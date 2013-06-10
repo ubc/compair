@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html ng-app = "myApp">
+	<head>
+		<title>ACJ</title>
+		<link rel="stylesheet" type="text/css" href="acj.css" />
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular-resource.min.js"></script>
+		<script src="acj.js" type="text/javascript"></script>
+	</head>
+	<body>
+		<h1>Adaptive Comparative Judgement</h1>
+		
+		<div ng-controller="IndexController">
+			{{login}}
+			<a href="#/login">
+				<button ng-hide="check">Log In</button>
+			</a>
+			<a href="#/judgepage">
+				<button ng-hide="check">Go Judge</button>
+			</a>
+			<form action="/logout">
+				<button type="submit" ng-show="check">Log Out</button>
+			</form>
+		</div>
+
+		<h3>View/</h3>
+		<div ng-view=""></div>
+		<h3>/View</h3>
+	</body>
+</html>

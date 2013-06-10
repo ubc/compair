@@ -1,0 +1,30 @@
+h1 {
+	color: silver;
+	text-align: center;
+}
+
+h2 {
+	color: gray;
+	text-align: center;
+}
+
+textarea {
+	resize: none;
+}
+
+pre {
+	width: 40%;
+	padding: 10px;
+	border: 3px solid red;
+	margin: 0px;
+}
+
+a:link {
+	text-decoration: none;
+	color: #F0FF00;
+}
+
+a:visited {
+	text-decoration: none;
+	color: #ABCDEF;
+}

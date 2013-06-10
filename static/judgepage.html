@@ -1,0 +1,28 @@
+<div>
+	<h2>Judge Page</h2>
+
+	<div style="display: inline-block">
+		SCRIPT1:
+		<br>
+		<textarea cols="50" rows="13">{{scriptl}}</textarea>
+	</div>
+
+	<div style="display: inline-block">
+		SCRIPT2:
+		<br>
+		<textarea cols="50" rows="13">{{scriptr}}</textarea>
+	</div>
+
+	<br>
+	
+	<div>
+		Which is Better?
+		<form ng-submit="submit()">
+			<input type="radio" name="pick" ng-model="pick" value="left">Left
+			<input type="radio" name="pick" ng-model="pick" value="right">Right
+			<br>
+			<input type="submit" value="Submit">
+		</form>
+	</div>
+</div>
+
