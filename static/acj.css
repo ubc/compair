@@ -28,3 +28,15 @@ a:visited {
 	text-decoration: none;
 	color: #ABCDEF;
 }
+
+.option {
+	display: inline-block;
+	margin: 5px;
+	padding: 10px;
+	border: 2px solid black;
+	background: yellow;
+}
+
+.inline {
+	display: inline-block;
+}

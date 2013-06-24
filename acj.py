@@ -1,8 +1,9 @@
 from __future__ import division
 from flask import Flask, url_for, request, render_template, redirect, escape, session
-from sqlalchemy_acj import db, User, Judgement, Script
+from sqlalchemy_acj import db, User, Judgement, Script, CJ_Model, Score, Course, Question
 from sqlalchemy import desc, func, select
 from random import shuffle
+from math import log10, exp
 import exceptions
 import MySQLdb
 import re
@@ -29,12 +30,12 @@ def get_script(id):
 	ret_val = json.dumps( {"content": query.content} )
 	return ret_val
 
-@app.route('/script/<id>', methods=['', 'POST'])
+@app.route('/script/<id>', methods=['POST'])
 def mark_script(id):
 	query = Script.query.filter_by(id = id).first()
 	if not query:
 		return json.dumps({"msg": "No matching script"})
-	query.score = query.score + 1
+	query.wins = query.wins + 1
 	query.count = query.count + 1
 	param = request.json
 	sidl = param['sidl']
@@ -84,15 +85,6 @@ def logout():
 	session.pop('username', None)
 	return redirect(url_for('index'))
 
-@app.route('/judgement/<id>')
-def check_judge(id):
-	query = User.query.filter_by(username = session['username']).first()
-	query = Judgement.query.filter_by(uid = query.id).first()
-	if not query:
-		return json.dumps( {"msg": 'No matching judgement'} )
-	ret_val = json.dumps( {"sidl": query.sidl, "sidr": query.sidr} )
-	return ret_val
-
 @app.route('/user', methods=['POST'])
 def create_user():
 	param = request.json
@@ -102,23 +94,32 @@ def create_user():
 		return json.dumps( {"msg": 'Username already exists'} )
 	password = param['password']
 	password = hasher.hash_password( password )
-	table = User(username, password)
+	usertype = param['usertype']
+	table = User(username, password, usertype)
 	db.session.add(table)
 	db.session.commit()
 	session['username'] = username
 	return ''
 
-@app.route('/pickscript', methods=['GET'])
-def pick_script():
-	query = Script.query.order_by( Script.count.desc() ).first()
+@app.route('/pickscript/<id>', methods=['GET'])
+def pick_script(id):
+	query = Script.query.filter_by(qid = id).order_by( Script.count.desc() ).first()
+	if not query:
+		return ''
 	max = query.count
-	query = Script.query.order_by( Script.count ).first()
+	query = Script.query.filter_by(qid = id).order_by( Script.count ).first()
 	min = query.count
 	print ('max: ' + str(max))
 	print ('min: ' + str(min))
 	if max == min:
 		max = max + 1 
-	query = Script.query.filter(Script.count < max).order_by( Script.count ).limit(10).all()
+	query = Script.query.filter_by(qid = id).order_by( Script.count ).limit(10).all()
+	index = 0
+	for script in query:
+		if script.count >= max:
+			query[:index]
+			break
+		index = index + 1
 	query[2:]
 	shuffle( query )
 	fresh = get_fresh_pair( query )
@@ -150,6 +151,93 @@ def get_fresh_pair( scripts ):
 			if not query:
 				return [sidl, sidr]
 	return ''
+
+@app.route('/cjmodel')
+def produce_cj_model():
+	scripts = Script.query.order_by( Script.id ).all()
+	index = 0
+	for scriptl in scripts:
+		lwins = scriptl.wins
+		for scriptr in scripts:
+			if scriptl != scriptr:
+				rwins = scriptr.wins
+				odds = (lwins/scriptl.count) / (rwins/scriptr.count) 
+				diff = log10( odds )
+				table =  CJ_Model(scriptl.id, scriptr.id, diff)
+				db.session.add(table)
+	db.session.commit()
+	return '1001110100101010001011010101010'
+
+
+@app.route('/score')
+def estimate_score():
+	scripts = Script.query.order_by( Script.id ).all()
+	for scriptl in scripts:
+		sidl = scriptl.id
+		print ('sidl: ' + str(sidl))
+		sigma = 0
+		lwins = scriptl.wins
+		for scriptr in scripts:
+			if scriptl != scriptr:
+				rwins = scriptr.wins
+				print ('loop sidr: ' + str(scriptr.id))
+				prob = lwins / (lwins + rwins)
+				print ('prob: ' + str(prob))
+				sigma = sigma + prob
+				print ('sigma: ' + str(sigma))
+		print ('out of inner loop')
+		query = Script.query.filter_by(id = sidl).first()
+		query.score = sigma
+	db.session.commit()
+	return '101010100010110'
+		
+@app.route('/ranking')
+def marked_scripts():
+	scripts = Script.query.order_by( Script.score.desc() ).all() 
+	lst = []
+	for script in scripts:
+		lst.append( {"title": script.title, "author": script.author, "time": str(script.time), "content": script.content, "score":script.score } )
+	print ('what is happneing')
+	print ( lst )
+	return json.dumps( {"scripts": lst} )
+
+@app.route('/course', methods=['POST'])
+def create_course():
+	param = request.json
+	name = param['name']
+	table = Course(name)
+	db.session.add(table)
+	db.session.commit()
+	return ''
+
+@app.route('/course', methods=['GET'])
+def list_course():
+	courses = Course.query.order_by( Course.name ).all()
+	lst = []
+	for course in courses:
+		lst.append( {"id": course.id, "name": course.name} )
+	return json.dumps( {"courses": lst} )
+
+@app.route('/question/<id>')
+def list_question(id):
+	course = Course.query.filter_by(id = id).first()
+	questions = Question.query.filter_by(cid = id).all()
+	lst = []
+	for question in questions:
+		lst.append( {"id": question.id, "content": question.content} )
+	return json.dumps( {"course": course.name, "questions": lst} )
+
+@app.route('/question/<id>', methods=['POST'])
+def ask_question(id):
+	param = request.json
+	content = param['content']
+	table = Question(id, content)
+	db.session.add(table)
+	db.session.commit()
+	course = Course.query.filter_by(id = id).first()
+	return json.dumps( {"course": course.name} )
+
+
 
 app.secret_key = 'asdf1234'
 

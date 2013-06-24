@@ -10,17 +10,26 @@
 	<body>
 		<h1>Adaptive Comparative Judgement</h1>
 		
-		<div ng-controller="IndexController">
-			{{login}}
+		<div class="option" ng-controller="IndexController">
+			<form action="/logout">
+				{{login}}
+				<button type="submit" ng-show="check">Log Out</button>
+			</form>
 			<a href="#/login">
 				<button ng-hide="check">Log In</button>
 			</a>
-			<a href="#/judgepage">
-				<button ng-hide="check">Go Judge</button>
+			<a href="/">
+				<button>Index</button>
 			</a>
-			<form action="/logout">
-				<button type="submit" ng-show="check">Log Out</button>
-			</form>
+			<a href="#/judgepage">
+				<button ng-show="check">Go Judge</button>
+			</a>
+			<a href="#/rankpage">
+				<button>Ranking Page</button>
+			</a>
+			<a href="#/coursepage">
+				<button ng-show="check">Courses</button>
+			</a>
 		</div>
 
 		<h3>View/</h3>
