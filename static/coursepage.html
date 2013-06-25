@@ -1,0 +1,14 @@
+<div>
+	<h2>Course Page</h2>
+	<a href="#/createcourse">
+		<button>Create Course</button>
+	</a>
+	<ul>
+		<li ng-repeat="course in courses">
+			<p>
+				<b>{{course.name}}</b>
+				<button ng-click="ask(course.id)">Questions</button>
+			</p>
+		</li>
+	</ul>
+</div>

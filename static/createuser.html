@@ -1,0 +1,16 @@
+<div>
+	<h2>Become a Judge Today!</h2>
+	
+	<form ng-submit="submit()">
+		Pick user type
+		<select ng-model="usertype">
+			<option value="Student">Student</option>
+			<option value="Teacher">Teacher</option>
+		</select>
+		<p>Username:<input type=text ng-model="username"></p>
+		<p>Password:<input type=password ng-model="password"></p>
+		<p>RetypePW:<input type=password ng-model="retypepw"></p>
+		<p><input type=submit value=Confirm></p>
+	</form>
+	{{usertype}}
+</div>

@@ -1,0 +1,17 @@
+<div>
+	<h2>Inter-Course, Inter-Question Comparison</h2>
+	<ul>
+		<li ng-repeat="script in scripts">
+			Script Score: <b>{{script.score}}</b>
+			<br>
+			Author: <b>{{script.author}}</b> - {{script.time}}
+			<br>
+			Course: <b>{{script.course}}</b>
+			<br>
+			- Question: <b>{{script.question}}</b>
+			<br><br>
+			<pre>{{script.content}}</pre>
+			<br>
+		</li>
+	</ul>
+</div>
