@@ -21,15 +21,19 @@ myApp.factory('pickscriptService', function($resource) {
 });
 
 myApp.factory('rankService', function($resource) {
-	return $resource( 'http://localhost\\:5000/ranking' );
+	return $resource( 'http://localhost\\:5000/ranking/:qid' );
 });
 
 myApp.factory('courseService', function($resource) {
-	return $resource( 'http://localhost\\:5000/course');
+	return $resource( 'http://localhost\\:5000/course' );
 });
 
 myApp.factory('questionService', function($resource) {
-	return $resource( 'http://localhost\\:5000/question/:cid');
+	return $resource( 'http://localhost\\:5000/question/:cid' );
+});
+
+myApp.factory('answerService', function($resource) {
+	return $resource( 'http://localhost\\:5000/answer/:qid' );
 });
 
 myApp.config( function ($routeProvider) {
@@ -79,6 +83,11 @@ myApp.config( function ($routeProvider) {
 				controller: AskController,
 				templateUrl: 'createquestion.html'
 			})
+		.when ('/answerpage',
+			{
+				controller: AnswerController,
+				templateUrl: 'answerpage.html'
+			})
 		.otherwise({redirectTo: '/'});
 });
 
@@ -104,6 +113,7 @@ function JudgepageController($scope, judgeService, pickscriptService) {
 	var sidr;
 	var winner;
 	var retval = pickscriptService.get( {qid: questionId}, function() {
+		$scope.question = retval.question;
 		if (retval.sidl) {
 			sidl = retval.sidl;
 			sidr = retval.sidr;
@@ -134,7 +144,7 @@ function JudgepageController($scope, judgeService, pickscriptService) {
 		input = {"sidl": sidl, "sidr": sidr};
 		var temp = judgeService.save( {scriptId:winner}, input, function() {
 			alert(temp.msg);
-			window.location = "http://localhost:5000/static/index.html";
+			window.location = "#/questionpage";
 		});
 	};
 }
@@ -151,7 +161,8 @@ function LoginController($scope, loginService) {
 			if (message) {
 				alert(message);
 			} else {
-				window.location = "http://localhost:5000/static/index.html";
+				window.location = "#/coursepage";
+				document.location.reload();
 			}
 		});
 	};
@@ -184,11 +195,9 @@ function UserController($scope, userService) {
 	};
 }
 
-function RankController($scope, rankService) {
-	courseId = 0;
-	questionId = 0;
-	var scripts = rankService.get( function() {
-		$scope.scripts = scripts.scripts;
+function RankController($scope, $resource) {
+	var retval = $resource('http://localhost\\:5000/ranking').get( function() {
+		$scope.scripts = retval.scripts;
 	});
 }
 
@@ -224,17 +233,33 @@ function QuestionController($scope, questionService) {
 		$scope.course = retval.course;
 		$scope.questions = retval.questions;
 	});
-	$scope.answer = function(id) {
+	$scope.ask = function() {
+		$scope.check = true;
+	};
+	$scope.submit = function() {
+		input = {"content": $scope.question};
+		var msg = questionService.save( {cid: courseId}, input, function() {
+			if (msg.msg) {
+				alert('something is wrong');
+			} else {
+				QuestionController($scope, questionService);
+			}
+		});
+		$scope.check = false;
+	};
+	$scope.delete = function(id) {
 		questionId = id;
-		window.location = "#/answerpage";
+		var retval = questionService.delete( {cid: questionId}, function() {
+			QuestionController($scope, questionService);
+		});
 	};
 	$scope.judge = function(id) {
 		questionId = id;
 		window.location = "#/judgepage";
 	};
-	$scope.rank = function(id) {
+	$scope.answer = function(id) {
 		questionId = id;
-		window.location = "#/rankpage";
+		window.location = "#/answerpage";
 	};
 }
 
@@ -250,3 +275,25 @@ function AskController($scope, questionService) {
 		});
 	};
 }
+
+function AnswerController($scope, answerService, rankService) {
+	var retval = rankService.get( {qid: questionId}, function() {
+		$scope.question = retval.question;
+		$scope.scripts = retval.scripts;
+	});
+	$scope.answer = function() {
+		$scope.check = true;
+	};
+	$scope.submit = function() {
+		input = {"content": $scope.myanswer};
+		var msg = answerService.save( {qid: questionId}, input, function() {
+			if (msg.msg) {
+				alert('something is wrong');
+			} else {
+				AnswerController($scope, answerService, rankService);
+			}
+		});
+		$scope.check = false;
+	};
+}
+

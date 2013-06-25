@@ -60,6 +60,17 @@ def mark_script(id):
 	db.session.commit()
 	return json.dumps({"msg": "Script & Judgement updated"})
 
+@app.route('/answer/<id>', methods=['POST'])
+def post_answer(id):
+	param = request.json
+	qid = id
+	author = session['username']
+	content = param['content']
+	table = Script(qid, author, content)
+	db.session.add(table)
+	db.session.commit()
+	return ''
+
 @app.route('/login', methods=['GET'])
 def logincheck():
 	if 'username' in session:
@@ -104,8 +115,9 @@ def create_user():
 @app.route('/pickscript/<id>', methods=['GET'])
 def pick_script(id):
 	query = Script.query.filter_by(qid = id).order_by( Script.count.desc() ).first()
+	question = Question.query.filter_by(id = id).first()
 	if not query:
-		return ''
+		return json.dumps( {"question": question.content} )
 	max = query.count
 	query = Script.query.filter_by(qid = id).order_by( Script.count ).first()
 	min = query.count
@@ -125,10 +137,10 @@ def pick_script(id):
 	fresh = get_fresh_pair( query )
 	if not fresh:
 		print 'judged them all'
-		return '' 
+		return json.dumps( {"question": question.content} ) 
 	print ('freshl: ' + str(fresh[0]))
 	print ('freshr: ' + str(fresh[1]))
-	return json.dumps( {"sidl": fresh[0], "sidr": fresh[1]} )
+	return json.dumps( {"question": question.content, "sidl": fresh[0], "sidr": fresh[1]} )
 
 def get_fresh_pair( scripts ):
 	uid = User.query.filter_by(username = session['username']).first().id
@@ -169,9 +181,8 @@ def produce_cj_model():
 	return '1001110100101010001011010101010'
 
 
-@app.route('/score')
-def estimate_score():
-	scripts = Script.query.order_by( Script.id ).all()
+def estimate_score(id):
+	scripts = Script.query.filter_by(qid = id).order_by( Script.id ).all()
 	for scriptl in scripts:
 		sidl = scriptl.id
 		print ('sidl: ' + str(sidl))
@@ -181,7 +192,10 @@ def estimate_score():
 			if scriptl != scriptr:
 				rwins = scriptr.wins
 				print ('loop sidr: ' + str(scriptr.id))
-				prob = lwins / (lwins + rwins)
+				if lwins + rwins == 0:
+					prob = 0
+				else:
+					prob = lwins / (lwins + rwins)
 				print ('prob: ' + str(prob))
 				sigma = sigma + prob
 				print ('sigma: ' + str(sigma))
@@ -191,14 +205,27 @@ def estimate_score():
 	db.session.commit()
 	return '101010100010110'
 		
-@app.route('/ranking')
-def marked_scripts():
-	scripts = Script.query.order_by( Script.score.desc() ).all() 
+@app.route('/ranking/<id>')
+def marked_scripts(id):
+####### Do math before calling it ########
+	estimate_score(id)
+	scripts = Script.query.filter_by(qid = id).order_by( Script.score.desc() ).all() 
 	lst = []
 	for script in scripts:
 		lst.append( {"title": script.title, "author": script.author, "time": str(script.time), "content": script.content, "score":script.score } )
 	print ('what is happneing')
 	print ( lst )
+	question = Question.query.filter_by(id = id).first()
+	return json.dumps( {"question": question.content, "scripts": lst} )
+
+@app.route('/ranking')
+def total_ranking():
+	scripts = Script.query.order_by( Script.score.desc() ).all()
+	lst = []
+	for script in scripts:
+		question = Question.query.filter_by(id = script.qid).first()
+		course = Course.query.filter_by(id = question.cid).first()
+		lst.append( {"course": course.name, "question": question.content, "author":script.author, "time": str(script.time), "content": script.content, "score": script.score } )
 	return json.dumps( {"scripts": lst} )
 
 @app.route('/course', methods=['POST'])
@@ -221,10 +248,10 @@ def list_course():
 @app.route('/question/<id>')
 def list_question(id):
 	course = Course.query.filter_by(id = id).first()
-	questions = Question.query.filter_by(cid = id).all()
+	questions = Question.query.filter_by(cid = id).order_by( Question.time.desc() ).all()
 	lst = []
 	for question in questions:
-		lst.append( {"id": question.id, "content": question.content} )
+		lst.append( {"id": question.id, "time": str(question.time), "content": question.content} )
 	return json.dumps( {"course": course.name, "questions": lst} )
 
 @app.route('/question/<id>', methods=['POST'])
@@ -237,6 +264,12 @@ def ask_question(id):
 	course = Course.query.filter_by(id = id).first()
 	return json.dumps( {"course": course.name} )
 
+@app.route('/question/<id>', methods=['DELETE'])
+def delete_question(id):
+	question = Question.query.filter_by(id = id).first()
+	db.session.delete(question)
+	db.session.commit()
+	return ''
 
 
 app.secret_key = 'asdf1234'
