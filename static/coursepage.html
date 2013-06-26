@@ -1,8 +1,13 @@
 <div>
 	<h2>Course Page</h2>
-	<a href="#/createcourse">
-		<button>Create Course</button>
-	</a>
+	<button ng-click="create()">Create Course</button>
+	<form ng-show="check" ng-submit="submit()">
+		<br>
+		<textarea cols="50" rows="13" ng-model="course">Course Name</textarea>
+		<br><br>
+		<button type="submit">Submit</button>
+		<br>
+	</form>
 	<ul>
 		<li ng-repeat="course in courses">
 			<p>

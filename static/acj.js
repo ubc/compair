@@ -36,6 +36,10 @@ myApp.factory('answerService', function($resource) {
 	return $resource( 'http://localhost\\:5000/answer/:qid' );
 });
 
+myApp.factory('quickService', function($resource) {
+	return $resource( 'http://localhost\\:5000/randquestion' );
+});
+
 myApp.config( function ($routeProvider) {
 	$routeProvider
 		.when ('/', 
@@ -68,11 +72,6 @@ myApp.config( function ($routeProvider) {
 				controller: CourseController,
 				templateUrl: 'coursepage.html'
 			})
-		.when ('/createcourse',
-			{
-				controller: CreateCourseController,
-				templateUrl: 'createcourse.html'
-			})
 		.when ('/questionpage',
 			{
 				controller: QuestionController,
@@ -91,7 +90,7 @@ myApp.config( function ($routeProvider) {
 		.otherwise({redirectTo: '/'});
 });
 
-function IndexController($scope, loginService) {
+function IndexController($scope, loginService, quickService) {
 	var login = loginService.get( function() {
 		login = login.username;
 		if (login) {
@@ -101,11 +100,20 @@ function IndexController($scope, loginService) {
 			$scope.check = false;
 		}
 	});
+	$scope.quickjudge = function() {
+		var retval = quickService.get( function() {
+			if (retval.question) {
+				questionId = retval.question;
+				window.location = "#/judgepage";
+			} else {
+				alert('None of the questions has enough answers. Please come back later');
+			}
+		});
+	};
 }
 
 function JudgepageController($scope, judgeService, pickscriptService) {
 	if (questionId == 0) {
-		alert( 'Error: questionId == 0; invalid access point to judgepage');
 		window.location = "#/";
 		return;
 	}
@@ -113,6 +121,7 @@ function JudgepageController($scope, judgeService, pickscriptService) {
 	var sidr;
 	var winner;
 	var retval = pickscriptService.get( {qid: questionId}, function() {
+		$scope.course = retval.course;
 		$scope.question = retval.question;
 		if (retval.sidl) {
 			sidl = retval.sidl;
@@ -205,29 +214,30 @@ function CourseController($scope, courseService) {
 	var courses = courseService.get( function() {
 		$scope.courses = courses.courses;
 	});
+	$scope.create = function() {
+		$scope.check = true;
+	};
+	$scope.submit = function() {
+		input = {"name": $scope.course};
+		var retval = courseService.save( input, function() {
+			if (retval.msg) {
+				alert('course creation failed');
+			} else {
+				$scope.check = false;
+				CourseController($scope, courseService);
+			}
+		});
+	};
 	$scope.ask= function(id) {
 		courseId = id;
 		window.location = "#/questionpage";
 	};
 }
 
-function CreateCourseController($scope, courseService) {
-	$scope.submit = function() {
-		input = {"name": $scope.name};
-		var msg = courseService.save( input, function() {
-			if (msg.msg) {
-				alert('something is wrong');
-			} else {
-				window.location = "#/coursepage";
-			}
-		});
-	};
-}
-
 function QuestionController($scope, questionService) {
 	if (courseId == 0) {
-		alert('Error: courseId == 0; invalid entry point to question page');
 		window.location = "#/coursepage";
+		return;
 	}
 	var retval = questionService.get( {cid: courseId}, function() {
 		$scope.course = retval.course;

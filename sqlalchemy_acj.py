@@ -1,5 +1,6 @@
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy 
+from sqlalchemy.orm import backref
 import datetime
 
 app = Flask(__name__)
@@ -41,7 +42,7 @@ class Question(db.Model):
 	cid = db.Column(db.Integer, db.ForeignKey('Course.id', ondelete='CASCADE'))
 	time = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 	content = db.Column(db.Text)
-	script = db.relationship('Script', passive_deletes=True)
+	script = db.relationship('Script', cascade="all,delete")
 
 	def __init__(self, cid, content):
 		self.cid = cid
@@ -78,8 +79,8 @@ class Judgement(db.Model):
 	sidr = db.Column(db.Integer, db.ForeignKey('Script.id', ondelete='CASCADE'))
 	winner = db.Column(db.Integer, unique=False)
 
-	script1 = db.relationship('Script', foreign_keys=[sidl], passive_deletes=True)
-	script2 = db.relationship('Script', foreign_keys=[sidr], passive_deletes=True)
+	script1 = db.relationship('Script', foreign_keys=[sidl], backref=backref("judge1", cascade="all,delete"))
+	script2 = db.relationship('Script', foreign_keys=[sidr], backref=backref("judge2", cascade="all,delete"))
 
 	def __init__(self, uid, sidl, sidr, winner):
 		self.uid = uid

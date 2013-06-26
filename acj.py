@@ -116,8 +116,9 @@ def create_user():
 def pick_script(id):
 	query = Script.query.filter_by(qid = id).order_by( Script.count.desc() ).first()
 	question = Question.query.filter_by(id = id).first()
+	course = Course.query.filter_by(id = question.cid).first()
 	if not query:
-		return json.dumps( {"question": question.content} )
+		return json.dumps( {"course": course.name, "question": question.content} )
 	max = query.count
 	query = Script.query.filter_by(qid = id).order_by( Script.count ).first()
 	min = query.count
@@ -140,7 +141,7 @@ def pick_script(id):
 		return json.dumps( {"question": question.content} ) 
 	print ('freshl: ' + str(fresh[0]))
 	print ('freshr: ' + str(fresh[1]))
-	return json.dumps( {"question": question.content, "sidl": fresh[0], "sidr": fresh[1]} )
+	return json.dumps( {"course": course.name, "question": question.content, "sidl": fresh[0], "sidr": fresh[1]} )
 
 def get_fresh_pair( scripts ):
 	uid = User.query.filter_by(username = session['username']).first().id
@@ -207,7 +208,6 @@ def estimate_score(id):
 		
 @app.route('/ranking/<id>')
 def marked_scripts(id):
-####### Do math before calling it ########
 	estimate_score(id)
 	scripts = Script.query.filter_by(qid = id).order_by( Script.score.desc() ).all() 
 	lst = []
@@ -269,6 +269,35 @@ def delete_question(id):
 	question = Question.query.filter_by(id = id).first()
 	db.session.delete(question)
 	db.session.commit()
+	return ''
+
+@app.route('/randquestion')
+def random_question():
+	scripts = Script.query.order_by( Script.count ).all()
+	if scripts[0].qid == scripts[1].qid:
+		print ('match: ' + str(scripts[0].qid) + ' & ' + str(scripts[1].qid))
+		return json.dumps( {"question": scripts[0].qid} )
+	lowest0 = ''
+	qid = ''
+	lowest1 = ''
+	for script in scripts:
+		print ('in loop, script: ' + str(script))
+		print ('in loop, lowest0: ' + str(lowest0))
+		print ('in loop, lowest1: ' + str(lowest1))
+		query = Script.query.filter_by(qid = script.qid).order_by( Script.count ).all()
+		if len(query) > 1:
+			sum = query[0].count + query[1].count
+			if not lowest0:
+				lowest0 = sum
+				qid = script.qid
+				print ('in if, lowest0: ' + str(lowest0))
+			else:
+				lowest1 = sum
+				print ('in if, lowest1: ' + str(lowest1))
+				if lowest0 > lowest1:
+					qid = script.qid
+				print ('retval: ' + str(qid))
+				return json.dumps( {"question": qid} )
 	return ''
 
 
