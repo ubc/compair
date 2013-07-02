@@ -1,6 +1,6 @@
 <div>
 	<h2>Course Page</h2>
-	<button ng-click="create()">Create Course</button>
+	<button ng-show="instructor" ng-click="check=!check">Create Course</button>
 	<form ng-show="check" ng-submit="submit()">
 		<br>
 		<textarea cols="50" rows="13" ng-model="course">Course Name</textarea>
@@ -13,6 +13,7 @@
 			<p>
 				<b>{{course.name}}</b>
 				<button ng-click="ask(course.id)">Questions</button>
+				<button ng-show="instructor" ng-click="enroll(course.id)">Enroll Students</button>
 			</p>
 		</li>
 	</ul>

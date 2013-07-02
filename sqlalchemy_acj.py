@@ -14,7 +14,8 @@ class User(db.Model):
 	password = db.Column(db.String(120), unique=False)
 	usertype = db.Column(db.Enum('Teacher', 'Student'))
 	#judgements = db.Column(postgresql.ARRAY(db.Integer), unique=False)
-	judgement = db.relationship('Judgement', passive_deletes=True)
+	judgement = db.relationship('Judgement', cascade="all,delete")
+	enrollment = db.relationship('Enrollment', cascade="all,delete")
 
 	def __init__(self, username, password, usertype):
 		self.username = username
@@ -28,7 +29,8 @@ class Course(db.Model):
 	__tablename__ = 'Course'
 	id = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.String(80), unique=True)
-	question = db.relationship('Question', passive_deletes=True)
+	question = db.relationship('Question', cascade="all,delete")
+	enrollment = db.relationship('Enrollment', cascade="all,delete")
 
 	def __init__(self, name):
 		self.name = name
@@ -40,12 +42,14 @@ class Question(db.Model):
 	__tablename__ = 'Question'
 	id = db.Column(db.Integer, primary_key=True)
 	cid = db.Column(db.Integer, db.ForeignKey('Course.id', ondelete='CASCADE'))
+	author = db.Column(db.String(80), default='anonym')
 	time = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 	content = db.Column(db.Text)
 	script = db.relationship('Script', cascade="all,delete")
 
-	def __init__(self, cid, content):
+	def __init__(self, cid, author, content):
 		self.cid = cid
+		self.author = author
 		self.content = content
 
 	def __repr__(self):
@@ -123,3 +127,16 @@ class Score(db.Model):
 
 	def __repr__(self):
 		return '<Score %r>' % self.sid
+
+class Enrollment(db.Model):
+	__tablename__ = 'Enrollment'
+	id = db.Column(db.Integer, primary_key=True)
+	uid = db.Column(db.Integer, db.ForeignKey('User.id', ondelete='CASCADE'))
+	cid = db.Column(db.Integer, db.ForeignKey('Course.id', ondelete='CASCADE'))
+
+	def __init__(self, uid, cid):
+		self.uid = uid
+		self.cid = cid
+
+	def __repr__(self):
+		return '<Enrollment %r>' % self.id

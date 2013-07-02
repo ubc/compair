@@ -1,6 +1,6 @@
 from __future__ import division
 from flask import Flask, url_for, request, render_template, redirect, escape, session
-from sqlalchemy_acj import db, User, Judgement, Script, CJ_Model, Score, Course, Question
+from sqlalchemy_acj import db, User, Judgement, Script, CJ_Model, Score, Course, Question, Enrollment
 from sqlalchemy import desc, func, select
 from random import shuffle
 from math import log10, exp
@@ -71,10 +71,26 @@ def post_answer(id):
 	db.session.commit()
 	return ''
 
+@app.route('/answer/<id>', methods=['PUT'])
+def edit_answer(id):
+	param = request.json
+	script = Script.query.filter_by(id = id).first()
+	script.content = param['content']
+	db.session.commit()
+	return ''
+
+@app.route('/answer/<id>', methods=['DELETE'])
+def delete_answer(id):
+	script = Script.query.filter_by(id = id).first()
+	db.session.delete(script)
+	db.session.commit()
+	return ''
+
 @app.route('/login', methods=['GET'])
 def logincheck():
 	if 'username' in session:
-		return json.dumps( {"username": session['username']} )
+		user = User.query.filter_by(username = session['username']).first()
+		return json.dumps( {"username": session['username'], "usertype": user.usertype} )
 	return ''
 
 @app.route('/login', methods=['POST'])
@@ -133,8 +149,9 @@ def pick_script(id):
 			query[:index]
 			break
 		index = index + 1
-	query[2:]
 	shuffle( query )
+	# why is this here?
+	# query[2:]
 	fresh = get_fresh_pair( query )
 	if not fresh:
 		print 'judged them all'
@@ -150,19 +167,21 @@ def get_fresh_pair( scripts ):
 		index = index + 1
 		print ('index: ' + str(index))
 		print (scripts[index:])
-		for scriptr in scripts[index:]:
-			sidl = scriptl.id
-			sidr = scriptr.id
-			print ('uid: ' + str(uid))
-			print ('sid: ' + str(sidl))
-			print ('sid: ' + str(sidr))
-			if sidl > sidr:
-				temp = sidr
-				sidr = sidl
-				sidl = temp
-			query = Judgement.query.filter_by(uid = uid).filter_by(sidl = sidl).filter_by(sidr = sidr).first()
-			if not query:
-				return [sidl, sidr]
+		if session['username'] != scriptl.author:
+			for scriptr in scripts[index:]:
+				if session['username'] != scriptr.author:
+					sidl = scriptl.id
+					sidr = scriptr.id
+					print ('uid: ' + str(uid))
+					print ('sid: ' + str(sidl))
+					print ('sid: ' + str(sidr))
+					if sidl > sidr:
+						temp = sidr
+						sidr = sidl
+						sidl = temp
+					query = Judgement.query.filter_by(uid = uid).filter_by(sidl = sidl).filter_by(sidr = sidr).first()
+					if not query:
+						return [sidl, sidr]
 	return ''
 
 @app.route('/cjmodel')
@@ -212,11 +231,12 @@ def marked_scripts(id):
 	scripts = Script.query.filter_by(qid = id).order_by( Script.score.desc() ).all() 
 	lst = []
 	for script in scripts:
-		lst.append( {"title": script.title, "author": script.author, "time": str(script.time), "content": script.content, "score":script.score } )
+		lst.append( {"id": script.id, "title": script.title, "author": script.author, "time": str(script.time), "content": script.content, "score":script.score } )
 	print ('what is happneing')
 	print ( lst )
 	question = Question.query.filter_by(id = id).first()
-	return json.dumps( {"question": question.content, "scripts": lst} )
+	user = User.query.filter_by(username = session['username']).first()
+	return json.dumps( {"usertype": user.usertype, "question": question.content, "scripts": lst} )
 
 @app.route('/ranking')
 def total_ranking():
@@ -239,9 +259,14 @@ def create_course():
 
 @app.route('/course', methods=['GET'])
 def list_course():
+	user = User.query.filter_by( username = session['username'] ).first()
 	courses = Course.query.order_by( Course.name ).all()
 	lst = []
 	for course in courses:
+		if user.usertype == 'Student':
+			query = Enrollment.query.filter_by(cid = course.id).filter_by(uid = user.id).first()
+			if not query:
+				continue
 		lst.append( {"id": course.id, "name": course.name} )
 	return json.dumps( {"courses": lst} )
 
@@ -251,14 +276,14 @@ def list_question(id):
 	questions = Question.query.filter_by(cid = id).order_by( Question.time.desc() ).all()
 	lst = []
 	for question in questions:
-		lst.append( {"id": question.id, "time": str(question.time), "content": question.content} )
+		lst.append( {"id": question.id, "author": question.author, "time": str(question.time), "content": question.content} )
 	return json.dumps( {"course": course.name, "questions": lst} )
 
 @app.route('/question/<id>', methods=['POST'])
 def ask_question(id):
 	param = request.json
 	content = param['content']
-	table = Question(id, content)
+	table = Question(id, session['username'], content)
 	db.session.add(table)
 	db.session.commit()
 	course = Course.query.filter_by(id = id).first()
@@ -267,13 +292,18 @@ def ask_question(id):
 @app.route('/question/<id>', methods=['DELETE'])
 def delete_question(id):
 	question = Question.query.filter_by(id = id).first()
+	user = User.query.filter_by(username = session['username']).first()
+	if session['username'] != question.author and user.usertype != 'Teacher':
+		return json.dumps( {"msg": question.author} )
 	db.session.delete(question)
 	db.session.commit()
 	return ''
 
 @app.route('/randquestion')
 def random_question():
-	scripts = Script.query.order_by( Script.count ).all()
+	scripts = Script.query.order_by( Script.count ).first()
+	scripts = Script.query.filter_by( count = scripts.count ).all()
+	shuffle( scripts )
 	if scripts[0].qid == scripts[1].qid:
 		print ('match: ' + str(scripts[0].qid) + ' & ' + str(scripts[1].qid))
 		return json.dumps( {"question": scripts[0].qid} )
@@ -299,6 +329,41 @@ def random_question():
 				print ('retval: ' + str(qid))
 				return json.dumps( {"question": qid} )
 	return ''
+
+@app.route('/enrollment/<id>')
+def students_enrolled(id):
+	students = User.query.filter_by(usertype = 'Student').order_by( User.username ).all()
+	lst = []
+	for student in students:
+		print ('in loop, student: ' + str(student))
+		enrolled = ''
+		query = Enrollment.query.filter_by(uid = student.id).filter_by(cid = id).first()
+		print (query)
+		if (query):
+			print ('enrolled')
+			enrolled = query.id
+		lst.append( {"uid": student.id, "username": student.username, "enrolled": enrolled} )
+	course = Course.query.filter_by(id = id).first()
+	return json.dumps( {"course": course.name, "students": lst} )
+
+@app.route('/enrollment/<id>', methods=['POST'])
+def enroll_student(id):
+	param = request.json
+	sid = param['sid']
+	table = Enrollment(sid, id)
+	db.session.add(table)
+	db.session.commit()
+	return ''
+
+@app.route('/enrollment/<id>', methods=['DELETE'])
+def drop_student(id):
+	query = Enrollment.query.filter_by( id = id ).first()
+	db.session.delete(query)
+	db.session.commit()
+	return ''
+	
+
+
 
 
 app.secret_key = 'asdf1234'

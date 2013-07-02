@@ -2,7 +2,7 @@
 	<h2>Question Page</h2>
 	<a href="#/coursepage">Back to Course Page</a>
 	<p> Course: <b>{{course}}</b> </p>
-	<button ng-click="ask()">Create Question</button>
+	<button ng-click="check=!check">Create Question</button>
 	<form ng-show="check" ng-submit="submit()">
 		<br>
 		<textarea cols="50" rows="13" ng-model="question">Ask Something</textarea>
@@ -12,10 +12,11 @@
 	</form>
 	<ul>
 		<li ng-repeat="question in questions">
-			<p>QUESTION - {{question.time}}:</p>
-			<pre>{{question.content}}</pre>
+			<p> Author: <b>{{question.author}}</b> - {{question.time}}:</p>
+			<textarea class="question" readonly>{{question.content}}</textarea>
+			<br>
 			<p class="inline">
-				<button ng-click="delete(question.id)">Delete Question</button>
+				<button ng-show="login == question.author || instructor" ng-click="delete(question.id)">Delete Question</button>
 				<button ng-click="judge(question.id)">Judge Answers</button>
 				<button ng-click="answer(question.id)">Answer Page</button>
 			</p>

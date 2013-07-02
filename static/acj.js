@@ -33,11 +33,15 @@ myApp.factory('questionService', function($resource) {
 });
 
 myApp.factory('answerService', function($resource) {
-	return $resource( 'http://localhost\\:5000/answer/:qid' );
+	return $resource( 'http://localhost\\:5000/answer/:qid', {}, { put: {method: 'PUT'} } );
 });
 
 myApp.factory('quickService', function($resource) {
 	return $resource( 'http://localhost\\:5000/randquestion' );
+});
+
+myApp.factory('enrollService', function($resource) {
+	return $resource( 'http://localhost\\:5000/enrollment/:cid' );
 });
 
 myApp.config( function ($routeProvider) {
@@ -87,10 +91,20 @@ myApp.config( function ($routeProvider) {
 				controller: AnswerController,
 				templateUrl: 'answerpage.html'
 			})
+		.when ('/enrollpage',
+			{
+				controller: EnrollController,
+				templateUrl: 'enrollpage.html'
+			})
+		.when ('/quickjudge',
+			{
+				controller: QuickController,
+				templateUrl: 'judgepage.html'
+			})
 		.otherwise({redirectTo: '/'});
 });
 
-function IndexController($scope, loginService, quickService) {
+function IndexController($scope, loginService) {
 	var login = loginService.get( function() {
 		login = login.username;
 		if (login) {
@@ -100,16 +114,18 @@ function IndexController($scope, loginService, quickService) {
 			$scope.check = false;
 		}
 	});
-	$scope.quickjudge = function() {
-		var retval = quickService.get( function() {
-			if (retval.question) {
-				questionId = retval.question;
-				window.location = "#/judgepage";
-			} else {
-				alert('None of the questions has enough answers. Please come back later');
-			}
-		});
-	};
+}
+
+function QuickController($scope, judgeService, pickscriptService, quickService) {
+	var retval = quickService.get( function() {
+		if (retval.question) {
+			questionId = retval.question;
+			window.location = "#/judgepage";
+		} else {
+			window.location = "#/";
+			alert('None of the questions has enough answers. Please come back later');
+		}
+	});
 }
 
 function JudgepageController($scope, judgeService, pickscriptService) {
@@ -155,6 +171,9 @@ function JudgepageController($scope, judgeService, pickscriptService) {
 			alert(temp.msg);
 			window.location = "#/questionpage";
 		});
+	};
+	$scope.next = function() {
+		JudgepageController($scope, judgeService, pickscriptService);
 	};
 }
 
@@ -210,49 +229,61 @@ function RankController($scope, $resource) {
 	});
 }
 
-function CourseController($scope, courseService) {
+function CourseController($scope, courseService, loginService) {
+	var login = loginService.get( function() {
+		type = login.usertype;
+		if (type && type == 'Teacher') {
+			$scope.instructor = true;
+		} else {
+			$scope.instructor = false;
+		}
+	});
 	var courses = courseService.get( function() {
 		$scope.courses = courses.courses;
 	});
-	$scope.create = function() {
-		$scope.check = true;
-	};
 	$scope.submit = function() {
 		input = {"name": $scope.course};
 		var retval = courseService.save( input, function() {
-			if (retval.msg) {
-				alert('course creation failed');
-			} else {
-				$scope.check = false;
-				CourseController($scope, courseService);
-			}
+			$scope.check = false;
+			CourseController($scope, courseService);
 		});
 	};
 	$scope.ask= function(id) {
 		courseId = id;
 		window.location = "#/questionpage";
 	};
+	$scope.enroll = function(id) {
+		courseId = id;
+		window.location = "#/enrollpage";
+	};
 }
 
-function QuestionController($scope, questionService) {
+function QuestionController($scope, questionService, loginService) {
 	if (courseId == 0) {
 		window.location = "#/coursepage";
 		return;
 	}
+	var login = loginService.get( function() {
+		if (login.username) {
+			$scope.login= login.username;
+			if (login.usertype == 'Teacher') {
+				$scope.instructor = true;
+			}
+		} else {
+			$scope.login = '';
+		}
+	});
 	var retval = questionService.get( {cid: courseId}, function() {
 		$scope.course = retval.course;
 		$scope.questions = retval.questions;
 	});
-	$scope.ask = function() {
-		$scope.check = true;
-	};
 	$scope.submit = function() {
 		input = {"content": $scope.question};
 		var msg = questionService.save( {cid: courseId}, input, function() {
 			if (msg.msg) {
 				alert('something is wrong');
 			} else {
-				QuestionController($scope, questionService);
+				QuestionController($scope, questionService, loginService);
 			}
 		});
 		$scope.check = false;
@@ -260,7 +291,11 @@ function QuestionController($scope, questionService) {
 	$scope.delete = function(id) {
 		questionId = id;
 		var retval = questionService.delete( {cid: questionId}, function() {
-			QuestionController($scope, questionService);
+			if (retval.msg) {
+				alert( "You cannot delete others' questions" )
+			} else {
+				QuestionController($scope, questionService, loginService);
+			}
 		});
 	};
 	$scope.judge = function(id) {
@@ -290,10 +325,10 @@ function AnswerController($scope, answerService, rankService) {
 	var retval = rankService.get( {qid: questionId}, function() {
 		$scope.question = retval.question;
 		$scope.scripts = retval.scripts;
+		if (retval.usertype == 'Teacher') {
+			$scope.instructor = true;
+		}
 	});
-	$scope.answer = function() {
-		$scope.check = true;
-	};
 	$scope.submit = function() {
 		input = {"content": $scope.myanswer};
 		var msg = answerService.save( {qid: questionId}, input, function() {
@@ -305,5 +340,33 @@ function AnswerController($scope, answerService, rankService) {
 		});
 		$scope.check = false;
 	};
+	$scope.editscript = function(id, newanswer) {
+		input = {"content": newanswer};
+		var msg = answerService.put( {qid: id}, input, function() {
+			AnswerController($scope, answerService, rankService);
+		});
+	};
+	$scope.delete = function(id) {
+		var retval = answerService.delete( {qid: id}, function() {
+			AnswerController($scope, answerService, rankService);
+		});
+	};
 }
 
+function EnrollController($scope, enrollService) {
+	var retval = enrollService.get( {cid: courseId}, function() {
+		$scope.course = retval.course;
+		$scope.students = retval.students;
+	});
+	$scope.add = function(id) {
+		input = {"sid": id};
+		var retval = enrollService.save( {cid: courseId}, input, function() {
+			EnrollController($scope, enrollService);
+		});
+	};
+	$scope.drop = function(id) {
+		var retval = enrollService.delete( {cid: id}, function() {
+			EnrollController($scope, enrollService);
+		});
+	};
+}

@@ -2,7 +2,7 @@
 	<h2>Answer Page</h2>
 	<a href="#/questionpage">Back to Question Page</a>
 	<p> Question: <b>{{question}}</b> </p>
-	<button ng-click="answer()">Answer Question</button>
+	<button ng-click="check=!check">Answer Question</button>
 	<form ng-show="check" ng-submit="submit()">
 		<br>
 		<textarea cols="50" rows="13" ng-model="myanswer">Answer</textarea>
@@ -16,7 +16,14 @@
 			<br>
 			Author: <b>{{script.author}}</b> - {{script.time}}
 			<br><br>
-			<pre>{{script.content}}</pre>
+			<textarea ng-hide="edit" class="answer" readonly>{{script.content}}</textarea>
+			<textarea ng-show="edit" class="answer" ng-model="newanswer"></textarea>
+			<br>
+			<p class="inline">
+				<button ng-show="instructor" ng-click="delete(script.id)">Delete Answer</button>
+				<button ng-show="instructor" ng-click="edit=!edit;newanswer=script.content">Edit Answer</button>
+				<button ng-show="edit" ng-click="editscript(script.id, newanswer)">Submit</button>
+			</p>
 			<br>
 		</li>
 	</ul>
