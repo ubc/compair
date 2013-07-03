@@ -76,7 +76,7 @@ myApp.config( function ($routeProvider) {
 				controller: CourseController,
 				templateUrl: 'coursepage.html'
 			})
-		.when ('/questionpage',
+		.when ('/questionpage/:courseId',
 			{
 				controller: QuestionController,
 				templateUrl: 'questionpage.html'
@@ -250,19 +250,17 @@ function CourseController($scope, courseService, loginService) {
 			$scope.courses.push(retval);
 		});
 	};
-	$scope.ask = function(id) {
-		courseId = id;
-		window.location = "#/questionpage";
-	};
 	$scope.enroll = function(id) {
 		courseId = id;
 		window.location = "#/enrollpage";
 	};
 }
 
-function QuestionController($scope, questionService, loginService) {
-	if (courseId == 0) {
-		window.location = "#/coursepage";
+function QuestionController($scope, $location, $routeParams, questionService, loginService) 
+{
+	var course = $routeParams.courseId; 
+	if (!course) {
+		$location.path("/coursepage");
 		return;
 	}
 	var login = loginService.get( function() {
@@ -275,13 +273,13 @@ function QuestionController($scope, questionService, loginService) {
 			$scope.login = '';
 		}
 	});
-	var retval = questionService.get( {cid: courseId}, function() {
+	var retval = questionService.get( {cid: course}, function() {
 		$scope.course = retval.course;
 		$scope.questions = retval.questions;
 	});
 	$scope.submit = function() {
 		input = {"content": $scope.question};
-		var msg = questionService.save( {cid: courseId}, input, function() {
+		var msg = questionService.save( {cid: course}, input, function() {
 			if (msg.msg) {
 				alert('something is wrong');
 			} else {

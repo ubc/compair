@@ -9,7 +9,8 @@
 		<li ng-repeat="course in courses | orderBy:orderProp">
 			<p>
 				<b>{{course.name}}</b>
-				<button ng-click="ask(course.id)">Questions</button>
+
+				<a href="#/questionpage/{{course.id}}"><button>Questions</button></a>
 				<button ng-show="instructor" ng-click="enroll(course.id)">Enroll Students</button>
 			</p>
 		</li>
