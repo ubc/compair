@@ -5,43 +5,43 @@ var courseId = 0;
 var questionId = 0;
 
 myApp.factory('judgeService', function($resource) {
-	return $resource( 'http://localhost\\:5000/script/:scriptId' );
+	return $resource( '/script/:scriptId' );
 });
 
 myApp.factory('loginService', function($resource) {
-	return $resource( 'http://localhost\\:5000/login' );
+	return $resource( '/login' );
 });
 
 myApp.factory('userService', function($resource) {
-	return $resource( 'http://localhost\\:5000/user' );
+	return $resource( '/user' );
 });
 
 myApp.factory('pickscriptService', function($resource) {
-	return $resource( 'http://localhost\\:5000/pickscript/:qid' );
+	return $resource( '/pickscript/:qid' );
 });
 
 myApp.factory('rankService', function($resource) {
-	return $resource( 'http://localhost\\:5000/ranking/:qid' );
+	return $resource( '/ranking/:qid' );
 });
 
 myApp.factory('courseService', function($resource) {
-	return $resource( 'http://localhost\\:5000/course' );
+	return $resource( '/course' );
 });
 
 myApp.factory('questionService', function($resource) {
-	return $resource( 'http://localhost\\:5000/question/:cid' );
+	return $resource( '/question/:cid' );
 });
 
 myApp.factory('answerService', function($resource) {
-	return $resource( 'http://localhost\\:5000/answer/:qid', {}, { put: {method: 'PUT'} } );
+	return $resource( '/answer/:qid', {}, { put: {method: 'PUT'} } );
 });
 
 myApp.factory('quickService', function($resource) {
-	return $resource( 'http://localhost\\:5000/randquestion' );
+	return $resource( '/randquestion' );
 });
 
 myApp.factory('enrollService', function($resource) {
-	return $resource( 'http://localhost\\:5000/enrollment/:cid' );
+	return $resource( '/enrollment/:cid' );
 });
 
 myApp.config( function ($routeProvider) {
@@ -217,14 +217,14 @@ function UserController($scope, userService) {
 			if (message) {
 				alert(message);
 			} else {
-				window.location = "http://localhost:5000/static/index.html";
+				window.location = "/static/index.html";
 			}
 		});
 	};
 }
 
 function RankController($scope, $resource) {
-	var retval = $resource('http://localhost\\:5000/ranking').get( function() {
+	var retval = $resource('/ranking').get( function() {
 		$scope.scripts = retval.scripts;
 	});
 }
