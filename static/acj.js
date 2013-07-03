@@ -177,7 +177,7 @@ function JudgepageController($scope, judgeService, pickscriptService) {
 	};
 }
 
-function LoginController($scope, loginService) {
+function LoginController($scope, $location, loginService) {
 	$scope.submit = function() {
 		if ( !($scope.username && $scope.password) ) {
 			alert('You must provide both username and password');
@@ -189,8 +189,7 @@ function LoginController($scope, loginService) {
 			if (message) {
 				alert(message);
 			} else {
-				window.location = "#/coursepage";
-				document.location.reload();
+				$location.path("/coursepage");
 			}
 		});
 	};
