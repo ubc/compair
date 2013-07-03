@@ -11,7 +11,7 @@
 				<b>{{course.name}}</b>
 
 				<a href="#/questionpage/{{course.id}}"><button>Questions</button></a>
-				<button ng-show="instructor" ng-click="enroll(course.id)">Enroll Students</button>
+				<a href="#/enrollpage/{{course.id}}" ng-show="instructor"><button>Enroll Students</button></a>
 			</p>
 		</li>
 	</ul>

@@ -11,12 +11,12 @@
 		<br>
 	</form>
 	<ul>
-		<li ng-repeat="question in questions">
+		<li ng-repeat="question in questions | orderBy:orderProp:true">
 			<p> Author: <b>{{question.author}}</b> - {{question.time}}:</p>
 			<textarea class="question" readonly>{{question.content}}</textarea>
 			<br>
 			<p class="inline">
-				<button ng-show="login == question.author || instructor" ng-click="delete(question.id)">Delete Question</button>
+				<button ng-show="login == question.author || instructor" ng-click="delete(question)">Delete Question</button>
 				<button ng-click="judge(question.id)">Judge Answers</button>
 				<button ng-click="answer(question.id)">Answer Page</button>
 			</p>

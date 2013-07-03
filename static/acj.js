@@ -1,7 +1,6 @@
 var myApp = angular.module('myApp', ['ngResource']);
 
 //Global Variables
-var courseId = 0;
 var questionId = 0;
 
 myApp.factory('judgeService', function($resource) {
@@ -91,7 +90,7 @@ myApp.config( function ($routeProvider) {
 				controller: AnswerController,
 				templateUrl: 'answerpage.html'
 			})
-		.when ('/enrollpage',
+		.when ('/enrollpage/:courseId',
 			{
 				controller: EnrollController,
 				templateUrl: 'enrollpage.html'
@@ -250,16 +249,14 @@ function CourseController($scope, courseService, loginService) {
 			$scope.courses.push(retval);
 		});
 	};
-	$scope.enroll = function(id) {
-		courseId = id;
-		window.location = "#/enrollpage";
-	};
 }
 
 function QuestionController($scope, $location, $routeParams, questionService, loginService) 
 {
-	var course = $routeParams.courseId; 
-	if (!course) {
+	$scope.orderProp = 'time';
+
+	var courseId = $routeParams.courseId; 
+	if (!courseId) {
 		$location.path("/coursepage");
 		return;
 	}
@@ -273,28 +270,30 @@ function QuestionController($scope, $location, $routeParams, questionService, lo
 			$scope.login = '';
 		}
 	});
-	var retval = questionService.get( {cid: course}, function() {
+	var retval = questionService.get( {cid: courseId}, function() {
 		$scope.course = retval.course;
 		$scope.questions = retval.questions;
 	});
 	$scope.submit = function() {
 		input = {"content": $scope.question};
-		var msg = questionService.save( {cid: course}, input, function() {
+		var msg = questionService.save( {cid: courseId}, input, function() {
 			if (msg.msg) {
+				// TODO: What use cases would land here?
 				alert('something is wrong');
 			} else {
-				QuestionController($scope, questionService, loginService);
+				$scope.questions.push(msg);
 			}
 		});
 		$scope.check = false;
 	};
-	$scope.delete = function(id) {
-		questionId = id;
+	$scope.delete = function(question) {
+		questionId = question.id;
 		var retval = questionService.delete( {cid: questionId}, function() {
 			if (retval.msg) {
 				alert( "You cannot delete others' questions" )
 			} else {
-				QuestionController($scope, questionService, loginService);
+				var index = jQuery.inArray(question, $scope.questions);
+				$scope.questions.splice(index, 1);
 			}
 		});
 	};
@@ -353,7 +352,8 @@ function AnswerController($scope, answerService, rankService) {
 	};
 }
 
-function EnrollController($scope, enrollService) {
+function EnrollController($scope, $routeParams, enrollService) {
+	var courseId = $routeParams.courseId; 
 	var retval = enrollService.get( {cid: courseId}, function() {
 		$scope.course = retval.course;
 		$scope.students = retval.students;

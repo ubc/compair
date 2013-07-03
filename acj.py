@@ -252,10 +252,10 @@ def total_ranking():
 def create_course():
 	param = request.json
 	name = param['name']
-	table = Course(name)
-	db.session.add(table)
+	newCourse = Course(name)
+	db.session.add(newCourse)
 	db.session.commit()
-	return json.dumps({"id": table.id, "name": table.name})
+	return json.dumps({"id": newCourse.id, "name": newCourse.name})
 
 @app.route('/course', methods=['GET'])
 def list_course():
@@ -280,14 +280,15 @@ def list_question(id):
 	return json.dumps( {"course": course.name, "questions": lst} )
 
 @app.route('/question/<id>', methods=['POST'])
-def ask_question(id):
+def create_question(id):
 	param = request.json
 	content = param['content']
-	table = Question(id, session['username'], content)
-	db.session.add(table)
+	newQuestion = Question(id, session['username'], content)
+	db.session.add(newQuestion)
 	db.session.commit()
 	course = Course.query.filter_by(id = id).first()
-	return json.dumps( {"course": course.name} )
+	
+	return json.dumps({"id": newQuestion.id, "author": newQuestion.author, "time": str(newQuestion.time), "content": newQuestion.content});
 
 @app.route('/question/<id>', methods=['DELETE'])
 def delete_question(id):
