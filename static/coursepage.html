@@ -2,14 +2,11 @@
 	<h2>Course Page</h2>
 	<button ng-show="instructor" ng-click="check=!check">Create Course</button>
 	<form ng-show="check" ng-submit="submit()">
-		<br>
-		<textarea cols="50" rows="13" ng-model="course">Course Name</textarea>
-		<br><br>
-		<button type="submit">Submit</button>
-		<br>
+		<label>Course Name: <input type="text" ng-model="course"></input></label>
+		<button type="submit">Create</button>
 	</form>
 	<ul>
-		<li ng-repeat="course in courses">
+		<li ng-repeat="course in courses | orderBy:orderProp">
 			<p>
 				<b>{{course.name}}</b>
 				<button ng-click="ask(course.id)">Questions</button>

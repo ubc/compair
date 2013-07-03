@@ -255,7 +255,7 @@ def create_course():
 	table = Course(name)
 	db.session.add(table)
 	db.session.commit()
-	return ''
+	return json.dumps({"id": table.id, "name": table.name})
 
 @app.route('/course', methods=['GET'])
 def list_course():

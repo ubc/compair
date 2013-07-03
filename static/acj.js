@@ -230,6 +230,9 @@ function RankController($scope, $resource) {
 }
 
 function CourseController($scope, courseService, loginService) {
+	// the property by which the list of courses will be sorted
+	$scope.orderProp = 'name';
+
 	var login = loginService.get( function() {
 		type = login.usertype;
 		if (type && type == 'Teacher') {
@@ -245,10 +248,10 @@ function CourseController($scope, courseService, loginService) {
 		input = {"name": $scope.course};
 		var retval = courseService.save( input, function() {
 			$scope.check = false;
-			CourseController($scope, courseService);
+			$scope.courses.push(retval);
 		});
 	};
-	$scope.ask= function(id) {
+	$scope.ask = function(id) {
 		courseId = id;
 		window.location = "#/questionpage";
 	};
