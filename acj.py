@@ -184,6 +184,46 @@ def get_fresh_pair( scripts ):
 						return [sidl, sidr]
 	return ''
 
+@app.route('/randquestion')
+def random_question():
+	script = Script.query.order_by( Script.count ).first()
+	scripts = Script.query.filter_by( count = script.count ).all()
+	print ('initial scripts: ' + str(scripts))
+	user = User.query.filter_by( username = session['username'] ).first()
+	shuffle( scripts )
+	lowest0 = ''
+	qid = ''
+	lowest1 = ''
+	for script in scripts:
+		if user.usertype == 'Student':
+			question = Question.query.filter_by( id = script.qid ).first()
+			enrolled = Enrollment.query.filter_by( cid = question.cid ).filter_by( uid = user.id ).first()
+			if not enrolled:
+				continue
+		print ('in loop, script: ' + str(script))
+		print ('in loop, lowest0: ' + str(lowest0))
+		print ('in loop, lowest1: ' + str(lowest1))
+		query = Script.query.filter_by(qid = script.qid).order_by( Script.count ).limit(10).all()
+		if get_fresh_pair(query):
+			sum = query[0].count + query[1].count
+			if lowest0 == '':
+				lowest0 = sum
+				qid = script.qid
+				print ('in if, lowest0: ' + str(lowest0))
+			else:
+				lowest1 = sum
+				print ('in if, lowest1: ' + str(lowest1))
+				if lowest0 > lowest1:
+					qid = script.qid
+				print ('retval: ' + str(qid))
+				return json.dumps( {"question": qid} )
+	print ('RETURN: SOMETHING IS NOT RIGHT')
+	return ''
+
+@app.route('/temp')
+def temp():
+	return Script.query(columns[qid, wins]).filter_by(count = 0).all()
+
 @app.route('/cjmodel')
 def produce_cj_model():
 	scripts = Script.query.order_by( Script.id ).all()
@@ -236,7 +276,7 @@ def marked_scripts(id):
 	print ( lst )
 	question = Question.query.filter_by(id = id).first()
 	user = User.query.filter_by(username = session['username']).first()
-	return json.dumps( {"usertype": user.usertype, "question": question.content, "scripts": lst} )
+	return json.dumps( {"username": session['username'], "usertype": user.usertype, "question": question.content, "scripts": lst} )
 
 @app.route('/ranking')
 def total_ranking():
@@ -298,37 +338,6 @@ def delete_question(id):
 		return json.dumps( {"msg": question.author} )
 	db.session.delete(question)
 	db.session.commit()
-	return ''
-
-@app.route('/randquestion')
-def random_question():
-	scripts = Script.query.order_by( Script.count ).first()
-	scripts = Script.query.filter_by( count = scripts.count ).all()
-	shuffle( scripts )
-	if scripts[0].qid == scripts[1].qid:
-		print ('match: ' + str(scripts[0].qid) + ' & ' + str(scripts[1].qid))
-		return json.dumps( {"question": scripts[0].qid} )
-	lowest0 = ''
-	qid = ''
-	lowest1 = ''
-	for script in scripts:
-		print ('in loop, script: ' + str(script))
-		print ('in loop, lowest0: ' + str(lowest0))
-		print ('in loop, lowest1: ' + str(lowest1))
-		query = Script.query.filter_by(qid = script.qid).order_by( Script.count ).all()
-		if len(query) > 1:
-			sum = query[0].count + query[1].count
-			if not lowest0:
-				lowest0 = sum
-				qid = script.qid
-				print ('in if, lowest0: ' + str(lowest0))
-			else:
-				lowest1 = sum
-				print ('in if, lowest1: ' + str(lowest1))
-				if lowest0 > lowest1:
-					qid = script.qid
-				print ('retval: ' + str(qid))
-				return json.dumps( {"question": qid} )
 	return ''
 
 @app.route('/enrollment/<id>')

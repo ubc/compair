@@ -122,7 +122,7 @@ function QuickController($scope, judgeService, pickscriptService, quickService) 
 			window.location = "#/judgepage";
 		} else {
 			window.location = "#/";
-			alert('None of the questions has enough answers. Please come back later');
+			alert('None of the questions has enough new answers. Please come back later');
 		}
 	});
 }
@@ -324,6 +324,7 @@ function AnswerController($scope, answerService, rankService) {
 	var retval = rankService.get( {qid: questionId}, function() {
 		$scope.question = retval.question;
 		$scope.scripts = retval.scripts;
+		$scope.login = retval.username;
 		if (retval.usertype == 'Teacher') {
 			$scope.instructor = true;
 		}
