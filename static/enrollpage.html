@@ -1,0 +1,13 @@
+<div>
+	<h2>Enrollment Page</h2>
+	<a href="#/coursepage">Back to Course Page</a>
+	<p> Course: <b>{{course}}</b> </p>
+	<ul>
+		<li ng-repeat="student in students">
+			Student Name: <b>{{student.username}}</b>
+			<button ng-disabled="student.enrolled" ng-click="add(student.uid)">Add Student</button>
+			<button ng-disabled="!student.enrolled" ng-click="drop(student.enrolled)">Drop Student</button>
+			<i ng-show="student.enrolled" style="color:green">Enrolled</i>
+		</li>
+	</ul>
+</div>
