@@ -195,11 +195,10 @@ def random_question():
 	qid = ''
 	lowest1 = ''
 	for script in scripts:
-		if user.usertype == 'Student':
-			question = Question.query.filter_by( id = script.qid ).first()
-			enrolled = Enrollment.query.filter_by( cid = question.cid ).filter_by( uid = user.id ).first()
-			if not enrolled:
-				continue
+		question = Question.query.filter_by( id = script.qid ).first()
+		enrolled = Enrollment.query.filter_by( cid = question.cid ).filter_by( uid = user.id ).first()
+		if not enrolled:
+			continue
 		print ('in loop, script: ' + str(script))
 		print ('in loop, lowest0: ' + str(lowest0))
 		print ('in loop, lowest1: ' + str(lowest1))
@@ -290,10 +289,15 @@ def total_ranking():
 
 @app.route('/course', methods=['POST'])
 def create_course():
+	user = User.query.filter_by( username = session['username']).first()
 	param = request.json
 	name = param['name']
-	newCourse = Course(name)
+	newCourse = Course(name, user.id)
 	db.session.add(newCourse)
+	db.session.commit()
+	course = Course.query.filter_by( name = name ).first()
+	table = Enrollment(user.id, course.id)
+	db.session.add(table)
 	db.session.commit()
 	return json.dumps({"id": newCourse.id, "name": newCourse.name})
 
@@ -342,19 +346,26 @@ def delete_question(id):
 
 @app.route('/enrollment/<id>')
 def students_enrolled(id):
-	students = User.query.filter_by(usertype = 'Student').order_by( User.username ).all()
-	lst = []
-	for student in students:
-		print ('in loop, student: ' + str(student))
+	admin = Course.query.filter_by(id = id).first()
+	users = User.query.filter(User.id != admin.admin).order_by( User.username ).all()
+	studentlst = []
+	teacherlst = []
+	for user in users:
+		print ('in loop, student: ' + str(user))
 		enrolled = ''
-		query = Enrollment.query.filter_by(uid = student.id).filter_by(cid = id).first()
+		query = Enrollment.query.filter_by(uid = user.id).filter_by(cid = id).first()
 		print (query)
 		if (query):
 			print ('enrolled')
 			enrolled = query.id
-		lst.append( {"uid": student.id, "username": student.username, "enrolled": enrolled} )
+		if user.usertype == 'Student':
+			studentlst.append( {"uid": user.id, "username": user.username, "enrolled": enrolled} )
+		else:
+			teacherlst.append( {"uid": user.id, "username": user.username, "enrolled": enrolled} )
+	print ('student list: ' + str(studentlst))
+	print ('teacher list: ' + str(teacherlst))
 	course = Course.query.filter_by(id = id).first()
-	return json.dumps( {"course": course.name, "students": lst} )
+	return json.dumps( { "course": course.name, "students": studentlst, "teachers": teacherlst } )
 
 @app.route('/enrollment/<id>', methods=['POST'])
 def enroll_student(id):

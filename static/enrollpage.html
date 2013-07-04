@@ -3,6 +3,12 @@
 	<a href="#/coursepage">Back to Course Page</a>
 	<p> Course: <b>{{course}}</b> </p>
 	<ul>
+		<li ng-repeat="teacher in teachers">
+			Instructor Name: <b>{{teacher.username}}</b>
+			<button ng-disabled="teacher.enrolled" ng-click="add(teacher.uid)">Add Instructor</button>
+			<button ng-disabled="!teacher.enrolled" ng-click="drop(teacher.enrolled)">Drop Instructor</button>
+			<i ng-show="teacher.enrolled" style="color:green">Enrolled</i>
+		</li>
 		<li ng-repeat="student in students">
 			Student Name: <b>{{student.username}}</b>
 			<button ng-disabled="student.enrolled" ng-click="add(student.uid)">Add Student</button>

@@ -108,28 +108,32 @@ function IndexController($scope, loginService) {
 		login = login.username;
 		if (login) {
 			$scope.check = true;
-			$scope.login = 'Logged in as: ' + login;
+			$scope.login = login;
 		} else {
 			$scope.check = false;
 		}
 	});
+	$scope.$on("LOGGED_IN", function(event, username) {
+		$scope.check = true;
+		$scope.login = username;
+	});
 }
 
-function QuickController($scope, judgeService, pickscriptService, quickService) {
+function QuickController($scope, $location, judgeService, pickscriptService, quickService) {
 	var retval = quickService.get( function() {
 		if (retval.question) {
 			questionId = retval.question;
-			window.location = "#/judgepage";
+			$location.path('/judgepage');
 		} else {
-			window.location = "#/";
+			$location.path('/');
 			alert('None of the questions has enough new answers. Please come back later');
 		}
 	});
 }
 
-function JudgepageController($scope, judgeService, pickscriptService) {
+function JudgepageController($scope, $location, judgeService, pickscriptService) {
 	if (questionId == 0) {
-		window.location = "#/";
+		$location.path('/');
 		return;
 	}
 	var sidl;
@@ -143,7 +147,7 @@ function JudgepageController($scope, judgeService, pickscriptService) {
 			sidr = retval.sidr;
 		} else {
 			alert( 'Either you have already judged all of the high-priority scripts OR there are not enough answers to judge. Please come back later' );
-			window.location = "#/questionpage";
+			$location.path('/questionpage');
 			return;
 		}
 		var script1 = judgeService.get( {scriptId:sidl}, function() {
@@ -168,7 +172,7 @@ function JudgepageController($scope, judgeService, pickscriptService) {
 		input = {"sidl": sidl, "sidr": sidr};
 		var temp = judgeService.save( {scriptId:winner}, input, function() {
 			alert(temp.msg);
-			window.location = "#/questionpage";
+			$location.path('/questionpage');
 		});
 	};
 	$scope.next = function() {
@@ -176,7 +180,7 @@ function JudgepageController($scope, judgeService, pickscriptService) {
 	};
 }
 
-function LoginController($scope, $location, loginService) {
+function LoginController($rootScope, $scope, $location, loginService) {
 	$scope.submit = function() {
 		if ( !($scope.username && $scope.password) ) {
 			alert('You must provide both username and password');
@@ -188,15 +192,20 @@ function LoginController($scope, $location, loginService) {
 			if (message) {
 				alert(message);
 			} else {
-				$location.path("/coursepage");
+				$rootScope.$broadcast("LOGGED_IN", $scope.username); 
+				$location.path('/coursepage');
 			}
 		});
 	};
 }
 
-function UserController($scope, userService) {
+function UserController($rootScope, $scope, $location, userService) {
 	$scope.usertypes = ['Student', 'Teacher'];
 	$scope.submit = function() {
+		if ( !$scope.usertype ) {
+			alert('Pick a usertype');
+			return;
+		}
 		if ( !$scope.username ) {
 			alert('Username cannot be empty string');
 			return;
@@ -215,7 +224,8 @@ function UserController($scope, userService) {
 			if (message) {
 				alert(message);
 			} else {
-				window.location = "/static/index.html";
+				$rootScope.$broadcast("LOGGED_IN", $scope.username); 
+				$location.path('/coursepage');
 			}
 		});
 	};
@@ -299,22 +309,22 @@ function QuestionController($scope, $location, $routeParams, questionService, lo
 	};
 	$scope.judge = function(id) {
 		questionId = id;
-		window.location = "#/judgepage";
+		$location.path("/judgepage");
 	};
 	$scope.answer = function(id) {
 		questionId = id;
-		window.location = "#/answerpage";
+		$location.path("/answerpage");
 	};
 }
 
-function AskController($scope, questionService) {
+function AskController($scope, $location, questionService) {
 	$scope.submit = function() {
 		input = {"content": $scope.question};
 		var msg = questionService.save( {cid: courseId}, input, function() {
 			if (msg.msg) {
 				alert('something is wrong');
 			} else {
-				window.location = "#/questionpage";
+				$location.path("/questionpage");
 			}
 		});
 	};
@@ -358,16 +368,17 @@ function EnrollController($scope, $routeParams, enrollService) {
 	var retval = enrollService.get( {cid: courseId}, function() {
 		$scope.course = retval.course;
 		$scope.students = retval.students;
+		$scope.teachers = retval.teachers;
 	});
 	$scope.add = function(id) {
 		input = {"sid": id};
 		var retval = enrollService.save( {cid: courseId}, input, function() {
-			EnrollController($scope, enrollService);
+			EnrollController($scope, $routeParams, enrollService);
 		});
 	};
 	$scope.drop = function(id) {
 		var retval = enrollService.delete( {cid: id}, function() {
-			EnrollController($scope, enrollService);
+			EnrollController($scope, $routeParams, enrollService);
 		});
 	};
 }
