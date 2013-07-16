@@ -5,7 +5,7 @@
 	<button ng-click="check=!check">Answer Question</button>
 	<form ng-show="check" ng-submit="submit()">
 		<br>
-		<textarea cols="50" rows="13" ng-model="myanswer">Answer</textarea>
+		<textarea cols="50" rows="13" ng-model="myanswer" jqte></textarea>
 		<br><br>
 		<button type="submit">Submit</button>
 		<br>
@@ -16,8 +16,10 @@
 			<br>
 			Author: <b>{{script.author}}</b> - {{script.time}}
 			<br><br>
-			<textarea ng-hide="edit" class="answer" readonly>{{script.content}}</textarea>
-			<textarea ng-show="edit" class="edit" ng-model="newanswer"></textarea>
+			<div class="answer">{{script.content}}</div>
+			<div ng-show="edit">
+				<textarea class="edit" ng-model="newanswer" jqte></textarea>
+			</div>
 			<br>
 			<p class="inline">
 				<button ng-show="instructor || login==script.author" ng-click="delete(script.id)">Delete Answer</button>
