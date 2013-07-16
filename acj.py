@@ -69,7 +69,8 @@ def post_answer(id):
 	table = Script(qid, author, content)
 	db.session.add(table)
 	db.session.commit()
-	return ''
+	script = Script.query.order_by( Script.time.desc() ).first()
+	return json.dumps({"id": script.id, "author": script.author, "time": str(script.time), "content": script.content, "score":script.score})
 
 @app.route('/answer/<id>', methods=['PUT'])
 def edit_answer(id):
@@ -77,14 +78,14 @@ def edit_answer(id):
 	script = Script.query.filter_by(id = id).first()
 	script.content = param['content']
 	db.session.commit()
-	return ''
+	return json.dumps({"msg": "PASS"})
 
 @app.route('/answer/<id>', methods=['DELETE'])
 def delete_answer(id):
 	script = Script.query.filter_by(id = id).first()
 	db.session.delete(script)
 	db.session.commit()
-	return ''
+	return json.dumps({"msg": "PASS"})
 
 @app.route('/login', methods=['GET'])
 def logincheck():
@@ -292,7 +293,7 @@ def create_course():
 	user = User.query.filter_by( username = session['username']).first()
 	param = request.json
 	name = param['name']
-	newCourse = Course(name, user.id)
+	newCourse = Course(name)
 	db.session.add(newCourse)
 	db.session.commit()
 	course = Course.query.filter_by( name = name ).first()
@@ -307,7 +308,7 @@ def list_course():
 	courses = Course.query.order_by( Course.name ).all()
 	lst = []
 	for course in courses:
-		if user.usertype == 'Student':
+		if user.usertype != 'Admin':
 			query = Enrollment.query.filter_by(cid = course.id).filter_by(uid = user.id).first()
 			if not query:
 				continue
@@ -346,8 +347,7 @@ def delete_question(id):
 
 @app.route('/enrollment/<id>')
 def students_enrolled(id):
-	admin = Course.query.filter_by(id = id).first()
-	users = User.query.filter(User.id != admin.admin).order_by( User.username ).all()
+	users = User.query.filter((User.usertype == 'Teacher') | (User.usertype == 'Student')).order_by( User.username ).all()
 	studentlst = []
 	teacherlst = []
 	for user in users:

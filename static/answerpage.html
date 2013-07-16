@@ -1,30 +1,33 @@
 <div>
 	<h2>Answer Page</h2>
 	<a href back-button>Back to Question Page</a>
-	<p> Question: <b>{{question}}</b> </p>
+	<p> <b>Question:</b> <br> <p class="question"> {{question}} </p> </p>
 	<button ng-click="check=!check">Answer Question</button>
+	<br><br><br>
 	<form ng-show="check" ng-submit="submit()">
 		<br>
-		<textarea cols="50" rows="13" ng-model="myanswer">Answer</textarea>
+		<textarea id="postA" answer-editor></textarea>
 		<br><br>
 		<button type="submit">Submit</button>
 		<br>
 	</form>
+	<button ng-click="temp=orderProp;orderProp=nextOrder;nextOrder=temp">Order By: {{nextOrder}}</button>
 	<ul>
-		<li ng-repeat="script in scripts">
+		<li ng-repeat="script in scripts | orderBy:orderProp:true">
 			Script Score: <b>{{script.score}}</b>
 			<br>
 			Author: <b>{{script.author}}</b> - {{script.time}}
-			<br><br>
-			<textarea ng-hide="edit" class="answer" readonly>{{script.content}}</textarea>
-			<textarea ng-show="edit" class="edit" ng-model="newanswer"></textarea>
-			<br>
+			<p ng-hide="edit" class="answer block"> <ANY ng-bind-html-unsafe="script.content"></ANY> </p>
+			<span ng-show="edit" ng-model="newanswer"> 
+				{{$index}}
+				<textarea id="$index" edit-editor>{{newanswer}}</textarea> 
+			</span>
 			<p class="inline">
-				<button ng-show="instructor || login==script.author" ng-click="delete(script.id)">Delete Answer</button>
+				<button ng-show="instructor || login==script.author" ng-click="delete(script)">Delete Answer</button>
 				<button ng-show="instructor || login==script.author" ng-click="edit=!edit;newanswer=script.content">Edit Answer</button>
-				<button ng-show="edit" ng-click="editscript(script.id, newanswer)">Submit</button>
+				<button ng-show="edit" ng-click="editscript(script, newanswer)">Submit</button>
 			</p>
-			<br>
+			<br><br><br>
 		</li>
 	</ul>
 </div>

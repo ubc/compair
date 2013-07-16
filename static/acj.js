@@ -1,4 +1,4 @@
-var myApp = angular.module('myApp', ['ngResource']);
+var myApp = angular.module('myApp', ['ngResource', 'ngTable']);
 
 //Global Variables
 var questionId = 0;
@@ -125,7 +125,7 @@ function QuickController($scope, $location, judgeService, pickscriptService, qui
 			questionId = retval.question;
 			$location.path('/judgepage');
 		} else {
-			$location.path('/');
+			window.history.back();
 			alert('None of the questions has enough new answers. Please come back later');
 		}
 	});
@@ -147,7 +147,8 @@ function JudgepageController($scope, $location, judgeService, pickscriptService)
 			sidr = retval.sidr;
 		} else {
 			alert( 'Either you have already judged all of the high-priority scripts OR there are not enough answers to judge. Please come back later' );
-			$location.path('/questionpage');
+			window.history.back();
+			//$location.path('/questionpage/' + courseId);
 			return;
 		}
 		var script1 = judgeService.get( {scriptId:sidl}, function() {
@@ -242,8 +243,9 @@ function CourseController($scope, courseService, loginService) {
 	$scope.orderProp = 'name';
 
 	var login = loginService.get( function() {
+		$scope.login = login.username;
 		type = login.usertype;
-		if (type && type == 'Teacher') {
+		if (type && (type=='Teacher' || type=='Admin')) {
 			$scope.instructor = true;
 		} else {
 			$scope.instructor = false;
@@ -331,44 +333,73 @@ function AskController($scope, $location, questionService) {
 }
 
 function AnswerController($scope, answerService, rankService) {
+	$scope.orderProp = 'time';
+	$scope.nextOrder = 'score';
+
 	var retval = rankService.get( {qid: questionId}, function() {
 		$scope.question = retval.question;
 		$scope.scripts = retval.scripts;
 		$scope.login = retval.username;
-		if (retval.usertype == 'Teacher') {
+		if (retval.usertype == 'Teacher' || retval.usertype == 'Admin') {
 			$scope.instructor = true;
 		}
 	});
 	$scope.submit = function() {
 		input = {"content": $scope.myanswer};
-		var msg = answerService.save( {qid: questionId}, input, function() {
-			if (msg.msg) {
+		var newscript = answerService.save( {qid: questionId}, input, function() {
+			if (!newscript) {
 				alert('something is wrong');
 			} else {
-				AnswerController($scope, answerService, rankService);
+				$scope.scripts.push(newscript);
 			}
 		});
 		$scope.check = false;
 	};
-	$scope.editscript = function(id, newanswer) {
+	$scope.editscript = function(script, newanswer) {
 		input = {"content": newanswer};
-		var msg = answerService.put( {qid: id}, input, function() {
-			AnswerController($scope, answerService, rankService);
+		var retval = answerService.put( {qid: script.id}, input, function() {
+			if (retval.msg != 'PASS') {
+				alert('something is wrong');
+				alert(retval);
+			} else {
+				var index = jQuery.inArray(script, $scope.scripts);
+				$scope.scripts[index].content = newanswer;
+			}
 		});
 	};
-	$scope.delete = function(id) {
-		var retval = answerService.delete( {qid: id}, function() {
-			AnswerController($scope, answerService, rankService);
+	$scope.delete = function(script) {
+		var retval = answerService.delete( {qid: script.id}, function() {
+			if (retval.msg != 'PASS') {
+				alert('something is wrong');
+				alert(retval);
+			} else {
+				var index = jQuery.inArray(script, $scope.scripts);
+				$scope.scripts.splice(index, 1);
+			}
 		});
 	};
 }
 
-function EnrollController($scope, $routeParams, enrollService) {
+function EnrollController($scope, $routeParams, $filter, ngTableParams, enrollService) {
 	var courseId = $routeParams.courseId; 
+	var teacherData = [];
+	var studentData = [];
 	var retval = enrollService.get( {cid: courseId}, function() {
 		$scope.course = retval.course;
+		studentData = retval.students;
 		$scope.students = retval.students;
+		teacherData = retval.teachers;
 		$scope.teachers = retval.teachers;
+		$scope.studentParams = new ngTableParams({
+			page: 1,
+			total: studentData.length,
+			count: 10,
+		});
+		$scope.teacherParams = new ngTableParams({
+			page: 1,
+			total: teacherData.length,
+			count: 10,
+		});
 	});
 	$scope.add = function(id) {
 		input = {"sid": id};
@@ -381,6 +412,22 @@ function EnrollController($scope, $routeParams, enrollService) {
 			EnrollController($scope, $routeParams, enrollService);
 		});
 	};
+	$scope.$watch('teacherParams', function(params) {
+		var orderedData = params.sorting ? $filter('orderBy')(teacherData, params.orderBy()) : teacherData;
+		
+		$scope.teachers = orderedData.slice(
+			(params.page - 1) * params.count,
+			params.page * params.count
+		);
+	}, true);
+	$scope.$watch('studentParams', function(params) {
+		var orderedData = params.sorting ? $filter('orderBy')(studentData, params.orderBy()) : studentData;
+
+		$scope.students = orderedData.slice(
+			(params.page - 1) * params.count,
+			params.page * params.count
+		);
+	}, true);
 }
 
 myApp.directive('backButton', function(){
@@ -397,3 +444,49 @@ myApp.directive('backButton', function(){
       }
     }
 });
+
+myApp.directive('questionEditor', function() {
+	return {
+		link: function(scope, element, attrs) {
+			new nicEditor({
+				maxHeight:100, 
+				onSave:function(content, id, instance) {
+					scope.question = content;
+					scope.$apply();
+					scope.submit();
+				}
+			}).panelInstance('postQ');
+		}
+	}
+});
+
+myApp.directive('answerEditor', function() {
+	return {
+		link: function(scope, element, attrs) {
+			new nicEditor({
+				maxHeight:200,
+				onSave:function(content, id, instance) {
+					scope.myanswer = content;
+					scope.$apply();
+					scope.submit();
+				}
+			}).panelInstance('postA');
+		}
+	}
+});
+
+myApp.directive('editEditor', function() {
+	return {
+		link: function(scope, element, attrs) {
+			new nicEditor({
+				maxHeight:200,
+				onSave:function(content, id, instance) {
+					scope.newanswer = content;
+					scope.$apply();
+					scope.submit();
+				}
+			}).panelInstance($scope.$index);
+		}
+	}
+});
+

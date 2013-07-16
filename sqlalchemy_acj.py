@@ -12,11 +12,10 @@ class User(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	username = db.Column(db.String(80), unique=True)
 	password = db.Column(db.String(120), unique=False)
-	usertype = db.Column(db.Enum('Teacher', 'Student'))
+	usertype = db.Column(db.Enum('Admin', 'Teacher', 'Student'))
 	#judgements = db.Column(postgresql.ARRAY(db.Integer), unique=False)
 	judgement = db.relationship('Judgement', cascade="all,delete")
 	enrollment = db.relationship('Enrollment', cascade="all,delete")
-	course = db.relationship('Course', cascade="all,delete")
 
 	def __init__(self, username, password, usertype):
 		self.username = username
@@ -30,13 +29,11 @@ class Course(db.Model):
 	__tablename__ = 'Course'
 	id = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.String(80), unique=True)
-	admin = db.Column(db.Integer, db.ForeignKey('User.id', ondelete='CASCADE'))
 	question = db.relationship('Question', cascade="all,delete")
 	enrollment = db.relationship('Enrollment', cascade="all,delete")
 
-	def __init__(self, name, admin):
+	def __init__(self, name):
 		self.name = name
-		self.admin = admin
 
 	def __repr__(self):
 		return '<Course %r>' % self.name

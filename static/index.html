@@ -2,40 +2,46 @@
 <html ng-app = "myApp">
 	<head>
 		<title>ACJ</title>
-		<link rel="stylesheet" type="text/css" href="acj.css" />
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
 		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular-resource.min.js"></script>
+		<script src="ng-table.js" type="text/javascript"></script>
+		<link rel="stylesheet" type="text/css" href="ng-table.css" />
 		<script src="acj.js" type="text/javascript"></script>
+		<script src="//js.nicedit.com/nicEdit-latest.js" type="text/javascript"></script>
+		<link rel="stylesheet" type="text/css" href="acj.css" />
 	</head>
 	<body>
-		<h1>Adaptive Comparative Judgement</h1>
-		
-		<div class="option" ng-controller="IndexController">
-			<form action="/logout">
-				<span ng-show="check">Logged in as: <b>{{login}}</b></span>
-				<button type="submit" ng-show="check">Log Out</button>
-			</form>
-			<a href="/">
-				<button>Index</button>
-			</a>
-			<a href="#/login">
-				<button ng-hide="check">Log In</button>
-			</a>
-			<a href="#/coursepage">
-				<button ng-show="check">Courses</button>
-			</a>
-			<a href="#/quickjudge">
-				<button ng-show="check">Quick Judge</button>
-			</a>
-			<a href="#/rankpage">
-				<button>Inter-Rank</button>
-			</a>
+		<div id="main">
+		<a href="/" > <img src="http://farm4.staticflickr.com/3085/2786778672_3fb8cdd469_o.jpg" id="logo" />  </a>
+		<div class="nav" ng-controller="IndexController">
+			<div class="option">
+				<a href="#/coursepage" ng-show="check">
+					Courses
+				</a>
+				<a href="#/quickjudge" ng-show="check">
+					Quick-Judge
+				</a>
+				<a href="#/rankpage">
+					Inter-Rank
+				</a>
+			</div>
+			<div class="userlogin">
+				<form action="/logout">
+					<span ng-show="check">Logged in as: <b>{{login}}</b></span>
+					<button type="submit" ng-show="check" class="button">Log Out</button>
+				</form>
+				<a href="#/login">
+					<button ng-hide="check" class="button">Log In</button>
+				</a>
+			</div>
 		</div>
+		<br>
 
 		<h3>View/</h3>
 		<div ng-view=""></div>
 		<h3>/View</h3>
 
+		</div>
 	</body>
 </html>

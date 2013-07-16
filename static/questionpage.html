@@ -5,22 +5,21 @@
 	<button ng-click="check=!check">Create Question</button>
 	<form ng-show="check" ng-submit="submit()">
 		<br>
-		<textarea cols="50" rows="13" ng-model="question">Ask Something</textarea>
+		<textarea id="postQ" question-editor></textarea>
 		<br><br>
 		<button type="submit">Submit</button>
 		<br>
 	</form>
 	<ul>
 		<li ng-repeat="question in questions | orderBy:orderProp:true">
-			<p> Author: <b>{{question.author}}</b> - {{question.time}}:</p>
-			<textarea class="question" readonly>{{question.content}}</textarea>
-			<br>
-			<p class="inline">
+			<p><b>{{question.author}}</b> - {{question.time}}</p>
+			<p class="question"> <ANY ng-bind-html-unsafe="question.content"</ANY> </p>
+			<p class="qbutton">
 				<button ng-show="login == question.author || instructor" ng-click="delete(question)">Delete Question</button>
 				<button ng-click="judge(question.id)">Judge Answers</button>
 				<button ng-click="answer(question.id)">Answer Page</button>
 			</p>
-			<br>
+			<br><br><br>
 		</li>
 	</ul>
 </div>

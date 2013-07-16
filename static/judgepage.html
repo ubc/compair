@@ -2,26 +2,17 @@
 	<h2>Judge Page</h2>
 	<a href="#/questionpage">Back to Question Page</a>
 	<p> Course: <i><b>{{course}}</b></i> </p>
-	<p> - Question: <b>{{question}}</b> </p>
+	<p> - Question: <br> <p class="question">{{question}}</p> </p>
 	<br>
 	<button ng-click="next()">Next Pair in this Question</button>
 	<br>
 	<br>
-	<div class="inline">
-		SCRIPT1:
-		<br>
-		<textarea cols="50" rows="13" readonly>{{scriptl}}</textarea>
-	</div>
+	<div class="versus">
+		<p class="ljanswer">{{scriptl}}</p>
 
-	<div class="inline">
-		<h1>| - - VERSUS - - |</h1>
-		<br><br><br><br>
-	</div>
+		<h1 class="inline"><br><br><br>&#160;VS&#160;</h1>
 
-	<div class="inline">
-		SCRIPT2:
-		<br>
-		<textarea cols="50" rows="13" readonly>{{scriptr}}</textarea>
+		<p class="rjanswer">{{scriptr}}</p>
 	</div>
 
 	<br>
