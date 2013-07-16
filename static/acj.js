@@ -125,7 +125,7 @@ function QuickController($scope, $location, judgeService, pickscriptService, qui
 			questionId = retval.question;
 			$location.path('/judgepage');
 		} else {
-			window.history.back();
+			history.back();
 			alert('None of the questions has enough new answers. Please come back later');
 		}
 	});
@@ -139,28 +139,30 @@ function JudgepageController($scope, $location, judgeService, pickscriptService)
 	var sidl;
 	var sidr;
 	var winner;
-	var retval = pickscriptService.get( {qid: questionId}, function() {
-		$scope.course = retval.course;
-		$scope.question = retval.question;
-		if (retval.sidl) {
-			sidl = retval.sidl;
-			sidr = retval.sidr;
-		} else {
-			alert( 'Either you have already judged all of the high-priority scripts OR there are not enough answers to judge. Please come back later' );
-			window.history.back();
-			//$location.path('/questionpage/' + courseId);
-			return;
-		}
-		var script1 = judgeService.get( {scriptId:sidl}, function() {
-				content = script1.content;
-				$scope.scriptl = content;
+	$scope.getscript = function() {
+		var retval = pickscriptService.get( {qid: questionId}, function() {
+			$scope.course = retval.course;
+			$scope.question = retval.question;
+			if (retval.sidl) {
+				sidl = retval.sidl;
+				sidr = retval.sidr;
+			} else {
+				alert( 'Either you have already judged all of the high-priority scripts OR there are not enough answers to judge. Please come back later' );
+				history.back();
+				//$location.path('/questionpage/' + courseId);
+				return;
+			}
+			var script1 = judgeService.get( {scriptId:sidl}, function() {
+					content = script1.content;
+					$scope.scriptl = content;
+			});
+			var script2 = judgeService.get( {scriptId:sidr}, function() {
+					content = script2.content;
+					$scope.scriptr = content;
+			});
 		});
-		var script2 = judgeService.get( {scriptId:sidr}, function() {
-				content = script2.content;
-				$scope.scriptr = content;
-		});
-	});
-
+	};
+	$scope.getscript();
 	$scope.submit = function() {
 		if ($scope.pick == 'left') {
 			winner = sidl;
@@ -175,9 +177,6 @@ function JudgepageController($scope, $location, judgeService, pickscriptService)
 			alert(temp.msg);
 			$location.path('/questionpage');
 		});
-	};
-	$scope.next = function() {
-		JudgepageController($scope, judgeService, pickscriptService);
 	};
 }
 

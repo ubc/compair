@@ -3,14 +3,11 @@
 	<a href back-button>Back to Question Page</a>
 	<p> <b>Question:</b> <br> <p class="question"> <ANY ng-bind-html-unsafe="question"></ANY> </p> </p>
 	<button ng-click="check=!check">Answer Question</button>
-	<br><br><br>
 	<form ng-show="check" ng-submit="submit()">
-		<br>
 		<textarea ng-model="myanswer" jqte></textarea>
-		<br><br>
 		<button type="submit">Submit</button>
-		<br>
 	</form>
+	<br><br><br>
 	<button ng-click="temp=orderProp;orderProp=nextOrder;nextOrder=temp">Order By: {{nextOrder}}</button>
 	<ul>
 		<li ng-repeat="script in scripts | orderBy:orderProp:true">
