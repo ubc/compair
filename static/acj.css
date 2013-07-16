@@ -23,21 +23,21 @@ p {
 	margin: 3px;
 }
 
-p.question {
-	width: 60%;
+div.question, p.question {
+	width: 80%;
 	padding: 7px;
 	margin: 3px;
 	white-space: pre-wrap;
 	margin-left: 2em;
 }
 
-p.qbutton {
+div.qbutton {
 	display: inline-block;
 	margin-left: 2em;
 }
 
-p.answer {
-	width: 60%;
+div.answer, p.answer {
+	width: 80%;
 	min-height: 3em;
 	max-height: 15em;
 	border: 3px solid #E0FEFE;

@@ -40,7 +40,7 @@ myApp.factory('quickService', function($resource) {
 });
 
 myApp.factory('enrollService', function($resource) {
-	return $resource( '/enrollment/:cid' );
+	return $resource( '/enrollment/:id' );
 });
 
 myApp.config( function ($routeProvider) {
@@ -384,7 +384,7 @@ function EnrollController($scope, $routeParams, $filter, ngTableParams, enrollSe
 	var courseId = $routeParams.courseId; 
 	var teacherData = [];
 	var studentData = [];
-	var retval = enrollService.get( {cid: courseId}, function() {
+	var retval = enrollService.get( {id: courseId}, function() {
 		$scope.course = retval.course;
 		studentData = retval.students;
 		$scope.students = retval.students;
@@ -401,15 +401,35 @@ function EnrollController($scope, $routeParams, $filter, ngTableParams, enrollSe
 			count: 10,
 		});
 	});
-	$scope.add = function(id) {
-		input = {"sid": id};
-		var retval = enrollService.save( {cid: courseId}, input, function() {
-			EnrollController($scope, $routeParams, enrollService);
+	$scope.add = function(user, type) {
+		input = {"uid": user.uid};
+		var retval = enrollService.save( {id: courseId}, input, function() {
+			if (retval.eid) {
+				if (type == 'T') {
+					var index = jQuery.inArray(user, $scope.teachers);
+					$scope.teachers[index].enrolled = retval.eid;
+				} else if (type == 'S') {
+					var index = jQuery.inArray(user, $scope.students);
+					$scope.students[index].enrolled = retval.eid;
+				}
+			} else {
+				alert('something is wrong');
+			}
 		});
 	};
-	$scope.drop = function(id) {
-		var retval = enrollService.delete( {cid: id}, function() {
-			EnrollController($scope, $routeParams, enrollService);
+	$scope.drop = function(user, type) {
+		var retval = enrollService.delete( {id: user.enrolled}, function() {
+			if (retval.msg != 'PASS') {
+				alert('something is wrong');
+			} else {
+				if (type == 'T') {
+					var index = jQuery.inArray(user, $scope.teachers);
+					$scope.teachers[index].enrolled = '';
+				} else if (type == 'S') {
+					var index = jQuery.inArray(user, $scope.students);
+					$scope.students[index].enrolled = '';
+				}
+			}
 		});
 	};
 	$scope.$watch('teacherParams', function(params) {

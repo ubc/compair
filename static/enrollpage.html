@@ -2,6 +2,7 @@
 	<h2>Enrollment Page</h2>
 	<a href="#/coursepage">Back to Course Page</a>
 	<p> Course: <b>{{course}}</b> </p>
+	<br>
 	<div style="display: inline-block; vertical-align: top; margin-right: 5em">
 			<table ng-table="teacherParams" class="table"> 
 			Search Teacher: <input ng-model="tquery" style="border-radius: 7em">
@@ -10,10 +11,10 @@
 					{{teacher.username}}
 				</td>
 				<td title="Add">
-					<button class="button" ng-disabled="teacher.enrolled" ng-click="add(teacher.uid)">Add Instructor</button>
+					<button class="button" ng-disabled="teacher.enrolled" ng-click="add(teacher, 'T')">Add Instructor</button>
 				</td>
 				<td title="Drop">
-					<button class="button" ng-disabled="!teacher.enrolled" ng-click="drop(teacher.enrolled)">Drop Instructor</button>
+					<button class="button" ng-disabled="!teacher.enrolled" ng-click="drop(teacher, 'T')">Drop Instructor</button>
 				</td>
 				<td title="Status" sortable="enrolled">
 					<i ng-show="teacher.enrolled" style="color:green">Enrolled</i>
@@ -29,10 +30,10 @@
 					{{student.username}}
 				</td>
 				<td title="Add">
-					<button class="button" ng-disabled="student.enrolled" ng-click="add(student.uid)">Add Student</button>		
+					<button class="button" ng-disabled="student.enrolled" ng-click="add(student, 'S')">Add Student</button>		
 				</td>
 				<td title="Drop">
-					<button class="button" ng-disabled="!student.enrolled" ng-click="drop(student.enrolled)">Drop Student</button>
+					<button class="button" ng-disabled="!student.enrolled" ng-click="drop(student, 'S')">Drop Student</button>
 				</td>
 				<td title="Status" sortable="enrolled">
 					<i ng-show="student.enrolled" style="color:green">Enrolled</i>

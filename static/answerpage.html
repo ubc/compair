@@ -18,16 +18,16 @@
 			<br>
 			Author: <b>{{script.author}}</b> - {{script.time}}
 			<br><br>
-			<div class="answer">{{script.content}}</div>
+			<div class="answer"> <ANY ng-bind-html-unsafe="script.content"><ANY> </div>
 			<div ng-show="edit">
 				<textarea class="edit" ng-model="newanswer" jqte></textarea>
 			</div>
 			<br>
-			<p class="inline">
+			<div class="inline">
 				<button ng-show="instructor || login==script.author" ng-click="delete(script)">Delete Answer</button>
 				<button ng-show="instructor || login==script.author" ng-click="edit=!edit;newanswer=script.content">Edit Answer</button>
 				<button ng-show="edit" ng-click="editscript(script, newanswer)">Submit</button>
-			</p>
+			</div>
 			<br><br><br>
 		</li>
 	</ul>

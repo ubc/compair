@@ -345,15 +345,15 @@ def delete_question(id):
 	db.session.commit()
 	return ''
 
-@app.route('/enrollment/<id>')
-def students_enrolled(id):
+@app.route('/enrollment/<cid>')
+def students_enrolled(cid):
 	users = User.query.filter((User.usertype == 'Teacher') | (User.usertype == 'Student')).order_by( User.username ).all()
 	studentlst = []
 	teacherlst = []
 	for user in users:
 		print ('in loop, student: ' + str(user))
 		enrolled = ''
-		query = Enrollment.query.filter_by(uid = user.id).filter_by(cid = id).first()
+		query = Enrollment.query.filter_by(uid = user.id).filter_by(cid = cid).first()
 		print (query)
 		if (query):
 			print ('enrolled')
@@ -364,24 +364,25 @@ def students_enrolled(id):
 			teacherlst.append( {"uid": user.id, "username": user.username, "enrolled": enrolled} )
 	print ('student list: ' + str(studentlst))
 	print ('teacher list: ' + str(teacherlst))
-	course = Course.query.filter_by(id = id).first()
+	course = Course.query.filter_by(id = cid).first()
 	return json.dumps( { "course": course.name, "students": studentlst, "teachers": teacherlst } )
 
-@app.route('/enrollment/<id>', methods=['POST'])
-def enroll_student(id):
+@app.route('/enrollment/<cid>', methods=['POST'])
+def enroll_student(cid):
 	param = request.json
-	sid = param['sid']
-	table = Enrollment(sid, id)
+	uid = param['uid']
+	table = Enrollment(uid, cid)
 	db.session.add(table)
 	db.session.commit()
-	return ''
+	query = Enrollment.query.filter_by(uid = uid).filter_by(cid = cid).first()
+	return json.dumps( {"eid": query.id} )
 
-@app.route('/enrollment/<id>', methods=['DELETE'])
-def drop_student(id):
-	query = Enrollment.query.filter_by( id = id ).first()
+@app.route('/enrollment/<eid>', methods=['DELETE'])
+def drop_student(eid):
+	query = Enrollment.query.filter_by( id = eid ).first()
 	db.session.delete(query)
 	db.session.commit()
-	return ''
+	return json.dumps( {"msg": "PASS"} )
 	
 
 
