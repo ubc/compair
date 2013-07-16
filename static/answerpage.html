@@ -1,7 +1,7 @@
 <div>
 	<h2>Answer Page</h2>
 	<a href back-button>Back to Question Page</a>
-	<p> <b>Question:</b> <br> <p class="question"> {{question}} </p> </p>
+	<p> <b>Question:</b> <br> <p class="question"> <ANY ng-bind-html-unsafe="question"></ANY> </p> </p>
 	<button ng-click="check=!check">Answer Question</button>
 	<br><br><br>
 	<form ng-show="check" ng-submit="submit()">
@@ -18,7 +18,7 @@
 			<br>
 			Author: <b>{{script.author}}</b> - {{script.time}}
 			<br><br>
-			<div class="answer"> <ANY ng-bind-html-unsafe="script.content"><ANY> </div>
+			<div class="answer"> <ANY ng-bind-html-unsafe="script.content"></ANY> </div>
 			<div ng-show="edit">
 				<textarea class="edit" ng-model="newanswer" jqte></textarea>
 			</div>
