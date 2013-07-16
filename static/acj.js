@@ -445,48 +445,38 @@ myApp.directive('backButton', function(){
     }
 });
 
-myApp.directive('questionEditor', function() {
-	return {
-		link: function(scope, element, attrs) {
-			new nicEditor({
-				maxHeight:100, 
-				onSave:function(content, id, instance) {
-					scope.question = content;
-					scope.$apply();
-					scope.submit();
+myApp.directive('jqte', function() {
+	return function(scope, element, attrs)
+	{
+		// convert the given element, presumably a text area, into a jqueryte
+		// wysiwyg text editor
+		element.jqte({
+			// event callback that tells angularjs when a user is typing stuff
+			// into the text area by updating the ng-model binding
+			change: function() 
+				{
+					if (!scope.$$phase) 
+					{ // prevent digest already in progress err on init
+						scope.$apply(function() 
+							{ scope[attrs.ngModel] = element.val(); }); 
+					}
 				}
-			}).panelInstance('postQ');
-		}
-	}
-});
-
-myApp.directive('answerEditor', function() {
-	return {
-		link: function(scope, element, attrs) {
-			new nicEditor({
-				maxHeight:200,
-				onSave:function(content, id, instance) {
-					scope.myanswer = content;
-					scope.$apply();
-					scope.submit();
+		});
+		// On initial page load, we haven't received data from the services yet
+		// so jqte will just create an empty textarea.  This watch will
+		// properly initialize the value shown in the jqte created textarea
+		// once the model has been properly loaded from services.
+		// Can't figure out how to remove the watch after the init, the standard
+		// way of using the returned unwatch function doesn't seem to work.
+		scope.$watch(attrs.ngModel, 
+			function (newVal, oldVal) 
+			{ 
+				if (oldVal == undefined && newVal != undefined)
+				{ // we finally got an actual value
+					element.jqteVal(newVal); // initialize jqte textarea
 				}
-			}).panelInstance('postA');
-		}
-	}
-});
+			} 
+		);
 
-myApp.directive('editEditor', function() {
-	return {
-		link: function(scope, element, attrs) {
-			new nicEditor({
-				maxHeight:200,
-				onSave:function(content, id, instance) {
-					scope.newanswer = content;
-					scope.$apply();
-					scope.submit();
-				}
-			}).panelInstance($scope.$index);
-		}
-	}
+	};
 });
-

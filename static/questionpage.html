@@ -5,7 +5,7 @@
 	<button ng-click="check=!check">Create Question</button>
 	<form ng-show="check" ng-submit="submit()">
 		<br>
-		<textarea id="postQ" question-editor></textarea>
+		<textarea ng-model="question" jqte></textarea>
 		<br><br>
 		<button type="submit">Submit</button>
 		<br>

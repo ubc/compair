@@ -6,7 +6,7 @@
 	<br><br><br>
 	<form ng-show="check" ng-submit="submit()">
 		<br>
-		<textarea id="postA" answer-editor></textarea>
+		<textarea ng-model="myanswer" jqte></textarea>
 		<br><br>
 		<button type="submit">Submit</button>
 		<br>
@@ -17,11 +17,12 @@
 			Script Score: <b>{{script.score}}</b>
 			<br>
 			Author: <b>{{script.author}}</b> - {{script.time}}
-			<p ng-hide="edit" class="answer block"> <ANY ng-bind-html-unsafe="script.content"></ANY> </p>
-			<span ng-show="edit" ng-model="newanswer"> 
-				{{$index}}
-				<textarea id="$index" edit-editor>{{newanswer}}</textarea> 
-			</span>
+			<br><br>
+			<div class="answer">{{script.content}}</div>
+			<div ng-show="edit">
+				<textarea class="edit" ng-model="newanswer" jqte></textarea>
+			</div>
+			<br>
 			<p class="inline">
 				<button ng-show="instructor || login==script.author" ng-click="delete(script)">Delete Answer</button>
 				<button ng-show="instructor || login==script.author" ng-click="edit=!edit;newanswer=script.content">Edit Answer</button>
