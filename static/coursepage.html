@@ -12,13 +12,13 @@
 		<th colspan="3">Courses</th>
 	</tr>
 	<tr ng-repeat="course in courses | orderBy:orderProp | filter:cquery">
-		<td title="Course Name">
+		<td>
 			<b>{{course.name}}</b>
 		</td>
-		<td title="jk">
+		<td>
 			<a href="#/questionpage/{{course.id}}"> <button class="button">Questions</button> </a>
 		</td>
-		<td title="jk" ng-show="instructor">
+		<td ng-show="instructor">
 			<a href="#/enrollpage/{{course.id}}"> <button class="button">Enroll Users</button> </a>
 		</td>
 	</tr>

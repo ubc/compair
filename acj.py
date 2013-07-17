@@ -17,6 +17,12 @@ db.create_all()
 
 hasher = phpass.PasswordHash()
 
+def commit():
+	try:
+		db.session.flush()
+	except:
+		db.session.rollback()
+
 @app.route('/')
 def index():
 	return redirect(url_for('static', filename="index.html"))
@@ -57,7 +63,7 @@ def mark_script(id):
 		sidl = temp
 	table = Judgement(uid, sidl, sidr, id)
 	db.session.add(table)
-	db.session.commit()
+	commit()
 	return json.dumps({"msg": "Script & Judgement updated"})
 
 @app.route('/answer/<id>', methods=['POST'])
@@ -68,7 +74,7 @@ def post_answer(id):
 	content = param['content']
 	table = Script(qid, author, content)
 	db.session.add(table)
-	db.session.commit()
+	commit()
 	script = Script.query.order_by( Script.time.desc() ).first()
 	return json.dumps({"id": script.id, "author": script.author, "time": str(script.time), "content": script.content, "score":script.score})
 
@@ -77,14 +83,14 @@ def edit_answer(id):
 	param = request.json
 	script = Script.query.filter_by(id = id).first()
 	script.content = param['content']
-	db.session.commit()
+	commit()
 	return json.dumps({"msg": "PASS"})
 
 @app.route('/answer/<id>', methods=['DELETE'])
 def delete_answer(id):
 	script = Script.query.filter_by(id = id).first()
 	db.session.delete(script)
-	db.session.commit()
+	commit()
 	return json.dumps({"msg": "PASS"})
 
 @app.route('/login', methods=['GET'])
@@ -125,7 +131,7 @@ def create_user():
 	usertype = param['usertype']
 	table = User(username, password, usertype)
 	db.session.add(table)
-	db.session.commit()
+	commit()
 	session['username'] = username
 	return ''
 
@@ -237,7 +243,7 @@ def produce_cj_model():
 				diff = log10( odds )
 				table =  CJ_Model(scriptl.id, scriptr.id, diff)
 				db.session.add(table)
-	db.session.commit()
+	commit()
 	return '1001110100101010001011010101010'
 
 
@@ -262,7 +268,7 @@ def estimate_score(id):
 		print ('out of inner loop')
 		query = Script.query.filter_by(id = sidl).first()
 		query.score = sigma
-	db.session.commit()
+	commit()
 	return '101010100010110'
 		
 @app.route('/ranking/<id>')
@@ -295,11 +301,11 @@ def create_course():
 	name = param['name']
 	newCourse = Course(name)
 	db.session.add(newCourse)
-	db.session.commit()
+	commit()
 	course = Course.query.filter_by( name = name ).first()
 	table = Enrollment(user.id, course.id)
 	db.session.add(table)
-	db.session.commit()
+	commit()
 	return json.dumps({"id": newCourse.id, "name": newCourse.name})
 
 @app.route('/course', methods=['GET'])
@@ -330,7 +336,7 @@ def create_question(id):
 	content = param['content']
 	newQuestion = Question(id, session['username'], content)
 	db.session.add(newQuestion)
-	db.session.commit()
+	commit()
 	course = Course.query.filter_by(id = id).first()
 	
 	return json.dumps({"id": newQuestion.id, "author": newQuestion.author, "time": str(newQuestion.time), "content": newQuestion.content});
@@ -342,7 +348,7 @@ def delete_question(id):
 	if session['username'] != question.author and user.usertype != 'Teacher':
 		return json.dumps( {"msg": question.author} )
 	db.session.delete(question)
-	db.session.commit()
+	commit()
 	return ''
 
 @app.route('/enrollment/<cid>')
@@ -373,7 +379,7 @@ def enroll_student(cid):
 	uid = param['uid']
 	table = Enrollment(uid, cid)
 	db.session.add(table)
-	db.session.commit()
+	commit()
 	query = Enrollment.query.filter_by(uid = uid).filter_by(cid = cid).first()
 	return json.dumps( {"eid": query.id} )
 
@@ -381,7 +387,7 @@ def enroll_student(cid):
 def drop_student(eid):
 	query = Enrollment.query.filter_by( id = eid ).first()
 	db.session.delete(query)
-	db.session.commit()
+	commit()
 	return json.dumps( {"msg": "PASS"} )
 	
 

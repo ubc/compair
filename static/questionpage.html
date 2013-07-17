@@ -17,8 +17,8 @@
 				<button class="delete" ng-show="login == question.author || instructor" ng-click="delete(question)">
 					Delete Question
 				</button>
-				<button class="judge" ng-click="judge(question.id)">Judge Answers</button>
-				<button class="answer" ng-click="answer(question.id)">Answer Page</button>
+				<a href="#/judgepage/{{question.id}}"> <button class="judge">Judge Answers</button> </a>
+				<a href="#/answerpage/{{question.id}}"> <button class="answer">Answer Page</button> </a>
 			</div>
 			<br><br><br>
 		</li>

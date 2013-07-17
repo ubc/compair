@@ -1,7 +1,6 @@
 var myApp = angular.module('myApp', ['ngResource', 'ngTable']);
 
 //Global Variables
-var questionId = 0;
 
 myApp.factory('judgeService', function($resource) {
 	return $resource( '/script/:scriptId' );
@@ -50,7 +49,7 @@ myApp.config( function ($routeProvider) {
 				controller: IndexController,
 				templateUrl: 'intro.html'
 			})
-		.when ('/judgepage',
+		.when ('/judgepage/:questionId',
 			{
 				controller: JudgepageController,
 				templateUrl: 'judgepage.html'
@@ -85,7 +84,7 @@ myApp.config( function ($routeProvider) {
 				controller: AskController,
 				templateUrl: 'createquestion.html'
 			})
-		.when ('/answerpage',
+		.when ('/answerpage/:questionId',
 			{
 				controller: AnswerController,
 				templateUrl: 'answerpage.html'
@@ -123,7 +122,7 @@ function QuickController($scope, $location, judgeService, pickscriptService, qui
 	var retval = quickService.get( function() {
 		if (retval.question) {
 			questionId = retval.question;
-			$location.path('/judgepage');
+			$location.path('/judgepage/' + questionId);
 		} else {
 			history.back();
 			alert('None of the questions has enough new answers. Please come back later');
@@ -131,7 +130,8 @@ function QuickController($scope, $location, judgeService, pickscriptService, qui
 	});
 }
 
-function JudgepageController($scope, $location, judgeService, pickscriptService) {
+function JudgepageController($scope, $routeParams, $location, judgeService, pickscriptService) {
+	var questionId = $routeParams.questionId;
 	if (questionId == 0) {
 		$location.path('/');
 		return;
@@ -331,7 +331,9 @@ function AskController($scope, $location, questionService) {
 	};
 }
 
-function AnswerController($scope, answerService, rankService) {
+function AnswerController($scope, $routeParams, answerService, rankService) {
+	var questionId = $routeParams.questionId; 
+
 	$scope.orderProp = 'time';
 	$scope.nextOrder = 'score';
 
