@@ -2,28 +2,32 @@
 	<h2>Answer Page</h2>
 	<a href back-button>Back to Question Page</a>
 	<p> <b>Question:</b> <br> <p class="question"> <ANY ng-bind-html-unsafe="question"></ANY> </p> </p>
-	<button ng-click="check=!check">Answer Question</button>
+	<button class="create" ng-click="check=!check">Answer Question</button>
 	<form ng-show="check" ng-submit="submit()">
 		<textarea ng-model="myanswer" jqte></textarea>
-		<button type="submit">Submit</button>
+		<button class="submit" type="submit">Submit</button>
 	</form>
 	<br><br><br>
-	<button ng-click="temp=orderProp;orderProp=nextOrder;nextOrder=temp">Order By: {{nextOrder}}</button>
+	<button class="button" ng-click="temp=orderProp;orderProp=nextOrder;nextOrder=temp">Order By: {{nextOrder}}</button>
 	<ul>
 		<li ng-repeat="script in scripts | orderBy:orderProp:true">
 			Script Score: <b>{{script.score}}</b>
 			<br>
 			Author: <b>{{script.author}}</b> - {{script.time}}
 			<br><br>
-			<div class="answer"> <ANY ng-bind-html-unsafe="script.content"></ANY> </div>
+			<div ng-hide="edit" class="answer"> <ANY ng-bind-html-unsafe="script.content"></ANY> </div>
 			<div ng-show="edit">
 				<textarea class="edit" ng-model="newanswer" jqte></textarea>
 			</div>
 			<br>
 			<div class="inline">
-				<button ng-show="instructor || login==script.author" ng-click="delete(script)">Delete Answer</button>
-				<button ng-show="instructor || login==script.author" ng-click="edit=!edit;newanswer=script.content">Edit Answer</button>
-				<button ng-show="edit" ng-click="editscript(script, newanswer)">Submit</button>
+				<button class="delete" ng-show="instructor || login==script.author" ng-click="delete(script)">
+					Delete Answer
+				</button>
+				<button class="answer" ng-show="instructor || login==script.author" ng-click="edit=!edit;newanswer=script.content">
+					Edit Answer
+				</button>
+				<button class="submit" ng-show="edit" ng-click="editscript(script, newanswer)">Submit</button>
 			</div>
 			<br><br><br>
 		</li>

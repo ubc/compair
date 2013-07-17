@@ -24,7 +24,7 @@ p {
 }
 
 div.question, p.question {
-	width: 80%;
+	width: 90%;
 	padding: 7px;
 	margin: 3px;
 	white-space: pre-wrap;
@@ -37,9 +37,9 @@ div.qbutton {
 }
 
 div.answer, p.answer {
-	width: 80%;
+	width: 90%;
 	min-height: 3em;
-	max-height: 15em;
+	max-height: 20em;
 	border: 3px solid #E0FEFE;
 	border-radius: 1em;
 	padding: 7px;
@@ -58,7 +58,7 @@ div.divtext {
 	width: 45%;
 	min-height: 15em;
 	max-height: 30em;
-	border: 3px solid #FFFA0A;
+	border: 3px solid #FFDF00;
 	display: inline-block;
 	vertical-align: top;
 	background-color: #FCFCF7;
@@ -124,6 +124,32 @@ a:visited {
 a:hover {
 	text-decoration: none;
 	color:red;
+}
+
+button.delete {
+	margin-right: 2em;
+	border: 1px solid #BB0000;
+	background-color: #FF5050;
+}
+
+button.judge {
+	border: 1px solid #F0F0F0;
+	background-color: #D0D0D0;
+}
+
+button.answer {
+	border: 1px solid #E0E0FF;
+	background-color: #F8F8FF;
+}
+
+button.create {
+	border: 1px solid #000000;
+	background-color: #FFFFFF;
+}
+
+button.submit {
+	border: 1px solid #000000;
+	background-color: #FFFFFF;
 }
 
 .button {

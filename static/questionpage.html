@@ -2,10 +2,10 @@
 	<h2>Question Page</h2>
 	<a href="#/coursepage">Back to Course Page</a>
 	<p> Course: <b>{{course}}</b> </p>
-	<button ng-click="check=!check">Create Question</button>
+	<button class="create" ng-click="check=!check">Create Question</button>
 	<form ng-show="check" ng-submit="submit()">
 		<textarea ng-model="question" jqte></textarea>
-		<button type="submit">Submit</button>
+		<button class="submit" type="submit">Submit</button>
 		<br>
 	</form>
 	<br><br>
@@ -14,9 +14,11 @@
 			<p><b>{{question.author}}</b> - {{question.time}}</p>
 			<p class="question"> <ANY ng-bind-html-unsafe="question.content"</ANY> </p>
 			<div class="qbutton">
-				<button ng-show="login == question.author || instructor" ng-click="delete(question)">Delete Question</button>
-				<button ng-click="judge(question.id)">Judge Answers</button>
-				<button ng-click="answer(question.id)">Answer Page</button>
+				<button class="delete" ng-show="login == question.author || instructor" ng-click="delete(question)">
+					Delete Question
+				</button>
+				<button class="judge" ng-click="judge(question.id)">Judge Answers</button>
+				<button class="answer" ng-click="answer(question.id)">Answer Page</button>
 			</div>
 			<br><br><br>
 		</li>

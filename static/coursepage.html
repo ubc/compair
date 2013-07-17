@@ -1,9 +1,9 @@
 <div>
 	<h2>Course Page</h2>
-	<button ng-show="instructor" ng-click="check=!check">Create Course</button>
+	<button class="create" ng-show="instructor" ng-click="check=!check">Create Course</button>
 	<form ng-show="check" ng-submit="submit()">
 		<label>Course Name: <input type="text" ng-model="course"></input></label>
-		<button type="submit">Create</button>
+		<button class="submit" type="submit">Create</button>
 	</form>
 	<br><br>
 	<table class="table">

@@ -4,7 +4,7 @@
 	<p> Course: <i><b>{{course}}</b></i> </p>
 	<p> - Question: <br> <p class="question"> <ANY ng-bind-html-unsafe="question"></ANY> </p> </p>
 	<br>
-	<button ng-click="getscript()">Next Pair in this Question</button>
+	<button class="answer" ng-click="getscript()">Next Pair in this Question</button>
 	<br>
 	<br>
 	<div class="versus">
@@ -23,7 +23,7 @@
 			<input type="radio" name="pick" ng-model="pick" value="left">Left
 			<input type="radio" name="pick" ng-model="pick" value="right">Right
 			<br>
-			<input type="submit" value="Submit">
+			<button class="submit" type="submit">Submit</button>
 		</form>
 	</div>
 </div>
