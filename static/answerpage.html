@@ -27,7 +27,7 @@
 				<button class="answer" ng-show="instructor || login==script.author" ng-click="edit=!edit;newanswer=script.content">
 					Edit Answer
 				</button>
-				<button class="submit" ng-show="edit" ng-click="editscript(script, newanswer)">Submit</button>
+				<button class="submit" ng-show="edit" ng-click="editscript(script, newanswer);edit=!edit">Submit</button>
 			</div>
 			<br><br><br>
 		</li>
