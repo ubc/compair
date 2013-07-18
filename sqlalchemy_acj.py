@@ -1,21 +1,26 @@
 from flask import Flask
-from flask.ext.sqlalchemy import SQLAlchemy 
-from sqlalchemy.orm import backref
+from flask.ext.sqlalchemy import SQLAlchemy
+from sqlalchemy import create_engine, Column, Integer, String, Enum, ForeignKey, DateTime, Text, Float
+from sqlalchemy.orm import backref, scoped_session, sessionmaker, relationship
+from sqlalchemy.ext.declarative import declarative_base
 import datetime
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://testuser:testpw@localhost/acj'
-db = SQLAlchemy(app)
+engine = create_engine('mysql://testuser:testpw@localhost/acj', convert_unicode=True)
+db_session = scoped_session(sessionmaker (autocommit=False, autoflush=False, bind=engine))
 
-class User(db.Model):
+Base = declarative_base()
+Base.query = db_session.query_property()
+Base.metadata.create_all(bind=engine)
+
+class User(Base):
 	__tablename__ = 'User'
-	id = db.Column(db.Integer, primary_key=True)
-	username = db.Column(db.String(80), unique=True)
-	password = db.Column(db.String(120), unique=False)
-	usertype = db.Column(db.Enum('Admin', 'Teacher', 'Student'))
-	#judgements = db.Column(postgresql.ARRAY(db.Integer), unique=False)
-	judgement = db.relationship('Judgement', cascade="all,delete")
-	enrollment = db.relationship('Enrollment', cascade="all,delete")
+	id = Column(Integer, primary_key=True)
+	username = Column(String(80), unique=True)
+	password = Column(String(120), unique=False)
+	usertype = Column(Enum('Admin', 'Teacher', 'Student'))
+	#judgements = Column(postgresql.ARRAY(Integer), unique=False)
+	judgement = relationship('Judgement', cascade="all,delete")
+	enrollment = relationship('Enrollment', cascade="all,delete")
 
 	def __init__(self, username, password, usertype):
 		self.username = username
@@ -25,12 +30,12 @@ class User(db.Model):
 	def __repr__(self):
 		return '<User %r>' % self.username
 
-class Course(db.Model):
+class Course(Base):
 	__tablename__ = 'Course'
-	id = db.Column(db.Integer, primary_key=True)
-	name = db.Column(db.String(80), unique=True)
-	question = db.relationship('Question', cascade="all,delete")
-	enrollment = db.relationship('Enrollment', cascade="all,delete")
+	id = Column(Integer, primary_key=True)
+	name = Column(String(80), unique=True)
+	question = relationship('Question', cascade="all,delete")
+	enrollment = relationship('Enrollment', cascade="all,delete")
 
 	def __init__(self, name):
 		self.name = name
@@ -38,34 +43,36 @@ class Course(db.Model):
 	def __repr__(self):
 		return '<Course %r>' % self.name
 
-class Question(db.Model):
+class Question(Base):
 	__tablename__ = 'Question'
-	id = db.Column(db.Integer, primary_key=True)
-	cid = db.Column(db.Integer, db.ForeignKey('Course.id', ondelete='CASCADE'))
-	author = db.Column(db.String(80), default='anonym')
-	time = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-	content = db.Column(db.Text)
-	script = db.relationship('Script', cascade="all,delete")
+	id = Column(Integer, primary_key=True)
+	cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
+	author = Column(String(80), default='anonym')
+	time = Column(DateTime, default=datetime.datetime.utcnow)
+	title = Column(String(80))
+	content = Column(Text)
+	script = relationship('Script', cascade="all,delete")
 
-	def __init__(self, cid, author, content):
+	def __init__(self, cid, author, title, content):
 		self.cid = cid
 		self.author = author
+		self.title = title
 		self.content = content
 
 	def __repr__(self):
 		return '<Question %r>' % self.id
 
-class Script(db.Model):
+class Script(Base):
 	__tablename__ = 'Script'
-	id = db.Column(db.Integer, primary_key=True)
-	qid = db.Column(db.Integer, db.ForeignKey('Question.id', ondelete='CASCADE'))
-	title = db.Column(db.String(80), default='answer')
-	author = db.Column(db.String(80), unique=False)
-	time = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-	content = db.Column(db.Text, unique=False)
-	wins = db.Column(db.Integer, default=0)
-	count = db.Column(db.Integer, default=0)
-	score = db.Column(db.Float, default=0)
+	id = Column(Integer, primary_key=True)
+	qid = Column(Integer, ForeignKey('Question.id', ondelete='CASCADE'))
+	title = Column(String(80), default='answer')
+	author = Column(String(80), unique=False)
+	time = Column(DateTime, default=datetime.datetime.utcnow)
+	content = Column(Text, unique=False)
+	wins = Column(Integer, default=0)
+	count = Column(Integer, default=0)
+	score = Column(Float, default=0)
 
 	def __init__(self, qid, author, content):
 		self.qid = qid
@@ -75,16 +82,16 @@ class Script(db.Model):
 	def __repr__(self):
 		return '<Script %r>' % self.id
 
-class Judgement(db.Model):
+class Judgement(Base):
 	__tablename__ = 'Judgement'
-	id = db.Column(db.Integer, primary_key=True)
-	uid = db.Column(db.Integer, db.ForeignKey('User.id', ondelete='CASCADE'))
-	sidl= db.Column(db.Integer, db.ForeignKey('Script.id', ondelete='CASCADE'))
-	sidr = db.Column(db.Integer, db.ForeignKey('Script.id', ondelete='CASCADE'))
-	winner = db.Column(db.Integer, unique=False)
+	id = Column(Integer, primary_key=True)
+	uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
+	sidl= Column(Integer, ForeignKey('Script.id', ondelete='CASCADE'))
+	sidr = Column(Integer, ForeignKey('Script.id', ondelete='CASCADE'))
+	winner = Column(Integer, unique=False)
 
-	script1 = db.relationship('Script', foreign_keys=[sidl], backref=backref("judge1", cascade="all,delete"))
-	script2 = db.relationship('Script', foreign_keys=[sidr], backref=backref("judge2", cascade="all,delete"))
+	script1 = relationship('Script', foreign_keys=[sidl], backref=backref("judge1", cascade="all,delete"))
+	script2 = relationship('Script', foreign_keys=[sidr], backref=backref("judge2", cascade="all,delete"))
 
 	def __init__(self, uid, sidl, sidr, winner):
 		self.uid = uid
@@ -95,15 +102,15 @@ class Judgement(db.Model):
 	def __repr__(self):
 		return '<Judgement %r>' % self.id
 
-class CJ_Model(db.Model):
+class CJ_Model(Base):
 	__tablename__ = 'CJ_Model'
-	id = db.Column(db.Integer, primary_key=True)
-	sidl = db.Column(db.Integer, db.ForeignKey('Script.id'))
-	sidr = db.Column(db.Integer, db.ForeignKey('Script.id'))
-	diff = db.Column(db.Float, unique=False)
+	id = Column(Integer, primary_key=True)
+	sidl = Column(Integer, ForeignKey('Script.id'))
+	sidr = Column(Integer, ForeignKey('Script.id'))
+	diff = Column(Float, unique=False)
 
-	scriptl = db.relationship('Script', foreign_keys=[sidl])
-	scriptr = db.relationship('Script', foreign_keys=[sidr])
+	scriptl = relationship('Script', foreign_keys=[sidl])
+	scriptr = relationship('Script', foreign_keys=[sidr])
 
 	def __init__(self, sidl, sidr, diff):
 		self.sidl = sidl
@@ -113,13 +120,13 @@ class CJ_Model(db.Model):
 	def __repr__(self):
 		return '<CJ_Model %r>' % self.id
 
-class Score(db.Model):
+class Score(Base):
 	__tablename__ = 'Score'
-	id = db.Column(db.Integer, primary_key=True)
-	sid = db.Column(db.Integer, db.ForeignKey('Script.id'))
-	score = db.Column(db.Float, unique=False)
+	id = Column(Integer, primary_key=True)
+	sid = Column(Integer, ForeignKey('Script.id'))
+	score = Column(Float, unique=False)
 
-	script = db.relationship('Script')
+	script = relationship('Script')
 
 	def __init__(self, sid, score):
 		self.sid = sid
@@ -128,11 +135,11 @@ class Score(db.Model):
 	def __repr__(self):
 		return '<Score %r>' % self.sid
 
-class Enrollment(db.Model):
+class Enrollment(Base):
 	__tablename__ = 'Enrollment'
-	id = db.Column(db.Integer, primary_key=True)
-	uid = db.Column(db.Integer, db.ForeignKey('User.id', ondelete='CASCADE'))
-	cid = db.Column(db.Integer, db.ForeignKey('Course.id', ondelete='CASCADE'))
+	id = Column(Integer, primary_key=True)
+	uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
+	cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
 
 	def __init__(self, uid, cid):
 		self.uid = uid

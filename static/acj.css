@@ -40,7 +40,7 @@ div.answer, p.answer {
 	width: 90%;
 	min-height: 3em;
 	max-height: 20em;
-	border: 3px solid #E0FEFE;
+	border: 3px solid #F0FAF0;
 	border-radius: 1em;
 	padding: 7px;
 	overflow-y: scroll;
@@ -72,8 +72,8 @@ div.divtext {
 	max-height: 30em;
 	display: inline-block;
 	vertical-align: top;
-	border: 3px solid black;
-	background-color: #FF4747;
+	border: 3px solid #BB0000;
+	background-color: white;
 	overflow-y: scroll;
 	white-space: pre-wrap;
 }

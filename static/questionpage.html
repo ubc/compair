@@ -1,9 +1,12 @@
 <div>
 	<h2>Question Page</h2>
 	<a href="#/coursepage">Back to Course Page</a>
+	<br><br>
 	<p> Course: <b>{{course}}</b> </p>
 	<button class="create" ng-click="check=!check">Create Question</button>
 	<form ng-show="check" ng-submit="submit()">
+		<br>
+		Question Title: <input type="text" ng-model="title"></input>
 		<textarea ng-model="question" jqte></textarea>
 		<button class="submit" type="submit">Submit</button>
 		<br>
@@ -12,7 +15,8 @@
 	<ul>
 		<li ng-repeat="question in questions | orderBy:orderProp:true">
 			<p><b>{{question.author}}</b> - {{question.time}}</p>
-			<p class="question"> <ANY ng-bind-html-unsafe="question.content"</ANY> </p>
+			<p class="question" ng-hide="full" ng-click="full=!full">{{question.title}}</p>
+			<p class="question" ng-show="full"><ANY ng-bind-html-unsafe="question.content"</ANY></p>
 			<div class="qbutton">
 				<button class="delete" ng-show="login == question.author || instructor" ng-click="delete(question)">
 					Delete Question

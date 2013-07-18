@@ -286,7 +286,7 @@ function QuestionController($scope, $location, $routeParams, questionService, lo
 		$scope.questions = retval.questions;
 	});
 	$scope.submit = function() {
-		input = {"content": $scope.question};
+		input = {"title": $scope.title, "content": $scope.question};
 		var msg = questionService.save( {cid: courseId}, input, function() {
 			if (msg.msg) {
 				// TODO: What use cases would land here?
@@ -338,6 +338,7 @@ function AnswerController($scope, $routeParams, answerService, rankService) {
 	$scope.nextOrder = 'score';
 
 	var retval = rankService.get( {qid: questionId}, function() {
+		$scope.course = retval.course;
 		$scope.question = retval.question;
 		$scope.scripts = retval.scripts;
 		$scope.login = retval.username;
