@@ -370,15 +370,17 @@ function AnswerController($scope, $routeParams, answerService, rankService) {
 		});
 	};
 	$scope.delete = function(script) {
-		var retval = answerService.delete( {qid: script.id}, function() {
-			if (retval.msg != 'PASS') {
-				alert('something is wrong');
-				alert(retval);
-			} else {
-				var index = jQuery.inArray(script, $scope.scripts);
-				$scope.scripts.splice(index, 1);
-			}
-		});
+		if (confirm("Delete?") == true) {
+			var retval = answerService.delete( {qid: script.id}, function() {
+				if (retval.msg != 'PASS') {
+					alert('something is wrong');
+					alert(retval);
+				} else {
+					var index = jQuery.inArray(script, $scope.scripts);
+					$scope.scripts.splice(index, 1);
+				}
+			});
+		}
 	};
 }
 

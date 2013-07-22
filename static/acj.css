@@ -1,5 +1,6 @@
 body {
 	background-color: rgb(240, 250, 240);
+	font-family:"Times New Roman", Times, serif;
 }
 
 h1 {
@@ -31,6 +32,12 @@ div.question, p.question {
 	margin-left: 2em;
 }
 
+div.qtitle, p.qtitle {
+	width: 90%;
+	padding: 7px;
+	margin-left: 2em;
+}
+
 div.qbutton {
 	display: inline-block;
 	margin-left: 2em;
@@ -43,7 +50,7 @@ div.answer, p.answer {
 	border: 3px solid #F0FAF0;
 	border-radius: 1em;
 	padding: 7px;
-	overflow-y: scroll;
+	overflow-y: auto;
 	white-space: pre-wrap;
 }
 
@@ -57,24 +64,24 @@ div.divtext {
 .ljanswer {
 	width: 45%;
 	min-height: 15em;
-	max-height: 30em;
+	max-height: 50em;
 	border: 3px solid #FFDF00;
 	display: inline-block;
 	vertical-align: top;
-	background-color: #FCFCF7;
-	overflow-y: scroll;
+	background-color: #FDFEFF;
+	overflow-y: auto;
 	white-space: pre-wrap;
 }
 
 .rjanswer {
 	width: 45%;
 	min-height: 15em;
-	max-height: 30em;
+	max-height: 50em;
 	display: inline-block;
 	vertical-align: top;
 	border: 3px solid #BB0000;
-	background-color: white;
-	overflow-y: scroll;
+	background-color: #FFFDFE;
+	overflow-y: auto;
 	white-space: pre-wrap;
 }
 
@@ -126,30 +133,50 @@ a:hover {
 	color:red;
 }
 
-button.delete {
+a.delete {
 	margin-right: 2em;
 	border: 1px solid #BB0000;
 	background-color: #FF5050;
 }
 
-button.judge {
+a.delete:hover {
+	color: white;
+}
+
+input.judge {
 	border: 1px solid #F0F0F0;
 	background-color: #D0D0D0;
+	cursor: pointer;
 }
 
-button.answer {
+input.answer {
 	border: 1px solid #E0E0FF;
 	background-color: #F8F8FF;
+	cursor: pointer;
 }
 
-button.create {
+input.create {
 	border: 1px solid #000000;
 	background-color: #FFFFFF;
 }
 
-button.submit {
+input.submit {
 	border: 1px solid #000000;
 	background-color: #FFFFFF;
+}
+
+input.expand {
+	border: 1px solid black;
+ 	border-radius: 40%;
+	background-color: white;
+	font-size: 60%;
+	font-weight: 600;
+	margin: 0px;
+	padding: 0px;
+}
+
+input.expand:hover {
+	background-color: #B0B0FF;
 }
 
 .button {
@@ -157,6 +184,7 @@ button.submit {
 	margin-right: 1em;
 	background-color: #ffffff;
 	border: 1px solid #dddddd;
+	cursor: pointer;
 }
 
 .toplogo {

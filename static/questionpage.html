@@ -3,26 +3,36 @@
 	<a href="#/coursepage">Back to Course Page</a>
 	<br><br>
 	<p> Course: <b>{{course}}</b> </p>
-	<button class="create" ng-click="check=!check">Create Question</button>
+	<input type="button" class="create" ng-click="check=!check" value="Create Question">
 	<form ng-show="check" ng-submit="submit()">
 		<br>
 		Question Title: <input type="text" ng-model="title"></input>
+		<br><br>
 		<textarea ng-model="question" jqte></textarea>
-		<button class="submit" type="submit">Submit</button>
+		<br>
+		<input class="submit" type="submit" value="Submit">
 		<br>
 	</form>
 	<br><br>
 	<ul>
 		<li ng-repeat="question in questions | orderBy:orderProp:true">
 			<p><b>{{question.author}}</b> - {{question.time}}</p>
-			<p class="question" ng-hide="full" ng-click="full=!full">{{question.title}}</p>
-			<p class="question" ng-show="full"><ANY ng-bind-html-unsafe="question.content"</ANY></p>
+			<div class="qtitle" ng-click="full=!full" ng-hide="full" >
+				<i class="icon-collapse"></i>
+				{{question.title}}   
+			</div>
+			<div ng-click="full=!full" ng-show="full">
+				<p class="question"><ANY ng-bind-html-unsafe="question.content"</ANY></p>   
+			</div>
+			<div class="qtitle" ng-click="full=!full" ng-show="full">
+				<i class="icon-collapse-top"></i>
+			</div>
 			<div class="qbutton">
-				<button class="delete" ng-show="login == question.author || instructor" ng-click="delete(question)">
-					Delete Question
-				</button>
-				<a href="#/judgepage/{{question.id}}"> <button class="judge">Judge Answers</button> </a>
-				<a href="#/answerpage/{{question.id}}"> <button class="answer">Answer Page</button> </a>
+				<a href="" class="delete" ng-show="login == question.author || instructor" ng-click="delete(question)">
+					<i class="icon-trash icon-large"></i> Delete
+				</a>
+				<a href="#/judgepage/{{question.id}}"> <input type="button" class="judge" value="Judge Answers"> </a>
+				<a href="#/answerpage/{{question.id}}"> <input type="button" class="answer" value="Answer Page"> </a>
 			</div>
 			<br><br><br>
 		</li>

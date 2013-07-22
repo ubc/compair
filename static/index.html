@@ -11,35 +11,36 @@
 		<script src="ng-table.js" type="text/javascript"></script>
 		<link rel="stylesheet" type="text/css" href="ng-table.css" />
 		<script src="acj.js" type="text/javascript"></script>
+		<link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" />
 		<link rel="stylesheet" type="text/css" href="acj.css" />
 	</head>
 	<body>
 		<div id="main">
-		<a href="/" > <img src="http://farm4.staticflickr.com/3085/2786778672_3fb8cdd469_o.jpg" id="logo" />  </a>
-		<div class="nav" ng-controller="IndexController">
-			<div class="option">
-				<a href="#/coursepage" ng-show="check">
-					Courses
-				</a>
-				<a href="#/quickjudge" ng-show="check">
-					Quick-Judge
-				</a>
-				<a href="#/rankpage">
-					Inter-Rank
-				</a>
+			<a href="/" > <img src="http://farm4.staticflickr.com/3085/2786778672_3fb8cdd469_o.jpg" id="logo" />  </a>
+			<div class="nav" ng-controller="IndexController">
+				<div class="option">
+					<a href="#/coursepage" ng-show="check">
+						Courses
+					</a>
+					<a href="#/quickjudge" ng-show="check">
+						Quick-Judge
+					</a>
+					<a href="#/rankpage">
+						Inter-Rank
+					</a>
+				</div>
+				<div class="userlogin">
+					<form action="/logout">
+						<span ng-show="check">Logged in as: <b>{{login}}</b></span>
+						<input type="button" ng-show="check" class="button" value="Log Out">
+					</form>
+					<a href="#/login">
+						<input type="button" ng-hide="check" class="button" value="Log In">
+					</a>
+				</div>
 			</div>
-			<div class="userlogin">
-				<form action="/logout">
-					<span ng-show="check">Logged in as: <b>{{login}}</b></span>
-					<button type="submit" ng-show="check" class="button">Log Out</button>
-				</form>
-				<a href="#/login">
-					<button ng-hide="check" class="button">Log In</button>
-				</a>
-			</div>
-		</div>
 
-		<div ng-view=""></div>
+			<div ng-view=""></div>
 
 		</div>
 	</body>

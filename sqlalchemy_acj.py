@@ -15,17 +15,6 @@ Base.metadata.create_all(bind=engine)
 def init_db():
 	Base.metadata.create_all(bind=engine)
 
-class Temp(Base):
-	__tablename__ = 'Temp'
-	id = Column(Integer, primary_key=True)
-	name = Column(String(80), unique=True)
-
-	def __init__(self, name):
-		self.name = name
-
-	def __repr__(self):
-		return '<Temp %r>' % self.name
-
 class User(Base):
 	__tablename__ = 'User'
 	id = Column(Integer, primary_key=True)

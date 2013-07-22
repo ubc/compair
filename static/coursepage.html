@@ -1,9 +1,9 @@
 <div>
 	<h2>Course Page</h2>
-	<button class="create" ng-show="instructor" ng-click="check=!check">Create Course</button>
+	<input type="submit" class="create" ng-show="instructor" ng-click="check=!check" value="Create Course">
 	<form ng-show="check" ng-submit="submit()">
 		<label>Course Name: <input type="text" ng-model="course"></input></label>
-		<button class="submit" type="submit">Create</button>
+		<input type="submit" class="submit" type="button" value="Create">
 	</form>
 	<br><br>
 	<table class="table">
@@ -16,10 +16,10 @@
 			<b>{{course.name}}</b>
 		</td>
 		<td>
-			<a href="#/questionpage/{{course.id}}"> <button class="button">Questions</button> </a>
+			<a href="#/questionpage/{{course.id}}"> <input type="button" class="button" value="Questions"> </a>
 		</td>
 		<td ng-show="instructor">
-			<a href="#/enrollpage/{{course.id}}"> <button class="button">Enroll Users</button> </a>
+			<a href="#/enrollpage/{{course.id}}"> <input type="button" class="button" value="Enroll Users"> </a>
 		</td>
 	</tr>
 	</table>

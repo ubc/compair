@@ -3,17 +3,17 @@
 	<a href="#/questionpage">Back to Question Page</a>
 	<br><br>
 	<p> Course: <i><b>{{course}}</b></i> </p>
-	<p> - Question: <br> <p class="question"><ANY ng-bind-html-unsafe="question"></ANY> </p> </p>
+	<p> - Question: <br> <p class="question"><ANY ng-bind-html-unsafe="question"></ANY></p> </p>
 	<br>
-	<button class="answer" ng-click="getscript()">Next Pair in this Question</button>
+	<input type="button" class="answer" ng-click="getscript()" value="Next Pair in this Question">
 	<br>
 	<br>
 	<div class="versus">
-		<p class="ljanswer"><ANY ng-bind-html-unsafe="scriptl"></ANY> </p>
+		<p class="ljanswer"><ANY ng-bind-html-unsafe="scriptl"></ANY></p>
 
 		<h1 class="inline"><br><br><br>&#160;VS&#160;</h1>
 
-		<p class="rjanswer"><ANY ng-bind-html-unsafe="scriptr"></ANY> </p>
+		<p class="rjanswer"><ANY ng-bind-html-unsafe="scriptr"></ANY></p>
 	</div>
 
 	<br>
@@ -24,7 +24,7 @@
 			<input type="radio" name="pick" ng-model="pick" value="left">Left
 			<input type="radio" name="pick" ng-model="pick" value="right">Right
 			<br>
-			<button class="submit" type="submit">Submit</button>
+			<input class="submit" type="submit" value="Submit">
 		</form>
 	</div>
 </div>
