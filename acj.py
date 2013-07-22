@@ -1,6 +1,6 @@
 from __future__ import division
 from flask import Flask, url_for, request, render_template, redirect, escape, session
-from sqlalchemy_acj import db_session, User, Judgement, Script, CJ_Model, Score, Course, Question, Enrollment
+from sqlalchemy_acj import init_db, db_session, User, Judgement, Script, CJ_Model, Score, Course, Question, Enrollment
 from sqlalchemy import desc, func, select
 from random import shuffle
 from math import log10, exp
@@ -12,7 +12,7 @@ import json
 
 
 app = Flask(__name__)
-
+init_db()
 hasher = phpass.PasswordHash()
 
 def commit():
@@ -361,11 +361,12 @@ def list_question(id):
 def create_question(id):
 	param = request.json
 	content = param['content']
-	newQuestion = Question(id, session['username'], content)
+	title = param['title']
+	newQuestion = Question(id, session['username'], title, content)
 	db_session.add(newQuestion)
 	db_session.commit()
 	course = Course.query.filter_by(id = id).first()
-	retval = json.dumps({"id": newQuestion.id, "author": newQuestion.author, "time": str(newQuestion.time), "content": newQuestion.content})
+	retval = json.dumps({"id": newQuestion.id, "author": newQuestion.author, "time": str(newQuestion.time), "title": newQuestion.title, "content": newQuestion.content})
 	db_session.rollback()
 	return retval
 

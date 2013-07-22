@@ -5,12 +5,26 @@ from sqlalchemy.orm import backref, scoped_session, sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 import datetime
 
-engine = create_engine('mysql://testuser:testpw@localhost/acj', convert_unicode=True)
+engine = create_engine('mysql://testuser:testpw@localhost/acj', convert_unicode=True, pool_recycle=300)
 db_session = scoped_session(sessionmaker (autocommit=False, autoflush=False, bind=engine))
 
 Base = declarative_base()
 Base.query = db_session.query_property()
 Base.metadata.create_all(bind=engine)
+
+def init_db():
+	Base.metadata.create_all(bind=engine)
+
+class Temp(Base):
+	__tablename__ = 'Temp'
+	id = Column(Integer, primary_key=True)
+	name = Column(String(80), unique=True)
+
+	def __init__(self, name):
+		self.name = name
+
+	def __repr__(self):
+		return '<Temp %r>' % self.name
 
 class User(Base):
 	__tablename__ = 'User'
@@ -18,7 +32,6 @@ class User(Base):
 	username = Column(String(80), unique=True)
 	password = Column(String(120), unique=False)
 	usertype = Column(Enum('Admin', 'Teacher', 'Student'))
-	#judgements = Column(postgresql.ARRAY(Integer), unique=False)
 	judgement = relationship('Judgement', cascade="all,delete")
 	enrollment = relationship('Enrollment', cascade="all,delete")
 
