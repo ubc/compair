@@ -182,7 +182,7 @@ def pick_script(id):
 		return retval
 	print ('freshl: ' + str(fresh[0]))
 	print ('freshr: ' + str(fresh[1]))
-	retval = json.dumps( {"course": course.name, "question": question.content, "sidl": fresh[0], "sidr": fresh[1]} )
+	retval = json.dumps( {"cid": course.id, "course": course.name, "question": question.content, "sidl": fresh[0], "sidr": fresh[1]} )
 	db_session.rollback()
 	return retval
 
@@ -303,7 +303,7 @@ def marked_scripts(id):
 	question = Question.query.filter_by(id = id).first()
 	course = Course.query.filter_by(id = question.cid).first()
 	user = User.query.filter_by(username = session['username']).first()
-	retval = json.dumps( {"username": session['username'], "usertype": user.usertype, "course": course.name, "question": question.content, "scripts": lst} )
+	retval = json.dumps( {"username": session['username'], "usertype": user.usertype, "cid": course.id, "course": course.name, "question": question.content, "scripts": lst} )
 	db_session.rollback()
 	return retval
 

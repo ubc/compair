@@ -142,6 +142,7 @@ function JudgepageController($scope, $routeParams, $location, judgeService, pick
 	$scope.getscript = function() {
 		var retval = pickscriptService.get( {qid: questionId}, function() {
 			$scope.course = retval.course;
+			$scope.cid = retval.cid;
 			$scope.question = retval.question;
 			if (retval.sidl) {
 				sidl = retval.sidl;
@@ -339,6 +340,7 @@ function AnswerController($scope, $routeParams, answerService, rankService) {
 
 	var retval = rankService.get( {qid: questionId}, function() {
 		$scope.course = retval.course;
+		$scope.cid = retval.cid;
 		$scope.question = retval.question;
 		$scope.scripts = retval.scripts;
 		$scope.login = retval.username;

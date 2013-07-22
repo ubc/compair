@@ -229,6 +229,11 @@ input.expand:hover {
 	display: inline-block;
 }
 
+.bcrumb {
+	display: inline-block;
+	margin-right: 1em;
+}
+
 .block {
 	display: block;
 } 
