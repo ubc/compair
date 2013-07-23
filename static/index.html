@@ -18,21 +18,16 @@
 		<div id="main">
 			<a href="/" > <img src="http://farm4.staticflickr.com/3085/2786778672_3fb8cdd469_o.jpg" id="logo" />  </a>
 			<div class="nav" ng-controller="IndexController">
-				<div class="option">
-					<a href="#/coursepage" ng-show="check">
-						Courses
-					</a>
-					<a href="#/quickjudge" ng-show="check">
-						Quick-Judge
-					</a>
-					<a href="#/rankpage">
-						Inter-Rank
-					</a>
-				</div>
+				<a class="option" href="#/quickjudge" ng-show="check">
+					Quick-Judge
+				</a>
+				<a class="option" href="#/rankpage">
+					Inter-Rank
+				</a>
 				<div class="userlogin">
 					<form action="/logout">
 						<span ng-show="check">Logged in as: <b>{{login}}</b></span>
-						<input type="button" ng-show="check" class="button" value="Log Out">
+						<input type="submit" ng-show="check" class="button" value="Log Out">
 					</form>
 					<a href="#/login">
 						<input type="button" ng-hide="check" class="button" value="Log In">
