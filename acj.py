@@ -158,7 +158,7 @@ def create_user():
 	query = User.query.filter_by(username = username).first()
 	if query:
 		db_session.rollback()
-		return json.dumps( {"msg": 'Username already exists'} )
+		return json.dumps( {"flash": 'Username already exists'} )
 	password = param['password']
 	password = hasher.hash_password( password )
 	usertype = param['usertype']
@@ -370,6 +370,10 @@ def delete_comment(id):
 def create_course():
 	user = User.query.filter_by( username = session['username']).first()
 	param = request.json
+	course = Course.query.filter_by( name = param['name']).first()
+	if course:
+		db_session.rollback()
+		return json.dumps( {"flash": 'Course name already exists.'} )
 	name = param['name']
 	newCourse = Course(name)
 	db_session.add(newCourse)

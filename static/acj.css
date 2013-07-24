@@ -383,3 +383,15 @@ input.expand:hover {
     color: #990044;
     display: block;
 }
+
+.errFlash {
+    color: #990044;
+    display: block;
+    text-align: center;
+    border: 2px solid #990044;
+    padding: 0.7em;
+    margin-top: 0.5em;
+    margin-bottom: 1em;
+    font-weight: 600;
+    font-size: 110%;
+}

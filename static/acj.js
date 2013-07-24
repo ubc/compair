@@ -188,15 +188,13 @@ function JudgepageController($scope, $routeParams, $location, judgeService, pick
 function LoginController($rootScope, $scope, $location, loginService) {
 	$scope.submit = function() {
 		if ( !($scope.username && $scope.password) ) {
-			alert('You must provide both username and password');
-			return;
+			$scope.msg = 'Please provide a username and a password';
+			return '';
 		}
 		input = {"username": $scope.username, "password": $scope.password};
 		var user = loginService.save( input, function() {
-			message = user.msg;
-			if (message) {
-				alert(message);
-			} else {
+			$scope.msg = user.msg;
+			if (!$scope.msg) {
 				$rootScope.$broadcast("LOGGED_IN", $scope.username); 
 				$location.path('/coursepage');
 			}
@@ -212,11 +210,12 @@ function UserController($rootScope, $scope, $location, userService) {
 		}
 		input = {"username": $scope.username, "password": $scope.password, "usertype": $scope.usertype};
 		var user = userService.save( input, function() {
-			message = user.msg;
-			if (!message) {
+			$scope.flash = user.flash;
+			if (!user.msg && !$scope.flash) {
 				$rootScope.$broadcast("LOGGED_IN", $scope.username); 
 				$location.path('/coursepage');
 			}
+			return '';
 		});
 	};
 }
@@ -247,7 +246,10 @@ function CourseController($scope, courseService, loginService) {
 		input = {"name": $scope.course};
 		var retval = courseService.save( input, function() {
 			$scope.check = false;
-			$scope.courses.push(retval);
+			$scope.flash = retval.flash;
+			if (!$scope.flash) {
+				$scope.courses.push(retval);
+			}
 		});
 	};
 }

@@ -1,4 +1,5 @@
 <div>
+	<div class="errFlash" ng-show="flash">{{ flash }}</div>
 	<h2>Course Page</h2>
 	<input type="submit" class="create" ng-show="instructor" ng-click="check=!check" value="Create Course">
 	<form ng-show="check" ng-submit="submit()">
