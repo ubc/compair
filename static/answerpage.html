@@ -30,7 +30,7 @@
 				</a>
 				<input type="button" class="answer" ng-show="instructor || login==script.author" ng-click="edit=!edit;newanswer=script.content" value="Edit Answer">
 				<input type="button" class="submit" ng-show="edit" ng-click="editscript(script, newanswer);edit=!edit" value="Submit">
-				<input type="button" class="create" ng-click="scomm=!scomm" value="Comments">
+				<input type="button" class="create" ng-click="getcomments(script);scomm=!scomm" value="Comments">
 			</div>
 			<br>
 			<div class="commentblock" ng-show="scomm">

@@ -304,11 +304,7 @@ def marked_scripts(id):
 	scripts = Script.query.filter_by(qid = id).order_by( Script.score.desc() ).all() 
 	slst = []
 	for script in scripts:
-		clst = []
-		comments = Comment.query.filter_by(sid = script.id).order_by( Comment.time ).all()
-		for comment in comments:
-			clst.append( {"id": comment.id, "author": comment.author, "time": str(comment.time), "content": comment.content} )
-		slst.append( {"id": script.id, "title": script.title, "author": script.author, "time": str(script.time), "content": script.content, "score": script.score, "comments": clst} )
+		slst.append( {"id": script.id, "title": script.title, "author": script.author, "time": str(script.time), "content": script.content, "score": script.score, "comments": []} )
 	print ('what is happneing')
 	print ( slst )
 	question = Question.query.filter_by(id = id).first()
@@ -328,6 +324,16 @@ def total_ranking():
 		lst.append( {"course": course.name, "question": question.content, "author":script.author, "time": str(script.time), "content": script.content, "score": script.score } )
 	db_session.rollback()
 	return json.dumps( {"scripts": lst} )
+
+@app.route('/comment/<id>')
+def get_comments(id):
+	comments = Comment.query.filter_by(sid = id).order_by( Comment.time ).all()
+	lst = []
+	for comment in comments:
+		lst.append( {"id": comment.id, "author": comment.author, "time": str(comment.time), "content": comment.content} )
+	retval = json.dumps( {"comments": lst} )
+	db_session.rollback()
+	return retval
 
 @app.route('/comment/<id>', methods=['POST'])
 def comment_script(id):

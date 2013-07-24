@@ -388,6 +388,15 @@ function AnswerController($scope, $routeParams, answerService, rankService, comm
 			});
 		}
 	};
+	$scope.getcomments = function(script) {
+		var retval = commentService.get( {id: script.id}, function() {
+			if (retval.comments) {
+				script.comments = retval.comments;
+			} else {
+				alert('something is wrong');
+			}
+		});
+	};
 	$scope.comment = function(script, mycomment) {
 		input = {"content": mycomment}
 		var retval = commentService.save( {id: script.id}, input, function() {
