@@ -10,6 +10,7 @@ import re
 import phpass
 import json
 import datetime
+import validictory
 
 
 app = Flask(__name__)
@@ -141,6 +142,18 @@ def logout():
 @app.route('/user', methods=['POST'])
 def create_user():
 	param = request.json
+	schema = {
+		'type': 'object',
+		'properties': {
+			'username': {'type': 'string'},
+			'usertype': {'type': 'string', 'enum': ['Student', 'Teacher']},
+			'password': {'type': 'string'}
+		}
+	}
+	try:
+		validictory.validate(param, schema)
+	except ValueError, error:
+		return json.dumps( {"msg": str(error)} )
 	username = param['username']
 	query = User.query.filter_by(username = username).first()
 	if query:

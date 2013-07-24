@@ -378,3 +378,8 @@ input.expand:hover {
 	width: 12em;
 	height: 7em;
 }
+
+.errMsg {
+    color: #990044;
+    display: block;
+}

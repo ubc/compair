@@ -207,28 +207,13 @@ function LoginController($rootScope, $scope, $location, loginService) {
 function UserController($rootScope, $scope, $location, userService) {
 	$scope.usertypes = ['Student', 'Teacher'];
 	$scope.submit = function() {
-		if ( !$scope.usertype ) {
-			alert('Pick a usertype');
-			return;
-		}
-		if ( !$scope.username ) {
-			alert('Username cannot be empty string');
-			return;
-		}
-		if ( !$scope.password ) {
-			alert('You must provide password');
-			return;
-		}
-		if ( $scope.password != $scope.retypepw ) {
-			alert('Retyped password does not match');
-			return;
+		if ($scope.password != $scope.retypepw) {
+			return '';
 		}
 		input = {"username": $scope.username, "password": $scope.password, "usertype": $scope.usertype};
 		var user = userService.save( input, function() {
 			message = user.msg;
-			if (message) {
-				alert(message);
-			} else {
+			if (!message) {
 				$rootScope.$broadcast("LOGGED_IN", $scope.username); 
 				$location.path('/coursepage');
 			}

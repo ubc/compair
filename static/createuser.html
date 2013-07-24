@@ -1,15 +1,23 @@
 <div>
 	<h2>Become a Judge Today!</h2>
 	
-	<form ng-submit="submit()">
+	<form ng-submit="submit()" name="createUser" novalidate>
 		Pick user type
-		<select ng-model="usertype">
+		<select name="type" ng-model="usertype" required>
 			<option value="Student">Student</option>
 			<option value="Teacher">Teacher</option>
 		</select>
-		<p>Username:<input type=text ng-model="username"></p>
-		<p>Password:<input type=password ng-model="password"></p>
-		<p>RetypePW:<input type=password ng-model="retypepw"></p>
-		<p><input type=submit value=Confirm></p>
+		<span class=errMsg ng-show="submitted && createUser.type.$invalid">
+			Please select a user type</span>
+		<p>Username:<input type=text name="username" ng-model="username" required></p>
+		<span class=errMsg ng-show="submitted && createUser.username.$error.required">
+			A username is required.</span>
+		<p>Password:<input type=password name="password" ng-model="password" required></p>
+		<span class=errMsg ng-show="submitted && createUser.password.$error.required">
+			A password is required.</span>
+		<p>RetypePW:<input type=password name="retypepw" ng-model="retypepw"></p>
+		<span class=errMsg ng-show="submitted && (password != retypepw)">
+			The passwords do not match.</span>
+		<p><input type=submit name="submit" value=Confirm ng-click="submitted=true"></p>
 	</form>
 </div>
