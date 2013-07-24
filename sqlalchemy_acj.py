@@ -21,6 +21,7 @@ class User(Base):
 	username = Column(String(80), unique=True)
 	password = Column(String(120), unique=False)
 	usertype = Column(Enum('Admin', 'Teacher', 'Student'))
+
 	judgement = relationship('Judgement', cascade="all,delete")
 	enrollment = relationship('Enrollment', cascade="all,delete")
 
@@ -53,6 +54,7 @@ class Question(Base):
 	time = Column(DateTime, default=datetime.datetime.utcnow)
 	title = Column(String(80))
 	content = Column(Text)
+
 	script = relationship('Script', cascade="all,delete")
 
 	def __init__(self, cid, author, title, content):
@@ -75,6 +77,8 @@ class Script(Base):
 	wins = Column(Integer, default=0)
 	count = Column(Integer, default=0)
 	score = Column(Float, default=0)
+
+	comment = relationship('Comment', cascade="all,delete")
 
 	def __init__(self, qid, author, content):
 		self.qid = qid
@@ -122,21 +126,6 @@ class CJ_Model(Base):
 	def __repr__(self):
 		return '<CJ_Model %r>' % self.id
 
-class Score(Base):
-	__tablename__ = 'Score'
-	id = Column(Integer, primary_key=True)
-	sid = Column(Integer, ForeignKey('Script.id'))
-	score = Column(Float, unique=False)
-
-	script = relationship('Script')
-
-	def __init__(self, sid, score):
-		self.sid = sid
-		self.score = score
-
-	def __repr__(self):
-		return '<Score %r>' % self.sid
-
 class Enrollment(Base):
 	__tablename__ = 'Enrollment'
 	id = Column(Integer, primary_key=True)
@@ -149,3 +138,19 @@ class Enrollment(Base):
 
 	def __repr__(self):
 		return '<Enrollment %r>' % self.id
+
+class Comment(Base):
+	__tablename__ = 'Comment'
+	id = Column(Integer, primary_key=True)
+	sid = Column(Integer, ForeignKey('Script.id', ondelete='CASCADE'))
+	author = Column(String(80))
+	time = Column(DateTime, default=datetime.datetime.utcnow)
+	content = Column(Text)
+
+	def __init__(self, sid, author, content):
+		self.sid = sid
+		self.author = author
+		self.content = content
+
+	def __repr__(self):
+		return '<Comment %r>' % self.id

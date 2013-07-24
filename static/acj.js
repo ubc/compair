@@ -42,6 +42,10 @@ myApp.factory('enrollService', function($resource) {
 	return $resource( '/enrollment/:id' );
 });
 
+myApp.factory('commentService', function($resource) {
+	return $resource( '/comment/:id' );
+});
+
 myApp.config( function ($routeProvider) {
 	$routeProvider
 		.when ('/', 
@@ -124,7 +128,7 @@ function QuickController($scope, $location, judgeService, pickscriptService, qui
 			questionId = retval.question;
 			$location.path('/judgepage/' + questionId);
 		} else {
-			history.back();
+			$location.path('/coursepage');
 			alert('None of the questions has enough new answers. Please come back later');
 		}
 	});
@@ -133,7 +137,7 @@ function QuickController($scope, $location, judgeService, pickscriptService, qui
 function JudgepageController($scope, $routeParams, $location, judgeService, pickscriptService) {
 	var questionId = $routeParams.questionId;
 	if (questionId == 0) {
-		$location.path('/');
+		$location.path('/coursepage');
 		return;
 	}
 	var sidl;
@@ -149,7 +153,7 @@ function JudgepageController($scope, $routeParams, $location, judgeService, pick
 				sidr = retval.sidr;
 			} else {
 				alert( 'Either you have already judged all of the high-priority scripts OR there are not enough answers to judge. Please come back later' );
-				history.back();
+				$location.path('/coursepage');
 				//$location.path('/questionpage/' + courseId);
 				return;
 			}
@@ -332,7 +336,7 @@ function AskController($scope, $location, questionService) {
 	};
 }
 
-function AnswerController($scope, $routeParams, answerService, rankService) {
+function AnswerController($scope, $routeParams, answerService, rankService, commentService) {
 	var questionId = $routeParams.questionId; 
 
 	$scope.orderProp = 'time';
@@ -372,7 +376,7 @@ function AnswerController($scope, $routeParams, answerService, rankService) {
 		});
 	};
 	$scope.delete = function(script) {
-		if (confirm("Delete?") == true) {
+		if (confirm("Delete Answer?") == true) {
 			var retval = answerService.delete( {qid: script.id}, function() {
 				if (retval.msg != 'PASS') {
 					alert('something is wrong');
@@ -380,6 +384,28 @@ function AnswerController($scope, $routeParams, answerService, rankService) {
 				} else {
 					var index = jQuery.inArray(script, $scope.scripts);
 					$scope.scripts.splice(index, 1);
+				}
+			});
+		}
+	};
+	$scope.comment = function(script, mycomment) {
+		input = {"content": mycomment}
+		var retval = commentService.save( {id: script.id}, input, function() {
+			if (retval.comment) {
+				script.comments.push( retval.comment );
+			} else {
+				alert('something is wrong');
+			}
+		});
+	};
+	$scope.delcom = function(script, comment) {
+		if (confirm("Delete Comment?") == true) {
+			var retval = commentService.delete( {id: comment.id}, function() {
+				if (retval.msg != 'PASS') {
+					alert('something is wrong');
+				} else {
+					var index = jQuery.inArray(comment, script.comments);
+					script.comments.splice(index, 1);
 				}
 			});
 		}

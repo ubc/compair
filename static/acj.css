@@ -16,7 +16,6 @@ textarea {
 	resize: none;
 	font-family:"Times New Roman", Times, serif;
 	margin: 3px;
-	width: 60%;
 }
 
 p {
@@ -86,12 +85,26 @@ div.divtext {
 }
 
 textarea.edit {
-	width: 60%;
 	min-height: 15em;
 	max-height: 30em;
 	border-radius: 1em;
 	padding: 7px;
 	border: 3px solid red;
+}
+
+textarea.comment {
+	min-height: 10em;
+	max-height: 20em;
+}
+
+div.commentblock {
+	margin-left: 4em;
+}
+
+div.comment {
+	max-height: 20em;
+	overflow-y: auto;
+	white-space: pre-wrap;
 }
 
 pre {
@@ -158,11 +171,13 @@ input.answer {
 input.create {
 	border: 1px solid #000000;
 	background-color: #FFFFFF;
+	cursor: pointer;
 }
 
 input.submit {
 	border: 1px solid #000000;
 	background-color: #FFFFFF;
+	cursor: pointer;
 }
 
 input.expand {
@@ -217,7 +232,8 @@ input.expand:hover {
 .option {
 	display: inline-block;
 	float: left;
-	word-spacing: 1em;
+	margin-right: 1em;
+	margin-left: 1em;
 }
 
 .userlogin {

@@ -1,10 +1,9 @@
 <div>
 	<h2>Judge Page</h2>
-	<a class="bcrumb" href="#/coursepage"> <i class="icon-fighter-jet"></i> Course Page</a>
-	<a class="bcrumb" href="#/questionpage/{{cid}}"> <i class="icon-fighter-jet"></i> Question Page</a>
+	<a class="bcrumb" href="#/coursepage"> <i class="icon-fighter-jet"></i> Courses </a>
+	<a class="bcrumb" href="#/questionpage/{{cid}}"> <i class="icon-fighter-jet"></i> {{course}} </a>
 	<br><br>
-	<p> Course: <i><b>{{course}}</b></i> </p>
-	<p> - Question: <br> <p class="question"><ANY ng-bind-html-unsafe="question"></ANY></p> </p>
+	<p>  <b>Question:</b> <br> <p class="question"><ANY ng-bind-html-unsafe="question"></ANY></p> </p>
 	<br>
 	<input type="button" class="answer" ng-click="getscript()" value="Next Pair in this Question">
 	<br>

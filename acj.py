@@ -1,6 +1,6 @@
 from __future__ import division
 from flask import Flask, url_for, request, render_template, redirect, escape, session
-from sqlalchemy_acj import init_db, db_session, User, Judgement, Script, CJ_Model, Score, Course, Question, Enrollment
+from sqlalchemy_acj import init_db, db_session, User, Judgement, Script, CJ_Model, Course, Question, Enrollment, Comment
 from sqlalchemy import desc, func, select
 from random import shuffle
 from math import log10, exp
@@ -9,11 +9,18 @@ import MySQLdb
 import re
 import phpass
 import json
+import datetime
 
 
 app = Flask(__name__)
 init_db()
 hasher = phpass.PasswordHash()
+
+class DatetimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime.datetime):
+			return obj.strftime("%F %r")
+        return json.JSONEncoder.default(self, obj) 
 
 def commit():
 	try:
@@ -295,15 +302,19 @@ def estimate_score(id):
 def marked_scripts(id):
 	estimate_score(id)
 	scripts = Script.query.filter_by(qid = id).order_by( Script.score.desc() ).all() 
-	lst = []
+	slst = []
 	for script in scripts:
-		lst.append( {"id": script.id, "title": script.title, "author": script.author, "time": str(script.time), "content": script.content, "score":script.score } )
+		clst = []
+		comments = Comment.query.filter_by(sid = script.id).order_by( Comment.time ).all()
+		for comment in comments:
+			clst.append( {"id": comment.id, "author": comment.author, "time": str(comment.time), "content": comment.content} )
+		slst.append( {"id": script.id, "title": script.title, "author": script.author, "time": str(script.time), "content": script.content, "score": script.score, "comments": clst} )
 	print ('what is happneing')
-	print ( lst )
+	print ( slst )
 	question = Question.query.filter_by(id = id).first()
 	course = Course.query.filter_by(id = question.cid).first()
 	user = User.query.filter_by(username = session['username']).first()
-	retval = json.dumps( {"username": session['username'], "usertype": user.usertype, "cid": course.id, "course": course.name, "question": question.content, "scripts": lst} )
+	retval = json.dumps( {"username": session['username'], "usertype": user.usertype, "cid": course.id, "course": course.name, "question": question.content, "scripts": slst} )
 	db_session.rollback()
 	return retval
 
@@ -317,6 +328,24 @@ def total_ranking():
 		lst.append( {"course": course.name, "question": question.content, "author":script.author, "time": str(script.time), "content": script.content, "score": script.score } )
 	db_session.rollback()
 	return json.dumps( {"scripts": lst} )
+
+@app.route('/comment/<id>', methods=['POST'])
+def comment_script(id):
+	param = request.json
+	table = Comment(id, session['username'], param['content'])
+	db_session.add(table)
+	db_session.commit()
+	comment = Comment.query.order_by( Comment.time.desc() ).first()
+	retval = json.dumps({"comment": {"id": comment.id, "author": comment.author, "time": str(comment.time), "content": comment.content}})
+	db_session.rollback()
+	return retval
+
+@app.route('/comment/<id>', methods=['DELETE'])
+def delete_comment(id):
+	comment = Comment.query.filter_by(id = id).first()
+	db_session.delete(comment)
+	commit()
+	return json.dumps({"msg": "PASS"})
 
 @app.route('/course', methods=['POST'])
 def create_course():
