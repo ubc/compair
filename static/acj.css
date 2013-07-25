@@ -146,6 +146,10 @@ a:hover {
 	color:red;
 }
 
+a.answer:hover {
+	color: #FFDF00;
+}
+
 a.delete {
 	margin-right: 2em;
 }
@@ -175,7 +179,15 @@ a.comments:hover {
 }
 
 a.submit:hover {
-	color: #00CC00;
+	color: #00AA00;
+}
+
+a.sort {
+	margin-left: 1em;
+}
+
+a.sort:hover {
+	color: gray;
 }
 
 input.judge {

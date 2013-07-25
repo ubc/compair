@@ -28,20 +28,29 @@
 		</a>
 		<div ng-show="lqcomm">
 			<textarea class="comment" ng-model="myQcomment" jqte></textarea>
-			<input type="button" class="submit" ng-click="makeQcomment(myQcomment);lqcomm=falst" value="Submit">
+			<a href="" class="submit" ng-click="makeQcomment(myQcomment);lqcomm=falst">
+				<i class="icon-ok icon-large"></i> Submit
+			</a>
 		</div>
 		<br><br>
 	</div>
 	<br><br><br><br>
-	<input type="button" class="create" ng-click="check=!check" value="Answer Question">
-	<form ng-show="check" ng-submit="submit()">
+	<a href="" class="answer" ng-click="check=!check">
+		<i class="icon-puzzle-piece icon-large"></i> Answer Question
+	</a>
+	<div ng-show="check">
 		<br>
 		<textarea ng-model="myanswer" jqte></textarea>
 		<br>
-		<input class="submit" type="submit" value="Submit">
-	</form>
+		<a href="" class="submit" ng-click="submit()">
+			<i class="icon-ok icon-large"></i> Submit
+		</a>
+	</div>
 	<br><br>
-	<input type="button" class="button" ng-click="temp=orderProp;orderProp=nextOrder;nextOrder=temp" value="Order By: {{nextOrder}}">
+	<a href="" class="sort" ng-click="temp=orderProp;orderProp=nextOrder;nextOrder=temp">
+		<i class="icon-sort-by-attributes icon-large"></i> By {{nextOrder}}
+	</a>
+	<br><br>
 	<ul>
 		<li ng-repeat="script in scripts | orderBy:orderProp:true">
 			Script Score: <b>{{script.score}}</b>
@@ -64,14 +73,16 @@
 				<textarea class="edit" ng-model="newanswer" jqte></textarea>
 			</div>
 			<br>
-				<input type="button" class="submit" ng-show="edit" ng-click="editscript(script, newanswer);edit=!edit" value="Submit">
+				<a href="" class="submit" ng-show="edit" ng-click="editscript(script, newanswer);edit=!edit">
+					<i class="icon-ok icon-large"></i> Submit
+				</a>
 			<br>
 			<div class="commentblock" ng-show="scomm">
 				<br>
 				<ul> 
 					<li ng-repeat="comment in script.comments">
 						<font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}}&#160;
-						<a href="" class="" ng-show="instructor || login==comment.author" ng-click="delAcom(script, comment)">
+						<a href="" ng-show="instructor || login==comment.author" ng-click="delAcom(script, comment)">
 							<i class="icon-remove-sign icon-large"></i>
 						</a>
 						<br>
@@ -79,10 +90,14 @@
 						<br><br>
 					</li>
 				</ul>
-				<input type="button" class="submit" ng-click="lcomm=!lcomm" value="Leave a Comment">
+				<a href="" class="comments" ng-click="lcomm=!lcomm">
+					<i class="icon-comment-alt icon-large"></i> Leave a Comment
+				</a>
 				<div ng-show="lcomm">
 					<textarea class="comment" ng-model="mycomment" jqte></textarea> 
-					<input type="button" class="submit" ng-click="makeAcomment(script, mycomment);lcomm=false" value="Submit">
+					<a href="" class="submit" ng-click="makeAcomment(script, mycomment);lcomm=false">
+						<i class="icon-ok icon-large"></i> Submit
+					</a>
 				</div>
 				<br><br>
 			</div>
