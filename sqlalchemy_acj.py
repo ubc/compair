@@ -78,7 +78,7 @@ class Script(Base):
 	count = Column(Integer, default=0)
 	score = Column(Float, default=0)
 
-	comment = relationship('Comment', cascade="all,delete")
+	comment = relationship('CommentA', cascade="all,delete")
 
 	def __init__(self, qid, author, content):
 		self.qid = qid
@@ -139,8 +139,8 @@ class Enrollment(Base):
 	def __repr__(self):
 		return '<Enrollment %r>' % self.id
 
-class Comment(Base):
-	__tablename__ = 'Comment'
+class CommentA(Base):
+	__tablename__ = 'CommentA'
 	id = Column(Integer, primary_key=True)
 	sid = Column(Integer, ForeignKey('Script.id', ondelete='CASCADE'))
 	author = Column(String(80))
@@ -153,4 +153,20 @@ class Comment(Base):
 		self.content = content
 
 	def __repr__(self):
-		return '<Comment %r>' % self.id
+		return '<CommentA %r>' % self.id
+
+class CommentQ(Base):
+	__tablename__ = 'CommentQ'
+	id = Column(Integer, primary_key=True)
+	qid = Column(Integer, ForeignKey('Question.id', ondelete='CASCADE'))
+	author = Column(String(80))
+	time = Column(DateTime, default=datetime.datetime.utcnow)
+	content = Column(Text)
+	
+	def __init__(self, qid, author, content):
+		self.qid = qid
+		self.author = author
+		self.content = content
+
+	def __repr__(self):
+		return '<CommentQ %r>' % self.id

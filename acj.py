@@ -1,6 +1,6 @@
 from __future__ import division
 from flask import Flask, url_for, request, render_template, redirect, escape, session
-from sqlalchemy_acj import init_db, db_session, User, Judgement, Script, CJ_Model, Course, Question, Enrollment, Comment
+from sqlalchemy_acj import init_db, db_session, User, Judgement, Script, CJ_Model, Course, Question, Enrollment, CommentA, CommentQ
 from sqlalchemy import desc, func, select
 from random import shuffle
 from math import log10, exp
@@ -338,33 +338,74 @@ def total_ranking():
 	db_session.rollback()
 	return json.dumps( {"scripts": lst} )
 
-@app.route('/comment/<id>')
-def get_comments(id):
-	comments = Comment.query.filter_by(sid = id).order_by( Comment.time ).all()
+def get_comments(type, id):
+	comments = []
 	lst = []
+	if (type == 'answer'):
+		comments = CommentA.query.filter_by(sid = id).order_by( CommentA.time ).all()
+	elif (type == 'question'):
+		comments = CommentQ.query.filter_by(qid = id).order_by( CommentQ.time ).all()
 	for comment in comments:
 		lst.append( {"id": comment.id, "author": comment.author, "time": str(comment.time), "content": comment.content} )
 	retval = json.dumps( {"comments": lst} )
 	db_session.rollback()
 	return retval
 
-@app.route('/comment/<id>', methods=['POST'])
-def comment_script(id):
-	param = request.json
-	table = Comment(id, session['username'], param['content'])
+def make_comment(type, id, content):
+	table = ''
+	if (type == 'answer'):
+		table = CommentA(id, session['username'], content)
+	elif (type == 'question'):
+		print ('at least in question')
+		table = CommentQ(id, session['username'], content)
 	db_session.add(table)
 	db_session.commit()
-	comment = Comment.query.order_by( Comment.time.desc() ).first()
+	comment = ''
+	if (type == 'answer'):
+		comment = CommentA.query.order_by( CommentA.time.desc() ).first()
+	elif (type == 'question'):
+		print ('at least in question')
+		comment = CommentQ.query.order_by( CommentQ.time.desc() ).first()
 	retval = json.dumps({"comment": {"id": comment.id, "author": comment.author, "time": str(comment.time), "content": comment.content}})
 	db_session.rollback()
 	return retval
 
-@app.route('/comment/<id>', methods=['DELETE'])
-def delete_comment(id):
-	comment = Comment.query.filter_by(id = id).first()
+def delete_comment(type, id):
+	comment = ''
+	if (type == 'answer'):
+		comment = CommentA.query.filter_by(id = id).first()
+	elif (type == 'question'):
+		comment = CommentQ.query.filter_by(id = id).first()
 	db_session.delete(comment)
 	commit()
 	return json.dumps({"msg": "PASS"})
+
+@app.route('/answer/<id>/comment')
+def get_commentsA(id):
+	return get_comments('answer', id)
+
+@app.route('/answer/<id>/comment', methods=['POST'])
+def comment_answer(id):
+	param = request.json
+	return make_comment('answer', id, param['content'])
+
+@app.route('/answer/<id>/comment', methods=['DELETE'])
+def delete_commentA(id):
+	return delete_comment('answer', id)
+
+@app.route('/question/<id>/comment')
+def get_commentsQ(id):
+	return get_comments('question', id)
+
+@app.route('/question/<id>/comment', methods=['POST'])
+def comment_question(id):
+	print ('asdfasdfasdfasdf')
+	param = request.json
+	return make_comment('question', id, param['content'])
+
+@app.route('/question/<id>/comment', methods=['DELETE'])
+def delete_commentQ(id):
+	return delete_comment('question', id)
 
 @app.route('/course', methods=['POST'])
 def create_course():

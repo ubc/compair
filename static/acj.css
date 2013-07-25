@@ -118,11 +118,11 @@ ul {
 	list-style-type: none;
 }
 
-tr:nth-child(even) {
+.tr:nth-child(even) {
 	background: white;
 }
 
-tr:nth-child(odd) {
+.tr:nth-child(odd) {
 	background: #FFDDDD;
 }
 

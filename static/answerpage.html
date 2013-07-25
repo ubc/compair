@@ -3,7 +3,29 @@
 	<a class="bcrumb" href="#/coursepage"> <i class="icon-fighter-jet"></i> Courses </a>
 	<a class="bcrumb" href="#/questionpage/{{cid}}"> <i class="icon-fighter-jet"></i> {{course}} </a>
 	<br><br>
-	<p> <b>Question:</b> <br> <p class="question"> <ANY ng-bind-html-unsafe="question"></ANY> </p> </p>
+	<p> <b>Question:</b> <br> <p class="question"><ANY ng-bind-html-unsafe="question"></ANY></p> </p>
+	<input type="button" class="button" ng-click="getQcomments();qcomm=!qcomm" value="Comments">
+	<div class="commentblock" ng-show="qcomm">
+		<br>
+		<ul>
+			<li ng-repeat="comment in questionComments">
+				<font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}}&#160;
+				<a href="" class="delete" ng-show="instructor || login==comment.author" ng-click="delQcom(comment)">
+					<i class="icon-trash icon-large"></i> Delete&#160;
+				</a>
+				<br>
+				<div class="comment"><ANY ng-bind-html-unsafe="comment.content"></ANY></div>
+				<br><br>
+			</li>
+		</ul>	
+		<input type="button" class="submit" ng-click="lqcomm=!lqcomm" value="Leave a Comment">
+		<div ng-show="lqcomm">
+			<textarea class="comment" ng-model="myQcomment" jqte></textarea>
+			<input type="button" class="submit" ng-click="makeQcomment(myQcomment);lqcomm=falst" value="Submit">
+		</div>
+		<br><br>
+	</div>
+	<br><br><br><br>
 	<input type="button" class="create" ng-click="check=!check" value="Answer Question">
 	<form ng-show="check" ng-submit="submit()">
 		<br>
@@ -11,7 +33,7 @@
 		<br>
 		<input class="submit" type="submit" value="Submit">
 	</form>
-	<br><br><br>
+	<br><br>
 	<input type="button" class="button" ng-click="temp=orderProp;orderProp=nextOrder;nextOrder=temp" value="Order By: {{nextOrder}}">
 	<ul>
 		<li ng-repeat="script in scripts | orderBy:orderProp:true">
@@ -30,7 +52,7 @@
 				</a>
 				<input type="button" class="answer" ng-show="instructor || login==script.author" ng-click="edit=!edit;newanswer=script.content" value="Edit Answer">
 				<input type="button" class="submit" ng-show="edit" ng-click="editscript(script, newanswer);edit=!edit" value="Submit">
-				<input type="button" class="create" ng-click="getcomments(script);scomm=!scomm" value="Comments">
+				<input type="button" class="create" ng-click="getAcomments(script);scomm=!scomm" value="Comments">
 			</div>
 			<br>
 			<div class="commentblock" ng-show="scomm">
@@ -38,7 +60,7 @@
 				<ul> 
 					<li ng-repeat="comment in script.comments">
 						<font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}} &#160;
-						<a href="" class="delete" ng-show="instructor || login==script.author" ng-click="delcom(script, comment)">
+						<a href="" class="delete" ng-show="instructor || login==comment.author" ng-click="delAcom(script, comment)">
 							<i class="icon-trash icon-large"></i> Delete&#160;
 						</a>
 						<br>
@@ -49,7 +71,7 @@
 				<input type="button" class="submit" ng-click="lcomm=!lcomm" value="Leave a Comment">
 				<div ng-show="lcomm">
 					<textarea class="comment" ng-model="mycomment" jqte></textarea> 
-					<input type="button" class="submit" ng-click="comment(script, mycomment);lcomm=false" value="Submit">
+					<input type="button" class="submit" ng-click="makeAcomment(script, mycomment);lcomm=false" value="Submit">
 				</div>
 				<br><br>
 			</div>

@@ -42,8 +42,12 @@ myApp.factory('enrollService', function($resource) {
 	return $resource( '/enrollment/:id' );
 });
 
-myApp.factory('commentService', function($resource) {
-	return $resource( '/comment/:id' );
+myApp.factory('commentAService', function($resource) {
+	return $resource( '/answer/:id/comment' );
+});
+
+myApp.factory('commentQService', function($resource) {
+	return $resource( '/question/:id/comment' );
 });
 
 myApp.config( function ($routeProvider) {
@@ -254,9 +258,10 @@ function CourseController($scope, courseService, loginService) {
 	};
 }
 
-function QuestionController($scope, $location, $routeParams, questionService, loginService) 
+function QuestionController($scope, $location, $routeParams, $filter, ngTableParams, questionService, loginService) 
 {
 	$scope.orderProp = 'time';
+	var questionData = [];
 
 	var courseId = $routeParams.courseId; 
 	if (!courseId) {
@@ -276,6 +281,12 @@ function QuestionController($scope, $location, $routeParams, questionService, lo
 	var retval = questionService.get( {cid: courseId}, function() {
 		$scope.course = retval.course;
 		$scope.questions = retval.questions;
+		questionData = retval.questions;
+		$scope.questionParams = new ngTableParams({
+			page: 1,
+			total: questionData.length,
+			count: 10,
+		});
 	});
 	$scope.submit = function() {
 		input = {"title": $scope.title, "content": $scope.question};
@@ -308,6 +319,14 @@ function QuestionController($scope, $location, $routeParams, questionService, lo
 		questionId = id;
 		$location.path("/answerpage");
 	};
+	$scope.$watch('questionParams', function(params) {
+		var orderedData = params.sorting ? $filter('orderBy')(questionData, params.orderBy()) : questionData;
+
+		$scope.questions = orderedData.slice(
+			(params.page - 1) * params.count,
+			params.page * params.count
+		);
+	}, true);
 }
 
 function AskController($scope, $location, questionService) {
@@ -323,7 +342,7 @@ function AskController($scope, $location, questionService) {
 	};
 }
 
-function AnswerController($scope, $routeParams, answerService, rankService, commentService) {
+function AnswerController($scope, $routeParams, answerService, rankService, commentAService, commentQService) {
 	var questionId = $routeParams.questionId; 
 
 	$scope.orderProp = 'time';
@@ -375,8 +394,8 @@ function AnswerController($scope, $routeParams, answerService, rankService, comm
 			});
 		}
 	};
-	$scope.getcomments = function(script) {
-		var retval = commentService.get( {id: script.id}, function() {
+	$scope.getAcomments = function(script) {
+		var retval = commentAService.get( {id: script.id}, function() {
 			if (retval.comments) {
 				script.comments = retval.comments;
 			} else {
@@ -384,9 +403,18 @@ function AnswerController($scope, $routeParams, answerService, rankService, comm
 			}
 		});
 	};
-	$scope.comment = function(script, mycomment) {
-		input = {"content": mycomment}
-		var retval = commentService.save( {id: script.id}, input, function() {
+	$scope.getQcomments = function() {
+		var retval = commentQService.get( {id: questionId}, function() {
+			if (retval.comments) {
+				$scope.questionComments = retval.comments;
+			} else {
+				alert('something is wrong');
+			}
+		});
+	};
+	$scope.makeAcomment = function(script, mycomment) {
+		input = {"content": mycomment};
+		var retval = commentAService.save( {id: script.id}, input, function() {
 			if (retval.comment) {
 				script.comments.push( retval.comment );
 			} else {
@@ -394,14 +422,36 @@ function AnswerController($scope, $routeParams, answerService, rankService, comm
 			}
 		});
 	};
-	$scope.delcom = function(script, comment) {
+	$scope.makeQcomment = function(myQcomment) {
+		input = {"content": myQcomment};
+		var retval = commentQService.save( {id: questionId}, input, function() {
+			if (retval.comment) {
+				$scope.questionComments.push( retval.comment );
+			} else {
+				alert('something is wrong');
+			}
+		});
+	};
+	$scope.delAcom = function(script, comment) {
 		if (confirm("Delete Comment?") == true) {
-			var retval = commentService.delete( {id: comment.id}, function() {
+			var retval = commentAService.delete( {id: comment.id}, function() {
 				if (retval.msg != 'PASS') {
 					alert('something is wrong');
 				} else {
 					var index = jQuery.inArray(comment, script.comments);
 					script.comments.splice(index, 1);
+				}
+			});
+		}
+	};
+	$scope.delQcom = function(comment) {
+		if (confirm("Delete Comment?") == true) {
+			var retval = commentQService.delete( {id: comment.id}, function() {
+				if (retval.msg != 'PASS') {
+					alert('something is wrong');
+				} else {
+					var index = jQuery.inArray(comment, $scope.questionComments);
+					$scope.questionComments.splice(index, 1);
 				}
 			});
 		}
