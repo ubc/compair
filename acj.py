@@ -68,6 +68,7 @@ def mark_script(id):
 		sid = sidl
 	query = Script.query.filter_by(id = sid).first()
 	query.count = query.count + 1
+	estimate_score(query.qid)
 	query = User.query.filter_by(username = session['username']).first()
 	uid = query.id
 	if sidl > sidr:
@@ -313,7 +314,6 @@ def estimate_score(id):
 		
 @app.route('/ranking/<id>')
 def marked_scripts(id):
-	estimate_score(id)
 	scripts = Script.query.filter_by(qid = id).order_by( Script.score.desc() ).all() 
 	slst = []
 	for script in scripts:
