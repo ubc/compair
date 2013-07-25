@@ -10,8 +10,8 @@
 		<ul>
 			<li ng-repeat="comment in questionComments">
 				<font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}}&#160;
-				<a href="" class="delete" ng-show="instructor || login==comment.author" ng-click="delQcom(comment)">
-					<i class="icon-trash icon-large"></i> Delete&#160;
+				<a href="" class="" ng-show="instructor || login==comment.author" ng-click="delQcom(comment)">
+					<i class="icon-remove-sign icon-large"></i>
 				</a>
 				<br>
 				<div class="comment"><ANY ng-bind-html-unsafe="comment.content"></ANY></div>
@@ -59,9 +59,9 @@
 				<br>
 				<ul> 
 					<li ng-repeat="comment in script.comments">
-						<font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}} &#160;
-						<a href="" class="delete" ng-show="instructor || login==comment.author" ng-click="delAcom(script, comment)">
-							<i class="icon-trash icon-large"></i> Delete&#160;
+						<font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}}&#160;
+						<a href="" class="" ng-show="instructor || login==comment.author" ng-click="delAcom(script, comment)">
+							<i class="icon-remove-sign icon-large"></i>
 						</a>
 						<br>
 						<div class="comment"><ANY ng-bind-html-unsafe="comment.content"></ANY></div>
