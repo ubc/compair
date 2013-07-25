@@ -148,12 +148,34 @@ a:hover {
 
 a.delete {
 	margin-right: 2em;
-	border: 1px solid #BB0000;
-	background-color: #FF5050;
 }
 
 a.delete:hover {
-	color: white;
+	color: #FF5050;
+}
+
+a.edit {
+	margin-right: 1em;
+}
+
+a.edit:hover {
+	color: #FF9900;
+}
+
+a.cedit:hover {
+	color: #D0D000;
+}
+
+a.comments {
+	margin-right: 1em;
+}
+
+a.comments:hover {
+	color: #9090FF;
+}
+
+a.submit:hover {
+	color: #00CC00;
 }
 
 input.judge {
@@ -243,6 +265,12 @@ input.expand:hover {
 
 .inline {
 	display: inline-block;
+}
+
+.opbuttons {
+	display: inline-block;
+	float: right;
+	text-align: right;
 }
 
 .bcrumb {
