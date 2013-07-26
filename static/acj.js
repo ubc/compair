@@ -1,4 +1,4 @@
-var myApp = angular.module('myApp', ['ngResource', 'ngTable']);
+var myApp = angular.module('myApp', ['ngResource', 'ngTable', 'http-auth-interceptor', 'ngCookies']);
 
 //Global Variables
 
@@ -8,6 +8,10 @@ myApp.factory('judgeService', function($resource) {
 
 myApp.factory('loginService', function($resource) {
 	return $resource( '/login' );
+});
+
+myApp.factory('logoutService', function($resource) {
+	return $resource( '/logout' );
 });
 
 myApp.factory('userService', function($resource) {
@@ -54,8 +58,8 @@ myApp.config( function ($routeProvider) {
 	$routeProvider
 		.when ('/', 
 			{
-				controller: IndexController,
-				templateUrl: 'intro.html'
+				controller: CourseController,
+				templateUrl: 'coursepage.html'
 			})
 		.when ('/judgepage/:questionId',
 			{
@@ -76,11 +80,6 @@ myApp.config( function ($routeProvider) {
 			{
 				controller: RankController,
 				templateUrl: 'rankpage.html'
-			})
-		.when ('/coursepage',
-			{
-				controller: CourseController,
-				templateUrl: 'coursepage.html'
 			})
 		.when ('/questionpage/:courseId',
 			{
@@ -105,7 +104,21 @@ myApp.config( function ($routeProvider) {
 		.otherwise({redirectTo: '/'});
 });
 
-function IndexController($scope, loginService) {
+myApp.directive('authLogin', function($location, $cookieStore) {
+	return {
+		link: function(scope, elem, attrs) {
+			scope.$on('event:auth-loginRequired', function() {
+				$location.path('/login');
+			});
+			scope.$on('event:auth-loginConfirmed', function() {
+				$location.path('/');
+				$cookieStore.put('loggedIn', true);
+			});
+		}
+	}
+});
+
+function IndexController($scope, $location, $cookieStore, loginService, logoutService) {
 	var login = loginService.get( function() {
 		login = login.display;
 		if (login) {
@@ -119,6 +132,15 @@ function IndexController($scope, loginService) {
 		$scope.check = true;
 		$scope.login = display;
 	});
+	$scope.logout = function() {
+		var logout = logoutService.get( function() {
+			if (logout.status) {
+				$cookieStore.put('loggedIn', false);
+				$scope.check = false;
+				$location.path('/login');
+			}
+		});
+	}
 }
 
 function QuickController($scope, $location, judgeService, pickscriptService, quickService) {
@@ -127,16 +149,16 @@ function QuickController($scope, $location, judgeService, pickscriptService, qui
 			questionId = retval.question;
 			$location.path('/judgepage/' + questionId);
 		} else {
-			$location.path('/coursepage');
+			$location.path('/');
 			alert('None of the questions has enough new answers. Please come back later');
 		}
 	});
 }
 
-function JudgepageController($scope, $routeParams, $location, judgeService, pickscriptService) {
+function JudgepageController($scope, $cookieStore, $routeParams, $location, judgeService, pickscriptService) {
 	var questionId = $routeParams.questionId;
 	if (questionId == 0) {
-		$location.path('/coursepage');
+		$location.path('/');
 		return;
 	}
 	var sidl;
@@ -152,7 +174,7 @@ function JudgepageController($scope, $routeParams, $location, judgeService, pick
 				sidr = retval.sidr;
 			} else {
 				alert( 'Either you have already judged all of the high-priority scripts OR there are not enough answers to judge. Please come back later' );
-				$location.path('/coursepage');
+				$location.path('/');
 				//$location.path('/questionpage/' + courseId);
 				return;
 			}
@@ -184,7 +206,7 @@ function JudgepageController($scope, $routeParams, $location, judgeService, pick
 	};
 }
 
-function LoginController($rootScope, $scope, $location, loginService) {
+function LoginController($rootScope, $cookieStore, $scope, $location, loginService, authService) {
 	$scope.submit = function() {
 		if ( !($scope.username && $scope.password) ) {
 			$scope.msg = 'Please provide a username and a password';
@@ -193,8 +215,9 @@ function LoginController($rootScope, $scope, $location, loginService) {
 		input = {"username": $scope.username, "password": $scope.password};
 		var user = loginService.save( input, function() {
 			if (user.display) {
-				$rootScope.$broadcast("LOGGED_IN", user.display);
-				$location.path('/coursepage');
+				authService.loginConfirmed();
+				$rootScope.$broadcast("LOGGED_IN", user.display); 
+				$location.path('/');
 			} else {
 				$scope.msg = 'Incorrect username or password';
 			}
@@ -202,7 +225,7 @@ function LoginController($rootScope, $scope, $location, loginService) {
 	};
 }
 
-function UserController($rootScope, $scope, $location, userService) {
+function UserController($rootScope, $scope, $location, userService, authService) {
 	$scope.usertypes = ['Student', 'Teacher'];
 	$scope.submit = function() {
 		if ($scope.password != $scope.retypepw) {
@@ -219,8 +242,9 @@ function UserController($rootScope, $scope, $location, userService) {
 		var user = userService.save( input, function() {
 			$scope.flash = user.flash;
 			if (!user.msg && !$scope.flash) {
+				authService.loginConfirmed();
 				$rootScope.$broadcast("LOGGED_IN", $scope.display); 
-				$location.path('/coursepage');
+				$location.path('/');
 			}
 			return '';
 		});
@@ -233,7 +257,7 @@ function RankController($scope, $resource) {
 	});
 }
 
-function CourseController($scope, courseService, loginService) {
+function CourseController($scope, $cookieStore, courseService, loginService) {
 	// the property by which the list of courses will be sorted
 	$scope.orderProp = 'name';
 
@@ -267,7 +291,7 @@ function QuestionController($scope, $location, $routeParams, $filter, ngTablePar
 
 	var courseId = $routeParams.courseId; 
 	if (!courseId) {
-		$location.path("/coursepage");
+		$location.path("/");
 		return;
 	}
 	var login = loginService.get( function() {

@@ -1,6 +1,7 @@
 from __future__ import division
 from flask import Flask, url_for, request, render_template, redirect, escape, session
 from sqlalchemy_acj import init_db, db_session, User, Judgement, Script, CJ_Model, Course, Question, Enrollment, CommentA, CommentQ
+from flask_principal import ActionNeed, AnonymousIdentity, Identity, identity_changed, identity_loaded, Permission, Principal, RoleNeed
 from sqlalchemy import desc, func, select
 from random import shuffle
 from math import log10, exp
@@ -16,6 +17,20 @@ import validictory
 app = Flask(__name__)
 init_db()
 hasher = phpass.PasswordHash()
+principals = Principal(app)
+
+# Needs
+is_teacher = RoleNeed('Teacher')
+is_student = RoleNeed('Student')
+
+# Permissions
+teacher = Permission(is_teacher)
+teacher.description = "Teacher's permissions"
+student = Permission(is_student)
+student.description = "Student's permissions"
+
+apps_needs = [is_teacher, is_student]
+apps_permissions = [teacher, student]
 
 class DatetimeEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -38,6 +53,7 @@ def index():
 	return redirect(url_for('static', filename="index.html"))
 
 @app.route('/script/<id>', methods=['GET'])
+@student.require(http_exception=401)
 def get_script(id):
 	print(id)
 	query = Script.query.filter_by(id = id).first()
@@ -49,6 +65,7 @@ def get_script(id):
 	return ret_val
 
 @app.route('/script/<id>', methods=['POST'])
+@student.require(http_exception=401)
 def mark_script(id):
 	query = Script.query.filter_by(id = id).first()
 	if not query:
@@ -81,6 +98,7 @@ def mark_script(id):
 	return json.dumps({"msg": "Script & Judgement updated"})
 
 @app.route('/answer/<id>', methods=['POST'])
+@student.require(http_exception=401)
 def post_answer(id):
 	param = request.json
 	qid = id
@@ -97,6 +115,7 @@ def post_answer(id):
 	return retval
 
 @app.route('/answer/<id>', methods=['PUT'])
+@student.require(http_exception=401)
 def edit_answer(id):
 	param = request.json
 	script = Script.query.filter_by(id = id).first()
@@ -105,6 +124,7 @@ def edit_answer(id):
 	return json.dumps({"msg": "PASS"})
 
 @app.route('/answer/<id>', methods=['DELETE'])
+@student.require(http_exception=401)
 def delete_answer(id):
 	script = Script.query.filter_by(id = id).first()
 	db_session.delete(script)
@@ -134,14 +154,19 @@ def login():
 		session['username'] = username
 		display = User.query.filter_by(username = username).first().display
 		db_session.rollback()
+		identity = Identity('only_' + query.usertype)
+		identity_changed.send(app, identity=identity)
 		return json.dumps( {"display": display} )
-	db.dession.rollback()
+	db_session.rollback()
 	return json.dumps( {"msg": 'Incorrect username or password'} )
 
 @app.route('/logout')
 def logout():
 	session.pop('username', None)
-	return redirect(url_for('index'))
+	for key in ['identity.name', 'identity.auth_type']:
+		session.pop(key, None)
+	identity_changed.send(app, identity=AnonymousIdentity())
+	return json.dumps( {"status": 'logged out'} )
 
 @app.route('/user', methods=['POST'])
 def create_user():
@@ -190,9 +215,12 @@ def create_user():
 	db_session.add(table)
 	commit()
 	session['username'] = username
+	identity = Identity('only_' + param['usertype'])
+	identity_changed.send(app, identity=identity)
 	return ''
 
 @app.route('/pickscript/<id>', methods=['GET'])
+@student.require(http_exception=401)
 def pick_script(id):
 	query = Script.query.filter_by(qid = id).order_by( Script.count.desc() ).first()
 	question = Question.query.filter_by(id = id).first()
@@ -230,6 +258,7 @@ def pick_script(id):
 	db_session.rollback()
 	return retval
 
+@student.require(http_exception=401)
 def get_fresh_pair( scripts ):
 	uid = User.query.filter_by(username = session['username']).first().id
 	index = 0
@@ -257,6 +286,7 @@ def get_fresh_pair( scripts ):
 	return ''
 
 @app.route('/randquestion')
+@student.require(http_exception=401)
 def random_question():
 	script = Script.query.order_by( Script.count ).first()
 	if not script:
@@ -338,6 +368,7 @@ def estimate_score(id):
 	return '101010100010110'
 		
 @app.route('/ranking/<id>')
+@student.require(http_exception=401)
 def marked_scripts(id):
 	scripts = Script.query.filter_by(qid = id).order_by( Script.score.desc() ).all() 
 	slst = []
@@ -354,6 +385,7 @@ def marked_scripts(id):
 	return retval
 
 @app.route('/ranking')
+@student.require(http_exception=401)
 def total_ranking():
 	scripts = Script.query.order_by( Script.score.desc() ).all()
 	lst = []
@@ -438,6 +470,7 @@ def delete_commentQ(id):
 	return delete_comment('question', id)
 
 @app.route('/course', methods=['POST'])
+@teacher.require(http_exception=401)
 def create_course():
 	user = User.query.filter_by( username = session['username']).first()
 	param = request.json
@@ -457,6 +490,7 @@ def create_course():
 	return retval
 
 @app.route('/course', methods=['GET'])
+@student.require(http_exception=401)
 def list_course():
 	user = User.query.filter_by( username = session['username'] ).first()
 	courses = Course.query.order_by( Course.name ).all()
@@ -471,6 +505,7 @@ def list_course():
 	return json.dumps( {"courses": lst} )
 
 @app.route('/question/<id>')
+@student.require(http_exception=401)
 def list_question(id):
 	course = Course.query.filter_by(id = id).first()
 	questions = Question.query.filter_by(cid = id).order_by( Question.time.desc() ).all()
@@ -482,6 +517,7 @@ def list_question(id):
 	return json.dumps( {"course": course.name, "questions": lst} )
 
 @app.route('/question/<id>', methods=['POST'])
+@teacher.require(http_exception=401)
 def create_question(id):
 	param = request.json
 	content = param['content']
@@ -496,6 +532,7 @@ def create_question(id):
 	return retval
 
 @app.route('/question/<id>', methods=['DELETE'])
+@teacher.require(http_exception=401)
 def delete_question(id):
 	question = Question.query.filter_by(id = id).first()
 	user = User.query.filter_by(username = session['username']).first()
@@ -508,6 +545,7 @@ def delete_question(id):
 	return ''
 
 @app.route('/enrollment/<cid>')
+@teacher.require(http_exception=401)
 def students_enrolled(cid):
 	users = User.query.filter((User.usertype == 'Teacher') | (User.usertype == 'Student')).order_by( User.username ).all()
 	studentlst = []
@@ -532,6 +570,7 @@ def students_enrolled(cid):
 	return retval
 
 @app.route('/enrollment/<cid>', methods=['POST'])
+@teacher.require(http_exception=401)
 def enroll_student(cid):
 	param = request.json
 	uid = param['uid']
@@ -544,15 +583,25 @@ def enroll_student(cid):
 	return retval
 
 @app.route('/enrollment/<eid>', methods=['DELETE'])
+@teacher.require(http_exception=401)
 def drop_student(eid):
 	query = Enrollment.query.filter_by( id = eid ).first()
 	db_session.delete(query)
 	commit()
 	return json.dumps( {"msg": "PASS"} )
 	
-
-
-
+@identity_loaded.connect_via(app)
+def on_identity_loaded(sender, identity):
+	needs = []
+	
+	if identity.id in ('only_Student', 'only_Teacher'):
+		needs.append(is_student)
+	
+	if identity.id == 'only_Teacher':
+		needs.append(is_teacher)
+	
+	for n in needs:
+		identity.provides.add(n)
 
 app.secret_key = 'asdf1234'
 
