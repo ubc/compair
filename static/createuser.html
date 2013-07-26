@@ -13,6 +13,15 @@
 		<p>Username: <input type=text name="username" ng-model="username" required></p>
 		<span class=errMsg ng-show="submitted && createUser.username.$error.required">
 			A username is required.</span>
+		<p>First Name: <input type="text" name="firstname" ng-model="firstname" required></p>
+		<span class=errMsg ng-show="submitted && createUser.username.$error.required">
+			First name is required.</span>
+		<p>Last Name: <input type="text" name="lastname" ng-model="lastname" required></p>
+		<span class=errMsg ng-show="submitted && createUser.username.$error.required">
+			Last name is required.</span>
+		<p>Display Name: <input type="text" name="display" ng-model="display" required></p>
+		<span class=errMsg ng-show="submitted && createUser.username.$error.required">
+			Display name is required.</span>
 		<p>Email: <input type=text name="email" ng-model="email" ng-click="formaterr=false"></p>
 		<span class=errMsg ng-show="formaterr">
 			Incorrect email format.</span>

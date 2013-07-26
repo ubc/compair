@@ -113,7 +113,7 @@ def delete_answer(id):
 def logincheck():
 	if 'username' in session:
 		user = User.query.filter_by(username = session['username']).first()
-		retval = json.dumps( {"username": session['username'], "usertype": user.usertype} )
+		retval = json.dumps( {"display": user.display, "usertype": user.usertype} )
 		db_session.rollback()
 		return retval
 	return ''
@@ -150,7 +150,10 @@ def create_user():
 			'username': {'type': 'string'},
 			'usertype': {'type': 'string', 'enum': ['Student', 'Teacher']},
 			'password': {'type': 'string'},
-			'email': {'type': 'string', 'format': 'email', 'required': False}
+			'email': {'type': 'string', 'format': 'email', 'required': False},
+			'firstname': {'type': 'string'},
+			'lastname': {'type': 'string'},
+			'display': {'type': 'string'},
 		}
 	}
 	try:
@@ -163,16 +166,24 @@ def create_user():
 	if query:
 		db_session.rollback()
 		return json.dumps( {"flash": 'Username already exists'} )
+	display = param['display']
+	query = User.query.filter_by(display = display).first()
+	if query:
+		db_session.rollback()
+		return json.dumps( {"flash": 'Display name already exists'} )
 	password = param['password']
 	password = hasher.hash_password( password )
 	usertype = param['usertype']
 	if 'email' in param:
 		email = param['email']
 		if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+			db_session.rollback()
 			return json.dumps( {"flash": 'Incorrect email format'} )
 	else:
 		email = ''
-	table = User(username, password, usertype, email)
+	firstname = param['firstname']
+	lastname = param['lastname']
+	table = User(username, password, usertype, email, firstname, lastname, display)
 	db_session.add(table)
 	commit()
 	session['username'] = username

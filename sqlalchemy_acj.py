@@ -3,6 +3,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine, Column, Integer, String, Enum, ForeignKey, DateTime, Text, Float
 from sqlalchemy.orm import backref, scoped_session, sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.hybrid import hybrid_property
 import datetime
 
 engine = create_engine('mysql://testuser:testpw@localhost/acj', convert_unicode=True, pool_recycle=300)
@@ -22,18 +23,28 @@ class User(Base):
 	password = Column(String(120), unique=False)
 	usertype = Column(Enum('Admin', 'Teacher', 'Student'))
 	email = Column(String(254))
+	firstname = Column(String(254))
+	lastname = Column(String(254))
+	display = Column(String(254), unique=True)
 
 	judgement = relationship('Judgement', cascade="all,delete")
 	enrollment = relationship('Enrollment', cascade="all,delete")
 
-	def __init__(self, username, password, usertype, email):
+	def __init__(self, username, password, usertype, email, firstname, lastname, display):
 		self.username = username
 		self.password = password
 		self.usertype = usertype
 		self.email = email
+		self.firstname = firstname
+		self.lastname = lastname
+		self.display = display
 
 	def __repr__(self):
 		return '<User %r>' % self.username
+
+	@hybrid_property
+	def fullname(self):
+		return self.firstname + ' ' + self.lastname
 
 class Course(Base):
 	__tablename__ = 'Course'

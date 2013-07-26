@@ -112,7 +112,7 @@ myApp.config( function ($routeProvider) {
 
 function IndexController($scope, loginService) {
 	var login = loginService.get( function() {
-		login = login.username;
+		login = login.display;
 		if (login) {
 			$scope.check = true;
 			$scope.login = login;
@@ -213,11 +213,13 @@ function UserController($rootScope, $scope, $location, userService) {
 			return '';
 		}
 		var re = /[^@]+@[^@]+/;
-		if (!re.exec($scope.email)) {
+		if (!re.exec($scope.email) && $scope.email != undefined && $scope.email != '') {
 			$scope.formaterr = true;
 			return;
+		} else {
+			$scope.email = undefined;
 		}
-		input = {"username": $scope.username, "password": $scope.password, "usertype": $scope.usertype, "email": $scope.email};
+		input = {"username": $scope.username, "password": $scope.password, "usertype": $scope.usertype, "email": $scope.email, "firstname": $scope.firstname, "lastname": $scope.lastname, "display": $scope.display};
 		var user = userService.save( input, function() {
 			$scope.flash = user.flash;
 			if (!user.msg && !$scope.flash) {
