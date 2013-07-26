@@ -21,14 +21,16 @@ class User(Base):
 	username = Column(String(80), unique=True)
 	password = Column(String(120), unique=False)
 	usertype = Column(Enum('Admin', 'Teacher', 'Student'))
+	email = Column(String(254))
 
 	judgement = relationship('Judgement', cascade="all,delete")
 	enrollment = relationship('Enrollment', cascade="all,delete")
 
-	def __init__(self, username, password, usertype):
+	def __init__(self, username, password, usertype, email):
 		self.username = username
 		self.password = password
 		self.usertype = usertype
+		self.email = email
 
 	def __repr__(self):
 		return '<User %r>' % self.username

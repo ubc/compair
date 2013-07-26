@@ -146,8 +146,12 @@ a:hover {
 	color:red;
 }
 
+a.answer {
+	margin-right: 1em;
+}
+
 a.answer:hover {
-	color: #FFDF00;
+	color: #F0D000;
 }
 
 a.delete {
@@ -188,6 +192,18 @@ a.sort {
 
 a.sort:hover {
 	color: gray;
+}
+
+a.judge {
+	margin-right: 1em;
+}
+
+a.judge:hover {
+	color: #772A00;
+}
+
+a.question:hover {
+	color: silver;
 }
 
 input.judge {
@@ -271,6 +287,7 @@ input.expand:hover {
 }
 
 .userlogin {
+	display: inline-block;
 	float: right;
 	text-align: right;
 }

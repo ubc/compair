@@ -143,17 +143,20 @@ def logout():
 @app.route('/user', methods=['POST'])
 def create_user():
 	param = request.json
+	print(param)
 	schema = {
 		'type': 'object',
 		'properties': {
 			'username': {'type': 'string'},
 			'usertype': {'type': 'string', 'enum': ['Student', 'Teacher']},
-			'password': {'type': 'string'}
+			'password': {'type': 'string'},
+			'email': {'type': 'string', 'format': 'email', 'required': False}
 		}
 	}
 	try:
 		validictory.validate(param, schema)
 	except ValueError, error:
+		print (str(error))
 		return json.dumps( {"msg": str(error)} )
 	username = param['username']
 	query = User.query.filter_by(username = username).first()
@@ -163,7 +166,13 @@ def create_user():
 	password = param['password']
 	password = hasher.hash_password( password )
 	usertype = param['usertype']
-	table = User(username, password, usertype)
+	if 'email' in param:
+		email = param['email']
+		if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+			return json.dumps( {"flash": 'Incorrect email format'} )
+	else:
+		email = ''
+	table = User(username, password, usertype, email)
 	db_session.add(table)
 	commit()
 	session['username'] = username

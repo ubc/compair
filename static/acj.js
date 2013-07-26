@@ -212,7 +212,12 @@ function UserController($rootScope, $scope, $location, userService) {
 		if ($scope.password != $scope.retypepw) {
 			return '';
 		}
-		input = {"username": $scope.username, "password": $scope.password, "usertype": $scope.usertype};
+		var re = /[^@]+@[^@]+/;
+		if (!re.exec($scope.email)) {
+			$scope.formaterr = true;
+			return;
+		}
+		input = {"username": $scope.username, "password": $scope.password, "usertype": $scope.usertype, "email": $scope.email};
 		var user = userService.save( input, function() {
 			$scope.flash = user.flash;
 			if (!user.msg && !$scope.flash) {

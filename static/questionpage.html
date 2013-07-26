@@ -3,20 +3,34 @@
 	<a href="#/coursepage"> <i class="icon-fighter-jet"></i> Courses</a>
 	<br><br>
 	<p> Course: <b>{{course}}</b> </p>
-	<input type="button" class="create" ng-click="check=!check" value="Create Question">
-	<form ng-show="check" ng-submit="submit()">
+	<a href="" class="question" ng-click="check=!check">
+		<i class="icon-question-sign icon-large"></i> Create Question
+	</a>
+	<div ng-show="check">
 		<br>
 		Question Title: <input type="text" ng-model="title"></input>
-		<br><br>
+		<br>
 		<textarea ng-model="question" jqte></textarea>
 		<br>
-		<input class="submit" type="submit" value="Submit">
-		<br>
-	</form>
-	<br><br>
+		<a href="" class="submit" ng-click="submit()">
+			<i class="icon-ok icon-large"></i> Submit
+		</a>
+	</div>
+	<br><br><br>
 	<ul>
 		<li ng-repeat="question in questions | orderBy:orderProp:true">
-			<p><b>{{question.author}}</b> - {{question.time}}</p>
+			<b>{{question.author}}</b> - {{question.time}}
+			<div class="opbuttons">
+				<a href="#/answerpage/{{question.id}}" class="answer"> 
+					<i class="icon-puzzle-piece icon-large"></i> Answer Page
+				</a>
+				<a href="#/judgepage/{{question.id}}" class="judge"> 
+					<i class="icon-legal icon-large"></i> Judge Answers
+				</a>
+				<a href="" class="delete" ng-show="login == question.author || instructor" ng-click="delete(question)">
+					<i class="icon-trash icon-large"></i> Delete
+				</a>
+			</div>
 			<div class="qtitle" ng-click="full=!full" ng-hide="full" >
 				<i class="icon-collapse"></i>
 				{{question.title}}   
@@ -27,13 +41,7 @@
 			<div class="qtitle" ng-click="full=!full" ng-show="full">
 				<i class="icon-collapse-top"></i>
 			</div>
-			<div class="qbutton">
-				<a href="" class="delete" ng-show="login == question.author || instructor" ng-click="delete(question)">
-					<i class="icon-trash icon-large"></i> Delete
-				</a>
-				<a href="#/judgepage/{{question.id}}"> <input type="button" class="judge" value="Judge Answers"> </a>
-				<a href="#/answerpage/{{question.id}}"> <input type="button" class="answer" value="Answer Page"> </a>
-			</div>
+
 			<br><br><br>
 		</li>
 	</ul>
