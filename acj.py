@@ -86,13 +86,13 @@ def post_answer(id):
 	qid = id
 	user = User.query.filter_by(username = session['username']).first()
 	uid = user.id
-	Author = user.display
+	author = user.display
 	content = param['content']
 	table = Script(qid, uid, content)
 	db_session.add(table)
 	db_session.commit()
 	script = Script.query.order_by( Script.time.desc() ).first()
-	retval = json.dumps({"id": script.id, "Author": display, "time": str(script.time), "content": script.content, "score":script.score})
+	retval = json.dumps({"id": script.id, "author": author, "time": str(script.time), "content": script.content, "score":script.score})
 	db_session.rollback()
 	return retval
 
@@ -259,6 +259,8 @@ def get_fresh_pair( scripts ):
 @app.route('/randquestion')
 def random_question():
 	script = Script.query.order_by( Script.count ).first()
+	if not script:
+		return ''
 	scripts = Script.query.filter_by( count = script.count ).all()
 	print ('initial scripts: ' + str(scripts))
 	user = User.query.filter_by( username = session['username'] ).first()
@@ -340,8 +342,8 @@ def marked_scripts(id):
 	scripts = Script.query.filter_by(qid = id).order_by( Script.score.desc() ).all() 
 	slst = []
 	for script in scripts:
-		Author = User.query.filter_by(id = script.uid).first().display
-		slst.append( {"id": script.id, "title": script.title, "Author": Author, "time": str(script.time), "content": script.content, "score": script.score, "comments": []} )
+		author = User.query.filter_by(id = script.uid).first().display
+		slst.append( {"id": script.id, "title": script.title, "author": author, "time": str(script.time), "content": script.content, "score": script.score, "comments": []} )
 	print ('what is happneing')
 	print ( slst )
 	question = Question.query.filter_by(id = id).first()
@@ -358,8 +360,8 @@ def total_ranking():
 	for script in scripts:
 		question = Question.query.filter_by(id = script.qid).first()
 		course = Course.query.filter_by(id = question.cid).first()
-		Author = User.query.filter_by(id = script.uid).first().display
-		lst.append( {"course": course.name, "question": question.content, "Author": Author, "time": str(script.time), "content": script.content, "score": script.score } )
+		author = User.query.filter_by(id = script.uid).first().display
+		lst.append( {"course": course.name, "question": question.content, "author": author, "time": str(script.time), "content": script.content, "score": script.score } )
 	db_session.rollback()
 	return json.dumps( {"scripts": lst} )
 
@@ -371,8 +373,8 @@ def get_comments(type, id):
 	elif (type == 'question'):
 		comments = CommentQ.query.filter_by(qid = id).order_by( CommentQ.time ).all()
 	for comment in comments:
-		Author = User.query.filter_by(id = comment.uid).first().display
-		lst.append( {"id": comment.id, "Author": Author, "time": str(comment.time), "content": comment.content} )
+		author = User.query.filter_by(id = comment.uid).first().display
+		lst.append( {"id": comment.id, "author": author, "time": str(comment.time), "content": comment.content} )
 	retval = json.dumps( {"comments": lst} )
 	db_session.rollback()
 	return retval
@@ -393,8 +395,8 @@ def make_comment(type, id, content):
 	elif (type == 'question'):
 		print ('at least in question')
 		comment = CommentQ.query.order_by( CommentQ.time.desc() ).first()
-	Author = User.query.filter_by(id = comment.uid).first().display
-	retval = json.dumps({"comment": {"id": comment.id, "Author": Author, "time": str(comment.time), "content": comment.content}})
+	author = User.query.filter_by(id = comment.uid).first().display
+	retval = json.dumps({"comment": {"id": comment.id, "author": author, "time": str(comment.time), "content": comment.content}})
 	db_session.rollback()
 	return retval
 
@@ -474,8 +476,8 @@ def list_question(id):
 	questions = Question.query.filter_by(cid = id).order_by( Question.time.desc() ).all()
 	lst = []
 	for question in questions:
-		Author = User.query.filter_by(id = question.uid).first().display
-		lst.append( {"id": question.id, "Author": Author, "time": str(question.time), "title": question.title, "content": question.content} )
+		author = User.query.filter_by(id = question.uid).first().display
+		lst.append( {"id": question.id, "author": author, "time": str(question.time), "title": question.title, "content": question.content} )
 	db_session.rollback()
 	return json.dumps( {"course": course.name, "questions": lst} )
 
@@ -489,7 +491,7 @@ def create_question(id):
 	db_session.add(newQuestion)
 	db_session.commit()
 	course = Course.query.filter_by(id = id).first()
-	retval = json.dumps({"id": newQuestion.id, "Author": user.display, "time": str(newQuestion.time), "title": newQuestion.title, "content": newQuestion.content})
+	retval = json.dumps({"id": newQuestion.id, "author": user.display, "time": str(newQuestion.time), "title": newQuestion.title, "content": newQuestion.content})
 	db_session.rollback()
 	return retval
 

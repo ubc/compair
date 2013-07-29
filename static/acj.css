@@ -23,6 +23,10 @@ p {
 	margin: 3px;
 }
 
+input[type="radio"] {
+	margin-bottom: 0.5em;
+}
+
 div.question, p.question {
 	width: 90%;
 	padding: 7px;

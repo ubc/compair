@@ -87,11 +87,6 @@ myApp.config( function ($routeProvider) {
 				controller: QuestionController,
 				templateUrl: 'questionpage.html'
 			})
-		.when ('/createquestion',
-			{
-				controller: AskController,
-				templateUrl: 'createquestion.html'
-			})
 		.when ('/answerpage/:questionId',
 			{
 				controller: AnswerController,
@@ -243,7 +238,6 @@ function CourseController($scope, courseService, loginService) {
 	$scope.orderProp = 'name';
 
 	var login = loginService.get( function() {
-		$scope.login = login.username;
 		type = login.usertype;
 		if (type && (type=='Teacher' || type=='Admin')) {
 			$scope.instructor = true;
@@ -279,11 +273,12 @@ function QuestionController($scope, $location, $routeParams, $filter, ngTablePar
 	var login = loginService.get( function() {
 		if (login.display) {
 			$scope.login= login.display;
-			if (login.usertype == 'Teacher') {
+			if (login.usertype == 'Teacher' || login.usertype == 'Admin') {
 				$scope.instructor = true;
 			}
 		} else {
 			$scope.login = '';
+			alert('something is not right; user is not logged in');
 		}
 	});
 	var retval = questionService.get( {cid: courseId}, function() {
@@ -335,19 +330,6 @@ function QuestionController($scope, $location, $routeParams, $filter, ngTablePar
 			params.page * params.count
 		);
 	}, true);
-}
-
-function AskController($scope, $location, questionService) {
-	$scope.submit = function() {
-		input = {"content": $scope.question};
-		var msg = questionService.save( {cid: courseId}, input, function() {
-			if (msg.msg) {
-				alert('something is wrong');
-			} else {
-				$location.path("/questionpage");
-			}
-		});
-	};
 }
 
 function AnswerController($scope, $routeParams, answerService, rankService, commentAService, commentQService) {
