@@ -63,16 +63,16 @@ class Question(Base):
 	__tablename__ = 'Question'
 	id = Column(Integer, primary_key=True)
 	cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
-	author = Column(String(80), default='anonym')
+	uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
 	time = Column(DateTime, default=datetime.datetime.utcnow)
 	title = Column(String(80))
 	content = Column(Text)
 
 	script = relationship('Script', cascade="all,delete")
 
-	def __init__(self, cid, author, title, content):
+	def __init__(self, cid, uid, title, content):
 		self.cid = cid
-		self.author = author
+		self.uid = uid 
 		self.title = title
 		self.content = content
 
@@ -84,7 +84,7 @@ class Script(Base):
 	id = Column(Integer, primary_key=True)
 	qid = Column(Integer, ForeignKey('Question.id', ondelete='CASCADE'))
 	title = Column(String(80), default='answer')
-	author = Column(String(80), unique=False)
+	uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
 	time = Column(DateTime, default=datetime.datetime.utcnow)
 	content = Column(Text, unique=False)
 	wins = Column(Integer, default=0)
@@ -93,9 +93,9 @@ class Script(Base):
 
 	comment = relationship('CommentA', cascade="all,delete")
 
-	def __init__(self, qid, author, content):
+	def __init__(self, qid, uid, content):
 		self.qid = qid
-		self.author = author
+		self.uid = uid 
 		self.content = content
 
 	def __repr__(self):
@@ -156,13 +156,13 @@ class CommentA(Base):
 	__tablename__ = 'CommentA'
 	id = Column(Integer, primary_key=True)
 	sid = Column(Integer, ForeignKey('Script.id', ondelete='CASCADE'))
-	author = Column(String(80))
+	uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
 	time = Column(DateTime, default=datetime.datetime.utcnow)
 	content = Column(Text)
 
-	def __init__(self, sid, author, content):
+	def __init__(self, sid, uid, content):
 		self.sid = sid
-		self.author = author
+		self.uid = uid 
 		self.content = content
 
 	def __repr__(self):
@@ -172,13 +172,13 @@ class CommentQ(Base):
 	__tablename__ = 'CommentQ'
 	id = Column(Integer, primary_key=True)
 	qid = Column(Integer, ForeignKey('Question.id', ondelete='CASCADE'))
-	author = Column(String(80))
+	uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
 	time = Column(DateTime, default=datetime.datetime.utcnow)
 	content = Column(Text)
 	
-	def __init__(self, qid, author, content):
+	def __init__(self, qid, uid, content):
 		self.qid = qid
-		self.author = author
+		self.uid = uid 
 		self.content = content
 
 	def __repr__(self):

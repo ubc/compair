@@ -120,9 +120,9 @@ function IndexController($scope, loginService) {
 			$scope.check = false;
 		}
 	});
-	$scope.$on("LOGGED_IN", function(event, username) {
+	$scope.$on("LOGGED_IN", function(event, display) {
 		$scope.check = true;
-		$scope.login = username;
+		$scope.login = display;
 	});
 }
 
@@ -197,10 +197,11 @@ function LoginController($rootScope, $scope, $location, loginService) {
 		}
 		input = {"username": $scope.username, "password": $scope.password};
 		var user = loginService.save( input, function() {
-			$scope.msg = user.msg;
-			if (!$scope.msg) {
-				$rootScope.$broadcast("LOGGED_IN", $scope.username); 
+			if (user.display) {
+				$rootScope.$broadcast("LOGGED_IN", user.display);
 				$location.path('/coursepage');
+			} else {
+				$scope.msg = 'Incorrect username or password';
 			}
 		});
 	};
@@ -223,7 +224,7 @@ function UserController($rootScope, $scope, $location, userService) {
 		var user = userService.save( input, function() {
 			$scope.flash = user.flash;
 			if (!user.msg && !$scope.flash) {
-				$rootScope.$broadcast("LOGGED_IN", $scope.username); 
+				$rootScope.$broadcast("LOGGED_IN", $scope.display); 
 				$location.path('/coursepage');
 			}
 			return '';
@@ -276,8 +277,8 @@ function QuestionController($scope, $location, $routeParams, $filter, ngTablePar
 		return;
 	}
 	var login = loginService.get( function() {
-		if (login.username) {
-			$scope.login= login.username;
+		if (login.display) {
+			$scope.login= login.display;
 			if (login.usertype == 'Teacher') {
 				$scope.instructor = true;
 			}
@@ -360,7 +361,7 @@ function AnswerController($scope, $routeParams, answerService, rankService, comm
 		$scope.cid = retval.cid;
 		$scope.question = retval.question;
 		$scope.scripts = retval.scripts;
-		$scope.login = retval.username;
+		$scope.login = retval.display;
 		if (retval.usertype == 'Teacher' || retval.usertype == 'Admin') {
 			$scope.instructor = true;
 		}
