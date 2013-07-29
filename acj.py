@@ -1,6 +1,6 @@
 from __future__ import division
 from flask import Flask, url_for, request, render_template, redirect, escape, session
-from sqlalchemy_acj import init_db, db_session, User, Judgement, Script, CJ_Model, Course, Question, Enrollment, CommentA, CommentQ
+from sqlalchemy_acj import init_db, db_session, User, Judgement, Script, CJ_Model, Course, Question, Enrollment, CommentA, CommentQ, Entry
 from flask_principal import ActionNeed, AnonymousIdentity, Identity, identity_changed, identity_loaded, Permission, Principal, RoleNeed
 from sqlalchemy import desc, func, select
 from random import shuffle
@@ -20,17 +20,20 @@ hasher = phpass.PasswordHash()
 principals = Principal(app)
 
 # Needs
+is_admin = RoleNeed('Admin')
 is_teacher = RoleNeed('Teacher')
 is_student = RoleNeed('Student')
 
 # Permissions
+admin = Permission(is_admin)
+admin.description = "Admin's permissions"
 teacher = Permission(is_teacher)
 teacher.description = "Teacher's permissions"
 student = Permission(is_student)
 student.description = "Student's permissions"
 
-apps_needs = [is_teacher, is_student]
-apps_permissions = [teacher, student]
+apps_needs = [is_admin, is_teacher, is_student]
+apps_permissions = [admin, teacher, student]
 
 class DatetimeEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -594,11 +597,14 @@ def drop_student(eid):
 def on_identity_loaded(sender, identity):
 	needs = []
 	
-	if identity.id in ('only_Student', 'only_Teacher'):
+	if identity.id in ('only_Student', 'only_Teacher', 'only_Admin'):
 		needs.append(is_student)
 	
-	if identity.id == 'only_Teacher':
+	if identity.id in ('only_Teacher', 'only_Admin'):
 		needs.append(is_teacher)
+	
+	if identity.id == 'only_Admin':
+		needs.append(is_admin)
 	
 	for n in needs:
 		identity.provides.add(n)

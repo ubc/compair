@@ -59,16 +59,28 @@ class Course(Base):
 	def __repr__(self):
 		return '<Course %r>' % self.name
 
-class Question(Base):
-	__tablename__ = 'Question'
+class Entry(Base):
+	__tablename__ = 'Entry'
 	id = Column(Integer, primary_key=True)
-	cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
 	uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
 	time = Column(DateTime, default=datetime.datetime.utcnow)
-	title = Column(String(80))
 	content = Column(Text)
 
-	script = relationship('Script', cascade="all,delete")
+	def __init__(self, uid, content):
+		self.uid = uid
+		self.content = content
+	
+	def __repr__(self):
+		return '<Entry %r>' % self.id
+
+class Question(Entry):
+	__tablename__ = 'Question'
+	id = Column(Integer, primary_key=True)
+	eid = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'))
+	cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
+	title = Column(String(80))
+	
+	entry = relationship('Entry', foreign_keys=[eid])
 
 	def __init__(self, cid, uid, title, content):
 		self.cid = cid
@@ -79,19 +91,18 @@ class Question(Base):
 	def __repr__(self):
 		return '<Question %r>' % self.id
 
-class Script(Base):
+class Script(Entry):
 	__tablename__ = 'Script'
 	id = Column(Integer, primary_key=True)
+	eid = Column(Integer, ForeignKey('Entry.id', ondelete="CASCADE"))
 	qid = Column(Integer, ForeignKey('Question.id', ondelete='CASCADE'))
 	title = Column(String(80), default='answer')
-	uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
-	time = Column(DateTime, default=datetime.datetime.utcnow)
-	content = Column(Text, unique=False)
 	wins = Column(Integer, default=0)
 	count = Column(Integer, default=0)
 	score = Column(Float, default=0)
 
-	comment = relationship('CommentA', cascade="all,delete")
+	entry = relationship('Entry', foreign_keys=[eid])
+	question = relationship('Question', foreign_keys=[qid], cascade="all,delete")
 
 	def __init__(self, qid, uid, content):
 		self.qid = qid
@@ -152,13 +163,14 @@ class Enrollment(Base):
 	def __repr__(self):
 		return '<Enrollment %r>' % self.id
 
-class CommentA(Base):
+class CommentA(Entry):
 	__tablename__ = 'CommentA'
 	id = Column(Integer, primary_key=True)
 	sid = Column(Integer, ForeignKey('Script.id', ondelete='CASCADE'))
-	uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
-	time = Column(DateTime, default=datetime.datetime.utcnow)
-	content = Column(Text)
+	eid = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'))
+
+	entry = relationship('Entry', foreign_keys=[eid])
+	script = relationship('Script', foreign_keys=[sid], cascade="all,delete")
 
 	def __init__(self, sid, uid, content):
 		self.sid = sid
@@ -168,13 +180,14 @@ class CommentA(Base):
 	def __repr__(self):
 		return '<CommentA %r>' % self.id
 
-class CommentQ(Base):
+class CommentQ(Entry):
 	__tablename__ = 'CommentQ'
 	id = Column(Integer, primary_key=True)
 	qid = Column(Integer, ForeignKey('Question.id', ondelete='CASCADE'))
-	uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
-	time = Column(DateTime, default=datetime.datetime.utcnow)
-	content = Column(Text)
+	eid = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'))
+	
+	entry = relationship('Entry', foreign_keys=[eid])
+	question = relationship('Question', foreign_keys=[qid])
 	
 	def __init__(self, qid, uid, content):
 		self.qid = qid
