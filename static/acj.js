@@ -23,7 +23,7 @@ myApp.factory('logoutService', function($resource) {
 });
 
 myApp.factory('userService', function($resource) {
-	return $resource( '/user' );
+	return $resource( '/user', {}, { put: {method: 'PUT'} } );
 });
 
 myApp.factory('pickscriptService', function($resource) {
@@ -118,6 +118,11 @@ myApp.config( function ($routeProvider) {
 			{
 				controller: QuickController,
 				templateUrl: 'judgepage.html'
+			})
+		.when ('/userprofile',
+			{
+				controller: ProfileController,
+				templateUrl: 'userprofile.html'
 			})
 		.otherwise({redirectTo: '/'});
 });
@@ -291,11 +296,11 @@ function UserController($rootScope, $scope, $location, userService, authService)
 			return '';
 		}
 		var re = /[^@]+@[^@]+/;
-		if (!re.exec($scope.email) && $scope.email != undefined && $scope.email != '') {
+		if ($scope.email == undefined || $scope.email == '') {
+			$scope.email = undefined;
+		} else if (!re.exec($scope.email)) {
 			$scope.formaterr = true;
 			return;
-		} else {
-			$scope.email = undefined;
 		}
 		input = {"username": $scope.username, "password": $scope.password, "usertype": $scope.usertype, "email": $scope.email, "firstname": $scope.firstname, "lastname": $scope.lastname, "display": $scope.display};
 		var user = userService.save( input, function() {
@@ -306,6 +311,57 @@ function UserController($rootScope, $scope, $location, userService, authService)
 				$location.path('/');
 			}
 			return '';
+		});
+	};
+}
+
+function ProfileController($rootScope, $scope, userService) {
+	var retval = userService.get( function() {
+		if (retval.username) {
+			$scope.username = retval.username;
+			$scope.fullname = retval.fullname;
+			$scope.display = retval.display;
+			$scope.email = retval.email;
+			$scope.usertype = retval.usertype;
+			$scope.password = retval.password;
+		} else {
+			alert('something is wrong');
+		}
+	});
+	$scope.submit = function() {
+		// typing in new password when current password isn't
+		if ($scope.newpassword && $scope.oldpassword == '') {
+			return;
+		}
+		if ($scope.newpassword != $scope.newretypepw) {
+			return;
+		}
+		if ($scope.oldpassword) {
+			$scope.password = $scope.oldpassword;
+		}
+		var re = /[^@]+@[^@]+/;
+		if ($scope.newemail == undefined || $scope.newemail == '') {
+			$scope.newemail = undefined;
+		} else if (!re.exec($scope.newemail) && $scope.newemail) {
+			$scope.formaterr = true;
+			return;
+		} 
+		var newpassword = $scope.newpassword;
+		if ($scope.newpassword == '' || $scope.newpassword == undefined) {
+			newpassword = undefined;
+		}
+		input = {"display": $scope.newdisplay, "email": $scope.newemail, "password": $scope.password, "newpassword": newpassword};
+		var retval = userService.put( input, function() {
+			$scope.flash = retval.flash;
+			if (retval.msg) {
+				$scope.edit = false;
+				$scope.submitted = false;
+				$scope.email = $scope.newemail;
+				$scope.display = $scope.newdisplay;
+				$rootScope.$broadcast("LOGGED_IN", $scope.newdisplay); 
+			} else {
+				alert('something is wrong');
+			}
 		});
 	};
 }

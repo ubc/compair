@@ -1,0 +1,51 @@
+<div>
+	<h2>User Profile</h2>
+	<div class="errFlash" ng-show="flash">{{flash}}</div>
+	<form name=userProfile novalidate>
+		Username: 
+		<br>
+		<span class="profile">{{username}}</span>
+		<br><br>
+		{{usertype}} Name: 
+		<br>
+		<span class="profile">{{fullname}}</span>
+		<br><br>
+		Display Name:
+		<br>
+		<span class="profile" ng-hide="edit">{{display}}</span> 
+		<span class="profile" ng-show="edit">
+			<input type="text" name="displayname" ng-model="newdisplay" value="newdisplay" required>
+		</span>
+		<span class=errMsg ng-show="submitted && userProfile.displayname.$error.required">Display name is required.</span>
+		<br><br>
+		Email:
+		<br>
+		<span class="profile" ng-hide="edit">{{email}}</span>
+		<span class="profile" ng-show="edit"><input type="text" ng-model="newemail" ng-click="formaterr=false" value="newemail"></span>
+		<span class=errMsg ng-show="formaterr">Incorrect email format</span>
+		<br><br>
+		Password: 
+		<br>
+		<span class="profile" ng-hide="edit"><i class="icon-lock icon-large"></i></span>
+		<div class="profile" ng-show="edit">
+			<input type="password" ng-model="oldpassword" placeholder="Type Current Password">
+			<br>
+			<input type="password" ng-model="newpassword" placeholder="Type New Password">
+			<span class=errMsg ng-show="submitted && (oldpassword == '') && newpassword">
+				Provide current password to change password</span>
+			<br>
+			<input type="password" ng-model="newretypepw" placeholder="Retype the Password">
+			<span class=errMsg ng-show="submitted && (newpassword != newretypepw)">
+				The passwords do not match.</span>
+		</div>
+		<br><br>
+	</form>
+	<a href="" class="edit" ng-click="edit=!edit; newdisplay=display; newemail=email; newpassword=''; newretypepw=''; oldpassword=''">
+		<i class="icon-edit-sign icon-large"></i> Edit
+	</a> 
+	<a href="" class="submit" ng-show="edit" ng-click="submit();submitted=true">
+		<i class="icon-ok icon-large"></i> Submit
+	</a>
+</div>
+
+

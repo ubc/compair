@@ -300,6 +300,15 @@ input.expand:hover {
 	display: inline-block;
 }
 
+.whitespace {
+	white-space: pre-wrap;
+}
+
+.profile {
+	margin-left: 2em;
+	font-weight: bold;
+}
+
 .opbuttons {
 	display: inline-block;
 	float: right;

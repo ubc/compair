@@ -185,6 +185,13 @@ def logout():
 	identity_changed.send(app, identity=AnonymousIdentity())
 	return json.dumps( {"status": 'logged out'} )
 
+@app.route('/user')
+def user_profile():
+	user = User.query.filter_by(username = session['username']).first()
+	retval = json.dumps({"username":user.username, "fullname":user.fullname, "display":user.display, "email":user.email, "usertype":user.usertype, "password":user.password})
+	db_session.rollback()
+	return retval
+
 @app.route('/user', methods=['POST'])
 def create_user():
 	param = request.json
@@ -221,7 +228,7 @@ def create_user():
 	usertype = param['usertype']
 	if 'email' in param:
 		email = param['email']
-		if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+		if not re.match(r"[^@]+@[^@]+", email):
 			db_session.rollback()
 			return json.dumps( {"flash": 'Incorrect email format'} )
 	else:
@@ -238,6 +245,48 @@ def create_user():
 	else :
 		file = open('tmp/installed.txt', 'w+')
 	return ''
+
+@app.route('/user', methods=['PUT'])
+def edit_user():
+	user = User.query.filter_by(username = session['username']).first()
+	param = request.json
+	schema = {
+		'type': 'object',
+		'properties': {
+			'password': {'type': 'string'},
+			'newpassword': {'type': 'string', 'required': False},
+			'email': {'type': 'string', 'format': 'email', 'required': False},
+			'display': {'type': 'string'},
+		}
+	}
+	try:
+		validictory.validate(param, schema)
+	except ValueError, error:
+		print (str(error))
+		return json.dumps( {"flash": str(error)} )
+	display = param['display']
+	query = User.query.filter(User.id != user.id).filter_by(display = display).first()
+	if query:
+		db_session.rollback()
+		return json.dumps( {"flash": 'Display name already exists'} )
+	user.display = display
+	if 'email' in param:
+		email = param['email']
+		if not re.match(r"[^@]+@[^@]+", email):
+			db_session.rollback()
+			return json.dumps( {"flash": 'Incorrect email format'} )
+		user.email = email
+	else:
+		user.email = ''
+	if 'newpassword' in param:
+		if not hasher.check_password( param['password'], user.password ):
+			db_session.rollback()
+			return json.dumps( {"flash": 'Incorrect password'} )
+		newpassword = param['newpassword']
+		newpassword = hasher.hash_password( newpassword )
+		user.password = newpassword
+	commit()
+	return json.dumps( {"msg": "PASS"} )
 
 @app.route('/pickscript/<id>', methods=['GET'])
 @student.require(http_exception=401)

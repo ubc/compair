@@ -5,7 +5,9 @@
 	<br><br>
 	<p>  <b>Question:</b> <br> <p class="question"><ANY ng-bind-html-unsafe="question"></ANY></p> </p>
 	<br>
-	<input type="button" class="answer" ng-click="getscript()" value="Next Pair in this Question">
+	<a href="" class="sort" ng-click="getscript()">
+		<i class="icon-random icon-large"></i> Next Pair of Answers
+	</a>
 	<br>
 	<br>
 	<div class="versus">
@@ -20,11 +22,14 @@
 	
 	<div>
 		Which is Better?
-		<form ng-submit="submit()">
-			<input type="radio" name="pick" ng-model="pick" value="left">Left
-			<input type="radio" name="pick" ng-model="pick" value="right">Right
-			<br>
-			<input class="submit" type="submit" value="Submit">
+		<br>
+		<input type="radio" name="pick" ng-model="pick" value="left"> 
+		<span class="whitespace"> <i class="icon-hand-left icon-large"></i> Left       Right <i class="icon-hand-right icon-large"></i></span>
+		<input type="radio" name="pick" ng-model="pick" value="right"> 
+		<br>
+		<a href="" class="submit" ng-click="submit()">
+			<i class="icon-ok icon-large"></i> Submit
+		</a>
 		</form>
 	</div>
 </div>
