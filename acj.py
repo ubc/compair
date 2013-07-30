@@ -12,6 +12,7 @@ import phpass
 import json
 import datetime
 import validictory
+import os
 
 
 app = Flask(__name__)
@@ -54,6 +55,19 @@ def shutdown_session(exception=None):
 @app.route('/')
 def index():
 	return redirect(url_for('static', filename="index.html"))
+
+@app.route('/isinstalled')
+def is_installed():
+	if os.access('tmp/installed.txt', os.W_OK):
+		return json.dumps({'installed': True})
+	return json.dumps({'installed': False})
+
+@app.route('/install', methods=['GET'])
+def install():
+	requirements = []
+	writable = True if os.access('tmp', os.W_OK) else False
+	requirements.append( { 'text': 'tmp folder is writable', 'boolean': writable } )
+	return json.dumps( {'requirements': requirements} )
 
 @app.route('/script/<id>', methods=['GET'])
 @student.require(http_exception=401)
@@ -179,7 +193,7 @@ def create_user():
 		'type': 'object',
 		'properties': {
 			'username': {'type': 'string'},
-			'usertype': {'type': 'string', 'enum': ['Student', 'Teacher']},
+			'usertype': {'type': 'string', 'enum': ['Admin', 'Student', 'Teacher']},
 			'password': {'type': 'string'},
 			'email': {'type': 'string', 'format': 'email', 'required': False},
 			'firstname': {'type': 'string'},
@@ -217,9 +231,12 @@ def create_user():
 	table = User(username, password, usertype, email, firstname, lastname, display)
 	db_session.add(table)
 	commit()
-	session['username'] = username
-	identity = Identity('only_' + param['usertype'])
-	identity_changed.send(app, identity=identity)
+	if os.access('tmp/installed.txt', os.W_OK):
+		session['username'] = username
+		identity = Identity('only_' + param['usertype'])
+		identity_changed.send(app, identity=identity)
+	else :
+		file = open('tmp/installed.txt', 'w+')
 	return ''
 
 @app.route('/pickscript/<id>', methods=['GET'])
@@ -550,7 +567,7 @@ def delete_question(id):
 @app.route('/enrollment/<cid>')
 @teacher.require(http_exception=401)
 def students_enrolled(cid):
-	users = User.query.filter((User.usertype == 'Teacher') | (User.usertype == 'Student')).order_by( User.username ).all()
+	users = User.query.filter((User.usertype == 'Teacher') | (User.usertype == 'Student')).order_by( User.fullname ).all()
 	studentlst = []
 	teacherlst = []
 	for user in users:
@@ -562,9 +579,9 @@ def students_enrolled(cid):
 			print ('enrolled')
 			enrolled = query.id
 		if user.usertype == 'Student':
-			studentlst.append( {"uid": user.id, "username": user.username, "enrolled": enrolled} )
+			studentlst.append( {"uid": user.id, "username": user.fullname, "enrolled": enrolled} )
 		else:
-			teacherlst.append( {"uid": user.id, "username": user.username, "enrolled": enrolled} )
+			teacherlst.append( {"uid": user.id, "username": user.fullname, "enrolled": enrolled} )
 	print ('student list: ' + str(studentlst))
 	print ('teacher list: ' + str(teacherlst))
 	course = Course.query.filter_by(id = cid).first()

@@ -2,6 +2,14 @@ var myApp = angular.module('myApp', ['ngResource', 'ngTable', 'http-auth-interce
 
 //Global Variables
 
+myApp.factory('installService', function($resource) {
+	return $resource( '/install' );
+});
+
+myApp.factory('isInstalled', function($resource) {
+	return $resource( '/isinstalled' );
+});
+
 myApp.factory('judgeService', function($resource) {
 	return $resource( '/script/:scriptId' );
 });
@@ -56,6 +64,16 @@ myApp.factory('commentQService', function($resource) {
 
 myApp.config( function ($routeProvider) {
 	$routeProvider
+		.when ('/install', 
+			{
+				controller: InstallController,
+				templateUrl: 'install.html'
+			})
+		.when ('/install2', 
+			{
+				controller: InstallController,
+				templateUrl: 'install2.html'
+			})
 		.when ('/', 
 			{
 				controller: CourseController,
@@ -118,7 +136,38 @@ myApp.directive('authLogin', function($location, $cookieStore) {
 	}
 });
 
-function IndexController($scope, $location, $cookieStore, loginService, logoutService) {
+function InstallController($scope, $location, $cookieStore, installService, userService, isInstalled) {
+	var criteria = installService.get( function() {
+		//$scope.username = criteria.username;
+		$scope.requirements = criteria.requirements;
+		$scope.username = 'root';
+	});
+
+	$scope.submit = function() {
+		if ($scope.password != $scope.retypepw) {
+			return '';
+		}
+		var re = /[^@]+@[^@]+/;
+		if (!re.exec($scope.email) && $scope.email != undefined && $scope.email != '') {
+			$scope.formaterr = true;
+			return;
+		} else {
+			$scope.email = undefined;
+		}
+		input = {"username": $scope.username, "password": $scope.password, "usertype": 'Admin', "email": $scope.email, "firstname": $scope.firstname, "lastname": $scope.lastname, "display": $scope.display};
+		var user = userService.save( input, function() {
+			$scope.flash = user.flash;
+			if (!user.msg && !$scope.flash) {
+				$scope.done = true;
+				$scope.success = 'Administrator created. Click Login to try logging in with your administrator account';
+				return '';
+			}
+			return '';
+		});
+	}
+}
+
+function IndexController($scope, $location, $cookieStore, loginService, logoutService, isInstalled) {
 	var login = loginService.get( function() {
 		login = login.display;
 		if (login) {
@@ -126,6 +175,11 @@ function IndexController($scope, $location, $cookieStore, loginService, logoutSe
 			$scope.login = login;
 		} else {
 			$scope.check = false;
+		}
+	});
+	var installed = isInstalled.get( function() {
+		if (!installed.installed) {
+			$location.path('/install');
 		}
 	});
 	$scope.$on("LOGGED_IN", function(event, display) {
@@ -206,7 +260,12 @@ function JudgepageController($scope, $cookieStore, $routeParams, $location, judg
 	};
 }
 
-function LoginController($rootScope, $cookieStore, $scope, $location, loginService, authService) {
+function LoginController($rootScope, $cookieStore, $scope, $location, loginService, authService, isInstalled) {
+	var installed = isInstalled.get( function() {
+		if (!installed.installed) {
+			$location.path('/install');
+		}
+	});
 	$scope.submit = function() {
 		if ( !($scope.username && $scope.password) ) {
 			$scope.msg = 'Please provide a username and a password';

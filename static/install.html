@@ -1,0 +1,12 @@
+<h2> System Requirements </h2>
+<table class="install">
+<tr ng-repeat="require in requirements">
+<td>{{ require.text }}</td>
+<td><font color="{{ require.boolean | uppercase}} ? red : green">{{ require.boolean }}</font></td>
+</tr>
+</table>
+<div class="next">
+<a href="#/install2">
+	<input type="button" class="next" value="Next">
+</a>
+</div>
