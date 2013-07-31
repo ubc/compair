@@ -12,7 +12,7 @@
 		<ul>
 			<li ng-repeat="comment in questionComments">
 				<font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}}&#160;
-				<a href="" class="cedit" ng-show="instructor || login==comment.author" ng-click="editQC=!editQC;newQcom=comment.content">
+				<a href="" class="edit" ng-show="instructor || login==comment.author" ng-click="editQC=!editQC;newQcom=comment.content">
 					<i class="icon-edit icon-large"></i>
 				</a>
 				<a href="" ng-show="instructor || login==comment.author" ng-click="delQcom(comment)">
@@ -87,11 +87,20 @@
 				<ul> 
 					<li ng-repeat="comment in script.comments">
 						<font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}}&#160;
+						<a href="" ng-show="instructor || login==comment.author" class="edit" ng-click="editAC=!editAC;newAcom=comment.content">
+							<i class="icon-edit icon-large"></i>
+						</a>
 						<a href="" ng-show="instructor || login==comment.author" ng-click="delAcom(script, comment)">
 							<i class="icon-remove-sign icon-large"></i>
 						</a>
 						<br>
-						<div class="comment"><ANY ng-bind-html-unsafe="comment.content"></ANY></div>
+						<div class="comment" ng-hide="editAC"><ANY ng-bind-html-unsafe="comment.content"></ANY></div>
+						<div ng-show="editAC">
+							<textarea class="edit" ng-model="newAcom" jqte></textarea>
+						</div>
+						<a href="" class="submit" ng-show="editAC" ng-click="editAcom(script, comment, newAcom);editAC=false">
+							<i class="icon-ok-sign icon-large"></i> Submit
+						</a>
 						<br><br>
 					</li>
 				</ul>

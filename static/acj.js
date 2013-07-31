@@ -596,8 +596,16 @@ function AnswerController($scope, $routeParams, answerService, rankService, comm
 			}
 		});
 	};
-	$scope.editAcom = function(script, newcontent) {
+	$scope.editAcom = function(script, comment, newcontent) {
 		input = {"content": newcontent};
+		var retval = commentAService.put( {id: comment.id}, input, function() {
+			if (retval.msg != 'PASS') {
+				alert('something is wrong');
+			} else {
+				var index = jQuery.inArray(comment, script.comments);
+				script.comments[index].content = newcontent;
+			}
+		});
 	};
 }
 

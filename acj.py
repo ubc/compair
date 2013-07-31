@@ -508,6 +508,7 @@ def edit_comment(type, id, content):
 	elif (type == 'question'):
 		comment = CommentQ.query.filter_by(id = id).first()
 	comment.content = content
+	db_session.commit()
 	db_session.rollback()
 	return json.dumps({"msg": "PASS"})
 
@@ -531,6 +532,12 @@ def get_commentsA(id):
 def comment_answer(id):
 	param = request.json
 	return make_comment('answer', id, param['content'])
+
+
+@app.route('/answer/<id>/comment', methods=['PUT'])
+def edit_commentA(id):
+	param = request.json
+	return edit_comment('answer', id, param['content'])
 
 
 @app.route('/answer/<id>/comment', methods=['DELETE'])
