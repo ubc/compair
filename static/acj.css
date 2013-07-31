@@ -454,7 +454,11 @@ input.expand:hover {
     display: block;
 }
 
-.errFlash {
+ol#flash-messages {
+	list-style-type: none;
+}
+
+.error {
     color: #990044;
     display: block;
     text-align: center;
@@ -464,9 +468,10 @@ input.expand:hover {
     margin-bottom: 1em;
     font-weight: 600;
     font-size: 110%;
+    margin-right: 1.5em;
 }
 
-.successFlash {
+.success {
     color: green;
     display: block;
     text-align: center;
@@ -476,6 +481,7 @@ input.expand:hover {
     margin-bottom: 1em;
     font-weight: 600;
     font-size: 110%;
+    margin-right: 1.5em;
 }
 
 table.install {

@@ -1,4 +1,4 @@
-var myApp = angular.module('myApp', ['ngResource', 'ngTable', 'http-auth-interceptor', 'ngCookies']);
+var myApp = angular.module('myApp', ['flash', 'ngResource', 'ngTable', 'http-auth-interceptor', 'ngCookies']);
 
 //Global Variables
 
@@ -100,7 +100,7 @@ myApp.config( function ($routeProvider) {
 			})
 		.when ('/user',
 			{
-				controller: UserController,
+				controller: UserIndexController,
 				templateUrl: 'userpage.html'
 			})
 		.when ('/rankpage',
@@ -280,6 +280,9 @@ function LoginController($rootScope, $cookieStore, $scope, $location, loginServi
 			$location.path('/install');
 		}
 	});
+	if ($cookieStore.get('loggedIn')) {
+		$location.path('/');
+	}
 	$scope.submit = function() {
 		if ( !($scope.username && $scope.password) ) {
 			$scope.msg = 'Please provide a username and a password';
@@ -298,11 +301,31 @@ function LoginController($rootScope, $cookieStore, $scope, $location, loginServi
 	};
 }
 
-function UserController($rootScope, $scope, $location, userService, allUserService) {
-	$scope.usertypes = ['Student', 'Teacher'];
+function UserIndexController($rootScope, $scope, $filter, ngTableParams, userService, allUserService) {
 	var allUsers = allUserService.get( function() {
 		$scope.allUsers = allUsers.users;
+		$scope.userParams = new ngTableParams({
+			$liveFiltering: true,
+			page: 1,
+			total: $scope.allUsers.length,
+			count: 10,
+			sorting: {fullname: 'asc'}
+		});
 	});
+	$scope.$watch('userParams', function(params) {
+		var orderedData = params.sorting ? $filter('orderBy')(allUsers.users, params.orderBy()) : allUsers.users;
+
+        params.total = orderedData.length;
+
+		$scope.allUsers = orderedData.slice(
+			(params.page - 1) * params.count,
+			params.page * params.count
+		);
+	}, true);
+}
+
+function UserController($rootScope, $scope, $location, flash, userService) {
+	$scope.usertypes = ['Student', 'Teacher'];
 	$scope.submit = function() {
 		if ($scope.password != $scope.retypepw) {
 			return '';
@@ -317,7 +340,12 @@ function UserController($rootScope, $scope, $location, userService, allUserServi
 		input = {"username": $scope.username, "password": $scope.password, "usertype": $scope.usertype, "email": $scope.email, "firstname": $scope.firstname, "lastname": $scope.lastname, "display": $scope.display};
 		var user = userService.save( input, function() {
 			$scope.flash = user.flash;
-			$scope.success = user.success;
+			if (!user.msg && !$scope.flash) {
+				flash('User created successfully');
+				$location.path('/user');
+			} else if ($scope.flash) {
+				flash('error', $scope.flash);
+			}
 			return '';
 		});
 	};

@@ -193,8 +193,8 @@ def user_profile():
 	return retval
 
 @app.route('/allUsers')
+@admin.require(http_exception=401)
 def all_users():
-	print 'in'
 	query = User.query.order_by(User.lastname)
 	users = []
 	for user in query:
@@ -248,13 +248,9 @@ def create_user():
 	table = User(username, password, usertype, email, firstname, lastname, display)
 	db_session.add(table)
 	commit()
-	if os.access('tmp/installed.txt', os.W_OK):
-		session['username'] = username
-		identity = Identity('only_' + param['usertype'])
-		identity_changed.send(app, identity=identity)
-	else :
+	if not os.access('tmp/installed.txt', os.W_OK):
 		file = open('tmp/installed.txt', 'w+')
-	return json.dumps( {"success": 'User created successfully.'} )
+	return ''
 
 @app.route('/user', methods=['PUT'])
 def edit_user():
