@@ -1,0 +1,14 @@
+<h2>User Page</h2>
+<table class="table">
+	Search User <input type="text" style="border-radius: 7em" ng-model="uquery" ng-change="search" placeholder="Search">
+	<tr>
+		<th>Full Name</th>
+		<th>Display Name</th>
+		<th>User Type</th>
+	</tr>
+	<tr class="tr" ng-repeat="user in allUsers | filter:uquery">
+		<td>{{user.fullname}}</td>
+		<td>{{user.display}}</td>
+		<td>{{user.type}}</td>
+	</tr>
+</table>

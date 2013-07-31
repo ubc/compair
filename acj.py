@@ -192,6 +192,16 @@ def user_profile():
 	db_session.rollback()
 	return retval
 
+@app.route('/allUsers')
+def all_users():
+	print 'in'
+	query = User.query.order_by(User.lastname)
+	users = []
+	for user in query:
+		users.append( {"fullname": user.fullname, "display": user.display, "type": user.usertype} )
+	db_session.rollback()
+	return json.dumps( {'users': users})
+
 @app.route('/user', methods=['POST'])
 def create_user():
 	param = request.json
@@ -244,7 +254,7 @@ def create_user():
 		identity_changed.send(app, identity=identity)
 	else :
 		file = open('tmp/installed.txt', 'w+')
-	return ''
+	return json.dumps( {"success": 'User created successfully.'} )
 
 @app.route('/user', methods=['PUT'])
 def edit_user():

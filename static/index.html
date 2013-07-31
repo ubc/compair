@@ -27,15 +27,15 @@
 				<a class="option" href="#/rankpage">
 					Inter Rank
 				</a>
-				<a class="option" href="#/createuser" ng-hide="check">
+				<a class="option" href="#/createuser" ng-show="check">
 					Create User
 				</a>
-				<a class="option" href="#/userprofile" ng-show="check">
-					User Profile
+				<a class="option" href="#/user" ng-show="check">
+					User
 				</a>
 				<div class="userlogin">
 					<form ng-submit="logout()">
-						<span ng-show="check">Logged in as: <b>{{login}}</b></span>
+						<span ng-show="check">Logged in as: <a href="#/userprofile"><b>{{login}}</b></a></span>
 						<input type="submit" ng-show="check" class="button" value="Log Out">
 					</form>
 				</div>

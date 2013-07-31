@@ -26,6 +26,10 @@ myApp.factory('userService', function($resource) {
 	return $resource( '/user', {}, { put: {method: 'PUT'} } );
 });
 
+myApp.factory('allUserService', function($resource) {
+	return $resource( '/allUsers' );
+});
+
 myApp.factory('pickscriptService', function($resource) {
 	return $resource( '/pickscript/:qid' );
 });
@@ -93,6 +97,11 @@ myApp.config( function ($routeProvider) {
 			{
 				controller: UserController,
 				templateUrl: 'createuser.html'
+			})
+		.when ('/user',
+			{
+				controller: UserController,
+				templateUrl: 'userpage.html'
 			})
 		.when ('/rankpage',
 			{
@@ -289,8 +298,11 @@ function LoginController($rootScope, $cookieStore, $scope, $location, loginServi
 	};
 }
 
-function UserController($rootScope, $scope, $location, userService, authService) {
+function UserController($rootScope, $scope, $location, userService, allUserService) {
 	$scope.usertypes = ['Student', 'Teacher'];
+	var allUsers = allUserService.get( function() {
+		$scope.allUsers = allUsers.users;
+	});
 	$scope.submit = function() {
 		if ($scope.password != $scope.retypepw) {
 			return '';
@@ -305,11 +317,7 @@ function UserController($rootScope, $scope, $location, userService, authService)
 		input = {"username": $scope.username, "password": $scope.password, "usertype": $scope.usertype, "email": $scope.email, "firstname": $scope.firstname, "lastname": $scope.lastname, "display": $scope.display};
 		var user = userService.save( input, function() {
 			$scope.flash = user.flash;
-			if (!user.msg && !$scope.flash) {
-				authService.loginConfirmed();
-				$rootScope.$broadcast("LOGGED_IN", $scope.display); 
-				$location.path('/');
-			}
+			$scope.success = user.success;
 			return '';
 		});
 	};
