@@ -80,7 +80,7 @@ class Question(Entry):
 	cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
 	title = Column(String(80))
 	
-	entry = relationship('Entry', foreign_keys=[eid])
+	entry = relationship('Entry', foreign_keys=[eid], cascade='all,delete')
 
 	def __init__(self, cid, uid, title, content):
 		self.cid = cid
@@ -131,24 +131,6 @@ class Judgement(Base):
 
 	def __repr__(self):
 		return '<Judgement %r>' % self.id
-
-class CJ_Model(Base):
-	__tablename__ = 'CJ_Model'
-	id = Column(Integer, primary_key=True)
-	sidl = Column(Integer, ForeignKey('Script.id'))
-	sidr = Column(Integer, ForeignKey('Script.id'))
-	diff = Column(Float, unique=False)
-
-	scriptl = relationship('Script', foreign_keys=[sidl])
-	scriptr = relationship('Script', foreign_keys=[sidr])
-
-	def __init__(self, sidl, sidr, diff):
-		self.sidl = sidl
-		self.sidr = sidr
-		self.diff = diff
-
-	def __repr__(self):
-		return '<CJ_Model %r>' % self.id
 
 class Enrollment(Base):
 	__tablename__ = 'Enrollment'

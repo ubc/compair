@@ -1,6 +1,6 @@
 from __future__ import division
 from flask import Flask, url_for, request, render_template, redirect, escape, session
-from sqlalchemy_acj import init_db, db_session, User, Judgement, Script, CJ_Model, Course, Question, Enrollment, CommentA, CommentQ, Entry
+from sqlalchemy_acj import init_db, db_session, User, Judgement, Script, Course, Question, Enrollment, CommentA, CommentQ, Entry
 from flask_principal import ActionNeed, AnonymousIdentity, Identity, identity_changed, identity_loaded, Permission, Principal, RoleNeed
 from sqlalchemy import desc, func, select
 from random import shuffle
@@ -501,6 +501,16 @@ def make_comment(type, id, content):
 	db_session.rollback()
 	return retval
 
+def edit_comment(type, id, content):
+	comment = ''
+	if (type == 'answer'):
+		comment = CommentA.query.filter_by(id = id).first()
+	elif (type == 'question'):
+		comment = CommentQ.query.filter_by(id = id).first()
+	comment.content = content
+	db_session.rollback()
+	return json.dumps({"msg": "PASS"})
+
 def delete_comment(type, id):
 	comment = ''
 	if (type == 'answer'):
@@ -511,32 +521,44 @@ def delete_comment(type, id):
 	commit()
 	return json.dumps({"msg": "PASS"})
 
+
 @app.route('/answer/<id>/comment')
 def get_commentsA(id):
 	return get_comments('answer', id)
+
 
 @app.route('/answer/<id>/comment', methods=['POST'])
 def comment_answer(id):
 	param = request.json
 	return make_comment('answer', id, param['content'])
 
+
 @app.route('/answer/<id>/comment', methods=['DELETE'])
 def delete_commentA(id):
 	return delete_comment('answer', id)
+
 
 @app.route('/question/<id>/comment')
 def get_commentsQ(id):
 	return get_comments('question', id)
 
+
 @app.route('/question/<id>/comment', methods=['POST'])
 def comment_question(id):
-	print ('asdfasdfasdfasdf')
 	param = request.json
 	return make_comment('question', id, param['content'])
+
+
+@app.route('/question/<id>/comment', methods=['PUT'])
+def edit_commentQ(id):
+	param = request.json
+	return edit_comment('question', id, param['content'])
+
 
 @app.route('/question/<id>/comment', methods=['DELETE'])
 def delete_commentQ(id):
 	return delete_comment('question', id)
+
 
 @app.route('/course', methods=['POST'])
 @teacher.require(http_exception=401)

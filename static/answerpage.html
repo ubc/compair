@@ -12,14 +12,20 @@
 		<ul>
 			<li ng-repeat="comment in questionComments">
 				<font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}}&#160;
-				<a href="" class="cedit" ng-show="instructor || login==comment.author" ng-click="delQcom(comment)">
+				<a href="" class="cedit" ng-show="instructor || login==comment.author" ng-click="editQC=!editQC;newQcom=comment.content">
 					<i class="icon-edit icon-large"></i>
 				</a>
 				<a href="" ng-show="instructor || login==comment.author" ng-click="delQcom(comment)">
 					<i class="icon-remove-sign icon-large"></i>
 				</a>
 				<br>
-				<div class="comment"><ANY ng-bind-html-unsafe="comment.content"></ANY></div>
+				<div class="comment" ng-hide="editQC"><ANY ng-bind-html-unsafe="comment.content"></ANY></div>
+				<div ng-show="editQC">
+					<textarea class="edit" ng-model="newQcom" jqte></textarea>
+				</div>
+				<a href="" class="submit" ng-show="editQC" ng-click="editQcom(comment, newQcom);editQC=false">
+					<i class="icon-ok-sign icon-large"></i> Submit
+				</a>
 				<br><br>
 			</li>
 		</ul>	

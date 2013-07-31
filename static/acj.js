@@ -55,11 +55,11 @@ myApp.factory('enrollService', function($resource) {
 });
 
 myApp.factory('commentAService', function($resource) {
-	return $resource( '/answer/:id/comment' );
+	return $resource( '/answer/:id/comment', {}, { put: {method: 'PUT'} } );
 });
 
 myApp.factory('commentQService', function($resource) {
-	return $resource( '/question/:id/comment' );
+	return $resource( '/question/:id/comment', {}, { put: {method: 'PUT'} } );
 });
 
 myApp.config( function ($routeProvider) {
@@ -584,6 +584,20 @@ function AnswerController($scope, $routeParams, answerService, rankService, comm
 				}
 			});
 		}
+	};
+	$scope.editQcom = function(comment, newcontent) {
+		input = {"content": newcontent};
+		var retval = commentQService.put( {id: comment.id}, input, function() {
+			if (retval.msg != 'PASS') {
+				alert('something is wrong');
+			} else {
+				var index = jQuery.inArray(comment, $scope.questionComments);
+				$scope.questionComments[index].content = newcontent;
+			}
+		});
+	};
+	$scope.editAcom = function(script, newcontent) {
+		input = {"content": newcontent};
 	};
 }
 

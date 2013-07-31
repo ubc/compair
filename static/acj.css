@@ -48,7 +48,7 @@ div.qbutton {
 
 div.answer, p.answer {
 	width: 90%;
-	min-height: 3em;
+	min-height: 5em;
 	max-height: 20em;
 	border: 3px solid #F0FAF0;
 	border-radius: 1em;
