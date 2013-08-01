@@ -301,7 +301,7 @@ function LoginController($rootScope, $cookieStore, $scope, $location, loginServi
 	};
 }
 
-function UserIndexController($rootScope, $scope, $filter, ngTableParams, userService, allUserService) {
+function UserIndexController($rootScope, $scope, $filter, $q, ngTableParams, userService, allUserService) {
 	var allUsers = allUserService.get( function() {
 		$scope.allUsers = allUsers.users;
 		$scope.userParams = new ngTableParams({
@@ -312,8 +312,28 @@ function UserIndexController($rootScope, $scope, $filter, ngTableParams, userSer
 			sorting: {fullname: 'asc'}
 		});
 	});
+	
+	var usertypes = [{type: 'Admin'}, {type: 'Teacher'}, {type: 'Student'}];
+	$scope.types = function(column) {
+		var def = $q.defer(),
+			arr =[],
+			types = [];
+		angular.forEach(usertypes, function(item) {
+			if ($.inArray(item.type, arr) === -1) {
+				arr.push(item.type);
+				types.push({
+					'id': item.type,
+					'title': item.type
+				});
+			} 
+		});
+		def.resolve(types);
+		return def.promise;
+	};
+
 	$scope.$watch('userParams', function(params) {
 		var orderedData = params.sorting ? $filter('orderBy')(allUsers.users, params.orderBy()) : allUsers.users;
+		orderedData = params.filter ? $filter('filter')(orderedData, params.filter) : orderedData;
 
         params.total = orderedData.length;
 

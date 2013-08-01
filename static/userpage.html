@@ -1,11 +1,10 @@
 <div class="errFlash" ng-show="flash">{{ flash }}</div>
 <div class="successFlash" ng-show="success">{{ success }}</div>
 <h2>User Page</h2>
-<table ng-table="userParams" class="table">
-	Search User <input type="text" style="border-radius: 7em" ng-model="uquery" ng-change="search" placeholder="Search">
+<table ng-table="userParams" class="table" show-filter="true">
 	<tr class="tr" ng-repeat="user in allUsers | filter:uquery">
-		<td title="'Full Name'" sortable="fullname" sortable="fullname">{{user.fullname}}</td>
-		<td title="'Display Name'" sortable="display">{{user.display}}</td>
-		<td title="'User Type'" sortable="type">{{user.type}}</td>
+		<td title="'Full Name'" sortable="fullname" sortable="fullname" filter="{ 'fullname': 'text' }">{{user.fullname}}</td>
+		<td title="'Display Name'" sortable="display" filter="{ 'display': 'text' }">{{user.display}}</td>
+		<td title="'User Type'" sortable="type" filter="{ 'type': 'select' }" filter-data="types($column)">{{user.type}}</td>
 	</tr>
 </table>

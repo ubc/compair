@@ -153,7 +153,7 @@ class CommentA(Entry):
 	eid = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'))
 
 	entry = relationship('Entry', foreign_keys=[eid])
-	script = relationship('Script', foreign_keys=[sid], backref=backref("Script", cascade="all,delete"))
+	script = relationship('Script', foreign_keys=[sid], backref=backref("CommentA", cascade="all,delete"))
 
 	def __init__(self, sid, uid, content):
 		self.sid = sid
