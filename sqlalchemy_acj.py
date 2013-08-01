@@ -50,6 +50,7 @@ class Course(Base):
 	__tablename__ = 'Course'
 	id = Column(Integer, primary_key=True)
 	name = Column(String(80), unique=True)
+
 	question = relationship('Question', cascade="all,delete")
 	enrollment = relationship('Enrollment', cascade="all,delete")
 
@@ -63,8 +64,14 @@ class Entry(Base):
 	__tablename__ = 'Entry'
 	id = Column(Integer, primary_key=True)
 	uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
+	type = Column(String(50))
 	time = Column(DateTime, default=datetime.datetime.utcnow)
 	content = Column(Text)
+
+	__mapper_args__ = {
+		'polymorphic_identity': 'Entry',
+		'polymorphic_on': type
+	}
 
 	def __init__(self, uid, content):
 		self.uid = uid
@@ -75,13 +82,13 @@ class Entry(Base):
 
 class Question(Entry):
 	__tablename__ = 'Question'
-	id = Column(Integer, primary_key=True)
-	eid = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'))
+	id = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'), primary_key=True)
 	cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
 	title = Column(String(80))
-	
-	entry = relationship('Entry', foreign_keys=[eid])
-	course = relationship('Course', foreign_keys=[cid])
+
+	__mapper_args__ = {
+		'polymorphic_identity': 'Question',
+	}
 
 	def __init__(self, cid, uid, title, content):
 		self.cid = cid
@@ -94,16 +101,18 @@ class Question(Entry):
 
 class Script(Entry):
 	__tablename__ = 'Script'
-	id = Column(Integer, primary_key=True)
-	eid = Column(Integer, ForeignKey('Entry.id', ondelete="CASCADE"))
+	id = Column(Integer, ForeignKey('Entry.id', ondelete="CASCADE"), primary_key=True)
 	qid = Column(Integer, ForeignKey('Question.id', ondelete='CASCADE'))
 	title = Column(String(80), default='answer')
 	wins = Column(Integer, default=0)
 	count = Column(Integer, default=0)
 	score = Column(Float, default=0)
 
-	question = relationship('Question', foreign_keys=[qid], backref=backref("Script", cascade="all,delete"))
-	entry = relationship('Entry', foreign_keys=[eid])
+	question = relationship('Question', foreign_keys=[qid], backref=backref('Script', cascade="all,delete"))
+
+	__mapper_args__ = {
+		'polymorphic_identity': 'Script',
+	}
 
 	def __init__(self, qid, uid, content):
 		self.qid = qid
@@ -148,12 +157,14 @@ class Enrollment(Base):
 
 class CommentA(Entry):
 	__tablename__ = 'CommentA'
-	id = Column(Integer, primary_key=True)
+	id = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'), primary_key=True)
 	sid = Column(Integer, ForeignKey('Script.id', ondelete='CASCADE'))
-	eid = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'))
 
-	entry = relationship('Entry', foreign_keys=[eid])
-	script = relationship('Script', foreign_keys=[sid], backref=backref("CommentA", cascade="all,delete"))
+	script = relationship('Script', foreign_keys=[sid], backref=backref('CommentA', cascade="all,delete"))
+
+	__mapper_args__ = {
+		'polymorphic_identity': 'CommentA',
+	}
 
 	def __init__(self, sid, uid, content):
 		self.sid = sid
@@ -165,12 +176,14 @@ class CommentA(Entry):
 
 class CommentQ(Entry):
 	__tablename__ = 'CommentQ'
-	id = Column(Integer, primary_key=True)
+	id = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'), primary_key=True)
 	qid = Column(Integer, ForeignKey('Question.id', ondelete='CASCADE'))
-	eid = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'))
-	
-	entry = relationship('Entry', foreign_keys=[eid])
-	question = relationship('Question', foreign_keys=[qid], backref=backref("CommentQ", cascade="all,delete"))
+
+	question = relationship('Question', foreign_keys=[qid], backref=backref('CommentQ', cascade="all,delete"))
+
+	__mapper_args__ = {
+		'polymorphic_identity': 'CommentQ',
+	}
 	
 	def __init__(self, qid, uid, content):
 		self.qid = qid

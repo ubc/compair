@@ -573,6 +573,13 @@ def delete_commentQ(id):
 	return delete_comment('question', id)
 
 
+@app.route('/course/<id>', methods=['DELETE'])
+def delete_coursae(id):
+	course = Course.query.filter_by( id = id).first()
+	db_session.delete(course)
+	commit()
+	return ''
+
 @app.route('/course', methods=['POST'])
 @teacher.require(http_exception=401)
 def create_course():
