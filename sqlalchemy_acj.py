@@ -80,7 +80,8 @@ class Question(Entry):
 	cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
 	title = Column(String(80))
 	
-	entry = relationship('Entry', foreign_keys=[eid], cascade='all,delete')
+	entry = relationship('Entry', foreign_keys=[eid])
+	course = relationship('Course', foreign_keys=[cid])
 
 	def __init__(self, cid, uid, title, content):
 		self.cid = cid
@@ -101,8 +102,8 @@ class Script(Entry):
 	count = Column(Integer, default=0)
 	score = Column(Float, default=0)
 
+	question = relationship('Question', foreign_keys=[qid], backref=backref("Script", cascade="all,delete"))
 	entry = relationship('Entry', foreign_keys=[eid])
-	question = relationship('Question', foreign_keys=[qid], cascade="all,delete")
 
 	def __init__(self, qid, uid, content):
 		self.qid = qid
@@ -152,7 +153,7 @@ class CommentA(Entry):
 	eid = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'))
 
 	entry = relationship('Entry', foreign_keys=[eid])
-	script = relationship('Script', foreign_keys=[sid], cascade="all,delete")
+	script = relationship('Script', foreign_keys=[sid], backref=backref("Script", cascade="all,delete"))
 
 	def __init__(self, sid, uid, content):
 		self.sid = sid
@@ -169,7 +170,7 @@ class CommentQ(Entry):
 	eid = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'))
 	
 	entry = relationship('Entry', foreign_keys=[eid])
-	question = relationship('Question', foreign_keys=[qid])
+	question = relationship('Question', foreign_keys=[qid], backref=backref("CommentQ", cascade="all,delete"))
 	
 	def __init__(self, qid, uid, content):
 		self.qid = qid
