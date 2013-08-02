@@ -8,13 +8,18 @@
 	</a>
 	<div ng-show="check">
 		<br>
-		Question Title: <input type="text" ng-model="title"></input>
+		<form name="createQuestion" novalidate>
+		Question Title: <input type="text" name="title" ng-model="title" required>
+		<span class=errMsg ng-show="submitted && createQuestion.title.$error.required">
+			A title is required for the question.</span>
+		<textarea name="question" ng-model="question" required jqte></textarea>
+		<span class=errMsg ng-show="submitted && createQuestion.question.$error.required">
+			Please enter a question.</span>
 		<br>
-		<textarea ng-model="question" jqte></textarea>
-		<br>
-		<a href="" class="submit" ng-click="submit()">
+		<a href="" class="submit" ng-click="submit(); submitted=true">
 			<i class="icon-ok icon-large"></i> Submit
 		</a>
+		</form>
 	</div>
 	<br><br><br>
 	<ul>

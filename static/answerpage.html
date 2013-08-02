@@ -23,7 +23,7 @@
 				<div ng-show="editQC" class="comment">
 					<textarea class="edit" ng-model="newQcom" jqte></textarea>
 				</div>
-				<a href="" class="submit" ng-show="editQC" ng-click="editQcom(comment, newQcom);editQC=false">
+				<a href="" class="submit comment" ng-show="editQC" ng-click="editQcom(comment, newQcom);editQC=false">
 					<i class="icon-ok-sign icon-large"></i> Submit
 				</a>
 				<br><br>
@@ -33,10 +33,14 @@
 			<i class="icon-comment-alt icon-large"></i> Leave a Comment
 		</a>
 		<div ng-show="lqcomm">
-			<textarea class="comment" ng-model="myQcomment" jqte></textarea>
-			<a href="" class="submit" ng-click="makeQcomment(myQcomment);lqcomm=falst">
-				<i class="icon-ok icon-large"></i> Submit
-			</a>
+			<form name="addCommentQ" novalidate>
+				<textarea class="comment" name="myQcomment" ng-model="myQcomment" required jqte></textarea>
+				<span class=errMsg ng-show="newQcomment && addCommentQ.myQcomment.$error.required">
+					Please submit a comment.<br><br></span>
+				<a href="" class="submit" ng-click="makeQcomment(myQcomment);newQcomment=true">
+					<i class="icon-ok icon-large"></i> Submit
+				</a>
+			</form>
 		</div>
 		<br><br>
 	</div>
@@ -46,11 +50,15 @@
 	</a>
 	<div ng-show="check">
 		<br>
-		<textarea ng-model="myanswer" jqte></textarea>
-		<br>
-		<a href="" class="submit" ng-click="submit()">
-			<i class="icon-ok icon-large"></i> Submit
-		</a>
+		<form name="newAnswer" novalidate>
+			<textarea name="myanswer" ng-model="myanswer" jqte required></textarea>
+			<span class=errMsg ng-show="submitted && newAnswer.myanswer.$error.required">
+				Please enter an answer.</span>
+			<br>
+			<a href="" class="submit" ng-click="submit();submitted=true">
+				<i class="icon-ok icon-large"></i> Submit
+			</a>
+		</form>
 	</div>
 	<br><br>
 	<a href="" class="sort" ng-click="temp=orderProp;orderProp=nextOrder;nextOrder=temp">
@@ -96,10 +104,10 @@
 							<i class="icon-remove-sign icon-large"></i>
 						</a></p>
 						<div class="comment" ng-hide="editAC"><ANY ng-bind-html-unsafe="comment.content"></ANY></div>
-						<div ng-show="editAC">
+						<div ng-show="editAC" class="comment">
 							<textarea class="edit" ng-model="newAcom" jqte></textarea>
 						</div>
-						<a href="" class="submit" ng-show="editAC" ng-click="editAcom(script, comment, newAcom);editAC=false">
+						<a href="" class="submit comment" ng-show="editAC" ng-click="editAcom(script, comment, newAcom);editAC=false">
 							<i class="icon-ok-sign icon-large"></i> Submit
 						</a>
 						<br><br>

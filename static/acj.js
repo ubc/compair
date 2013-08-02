@@ -334,15 +334,18 @@ function UserIndexController($rootScope, $scope, $filter, $q, ngTableParams, use
 	};
 
 	$scope.$watch('userParams', function(params) {
-		var orderedData = params.sorting ? $filter('orderBy')(allUsers.users, params.orderBy()) : allUsers.users;
-		orderedData = params.filter ? $filter('filter')(orderedData, params.filter) : orderedData;
+		// wait for allUsers to become a valid object
+		if (params) {
+			var orderedData = params.sorting ? $filter('orderBy')(allUsers.users, params.orderBy()) : allUsers.users;
+			orderedData = params.filter ? $filter('filter')(orderedData, params.filter) : orderedData;
 
-        params.total = orderedData.length;
+			params.total = orderedData.length;
 
-		$scope.allUsers = orderedData.slice(
-			(params.page - 1) * params.count,
-			params.page * params.count
-		);
+			$scope.allUsers = orderedData.slice(
+				(params.page - 1) * params.count,
+				params.page * params.count
+			);
+		}
 	}, true);
 }
 
@@ -492,13 +495,14 @@ function QuestionController($scope, $location, $routeParams, $filter, flash, ngT
 		input = {"title": $scope.title, "content": $scope.question};
 		var msg = questionService.save( {cid: courseId}, input, function() {
 			if (msg.msg) {
-				// TODO: What use cases would land here?
-				alert('something is wrong');
+				// TODO: What use cases would land here? eg. validation error
+				// alert('something is wrong');
 			} else {
 				$scope.questions.push(msg);
+				$scope.check = false;
+				flash("The question has been successfully added.");
 			}
 		});
-		$scope.check = false;
 	};
 	$scope.delete = function(question) {
 		questionId = question.id;
@@ -508,7 +512,7 @@ function QuestionController($scope, $location, $routeParams, $filter, flash, ngT
 			} else {
 				var index = jQuery.inArray(question, $scope.questions);
 				$scope.questions.splice(index, 1);
-				flash("Question has been successfully deleted.");
+				flash("The question has been successfully deleted.");
 			}
 		});
 	};
@@ -521,16 +525,19 @@ function QuestionController($scope, $location, $routeParams, $filter, flash, ngT
 		$location.path("/answerpage");
 	};
 	$scope.$watch('questionParams', function(params) {
-		var orderedData = params.sorting ? $filter('orderBy')(questionData, params.orderBy()) : questionData;
+		// wait for the params object to be created
+		if (params) {
+			var orderedData = params.sorting ? $filter('orderBy')(questionData, params.orderBy()) : questionData;
 
-		$scope.questions = orderedData.slice(
-			(params.page - 1) * params.count,
-			params.page * params.count
-		);
+			$scope.questions = orderedData.slice(
+				(params.page - 1) * params.count,
+				params.page * params.count
+			);
+		}
 	}, true);
 }
 
-function AnswerController($scope, $routeParams, answerService, rankService, commentAService, commentQService) {
+function AnswerController($scope, $routeParams, flash, answerService, rankService, commentAService, commentQService) {
 	var questionId = $routeParams.questionId; 
 
 	$scope.orderProp = 'time';
@@ -549,23 +556,25 @@ function AnswerController($scope, $routeParams, answerService, rankService, comm
 	$scope.submit = function() {
 		input = {"content": $scope.myanswer};
 		var newscript = answerService.save( {qid: questionId}, input, function() {
-			if (!newscript) {
-				alert('something is wrong');
+			if (newscript.msg) {
+				//alert('something is wrong');
 			} else {
 				$scope.scripts.push(newscript);
+				$scope.check = false;
 			}
 		});
-		$scope.check = false;
 	};
 	$scope.editscript = function(script, newanswer) {
 		input = {"content": newanswer};
 		var retval = answerService.put( {qid: script.id}, input, function() {
 			if (retval.msg != 'PASS') {
-				alert('something is wrong');
-				alert(retval);
+				//alert('something is wrong');
+				//alert(retval);
+				flash('error', 'Please submit an answer.');
 			} else {
 				var index = jQuery.inArray(script, $scope.scripts);
 				$scope.scripts[index].content = newanswer;
+				flash('The answer has been successfully modified.');
 			}
 		});
 	};
@@ -605,8 +614,10 @@ function AnswerController($scope, $routeParams, answerService, rankService, comm
 		var retval = commentAService.save( {id: script.id}, input, function() {
 			if (retval.comment) {
 				script.comments.push( retval.comment );
+				flash('The comment has been successfully added.');
 			} else {
-				alert('something is wrong');
+				//alert('something is wrong');
+				flash('error', 'Please submit a valid comment.');
 			}
 		});
 	};
@@ -615,8 +626,10 @@ function AnswerController($scope, $routeParams, answerService, rankService, comm
 		var retval = commentQService.save( {id: questionId}, input, function() {
 			if (retval.comment) {
 				$scope.questionComments.push( retval.comment );
+				$scope.lqcomm = false;
+				flash('The comment has been successfully added');
 			} else {
-				alert('something is wrong');
+				//alert('something is wrong');
 			}
 		});
 	};
@@ -648,10 +661,13 @@ function AnswerController($scope, $routeParams, answerService, rankService, comm
 		input = {"content": newcontent};
 		var retval = commentQService.put( {id: comment.id}, input, function() {
 			if (retval.msg != 'PASS') {
-				alert('something is wrong');
+				// can't seem to use regular span error messages
+				// causes the edit toggle not to close if the edit is successful
+				flash('error', 'Please submit a comment.');
 			} else {
 				var index = jQuery.inArray(comment, $scope.questionComments);
 				$scope.questionComments[index].content = newcontent;
+				flash('The comment has been successfully modified');
 			}
 		});
 	};
@@ -659,10 +675,12 @@ function AnswerController($scope, $routeParams, answerService, rankService, comm
 		input = {"content": newcontent};
 		var retval = commentAService.put( {id: comment.id}, input, function() {
 			if (retval.msg != 'PASS') {
-				alert('something is wrong');
+				//alert('something is wrong');
+				flash('error', 'Please submit a valid comment');
 			} else {
 				var index = jQuery.inArray(comment, script.comments);
 				script.comments[index].content = newcontent;
+				flash('The comment has been successfully added.');
 			}
 		});
 	};
@@ -721,20 +739,24 @@ function EnrollController($scope, $routeParams, $filter, ngTableParams, enrollSe
 		});
 	};
 	$scope.$watch('teacherParams', function(params) {
-		var orderedData = params.sorting ? $filter('orderBy')(teacherData, params.orderBy()) : teacherData;
+		if (params) {
+			var orderedData = params.sorting ? $filter('orderBy')(teacherData, params.orderBy()) : teacherData;
 		
-		$scope.teachers = orderedData.slice(
-			(params.page - 1) * params.count,
-			params.page * params.count
-		);
+			$scope.teachers = orderedData.slice(
+				(params.page - 1) * params.count,
+				params.page * params.count
+			);
+		}
 	}, true);
 	$scope.$watch('studentParams', function(params) {
-		var orderedData = params.sorting ? $filter('orderBy')(studentData, params.orderBy()) : studentData;
+		if (params) {
+			var orderedData = params.sorting ? $filter('orderBy')(studentData, params.orderBy()) : studentData;
 
-		$scope.students = orderedData.slice(
-			(params.page - 1) * params.count,
-			params.page * params.count
-		);
+			$scope.students = orderedData.slice(
+				(params.page - 1) * params.count,
+				params.page * params.count
+			);
+		}
 	}, true);
 }
 

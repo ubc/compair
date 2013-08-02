@@ -118,6 +118,17 @@ def mark_script(id):
 @student.require(http_exception=401)
 def post_answer(id):
 	param = request.json
+	schema = {
+		'type': 'object',
+		'properties': {
+			'content': {'type': 'string'}
+		}
+	}
+	try:
+		validictory.validate(param, schema)
+	except ValueError, error:
+		print (str(error))
+		return json.dumps( {"msg": str(error)} )
 	qid = id
 	user = User.query.filter_by(username = session['username']).first()
 	uid = user.id
@@ -135,6 +146,17 @@ def post_answer(id):
 @student.require(http_exception=401)
 def edit_answer(id):
 	param = request.json
+	schema = {
+		'type': 'object',
+		'properties': {
+			'content': {'type': 'string'}
+		}
+	}
+	try:
+		validictory.validate(param, schema)
+	except ValueError, error:
+		print (str(error))
+		return json.dumps( {"msg": str(error)} )
 	script = Script.query.filter_by(id = id).first()
 	script.content = param['content']
 	commit()
@@ -536,12 +558,34 @@ def get_commentsA(id):
 @app.route('/answer/<id>/comment', methods=['POST'])
 def comment_answer(id):
 	param = request.json
+	schema = {
+		'type': 'object',
+		'properties': {
+			'content': {'type': 'string'}
+		}
+	}
+	try:
+		validictory.validate(param, schema)
+	except ValueError, error:
+		print (str(error))
+		return json.dumps( {"msg": str(error)} )
 	return make_comment('answer', id, param['content'])
 
 
 @app.route('/answer/<id>/comment', methods=['PUT'])
 def edit_commentA(id):
 	param = request.json
+	schema = {
+		'type': 'object',
+		'properties': {
+			'content': {'type': 'string'}
+		}
+	}
+	try:
+		validictory.validate(param, schema)
+	except ValueError, error:
+		print (str(error))
+		return json.dumps( {"msg": str(error)} )
 	return edit_comment('answer', id, param['content'])
 
 
@@ -558,12 +602,34 @@ def get_commentsQ(id):
 @app.route('/question/<id>/comment', methods=['POST'])
 def comment_question(id):
 	param = request.json
+	schema = {
+		'type': 'object',
+		'properties': {
+			'content': {'type': 'string'}
+		}
+	}
+	try:
+		validictory.validate(param, schema)
+	except ValueError, error:
+		print (str(error))
+		return json.dumps( {"msg": str(error)} )
 	return make_comment('question', id, param['content'])
 
 
 @app.route('/question/<id>/comment', methods=['PUT'])
 def edit_commentQ(id):
 	param = request.json
+	schema = {
+		'type': 'object',
+		'properties': {
+			'content': {'type': 'string'}
+		}
+	}
+	try:
+		validictory.validate(param, schema)
+	except ValueError, error:
+		print (str(error))
+		return json.dumps( {"msg": str(error)} )
 	return edit_comment('question', id, param['content'])
 
 
@@ -630,6 +696,18 @@ def list_question(id):
 @student.require(http_exception=401)
 def create_question(id):
 	param = request.json
+	schema = {
+		'type': 'object',
+		'properties': {
+			'title': {'type': 'string'},
+			'content': {'type': 'string'}
+		}
+	}
+	try:
+		validictory.validate(param, schema)
+	except ValueError, error:
+		print (str(error))
+		return json.dumps( {"msg": str(error)} )
 	content = param['content']
 	title = param['title']
 	user = User.query.filter_by(username = session['username']).first()

@@ -121,6 +121,10 @@ div.comment {
 	margin-left: 4.5em;
 }
 
+a.comment {
+	margin-left: 4.5em;
+}
+
 pre {
 	width: 40%;
 	padding: 10px;
