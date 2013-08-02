@@ -5,6 +5,7 @@ from sqlalchemy.orm import backref, scoped_session, sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
 import datetime
+import hashlib
 
 engine = create_engine('mysql://testuser:testpw@localhost/acj', convert_unicode=True, pool_recycle=300)
 db_session = scoped_session(sessionmaker (autocommit=False, autoflush=False, bind=engine))
@@ -45,6 +46,12 @@ class User(Base):
 	@hybrid_property
 	def fullname(self):
 		return self.firstname + ' ' + self.lastname
+
+	@hybrid_property
+	def avatar(self):
+		m = hashlib.md5()
+		m.update(self.email)
+		return m.hexdigest()
 
 class Course(Base):
 	__tablename__ = 'Course'
