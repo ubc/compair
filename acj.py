@@ -205,7 +205,6 @@ def all_users():
 @app.route('/user', methods=['POST'])
 def create_user():
 	param = request.json
-	print(param)
 	schema = {
 		'type': 'object',
 		'properties': {
@@ -628,7 +627,7 @@ def list_question(id):
 	return json.dumps( {"course": course.name, "questions": lst} )
 
 @app.route('/question/<id>', methods=['POST'])
-@teacher.require(http_exception=401)
+@student.require(http_exception=401)
 def create_question(id):
 	param = request.json
 	content = param['content']
@@ -643,11 +642,11 @@ def create_question(id):
 	return retval
 
 @app.route('/question/<id>', methods=['DELETE'])
-@teacher.require(http_exception=401)
+@student.require(http_exception=401)
 def delete_question(id):
 	question = Question.query.filter_by(id = id).first()
 	user = User.query.filter_by(username = session['username']).first()
-	if user.id != question.uid and user.usertype != 'Teacher':
+	if user.id != question.uid and user.usertype != 'Teacher' and user.usertype != 'Admin':
 		retval = json.dumps( {"msg": user.display} )
 		db_session.rollback()
 		return retval

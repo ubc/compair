@@ -150,7 +150,7 @@ myApp.directive('authLogin', function($location, $cookieStore) {
 	}
 });
 
-function InstallController($scope, $location, $cookieStore, installService, userService, isInstalled) {
+function InstallController($scope, $location, $cookieStore, flash, installService, userService, isInstalled) {
 	var criteria = installService.get( function() {
 		//$scope.username = criteria.username;
 		$scope.requirements = criteria.requirements;
@@ -173,8 +173,10 @@ function InstallController($scope, $location, $cookieStore, installService, user
 			$scope.flash = user.flash;
 			if (!user.msg && !$scope.flash) {
 				$scope.done = true;
-				$scope.success = 'Administrator created. Click Login to try logging in with your administrator account';
+				flash('Administrator created. Click Login to try logging in with your administrator account');
 				return '';
+			} else if ($scope.flash) {
+				flash ('error', $scope.flash);
 			}
 			return '';
 		});
@@ -211,19 +213,19 @@ function IndexController($scope, $location, $cookieStore, loginService, logoutSe
 	}
 }
 
-function QuickController($scope, $location, judgeService, pickscriptService, quickService) {
+function QuickController($scope, $location, flash, judgeService, pickscriptService, quickService) {
 	var retval = quickService.get( function() {
 		if (retval.question) {
 			questionId = retval.question;
 			$location.path('/judgepage/' + questionId);
 		} else {
 			$location.path('/');
-			alert('None of the questions has enough new answers. Please come back later');
+			flash('error', 'None of the questions has enough new answers. Please come back later');
 		}
 	});
 }
 
-function JudgepageController($scope, $cookieStore, $routeParams, $location, judgeService, pickscriptService) {
+function JudgepageController($scope, $cookieStore, $routeParams, $location, flash, judgeService, pickscriptService) {
 	var questionId = $routeParams.questionId;
 	if (questionId == 0) {
 		$location.path('/');
@@ -241,9 +243,9 @@ function JudgepageController($scope, $cookieStore, $routeParams, $location, judg
 				sidl = retval.sidl;
 				sidr = retval.sidr;
 			} else {
-				alert( 'Either you have already judged all of the high-priority scripts OR there are not enough answers to judge. Please come back later' );
-				$location.path('/');
-				//$location.path('/questionpage/' + courseId);
+				flash( 'error', 'Either you have already judged all of the high-priority scripts OR there are not enough answers to judge. Please come back later' );
+				//$location.path('/');
+				$location.path('/questionpage/' + $scope.cid);
 				return;
 			}
 			var script1 = judgeService.get( {scriptId:sidl}, function() {
@@ -263,13 +265,13 @@ function JudgepageController($scope, $cookieStore, $routeParams, $location, judg
 		} else if ($scope.pick == 'right') {
 			winner = sidr;
 		} else {
-			alert('Pick a side');
+			flash('error', 'Please pick a side');
 			return;
 		}
 		input = {"sidl": sidl, "sidr": sidr};
 		var temp = judgeService.save( {scriptId:winner}, input, function() {
-			alert(temp.msg);
-			$location.path('/questionpage');
+			flash(temp.msg);
+			$location.path('/questionpage/' + $scope.cid);
 		});
 	};
 }
@@ -455,7 +457,7 @@ function CourseController($scope, $cookieStore, courseService, loginService) {
 	};
 }
 
-function QuestionController($scope, $location, $routeParams, $filter, ngTableParams, questionService, loginService) 
+function QuestionController($scope, $location, $routeParams, $filter, flash, ngTableParams, questionService, loginService) 
 {
 	$scope.orderProp = 'time';
 	var questionData = [];
@@ -502,10 +504,11 @@ function QuestionController($scope, $location, $routeParams, $filter, ngTablePar
 		questionId = question.id;
 		var retval = questionService.delete( {cid: questionId}, function() {
 			if (retval.msg) {
-				alert( "You cannot delete others' questions" )
+				flash( "error", "You cannot delete others' questions" )
 			} else {
 				var index = jQuery.inArray(question, $scope.questions);
 				$scope.questions.splice(index, 1);
+				flash("Question has been successfully deleted.");
 			}
 		});
 	};
