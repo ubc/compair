@@ -11,16 +11,16 @@
 		<br>
 		<ul>
 			<li ng-repeat="comment in questionComments">
-				<font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}}&#160;
+				<img src="http://www.gravatar.com/avatar/{{comment.avatar}}?s=50&d=mm" class="avatar">
+				<p class="authorHeader"><font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}}&#160;
 				<a href="" class="edit" ng-show="instructor || login==comment.author" ng-click="editQC=!editQC;newQcom=comment.content">
 					<i class="icon-edit icon-large"></i>
 				</a>
 				<a href="" ng-show="instructor || login==comment.author" ng-click="delQcom(comment)">
 					<i class="icon-remove-sign icon-large"></i>
-				</a>
-				<br>
+				</a></p>
 				<div class="comment" ng-hide="editQC"><ANY ng-bind-html-unsafe="comment.content"></ANY></div>
-				<div ng-show="editQC">
+				<div ng-show="editQC" class="comment">
 					<textarea class="edit" ng-model="newQcom" jqte></textarea>
 				</div>
 				<a href="" class="submit" ng-show="editQC" ng-click="editQcom(comment, newQcom);editQC=false">
@@ -59,9 +59,10 @@
 	<br><br>
 	<ul>
 		<li ng-repeat="script in scripts | orderBy:orderProp:true">
-			Script Score: <b>{{script.score}}</b>
+			<img src="http://www.gravatar.com/avatar/{{script.avatar}}?s=50&d=mm" class="avatar">
+			<p class="authorHeader">Script Score: <b>{{script.score}}</b></p>
 			<br>
-			Author: <b>{{script.author}}</b> - {{script.time}}
+			<p class="authorHeader">Author: <b>{{script.author}}</b> - {{script.time}}</p>
 			<div class="opbuttons">
 				<a href="" class="comments" ng-click="getAcomments(script);scomm=!scomm">
 					<i class="icon-comments-alt icon-large"></i> Comments
@@ -86,14 +87,14 @@
 				<br>
 				<ul> 
 					<li ng-repeat="comment in script.comments">
-						<font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}}&#160;
+						<img src="http://www.gravatar.com/avatar/{{comment.avatar}}?s=50&d=mm" class="avatar">
+						<p class="authorHeader"><font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}}&#160;
 						<a href="" ng-show="instructor || login==comment.author" class="edit" ng-click="editAC=!editAC;newAcom=comment.content">
 							<i class="icon-edit icon-large"></i>
 						</a>
 						<a href="" ng-show="instructor || login==comment.author" ng-click="delAcom(script, comment)">
 							<i class="icon-remove-sign icon-large"></i>
-						</a>
-						<br>
+						</a></p>
 						<div class="comment" ng-hide="editAC"><ANY ng-bind-html-unsafe="comment.content"></ANY></div>
 						<div ng-show="editAC">
 							<textarea class="edit" ng-model="newAcom" jqte></textarea>

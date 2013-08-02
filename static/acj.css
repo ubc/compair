@@ -32,13 +32,22 @@ div.question, p.question {
 	padding: 7px;
 	margin: 3px;
 	white-space: pre-wrap;
-	margin-left: 2em;
+	margin-left: 4.5em;
+}
+
+li.question {
+	margin-bottom: 3em;
 }
 
 div.qtitle, p.qtitle {
 	width: 90%;
 	padding: 7px;
-	margin-left: 2em;
+	margin-left: 4.5em;
+}
+
+p.authorHeader {
+	display: inline-block;
+	margin-left: 4.5em;
 }
 
 div.qbutton {
@@ -109,6 +118,7 @@ div.comment {
 	max-height: 20em;
 	overflow-y: auto;
 	white-space: pre-wrap;
+	margin-left: 4.5em;
 }
 
 pre {
@@ -511,4 +521,8 @@ div.next {
 select.filter-select {
 	margin-bottom: 0;
 	width: 100%;
+}
+
+.avatar {
+	position: absolute;
 }

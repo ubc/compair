@@ -18,8 +18,9 @@
 	</div>
 	<br><br><br>
 	<ul>
-		<li ng-repeat="question in questions | orderBy:orderProp:true">
-			<b>{{question.author}}</b> - {{question.time}}
+		<li ng-repeat="question in questions | orderBy:orderProp:true" class="question">
+			<img src="http://www.gravatar.com/avatar/{{question.avatar}}?s=50&d=mm" class="avatar">
+			<p class="authorHeader"><b>{{question.author}}</b> - {{question.time}}</p>
 			<div class="opbuttons">
 				<a href="#/answerpage/{{question.id}}" class="answer"> 
 					<i class="icon-puzzle-piece icon-large"></i> Answer Page
@@ -41,8 +42,6 @@
 			<div class="qtitle" ng-click="full=!full" ng-show="full">
 				<i class="icon-collapse-top"></i>
 			</div>
-
-			<br><br><br>
 		</li>
 	</ul>
 </div>
