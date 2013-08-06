@@ -21,7 +21,7 @@
 				</a></p>
 				<div class="comment" ng-hide="editQC"><ANY ng-bind-html-unsafe="comment.content"></ANY></div>
 				<div ng-show="editQC" class="comment">
-					<textarea class="edit" ng-model="newQcom" jqte></textarea>
+					<textarea class="edit" ng-model="newQcom" ui-tinymce="tinymceOptions"></textarea>
 				</div>
 				<a href="" class="submit comment" ng-show="editQC" ng-click="editQcom(comment, newQcom);editQC=false">
 					<i class="icon-ok-sign icon-large"></i> Submit
@@ -34,7 +34,7 @@
 		</a>
 		<div ng-show="lqcomm">
 			<form name="addCommentQ" novalidate>
-				<textarea class="comment" name="myQcomment" ng-model="myQcomment" required jqte></textarea>
+				<textarea class="comment" name="myQcomment" ng-model="myQcomment" required ui-tinymce="tinymceOptions"></textarea>
 				<span class=errMsg ng-show="newQcomment && addCommentQ.myQcomment.$error.required">
 					Please submit a comment.<br><br></span>
 				<a href="" class="submit" ng-click="makeQcomment(myQcomment);newQcomment=true">
@@ -51,7 +51,7 @@
 	<div ng-show="check">
 		<br>
 		<form name="newAnswer" novalidate>
-			<textarea name="myanswer" ng-model="myanswer" jqte required></textarea>
+			<textarea name="myanswer" ng-model="myanswer" ui-tinymce="tinymceOptions" required></textarea>
 			<span class=errMsg ng-show="submitted && newAnswer.myanswer.$error.required">
 				Please enter an answer.</span>
 			<br>
@@ -85,7 +85,7 @@
 			<br><br>
 			<div ng-hide="edit" class="answer"><ANY ng-bind-html-unsafe="script.content"></ANY></div>
 			<div ng-show="edit">
-				<textarea class="edit" ng-model="newanswer" jqte></textarea>
+				<textarea class="edit" ng-model="newanswer" ui-tinymce="tinymceOptions"></textarea>
 			</div>
 			<br>
 				<a href="" class="submit" ng-show="edit" ng-click="editscript(script, newanswer);edit=!edit">
@@ -105,7 +105,7 @@
 						</a></p>
 						<div class="comment" ng-hide="editAC"><ANY ng-bind-html-unsafe="comment.content"></ANY></div>
 						<div ng-show="editAC" class="comment">
-							<textarea class="edit" ng-model="newAcom" jqte></textarea>
+							<textarea class="edit" ng-model="newAcom" ui-tinymce="tinymceOptions"></textarea>
 						</div>
 						<a href="" class="submit comment" ng-show="editAC" ng-click="editAcom(script, comment, newAcom);editAC=false">
 							<i class="icon-ok-sign icon-large"></i> Submit
@@ -117,7 +117,7 @@
 					<i class="icon-comment-alt icon-large"></i> Leave a Comment
 				</a>
 				<div ng-show="lcomm">
-					<textarea class="comment" ng-model="mycomment" jqte></textarea> 
+					<textarea class="comment" ng-model="mycomment" ui-tinymce="tinymceOptions"></textarea> 
 					<a href="" class="submit" ng-click="makeAcomment(script, mycomment);lcomm=false">
 						<i class="icon-ok icon-large"></i> Submit
 					</a>
