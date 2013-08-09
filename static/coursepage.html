@@ -10,7 +10,7 @@
 	<table class="table">
 	Search Course: <input type="text" style="border-radius: 7em" ng-model="cquery" ng-change="search()" placeholder="Search">
 	<tr>
-		<th colspan="3">Courses</th>
+		<th colspan="4">Courses</th>
 	</tr>
 	<tr class="tr" ng-repeat="course in courses | orderBy:orderProp | filter:cquery">
 		<td>
@@ -21,6 +21,9 @@
 		</td>
 		<td ng-show="instructor">
 			<a href="#/enrollpage/{{course.id}}"> <input type="button" class="button" value="Enroll Users"> </a>
+		</td>
+		<td ng-show="instructor">
+			<a href="#/classimport"> <input type="button" class="button" value="Import Students"> </a>
 		</td>
 	</tr>
 	</table>

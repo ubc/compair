@@ -13,12 +13,21 @@ import json
 import datetime
 import validictory
 import os
+import time
+import csv
+import string
+import random
+from werkzeug import secure_filename
 
 
 app = Flask(__name__)
 init_db()
 hasher = phpass.PasswordHash()
 principals = Principal(app)
+
+UPLOAD_FOLDER = 'tmp'
+ALLOWED_EXTENSIONS = set(['csv', 'txt'])
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Needs
 is_admin = RoleNeed('Admin')
@@ -45,8 +54,10 @@ class DatetimeEncoder(json.JSONEncoder):
 def commit():
 	try:
 		db_session.commit()
-	finally:
+	except:
 		db_session.rollback()
+		return False
+	return True
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
@@ -777,6 +788,145 @@ def drop_student(eid):
 	db_session.delete(query)
 	commit()
 	return json.dumps( {"msg": "PASS"} )
+
+def allowed_file(filename):
+	return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+@app.route('/userimport', methods=['POST'])
+@teacher.require(http_exception=401)
+def user_import():
+	file = request.files['file']
+	if not file or not allowed_file(file.filename):
+		return json.dumps( {"completed": True, "msg": "Please provide a valid file"} )
+	schema = {
+		'type': 'object',
+		'properties': {
+			'course': {'type': 'string'}
+		}
+	}
+	try:
+		validictory.validate(request.form, schema)
+	except ValueError, error:
+		return json.dumps( {"completed": True} )
+	courseId = request.form['course']
+	retval = []
+	ts = time.time()
+	timestamp = datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
+	filename = timestamp + '-' + secure_filename(file.filename)
+	file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+	content = csv_user_parser(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+	result = import_users(content['list'])
+	enrolled = []
+	success = []
+	if len(result['success']):
+		enrolled = enrol_users(result['success'], courseId)
+		success = enrolled['success']
+		enrolled = enrolled['error']
+	error = result['error'] + enrolled + content['error']
+	return json.dumps( {"success": success, "error": error, "completed": True} )
+
+@teacher.require(http_exception=401)
+def csv_user_parser(filename):
+	reader = csv.reader(open(filename, "rU"))
+	list = []
+	error = []
+	for row in reader:
+		# filter removes trailing empty columns in cases where some rows have more than 4 columns
+		row = filter(None, row)
+		if len(row) != 4:
+			error.append({'user': {'username': 'N/A', 'display': 'N/A'}, 'msg': str(row) + ' is an invalid row'})
+			continue
+		user = {'username': row[0], 'password': password_generator(), 'usertype': 'Student',
+			'email': row[3], 'firstname': row[1], 'lastname': row[2], 'display': row[1] + ' ' + row[2]}
+		list.append(user)
+	return {'list': list, 'error': error}
+
+@teacher.require(http_exception=401)
+def password_generator(size=16, chars=string.ascii_uppercase + string.ascii_lowercase + string.digits):
+	return ''.join(random.choice(chars) for x in range(size))
+
+@teacher.require(http_exception=401)
+def import_users(list):
+	schema = {
+		'type': 'object',
+		'properties': {
+			'username': {'type': 'string'},
+			'usertype': {'type': 'string', 'enum': ['Admin', 'Student', 'Teacher']},
+			'password': {'type': 'string'},
+			'email': {'type': 'string', 'format': 'email', 'required': False},
+			'firstname': {'type': 'string'},
+			'lastname': {'type': 'string'},
+			'display': {'type': 'string'},
+		}
+	}
+	# query all used usernames and displays
+	query = User.query.with_entities(User.username).all()
+	usernames = [item for sublist in query for item in sublist]
+	query = User.query.with_entities(User.display).all()
+	displays = [item for sublist in query for item in sublist]
+	duplicate = []
+	error = []
+	success = []
+	for user in list:
+		try:
+			validictory.validate(user, schema)
+		except ValueError, err:
+			error.append({'user': user, 'msg': str(err)})
+		if user['username'] in duplicate:
+			error.append({'user': user, 'msg': 'Duplicate username in file'})
+			continue
+		if user['username'] in usernames:
+			u = User.query.filter_by( username = user['username'] ).first()
+			if u.usertype == 'Student':
+				user = {'id': u.id, 'username': u.username, 'password': 'hidden', 'usertype': 'Student',
+					'email': u.email, 'firstname': u.firstname, 'lastname': u.lastname, 'display': u.display}
+				duplicate.append(user['username'])
+				success.append({'user': user})
+			else : 
+				error.append({'user': user, 'msg': 'User is not a student'})
+			continue
+		if user['display'] in displays:
+			integer = random.randrange(1000, 9999)
+			user['display'] = user['display'] + ' ' + str(integer)
+		if 'email' in user:
+			email = user['email']
+			if not re.match(r"[^@]+@[^@]+", email):
+				error.append({'user': user, 'msg': 'Incorrect email format'})
+				continue
+		else:
+			email = ''
+		table = User(user['username'], hasher.hash_password(user['password']), user['usertype'], email, user['firstname'], user['lastname'], user['display'])
+		db_session.add(table)
+		status = commit()
+		if not status:
+			error.append({'user': user, 'msg': 'Error'})
+		else:
+			# if successful append usernames + displays to prevent duplicates
+			duplicate.append(user['username'])
+			displays.append(user['display'])
+			user['id'] = table.id
+			success.append({'user': user})
+	return {'error': error, 'success': success}
+
+@teacher.require(http_exception=401)
+def enrol_users(users, courseId):
+	error = []
+	success = []
+	enrolled = Enrollment.query.filter_by(cid = courseId).with_entities(Enrollment.uid).all()
+	enrolled =  [item for sublist in enrolled for item in sublist]
+	for u in users:
+		if u['user']['id'] in enrolled:
+			success.append(u)
+			continue
+		table = Enrollment(u['user']['id'], courseId)
+		db_session.add(table)
+		status = commit()
+		if status:
+			success.append(u)
+		else:
+			u['msg'] = 'The user is created, but cannot be enrolled'
+			error.append(u)
+	return {'error': error, 'success': success}
 	
 @identity_loaded.connect_via(app)
 def on_identity_loaded(sender, identity):

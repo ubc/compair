@@ -530,3 +530,48 @@ select.filter-select {
 .avatar {
 	position: absolute;
 }
+
+ul.instructions {
+	list-style-type: circle;
+}
+
+pre.instructions {
+	display: inline-block;
+	border: 1px solid black;
+	background-color: white;
+	border-radius: 0px;
+	width: auto;
+}
+
+form.import label {
+	float: left;
+	text-align: right;
+	clear: left;
+	width: 10em;
+	margin-right: 2em;
+	margin-top: 0.4em;
+	font-size: 150%
+}
+
+form.import div {
+	display: block;
+	margin-bottom: 0.7em;
+}
+
+form.import input[type="submit"] {
+	display: block;
+	margin-right: auto;
+	margin-left: auto;
+}
+
+form.import span {
+	margin-left: 10em;
+}
+
+table.results td, table.results th {
+	text-align: center;
+}
+
+table.results {
+	width: 100%;
+}

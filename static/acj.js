@@ -1,4 +1,4 @@
-var myApp = angular.module('myApp', ['flash', 'ngResource', 'ngTable', 'http-auth-interceptor', 'ngCookies', 'ui.tinymce']);
+var myApp = angular.module('myApp', ['flash', 'ngResource', 'ngTable', 'http-auth-interceptor', 'ngCookies', 'ui.tinymce', 'ngUpload']);
 
 //Global Variables
 
@@ -132,6 +132,11 @@ myApp.config( function ($routeProvider) {
 			{
 				controller: ProfileController,
 				templateUrl: 'userprofile.html'
+			})
+		.when('/classimport',
+			{
+				controller: ImportController,
+				templateUrl: 'classimport.html'
 			})
 		.otherwise({redirectTo: '/'});
 });
@@ -276,7 +281,7 @@ function JudgepageController($scope, $cookieStore, $routeParams, $location, flas
 	};
 }
 
-function LoginController($rootScope, $cookieStore, $scope, $location, loginService, authService, isInstalled) {
+function LoginController($rootScope, $cookieStore, $scope, $location, flash, loginService, authService, isInstalled) {
 	var installed = isInstalled.get( function() {
 		if (!installed.installed) {
 			$location.path('/install');
@@ -287,7 +292,7 @@ function LoginController($rootScope, $cookieStore, $scope, $location, loginServi
 	}
 	$scope.submit = function() {
 		if ( !($scope.username && $scope.password) ) {
-			$scope.msg = 'Please provide a username and a password';
+			flash('error', 'Please provide a username and a password');
 			return '';
 		}
 		input = {"username": $scope.username, "password": $scope.password};
@@ -297,7 +302,7 @@ function LoginController($rootScope, $cookieStore, $scope, $location, loginServi
 				$rootScope.$broadcast("LOGGED_IN", user.display); 
 				$location.path('/');
 			} else {
-				$scope.msg = 'Incorrect username or password';
+				flash('error', 'Incorrect username or password');
 			}
 		});
 	};
@@ -764,6 +769,33 @@ function EnrollController($scope, $routeParams, $filter, ngTableParams, enrollSe
 			);
 		}
 	}, true);
+}
+
+function ImportController($scope, $routeParams, $http, flash, courseService) {
+	courses = courseService.get(function() {
+		$scope.courses = courses.courses;
+	});
+	$scope.resultPage = false;
+	$scope.uploadComplete = function(content) {
+		/* angularjs is asynchronous therefore if we don't restrict messages to only
+		appear after flask has done its job, we'll see an error message first
+		then switches to success message if the task is successful*/
+		$scope.resultPage = content.completed;
+		if (content.completed && content.success.length > 0) {
+			$scope.success = content.success;
+			$scope.error = content.error;
+			msg = content.error.length > 0 ? 'Users are successfully imported, however some users have errors.' :
+				'Users are successfully imported.'
+			flash(msg);
+		} else if(content.completed) {
+			$scope.error = content.error;
+			if (content.msg) {
+				flash('error', content.msg);
+			} else {
+				flash('error', 'Users are unsuccessfully imported');
+			}
+		}
+	};
 }
 
 myApp.directive('backButton', function(){
