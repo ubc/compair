@@ -11,7 +11,7 @@
 		<br>
 		<ul>
 			<li ng-repeat="comment in questionComments">
-				<img src="http://www.gravatar.com/avatar/{{comment.avatar}}?s=50&d=mm" class="avatar">
+				<img src="http://www.gravatar.com/avatar/{{comment.avatar}}?s=50&d=retro" class="avatar">
 				<p class="authorHeader"><font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}}&#160;
 				<a href="" class="edit" ng-show="instructor || login==comment.author" ng-click="editQC=!editQC;newQcom=comment.content">
 					<i class="icon-edit icon-large"></i>
@@ -67,7 +67,7 @@
 	<br><br>
 	<ul>
 		<li ng-repeat="script in scripts | orderBy:orderProp:true">
-			<img src="http://www.gravatar.com/avatar/{{script.avatar}}?s=50&d=mm" class="avatar">
+			<img src="http://www.gravatar.com/avatar/{{script.avatar}}?s=50&d=retro" class="avatar">
 			<p class="authorHeader">Script Score: <b>{{script.score}}</b></p>
 			<br>
 			<p class="authorHeader">Author: <b>{{script.author}}</b> - {{script.time}}</p>
@@ -95,7 +95,7 @@
 				<br>
 				<ul> 
 					<li ng-repeat="comment in script.comments">
-						<img src="http://www.gravatar.com/avatar/{{comment.avatar}}?s=50&d=mm" class="avatar">
+						<img src="http://www.gravatar.com/avatar/{{comment.avatar}}?s=50&d=retro" class="avatar">
 						<p class="authorHeader"><font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}}&#160;
 						<a href="" ng-show="instructor || login==comment.author" class="edit" ng-click="editAC=!editAC;newAcom=comment.content">
 							<i class="icon-edit icon-large"></i>

@@ -3,6 +3,10 @@ body {
 	font-family:"Times New Roman", Times, serif;
 }
 
+.body {
+	background-color: rgb(240, 250, 240);
+}
+
 h1 {
 	text-align: center;
 }
@@ -23,10 +27,6 @@ p {
 	margin: 3px;
 }
 
-input[type="radio"] {
-	margin-bottom: 0.5em;
-}
-
 div.question, p.question {
 	width: 90%;
 	padding: 7px;
@@ -37,6 +37,7 @@ div.question, p.question {
 
 li.question {
 	margin-bottom: 3em;
+	margin-left: 2em;
 }
 
 div.qtitle, p.qtitle {
@@ -64,6 +65,7 @@ div.answer, p.answer {
 	padding: 7px;
 	overflow-y: auto;
 	white-space: pre-wrap;
+	margin-left: 4.5em;
 }
 
 div.divtext {
@@ -136,6 +138,14 @@ ul {
 	list-style-type: none;
 }
 
+li.mynav {
+	line-height: 4em;
+}
+
+a.mynav {
+	padding: 0 1em !important;
+}
+
 .tr:nth-child(even) {
 	background: white;
 }
@@ -161,7 +171,7 @@ a:visited {
 
 a:hover {
 	text-decoration: none;
-	color:red;
+	color: rgb(51, 153, 243);
 }
 
 a.answer {
@@ -290,11 +300,19 @@ input.expand:hover {
 	background-color: yellow;
 }
 
-.nav {
-	height: 2em;
-	line-height: 2em;
+.navbar2 {
+	height: 3em;
+	line-height: 3em;
 	vertical-align: middle;
-	background-color: silver;
+	text-shadow:0 1px 0 rgba(255,255,255,0.3);
+	background-color:#ececec;
+	background-image:-webkit-gradient(linear,0 0,0 100%,from(#fff),color-stop(50%,#eee),to(#e4e4e4));
+	background-image:-webkit-linear-gradient(#fff,#eee 50%,#e4e4e4);
+	background-image:-moz-linear-gradient(top,#fff,#eee 50%,#e4e4e4);
+	background-image:linear-gradient(#fff,#eee 50%,#e4e4e4);
+	background-repeat:no-repeat;
+	border:1px solid #d5d5d5;
+	broder-radius: 4px;
 }
 
 .option {
@@ -304,10 +322,25 @@ input.expand:hover {
 	margin-left: 1em;
 }
 
+.mydropdown{
+	display: inline-block;
+	position: relative;
+	top: 1.25em;
+	float: right;
+	text-align: left;
+}
+
 .userlogin {
 	display: inline-block;
+	line-height: 4em;
 	float: right;
 	text-align: right;
+}
+
+.enroll {
+	display: inline-block;
+	vertical-align: top;
+	margin-left: 1em;
 }
 
 .inline {
@@ -453,14 +486,27 @@ input.expand:hover {
 	width: 70em;
 	margin: auto;
 	background-color: white;
-	padding: 1em;
-	border: 1em solid gray;
-	border-radius: 3em; 
+	padding: 0.2em;
+	border: 1px solid white;
+	border-radius: 1em; 
 }
 
 #logo {
 	width: 12em;
 	height: 7em;
+}
+
+#logo2 {
+	width: 8em;
+	height: 4em;
+	display: block;
+	float: left;
+	margin-right: 1em;
+}
+
+#logo3 {
+	width: 100%;
+	height: 100%;
 }
 
 .errMsg {
@@ -482,7 +528,7 @@ ol#flash-messages {
     margin-bottom: 1em;
     font-weight: 600;
     font-size: 110%;
-    margin-right: 1.5em;
+	margin-right: 1.5em;
 }
 
 .success {
@@ -495,7 +541,7 @@ ol#flash-messages {
     margin-bottom: 1em;
     font-weight: 600;
     font-size: 110%;
-    margin-right: 1.5em;
+	margin-right: 1.5em;
 }
 
 table.install {
@@ -575,3 +621,4 @@ table.results td, table.results th {
 table.results {
 	width: 100%;
 }
+

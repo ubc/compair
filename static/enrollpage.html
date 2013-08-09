@@ -4,7 +4,7 @@
 	<br><br>
 	<p> Course: <b>{{course}}</b> </p>
 	<br>
-	<div style="display: inline-block; vertical-align: top; margin-right: 5em">
+	<div class="enroll">
 		<table ng-table="teacherParams" class="table"> 
 		Search Teacher: <input ng-model="tquery" style="border-radius: 7em">
 		<tr class="tr" ng-repeat="teacher in teachers | filter:tquery" >
@@ -23,7 +23,7 @@
 		</tr>
 		</table>
 	</div>
-	<div style="display: inline-block; vertical-align: top">
+	<div class="enroll">
 		<table ng-table="studentParams" class="table">
 		Search Student: <input ng-model="squery" style="border-radius: 7em">
 		<tr class="tr" ng-repeat="student in students | filter:squery">

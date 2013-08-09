@@ -2,10 +2,11 @@
 <html ng-app = "myApp" auth-login>
 	<head>
 		<title>ACJ</title>
-		<link rel="stylesheet" type="text/css" href="acj.css" />
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 		<script src="//tinymce.cachefly.net/4.0/tinymce.min.js"></script>
 		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/angular-strap/0.7.4/angular-strap.min.js"></script>
 		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular-resource.min.js"></script>
 		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular-cookies.min.js"></script>
 		<script type="text/javascript" src="angular-ui-tinymce/tinymce.js"></script>
@@ -15,38 +16,47 @@
 		<script src="angular-flash.js"></script>
 		<script src="ng-upload.min.js"></script>
 		<script src="acj.js" type="text/javascript"></script>
-		<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
-		<link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" />
+		<link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.1/css/bootstrap.min.css" rel="stylesheet">
+		<link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.1/css/bootstrap-responsive.min.css" rel="stylesheet">
+		<link href="//mgcrea.github.com/angular-strap/css/prettify.css" rel="stylesheet">
 		<link rel="stylesheet" type="text/css" href="acj.css" />
+		<link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" />
+		<link rel="stylesheet" type="text/css" href="bootswatch.min.css" />
 	</head>
-	<body>
+	<body class="body">
 		<div id="main">
-			<a href="/" > <img src="http://farm4.staticflickr.com/3085/2786778672_3fb8cdd469_o.jpg" id="logo" />  </a>
-			<div class="nav" ng-controller="IndexController">
-				<a class="option" href="#/quickjudge" ng-show="check">
-					Random Judge
-				</a>
-				<a class="option" href="#/rankpage">
-					Inter Rank
-				</a>
-				<a class="option" href="#/createuser" ng-show="check">
-					Create User
-				</a>
-				<a class="option" href="#/user" ng-show="check">
-					User
-				</a>
-				<div class="userlogin">
-					<form ng-submit="logout()">
-						<span ng-show="check">Logged in as: <a href="#/userprofile"><b>{{login}}</b></a></span>
-						<input type="submit" ng-show="check" class="button" value="Log Out">
-					</form>
-				</div>
-				<div class="userlogin" ng-hide="check">
-					<a href="#/login">
-						<input type="button" class="button" value="Log In">
-					</a>
+			<div class="navbar" ng-controller="IndexController" bs-navbar>
+				<div class="navbar-inner">
+					<div id="logo2">
+						<a href="/">
+							<img src="http://farm4.staticflickr.com/3085/2786778672_3fb8cdd469_o.jpg" id="logo3"/>
+						</a>
+					</div>
+					<ul class="nav">
+						<li data-match-route="/judgepage.*" class="mynav" ng-show="check">
+							<a class="mynav" href="#/quickjudge">Random Judge</a>
+						</li>
+						<li data-match-route="/rankpage" class="mynav">
+							<a class="mynav" href="#/rankpage">Inter Rank</a>
+						</li>
+						<li data-match-route="/createuser" class="mynav">
+							<a class="mynav" href="#/createuser">Create User</a>
+						</li>
+						<li data-match-route="/user" class="mynav">
+							<a class="mynav" href="#/user" class="mynav">User</a>
+						</li>
+					</ul>
+					<div class="mydropdown">
+						<span ng-show="check">
+							Logged in as: <input class="button" type="button" bs-dropdown="dropdown" value="{{login}}">
+						</span>
+						<a href="#/login" ng-hide="check">
+							<input type="button" class="button" value="Log In">
+						</a>
+					</div>
 				</div>
 			</div>
+			
 			<flash-messages></flash-messages>
 
 			<div style="border=1" ng-view=""></div>

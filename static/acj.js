@@ -1,4 +1,4 @@
-var myApp = angular.module('myApp', ['flash', 'ngResource', 'ngTable', 'http-auth-interceptor', 'ngCookies', 'ui.tinymce', 'ngUpload']);
+var myApp = angular.module('myApp', ['flash', 'ngResource', 'ngTable', 'http-auth-interceptor', 'ngCookies', 'ui.tinymce', 'ngUpload', '$strap.directives']);
 
 //Global Variables
 
@@ -189,6 +189,17 @@ function InstallController($scope, $location, $cookieStore, flash, installServic
 }
 
 function IndexController($scope, $location, $cookieStore, loginService, logoutService, isInstalled) {
+	$scope.dropdown = [
+		{
+			"text": "User Profile",
+			"href": "#/userprofile",
+		},
+		{
+			"text": "Log Out",
+			"href": "#",
+			"click": "logout()",
+		},
+	];
 	var login = loginService.get( function() {
 		login = login.display;
 		if (login) {
@@ -231,6 +242,16 @@ function QuickController($scope, $location, flash, judgeService, pickscriptServi
 }
 
 function JudgepageController($scope, $cookieStore, $routeParams, $location, flash, judgeService, pickscriptService) {
+	$scope.tabs = [
+		{
+			"title": "Left Test",
+			"content": "Test Left Script Content",
+		},
+		{
+			"title": "Right Test",
+			"content": "Test Right Script Content",
+		},
+	];
 	var questionId = $routeParams.questionId;
 	if (questionId == 0) {
 		$location.path('/');
@@ -813,4 +834,5 @@ myApp.directive('backButton', function(){
       }
     }
 });
+
 

@@ -365,9 +365,10 @@ def random_question():
 	lowest1 = ''
 	for script in scripts:
 		question = Question.query.filter_by( id = script.qid ).first()
-		enrolled = Enrollment.query.filter_by( cid = question.cid ).filter_by( uid = user.id ).first()
-		if not enrolled:
-			continue
+		if user.usertype != 'Admin':
+			enrolled = Enrollment.query.filter_by( cid = question.cid ).filter_by( uid = user.id ).first()
+			if not enrolled:
+				continue
 		print ('in loop, script: ' + str(script))
 		print ('in loop, lowest0: ' + str(lowest0))
 		print ('in loop, lowest1: ' + str(lowest1))

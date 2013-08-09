@@ -32,5 +32,30 @@
 		</a>
 		</form>
 	</div>
+
+<br>
+	<div class="row">
+	<ul class="nav nav-tabs">
+		<li class="active">
+			<a data-toggle="tab" ng-href="#left">Left</a>
+		</li>
+		<li>
+			<a data-toggle="tab" ng-href="#right">Right</a>
+		</li>
+	</ul>
+	<div class="tab-content">
+		<div id="left" class="tab-pane fade active in">
+			<p class="ljanswer"><ANY ng-bind-html-unsafe="scriptl"></ANY></p>
+		</div>
+		<div id="right" class="tab-pane fade">
+			<p class="rjanswer"><ANY ng-bind-html-unsafe="scriptr"></ANY></p>
+		</div>
+	</div>
+	</div>
+<br>
+
+	<div data-fade="1" ng-model="activeTab" bs-tabs>
+		<div ng-repeat="tab in tabs" data-title="{{tab.title}}"> <p>{{tab.content}}</p> </div>
+	</div>
 </div>
 
