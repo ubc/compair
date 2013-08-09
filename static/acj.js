@@ -369,12 +369,11 @@ function UserController($rootScope, $scope, $location, flash, userService) {
 		}
 		input = {"username": $scope.username, "password": $scope.password, "usertype": $scope.usertype, "email": $scope.email, "firstname": $scope.firstname, "lastname": $scope.lastname, "display": $scope.display};
 		var user = userService.save( input, function() {
-			$scope.flash = user.flash;
-			if (!user.msg && !$scope.flash) {
+			if (user.success.length > 0) {
 				flash('User created successfully');
 				$location.path('/user');
-			} else if ($scope.flash) {
-				flash('error', $scope.flash);
+			} else if (!user.error[0].validation) {
+				flash("error", user.error[0].msg);
 			}
 			return '';
 		});
@@ -721,13 +720,13 @@ function EnrollController($scope, $routeParams, $filter, ngTableParams, enrollSe
 	$scope.add = function(user, type) {
 		input = {"uid": user.uid};
 		var retval = enrollService.save( {id: courseId}, input, function() {
-			if (retval.eid) {
+			if (retval.success.length > 0) {
 				if (type == 'T') {
 					var index = jQuery.inArray(user, $scope.teachers);
-					$scope.teachers[index].enrolled = retval.eid;
+					$scope.teachers[index].enrolled = retval.success[0].eid;
 				} else if (type == 'S') {
 					var index = jQuery.inArray(user, $scope.students);
-					$scope.students[index].enrolled = retval.eid;
+					$scope.students[index].enrolled = retval.success[0].eid;
 				}
 			} else {
 				alert('something is wrong');
@@ -780,18 +779,20 @@ function ImportController($scope, $routeParams, $http, flash, courseService) {
 		/* angularjs is asynchronous therefore if we don't restrict messages to only
 		appear after flask has done its job, we'll see an error message first
 		then switches to success message if the task is successful*/
-		$scope.resultPage = content.completed;
-		if (content.completed && content.success.length > 0) {
+		if (content.completed && content.success && content.success.length > 0) {
 			$scope.success = content.success;
 			$scope.error = content.error;
 			msg = content.error.length > 0 ? 'Users are successfully imported, however some users have errors.' :
 				'Users are successfully imported.'
+			$scope.resultPage = true;
 			flash(msg);
 		} else if(content.completed) {
 			$scope.error = content.error;
 			if (content.msg) {
+				$scope.resultPage = false;
 				flash('error', content.msg);
 			} else {
+				$scope.resultPage = true;
 				flash('error', 'Users are unsuccessfully imported');
 			}
 		}

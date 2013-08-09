@@ -237,52 +237,10 @@ def all_users():
 
 @app.route('/user', methods=['POST'])
 def create_user():
-	param = request.json
-	schema = {
-		'type': 'object',
-		'properties': {
-			'username': {'type': 'string'},
-			'usertype': {'type': 'string', 'enum': ['Admin', 'Student', 'Teacher']},
-			'password': {'type': 'string'},
-			'email': {'type': 'string', 'format': 'email', 'required': False},
-			'firstname': {'type': 'string'},
-			'lastname': {'type': 'string'},
-			'display': {'type': 'string'},
-		}
-	}
-	try:
-		validictory.validate(param, schema)
-	except ValueError, error:
-		print (str(error))
-		return json.dumps( {"msg": str(error)} )
-	username = param['username']
-	query = User.query.filter_by(username = username).first()
-	if query:
-		db_session.rollback()
-		return json.dumps( {"flash": 'Username already exists'} )
-	display = param['display']
-	query = User.query.filter_by(display = display).first()
-	if query:
-		db_session.rollback()
-		return json.dumps( {"flash": 'Display name already exists'} )
-	password = param['password']
-	password = hasher.hash_password( password )
-	usertype = param['usertype']
-	if 'email' in param:
-		email = param['email']
-		if not re.match(r"[^@]+@[^@]+", email):
-			db_session.rollback()
-			return json.dumps( {"flash": 'Incorrect email format'} )
-	else:
-		email = ''
-	firstname = param['firstname']
-	lastname = param['lastname']
-	table = User(username, password, usertype, email, firstname, lastname, display)
-	db_session.add(table)
-	commit()
-	if not os.access('tmp/installed.txt', os.W_OK):
+	result = import_users([request.json], False)
+	if not os.access('tmp/installed.txt', os.W_OK) and result['success']:
 		file = open('tmp/installed.txt', 'w+')
-	return ''
+	return json.dumps(result)
 
 @app.route('/user', methods=['PUT'])
 def edit_user():
@@ -771,15 +729,9 @@ def students_enrolled(cid):
 @app.route('/enrollment/<cid>', methods=['POST'])
 @teacher.require(http_exception=401)
 def enroll_student(cid):
-	param = request.json
-	uid = param['uid']
-	table = Enrollment(uid, cid)
-	db_session.add(table)
-	db_session.commit()
-	query = Enrollment.query.filter_by(uid = uid).filter_by(cid = cid).first()
-	retval = json.dumps( {"eid": query.id} )
-	db_session.rollback()
-	return retval
+	user = {'user': {'id': request.json['uid']}}
+	retval = enrol_users([user], cid)
+	return json.dumps(retval)
 
 @app.route('/enrollment/<eid>', methods=['DELETE'])
 @teacher.require(http_exception=401)
@@ -846,7 +798,7 @@ def password_generator(size=16, chars=string.ascii_uppercase + string.ascii_lowe
 	return ''.join(random.choice(chars) for x in range(size))
 
 @teacher.require(http_exception=401)
-def import_users(list):
+def import_users(list, group=True):
 	schema = {
 		'type': 'object',
 		'properties': {
@@ -871,21 +823,28 @@ def import_users(list):
 		try:
 			validictory.validate(user, schema)
 		except ValueError, err:
-			error.append({'user': user, 'msg': str(err)})
+			error.append({'user': user, 'msg': str(err), 'validation': True})
+			continue
 		if user['username'] in duplicate:
 			error.append({'user': user, 'msg': 'Duplicate username in file'})
 			continue
 		if user['username'] in usernames:
-			u = User.query.filter_by( username = user['username'] ).first()
-			if u.usertype == 'Student':
-				user = {'id': u.id, 'username': u.username, 'password': 'hidden', 'usertype': 'Student',
-					'email': u.email, 'firstname': u.firstname, 'lastname': u.lastname, 'display': u.display}
-				duplicate.append(user['username'])
-				success.append({'user': user})
-			else : 
-				error.append({'user': user, 'msg': 'User is not a student'})
+			if not group:
+				error.append({'user': user, 'msg': 'Username already exists'})
+			else:
+				u = User.query.filter_by( username = user['username'] ).first()
+				if u.usertype == 'Student':
+					user = {'id': u.id, 'username': u.username, 'password': 'hidden', 'usertype': 'Student',
+						'email': u.email, 'firstname': u.firstname, 'lastname': u.lastname, 'display': u.display}
+					duplicate.append(user['username'])
+					success.append({'user': user})
+				else : 
+					error.append({'user': user, 'msg': 'User is not a student'})
 			continue
 		if user['display'] in displays:
+			if not group:
+				error.append({'user': user, 'msg': 'Display name already exists'})
+				continue
 			integer = random.randrange(1000, 9999)
 			user['display'] = user['display'] + ' ' + str(integer)
 		if 'email' in user:
@@ -922,6 +881,7 @@ def enrol_users(users, courseId):
 		db_session.add(table)
 		status = commit()
 		if status:
+			u['eid'] = table.id
 			success.append(u)
 		else:
 			u['msg'] = 'The user is created, but cannot be enrolled'
