@@ -662,6 +662,27 @@ def list_question(id):
 	db_session.rollback()
 	return json.dumps( {"course": course.name, "questions": lst} )
 
+@app.route('/question/<id>', methods=['PUT'])
+def edit_question(id):
+	param = request.json
+	schema = {
+		'type': 'object',
+		'properties': {
+			'title': {'type': 'string'},
+			'content': {'type': 'string'}
+		}
+	}
+	try:
+		validictory.validate(param, schema)
+	except ValueError, error:
+		print (str(error))
+		return json.dumps( {"msg": str(error)} )
+	question = Question.query.filter_by(id = id).first()
+	question.title = param['title']
+	question.content = param['content']
+	commit()
+	return json.dumps({"msg": "PASS"})
+
 @app.route('/question/<id>', methods=['POST'])
 @student.require(http_exception=401)
 def create_question(id):

@@ -43,7 +43,7 @@ myApp.factory('courseService', function($resource) {
 });
 
 myApp.factory('questionService', function($resource) {
-	return $resource( '/question/:cid' );
+	return $resource( '/question/:cid', {}, { put: {method: 'PUT'} } );
 });
 
 myApp.factory('answerService', function($resource) {
@@ -242,16 +242,6 @@ function QuickController($scope, $location, flash, judgeService, pickscriptServi
 }
 
 function JudgepageController($scope, $cookieStore, $routeParams, $location, flash, judgeService, pickscriptService) {
-	$scope.tabs = [
-		{
-			"title": "Left Test",
-			"content": "Test Left Script Content",
-		},
-		{
-			"title": "Right Test",
-			"content": "Test Right Script Content",
-		},
-	];
 	var questionId = $routeParams.questionId;
 	if (questionId == 0) {
 		$location.path('/');
@@ -532,17 +522,32 @@ function QuestionController($scope, $location, $routeParams, $filter, flash, ngT
 			}
 		});
 	};
-	$scope.delete = function(question) {
-		questionId = question.id;
-		var retval = questionService.delete( {cid: questionId}, function() {
-			if (retval.msg) {
-				flash( "error", "You cannot delete others' questions" )
+	$scope.editquestion = function(newtitle, newquestion, question) {
+		input = {"title": newtitle, "content": newquestion};
+		var retval = questionService.put( {cid: question.id}, input, function() {
+			if (retval.msg != 'PASS') {
+				flash('error', 'Please submit a question.');
 			} else {
 				var index = jQuery.inArray(question, $scope.questions);
-				$scope.questions.splice(index, 1);
-				flash("The question has been successfully deleted.");
+				$scope.questions[index].title = newtitle;
+				$scope.questions[index].content = newquestion;
+				flash('The question has been successfully modified.');
 			}
 		});
+	};
+	$scope.delete = function(question) {
+		questionId = question.id;
+		if (confirm("Delete Answer?") == true) {
+			var retval = questionService.delete( {cid: questionId}, function() {
+				if (retval.msg) {
+					flash( "error", "You cannot delete others' questions" )
+				} else {
+					var index = jQuery.inArray(question, $scope.questions);
+					$scope.questions.splice(index, 1);
+					flash("The question has been successfully deleted.");
+				}
+			});
+		}
 	};
 	$scope.judge = function(id) {
 		questionId = id;

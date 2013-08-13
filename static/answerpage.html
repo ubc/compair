@@ -16,7 +16,7 @@
 				<a href="" class="edit" ng-show="instructor || login==comment.author" ng-click="editQC=!editQC;newQcom=comment.content">
 					<i class="icon-edit icon-large"></i>
 				</a>
-				<a href="" ng-show="instructor || login==comment.author" ng-click="delQcom(comment)">
+				<a href="" class="delete" ng-show="instructor || login==comment.author" ng-click="delQcom(comment)">
 					<i class="icon-remove-sign icon-large"></i>
 				</a></p>
 				<div class="comment" ng-hide="editQC"><ANY ng-bind-html-unsafe="comment.content"></ANY></div>
@@ -84,7 +84,7 @@
 			</div>
 			<br><br>
 			<div ng-hide="edit" class="answer"><ANY ng-bind-html-unsafe="script.content"></ANY></div>
-			<div ng-show="edit">
+			<div ng-show="edit" class="edit">
 				<textarea class="edit" ng-model="newanswer" ui-tinymce="tinymceOptions"></textarea>
 			</div>
 			<br>
@@ -100,7 +100,7 @@
 						<a href="" ng-show="instructor || login==comment.author" class="edit" ng-click="editAC=!editAC;newAcom=comment.content">
 							<i class="icon-edit icon-large"></i>
 						</a>
-						<a href="" ng-show="instructor || login==comment.author" ng-click="delAcom(script, comment)">
+						<a href="" class="delete" ng-show="instructor || login==comment.author" ng-click="delAcom(script, comment)">
 							<i class="icon-remove-sign icon-large"></i>
 						</a></p>
 						<div class="comment" ng-hide="editAC"><ANY ng-bind-html-unsafe="comment.content"></ANY></div>

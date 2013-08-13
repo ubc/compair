@@ -75,6 +75,11 @@ div.divtext {
 	background-color: rgb(239, 239, 239);
 }
 
+div.edit {
+	width: 90%;
+	margin-left: 4.5em;
+}
+
 .ljanswer {
 	width: 45%;
 	min-height: 15em;
@@ -183,7 +188,7 @@ a.answer:hover {
 }
 
 a.delete {
-	margin-right: 2em;
+	margin-right: 3em;
 }
 
 a.delete:hover {
@@ -203,7 +208,7 @@ a.cedit:hover {
 }
 
 a.comments {
-	margin-right: 2em;
+	margin-right: 3em;
 }
 
 a.comments:hover {
@@ -223,7 +228,7 @@ a.sort:hover {
 }
 
 a.judge {
-	margin-right: 2em;
+	margin-right: 3em;
 }
 
 a.judge:hover {

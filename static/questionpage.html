@@ -17,7 +17,6 @@
 			Please enter a question.</span>
 		<br>
 		<a href="" class="submit" ng-click="submit(); submitted=true">
-
 			<i class="icon-ok icon-large"></i> Submit
 		</a>
 		</form>
@@ -34,19 +33,38 @@
 				<a href="#/judgepage/{{question.id}}" class="judge"> 
 					<i class="icon-legal icon-large"></i> Judge Answers
 				</a>
+				<a href="" class="edit" ng-show="login == question.author || instructor" ng-click="edit=!edit;newtitle=question.title;newquestion=question.content">
+					<i class="icon-edit-sign icon-large"></i> Edit Question
+				</a>
 				<a href="" class="delete" ng-show="login == question.author || instructor" ng-click="delete(question)">
 					<i class="icon-trash icon-large"></i> Delete
 				</a>
 			</div>
-			<div class="qtitle" ng-click="full=!full" ng-hide="full" >
-				<i class="icon-collapse"></i>
-				{{question.title}}   
+			<div ng-hide="edit">
+				<div class="qtitle" ng-click="full=!full" ng-hide="full" >
+					<i class="icon-collapse"></i>
+					{{question.title}}   
+				</div>
+				<div ng-click="full=!full" ng-show="full">
+					<p class="question"><ANY ng-bind-html-unsafe="question.content"></ANY></p>   
+				</div>
+				<div class="qtitle" ng-click="full=!full" ng-show="full">
+					<i class="icon-collapse-top"></i>
+				</div>
 			</div>
-			<div ng-click="full=!full" ng-show="full">
-				<p class="question"><ANY ng-bind-html-unsafe="question.content"></ANY></p>   
-			</div>
-			<div class="qtitle" ng-click="full=!full" ng-show="full">
-				<i class="icon-collapse-top"></i>
+			<div ng-show="edit">
+				<form name="createQuestion" novalidate>
+				Question Title: <input type="text" name="title" ng-model="newtitle" required>
+				<span class=errMsg ng-show="submitted && createQuestion.title.$error.required">
+					A title is required for the question.</span>
+				<textarea name="question" ui-tinymce="tinymceOptions" ng-model="newquestion" required></textarea>
+				<span class=errMsg ng-show="submitted && createQuestion.question.$error.required">
+					Please enter a question.</span>
+				<br>
+				<a href="" class="submit" ng-click="editquestion(newtitle, newquestion, question);edit=false;submitted=true">
+					<i class="icon-ok icon-large"></i> Submit
+				</a>
+				</form>
 			</div>
 		</li>
 	</ul>
