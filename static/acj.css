@@ -92,6 +92,16 @@ div.edit {
 	white-space: pre-wrap;
 }
 
+.leftanswer {
+	min-height: 15em;
+	max-height: 50em;
+	border: 3px solid #FFDF00;
+	vertical-align: top;
+	background-color: #FDFEFF;
+	overflow-y: auto;
+	white-space: pre-wrap;
+}
+
 .rjanswer {
 	width: 45%;
 	min-height: 15em;
@@ -102,6 +112,22 @@ div.edit {
 	background-color: #FFFDFE;
 	overflow-y: auto;
 	white-space: pre-wrap;
+}
+
+.rightanswer {
+	min-height: 15em;
+	max-height: 50em;
+	vertical-align: top;
+	border: 3px solid #BB0000;
+	background-color: #FFFDFE;
+	overflow-y: auto;
+	white-space: pre-wrap;
+}
+
+.mytab {
+	width: 33.33%;
+	text-align: center;
+	font-weight: bold;
 }
 
 textarea.edit {
