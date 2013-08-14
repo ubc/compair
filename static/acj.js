@@ -1,4 +1,4 @@
-var myApp = angular.module('myApp', ['flash', 'ngResource', 'ngTable', 'http-auth-interceptor', 'ngCookies', 'ui.tinymce', 'ngUpload', '$strap.directives']);
+var myApp = angular.module('myApp', ['flash', 'ngResource', 'ngTable', 'http-auth-interceptor', 'ngCookies', 'ngUpload', '$strap.directives']);
 
 //Global Variables
 
@@ -477,10 +477,8 @@ function CourseController($scope, $cookieStore, courseService, loginService) {
 
 function QuestionController($scope, $location, $routeParams, $filter, flash, ngTableParams, questionService, loginService) 
 {
-	$scope.tinymceOptions = {
-		menubar: false // disable file, edit, format, etc. menubar
-	};
 	$scope.orderProp = 'time';
+	$scope.newQuestion = '';
 	var questionData = [];
 
 	var courseId = $routeParams.courseId; 
@@ -499,6 +497,7 @@ function QuestionController($scope, $location, $routeParams, $filter, flash, ngT
 			alert('something is not right; user is not logged in');
 		}
 	});
+
 	var retval = questionService.get( {cid: courseId}, function() {
 		$scope.course = retval.course;
 		$scope.questions = retval.questions;
@@ -518,6 +517,10 @@ function QuestionController($scope, $location, $routeParams, $filter, flash, ngT
 			} else {
 				$scope.questions.push(msg);
 				$scope.check = false;
+				// reset the form
+				$scope.title = '';
+				$scope.question = '';
+				$scope.submitted = '';
 				flash("The question has been successfully added.");
 			}
 		});
@@ -570,14 +573,13 @@ function QuestionController($scope, $location, $routeParams, $filter, flash, ngT
 	}, true);
 }
 
-function AnswerController($scope, $routeParams, flash, answerService, rankService, commentAService, commentQService) {
-	$scope.tinymceOptions = {
-		menubar: false // disable file, edit, format, etc. menubar
-	};
+function AnswerController($scope, $routeParams, $http, flash, answerService, rankService, commentAService, commentQService) {
 	var questionId = $routeParams.questionId; 
 
 	$scope.orderProp = 'time';
 	$scope.nextOrder = 'score';
+	
+	$scope.newScript = '';
 
 	var retval = rankService.get( {qid: questionId}, function() {
 		$scope.course = retval.course;
@@ -593,9 +595,10 @@ function AnswerController($scope, $routeParams, flash, answerService, rankServic
 		input = {"content": $scope.myanswer};
 		var newscript = answerService.save( {qid: questionId}, input, function() {
 			if (newscript.msg) {
-				//alert('something is wrong');
+				flash('error', 'Please submit a valid answer.');
 			} else {
 				$scope.scripts.push(newscript);
+				$scope.myanswer = '';
 				$scope.check = false;
 			}
 		});
@@ -627,6 +630,7 @@ function AnswerController($scope, $routeParams, flash, answerService, rankServic
 			});
 		}
 	};
+
 	$scope.getAcomments = function(script) {
 		var retval = commentAService.get( {id: script.id}, function() {
 			if (retval.comments) {
@@ -662,6 +666,7 @@ function AnswerController($scope, $routeParams, flash, answerService, rankServic
 		var retval = commentQService.save( {id: questionId}, input, function() {
 			if (retval.comment) {
 				$scope.questionComments.push( retval.comment );
+				$scope.myQcomment = '';
 				$scope.lqcomm = false;
 				flash('The comment has been successfully added');
 			} else {
@@ -839,5 +844,49 @@ myApp.directive('backButton', function(){
       }
     }
 });
+ 
+myApp.directive('halloEditor', function() {
+    return {
+        restrict: 'A',
+        require: '?ngModel',
+        link: function(scope, element, attrs, ngModel) {
+            if (!ngModel) {
+                return;
+            }
+ 
+            element.hallo({
+               plugins: {
+                 'halloformat': {'formattings': {"bold": true, "italic": true, "strikethrough": true, "underline": true}},
+                 'halloheadings': [1,2,3],
+                 'hallojustify' : {},
+                 'hallolists': {},
+               }
+            });
+ 
+            ngModel.$render = function() {
+                element.html(ngModel.$viewValue || '');
+            };
+ 
+            element.on('hallomodified', function() {
+                ngModel.$setViewValue(element.html());
+                scope.$apply();
+            });
+        }
+    };
+});
 
-
+myApp.directive("mathjaxBind", function() {
+    return {
+        restrict: "A",
+        controller: ["$scope", "$element", "$attrs",
+                function($scope, $element, $attrs) {
+            $scope.$watch($attrs.mathjaxBind, function(value) {
+                var $script = angular.element("<span class='renderContent'>")
+                    .html(value == undefined ? "" : value);
+                $element.html("");
+                $element.append($script);
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub, $element[0]]);
+            });
+        }]
+    };
+});

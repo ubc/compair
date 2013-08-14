@@ -3,7 +3,7 @@
 	<a class="bcrumb" href="#/coursepage"> <i class="icon-fighter-jet"></i> Courses </a>
 	<a class="bcrumb" href="#/questionpage/{{cid}}"> <i class="icon-fighter-jet"></i> {{course}} </a>
 	<br><br>
-	<p> <b>Question:</b> <br> <p class="question"><ANY ng-bind-html-unsafe="question"></ANY></p> </p>
+	<p> <b>Question:</b> <br> <p class="question"><span class="renderContent" mathjax-bind="question"></span></p> </p>
 	<a title="Comments" href="" class="comments" ng-click="getQcomments();qcomm=!qcomm">
 		<i class="icon-comments-alt icon-large"></i> Comments&#160;
 	</a> 
@@ -19,9 +19,9 @@
 				<a href="" class="delete" ng-show="instructor || login==comment.author" ng-click="delQcom(comment)">
 					<i class="icon-remove-sign icon-large"></i>
 				</a></p>
-				<div class="comment" ng-hide="editQC"><ANY ng-bind-html-unsafe="comment.content"></ANY></div>
+				<div class="comment" ng-hide="editQC"><span class="qcomm renderComment" mathjax-bind="comment.content"></span></div>
 				<div ng-show="editQC" class="comment">
-					<textarea class="edit" ng-model="newQcom" ui-tinymce="tinymceOptions"></textarea>
+					<div hallo-editor ng-model="newQcom" class="entries edit"></div>
 				</div>
 				<a href="" class="submit comment" ng-show="editQC" ng-click="editQcom(comment, newQcom);editQC=false">
 					<i class="icon-ok-sign icon-large"></i> Submit
@@ -34,9 +34,7 @@
 		</a>
 		<div ng-show="lqcomm">
 			<form name="addCommentQ" novalidate>
-				<textarea class="comment" name="myQcomment" ng-model="myQcomment" required ui-tinymce="tinymceOptions"></textarea>
-				<span class=errMsg ng-show="newQcomment && addCommentQ.myQcomment.$error.required">
-					Please submit a comment.<br><br></span>
+				<div hallo-editor ng-model="myQcomment" class="entries"></div>
 				<a href="" class="submit" ng-click="makeQcomment(myQcomment);newQcomment=true">
 					<i class="icon-ok icon-large"></i> Submit
 				</a>
@@ -51,10 +49,7 @@
 	<div ng-show="check">
 		<br>
 		<form name="newAnswer" novalidate>
-			<textarea name="myanswer" ng-model="myanswer" ui-tinymce="tinymceOptions" required></textarea>
-			<span class=errMsg ng-show="submitted && newAnswer.myanswer.$error.required">
-				Please enter an answer.</span>
-			<br>
+			<div hallo-editor ng-model="myanswer" id="myanswer" class="entries"></div>
 			<a href="" class="submit" ng-click="submit();submitted=true">
 				<i class="icon-ok icon-large"></i> Submit
 			</a>
@@ -83,9 +78,9 @@
 				</a>
 			</div>
 			<br><br>
-			<div ng-hide="edit" class="answer"><ANY ng-bind-html-unsafe="script.content"></ANY></div>
+			<div ng-hide="edit" class="answer"><span class="renderContent" id="script{{script.id}}" mathjax-bind="script.content"></span></div>
 			<div ng-show="edit" class="edit">
-				<textarea class="edit" ng-model="newanswer" ui-tinymce="tinymceOptions"></textarea>
+				<div hallo-editor id="editScript{{script.id}}" ng-model="newanswer" class="entries edit"></div>
 			</div>
 			<br>
 				<a href="" class="submit" ng-show="edit" ng-click="editscript(script, newanswer);edit=!edit">
@@ -103,9 +98,9 @@
 						<a href="" class="delete" ng-show="instructor || login==comment.author" ng-click="delAcom(script, comment)">
 							<i class="icon-remove-sign icon-large"></i>
 						</a></p>
-						<div class="comment" ng-hide="editAC"><ANY ng-bind-html-unsafe="comment.content"></ANY></div>
+						<div class="comment" ng-hide="editAC"><span class="renderComment" mathjax-bind="comment.content"></span></div>
 						<div ng-show="editAC" class="comment">
-							<textarea class="edit" ng-model="newAcom" ui-tinymce="tinymceOptions"></textarea>
+							<div hallo-editor ng-model="newAcom" class="edit entries"></div>
 						</div>
 						<a href="" class="submit comment" ng-show="editAC" ng-click="editAcom(script, comment, newAcom);editAC=false">
 							<i class="icon-ok-sign icon-large"></i> Submit
@@ -117,7 +112,7 @@
 					<i class="icon-comment-alt icon-large"></i> Leave a Comment
 				</a>
 				<div ng-show="lcomm">
-					<textarea class="comment" ng-model="mycomment" ui-tinymce="tinymceOptions"></textarea> 
+					<div hallo-editor ng-model="mycomment" class="entries"></div> 
 					<a href="" class="submit" ng-click="makeAcomment(script, mycomment);lcomm=false">
 						<i class="icon-ok icon-large"></i> Submit
 					</a>

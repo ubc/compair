@@ -653,3 +653,15 @@ table.results {
 	width: 100%;
 }
 
+.entries {
+	min-width: 0 !important;
+	min-height: 6em !important;
+	margin-top: 1em;
+	margin-bottom: 1em;
+	border: 3px solid lightgrey;
+	font-family:"Times New Roman", Times, serif;
+}
+
+.renderContent {
+	display: inline-block;
+}

@@ -12,7 +12,7 @@
 		Question Title: <input type="text" name="title" ng-model="title" required>
 		<span class=errMsg ng-show="submitted && createQuestion.title.$error.required">
 			A title is required for the question.</span>
-		<textarea name="question" ui-tinymce="tinymceOptions" ng-model="question" required></textarea>
+		<div hallo-editor name="question" ng-model="question" id="myquestion" class="entries"></div>
 		<span class=errMsg ng-show="submitted && createQuestion.question.$error.required">
 			Please enter a question.</span>
 		<br>
@@ -43,10 +43,10 @@
 			<div ng-hide="edit">
 				<div class="qtitle" ng-click="full=!full" ng-hide="full" >
 					<i class="icon-collapse"></i>
-					{{question.title}}   
+					<span class="renderContent" mathjax-bind="question.title"></span>   
 				</div>
 				<div ng-click="full=!full" ng-show="full">
-					<p class="question"><ANY ng-bind-html-unsafe="question.content"></ANY></p>   
+					<p class="question"><span class="renderContent" mathjax-bind="question.content"></span></p>   
 				</div>
 				<div class="qtitle" ng-click="full=!full" ng-show="full">
 					<i class="icon-collapse-top"></i>
