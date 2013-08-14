@@ -5,10 +5,9 @@
 	<p> Course: <b>{{course}}</b> </p>
 	<br>
 	<div class="enroll">
-		<table ng-table="teacherParams" class="table"> 
-		Search Teacher: <input ng-model="tquery" style="border-radius: 7em">
+		<table ng-table="teacherParams" show-filter="true" class="table"> 
 		<tr class="tr" ng-repeat="teacher in teachers | filter:tquery" >
-			<td title="Name" sortable="username"> 
+			<td title="Name" sortable="username" filter="{'username': 'text'}"> 
 				{{teacher.username}}
 			</td>
 			<td title="Add">
@@ -25,8 +24,8 @@
 	</div>
 	<div class="enroll">
 		<table ng-table="studentParams" class="table">
-		Search Student: <input ng-model="squery" style="border-radius: 7em">
-		<tr class="tr" ng-repeat="student in students | filter:squery">
+		Search Student: <input ng-model="squery">
+		<tr class="tr" ng-repeat="student in students">
 			<td title="Name" sortable="username">
 				{{student.username}}
 			</td>

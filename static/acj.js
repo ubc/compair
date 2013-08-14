@@ -404,6 +404,7 @@ function ProfileController($rootScope, $scope, userService) {
 			alert('something is wrong');
 		}
 	});
+	$scope.tooltip = { "title": "Password is needed only when changing password. Otherwise, leave it blank." };
 	$scope.submit = function() {
 		// typing in new password when current password isn't
 		if ($scope.newpassword && $scope.oldpassword == '') {
@@ -743,6 +744,7 @@ function EnrollController($scope, $routeParams, $filter, ngTableParams, enrollSe
 			count: 10,
 		});
 		$scope.teacherParams = new ngTableParams({
+			$liveFiltering: true,
 			page: 1,
 			total: teacherData.length,
 			count: 10,
@@ -782,6 +784,9 @@ function EnrollController($scope, $routeParams, $filter, ngTableParams, enrollSe
 	$scope.$watch('teacherParams', function(params) {
 		if (params) {
 			var orderedData = params.sorting ? $filter('orderBy')(teacherData, params.orderBy()) : teacherData;
+			orderedData = params.filter ? $filter('filter')(orderedData, params.filter) : orderedData;
+
+			params.total = orderedData.length;
 		
 			$scope.teachers = orderedData.slice(
 				(params.page - 1) * params.count,
@@ -792,12 +797,21 @@ function EnrollController($scope, $routeParams, $filter, ngTableParams, enrollSe
 	$scope.$watch('studentParams', function(params) {
 		if (params) {
 			var orderedData = params.sorting ? $filter('orderBy')(studentData, params.orderBy()) : studentData;
+			orderedData = params.filter ? $filter('filter')(orderedData, params.filter) : orderedData;
+
+			params.total = orderedData.length;
 
 			$scope.students = orderedData.slice(
 				(params.page - 1) * params.count,
 				params.page * params.count
 			);
 		}
+	}, true);
+	$scope.$watch('squery', function(newValue) {
+		$scope.studentParams.filter = newValue;
+	}, true);
+	$scope.$watch('tquery', function(newValue) {
+		$scope.teacherParams.filter = newValue;
 	}, true);
 }
 
