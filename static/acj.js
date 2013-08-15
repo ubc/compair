@@ -809,9 +809,11 @@ function EnrollController($scope, $routeParams, $filter, ngTableParams, enrollSe
 	}, true);
 	$scope.$watch('squery', function(newValue) {
 		$scope.studentParams.filter = newValue;
+		$scope.studentParams.page = 1;
 	}, true);
 	$scope.$watch('tquery', function(newValue) {
 		$scope.teacherParams.filter = newValue;
+		$scope.teacherParams.page = 1;
 	}, true);
 }
 
