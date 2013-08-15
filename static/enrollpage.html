@@ -5,41 +5,45 @@
 	<p> Course: <b>{{course}}</b> </p>
 	<br>
 	<div class="enroll">
-		<table ng-table="teacherParams" class="table"> 
-		Search Teacher: <input ng-model="tquery">
-		<tr class="tr" ng-repeat="teacher in teachers" >
-			<td title="Name" sortable="username"> 
-				{{teacher.username}}
-			</td>
-			<td title="Add">
-				<input type="button" class="button" ng-disabled="teacher.enrolled" ng-click="add(teacher, 'T')" value="Add Instructor">
-			</td>
-			<td title="Drop">
-				<input type="button" class="button" ng-disabled="!teacher.enrolled" ng-click="drop(teacher, 'T')" value="Drop Instructor">
-			</td>
-			<td title="Status" sortable="enrolled">
-				<i ng-show="teacher.enrolled" style="color:green">Enrolled</i>
-			</td>
-		</tr>
-		</table>
+		<div class="tablewrapper">
+			<table ng-table="teacherParams" class="table"> 
+			Search Teacher: <input ng-model="tquery">
+			<tr class="tr" ng-repeat="teacher in teachers" >
+				<td title="Name" sortable="username"> 
+					{{teacher.username}}
+				</td>
+				<td title="Add">
+					<input type="button" class="button" ng-disabled="teacher.enrolled" ng-click="add(teacher, 'T')" value="Add Instructor">
+				</td>
+				<td title="Drop">
+					<input type="button" class="button" ng-disabled="!teacher.enrolled" ng-click="drop(teacher, 'T')" value="Drop Instructor">
+				</td>
+				<td title="Status" sortable="enrolled">
+					<i ng-show="teacher.enrolled" style="color:green">Enrolled</i>
+				</td>
+			</tr>
+			</table>
+		</div>
 	</div>
 	<div class="enroll">
-		<table ng-table="studentParams" class="table">
-		Search Student: <input ng-model="squery">
-		<tr class="tr" ng-repeat="student in students">
-			<td title="Name" sortable="username">
-				{{student.username}}
-			</td>
-			<td title="Add">
-				<input type="button" class="button" ng-disabled="student.enrolled" ng-click="add(student, 'S')" value="Add Student">	
-			</td>
-			<td title="Drop">
-				<input type="button" class="button" ng-disabled="!student.enrolled" ng-click="drop(student, 'S')" value="Drop Student">
-			</td>
-			<td title="Status" sortable="enrolled">
-				<i ng-show="student.enrolled" style="color:green">Enrolled</i>
-			</td>
-		</tr>
-		</table>
+		<div class="tablewrapper">
+			<table ng-table="studentParams" class="table">
+			Search Student: <input ng-model="squery">
+			<tr class="tr" ng-repeat="student in students">
+				<td title="Name" sortable="username">
+					{{student.username}}
+				</td>
+				<td title="Add">
+					<input type="button" class="button" ng-disabled="student.enrolled" ng-click="add(student, 'S')" value="Add Student">	
+				</td>
+				<td title="Drop">
+					<input type="button" class="button" ng-disabled="!student.enrolled" ng-click="drop(student, 'S')" value="Drop Student">
+				</td>
+				<td title="Status" sortable="enrolled">
+					<i ng-show="student.enrolled" style="color:green">Enrolled</i>
+				</td>
+			</tr>
+			</table>
+		</div>
 	</div>
 </div>

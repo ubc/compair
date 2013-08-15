@@ -185,6 +185,14 @@ a.mynav {
 	background: #FFDDDD;
 }
 
+.table th, .table td {
+	padding: 0.5em 0;
+}
+
+.table th {
+	text-align: center;
+}
+
 th {
 	background: white;
 	border-bottom: 1px solid black;
@@ -265,6 +273,10 @@ a.question:hover {
 	color: silver;
 }
 
+form {
+	margin: 0 2em 0 0;
+}
+
 input.judge {
 	border: 1px solid #F0F0F0;
 	background-color: #D0D0D0;
@@ -304,8 +316,8 @@ input.expand:hover {
 }
 
 .button {
-	margin-left: 1em;
-	margin-right: 1em;
+	margin-left: 0.5em;
+	margin-right: 0.5em;
 	background-color: #ffffff;
 	border: 1px solid #dddddd;
 	cursor: pointer;
@@ -371,7 +383,7 @@ input.expand:hover {
 .enroll {
 	display: inline-block;
 	vertical-align: top;
-	margin-left: 1em;
+	width: 49%;
 }
 
 .inline {
@@ -404,6 +416,12 @@ input.expand:hover {
 
 .table {
 	border-collapse: collapse;
+}
+
+.tablewrapper {
+	width: 90%;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 .versus {
