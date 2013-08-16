@@ -148,7 +148,7 @@ div.commentblock {
 }
 
 div.comment {
-	max-height: 20em;
+	max-height: 30em;
 	overflow-y: auto;
 	white-space: pre-wrap;
 	margin-left: 4.5em;
@@ -698,4 +698,21 @@ table.results {
 
 .renderContent {
 	display: inline-block;
+}
+
+.mathtoolbar {
+	display: block;
+	white-space: normal;
+}
+
+.btn-group > .btn {
+	vertical-align: middle;
+}
+
+.btn-group {
+	margin-bottom: 0.5em;
+}
+
+.preview {
+	margin: 1em;
 }

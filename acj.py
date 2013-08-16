@@ -221,12 +221,14 @@ def logout():
 @app.route('/user/<id>')
 def user_profile(id):
 	user = ''
+	retval = ''
 	loggedUser = User.query.filter_by(username = session['username']).first()
 	if id == '0':
 		user = loggedUser
 	elif id:
 		user = User.query.filter_by(id = id).first()
-	retval = json.dumps({"username":user.username, "fullname":user.fullname, "display":user.display, "email":user.email, "usertype":user.usertype, "loggedType": loggedUser.usertype, "loggedName": loggedUser.username})
+	if user:
+		retval = json.dumps({"username":user.username, "fullname":user.fullname, "display":user.display, "email":user.email, "usertype":user.usertype, "loggedType": loggedUser.usertype, "loggedName": loggedUser.username})
 	db_session.rollback()
 	return retval
 
@@ -949,3 +951,4 @@ app.secret_key = 'asdf1234'
 
 if __name__=='__main__':
 	app.run(debug=True)
+	#app.run('0.0.0.0',8080)

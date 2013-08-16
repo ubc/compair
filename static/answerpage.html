@@ -21,7 +21,8 @@
 				</a></p>
 				<div class="comment" ng-hide="editQC"><span class="qcomm renderComment" mathjax-bind="comment.content"></span></div>
 				<div ng-show="editQC" class="comment">
-					<div hallo-editor ng-model="newQcom" class="entries edit"></div>
+					<div math-toolbar editor="editqcom{{comment.id}}" class="mathtoolbar btn-group"></div>
+					<div hallo-editor name="editqcom" ng-model="newQcom" id="editqcom{{comment.id}}" class="edit entries"></div>
 				</div>
 				<a href="" class="submit comment" ng-show="editQC" ng-click="editQcom(comment, newQcom);editQC=false">
 					<i class="icon-ok-sign icon-large"></i> Submit
@@ -34,7 +35,8 @@
 		</a>
 		<div ng-show="lqcomm">
 			<form name="addCommentQ" novalidate>
-				<div hallo-editor ng-model="myQcomment" class="entries"></div>
+				<div math-toolbar editor="myQcomment" class="mathtoolbar btn-group"></div>
+				<div hallo-editor name="qcom" ng-model="myQcomment" id="myQcomment" class="entries"></div>
 				<a href="" class="submit" ng-click="makeQcomment(myQcomment);newQcomment=true">
 					<i class="icon-ok icon-large"></i> Submit
 				</a>
@@ -49,7 +51,8 @@
 	<div ng-show="check">
 		<br>
 		<form name="newAnswer" novalidate>
-			<div hallo-editor ng-model="myanswer" id="myanswer" class="entries"></div>
+			<div math-toolbar editor="myanswer" class="mathtoolbar btn-group"></div>
+			<div hallo-editor name="answer" ng-model="myanswer" id="myanswer" class="entries"></div>
 			<a href="" class="submit" ng-click="submit();submitted=true">
 				<i class="icon-ok icon-large"></i> Submit
 			</a>
@@ -80,7 +83,8 @@
 			<br><br>
 			<div ng-hide="edit" class="answer"><span class="renderContent" id="script{{script.id}}" mathjax-bind="script.content"></span></div>
 			<div ng-show="edit" class="edit">
-				<div hallo-editor id="editScript{{script.id}}" ng-model="newanswer" class="entries edit"></div>
+				<div math-toolbar editor="editScript{{script.id}}" class="mathtoolbar btn-group"></div>
+				<div hallo-editor name="editanswers" ng-model="newanswer" id="editScript{{script.id}}" class="edit entries"></div>
 			</div>
 			<br>
 				<a href="" class="submit" ng-show="edit" ng-click="editscript(script, newanswer);edit=!edit">
@@ -100,7 +104,8 @@
 						</a></p>
 						<div class="comment" ng-hide="editAC"><span class="renderComment" mathjax-bind="comment.content"></span></div>
 						<div ng-show="editAC" class="comment">
-							<div hallo-editor ng-model="newAcom" class="edit entries"></div>
+							<div math-toolbar editor="editacom{{comment.id}}" class="mathtoolbar btn-group"></div>
+							<div hallo-editor name="editacom" ng-model="newAcom" id="editacom{{comment.id}}" class="edit entries"></div>
 						</div>
 						<a href="" class="submit comment" ng-show="editAC" ng-click="editAcom(script, comment, newAcom);editAC=false">
 							<i class="icon-ok-sign icon-large"></i> Submit
@@ -112,7 +117,8 @@
 					<i class="icon-comment-alt icon-large"></i> Leave a Comment
 				</a>
 				<div ng-show="lcomm">
-					<div hallo-editor ng-model="mycomment" class="entries"></div> 
+					<div math-toolbar editor="newacom{{script.id}}" class="mathtoolbar btn-group"></div>
+					<div hallo-editor name="acom" ng-model="mycomment" id="newacom{{script.id}}" class="entries"></div>
 					<a href="" class="submit" ng-click="makeAcomment(script, mycomment);lcomm=false">
 						<i class="icon-ok icon-large"></i> Submit
 					</a>

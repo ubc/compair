@@ -391,7 +391,7 @@ function UserController($rootScope, $scope, $location, flash, userService) {
 	};
 }
 
-function ProfileController($rootScope, $scope, $routeParams, userService) {
+function ProfileController($rootScope, $scope, $routeParams, $location, flash, userService) {
 	var uid = $routeParams.userId;
 	var retval = userService.get( {uid: uid}, function() {
 		if (retval.username) {
@@ -403,7 +403,8 @@ function ProfileController($rootScope, $scope, $routeParams, userService) {
 			$scope.loggedType = retval.loggedType;
 			$scope.loggedName = retval.loggedName;
 		} else {
-			alert('something is wrong');
+			flash('error', 'Invalid User');
+			$location.path('/');
 		}
 	});
 	$scope.tooltip = { "title": "Password is needed only when changing password. Otherwise, leave it blank." };
@@ -436,7 +437,7 @@ function ProfileController($rootScope, $scope, $routeParams, userService) {
 				$scope.display = $scope.newdisplay;
 				$rootScope.$broadcast("LOGGED_IN", $scope.newdisplay); 
 			} else {
-				alert('something is wrong');
+				flash('error', 'Your profile was unsuccessfully updated.');
 			}
 		});
 	};
@@ -494,7 +495,6 @@ function QuestionController($scope, $location, $routeParams, $filter, flash, ngT
 			}
 		} else {
 			$scope.login = '';
-			alert('something is not right; user is not logged in');
 		}
 	});
 
@@ -508,7 +508,11 @@ function QuestionController($scope, $location, $routeParams, $filter, flash, ngT
 			count: 10,
 		});
 	});
+	$scope.previewText = function() {
+		$scope.preview = angular.element("div#myquestion").html();
+	}
 	$scope.submit = function() {
+		$scope.question = angular.element("div#myquestion").html();
 		input = {"title": $scope.title, "content": $scope.question};
 		var msg = questionService.save( {cid: courseId}, input, function() {
 			if (msg.msg) {
@@ -526,6 +530,7 @@ function QuestionController($scope, $location, $routeParams, $filter, flash, ngT
 		});
 	};
 	$scope.editquestion = function(newtitle, newquestion, question) {
+		newquestion = angular.element("#question"+question.id).html();
 		input = {"title": newtitle, "content": newquestion};
 		var retval = questionService.put( {cid: question.id}, input, function() {
 			if (retval.msg != 'PASS') {
@@ -592,6 +597,7 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 		}
 	});
 	$scope.submit = function() {
+		$scope.myanswer = angular.element("#myanswer").html();
 		input = {"content": $scope.myanswer};
 		var newscript = answerService.save( {qid: questionId}, input, function() {
 			if (newscript.msg) {
@@ -604,6 +610,7 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 		});
 	};
 	$scope.editscript = function(script, newanswer) {
+		newanswer = angular.element("#editScript"+script.id).html();
 		input = {"content": newanswer};
 		var retval = answerService.put( {qid: script.id}, input, function() {
 			if (retval.msg != 'PASS') {
@@ -621,8 +628,7 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 		if (confirm("Delete Answer?") == true) {
 			var retval = answerService.delete( {qid: script.id}, function() {
 				if (retval.msg != 'PASS') {
-					alert('something is wrong');
-					alert(retval);
+					flash('error', 'The answer was unsuccessfully deleted.');
 				} else {
 					var index = jQuery.inArray(script, $scope.scripts);
 					$scope.scripts.splice(index, 1);
@@ -636,7 +642,7 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 			if (retval.comments) {
 				script.comments = retval.comments;
 			} else {
-				alert('something is wrong');
+				flash('error', 'The comments could not be found.');
 			}
 		});
 	};
@@ -645,11 +651,12 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 			if (retval.comments) {
 				$scope.questionComments = retval.comments;
 			} else {
-				alert('something is wrong');
+				flash('error', 'The comments could not be found.');
 			}
 		});
 	};
 	$scope.makeAcomment = function(script, mycomment) {
+		mycomment = angular.element("#newacom"+script.id).html();
 		input = {"content": mycomment};
 		var retval = commentAService.save( {id: script.id}, input, function() {
 			if (retval.comment) {
@@ -662,6 +669,7 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 		});
 	};
 	$scope.makeQcomment = function(myQcomment) {
+		myQcomment = angular.element("#myQcomment").html();
 		input = {"content": myQcomment};
 		var retval = commentQService.save( {id: questionId}, input, function() {
 			if (retval.comment) {
@@ -678,7 +686,7 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 		if (confirm("Delete Comment?") == true) {
 			var retval = commentAService.delete( {id: comment.id}, function() {
 				if (retval.msg != 'PASS') {
-					alert('something is wrong');
+					flash('error', 'The comment was unsuccessfully deleted.');
 				} else {
 					var index = jQuery.inArray(comment, script.comments);
 					script.comments.splice(index, 1);
@@ -690,7 +698,7 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 		if (confirm("Delete Comment?") == true) {
 			var retval = commentQService.delete( {id: comment.id}, function() {
 				if (retval.msg != 'PASS') {
-					alert('something is wrong');
+					flash('error', 'The comment was unsuccessfully deleted.');
 				} else {
 					var index = jQuery.inArray(comment, $scope.questionComments);
 					$scope.questionComments.splice(index, 1);
@@ -699,6 +707,7 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 		}
 	};
 	$scope.editQcom = function(comment, newcontent) {
+		newcontent = angular.element("#editqcom"+comment.id).html();
 		input = {"content": newcontent};
 		var retval = commentQService.put( {id: comment.id}, input, function() {
 			if (retval.msg != 'PASS') {
@@ -713,6 +722,7 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 		});
 	};
 	$scope.editAcom = function(script, comment, newcontent) {
+		newcontent = angular.element("#editacom"+comment.id).html();
 		input = {"content": newcontent};
 		var retval = commentAService.put( {id: comment.id}, input, function() {
 			if (retval.msg != 'PASS') {
@@ -761,14 +771,14 @@ function EnrollController($scope, $routeParams, $filter, ngTableParams, enrollSe
 					$scope.students[index].enrolled = retval.success[0].eid;
 				}
 			} else {
-				alert('something is wrong');
+				flash('error', 'The user was unsuccessfully enrolled.');
 			}
 		});
 	};
 	$scope.drop = function(user, type) {
 		var retval = enrollService.delete( {id: user.enrolled}, function() {
 			if (retval.msg != 'PASS') {
-				alert('something is wrong');
+				flash('error', 'The user was unsuccessfully dropped.');
 			} else {
 				if (type == 'T') {
 					var index = jQuery.inArray(user, $scope.teachers);
@@ -904,4 +914,102 @@ myApp.directive("mathjaxBind", function() {
             });
         }]
     };
+});
+
+myApp.directive("mathFormula", function() {
+	return {
+		restrict: "A",
+		replace: true,
+		scope: {
+			equation: "@mathEquation",
+			editor: "@editor",
+			label: "@label"
+		},
+		template: '<span ng-click="add()" class="btn btn-default" mathjax-bind="label"></span>',
+		controller: function($scope, $element, $attrs) {
+			$scope.add = function() {
+				var textarea = angular.element("div#"+$scope.editor);
+				textarea.append($scope.equation);
+				/*var sel, range;
+				if (window.getSelection) {
+					sel = window.getSelecton();
+					if (sel.getRangeAt && sel.rangeCount) {
+						range = sel.getRangeAt(0);
+						range.deleteContents();
+						range.insertNode(document.createTextNode($scope.equation));
+					}
+				} else if {
+					document.selection.createRange().text() = $scope.equation;
+				}*/
+			};
+		}
+	};
+});
+
+myApp.directive("mathToolbar", function() {
+	return {
+		restrict: "A",
+		replace: false,
+		scope: {
+			editor: "@editor",
+		},
+		template: '<div class="btn-group">'+
+			'<span math-formula math-equation="``" label="(empty)" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`+`" label="`+`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`-`" label="`-`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`*`" label="`*`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`xx`" label="`xx`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`-:`" label="`-:`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`1/2`"  label="`1/2`" editor="{{ editor }}"></span>'+
+			'</div>'+
+			'<div class="btn-group">'+
+			'<span math-formula math-equation="`sin(x)`" label="`sin(x)`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`cos(x)`" label="`cos(x)`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`tan(x)`" label="`tan(x)`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`log(x)`" label="`log(x)`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`log_2(x)`" label="`log_2(x)`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`ln(x)`" label="`ln(x)`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`sqrt(x)`" label="`sqrt(x)`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`root(3)(x^2)`" label="`root(3)(x^2)`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`x^2`" label="`x^2`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`x_1`" label="`x_1`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`|x|`" label="`|x|`" editor="{{ editor }}"></span>'+
+			'</div>'+
+			'<div class="btn-group">'+
+			'<span math-formula math-equation="`f(x)`" label="`f(x)`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`sumx`" label="`sumx`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`sum_(x=0)^(10)x`" label="`sum_(x=0)^(10)x`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`intx`" label="`intx`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`int_(x=0)^(10)x`" label="`int_(x=0)^(10)x`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`lim_(x->1)(x^2-1)/(x-1)`" label="`lim_(x->1)(x^2-1)/(x-1)`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`infty`" label="`infty`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`((a,b),(c,d))`"  label="`((a,b),(c,d))`" editor="{{ editor }}"></span>'+
+			'</div>'+
+			'<div class="btn-group">'+
+			'<span math-formula math-equation="`<`"  label="`<`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`<=`"  label="`<=`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`=`" label="`=`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`!=`" label="`!=`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`>`"  label="`>`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`>=`"  label="`>=`" editor="{{ editor }}"></span>'+
+			'</div>'+
+			'<div class="btn-group">'+
+			'<span math-formula math-equation="`alpha`"  label="`alpha`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`beta`" label="`beta`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`delta`" label="`delta`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`epsilon`" label="`epsilon`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`gamma`" label="`gamma`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`theta`" label="`theta`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`lambda`" label="`lambda`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`mu`" label="`mu`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`pi`" label="`pi`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`sigma`" label="`sigma`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`tau`" label="`tau`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`phi`" label="`phi`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`omega`" label="`omega`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`Delta`" label="`Delta`" editor="{{ editor }}"></span>'+
+			'<span math-formula math-equation="`Omega`" label="`Omega`" editor="{{ editor }}"></span></div>',
+		controller: function($scope, $element, $attrs) {
+		}
+	};
 });
