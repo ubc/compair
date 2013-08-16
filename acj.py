@@ -185,7 +185,7 @@ def delete_answer(id):
 def logincheck():
 	if 'username' in session:
 		user = User.query.filter_by(username = session['username']).first()
-		retval = json.dumps( {"display": user.display, "usertype": user.usertype} )
+		retval = json.dumps( {"id": user.id, "display": user.display, "usertype": user.usertype} )
 		db_session.rollback()
 		return retval
 	return ''
@@ -218,9 +218,13 @@ def logout():
 	identity_changed.send(app, identity=AnonymousIdentity())
 	return json.dumps( {"status": 'logged out'} )
 
-@app.route('/user')
-def user_profile():
-	user = User.query.filter_by(username = session['username']).first()
+@app.route('/user/<id>')
+def user_profile(id):
+	user = ''
+	if id==0:
+		user = User.query.filter_by(username = session['username']).first()
+	elif id:
+		user = User.query.filter_by(id = id).first()
 	retval = json.dumps({"username":user.username, "fullname":user.fullname, "display":user.display, "email":user.email, "usertype":user.usertype, "password":user.password})
 	db_session.rollback()
 	return retval
@@ -235,15 +239,15 @@ def all_users():
 	db_session.rollback()
 	return json.dumps( {'users': users})
 
-@app.route('/user', methods=['POST'])
-def create_user():
+@app.route('/user/<id>', methods=['POST'])
+def create_user(id):
 	result = import_users([request.json], False)
 	if not os.access('tmp/installed.txt', os.W_OK) and result['success']:
 		file = open('tmp/installed.txt', 'w+')
 	return json.dumps(result)
 
-@app.route('/user', methods=['PUT'])
-def edit_user():
+@app.route('/user/<id>', methods=['PUT'])
+def edit_user(id):
 	user = User.query.filter_by(username = session['username']).first()
 	param = request.json
 	schema = {

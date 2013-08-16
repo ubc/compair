@@ -10,16 +10,15 @@
 			Search Teacher: <input ng-model="tquery">
 			<tr class="tr" ng-repeat="teacher in teachers" >
 				<td title="Name" sortable="username"> 
-					{{teacher.username}}
+					<a href="#/userprofile/{{teacher.uid}}">{{teacher.username}}</a>
 				</td>
-				<td title="Add">
-					<input type="button" class="button" ng-disabled="teacher.enrolled" ng-click="add(teacher, 'T')" value="Add Instructor">
-				</td>
-				<td title="Drop">
-					<input type="button" class="button" ng-disabled="!teacher.enrolled" ng-click="drop(teacher, 'T')" value="Drop Instructor">
-				</td>
-				<td title="Status" sortable="enrolled">
-					<i ng-show="teacher.enrolled" style="color:green">Enrolled</i>
+				<td ng-switch on="teacher.enrolled" title="Status" sortable="enrolled">
+					<div ng-switch-default>
+						<p class="enrolled-sign" ng-click="drop(teacher, 'T')">Enrolled</p>
+					</div>
+					<div ng-switch-when="">
+						<p class="dropped-sign" ng-click="add(teacher, 'T')">Dropped</p>
+					</div>
 				</td>
 			</tr>
 			</table>
@@ -31,16 +30,15 @@
 			Search Student: <input ng-model="squery">
 			<tr class="tr" ng-repeat="student in students">
 				<td title="Name" sortable="username">
-					{{student.username}}
+					<a href="#/userprofile/{{student.uid}}">{{student.username}}</a>
 				</td>
-				<td title="Add">
-					<input type="button" class="button" ng-disabled="student.enrolled" ng-click="add(student, 'S')" value="Add Student">	
-				</td>
-				<td title="Drop">
-					<input type="button" class="button" ng-disabled="!student.enrolled" ng-click="drop(student, 'S')" value="Drop Student">
-				</td>
-				<td title="Status" sortable="enrolled">
-					<i ng-show="student.enrolled" style="color:green">Enrolled</i>
+				<td ng-switch on="student.enrolled" title="Status" sortable="enrolled">
+					<div ng-switch-default>
+						<p class="enrolled-sign" ng-click="drop(student, 'S')">Enrolled</p>
+					</div>
+					<div ng-switch-when="">
+						<p class="dropped-sign" ng-click="add(student, 'S')">Dropped</p>
+					</div>
 				</td>
 			</tr>
 			</table>

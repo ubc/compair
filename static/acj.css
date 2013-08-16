@@ -182,7 +182,7 @@ a.mynav {
 }
 
 .tr:nth-child(odd) {
-	background: #FFDDDD;
+	background: #F7F7F7;
 }
 
 .table th, .table td {
@@ -384,6 +384,22 @@ input.expand:hover {
 	display: inline-block;
 	vertical-align: top;
 	width: 49%;
+}
+
+.enrolled-sign {
+	font-style: italic;
+	color: green;
+	font-weight: bold;
+	cursor: pointer;
+	text-align: center;
+}
+
+.dropped-sign {
+	font-style: italic;
+	color: red;
+	font-weight: bold;
+	cursor: pointer;
+	text-align: center;
 }
 
 .inline {

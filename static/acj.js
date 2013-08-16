@@ -23,7 +23,7 @@ myApp.factory('logoutService', function($resource) {
 });
 
 myApp.factory('userService', function($resource) {
-	return $resource( '/user', {}, { put: {method: 'PUT'} } );
+	return $resource( '/user/:uid', {}, { put: {method: 'PUT'} } );
 });
 
 myApp.factory('allUserService', function($resource) {
@@ -128,7 +128,7 @@ myApp.config( function ($routeProvider) {
 				controller: QuickController,
 				templateUrl: 'judgepage.html'
 			})
-		.when ('/userprofile',
+		.when ('/userprofile/:userId',
 			{
 				controller: ProfileController,
 				templateUrl: 'userprofile.html'
@@ -174,7 +174,7 @@ function InstallController($scope, $location, $cookieStore, flash, installServic
 			$scope.email = undefined;
 		}
 		input = {"username": $scope.username, "password": $scope.password, "usertype": 'Admin', "email": $scope.email, "firstname": $scope.firstname, "lastname": $scope.lastname, "display": $scope.display};
-		var user = userService.save( input, function() {
+		var user = userService.save( {uid:0}, input, function() {
 			$scope.flash = user.flash;
 			if (!user.msg && !$scope.flash) {
 				$scope.done = true;
@@ -192,7 +192,7 @@ function IndexController($scope, $location, $cookieStore, loginService, logoutSe
 	$scope.dropdown = [
 		{
 			"text": "User Profile",
-			"href": "#/userprofile",
+			"href": "#/userprofile/0",
 		},
 		{
 			"text": "Log Out",
@@ -391,8 +391,9 @@ function UserController($rootScope, $scope, $location, flash, userService) {
 	};
 }
 
-function ProfileController($rootScope, $scope, userService) {
-	var retval = userService.get( function() {
+function ProfileController($rootScope, $scope, $routeParams, userService) {
+	var uid = $routeParams.userId;
+	var retval = userService.get( {uid: uid}, function() {
 		if (retval.username) {
 			$scope.username = retval.username;
 			$scope.fullname = retval.fullname;
@@ -428,7 +429,7 @@ function ProfileController($rootScope, $scope, userService) {
 			newpassword = undefined;
 		}
 		input = {"display": $scope.newdisplay, "email": $scope.newemail, "password": $scope.password, "newpassword": newpassword};
-		var retval = userService.put( input, function() {
+		var retval = userService.put( {uid: uid}, input, function() {
 			$scope.flash = retval.flash;
 			if (retval.msg) {
 				$scope.edit = false;
