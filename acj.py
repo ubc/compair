@@ -221,11 +221,12 @@ def logout():
 @app.route('/user/<id>')
 def user_profile(id):
 	user = ''
+	loggedUser = User.query.filter_by(username = session['username']).first()
 	if id == '0':
-		user = User.query.filter_by(username = session['username']).first()
+		user = loggedUser
 	elif id:
 		user = User.query.filter_by(id = id).first()
-	retval = json.dumps({"username":user.username, "fullname":user.fullname, "display":user.display, "email":user.email, "usertype":user.usertype, "password":user.password})
+	retval = json.dumps({"username":user.username, "fullname":user.fullname, "display":user.display, "email":user.email, "usertype":user.usertype, "loggedType": loggedUser.usertype, "loggedName": loggedUser.username})
 	db_session.rollback()
 	return retval
 
@@ -248,15 +249,26 @@ def create_user(id):
 
 @app.route('/user/<id>', methods=['PUT'])
 def edit_user(id):
-	user = User.query.filter_by(username = session['username']).first()
+	user = ''
+	loggedUser = User.query.filter_by(username = session['username']).first()
+	if id == '0':
+		user = loggedUser 
+	elif id:
+		user = User.query.filter_by(id = id).first()
 	param = request.json
 	schema = {
 		'type': 'object',
 		'properties': {
-			'password': {'type': 'string'},
-			'newpassword': {'type': 'string', 'required': False},
 			'email': {'type': 'string', 'format': 'email', 'required': False},
 			'display': {'type': 'string'},
+			'password': {
+				'type': 'object', 
+				'properties': {
+					'old': {'type': 'string'},
+					'new': {'type': 'string'},
+				},
+				'required': False
+			},						
 		}
 	}
 	try:
@@ -278,11 +290,14 @@ def edit_user(id):
 		user.email = email
 	else:
 		user.email = ''
-	if 'newpassword' in param:
-		if not hasher.check_password( param['password'], user.password ):
+	if 'password' in param:
+		print(user.password)
+		if not hasher.check_password( param['password']['old'], user.password ):
+			print(param['password']['old'])
+			print(type(param['password']['old']))
 			db_session.rollback()
 			return json.dumps( {"flash": 'Incorrect password'} )
-		newpassword = param['newpassword']
+		newpassword = param['password']['new']
 		newpassword = hasher.hash_password( newpassword )
 		user.password = newpassword
 	commit()

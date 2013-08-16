@@ -192,7 +192,7 @@ function IndexController($scope, $location, $cookieStore, loginService, logoutSe
 	$scope.dropdown = [
 		{
 			"text": "User Profile",
-			"href": "#/userprofile/0",
+			"href": "#/userprofile/0"
 		},
 		{
 			"text": "Log Out",
@@ -400,7 +400,8 @@ function ProfileController($rootScope, $scope, $routeParams, userService) {
 			$scope.display = retval.display;
 			$scope.email = retval.email;
 			$scope.usertype = retval.usertype;
-			$scope.password = retval.password;
+			$scope.loggedType = retval.loggedType;
+			$scope.loggedName = retval.loggedName;
 		} else {
 			alert('something is wrong');
 		}
@@ -414,21 +415,18 @@ function ProfileController($rootScope, $scope, $routeParams, userService) {
 		if ($scope.newpassword != $scope.newretypepw) {
 			return;
 		}
-		if ($scope.oldpassword) {
-			$scope.password = $scope.oldpassword;
-		}
 		var re = /[^@]+@[^@]+/;
-		if ($scope.newemail == undefined || $scope.newemail == '') {
+		if ($scope.newemail == '') {
 			$scope.newemail = undefined;
 		} else if (!re.exec($scope.newemail) && $scope.newemail) {
 			$scope.formaterr = true;
 			return;
 		} 
-		var newpassword = $scope.newpassword;
-		if ($scope.newpassword == '' || $scope.newpassword == undefined) {
-			newpassword = undefined;
+		var password = undefined;
+		if ($scope.newpassword != '' && $scope.newpassword != '') {
+			password = {"old": $scope.oldpassword, "new": $scope.newpassword};
 		}
-		input = {"display": $scope.newdisplay, "email": $scope.newemail, "password": $scope.password, "newpassword": newpassword};
+		input = {"display": $scope.newdisplay, "email": $scope.newemail, "password": password};
 		var retval = userService.put( {uid: uid}, input, function() {
 			$scope.flash = retval.flash;
 			if (retval.msg) {

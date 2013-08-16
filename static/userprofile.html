@@ -28,7 +28,7 @@
 		<br>
 		<span class="profile" ng-hide="edit"><i class="icon-lock icon-large"></i></span>
 		<div class="profile" ng-show="edit">
-			<input type="password" ng-model="oldpassword" placeholder="Type Current Password" bs-tooltip="tooltip.title">
+			<input type="password" ng-model="oldpassword" placeholder="Type Current Password">
 			<br>
 			<input type="password" ng-model="newpassword" placeholder="Type New Password">
 			<span class=errMsg ng-show="submitted && (oldpassword == '') && newpassword">
@@ -40,7 +40,7 @@
 		</div>
 		<br><br>
 	</form>
-	<a href="" class="edit" ng-click="edit=!edit; newdisplay=display; newemail=email; newpassword=''; newretypepw=''; oldpassword=''">
+	<a href="" ng-hide="username!=loggedName && loggedType!='Admin'" class="edit" ng-click="edit=!edit; newdisplay=display; newemail=email; newpassword=''; newretypepw=''; oldpassword=''">
 		<i class="icon-edit-sign icon-large"></i> Edit
 	</a> 
 	<a href="" class="submit" ng-show="edit" ng-click="submit();submitted=true">
