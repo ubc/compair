@@ -379,7 +379,7 @@ function UserController($rootScope, $scope, $location, flash, userService) {
 			return;
 		}
 		input = {"username": $scope.username, "password": $scope.password, "usertype": $scope.usertype, "email": $scope.email, "firstname": $scope.firstname, "lastname": $scope.lastname, "display": $scope.display};
-		var user = userService.save( input, function() {
+		var user = userService.save( {uid:0}, input, function() {
 			if (user.success.length > 0) {
 				flash('User created successfully');
 				$location.path('/user');

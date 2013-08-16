@@ -221,7 +221,7 @@ def logout():
 @app.route('/user/<id>')
 def user_profile(id):
 	user = ''
-	if id==0:
+	if id == '0':
 		user = User.query.filter_by(username = session['username']).first()
 	elif id:
 		user = User.query.filter_by(id = id).first()
