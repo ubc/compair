@@ -56,9 +56,11 @@
 		<form name="newAnswer" novalidate>
 			<div math-toolbar editor="myanswer" class="mathtoolbar btn-group"></div>
 			<div hallo-editor name="answer" ng-model="myanswer" id="myanswer" class="entries"></div>
+			<a ng-click="previewText()"><i class="icon-eye-open icon-large"></i> Preview</a>
 			<a href="" class="submit" ng-click="submit();submitted=true">
 				<i class="icon-ok icon-large"></i> Submit
-			</a>
+			</a><br>
+			<span class="renderContent preview" mathjax-bind="preview"></span>
 		</form>
 	</div>
 	<br><br>

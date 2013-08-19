@@ -610,6 +610,9 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 			}
 		});
 	};
+	$scope.previewText = function() {
+		$scope.preview = angular.element("div#myanswer").html();
+	}
 	$scope.editscript = function(script, newanswer) {
 		newanswer = angular.element("#editScript"+script.id).html();
 		input = {"content": newanswer};
