@@ -312,7 +312,7 @@ def pick_script(id):
 	question = Question.query.filter_by(id = id).first()
 	course = Course.query.filter_by(id = question.cid).first()
 	if not query:
-		retval = json.dumps( {"course": course.name, "question": question.content} )
+		retval = json.dumps( {"cid": course.id, "course": course.name, "question": question.content} )
 		db_session.rollback()
 		return retval
 	max = query.count
@@ -335,7 +335,7 @@ def pick_script(id):
 	fresh = get_fresh_pair( query )
 	if not fresh:
 		print 'judged them all'
-		retval = json.dumps( {"question": question.content} ) 
+		retval = json.dumps( {"cid": course.id, "question": question.content} ) 
 		db_session.rollback()
 		return retval
 	print ('freshl: ' + str(fresh[0]))
@@ -377,7 +377,12 @@ def random_question():
 	script = Script.query.order_by( Script.count ).first()
 	if not script:
 		return ''
-	scripts = Script.query.filter_by( count = script.count ).all()
+	count = script.count
+	scripts = Script.query.filter_by( count = count ).all()
+	while len(scripts) < 2:
+		count = count + 1
+		nextscripts = Script.query.filter_by( count = count).all()
+		scripts.extend( nextscripts )
 	print ('initial scripts: ' + str(scripts))
 	user = User.query.filter_by( username = session['username'] ).first()
 	shuffle( scripts )
