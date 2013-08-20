@@ -1,113 +1,140 @@
 <div>
+	<ul class="breadcrumb">
+		<li>
+			<a href="#/coursepage">Courses</a>
+			<span class="divider">/</span> 
+		</li>
+		<li>
+			<a href="#/questionpage/{{cid}}">{{course}}</a>
+			<span class="divider">/</span> 
+		</li>
+	</ul>
 	<h2>Answer Page</h2>
-	<a class="bcrumb" href="#/coursepage"> <i class="icon-fighter-jet"></i> Courses </a>
-	<a class="bcrumb" href="#/questionpage/{{cid}}"> <i class="icon-fighter-jet"></i> {{course}} </a>
-	<br><br>
-	<p> <b>Question:</b> <br> <p class="question"><span class="renderContent" mathjax-bind="question"></span></p> </p>
-	<a href="#/judgepage/{{qid}}" class="judge"> 
+
+	<h3>Question</h3> 
+	
+	<div class="questionContent" mathjax-bind="question"></div>
+
+	<a href="" class="btn btn-success" ng-click="check=!check">
+		<i class="icon-puzzle-piece icon-large"></i> Submit Answer
+	</a>
+	<a href="#/judgepage/{{qid}}" class="btn btn-inverse"> 
 		<i class="icon-legal icon-large"></i> Judge Answers
 	</a>
-	<a title="Comments" href="" class="comments" ng-click="getQcomments();qcomm=!qcomm">
-		<i class="icon-comments-alt icon-large"></i> Comments&#160;
+	<a title="Comments" class="btn" ng-click="getQcomments();qcomm=!qcomm">
+		<i class="icon-comments-alt"></i> Show Comments
 	</a> 
-	<div class="commentblock" ng-show="qcomm">
-		<br>
-		<ul>
+	<div ng-show="qcomm" class="commentsList">
+		<ul class="postingsList">
 			<li ng-repeat="comment in questionComments">
-				<img src="http://www.gravatar.com/avatar/{{comment.avatar}}?s=50&d=retro" class="avatar">
-				<p class="authorHeader"><font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}}&#160;
-				<a href="" class="edit" ng-show="instructor || login==comment.author" ng-click="editQC=!editQC;newQcom=comment.content">
-					<i class="icon-edit icon-large"></i>
-				</a>
-				<a href="" class="delete" ng-show="instructor || login==comment.author" ng-click="delQcom(comment)">
-					<i class="icon-remove-sign icon-large"></i>
-				</a></p>
-				<div class="comment" ng-hide="editQC"><span class="qcomm renderComment" mathjax-bind="comment.content"></span></div>
+				<img src="http://www.gravatar.com/avatar/{{comment.avatar}}?s=32&d=retro" class="avatar">
+				<p class="authorHeader"><strong>{{comment.author}}</strong> - {{comment.time}}</p>
+
+				<div class="opbuttons">
+					<a href="" class="btn btn-small" ng-show="instructor || login==comment.author" ng-click="editQC=!editQC;newQcom=comment.content">
+						<i class="icon-edit icon-large"></i>
+						Edit
+					</a>
+					<a href="" class="btn btn-danger btn-small" ng-show="instructor || login==comment.author" ng-click="delQcom(comment)">
+						<i class="icon-remove-sign icon-large"></i>
+						Delete
+					</a>
+				</div>
+
+				<div ng-hide="editQC" mathjax-bind="comment.content"></div>
 				<div ng-show="editQC" class="comment">
 					<div math-toolbar editor="editqcom{{comment.id}}" class="mathtoolbar btn-group"></div>
-					<div hallo-editor name="editqcom" ng-model="newQcom" id="editqcom{{comment.id}}" class="edit entries"></div>
+					<div hallo-editor name="editqcom" ng-model="newQcom" id="editqcom{{comment.id}}" class="entries"></div>
 				</div>
-				<a href="" class="submit comment" ng-show="editQC" ng-click="editQcom(comment, newQcom);editQC=false">
-					<i class="icon-ok-sign icon-large"></i> Submit
+				<a href="" class="btn btn-primary" ng-show="editQC" ng-click="editQcom(comment, newQcom);editQC=false">
+					<i class="icon-ok-sign"></i> Submit
 				</a>
-				<br><br>
 			</li>
-		</ul>	
-		<a href="" class="comments" ng-click="lqcomm=!lqcomm">
-			<i class="icon-comment-alt icon-large"></i> Leave a Comment
+		</ul>
+
+		<a href="" class="btn" ng-click="lqcomm=!lqcomm">
+			<i class="icon-comment-alt"></i> Leave a Comment
 		</a>
-		<div ng-show="lqcomm">
+
+		<div ng-show="lqcomm" class="createPosting">
 			<form name="addCommentQ" novalidate>
 				<div math-toolbar editor="myQcomment" class="mathtoolbar btn-group"></div>
 				<div hallo-editor name="qcom" ng-model="myQcomment" id="myQcomment" class="entries"></div>
-				<a href="" class="submit" ng-click="makeQcomment(myQcomment);newQcomment=true">
-					<i class="icon-ok icon-large"></i> Submit
+				<a href="" class="btn btn-primary" ng-click="makeQcomment(myQcomment);newQcomment=true">
+					<i class="icon-ok"></i> Submit
 				</a>
 			</form>
 		</div>
-		<br><br>
 	</div>
-	<br><br><br><br>
-	<a href="" class="answer" ng-click="check=!check">
-		<i class="icon-puzzle-piece icon-large"></i> Answer Question
-	</a>
+
 	<div ng-show="check">
-		<br>
-		<form name="newAnswer" class="alternate" novalidate>
+		<form name="newAnswer" novalidate>
 			<div math-toolbar editor="myanswer" class="mathtoolbar btn-group"></div>
 			<div hallo-editor name="answer" ng-model="myanswer" id="myanswer" class="entries"></div>
-			<span class=errMsg ng-show="submitted && !myanswer">Please submit an answer.</span>
-			<a ng-click="previewText()"><i class="icon-eye-open icon-large"></i> Preview</a>
-			<a href="" class="submit" ng-click="submit();submitted=true">
-				<i class="icon-ok icon-large"></i> Submit
-			</a><br>
-			<span class="renderContent preview" mathjax-bind="preview"></span>
+			<p class="text-error" ng-show="submitted && !myanswer">
+				<span class="label label-important">Error</span>
+				Please submit an answer.
+			</p>
+
+			<a class="btn btn-info" ng-click="previewText(); showpreview=true;"><i class="icon-eye-open"></i> Preview</a>
+			<a class="btn btn-primary" ng-click="submit();submitted=true">
+				<i class="icon-ok"></i> Submit
+			</a>
+			<div class="preview" ng-show="showpreview" mathjax-bind="preview">
+			</div>
 		</form>
 	</div>
-	<br><br>
-	<a href="" class="sort" ng-click="temp=orderProp;orderProp=nextOrder;nextOrder=temp">
-		<i class="icon-sort-by-attributes icon-large"></i> By {{nextOrder}}
+
+	<h3>Answers</h3>
+
+	<div class="btn_spacing">
+	<a class="btn" ng-click="temp=orderProp;orderProp=nextOrder;nextOrder=temp">
+		<i class="icon-sort-by-attributes"></i> By {{nextOrder}}
 	</a>
-	<br><br>
-	<ul>
+	</div>
+
+	<ul class="postingsList">
 		<li ng-repeat="script in scripts | orderBy:orderProp:true">
-			<img src="http://www.gravatar.com/avatar/{{script.avatar}}?s=50&d=retro" class="avatar">
-			<p class="authorHeader">Script Score: <b>{{script.score}}</b></p>
-			<br>
-			<p class="authorHeader">Author: <b>{{script.author}}</b> - {{script.time}}</p>
+			<img src="http://www.gravatar.com/avatar/{{script.avatar}}?s=32&d=retro" class="avatar">
+			<p class="authorHeader">Author: <strong>{{script.author}}</strong> - {{script.time}} - Score: {{script.score}}</p>
 			<div class="opbuttons">
-				<a href="" class="comments" ng-click="getAcomments(script);scomm=!scomm">
+				<a class="btn btn-small btn-info" ng-click="getAcomments(script);scomm=!scomm">
 					<i class="icon-comments-alt icon-large"></i> Comments
 				</a>
-				<a href="" class="edit" ng-show="instructor || login==script.author" ng-click="edit=!edit;newanswer=script.content">
+				<a class="btn btn-small" ng-show="instructor || login==script.author" ng-click="edit=!edit;newanswer=script.content">
 					<i class="icon-edit-sign icon-large"></i> Edit
 				</a>
-				<a href="" class="delete" ng-show="instructor || login==script.author" ng-click="delete(script)">
-					<i class="icon-trash icon-large"></i> Delete&#160;
+				<a class="btn btn-small btn-danger" ng-show="instructor || login==script.author" ng-click="delete(script)">
+					<i class="icon-trash icon-large"></i> Delete
 				</a>
 			</div>
-			<br><br>
-			<div ng-hide="edit" class="answer"><span class="renderContent" id="script{{script.id}}" mathjax-bind="script.content"></span></div>
+
+			<div ng-hide="edit" id="script{{script.id}}" mathjax-bind="script.content"></div>
+
 			<div ng-show="edit" class="edit">
 				<div math-toolbar editor="editScript{{script.id}}" class="mathtoolbar btn-group"></div>
 				<div hallo-editor name="editanswers" ng-model="newanswer" id="editScript{{script.id}}" class="edit entries"></div>
 			</div>
-			<br>
-				<a href="" class="submit" ng-show="edit" ng-click="editscript(script, newanswer);edit=!edit">
-					<i class="icon-ok icon-large"></i> Submit
-				</a>
-			<div class="commentblock" ng-show="scomm">
-				<br>
-				<ul> 
+
+			<a class="btn btn-primary" ng-show="edit" ng-click="editscript(script, newanswer);edit=!edit">
+				<i class="icon-ok"></i> Submit
+			</a>
+
+			<div class="commentsList" ng-show="scomm">
+				<ul class="postingsList"> 
 					<li ng-repeat="comment in script.comments">
-						<img src="http://www.gravatar.com/avatar/{{comment.avatar}}?s=50&d=retro" class="avatar">
-						<p class="authorHeader"><font color="blue"><b>{{comment.author}}</b></font> - {{comment.time}}&#160;
-						<a href="" ng-show="instructor || login==comment.author" class="edit" ng-click="editAC=!editAC;newAcom=comment.content">
-							<i class="icon-edit icon-large"></i>
+						<img src="http://www.gravatar.com/avatar/{{comment.avatar}}?s=32&d=retro" class="avatar">
+						<p class="authorHeader"><strong>{{comment.author}}</strong> - {{comment.time}}</p>
+
+						<div class="opbuttons">
+						<a ng-show="instructor || login==comment.author" class="btn" ng-click="editAC=!editAC;newAcom=comment.content">
+							<i class="icon-edit icon-large"></i> Edit
 						</a>
-						<a href="" class="delete" ng-show="instructor || login==comment.author" ng-click="delAcom(script, comment)">
-							<i class="icon-remove-sign icon-large"></i>
-						</a></p>
+						<a class="btn btn-danger" ng-show="instructor || login==comment.author" ng-click="delAcom(script, comment)">
+							<i class="icon-remove-sign icon-large"></i> Delete
+						</a>
+						</div>
+
 						<div class="comment" ng-hide="editAC"><span class="renderComment" mathjax-bind="comment.content"></span></div>
 						<div ng-show="editAC" class="comment">
 							<div math-toolbar editor="editacom{{comment.id}}" class="mathtoolbar btn-group"></div>
@@ -116,22 +143,20 @@
 						<a href="" class="submit comment" ng-show="editAC" ng-click="editAcom(script, comment, newAcom);editAC=false">
 							<i class="icon-ok-sign icon-large"></i> Submit
 						</a>
-						<br><br>
 					</li>
 				</ul>
-				<a href="" class="comments" ng-click="lcomm=!lcomm">
-					<i class="icon-comment-alt icon-large"></i> Leave a Comment
+				<a href="" class="btn" ng-click="lcomm=!lcomm">
+					<i class="icon-comment-alt"></i> Leave a Comment
 				</a>
-				<div ng-show="lcomm">
+
+				<div ng-show="lcomm" class="createPosting">
 					<div math-toolbar editor="newacom{{script.id}}" class="mathtoolbar btn-group"></div>
 					<div hallo-editor name="acom" ng-model="mycomment" id="newacom{{script.id}}" class="entries"></div>
-					<a href="" class="submit" ng-click="makeAcomment(script, mycomment);lcomm=false">
-						<i class="icon-ok icon-large"></i> Submit
+					<a href="" class="btn btn-primary" ng-click="makeAcomment(script, mycomment);lcomm=false">
+						<i class="icon-ok"></i> Submit
 					</a>
 				</div>
-				<br><br>
 			</div>
-			<br><br><br>
 		</li>
 	</ul>
 </div>

@@ -11,27 +11,19 @@ form {
   padding: 1em; }
 
 /***** QUESTION PAGE *****/
-ul.questionList {
-  list-style-type: none;
-  margin: 1em 0; }
-
-ul.questionList li {
-  margin-bottom: 1em;
-  padding: 0.5em;
-  border-radius: 5px;
-  background: #fcfcfc;
-  border: 1px solid #ccc; }
-
-p.authorHeader {
-  display: inline-block;
-  margin-left: 0.5em; }
-
-div.opbuttons {
-  display: inline-block;
-  float: right; }
-
 div.questionContent {
   margin-top: 0.5em; }
+
+/***** ANSWERS PAGE *****/
+div.commentsList {
+  margin-top: 1em;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 0 1em 1em 1em;
+  background: #f0faf0; }
+
+div.btn_spacing {
+  margin-top: 1em; }
 
 /***** COURSES PAGE *****/
 form.createCourse {
@@ -45,6 +37,34 @@ form.searchCourse {
 
 table.table {
   border-bottom: 1px solid #ddd; }
+
+/***** USER POSTINGS (COMMENTS, QUESTIONS) *****/
+p.authorHeader {
+  display: inline-block;
+  margin-left: 0.5em; }
+
+div.opbuttons {
+  display: inline-block;
+  float: right; }
+
+ul.postingsList {
+  list-style-type: none;
+  margin: 1em 0; }
+
+ul.postingsList li {
+  margin-bottom: 1em;
+  padding: 0.5em;
+  border-radius: 5px;
+  background: #fcfcfc;
+  border: 1px solid #ccc; }
+
+div.createPosting {
+  margin-top: 1em;
+  background: white;
+  padding: 0.5em;
+  border-radius: 5px;
+  background: #fcfcfc;
+  border: 1px solid #ccc; }
 
 /***** WYSIWYG EDITOR *****/
 .entries {
@@ -164,26 +184,6 @@ textarea.edit {
 	border-radius: 1em;
 	padding: 7px;
 	border: 3px solid red;
-}
-
-textarea.comment {
-	min-height: 10em;
-	max-height: 20em;
-}
-
-div.commentblock {
-	margin-left: 4em;
-}
-
-div.comment {
-	max-height: 30em;
-	overflow-y: auto;
-	white-space: pre-wrap;
-	margin-left: 4.5em;
-}
-
-a.comment {
-	margin-left: 4.5em;
 }
 
 pre {
