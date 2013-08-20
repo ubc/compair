@@ -3,7 +3,7 @@
 	<a class="bcrumb" href="#/coursepage"> <i class="icon-fighter-jet"></i> Courses </a>
 	<a class="bcrumb" href="#/questionpage/{{cid}}"> <i class="icon-fighter-jet"></i> {{course}} </a>
 	<br><br>
-	<p>  <b>Question:</b> <br> <p class="question"><ANY ng-bind-html-unsafe="question"></ANY></p> </p>
+	<p>  <b>Question:</b> <br> <p class="question"><span class="renderContent" mathjax-bind="question"></span></p> </p>
 	<br>
 	<a href="" class="sort" ng-click="getscript()">
 		<i class="icon-random icon-large"></i> Next Pair of Answers
@@ -24,19 +24,19 @@
 	</ul>
 	<div class="tab-content">
 		<div id="left" class="tab-pane fade">
-			<p class="leftanswer"><ANY ng-bind-html-unsafe="scriptl"></ANY></p>
+			<p class="leftanswer"><span class="renderContent" mathjax-bind="scriptl"></span></p>
 		</div>
 		<div id="vs" class="tab-pane fade active in">
 			<div class="versus">
-				<p class="ljanswer"><ANY ng-bind-html-unsafe="scriptl"></ANY></p>
+				<p class="ljanswer"><span class="renderContent" mathjax-bind="scriptl"></span></p>
 
 				<h1 class="inline"><br><br>VS</h1>
 
-				<p class="rjanswer"><ANY ng-bind-html-unsafe="scriptr"></ANY></p>
+				<p class="rjanswer"><span class="renderContent" mathjax-bind="scriptr"></span></p>
 			</div>
 		</div>
 		<div id="right" class="tab-pane fade">
-			<p class="rightanswer"><ANY ng-bind-html-unsafe="scriptr"></ANY></p>
+			<p class="rightanswer"><span class="renderContent" mathjax-bind="scriptr"></span></p>
 		</div>
 	</div>
 

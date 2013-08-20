@@ -368,16 +368,16 @@ function UserIndexController($rootScope, $scope, $filter, $q, ngTableParams, use
 function UserController($rootScope, $scope, $location, flash, userService) {
 	$scope.usertypes = ['Student', 'Teacher'];
 	$scope.submit = function() {
-		if ($scope.password != $scope.retypepw) {
-			return '';
-		}
 		var re = /[^@]+@[^@]+/;
 		if ($scope.email == undefined || $scope.email == '') {
 			$scope.email = undefined;
 		} else if (!re.exec($scope.email)) {
 			$scope.formaterr = true;
-			return;
 		}
+		if ($scope.formaterr || $scope.password != $scope.retypepw) {
+			return '';
+		}
+		
 		input = {"username": $scope.username, "password": $scope.password, "usertype": $scope.usertype, "email": $scope.email, "firstname": $scope.firstname, "lastname": $scope.lastname, "display": $scope.display};
 		var user = userService.save( {uid:0}, input, function() {
 			if (user.success.length > 0) {
@@ -510,9 +510,13 @@ function QuestionController($scope, $location, $routeParams, $filter, flash, ngT
 	});
 	$scope.previewText = function() {
 		$scope.preview = angular.element("div#myquestion").html();
+		$scope.question = $scope.preview; // update ng-model
 	}
 	$scope.submit = function() {
 		$scope.question = angular.element("div#myquestion").html();
+		if (!$scope.title || !$scope.question) {
+			return ''
+		}
 		input = {"title": $scope.title, "content": $scope.question};
 		var msg = questionService.save( {cid: courseId}, input, function() {
 			if (msg.msg) {
@@ -525,6 +529,7 @@ function QuestionController($scope, $location, $routeParams, $filter, flash, ngT
 				$scope.title = '';
 				$scope.question = '';
 				$scope.submitted = '';
+				$scope.preview = '';
 				flash("The question has been successfully added.");
 			}
 		});
@@ -532,6 +537,9 @@ function QuestionController($scope, $location, $routeParams, $filter, flash, ngT
 	$scope.editquestion = function(newtitle, newquestion, question) {
 		newquestion = angular.element("#question"+question.id).html();
 		input = {"title": newtitle, "content": newquestion};
+		if (!newtitle || newquestion == '<br>') {
+			return '';
+		}
 		var retval = questionService.put( {cid: question.id}, input, function() {
 			if (retval.msg != 'PASS') {
 				flash('error', 'Please submit a question.');
@@ -599,6 +607,9 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 	});
 	$scope.submit = function() {
 		$scope.myanswer = angular.element("#myanswer").html();
+		if (!$scope.myanswer) {
+			return '';
+		}
 		input = {"content": $scope.myanswer};
 		var newscript = answerService.save( {qid: questionId}, input, function() {
 			if (newscript.msg) {
@@ -606,12 +617,14 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 			} else {
 				$scope.scripts.push(newscript);
 				$scope.myanswer = '';
+				$scope.submitted = false;
 				$scope.check = false;
 			}
 		});
 	};
 	$scope.previewText = function() {
 		$scope.preview = angular.element("div#myanswer").html();
+		$scope.myanswer = $scope.preview;
 	}
 	$scope.editscript = function(script, newanswer) {
 		newanswer = angular.element("#editScript"+script.id).html();
@@ -661,6 +674,9 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 	};
 	$scope.makeAcomment = function(script, mycomment) {
 		mycomment = angular.element("#newacom"+script.id).html();
+		if (!mycomment) {
+			return '';
+		}
 		input = {"content": mycomment};
 		var retval = commentAService.save( {id: script.id}, input, function() {
 			if (retval.comment) {
@@ -675,6 +691,9 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 	$scope.makeQcomment = function(myQcomment) {
 		myQcomment = angular.element("#myQcomment").html();
 		input = {"content": myQcomment};
+		if (!myQcomment) {
+			return '';
+		}
 		var retval = commentQService.save( {id: questionId}, input, function() {
 			if (retval.comment) {
 				$scope.questionComments.push( retval.comment );

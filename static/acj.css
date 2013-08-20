@@ -574,9 +574,8 @@ input.expand:hover {
 	height: 100%;
 }
 
-.errMsg {
+.required {
     color: #990044;
-    display: block;
 }
 
 ol#flash-messages {
@@ -654,29 +653,50 @@ pre.instructions {
 	width: auto;
 }
 
-form.import label {
+form label {
 	float: left;
 	text-align: right;
 	clear: left;
 	width: 10em;
 	margin-right: 2em;
 	margin-top: 0.4em;
-	font-size: 150%
+	font-size: 150%;
 }
 
-form.import div {
+form div {
 	display: block;
 	margin-bottom: 0.7em;
 }
 
-form.import input[type="submit"] {
+form.default input[type="submit"] {
 	display: block;
 	margin-right: auto;
 	margin-left: auto;
 }
 
-form.import span {
-	margin-left: 10em;
+form span.errMsg {
+    color: #990044;
+    display: block;
+	margin-left: 18em;
+}
+
+form.alternate input[type="submit"] {
+	display: inline-block;
+	margin: 0px;
+	margin-left: 2em;
+}
+
+form.alternate input {
+	margin-top: auto;
+	margin-bottom: auto;
+}
+
+form.alternate label {
+	width: auto;
+}
+
+form.alternate span.errMsg {
+	margin-left: 0em;
 }
 
 table.results td, table.results th {

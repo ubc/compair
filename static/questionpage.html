@@ -7,18 +7,15 @@
 		<i class="icon-question-sign icon-large"></i> Create Question
 	</a>
 	<div ng-show="check">
-		<br>
-		<form name="createQuestion" novalidate>
-		Question Title: <input type="text" name="title" ng-model="title" required>
-		<!--<a onclick='addFormula("#myquestion", "`sin(x)`")' math-formula="sin(x)">sin(x)</a>-->
+		<form name="createQuestion" ng-submit="submit()" class="alternate" novalidate>
+		<div><label>Question Title</label><input type="text" name="title" ng-model="title" required></div>
 		<span class=errMsg ng-show="submitted && createQuestion.title.$error.required">
 			A title is required for the question.</span>
 		<div math-toolbar editor="myquestion" class="mathtoolbar btn-group"></div>
 		<div hallo-editor name="question" ng-model="question" id="myquestion" class="entries"></div>
-		<span class=errMsg ng-show="submitted && createQuestion.question.$error.required">
-			Please enter a question.</span>
+		<span class=errMsg ng-show="submitted && !question">Please enter a question.</span>
 		<a ng-click="previewText()"><i class="icon-eye-open icon-large"></i> Preview</a>
-		<a href="" class="submit" ng-click="submit(); submitted=true">
+		<a href="" class="submit" ng-click="submit(); submitted=true" ng-disabled="createQuestion.$invalid">
 			<i class="icon-ok icon-large"></i> Submit
 		</a><br>
 		<span class="renderContent preview" mathjax-bind="preview"></span>
