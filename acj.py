@@ -374,23 +374,24 @@ def get_fresh_pair( scripts ):
 @app.route('/randquestion')
 @student.require(http_exception=401)
 def random_question():
-	script = Script.query.order_by( Script.count ).first()
-	if not script:
-		return ''
-	count = script.count
-	scripts = Script.query.filter_by( count = count ).all()
-	while len(scripts) < 2:
-		count = count + 1
-		nextscripts = Script.query.filter_by( count = count).all()
-		scripts.extend( nextscripts )
+	scripts = Script.query.order_by( Script.count ).limit(10).all()
+	#if not script:
+	#	return ''
+	#count = script.count
+	#scripts = Script.query.filter_by( count = count ).all()
+	#while len(scripts) < 2:
+	#	count = count + 1
+	#	nextscripts = Script.query.filter_by( count = count).all()
+	#	scripts.extend( nextscripts )
 	print ('initial scripts: ' + str(scripts))
 	user = User.query.filter_by( username = session['username'] ).first()
 	shuffle( scripts )
 	lowest0 = ''
-	qid = ''
+	retqid = ''
 	lowest1 = ''
 	for script in scripts:
-		question = Question.query.filter_by( id = script.qid ).first()
+		qid = script.qid
+		question = Question.query.filter_by( id = qid ).first()
 		if user.usertype != 'Admin':
 			enrolled = Enrollment.query.filter_by( cid = question.cid ).filter_by( uid = user.id ).first()
 			if not enrolled:
@@ -398,23 +399,27 @@ def random_question():
 		print ('in loop, script: ' + str(script))
 		print ('in loop, lowest0: ' + str(lowest0))
 		print ('in loop, lowest1: ' + str(lowest1))
-		query = Script.query.filter_by(qid = script.qid).order_by( Script.count ).limit(10).all()
-		if get_fresh_pair(query):
-			sum = query[0].count + query[1].count
-			if lowest0 == '':
+		query = Script.query.filter_by(qid = qid).order_by( Script.count ).limit(10).all()
+		fresh = get_fresh_pair( query )
+		if fresh:
+			sum = fresh[0].count + fresh[1].count
+			if not lowest0:
 				lowest0 = sum
-				qid = script.qid
+				retqid = qid
 				print ('in if, lowest0: ' + str(lowest0))
 			else:
 				lowest1 = sum
 				print ('in if, lowest1: ' + str(lowest1))
 				if lowest0 > lowest1:
-					qid = script.qid
-				print ('retval: ' + str(qid))
-				retval = json.dumps( {"question": qid} )
-				db_session.rollback()
-				return retval
-	print ('RETURN: SOMETHING IS NOT RIGHT')
+					retqid = qid
+				continue
+	print ('Out of scripts loop')
+	if lowest0:
+		print ('retval: ' + str(retqid))
+		retval = json.dumps( {"question": retqid} )
+		db_session.rollback()
+		return retval
+	print ('RETURN: Nothing for you to judge(not necessarily an error)')
 	db_session.rollback()
 	return ''
 

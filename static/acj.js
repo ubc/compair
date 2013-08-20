@@ -236,7 +236,7 @@ function QuickController($scope, $location, flash, judgeService, pickscriptServi
 			$location.path('/judgepage/' + questionId);
 		} else {
 			$location.path('/');
-			flash('error', 'None of the questions has enough new answers. Please come back later');
+			flash('error', 'Either you have already judged all of the high-priority scripts OR there are not enough answers to judge. Please come back later');
 		}
 	});
 }
