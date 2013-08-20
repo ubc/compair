@@ -238,7 +238,7 @@ def all_users():
 	query = User.query.order_by(User.lastname)
 	users = []
 	for user in query:
-		users.append( {"fullname": user.fullname, "display": user.display, "type": user.usertype} )
+		users.append( {"uid": user.id, "username": user.username, "fullname": user.fullname, "display": user.display, "type": user.usertype} )
 	db_session.rollback()
 	return json.dumps( {'users': users})
 
@@ -477,7 +477,7 @@ def marked_scripts(id):
 	question = Question.query.filter_by(id = id).first()
 	course = Course.query.filter_by(id = question.cid).first()
 	user = User.query.filter_by(username = session['username']).first()
-	retval = json.dumps( {"display": user.display, "usertype": user.usertype, "cid": course.id, "course": course.name, "question": question.content, "scripts": slst} )
+	retval = json.dumps( {"display": user.display, "usertype": user.usertype, "cid": course.id, "course": course.name, "qtitle": question.title, "question": question.content, "scripts": slst} )
 	db_session.rollback()
 	return retval
 

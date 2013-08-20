@@ -612,6 +612,7 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 		$scope.qid = questionId;
 		$scope.course = retval.course;
 		$scope.cid = retval.cid;
+		$scope.qtitle = retval.qtitle;
 		$scope.question = retval.question;
 		$scope.scripts = retval.scripts;
 		$scope.login = retval.display;
