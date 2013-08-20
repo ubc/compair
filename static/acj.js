@@ -587,6 +587,7 @@ function AnswerController($scope, $routeParams, $http, flash, answerService, ran
 	$scope.newScript = '';
 
 	var retval = rankService.get( {qid: questionId}, function() {
+		$scope.qid = questionId;
 		$scope.course = retval.course;
 		$scope.cid = retval.cid;
 		$scope.question = retval.question;
