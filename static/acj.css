@@ -1,40 +1,73 @@
-body {
-	background-color: rgb(240, 250, 240);
-	font-family:"Times New Roman", Times, serif;
-}
+/***** UNIVERSAL *****/
+h1, h2 {
+  text-align: center; }
 
-.body {
-	background-color: rgb(240, 250, 240);
-}
+form {
+  margin-top: 1em;
+  margin-bottom: 1em; }
 
-h1 {
-	text-align: center;
-}
+/***** INDEX PAGE *****/
+#main {
+  padding: 1em; }
 
-h2 {
-	color: gray;
-	text-align: center;
-}
+/***** QUESTION PAGE *****/
+ul.questionList {
+  list-style-type: none;
+  margin: 1em 0; }
 
-textarea {
-	resize: none;
-	font-family:"Times New Roman", Times, serif;
-	margin: 3px;
-}
+ul.questionList li {
+  margin-bottom: 1em;
+  padding: 0.5em;
+  border-radius: 5px;
+  background: #fcfcfc;
+  border: 1px solid #ccc; }
 
-p {
-	font-family:"Times New Roman", Times, serif;
-	margin: 3px;
-}
+p.authorHeader {
+  display: inline-block;
+  margin-left: 0.5em; }
 
-div.question, p.question {
-	width: 90%;
-	padding: 7px;
-	margin: 3px;
-	white-space: pre-wrap;
-	margin-left: 4.5em;
-}
+div.opbuttons {
+  display: inline-block;
+  float: right; }
 
+div.questionContent {
+  margin-top: 0.5em; }
+
+/***** COURSES PAGE *****/
+form.createCourse {
+  display: inline-block;
+  margin: 0;
+  padding-left: 0.5em; }
+
+form.searchCourse {
+  display: inline-block;
+  margin: 0; }
+
+table.table {
+  border-bottom: 1px solid #ddd; }
+
+/***** WYSIWYG EDITOR *****/
+.entries {
+  /* width and height prevent creation of scrollbar and keep math buttons properly sized */
+  min-height: 10em;
+  border: 1px solid #ccc;
+  padding: 0.5em; }
+
+.entries, .preview {
+  width: 90%;
+  margin: 1em 0;
+  border-radius: 4px; }
+
+.preview {
+  background: #eee;
+  padding: 1em; }
+
+/***** MATH INPUT *****/
+.mathtoolbar {
+  display: block;
+  white-space: normal; }
+
+/*
 li.question {
 	margin-bottom: 3em;
 	margin-left: 2em;
@@ -43,11 +76,6 @@ li.question {
 div.qtitle, p.qtitle {
 	width: 90%;
 	padding: 7px;
-	margin-left: 4.5em;
-}
-
-p.authorHeader {
-	display: inline-block;
 	margin-left: 4.5em;
 }
 
@@ -200,12 +228,10 @@ th {
 
 a:link {
 	text-decoration: none;
-	color: black;
 }
 
 a:visited {
 	text-decoration: none;
-	color: black;
 }
 
 a:hover {
@@ -290,18 +316,6 @@ input.judge {
 input.answer {
 	border: 1px solid #E0E0FF;
 	background-color: #F8F8FF;
-	cursor: pointer;
-}
-
-input.create {
-	border: 1px solid #000000;
-	background-color: #FFFFFF;
-	cursor: pointer;
-}
-
-input.submit {
-	border: 1px solid #000000;
-	background-color: #FFFFFF;
 	cursor: pointer;
 }
 
@@ -417,12 +431,6 @@ input.expand:hover {
 .profile {
 	margin-left: 2em;
 	font-weight: bold;
-}
-
-.opbuttons {
-	display: inline-block;
-	float: right;
-	text-align: right;
 }
 
 .bcrumb {
@@ -551,15 +559,6 @@ input.expand:hover {
 }
 
 
-#main {
-	width: 60%;
-	margin: auto;
-	background-color: white;
-	padding: 0.2em;
-	border: 1px solid white;
-	border-radius: 1em; 
-}
-
 #logo {
 	width: 12em;
 	height: 7em;
@@ -641,10 +640,6 @@ select.filter-select {
 	width: 100%;
 }
 
-.avatar {
-	position: absolute;
-}
-
 ul.instructions {
 	list-style-type: circle;
 }
@@ -711,23 +706,6 @@ table.results {
 	width: 100%;
 }
 
-.entries {
-	min-width: 0 !important;
-	min-height: 6em !important;
-	margin-top: 1em;
-	margin-bottom: 1em;
-	border: 3px solid lightgrey;
-	font-family:"Times New Roman", Times, serif;
-}
-
-.renderContent {
-	display: inline-block;
-}
-
-.mathtoolbar {
-	display: block;
-	white-space: normal;
-}
 
 .btn-group > .btn {
 	vertical-align: middle;
@@ -737,6 +715,4 @@ table.results {
 	margin-bottom: 0.5em;
 }
 
-.preview {
-	margin: 1em;
-}
+*/

@@ -1,30 +1,48 @@
-<div>
-	<div class="errFlash" ng-show="flash">{{ flash }}</div>
-	<h2>Course Page</h2>
-	<input type="submit" class="create" ng-show="instructor" ng-click="check=!check" value="Create Course">
-	<form ng-show="check" ng-submit="submit()" class="alternate">
-		<div><label>Course Name</label><input type="text" ng-model="course"></input>
-		<input type="submit" class="submit" type="button" value="Create"></div>
+<div class="errFlash span12" ng-show="flash">{{ flash }}</div>
+<h2>Courses</h2>
+<form class="form-inline createCourse" ng-show="check" ng-submit="submit()">
+	<label for="courseName">Course Name: </label>
+	<div class="input-append">
+		<input id="courseName" type="text" ng-model="course" />
+		<input type="submit" class="btn btn-primary" value="Create" />
+	</div>
+</form>
+
+<div class="navbar">
+	<form class="form-search searchCourse">
+		Search Course: 
+		<input class="search-query" type="text" ng-model="cquery">
 	</form>
-	<br><br>
-	<table class="table">
-	Search Course: <input type="text" style="border-radius: 7em" ng-model="cquery" ng-change="search()" placeholder="Search">
-	<tr>
-		<th colspan="4">Courses</th>
-	</tr>
-	<tr class="tr" ng-repeat="course in courses | orderBy:orderProp | filter:cquery">
-		<td>
-			<b>{{course.name}}</b>
-		</td>
-		<td>
-			<a href="#/questionpage/{{course.id}}"> <input type="button" class="button" value="Questions"> </a>
-		</td>
-		<td ng-show="instructor">
-			<a href="#/enrollpage/{{course.id}}"> <input type="button" class="button" value="Enroll Users"> </a>
-		</td>
-		<td ng-show="instructor">
-			<a href="#/classimport"> <input type="button" class="button" value="Import Students"> </a>
-		</td>
-	</tr>
-	</table>
+
+	<a ng-click="check = !check" class="btn pull-right" ng-show="instructor" ng-disabled="check">
+		<i class="icon-book"></i> Create Course
+	</a>
 </div>
+
+<table class="table table-hover">
+<tbody>
+<tr ng-repeat="course in courses | orderBy:orderProp | filter:cquery">
+	<td>
+		<b>{{course.name}}</b>
+	</td>
+	<td>
+		<a class="btn btn-success" href="#/questionpage/{{course.id}}">
+			<i class="icon-question-sign"></i> Questions
+		</a>
+	</td>
+	<td ng-show="instructor">
+		<a class="btn" href="#/enrollpage/{{course.id}}">
+			<i class="icon-plus-sign"></i>
+			Enrol Users
+		</a>
+	</td>
+	<td ng-show="instructor">
+		<a class="btn" href="#/classimport">
+			<i class="icon-upload"></i>
+			Import Students
+		</a>
+	</td>
+</tr>
+</tbody>
+</table>
+

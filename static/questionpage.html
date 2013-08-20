@@ -1,70 +1,104 @@
 <div>
+	<ul class="breadcrumb">
+		<li>
+			<a href="#/coursepage">Courses</a>
+			<span class="divider">/</span> 
+		</li>
+		<li class="active">{{course}}</li>
+	</ul>
+
 	<h2>Question Page</h2>
-	<a href="#/coursepage"> <i class="icon-fighter-jet"></i> Courses</a>
-	<br><br>
-	<p> Course: <b>{{course}}</b> </p>
-	<a href="" class="question" ng-click="check=!check">
+
+	<a href="" class="btn btn-success" ng-click="check=!check">
 		<i class="icon-question-sign icon-large"></i> Create Question
 	</a>
+
 	<div ng-show="check">
-		<form name="createQuestion" ng-submit="submit()" class="alternate" novalidate>
-		<div><label>Question Title</label><input type="text" name="title" ng-model="title" required></div>
-		<span class=errMsg ng-show="submitted && createQuestion.title.$error.required">
-			A title is required for the question.</span>
-		<div math-toolbar editor="myquestion" class="mathtoolbar btn-group"></div>
-		<div hallo-editor name="question" ng-model="question" id="myquestion" class="entries"></div>
-		<span class=errMsg ng-show="submitted && !question">Please enter a question.</span>
-		<a ng-click="previewText()"><i class="icon-eye-open icon-large"></i> Preview</a>
-		<a href="" class="submit" ng-click="submit(); submitted=true" ng-disabled="createQuestion.$invalid">
-			<i class="icon-ok icon-large"></i> Submit
-		</a><br>
-		<span class="renderContent preview" mathjax-bind="preview"></span>
-		<br>
+		<form class="createQuestion" name="createQuestion" ng-submit="submit()"  novalidate>
+			<label for="questionTitle">Question Title: </label>
+			<input id="questionTitle" type="text" name="title" ng-model="title" required />
+			<p class="text-error"
+				ng-show="submitted && createQuestion.title.$error.required">
+				<span class="label label-important"> 
+					Error
+				</span>
+				A title is required for the question.
+			</p>
+
+			<div math-toolbar editor="myquestion" class="mathtoolbar btn-group"></div>
+			<div hallo-editor name="question" ng-model="question" id="myquestion" class="entries"></div>
+			<p class="text-error" ng-show="submitted && !question">
+				<span class="label label-important">Error</span>
+				Please enter a question.
+			</p>
+
+			<a class="btn btn-info" ng-click="previewText(); showpreview=true;">
+				<i class="icon-eye-open"></i> Preview
+			</a>
+			<a class="btn btn-primary" ng-click="submit(); submitted=true"
+				ng-disabled="createQuestion.$invalid">
+				<i class="icon-ok"></i> Submit
+			</a>
+
+			<div class="preview" ng-show="showpreview" mathjax-bind="preview">
+			</div>
 		</form>
 	</div>
-	<br><br><br>
-	<ul>
+
+	<ul class="questionList">
 		<li ng-repeat="question in questions | orderBy:orderProp:true" class="question">
-			<img src="http://www.gravatar.com/avatar/{{question.avatar}}?s=50&d=retro" class="avatar">
-			<p class="authorHeader"><b>{{question.author}}</b> - {{question.time}}</p>
+			<img src="http://www.gravatar.com/avatar/{{question.avatar}}?s=32&d=retro" class="avatar">
+			<p class="authorHeader"><strong>{{question.author}}</strong> - {{question.time}}</p>
+
 			<div class="opbuttons">
-				<a href="#/answerpage/{{question.id}}" class="answer"> 
+				<a href="#/answerpage/{{question.id}}" class="btn btn-info btn-small"> 
 					<i class="icon-puzzle-piece icon-large"></i> Answer Page
 				</a>
-				<a href="#/judgepage/{{question.id}}" class="judge"> 
+				<a href="#/judgepage/{{question.id}}" class="btn btn-inverse btn-small"> 
 					<i class="icon-legal icon-large"></i> Judge Answers
 				</a>
-				<a href="" class="edit" ng-show="login == question.author || instructor" ng-click="edit=!edit;newtitle=question.title;newquestion=question.content">
+				<a class="btn btn-small" ng-show="login == question.author || instructor" ng-click="edit=!edit;newtitle=question.title;newquestion=question.content">
 					<i class="icon-edit-sign icon-large"></i> Edit Question
 				</a>
-				<a href="" class="delete" ng-show="login == question.author || instructor" ng-click="delete(question)">
+				<a class="btn btn-danger btn-small" ng-show="login == question.author || instructor" ng-click="delete(question)">
 					<i class="icon-trash icon-large"></i> Delete
 				</a>
 			</div>
+
 			<div ng-hide="edit">
-				<div class="qtitle" ng-click="full=!full" ng-hide="full" >
-					<i class="icon-collapse"></i>
-					<span class="renderContent" mathjax-bind="question.title"></span>   
-				</div>
-				<div ng-click="full=!full" ng-show="full">
-					<p class="question"><span class="renderContent" mathjax-bind="question.content"></span></p>   
-				</div>
-				<div class="qtitle" ng-click="full=!full" ng-show="full">
-					<i class="icon-collapse-top"></i>
-				</div>
+				<h4 mathjax-bind="question.title"></h4>
+				<a ng-click="full=!full" class="btn btn-mini" >
+					<span ng-hide="full">
+						<i class="icon-collapse"></i> Show
+					</span>
+					<span ng-show="full">
+						<i class="icon-collapse-top"></i> Hide
+					</span>
+				</a>
+				<div class="questionContent" ng-show="full" mathjax-bind="question.content"></div>
 			</div>
+
 			<div ng-show="edit">
 				<form name="createQuestion" novalidate>
 				Question Title: <input type="text" name="title" ng-model="newtitle" required>
-				<span class=errMsg ng-show="submitted && createQuestion.title.$error.required">
-					A title is required for the question.</span>
+				<p class="text-error"
+					ng-show="submitted && createQuestion.title.$error.required">
+					<span class="label label-important"> 
+						Error
+					</span>
+					A title is required for the question.
+				</p>
 				<div math-toolbar editor="question{{question.id}}" class="mathtoolbar btn-group"></div>
 				<div hallo-editor name="question" ng-model="newquestion" id="question{{question.id}}" class="entries"></div>
-				<span class=errMsg ng-show="submitted && createQuestion.question.$error.required">
-					Please enter a question.</span>
-				<br>
-				<a href="" class="submit" ng-click="editquestion(newtitle, newquestion, question);edit=false;submitted=true">
-					<i class="icon-ok icon-large"></i> Submit
+				<p class="text-error" 
+					ng-show="submitted && createQuestion.question.$error.required">
+					<span class="label label-important">
+						Error
+					</span>
+					Please enter a question.
+				</p>
+				<a class="btn btn-primary" ng-click="editquestion(newtitle, newquestion, question);edit=false;submitted=true">
+					<i class="icon-ok"></i> Submit
 				</a>
 				</form>
 			</div>
