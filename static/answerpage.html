@@ -53,9 +53,10 @@
 	</a>
 	<div ng-show="check">
 		<br>
-		<form name="newAnswer" novalidate>
+		<form name="newAnswer" class="alternate" novalidate>
 			<div math-toolbar editor="myanswer" class="mathtoolbar btn-group"></div>
 			<div hallo-editor name="answer" ng-model="myanswer" id="myanswer" class="entries"></div>
+			<span class=errMsg ng-show="submitted && !myanswer">Please submit an answer.</span>
 			<a ng-click="previewText()"><i class="icon-eye-open icon-large"></i> Preview</a>
 			<a href="" class="submit" ng-click="submit();submitted=true">
 				<i class="icon-ok icon-large"></i> Submit
