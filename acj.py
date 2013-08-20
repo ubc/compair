@@ -920,6 +920,15 @@ def import_users(list, group=True):
 			success.append({'user': user})
 	return {'error': error, 'success': success}
 
+@app.route('/password/<uid>')
+@admin.require(http_exception=401)
+def reset_password(uid):
+	user = User.query.filter_by( id = uid ).first()
+	password = password_generator()
+	user.password = hasher.hash_password( password )
+	commit()
+	return json.dumps( {"resetpassword": password} )
+
 @teacher.require(http_exception=401)
 def enrol_users(users, courseId):
 	error = []

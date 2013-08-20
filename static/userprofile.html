@@ -27,7 +27,7 @@
 		Password: 
 		<br>
 		<span class="profile" ng-hide="edit"><i class="icon-lock icon-large"></i></span>
-		<div class="profile" ng-show="edit">
+		<div class="profile" ng-show="edit && (loggedType!='Admin' || username==loggedName)">
 			<input type="password" ng-model="oldpassword" placeholder="Type Current Password">
 			<br>
 			<input type="password" ng-model="newpassword" placeholder="Type New Password">
@@ -37,6 +37,13 @@
 			<input type="password" ng-model="newretypepw" placeholder="Retype the Password">
 			<span class=errMsg ng-show="submitted && (newpassword != newretypepw)">
 				The passwords do not match.</span>
+		</div>
+		<div class="profile" ng-show="edit && loggedType=='Admin' && username!=loggedName">
+			<a href="" class="reset" ng-click="resetpw()">
+				<i class="icon-key icon-large"></i> Reset Password
+			</a>
+			<br><br>
+			<span>{{resetpassword}}</span>
 		</div>
 		<br><br>
 	</form>

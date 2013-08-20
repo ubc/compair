@@ -66,6 +66,10 @@ myApp.factory('commentQService', function($resource) {
 	return $resource( '/question/:id/comment', {}, { put: {method: 'PUT'} } );
 });
 
+myApp.factory('passwordService', function($resource) {
+	return $resource( '/password/:uid' );
+});
+
 myApp.config( function ($routeProvider) {
 	$routeProvider
 		.when ('/install', 
@@ -391,7 +395,7 @@ function UserController($rootScope, $scope, $location, flash, userService) {
 	};
 }
 
-function ProfileController($rootScope, $scope, $routeParams, $location, flash, userService) {
+function ProfileController($rootScope, $scope, $routeParams, $location, flash, userService, passwordService) {
 	var uid = $routeParams.userId;
 	var retval = userService.get( {uid: uid}, function() {
 		if (retval.username) {
@@ -438,6 +442,16 @@ function ProfileController($rootScope, $scope, $routeParams, $location, flash, u
 				$rootScope.$broadcast("LOGGED_IN", $scope.newdisplay); 
 			} else {
 				flash('error', 'Your profile was unsuccessfully updated.');
+			}
+		});
+	};
+	$scope.resetpw = function() {
+		var retval = passwordService.get( {uid:uid}, function() {
+			resetpassword = retval.resetpassword
+			if (resetpassword) {
+				$scope.resetpassword = resetpassword;
+			} else {
+				flash('error', 'Could not reset password.');
 			}
 		});
 	};

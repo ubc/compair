@@ -273,6 +273,10 @@ a.question:hover {
 	color: silver;
 }
 
+a.reset:hover {
+	color: #FF6666;
+}
+
 form {
 	margin: 0 2em 0 0;
 }
