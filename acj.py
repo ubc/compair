@@ -402,8 +402,8 @@ def random_question():
 		query = Script.query.filter_by(qid = qid).order_by( Script.count ).limit(10).all()
 		fresh = get_fresh_pair( query )
 		if fresh:
-			sum = fresh[0].count + fresh[1].count
-			if not lowest0:
+			sum = Script.query.filter_by(id = fresh[0]).first().count + Script.query.filter_by(id = fresh[1]).first().count
+			if lowest0 == '':
 				lowest0 = sum
 				retqid = qid
 				print ('in if, lowest0: ' + str(lowest0))
@@ -414,7 +414,7 @@ def random_question():
 					retqid = qid
 				continue
 	print ('Out of scripts loop')
-	if lowest0:
+	if lowest0 != '':
 		print ('retval: ' + str(retqid))
 		retval = json.dumps( {"question": retqid} )
 		db_session.rollback()
