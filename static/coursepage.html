@@ -1,12 +1,5 @@
 <div class="errFlash span12" ng-show="flash">{{ flash }}</div>
 <h2>Courses</h2>
-<form class="form-inline createCourse" ng-show="check" ng-submit="submit()">
-	<label for="courseName">Course Name: </label>
-	<div class="input-append">
-		<input id="courseName" type="text" ng-model="course" />
-		<input type="submit" class="btn btn-primary" value="Create" />
-	</div>
-</form>
 
 <div class="navbar">
 	<form class="form-search searchCourse">
@@ -18,7 +11,14 @@
 		<i class="icon-book"></i> Create Course
 	</a>
 </div>
-
+<form class="form-inline createCourse" ng-show="check" ng-submit="submit()">
+	<label for="courseName">Course Name: </label>
+	<div class="input-append">
+		<input id="courseName" type="text" ng-model="course" />
+		<input type="submit" class="btn btn-primary" value="Create" />
+	</div>
+	<br><br>
+</form>
 <table class="table table-hover">
 <tbody>
 <tr ng-repeat="course in courses | orderBy:orderProp | filter:cquery">

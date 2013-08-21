@@ -340,7 +340,7 @@ def pick_script(id):
 		return retval
 	print ('freshl: ' + str(fresh[0]))
 	print ('freshr: ' + str(fresh[1]))
-	retval = json.dumps( {"cid": course.id, "course": course.name, "question": question.content, "sidl": fresh[0], "sidr": fresh[1]} )
+	retval = json.dumps( {"cid": course.id, "course": course.name, "question": question.content, "qtitle": question.title, "sidl": fresh[0], "sidr": fresh[1]} )
 	db_session.rollback()
 	return retval
 

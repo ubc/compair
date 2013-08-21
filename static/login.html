@@ -2,9 +2,23 @@
 	<div class="errFlash" ng-show="msg">{{ msg }}</div>
 	<h2>Login Page</h2>
 
-	<form ng-submit="submit()">
-		<p>Username:<input type=text ng-model="username"></p>
-		<p>Password:<input type=password ng-model="password"></p>
-		<p><input type=submit class="submit" value="Log In"></p>
+	<form class="form-horizontal" ng-submit="submit()">
+		<div class="control-group">
+			<label class="control-label" for="inputUser">Username</label>
+			<div class="controls">
+				<input type="text" id="inputUser" ng-model="username" placeholder="e.g. user123" autofocus="autofocus">
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label" for="inputPass">Password</label>
+			<div class="controls">
+				<input type="password" id="inputPass" ng-model="password" placeholder="e.g. *******">
+			</div>
+		</div>
+		<div class="control-group">
+			<div class="controls">
+				<input type="submit" class="btn" value="Sign In">
+			</div>
+		</div>
 	</form>
 </div>

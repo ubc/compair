@@ -193,6 +193,7 @@ function InstallController($scope, $location, $cookieStore, flash, installServic
 }
 
 function IndexController($scope, $location, $cookieStore, loginService, logoutService, isInstalled) {
+	var breadCrumbs = [];
 	$scope.dropdown = [
 		{
 			"text": "User Profile",
@@ -231,6 +232,9 @@ function IndexController($scope, $location, $cookieStore, loginService, logoutSe
 			}
 		});
 	}
+	$scope.$on("NEW_CRUMB", function(event, crumb) {
+		alert('in new crumb');
+	});
 }
 
 function QuickController($scope, $location, flash, judgeService, pickscriptService, quickService) {
@@ -259,6 +263,7 @@ function JudgepageController($scope, $cookieStore, $routeParams, $location, flas
 			$scope.course = retval.course;
 			$scope.cid = retval.cid;
 			$scope.question = retval.question;
+			$scope.qtitle = retval.qtitle;
 			if (retval.sidl) {
 				sidl = retval.sidl;
 				sidr = retval.sidr;

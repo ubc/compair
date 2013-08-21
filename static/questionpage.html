@@ -9,9 +9,15 @@
 
 	<h2>Question Page</h2>
 
-	<a href="" class="btn btn-success" ng-click="check=!check">
-		<i class="icon-question-sign icon-large"></i> Create Question
-	</a>
+	<div class="navbar">
+		<form class="form-search searchCourse">
+			Search Question:
+			<input class="search-query" type="text" ng-model="search.title">
+		</form>
+		<a href="" class="btn btn-success pull-right" ng-click="check=!check">
+			<i class="icon-question-sign icon-large"></i> Create Question
+		</a>
+	</div>
 
 	<div ng-show="check">
 		<form class="createQuestion" name="createQuestion" ng-submit="submit()"  novalidate>
@@ -45,8 +51,10 @@
 		</form>
 	</div>
 
+	<br>
+
 	<ul class="postingsList">
-		<li ng-repeat="question in questions | orderBy:orderProp:true">
+		<li ng-repeat="question in questions | orderBy:orderProp:true | filter:search">
 			<img src="http://www.gravatar.com/avatar/{{question.avatar}}?s=32&d=retro" class="avatar">
 			<p class="authorHeader"><strong>{{question.author}}</strong> - {{question.time}}</p>
 
