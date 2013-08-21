@@ -1,63 +1,75 @@
 <div>
-	<h2>Judge Page</h2>
-	<a class="bcrumb" href="#/coursepage"> <i class="icon-fighter-jet"></i> Courses </a>
-	<a class="bcrumb" href="#/questionpage/{{cid}}"> <i class="icon-fighter-jet"></i> {{course}} </a>
-	<br><br>
-	<p>  <b>Question:</b> <br> <p class="question"><span class="renderContent" mathjax-bind="question"></span></p> </p>
-	<br>
-	<a href="" class="sort" ng-click="getscript()">
-		<i class="icon-random icon-large"></i> Next Pair of Answers
-	</a>
-	<br>
-	<br>
+	<ul class="breadcrumb">
+		<li>
+			<a href="#/coursepage">Courses</a>
+			<span class="divider">/</span> 
+		</li>
+		<li>
+			<a href="#/questionpage/{{cid}}">{{course}}</a>
+			<span class="divider">/</span> 
+		</li>
+	</ul>
 
-	<ul class="nav nav-tabs">
-		<li class="mytab">
+	<h2>Judge Page</h2>
+	<h3>Question</h3>
+	<div class="questionContent" mathjax-bind="question"></div>
+
+	<a class="btn" ng-click="getscript()">
+		<i class="icon-random"></i> Next Pair
+	</a>
+
+	<ul class="judgetabs nav nav-tabs" id="myTab">
+		<li>
 			<a data-toggle="tab" ng-href="#left">Left</a>
 		</li>
-		<li class="mytab active">
+		<li class="active">
 			<a data-toggle="tab" ng-href="#vs">VS</a>
 		</li>
-		<li class="mytab">
+		<li>
 			<a data-toggle="tab" ng-href="#right">Right</a>
 		</li>
 	</ul>
+
 	<div class="tab-content">
 		<div id="left" class="tab-pane fade">
-			<p class="leftanswer"><span class="renderContent" mathjax-bind="scriptl"></span></p>
+			<div class="answer left" mathjax-bind="scriptl"></div>
 		</div>
 		<div id="vs" class="tab-pane fade active in">
+			<div class="row-fluid">
+				<div class="answer left span6" mathjax-bind="scriptl"></div>
+				<div class="answer right span6" mathjax-bind="scriptr"></div>
+			</div>
 			<div class="versus">
-				<p class="ljanswer"><span class="renderContent" mathjax-bind="scriptl"></span></p>
-
-				<h1 class="inline"><br><br>VS</h1>
-
-				<p class="rjanswer"><span class="renderContent" mathjax-bind="scriptr"></span></p>
 			</div>
 		</div>
 		<div id="right" class="tab-pane fade">
-			<p class="rightanswer"><span class="renderContent" mathjax-bind="scriptr"></span></p>
+			<div class="answer right" mathjax-bind="scriptr"></div>
 		</div>
 	</div>
 
-	<br>
-	
-	<div>
-		Which is Better?
-		<br>
-		<input type="radio" name="pick" ng-model="pick" value="left"> 
-		<span class="whitespace"> <i class="icon-hand-left icon-large"></i> Left       Right <i class="icon-hand-right icon-large"></i></span>
-		<input type="radio" name="pick" ng-model="pick" value="right"> 
-		<br>
-		<a href="" class="submit" ng-click="submit()">
-			<i class="icon-ok icon-large"></i> Submit
-		</a>
-		</form>
-	</div>
+	<h3 class="text-center">Which is Better?</h3>
+	<form class="form-inline">
+		<div class="row-fluid">
+			<div class="span2 offset3">
+				<input id="voteleft" type="radio" name="pick" ng-model="pick" value="left"> 
+				<label for="voteleft">
+					<i class="icon-hand-left icon-large"></i> Left
+				</label>
+			</div>
 
-	<br>
-
-
+			<div class="span2 offset3">
+				<label for="voteright">
+					Right <i class="icon-hand-right icon-large"></i>
+				</label>
+				<input id="voteright" type="radio" name="pick" ng-model="pick" value="right"> 
+			</div>
+		</div>
+		<div class="row-fluid"><div class="span12 pagination-centered">
+			<a class="btn btn-primary" ng-click="submit()">
+				<i class="icon-ok"></i> Submit
+			</a>
+		</div></div>
+	</form>
 
 </div>
 
