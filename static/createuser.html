@@ -1,28 +1,77 @@
 <div>
 	<h2>Create User</h2>
 	
-	<form ng-submit="submit()" name="createUser" class="default" novalidate>
-		<div><label>Role</label>
-		<select name="type" ng-model="usertype" required>
-			<option value="Student">Student</option>
-			<option value="Teacher">Teacher</option>
-		</select>
-		<span class=required>*</span></div>
-		<div><label>Username</label><input type=text name="username" ng-model="username" required>
-			<span class=required>*</span></div>
-		<div><label>First Name</label><input type="text" name="firstname" ng-model="firstname" required>
-			<span class=required>*</span></div>
-		<div><label>Last Name</label><input type="text" name="lastname" ng-model="lastname" required>
-			<span class=required>*</span></div>
-		<div><label>Display Name</label><input type="text" name="display" ng-model="display" required>
-			<span class=required>*</span></div>
-		<div><label>Email</label><input type=text name="email" ng-model="email" ng-click="formaterr=false">
-			<span class=errMsg ng-show="formaterr">Incorrect email format.</span></div>
-		<div><label>Password</label><input type=password name="password" ng-model="password" required>
-			<span class=required>*</span></div>
-		<div><label>RetypePW</label><input type=password name="retypepw" ng-model="retypepw" required>
-			<span class=required>*</span>
-			<span class=errMsg ng-show="(password != retypepw)">The passwords do not match.</span></div>
-		<input type=submit name="submit" value=Confirm ng-disabled="createUser.$invalid">
+	<form ng-submit="submit()" name="createUser" class="form-horizontal" novalidate>
+		<div class="control-group">
+			<label class="control-label" for="roleInput">Role</label>
+			<div class="controls">
+			<select name="type" ng-model="usertype" id="roleInput" required>
+				<option value="Student">Student</option>
+				<option value="Teacher">Teacher</option>
+			</select>
+			</div>
+		</div>
+
+		<div class="control-group">
+			<label class="control-label" for="usernameInput">Username</label>
+			<div class="controls">
+			<input type=text name="username" ng-model="username" id="usernameInput" required>
+			</div>
+		</div>
+
+		<div class="control-group">
+			<label class="control-label" for="firstnameInput">First Name</label>
+			<div class="controls">
+			<input type="text" name="firstname" ng-model="firstname" id="firstnameInput" required>
+			</div>
+		</div>
+
+		<div class="control-group">
+			<label class="control-label" for="lastnameInput">Last Name</label>
+			<div class="controls">
+			<input type="text" name="lastname" ng-model="lastname" id="lastnameInput" required>
+			</div>
+		</div>
+
+		<div class="control-group">
+			<label class="control-label" for="displaynameInput">Display Name</label>
+			<div class="controls">
+			<input type="text" name="display" ng-model="display" id="displaynameInput" required>
+			</div>
+		</div>
+
+		<div class="control-group">
+			<label class="control-label" for="emailInput">Email</label>
+			<div class="controls">
+			<input type=text name="email" id="emailInput" ng-model="email" ng-click="formaterr=false">
+			<p class="text-error" ng-show="formaterr">
+				<span class="label label-important">Error</span>
+				Incorrect email format.
+			</p>
+			</div>
+		</div>
+
+		<div class="control-group">
+			<label class="control-label" for="passwordInput">Password</label>
+			<div class="controls">
+			<input type=password name="password" ng-model="password" id="passwordInput" required>
+			</div>
+		</div>
+
+		<div class="control-group">
+			<label class="control-label" for="retypepwInput">RetypePW</label>
+			<div class="controls">
+			<input type=password name="retypepw" ng-model="retypepw" id="retypepwInput" required>
+			<p class="text-error" ng-show="(password != retypepw)">
+				<span class="label label-important">Error</span>
+				The passwords do not match.</span>
+			</div>
+		</div>
+
+		<div class="control-group">
+			<div class="controls">
+				<input class="btn btn-primary" type=submit name="submit" value=Confirm ng-disabled="createUser.$invalid">
+			</div>
+		</div>
 	</form>
 </div>
