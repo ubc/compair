@@ -954,8 +954,22 @@ myApp.directive("mathjaxBind", function() {
                 $element.html("");
                 $element.append($script);
                 MathJax.Hub.Queue(["Typeset", MathJax.Hub, $element[0]]);
+                //MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
             });
         }]
+        /*compile: function(tElement, tAttrs) {
+        	console.log(tAttrs.mathEquation);
+        	var div = MathJax.HTML.Element(
+        		"div",
+  				{class: "renderContent"},
+  				[tAttrs.mathEquation]
+			);
+			var test = "<div>"+tAttrs.mathEquation+"</div>";
+			tElement.append(div);
+        }*/
+        /*link: function(scope, iElement, iAttrs, controller) {
+        	console.log(iAttrs);
+        }*/
     };
 });
 

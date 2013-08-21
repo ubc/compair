@@ -12,7 +12,8 @@ form {
 
 /***** QUESTION PAGE *****/
 div.questionContent {
-  margin-top: 0.5em; }
+  margin-top: 0.5em;
+  margin-bottom: 1em; }
 
 /***** ANSWERS PAGE *****/
 div.commentsList {
