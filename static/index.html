@@ -23,15 +23,20 @@
 		<script type="text/javascript">
 			jQuery('.myeditor').hallo();
 		</script>
+		<!--[if lte IE 8]>
+		<script>
+			document.createElement('flash-messages');
+		</script>
+		<![endif]-->
 		<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
 		<link rel="stylesheet" type="text/css" href="acj.css" />
 		<link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" />
-		<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/2.1-latest/MathJax.js?config=AM_HTMLorMML"></script>
+		<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/2.2-latest/MathJax.js?config=AM_HTMLorMML"></script>
 	</head>
 	<body>
 		<div class="navbar navbar-static-top" ng-controller="IndexController">
 			<div class="navbar-inner">
-				<a class="brand logo" href="#">a &#60; c &#61; j</a>
+				<a class="brand logo" href="#">ACJ</a>
 				<ul class="nav">
 					<li data-match-route="/judgepage.*"  ng-show="check">
 						<a  href="#/quickjudge">Random Judge</a>
@@ -58,7 +63,7 @@
 		</div>
 			
 		<div id="main">
-			<div flash-messages></div>
+			<flash-messages></flash-messages>
 			<div style="border=1" ng-view=""></div>
 		</div>
 	</body>

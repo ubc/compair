@@ -74,7 +74,7 @@
 			</div>
 
 			<div ng-hide="edit">
-				<h4 mathjax-bind="question.title" math-equation="{{question.title}}"></h4>
+				<h4 mathjax-bind="question.title"></h4>
 				<a ng-click="full=!full" class="btn btn-mini" >
 					<span ng-hide="full">
 						<i class="icon-collapse"></i> Show
@@ -83,7 +83,7 @@
 						<i class="icon-collapse-top"></i> Hide
 					</span>
 				</a>
-				<div class="questionContent" ng-show="full" mathjax-bind="question.content" math-equation="{{question.content}}"></div>
+				<div class="questionContent" ng-show="full" mathjax-bind="question.content""></div>
 			</div>
 
 			<div ng-show="edit">

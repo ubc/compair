@@ -7,7 +7,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 import datetime
 import hashlib
 
-engine = create_engine('mysql://root@localhost/acj', convert_unicode=True, pool_recycle=300)
+engine = create_engine('mysql://testuser:testpw@localhost/acj', convert_unicode=True, pool_recycle=300)
 db_session = scoped_session(sessionmaker (autocommit=False, autoflush=False, bind=engine))
 
 Base = declarative_base()
