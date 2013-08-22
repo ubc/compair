@@ -630,10 +630,10 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 			}
 		});
 	};
-	$scope.delete = function(question) {
+	$scope.remove = function(question) {
 		questionId = question.id;
 		if (confirm("Delete Answer?") == true) {
-			var retval = questionService.delete( {cid: questionId}, function() {
+			var retval = questionService.remove( {cid: questionId}, function() {
 				if (retval.msg) {
 					flashService.flash( "error", "You cannot delete others' questions" )
 				} else {
@@ -721,9 +721,9 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 			}
 		});
 	};
-	$scope.delete = function(script) {
+	$scope.remove = function(script) {
 		if (confirm("Delete Answer?") == true) {
-			var retval = answerService.delete( {qid: script.id}, function() {
+			var retval = answerService.remove( {qid: script.id}, function() {
 				if (retval.msg != 'PASS') {
 					flashService.flash('error', 'The answer was unsuccessfully deleted.');
 				} else {
@@ -787,7 +787,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 	};
 	$scope.delAcom = function(script, comment) {
 		if (confirm("Delete Comment?") == true) {
-			var retval = commentAService.delete( {id: comment.id}, function() {
+			var retval = commentAService.remove( {id: comment.id}, function() {
 				if (retval.msg != 'PASS') {
 					flashService.flash('error', 'The comment was unsuccessfully deleted.');
 				} else {
@@ -799,7 +799,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 	};
 	$scope.delQcom = function(comment) {
 		if (confirm("Delete Comment?") == true) {
-			var retval = commentQService.delete( {id: comment.id}, function() {
+			var retval = commentQService.remove( {id: comment.id}, function() {
 				if (retval.msg != 'PASS') {
 					flashService.flash('error', 'The comment was unsuccessfully deleted.');
 				} else {
@@ -881,7 +881,7 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 		});
 	};
 	$scope.drop = function(user, type) {
-		var retval = enrollService.delete( {id: user.enrolled}, function() {
+		var retval = enrollService.remove( {id: user.enrolled}, function() {
 			if (retval.msg != 'PASS') {
 				flashService.flash('error', 'The user was unsuccessfully dropped.');
 			} else {
