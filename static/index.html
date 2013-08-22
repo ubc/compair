@@ -44,10 +44,10 @@
 					<li data-match-route="/rankpage" >
 						<a  href="#/rankpage">Inter Rank</a>
 					</li>
-					<li data-match-route="/createuser" ng-show="check">
+					<li data-match-route="/createuser" ng-show="check && usertype!='Student'">
 						<a  href="#/createuser">Create User</a>
 					</li>
-					<li data-match-route="/user" ng-show="check">
+					<li data-match-route="/user" ng-show="check && usertype=='Admin'">
 						<a  href="#/user" >User</a>
 					</li>
 				</ul>
@@ -63,6 +63,13 @@
 		</div>
 			
 		<div id="main">
+			<ul class="breadcrumb" ng-controller="IndexController">
+				<li ng-repeat="breadcrumb in breadcrumbs">
+					<a href="#{{breadcrumb.route}}">{{breadcrumb.display}}</a>
+					<span class="divider">/</span> 
+				</li>
+				<li class="active">{{activecrumb}}</li>
+			</ul>
 			<flash-messages></flash-messages>
 			<div style="border=1" ng-view=""></div>
 		</div>

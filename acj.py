@@ -45,6 +45,9 @@ student.description = "Student's permissions"
 apps_needs = [is_admin, is_teacher, is_student]
 apps_permissions = [admin, teacher, student]
 
+currentScriptl = ''
+currentScriptr = ''
+
 class DatetimeEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
@@ -202,11 +205,12 @@ def login():
 	hx = query.password
 	if hasher.check_password( password, hx ):
 		session['username'] = username
+		usertype = query.usertype
 		display = User.query.filter_by(username = username).first().display
 		db_session.rollback()
 		identity = Identity('only_' + query.usertype)
 		identity_changed.send(app, identity=identity)
-		return json.dumps( {"display": display} )
+		return json.dumps( {"display": display, "usertype": usertype} )
 	db_session.rollback()
 	return json.dumps( {"msg": 'Incorrect username or password'} )
 
@@ -302,8 +306,9 @@ def edit_user(id):
 		newpassword = param['password']['new']
 		newpassword = hasher.hash_password( newpassword )
 		user.password = newpassword
+	usertype = user.usertype
 	commit()
-	return json.dumps( {"msg": "PASS"} )
+	return json.dumps( {"msg": "PASS", "usertype": usertype} )
 
 @app.route('/pickscript/<id>', methods=['GET'])
 @student.require(http_exception=401)
@@ -311,6 +316,7 @@ def pick_script(id):
 	query = Script.query.filter_by(qid = id).order_by( Script.count.desc() ).first()
 	question = Question.query.filter_by(id = id).first()
 	course = Course.query.filter_by(id = question.cid).first()
+	samePair = False
 	if not query:
 		retval = json.dumps( {"cid": course.id, "course": course.name, "question": question.content} )
 		db_session.rollback()
@@ -333,7 +339,7 @@ def pick_script(id):
 	# why is this here?
 	# query[2:]
 	fresh = get_fresh_pair( query )
-	if not fresh:
+	if not fresh[0]:
 		print 'judged them all'
 		retval = json.dumps( {"cid": course.id, "question": question.content} ) 
 		db_session.rollback()
@@ -341,6 +347,8 @@ def pick_script(id):
 	print ('freshl: ' + str(fresh[0]))
 	print ('freshr: ' + str(fresh[1]))
 	retval = json.dumps( {"cid": course.id, "course": course.name, "question": question.content, "qtitle": question.title, "sidl": fresh[0], "sidr": fresh[1]} )
+	currentScriptl = fresh[0]
+	currentScriptr = fresh[1]
 	db_session.rollback()
 	return retval
 

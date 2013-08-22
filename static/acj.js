@@ -202,7 +202,8 @@ function InstallController($scope, $location, $cookieStore, flashService, instal
 }
 
 function IndexController($scope, $location, $cookieStore, loginService, logoutService, isInstalled) {
-	var breadCrumbs = [];
+	var allBreadcrumbs = [];
+	$scope.breadcrumbs = [];
 	$scope.dropdown = [
 		{
 			"text": "User Profile",
@@ -215,6 +216,7 @@ function IndexController($scope, $location, $cookieStore, loginService, logoutSe
 		},
 	];
 	var login = loginService.get( function() {
+		$scope.usertype = login.usertype;
 		login = login.display;
 		if (login) {
 			$scope.check = true;
@@ -228,9 +230,10 @@ function IndexController($scope, $location, $cookieStore, loginService, logoutSe
 			$location.path('/install');
 		}
 	});
-	$scope.$on("LOGGED_IN", function(event, display) {
+	$scope.$on("LOGGED_IN", function(event, user) {
 		$scope.check = true;
-		$scope.login = display;
+		$scope.login = user.display;
+		$scope.usertype = user.usertype;
 	});
 	$scope.logout = function() {
 		var logout = logoutService.get( function() {
@@ -242,7 +245,25 @@ function IndexController($scope, $location, $cookieStore, loginService, logoutSe
 		});
 	}
 	$scope.$on("NEW_CRUMB", function(event, crumb) {
-		alert('in new crumb');
+		if (crumb.from === 'judgepage') {
+			$scope.breadcrumbs = allBreadcrumbs.slice();
+			$scope.activecrumb = 'Judgement Time';
+			return;
+		}
+		for (var i = 0; i < allBreadcrumbs.length; i++) {
+			if (crumb.from === allBreadcrumbs[i].from) {
+				allBreadcrumbs = allBreadcrumbs.slice(0, i);
+				break;
+			}
+		}
+		$scope.breadcrumbs = allBreadcrumbs.slice();
+		allBreadcrumbs.push( crumb );
+		$scope.activecrumb = crumb.display;
+	});
+	$scope.$on("JUDGEMENT", function(event) {
+		route = allBreadcrumbs[allBreadcrumbs.length - 1].route;
+		alert(route);
+		$location.path( route );
 	});
 }
 
@@ -258,12 +279,15 @@ function QuickController($scope, $location, flashService, judgeService, pickscri
 	});
 }
 
-function JudgepageController($scope, $cookieStore, $routeParams, $location, flashService, judgeService, pickscriptService) {
+function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $location, flashService, judgeService, pickscriptService) {
 	var questionId = $routeParams.questionId;
 	if (questionId == 0) {
 		$location.path('/');
 		return;
 	}
+
+	$rootScope.$broadcast("NEW_CRUMB", {"from": 'judgepage'});
+
 	var sidl;
 	var sidr;
 	var winner;
@@ -279,7 +303,7 @@ function JudgepageController($scope, $cookieStore, $routeParams, $location, flas
 			} else {
 				flashService.flash( 'error', 'Either you have already judged all of the high-priority scripts OR there are not enough answers to judge. Please come back later' );
 				//$location.path('/');
-				$location.path('/questionpage/' + $scope.cid);
+				$rootScope.$broadcast("JUDGEMENT"); 
 				return;
 			}
 			var script1 = judgeService.get( {scriptId:sidl}, function() {
@@ -305,7 +329,7 @@ function JudgepageController($scope, $cookieStore, $routeParams, $location, flas
 		input = {"sidl": sidl, "sidr": sidr};
 		var temp = judgeService.save( {scriptId:winner}, input, function() {
 			flashService.flash('success', temp.msg);
-			$location.path('/questionpage/' + $scope.cid);
+			$rootScope.$broadcast("JUDGEMENT"); 
 		});
 	};
 }
@@ -328,7 +352,7 @@ function LoginController($rootScope, $cookieStore, $scope, $location, flashServi
 		var user = loginService.save( input, function() {
 			if (user.display) {
 				authService.loginConfirmed();
-				$rootScope.$broadcast("LOGGED_IN", user.display); 
+				$rootScope.$broadcast("LOGGED_IN", user); 
 				$location.path('/');
 			} else {
 				flashService.flash('error', 'Incorrect username or password');
@@ -384,6 +408,9 @@ function UserIndexController($rootScope, $scope, $filter, $q, ngTableParams, use
 }
 
 function UserController($rootScope, $scope, $location, flashService, userService) {
+	var crumb = {"from": "createuser", "display": "Create User", "route": "/createuser"};
+	$rootScope.$broadcast("NEW_CRUMB", crumb);
+
 	$scope.usertypes = ['Student', 'Teacher'];
 	$scope.submit = function() {
 		var re = /[^@]+@[^@]+/;
@@ -420,6 +447,8 @@ function ProfileController($rootScope, $scope, $routeParams, $location, flashSer
 			$scope.usertype = retval.usertype;
 			$scope.loggedType = retval.loggedType;
 			$scope.loggedName = retval.loggedName;
+			var crumb = {"from": "userprofilepage", "display": retval.display + ' Profile', "route": "/userprofile/" + uid};
+			$rootScope.$broadcast("NEW_CRUMB", crumb);
 		} else {
 			flashService.flash('error', 'Invalid User');
 			$location.path('/');
@@ -453,7 +482,10 @@ function ProfileController($rootScope, $scope, $routeParams, $location, flashSer
 				$scope.submitted = false;
 				$scope.email = $scope.newemail;
 				$scope.display = $scope.newdisplay;
-				$rootScope.$broadcast("LOGGED_IN", $scope.newdisplay); 
+				// braodcast only when the new display name is yours
+				if ($scope.loggedName == $scope.username) {
+					$rootScope.$broadcast("LOGGED_IN", {"display": $scope.newdisplay, "usertype": retval.usertype}); 
+				}
 			} else {
 				flashService.flash('error', 'Your profile was unsuccessfully updated.');
 			}
@@ -477,9 +509,12 @@ function RankController($scope, $resource) {
 	});
 }
 
-function CourseController($scope, $cookieStore, courseService, loginService) {
+function CourseController($rootScope, $scope, $cookieStore, courseService, loginService) {
 	// the property by which the list of courses will be sorted
 	$scope.orderProp = 'name';
+
+	var crumb = {"from": "coursepage", "display": 'Courses', "route": "/coursepage"};
+	$rootScope.$broadcast("NEW_CRUMB", crumb);
 
 	var login = loginService.get( function() {
 		type = login.usertype;
@@ -504,7 +539,7 @@ function CourseController($scope, $cookieStore, courseService, loginService) {
 	};
 }
 
-function QuestionController($scope, $location, $routeParams, $filter, flashService, ngTableParams, questionService, loginService) 
+function QuestionController($rootScope, $scope, $location, $routeParams, $filter, flashService, ngTableParams, questionService, loginService) 
 {
 	$scope.orderProp = 'time';
 	$scope.newQuestion = '';
@@ -535,6 +570,8 @@ function QuestionController($scope, $location, $routeParams, $filter, flashServi
 			total: questionData.length,
 			count: 10,
 		});
+		var crumb = {"from": "questionpage", "display": retval.course, "route": "/questionpage/" + courseId};
+		$rootScope.$broadcast("NEW_CRUMB", crumb);
 	});
 	$scope.previewText = function() {
 		$scope.preview = angular.element("div#myquestion").html();
@@ -614,7 +651,7 @@ function QuestionController($scope, $location, $routeParams, $filter, flashServi
 	}, true);
 }
 
-function AnswerController($scope, $routeParams, $http, flashService, answerService, rankService, commentAService, commentQService) {
+function AnswerController($rootScope, $scope, $routeParams, $http, flashService, answerService, rankService, commentAService, commentQService) {
 	var questionId = $routeParams.questionId; 
 
 	$scope.orderProp = 'time';
@@ -633,6 +670,8 @@ function AnswerController($scope, $routeParams, $http, flashService, answerServi
 		if (retval.usertype == 'Teacher' || retval.usertype == 'Admin') {
 			$scope.instructor = true;
 		}
+		var crumb = {"from": "answerpage", "display": retval.qtitle, "route": "/answerpage/" + questionId};
+		$rootScope.$broadcast("NEW_CRUMB", crumb);
 	});
 	$scope.submit = function() {
 		$scope.myanswer = angular.element("#myanswer").html();
@@ -787,7 +826,7 @@ function AnswerController($scope, $routeParams, $http, flashService, answerServi
 	};
 }
 
-function EnrollController($scope, $routeParams, $filter, flashService, ngTableParams, enrollService) {
+function EnrollController($rootScope, $scope, $routeParams, $filter, flashService, ngTableParams, enrollService) {
 	var courseId = $routeParams.courseId; 
 	var teacherData = [];
 	var studentData = [];
@@ -808,6 +847,8 @@ function EnrollController($scope, $routeParams, $filter, flashService, ngTablePa
 			total: teacherData.length,
 			count: 10,
 		});
+		var crumb = {"from": "enrolpage", "display": "Enrol " + retval.course, "route": "/enrollpage/" + courseId};
+		$rootScope.$broadcast("NEW_CRUMB", crumb);
 	});
 	$scope.add = function(user, type) {
 		input = {"uid": user.uid};
@@ -918,6 +959,16 @@ myApp.directive('backButton', function(){
         }
       }
     }
+});
+
+myApp.directive('inputFocus', function() {
+	return {
+		restrict: 'A',
+		
+		link: function(scope, element, attrs) {
+			angular.element(element).focus();
+		}
+	}
 });
  
 myApp.directive('halloEditor', function() {
