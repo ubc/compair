@@ -858,7 +858,6 @@ def csv_user_parser(filename):
 def password_generator(size=16, chars=string.ascii_uppercase + string.ascii_lowercase + string.digits):
 	return ''.join(random.choice(chars) for x in range(size))
 
-@teacher.require(http_exception=401)
 def import_users(list, group=True):
 	schema = {
 		'type': 'object',

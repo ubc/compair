@@ -88,6 +88,11 @@ div.createPosting {
   display: block;
   white-space: normal; }
 
+select.mathtoolbar {
+	margin-bottom: 0em;
+	display: inline-block;
+	margin-right: 1em; }
+
 /***** JUDGE PAGE *****/
 ul.judgetabs {
   margin-top: 1em;

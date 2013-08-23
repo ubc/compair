@@ -180,11 +180,11 @@ function InstallController($scope, $location, $cookieStore, flashService, instal
 			return '';
 		}
 		var re = /[^@]+@[^@]+/;
-		if (!re.exec($scope.email) && $scope.email != undefined && $scope.email != '') {
+		if ($scope.email == undefined || $scope.email == '') {
+			$scope.email = undefined;
+		} else if (!re.exec($scope.email)) {
 			$scope.formaterr = true;
 			return;
-		} else {
-			$scope.email = undefined;
 		}
 		input = {"username": $scope.username, "password": $scope.password, "usertype": 'Admin', "email": $scope.email, "firstname": $scope.firstname, "lastname": $scope.lastname, "display": $scope.display};
 		var user = userService.save( {uid:0}, input, function() {
@@ -1068,7 +1068,19 @@ myApp.directive("mathToolbar", function() {
 		scope: {
 			editor: "@editor",
 		},
-		template: '<div class="btn-group">'+
+		controller: function($scope, $element, $attrs) {
+			$scope.toolbarOption = 'undefined';
+		},
+		template: 
+			'<select ng-model="toolbarOption" class="mathtoolbar">' +
+			'<option value=undefined>(Math Toolbars)</option>'+
+			'<option value="{{editor}}operator">Operators</option>'+
+			'<option value="{{editor}}functions">Functions</option>'+
+			'<option value="{{editor}}calculus">Calculus</option>'+
+			'<option value="{{editor}}inequalities">Inequalities</option>'+
+			'<option value="{{editor}}letters">Letters</option>'+
+			'</select>' +
+			'<div class="btn-group" ng-show="toolbarOption==editor+\'operator\'">'+
 			'<span math-formula math-equation="``" label="(empty)" editor="{{ editor }}"></span>'+
 			'<span math-formula math-equation="`+`" label="`+`" editor="{{ editor }}"></span>'+
 			'<span math-formula math-equation="`-`" label="`-`" editor="{{ editor }}"></span>'+
@@ -1077,7 +1089,7 @@ myApp.directive("mathToolbar", function() {
 			'<span math-formula math-equation="`-:`" label="`-:`" editor="{{ editor }}"></span>'+
 			'<span math-formula math-equation="`1/2`"  label="`1/2`" editor="{{ editor }}"></span>'+
 			'</div>'+
-			'<div class="btn-group">'+
+			'<div class="btn-group" ng-show="toolbarOption==editor+\'functions\'">'+
 			'<span math-formula math-equation="`sin(x)`" label="`sin(x)`" editor="{{ editor }}"></span>'+
 			'<span math-formula math-equation="`cos(x)`" label="`cos(x)`" editor="{{ editor }}"></span>'+
 			'<span math-formula math-equation="`tan(x)`" label="`tan(x)`" editor="{{ editor }}"></span>'+
@@ -1090,7 +1102,7 @@ myApp.directive("mathToolbar", function() {
 			'<span math-formula math-equation="`x_1`" label="`x_1`" editor="{{ editor }}"></span>'+
 			'<span math-formula math-equation="`|x|`" label="`|x|`" editor="{{ editor }}"></span>'+
 			'</div>'+
-			'<div class="btn-group">'+
+			'<div class="btn-group" ng-show="toolbarOption==editor+\'calculus\'">'+
 			'<span math-formula math-equation="`f(x)`" label="`f(x)`" editor="{{ editor }}"></span>'+
 			'<span math-formula math-equation="`sumx`" label="`sumx`" editor="{{ editor }}"></span>'+
 			'<span math-formula math-equation="`sum_(x=0)^(10)x`" label="`sum_(x=0)^(10)x`" editor="{{ editor }}"></span>'+
@@ -1100,7 +1112,7 @@ myApp.directive("mathToolbar", function() {
 			'<span math-formula math-equation="`infty`" label="`infty`" editor="{{ editor }}"></span>'+
 			'<span math-formula math-equation="`((a,b),(c,d))`"  label="`((a,b),(c,d))`" editor="{{ editor }}"></span>'+
 			'</div>'+
-			'<div class="btn-group">'+
+			'<div class="btn-group" ng-show="toolbarOption==editor+\'inequalities\'">'+
 			'<span math-formula math-equation="`<`"  label="`<`" editor="{{ editor }}"></span>'+
 			'<span math-formula math-equation="`<=`"  label="`<=`" editor="{{ editor }}"></span>'+
 			'<span math-formula math-equation="`=`" label="`=`" editor="{{ editor }}"></span>'+
@@ -1108,7 +1120,7 @@ myApp.directive("mathToolbar", function() {
 			'<span math-formula math-equation="`>`"  label="`>`" editor="{{ editor }}"></span>'+
 			'<span math-formula math-equation="`>=`"  label="`>=`" editor="{{ editor }}"></span>'+
 			'</div>'+
-			'<div class="btn-group">'+
+			'<div class="btn-group" ng-show="toolbarOption==editor+\'letters\'">'+
 			'<span math-formula math-equation="`alpha`"  label="`alpha`" editor="{{ editor }}"></span>'+
 			'<span math-formula math-equation="`beta`" label="`beta`" editor="{{ editor }}"></span>'+
 			'<span math-formula math-equation="`delta`" label="`delta`" editor="{{ editor }}"></span>'+
@@ -1124,7 +1136,5 @@ myApp.directive("mathToolbar", function() {
 			'<span math-formula math-equation="`omega`" label="`omega`" editor="{{ editor }}"></span>'+
 			'<span math-formula math-equation="`Delta`" label="`Delta`" editor="{{ editor }}"></span>'+
 			'<span math-formula math-equation="`Omega`" label="`Omega`" editor="{{ editor }}"></span></div>',
-		controller: function($scope, $element, $attrs) {
-		}
 	};
 });
