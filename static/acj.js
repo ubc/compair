@@ -31,7 +31,7 @@ myApp.factory('allUserService', function($resource) {
 });
 
 myApp.factory('pickscriptService', function($resource) {
-	return $resource( '/pickscript/:qid' );
+	return $resource( '/pickscript/:qid/:sidl/:sidr', {sidl: 0, sidr: 0} );
 });
 
 myApp.factory('rankService', function($resource) {
@@ -262,7 +262,6 @@ function IndexController($scope, $location, $cookieStore, loginService, logoutSe
 	});
 	$scope.$on("JUDGEMENT", function(event) {
 		route = allBreadcrumbs[allBreadcrumbs.length - 1].route;
-		alert(route);
 		$location.path( route );
 	});
 }
@@ -306,14 +305,7 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 				$rootScope.$broadcast("JUDGEMENT"); 
 				return;
 			}
-			var script1 = judgeService.get( {scriptId:sidl}, function() {
-					content = script1.content;
-					$scope.scriptl = content;
-			});
-			var script2 = judgeService.get( {scriptId:sidr}, function() {
-					content = script2.content;
-					$scope.scriptr = content;
-			});
+			loadscripts();
 		});
 	};
 	$scope.getscript();
@@ -330,6 +322,28 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 		var temp = judgeService.save( {scriptId:winner}, input, function() {
 			flashService.flash('success', temp.msg);
 			$rootScope.$broadcast("JUDGEMENT"); 
+		});
+	};
+	$scope.nextpair = function() {
+		var retval = pickscriptService.get( {qid: questionId, sidl: sidl, sidr: sidr}, function() {
+			if (retval.sidl) {
+				sidl = retval.sidl;
+				sidr = retval.sidr;
+				loadscripts();
+			} else if (retval.nonew) {
+				flashService.flash('error', 'This is the only fresh pair in this question');
+				return;
+			}
+		});
+	};
+	loadscripts = function() {
+		var script1 = judgeService.get( {scriptId:sidl}, function() {
+				content = script1.content;
+				$scope.scriptl = content;
+		});
+		var script2 = judgeService.get( {scriptId:sidr}, function() {
+				content = script2.content;
+				$scope.scriptr = content;
 		});
 	};
 }
@@ -1011,7 +1025,7 @@ myApp.directive("mathjaxBind", function() {
                     .html(value == undefined ? "" : value);
                 $element.html("");
                 $element.append($script);
-                MathJax.Hub.Queue(["Typeset", MathJax.Hub, $element[0]]);
+                //MathJax.Hub.Queue(["Typeset", MathJax.Hub, $element[0]]);
                 //MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
             });
         }]

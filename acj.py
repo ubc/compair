@@ -45,9 +45,6 @@ student.description = "Student's permissions"
 apps_needs = [is_admin, is_teacher, is_student]
 apps_permissions = [admin, teacher, student]
 
-currentScriptl = ''
-currentScriptr = ''
-
 class DatetimeEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
@@ -310,51 +307,55 @@ def edit_user(id):
 	commit()
 	return json.dumps( {"msg": "PASS", "usertype": usertype} )
 
-@app.route('/pickscript/<id>', methods=['GET'])
+@app.route('/pickscript/<id>/<sl>/<sr>', methods=['GET'])
 @student.require(http_exception=401)
-def pick_script(id):
-	query = Script.query.filter_by(qid = id).order_by( Script.count.desc() ).first()
+def pick_script(id, sl, sr):
+	query = hi_priority_pool(id, 10)
 	question = Question.query.filter_by(id = id).first()
 	course = Course.query.filter_by(id = question.cid).first()
-	samePair = False
 	if not query:
 		retval = json.dumps( {"cid": course.id, "course": course.name, "question": question.content} )
 		db_session.rollback()
 		return retval
-	max = query.count
-	query = Script.query.filter_by(qid = id).order_by( Script.count ).first()
-	min = query.count
-	print ('max: ' + str(max))
-	print ('min: ' + str(min))
-	if max == min:
-		max = max + 1 
-	query = Script.query.filter_by(qid = id).order_by( Script.count ).limit(10).all()
-	index = 0
-	for script in query:
-		if script.count >= max:
-			query[:index]
-			break
-		index = index + 1
-	shuffle( query )
-	# why is this here?
-	# query[2:]
-	fresh = get_fresh_pair( query )
-	if not fresh[0]:
+	print ('sl: ' + str(sl))
+	print ('sr: ' + str(sr))
+	fresh = get_fresh_pair( query, sl, sr )
+	if not fresh:
 		print 'judged them all'
 		retval = json.dumps( {"cid": course.id, "question": question.content} ) 
 		db_session.rollback()
 		return retval
+	if fresh == 'SAME PAIR':
+		print 'same pair'
+		db_session.rollback()
+		return json.dumps( {"nonew": 'No new pair'} ) 
 	print ('freshl: ' + str(fresh[0]))
 	print ('freshr: ' + str(fresh[1]))
 	retval = json.dumps( {"cid": course.id, "course": course.name, "question": question.content, "qtitle": question.title, "sidl": fresh[0], "sidr": fresh[1]} )
-	currentScriptl = fresh[0]
-	currentScriptr = fresh[1]
 	db_session.rollback()
 	return retval
 
+def hi_priority_pool(id, size):
+	script = Script.query.filter_by(qid = id).order_by( Script.count.desc() ).first()
+	max = script.count
+	script = Script.query.filter_by(qid = id).order_by( Script.count ).first()
+	min = script.count
+	if max == min:
+		max = max + 1
+	scripts = Script.query.filter_by(qid = id).order_by( Script.count ).limit( size ).all()
+	index = 0
+	for script in scripts:
+		if script.count >= max:
+			scripts[:index]
+			break
+		index = index + 1
+	shuffle( scripts )
+	return scripts
+
 @student.require(http_exception=401)
-def get_fresh_pair( scripts ):
+def get_fresh_pair(scripts, cursidl, cursidr):
 	uid = User.query.filter_by(username = session['username']).first().id
+	samepair = False
 	index = 0
 	for scriptl in scripts:
 		index = index + 1
@@ -374,9 +375,14 @@ def get_fresh_pair( scripts ):
 						sidl = temp
 					query = Judgement.query.filter_by(uid = uid).filter_by(sidl = sidl).filter_by(sidr = sidr).first()
 					if not query:
+						if sidr == int(cursidr) and sidl == int(cursidl):
+							samepair = True
+							continue
 						db_session.rollback()
 						return [sidl, sidr]
 	db_session.rollback()
+	if (samepair):
+		return 'SAME PAIR'
 	return ''
 
 @app.route('/randquestion')
@@ -408,8 +414,11 @@ def random_question():
 		print ('in loop, lowest0: ' + str(lowest0))
 		print ('in loop, lowest1: ' + str(lowest1))
 		query = Script.query.filter_by(qid = qid).order_by( Script.count ).limit(10).all()
-		fresh = get_fresh_pair( query )
+		shuffle( query )
+		fresh = get_fresh_pair( query, 0, 0 )
 		if fresh:
+			print ('if fresh, fresh[0]: ' + str(fresh[0]))
+			print ('if fresh, fresh[1]: ' + str(fresh[1]))
 			sum = Script.query.filter_by(id = fresh[0]).first().count + Script.query.filter_by(id = fresh[1]).first().count
 			if lowest0 == '':
 				lowest0 = sum
@@ -420,7 +429,7 @@ def random_question():
 				print ('in if, lowest1: ' + str(lowest1))
 				if lowest0 > lowest1:
 					retqid = qid
-				continue
+				break
 	print ('Out of scripts loop')
 	if lowest0 != '':
 		print ('retval: ' + str(retqid))
