@@ -12,22 +12,22 @@
 
 	<h2>Judge Page</h2>
 
-	<h3>{{qtitle}}</h3>
+	<h3 id="stepTitle">{{qtitle}}</h3>
 
-	<div class="questionContent" mathjax-bind="question"></div>
+	<div id="stepContent" class="questionContent" mathjax-bind="question"></div>
 
-	<a class="btn" ng-click="nextpair()">
+	<a id="stepNext" class="btn" ng-click="nextpair()">
 		<i class="icon-random"></i> Next Pair
 	</a>
 
 	<ul class="judgetabs nav nav-tabs" id="myTab">
-		<li>
+		<li id="stepLeft">
 			<a data-toggle="tab" ng-href="#left">Left</a>
 		</li>
-		<li class="active">
+		<li class="active" id="stepVS">
 			<a data-toggle="tab" ng-href="#vs">VS</a>
 		</li>
-		<li>
+		<li id="stepRight">
 			<a data-toggle="tab" ng-href="#right">Right</a>
 		</li>
 	</ul>
@@ -37,7 +37,7 @@
 			<div class="answer left" mathjax-bind="scriptl"></div>
 		</div>
 		<div id="vs" class="tab-pane fade active in">
-			<div class="row-fluid">
+			<div class="row-fluid" id="stepAnswers">
 				<div class="answer left span6" mathjax-bind="scriptl"></div>
 				<div class="answer right span6" mathjax-bind="scriptr"></div>
 			</div>
@@ -51,7 +51,7 @@
 
 	<h3 class="text-center">Which is Better?</h3>
 	<form class="form-inline">
-		<div class="row-fluid">
+		<div class="row-fluid" id="stepPick">
 			<div class="span2 offset3">
 				<input id="voteleft" type="radio" name="pick" ng-model="pick" value="left"> 
 				<label for="voteleft">
@@ -67,7 +67,7 @@
 			</div>
 		</div>
 		<div class="row-fluid"><div class="span12 pagination-centered">
-			<a class="btn btn-primary" ng-click="submit()">
+			<a class="btn btn-primary" ng-click="submit()" id="stepSubmit">
 				<i class="icon-ok"></i> Submit
 			</a>
 		</div></div>

@@ -404,6 +404,9 @@ def random_question():
 	retqid = ''
 	lowest1 = ''
 	for script in scripts:
+		if lowest0 == 0:
+			print('lowest == 0: break')
+			break
 		qid = script.qid
 		question = Question.query.filter_by( id = qid ).first()
 		if user.usertype != 'Admin':
@@ -428,8 +431,9 @@ def random_question():
 				lowest1 = sum
 				print ('in if, lowest1: ' + str(lowest1))
 				if lowest0 > lowest1:
+					print ('NEW LOWEST0')
+					lowest0 = lowest1
 					retqid = qid
-				break
 	print ('Out of scripts loop')
 	if lowest0 != '':
 		print ('retval: ' + str(retqid))

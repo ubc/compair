@@ -9,7 +9,7 @@
 
 	<h2>Question Page</h2>
 
-	<div class="navbar">
+	<div class="navbar" id="stepNav">
 		<form class="form-search searchCourse">
 			Search Question:
 			<input class="search-query" type="text" ng-model="search.title">
@@ -59,13 +59,14 @@
 			<p class="authorHeader"><strong>{{question.author}}</strong> - {{question.time}}</p>
 
 			<div class="opbuttons">
-				<a href="#/answerpage/{{question.id}}" class="btn btn-info btn-small"> 
+				<a href="#/answerpage/{{question.id}}" class="btn btn-info btn-small" id="stepAnswer"> 
 					<i class="icon-puzzle-piece icon-large"></i> Answer Page
 				</a>
-				<a href="#/judgepage/{{question.id}}" class="btn btn-inverse btn-small"> 
+				<a href="#/judgepage/{{question.id}}" class="btn btn-inverse btn-small" id="stepJudge"> 
 					<i class="icon-legal icon-large"></i> Judge Answers
 				</a>
-				<a class="btn btn-small" ng-show="login == question.author || instructor" ng-click="edit=!edit;newtitle=question.title;newquestion=question.content">
+				<a class="btn btn-small" ng-show="login == question.author || instructor" 
+					ng-click="edit=!edit;newtitle=question.title;newquestion=question.content">
 					<i class="icon-edit-sign icon-large"></i> Edit
 				</a>
 				<a class="btn btn-danger btn-small" ng-show="login == question.author || instructor" ng-click="remove(question)">
@@ -74,16 +75,16 @@
 			</div>
 
 			<div ng-hide="edit">
-				<h4 mathjax-bind="question.title"></h4>
+				<h4 mathjax-bind="question.title" id="stepTitle"></h4>
 				<a ng-click="full=!full" class="btn btn-mini" >
-					<span ng-hide="full">
+					<span ng-hide="full" id="stepShow">
 						<i class="icon-collapse"></i> Show
 					</span>
-					<span ng-show="full">
+					<span ng-show="full" id="stepHide">
 						<i class="icon-collapse-top"></i> Hide
 					</span>
 				</a>
-				<div class="questionContent" ng-show="full" mathjax-bind="question.content""></div>
+				<div class="questionContent" ng-show="full" mathjax-bind="question.content" id="stepContent"></div>
 			</div>
 
 			<div ng-show="edit">

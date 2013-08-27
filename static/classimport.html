@@ -1,14 +1,14 @@
 <div ng-hide="resultPage">
 <h3>Instructions</h3>
 <ul class="instructions">
-	<li>Import the class list in a CSV (.csv) or text (.txt) format</li>
+	<li id="stepFormat">Import the class list in a CSV (.csv) or text (.txt) format</li>
 	<li>Please format the class list in the format below.</li>
 	<ul class="instructions">
 		<li>Username,First Name,Last Name,Email</li>
 	</ul>
 </ul>
 <h3>Example</h3>
-<pre class="instructions">
+<pre class="instructions" id="stepExample">
 username1,firstname1,lastname1,1@email.com
 username2,firstname2,lastname2,2@email.com
 username3,firstname3,lastname3,3@email.com
@@ -18,16 +18,16 @@ username4,firstname4,lastname4,4@email.com
 <form ng-upload action="/userimport" enctype=multipart/form-data class="default" name="importUser" novalidate>
 	<div>
 		<label>File</label>
-		<input type=file name=file>
+		<input id="stepBrowse" type=file name=file>
 	</div>
 	<div>
 	<label>Courses</label>
-	<select ng-model="course" name="course" required>
+	<select ng-model="course" name="course" required id="stepCourses">
 		<option ng-repeat="c in courses" value="{{c.id}}">{{ c.name }}</option>	
 	</select>
 	</div>
 	<span class=errMsg ng-show="submitted && importUser.course.$invalid">Please select your desired course.</span>
-	<input type=submit value=Upload upload-submit="uploadComplete(content)" ng-click="submitted=true">
+	<input id="stepUpload" type=submit value=Upload upload-submit="uploadComplete(content)" ng-click="submitted=true">
 </form>
 </div>
 <div ng-show="resultPage">

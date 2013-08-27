@@ -1,7 +1,7 @@
 <div class="errFlash span12" ng-show="flash">{{ flash }}</div>
 <h2>Courses</h2>
 
-<div class="navbar">
+<div class="navbar"	id="step1">
 	<form class="form-search searchCourse">
 		Search Course: 
 		<input class="search-query" type="text" ng-model="cquery">
@@ -26,23 +26,25 @@
 		<b>{{course.name}}</b>
 	</td>
 	<td>
-		<a class="btn btn-success" href="#/questionpage/{{course.id}}">
+		<a class="btn btn-success" href="#/questionpage/{{course.id}}" id="step2">
 			<i class="icon-question-sign"></i> Questions
 		</a>
 	</td>
 	<td ng-show="instructor">
-		<a class="btn" href="#/enrollpage/{{course.id}}">
+		<a id="step3" class="btn" href="#/enrollpage/{{course.id}}">
 			<i class="icon-plus-sign"></i>
 			Enrol Users
 		</a>
+
 	</td>
 	<td ng-show="instructor">
-		<a class="btn" href="#/classimport">
-			<i class="icon-upload"></i>
-			Import Students
+		<a id="step4" class="btn" href="#/classimport">
+			<i class="icon-upload"></i> Import Students
 		</a>
 	</td>
 </tr>
 </tbody>
 </table>
+
+
 

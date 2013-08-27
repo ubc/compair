@@ -11,14 +11,14 @@
 	</ul>
 	<h2>Answer Page</h2>
 
-	<h3><div mathjax-bind="qtitle"></h3>
+	<h3 id="stepTitle"><div mathjax-bind="qtitle"></h3>
 	
-	<div class="questionContent" mathjax-bind="question"></div>
+	<div id="stepContent" class="questionContent" mathjax-bind="question"></div>
 
-	<a href="" class="btn btn-success" ng-click="check=!check">
+	<a href="" class="btn btn-success" ng-click="check=!check" id="stepAnswer">
 		<i class="icon-puzzle-piece icon-large"></i> Submit Answer
 	</a>
-	<a href="#/judgepage/{{qid}}" class="btn btn-inverse"> 
+	<a href="#/judgepage/{{qid}}" class="btn btn-inverse" id="stepJudge"> 
 		<i class="icon-legal icon-large"></i> Judge Answers
 	</a>
 	<a title="Comments" class="btn" ng-click="getQcomments();qcomm=!qcomm">
@@ -88,7 +88,7 @@
 	<h3>Answers</h3>
 
 	<div class="btn_spacing">
-	<a class="btn" ng-click="temp=orderProp;orderProp=nextOrder;nextOrder=temp">
+	<a class="btn" ng-click="temp=orderProp;orderProp=nextOrder;nextOrder=temp" id="stepOrder">
 		<i class="icon-sort-by-attributes"></i> By {{nextOrder}}
 	</a>
 	</div>

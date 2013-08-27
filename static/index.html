@@ -17,10 +17,12 @@
 		<link rel="stylesheet" type="text/css" href="ng-table.css" />
 		<script src="angular-flash.js"></script>
 		<script src="ng-upload.min.js"></script>
+		<script src="//cdn.jsdelivr.net/intro.js/0.5.0/intro.min.js"></script>
 		<script src="acj.js" type="text/javascript"></script>
 		<link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap.min.css" rel="stylesheet">
 		<link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap-responsive.min.css" rel="stylesheet">
 		<link href="//mgcrea.github.com/angular-strap/css/prettify.css" rel="stylesheet">
+		<link href="//cdnjs.cloudflare.com/ajax/libs/intro.js/0.5.0/introjs.min.css" rel="stylesheet">
 		<script type="text/javascript">
 			jQuery('.myeditor').hallo();
 		</script>
@@ -39,6 +41,9 @@
 			<div class="navbar-inner">
 				<a class="brand logo" href="#">ACJ</a>
 				<ul class="nav">
+					<li ng-show="hastutorial">
+						<a href="" ng-click="tutorial()">Tutorial</a>
+					</li>
 					<li data-match-route="/judgepage.*"  ng-show="check">
 						<a  href="#/quickjudge">Random Judge</a>
 					</li>
