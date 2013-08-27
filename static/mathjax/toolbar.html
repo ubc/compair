@@ -7,7 +7,7 @@
 	<option value="{{editor}}letters">Letters</option>
 </select>
 
-<div class="btn-group">
+<div class="btn-group" ng-if="toolbarOption==editor+'operator'">
 	<span math-formula math-equation="``" label="(empty)" editor="{{ editor }}"></span>
 	<span math-formula math-equation="`+`" label="`+`" editor="{{ editor }}"></span>
 	<span math-formula math-equation="`-`" label="`-`" editor="{{ editor }}"></span>
@@ -17,7 +17,7 @@
 	<span math-formula math-equation="`1/2`"  label="`1/2`" editor="{{ editor }}"></span>
 </div>
 
-<div class="btn-group">
+<div class="btn-group" ng-if="toolbarOption==editor+'functions'">
 	<span math-formula math-equation="`sin(x)`" label="`sin(x)`" editor="{{ editor }}"></span>
 	<span math-formula math-equation="`cos(x)`" label="`cos(x)`" editor="{{ editor }}"></span>
 	<span math-formula math-equation="`tan(x)`" label="`tan(x)`" editor="{{ editor }}"></span>
@@ -31,7 +31,7 @@
 	<span math-formula math-equation="`|x|`" label="`|x|`" editor="{{ editor }}"></span>
 </div>
 
-<div class="btn-group">
+<div class="btn-group" ng-if="toolbarOption==editor+'calculus'">
 	<span math-formula math-equation="`f(x)`" label="`f(x)`" editor="{{ editor }}"></span>
 	<span math-formula math-equation="`sumx`" label="`sumx`" editor="{{ editor }}"></span>
 	<span math-formula math-equation="`sum_(x=0)^(10)x`" label="`sum_(x=0)^(10)x`" editor="{{ editor }}"></span>
@@ -42,7 +42,7 @@
 	<span math-formula math-equation="`((a,b),(c,d))`"  label="`((a,b),(c,d))`" editor="{{ editor }}"></span>
 </div>
 
-<div class="btn-group">
+<div class="btn-group" ng-if="toolbarOption==editor+'inequalities'">
 	<span math-formula math-equation="`<`"  label="`<`" editor="{{ editor }}"></span>
 	<span math-formula math-equation="`<=`"  label="`<=`" editor="{{ editor }}"></span>
 	<span math-formula math-equation="`=`" label="`=`" editor="{{ editor }}"></span>
@@ -51,7 +51,7 @@
 	<span math-formula math-equation="`>=`"  label="`>=`" editor="{{ editor }}"></span>
 </div>
 
-<div class="btn-group">
+<div class="btn-group" ng-if="toolbarOption==editor+'letters'">
 	<span math-formula math-equation="`alpha`"  label="`alpha`" editor="{{ editor }}"></span>
 	<span math-formula math-equation="`beta`" label="`beta`" editor="{{ editor }}"></span>
 	<span math-formula math-equation="`delta`" label="`delta`" editor="{{ editor }}"></span>

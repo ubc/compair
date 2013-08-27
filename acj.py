@@ -69,7 +69,7 @@ def index():
 
 @app.route('/isinstalled')
 def is_installed():
-	if os.access('tmp/installed.txt', os.W_OK):
+	if os.access('tmp/installed.txt', os.F_OK):
 		return json.dumps({'installed': True})
 	return json.dumps({'installed': False})
 

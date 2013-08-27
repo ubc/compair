@@ -11,7 +11,7 @@
 	</ul>
 	<h2>Answer Page</h2>
 
-	<h3>{{qtitle}}</h3> 
+	<h3><div mathjax-bind="qtitle"></h3>
 	
 	<div class="questionContent" mathjax-bind="question"></div>
 
@@ -140,7 +140,7 @@
 							<div math-toolbar editor="editacom{{comment.id}}" class="mathtoolbar btn-group"></div>
 							<div hallo-editor name="editacom" ng-model="newAcom" id="editacom{{comment.id}}" class="edit entries"></div>
 						</div>
-						<a href="" class="submit comment" ng-show="editAC" ng-click="editAcom(script, comment, newAcom);editAC=false">
+						<a href="" class="btn btn-primary submit comment" ng-show="editAC" ng-click="editAcom(script, comment, newAcom);editAC=false">
 							<i class="icon-ok-sign icon-large"></i> Submit
 						</a>
 					</li>

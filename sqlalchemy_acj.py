@@ -91,7 +91,7 @@ class Question(Entry):
 	__tablename__ = 'Question'
 	id = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'), primary_key=True)
 	cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
-	title = Column(String(80))
+	title = Column(String(255))
 
 	__mapper_args__ = {
 		'polymorphic_identity': 'Question',
