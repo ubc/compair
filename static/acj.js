@@ -1,4 +1,4 @@
-var myApp = angular.module('myApp', ['flash', 'ngResource', 'ngTable', 'http-auth-interceptor', 'ngCookies', 'ngUpload', '$strap.directives']);
+var myApp = angular.module('myApp', ['flash', 'ngRoute', 'ngResource', 'ngTable', 'http-auth-interceptor', 'ngCookies', 'ngUpload', '$strap.directives']);
 
 //Global Variables
 
