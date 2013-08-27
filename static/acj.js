@@ -1025,8 +1025,7 @@ myApp.directive("mathjaxBind", function() {
                     .html(value == undefined ? "" : value);
                 $element.html("");
                 $element.append($script);
-                //MathJax.Hub.Queue(["Typeset", MathJax.Hub, $element[0]]);
-                //MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub, $element[0]]);
             });
         }]
         /*compile: function(tElement, tAttrs) {
@@ -1085,70 +1084,6 @@ myApp.directive("mathToolbar", function() {
 		controller: function($scope, $element, $attrs) {
 			$scope.toolbarOption = 'undefined';
 		},
-		template: 
-			'<select ng-model="toolbarOption" class="mathtoolbar">' +
-			'<option value=undefined>(Math Toolbars)</option>'+
-			'<option value="{{editor}}operator">Operators</option>'+
-			'<option value="{{editor}}functions">Functions</option>'+
-			'<option value="{{editor}}calculus">Calculus</option>'+
-			'<option value="{{editor}}inequalities">Inequalities</option>'+
-			'<option value="{{editor}}letters">Letters</option>'+
-			'</select>' +
-			'<div class="btn-group" ng-show="toolbarOption==editor+\'operator\'">'+
-			'<span math-formula math-equation="``" label="(empty)" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`+`" label="`+`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`-`" label="`-`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`*`" label="`*`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`xx`" label="`xx`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`-:`" label="`-:`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`1/2`"  label="`1/2`" editor="{{ editor }}"></span>'+
-			'</div>'+
-			'<div class="btn-group" ng-show="toolbarOption==editor+\'functions\'">'+
-			'<span math-formula math-equation="`sin(x)`" label="`sin(x)`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`cos(x)`" label="`cos(x)`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`tan(x)`" label="`tan(x)`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`log(x)`" label="`log(x)`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`log_2(x)`" label="`log_2(x)`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`ln(x)`" label="`ln(x)`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`sqrt(x)`" label="`sqrt(x)`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`root(3)(x^2)`" label="`root(3)(x^2)`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`x^2`" label="`x^2`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`x_1`" label="`x_1`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`|x|`" label="`|x|`" editor="{{ editor }}"></span>'+
-			'</div>'+
-			'<div class="btn-group" ng-show="toolbarOption==editor+\'calculus\'">'+
-			'<span math-formula math-equation="`f(x)`" label="`f(x)`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`sumx`" label="`sumx`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`sum_(x=0)^(10)x`" label="`sum_(x=0)^(10)x`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`intx`" label="`intx`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`int_(x=0)^(10)x`" label="`int_(x=0)^(10)x`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`lim_(x->1)(x^2-1)/(x-1)`" label="`lim_(x->1)(x^2-1)/(x-1)`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`infty`" label="`infty`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`((a,b),(c,d))`"  label="`((a,b),(c,d))`" editor="{{ editor }}"></span>'+
-			'</div>'+
-			'<div class="btn-group" ng-show="toolbarOption==editor+\'inequalities\'">'+
-			'<span math-formula math-equation="`<`"  label="`<`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`<=`"  label="`<=`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`=`" label="`=`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`!=`" label="`!=`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`>`"  label="`>`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`>=`"  label="`>=`" editor="{{ editor }}"></span>'+
-			'</div>'+
-			'<div class="btn-group" ng-show="toolbarOption==editor+\'letters\'">'+
-			'<span math-formula math-equation="`alpha`"  label="`alpha`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`beta`" label="`beta`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`delta`" label="`delta`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`epsilon`" label="`epsilon`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`gamma`" label="`gamma`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`theta`" label="`theta`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`lambda`" label="`lambda`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`mu`" label="`mu`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`pi`" label="`pi`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`sigma`" label="`sigma`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`tau`" label="`tau`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`phi`" label="`phi`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`omega`" label="`omega`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`Delta`" label="`Delta`" editor="{{ editor }}"></span>'+
-			'<span math-formula math-equation="`Omega`" label="`Omega`" editor="{{ editor }}"></span></div>',
+		templateUrl: 'mathjax/toolbar.html',
 	};
 });
