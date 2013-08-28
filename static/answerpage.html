@@ -11,9 +11,11 @@
 	</ul>
 	<h2>Answer Page</h2>
 
-	<h3 id="stepTitle"><div mathjax-bind="qtitle"></h3>
+	<div id="stepTitle">
+		<h3 id="stepTitle"><div mathjax-bind="qtitle"></h3>
 	
-	<div id="stepContent" class="questionContent" mathjax-bind="question"></div>
+		<div class="questionContent" mathjax-bind="question"></div>
+	</div>
 
 	<a href="" class="btn btn-success" ng-click="check=!check" id="stepAnswer">
 		<i class="icon-puzzle-piece icon-large"></i> Submit Answer

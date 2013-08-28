@@ -203,8 +203,6 @@ function InstallController($scope, $location, $cookieStore, flashService, instal
 
 function IndexController($rootScope, $scope, $location, $cookieStore, loginService, logoutService, isInstalled) {
 	$rootScope.intro = introJs();
-	$rootScope.hastutorial = true;
-	$scope.hastutorial = $rootScope.hastutorial;
 
 	var allBreadcrumbs = [];
 	$scope.breadcrumbs = [];
@@ -268,12 +266,25 @@ function IndexController($rootScope, $scope, $location, $cookieStore, loginServi
 		route = allBreadcrumbs[allBreadcrumbs.length - 1].route;
 		$location.path( route );
 	});
+	var steps = '';
+	var intro = '';
+	$scope.$on("STEPS", function(event, val) {
+		$scope.hastutorial = true;
+		steps = val.steps;
+		intro = val.intro;
+	});
+	$scope.$on("NO_TUTORIAL", function(event, val) {
+		alert('no tutorial');
+		$scope.hastutorial = false;
+	});
 	$scope.tutorial = function() {
+		steps.unshift({element: '#stepTutorial', intro: intro});
+		$rootScope.intro.setOption("steps", steps);
 		$rootScope.intro.start();
 	}
-	$rootScope.$watch('hastutorial', function(val) {
-		$scope.hastutorial = val;
-	});
+	//$rootScope.$watch('hastutorial', function(val) {
+	//	$scope.hastutorial = val;
+	//});
 }
 
 function QuickController($scope, $location, flashService, judgeService, pickscriptService, quickService) {
@@ -316,46 +327,42 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 				return;
 			}
 			loadscripts();
-			$rootScope.intro.setOptions({
-				steps: [
-					{
-						element: '#stepTitle',
-						intro: "Question Title",
-					},
-					{
-						element: '#stepContent',
-						intro: "Question Content",
-					},
-					{
-						element: '#stepNext',
-						intro: "Get another pair of answers in this question",
-					},
-					{
-						element: '#stepVS',
-						intro: "By default, it is in Versus view",
-					},
-					{
-						element: '#stepAnswers',
-						intro: "Both answers are displayed side-by-side in Versus view",
-					},
-					{
-						element: '#stepLeft',
-						intro: "Display the left answer only",
-					},
-					{
-						element: '#stepRight',
-						intro: "Display the right answer only",
-					},
-					{
-						element: '#stepPick',
-						intro: "Pick the winner: Right or left?",
-					},
-					{
-						element: '#stepSubmit',
-						intro: "Don't forget to submit your judgement",
-					},
-				]
-			});
+			var steps = [
+				{
+					element: '#stepTitle',
+					intro: "Question title and content",
+				},
+				{
+					element: '#stepNext',
+					intro: "Get another pair of answers from this question",
+				},
+				{
+					element: '#stepViews',
+					intro: "There are 3 different view modes. By default, it is in Versus view",
+				},
+				{
+					element: '#stepVS',
+					intro: "Display the pair side-by-side",
+				},
+				{
+					element: '#stepLeft',
+					intro: "Display the left answer only",
+				},
+				{
+					element: '#stepRight',
+					intro: "Display the right answer only",
+				},
+				{
+					element: '#stepPick',
+					intro: "Pick the winner: Right answer or left answer?",
+				},
+				{
+					element: '#stepSubmit',
+					intro: "Once you have picked a winner, submit your judgement",
+				},
+			];
+			var intro = "You will be presented with a random pair of answers from the question. Note that your own answer will not show up and you can judge the same pair only once. Examine both answers carefully and make your judgement."
+			$rootScope.$broadcast("STEPS", { "steps": steps, "intro": intro });
 		});
 	};
 	$scope.getscript();
@@ -399,7 +406,7 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 }
 
 function LoginController($rootScope, $cookieStore, $scope, $location, flashService, loginService, authService, isInstalled) {
-	$rootScope.hastutorial = false;
+	$rootScope.$broadcast("NO_TUTORIAL", false);
 
 	var installed = isInstalled.get( function() {
 		if (!installed.installed) {
@@ -428,7 +435,7 @@ function LoginController($rootScope, $cookieStore, $scope, $location, flashServi
 }
 
 function UserIndexController($rootScope, $scope, $filter, $q, ngTableParams, userService, allUserService) {
-	$rootScope.hastutorial = true;
+	$rootScope.$broadcast("NO_TUTORIAL", false);
 
 	var allUsers = allUserService.get( function() {
 		$scope.allUsers = allUsers.users;
@@ -476,7 +483,7 @@ function UserIndexController($rootScope, $scope, $filter, $q, ngTableParams, use
 }
 
 function UserController($rootScope, $scope, $location, flashService, userService) {
-	$rootScope.hastutorial = false; 
+	$rootScope.$broadcast("NO_TUTORIAL", false); 
 
 	var crumb = {"from": "createuser", "display": "Create User", "route": "/createuser"};
 	$rootScope.$broadcast("NEW_CRUMB", crumb);
@@ -507,7 +514,7 @@ function UserController($rootScope, $scope, $location, flashService, userService
 }
 
 function ProfileController($rootScope, $scope, $routeParams, $location, flashService, userService, passwordService) {
-	$rootScope.hastutorial = false; 
+	$rootScope.$broadcast("NO_TUTORIAL", false); 
 
 	var uid = $routeParams.userId;
 	var retval = userService.get( {uid: uid}, function() {
@@ -554,7 +561,7 @@ function ProfileController($rootScope, $scope, $routeParams, $location, flashSer
 				$scope.submitted = false;
 				$scope.email = $scope.newemail;
 				$scope.display = $scope.newdisplay;
-				// braodcast only when the new display name is yours
+				// broadcast only when the new display name is yours
 				if ($scope.loggedName == $scope.username) {
 					$rootScope.$broadcast("LOGGED_IN", {"display": $scope.newdisplay, "usertype": retval.usertype}); 
 				}
@@ -582,7 +589,6 @@ function RankController($scope, $resource) {
 }
 
 function CourseController($rootScope, $scope, $cookieStore, courseService, loginService) {
-	$rootScope.hastutorial = true; 
 	// the property by which the list of courses will be sorted
 	$scope.orderProp = 'name';
 
@@ -592,40 +598,40 @@ function CourseController($rootScope, $scope, $cookieStore, courseService, login
 	var login = loginService.get( function() {
 		type = login.usertype;
 		var steps = [];
+		var intro = '';
 		if (type && (type=='Teacher' || type=='Admin')) {
 			$scope.instructor = true;
 			steps = [
 				{
 					element: '#step1',
-					intro: 'You can search courses and create a new course',
+					intro: 'Create a new course',
+					position: 'left',
 				},
 				{
 					element: '#step2',
-					intro: "View questions for this course",
+					intro: "Go to Question Page to view questions and create questions",
 				},
 				{
 					element: '#step3',
-					intro: "Enrol students or drop students from this course",
+					intro: "Go to Enrol Page to enrol students or drop students",
 				},
 				{
 					element: "#step4",
-					intro: "Import students from the server?",
+					intro: "Go to Import Page to import students from a file",
 				},
 			];
+			intro = "Lists all the courses you are enrolled in. As an instructor, creating a new course is also an option. From here you can go to Question Page, Enrolment Page, or Import Page.";
 		} else {
 			$scope.instructor = false;
 			steps = [
 				{
-					element: '#step1',
-					intro: 'You can search courses',
-				},
-				{
 					element: '#step2',
-					intro: "View questions for this course",
+					intro: "Go to Question Page to view questions and create question",
 				},
 			];
+			intro = "Lists all the courses you are enrolled in. From here, you can go to Question Page.";
 		}
-		$rootScope.intro.setOptions({ steps: steps });
+		$rootScope.$broadcast("STEPS", {"steps": steps, "intro": intro});
 	});
 	var courses = courseService.get( function() {
 		$scope.courses = courses.courses;
@@ -644,8 +650,6 @@ function CourseController($rootScope, $scope, $cookieStore, courseService, login
 
 function QuestionController($rootScope, $scope, $location, $routeParams, $filter, flashService, ngTableParams, questionService, loginService) 
 {
-	$rootScope.hastutorial = true; 
-
 	$scope.orderProp = 'time';
 	$scope.newQuestion = '';
 	var questionData = [];
@@ -661,29 +665,27 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 			var steps = [
 				{
 					element: '#stepNav',
-					intro: 'Search question by title. Anyone can create question',
+					intro: 'Create a question',
+					position: 'left',
 				},
 				{
 					element: '#stepTitle',
-					intro: "Title of the question",
-				},
-				{
-					element: '#stepShow',
-					intro: "Click to show content of the question",
+					intro: "Question's title and content which can be displayed by clicking Show",
 				},
 				{
 					element: '#stepAnswer',
-					intro: "Read others' answers or create your own answer",
+					intro: "Go to Answer Page to submit answers and view answers submitted by others",
 				},
 				{
 					element: '#stepJudge',
-					intro: "Judgement Time!\nYou can also judge from Answer Page",
+					intro: "Go to Judge Page to judge submitted answers",
 				},
 			];
 			if (login.usertype == 'Teacher' || login.usertype == 'Admin') {
 				$scope.instructor = true;
 			}
-			$rootScope.intro.setOptions( { steps: steps} );
+			var intro = "All the questions for this course are listed here. You can create a question or answer existing questions by going to Answer Page. You can also access Judge Page from this page.";
+			$rootScope.$broadcast("STEPS", {"steps": steps, "intro": intro});
 		} else {
 			$scope.login = '';
 		}
@@ -782,37 +784,31 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 function AnswerController($rootScope, $scope, $routeParams, $http, flashService, answerService, rankService, commentAService, commentQService) {
 	var questionId = $routeParams.questionId; 
 
-	$rootScope.hastutorial = true; 
-
 	$scope.orderProp = 'time';
 	$scope.nextOrder = 'score';
 	
 	$scope.newScript = '';
 
-	$rootScope.intro.setOptions({
-		steps: [
-			{
-				element: '#stepTitle',
-				intro: "Title of the question",
-			},
-			{
-				element: '#stepContent',
-				intro: "Content of the question",
-			},
-			{
-				element: '#stepAnswer',
-				intro: "Answer the question yourself",
-			},
-			{
-				element: '#stepJudge',
-				intro: "Judgement Time!\nYou can also judge from Question Page",
-			},
-			{
-				element: '#stepOrder',
-				intro: "Order by Time or by Score. Default value is by Time",
-			},
-		]
-	});
+	var steps = [
+		{
+			element: '#stepTitle',
+			intro: "Title and content of the question",
+		},
+		{
+			element: '#stepAnswer',
+			intro: "Submit your answer",
+		},
+		{
+			element: '#stepJudge',
+			intro: "Go to Judge Page to judge submitted answers",
+		},
+		{
+			element: '#stepOrder',
+			intro: "Re-order answers by Time or by Score. By default, answers are ordered by Time",
+		},
+	];
+	var intro = "All the subitted answers for the question are listed here. Submit your answer or judge others' answers by going to Judge Page. You can also leave comments on the question or any of the submitted answers.";
+	$rootScope.$broadcast("STEPS", {"steps": steps, "intro": intro}); 
 
 	var retval = rankService.get( {qid: questionId}, function() {
 		$scope.qid = questionId;
@@ -982,7 +978,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 }
 
 function EnrollController($rootScope, $scope, $routeParams, $filter, flashService, ngTableParams, enrollService) {
-	$rootScope.hastutorial = false; 
+	$rootScope.$broadcast("NO_TUTORIAL", false); 
 
 	var courseId = $routeParams.courseId; 
 	var teacherData = [];
@@ -1075,34 +1071,24 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 }
 
 function ImportController($rootScope, $scope, $routeParams, $http, flashService, courseService) {
-	$rootScope.hastutorial = true; 
-
 	courses = courseService.get(function() {
 		$scope.courses = courses.courses;
-		$rootScope.intro.setOptions({
-			steps: [
-				{
-					element: '#stepBrowse',
-					intro: "Browse and choose a file to import data from",
-				},
-				{
-					element: '#stepFormat',
-					intro: "Make sure the file is in either .csv or .txt format",
-				},
-				{
-					element: '#stepExample',
-					intro: "Make sure to list Username, First name, Last name, Email in order",
-				},
-				{
-					element: '#stepCourses',
-					intro: "Which course are you importing users to?",
-				},
-				{
-					element: '#stepUpload',
-					intro: "Don't forget to click upload",
-				},
-			]
-		});
+		var steps = [
+			{
+				element: '#stepBrowse',
+				intro: "Choose a .txt or .csv file",
+			},
+			{
+				element: '#stepCourses',
+				intro: "Choose the target course",
+			},
+			{
+				element: '#stepUpload',
+				intro: "Click to import users to the chosen course",
+			},
+		];
+		var intro = "As an instructor, you can import students which will enrol them to your course automatically. Read the instructions and make sure that your file follows the format.";
+		$rootScope.$broadcast("STEPS", {"steps": steps, "intro": intro}); 
 	});
 	$scope.resultPage = false;
 	$scope.uploadComplete = function(content) {

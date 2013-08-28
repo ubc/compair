@@ -12,15 +12,17 @@
 
 	<h2>Judge Page</h2>
 
-	<h3 id="stepTitle">{{qtitle}}</h3>
+	<div id="stepTitle">
+		<h3>{{qtitle}}</h3>
 
-	<div id="stepContent" class="questionContent" mathjax-bind="question"></div>
+		<div class="questionContent" mathjax-bind="question"></div>
+	</div>
 
 	<a id="stepNext" class="btn" ng-click="nextpair()">
 		<i class="icon-random"></i> Next Pair
 	</a>
 
-	<ul class="judgetabs nav nav-tabs" id="myTab">
+	<ul id="stepViews" class="judgetabs nav nav-tabs" id="myTab">
 		<li id="stepLeft">
 			<a data-toggle="tab" ng-href="#left">Left</a>
 		</li>
@@ -37,7 +39,7 @@
 			<div class="answer left" mathjax-bind="scriptl"></div>
 		</div>
 		<div id="vs" class="tab-pane fade active in">
-			<div class="row-fluid" id="stepAnswers">
+			<div class="row-fluid">
 				<div class="answer left span6" mathjax-bind="scriptl"></div>
 				<div class="answer right span6" mathjax-bind="scriptr"></div>
 			</div>
@@ -49,9 +51,9 @@
 		</div>
 	</div>
 
-	<h3 class="text-center">Which is Better?</h3>
 	<form class="form-inline">
 		<div class="row-fluid" id="stepPick">
+			<h3 class="text-center">Which is Better?</h3>
 			<div class="span2 offset3">
 				<input id="voteleft" type="radio" name="pick" ng-model="pick" value="left"> 
 				<label for="voteleft">

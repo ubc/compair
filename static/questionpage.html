@@ -9,18 +9,18 @@
 
 	<h2>Question Page</h2>
 
-	<div class="navbar" id="stepNav">
+	<div class="navbar">
 		<form class="form-search searchCourse">
 			Search Question:
 			<input class="search-query" type="text" ng-model="search.title">
 		</form>
-		<a href="" class="btn btn-success pull-right" ng-click="check=!check">
+		<a href="" class="btn btn-success pull-right" ng-click="check=!check" id="stepNav">
 			<i class="icon-question-sign icon-large"></i> Create Question
 		</a>
 	</div>
 
 	<div ng-show="check">
-		<form class="createQuestion" name="createQuestion" ng-submit="submit()"  novalidate>
+		<form class="createQuestion" name="createQuestion" ng-submit="submit()" novalidate>
 			<label for="questionTitle">Question Title: </label>
 			<input id="questionTitle" type="text" name="title" ng-model="title" required />
 			<p class="text-error"
@@ -74,17 +74,17 @@
 				</a>
 			</div>
 
-			<div ng-hide="edit">
-				<h4 mathjax-bind="question.title" id="stepTitle"></h4>
+			<div ng-hide="edit" id="stepTitle">
+				<h4 mathjax-bind="question.title"></h4>
 				<a ng-click="full=!full" class="btn btn-mini" >
-					<span ng-hide="full" id="stepShow">
+					<span ng-hide="full">
 						<i class="icon-collapse"></i> Show
 					</span>
-					<span ng-show="full" id="stepHide">
+					<span ng-show="full">
 						<i class="icon-collapse-top"></i> Hide
 					</span>
 				</a>
-				<div class="questionContent" ng-show="full" mathjax-bind="question.content" id="stepContent"></div>
+				<div class="questionContent" ng-show="full" mathjax-bind="question.content"></div>
 			</div>
 
 			<div ng-show="edit">

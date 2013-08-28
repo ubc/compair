@@ -1,13 +1,13 @@
 <div class="errFlash span12" ng-show="flash">{{ flash }}</div>
 <h2>Courses</h2>
 
-<div class="navbar"	id="step1">
+<div class="navbar">
 	<form class="form-search searchCourse">
 		Search Course: 
 		<input class="search-query" type="text" ng-model="cquery">
 	</form>
 
-	<a ng-click="check = !check" class="btn pull-right" ng-show="instructor" ng-disabled="check">
+	<a ng-click="check = !check" class="btn pull-right" ng-show="instructor" ng-disabled="check" id="step1">
 		<i class="icon-book"></i> Create Course
 	</a>
 </div>
