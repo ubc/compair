@@ -1222,7 +1222,7 @@ myApp.directive("mathFormula", function() {
 			label: "@label"
 		},
 		template: '<span ng-click="add()" class="btn btn-default" mathjax-bind="label"></span>',
-		controller: function($scope, $element, $attrs, formulaService) {
+		controller: function($scope, $element, $attrs) {
 			$scope.add = function() {
 				var textarea = angular.element("div#"+$scope.editor);
 				textarea.append($scope.equation);
