@@ -41,8 +41,7 @@
 			<a class="btn btn-info" ng-click="previewText(); showpreview=true;">
 				<i class="icon-eye-open"></i> Preview
 			</a>
-			<a class="btn btn-primary" ng-click="submit(); submitted=true"
-				ng-disabled="createQuestion.$invalid">
+			<a class="btn btn-primary" ng-click="submit(); submitted=true">
 				<i class="icon-ok"></i> Submit
 			</a>
 
@@ -100,7 +99,7 @@
 				<div math-toolbar editor="question{{question.id}}" class="mathtoolbar btn-group"></div>
 				<div hallo-editor name="question" ng-model="newquestion" id="question{{question.id}}" class="entries"></div>
 				<p class="text-error" 
-					ng-show="submitted && createQuestion.question.$error.required">
+					ng-show="submitted && !newquestion">
 					<span class="label label-important">
 						Error
 					</span>

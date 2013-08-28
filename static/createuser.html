@@ -6,9 +6,9 @@
 			<label class="control-label" for="roleInput">Role</label>
 			<div class="controls">
 			<select name="type" ng-model="usertype" id="roleInput" required>
-				<option value="Student">Student</option>
-				<option value="Teacher">Teacher</option>
+				<option ng-repeat="type in usertypes" value="{{type}}">{{ type }}</option>
 			</select>
+			<span class="help-block required" ng-show="createUser.type.$invalid">A user type is required</span>
 			</div>
 		</div>
 
@@ -16,6 +16,7 @@
 			<label class="control-label" for="usernameInput">Username</label>
 			<div class="controls">
 			<input type=text name="username" ng-model="username" id="usernameInput" required>
+			<span class="help-block required" ng-show="createUser.username.$error.required">A username is required.</span>
 			</div>
 		</div>
 
@@ -23,6 +24,7 @@
 			<label class="control-label" for="firstnameInput">First Name</label>
 			<div class="controls">
 			<input type="text" name="firstname" ng-model="firstname" id="firstnameInput" required>
+			<span class="help-block required" ng-show="createUser.firstname.$error.required">First name is required.</span>
 			</div>
 		</div>
 
@@ -30,6 +32,7 @@
 			<label class="control-label" for="lastnameInput">Last Name</label>
 			<div class="controls">
 			<input type="text" name="lastname" ng-model="lastname" id="lastnameInput" required>
+			<span class="help-block required" ng-show="createUser.lastname.$error.required">Last name is required.</span>
 			</div>
 		</div>
 
@@ -37,6 +40,7 @@
 			<label class="control-label" for="displaynameInput">Display Name</label>
 			<div class="controls">
 			<input type="text" name="display" ng-model="display" id="displaynameInput" required>
+			<span class="help-block required" ng-show="createUser.display.$error.required">Display name is required.</span>
 			</div>
 		</div>
 
@@ -55,6 +59,7 @@
 			<label class="control-label" for="passwordInput">Password</label>
 			<div class="controls">
 			<input type=password name="password" ng-model="password" id="passwordInput" required>
+			<span class="help-block required" ng-show="createUser.password.$error.required">A password is required.</span>
 			</div>
 		</div>
 
@@ -65,12 +70,13 @@
 			<p class="text-error" ng-show="(password != retypepw)">
 				<span class="label label-important">Error</span>
 				The passwords do not match.</span>
+			</p>
 			</div>
 		</div>
 
 		<div class="control-group">
 			<div class="controls">
-				<input class="btn btn-primary" type=submit name="submit" value=Confirm ng-disabled="createUser.$invalid">
+				<input class="btn btn-primary" type=submit name="submit" value="Confirm" ng-disabled="createUser.$invalid">
 			</div>
 		</div>
 	</form>

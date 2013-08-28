@@ -52,7 +52,7 @@ ul.postingsList {
   list-style-type: none;
   margin: 1em 0; }
 
-ul.postingsList li {
+ul.postingsList > li {
   margin-bottom: 1em;
   padding: 0.5em;
   border-radius: 5px;
@@ -114,3 +114,8 @@ ul.judgetabs li {
 /***** FLASH MESSAGES *****/
 ol#flash-messages {
 	list-style-type: none;}
+
+/***** FORMS *****/
+span.required {
+	color: #990044;
+}

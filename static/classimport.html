@@ -23,11 +23,25 @@ username4,firstname4,lastname4,4@email.com
 	<div>
 	<label>Courses</label>
 	<select ng-model="course" name="course" required id="stepCourses">
+<form ng-upload action="/userimport" enctype=multipart/form-data class="form-horizontal" name="importUser" novalidate>
+	<div class="control-group">
+		<label class="control-label" for="stepBrowse">File</label>
+		<div class="controls"><input type=file name=file id="stepBrowse"></div>
+	</div>
+	<div class="control-group">
+	<label class="control-label" for="stepCourses">Courses</label>
+	<div class="controls">
+	<select ng-model="course" name="course" id="stepCourses" required>
 		<option ng-repeat="c in courses" value="{{c.id}}">{{ c.name }}</option>	
 	</select>
+	<span class="help-block required" ng-show="importUser.course.$invalid">Please select your desired course.</span>
 	</div>
-	<span class=errMsg ng-show="submitted && importUser.course.$invalid">Please select your desired course.</span>
-	<input id="stepUpload" type=submit value=Upload upload-submit="uploadComplete(content)" ng-click="submitted=true">
+	</div>
+	<div class="control-group">
+		<div class="controls">
+			<input class="btn btn-primary" id="stepUpload" type=submit value=Upload upload-submit="uploadComplete(content)" ng-disabled="importUser.$invalid">
+		</div>
+	</div>
 </form>
 </div>
 <div ng-show="resultPage">

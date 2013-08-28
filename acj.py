@@ -243,11 +243,25 @@ def all_users():
 	db_session.rollback()
 	return json.dumps( {'users': users})
 
+@app.route('/admin', methods=['POST'])
+def create_admin():
+	result = import_users([request.json], False)
+	file = open('tmp/installed.txt', 'w+')
+	return json.dumps(result)
+
+@app.route('/roles')
+@teacher.require(http_exception=401)
+def roles():
+	query = User.query.filter_by(username = session['username']).first()
+	roles = ['Student','Teacher']
+	if query.usertype == 'Admin':
+		roles.append('Admin')
+	return json.dumps({'roles': roles})
+
 @app.route('/user/<id>', methods=['POST'])
+@teacher.require(http_exception=401)
 def create_user(id):
 	result = import_users([request.json], False)
-	if not os.access('tmp/installed.txt', os.W_OK) and result['success']:
-		file = open('tmp/installed.txt', 'w+')
 	return json.dumps(result)
 
 @app.route('/user/<id>', methods=['PUT'])

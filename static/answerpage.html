@@ -62,6 +62,11 @@
 			<form name="addCommentQ" novalidate>
 				<div math-toolbar editor="myQcomment" class="mathtoolbar btn-group"></div>
 				<div hallo-editor name="qcom" ng-model="myQcomment" id="myQcomment" class="entries"></div>
+				<p class="text-error" ng-show="newQcomment && !myQcomment">
+				<span class="label label-important">Error</span>
+					Please enter a comment.
+				</p>
+
 				<a href="" class="btn btn-primary" ng-click="makeQcomment(myQcomment);newQcomment=true">
 					<i class="icon-ok"></i> Submit
 				</a>

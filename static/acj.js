@@ -6,6 +6,10 @@ myApp.factory('installService', function($resource) {
 	return $resource( '/install' );
 });
 
+myApp.factory('createAdmin', function($resource) {
+	return $resource( '/admin' );
+});
+
 myApp.factory('isInstalled', function($resource) {
 	return $resource( '/isinstalled' );
 });
@@ -20,6 +24,10 @@ myApp.factory('loginService', function($resource) {
 
 myApp.factory('logoutService', function($resource) {
 	return $resource( '/logout' );
+});
+
+myApp.factory('roleService', function($resource) {
+	return $resource( '/roles' );
 });
 
 myApp.factory('userService', function($resource) {
@@ -73,8 +81,8 @@ myApp.factory('passwordService', function($resource) {
 myApp.factory('flashService', function(flash) {
 	return {
 		flash: function (type, msg) {
-				type = 'alert alert-' + type + ' text-center';
-				flash([{ level: type, text: msg}]);
+			type = 'alert alert-' + type + ' text-center';
+			flash([{ level: type, text: msg}]);
 		}		
 	};
 });
@@ -168,7 +176,7 @@ myApp.directive('authLogin', function($location, $cookieStore) {
 	}
 });
 
-function InstallController($scope, $location, $cookieStore, flashService, installService, userService, isInstalled) {
+function InstallController($scope, $location, $cookieStore, flashService, installService, createAdmin, isInstalled) {
 	var criteria = installService.get( function() {
 		//$scope.username = criteria.username;
 		$scope.requirements = criteria.requirements;
@@ -187,7 +195,7 @@ function InstallController($scope, $location, $cookieStore, flashService, instal
 			return;
 		}
 		input = {"username": $scope.username, "password": $scope.password, "usertype": 'Admin', "email": $scope.email, "firstname": $scope.firstname, "lastname": $scope.lastname, "display": $scope.display};
-		var user = userService.save( {uid:0}, input, function() {
+		var user = createAdmin.save( input, function() {
 			$scope.flash = user.flash;
 			if (!user.msg && !$scope.flash) {
 				$scope.done = true;
@@ -482,13 +490,14 @@ function UserIndexController($rootScope, $scope, $filter, $q, ngTableParams, use
 	}, true);
 }
 
-function UserController($rootScope, $scope, $location, flashService, userService) {
+function UserController($rootScope, $scope, $location, flashService, roleService, userService) {
 	$rootScope.$broadcast("NO_TUTORIAL", false); 
-
 	var crumb = {"from": "createuser", "display": "Create User", "route": "/createuser"};
 	$rootScope.$broadcast("NEW_CRUMB", crumb);
 
-	$scope.usertypes = ['Student', 'Teacher'];
+	retval = roleService.get(function() {
+		$scope.usertypes = retval.roles;
+	});
 	$scope.submit = function() {
 		var re = /[^@]+@[^@]+/;
 		if ($scope.email == undefined || $scope.email == '') {
@@ -504,7 +513,7 @@ function UserController($rootScope, $scope, $location, flashService, userService
 		var user = userService.save( {uid:0}, input, function() {
 			if (user.success.length > 0) {
 				flashService.flash('success', 'User created successfully');
-				$location.path('/user');
+				$location.path('/');
 			} else if (!user.error[0].validation) {
 				flashService.flash("error", user.error[0].msg);
 			}
@@ -709,7 +718,8 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 	}
 	$scope.submit = function() {
 		$scope.question = angular.element("div#myquestion").html();
-		if (!$scope.title || !$scope.question) {
+		newstring = angular.element("div#myquestion").text();
+		if (!$scope.title || !newstring) {
 			return ''
 		}
 		input = {"title": $scope.title, "content": $scope.question};
@@ -731,8 +741,9 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 	};
 	$scope.editquestion = function(newtitle, newquestion, question) {
 		newquestion = angular.element("#question"+question.id).html();
+		newstring = angular.element("#question"+question.id).text(); // ignore tags
 		input = {"title": newtitle, "content": newquestion};
-		if (!newtitle || newquestion == '<br>') {
+		if (!newtitle || !newstring) {
 			return '';
 		}
 		var retval = questionService.put( {cid: question.id}, input, function() {
@@ -826,7 +837,8 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 	});
 	$scope.submit = function() {
 		$scope.myanswer = angular.element("#myanswer").html();
-		if (!$scope.myanswer) {
+		newstring = angular.element("#myanswer").text();
+		if (!newstring) {
 			return '';
 		}
 		input = {"content": $scope.myanswer};
@@ -847,6 +859,10 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 	}
 	$scope.editscript = function(script, newanswer) {
 		newanswer = angular.element("#editScript"+script.id).html();
+		newstring = angular.element("#editScript"+script.id).text();
+		if (!newstring) {
+			return '';
+		}
 		input = {"content": newanswer};
 		var retval = answerService.put( {qid: script.id}, input, function() {
 			if (retval.msg != 'PASS') {
@@ -891,7 +907,8 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 	};
 	$scope.makeAcomment = function(script, mycomment) {
 		mycomment = angular.element("#newacom"+script.id).html();
-		if (!mycomment) {
+		newstring = angular.element("#newacom"+script.id).text();
+		if (!newstring) {
 			return '';
 		}
 		input = {"content": mycomment};
@@ -907,8 +924,9 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 	};
 	$scope.makeQcomment = function(myQcomment) {
 		myQcomment = angular.element("#myQcomment").html();
+		newstring = angular.element("#myQcomment").text();
 		input = {"content": myQcomment};
-		if (!myQcomment) {
+		if (!newstring) {
 			return '';
 		}
 		var retval = commentQService.save( {id: questionId}, input, function() {
@@ -948,6 +966,10 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 	};
 	$scope.editQcom = function(comment, newcontent) {
 		newcontent = angular.element("#editqcom"+comment.id).html();
+		newstring = angular.element("#editqcom"+comment.id).text();
+		if (!newstring) {
+			return '';
+		}
 		input = {"content": newcontent};
 		var retval = commentQService.put( {id: comment.id}, input, function() {
 			if (retval.msg != 'PASS') {
@@ -963,6 +985,10 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 	};
 	$scope.editAcom = function(script, comment, newcontent) {
 		newcontent = angular.element("#editacom"+comment.id).html();
+		newstring = angular.element("#editacom"+comment.id).text();
+		if (!newstring) {
+			return '';
+		}
 		input = {"content": newcontent};
 		var retval = commentAService.put( {id: comment.id}, input, function() {
 			if (retval.msg != 'PASS') {
@@ -1183,19 +1209,6 @@ myApp.directive("mathjaxBind", function() {
                 MathJax.Hub.Queue(["Typeset", MathJax.Hub, $element[0]]);
             });
         }]
-        /*compile: function(tElement, tAttrs) {
-        	console.log(tAttrs.mathEquation);
-        	var div = MathJax.HTML.Element(
-        		"div",
-  				{class: "renderContent"},
-  				[tAttrs.mathEquation]
-			);
-			var test = "<div>"+tAttrs.mathEquation+"</div>";
-			tElement.append(div);
-        }*/
-        /*link: function(scope, iElement, iAttrs, controller) {
-        	console.log(iAttrs);
-        }*/
     };
 });
 
@@ -1209,21 +1222,10 @@ myApp.directive("mathFormula", function() {
 			label: "@label"
 		},
 		template: '<span ng-click="add()" class="btn btn-default" mathjax-bind="label"></span>',
-		controller: function($scope, $element, $attrs) {
+		controller: function($scope, $element, $attrs, formulaService) {
 			$scope.add = function() {
 				var textarea = angular.element("div#"+$scope.editor);
 				textarea.append($scope.equation);
-				/*var sel, range;
-				if (window.getSelection) {
-					sel = window.getSelecton();
-					if (sel.getRangeAt && sel.rangeCount) {
-						range = sel.getRangeAt(0);
-						range.deleteContents();
-						range.insertNode(document.createTextNode($scope.equation));
-					}
-				} else if {
-					document.selection.createRange().text() = $scope.equation;
-				}*/
 			};
 		}
 	};
