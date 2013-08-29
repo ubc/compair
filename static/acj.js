@@ -275,18 +275,16 @@ function IndexController($rootScope, $scope, $location, $cookieStore, loginServi
 		$location.path( route );
 	});
 	var steps = '';
-	var intro = '';
 	$scope.$on("STEPS", function(event, val) {
 		$scope.hastutorial = true;
 		steps = val.steps;
-		intro = val.intro;
+		var intro = val.intro;
+		steps.unshift({element: '#stepTutorial', intro: intro});
 	});
 	$scope.$on("NO_TUTORIAL", function(event, val) {
-		alert('no tutorial');
 		$scope.hastutorial = false;
 	});
 	$scope.tutorial = function() {
-		steps.unshift({element: '#stepTutorial', intro: intro});
 		$rootScope.intro.setOption("steps", steps);
 		$rootScope.intro.start();
 	}
@@ -606,10 +604,17 @@ function CourseController($rootScope, $scope, $cookieStore, courseService, login
 
 	var login = loginService.get( function() {
 		type = login.usertype;
-		var steps = [];
-		var intro = '';
 		if (type && (type=='Teacher' || type=='Admin')) {
 			$scope.instructor = true;
+		} else {
+			$scope.instructor = false;
+		}
+	});
+	var courses = courseService.get( function() {
+		var steps = [];
+		var intro = '';
+		$scope.courses = courses.courses;
+		if ( $scope.instructor ) {
 			steps = [
 				{
 					element: '#step1',
@@ -631,7 +636,6 @@ function CourseController($rootScope, $scope, $cookieStore, courseService, login
 			];
 			intro = "Lists all the courses you are enrolled in. As an instructor, creating a new course is also an option. From here you can go to Question Page, Enrolment Page, or Import Page.";
 		} else {
-			$scope.instructor = false;
 			steps = [
 				{
 					element: '#step2',
@@ -640,10 +644,10 @@ function CourseController($rootScope, $scope, $cookieStore, courseService, login
 			];
 			intro = "Lists all the courses you are enrolled in. From here, you can go to Question Page.";
 		}
+		if ( courses.courses.length < 1 ) {
+			steps = [];
+		}
 		$rootScope.$broadcast("STEPS", {"steps": steps, "intro": intro});
-	});
-	var courses = courseService.get( function() {
-		$scope.courses = courses.courses;
 	});
 	$scope.submit = function() {
 		input = {"name": $scope.course};
@@ -671,6 +675,28 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 	var login = loginService.get( function() {
 		if (login.display) {
 			$scope.login= login.display;
+			if (login.usertype == 'Teacher' || login.usertype == 'Admin') {
+				$scope.instructor = true;
+			}
+
+		} else {
+			$scope.login = '';
+		}
+	});
+
+	var retval = questionService.get( {cid: courseId}, function() {
+		$scope.course = retval.course;
+		$scope.questions = retval.questions;
+		questionData = retval.questions;
+		$scope.questionParams = new ngTableParams({
+			page: 1,
+			total: questionData.length,
+			count: 10,
+		});
+		var crumb = {"from": "questionpage", "display": retval.course, "route": "/questionpage/" + courseId};
+		$rootScope.$broadcast("NEW_CRUMB", crumb);
+		var steps = [];
+		if ( retval.questions.length > 0 ) {
 			var steps = [
 				{
 					element: '#stepNav',
@@ -690,27 +716,9 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 					intro: "Go to Judge Page to judge submitted answers",
 				},
 			];
-			if (login.usertype == 'Teacher' || login.usertype == 'Admin') {
-				$scope.instructor = true;
-			}
-			var intro = "All the questions for this course are listed here. You can create a question or answer existing questions by going to Answer Page. You can also access Judge Page from this page.";
-			$rootScope.$broadcast("STEPS", {"steps": steps, "intro": intro});
-		} else {
-			$scope.login = '';
 		}
-	});
-
-	var retval = questionService.get( {cid: courseId}, function() {
-		$scope.course = retval.course;
-		$scope.questions = retval.questions;
-		questionData = retval.questions;
-		$scope.questionParams = new ngTableParams({
-			page: 1,
-			total: questionData.length,
-			count: 10,
-		});
-		var crumb = {"from": "questionpage", "display": retval.course, "route": "/questionpage/" + courseId};
-		$rootScope.$broadcast("NEW_CRUMB", crumb);
+		var intro = "All the questions for this course are listed here. You can create a question or answer existing questions by going to Answer Page. You can also access Judge Page from this page.";
+		$rootScope.$broadcast("STEPS", {"steps": steps, "intro": intro});
 	});
 	$scope.previewText = function() {
 		$scope.preview = angular.element("div#myquestion").html();

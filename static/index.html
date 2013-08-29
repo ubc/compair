@@ -66,16 +66,16 @@
 					</li>
 				</ul>
 			</div>
-		</div>
-			
-		<div id="main">
-			<ul class="breadcrumb" ng-controller="IndexController">
+			<ul class="breadcrumb">
 				<li ng-repeat="breadcrumb in breadcrumbs">
 					<a href="#{{breadcrumb.route}}">{{breadcrumb.display}}</a>
 					<span class="divider">/</span> 
 				</li>
 				<li class="active">{{activecrumb}}</li>
 			</ul>
+		</div>
+			
+		<div id="main">
 			<flash-messages></flash-messages>
 			<div style="border=1" ng-view=""></div>
 		</div>
