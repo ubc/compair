@@ -176,7 +176,8 @@ myApp.directive('authLogin', function($location, $cookieStore) {
 	}
 });
 
-function InstallController($scope, $location, $cookieStore, flashService, installService, createAdmin, isInstalled) {
+function InstallController($rootScope, $scope, $location, $cookieStore, flashService, installService, createAdmin, isInstalled) {
+	$rootScope.breadcrumb = ['Installer'];
 	var criteria = installService.get( function() {
 		//$scope.username = criteria.username;
 		$scope.requirements = criteria.requirements;
@@ -312,13 +313,13 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 		return;
 	}
 
-	$rootScope.$broadcast("NEW_CRUMB", {"from": 'judgepage'});
-
 	var sidl;
 	var sidr;
 	var winner;
 	$scope.getscript = function() {
 		var retval = pickscriptService.get( {qid: questionId}, function() {
+			var title = retval.qtitle.length > 80 ? retval.qtitle.slice(0, 79) + '...' : retval.qtitle;
+			$rootScope.breadcrumb = ['Judge', retval.course, title];
 			$scope.course = retval.course;
 			$scope.cid = retval.cid;
 			$scope.question = retval.question;
@@ -412,6 +413,7 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 }
 
 function LoginController($rootScope, $cookieStore, $scope, $location, flashService, loginService, authService, isInstalled) {
+	$rootScope.breadcrumb = ['Login'];
 	$rootScope.$broadcast("NO_TUTORIAL", false);
 
 	var installed = isInstalled.get( function() {
@@ -442,6 +444,7 @@ function LoginController($rootScope, $cookieStore, $scope, $location, flashServi
 
 function UserIndexController($rootScope, $scope, $filter, $q, ngTableParams, userService, allUserService) {
 	$rootScope.$broadcast("NO_TUTORIAL", false);
+	$rootScope.breadcrumb = ['Users'];
 
 	var allUsers = allUserService.get( function() {
 		$scope.allUsers = allUsers.users;
@@ -490,8 +493,7 @@ function UserIndexController($rootScope, $scope, $filter, $q, ngTableParams, use
 
 function UserController($rootScope, $scope, $location, flashService, roleService, userService) {
 	$rootScope.$broadcast("NO_TUTORIAL", false); 
-	var crumb = {"from": "createuser", "display": "Create User", "route": "/createuser"};
-	$rootScope.$broadcast("NEW_CRUMB", crumb);
+	$rootScope.breadcrumb = ['Users', 'Create User'];
 
 	retval = roleService.get(function() {
 		$scope.usertypes = retval.roles;
@@ -507,7 +509,7 @@ function UserController($rootScope, $scope, $location, flashService, roleService
 			return '';
 		}
 		
-		input = {"username": $scope.username, "password": $scope.password, "usertype": $scope.usertype, "email": $scope.email, "firstname": $scope.firstname, "lastname": $scope.lastname, "display": $scope.display};
+		input = {"username": $scope.username, "password": $scope.password, "usertype": $scope.role, "email": $scope.email, "firstname": $scope.firstname, "lastname": $scope.lastname, "display": $scope.display};
 		var user = userService.save( {uid:0}, input, function() {
 			if (user.success.length > 0) {
 				flashService.flash('success', 'User created successfully');
@@ -521,7 +523,8 @@ function UserController($rootScope, $scope, $location, flashService, roleService
 }
 
 function ProfileController($rootScope, $scope, $routeParams, $location, flashService, userService, passwordService) {
-	$rootScope.$broadcast("NO_TUTORIAL", false); 
+	$rootScope.$broadcast("NO_TUTORIAL", false);
+	$rootScope.$broadcast = ['Users', 'Edit Profile']; 
 
 	var uid = $routeParams.userId;
 	var retval = userService.get( {uid: uid}, function() {
@@ -589,7 +592,8 @@ function ProfileController($rootScope, $scope, $routeParams, $location, flashSer
 	};
 }
 
-function RankController($scope, $resource) {
+function RankController($rootScope, $scope, $resource) {
+	$rootScope.breadcrumb = ['Ranking'];
 	var retval = $resource('/ranking').get( function() {
 		$scope.scripts = retval.scripts;
 	});
@@ -598,9 +602,7 @@ function RankController($scope, $resource) {
 function CourseController($rootScope, $scope, $cookieStore, courseService, loginService) {
 	// the property by which the list of courses will be sorted
 	$scope.orderProp = 'name';
-
-	var crumb = {"from": "coursepage", "display": 'Courses', "route": "/coursepage"};
-	$rootScope.$broadcast("NEW_CRUMB", crumb);
+	$rootScope.breadcrumb = ['Courses'];
 
 	var login = loginService.get( function() {
 		type = login.usertype;
@@ -693,8 +695,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 			total: questionData.length,
 			count: 10,
 		});
-		var crumb = {"from": "questionpage", "display": retval.course, "route": "/questionpage/" + courseId};
-		$rootScope.$broadcast("NEW_CRUMB", crumb);
+		$rootScope.breadcrumb = [retval.course, 'Questions'];
 		var steps = [];
 		if ( retval.questions.length > 0 ) {
 			var steps = [
@@ -801,6 +802,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 }
 
 function AnswerController($rootScope, $scope, $routeParams, $http, flashService, answerService, rankService, commentAService, commentQService) {
+	$rootScope.breadcrumb = ['Course', 'Question', 'Answer'];
 	var questionId = $routeParams.questionId; 
 
 	$scope.orderProp = 'time';
@@ -840,8 +842,8 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 		if (retval.usertype == 'Teacher' || retval.usertype == 'Admin') {
 			$scope.instructor = true;
 		}
-		var crumb = {"from": "answerpage", "display": retval.qtitle, "route": "/answerpage/" + questionId};
-		$rootScope.$broadcast("NEW_CRUMB", crumb);
+		var title = retval.qtitle.length > 80 ? retval.qtitle.slice(0, 79) + '...' : retval.qtitle;
+		$rootScope.breadcrumb = [retval.course, title, 'Answers'];
 	});
 	$scope.submit = function() {
 		$scope.myanswer = angular.element("#myanswer").html();
@@ -1034,8 +1036,7 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 			total: teacherData.length,
 			count: 10,
 		});
-		var crumb = {"from": "enrolpage", "display": "Enrol " + retval.course, "route": "/enrollpage/" + courseId};
-		$rootScope.$broadcast("NEW_CRUMB", crumb);
+		$rootScope.breadcrumb = [retval.course, 'Enrol']
 	});
 	$scope.add = function(user, type) {
 		input = {"uid": user.uid};
@@ -1105,6 +1106,7 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 }
 
 function ImportController($rootScope, $scope, $routeParams, $http, flashService, courseService) {
+	$rootScope.breadcrumb = ['Users', 'Import'];
 	courses = courseService.get(function() {
 		$scope.courses = courses.courses;
 		var steps = [
@@ -1250,5 +1252,16 @@ myApp.directive("mathToolbar", function() {
 			$scope.toolbarOption = 'undefined';
 		},
 		templateUrl: 'mathjax/toolbar.html',
+	};
+});
+
+myApp.directive("breadcrumb", function() {
+	return {
+		restrict: "A",
+		replace: true,
+		template: '<ul class="breadcrumb">' + 
+			'<li ng-class="{active: $last}" ng-repeat="crumb in breadcrumb">{{ crumb }}' +
+			'<span class="divider" ng-if="!$last"> > </span></li></ul>',
+		scope: true
 	};
 });
