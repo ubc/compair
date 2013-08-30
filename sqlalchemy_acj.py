@@ -4,10 +4,12 @@ from sqlalchemy import create_engine, Column, Integer, String, Enum, ForeignKey,
 from sqlalchemy.orm import backref, scoped_session, sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.engine.url import URL
 import datetime
 import hashlib
+import settings
 
-engine = create_engine('mysql://testuser:testpw@localhost/acj', convert_unicode=True, pool_recycle=300)
+engine = create_engine(URL(**settings.DATABASE), convert_unicode=True, pool_recycle=300)
 db_session = scoped_session(sessionmaker (autocommit=False, autoflush=False, bind=engine))
 
 Base = declarative_base()
