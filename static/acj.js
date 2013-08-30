@@ -524,7 +524,7 @@ function UserController($rootScope, $scope, $location, flashService, roleService
 
 function ProfileController($rootScope, $scope, $routeParams, $location, flashService, userService, passwordService) {
 	$rootScope.$broadcast("NO_TUTORIAL", false);
-	$rootScope.$broadcast = ['Users', 'Edit Profile']; 
+	$rootScope.breadcrumb = ['Users', 'Edit Profile']; 
 
 	var uid = $routeParams.userId;
 	var retval = userService.get( {uid: uid}, function() {
@@ -536,8 +536,6 @@ function ProfileController($rootScope, $scope, $routeParams, $location, flashSer
 			$scope.usertype = retval.usertype;
 			$scope.loggedType = retval.loggedType;
 			$scope.loggedName = retval.loggedName;
-			var crumb = {"from": "userprofilepage", "display": retval.display + ' Profile', "route": "/userprofile/" + uid};
-			$rootScope.$broadcast("NEW_CRUMB", crumb);
 		} else {
 			flashService.flash('error', 'Invalid User');
 			$location.path('/');
