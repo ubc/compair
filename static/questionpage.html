@@ -45,7 +45,7 @@
 	<br>
 
 	<ul class="postingsList">
-		<li ng-repeat="question in questions | orderBy:orderProp:true | filter:search">
+		<li ng-repeat="question in questions | orderBy:orderProp:true | filter:searchFilter">
 			<img src="http://www.gravatar.com/avatar/{{question.avatar}}?s=32&d=retro" class="avatar">
 			<p class="authorHeader"><strong>{{question.author}}</strong> - {{question.time}}</p>
 
