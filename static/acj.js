@@ -1373,8 +1373,39 @@ myApp.directive("commentBlock", function() {
 				}
 			};
 
-			$scope.editComment = function(comment) {
-
+			$scope.editComment = function( comment ) {
+				var newcontent = angular.element("#editcom"+comment.id).html();
+				var newstring = angular.element("#editcom"+comment.id).text();
+				if (!newstring) {
+					return '';
+				}
+				var input = {"content": newcontent};
+				if ($scope.type == 'Question') {
+					var retval = commentQService.put( {id: comment.id}, input, function() {
+						if (retval.msg != 'PASS') {
+							// can't seem to use regular span error messages
+							// causes the edit toggle not to close if the edit is successful
+							flashService.flash('error', 'Please submit a comment.');
+						} else {
+							var index = jQuery.inArray(comment, $scope.anyComments);
+							$scope.anyComments[index].content = newcontent;
+							flashService.flash('success', 'The comment has been successfully modified');
+						}
+					});
+				} else if ($scope.type == 'Answer') {
+					var retval = commentAService.put( {id: comment.id}, input, function() {
+						if (retval.msg != 'PASS') {
+							//alert('something is wrong');
+							flashService.flash('error', 'Please submit a valid comment');
+						} else {
+							var index = jQuery.inArray(comment, $scope.anyComments);
+							$scope.anyComments[index].content = newcontent;
+							flashService.flash('success', 'The comment has been successfully added.');
+						}
+					});
+				} else {
+					alert('something is wrong; comment type should be either Question or Answer');
+				}
 			};
 		},
 		templateUrl: 'templates/comments.html',
