@@ -684,6 +684,11 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 		}
 	});
 
+	$scope.searchFilter = function (obj) {
+		var re = new RegExp($scope.search, 'i');
+		return !$scope.search || re.test(obj.title) || re.test(obj.content);
+	};
+
 	var retval = questionService.get( {cid: courseId}, function() {
 		$scope.course = retval.course;
 		$scope.questions = retval.questions;
@@ -694,14 +699,15 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 			count: 10,
 		});
 		$rootScope.breadcrumb = [retval.course, 'Questions'];
-		var steps = [];
-		if ( retval.questions.length > 0 ) {
-			var steps = [
+		var steps = [
 				{
 					element: '#stepNav',
 					intro: 'Create a question',
 					position: 'left',
-				},
+				}
+		];
+		if ( retval.questions.length > 0 ) {
+			var steps2 = [
 				{
 					element: '#stepTitle',
 					intro: "Question's title and content which can be displayed by clicking Show",
@@ -715,6 +721,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 					intro: "Go to Judge Page to judge submitted answers",
 				},
 			];
+			steps = steps.concat(steps2);
 		}
 		var intro = "All the questions for this course are listed here. You can create a question or answer existing questions by going to Answer Page. You can also access Judge Page from this page.";
 		$rootScope.$broadcast("STEPS", {"steps": steps, "intro": intro});
