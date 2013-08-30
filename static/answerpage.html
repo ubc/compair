@@ -13,55 +13,12 @@
 	<a href="#/judgepage/{{qid}}" class="btn btn-inverse" id="stepJudge"> 
 		<i class="icon-legal icon-large"></i> Judge Answers
 	</a>
-	<a title="Comments" class="btn" ng-click="getQcomments();qcomm=!qcomm">
+	<a title="Comments" class="btn" ng-click="qcomm=!qcomm">
 		<i class="icon-comments-alt"></i> Show Comments
 	</a> 
-	<div ng-show="qcomm" class="commentsList">
-		<ul class="postingsList">
-			<li ng-repeat="comment in questionComments">
-				<img src="http://www.gravatar.com/avatar/{{comment.avatar}}?s=32&d=retro" class="avatar">
-				<p class="authorHeader"><strong>{{comment.author}}</strong> - {{comment.time}}</p>
-
-				<div class="opbuttons">
-					<a href="" class="btn btn-small" ng-show="instructor || login==comment.author" ng-click="editQC=!editQC;newQcom=comment.content">
-						<i class="icon-edit icon-large"></i>
-						Edit
-					</a>
-					<a href="" class="btn btn-danger btn-small" ng-show="instructor || login==comment.author" ng-click="delQcom(comment)">
-						<i class="icon-remove-sign icon-large"></i>
-						Delete
-					</a>
-				</div>
-
-				<div ng-hide="editQC" mathjax-bind="comment.content"></div>
-				<div ng-show="editQC" class="comment">
-					<div math-toolbar editor="editqcom{{comment.id}}" class="mathtoolbar btn-group"></div>
-					<div hallo-editor name="editqcom" ng-model="newQcom" id="editqcom{{comment.id}}" class="entries"></div>
-				</div>
-				<a href="" class="btn btn-primary" ng-show="editQC" ng-click="editQcom(comment, newQcom);editQC=false">
-					<i class="icon-ok-sign"></i> Submit
-				</a>
-			</li>
-		</ul>
-
-		<a href="" class="btn" ng-click="lqcomm=!lqcomm">
-			<i class="icon-comment-alt"></i> Leave a Comment
-		</a>
-
-		<div ng-show="lqcomm" class="createPosting">
-			<form name="addCommentQ" novalidate>
-				<div math-toolbar editor="myQcomment" class="mathtoolbar btn-group"></div>
-				<div hallo-editor name="qcom" ng-model="myQcomment" id="myQcomment" class="entries"></div>
-				<p class="text-error" ng-show="newQcomment && !myQcomment">
-				<span class="label label-important">Error</span>
-					Please enter a comment.
-				</p>
-
-				<a href="" class="btn btn-primary" ng-click="makeQcomment(myQcomment);newQcomment=true">
-					<i class="icon-ok"></i> Submit
-				</a>
-			</form>
-		</div>
+	
+	<div ng-show="qcomm">
+		<div ctype="Question" cinstructor="{{instructor}}" clogin="{{login}}" comment-block></div>
 	</div>
 
 	<div ng-show="check">
@@ -116,44 +73,11 @@
 			<a class="btn btn-primary" ng-show="edit" ng-click="editscript(script, newanswer);edit=!edit">
 				<i class="icon-ok"></i> Submit
 			</a>
-
-			<div class="commentsList" ng-show="scomm">
-				<ul class="postingsList"> 
-					<li ng-repeat="comment in script.comments">
-						<img src="http://www.gravatar.com/avatar/{{comment.avatar}}?s=32&d=retro" class="avatar">
-						<p class="authorHeader"><strong>{{comment.author}}</strong> - {{comment.time}}</p>
-
-						<div class="opbuttons">
-						<a ng-show="instructor || login==comment.author" class="btn" ng-click="editAC=!editAC;newAcom=comment.content">
-							<i class="icon-edit icon-large"></i> Edit
-						</a>
-						<a class="btn btn-danger" ng-show="instructor || login==comment.author" ng-click="delAcom(script, comment)">
-							<i class="icon-remove-sign icon-large"></i> Delete
-						</a>
-						</div>
-
-						<div class="comment" ng-hide="editAC"><span class="renderComment" mathjax-bind="comment.content"></span></div>
-						<div ng-show="editAC" class="comment">
-							<div math-toolbar editor="editacom{{comment.id}}" class="mathtoolbar btn-group"></div>
-							<div hallo-editor name="editacom" ng-model="newAcom" id="editacom{{comment.id}}" class="edit entries"></div>
-						</div>
-						<a href="" class="btn btn-primary submit comment" ng-show="editAC" ng-click="editAcom(script, comment, newAcom);editAC=false">
-							<i class="icon-ok-sign icon-large"></i> Submit
-						</a>
-					</li>
-				</ul>
-				<a href="" class="btn" ng-click="lcomm=!lcomm">
-					<i class="icon-comment-alt"></i> Leave a Comment
-				</a>
-
-				<div ng-show="lcomm" class="createPosting">
-					<div math-toolbar editor="newacom{{script.id}}" class="mathtoolbar btn-group"></div>
-					<div hallo-editor name="acom" ng-model="mycomment" id="newacom{{script.id}}" class="entries"></div>
-					<a href="" class="btn btn-primary" ng-click="makeAcomment(script, mycomment);lcomm=false">
-						<i class="icon-ok"></i> Submit
-					</a>
-				</div>
+			
+			<div ng-show="scomm">
+				<div csid="{{script.id}}" ctype="Answer" cinstructor="{{instructor}}" clogin="{{login}}" comment-block></div>
 			</div>
+
 		</li>
 	</ul>
 </div>

@@ -9,10 +9,10 @@
 			<table ng-table="teacherParams" class="table"> 
 			Search Teacher: <input ng-model="tquery">
 			<tr class="tr" ng-repeat="teacher in teachers" >
-				<td title="Name" sortable="username"> 
+				<td title="'Name'" sortable="username"> 
 					<a href="#/userprofile/{{teacher.uid}}">{{teacher.username}}</a>
 				</td>
-				<td ng-switch on="teacher.enrolled" title="Status" sortable="enrolled">
+				<td ng-switch on="teacher.enrolled" title="'Status'" sortable="enrolled">
 					<div ng-switch-default>
 						<p class="enrolled-sign" ng-click="drop(teacher, 'T')">Enrolled</p>
 					</div>
@@ -24,6 +24,7 @@
 			</table>
 		</div>
 	</div>
+	<br><br>
 	<div class="enroll">
 		<div class="tablewrapper">
 			<table ng-table="studentParams" class="table">

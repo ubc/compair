@@ -980,6 +980,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 		}
 	};
 	$scope.editQcom = function(comment, newcontent) {
+		console.log('in editQcom');
 		newcontent = angular.element("#editqcom"+comment.id).html();
 		newstring = angular.element("#editqcom"+comment.id).text();
 		if (!newstring) {
@@ -1268,5 +1269,114 @@ myApp.directive("breadcrumb", function() {
 			'<li ng-class="{active: $last}" ng-repeat="crumb in breadcrumb">{{ crumb }}' +
 			'<span class="divider" ng-if="!$last"> > </span></li></ul>',
 		scope: true
+	}
+});
+
+myApp.directive("commentBlock", function() {
+	return {
+		restrict: "A",
+		scope: {
+			type: "@ctype",
+			login: "@clogin",
+			instructor: "@cinstructor",
+			sid: "@csid",
+		},
+		controller: function($scope, $element, $attrs, $routeParams, flashService, commentQService, commentAService) {
+			console.log($scope.type);
+			console.log($scope.login);
+			console.log($scope.instructor);
+			console.log($scope.sid);
+			var questionId = $routeParams.questionId;
+
+			$scope.getComments = function() {
+				if ($scope.type == 'Question') {
+					var retval = commentQService.get( {id: questionId}, function() {
+						if (retval.comments) {
+							$scope.anyComments = retval.comments;
+						} else {
+							flashService.flash('error', 'The comments could not be found.');
+						}
+					});
+				} else if ($scope.type == 'Answer') {
+					var retval = commentAService.get( {id: $scope.sid}, function() {
+						if (retval.comments) {
+							$scope.anyComments = retval.comments;
+						} else {
+							flashService.flash('error', 'The comments could not be found.');
+						}
+					});
+				} else {
+					alert('something is wrong; comment type should be either Question or Answer');
+				}
+			};
+			$scope.getComments();
+
+			$scope.makeComment = function() {
+				var myComment = angular.element("#mycomment"+$scope.type).html();
+				var newstring = angular.element("#mycomment"+$scope.type).text();
+				var input = {"content": myComment};
+				if (!newstring) {
+					return '';
+				}
+				if ($scope.type == 'Question') {
+					var retval = commentQService.save( {id: questionId}, input, function() {
+						if (retval.comment) {
+							$scope.anyComments.push( retval.comment );
+							$scope.myComment = '';
+							$scope.lcomm = false;
+							flashService.flash('success', 'The comment has been successfully added');
+						} else {
+							flashService.flash('error', 'Please submit a valid comment.');
+						}
+					});
+				} else if ($scope.type == 'Answer') {
+					var retval = commentAService.save( {id: $scope.sid}, input, function() {
+						if (retval.comment) {
+							$scope.anyComments.push( retval.comment );
+							$scope.myComment = '';
+							$scope.lcomm = false;
+							flashService.flash('success', 'The comment has been successfully added.');
+						} else {
+							flashService.flash('error', 'Please submit a valid comment.');
+						}
+					});
+				} else {
+					alert('something is wrong; comment type should be either Question or Answer');
+				}
+			};
+
+			$scope.delComment = function( comment ) {
+				if ($scope.type == 'Question') {
+					if (confirm("Delete Question Comment?") == true) {
+						var retval = commentQService.remove( {id: comment.id}, function() {
+							if (retval.msg != 'PASS') {
+								flashService.flash('error', 'The comment was unsuccessfully deleted.');
+							} else {
+								var index = jQuery.inArray(comment, $scope.anyComments);
+								$scope.anyComments.splice(index, 1);
+							}
+						});
+					}
+				} else if ($scope.type == 'Answer') {
+					if (confirm("Delete Answer Comment?") == true) {
+						var retval = commentAService.remove( {id: comment.id}, function() {
+							if (retval.msg != 'PASS') {
+								flashService.flash('error', 'The comment was unsuccessfully deleted.');
+							} else {
+								var index = jQuery.inArray(comment, $scope.anyComments);
+								$scope.anyComments.splice(index, 1);
+							}
+						});
+					}
+				} else {
+					alert('something is wrong; comment type should be either Question or Answer');
+				}
+			};
+
+			$scope.editComment = function(comment) {
+
+			};
+		},
+		templateUrl: 'templates/comments.html',
 	};
 });
