@@ -5,10 +5,10 @@ from flask_principal import ActionNeed, AnonymousIdentity, Identity, identity_ch
 from sqlalchemy import desc, func, select
 from random import shuffle
 from math import log10, exp
+from pw_hash import PasswordHash
 import exceptions
 import MySQLdb
 import re
-import phpass
 import json
 import datetime
 import validictory
@@ -22,7 +22,7 @@ from werkzeug import secure_filename
 
 app = Flask(__name__)
 init_db()
-hasher = phpass.PasswordHash()
+hasher = PasswordHash()
 principals = Principal(app)
 
 UPLOAD_FOLDER = 'tmp'
