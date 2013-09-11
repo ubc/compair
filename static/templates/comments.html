@@ -1,0 +1,49 @@
+	<div class="commentsList">
+		<ul class="postingsList">
+			<li ng-repeat="comment in anyComments">
+				<img src="http://www.gravatar.com/avatar/{{comment.avatar}}?s=32&d=retro" class="avatar">
+				<p class="authorHeader"><strong>{{comment.author}}</strong> - {{comment.time}}</p> {{type}} {{login}} {{instructor}} {{sid}}
+
+				<div class="opbuttons">
+					<a href="" class="btn btn-small" ng-show="instructor || login==comment.author" 
+						ng-click="editC=!editC;newCom=comment.content">
+						<i class="icon-edit icon-large"></i>
+						Edit
+					</a>
+					<a href="" class="btn btn-danger btn-small" ng-show="instructor || login==comment.author" ng-click="delComment(comment)">
+						<i class="icon-remove-sign icon-large"></i>
+						Delete
+					</a>
+				</div>
+
+				<div ng-hide="editC" mathjax-bind="comment.content"></div>
+				<div ng-show="editC" class="comment">
+					<div math-toolbar editor="editcom{{comment.id}}" class="mathtoolbar btn-group"></div>
+					<div hallo-editor name="editCom" ng-model="newCom" id="editcom{{comment.id}}" class="entries"></div>
+				</div>
+				<a href="" class="btn btn-primary" ng-show="editC" ng-click="editComment(comment, newCom);editC=false">
+					<i class="icon-ok-sign"></i> Submit
+				</a>
+			</li>
+		</ul>
+
+		<a href="" class="btn" ng-click="lcomm=!lcomm">
+			<i class="icon-comment-alt"></i> Leave a Comment
+		</a>
+
+		<div ng-show="lcomm" class="createPosting">
+			<form name="addComment" novalidate>
+				<div math-toolbar editor="mycomment{{type}}" class="mathtoolbar btn-group"></div>
+				<div hallo-editor name="qcom" ng-model="myComment" id="mycomment{{type}}" class="entries"></div>
+				<p class="text-error" ng-show="newComment && !myComment">
+					<span class="label label-important">Error</span>
+					Please enter a comment.
+				</p>
+
+				<a href="" class="btn btn-primary" ng-click="makeComment();newComment=true">
+					<i class="icon-ok"></i> Submit
+				</a>
+			</form>
+		</div>
+	</div>
+
