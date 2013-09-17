@@ -13,7 +13,13 @@ form {
 /***** QUESTION PAGE *****/
 div.questionContent {
   margin-top: 0.5em;
-  margin-bottom: 1em; }
+  margin-bottom: 1em; 
+  max-height: 300px;
+  overflow: auto;
+  padding: 0.5em;
+  border-radius: 5px;
+  background: #fcfcfc;
+  border: 1px solid #ccc;}
 
 /***** ANSWERS PAGE *****/
 div.commentsList {
@@ -105,11 +111,15 @@ ul.judgetabs li {
 .answer {
   border: 1px solid #eee;
   border-radius: 3px;
-  padding: 0.5em; }
-  .answer.left {
-    background: azure; }
-  .answer.right {
-    background: ivory; }
+  padding: 0.5em; 
+  max-height: 300px;
+  overflow: auto;}
+ 
+.answer.left {
+    background: azure;}
+  
+.answer.right {
+    background: ivory;}
 
 /***** FLASH MESSAGES *****/
 ol#flash-messages {
@@ -118,4 +128,45 @@ ol#flash-messages {
 /***** FORMS *****/
 span.required {
 	color: #990044;
+}
+
+/***** GENERAL USE *****/
+.pointer {
+	cursor: pointer;
+}
+
+.marginT5 {
+	margin-top: 5px;
+}	
+
+.marginT15 {
+	margin-top: 15px;
+}
+
+.marginB15 {
+	margin-bottom: 15px;
+}
+
+.marginR50 {
+	margin-right: 50px;
+}
+
+.marginL50 {
+	margin-left: 50px;
+}
+
+.btnWidth {
+	width: 130px;
+}
+
+.selected {
+	border: 1px solid #468847;
+}
+
+.top {
+	vertical-align: top;	
+}
+
+.padding0 {
+	padding: 0;
 }

@@ -1,10 +1,11 @@
-<select ng-model="toolbarOption" class="mathtoolbar"> +
+<select ng-model="toolbarOption" class="mathtoolbar">
 	<option value=undefined>(Math Toolbars)</option>
 	<option value="{{editor}}operator">Operators</option>
 	<option value="{{editor}}functions">Functions</option>
 	<option value="{{editor}}calculus">Calculus</option>
 	<option value="{{editor}}inequalities">Inequalities</option>
 	<option value="{{editor}}letters">Letters</option>
+	<option value="{{editor}}test">Test</option>
 </select>
 
 <div class="btn-group" ng-if="toolbarOption==editor+'operator'">
@@ -33,13 +34,13 @@
 
 <div class="btn-group" ng-if="toolbarOption==editor+'calculus'">
 	<span math-formula math-equation="`f(x)`" label="`f(x)`" editor="{{ editor }}"></span>
-	<span math-formula math-equation="`sumx`" label="`sumx`" editor="{{ editor }}"></span>
-	<span math-formula math-equation="`sum_(x=0)^(10)x`" label="`sum_(x=0)^(10)x`" editor="{{ editor }}"></span>
-	<span math-formula math-equation="`intx`" label="`intx`" editor="{{ editor }}"></span>
-	<span math-formula math-equation="`int_(x=0)^(10)x`" label="`int_(x=0)^(10)x`" editor="{{ editor }}"></span>
-	<span math-formula math-equation="`lim_(x->1)(x^2-1)/(x-1)`" label="`lim_(x->1)(x^2-1)/(x-1)`" editor="{{ editor }}"></span>
+	<span math-image math-equation="`sumx`" label="`sumx`" img-src="sumx.png" editor="{{ editor }}"></span>
+	<span math-image math-equation="`sum_(x=0)^(10)x`" label="`sum_(x=0)^(10)x`" img-src="sum_(x=0)^(10)x.png" editor="{{ editor }}"></span>
+	<span math-image math-equation="`intx`" label="`intx`" img-src="intx.png" editor="{{ editor }}"></span>
+	<span math-image math-equation="`int_(x=0)^(10)x`" label="`int_(x=0)^(10)x`" img-src="int_(x=0)^(10)x.png" editor="{{ editor }}"></span>
+	<span math-image math-equation="`lim_(x->1)(x^2-1)/(x-1)`" label="`lim_(x->1)(x^2-1)/(x-1)`" img-src="lim_(x->1)(x^2-1)(x-1).png" editor="{{ editor }}"></span>
 	<span math-formula math-equation="`infty`" label="`infty`" editor="{{ editor }}"></span>
-	<span math-formula math-equation="`((a,b),(c,d))`"  label="`((a,b),(c,d))`" editor="{{ editor }}"></span>
+	<span math-image math-equation="`((a,b),(c,d))`"  label="`((a,b),(c,d))`" img-src="((a,b),(c,d)).png" editor="{{ editor }}"></span>
 </div>
 
 <div class="btn-group" ng-if="toolbarOption==editor+'inequalities'">
@@ -69,3 +70,13 @@
 	<span math-formula math-equation="`Omega`" label="`Omega`" editor="{{ editor }}"></span>
 </div>
 
+<div class="btn-group" ng-if="toolbarOption==editor+'test'">
+	<div math-formula math-equation="`f(x)`" label="`f(x)`" editor="{{ editor }}"></div>
+	<span math-formula math-equation="`sum x`" label="`sum x`" editor="{{ editor }}"></span>
+	<span math-formula math-equation="`sum_(x=0)^(10)x`" label="`sum_(x=0)^(10)x`" editor="{{ editor }}"></span>
+	<span math-formula math-equation="`intx`" label="`intx`" editor="{{ editor }}"></span>
+	<span math-formula math-equation="`int_(x=0)^(10)x`" label="`int_(x=0)^(10)x`" editor="{{ editor }}"></span>
+	<span math-formula math-equation="`lim_(x->1)(x^2-1)/(x-1)`" label="`lim_(x->1)(x^2-1)/(x-1)`" editor="{{ editor }}"></span>
+	<span math-formula math-equation="`infty`" label="`infty`" editor="{{ editor }}"></span>
+	<span math-formula math-equation="`((a,b),(c,d))`"  label="`((a,b),(c,d))`" editor="{{ editor }}"></span>
+</div>

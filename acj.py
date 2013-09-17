@@ -1,6 +1,6 @@
 from __future__ import division
 from flask import Flask, url_for, request, render_template, redirect, escape, session
-from sqlalchemy_acj import init_db, db_session, User, Judgement, Script, Course, Question, Enrollment, CommentA, CommentQ, Entry
+from sqlalchemy_acj import init_db, db_session, User, Judgement, Script, Course, Question, Enrollment, CommentA, CommentQ, CommentJ, Entry
 from flask_principal import ActionNeed, AnonymousIdentity, Identity, identity_changed, identity_loaded, Permission, Principal, RoleNeed
 from sqlalchemy import desc, func, select
 from random import shuffle
@@ -83,12 +83,11 @@ def install():
 @app.route('/script/<id>', methods=['GET'])
 @student.require(http_exception=401)
 def get_script(id):
-	print(id)
 	query = Script.query.filter_by(id = id).first()
 	if not query:
 		db_session.rollback()
 		return json.dumps({"msg": "No matching script"})
-	ret_val = json.dumps( {"content": query.content} )
+	ret_val = json.dumps( {"content": query.content} )    
 	db_session.rollback()
 	return ret_val
 
@@ -106,10 +105,8 @@ def mark_script(id):
 	sidr = param['sidr']
 	sid = 0
 	if sidl == int(id):
-		print ('sidl == id')
 		sid = sidr
 	elif sidr == int(id):
-		print ('sidr == id')
 		sid = sidl
 	query = Script.query.filter_by(id = sid).first()
 	query.count = query.count + 1
@@ -308,10 +305,7 @@ def edit_user(id):
 	else:
 		user.email = ''
 	if 'password' in param:
-		print(user.password)
 		if not hasher.check_password( param['password']['old'], user.password ):
-			print(param['password']['old'])
-			print(type(param['password']['old']))
 			db_session.rollback()
 			return json.dumps( {"flash": 'Incorrect password'} )
 		newpassword = param['password']['new']
@@ -331,20 +325,14 @@ def pick_script(id, sl, sr):
 		retval = json.dumps( {"cid": course.id, "course": course.name, "question": question.content} )
 		db_session.rollback()
 		return retval
-	print ('sl: ' + str(sl))
-	print ('sr: ' + str(sr))
 	fresh = get_fresh_pair( query, sl, sr )
 	if not fresh:
-		print 'judged them all'
-		retval = json.dumps( {"cid": course.id, "question": question.content} ) 
+		retval = json.dumps( {"cid": course.id, "question": question.content, "course": course.name} ) 
 		db_session.rollback()
 		return retval
 	if fresh == 'SAME PAIR':
-		print 'same pair'
 		db_session.rollback()
-		return json.dumps( {"nonew": 'No new pair'} ) 
-	print ('freshl: ' + str(fresh[0]))
-	print ('freshr: ' + str(fresh[1]))
+		return json.dumps( {"nonew": 'No new pair'} )
 	retval = json.dumps( {"cid": course.id, "course": course.name, "question": question.content, "qtitle": question.title, "sidl": fresh[0], "sidr": fresh[1]} )
 	db_session.rollback()
 	return retval
@@ -373,16 +361,11 @@ def get_fresh_pair(scripts, cursidl, cursidr):
 	index = 0
 	for scriptl in scripts:
 		index = index + 1
-		print ('index: ' + str(index))
-		print (scripts[index:])
 		if uid != scriptl.uid:
 			for scriptr in scripts[index:]:
 				if uid != scriptr.uid:
 					sidl = scriptl.id
 					sidr = scriptr.id
-					print ('uid: ' + str(uid))
-					print ('sid: ' + str(sidl))
-					print ('sid: ' + str(sidr))
 					if sidl > sidr:
 						temp = sidr
 						sidr = sidl
@@ -411,7 +394,6 @@ def random_question():
 	#	count = count + 1
 	#	nextscripts = Script.query.filter_by( count = count).all()
 	#	scripts.extend( nextscripts )
-	print ('initial scripts: ' + str(scripts))
 	user = User.query.filter_by( username = session['username'] ).first()
 	shuffle( scripts )
 	lowest0 = ''
@@ -419,7 +401,6 @@ def random_question():
 	lowest1 = ''
 	for script in scripts:
 		if lowest0 == 0:
-			print('lowest == 0: break')
 			break
 		qid = script.qid
 		question = Question.query.filter_by( id = qid ).first()
@@ -427,34 +408,23 @@ def random_question():
 			enrolled = Enrollment.query.filter_by( cid = question.cid ).filter_by( uid = user.id ).first()
 			if not enrolled:
 				continue
-		print ('in loop, script: ' + str(script))
-		print ('in loop, lowest0: ' + str(lowest0))
-		print ('in loop, lowest1: ' + str(lowest1))
 		query = Script.query.filter_by(qid = qid).order_by( Script.count ).limit(10).all()
 		shuffle( query )
 		fresh = get_fresh_pair( query, 0, 0 )
 		if fresh:
-			print ('if fresh, fresh[0]: ' + str(fresh[0]))
-			print ('if fresh, fresh[1]: ' + str(fresh[1]))
 			sum = Script.query.filter_by(id = fresh[0]).first().count + Script.query.filter_by(id = fresh[1]).first().count
 			if lowest0 == '':
 				lowest0 = sum
 				retqid = qid
-				print ('in if, lowest0: ' + str(lowest0))
 			else:
 				lowest1 = sum
-				print ('in if, lowest1: ' + str(lowest1))
 				if lowest0 > lowest1:
-					print ('NEW LOWEST0')
 					lowest0 = lowest1
 					retqid = qid
-	print ('Out of scripts loop')
 	if lowest0 != '':
-		print ('retval: ' + str(retqid))
 		retval = json.dumps( {"question": retqid} )
 		db_session.rollback()
 		return retval
-	print ('RETURN: Nothing for you to judge(not necessarily an error)')
 	db_session.rollback()
 	return ''
 
@@ -479,21 +449,16 @@ def estimate_score(id):
 	scripts = Script.query.filter_by(qid = id).order_by( Script.id ).all()
 	for scriptl in scripts:
 		sidl = scriptl.id
-		print ('sidl: ' + str(sidl))
 		sigma = 0
 		lwins = scriptl.wins
 		for scriptr in scripts:
 			if scriptl != scriptr:
 				rwins = scriptr.wins
-				print ('loop sidr: ' + str(scriptr.id))
 				if lwins + rwins == 0:
 					prob = 0
 				else:
 					prob = lwins / (lwins + rwins)
-				print ('prob: ' + str(prob))
 				sigma = sigma + prob
-				print ('sigma: ' + str(sigma))
-		print ('out of inner loop')
 		query = Script.query.filter_by(id = sidl).first()
 		query.score = sigma
 	db_session.commit()
@@ -502,17 +467,20 @@ def estimate_score(id):
 @app.route('/ranking/<id>')
 @student.require(http_exception=401)
 def marked_scripts(id):
-	scripts = Script.query.filter_by(qid = id).order_by( Script.score.desc() ).all() 
+	scripts = Script.query.filter_by(qid = id).order_by( Script.score.desc() ).all() 	
 	slst = []
 	for script in scripts:
 		author = User.query.filter_by(id = script.uid).first()
-		slst.append( {"id": script.id, "title": script.title, "author": author.display, "time": str(script.time), "content": script.content, "score": script.score, "comments": [], "avatar": author.avatar} )
-	print ('what is happneing')
-	print ( slst )
+		commentA = CommentA.query.filter_by(sid = script.id).all()
+		slst.append( {"id": script.id, "title": script.title, "author": author.display, "time": str(script.time), "content": script.content, "score": script.score, "comments": [], "avatar": author.avatar, "commentACount": len(commentA)} )
 	question = Question.query.filter_by(id = id).first()
 	course = Course.query.filter_by(id = question.cid).first()
 	user = User.query.filter_by(username = session['username']).first()
-	retval = json.dumps( {"display": user.display, "usertype": user.usertype, "cid": course.id, "course": course.name, "qtitle": question.title, "question": question.content, "scripts": slst} )
+	userQ = User.query.filter_by(id = question.uid).first()
+	commentQ = CommentQ.query.filter_by(qid = question.id).all()
+	retval = json.dumps( {"display": user.display, "usertype": user.usertype, "cid": course.id, "course": course.name, 
+                          "qtitle": question.title, "question": question.content, "scripts": slst, "commentQCount": len(commentQ), 
+                          "authorQ": userQ.display, "timeQ": str(question.time), "avatarQ": userQ.avatar} )
 	db_session.rollback()
 	return retval
 
@@ -529,13 +497,15 @@ def total_ranking():
 	db_session.rollback()
 	return json.dumps( {"scripts": lst} )
 
-def get_comments(type, id):
+def get_comments(type, id, sidl=None, sidr=None):
 	comments = []
 	lst = []
 	if (type == 'answer'):
 		comments = CommentA.query.filter_by(sid = id).order_by( CommentA.time ).all()
 	elif (type == 'question'):
 		comments = CommentQ.query.filter_by(qid = id).order_by( CommentQ.time ).all()
+	elif (type == 'judgement'):
+		comments = CommentJ.query.filter_by(qid = id, sidl = sidl, sidr = sidr).order_by( CommentJ.time ).all()
 	for comment in comments:
 		author = User.query.filter_by(id = comment.uid).first()
 		lst.append( {"id": comment.id, "author": author.display, "time": str(comment.time), "content": comment.content, "avatar": author.avatar} )
@@ -543,44 +513,50 @@ def get_comments(type, id):
 	db_session.rollback()
 	return retval
 
-def make_comment(type, id, content):
+def make_comment(type, id, content, sidl=None, sidr=None):
 	table = ''
 	uid = User.query.filter_by(username = session['username']).first().id
 	if (type == 'answer'):
 		table = CommentA(id, uid, content)
 	elif (type == 'question'):
-		print ('at least in question')
 		table = CommentQ(id, uid, content)
+	elif (type == 'judgement'):
+		table = CommentJ(id, sidl, sidr, uid, content)
 	db_session.add(table)
 	db_session.commit()
 	comment = ''
 	if (type == 'answer'):
 		comment = CommentA.query.order_by( CommentA.time.desc() ).first()
 	elif (type == 'question'):
-		print ('at least in question')
 		comment = CommentQ.query.order_by( CommentQ.time.desc() ).first()
+	elif (type == 'judgement'):
+		comment = CommentJ.query.order_by( CommentJ.time.desc() ).first()
 	author = User.query.filter_by(id = comment.uid).first()
 	retval = json.dumps({"comment": {"id": comment.id, "author": author.display, "time": str(comment.time), "content": comment.content, "avatar": author.avatar}})
 	db_session.rollback()
 	return retval
 
-def edit_comment(type, id, content):
+def edit_comment(type, id, content, sidl=None, sidr=None):
 	comment = ''
 	if (type == 'answer'):
 		comment = CommentA.query.filter_by(id = id).first()
 	elif (type == 'question'):
 		comment = CommentQ.query.filter_by(id = id).first()
+	elif (type == 'judgement'):
+		comment = CommentJ.query.filter_by(id = id, sidl = sidl, sidr = sidr).first()
 	comment.content = content
 	db_session.commit()
 	db_session.rollback()
 	return json.dumps({"msg": "PASS"})
 
-def delete_comment(type, id):
+def delete_comment(type, id, sidl=None, sidr=None):
 	comment = ''
 	if (type == 'answer'):
 		comment = CommentA.query.filter_by(id = id).first()
 	elif (type == 'question'):
 		comment = CommentQ.query.filter_by(id = id).first()
+	elif (type == 'judgement'):
+		comment = CommentJ.query.filter_by(id = id, sidl = sidl, sidr = sidr).first()
 	db_session.delete(comment)
 	commit()
 	return json.dumps({"msg": "PASS"})
@@ -668,10 +644,48 @@ def edit_commentQ(id):
 		return json.dumps( {"msg": str(error)} )
 	return edit_comment('question', id, param['content'])
 
+@app.route('/judgepage/<id>/comment/<sidl>/<sidr>')
+def get_commentsJ(id, sidl, sidr):
+	return get_comments('judgement', id, sidl, sidr)
 
-@app.route('/question/<id>/comment', methods=['DELETE'])
-def delete_commentQ(id):
-	return delete_comment('question', id)
+
+@app.route('/judgepage/<id>/comment/<sidl>/<sidr>', methods=['POST'])
+def comment_judgement(id, sidl, sidr):
+	param = request.json
+	schema = {
+		'type': 'object',
+		'properties': {
+			'content': {'type': 'string'}
+		}
+	}
+	try:
+		validictory.validate(param, schema)
+	except ValueError, error:
+		print (str(error))
+		return json.dumps( {"msg": str(error)} )
+	return make_comment('judgement', id, param['content'], sidl, sidr)
+
+
+@app.route('/judgepage/<id>/comment/<sidl>/<sidr>', methods=['PUT'])
+def edit_commentJ(id, sidl, sidr):
+	param = request.json
+	schema = {
+		'type': 'object',
+		'properties': {
+			'content': {'type': 'string'}
+		}
+	}
+	try:
+		validictory.validate(param, schema)
+	except ValueError, error:
+		print (str(error))
+		return json.dumps( {"msg": str(error)} )
+	return edit_comment('judgement', id, param['content'], sidl, sidr)
+
+
+@app.route('/judgepage/<id>/comment/<sidl>/<sidr>', methods=['DELETE'])
+def delete_commentJ(id, sidl, sidr):
+	return delete_comment('judgement', id, sidl, sidr)
 
 
 @app.route('/course/<id>', methods=['DELETE'])
@@ -712,7 +726,7 @@ def list_course():
 			query = Enrollment.query.filter_by(cid = course.id).filter_by(uid = user.id).first()
 			if not query:
 				continue
-		lst.append( {"id": course.id, "name": course.name} )
+		lst.append( {"id": course.id, "name": course.name, "count": len(course.question)} )
 	db_session.rollback()
 	return json.dumps( {"courses": lst} )
 
@@ -724,7 +738,8 @@ def list_question(id):
 	lst = []
 	for question in questions:
 		author = User.query.filter_by(id = question.uid).first()
-		lst.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar} )
+		count = Script.query.filter_by(qid = question.id).all()
+		lst.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar, "count": len(count)} )
 	db_session.rollback()
 	return json.dumps( {"course": course.name, "questions": lst} )
 
@@ -796,19 +811,14 @@ def students_enrolled(cid):
 	studentlst = []
 	teacherlst = []
 	for user in users:
-		print ('in loop, student: ' + str(user))
 		enrolled = ''
 		query = Enrollment.query.filter_by(uid = user.id).filter_by(cid = cid).first()
-		print (query)
 		if (query):
-			print ('enrolled')
 			enrolled = query.id
 		if user.usertype == 'Student':
 			studentlst.append( {"uid": user.id, "username": user.fullname, "enrolled": enrolled} )
 		else:
 			teacherlst.append( {"uid": user.id, "username": user.fullname, "enrolled": enrolled} )
-	print ('student list: ' + str(studentlst))
-	print ('teacher list: ' + str(teacherlst))
 	course = Course.query.filter_by(id = cid).first()
 	retval = json.dumps( { "course": course.name, "students": studentlst, "teachers": teacherlst } )
 	db_session.rollback()
@@ -962,6 +972,26 @@ def reset_password(uid):
 	user.password = hasher.hash_password( password )
 	commit()
 	return json.dumps( {"resetpassword": password} )
+
+@app.route('/judgements/<qid>', methods=['GET'])
+@student.require(http_exception=401)
+def get_judgements(qid):
+    judgements = []
+    judgement = Judgement.query.filter(Judgement.script1.has(qid = qid)).group_by(Judgement.sidl, Judgement.sidr).all()
+    question = Question.query.filter_by(id = qid).first()
+    userQ = User.query.filter_by(id = question.uid).first()
+    course = Course.query.filter_by(id = question.cid).first()
+    for row in judgement:
+        user1 = User.query.filter_by(id = row.script1.uid).first()
+        user2 = User.query.filter_by(id = row.script2.uid).first()
+        judgements.append({"scriptl": row.script1.content, "scriptr": row.script2.content, "winner": row.winner, 
+                           "sidl": row.sidl, "sidr": row.sidr, "scorel": row.script1.score, "scorer": row.script2.score, 
+                           "authorl": user1.display, "authorr": user2.display, "timel": str(row.script1.time), "timer": str(row.script2.time), 
+                           "avatarl": user1.avatar, "avatarr": user2.avatar, "qid": row.script1.qid})
+    ret_val = json.dumps({"judgements": judgements, "title": question.title, "question": question.content, "cid": course.id, "course": course.name,
+                          "authorQ": userQ.display, "timeQ": str(question.time), "avatarQ": userQ.avatar})
+    db_session.rollback()
+    return ret_val
 
 @teacher.require(http_exception=401)
 def enrol_users(users, courseId):

@@ -74,8 +74,16 @@ myApp.factory('commentQService', function($resource) {
 	return $resource( '/question/:id/comment', {}, { put: {method: 'PUT'} } );
 });
 
+myApp.factory('commentJService', function($resource) {
+	return $resource( '/judgepage/:id/comment/:sidl/:sidr', {}, { put: {method: 'PUT'} } );
+});
+
 myApp.factory('passwordService', function($resource) {
 	return $resource( '/password/:uid' );
+});
+
+myApp.factory('reviewjudgeService', function($resource) {
+	return $resource( '/judgements/:qid' );
 });
 
 myApp.factory('flashService', function(flash) {
@@ -159,6 +167,11 @@ myApp.config( function ($routeProvider) {
 				controller: ImportController,
 				templateUrl: 'classimport.html'
 			})
+		.when ('/reviewjudge/:qid',
+			{
+				controller: ReviewJudgeController,
+				templateUrl: 'reviewjudge.html'
+			})
 		.otherwise({redirectTo: '/'});
 });
 
@@ -173,11 +186,11 @@ myApp.directive('authLogin', function($location, $cookieStore) {
 				$cookieStore.put('loggedIn', true);
 			});
 		}
-	}
+	};
 });
 
 function InstallController($rootScope, $scope, $location, $cookieStore, flashService, installService, createAdmin, isInstalled) {
-	$rootScope.breadcrumb = ['Installer'];
+	$rootScope.breadcrumb = [{'name':'Installer'}];
 	var criteria = installService.get( function() {
 		//$scope.username = criteria.username;
 		$scope.requirements = criteria.requirements;
@@ -207,13 +220,13 @@ function InstallController($rootScope, $scope, $location, $cookieStore, flashSer
 			}
 			return '';
 		});
-	}
+	};
 }
 
 function IndexController($rootScope, $scope, $location, $cookieStore, loginService, logoutService, isInstalled) {
 	$rootScope.intro = introJs();
 
-	var allBreadcrumbs = [];
+	//var allBreadcrumbs = [];
 	$scope.breadcrumbs = [];
 	$scope.dropdown = [
 		{
@@ -254,7 +267,8 @@ function IndexController($rootScope, $scope, $location, $cookieStore, loginServi
 				$location.path('/login');
 			}
 		});
-	}
+	};
+	/*
 	$scope.$on("NEW_CRUMB", function(event, crumb) {
 		if (crumb.from === 'judgepage') {
 			$scope.breadcrumbs = allBreadcrumbs.slice();
@@ -271,9 +285,10 @@ function IndexController($rootScope, $scope, $location, $cookieStore, loginServi
 		allBreadcrumbs.push( crumb );
 		$scope.activecrumb = crumb.display;
 	});
+	*/
 	$scope.$on("JUDGEMENT", function(event) {
-		route = allBreadcrumbs[allBreadcrumbs.length - 1].route;
-		$location.path( route );
+		route = $scope.breadcrumb[$scope.breadcrumb.length - 1].link ? $scope.breadcrumb[$scope.breadcrumb.length - 1].link : "";
+		$location.path(route.replace("#/", ""));
 	});
 	var steps = '';
 	$scope.$on("STEPS", function(event, val) {
@@ -288,38 +303,50 @@ function IndexController($rootScope, $scope, $location, $cookieStore, loginServi
 	$scope.tutorial = function() {
 		$rootScope.intro.setOption("steps", steps);
 		$rootScope.intro.start();
-	}
+	};
 	//$rootScope.$watch('hastutorial', function(val) {
 	//	$scope.hastutorial = val;
 	//});
 }
 
-function QuickController($scope, $location, flashService, judgeService, pickscriptService, quickService) {
+function QuickController($rootScope, $scope, $location, flashService, judgeService, pickscriptService, quickService) {
 	var retval = quickService.get( function() {
 		if (retval.question) {
 			questionId = retval.question;
 			$location.path('/judgepage/' + questionId);
 		} else {
-			$location.path('/');
+			//$location.path('/');
 			flashService.flash('error', 'Either you have already judged all of the high-priority scripts OR there are not enough answers to judge. Please come back later');
+			$rootScope.$broadcast("JUDGEMENT");
 		}
 	});
 }
 
-function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $location, flashService, judgeService, pickscriptService) {
+function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $location, loginService, flashService, judgeService, pickscriptService) {
 	var questionId = $routeParams.questionId;
 	if (questionId == 0) {
 		$location.path('/');
 		return;
 	}
 
+	var login = loginService.get( function() {
+		if (login.display) {
+			$scope.login= login.display;
+			if (login.usertype == 'Teacher' || login.usertype == 'Admin') {
+				$scope.instructor = true;
+			}
+
+		} else {
+			$scope.login = '';
+		}
+	});
+	
 	var sidl;
 	var sidr;
 	var winner;
 	$scope.getscript = function() {
 		var retval = pickscriptService.get( {qid: questionId}, function() {
-			var title = retval.qtitle.length > 80 ? retval.qtitle.slice(0, 79) + '...' : retval.qtitle;
-			$rootScope.breadcrumb = ['Judge', retval.course, title];
+			//var title = retval.qtitle ? retval.qtitle.length > 80 ? retval.qtitle.slice(0, 79) + '...' : retval.qtitle : '';
 			$scope.course = retval.course;
 			$scope.cid = retval.cid;
 			$scope.question = retval.question;
@@ -327,12 +354,15 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 			if (retval.sidl) {
 				sidl = retval.sidl;
 				sidr = retval.sidr;
+				$scope.sidl = retval.sidl;
+				$scope.sidr = retval.sidr;
 			} else {
 				flashService.flash( 'error', 'Either you have already judged all of the high-priority scripts OR there are not enough answers to judge. Please come back later' );
 				//$location.path('/');
 				$rootScope.$broadcast("JUDGEMENT"); 
 				return;
 			}
+			$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':retval.course,'link':'#/questionpage/' + retval.cid},{'name':'Judge','link':'#/questionpage/' + retval.cid}];
 			loadscripts();
 			var steps = [
 				{
@@ -368,7 +398,7 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 					intro: "Once you have picked a winner, submit your judgement",
 				},
 			];
-			var intro = "You will be presented with a random pair of answers from the question. Note that your own answer will not show up and you can judge the same pair only once. Examine both answers carefully and make your judgement."
+			var intro = "You will be presented with a random pair of answers from the question. Note that your own answer will not show up and you can judge the same pair only once. Examine both answers carefully and make your judgement.";
 			$rootScope.$broadcast("STEPS", { "steps": steps, "intro": intro });
 		});
 	};
@@ -393,7 +423,10 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 			if (retval.sidl) {
 				sidl = retval.sidl;
 				sidr = retval.sidr;
+				$scope.sidl = retval.sidl;
+				$scope.sidr = retval.sidr;
 				loadscripts();
+				$scope.pick = "";
 			} else if (retval.nonew) {
 				flashService.flash('error', 'This is the only fresh pair in this question');
 				return;
@@ -413,7 +446,7 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 }
 
 function LoginController($rootScope, $cookieStore, $scope, $location, flashService, loginService, authService, isInstalled) {
-	$rootScope.breadcrumb = ['Login'];
+	$rootScope.breadcrumb = [{'name':'Login'}];
 	$rootScope.$broadcast("NO_TUTORIAL", false);
 
 	var installed = isInstalled.get( function() {
@@ -444,7 +477,7 @@ function LoginController($rootScope, $cookieStore, $scope, $location, flashServi
 
 function UserIndexController($rootScope, $scope, $filter, $q, ngTableParams, userService, allUserService) {
 	$rootScope.$broadcast("NO_TUTORIAL", false);
-	$rootScope.breadcrumb = ['Users'];
+	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':'Users'}];
 
 	var allUsers = allUserService.get( function() {
 		$scope.allUsers = allUsers.users;
@@ -493,7 +526,7 @@ function UserIndexController($rootScope, $scope, $filter, $q, ngTableParams, use
 
 function UserController($rootScope, $scope, $location, flashService, roleService, userService) {
 	$rootScope.$broadcast("NO_TUTORIAL", false); 
-	$rootScope.breadcrumb = ['Users', 'Create User'];
+	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':'Create User'}];
 
 	retval = roleService.get(function() {
 		$scope.usertypes = retval.roles;
@@ -524,8 +557,8 @@ function UserController($rootScope, $scope, $location, flashService, roleService
 
 function ProfileController($rootScope, $scope, $routeParams, $location, flashService, userService, passwordService) {
 	$rootScope.$broadcast("NO_TUTORIAL", false);
-	$rootScope.breadcrumb = ['Users', 'Edit Profile']; 
-
+	$rootScope.breadcrumb = [{'name':'Home','link':'#'}];
+	
 	var uid = $routeParams.userId;
 	var retval = userService.get( {uid: uid}, function() {
 		if (retval.username) {
@@ -536,11 +569,17 @@ function ProfileController($rootScope, $scope, $routeParams, $location, flashSer
 			$scope.usertype = retval.usertype;
 			$scope.loggedType = retval.loggedType;
 			$scope.loggedName = retval.loggedName;
+			
+			if ($scope.loggedType == 'Admin') {
+				$rootScope.breadcrumb.push({'name':'Users','link':'#/user'});
+			}
+			$rootScope.breadcrumb.push({'name':'Edit Profile'});	
 		} else {
 			flashService.flash('error', 'Invalid User');
 			$location.path('/');
 		}
-	});
+	});	
+	
 	$scope.tooltip = { "title": "Password is needed only when changing password. Otherwise, leave it blank." };
 	$scope.submit = function() {
 		// typing in new password when current password isn't
@@ -580,7 +619,7 @@ function ProfileController($rootScope, $scope, $routeParams, $location, flashSer
 	};
 	$scope.resetpw = function() {
 		var retval = passwordService.get( {uid:uid}, function() {
-			resetpassword = retval.resetpassword
+			resetpassword = retval.resetpassword;
 			if (resetpassword) {
 				$scope.resetpassword = resetpassword;
 			} else {
@@ -591,16 +630,16 @@ function ProfileController($rootScope, $scope, $routeParams, $location, flashSer
 }
 
 function RankController($rootScope, $scope, $resource) {
-	$rootScope.breadcrumb = ['Ranking'];
+	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':'Ranking'}];
 	var retval = $resource('/ranking').get( function() {
 		$scope.scripts = retval.scripts;
 	});
 }
 
-function CourseController($rootScope, $scope, $cookieStore, courseService, loginService) {
+function CourseController($rootScope, $scope, $cookieStore, $location, courseService, loginService) {
 	// the property by which the list of courses will be sorted
 	$scope.orderProp = 'name';
-	$rootScope.breadcrumb = ['Courses'];
+	$rootScope.breadcrumb = [{'name':'Home'}];
 
 	var login = loginService.get( function() {
 		type = login.usertype;
@@ -613,7 +652,7 @@ function CourseController($rootScope, $scope, $cookieStore, courseService, login
 	var courses = courseService.get( function() {
 		var steps = [];
 		var intro = '';
-		$scope.courses = courses.courses;
+		$scope.courses = courses.courses;	
 		if ( $scope.instructor ) {
 			steps = [
 				{
@@ -659,6 +698,9 @@ function CourseController($rootScope, $scope, $cookieStore, courseService, login
 			}
 		});
 	};
+	$scope.redirect = function(url) {
+		$location.path(unescape(url));
+	};
 }
 
 function QuestionController($rootScope, $scope, $location, $routeParams, $filter, flashService, ngTableParams, questionService, loginService) 
@@ -666,7 +708,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 	$scope.orderProp = 'time';
 	$scope.newQuestion = '';
 	var questionData = [];
-
+		
 	var courseId = $routeParams.courseId; 
 	if (!courseId) {
 		$location.path("/");
@@ -698,7 +740,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 			total: questionData.length,
 			count: 10,
 		});
-		$rootScope.breadcrumb = [retval.course, 'Questions'];
+		$rootScope.breadcrumb = [{'name':'Home', 'link':'#'}, {'name':retval.course, 'link':'#/questionpage/'+courseId}];
 		var steps = [
 				{
 					element: '#stepNav',
@@ -729,12 +771,27 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 	$scope.previewText = function() {
 		$scope.preview = angular.element("div#myquestion").html();
 		$scope.question = $scope.preview; // update ng-model
-	}
+	};
+	// preview when editing a question
+	$scope.previewTextEdit = function(question) {
+		$scope.previewEdit = angular.element("#question"+question.id).html();
+		$scope.newquestion = $scope.previewEdit; // update ng-model
+	};
+	// only allow one single question to be editable at a time
+	$scope.editId = -1;
+	$scope.switchEdits = function(id) {		
+		if (id) {
+			$scope.previewEdit = null;
+			$scope.newquestion =  null;
+		}
+		$scope.editId = id ? id == $scope.editId ? -1 : id : $scope.editId;
+		return $scope.editId;
+	};
 	$scope.submit = function() {
 		$scope.question = angular.element("div#myquestion").html();
 		newstring = angular.element("div#myquestion").text();
 		if (!$scope.title || !newstring) {
-			return ''
+			return '';
 		}
 		input = {"title": $scope.title, "content": $scope.question};
 		var msg = questionService.save( {cid: courseId}, input, function() {
@@ -749,6 +806,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 				$scope.question = '';
 				$scope.submitted = '';
 				$scope.preview = '';
+				$scope.previewEdit = '';
 				flashService.flash('success', "The question has been successfully added.");
 			}
 		});
@@ -776,7 +834,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 		if (confirm("Delete Answer?") == true) {
 			var retval = questionService.remove( {cid: questionId}, function() {
 				if (retval.msg) {
-					flashService.flash( "error", "You cannot delete others' questions" )
+					flashService.flash( "error", "You cannot delete others' questions" );
 				} else {
 					var index = jQuery.inArray(question, $scope.questions);
 					$scope.questions.splice(index, 1);
@@ -804,10 +862,16 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 			);
 		}
 	}, true);
+	
+	// save the Rangy object for the selected hallo editor
+	$scope.saveRange = function() {
+		var selRange = rangy.getSelection();
+		$rootScope.savedRange = selRange.rangeCount ? selRange.getRangeAt(0) : null;
+	};
 }
 
 function AnswerController($rootScope, $scope, $routeParams, $http, flashService, answerService, rankService, commentAService, commentQService) {
-	$rootScope.breadcrumb = ['Course', 'Question', 'Answer'];
+	$rootScope.breadcrumb = [{'name':'Home', 'link':'#'}, {'name':'Question', 'link':''}, {'name':'Answer'}];
 	var questionId = $routeParams.questionId; 
 
 	$scope.orderProp = 'time';
@@ -844,11 +908,15 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 		$scope.question = retval.question;
 		$scope.scripts = retval.scripts;
 		$scope.login = retval.display;
+		$scope.commentQCount = retval.commentQCount;
+		$scope.authorQ = retval.authorQ;
+		$scope.timeQ = retval.timeQ;
+		$scope.avatarQ = retval.avatarQ;
 		if (retval.usertype == 'Teacher' || retval.usertype == 'Admin') {
 			$scope.instructor = true;
 		}
 		var title = retval.qtitle.length > 80 ? retval.qtitle.slice(0, 79) + '...' : retval.qtitle;
-		$rootScope.breadcrumb = [retval.course, title, 'Answers'];
+		$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name':retval.course, 'link':'#/questionpage/'+retval.cid}, {'name':title, 'link':'#/answerpage/'+questionId}];
 	});
 	$scope.submit = function() {
 		$scope.myanswer = angular.element("#myanswer").html();
@@ -865,13 +933,29 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 				$scope.myanswer = '';
 				$scope.submitted = false;
 				$scope.check = false;
+				$scope.previewEdit = '';
 			}
 		});
 	};
 	$scope.previewText = function() {
 		$scope.preview = angular.element("div#myanswer").html();
 		$scope.myanswer = $scope.preview;
-	}
+	};
+	// preview when editing an answer
+	$scope.previewTextEdit = function(script) {
+		$scope.previewEdit = angular.element("#editScript"+script.id).html();
+		$scope.newanswer = $scope.previewEdit; // update ng-model
+	};
+	// only allow one single answer to be editable at a time
+	$scope.editId = -1;
+	$scope.switchEdits = function(id) {		
+		if (id) {
+			$scope.previewEdit = null;
+			$scope.newanswer =  null;
+		}
+		$scope.editId = id ? id == $scope.editId ? -1 : id : $scope.editId;
+		return $scope.editId;
+	};
 	$scope.editscript = function(script, newanswer) {
 		newanswer = angular.element("#editScript"+script.id).html();
 		newstring = angular.element("#editScript"+script.id).text();
@@ -911,6 +995,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 			}
 		});
 	};
+	/* not used
 	$scope.getQcomments = function() {
 		var retval = commentQService.get( {id: questionId}, function() {
 			if (retval.comments) {
@@ -920,6 +1005,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 			}
 		});
 	};
+	*/
 	$scope.makeAcomment = function(script, mycomment) {
 		mycomment = angular.element("#newacom"+script.id).html();
 		newstring = angular.element("#newacom"+script.id).text();
@@ -980,7 +1066,6 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 		}
 	};
 	$scope.editQcom = function(comment, newcontent) {
-		console.log('in editQcom');
 		newcontent = angular.element("#editqcom"+comment.id).html();
 		newstring = angular.element("#editqcom"+comment.id).text();
 		if (!newstring) {
@@ -1017,6 +1102,12 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 			}
 		});
 	};
+	
+	// save the Rangy object for the selected hallo editor
+	$scope.saveRange = function() {
+		var selRange = rangy.getSelection();
+		$rootScope.savedRange = selRange.rangeCount ? selRange.getRangeAt(0) : null;
+	};
 }
 
 function EnrollController($rootScope, $scope, $routeParams, $filter, flashService, ngTableParams, enrollService) {
@@ -1042,7 +1133,7 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 			total: teacherData.length,
 			count: 10,
 		});
-		$rootScope.breadcrumb = [retval.course, 'Enrol']
+		$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name':retval.course, 'link':''}, {'name':'Enrol','link':''}];
 	});
 	$scope.add = function(user, type) {
 		input = {"uid": user.uid};
@@ -1102,17 +1193,21 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 		}
 	}, true);
 	$scope.$watch('squery', function(newValue) {
-		$scope.studentParams.filter = newValue;
-		$scope.studentParams.page = 1;
+		if ($scope.studentParams) {
+			$scope.studentParams.filter = newValue;
+			$scope.studentParams.page = 1;
+		}
 	}, true);
 	$scope.$watch('tquery', function(newValue) {
-		$scope.teacherParams.filter = newValue;
-		$scope.teacherParams.page = 1;
+		if ($scope.teacherParams) {
+			$scope.teacherParams.filter = newValue;
+			$scope.teacherParams.page = 1;
+		}
 	}, true);
 }
 
 function ImportController($rootScope, $scope, $routeParams, $http, flashService, courseService) {
-	$rootScope.breadcrumb = ['Users', 'Import'];
+	$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name':'Users', 'link':''}, {'name':'Import','link':''}];
 	courses = courseService.get(function() {
 		$scope.courses = courses.courses;
 		var steps = [
@@ -1141,7 +1236,7 @@ function ImportController($rootScope, $scope, $routeParams, $http, flashService,
 			$scope.success = content.success;
 			$scope.error = content.error;
 			msg = content.error.length > 0 ? 'Users are successfully imported, however some users have errors.' :
-				'Users are successfully imported.'
+				'Users are successfully imported.';
 			$scope.resultPage = true;
 			flashService.flash('success', msg);
 		} else if(content.completed) {
@@ -1157,6 +1252,31 @@ function ImportController($rootScope, $scope, $routeParams, $http, flashService,
 	};
 }
 
+function ReviewJudgeController($rootScope, $scope, $routeParams, loginService, reviewjudgeService) {
+	//$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name':'Review Judgements','link':''}];
+	var qid = $routeParams.qid; 
+	var login = loginService.get( function() {
+		if (login.display) {
+			$scope.login = login.display;
+			if (login.usertype == 'Teacher' || login.usertype == 'Admin') {
+				$scope.instructor = true;
+			}
+
+		} else {
+			$scope.login = '';
+		}
+	});
+	var retval = reviewjudgeService.get({qid: qid}, function() {
+		$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':retval.course,'link':'#/questionpage/' + retval.cid},{'name':'Review Judgements', 'link':''}];
+		$scope.judgements = retval.judgements;
+		$scope.title = retval.title;
+		$scope.question = retval.question;
+		$scope.authorQ = retval.authorQ;
+		$scope.timeQ = retval.timeQ;
+		$scope.avatarQ = retval.avatarQ;
+	});
+}
+
 myApp.directive('backButton', function(){
     return {
       restrict: 'A',
@@ -1169,7 +1289,7 @@ myApp.directive('backButton', function(){
           scope.$apply();
         }
       }
-    }
+    };
 });
 
 myApp.directive('inputFocus', function() {
@@ -1179,7 +1299,7 @@ myApp.directive('inputFocus', function() {
 		link: function(scope, element, attrs) {
 			angular.element(element).focus();
 		}
-	}
+	};
 });
  
 myApp.directive('halloEditor', function() {
@@ -1200,11 +1320,11 @@ myApp.directive('halloEditor', function() {
                }
             });
  
-            ngModel.$render = function() {
+            ngModel.$render = function($scope) {
                 element.html(ngModel.$viewValue || '');
             };
  
-            element.on('hallomodified', function() {
+            element.on('hallomodified', function() {				
                 ngModel.$setViewValue(element.html());
                 scope.$apply();
             });
@@ -1238,10 +1358,38 @@ myApp.directive("mathFormula", function() {
 			label: "@label"
 		},
 		template: '<span ng-click="add()" class="btn btn-default" mathjax-bind="label"></span>',
-		controller: function($scope, $element, $attrs) {
+		controller: function($rootScope, $scope, $element, $attrs) {
 			$scope.add = function() {
-				var textarea = angular.element("div#"+$scope.editor);
-				textarea.append($scope.equation);
+				// insert the formular at the cursor position using Rangy's insert method
+				if ($rootScope.savedRange) {
+					$rootScope.savedRange.insertNode(document.createTextNode($scope.equation));
+					rangy.getSelection().setSingleRange($rootScope.savedRange);
+				}
+				else {
+					var textarea = angular.element("div#"+$scope.editor);
+					textarea.append($scope.equation);
+				}
+			};
+		}
+	};
+});
+
+myApp.directive("mathImage", function() {
+	return {
+		restrict: "A",
+		replace: true,
+		scope: {
+			equation: "@mathEquation",
+			editor: "@editor",
+			label: "@label",
+			imgSrc: "@imgSrc"
+		},
+		template: '<span ng-click="add()" class="btn btn-default"><img ng-src="img/{{imgSrc}}" style="height:18px;" /></span>',
+		controller: function($rootScope, $scope, $element, $attrs) {
+			$scope.add = function() {
+				// insert the formular at the cursor position using Rangy's insert method
+				$rootScope.savedRange.insertNode(document.createTextNode($scope.equation));
+				rangy.getSelection().setSingleRange($rootScope.savedRange);
 			};
 		}
 	};
@@ -1262,14 +1410,15 @@ myApp.directive("mathToolbar", function() {
 });
 
 myApp.directive("breadcrumb", function() {
-	return {
+	return {		
 		restrict: "A",
 		replace: true,
+		scope: true,
 		template: '<ul class="breadcrumb">' + 
-			'<li ng-class="{active: $last}" ng-repeat="crumb in breadcrumb">{{ crumb }}' +
-			'<span class="divider" ng-if="!$last"> > </span></li></ul>',
-		scope: true
-	}
+			'<li ng-class="{active: $last}" ng-repeat="crumb in breadcrumb"><a href="{{crumb.link}}" ng-if="!$last">{{crumb.name}}</a>' +
+			'<span ng-if="$last">{{crumb.name}}</span>' +
+			'</li></ul>'	
+	};
 });
 
 myApp.directive("commentBlock", function() {
@@ -1280,14 +1429,24 @@ myApp.directive("commentBlock", function() {
 			login: "@clogin",
 			instructor: "@cinstructor",
 			sid: "@csid",
+			sidl: "@sidl",
+			sidr: "@sidr",
+			qid: "@qid",
 		},
-		controller: function($scope, $element, $attrs, $routeParams, flashService, commentQService, commentAService) {
-			console.log($scope.type);
-			console.log($scope.login);
-			console.log($scope.instructor);
-			console.log($scope.sid);
+		controller: function($rootScope, $scope, $element, $attrs, $routeParams, flashService, commentQService, commentAService, commentJService) {
 			var questionId = $routeParams.questionId;
-
+			
+			$scope.commentEditId = -1;
+			$scope.switchEdits = function(id) {		
+				if (id) {
+					$scope.myComment = null;
+					$scope.lcomm =  null;
+					$rootScope.savedRange = null;
+				}
+				$scope.commentEditId = id ? id == $scope.commentEditId ? -1 : id : $scope.commentEditId;				
+				return $scope.commentEditId;
+			};
+	
 			$scope.getComments = function() {
 				if ($scope.type == 'Question') {
 					var retval = commentQService.get( {id: questionId}, function() {
@@ -1305,15 +1464,23 @@ myApp.directive("commentBlock", function() {
 							flashService.flash('error', 'The comments could not be found.');
 						}
 					});
+				} else if ($scope.type == 'Judgement' || $scope.type == 'ReviewJudgement') {
+					var retval = commentJService.get( {id: $scope.type == 'Judgement' ? questionId : $scope.qid, sidl: $scope.sidl, sidr: $scope.sidr}, function() {
+						if (retval.comments) {
+							$scope.anyComments = retval.comments;
+						} else {
+							flashService.flash('error', 'The comments could not be found.');
+						}
+					});
 				} else {
-					alert('something is wrong; comment type should be either Question or Answer');
+					alert('something is wrong; comment type should be either Question, Answer or Judgement');
 				}
 			};
 			$scope.getComments();
 
 			$scope.makeComment = function() {
-				var myComment = angular.element("#mycomment"+$scope.type).html();
-				var newstring = angular.element("#mycomment"+$scope.type).text();
+				var myComment = angular.element("#mycomment"+$scope.type + ($scope.type == "Answer" ? $scope.sid : "")).html();
+				var newstring = angular.element("#mycomment"+$scope.type + ($scope.type == "Answer" ? $scope.sid : "")).text();
 				var input = {"content": myComment};
 				if (!newstring) {
 					return '';
@@ -1340,8 +1507,19 @@ myApp.directive("commentBlock", function() {
 							flashService.flash('error', 'Please submit a valid comment.');
 						}
 					});
+				} else if ($scope.type == 'Judgement' || $scope.type == 'ReviewJudgement') {
+					var retval = commentJService.save( {id: $scope.type == 'Judgement' ? questionId : $scope.qid, sidl: $scope.sidl, sidr: $scope.sidr}, input, function() {
+						if (retval.comment) {
+							$scope.anyComments.push( retval.comment );
+							$scope.myComment = '';
+							$scope.lcomm = false;
+							flashService.flash('success', 'The comment has been successfully added.');
+						} else {
+							flashService.flash('error', 'Please submit a valid comment.');
+						}
+					});
 				} else {
-					alert('something is wrong; comment type should be either Question or Answer');
+					alert('something is wrong; comment type should be either Question, Answer or Judgement');
 				}
 			};
 
@@ -1368,8 +1546,19 @@ myApp.directive("commentBlock", function() {
 							}
 						});
 					}
+				} else if ($scope.type == 'Judgement' || $scope.type == 'ReviewJudgement') {
+					if (confirm("Delete Answer Comment?") == true) {
+						var retval = commentJService.remove( {id: comment.id, sidl: $scope.sidl, sidr: $scope.sidr}, function() {
+							if (retval.msg != 'PASS') {
+								flashService.flash('error', 'The comment was unsuccessfully deleted.');
+							} else {
+								var index = jQuery.inArray(comment, $scope.anyComments);
+								$scope.anyComments.splice(index, 1);
+							}
+						});
+					}
 				} else {
-					alert('something is wrong; comment type should be either Question or Answer');
+					alert('something is wrong; comment type should be either Question, Answer or Judgement');
 				}
 			};
 
@@ -1403,9 +1592,26 @@ myApp.directive("commentBlock", function() {
 							flashService.flash('success', 'The comment has been successfully added.');
 						}
 					});
+				} else if ($scope.type == 'Judgement' || $scope.type == 'ReviewJudgement') {
+					var retval = commentJService.put( {id: comment.id, sidl: $scope.sidl, sidr: $scope.sidr}, input, function() {
+						if (retval.msg != 'PASS') {
+							//alert('something is wrong');
+							flashService.flash('error', 'Please submit a valid comment');
+						} else {
+							var index = jQuery.inArray(comment, $scope.anyComments);
+							$scope.anyComments[index].content = newcontent;
+							flashService.flash('success', 'The comment has been successfully added.');
+						}
+					});
 				} else {
-					alert('something is wrong; comment type should be either Question or Answer');
+					alert('something is wrong; comment type should be either Question, Answer or Judgement');
 				}
+			};
+			
+			// save the Rangy object for the selected hallo editor
+			$scope.saveRange = function() {
+				var selRange = rangy.getSelection();
+				$rootScope.savedRange = selRange.rangeCount ? selRange.getRangeAt(0) : null;
 			};
 		},
 		templateUrl: 'templates/comments.html',

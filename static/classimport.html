@@ -1,70 +1,78 @@
 <div ng-hide="resultPage">
-<h3>Instructions</h3>
-<ul class="instructions">
-	<li>Import the class list in a CSV (.csv) or text (.txt) format</li>
-	<li>Please format the class list in the format below.</li>
+	<h3>Instructions</h3>
 	<ul class="instructions">
-		<li>Username,First Name,Last Name,Email</li>
+		<li>Import the class list in a CSV (.csv) or text (.txt) format</li>
+		<li>Please format the class list in the format below.</li>
+		<ul class="instructions">
+			<li>Username,First Name,Last Name,Email</li>
+		</ul>
 	</ul>
-</ul>
-<h3>Example</h3>
-<pre class="instructions">
-username1,firstname1,lastname1,1@email.com
-username2,firstname2,lastname2,2@email.com
-username3,firstname3,lastname3,3@email.com
-username4,firstname4,lastname4,4@email.com
-</pre>
-<h3>Import</h3>
-<form ng-upload action="/userimport" enctype=multipart/form-data class="form-horizontal" name="importUser" novalidate>
-	<div class="control-group">
-		<label class="control-label" for="stepBrowse">File</label>
-		<div class="controls"><input type=file name=file id="stepBrowse"></div>
-	</div>
-	<div class="control-group">
-	<label class="control-label" for="stepCourses">Courses</label>
-	<div class="controls">
-	<select ng-model="course" name="course" id="stepCourses" required>
-		<option ng-repeat="c in courses" value="{{c.id}}">{{ c.name }}</option>	
-	</select>
-	<span class="help-block required" ng-show="importUser.course.$invalid">Please select your desired course.</span>
-	</div>
-	</div>
-	<div class="control-group">
-		<div class="controls">
-			<input class="btn btn-primary" id="stepUpload" type=submit value=Upload upload-submit="uploadComplete(content)" ng-disabled="importUser.$invalid">
+	<h3>Example</h3>
+	<pre class="instructions">
+		username1,firstname1,lastname1,1@email.com
+		username2,firstname2,lastname2,2@email.com
+		username3,firstname3,lastname3,3@email.com
+		username4,firstname4,lastname4,4@email.com
+	</pre>
+	<h3>Import</h3>
+	<form ng-upload action="/userimport" enctype=multipart/form-data
+		class="form-horizontal" name="importUser" novalidate>
+		<div class="control-group">
+			<label class="control-label" for="stepBrowse">File</label>
+			<div class="controls">
+				<input type=file name=file id="stepBrowse">
+			</div>
 		</div>
-	</div>
-</form>
+		<div class="control-group">
+			<label class="control-label" for="stepCourses">Courses</label>
+			<div class="controls">
+				<select ng-model="course" name="course" id="stepCourses" required>
+					<option ng-repeat="c in courses" value="{{c.id}}">{{
+						c.name }}</option>
+				</select> <span class="help-block required"
+					ng-show="importUser.course.$invalid">Please select your
+					desired course.</span>
+			</div>
+		</div>
+		<div class="control-group">
+			<div class="controls">
+				<input class="btn btn-primary" id="stepUpload" type=submit
+					value=Upload upload-submit="uploadComplete(content)"
+					ng-disabled="importUser.$invalid">
+			</div>
+		</div>
+	</form>
 </div>
 <div ng-show="resultPage">
-<h2>Results</h2>
-<div ng-show="success">
-<h3>Successful Users</h3>
-<table class="results">
-<tr>
-	<th>Username</th>
-	<th>Display Name</th>
-	<th>Password</th>
-</tr>
-<tr ng-repeat="user in success">
-	<td>{{user.user.username}}</td>
-	<td>{{user.user.display}}</td>
-	<td>{{user.user.password}}</td>
-</tr>
-</table>
-</div>
-<div ng-show="error">
-<h3>Errors</h3>
-<table class="results">
-<tr>
-	<th>Username</th>
-	<th>Display Name</th>
-	<th>Error Message</th>
-</tr>
-<tr ng-repeat="user in error">
-	<td>{{user.user.username}}</td>
-	<td>{{user.user.display}}</td>
-	<td>{{user.msg}}</td>
-</tr>
-</table>
+	<h2>Results</h2>
+	<div ng-show="success">
+		<h3>Successful Users</h3>
+		<table class="results">
+			<tr>
+				<th>Username</th>
+				<th>Display Name</th>
+				<th>Password</th>
+			</tr>
+			<tr ng-repeat="user in success">
+				<td>{{user.user.username}}</td>
+				<td>{{user.user.display}}</td>
+				<td>{{user.user.password}}</td>
+			</tr>
+		</table>
+	</div>
+	<div ng-show="error">
+		<h3>Errors</h3>
+		<table class="results">
+			<tr>
+				<th>Username</th>
+				<th>Display Name</th>
+				<th>Error Message</th>
+			</tr>
+			<tr ng-repeat="user in error">
+				<td>{{user.user.username}}</td>
+				<td>{{user.user.display}}</td>
+				<td>{{user.msg}}</td>
+			</tr>
+		</table>
+	</div>
 </div>

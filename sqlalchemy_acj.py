@@ -201,3 +201,26 @@ class CommentQ(Entry):
 
 	def __repr__(self):
 		return '<CommentQ %r>' % self.id
+
+class CommentJ(Entry):
+	__tablename__ = 'CommentJ'
+	id = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'), primary_key=True)
+	qid = Column(Integer, ForeignKey('Question.id', ondelete='CASCADE'))
+	sidl = Column(Integer, ForeignKey('Judgement.sidl', ondelete='CASCADE'))
+	sidr = Column(Integer, ForeignKey('Judgement.sidr', ondelete='CASCADE'))
+
+	#judgement = relationship('Judgement', foreign_keys=[id], backref=backref('CommentJ', cascade="all,delete"))
+
+	__mapper_args__ = {
+		'polymorphic_identity': 'CommentJ',
+	}
+	
+	def __init__(self, qid, sidl, sidr, uid, content):
+		self.qid = qid
+		self.sidl = sidl
+		self.sidr = sidr
+		self.uid = uid 
+		self.content = content
+
+	def __repr__(self):
+		return '<CommentJ %r>' % self.id
