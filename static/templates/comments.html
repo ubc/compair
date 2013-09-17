@@ -2,11 +2,11 @@
 		<ul class="postingsList">
 			<li ng-repeat="comment in anyComments">
 				<img src="http://www.gravatar.com/avatar/{{comment.avatar}}?s=32&d=retro" class="avatar">
-				<p class="authorHeader"><strong>{{comment.author}}</strong> - {{comment.time}}</p> {{type}} {{login}} {{instructor}} {{sid}}
+				<p class="authorHeader"><strong>{{comment.author}}</strong> - {{comment.time}}</p>
 
 				<div class="opbuttons">
 					<a href="" class="btn btn-small" ng-show="instructor || login==comment.author" 
-						ng-click="editC=!editC;newCom=comment.content">
+						ng-click="switchEdits({{comment.id}});newCom=comment.content">
 						<i class="icon-edit icon-large"></i>
 						Edit
 					</a>
@@ -16,12 +16,12 @@
 					</a>
 				</div>
 
-				<div ng-hide="editC" mathjax-bind="comment.content"></div>
-				<div ng-show="editC" class="comment">
-					<div math-toolbar editor="editcom{{comment.id}}" class="mathtoolbar btn-group"></div>
-					<div hallo-editor name="editCom" ng-model="newCom" id="editcom{{comment.id}}" class="entries"></div>
+				<div ng-hide="switchEdits() == {{comment.id}}" mathjax-bind="comment.content" class="questionContent"></div>
+				<div ng-show="switchEdits() == {{comment.id}}" class="comment">
+					<div math-toolbar editor="editcom{{comment.id}}" class="mathtoolbar"></div>
+					<div hallo-editor name="editCom" ng-model="newCom" id="editcom{{comment.id}}" class="entries" ng-mouseup="saveRange()" ng-keyup="saveRange()"></div>
 				</div>
-				<a href="" class="btn btn-primary" ng-show="editC" ng-click="editComment(comment, newCom);editC=false">
+				<a href="" class="btn btn-primary" ng-show="switchEdits() == {{comment.id}}" ng-click="editComment(comment, newCom);switchEdits(-1);">
 					<i class="icon-ok-sign"></i> Submit
 				</a>
 			</li>
@@ -33,14 +33,14 @@
 
 		<div ng-show="lcomm" class="createPosting">
 			<form name="addComment" novalidate>
-				<div math-toolbar editor="mycomment{{type}}" class="mathtoolbar btn-group"></div>
-				<div hallo-editor name="qcom" ng-model="myComment" id="mycomment{{type}}" class="entries"></div>
+				<div math-toolbar editor="mycomment{{type}}" class="mathtoolbar"></div>
+				<div hallo-editor name="qcom" ng-model="myComment" id="mycomment{{type}}{{sid}}" class="entries" ng-mouseup="saveRange()" ng-keyup="saveRange()"></div>
 				<p class="text-error" ng-show="newComment && !myComment">
 					<span class="label label-important">Error</span>
 					Please enter a comment.
 				</p>
 
-				<a href="" class="btn btn-primary" ng-click="makeComment();newComment=true">
+				<a href="" class="btn btn-primary" ng-click="makeComment();newComment=true;switchEdits(-1);">
 					<i class="icon-ok"></i> Submit
 				</a>
 			</form>
