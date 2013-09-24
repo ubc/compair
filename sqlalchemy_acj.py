@@ -1,6 +1,6 @@
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
-from sqlalchemy import create_engine, Column, Integer, String, Enum, ForeignKey, DateTime, Text, Float
+from sqlalchemy import create_engine, Column, Integer, String, Enum, ForeignKey, DateTime, Text, Float, Boolean, Table
 from sqlalchemy.orm import backref, scoped_session, sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -16,6 +16,16 @@ Base = declarative_base()
 Base.query = db_session.query_property()
 Base.metadata.create_all(bind=engine)
 
+course_tags_table = Table('CourseTags', Base.metadata,
+    Column('cid', Integer, ForeignKey('Course.id', ondelete='CASCADE')),
+    Column('tid', Integer, ForeignKey('Tags.id', ondelete='CASCADE'))
+)
+
+question_tags_table = Table('QuestionTags', Base.metadata,
+    Column('qid', Integer, ForeignKey('Question.id', ondelete='CASCADE')),
+    Column('tid', Integer, ForeignKey('Tags.id', ondelete='CASCADE'))
+)
+
 def init_db():
 	Base.metadata.create_all(bind=engine)
 
@@ -29,6 +39,7 @@ class User(Base):
 	firstname = Column(String(254))
 	lastname = Column(String(254))
 	display = Column(String(254), unique=True)
+	lastOnline = Column(DateTime)
 
 	judgement = relationship('Judgement', cascade="all,delete")
 	enrollment = relationship('Enrollment', cascade="all,delete")
@@ -63,6 +74,10 @@ class Course(Base):
 	question = relationship('Question', cascade="all,delete")
 	enrollment = relationship('Enrollment', cascade="all,delete")
 
+	tags = relationship("Tags",
+						secondary=course_tags_table,
+						backref=backref('tags', lazy='dynamic'), cascade="all,delete")
+	
 	def __init__(self, name):
 		self.name = name
 
@@ -74,7 +89,7 @@ class Entry(Base):
 	id = Column(Integer, primary_key=True)
 	uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
 	type = Column(String(50))
-	time = Column(DateTime, default=datetime.datetime.utcnow)
+	time = Column(DateTime, default=datetime.datetime.now)
 	content = Column(Text)
 
 	__mapper_args__ = {
@@ -94,16 +109,22 @@ class Question(Entry):
 	id = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'), primary_key=True)
 	cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
 	title = Column(String(255))
+	quiz = Column(Boolean, default=True)
+
+	tagsQ = relationship("Tags",
+						secondary=question_tags_table,
+						backref=backref('tagsQ', lazy='dynamic'), cascade="all,delete")
 
 	__mapper_args__ = {
 		'polymorphic_identity': 'Question',
 	}
 
-	def __init__(self, cid, uid, title, content):
+	def __init__(self, cid, uid, title, content, quiz):
 		self.cid = cid
 		self.uid = uid 
 		self.title = title
 		self.content = content
+		self.quiz = quiz
 
 	def __repr__(self):
 		return '<Question %r>' % self.id
@@ -156,6 +177,7 @@ class Enrollment(Base):
 	id = Column(Integer, primary_key=True)
 	uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
 	cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
+	time = Column(DateTime, default=datetime.datetime.now)
 
 	def __init__(self, uid, cid):
 		self.uid = uid
@@ -224,3 +246,15 @@ class CommentJ(Entry):
 
 	def __repr__(self):
 		return '<CommentJ %r>' % self.id
+
+class Tags(Base):
+	__tablename__ = 'Tags'
+	id = Column(Integer, primary_key=True)
+	name = Column(String(80), unique=True)
+	
+	def __init__(self, name):
+		self.name = name
+
+	def __repr__(self):
+		return '<Tags %r>' % self.name
+

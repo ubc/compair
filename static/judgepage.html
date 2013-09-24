@@ -1,5 +1,5 @@
 <div>
-	<h2>Judge Page</h2>
+	<h2>Judge peer responses</h2>
 
 	<div id="stepTitle">
 		<h3>{{qtitle}}</h3>
@@ -7,17 +7,14 @@
 		<div class="questionContent" mathjax-bind="question"></div>
 	</div>
 
-	<a id="stepNext" class="btn" ng-click="nextpair();jcomm=false">
-		<i class="icon-random"></i> Next Pair
-	</a>
 	<ul id="stepViews" class="judgetabs nav nav-tabs">
-		<li id="stepLeft">
+		<li id="stepLeft" class="pointer">
 			<a data-toggle="tab" data-target="#left">Left</a>
 		</li>
-		<li class="active" id="stepVS">
+		<li class="active pointer" id="stepVS">
 			<a data-toggle="tab" data-target="#vs">VS</a>
 		</li>
-		<li id="stepRight">
+		<li id="stepRight" class="pointer">
 			<a data-toggle="tab" data-target="#right">Right</a>
 		</li>
 	</ul>
@@ -65,7 +62,9 @@
 		</div>
 		
 	</form>		
-	
+	<a id="stepNext" class="btn" ng-click="nextpair();jcomm=false">
+		<i class="icon-random"></i> Next Pair
+	</a>
 	<a class="btn btn-info" ng-click="jcomm=!jcomm;">
 			<i class="icon-comments-alt icon-large"></i> Comments
 	</a>

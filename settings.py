@@ -3,4 +3,4 @@ DATABASE = {'drivername': 'mysql',
 			'port': '80',
 			'username': 'root',
 			'password': '',
-			'database': 'acj'}
+			'database': 'acj_2'}

@@ -6,6 +6,10 @@ form {
   margin-top: 1em;
   margin-bottom: 1em; }
 
+/* otherwise collides with navbar */
+.dropdown-menu {
+	z-index: 1001;
+}
 /***** INDEX PAGE *****/
 #main {
   padding: 1em; }
@@ -64,6 +68,12 @@ ul.postingsList > li {
   border-radius: 5px;
   background: #fcfcfc;
   border: 1px solid #ccc; }
+
+ul.postingsList > li.quiz {
+	background: azure; }
+	
+ul.postingsList > li.discussion {
+	background: ivory; }
 
 div.createPosting {
   margin-top: 1em;
@@ -163,8 +173,16 @@ span.required {
 	border: 1px solid #468847;
 }
 
+.margin1 {
+	margin:1px;
+}
+
 .top {
 	vertical-align: top;	
+}
+
+.middle {
+	vertical-align: middle;	
 }
 
 .padding0 {

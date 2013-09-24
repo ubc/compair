@@ -1,0 +1,33 @@
+<div>
+	<h2>Edit Course</h2>
+	<div class="errFlash" ng-show="flash">{{flash}}</div>
+	<form name=editCourse novalidate>
+		Course: 
+		<br>
+		<span class="profile" ng-hide="edit">{{name}}</span> 
+		<span class="profile" ng-show="edit">
+			<input type="text" name="coursename" ng-model="newname" value="newname" required>
+		</span>
+		<span class=errMsg ng-show="submitted && editCourse.coursename.$error.required">Course name is required.</span>
+		<br><br>
+		Tags:
+		<br>
+		<ul>
+			<li	ng-repeat="tag in tags">
+				<button class="btn btn-danger btn-mini icon-remove" ng-click="removeTag({{tag.id}})"></button> {{tag.name}} 
+			</li>
+		</ul>
+		New Tag: <input type="text" ng-model="newtag">
+		<button class="btn btn-success btn-mini icon-plus" ng-click="addTag()"></button>
+		<br><br>
+		<br><br>
+	</form>
+	<a href="" ng-hide="username!=loggedName && loggedType!='Admin'" class="edit" ng-click="edit=!edit; newdisplay=display; newemail=email; newpassword=''; newretypepw=''; oldpassword=''">
+		<i class="icon-edit-sign icon-large"></i> Edit
+	</a> 
+	<a href="" class="submit" ng-show="edit" ng-click="submit();submitted=true">
+		<i class="icon-ok icon-large"></i> Submit
+	</a>
+</div>
+
+

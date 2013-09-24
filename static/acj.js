@@ -3,7 +3,7 @@ var myApp = angular.module('myApp', ['flash', 'ngRoute', 'ngResource', 'ngTable'
 //Global Variables
 
 myApp.factory('installService', function($resource) {
-	return $resource( '/install' );
+	return $resource('/install');
 });
 
 myApp.factory('createAdmin', function($resource) {
@@ -50,6 +50,10 @@ myApp.factory('courseService', function($resource) {
 	return $resource( '/course' );
 });
 
+myApp.factory('editcourseService', function($resource) {
+	return $resource( '/editcourse/:cid', {}, { put: {method: 'PUT'} } );
+});
+
 myApp.factory('questionService', function($resource) {
 	return $resource( '/question/:cid', {}, { put: {method: 'PUT'} } );
 });
@@ -84,6 +88,14 @@ myApp.factory('passwordService', function($resource) {
 
 myApp.factory('reviewjudgeService', function($resource) {
 	return $resource( '/judgements/:qid' );
+});
+
+myApp.factory('notificationService', function($resource) {
+	return $resource( '/notifications' );
+});
+
+myApp.factory('tagService', function($resource) {
+	return $resource( '/managetag/:cid/:tid' );
 });
 
 myApp.factory('flashService', function(flash) {
@@ -172,6 +184,11 @@ myApp.config( function ($routeProvider) {
 				controller: ReviewJudgeController,
 				templateUrl: 'reviewjudge.html'
 			})
+		.when ('/editcourse/:courseId',
+			{
+				controller: EditCourseController,
+				templateUrl: 'editcourse.html'
+			})
 		.otherwise({redirectTo: '/'});
 });
 
@@ -223,7 +240,7 @@ function InstallController($rootScope, $scope, $location, $cookieStore, flashSer
 	};
 }
 
-function IndexController($rootScope, $scope, $location, $cookieStore, loginService, logoutService, isInstalled) {
+function IndexController($rootScope, $scope, $location, $cookieStore, loginService, logoutService, isInstalled, notificationService) {
 	$rootScope.intro = introJs();
 
 	//var allBreadcrumbs = [];
@@ -239,6 +256,7 @@ function IndexController($rootScope, $scope, $location, $cookieStore, loginServi
 			"click": "logout()",
 		},
 	];
+	
 	var login = loginService.get( function() {
 		$scope.usertype = login.usertype;
 		login = login.display;
@@ -254,11 +272,27 @@ function IndexController($rootScope, $scope, $location, $cookieStore, loginServi
 			$location.path('/install');
 		}
 	});
+	
 	$scope.$on("LOGGED_IN", function(event, user) {
 		$scope.check = true;
 		$scope.login = user.display;
 		$scope.usertype = user.usertype;
+		
+		var notifications = notificationService.get( function() {
+			if (notifications.count > 0) {
+				$scope.notifications = true;
+				$scope.notificationsCount = notifications.count;
+				$scope.notificationdropdown = [];
+				for (var i = 0; i < notifications.questions.length; i++) {
+					$scope.notificationdropdown.push({
+	           			"text": notifications.questions[i].title.length > 30 ? notifications.questions[i].title.slice(0, 29) + '...' : notifications.questions[i].title,
+	           			"href": "#/answerpage/" + notifications.questions[i].qid
+	           		});
+				}
+			}
+		});
 	});
+	
 	$scope.logout = function() {
 		var logout = logoutService.get( function() {
 			if (logout.status) {
@@ -645,10 +679,12 @@ function CourseController($rootScope, $scope, $cookieStore, $location, courseSer
 		type = login.usertype;
 		if (type && (type=='Teacher' || type=='Admin')) {
 			$scope.instructor = true;
+			$scope.admin = type=='Admin';
 		} else {
 			$scope.instructor = false;
 		}
 	});
+	
 	var courses = courseService.get( function() {
 		var steps = [];
 		var intro = '';
@@ -703,13 +739,58 @@ function CourseController($rootScope, $scope, $cookieStore, $location, courseSer
 	};
 }
 
-function QuestionController($rootScope, $scope, $location, $routeParams, $filter, flashService, ngTableParams, questionService, loginService) 
+function EditCourseController($rootScope, $scope, $routeParams, editcourseService, tagService) {
+	var courseId = $routeParams.courseId; 
+	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':'Edit Course'}];
+	var course = editcourseService.get({cid: courseId}, function() {
+		$scope.id = course.id;
+		$scope.name = course.name;
+		$scope.newname = course.name;
+		$scope.tags = course.tags;
+	});
+	
+	$scope.submit = function() {
+		var input = {"name": $scope.newname};
+		var retval = editcourseService.put({cid: $scope.id}, input, function() {
+			if (retval.msg != 'PASS') {
+				//TODO
+				//flashService.flash('error', '...');
+			} else {
+				$scope.edit = false;
+				$scope.submitted = false;
+				$scope.name = $scope.newname;
+				//flashService.flash('success', 'The course has been successfully modified.');
+			}
+		});
+	};
+	
+	$scope.removeTag = function(tid) {
+		var course = tagService.remove({"cid": $scope.id, "tid": tid}, function() {
+			$scope.id = course.id;
+			$scope.name = course.name;
+			$scope.newname = course.name;
+			$scope.tags = course.tags;
+		});
+	};
+	$scope.addTag = function() {
+		var input = {"cid": $scope.id, "name": $scope.newtag};
+		var course = tagService.save({}, input, function() {
+			$scope.id = course.id;
+			$scope.name = course.name;
+			$scope.newname = course.name;
+			$scope.tags = course.tags;
+		});
+	};
+}
+
+function QuestionController($rootScope, $scope, $location, $routeParams, $filter, flashService, ngTableParams, questionService, answerService, loginService) 
 {
 	$scope.orderProp = 'time';
 	$scope.newQuestion = '';
+	$scope.type = $rootScope.type ? $rootScope.type : 'quiz';
 	var questionData = [];
 		
-	var courseId = $routeParams.courseId; 
+	var courseId = $routeParams.courseId;
 	if (!courseId) {
 		$location.path("/");
 		return;
@@ -728,18 +809,27 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 
 	$scope.searchFilter = function (obj) {
 		var re = new RegExp($scope.search, 'i');
+		for (tag in obj.tags) {
+			if (re.test(obj.tags[tag])) {
+				return true;
+			}
+		}
 		return !$scope.search || re.test(obj.title) || re.test(obj.content);
 	};
 
 	var retval = questionService.get( {cid: courseId}, function() {
 		$scope.course = retval.course;
-		$scope.questions = retval.questions;
+		$scope.discussions = retval.questions;
+		$scope.quizzes = retval.quizzes;
+		$scope.tags = retval.tags;
 		questionData = retval.questions;
+		/*
 		$scope.questionParams = new ngTableParams({
 			page: 1,
 			total: questionData.length,
 			count: 10,
 		});
+		*/
 		$rootScope.breadcrumb = [{'name':'Home', 'link':'#'}, {'name':retval.course, 'link':'#/questionpage/'+courseId}];
 		var steps = [
 				{
@@ -779,7 +869,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 	};
 	// only allow one single question to be editable at a time
 	$scope.editId = -1;
-	$scope.switchEdits = function(id) {		
+	$scope.switchEdits = function(id) {	
 		if (id) {
 			$scope.previewEdit = null;
 			$scope.newquestion =  null;
@@ -793,28 +883,48 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 		if (!$scope.title || !newstring) {
 			return '';
 		}
-		input = {"title": $scope.title, "content": $scope.question};
+		input = {"title": $scope.title, "content": $scope.question, "type": $scope.type, "taglist": $scope.taglist ? $scope.taglist : new Array()};
 		var msg = questionService.save( {cid: courseId}, input, function() {
 			if (msg.msg) {
 				// TODO: What use cases would land here? eg. validation error
 				// alert('something is wrong');
 			} else {
-				$scope.questions.push(msg);
-				$scope.check = false;
-				// reset the form
-				$scope.title = '';
-				$scope.question = '';
-				$scope.submitted = '';
-				$scope.preview = '';
-				$scope.previewEdit = '';
-				flashService.flash('success', "The question has been successfully added.");
+				validAnswer = true;
+				if ($scope.type == 'quiz') {
+					$scope.myanswerq = angular.element("#myanswerq").html();
+					newstring = angular.element("#myanswerq").text();
+					if (!newstring) {
+						return '';
+					}
+					input = {"content": $scope.myanswerq};
+					var newscript = answerService.save( {qid: msg.id}, input, function() {
+						if (newscript.msg) {
+							flashService.flash('error', 'Please submit a valid answer.');
+							validAnswer = false;
+						} else {
+							$scope.myanswerq = '';
+						}
+					});
+				}
+				if (validAnswer) {
+					$scope.type == 'quiz' ? $scope.quizzes.push(msg) : $scope.discussions.push(msg);
+					$scope.check = false;
+					// reset the form
+					$scope.title = '';
+					$scope.question = '';
+					$scope.submitted = '';
+					$scope.preview = '';
+					$scope.previewEdit = '';
+					flashService.flash('success', "The question has been successfully added.");
+				}
 			}
 		});
 	};
+	
 	$scope.editquestion = function(newtitle, newquestion, question) {
 		newquestion = angular.element("#question"+question.id).html();
-		newstring = angular.element("#question"+question.id).text(); // ignore tags
-		input = {"title": newtitle, "content": newquestion};
+		newstring = angular.element("#question"+question.id).text(); // ignore html tags
+		input = {"title": newtitle, "content": newquestion, "taglist": question.tags ? question.tags : new Array()};
 		if (!newtitle || !newstring) {
 			return '';
 		}
@@ -822,22 +932,35 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 			if (retval.msg != 'PASS') {
 				flashService.flash('error', 'Please submit a question.');
 			} else {
-				var index = jQuery.inArray(question, $scope.questions);
-				$scope.questions[index].title = newtitle;
-				$scope.questions[index].content = newquestion;
+				if ($scope.type == 'quiz') {
+					var index = jQuery.inArray(question, $scope.quizzes);
+					$scope.quizzes[index].title = newtitle;
+					$scope.quizzes[index].content = newquestion;
+				}
+				else {
+					var index = jQuery.inArray(question, $scope.discussions);
+					$scope.discussions[index].title = newtitle;
+					$scope.discussions[index].content = newquestion;
+				}
 				flashService.flash('success', 'The question has been successfully modified.');
 			}
 		});
 	};
 	$scope.remove = function(question) {
 		questionId = question.id;
-		if (confirm("Delete Answer?") == true) {
+		if (confirm("Delete Question?") == true) {
 			var retval = questionService.remove( {cid: questionId}, function() {
 				if (retval.msg) {
 					flashService.flash( "error", "You cannot delete others' questions" );
 				} else {
-					var index = jQuery.inArray(question, $scope.questions);
-					$scope.questions.splice(index, 1);
+					if ($scope.type == 'quiz') {
+						var index = jQuery.inArray(question, $scope.quizzes);
+						$scope.quizzes.splice(index, 1);
+					}
+					else {
+						var index = jQuery.inArray(question, $scope.discussions);
+						$scope.discussions.splice(index, 1);
+					}
 					flashService.flash('success', "The question has been successfully deleted.");
 				}
 			});
@@ -851,22 +974,61 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 		questionId = id;
 		$location.path("/answerpage");
 	};
+	// TODO what does this do?
+	/*
 	$scope.$watch('questionParams', function(params) {
 		// wait for the params object to be created
 		if (params) {
 			var orderedData = params.sorting ? $filter('orderBy')(questionData, params.orderBy()) : questionData;
-
 			$scope.questions = orderedData.slice(
 				(params.page - 1) * params.count,
 				params.page * params.count
 			);
 		}
 	}, true);
-	
+	*/
 	// save the Rangy object for the selected hallo editor
 	$scope.saveRange = function() {
 		var selRange = rangy.getSelection();
 		$rootScope.savedRange = selRange.rangeCount ? selRange.getRangeAt(0) : null;
+	};
+	
+	$scope.tagActionN = function(id) {
+		if (!$scope.taglist) $scope.taglist = [];
+		var index = jQuery.inArray(id, $scope.taglist);
+		if (index >= 0) {
+			$scope.taglist.splice(index, 1);
+		}
+		else {
+			$scope.taglist.push(id);
+		}
+	};
+	$scope.tagActionQ = function(list, name) {
+		if (!list) list = [];
+		var index = jQuery.inArray(name, list);
+		if (index >= 0) {
+			list.splice(index, 1);
+		}
+		else {
+			list.push(name);
+		}
+	};
+	$scope.checkTagN = function(id) {
+		return jQuery.inArray(id, $scope.taglist) >= 0;
+	};
+	$scope.checkTagQ = function(list, name) {
+		if (list) {
+			for (var i = 0; i < list.length; i++) {
+				if (list[i] == name) {
+					return true;
+				}
+			}
+		}
+		return false;
+	};
+	$scope.setType = function(type) {
+		$scope.type = type;
+		$rootScope.type = type;
 	};
 }
 
@@ -878,6 +1040,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 	$scope.nextOrder = 'score';
 	
 	$scope.newScript = '';
+	$scope.answered = false;
 
 	var steps = [
 		{
@@ -912,6 +1075,8 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 		$scope.authorQ = retval.authorQ;
 		$scope.timeQ = retval.timeQ;
 		$scope.avatarQ = retval.avatarQ;
+		$scope.answered = retval.answered;
+		$scope.quiz = retval.quiz;
 		if (retval.usertype == 'Teacher' || retval.usertype == 'Admin') {
 			$scope.instructor = true;
 		}
@@ -934,6 +1099,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 				$scope.submitted = false;
 				$scope.check = false;
 				$scope.previewEdit = '';
+				$scope.answered = true;
 			}
 		});
 	};
@@ -1324,7 +1490,7 @@ myApp.directive('halloEditor', function() {
                 element.html(ngModel.$viewValue || '');
             };
  
-            element.on('hallomodified', function() {				
+            element.on('hallomodified', function() {
                 ngModel.$setViewValue(element.html());
                 scope.$apply();
             });
@@ -1418,6 +1584,17 @@ myApp.directive("breadcrumb", function() {
 			'<li ng-class="{active: $last}" ng-repeat="crumb in breadcrumb"><a href="{{crumb.link}}" ng-if="!$last">{{crumb.name}}</a>' +
 			'<span ng-if="$last">{{crumb.name}}</span>' +
 			'</li></ul>'	
+	};
+});
+
+myApp.directive("notification", function() {
+	return {		
+		restrict: "A",
+		replace: true,
+		scope: true,
+		template: '<ul class="dropdown-menu"><li>{{notificationsCount}} new answer(s):</li>' + 
+		'<li ng-repeat="item in notificationdropdown"><a href="{{item.href}}">{{item.text}}</a>' +
+		'</li></ul>'	
 	};
 });
 

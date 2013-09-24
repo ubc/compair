@@ -1,13 +1,15 @@
 <div class="errFlash span12" ng-show="flash">{{ flash }}</div>
-<h2>Courses</h2>
+<h2>
+	<span ng-show="!instructor">Courses you are enrolled in</span>
+	<span ng-show="instructor">Courses you belong to</span>
+</h2>
 
 <div class="navbar">
-	<form class="searchCourse">
+	<form class="searchCourse pull-right" ng-show="admin">
 		Search Course: 
 		<input class="search-query" type="text" ng-model="cquery">
 	</form>
-
-	<a ng-click="check = !check" class="btn pull-right" ng-show="instructor" ng-disabled="check" id="step1">
+	<a ng-click="check = !check" class="btn" ng-show="instructor" ng-disabled="check" id="step1">
 		<i class="icon-book"></i> Create Course
 	</a>
 </div>
@@ -24,6 +26,9 @@
 	<tr ng-repeat="course in courses | orderBy:orderProp | filter:cquery">		
 		<td ng-click="redirect('/questionpage/{{course.id}}')" class="pointer" id="step2">
 			<b>{{course.name}}</b>
+		</td>
+		<td ng-click="redirect('/questionpage/{{course.id}}')" class="pointer">
+			{{course.time}}
 		</td>
 		<td ng-click="redirect('/questionpage/{{course.id}}')" class="pointer">
 			<span class="label" ng-class="{'label-success': course.count > 0, 'label-default': course.count == 0}">{{course.count}} question(s)</span>
@@ -45,6 +50,12 @@
 		<td ng-show="instructor">
 			<a id="step4" class="btn" href="#/classimport">
 				<i class="icon-upload"></i> Import Students
+			</a>
+		</td>
+
+		<td ng-show="instructor">
+			<a id="step4" class="btn" href="#/editcourse/{{course.id}}">
+				<i class="icon-edit"></i> Edit Course
 			</a>
 		</td>
 	</tr>
