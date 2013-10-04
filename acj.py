@@ -1,6 +1,6 @@
 from __future__ import division
-from flask import Flask, url_for, request, render_template, redirect, escape, session, jsonify
-from sqlalchemy_acj import init_db, db_session, User, Judgement, Script, Course, Question, Enrollment, CommentA, CommentQ, CommentJ, Entry, Tags
+from flask import Flask, url_for, request, render_template, redirect, escape, session, jsonify, Response
+from sqlalchemy_acj import init_db, reset_db, db_session, User, Judgement, Script, Course, Question, Enrollment, CommentA, CommentQ, CommentJ, Entry, Tags
 from flask_principal import ActionNeed, AnonymousIdentity, Identity, identity_changed, identity_loaded, Permission, Principal, RoleNeed
 from sqlalchemy import desc, func, select
 from random import shuffle
@@ -21,6 +21,7 @@ import time
 from threading import Timer
 from werkzeug import secure_filename
 from flask.ext import sqlalchemy
+import Image
 '''
 import logging
 logging.basicConfig()
@@ -32,8 +33,11 @@ hasher = PasswordHash()
 principals = Principal(app)
 
 UPLOAD_FOLDER = 'tmp'
+UPLOAD_IMAGE_FOLDER = 'static/user_images'
 ALLOWED_EXTENSIONS = set(['csv', 'txt'])
+ALLOWED_IMAGE_EXTENSIONS = set(['jpg', 'jpeg', 'png', 'gif', 'bmp'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['UPLOAD_IMAGE_FOLDER'] = UPLOAD_IMAGE_FOLDER
 
 # Needs
 is_admin = RoleNeed('Admin')
@@ -244,17 +248,17 @@ def logout():
 
 @app.route('/user/<id>')
 def user_profile(id):
-	user = ''
-	retval = ''
-	loggedUser = User.query.filter_by(username = session['username']).first()
-	if id == '0':
-		user = loggedUser
-	elif id:
-		user = User.query.filter_by(id = id).first()
-	if user:
-		retval = json.dumps({"username":user.username, "fullname":user.fullname, "display":user.display, "email":user.email, "usertype":user.usertype, "loggedType": loggedUser.usertype, "loggedName": loggedUser.username})
-	db_session.rollback()
-	return retval
+    user = ''
+    retval = ''
+    loggedUser = User.query.filter_by(username = session['username']).first()
+    if id == '0':
+    	user = loggedUser
+    elif id and loggedUser.usertype != 'Student':
+        user = User.query.filter_by(id = id).first()
+    if user:
+    	retval = json.dumps({"username":user.username, "fullname":user.fullname, "display":user.display, "email":user.email, "usertype":user.usertype, "loggedType": loggedUser.usertype, "loggedName": loggedUser.username})
+    db_session.rollback()
+    return retval
 
 @app.route('/allUsers')
 @admin.require(http_exception=401)
@@ -315,7 +319,7 @@ def edit_user(id):
 		validictory.validate(param, schema)
 	except ValueError, error:
 		print (str(error))
-		return json.dumps( {"flash": str(error)} )
+		return ''#json.dumps( {"flash": str(error)} )
 	display = param['display']
 	query = User.query.filter(User.id != user.id).filter_by(display = display).first()
 	if query:
@@ -762,7 +766,14 @@ def list_course():
                 continue
             else:
                 time = str(query.time)
-        lst.append( {"id": course.id, "name": course.name, "count": len(course.question), "time": time} )
+        new = 0
+        if user.lastOnline:
+            for question in course.question:
+                if question.time > user.lastOnline:
+                    new += 1
+        else:
+            new = len(course.question)
+        lst.append( {"id": course.id, "name": course.name, "count": len(course.question), "new": new, "time": time} )
     db_session.rollback()
     return json.dumps( {"courses": lst} )
 
@@ -772,7 +783,7 @@ def get_course(cid):
     course = Course.query.filter_by(id = cid).first()
     taglist = []
     for tag in course.tags:
-        taglist.append({"name": tag.name, "id": tag.id})
+        taglist.append({"tag": tag.name, "id": tag.id})
     db_session.rollback()
     return json.dumps( {"id": course.id, "name": course.name, "tags": taglist} )
 
@@ -825,7 +836,7 @@ def add_tag():
     
     taglist = []
     for tag in course.tags:
-        taglist.append({"name": tag.name, "id": tag.id})
+        taglist.append({"tag": tag.name, "id": tag.id})
     db_session.rollback()
     return json.dumps( {"id": course.id, "name": course.name, "tags": taglist} )
 
@@ -840,7 +851,7 @@ def remove_tag(cid, tid):
     
     taglist = []
     for tag in course.tags:
-        taglist.append({"name": tag.name, "id": tag.id})
+        taglist.append({"tag": tag.name, "id": tag.id})
     db_session.rollback()
     return json.dumps( {"id": course.id, "name": course.name, "tags": taglist} )
 
@@ -866,7 +877,7 @@ def list_question(id):
     taglist = []
    
     for tag in course.tags:
-        taglist.append({"name": tag.name, "id": tag.id})
+        taglist.append({"tag": tag.name, "id": tag.id})
     db_session.rollback()
     
     return json.dumps( {"course": course.name, "tags": taglist, "questions": lstQuestion, "quizzes": lstQuiz} )
@@ -980,6 +991,9 @@ def drop_student(eid):
 
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+def allowed_image_file(filename):
+	return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_IMAGE_EXTENSIONS
 
 @app.route('/userimport', methods=['POST'])
 @teacher.require(http_exception=401)
@@ -1116,23 +1130,27 @@ def reset_password(uid):
 @student.require(http_exception=401)
 def get_judgements(qid):
     judgements = []
-    judgement = Judgement.query.filter(Judgement.script1.has(qid = qid)).group_by(Judgement.sidl, Judgement.sidr).all()
+    judgement = Judgement.query.filter(Judgement.script1.has(qid = qid)).group_by(Judgement.sidl, Judgement.sidr).add_columns(func.sum(Judgement.winner == Judgement.sidl, type_=None).label('wins_l'), 
+                                func.sum(Judgement.winner == Judgement.sidr, type_=None).label('wins_r')).all()
     question = Question.query.filter_by(id = qid).first()
     userQ = User.query.filter_by(id = question.uid).first()
     course = Course.query.filter_by(id = question.cid).first()
-    for row in judgement:
+    for fullrow in judgement:
+        row = fullrow[0]
         user1 = User.query.filter_by(id = row.script1.uid).first()
         user2 = User.query.filter_by(id = row.script2.uid).first()
-        judgements.append({"scriptl": row.script1.content, "scriptr": row.script2.content, "winner": row.winner, 
+        commentsCount = CommentJ.query.filter_by(sidl = row.sidl).filter_by(sidr = row.sidr).count()
+        judgements.append({"scriptl": row.script1.content, "scriptr": row.script2.content, "winner": row.winner, "wins_l": int(fullrow.wins_l), "wins_r": int(fullrow.wins_r),
                            "sidl": row.sidl, "sidr": row.sidr, "scorel": "{:10.2f}".format(row.script1.score), "scorer": "{:10.2f}".format(row.script2.score), 
                            "authorl": user1.display, "authorr": user2.display, "timel": str(row.script1.time), "timer": str(row.script2.time), 
-                           "avatarl": user1.avatar, "avatarr": user2.avatar, "qid": row.script1.qid})
+                           "avatarl": user1.avatar, "avatarr": user2.avatar, "qid": row.script1.qid, "commentsCount": commentsCount})
     ret_val = json.dumps({"judgements": judgements, "title": question.title, "question": question.content, "cid": course.id, "course": course.name,
                           "authorQ": userQ.display, "timeQ": str(question.time), "avatarQ": userQ.avatar})
     db_session.rollback()
     return ret_val
 
-@app.route('/notifications')
+@app.route('/notifications', methods=['GET'])
+@student.require(http_exception=401)
 def get_notifications():
     user = User.query.filter_by(username = session['username']).first()
     if user.lastOnline is not None:
@@ -1147,27 +1165,83 @@ def get_notifications():
     else:
         return json.dumps({"count": 0, "questions": {}})
 
+@app.route('/statistics/<cid>', methods=['GET'])
+@teacher.require(http_exception=401)
+def get_stats(cid):
+    stats = []
+    course = Course.query.filter_by(id = cid).first()
+    totalQuestionCount = Question.query.filter_by(cid = cid).count()
+    totalAnswerCount = Script.query.filter(Script.qid.in_(Question.query.with_entities(Question.id).filter_by(cid = cid))).count()
+    studentsInCourse = User.query.join(Enrollment, Enrollment.uid == User.id).filter(Enrollment.cid == cid).filter(User.usertype == 'Student').all()
+    for student in studentsInCourse:
+        questionCount = Question.query.filter_by(cid = cid).filter_by(uid = student.id).count()
+        answerCount = Script.query.filter(Script.qid.in_(Question.query.with_entities(Question.id).filter_by(cid = cid))).filter_by(uid = student.id).count()
+        answerAvg = Script.query.with_entities(func.avg(Script.score).label('average')).filter(Script.qid.in_(Question.query.with_entities(Question.id).filter_by(cid = cid))).filter_by(uid = student.id).first()
+        stats.append({"totalQuestions": totalQuestionCount, "totalAnswers": totalAnswerCount,"student":{"firstname": student.firstname, "lastname": student.lastname, "questionCount": questionCount, "answerCount": answerCount, "avgScore": answerAvg}})
+    return json.dumps({"coursename": course.name, "stats":stats})
+
+@app.route('/uploadimage', methods=['POST'])
+@student.require(http_exception=401)
+def upload_image():
+    file = request.files['file']
+    if not file or not allowed_image_file(file.filename):
+        return json.dumps( {"completed": True, "msg": "Please provide a valid image file"} )
+    #throw exception if its not an image file
+    try:
+        img = Image.open(file)
+    except IOError:
+        return json.dumps( {"completed": True, "msg": "Invalid image file"} )    
+    #scale the image if necessary
+    if img.size[0] > 800 or img.size[1] > 800:
+        neww = 0
+        newh = 0
+        rw = img.size[0] / 800
+        rh = img.size[1] / 800
+        
+        if rw > rh:
+            newh = int(round(img.size[1] / rw))
+            neww = 800
+        else:
+            neww = int(round(img.size[0] / rh))
+            newh = 800
+        img = img.resize((neww,newh), Image.ANTIALIAS)
+                        
+    retval = []
+    ts = time.time()
+    timestamp = datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d_%H:%M:%S")
+    filename = timestamp + '-' + secure_filename(file.filename)
+    if not os.path.exists(app.config['UPLOAD_IMAGE_FOLDER']):
+        os.makedirs(app.config['UPLOAD_IMAGE_FOLDER'])
+    img.save(os.path.join(app.config['UPLOAD_IMAGE_FOLDER'], filename))
+    file.close()
+    return json.dumps( {"file": filename, "completed": True} )
+
 @teacher.require(http_exception=401)
 def enrol_users(users, courseId):
-	error = []
-	success = []
-	enrolled = Enrollment.query.filter_by(cid = courseId).with_entities(Enrollment.uid).all()
-	enrolled =  [item for sublist in enrolled for item in sublist]
-	for u in users:
-		if u['user']['id'] in enrolled:
-			success.append(u)
-			continue
-		table = Enrollment(u['user']['id'], courseId)
-		db_session.add(table)
-		status = commit()
-		if status:
-			u['eid'] = table.id
-			success.append(u)
-		else:
-			u['msg'] = 'The user is created, but cannot be enrolled'
-			error.append(u)
-	return {'error': error, 'success': success}
-	
+    error = []
+    success = []
+    enrolled = Enrollment.query.filter_by(cid = courseId).with_entities(Enrollment.uid).all()
+    enrolled =  [item for sublist in enrolled for item in sublist]
+    for u in users:
+        if u['user']['id'] in enrolled:
+        	success.append(u)
+        	continue
+        table = Enrollment(u['user']['id'], courseId)
+        db_session.add(table)
+        status = commit()
+        if status:
+        	u['eid'] = table.id
+        	success.append(u)
+        else:
+        	u['msg'] = 'The user is created, but cannot be enrolled'
+        	error.append(u)
+    return {'error': error, 'success': success}
+
+@app.route('/resetdb')
+def resetdb():
+    reset_db()
+    return ''
+
 @identity_loaded.connect_via(app)
 def on_identity_loaded(sender, identity):
 	needs = []

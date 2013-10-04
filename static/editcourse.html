@@ -12,21 +12,29 @@
 		<br><br>
 		Tags:
 		<br>
-		<ul>
-			<li	ng-repeat="tag in tags">
-				<button class="btn btn-danger btn-mini icon-remove" ng-click="removeTag({{tag.id}})"></button> {{tag.name}} 
-			</li>
-		</ul>
-		New Tag: <input type="text" ng-model="newtag">
-		<button class="btn btn-success btn-mini icon-plus" ng-click="addTag()"></button>
+
+		<table ng-table="tagParams" class="table tagTable">
+			<tr class="tr" ng-repeat="tag in tags">
+				<td data-title="Tag" sortable="tag">{{tag.tag}}</td>
+				<td data-title="">
+					<button class="btn btn-danger btn-xs glyphicon glyphicon-remove"
+						ng-click="removeTag({{tag.id}})"></button>
+				</td>
+			</tr>
+		</table>
+
+
+		<span>New Tag: <input type="text" ng-model="newtag">
+			<button class="btn btn-success btn-xs glyphicon glyphicon-plus"
+				ng-click="addTag()"></button></span>
 		<br><br>
 		<br><br>
 	</form>
 	<a href="" ng-hide="username!=loggedName && loggedType!='Admin'" class="edit" ng-click="edit=!edit; newdisplay=display; newemail=email; newpassword=''; newretypepw=''; oldpassword=''">
-		<i class="icon-edit-sign icon-large"></i> Edit
+		<span class="glyphicon glyphicon-edit icon-large"></span > Edit
 	</a> 
 	<a href="" class="submit" ng-show="edit" ng-click="submit();submitted=true">
-		<i class="icon-ok icon-large"></i> Submit
+		<span class="glyphicon glyphicon-ok icon-large"></span > Submit
 	</a>
 </div>
 

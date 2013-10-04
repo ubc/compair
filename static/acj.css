@@ -133,16 +133,26 @@ ul.judgetabs li {
 
 /***** FLASH MESSAGES *****/
 ol#flash-messages {
-	list-style-type: none;}
+	list-style-type: none;
+	padding: 0;}
 
 /***** FORMS *****/
 span.required {
 	color: #990044;
 }
 
+/***** EDIT COURSE PAGE PAGE *****/
+.tagTable {
+	width: 200px;
+}
+
 /***** GENERAL USE *****/
 .pointer {
 	cursor: pointer;
+}
+
+.marginT2 {
+	margin-top: 2px;
 }
 
 .marginT5 {
@@ -155,6 +165,10 @@ span.required {
 
 .marginB15 {
 	margin-bottom: 15px;
+}
+
+.marginR5 {
+	margin-right: 5px;
 }
 
 .marginR50 {
@@ -177,6 +191,14 @@ span.required {
 	margin:1px;
 }
 
+.margin0 {
+	margin:0px;
+}
+
+.padding0 {
+	padding: 0;
+}
+
 .top {
 	vertical-align: top;	
 }
@@ -185,6 +207,18 @@ span.required {
 	vertical-align: middle;	
 }
 
-.padding0 {
-	padding: 0;
+.centered {
+	text-align: center;
+}
+
+.alignLeft {
+	text-align: left;
+}
+
+.alignRight {
+	text-align: right;
+}
+
+.inlineBlock {
+	display: inline-block !important;
 }

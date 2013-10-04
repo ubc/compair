@@ -8,72 +8,78 @@
 
 	<div class="tab-content">
 
-		<div class="navbar">
+		<div class="navbar marginT5">
 			<a href="" class="btn btn-success" ng-click="check=!check"
-				id="stepNav"> <i class="icon-question-sign icon-large"></i>
+				id="stepNav"> <span class="glyphicon glyphicon-question-sign icon-large"></span>
 				Create Question
 			</a>
-			<form class="searchCourse pull-right">
-				Search Question: <input class="search-query" type="text"
-					ng-model="search">
+			<form class="form-inline searchCourse pull-right">
+				<span>Search Question:</span> 
+				<div class="form-group">
+					<input class="form-control" type="text" ng-model="search">
+				</div>
 			</form>
 		</div>
 
 		<div ng-show="check">
-			<form class="createQuestion" name="createQuestion"
-				ng-submit="submit()" novalidate>
-				<label for="questionTitle">Question Title: </label> <input
-					id="questionTitle" type="text" name="title" ng-model="title"
-					required />
-				<p class="text-error"
-					ng-show="submitted && createQuestion.title.$error.required">
-					<span class="label label-important"> Error </span> A title is
-					required for the question.
-				</p>
-				
-				<div>
-					<span ng-repeat="tag in tags" class="label pointer margin1" ng-click="tagActionN({{tag.id}})"
-						ng-class="{'label-default': !checkTagN({{tag.id}}), 'label-success': checkTagN({{tag.id}})}">{{tag.name}}</span>
+			<ng-form class="createQuestion" name="createQuestion"
+				ng-submit="submit()" novalidate> <label
+				for="questionTitle">Question Title: </label>
+			<div class="row">
+				<div class="col-lg-3">
+					<input class="form-control" id="questionTitle" type="text"
+						name="title" ng-model="title" required />
 				</div>
-					
-				<div class="marginT5">
-					Question:
-					<div math-toolbar editor="myquestion" class="mathtoolbar"></div>
-					<div hallo-editor name="question" ng-model="question"
-						id="myquestion" class="entries" ng-mouseup="saveRange()"
-						ng-keyup="saveRange()"></div>
-					<p class="text-error" ng-show="submitted && !question">
-						<span class="label label-important">Error</span> Please enter a
-						question.
-					</p>
-				</div>
-				
-				<div ng-show="type!='discussion'">
-					Answer:
-					<div math-toolbar editor="myanswerq" class="mathtoolbar"></div>
-					<div hallo-editor name="answerq" ng-model="answerq"
-						id="myanswerq" class="entries" ng-mouseup="saveRange()"
-						ng-keyup="saveRange()"></div>
-					<p class="text-error" ng-show="submitted && !answer">
-						<span class="label label-important">Error</span> Please enter an
-						answer.
-					</p>
-				</div>
- 				 
-				<a class="btn btn-info" ng-click="previewText(); showpreview=true;">
-					<i class="icon-eye-open"></i> Preview
-				</a> <a class="btn btn-primary" ng-click="submit(); submitted=true">
-					<i class="icon-ok"></i> Submit
-				</a>
+			</div>
+			<p class="text-error"
+				ng-show="submitted && createQuestion.title.$error.required">
+				<span class="label label-important"> Error </span> A title is
+				required for the question.
+			</p>
 
-				<div class="preview" ng-show="showpreview" mathjax-bind="preview">
-				</div>
-			</form>
+			<div>
+				<span ng-repeat="tag in tags" class="label pointer margin1"
+					ng-click="tagActionN({{tag.id}})"
+					ng-class="{'label-default': !checkTagN({{tag.id}}), 'label-success': checkTagN({{tag.id}})}">{{tag.name}}</span>
+			</div>
+
+			<div class="marginT5">
+				Question:
+				<div math-toolbar editor="myquestion" class="mathtoolbar"></div>
+				<div hallo-editor name="question" ng-model="question"
+					id="myquestion" class="entries" ng-mouseup="saveRange()"
+					ng-keyup="saveRange()"></div>
+				<p class="text-error" ng-show="submitted && !question">
+					<span class="label label-important">Error</span> Please enter a
+					question.
+				</p>
+			</div>
+
+			<div ng-show="type!='discussion'">
+				Answer:
+				<div math-toolbar editor="myanswerq" class="mathtoolbar"></div>
+				<div hallo-editor name="answerq" ng-model="answerq" id="myanswerq"
+					class="entries" ng-mouseup="saveRange()" ng-keyup="saveRange()"></div>
+				<p class="text-error" ng-show="submitted && !answer">
+					<span class="label label-important">Error</span> Please enter an
+					answer.
+				</p>
+			</div>
+
+			<a class="btn btn-info" ng-click="previewText(); showpreview=true;">
+				<span class="glyphicon glyphicon-eye-open"></span> Preview
+			</a> <a class="btn btn-primary" ng-click="submit(); submitted=true">
+				<span class="glyphicon glyphicon-ok"></span> Submit
+			</a>
+
+			<div class="preview" ng-show="showpreview" mathjax-bind="preview">
+			</div>
+			</ng-form>
 		</div>
 
 		<br>
 		<span ng-show="type=='discussion' ? discussions.length == 0 : quizzes.length == 0">There are no questions in this section yet.</span>
-		<ul class="postingsList">
+		<ul class="postingsList padding0">
 			<li ng-class="{quiz: type=='quiz', discussion: type=='discussion'}"
 				ng-repeat="question in type=='discussion' ? discussions : quizzes | orderBy:orderProp:true | filter:searchFilter">
 				<img
@@ -83,70 +89,70 @@
 					<strong>{{question.author}}</strong> - {{question.time}}
 				</p>
 				<div class="opbuttons">
-					<div class="row-fluid">
+					<div class="row">
 						<div class="col-md-12">
-							<div class="row-fluid">
+							<div class="row">
 								<div class="col-md-4">
 									<a href="#/answerpage/{{question.id}}"
-										class="btn btn-info btn-small btnWidth" id="stepAnswer"> <i
-										class="icon-puzzle-piece icon-large"></i>
+										class="btn btn-info btn-sm btnWidth" id="stepAnswer"> <span
+										class="glyphicon glyphicon-list-alt icon-large"></span>
 										<span ng-show="type=='discussion' || instructor || question.answered"> View Answers</span>
 										<span ng-show="type!='discussion' && !instructor && !question.answered"> Answer</span>
 									</a>
 								</div>
 								<div class="col-md-4 col-md-offset-1">
 									<a href="#/judgepage/{{question.id}}"
-										class="btn btn-inverse btn-small btnWidth" id="stepJudge"
-										ng-show="(type=='discussion' || question.answered) && question.count > 1"> <i
-										class="icon-legal icon-large"></i> Judge Answers
+										class="btn btn-primary btn-sm btnWidth" id="stepJudge"
+										ng-show="(type=='discussion' || question.answered) && question.count > 1"> <span
+										class="glyphicon glyphicon-pencil icon-large"></span> Judge Answers
 									</a>
-									<button class="btn btn-inverse btn-small disabled btnWidth"
+									<button class="btn btn-primary btn-sm disabled btnWidth"
 										id="stepJudgeDisabled" ng-show="(type=='quiz' && !question.answered) || question.count <= 1"
 										title="Not enough answers to judge yet!">
-										<i class="icon-legal icon-large"></i> Judge Answers
+										<span class="glyphicon glyphicon-pencil icon-large"></span> Judge Answers
 									</button>
 								</div>
 							</div>
 						</div>
 					</div>
-					<div class="row-fluid marginT5">
+					<div class="row marginT5">
 						<div class="col-md-12">
-							<div class="row-fluid">
+							<div class="row">
 								<div class="col-md-4">
-									<span class="label btnWidth top"
+									<span class="label btnWidth top inlineBlock"
 										ng-class="{'label-success': question.count > 1, 'label-warning': question.count == 1, 'label-important': question.count == 0}">{{question.count}}
 										answer(s)</span>
 								</div>
 								<div class="col-md-4 col-md-offset-1">
 									<a href="#/reviewjudge/{{question.id}}"
-										class="btn btn-inverse btn-small btnWidth"
-										ng-show="(type=='discussion' || question.answered) && question.count > 1"> <i
-										class="icon-eye-open icon-large"></i> Review
+										class="btn btn-primary btn-sm btnWidth"
+										ng-show="(type=='discussion' || question.answered) && question.count > 1"> <span
+										class="glyphicon glyphicon-folder-open icon-large"></span>&nbsp; Review
 									</a>
-									<button class="btn btn-inverse btn-small disabled btnWidth"
+									<button class="btn btn-primary btn-sm disabled btnWidth"
 										id="stepJudgeDisabled" ng-show="(type=='quiz' && !question.answered) || question.count <= 1"
 										title="Not enough answers have been judged yet!">
-										<i class="icon-eye-open icon-large"></i> Review
+										<span class="glyphicon glyphicon-folder-open icon-large"></span>&nbsp; Review
 									</button>
 								</div>
 							</div>
 						</div>
 					</div>
-					<div class="row-fluid marginT15">
+					<div class="row marginT5">
 						<div class="col-md-12">
-							<div class="row-fluid">
+							<div class="row">
 								<div class="col-md-4">
-									<a class="btn btn-small btnWidth"
+									<a class="btn btn-default btn-sm btnWidth"
 										ng-show="login == question.author || instructor"
 										ng-click="switchEdits({{question.id}});newtitle=question.title;newquestion=question.content;showpreviewEdit=false;">
-										<i class="icon-edit-sign icon-large"></i> Edit
+										<span class="glyphicon glyphicon-edit icon-large"></span> Edit
 									</a>
 								</div>
 								<div class="col-md-4 col-md-offset-1">
-									<a class="btn btn-danger btn-small btnWidth"
+									<a class="btn btn-danger btn-sm btnWidth"
 										ng-show="login == question.author || instructor"
-										ng-click="remove(question)"> <i
-										class="icon-trash icon-large"></i> Delete
+										ng-click="remove(question)"> <span
+										class="glyphicon glyphicon-trash icon-large"></span> Delete
 									</a>
 								</div>
 							</div>
@@ -161,9 +167,9 @@
 					<div>
 						<span ng-repeat="tag in question.tags" class="label label-success margin1">{{tag}}</span>
 					</div>
-					<a ng-click="full=!full" class="btn btn-mini marginT5"> <span
-						ng-hide="full"> <i class="icon-collapse"></i> Show
-					</span> <span ng-show="full"> <i class="icon-collapse-top"></i>
+					<a ng-click="full=!full" class="btn btn-default btn-xs marginT5"> <span
+						ng-hide="full"> <span class="glyphicon glyphicon-collapse-down"></span> Show
+					</span> <span ng-show="full"> <span class="glyphicon glyphicon-collapse-up"></span>
 							Hide
 					</span>
 					</a>
@@ -173,9 +179,14 @@
 
 <!-- 				<div ng-show="switchEdits() == {{question.id}}"> -->
 				<div ng-show="{{question.id}} == editId">
-					<form name="createQuestion" novalidate>
-						Question Title: <input type="text" name="title"
-							ng-model="newtitle" required>
+					<ng-form name="createQuestion" novalidate>
+						Question Title:
+						<div class="row">
+							<div class="col-lg-3">
+								<input type="text" name="title" class="form-control"
+									ng-model="newtitle" required>
+							</div>
+						</div>
 						<p class="text-error"
 							ng-show="submitted && createQuestion.title.$error.required">
 							<span class="label label-important"> Error </span> A title is
@@ -189,7 +200,7 @@
 						</div>
 				
 						<div math-toolbar editor="question{{question.id}}"
-							class="mathtoolbar magrinT5"></div>
+							class="mathtoolbar marginT5"></div>
 						<div hallo-editor name="question" ng-model="newquestion"
 							id="question{{question.id}}" class="entries questionContent"
 							ng-mouseup="saveRange()" ng-keyup="saveRange()"></div>
@@ -200,16 +211,16 @@
 
 						<a class="btn btn-info"
 							ng-click="previewTextEdit(question); showpreviewEdit=true;">
-							<i class="icon-eye-open"></i> Preview
+							<span class="glyphicon glyphicon-eye-open"></span> Preview
 						</a> <a class="btn btn-primary"
 							ng-click="editquestion(newtitle, newquestion, question);switchEdits(-1);submitted=true">
-							<i class="icon-ok"></i> Submit
+							<span class="glyphicon glyphicon-ok"></span> Submit
 						</a>
 
 						<div class="preview" ng-show="showpreviewEdit"
 							mathjax-bind="previewEdit"></div>
 
-					</form>
+					</ng-form>
 				</div>
 			</li>
 		</ul>

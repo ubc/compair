@@ -3,22 +3,24 @@
 	<h2>Login Page</h2>
 
 	<form class="form-horizontal" ng-submit="submit()">
-		<div class="control-group">
-			<label class="control-label" for="inputUser">Username</label>
-			<div class="controls">
-				<input type="text" id="inputUser" ng-model="username" placeholder="e.g. user123" input-focus> 
+		<div>
+			<label for="inputUser">Username</label>
+			<div class="row">
+				<div class="col-lg-3">
+					<input type="text" id="inputUser" ng-model="username" placeholder="e.g. user123" class="form-control" input-focus> 
+				</div>
 			</div>
 		</div>
-		<div class="control-group">
-			<label class="control-label" for="inputPass">Password</label>
-			<div class="controls">
-				<input type="password" id="inputPass" ng-model="password" placeholder="e.g. *******">
+		<div>
+			<label for="inputPass">Password</label>
+			<div class="row">
+				<div class="col-lg-3">
+					<input type="password" id="inputPass" ng-model="password" placeholder="e.g. *******" class="form-control">
+				</div>
 			</div>
 		</div>
-		<div class="control-group">
-			<div class="controls">
-				<input type="submit" class="btn btn-primary" value="Sign In">
-			</div>
+		<div class="marginT15">
+			<input type="submit" class="btn btn-primary" value="Sign In">
 		</div>
 	</form>
 </div>

@@ -8,8 +8,15 @@ from sqlalchemy.engine.url import URL
 import datetime
 import hashlib
 import settings
+import sys
+from pw_hash import PasswordHash
 
-engine = create_engine(URL(**settings.DATABASE), convert_unicode=True, pool_recycle=300)
+TESTENV = False
+if len(sys.argv) > 1 and str(sys.argv[1]) == '--t':
+    TESTENV = True
+    engine = create_engine(URL(**settings.DATABASE_TEST), convert_unicode=True, pool_recycle=300)
+else:
+    engine = create_engine(URL(**settings.DATABASE), convert_unicode=True, pool_recycle=300)
 db_session = scoped_session(sessionmaker (autocommit=False, autoflush=False, bind=engine))
 
 Base = declarative_base()
@@ -27,7 +34,18 @@ question_tags_table = Table('QuestionTags', Base.metadata,
 )
 
 def init_db():
-	Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+
+def reset_db():
+    if TESTENV:
+        print("resetting db state...")
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
+        
+        with open('static/test/testdata.sql', 'r') as f:
+            db_session.execute(f.read().decode("utf8"))
+        db_session.commit()
+        print("done resetting db state")
 
 class User(Base):
 	__tablename__ = 'User'

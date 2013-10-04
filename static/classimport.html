@@ -17,29 +17,28 @@
 	<h3>Import</h3>
 	<form ng-upload action="/userimport" enctype=multipart/form-data
 		class="form-horizontal" name="importUser" novalidate>
-		<div class="control-group">
-			<label class="control-label" for="stepBrowse">File</label>
-			<div class="controls">
-				<input type=file name=file id="stepBrowse">
-			</div>
+		<div>
+			<label for="stepBrowse">File</label>
+			<input type=file name=file id="stepBrowse">
 		</div>
-		<div class="control-group">
-			<label class="control-label" for="stepCourses">Courses</label>
-			<div class="controls">
-				<select ng-model="course" name="course" id="stepCourses" required>
-					<option ng-repeat="c in courses" value="{{c.id}}">{{
-						c.name }}</option>
-				</select> <span class="help-block required"
+		<div>
+			<label for="stepCourses">Courses</label>
+			<div class="row">
+				<div class="col-lg-3">
+					<select ng-model="course" name="course" id="stepCourses" required class="form-control">
+						<option ng-repeat="c in courses" value="{{c.id}}">{{
+							c.name }}</option>
+					</select> 
+				</div>
+				<span class="help-block required"
 					ng-show="importUser.course.$invalid">Please select your
 					desired course.</span>
 			</div>
 		</div>
-		<div class="control-group">
-			<div class="controls">
-				<input class="btn btn-primary" id="stepUpload" type=submit
-					value=Upload upload-submit="uploadComplete(content)"
-					ng-disabled="importUser.$invalid">
-			</div>
+		<div class="marginT15">
+			<input class="btn btn-primary" id="stepUpload" type=submit
+				value=Upload upload-submit="uploadComplete(content)"
+				ng-disabled="importUser.$invalid">
 		</div>
 	</form>
 </div>

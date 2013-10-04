@@ -1,17 +1,17 @@
 	<div class="commentsList">
-		<ul class="postingsList">
+		<ul class="postingsList padding0">
 			<li ng-repeat="comment in anyComments">
 				<img src="http://www.gravatar.com/avatar/{{comment.avatar}}?s=32&d=retro" class="avatar">
 				<p class="authorHeader"><strong>{{comment.author}}</strong> - {{comment.time}}</p>
 
 				<div class="opbuttons">
-					<a href="" class="btn btn-small" ng-show="instructor || login==comment.author" 
+					<a href="" class="btn btn-default btn-sm" ng-show="instructor || login==comment.author" 
 						ng-click="switchEdits({{comment.id}});newCom=comment.content">
-						<i class="icon-edit icon-large"></i>
+						<span class="glyphicon glyphicon-edit icon-large"></span >
 						Edit
 					</a>
-					<a href="" class="btn btn-danger btn-small" ng-show="instructor || login==comment.author" ng-click="delComment(comment)">
-						<i class="icon-remove-sign icon-large"></i>
+					<a href="" class="btn btn-danger btn-sm" ng-show="instructor || login==comment.author" ng-click="delComment(comment)">
+						<span class="glyphicon glyphicon-remove-sign icon-large"></span >
 						Delete
 					</a>
 				</div>
@@ -22,18 +22,18 @@
 					<div hallo-editor name="editCom" ng-model="newCom" id="editcom{{comment.id}}" class="entries" ng-mouseup="saveRange()" ng-keyup="saveRange()"></div>
 				</div>
 				<a href="" class="btn btn-primary" ng-show="switchEdits() == {{comment.id}}" ng-click="editComment(comment, newCom);switchEdits(-1);">
-					<i class="icon-ok-sign"></i> Submit
+					<span class="glyphicon glyphicon-ok-sign"></span > Submit
 				</a>
 			</li>
 		</ul>
 
-		<a href="" class="btn" ng-click="lcomm=!lcomm">
-			<i class="icon-comment-alt"></i> Leave a Comment
+		<a href="" class="btn btn-default" ng-click="lcomm=!lcomm">
+			<span class="glyphicon glyphicon-comment"></span > Leave a Comment
 		</a>
 
 		<div ng-show="lcomm" class="createPosting">
-			<form name="addComment" novalidate>
-				<div math-toolbar editor="mycomment{{type}}" class="mathtoolbar"></div>
+			<ng-form name="addComment" novalidate>
+				<div math-toolbar editor="mycomment{{type}}{{sid}}" class="mathtoolbar"></div>
 				<div hallo-editor name="qcom" ng-model="myComment" id="mycomment{{type}}{{sid}}" class="entries" ng-mouseup="saveRange()" ng-keyup="saveRange()"></div>
 				<p class="text-error" ng-show="newComment && !myComment">
 					<span class="label label-important">Error</span>
@@ -41,9 +41,9 @@
 				</p>
 
 				<a href="" class="btn btn-primary" ng-click="makeComment();newComment=true;switchEdits(-1);">
-					<i class="icon-ok"></i> Submit
+					<span class="glyphicon glyphicon-ok"></span > Submit
 				</a>
-			</form>
+			</ng-form>
 		</div>
 	</div>
 

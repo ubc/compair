@@ -98,6 +98,14 @@ myApp.factory('tagService', function($resource) {
 	return $resource( '/managetag/:cid/:tid' );
 });
 
+myApp.factory('statisticService', function($resource) {
+	return $resource( '/statistics/:cid' );
+});
+//used for testing
+myApp.factory('resetDB', function($resource) {
+	return $resource( '/resetdb' );
+});
+
 myApp.factory('flashService', function(flash) {
 	return {
 		flash: function (type, msg) {
@@ -189,6 +197,11 @@ myApp.config( function ($routeProvider) {
 				controller: EditCourseController,
 				templateUrl: 'editcourse.html'
 			})
+		.when ('/stats/:courseId',
+			{
+				controller: StatisticController,
+				templateUrl: 'stats.html'
+			})
 		.otherwise({redirectTo: '/'});
 });
 
@@ -233,7 +246,7 @@ function InstallController($rootScope, $scope, $location, $cookieStore, flashSer
 				flashService.flash('success', 'Administrator created. Click Login to try logging in with your administrator account');
 				return '';
 			} else if ($scope.flash) {
-				flashService.flash ('error', $scope.flash);
+				flashService.flash ('danger', $scope.flash);
 			}
 			return '';
 		});
@@ -254,6 +267,7 @@ function IndexController($rootScope, $scope, $location, $cookieStore, loginServi
 			"text": "Log Out",
 			"href": "#",
 			"click": "logout()",
+			"id": "logout",
 		},
 	];
 	
@@ -277,12 +291,12 @@ function IndexController($rootScope, $scope, $location, $cookieStore, loginServi
 		$scope.check = true;
 		$scope.login = user.display;
 		$scope.usertype = user.usertype;
-		
+		$scope.notifications = false;
+		$scope.notificationdropdown = [];
 		var notifications = notificationService.get( function() {
 			if (notifications.count > 0) {
 				$scope.notifications = true;
 				$scope.notificationsCount = notifications.count;
-				$scope.notificationdropdown = [];
 				for (var i = 0; i < notifications.questions.length; i++) {
 					$scope.notificationdropdown.push({
 	           			"text": notifications.questions[i].title.length > 30 ? notifications.questions[i].title.slice(0, 29) + '...' : notifications.questions[i].title,
@@ -350,7 +364,7 @@ function QuickController($rootScope, $scope, $location, flashService, judgeServi
 			$location.path('/judgepage/' + questionId);
 		} else {
 			//$location.path('/');
-			flashService.flash('error', 'Either you have already judged all of the high-priority scripts OR there are not enough answers to judge. Please come back later');
+			flashService.flash('danger', 'Either you have already judged all of the high-priority scripts OR there are not enough answers to judge. Please come back later');
 			$rootScope.$broadcast("JUDGEMENT");
 		}
 	});
@@ -391,7 +405,7 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 				$scope.sidl = retval.sidl;
 				$scope.sidr = retval.sidr;
 			} else {
-				flashService.flash( 'error', 'Either you have already judged all of the high-priority scripts OR there are not enough answers to judge. Please come back later' );
+				flashService.flash( 'danger', 'Either you have already judged all of the high-priority scripts OR there are not enough answers to judge. Please come back later' );
 				//$location.path('/');
 				$rootScope.$broadcast("JUDGEMENT"); 
 				return;
@@ -402,10 +416,6 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 				{
 					element: '#stepTitle',
 					intro: "Question title and content",
-				},
-				{
-					element: '#stepNext',
-					intro: "Get another pair of answers from this question",
 				},
 				{
 					element: '#stepViews',
@@ -431,6 +441,10 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 					element: '#stepSubmit',
 					intro: "Once you have picked a winner, submit your judgement",
 				},
+				{
+					element: '#stepNext',
+					intro: "Can't decide which answer is better? Get another pair of answers from this question",
+				},
 			];
 			var intro = "You will be presented with a random pair of answers from the question. Note that your own answer will not show up and you can judge the same pair only once. Examine both answers carefully and make your judgement.";
 			$rootScope.$broadcast("STEPS", { "steps": steps, "intro": intro });
@@ -443,7 +457,7 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 		} else if ($scope.pick == 'right') {
 			winner = sidr;
 		} else {
-			flashService.flash('error', 'Please pick a side');
+			flashService.flash('danger', 'Please pick a side');
 			return;
 		}
 		input = {"sidl": sidl, "sidr": sidr};
@@ -462,7 +476,7 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 				loadscripts();
 				$scope.pick = "";
 			} else if (retval.nonew) {
-				flashService.flash('error', 'This is the only fresh pair in this question');
+				flashService.flash('danger', 'This is the only fresh pair in this question');
 				return;
 			}
 		});
@@ -493,7 +507,7 @@ function LoginController($rootScope, $cookieStore, $scope, $location, flashServi
 	}
 	$scope.submit = function() {
 		if ( !($scope.username && $scope.password) ) {
-			flashService.flash('error', 'Please provide a username and a password');
+			flashService.flash('danger', 'Please provide a username and a password');
 			return '';
 		}
 		input = {"username": $scope.username, "password": $scope.password};
@@ -503,7 +517,7 @@ function LoginController($rootScope, $cookieStore, $scope, $location, flashServi
 				$rootScope.$broadcast("LOGGED_IN", user); 
 				$location.path('/');
 			} else {
-				flashService.flash('error', 'Incorrect username or password');
+				flashService.flash('danger', 'Incorrect username or password');
 			}
 		});
 	};
@@ -609,7 +623,7 @@ function ProfileController($rootScope, $scope, $routeParams, $location, flashSer
 			}
 			$rootScope.breadcrumb.push({'name':'Edit Profile'});	
 		} else {
-			flashService.flash('error', 'Invalid User');
+			flashService.flash('danger', 'Invalid User');
 			$location.path('/');
 		}
 	});	
@@ -636,7 +650,7 @@ function ProfileController($rootScope, $scope, $routeParams, $location, flashSer
 		}
 		input = {"display": $scope.newdisplay, "email": $scope.newemail, "password": password};
 		var retval = userService.put( {uid: uid}, input, function() {
-			$scope.flash = retval.flash;
+			//$scope.flash = retval.flash;
 			if (retval.msg) {
 				$scope.edit = false;
 				$scope.submitted = false;
@@ -646,8 +660,9 @@ function ProfileController($rootScope, $scope, $routeParams, $location, flashSer
 				if ($scope.loggedName == $scope.username) {
 					$rootScope.$broadcast("LOGGED_IN", {"display": $scope.newdisplay, "usertype": retval.usertype}); 
 				}
+				flashService.flash('success', "The profile has been successfully updated.");
 			} else {
-				flashService.flash('error', 'Your profile was unsuccessfully updated.');
+				//flashService.flash('danger', 'Your profile was unsuccessfully updated.');
 			}
 		});
 	};
@@ -657,7 +672,7 @@ function ProfileController($rootScope, $scope, $routeParams, $location, flashSer
 			if (resetpassword) {
 				$scope.resetpassword = resetpassword;
 			} else {
-				flashService.flash('error', 'Could not reset password.');
+				flashService.flash('danger', 'Could not reset password.');
 			}
 		});
 	};
@@ -724,6 +739,7 @@ function CourseController($rootScope, $scope, $cookieStore, $location, courseSer
 		}
 		$rootScope.$broadcast("STEPS", {"steps": steps, "intro": intro});
 	});
+	
 	$scope.submit = function() {
 		input = {"name": $scope.course};
 		var retval = courseService.save( input, function() {
@@ -738,23 +754,107 @@ function CourseController($rootScope, $scope, $cookieStore, $location, courseSer
 		$location.path(unescape(url));
 	};
 }
+//TODO
+function StatisticController($rootScope, $routeParams, $scope, $cookieStore, $location, $filter, statisticService, ngTableParams) {
+	var cid = $routeParams.courseId;
+	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':'Statistics'}];
+	
+	var stats = statisticService.get({cid: cid}, function() {
+		$scope.stats = stats.stats;
+		$scope.coursename = stats.coursename;
+		statData = stats.stats;
+		
+		$scope.tableParams = new ngTableParams({
+	        page: 1,
+	        total: statData.length,
+	        count: 10,
+	        sorting: {
+	            name: 'asc'
+	        }
+	    });
+	});
+	
+	function orderBy(item, asc, question) {
+		val = (question ? item.student.questionCount : item.student.answerCount) / item.totalAnswers * 100; 
+		return asc ? val : -val;
+	}
+	
+	$scope.$watch('tableParams', function(params) {
+		if (params) {
+			if (params.sorting && params.orderBy().toString().indexOf("percent") > -1) {
+				if (params.orderBy().toString().indexOf("+") > -1) {
+					if(params.orderBy().toString().indexOf("qpercent") > -1) {
+						orderedData = $filter('orderBy')(statData, function(item){return orderBy(item, true, true);});
+					}
+					else {
+						orderedData = $filter('orderBy')(statData, function(item){return orderBy(item, true, false);});
+					}
+				}
+				else {
+					if(params.orderBy().toString().indexOf("qpercent") > -1) {
+						orderedData = $filter('orderBy')(statData, function(item){return orderBy(item, false, true);});
+					}
+					else {
+						orderedData = $filter('orderBy')(statData, function(item){return orderBy(item, false, false);});
+					}
+				}
+			}
+			else {
+				orderedData = params.sorting ? $filter('orderBy')(statData, params.orderBy()) : statData;
+			}
+			orderedData = params.filter ? $filter('filter')(orderedData, params.filter) : orderedData;
+			
+			params.total = orderedData.length;
+			
+			$scope.stats = orderedData.slice(
+				(params.page - 1) * params.count,
+				params.page * params.count
+			);
+		}
+	}, true);
+}
 
-function EditCourseController($rootScope, $scope, $routeParams, editcourseService, tagService) {
+function EditCourseController($rootScope, $scope, $routeParams, $filter, editcourseService, tagService, ngTableParams) {
 	var courseId = $routeParams.courseId; 
 	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':'Edit Course'}];
+
 	var course = editcourseService.get({cid: courseId}, function() {
 		$scope.id = course.id;
 		$scope.name = course.name;
 		$scope.newname = course.name;
 		$scope.tags = course.tags;
+		tagData = course.tags;
+		
+		$scope.tagParams = new ngTableParams({
+			page: 1,
+			total: tagData.length,
+			count: 10,
+			sorting: {
+	            tag: 'asc'
+	        }
+		});
 	});
+	
+	$scope.$watch('tagParams', function(params) {
+		if (params) {
+			var orderedData = params.sorting ? $filter('orderBy')(tagData, params.orderBy()) : tagData;
+			orderedData = params.filter ? $filter('filter')(orderedData, params.filter) : orderedData;
+			
+			params.total = orderedData.length;
+			
+			$scope.tags = orderedData.slice(
+				(params.page - 1) * params.count,
+				params.page * params.count
+			);
+		}
+	}, true);
 	
 	$scope.submit = function() {
 		var input = {"name": $scope.newname};
 		var retval = editcourseService.put({cid: $scope.id}, input, function() {
 			if (retval.msg != 'PASS') {
 				//TODO
-				//flashService.flash('error', '...');
+				//flashService.flash('danger', '...');
 			} else {
 				$scope.edit = false;
 				$scope.submitted = false;
@@ -770,6 +870,7 @@ function EditCourseController($rootScope, $scope, $routeParams, editcourseServic
 			$scope.name = course.name;
 			$scope.newname = course.name;
 			$scope.tags = course.tags;
+			tagData = course.tags;
 		});
 	};
 	$scope.addTag = function() {
@@ -779,6 +880,7 @@ function EditCourseController($rootScope, $scope, $routeParams, editcourseServic
 			$scope.name = course.name;
 			$scope.newname = course.name;
 			$scope.tags = course.tags;
+			tagData = course.tags;
 		});
 	};
 }
@@ -899,10 +1001,10 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 					input = {"content": $scope.myanswerq};
 					var newscript = answerService.save( {qid: msg.id}, input, function() {
 						if (newscript.msg) {
-							flashService.flash('error', 'Please submit a valid answer.');
+							flashService.flash('danger', 'Please submit a valid answer.');
 							validAnswer = false;
 						} else {
-							$scope.myanswerq = '';
+							$scope.answerq = '';
 						}
 					});
 				}
@@ -930,7 +1032,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 		}
 		var retval = questionService.put( {cid: question.id}, input, function() {
 			if (retval.msg != 'PASS') {
-				flashService.flash('error', 'Please submit a question.');
+				flashService.flash('danger', 'Please submit a question.');
 			} else {
 				if ($scope.type == 'quiz') {
 					var index = jQuery.inArray(question, $scope.quizzes);
@@ -1032,7 +1134,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 	};
 }
 
-function AnswerController($rootScope, $scope, $routeParams, $http, flashService, answerService, rankService, commentAService, commentQService) {
+function AnswerController($rootScope, $scope, $routeParams, $http, flashService, answerService, rankService, commentAService, commentQService, loginService) {
 	$rootScope.breadcrumb = [{'name':'Home', 'link':'#'}, {'name':'Question', 'link':''}, {'name':'Answer'}];
 	var questionId = $routeParams.questionId; 
 
@@ -1063,6 +1165,18 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 	var intro = "All the subitted answers for the question are listed here. Submit your answer or judge others' answers by going to Judge Page. You can also leave comments on the question or any of the submitted answers.";
 	$rootScope.$broadcast("STEPS", {"steps": steps, "intro": intro}); 
 
+	var login = loginService.get( function() {
+		if (login.display) {
+			$scope.login = login.display;
+			if (login.usertype == 'Teacher' || login.usertype == 'Admin') {
+				$scope.instructor = true;
+			}
+
+		} else {
+			$scope.login = '';
+		}
+	});
+	
 	var retval = rankService.get( {qid: questionId}, function() {
 		$scope.qid = questionId;
 		$scope.course = retval.course;
@@ -1092,7 +1206,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 		input = {"content": $scope.myanswer};
 		var newscript = answerService.save( {qid: questionId}, input, function() {
 			if (newscript.msg) {
-				flashService.flash('error', 'Please submit a valid answer.');
+				flashService.flash('danger', 'Please submit a valid answer.');
 			} else {
 				$scope.scripts.push(newscript);
 				$scope.myanswer = '';
@@ -1131,7 +1245,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 		input = {"content": newanswer};
 		var retval = answerService.put( {qid: script.id}, input, function() {
 			if (retval.msg != 'PASS') {
-				flashService.flash('error', 'Please submit an answer.');
+				flashService.flash('danger', 'Please submit an answer.');
 			} else {
 				var index = jQuery.inArray(script, $scope.scripts);
 				$scope.scripts[index].content = newanswer;
@@ -1143,7 +1257,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 		if (confirm("Delete Answer?") == true) {
 			var retval = answerService.remove( {qid: script.id}, function() {
 				if (retval.msg != 'PASS') {
-					flashService.flash('error', 'The answer was unsuccessfully deleted.');
+					flashService.flash('danger', 'The answer was unsuccessfully deleted.');
 				} else {
 					var index = jQuery.inArray(script, $scope.scripts);
 					$scope.scripts.splice(index, 1);
@@ -1157,7 +1271,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 			if (retval.comments) {
 				script.comments = retval.comments;
 			} else {
-				flashService.flash('error', 'The comments could not be found.');
+				flashService.flash('danger', 'The comments could not be found.');
 			}
 		});
 	};
@@ -1167,7 +1281,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 			if (retval.comments) {
 				$scope.questionComments = retval.comments;
 			} else {
-				flashService.flash('error', 'The comments could not be found.');
+				flashService.flash('danger', 'The comments could not be found.');
 			}
 		});
 	};
@@ -1185,7 +1299,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 				flashService.flash('success', 'The comment has been successfully added.');
 			} else {
 				//alert('something is wrong');
-				flashService.flash('error', 'Please submit a valid comment.');
+				flashService.flash('danger', 'Please submit a valid comment.');
 			}
 		});
 	};
@@ -1211,7 +1325,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 		if (confirm("Delete Comment?") == true) {
 			var retval = commentAService.remove( {id: comment.id}, function() {
 				if (retval.msg != 'PASS') {
-					flashService.flash('error', 'The comment was unsuccessfully deleted.');
+					flashService.flash('danger', 'The comment was unsuccessfully deleted.');
 				} else {
 					var index = jQuery.inArray(comment, script.comments);
 					script.comments.splice(index, 1);
@@ -1223,7 +1337,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 		if (confirm("Delete Comment?") == true) {
 			var retval = commentQService.remove( {id: comment.id}, function() {
 				if (retval.msg != 'PASS') {
-					flashService.flash('error', 'The comment was unsuccessfully deleted.');
+					flashService.flash('danger', 'The comment was unsuccessfully deleted.');
 				} else {
 					var index = jQuery.inArray(comment, $scope.questionComments);
 					$scope.questionComments.splice(index, 1);
@@ -1242,7 +1356,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 			if (retval.msg != 'PASS') {
 				// can't seem to use regular span error messages
 				// causes the edit toggle not to close if the edit is successful
-				flashService.flash('error', 'Please submit a comment.');
+				flashService.flash('danger', 'Please submit a comment.');
 			} else {
 				var index = jQuery.inArray(comment, $scope.questionComments);
 				$scope.questionComments[index].content = newcontent;
@@ -1260,7 +1374,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 		var retval = commentAService.put( {id: comment.id}, input, function() {
 			if (retval.msg != 'PASS') {
 				//alert('something is wrong');
-				flashService.flash('error', 'Please submit a valid comment');
+				flashService.flash('danger', 'Please submit a valid comment');
 			} else {
 				var index = jQuery.inArray(comment, script.comments);
 				script.comments[index].content = newcontent;
@@ -1294,12 +1408,11 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 			count: 10,
 		});
 		$scope.teacherParams = new ngTableParams({
-			$liveFiltering: true,
 			page: 1,
 			total: teacherData.length,
 			count: 10,
 		});
-		$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name':retval.course, 'link':''}, {'name':'Enrol','link':''}];
+		$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name':retval.course}];
 	});
 	$scope.add = function(user, type) {
 		input = {"uid": user.uid};
@@ -1313,14 +1426,14 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 					$scope.students[index].enrolled = retval.success[0].eid;
 				}
 			} else {
-				flashService.flash('error', 'The user was unsuccessfully enrolled.');
+				flashService.flash('danger', 'The user was unsuccessfully enrolled.');
 			}
 		});
 	};
 	$scope.drop = function(user, type) {
 		var retval = enrollService.remove( {id: user.enrolled}, function() {
 			if (retval.msg != 'PASS') {
-				flashService.flash('error', 'The user was unsuccessfully dropped.');
+				flashService.flash('danger', 'The user was unsuccessfully dropped.');
 			} else {
 				if (type == 'T') {
 					var index = jQuery.inArray(user, $scope.teachers);
@@ -1373,7 +1486,7 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 }
 
 function ImportController($rootScope, $scope, $routeParams, $http, flashService, courseService) {
-	$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name':'Users', 'link':''}, {'name':'Import','link':''}];
+	$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name':'Import'}];
 	courses = courseService.get(function() {
 		$scope.courses = courses.courses;
 		var steps = [
@@ -1394,28 +1507,6 @@ function ImportController($rootScope, $scope, $routeParams, $http, flashService,
 		$rootScope.$broadcast("STEPS", {"steps": steps, "intro": intro}); 
 	});
 	$scope.resultPage = false;
-	$scope.uploadComplete = function(content) {
-		/* angularjs is asynchronous therefore if we don't restrict messages to only
-		appear after flask has done its job, we'll see an error message first
-		then switches to success message if the task is successful*/
-		if (content.completed && content.success && content.success.length > 0) {
-			$scope.success = content.success;
-			$scope.error = content.error;
-			msg = content.error.length > 0 ? 'Users are successfully imported, however some users have errors.' :
-				'Users are successfully imported.';
-			$scope.resultPage = true;
-			flashService.flash('success', msg);
-		} else if(content.completed) {
-			$scope.error = content.error;
-			if (content.msg) {
-				$scope.resultPage = false;
-				flashService.flash('error', content.msg);
-			} else {
-				$scope.resultPage = true;
-				flashService.flash('error', 'Users are unsuccessfully imported');
-			}
-		}
-	};
 }
 
 function ReviewJudgeController($rootScope, $scope, $routeParams, loginService, reviewjudgeService) {
@@ -1496,6 +1587,44 @@ myApp.directive('halloEditor', function() {
             });
         }
     };
+});
+
+myApp.directive("uploadImage", function() {
+	return {
+		restrict: "A",
+		replace: true,
+		scope: {
+			image: "@image",
+			editor: "@editor"
+		},
+		template: '<form ng-upload action="/uploadimage" class="margin0" enctype="multipart/form-data" name="uploadImg" novalidate>' +
+			'<div><label for="stepBrowse" class="marginR5">Image</label><input type=file name=file id="stepBrowse" class="inlineBlock">' + 
+			'<input class="btn btn-primary" type="submit" value="Insert image" upload-submit="addImage(content)"></div></form>',
+		controller: function($rootScope, $scope, $element, $attrs, flashService) {
+			$scope.addImage = function(content) {
+				
+				if (content.completed && content.file && content.file.length > 0) {
+					img = document.createElement("IMG");
+					img.src = "user_images/" + content.file;
+					if ($rootScope.savedRange) {
+						$rootScope.savedRange.insertNode(img);
+						rangy.getSelection().setSingleRange($rootScope.savedRange);
+					}
+					else {
+						var textarea = angular.element("div#"+$scope.editor);
+						textarea.append(img);
+					}
+				} else if(content.completed) {
+					if(content.msg && content.msg.length > 0) {
+						flashService.flash('danger', content.msg);
+					}
+					else {
+						flashService.flash('danger', 'An error occured while uploading the image.');
+					}
+				}
+			};
+		}
+	};
 });
 
 myApp.directive("mathjaxBind", function() {
@@ -1630,7 +1759,7 @@ myApp.directive("commentBlock", function() {
 						if (retval.comments) {
 							$scope.anyComments = retval.comments;
 						} else {
-							flashService.flash('error', 'The comments could not be found.');
+							flashService.flash('danger', 'The comments could not be found.');
 						}
 					});
 				} else if ($scope.type == 'Answer') {
@@ -1638,7 +1767,7 @@ myApp.directive("commentBlock", function() {
 						if (retval.comments) {
 							$scope.anyComments = retval.comments;
 						} else {
-							flashService.flash('error', 'The comments could not be found.');
+							flashService.flash('danger', 'The comments could not be found.');
 						}
 					});
 				} else if ($scope.type == 'Judgement' || $scope.type == 'ReviewJudgement') {
@@ -1646,7 +1775,7 @@ myApp.directive("commentBlock", function() {
 						if (retval.comments) {
 							$scope.anyComments = retval.comments;
 						} else {
-							flashService.flash('error', 'The comments could not be found.');
+							flashService.flash('danger', 'The comments could not be found.');
 						}
 					});
 				} else {
@@ -1670,7 +1799,7 @@ myApp.directive("commentBlock", function() {
 							$scope.lcomm = false;
 							flashService.flash('success', 'The comment has been successfully added');
 						} else {
-							flashService.flash('error', 'Please submit a valid comment.');
+							flashService.flash('danger', 'Please submit a valid comment.');
 						}
 					});
 				} else if ($scope.type == 'Answer') {
@@ -1681,7 +1810,7 @@ myApp.directive("commentBlock", function() {
 							$scope.lcomm = false;
 							flashService.flash('success', 'The comment has been successfully added.');
 						} else {
-							flashService.flash('error', 'Please submit a valid comment.');
+							flashService.flash('danger', 'Please submit a valid comment.');
 						}
 					});
 				} else if ($scope.type == 'Judgement' || $scope.type == 'ReviewJudgement') {
@@ -1692,7 +1821,7 @@ myApp.directive("commentBlock", function() {
 							$scope.lcomm = false;
 							flashService.flash('success', 'The comment has been successfully added.');
 						} else {
-							flashService.flash('error', 'Please submit a valid comment.');
+							flashService.flash('danger', 'Please submit a valid comment.');
 						}
 					});
 				} else {
@@ -1705,7 +1834,7 @@ myApp.directive("commentBlock", function() {
 					if (confirm("Delete Question Comment?") == true) {
 						var retval = commentQService.remove( {id: comment.id}, function() {
 							if (retval.msg != 'PASS') {
-								flashService.flash('error', 'The comment was unsuccessfully deleted.');
+								flashService.flash('danger', 'The comment was unsuccessfully deleted.');
 							} else {
 								var index = jQuery.inArray(comment, $scope.anyComments);
 								$scope.anyComments.splice(index, 1);
@@ -1716,7 +1845,7 @@ myApp.directive("commentBlock", function() {
 					if (confirm("Delete Answer Comment?") == true) {
 						var retval = commentAService.remove( {id: comment.id}, function() {
 							if (retval.msg != 'PASS') {
-								flashService.flash('error', 'The comment was unsuccessfully deleted.');
+								flashService.flash('danger', 'The comment was unsuccessfully deleted.');
 							} else {
 								var index = jQuery.inArray(comment, $scope.anyComments);
 								$scope.anyComments.splice(index, 1);
@@ -1727,7 +1856,7 @@ myApp.directive("commentBlock", function() {
 					if (confirm("Delete Answer Comment?") == true) {
 						var retval = commentJService.remove( {id: comment.id, sidl: $scope.sidl, sidr: $scope.sidr}, function() {
 							if (retval.msg != 'PASS') {
-								flashService.flash('error', 'The comment was unsuccessfully deleted.');
+								flashService.flash('danger', 'The comment was unsuccessfully deleted.');
 							} else {
 								var index = jQuery.inArray(comment, $scope.anyComments);
 								$scope.anyComments.splice(index, 1);
@@ -1751,7 +1880,7 @@ myApp.directive("commentBlock", function() {
 						if (retval.msg != 'PASS') {
 							// can't seem to use regular span error messages
 							// causes the edit toggle not to close if the edit is successful
-							flashService.flash('error', 'Please submit a comment.');
+							flashService.flash('danger', 'Please submit a comment.');
 						} else {
 							var index = jQuery.inArray(comment, $scope.anyComments);
 							$scope.anyComments[index].content = newcontent;
@@ -1762,7 +1891,7 @@ myApp.directive("commentBlock", function() {
 					var retval = commentAService.put( {id: comment.id}, input, function() {
 						if (retval.msg != 'PASS') {
 							//alert('something is wrong');
-							flashService.flash('error', 'Please submit a valid comment');
+							flashService.flash('danger', 'Please submit a valid comment');
 						} else {
 							var index = jQuery.inArray(comment, $scope.anyComments);
 							$scope.anyComments[index].content = newcontent;
@@ -1773,7 +1902,7 @@ myApp.directive("commentBlock", function() {
 					var retval = commentJService.put( {id: comment.id, sidl: $scope.sidl, sidr: $scope.sidr}, input, function() {
 						if (retval.msg != 'PASS') {
 							//alert('something is wrong');
-							flashService.flash('error', 'Please submit a valid comment');
+							flashService.flash('danger', 'Please submit a valid comment');
 						} else {
 							var index = jQuery.inArray(comment, $scope.anyComments);
 							$scope.anyComments[index].content = newcontent;

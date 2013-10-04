@@ -5,61 +5,53 @@
 </h2>
 
 <div class="navbar">
-	<form class="searchCourse pull-right" ng-show="admin">
-		Search Course: 
-		<input class="search-query" type="text" ng-model="cquery">
+	<form class="form-inline searchCourse pull-right" ng-show="admin">
+		<span>Search Course:</span> 
+		<div class="form-group">
+			<input class="form-control" type="text" ng-model="cquery">
+		</div>
 	</form>
-	<a ng-click="check = !check" class="btn" ng-show="instructor" ng-disabled="check" id="step1">
-		<i class="icon-book"></i> Create Course
+	<a ng-click="check = !check" class="btn btn-default" ng-show="instructor" ng-disabled="check" id="step1">
+		<span class="glyphicon glyphicon-book"></span > Create Course
+	</a> <a id="step4" class="btn btn-default" ng-show="instructor"
+		href="#/classimport"> <span class="glyphicon glyphicon-upload"></span > Import Students
 	</a>
 </div>
 <form class="form-inline createCourse" ng-show="check" ng-submit="submit()">
 	<label for="courseName">Course Name: </label>
-	<div class="input-append">
-		<input id="courseName" type="text" ng-model="course" />
-		<input type="submit" class="btn btn-primary" value="Create" />
+	<div class="input-append form-group">
+		<input id="courseName" type="text" ng-model="course" class="form-control"/>
 	</div>
+	<input type="submit" class="btn btn-primary" value="Create" />
 	<br><br>
 </form>
 <table class="table table-hover">
 <tbody>
-	<tr ng-repeat="course in courses | orderBy:orderProp | filter:cquery">		
-		<td ng-click="redirect('/questionpage/{{course.id}}')" class="pointer" id="step2">
-			<b>{{course.name}}</b>
-		</td>
-		<td ng-click="redirect('/questionpage/{{course.id}}')" class="pointer">
-			{{course.time}}
-		</td>
-		<td ng-click="redirect('/questionpage/{{course.id}}')" class="pointer">
-			<span class="label" ng-class="{'label-success': course.count > 0, 'label-default': course.count == 0}">{{course.count}} question(s)</span>
-		</td>
-		<!--
-		<td>
-			<a class="btn btn-success" href="#/questionpage/{{course.id}}" id="step2">
-				<i class="icon-question-sign"></i> Questions
-			</a>
-		</td>
-		-->
-		<td ng-show="instructor">
-			<a id="step3" class="btn" href="#/enrollpage/{{course.id}}">
-				<i class="icon-plus-sign"></i>
-				Enrol Users
-			</a>
-
-		</td>
-		<td ng-show="instructor">
-			<a id="step4" class="btn" href="#/classimport">
-				<i class="icon-upload"></i> Import Students
-			</a>
-		</td>
-
-		<td ng-show="instructor">
-			<a id="step4" class="btn" href="#/editcourse/{{course.id}}">
-				<i class="icon-edit"></i> Edit Course
-			</a>
-		</td>
-	</tr>
-</tbody>
+		<tr ng-repeat="course in courses | orderBy:orderProp | filter:cquery">
+			<td ng-click="redirect('/questionpage/{{course.id}}')"
+				class="pointer" id="step2"><b>{{course.name}}</b></td>
+<!-- 			<td ng-click="redirect('/questionpage/{{course.id}}')" -->
+<!-- 				class="pointer">{{course.time}}</td> -->
+			<td ng-click="redirect('/questionpage/{{course.id}}')"
+				class="pointer"><span class="label"
+				ng-class="{'label-success': course.count > 0, 'label-default': course.count == 0}">{{course.count}} question(s)</span></td>
+			<td ng-click="redirect('/questionpage/{{course.id}}')"
+				class="pointer"><span class="label"
+				ng-class="{'label-success': course.new > 0, 'label-default': course.new == 0}">{{course.new}} new question(s)</span></td>
+			<td ng-show="instructor"><a id="step3" class="btn btn-default btn-sm"
+				href="#/enrollpage/{{course.id}}"> <span class="glyphicon glyphicon-plus-sign"></span >
+					Enrol Users
+			</a></td>
+			<td ng-show="instructor"><a class="btn btn-default btn-sm"
+				href="#/editcourse/{{course.id}}"> <span class="glyphicon glyphicon-edit"></span >
+					Edit Course
+			</a></td>
+			<td ng-show="instructor"><a class="btn btn-default btn-sm"
+				href="#/stats/{{course.id}}"> <span class="glyphicon glyphicon-stats"></span >
+					View Statistics
+			</a></td>
+		</tr>
+	</tbody>
 </table>
 
 

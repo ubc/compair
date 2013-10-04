@@ -4,12 +4,12 @@
 <div class="tablewrapper">
 	<table ng-table="userParams" class="table" show-filter="true">
 		<tr class="tr" ng-repeat="user in allUsers">
-			<td title="Username" sortable="username" filter="{ 'username': 'text' }">
+			<td data-title="Username" sortable="username" filter="{ 'username': 'text' }">
 				<a href="#/userprofile/{{user.uid}}">{{user.username}}</a>
 			</td>
-			<td title="'Full Name'" sortable="fullname" filter="{ 'fullname': 'text' }">{{user.fullname}}</td>
-			<td title="'Display Name'" sortable="display" filter="{ 'display': 'text' }">{{user.display}}</td>
-			<td title="'User Type'" sortable="type" filter="{ 'type': 'select' }" filter-data="types($column)">
+			<td data-title="'Full Name'" sortable="fullname" filter="{ 'fullname': 'text' }">{{user.fullname}}</td>
+			<td data-title="'Display Name'" sortable="display" filter="{ 'display': 'text' }">{{user.display}}</td>
+			<td data-title="'User Type'" sortable="type" filter="{ 'type': 'text' }"><!-- filter="{ 'type': 'select' }" filter-data="types($column)" -->
 				{{user.type}}
 			</td>
 		</tr>

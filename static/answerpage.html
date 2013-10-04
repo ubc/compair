@@ -8,25 +8,25 @@
 		<div class="questionContent" mathjax-bind="question"></div>
 	</div>
 
-	<a href="" class="btn btn-success" ng-click="check=!check" id="stepAnswer" ng-show="!quiz || !answered">
-		<i class="icon-puzzle-piece icon-large"></i> Submit Answer
+	<a href="" class="btn btn-success" ng-click="check=!check" id="stepAnswer" ng-show="instructor || !quiz || !answered">
+		<span class="glyphicon glyphicon-list-alt icon-large"></span > Submit Answer
 	</a>
-	<a href="#/judgepage/{{qid}}" class="btn btn-inverse" id="stepJudge" ng-show="answered && scripts.length > 1"> 
-		<i class="icon-legal icon-large"></i> Judge Answers
+	<a href="#/judgepage/{{qid}}" class="btn btn-default" id="stepJudge" ng-show="(instructor || !quiz || answered) && scripts.length > 1"> 
+		<span class="glyphicon glyphicon-pencil icon-large"></span > Judge Answers
 	</a>
-	<button class="btn btn-inverse disabled" id="stepJudgeDisabled" ng-show="answered && scripts.length <= 1" title="Not enough answers to judge yet!">
-		<i class="icon-legal icon-large"></i> Judge Answers
+	<button class="btn btn-default disabled" id="stepJudgeDisabled" ng-show="(instructor || !quiz || answered) && scripts.length <= 1" title="Not enough answers to judge yet!">
+		<span class="glyphicon glyphicon-pencil icon-large"></span > Judge Answers
 	</button>
-	<a title="Comments" class="btn" ng-click="qcomm=!qcomm">
-		<i class="icon-comments-alt"></i> Show Comments ({{commentQCount}})
+	<a title="Comments" class="btn btn-default" ng-click="qcomm=!qcomm">
+		<span class="glyphicon glyphicon-comment"></span > Show Comments ({{commentQCount}})
 	</a> 
 	
 	<div ng-show="qcomm">
 		<div ctype="Question" cinstructor="{{instructor}}" clogin="{{login}}" comment-block></div>
 	</div>
 
-	<div ng-show="check">
-		<form name="newAnswer" novalidate>
+	<div ng-show="check" class="marginT15">
+		<ng-form name="newAnswer" novalidate>
 			<div math-toolbar editor="myanswer" class="mathtoolbar"></div>
 			<div hallo-editor name="answer" ng-model="myanswer" id="myanswer" class="entries" ng-mouseup="saveRange()" ng-keyup="saveRange()"></div>
 			<p class="text-error" ng-show="submitted && !myanswer">
@@ -34,40 +34,40 @@
 				Please submit an answer.
 			</p>
 
-			<a class="btn btn-info" ng-click="previewText(); showpreview=true;"><i class="icon-eye-open"></i> Preview</a>
+			<a class="btn btn-info" ng-click="previewText(); showpreview=true;"><span class="glyphicon glyphicon-eye-open"></span > Preview</a>
 			<a class="btn btn-primary" ng-click="submit();submitted=true">
-				<i class="icon-ok"></i> Submit
+				<span class="glyphicon glyphicon-ok"></span > Submit
 			</a>
 			<div class="preview" ng-show="showpreview" mathjax-bind="preview">
 			</div>
-		</form>
+		</ng-form>
 	</div>
-	<div ng-show="!quiz || answered">
+	<div ng-show="instructor || !quiz || answered">
 		<h3>Answers</h3>
 	
 		<div class="btn_spacing">
-		<a class="btn" ng-click="temp=orderProp;orderProp=nextOrder;nextOrder=temp" id="stepOrder">
-			<i class="icon-sort-by-attributes"></i> By {{nextOrder}}
+		<a class="btn btn-default" ng-click="temp=orderProp;orderProp=nextOrder;nextOrder=temp" id="stepOrder">
+			<span class="glyphicon glyphicon-sort-by-attributes"></span > By {{nextOrder}}
 		</a>
 		</div>
 	
-		<ul class="postingsList">
+		<ul class="postingsList padding0">
 			<li ng-repeat="script in scripts | orderBy:orderProp:true" ng-class="{quiz: quiz, discussion: !quiz}">
 				<img src="http://www.gravatar.com/avatar/{{script.avatar}}?s=32&d=retro" class="avatar">
 				<p class="authorHeader">Author: <strong>{{script.author}}</strong> - {{script.time}} - Score: {{script.score}}</p>
 				<div class="opbuttons">
-					<div class="row-fluid">
+					<div class="row">
 						<div class="col-md-12">
-							<div class="row-fluid">
+							<div class="row">
 								<div class="col-md-4">
-									<a class="btn btn-small btnWidth" ng-show="instructor || login==script.author" ng-click="switchEdits({{script.id}});newanswer=script.content;showpreviewEdit=false;">
-										<i class="icon-edit-sign icon-large"></i> Edit
+									<a class="btn btn-default btn-sm btnWidth" ng-show="instructor || login==script.author" ng-click="switchEdits({{script.id}});newanswer=script.content;showpreviewEdit=false;">
+										<span class="glyphicon glyphicon-edit icon-large"></span > Edit
 									</a>
 									<div ng-hide="instructor || login==script.author" class="btnWidth"></div>
 								</div>
 								<div class="col-md-4 col-md-offset-1">
-									<a class="btn btn-small btn-danger btnWidth" ng-show="instructor || login==script.author" ng-click="remove(script)">
-										<i class="icon-trash icon-large"></i> Delete
+									<a class="btn btn-sm btn-danger btnWidth" ng-show="instructor || login==script.author" ng-click="remove(script)">
+										<span class="glyphicon glyphicon-trash icon-large"></span > Delete
 									</a>
 									<div ng-hide="instructor || login==script.author" class="btnWidth"></div>
 								</div>				
@@ -85,16 +85,16 @@
 					<div hallo-editor name="editanswers" ng-model="newanswer" id="editScript{{script.id}}" class="edit entries questionContent" ng-mouseup="saveRange()" ng-keyup="saveRange()"></div>
 				</div>
 				
-				<a class="btn btn-info marginT5" ng-show="switchEdits() == {{script.id}}" ng-click="previewTextEdit(script);showpreviewEdit=true;"><i class="icon-eye-open"></i> Preview</a>
+				<a class="btn btn-info marginT5" ng-show="switchEdits() == {{script.id}}" ng-click="previewTextEdit(script);showpreviewEdit=true;"><span class="glyphicon glyphicon-eye-open"></span > Preview</a>
 				<a class="btn btn-primary marginT5" ng-show="switchEdits() == {{script.id}}" ng-click="editscript(script, newanswer);switchEdits(-1);">
-					<i class="icon-ok"></i> Submit
+					<span class="glyphicon glyphicon-ok"></span > Submit
 				</a>
 				
 				<div class="preview" ng-show="switchEdits() == {{script.id}} && showpreviewEdit" mathjax-bind="previewEdit"></div>
 				
 				<div class="marginT5">
-					<a class="btn btn-small btn-info btnWidth" ng-click="getAcomments(script);scomm=!scomm;">
-						<i class="icon-comments-alt icon-large"></i> Comments ({{script.commentACount}})
+					<a class="btn btn-sm btn-info btnWidth" ng-click="getAcomments(script);scomm=!scomm;">
+						<span class="glyphicon glyphicon-comment icon-large"></span > Comments ({{script.commentACount}})
 					</a>
 				</div>
 					

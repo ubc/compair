@@ -9,11 +9,11 @@
 	</div>
 	
 	<div class="marginT15">
-		<ul class="postingsList" ng-show="judgements.length < 1">
+		<ul class="postingsList padding0" ng-show="judgements.length < 1">
 			<li>There are no Judgements yet</li>
 		</ul>
 	</div>
-	<ul class="postingsList">
+	<ul class="postingsList padding0">
 		<li ng-repeat="judgement in judgements">
 			<ul id="stepViews" class="judgetabs nav nav-tabs">
 				<li id="stepLeft"><a data-toggle="tab" data-target="#left{{$index}}">Left</a>
@@ -23,44 +23,48 @@
 				<li id="stepRight"><a data-toggle="tab" data-target="#right{{$index}}">Right</a>
 				</li>
 			</ul>
-			<div class="tab-content">
-				<div id="left{{$index}}" class="tab-pane fade">
-					<img src="http://www.gravatar.com/avatar/{{judgement.avatarl}}?s=32&d=retro" class="avatar">
-					<p class="authorHeader">Author: <strong>{{judgement.authorl}}</strong> - {{judgement.timel}} - Score: {{judgement.scorel}}</p>
-					<div class="answer left"
-						ng-class="{selected: judgement.sidl == judgement.winner}"
-						mathjax-bind="judgement.scriptl"></div>
-				</div>
-				<div id="vs{{$index}}" class="tab-pane fade active in">
-					<div class="col-md-6 padding0">
+			<div class="row">
+				<div class="tab-content col-md-12">
+					<div id="left{{$index}}" class="tab-pane fade">
 						<img src="http://www.gravatar.com/avatar/{{judgement.avatarl}}?s=32&d=retro" class="avatar">
 						<p class="authorHeader">Author: <strong>{{judgement.authorl}}</strong> - {{judgement.timel}} - Score: {{judgement.scorel}}</p>
+						<div class="answer left"
+							ng-class="{selected: judgement.wins_l >= judgement.wins_r}"
+							mathjax-bind="judgement.scriptl"></div>
 					</div>
-					<div class="col-md-6 padding0">
+					<div id="vs{{$index}}" class="tab-pane fade active in">
+						<div class="col-md-6 padding0">
+							<img src="http://www.gravatar.com/avatar/{{judgement.avatarl}}?s=32&d=retro" class="avatar">
+							<p class="authorHeader">Author: <strong>{{judgement.authorl}}</strong> - {{judgement.timel}} - Score: {{judgement.scorel}} - Wins vs Right: {{judgement.wins_l}}</p>
+						</div>
+						<div class="col-md-6 padding0">
+							<img src="http://www.gravatar.com/avatar/{{judgement.avatarr}}?s=32&d=retro" class="avatar">
+							<p class="authorHeader">Author: <strong>{{judgement.authorr}}</strong> - {{judgement.timer}} - Score: {{judgement.scorer}} - Wins vs Left: {{judgement.wins_r}}</p>
+						</div>
+						<div class="answer left col-md-6"
+							ng-class="{selected: judgement.wins_l >= judgement.wins_r}"
+							mathjax-bind="judgement.scriptl"></div>
+						<div class="answer right col-md-6"
+							ng-class="{selected: judgement.wins_l <= judgement.wins_r}"
+							mathjax-bind="judgement.scriptr"></div>
+						<div class="versus"></div>
+					</div>
+					<div id="right{{$index}}" class="tab-pane fade">
 						<img src="http://www.gravatar.com/avatar/{{judgement.avatarr}}?s=32&d=retro" class="avatar">
 						<p class="authorHeader">Author: <strong>{{judgement.authorr}}</strong> - {{judgement.timer}} - Score: {{judgement.scorer}}</p>
+						<div class="answer right"
+							ng-class="{selected: judgement.wins_l <= judgement.wins_r}"
+							mathjax-bind="judgement.scriptr"></div>
 					</div>
-					<div class="answer left col-md-6"
-						ng-class="{selected: judgement.sidl == judgement.winner}"
-						mathjax-bind="judgement.scriptl"></div>
-					<div class="answer right col-md-6"
-						ng-class="{selected: judgement.sidr == judgement.winner}"
-						mathjax-bind="judgement.scriptr"></div>
-					<div class="versus"></div>
-				</div>
-				<div id="right{{$index}}" class="tab-pane fade">
-					<img src="http://www.gravatar.com/avatar/{{judgement.avatarr}}?s=32&d=retro" class="avatar">
-					<p class="authorHeader">Author: <strong>{{judgement.authorr}}</strong> - {{judgement.timer}} - Score: {{judgement.scorer}}</p>
-					<div class="answer right"
-						ng-class="{selected: judgement.sidr == judgement.winner}"
-						mathjax-bind="judgement.scriptr"></div>
 				</div>
 			</div>
 
-			<div class="row-fluid marginT15">
-				<a class="btn btn-info" ng-click="jcomm=!jcomm;">
-					<i class="icon-comments-alt icon-large"></i> Comments
-				</a>
+			<div class="row marginT15">
+				<div class="col-md-12">
+					<a class="btn btn-info" ng-click="jcomm=!jcomm;">
+						<span class="glyphicon glyphicon-comment icon-large"></span > Comments ({{judgement.commentsCount}})
+					</a>
+				</div>
 			</div>
 			<div ng-if="jcomm">
 				<div ctype="ReviewJudgement" qid="{{judgement.qid}}" sidl="{{judgement.sidl}}" sidr="{{judgement.sidr}}" cinstructor="{{instructor}}" clogin="{{login}}" comment-block></div>

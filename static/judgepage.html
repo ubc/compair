@@ -8,29 +8,26 @@
 	</div>
 
 	<ul id="stepViews" class="judgetabs nav nav-tabs">
-		<li id="stepLeft" class="pointer">
-			<a data-toggle="tab" data-target="#left">Left</a>
-		</li>
-		<li class="active pointer" id="stepVS">
-			<a data-toggle="tab" data-target="#vs">VS</a>
-		</li>
-		<li id="stepRight" class="pointer">
-			<a data-toggle="tab" data-target="#right">Right</a>
-		</li>
+		<li id="stepLeft" class="pointer"><a data-toggle="tab"
+			data-target="#left">Left</a></li>
+		<li class="active pointer" id="stepVS"><a data-toggle="tab"
+			data-target="#vs">VS</a></li>
+		<li id="stepRight" class="pointer"><a data-toggle="tab"
+			data-target="#right">Right</a></li>
 	</ul>
-
-	<div class="tab-content">
-		<div id="left" class="tab-pane fade">
-			<div class="answer left" mathjax-bind="scriptl"></div>
-		</div>
-		<div id="vs" class="tab-pane fade active in">	
-				<div class="answer left col-md-6" mathjax-bind="scriptl"></div>
-				<div class="answer right col-md-6" mathjax-bind="scriptr"></div>	
-			<div class="versus">
+	<div class="row">
+		<div class="tab-content">
+			<div id="left" class="tab-pane fade">
+				<div class="answer left" mathjax-bind="scriptl"></div>
 			</div>
-		</div>
-		<div id="right" class="tab-pane fade">
-			<div class="answer right" mathjax-bind="scriptr"></div>
+			<div id="vs" class="tab-pane fade active in">
+				<div class="answer left col-md-6" mathjax-bind="scriptl"></div>
+				<div class="answer right col-md-6" mathjax-bind="scriptr"></div>
+				<div class="versus"></div>
+			</div>
+			<div id="right" class="tab-pane fade">
+				<div class="answer right" mathjax-bind="scriptr"></div>
+			</div>
 		</div>
 	</div>
 
@@ -39,37 +36,44 @@
 			<h3 class="text-center">Which is Better?</h3>
 		</div>
 
-		<div class="row-fluid" id="stepPick">
-			<div class="col-md-6 answer left pagination-right pointer" ng-class="{selected: pick=='left'}" ng-click="pick='left'">
-				<span class="marginR50">
-					<i class="icon-check-empty  icon-large" ng-show="pick!='left'"></i>
-					<i class="icon-check icon-large" ng-show="pick=='left'"></i>
+		<div class="row" id="stepPick">
+			<div class="col-md-6 answer left alignRight pointer"
+				ng-class="{selected: pick=='left'}" ng-click="pick='left'">
+				<span class="marginR50"> <span
+					class="glyphicon glyphicon-unchecked  icon-large"
+					ng-show="pick!='left'"></span> <span
+					class="glyphicon glyphicon-check icon-large" ng-show="pick=='left'"></span>
 				</span>
 			</div>
 
-			<div class="col-md-6 answer right pagination-left pointer" ng-class="{selected: pick=='right'}" ng-click="pick='right'">
-				<span class="marginL50">
-					<i class="icon-check-empty  icon-large" ng-show="pick!='right'"></i>
-					<i class="icon-check icon-large" ng-show="pick=='right'"></i>
+			<div class="col-md-6 answer right alignLeft pointer"
+				ng-class="{selected: pick=='right'}" ng-click="pick='right'">
+				<span class="marginL50"> <span
+					class="glyphicon glyphicon-unchecked  icon-large"
+					ng-show="pick!='right'"></span> <span
+					class="glyphicon glyphicon-check icon-large"
+					ng-show="pick=='right'"></span>
 				</span>
-			</div>	
+			</div>
 		</div>
-		
-		<div class="col-md-12 pagination-centered marginT15">
-			<a class="btn btn-primary" ng-click="submit()" id="stepSubmit">
-				<i class="icon-ok"></i> Submit
+
+		<div class="col-md-12 centered marginT15">
+			<a class="btn btn-primary" ng-click="submit()" id="stepSubmit"> <span
+				class="glyphicon glyphicon-ok"></span> Submit
 			</a>
 		</div>
-		
-	</form>		
-	<a id="stepNext" class="btn" ng-click="nextpair();jcomm=false">
-		<i class="icon-random"></i> Next Pair
-	</a>
-	<a class="btn btn-info" ng-click="jcomm=!jcomm;">
-			<i class="icon-comments-alt icon-large"></i> Comments
+
+	</form>
+
+	<a id="stepNext" class="btn btn-default"
+		ng-click="nextpair();jcomm=false"> <span
+		class="glyphicon glyphicon-random"></span> Next Pair
+	</a> <a class="btn btn-info" ng-click="jcomm=!jcomm;"> <span
+		class="glyphicon glyphicon-comment icon-large"></span> Comments
 	</a>
 	<div ng-if="jcomm">
-		<div ctype="Judgement" sidl="{{sidl}}" sidr="{{sidr}}" cinstructor="{{instructor}}" clogin="{{login}}" comment-block></div>
-	</div>	
+		<div ctype="Judgement" sidl="{{sidl}}" sidr="{{sidr}}"
+			cinstructor="{{instructor}}" clogin="{{login}}" comment-block></div>
+	</div>
 </div>
 

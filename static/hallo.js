@@ -1175,7 +1175,7 @@
       populateToolbar: function() {},
       buildIndicator: function() {
         var editButton;
-        editButton = jQuery('<div><i class="icon-edit"></i> Edit</div>');
+        editButton = jQuery('<div><span class="icon-edit"></span > Edit</div>');
         editButton.addClass(this.options.className);
         editButton.hide();
         this.element.before(editButton);
@@ -2214,7 +2214,7 @@
       _createButton: function(id, command, label, icon) {
         var classes;
         classes = ['ui-button', 'ui-widget', 'ui-state-default', 'ui-corner-all', 'ui-button-text-only', "" + command + "_button"];
-        return jQuery("<button id=\"" + id + "\"        class=\"" + (classes.join(' ')) + "\" title=\"" + label + "\">          <span class=\"ui-button-text\">            <i class=\"" + icon + "\"></i>          </span>        </button>");
+        return jQuery("<button id=\"" + id + "\"        class=\"" + (classes.join(' ')) + "\" title=\"" + label + "\">          <span class=\"ui-button-text\">            <span class=\"" + icon + "\"></span >          </span>        </button>");
       }
     });
     return jQuery.widget('IKS.hallobuttonset', {
@@ -2306,7 +2306,7 @@
         var buttonEl, classes, id;
         id = "" + this.options.uuid + "-" + this.options.label;
         classes = ['ui-button', 'ui-widget', 'ui-state-default', 'ui-corner-all', 'ui-button-text-only'];
-        buttonEl = jQuery("<button id=\"" + id + "\"       class=\"" + (classes.join(' ')) + "\" title=\"" + this.options.label + "\">       <span class=\"ui-button-text\"><i class=\"" + this.options.icon + "\"></i></span>       </button>");
+        buttonEl = jQuery("<button id=\"" + id + "\"       class=\"" + (classes.join(' ')) + "\" title=\"" + this.options.label + "\">       <span class=\"ui-button-text\"><span class=\"" + this.options.icon + "\"></span ></span>       </button>");
         if (this.options.cssClass) {
           buttonEl.addClass(this.options.cssClass);
         }

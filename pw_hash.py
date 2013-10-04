@@ -1,5 +1,6 @@
 from passlib.hash import sha512_crypt
 
+
 class PasswordHash:
 	def hash_password(self, pw):
 		return sha512_crypt.encrypt(pw)
