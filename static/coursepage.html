@@ -11,10 +11,12 @@
 			<input class="form-control" type="text" ng-model="cquery">
 		</div>
 	</form>
-	<a ng-click="check = !check" class="btn btn-default" ng-show="instructor" ng-disabled="check" id="step1">
-		<span class="glyphicon glyphicon-book"></span > Create Course
+	<a ng-click="check = !check" class="btn btn-default"
+		ng-show="instructor" ng-disabled="check" id="step1"> <span
+		class="glyphicon glyphicon-book"></span> Create Course
 	</a> <a id="step4" class="btn btn-default" ng-show="instructor"
-		href="#/classimport"> <span class="glyphicon glyphicon-upload"></span > Import Students
+		href="#/classimport"> <span class="glyphicon glyphicon-upload"></span>
+		Import Students
 	</a>
 </div>
 <form class="form-inline createCourse" ng-show="check" ng-submit="submit()">

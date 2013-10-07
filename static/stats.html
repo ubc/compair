@@ -1,12 +1,13 @@
 <h2>{{coursename}}</h2>
-
 <table ng-table="tableParams" class="table marginT15">
 	<tr ng-repeat="row in stats">
-		<td data-title="'Name'" sortable="student.lastname">{{row.student.firstname}} {{row.student.lastname}}</td>
-		<td data-title="'Questions'" sortable="student.questionCount">{{row.student.questionCount}}</td>
-		<td data-title="'%'" sortable="qpercent">{{row.student.questionCount / row.totalQuestions * 100 | number:0}}</td>
-		<td data-title="'Answers'" sortable="student.answerCount">{{row.student.answerCount}}</td>
-		<td data-title="'%'" sortable="apercent">{{row.student.answerCount/row.totalAnswers * 100 | number:2}}</td>
-		<td data-title="'Average score / answer'" sortable="student.avgScore">{{row.student.avgScore | number:2}}</td>
+		<td data-title="'Name'" sortable="student.lastname" class="alignLeft">{{row.student.firstname}} {{row.student.lastname}}</td>
+		<td data-title="'Questions'" sortable="student.questionCount" class="centered">{{row.student.questionCount}}</td>
+		<td data-title="'%'" sortable="qpercent" class="centered">{{row.student.questionCount / row.totalQuestions * 100 | number:0}}</td>
+		<td data-title="'Answers'" sortable="student.answerCount" class="centered">{{row.student.answerCount}}</td>
+		<td data-title="'%'" sortable="apercent" class="centered">{{row.student.answerCount/row.totalAnswers * 100 | number:2}}</td>
+		<td data-title="'Average score / answer'" sortable="student.avgScore" class="centered">{{row.student.avgScore | number:2}}</td>
 	</tr>
 </table>
+<a class="btn btn-default" href="#/statexport/{{cid}}/{{coursename}}"><span class="glyphicon glyphicon-export"></span> Export Data
+</a>

@@ -101,6 +101,11 @@ myApp.factory('tagService', function($resource) {
 myApp.factory('statisticService', function($resource) {
 	return $resource( '/statistics/:cid' );
 });
+
+myApp.factory('statisticExportService', function($resource) {
+	return $resource( '/statisticexport/', {}, { put: {method: 'POST'} } );
+});
+
 //used for testing
 myApp.factory('resetDB', function($resource) {
 	return $resource( '/resetdb' );
@@ -201,6 +206,11 @@ myApp.config( function ($routeProvider) {
 			{
 				controller: StatisticController,
 				templateUrl: 'stats.html'
+			})
+		.when ('/statexport/:cid/:cname',
+				{
+			controller: StatisticExportController,
+			templateUrl: 'statexport.html'
 			})
 		.otherwise({redirectTo: '/'});
 });
@@ -754,9 +764,10 @@ function CourseController($rootScope, $scope, $cookieStore, $location, courseSer
 		$location.path(unescape(url));
 	};
 }
-//TODO
+
 function StatisticController($rootScope, $routeParams, $scope, $cookieStore, $location, $filter, statisticService, ngTableParams) {
 	var cid = $routeParams.courseId;
+	$scope.cid = cid;
 	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':'Statistics'}];
 	
 	var stats = statisticService.get({cid: cid}, function() {
@@ -812,6 +823,47 @@ function StatisticController($rootScope, $routeParams, $scope, $cookieStore, $lo
 			);
 		}
 	}, true);
+}
+//TODO
+function StatisticExportController($rootScope, $routeParams, $scope, $window, statisticExportService) {
+	$scope.cid = $routeParams.cid;
+	$scope.cname = $routeParams.cname;
+	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':$scope.cname, 'link':'#/stats/'+$scope.cid},{'name':'Export Data'}];	
+	
+	$scope.question = true;
+	$scope.questionTitle = true;
+	$scope.questionBody = true;
+	$scope.questionComments = false;
+	$scope.answer = true;
+	$scope.answerBody = true;
+	$scope.answerComments = false;
+	$scope.judgement = true;
+	$scope.judgementQuestion = false;
+	$scope.judgementAnswer = false;
+	$scope.judgementComments = false;
+	
+	$scope.export = function() {
+		var form = $('<form action="/statisticexport/" method="post" id="csvForm">' +
+			'<input type="hidden" name="cid" value="' + $scope.cid + '" />' +
+			
+			'<input type="hidden" name="question" value="' + $scope.question + '" />' +
+			'<input type="hidden" name="questionTitle" value="' + $scope.questionTitle + '" />' +
+			'<input type="hidden" name="questionBody" value="' + $scope.questionBody + '" />' +
+			'<input type="hidden" name="questionComments" value="' + $scope.questionComments + '" />' +
+			
+			'<input type="hidden" name="answer" value="' + $scope.answer + '" />' +
+			'<input type="hidden" name="answerBody" value="' + $scope.answerBody + '" />' +
+			'<input type="hidden" name="answerComments" value="' + $scope.answerComments + '" />' +
+			
+			'<input type="hidden" name="judgement" value="' + $scope.judgement + '" />' +
+			'<input type="hidden" name="judgementQuestion" value="' + $scope.judgementQuestion + '" />' +
+			'<input type="hidden" name="judgementAnswer" value="' + $scope.judgementAnswer + '" />' +
+			'<input type="hidden" name="judgementComments" value="' + $scope.judgementComment + '" />' +
+		'</form>');
+		$('body').append(form);
+		$(form).submit();
+		$('#csvForm').remove();
+	};
 }
 
 function EditCourseController($rootScope, $scope, $routeParams, $filter, editcourseService, tagService, ngTableParams) {
@@ -1606,7 +1658,8 @@ myApp.directive("uploadImage", function() {
 				if (content.completed && content.file && content.file.length > 0) {
 					img = document.createElement("IMG");
 					img.src = "user_images/" + content.file;
-					if ($rootScope.savedRange) {
+					divElmnt = document.getElementById($scope.editor);
+					if ($rootScope.savedRange && $rootScope.savedRange.compareNode(divElmnt) == 2) {
 						$rootScope.savedRange.insertNode(img);
 						rangy.getSelection().setSingleRange($rootScope.savedRange);
 					}
@@ -1655,8 +1708,9 @@ myApp.directive("mathFormula", function() {
 		template: '<span ng-click="add()" class="btn btn-default" mathjax-bind="label"></span>',
 		controller: function($rootScope, $scope, $element, $attrs) {
 			$scope.add = function() {
+				divElmnt = document.getElementById($scope.editor);
 				// insert the formular at the cursor position using Rangy's insert method
-				if ($rootScope.savedRange) {
+				if ($rootScope.savedRange && $rootScope.savedRange.compareNode(divElmnt) == 2) {
 					$rootScope.savedRange.insertNode(document.createTextNode($scope.equation));
 					rangy.getSelection().setSingleRange($rootScope.savedRange);
 				}
@@ -1682,9 +1736,16 @@ myApp.directive("mathImage", function() {
 		template: '<span ng-click="add()" class="btn btn-default"><img ng-src="img/{{imgSrc}}" style="height:18px;" /></span>',
 		controller: function($rootScope, $scope, $element, $attrs) {
 			$scope.add = function() {
+				divElmnt = document.getElementById($scope.editor);
 				// insert the formular at the cursor position using Rangy's insert method
-				$rootScope.savedRange.insertNode(document.createTextNode($scope.equation));
-				rangy.getSelection().setSingleRange($rootScope.savedRange);
+				if ($rootScope.savedRange && $rootScope.savedRange.compareNode(divElmnt) == 2) {
+					$rootScope.savedRange.insertNode(document.createTextNode($scope.equation));
+					rangy.getSelection().setSingleRange($rootScope.savedRange);
+				}
+				else {
+					var textarea = angular.element("div#"+$scope.editor);
+					textarea.append($scope.equation);
+				}
 			};
 		}
 	};
