@@ -615,7 +615,15 @@ function UserController($rootScope, $scope, $location, flashService, roleService
 
 function ProfileController($rootScope, $scope, $routeParams, $location, flashService, userService, passwordService) {
 	$rootScope.$broadcast("NO_TUTORIAL", false);
-	$rootScope.breadcrumb = [{'name':'Home','link':'#'}];
+	if ($rootScope.referer && $rootScope.referer == 'enrollpage') {
+		$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name': $rootScope.refererName,'link':'#/enrollpage/'+$rootScope.refererCourseId}];
+		$rootScope.referer = null;
+		$rootScope.refererName = null;
+		$rootScope.refererCourseId = null;
+	}
+	else {
+		$rootScope.breadcrumb = [{'name':'Home','link':'#'}];
+	}
 	
 	var uid = $routeParams.userId;
 	var retval = userService.get( {uid: uid}, function() {
@@ -627,8 +635,7 @@ function ProfileController($rootScope, $scope, $routeParams, $location, flashSer
 			$scope.usertype = retval.usertype;
 			$scope.loggedType = retval.loggedType;
 			$scope.loggedName = retval.loggedName;
-			
-			if ($scope.loggedType == 'Admin') {
+			if ($scope.loggedType == 'Admin' && $rootScope.breadcrumb.length == 1) {
 				$rootScope.breadcrumb.push({'name':'Users','link':'#/user'});
 			}
 			$rootScope.breadcrumb.push({'name':'Edit Profile'});	
@@ -708,48 +715,47 @@ function CourseController($rootScope, $scope, $cookieStore, $location, courseSer
 		} else {
 			$scope.instructor = false;
 		}
-	});
 	
-	var courses = courseService.get( function() {
-		var steps = [];
-		var intro = '';
-		$scope.courses = courses.courses;	
-		if ( $scope.instructor ) {
-			steps = [
-				{
-					element: '#step1',
-					intro: 'Create a new course',
-					position: 'left',
-				},
-				{
-					element: '#step2',
-					intro: "Go to Question Page to view questions and create questions",
-				},
-				{
-					element: '#step3',
-					intro: "Go to Enrol Page to enrol students or drop students",
-				},
-				{
-					element: "#step4",
-					intro: "Go to Import Page to import students from a file",
-				},
-			];
-			intro = "Lists all the courses you are enrolled in. As an instructor, creating a new course is also an option. From here you can go to Question Page, Enrolment Page, or Import Page.";
-		} else {
-			steps = [
-				{
-					element: '#step2',
-					intro: "Go to Question Page to view questions and create question",
-				},
-			];
-			intro = "Lists all the courses you are enrolled in. From here, you can go to Question Page.";
-		}
-		if ( courses.courses.length < 1 ) {
-			steps = [];
-		}
-		$rootScope.$broadcast("STEPS", {"steps": steps, "intro": intro});
+		var courses = courseService.get( function() {
+			var steps = [];
+			var intro = '';
+			$scope.courses = courses.courses;
+			if ( $scope.instructor ) {
+				steps = [
+					{
+						element: '#step1',
+						intro: 'Create a new course',
+						position: 'left',
+					},
+					{
+						element: '#step2',
+						intro: "Go to Question Page to view questions and create questions",
+					},
+					{
+						element: '#step3',
+						intro: "Go to Enrol Page to enrol students or drop students",
+					},
+					{
+						element: "#step4",
+						intro: "Go to Import Page to import students from a file",
+					},
+				];
+				intro = "Lists all the courses you are enrolled in. As an instructor, creating a new course is also an option. From here you can go to Question Page, Enrolment Page, or Import Page.";
+			} else {
+				steps = [
+					{
+						element: '#step2',
+						intro: "Go to Question Page to view questions and create question",
+					},
+				];
+				intro = "Lists all the courses you are enrolled in. From here, you can go to Question Page.";
+			}
+			if ( courses.courses.length < 1 ) {
+				steps = [];
+			}
+			$rootScope.$broadcast("STEPS", {"steps": steps, "intro": intro});
+		});
 	});
-	
 	$scope.submit = function() {
 		input = {"name": $scope.course};
 		var retval = courseService.save( input, function() {
@@ -824,7 +830,7 @@ function StatisticController($rootScope, $routeParams, $scope, $cookieStore, $lo
 		}
 	}, true);
 }
-//TODO
+
 function StatisticExportController($rootScope, $routeParams, $scope, $window, statisticExportService) {
 	$scope.cid = $routeParams.cid;
 	$scope.cname = $routeParams.cname;
@@ -905,13 +911,12 @@ function EditCourseController($rootScope, $scope, $routeParams, $filter, editcou
 		var input = {"name": $scope.newname};
 		var retval = editcourseService.put({cid: $scope.id}, input, function() {
 			if (retval.msg != 'PASS') {
-				//TODO
-				//flashService.flash('danger', '...');
+				flashService.flash('danger', retval.msg);
 			} else {
 				$scope.edit = false;
 				$scope.submitted = false;
 				$scope.name = $scope.newname;
-				//flashService.flash('success', 'The course has been successfully modified.');
+				flashService.flash('success', 'The course has been successfully modified.');
 			}
 		});
 	};
@@ -1023,7 +1028,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 	};
 	// only allow one single question to be editable at a time
 	$scope.editId = -1;
-	$scope.switchEdits = function(id) {	
+	$scope.switchEdits = function(id) {
 		if (id) {
 			$scope.previewEdit = null;
 			$scope.newquestion =  null;
@@ -1078,7 +1083,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 	$scope.editquestion = function(newtitle, newquestion, question) {
 		newquestion = angular.element("#question"+question.id).html();
 		newstring = angular.element("#question"+question.id).text(); // ignore html tags
-		input = {"title": newtitle, "content": newquestion, "taglist": question.tags ? question.tags : new Array()};
+		input = {"title": newtitle, "content": newquestion, "taglist": question.tmptags ? question.tmptags : new Array()};
 		if (!newtitle || !newstring) {
 			return '';
 		}
@@ -1086,6 +1091,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 			if (retval.msg != 'PASS') {
 				flashService.flash('danger', 'Please submit a question.');
 			} else {
+				question.tags = question.tmptags ? question.tmptags : new Array();
 				if ($scope.type == 'quiz') {
 					var index = jQuery.inArray(question, $scope.quizzes);
 					$scope.quizzes[index].title = newtitle;
@@ -1535,6 +1541,12 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 			$scope.teacherParams.page = 1;
 		}
 	}, true);
+	
+	$scope.storeReferer = function() {
+		$rootScope.referer = "enrollpage";
+		$rootScope.refererName = $scope.course;
+		$rootScope.refererCourseId = courseId;
+	};
 }
 
 function ImportController($rootScope, $scope, $routeParams, $http, flashService, courseService) {
@@ -1680,6 +1692,37 @@ myApp.directive("uploadImage", function() {
 	};
 });
 
+//myApp.directive("insertCode", function() {
+//	return {
+//		restrict: "A",
+//		replace: true,
+//		scope: {
+//			image: "@image",
+//			editor: "@editor"
+//		},
+//		template: '<div><label class="marginR5">Code</label><textarea rows="4" cols="50" class="inlineBlock"></textarea>' + 
+//		'<input class="btn btn-primary" type="button" value="Insert Code" ng-click="insertCode()"></div>',
+//		controller: function($rootScope, $scope, $element, flashService) {
+//			$scope.insertCode = function() {
+//				txtArea = document.getElementsByTagName("TEXTAREA")[0];
+//				pre = document.createElement("pre");
+//				pre.className = "highlight";
+//				txt = document.createTextNode(txtArea.value);
+//				pre.innerHTML = txtArea.value;
+//				divElmnt = document.getElementById($scope.editor);
+//				if ($rootScope.savedRange && $rootScope.savedRange.compareNode(divElmnt) == 2) {
+//					$rootScope.savedRange.insertNode(pre);
+//					rangy.getSelection().setSingleRange($rootScope.savedRange);
+//				}
+//				else {
+//					var textarea = angular.element("div#"+$scope.editor);
+//					textarea.append(pre);
+//				}
+//			};
+//		}
+//	};
+//});
+
 myApp.directive("mathjaxBind", function() {
     return {
         restrict: "A",
@@ -1731,9 +1774,10 @@ myApp.directive("mathImage", function() {
 			equation: "@mathEquation",
 			editor: "@editor",
 			label: "@label",
-			imgSrc: "@imgSrc"
+			imgSrc: "@imgSrc",
+			height: "@height"				
 		},
-		template: '<span ng-click="add()" class="btn btn-default"><img ng-src="img/{{imgSrc}}" style="height:18px;" /></span>',
+		template: '<span ng-click="add()" class="btn btn-default"><img ng-src="img/{{imgSrc}}" style="height:{{height || 18}}px;" /></span>',
 		controller: function($rootScope, $scope, $element, $attrs) {
 			$scope.add = function() {
 				divElmnt = document.getElementById($scope.editor);

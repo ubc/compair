@@ -94,7 +94,6 @@ def submitOnline(name, time):
         
 @app.route('/')
 def index():
-    print("getting nothing")
     return redirect(url_for('static', filename="index.html"))
 
 @app.route('/isinstalled')
@@ -241,6 +240,12 @@ def login():
 
 @app.route('/logout')
 def logout():
+    if 'username' in session:
+        if session['username'] in events:
+            ev = events[session['username']]
+            ev.cancel()
+        submitOnline(session['username'], datetime.datetime.now())
+        
 	session.pop('username', None)
 	for key in ['identity.name', 'identity.auth_type']:
 		session.pop(key, None)
@@ -784,7 +789,7 @@ def get_course(cid):
     course = Course.query.filter_by(id = cid).first()
     taglist = []
     for tag in course.tags:
-        taglist.append({"tag": tag.name, "id": tag.id})
+        taglist.append({"name": tag.name, "id": tag.id})
     db_session.rollback()
     return json.dumps( {"id": course.id, "name": course.name, "tags": taglist} )
 
@@ -837,7 +842,7 @@ def add_tag():
     
     taglist = []
     for tag in course.tags:
-        taglist.append({"tag": tag.name, "id": tag.id})
+        taglist.append({"name": tag.name, "id": tag.id})
     db_session.rollback()
     return json.dumps( {"id": course.id, "name": course.name, "tags": taglist} )
 
@@ -852,7 +857,7 @@ def remove_tag(cid, tid):
     
     taglist = []
     for tag in course.tags:
-        taglist.append({"tag": tag.name, "id": tag.id})
+        taglist.append({"name": tag.name, "id": tag.id})
     db_session.rollback()
     return json.dumps( {"id": course.id, "name": course.name, "tags": taglist} )
 
@@ -872,13 +877,13 @@ def list_question(id):
         if question.quiz:
             user = User.query.filter_by(username = session['username']).first()
             answered = Script.query.filter(Script.qid == question.id).filter(Script.uid == user.id).first()
-            lstQuiz.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar, "count": len(count), "answered": answered != None, "tags": taglistQ} )
+            lstQuiz.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar, "count": len(count), "answered": answered != None, "tags": taglistQ, "tmptags": taglistQ} )
         else:
-            lstQuestion.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar, "count": len(count), "tags": taglistQ} )
+            lstQuestion.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar, "count": len(count), "tags": taglistQ, "tmptags": taglistQ} )
     taglist = []
    
     for tag in course.tags:
-        taglist.append({"tag": tag.name, "id": tag.id})
+        taglist.append({"name": tag.name, "id": tag.id})
     db_session.rollback()
     
     return json.dumps( {"course": course.name, "tags": taglist, "questions": lstQuestion, "quizzes": lstQuiz} )
