@@ -101,6 +101,11 @@ myApp.factory('tagService', function($resource) {
 myApp.factory('statisticService', function($resource) {
 	return $resource( '/statistics/:cid' );
 });
+
+myApp.factory('statisticExportService', function($resource) {
+	return $resource( '/statisticexport/', {}, { put: {method: 'POST'} } );
+});
+
 //used for testing
 myApp.factory('resetDB', function($resource) {
 	return $resource( '/resetdb' );
@@ -201,6 +206,11 @@ myApp.config( function ($routeProvider) {
 			{
 				controller: StatisticController,
 				templateUrl: 'stats.html'
+			})
+		.when ('/statexport/:cid/:cname',
+				{
+			controller: StatisticExportController,
+			templateUrl: 'statexport.html'
 			})
 		.otherwise({redirectTo: '/'});
 });
@@ -605,7 +615,15 @@ function UserController($rootScope, $scope, $location, flashService, roleService
 
 function ProfileController($rootScope, $scope, $routeParams, $location, flashService, userService, passwordService) {
 	$rootScope.$broadcast("NO_TUTORIAL", false);
-	$rootScope.breadcrumb = [{'name':'Home','link':'#'}];
+	if ($rootScope.referer && $rootScope.referer == 'enrollpage') {
+		$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name': $rootScope.refererName,'link':'#/enrollpage/'+$rootScope.refererCourseId}];
+		$rootScope.referer = null;
+		$rootScope.refererName = null;
+		$rootScope.refererCourseId = null;
+	}
+	else {
+		$rootScope.breadcrumb = [{'name':'Home','link':'#'}];
+	}
 	
 	var uid = $routeParams.userId;
 	var retval = userService.get( {uid: uid}, function() {
@@ -617,8 +635,7 @@ function ProfileController($rootScope, $scope, $routeParams, $location, flashSer
 			$scope.usertype = retval.usertype;
 			$scope.loggedType = retval.loggedType;
 			$scope.loggedName = retval.loggedName;
-			
-			if ($scope.loggedType == 'Admin') {
+			if ($scope.loggedType == 'Admin' && $rootScope.breadcrumb.length == 1) {
 				$rootScope.breadcrumb.push({'name':'Users','link':'#/user'});
 			}
 			$rootScope.breadcrumb.push({'name':'Edit Profile'});	
@@ -698,48 +715,47 @@ function CourseController($rootScope, $scope, $cookieStore, $location, courseSer
 		} else {
 			$scope.instructor = false;
 		}
-	});
 	
-	var courses = courseService.get( function() {
-		var steps = [];
-		var intro = '';
-		$scope.courses = courses.courses;	
-		if ( $scope.instructor ) {
-			steps = [
-				{
-					element: '#step1',
-					intro: 'Create a new course',
-					position: 'left',
-				},
-				{
-					element: '#step2',
-					intro: "Go to Question Page to view questions and create questions",
-				},
-				{
-					element: '#step3',
-					intro: "Go to Enrol Page to enrol students or drop students",
-				},
-				{
-					element: "#step4",
-					intro: "Go to Import Page to import students from a file",
-				},
-			];
-			intro = "Lists all the courses you are enrolled in. As an instructor, creating a new course is also an option. From here you can go to Question Page, Enrolment Page, or Import Page.";
-		} else {
-			steps = [
-				{
-					element: '#step2',
-					intro: "Go to Question Page to view questions and create question",
-				},
-			];
-			intro = "Lists all the courses you are enrolled in. From here, you can go to Question Page.";
-		}
-		if ( courses.courses.length < 1 ) {
-			steps = [];
-		}
-		$rootScope.$broadcast("STEPS", {"steps": steps, "intro": intro});
+		var courses = courseService.get( function() {
+			var steps = [];
+			var intro = '';
+			$scope.courses = courses.courses;
+			if ( $scope.instructor ) {
+				steps = [
+					{
+						element: '#step1',
+						intro: 'Create a new course',
+						position: 'left',
+					},
+					{
+						element: '#step2',
+						intro: "Go to Question Page to view questions and create questions",
+					},
+					{
+						element: '#step3',
+						intro: "Go to Enrol Page to enrol students or drop students",
+					},
+					{
+						element: "#step4",
+						intro: "Go to Import Page to import students from a file",
+					},
+				];
+				intro = "Lists all the courses you are enrolled in. As an instructor, creating a new course is also an option. From here you can go to Question Page, Enrolment Page, or Import Page.";
+			} else {
+				steps = [
+					{
+						element: '#step2',
+						intro: "Go to Question Page to view questions and create question",
+					},
+				];
+				intro = "Lists all the courses you are enrolled in. From here, you can go to Question Page.";
+			}
+			if ( courses.courses.length < 1 ) {
+				steps = [];
+			}
+			$rootScope.$broadcast("STEPS", {"steps": steps, "intro": intro});
+		});
 	});
-	
 	$scope.submit = function() {
 		input = {"name": $scope.course};
 		var retval = courseService.save( input, function() {
@@ -754,9 +770,10 @@ function CourseController($rootScope, $scope, $cookieStore, $location, courseSer
 		$location.path(unescape(url));
 	};
 }
-//TODO
+
 function StatisticController($rootScope, $routeParams, $scope, $cookieStore, $location, $filter, statisticService, ngTableParams) {
 	var cid = $routeParams.courseId;
+	$scope.cid = cid;
 	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':'Statistics'}];
 	
 	var stats = statisticService.get({cid: cid}, function() {
@@ -814,6 +831,47 @@ function StatisticController($rootScope, $routeParams, $scope, $cookieStore, $lo
 	}, true);
 }
 
+function StatisticExportController($rootScope, $routeParams, $scope, $window, statisticExportService) {
+	$scope.cid = $routeParams.cid;
+	$scope.cname = $routeParams.cname;
+	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':$scope.cname, 'link':'#/stats/'+$scope.cid},{'name':'Export Data'}];	
+	
+	$scope.question = true;
+	$scope.questionTitle = true;
+	$scope.questionBody = true;
+	$scope.questionComments = false;
+	$scope.answer = true;
+	$scope.answerBody = true;
+	$scope.answerComments = false;
+	$scope.judgement = true;
+	$scope.judgementQuestion = false;
+	$scope.judgementAnswer = false;
+	$scope.judgementComments = false;
+	
+	$scope.export = function() {
+		var form = $('<form action="/statisticexport/" method="post" id="csvForm">' +
+			'<input type="hidden" name="cid" value="' + $scope.cid + '" />' +
+			
+			'<input type="hidden" name="question" value="' + $scope.question + '" />' +
+			'<input type="hidden" name="questionTitle" value="' + $scope.questionTitle + '" />' +
+			'<input type="hidden" name="questionBody" value="' + $scope.questionBody + '" />' +
+			'<input type="hidden" name="questionComments" value="' + $scope.questionComments + '" />' +
+			
+			'<input type="hidden" name="answer" value="' + $scope.answer + '" />' +
+			'<input type="hidden" name="answerBody" value="' + $scope.answerBody + '" />' +
+			'<input type="hidden" name="answerComments" value="' + $scope.answerComments + '" />' +
+			
+			'<input type="hidden" name="judgement" value="' + $scope.judgement + '" />' +
+			'<input type="hidden" name="judgementQuestion" value="' + $scope.judgementQuestion + '" />' +
+			'<input type="hidden" name="judgementAnswer" value="' + $scope.judgementAnswer + '" />' +
+			'<input type="hidden" name="judgementComments" value="' + $scope.judgementComment + '" />' +
+		'</form>');
+		$('body').append(form);
+		$(form).submit();
+		$('#csvForm').remove();
+	};
+}
+
 function EditCourseController($rootScope, $scope, $routeParams, $filter, editcourseService, tagService, ngTableParams) {
 	var courseId = $routeParams.courseId; 
 	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':'Edit Course'}];
@@ -853,13 +911,12 @@ function EditCourseController($rootScope, $scope, $routeParams, $filter, editcou
 		var input = {"name": $scope.newname};
 		var retval = editcourseService.put({cid: $scope.id}, input, function() {
 			if (retval.msg != 'PASS') {
-				//TODO
-				//flashService.flash('danger', '...');
+				flashService.flash('danger', retval.msg);
 			} else {
 				$scope.edit = false;
 				$scope.submitted = false;
 				$scope.name = $scope.newname;
-				//flashService.flash('success', 'The course has been successfully modified.');
+				flashService.flash('success', 'The course has been successfully modified.');
 			}
 		});
 	};
@@ -971,7 +1028,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 	};
 	// only allow one single question to be editable at a time
 	$scope.editId = -1;
-	$scope.switchEdits = function(id) {	
+	$scope.switchEdits = function(id) {
 		if (id) {
 			$scope.previewEdit = null;
 			$scope.newquestion =  null;
@@ -1026,7 +1083,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 	$scope.editquestion = function(newtitle, newquestion, question) {
 		newquestion = angular.element("#question"+question.id).html();
 		newstring = angular.element("#question"+question.id).text(); // ignore html tags
-		input = {"title": newtitle, "content": newquestion, "taglist": question.tags ? question.tags : new Array()};
+		input = {"title": newtitle, "content": newquestion, "taglist": question.tmptags ? question.tmptags : new Array()};
 		if (!newtitle || !newstring) {
 			return '';
 		}
@@ -1034,6 +1091,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 			if (retval.msg != 'PASS') {
 				flashService.flash('danger', 'Please submit a question.');
 			} else {
+				question.tags = question.tmptags ? question.tmptags : new Array();
 				if ($scope.type == 'quiz') {
 					var index = jQuery.inArray(question, $scope.quizzes);
 					$scope.quizzes[index].title = newtitle;
@@ -1483,6 +1541,12 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 			$scope.teacherParams.page = 1;
 		}
 	}, true);
+	
+	$scope.storeReferer = function() {
+		$rootScope.referer = "enrollpage";
+		$rootScope.refererName = $scope.course;
+		$rootScope.refererCourseId = courseId;
+	};
 }
 
 function ImportController($rootScope, $scope, $routeParams, $http, flashService, courseService) {
@@ -1606,7 +1670,8 @@ myApp.directive("uploadImage", function() {
 				if (content.completed && content.file && content.file.length > 0) {
 					img = document.createElement("IMG");
 					img.src = "user_images/" + content.file;
-					if ($rootScope.savedRange) {
+					divElmnt = document.getElementById($scope.editor);
+					if ($rootScope.savedRange && $rootScope.savedRange.compareNode(divElmnt) == 2) {
 						$rootScope.savedRange.insertNode(img);
 						rangy.getSelection().setSingleRange($rootScope.savedRange);
 					}
@@ -1626,6 +1691,37 @@ myApp.directive("uploadImage", function() {
 		}
 	};
 });
+
+//myApp.directive("insertCode", function() {
+//	return {
+//		restrict: "A",
+//		replace: true,
+//		scope: {
+//			image: "@image",
+//			editor: "@editor"
+//		},
+//		template: '<div><label class="marginR5">Code</label><textarea rows="4" cols="50" class="inlineBlock"></textarea>' + 
+//		'<input class="btn btn-primary" type="button" value="Insert Code" ng-click="insertCode()"></div>',
+//		controller: function($rootScope, $scope, $element, flashService) {
+//			$scope.insertCode = function() {
+//				txtArea = document.getElementsByTagName("TEXTAREA")[0];
+//				pre = document.createElement("pre");
+//				pre.className = "highlight";
+//				txt = document.createTextNode(txtArea.value);
+//				pre.innerHTML = txtArea.value;
+//				divElmnt = document.getElementById($scope.editor);
+//				if ($rootScope.savedRange && $rootScope.savedRange.compareNode(divElmnt) == 2) {
+//					$rootScope.savedRange.insertNode(pre);
+//					rangy.getSelection().setSingleRange($rootScope.savedRange);
+//				}
+//				else {
+//					var textarea = angular.element("div#"+$scope.editor);
+//					textarea.append(pre);
+//				}
+//			};
+//		}
+//	};
+//});
 
 myApp.directive("mathjaxBind", function() {
     return {
@@ -1655,8 +1751,9 @@ myApp.directive("mathFormula", function() {
 		template: '<span ng-click="add()" class="btn btn-default" mathjax-bind="label"></span>',
 		controller: function($rootScope, $scope, $element, $attrs) {
 			$scope.add = function() {
+				divElmnt = document.getElementById($scope.editor);
 				// insert the formular at the cursor position using Rangy's insert method
-				if ($rootScope.savedRange) {
+				if ($rootScope.savedRange && $rootScope.savedRange.compareNode(divElmnt) == 2) {
 					$rootScope.savedRange.insertNode(document.createTextNode($scope.equation));
 					rangy.getSelection().setSingleRange($rootScope.savedRange);
 				}
@@ -1677,14 +1774,22 @@ myApp.directive("mathImage", function() {
 			equation: "@mathEquation",
 			editor: "@editor",
 			label: "@label",
-			imgSrc: "@imgSrc"
+			imgSrc: "@imgSrc",
+			height: "@height"				
 		},
-		template: '<span ng-click="add()" class="btn btn-default"><img ng-src="img/{{imgSrc}}" style="height:18px;" /></span>',
+		template: '<span ng-click="add()" class="btn btn-default"><img ng-src="img/{{imgSrc}}" style="height:{{height || 18}}px;" /></span>',
 		controller: function($rootScope, $scope, $element, $attrs) {
 			$scope.add = function() {
+				divElmnt = document.getElementById($scope.editor);
 				// insert the formular at the cursor position using Rangy's insert method
-				$rootScope.savedRange.insertNode(document.createTextNode($scope.equation));
-				rangy.getSelection().setSingleRange($rootScope.savedRange);
+				if ($rootScope.savedRange && $rootScope.savedRange.compareNode(divElmnt) == 2) {
+					$rootScope.savedRange.insertNode(document.createTextNode($scope.equation));
+					rangy.getSelection().setSingleRange($rootScope.savedRange);
+				}
+				else {
+					var textarea = angular.element("div#"+$scope.editor);
+					textarea.append($scope.equation);
+				}
 			};
 		}
 	};

@@ -54,7 +54,6 @@
 					question.
 				</p>
 			</div>
-
 			<div ng-show="type!='discussion'">
 				Answer:
 				<div math-toolbar editor="myanswerq" class="mathtoolbar"></div>
@@ -160,8 +159,6 @@
 					</div>
 				</div>
 
-
-<!-- 				<div ng-hide="switchEdits() == {{question.id}}" id="stepTitle"> -->
 				<div ng-hide="{{question.id}} == editId" id="stepTitle">
 					<h4 mathjax-bind="question.title"></h4>
 					<div>
@@ -177,7 +174,6 @@
 						mathjax-bind="question.content"></div>
 				</div>
 
-<!-- 				<div ng-show="switchEdits() == {{question.id}}"> -->
 				<div ng-show="{{question.id}} == editId">
 					<ng-form name="createQuestion" novalidate>
 						Question Title:
@@ -195,8 +191,8 @@
 						
 						<div>
 							<span ng-repeat="tag in tags" class="label pointer margin1"
-								ng-class="{'label-default': !checkTagQ(question.tags, tag.name), 'label-success': checkTagQ(question.tags, tag.name)}"
-								ng-click="tagActionQ(question.tags, tag.name)">{{tag.name}}</span>
+								ng-class="{'label-default': !checkTagQ(question.tmptags, tag.name), 'label-success': checkTagQ(question.tmptags, tag.name)}"
+								ng-click="tagActionQ(question.tmptags, tag.name)">{{tag.name}}</span>
 						</div>
 				
 						<div math-toolbar editor="question{{question.id}}"
@@ -221,6 +217,7 @@
 							mathjax-bind="previewEdit"></div>
 
 					</ng-form>
+
 				</div>
 			</li>
 		</ul>

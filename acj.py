@@ -94,7 +94,7 @@ def submitOnline(name, time):
         
 @app.route('/')
 def index():
-	return redirect(url_for('static', filename="index.html"))
+    return redirect(url_for('static', filename="index.html"))
 
 @app.route('/isinstalled')
 def is_installed():
@@ -240,6 +240,12 @@ def login():
 
 @app.route('/logout')
 def logout():
+    if 'username' in session:
+        if session['username'] in events:
+            ev = events[session['username']]
+            ev.cancel()
+        submitOnline(session['username'], datetime.datetime.now())
+        
 	session.pop('username', None)
 	for key in ['identity.name', 'identity.auth_type']:
 		session.pop(key, None)
@@ -783,7 +789,7 @@ def get_course(cid):
     course = Course.query.filter_by(id = cid).first()
     taglist = []
     for tag in course.tags:
-        taglist.append({"tag": tag.name, "id": tag.id})
+        taglist.append({"name": tag.name, "id": tag.id})
     db_session.rollback()
     return json.dumps( {"id": course.id, "name": course.name, "tags": taglist} )
 
@@ -836,7 +842,7 @@ def add_tag():
     
     taglist = []
     for tag in course.tags:
-        taglist.append({"tag": tag.name, "id": tag.id})
+        taglist.append({"name": tag.name, "id": tag.id})
     db_session.rollback()
     return json.dumps( {"id": course.id, "name": course.name, "tags": taglist} )
 
@@ -851,7 +857,7 @@ def remove_tag(cid, tid):
     
     taglist = []
     for tag in course.tags:
-        taglist.append({"tag": tag.name, "id": tag.id})
+        taglist.append({"name": tag.name, "id": tag.id})
     db_session.rollback()
     return json.dumps( {"id": course.id, "name": course.name, "tags": taglist} )
 
@@ -871,13 +877,13 @@ def list_question(id):
         if question.quiz:
             user = User.query.filter_by(username = session['username']).first()
             answered = Script.query.filter(Script.qid == question.id).filter(Script.uid == user.id).first()
-            lstQuiz.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar, "count": len(count), "answered": answered != None, "tags": taglistQ} )
+            lstQuiz.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar, "count": len(count), "answered": answered != None, "tags": taglistQ, "tmptags": taglistQ} )
         else:
-            lstQuestion.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar, "count": len(count), "tags": taglistQ} )
+            lstQuestion.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar, "count": len(count), "tags": taglistQ, "tmptags": taglistQ} )
     taglist = []
    
     for tag in course.tags:
-        taglist.append({"tag": tag.name, "id": tag.id})
+        taglist.append({"name": tag.name, "id": tag.id})
     db_session.rollback()
     
     return json.dumps( {"course": course.name, "tags": taglist, "questions": lstQuestion, "quizzes": lstQuiz} )
@@ -1215,6 +1221,100 @@ def upload_image():
     img.save(os.path.join(app.config['UPLOAD_IMAGE_FOLDER'], filename))
     file.close()
     return json.dumps( {"file": filename, "completed": True} )
+
+@app.route('/statisticexport/', methods=['POST'])
+@teacher.require(http_exception=401)
+def export_stats():
+    params = request.form
+    cid = params['cid']
+    csv = ''
+    comments = ''
+    if params['question'] == 'true':
+        header = '"author","time","question #"'
+        if params['questionTitle'] == 'true':
+            header = header + ',"title"'
+        if params['questionBody'] == 'true':
+            header = header + ',"question"'
+        questions = Question.query.filter_by(cid = cid).all()
+        csv = '\n"Questions"\n' + header + '\n'
+        for row in questions:
+            author = User.query.filter_by(id = row.uid).first()
+            csv = csv + '"' + author.display + '","' + str(row.time) + '","' + str(row.id) + '",'
+            if params['questionTitle'] == 'true':
+                csv = csv + '"' + row.title + '",'
+            if params['questionBody'] == 'true':
+                csv = csv + '"' + row.content + '",'
+            csv = csv[:-1] + '\n'
+            
+            if params['questionComments'] == 'true':
+                commentsQ = CommentQ.query.filter_by(qid = row.id).all()
+                for c_row in commentsQ:
+                    comments = comments + '"' + c_row.content + '"\n'
+        if params['questionComments'] == 'true':
+            comments = '\n"Question Comments"\n' + comments
+            csv = csv + comments
+            comments = ''
+                    
+    if params['answer'] == 'true':
+        header = '"author","time","score","question #"'
+        if params['answerBody'] == 'true':
+            header = header + ',"answer"'
+        answers = Script.query.filter(Script.qid.in_(Question.query.with_entities(Question.id).filter_by(cid = cid))).all()
+        csv = csv + '\n"Answers"\n' + header + '\n'
+        for row in answers:
+            author = User.query.filter_by(id = row.uid).first()
+            csv = csv + '"' + author.display + '","' + str(row.time) + '","' + str(row.score) + '","' + str(row.qid) + '",'
+            if params['answerBody'] == 'true':
+                csv = csv + '"' + row.content + '",'
+            csv = csv[:-1] + '\n'
+            
+            if params['answerComments'] == 'true':
+                commentsA = CommentA.query.filter_by(sid = row.id).all()
+                for c_row in commentsA:
+                    comments = comments + '"' + c_row.content + '"\n'
+        if params['answerComments'] == 'true':
+            comments = '\n"Answer Comments"\n' + comments
+            csv = csv + comments
+            comments = ''
+
+    if params['judgement'] == 'true':
+        header = '"judge","author answer 1","author answer 2","winner"'
+        if params['judgementQuestion'] == 'true':
+            header = header + ',"title","question"'
+        if params['judgementAnswer'] == 'true':
+            header = header + ',"answer 1","answer 2","winner"'
+        questionsJ = Question.query.with_entities(Question.id).filter_by(cid = cid)
+        csv = csv + '\n"Judgements"\n' + header + '\n'
+        for question in questionsJ:
+            judgements = Judgement.query.filter(Judgement.script1.has(qid = question.id)).all()
+            for row in judgements:
+                judge = User.query.filter_by(id = row.uid).first()
+                author1 = User.query.filter_by(id = row.script1.uid).first()
+                author2 = User.query.filter_by(id = row.script2.uid).first()
+                if row.winner == row.sidl:
+                        winner = "winner: " + author1.display
+                else:
+                    winner = "winner: " + author2.display
+                csv = csv + '"' + judge.display + '","' + author1.display + '","' + author2.display + '","' + winner + '",'
+                if params['judgementQuestion'] == 'true':
+                    questionsJ = Question.query.filter_by(id = row.script1.qid).all()
+                    for rowQ in questionsJ:
+                            csv = csv + '"' + rowQ.title + '",' + '"' + rowQ.content + '",'
+                if params['judgementAnswer'] == 'true':
+                    csv = csv + '"' + row.script1.content + '","' + row.script2.content + '",'
+                csv = csv[:-1] + '\n'
+                if params['judgementComments'] == 'true':
+                    commentsJ = CommentJ.query.filter_by(sidl = row.script1.id).filter_by(sidr = row.script2.id).all()
+                    for c_row in commentsJ:
+                        comments = comments + c_row.content + '\n'
+        if params['judgementComments'] == 'true':
+            comments = '\n"Judgement Comments"\n' + comments
+            csv = csv + comments
+            comments = ''
+
+    return Response(csv, mimetype='text/csv', headers={"Content-Disposition": "attachment;filename=statistics.csv"})
+
+
 
 @teacher.require(http_exception=401)
 def enrol_users(users, courseId):

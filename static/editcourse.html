@@ -15,18 +15,21 @@
 
 		<table ng-table="tagParams" class="table tagTable">
 			<tr class="tr" ng-repeat="tag in tags">
-				<td data-title="Tag" sortable="tag">{{tag.tag}}</td>
 				<td data-title="">
-					<button class="btn btn-danger btn-xs glyphicon glyphicon-remove"
-						ng-click="removeTag({{tag.id}})"></button>
+					<button class="btn btn-danger btn-xs"
+						ng-click="removeTag({{tag.id}})">
+						<span class="glyphicon glyphicon-remove icon-large"> </span>
+					</button>
 				</td>
+				<td data-title="Tag" sortable="tag">{{tag.name}}</td>
 			</tr>
 		</table>
 
 
-		<span>New Tag: <input type="text" ng-model="newtag">
-			<button class="btn btn-success btn-xs glyphicon glyphicon-plus"
-				ng-click="addTag()"></button></span>
+		<input type="text" ng-model="newtag">
+			<button class="btn btn-primary btn-sm"
+				ng-click="addTag()"><span class="glyphicon glyphicon-plus icon-large">
+				</span> Add Tag</button>
 		<br><br>
 		<br><br>
 	</form>
