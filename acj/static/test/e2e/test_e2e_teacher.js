@@ -31,11 +31,11 @@ describe('ACJ testsuite - Teacher', function() {
 			
 			expect(element("span.profile.ng-binding").text()).toBe("test course 201");
 			input("newtag").enter("Testtag 1");
-			element("button.glyphicon.glyphicon-plus").click();
+			element("button.btn.btn-primary.btn-sm").click();
 			input("newtag").enter("Testtag 2");
-			element("button.glyphicon.glyphicon-plus").click();
+			element("button.btn.btn-primary.btn-sm").click();
 			expect(repeater('tr[ng-repeat="tag in tags"]').count()).toBe(2);
-			element("button.glyphicon.glyphicon-remove:eq(0)").click();
+			element("button.btn.btn-danger.btn-xs:eq(0)").click();
 			expect(repeater('tr[ng-repeat="tag in tags"]').count()).toBe(1);
 		});
 		it('enroll students in the new course', function() {

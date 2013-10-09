@@ -42,7 +42,7 @@ def reset_db():
         Base.metadata.drop_all(bind=engine)
         Base.metadata.create_all(bind=engine)
         
-        with open('static/test/testdata.sql', 'r') as f:
+        with open('acj/static/test/testdata.sql', 'r') as f:
             db_session.execute(f.read().decode("utf8"))
         db_session.commit()
         print("done resetting db state")
