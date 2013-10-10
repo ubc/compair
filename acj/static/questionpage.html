@@ -89,9 +89,9 @@
 				</p>
 				<div class="opbuttons">
 					<div class="row">
-						<div class="col-md-12">
+						<div class="col-md-12 col-xs-12">
 							<div class="row">
-								<div class="col-md-4">
+								<div class="col-md-4 col-xs-5">
 									<a href="#/answerpage/{{question.id}}"
 										class="btn btn-info btn-sm btnWidth" id="stepAnswer"> <span
 										class="glyphicon glyphicon-list-alt icon-large"></span>
@@ -99,7 +99,7 @@
 										<span ng-show="type!='discussion' && !instructor && !question.answered"> Answer</span>
 									</a>
 								</div>
-								<div class="col-md-4 col-md-offset-1">
+								<div class="col-md-4 col-md-offset-1 col-xs-4">
 									<a href="#/judgepage/{{question.id}}"
 										class="btn btn-primary btn-sm btnWidth" id="stepJudge"
 										ng-show="(type=='discussion' || question.answered) && question.count > 1"> <span
@@ -115,14 +115,14 @@
 						</div>
 					</div>
 					<div class="row marginT5">
-						<div class="col-md-12">
+						<div class="col-md-12 col-xs-12">
 							<div class="row">
-								<div class="col-md-4">
+								<div class="col-md-4 col-xs-5">
 									<span class="label btnWidth top inlineBlock"
 										ng-class="{'label-success': question.count > 1, 'label-warning': question.count == 1, 'label-important': question.count == 0}">{{question.count}}
 										answer(s)</span>
 								</div>
-								<div class="col-md-4 col-md-offset-1">
+								<div class="col-md-4 col-md-offset-1 col-xs-4">
 									<a href="#/reviewjudge/{{question.id}}"
 										class="btn btn-primary btn-sm btnWidth"
 										ng-show="(type=='discussion' || question.answered) && question.count > 1"> <span
@@ -138,16 +138,16 @@
 						</div>
 					</div>
 					<div class="row marginT5">
-						<div class="col-md-12">
+						<div class="col-md-12 col-xs-12">
 							<div class="row">
-								<div class="col-md-4">
+								<div class="col-md-4 col-xs-5">
 									<a class="btn btn-default btn-sm btnWidth"
 										ng-show="login == question.author || instructor"
 										ng-click="switchEdits({{question.id}});newtitle=question.title;newquestion=question.content;showpreviewEdit=false;">
 										<span class="glyphicon glyphicon-edit icon-large"></span> Edit
 									</a>
 								</div>
-								<div class="col-md-4 col-md-offset-1">
+								<div class="col-md-4 col-md-offset-1 col-xs-4">
 									<a class="btn btn-danger btn-sm btnWidth"
 										ng-show="login == question.author || instructor"
 										ng-click="remove(question)"> <span
@@ -159,7 +159,7 @@
 					</div>
 				</div>
 
-				<div ng-hide="{{question.id}} == editId" id="stepTitle">
+				<div ng-hide="{{question.id}} == editId" id="stepTitle" class="minHeightMobile">
 					<h4 mathjax-bind="question.title"></h4>
 					<div>
 						<span ng-repeat="tag in question.tags" class="label label-success margin1">{{tag}}</span>
@@ -170,11 +170,11 @@
 							Hide
 					</span>
 					</a>
-					<div class="questionContent" ng-show="full"
+					<div class="questionContent" ng-class="{marginTopMobile: login == question.author || instructor}" ng-show="full"
 						mathjax-bind="question.content"></div>
 				</div>
 
-				<div ng-show="{{question.id}} == editId">
+				<div ng-show="{{question.id}} == editId" class="marginTopMobile90">
 					<ng-form name="createQuestion" novalidate>
 						Question Title:
 						<div class="row">

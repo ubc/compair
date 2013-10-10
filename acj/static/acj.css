@@ -226,3 +226,15 @@ span.required {
 .inlineBlock {
 	display: inline-block !important;
 }
+
+@media ( max-width :767px) {
+	.minHeightMobile {
+		min-height: 90px !important;
+	}
+	.marginTopMobile {
+		margin-top: 40px !important;
+	}
+	.marginTopMobile90 {
+		margin-top: 90px !important;
+	}
+}

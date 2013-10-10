@@ -57,15 +57,15 @@
 				<p class="authorHeader">Author: <strong>{{script.author}}</strong> - {{script.time}} - Score: {{script.score}}</p>
 				<div class="opbuttons">
 					<div class="row">
-						<div class="col-md-12">
+						<div class="col-md-12 col-xs-12">
 							<div class="row">
-								<div class="col-md-4">
+								<div class="col-md-4 col-xs-5">
 									<a class="btn btn-default btn-sm btnWidth" ng-show="instructor || login==script.author" ng-click="switchEdits({{script.id}});newanswer=script.content;showpreviewEdit=false;">
 										<span class="glyphicon glyphicon-edit icon-large"></span > Edit
 									</a>
 									<div ng-hide="instructor || login==script.author" class="btnWidth"></div>
 								</div>
-								<div class="col-md-4 col-md-offset-1">
+								<div class="col-md-4 col-md-offset-1 col-xs-4">
 									<a class="btn btn-sm btn-danger btnWidth" ng-show="instructor || login==script.author" ng-click="remove(script)">
 										<span class="glyphicon glyphicon-trash icon-large"></span > Delete
 									</a>
@@ -76,7 +76,7 @@
 					</div>				
 				</div>
 	
-				<div>
+				<div class="marginTopMobile">
 					<div ng-hide="switchEdits() == {{script.id}}" id="script{{script.id}}" mathjax-bind="script.content" class="questionContent"></div>
 				</div>
 				
