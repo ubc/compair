@@ -24,24 +24,21 @@
 		<div ng-show="check">
 			<ng-form class="createQuestion" name="createQuestion"
 				ng-submit="submit()" novalidate>
-			<div class="row">
-				<div class="col-lg-3">
-					<label for="questionTitle">Question Title: </label>
-				</div>
-				<div class="col-lg-3">
-					<span>Limit answer and comment length: </span>
-				</div>
-			</div>
+				<span>Limit answer and comment length: </span>
 				<div class="row">
-					<div class="col-lg-3">
-						<input class="form-control" id="questionTitle" type="text"
-							name="title" ng-model="title" required />
-					</div>
-					<div class="col-lg-3">
+					<div class="col-sm-3">
 						<div class="input-group">
 							<span class="input-group-addon"> <input type="checkbox" name="contentLengthCheck" ng-model="contentLengthCheck">
 							</span> <input type="number" class="form-control" min="0" name="contentLength" ng-model="contentLength" ng-disabled="!contentLengthCheck">
 						</div>
+					</div>
+				</div>
+					
+				Question Title:
+				<div class="row">
+					<div class="col-sm-3">
+						<input class="form-control" id="questionTitle" type="text"
+							name="title" ng-model="title" required />
 					</div>
 				</div>
 				<p class="text-error"
@@ -98,7 +95,7 @@
 				src="http://www.gravatar.com/avatar/{{question.avatar}}?s=32&d=retro"
 				class="avatar">
 				<p class="authorHeader">
-					<strong>{{question.author}}</strong> - {{question.time}}<span ng-show="instructor && question.contentLength > 0"> - Limit: {{question.contentLength}}</span>
+					<strong>{{question.author}}</strong> - {{question.time}}<span ng-show="(login == question.author || instructor) && question.contentLength > 0"> - Limit: {{question.contentLength}}</span>
 				</p>
 				<div class="opbuttons">
 					<div class="row">
@@ -191,7 +188,7 @@
 					<ng-form name="createQuestion" novalidate>
 						<span>Limit answer and comment length: </span>
 						<div class="row">
-							<div class="col-lg-3">
+							<div class="col-sm-3">
 								<div class="input-group">
 									<span class="input-group-addon"> <input type="checkbox" name="newcontentLengthCheck" ng-model="newcontentLengthCheck">
 									</span> <input type="number" min="0" class="form-control" name="newcontentLength" ng-model="newcontentLength" ng-disabled="!newcontentLengthCheck">
@@ -201,7 +198,7 @@
 							
 						Question Title:
 						<div class="row">
-							<div class="col-lg-3">
+							<div class="col-sm-3">
 								<input type="text" name="title" class="form-control"
 									ng-model="newtitle" required>
 							</div>

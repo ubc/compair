@@ -74,7 +74,7 @@ describe('ACJ testsuite - Student', function() {
 		});
 		it('judge answers', function() {
 			element('a[ng-click="setType(\'discussion\');switchEdits(-1)"]').click();
-			element('#stepJudge:not(.ng-hide):first').click();
+			element('a#stepJudge:not(.ng-hide):first').click();
 			element("div[ng-click='pick=\'left\'']").click();
 			element("#stepSubmit").click();
 			expect(element("li.alert.alert-success.text-center").text()).toBe("Script & Judgement updated");

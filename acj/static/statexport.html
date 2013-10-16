@@ -1,6 +1,6 @@
 <h2>{{cname}}</h2>
 <div class="row">
-	<div class="col-lg-4">
+	<div class="col-md-4">
 		<div class="input-group marginT15">
 			<div class="checkbox">
 				<label> <input type="checkbox" name="question" ng-model="question" ng-checked="question || questionTitle || questionBody || questionComments" ng-disabled="questionTitle || questionBody || questionComments"> Export Questions
@@ -22,7 +22,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="col-lg-4">
+	<div class="col-md-4">
 		<div class="input-group marginT15">
 			<div class="checkbox">
 				<label> <input type="checkbox" name="answer" ng-model="answer" ng-checked="answer || answerTitle || answerBody || answerComments" ng-disabled="answerTitle || answerBody || answerComments"> Export Answers
@@ -40,7 +40,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="col-lg-4">
+	<div class="col-md-4">
 		<div class="input-group marginT15">
 			<div class="checkbox">
 				<label> <input type="checkbox" name="judgement" ng-model="judgement" ng-checked="judgement || judgementQuestion || judgementAnswer || judgementComments" ng-disabled="judgementQuestion || judgementAnswer || judgementComments"> Export Judgements
@@ -64,7 +64,7 @@
 	</div>
 </div>
 <div class="row marginT50">
-	<div class="col-lg-4">
+	<div class="col-md-4">
 		<button class="btn btn-primary" ng-click="export()">
 			<span class="glyphicon glyphicon-export"></span> Export
 		</button>

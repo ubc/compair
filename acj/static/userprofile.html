@@ -3,36 +3,36 @@
 <!-- 	<div class="alert alert-danger" ng-show="flash">{{flash}}</div> -->
 	<form name=userProfile novalidate class="form-horizontal" role="form">
 		<div class="form-group">
-			<label class="col-lg-3">Username</label>
-			<div class="col-lg-6">
+			<label class="col-sm-3">Username</label>
+			<div class="col-sm-6">
 				<p class="form-control-static">{{username}}</p>
 			</div>
 		</div>
 		<div class="form-group">
-			<label class="col-lg-3">{{usertype}} Name</label>
-			<div class="col-lg-3">
+			<label class="col-sm-3">{{usertype}} Name</label>
+			<div class="col-sm-3">
 				<p class="form-control-static">{{fullname}}</p>
 			</div>
 		</div>
 		<div class="form-group">
-			<label class="col-lg-3">Display Name</label>
-			<div class="col-lg-3">
+			<label class="col-sm-3">Display Name</label>
+			<div class="col-sm-3">
 				<p class="form-control-static" ng-hide="edit">{{display}}</p>
 				<input type="text" name="displayname" ng-model="newdisplay" value="newdisplay" required ng-show="edit" class="form-control">
 			</div>
 			<span class="required" ng-show="submitted && userProfile.displayname.$error.required">Display name is required.</span>			
 		</div>
 		<div class="form-group">
-			<label class="col-lg-3">Email</label>
-			<div class="col-lg-3">
+			<label class="col-sm-3">Email</label>
+			<div class="col-sm-3">
 				<p class="form-control-static" ng-hide="edit">{{email}}</p>
 				<input type="text" ng-model="newemail" ng-click="formaterr=false" value="newemail" class="form-control" ng-show="edit">
 			</div>
 			<span class="required" ng-show="formaterr">Incorrect email format</span>
 		</div>
 		<div class="form-group">
-			<label class="col-lg-3">Password</label>
-			<div class="col-lg-3">
+			<label class="col-sm-3">Password</label>
+			<div class="col-sm-3">
 				<p class="form-control-static" ng-hide="edit"><span class="glyphicon glyphicon-lock"></span></p>
 				
 				<div class="profile" ng-show="edit && (loggedType!='Admin' || username==loggedName)">

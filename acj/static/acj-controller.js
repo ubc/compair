@@ -645,7 +645,7 @@ function StatisticExportController($rootScope, $routeParams, $scope, $window, st
 	};
 }
 
-function EditCourseController($rootScope, $scope, $routeParams, $filter, editcourseService, tagService, ngTableParams) {
+function EditCourseController($rootScope, $scope, $routeParams, $filter, editcourseService, tagService, ngTableParams, flashService) {
 	//TODO create tutorial
 	$rootScope.$broadcast("NO_TUTORIAL", false);
 	var courseId = $routeParams.courseId; 
