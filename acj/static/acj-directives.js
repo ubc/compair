@@ -487,7 +487,7 @@ myApp.directive("commentBlock", function() {
 			$scope.saveRange = function($event, max) {
 				var selRange = rangy.getSelection();
 				$rootScope.savedRange = selRange.rangeCount ? selRange.getRangeAt(0) : null;
-				if (max) {
+				if (max && max > 0) {
 					elmt = selRange.getRangeAt(0).startContainer;
 					while (elmt.contentEditable != 'true') {
 						elmt = elmt.parentNode;
