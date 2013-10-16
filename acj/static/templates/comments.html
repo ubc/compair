@@ -16,7 +16,9 @@
 					</a>
 				</div>
 
-				<div ng-hide="switchEdits() == {{comment.id}}" mathjax-bind="comment.content" class="questionContent"></div>
+				<div class="marginTopMobile">
+					<div ng-hide="switchEdits() == {{comment.id}}" mathjax-bind="comment.content" class="questionContent"></div>
+				</div>
 				<div ng-show="switchEdits() == {{comment.id}}" class="comment">
 					<div math-toolbar editor="editcom{{comment.id}}" class="mathtoolbar"></div>
 					<div hallo-editor name="editCom" ng-model="newCom" id="editcom{{comment.id}}" class="entries" ng-mouseup="saveRange($event, contentLength)" ng-keydown="saveRange($event, contentLength)"></div>

@@ -33,7 +33,7 @@ hasher = PasswordHash()
 principals = Principal(app)
 
 UPLOAD_FOLDER = 'tmp'
-UPLOAD_IMAGE_FOLDER = 'static/user_images'
+UPLOAD_IMAGE_FOLDER = 'acj/static/user_images'
 ALLOWED_EXTENSIONS = set(['csv', 'txt'])
 ALLOWED_IMAGE_EXTENSIONS = set(['jpg', 'jpeg', 'png', 'gif', 'bmp'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -228,18 +228,18 @@ def upload_image():
     except IOError:
         return json.dumps( {"completed": True, "msg": "Invalid image file"} )    
     #scale the image if necessary
-    if img.size[0] > 800 or img.size[1] > 800:
+    if img.size[0] > 400 or img.size[1] > 400:
         neww = 0
         newh = 0
-        rw = img.size[0] / 800
-        rh = img.size[1] / 800
+        rw = img.size[0] / 400
+        rh = img.size[1] / 400
         
         if rw > rh:
             newh = int(round(img.size[1] / rw))
-            neww = 800
+            neww = 400
         else:
             neww = int(round(img.size[0] / rh))
-            newh = 800
+            newh = 400
         img = img.resize((neww,newh), Image.ANTIALIAS)
                         
     retval = []
