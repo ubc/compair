@@ -33,7 +33,7 @@
 		<div class="form-group">
 			<label class="col-lg-3">Password</label>
 			<div class="col-lg-3">
-				<p class="form-control-static" ng-hide="edit"><span class="glyphicon glyphicon-lock icon-large"></span></p>
+				<p class="form-control-static" ng-hide="edit"><span class="glyphicon glyphicon-lock"></span></p>
 				
 				<div class="profile" ng-show="edit && (loggedType!='Admin' || username==loggedName)">
 					<input type="password" ng-model="oldpassword" placeholder="Current Password" class="form-control">
@@ -43,7 +43,7 @@
 				
 				<div class="profile" ng-show="edit && loggedType=='Admin' && username!=loggedName">
 					<a href="" class="reset btn btn-default btn-xs" ng-click="resetpw()">
-						<span class="glyphicon glyphicon-wrench icon-large"></span > Reset Password
+						<span class="glyphicon glyphicon-wrench"></span > Reset Password
 					</a>
 					<div class="marginT15">{{resetpassword}}</div>
 				</div>
@@ -56,10 +56,10 @@
 		</div>
 	</form>
 	<a href="" class="btn btn-default" ng-hide="username!=loggedName && loggedType!='Admin'" class="edit" ng-click="edit=!edit; newdisplay=display; newemail=email; newpassword=''; newretypepw=''; oldpassword=''">
-		<span class="glyphicon glyphicon-edit icon-large"></span > Edit
+		<span class="glyphicon glyphicon-edit"></span > Edit
 	</a> 
 	<a href="" class="btn btn-primary" class="submit" ng-show="edit" ng-click="submit();submitted=true">
-		<span class="glyphicon glyphicon-ok icon-large"></span > Submit
+		<span class="glyphicon glyphicon-ok"></span > Submit
 	</a>
 </div>
 

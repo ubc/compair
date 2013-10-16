@@ -40,18 +40,18 @@
 			<div class="col-md-6 col-xs-6 answer left alignRight pointer"
 				ng-class="{selected: pick=='left'}" ng-click="pick='left'">
 				<span class="marginR50"> <span
-					class="glyphicon glyphicon-unchecked  icon-large"
+					class="glyphicon glyphicon-unchecked"
 					ng-show="pick!='left'"></span> <span
-					class="glyphicon glyphicon-check icon-large" ng-show="pick=='left'"></span>
+					class="glyphicon glyphicon-check" ng-show="pick=='left'"></span>
 				</span>
 			</div>
 
 			<div class="col-md-6 col-xs-6 answer right alignLeft pointer"
 				ng-class="{selected: pick=='right'}" ng-click="pick='right'">
 				<span class="marginL50"> <span
-					class="glyphicon glyphicon-unchecked  icon-large"
+					class="glyphicon glyphicon-unchecked"
 					ng-show="pick!='right'"></span> <span
-					class="glyphicon glyphicon-check icon-large"
+					class="glyphicon glyphicon-check"
 					ng-show="pick=='right'"></span>
 				</span>
 			</div>
@@ -69,7 +69,7 @@
 		ng-click="nextpair();jcomm=false"> <span
 		class="glyphicon glyphicon-random"></span> Next Pair
 	</a> <a class="btn btn-info" ng-click="jcomm=!jcomm;"> <span
-		class="glyphicon glyphicon-comment icon-large"></span> Comments
+		class="glyphicon glyphicon-comment"></span> Comments
 	</a>
 	<div ng-if="jcomm">
 		<div ctype="Judgement" sidl="{{sidl}}" sidr="{{sidr}}"

@@ -142,6 +142,7 @@ def marked_scripts(id):
     commentQ = CommentQ.query.filter_by(qid = question.id).all()
     retval = json.dumps( {"display": user.display, "usertype": user.usertype, "cid": course.id, "course": course.name, 
                           "qtitle": question.title, "question": question.content, "scripts": slst, "commentQCount": len(commentQ), 
-                          "authorQ": userQ.display, "timeQ": str(question.time), "avatarQ": userQ.avatar, "answered": answered, "quiz": question.quiz} )
+                          "authorQ": userQ.display, "timeQ": str(question.time), "avatarQ": userQ.avatar, "answered": answered,
+                          "quiz": question.quiz, "contentLength":question.contentLength} )
     db_session.rollback()
     return retval

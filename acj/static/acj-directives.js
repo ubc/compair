@@ -80,7 +80,7 @@ myApp.directive("uploadImage", function() {
 			'<input class="btn btn-primary" type="submit" value="Insert image" upload-submit="addImage(content)"></div></form>',
 		controller: function($rootScope, $scope, $element, $attrs, flashService) {
 			$scope.addImage = function(content) {
-				
+				//TODO catch if the entered text is already at the char limit(?)
 				if (content.completed && content.file && content.file.length > 0) {
 					img = document.createElement("IMG");
 					img.src = "user_images/" + content.file;
@@ -196,9 +196,10 @@ myApp.directive("mathImage", function() {
 			$scope.add = function() {
 				divElmnt = document.getElementById($scope.editor);
 				// insert the formular at the cursor position using Rangy's insert method
+				//TODO catch if the entered text is already at the char limit
 				if ($rootScope.savedRange && $rootScope.savedRange.compareNode(divElmnt) == 2) {
 					$rootScope.savedRange.insertNode(document.createTextNode($scope.equation));
-					rangy.getSelection().setSingleRange($rootScope.savedRange);
+					rgy = rangy.getSelection().setSingleRange($rootScope.savedRange);
 				}
 				else {
 					var textarea = angular.element("div#"+$scope.editor);
@@ -257,6 +258,7 @@ myApp.directive("commentBlock", function() {
 			sidl: "@sidl",
 			sidr: "@sidr",
 			qid: "@qid",
+			contentLength: "@contentlength",
 		},
 		controller: function($rootScope, $scope, $element, $attrs, $routeParams, flashService, commentQService, commentAService, commentJService) {
 			var questionId = $routeParams.questionId;
@@ -277,6 +279,15 @@ myApp.directive("commentBlock", function() {
 					var retval = commentQService.get( {id: questionId}, function() {
 						if (retval.comments) {
 							$scope.anyComments = retval.comments;
+							var divs = jQuery('[contenteditable="true"][name]').filter(function() {
+								return $(this).attr("name").toString().toLowerCase().indexOf("com") > -1;
+							});
+							for ( var i = 0; divs[i]; i++) {
+								jQuery(divs[i]).unbind('paste');
+								jQuery(divs[i]).bind('paste', function(e) {
+									$scope.saveRange(e, $scope.contentLength);
+								});
+							}
 						} else {
 							flashService.flash('danger', 'The comments could not be found.');
 						}
@@ -285,6 +296,15 @@ myApp.directive("commentBlock", function() {
 					var retval = commentAService.get( {id: $scope.sid}, function() {
 						if (retval.comments) {
 							$scope.anyComments = retval.comments;
+							var divs = jQuery('[contenteditable="true"][name]').filter(function() {
+								return $(this).attr("name").toString().toLowerCase().indexOf("com") > -1;
+							});
+							for ( var i = 0; divs[i]; i++) {
+								jQuery(divs[i]).unbind('paste');
+								jQuery(divs[i]).bind('paste', function(e) {
+									$scope.saveRange(e, $scope.contentLength);
+								});
+							}
 						} else {
 							flashService.flash('danger', 'The comments could not be found.');
 						}
@@ -293,6 +313,13 @@ myApp.directive("commentBlock", function() {
 					var retval = commentJService.get( {id: $scope.type == 'Judgement' ? questionId : $scope.qid, sidl: $scope.sidl, sidr: $scope.sidr}, function() {
 						if (retval.comments) {
 							$scope.anyComments = retval.comments;
+							var divs = jQuery('[contenteditable="true"][name*="com"]');
+							for ( var i = 0; divs[i]; i++) {
+								jQuery(divs[i]).unbind('paste');
+								jQuery(divs[i]).bind('paste', function(e) {
+									$scope.saveRange(e, $scope.contentLength);
+								});
+							}
 						} else {
 							flashService.flash('danger', 'The comments could not be found.');
 						}
@@ -302,13 +329,23 @@ myApp.directive("commentBlock", function() {
 				}
 			};
 			$scope.getComments();
-
+			
 			$scope.makeComment = function() {
 				var myComment = angular.element("#mycomment"+$scope.type + ($scope.type == "Answer" ? $scope.sid : "")).html();
 				var newstring = angular.element("#mycomment"+$scope.type + ($scope.type == "Answer" ? $scope.sid : "")).text();
 				var input = {"content": myComment};
 				if (!newstring) {
 					return '';
+				}
+				if ($scope.contentLength > 0) {
+					elmt = angular.element("#mycomment"+$scope.type + ($scope.type == "Answer" ? $scope.sid : ""));
+					fullRange = rangy.createRange();
+					fullRange.setStartBefore(elmt[0]);
+					fullRange.setEndAfter(elmt[0]);
+					if (fullRange.toString().length > $scope.contentLength) {
+						flashService.flash('danger', 'The comment is too long.');
+						return '';
+					}
 				}
 				if ($scope.type == 'Question') {
 					var retval = commentQService.save( {id: questionId}, input, function() {
@@ -346,6 +383,7 @@ myApp.directive("commentBlock", function() {
 				} else {
 					alert('something is wrong; comment type should be either Question, Answer or Judgement');
 				}
+				$scope.switchEdits(-1);
 			};
 
 			$scope.delComment = function( comment ) {
@@ -393,6 +431,16 @@ myApp.directive("commentBlock", function() {
 				if (!newstring) {
 					return '';
 				}
+				if ($scope.contentLength > 0) {
+					elmt = angular.element("#editcom"+comment.id);
+					fullRange = rangy.createRange();
+					fullRange.setStartBefore(elmt[0]);
+					fullRange.setEndAfter(elmt[0]);
+					if (fullRange.toString().length > $scope.contentLength) {
+						flashService.flash('danger', 'The comment is too long.');
+						return '';
+					}
+				}
 				var input = {"content": newcontent};
 				if ($scope.type == 'Question') {
 					var retval = commentQService.put( {id: comment.id}, input, function() {
@@ -431,12 +479,33 @@ myApp.directive("commentBlock", function() {
 				} else {
 					alert('something is wrong; comment type should be either Question, Answer or Judgement');
 				}
+				$scope.switchEdits(-1);
 			};
 			
+			//TODO
 			// save the Rangy object for the selected hallo editor
-			$scope.saveRange = function() {
+			$scope.saveRange = function($event, max) {
 				var selRange = rangy.getSelection();
 				$rootScope.savedRange = selRange.rangeCount ? selRange.getRangeAt(0) : null;
+				if (max) {
+					elmt = selRange.getRangeAt(0).startContainer;
+					while (elmt.contentEditable != 'true') {
+						elmt = elmt.parentNode;
+					}
+					fullRange = rangy.getSelection().getRangeAt(0);
+					fullRange.setStartBefore(elmt);
+					fullRange.setEndAfter(elmt);
+					//[backspace,shift,ctrl,alt,end,home,left,up,down,right,delete]
+					allowedKeys = [8, 16, 17, 18, 35, 36, 37, 38, 39, 40, 46];
+					if($event && allowedKeys.indexOf($event.which) == -1 && fullRange.toString().length >= max) {
+						$event.preventDefault();
+						jQuery("#" + elmt.id).effect("highlight", {"color":"#dFb5b4"}, 50);
+						jQuery("#" + elmt.id + "Error").removeClass('ng-hide');
+				    }
+					else {
+						jQuery("#" + elmt.id + "Error").addClass('ng-hide');
+					}
+				}
 			};
 		},
 		templateUrl: 'templates/comments.html',

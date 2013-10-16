@@ -103,49 +103,51 @@ class Course(Base):
 		return '<Course %r>' % self.name
 
 class Entry(Base):
-	__tablename__ = 'Entry'
-	id = Column(Integer, primary_key=True)
-	uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
-	type = Column(String(50))
-	time = Column(DateTime, default=datetime.datetime.now)
-	content = Column(Text)
+    __tablename__ = 'Entry'
+    id = Column(Integer, primary_key=True)
+    uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
+    type = Column(String(50))
+    time = Column(DateTime, default=datetime.datetime.now)
+    content = Column(Text)
 
-	__mapper_args__ = {
-		'polymorphic_identity': 'Entry',
-		'polymorphic_on': type
-	}
+    __mapper_args__ = {
+    	'polymorphic_identity': 'Entry',
+    	'polymorphic_on': type
+    }
 
-	def __init__(self, uid, content):
-		self.uid = uid
-		self.content = content
-	
-	def __repr__(self):
-		return '<Entry %r>' % self.id
+    def __init__(self, uid, content):
+    	self.uid = uid
+    	self.content = content
+    
+    def __repr__(self):
+    	return '<Entry %r>' % self.id
 
 class Question(Entry):
-	__tablename__ = 'Question'
-	id = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'), primary_key=True)
-	cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
-	title = Column(String(255))
-	quiz = Column(Boolean, default=True)
-
-	tagsQ = relationship("Tags",
+    __tablename__ = 'Question'
+    id = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'), primary_key=True)
+    cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
+    title = Column(String(255))
+    quiz = Column(Boolean, default=True)
+    contentLength = Column('contentLength', Integer, default=0)
+    
+    tagsQ = relationship("Tags",
 						secondary=question_tags_table,
 						backref=backref('tagsQ', lazy='dynamic'), cascade="all,delete")
 
-	__mapper_args__ = {
-		'polymorphic_identity': 'Question',
-	}
+    __mapper_args__ = {
+    	'polymorphic_identity': 'Question',
+    }
 
-	def __init__(self, cid, uid, title, content, quiz):
-		self.cid = cid
-		self.uid = uid 
-		self.title = title
-		self.content = content
-		self.quiz = quiz
-
-	def __repr__(self):
-		return '<Question %r>' % self.id
+    def __init__(self, cid, uid, title, content, quiz, contentLength):
+    	self.cid = cid
+    	self.uid = uid 
+    	self.title = title
+    	self.content = content
+    	self.quiz = quiz
+    	self.contentLength = contentLength
+    
+    def __repr__(self):
+    	return '<Question %r>' % self.id
 
 class Script(Entry):
 	__tablename__ = 'Script'

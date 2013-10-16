@@ -22,9 +22,9 @@ def list_question(id):
         if question.quiz:
             user = User.query.filter_by(username = session['username']).first()
             answered = Script.query.filter(Script.qid == question.id).filter(Script.uid == user.id).first()
-            lstQuiz.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar, "count": len(count), "answered": answered != None, "tags": taglistQ, "tmptags": taglistQ} )
+            lstQuiz.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar, "count": len(count), "answered": answered != None, "tags": taglistQ, "tmptags": taglistQ, "contentLength": question.contentLength} )
         else:
-            lstQuestion.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar, "count": len(count), "tags": taglistQ, "tmptags": taglistQ} )
+            lstQuestion.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar, "count": len(count), "tags": taglistQ, "tmptags": taglistQ, "contentLength": question.contentLength} )
     taglist = []
    
     for tag in course.tags:
@@ -41,7 +41,8 @@ def edit_question(id):
         'properties': {
             'title': {'type': 'string'},
             'content': {'type': 'string'},
-            'taglist': {'type': 'array'}
+            'taglist': {'type': 'array'},
+            'contentLength': {'type': 'integer'}
         }
     }
     try:
@@ -52,6 +53,7 @@ def edit_question(id):
     question = Question.query.filter_by(id = id).first()
     question.title = param['title']
     question.content = param['content']
+    question.contentLength = param['contentLength']
     question.tagsQ = []
     for tagname in param['taglist']:
         tag = Tags.query.filter_by(name = tagname).first()
@@ -69,7 +71,8 @@ def create_question(id):
             'title': {'type': 'string'},
             'content': {'type': 'string'},
             'type': {'type': 'string'},
-            'taglist': {'type': 'array'}
+            'taglist': {'type': 'array'},
+            'contentLength': {'type': 'integer'}
         }
     }
     try:
@@ -80,15 +83,16 @@ def create_question(id):
     content = param['content']
     title = param['title']
     type = param['type']
+    contentLength = param['contentLength']
     user = User.query.filter_by(username = session['username']).first()
-    newQuestion = Question(id, user.id, title, content, type=='quiz')
+    newQuestion = Question(id, user.id, title, content, type=='quiz', contentLength)
     db_session.add(newQuestion)
     for id in param['taglist']:
         tag = Tags.query.filter_by(id = id).first()
         newQuestion.tagsQ.append(tag)
     db_session.commit()
     course = Course.query.filter_by(id = id).first()
-    retval = json.dumps({"id": newQuestion.id, "author": user.display, "time": str(newQuestion.time), "title": newQuestion.title, "content": newQuestion.content, "avatar": user.avatar, "count": "1" if type=='quiz' else "0", "answered": True})
+    retval = json.dumps({"id": newQuestion.id, "author": user.display, "time": str(newQuestion.time), "title": newQuestion.title, "content": newQuestion.content, "avatar": user.avatar, "count": "1" if type=='quiz' else "0", "answered": True, "contentLength": contentLength})
     db_session.rollback()
     return retval
 

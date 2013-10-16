@@ -9,29 +9,32 @@
 	</div>
 
 	<a href="" class="btn btn-success" ng-click="check=!check" id="stepAnswer" ng-show="instructor || !quiz || !answered">
-		<span class="glyphicon glyphicon-list-alt icon-large"></span > Submit Answer
+		<span class="glyphicon glyphicon-list-alt"></span > Submit Answer
 	</a>
 	<a href="#/judgepage/{{qid}}" class="btn btn-default" id="stepJudge" ng-show="(instructor || !quiz || answered) && scripts.length > 1"> 
-		<span class="glyphicon glyphicon-pencil icon-large"></span > Judge Answers
+		<span class="glyphicon glyphicon-pencil"></span > Judge Answers
 	</a>
 	<button class="btn btn-default disabled" id="stepJudgeDisabled" ng-show="(instructor || !quiz || answered) && scripts.length <= 1" title="Not enough answers to judge yet!">
-		<span class="glyphicon glyphicon-pencil icon-large"></span > Judge Answers
+		<span class="glyphicon glyphicon-pencil"></span > Judge Answers
 	</button>
 	<a title="Comments" class="btn btn-default" ng-click="qcomm=!qcomm">
 		<span class="glyphicon glyphicon-comment"></span > Show Comments ({{commentQCount}})
 	</a> 
 	
 	<div ng-show="qcomm">
-		<div ctype="Question" cinstructor="{{instructor}}" clogin="{{login}}" comment-block></div>
+		<div ctype="Question" cinstructor="{{instructor}}" clogin="{{login}}" contentlength="{{contentLength}}" comment-block></div>
 	</div>
 
 	<div ng-show="check" class="marginT15">
 		<ng-form name="newAnswer" novalidate>
 			<div math-toolbar editor="myanswer" class="mathtoolbar"></div>
-			<div hallo-editor name="answer" ng-model="myanswer" id="myanswer" class="entries" ng-mouseup="saveRange()" ng-keyup="saveRange()"></div>
+			<div hallo-editor name="answer" ng-model="myanswer" id="myanswer" class="entries" ng-mouseup="saveRange($event, contentLength)" ng-keydown="saveRange($event, contentLength)"></div>
 			<p class="text-error" ng-show="submitted && !myanswer">
-				<span class="label label-important">Error</span>
+				<span class="label required">Error</span>
 				Please submit an answer.
+			</p>
+			<p ng-show="false" id="myanswerError">
+				<span class="required">Limit reached!</span>
 			</p>
 
 			<a class="btn btn-info" ng-click="previewText(); showpreview=true;"><span class="glyphicon glyphicon-eye-open"></span > Preview</a>
@@ -61,13 +64,13 @@
 							<div class="row">
 								<div class="col-md-4 col-xs-5">
 									<a class="btn btn-default btn-sm btnWidth" ng-show="instructor || login==script.author" ng-click="switchEdits({{script.id}});newanswer=script.content;showpreviewEdit=false;">
-										<span class="glyphicon glyphicon-edit icon-large"></span > Edit
+										<span class="glyphicon glyphicon-edit"></span > Edit
 									</a>
 									<div ng-hide="instructor || login==script.author" class="btnWidth"></div>
 								</div>
 								<div class="col-md-4 col-md-offset-1 col-xs-4">
 									<a class="btn btn-sm btn-danger btnWidth" ng-show="instructor || login==script.author" ng-click="remove(script)">
-										<span class="glyphicon glyphicon-trash icon-large"></span > Delete
+										<span class="glyphicon glyphicon-trash"></span > Delete
 									</a>
 									<div ng-hide="instructor || login==script.author" class="btnWidth"></div>
 								</div>				
@@ -79,14 +82,16 @@
 				<div class="marginTopMobile">
 					<div ng-hide="switchEdits() == {{script.id}}" id="script{{script.id}}" mathjax-bind="script.content" class="questionContent"></div>
 				</div>
-				
 				<div ng-show="switchEdits() == {{script.id}}" class="edit">
 					<div math-toolbar editor="editScript{{script.id}}" class="mathtoolbar"></div>
-					<div hallo-editor name="editanswers" ng-model="newanswer" id="editScript{{script.id}}" class="edit entries questionContent" ng-mouseup="saveRange()" ng-keyup="saveRange()"></div>
+					<div hallo-editor name="editanswers" ng-model="newanswer" id="editScript{{script.id}}" class="edit entries questionContent" ng-mouseup="saveRange($event, contentLength)" ng-keydown="saveRange($event, contentLength)"></div>
+					<p ng-show="false" id="editScript{{script.id}}Error">
+						<span class="required">Limit reached!</span>
+					</p>
 				</div>
 				
 				<a class="btn btn-info marginT5" ng-show="switchEdits() == {{script.id}}" ng-click="previewTextEdit(script);showpreviewEdit=true;"><span class="glyphicon glyphicon-eye-open"></span > Preview</a>
-				<a class="btn btn-primary marginT5" ng-show="switchEdits() == {{script.id}}" ng-click="editscript(script, newanswer);switchEdits(-1);">
+				<a class="btn btn-primary marginT5" ng-show="switchEdits() == {{script.id}}" ng-click="editscript(script, newanswer);">
 					<span class="glyphicon glyphicon-ok"></span > Submit
 				</a>
 				
@@ -94,12 +99,12 @@
 				
 				<div class="marginT5">
 					<a class="btn btn-sm btn-info btnWidth" ng-click="getAcomments(script);scomm=!scomm;">
-						<span class="glyphicon glyphicon-comment icon-large"></span > Comments ({{script.commentACount}})
+						<span class="glyphicon glyphicon-comment"></span > Comments ({{script.commentACount}})
 					</a>
 				</div>
 					
 				<div ng-show="scomm">
-					<div csid="{{script.id}}" ctype="Answer" cinstructor="{{instructor}}" clogin="{{login}}" comment-block></div>
+					<div csid="{{script.id}}" ctype="Answer" cinstructor="{{instructor}}" clogin="{{login}}" contentlength="{{contentLength}}" comment-block></div>
 				</div>
 			</li>
 		</ul>

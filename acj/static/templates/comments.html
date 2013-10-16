@@ -7,11 +7,11 @@
 				<div class="opbuttons">
 					<a href="" class="btn btn-default btn-sm" ng-show="instructor || login==comment.author" 
 						ng-click="switchEdits({{comment.id}});newCom=comment.content">
-						<span class="glyphicon glyphicon-edit icon-large"></span >
+						<span class="glyphicon glyphicon-edit"></span >
 						Edit
 					</a>
 					<a href="" class="btn btn-danger btn-sm" ng-show="instructor || login==comment.author" ng-click="delComment(comment)">
-						<span class="glyphicon glyphicon-remove-sign icon-large"></span >
+						<span class="glyphicon glyphicon-remove-sign"></span >
 						Delete
 					</a>
 				</div>
@@ -19,10 +19,10 @@
 				<div ng-hide="switchEdits() == {{comment.id}}" mathjax-bind="comment.content" class="questionContent"></div>
 				<div ng-show="switchEdits() == {{comment.id}}" class="comment">
 					<div math-toolbar editor="editcom{{comment.id}}" class="mathtoolbar"></div>
-					<div hallo-editor name="editCom" ng-model="newCom" id="editcom{{comment.id}}" class="entries" ng-mouseup="saveRange()" ng-keyup="saveRange()"></div>
+					<div hallo-editor name="editCom" ng-model="newCom" id="editcom{{comment.id}}" class="entries" ng-mouseup="saveRange($event, contentLength)" ng-keydown="saveRange($event, contentLength)"></div>
 				</div>
-				<a href="" class="btn btn-primary" ng-show="switchEdits() == {{comment.id}}" ng-click="editComment(comment, newCom);switchEdits(-1);">
-					<span class="glyphicon glyphicon-ok-sign"></span > Submit
+				<a href="" class="btn btn-primary" ng-show="switchEdits() == {{comment.id}}" ng-click="editComment(comment, newCom);">
+					<span class="glyphicon glyphicon-ok-sign"></span> Submit
 				</a>
 			</li>
 		</ul>
@@ -34,13 +34,13 @@
 		<div ng-show="lcomm" class="createPosting">
 			<ng-form name="addComment" novalidate>
 				<div math-toolbar editor="mycomment{{type}}{{sid}}" class="mathtoolbar"></div>
-				<div hallo-editor name="qcom" ng-model="myComment" id="mycomment{{type}}{{sid}}" class="entries" ng-mouseup="saveRange()" ng-keyup="saveRange()"></div>
+				<div hallo-editor name="qcom" ng-model="myComment" id="mycomment{{type}}{{sid}}" class="entries" ng-mouseup="saveRange($event, contentLength)" ng-keydown="saveRange($event, contentLength)"></div>
 				<p class="text-error" ng-show="newComment && !myComment">
-					<span class="label label-important">Error</span>
+					<span class="label required">Error</span>
 					Please enter a comment.
 				</p>
 
-				<a href="" class="btn btn-primary" ng-click="makeComment();newComment=true;switchEdits(-1);">
+				<a href="" class="btn btn-primary" ng-click="makeComment();newComment=true;">
 					<span class="glyphicon glyphicon-ok"></span > Submit
 				</a>
 			</ng-form>

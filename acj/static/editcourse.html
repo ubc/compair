@@ -18,7 +18,7 @@
 				<td data-title="">
 					<button class="btn btn-danger btn-xs"
 						ng-click="removeTag({{tag.id}})">
-						<span class="glyphicon glyphicon-remove icon-large"> </span>
+						<span class="glyphicon glyphicon-remove"> </span>
 					</button>
 				</td>
 				<td data-title="Tag" sortable="tag">{{tag.name}}</td>
@@ -28,16 +28,16 @@
 
 		<input type="text" ng-model="newtag">
 			<button class="btn btn-primary btn-sm"
-				ng-click="addTag()"><span class="glyphicon glyphicon-plus icon-large">
+				ng-click="addTag()"><span class="glyphicon glyphicon-plus">
 				</span> Add Tag</button>
 		<br><br>
 		<br><br>
 	</form>
 	<a href="" ng-hide="username!=loggedName && loggedType!='Admin'" class="edit" ng-click="edit=!edit; newdisplay=display; newemail=email; newpassword=''; newretypepw=''; oldpassword=''">
-		<span class="glyphicon glyphicon-edit icon-large"></span > Edit
+		<span class="glyphicon glyphicon-edit"></span > Edit
 	</a> 
 	<a href="" class="submit" ng-show="edit" ng-click="submit();submitted=true">
-		<span class="glyphicon glyphicon-ok icon-large"></span > Submit
+		<span class="glyphicon glyphicon-ok"></span > Submit
 	</a>
 </div>
 

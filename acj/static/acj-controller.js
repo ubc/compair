@@ -541,6 +541,8 @@ function CourseController($rootScope, $scope, $cookieStore, $location, courseSer
 }
 
 function StatisticController($rootScope, $routeParams, $scope, $cookieStore, $location, $filter, statisticService, ngTableParams) {
+	//TODO create tutorial
+	$rootScope.$broadcast("NO_TUTORIAL", false);
 	var cid = $routeParams.courseId;
 	$scope.cid = cid;
 	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':'Statistics'}];
@@ -601,6 +603,8 @@ function StatisticController($rootScope, $routeParams, $scope, $cookieStore, $lo
 }
 
 function StatisticExportController($rootScope, $routeParams, $scope, $window, statisticExportService) {
+	//TODO create tutorial
+	$rootScope.$broadcast("NO_TUTORIAL", false);
 	$scope.cid = $routeParams.cid;
 	$scope.cname = $routeParams.cname;
 	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':$scope.cname, 'link':'#/stats/'+$scope.cid},{'name':'Export Data'}];	
@@ -642,6 +646,8 @@ function StatisticExportController($rootScope, $routeParams, $scope, $window, st
 }
 
 function EditCourseController($rootScope, $scope, $routeParams, $filter, editcourseService, tagService, ngTableParams) {
+	//TODO create tutorial
+	$rootScope.$broadcast("NO_TUTORIAL", false);
 	var courseId = $routeParams.courseId; 
 	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':'Edit Course'}];
 
@@ -716,7 +722,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 	$scope.orderProp = 'time';
 	$scope.newQuestion = '';
 	$scope.type = $rootScope.type ? $rootScope.type : 'quiz';
-	var questionData = [];
+	//var questionData = [];
 		
 	var courseId = $routeParams.courseId;
 	if (!courseId) {
@@ -750,7 +756,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 		$scope.discussions = retval.questions;
 		$scope.quizzes = retval.quizzes;
 		$scope.tags = retval.tags;
-		questionData = retval.questions;
+		//questionData = retval.questions;
 		/*
 		$scope.questionParams = new ngTableParams({
 			page: 1,
@@ -811,7 +817,16 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 		if (!$scope.title || !newstring) {
 			return '';
 		}
-		input = {"title": $scope.title, "content": $scope.question, "type": $scope.type, "taglist": $scope.taglist ? $scope.taglist : new Array()};
+		if ($scope.contentLengthCheck) {
+			limit = parseInt($scope.contentLength);
+			if (isNaN(limit) || limit < 0) {
+				flashService.flash('danger', "The limit is invalid.");
+				return '';
+			}
+		}
+		//TODO print error msg when wrong limit (here and in edit)
+		input = {"title": $scope.title, "content": $scope.question, "type": $scope.type, "taglist": $scope.taglist ? $scope.taglist : new Array(), 
+				"contentLength": $scope.contentLengthCheck ? $scope.contentLength : 0};
 		var msg = questionService.save( {cid: courseId}, input, function() {
 			if (msg.msg) {
 				// TODO: What use cases would land here? eg. validation error
@@ -843,19 +858,29 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 					$scope.submitted = '';
 					$scope.preview = '';
 					$scope.previewEdit = '';
+					$scope.contentLengthCheck = false;
+					$scope.contentLength = '';
 					flashService.flash('success', "The question has been successfully added.");
 				}
 			}
 		});
 	};
 	
-	$scope.editquestion = function(newtitle, newquestion, question) {
+	$scope.editquestion = function(newtitle, newquestion, question, newcontentLength, newcontentLengthCheck) {
 		newquestion = angular.element("#question"+question.id).html();
 		newstring = angular.element("#question"+question.id).text(); // ignore html tags
-		input = {"title": newtitle, "content": newquestion, "taglist": question.tmptags ? question.tmptags : new Array()};
 		if (!newtitle || !newstring) {
 			return '';
 		}
+		if (newcontentLengthCheck) {
+			limit = parseInt(newcontentLength);
+			if (isNaN(limit) || limit < 0) {
+				flashService.flash('danger', "The limit is invalid.");
+				return '';
+			}
+		}
+		input = {"title": newtitle, "content": newquestion, "taglist": question.tmptags ? question.tmptags : new Array(),
+				"contentLength": newcontentLengthCheck ? newcontentLength : 0};
 		var retval = questionService.put( {cid: question.id}, input, function() {
 			if (retval.msg != 'PASS') {
 				flashService.flash('danger', 'Please submit a question.');
@@ -865,12 +890,17 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 					var index = jQuery.inArray(question, $scope.quizzes);
 					$scope.quizzes[index].title = newtitle;
 					$scope.quizzes[index].content = newquestion;
+					$scope.quizzes[index].contentLengthCheck = newcontentLengthCheck;
+					$scope.quizzes[index].contentLength = newcontentLengthCheck ? newcontentLength : 0;
 				}
 				else {
 					var index = jQuery.inArray(question, $scope.discussions);
 					$scope.discussions[index].title = newtitle;
 					$scope.discussions[index].content = newquestion;
+					$scope.discussions[index].contentLengthCheck = newcontentLengthCheck;
+					$scope.discussions[index].contentLength = newcontentLengthCheck ? newcontentLength : 0;
 				}
+				$scope.switchEdits(-1);
 				flashService.flash('success', 'The question has been successfully modified.');
 			}
 		});
@@ -921,7 +951,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 		var selRange = rangy.getSelection();
 		$rootScope.savedRange = selRange.rangeCount ? selRange.getRangeAt(0) : null;
 	};
-	
+
 	$scope.tagActionN = function(id) {
 		if (!$scope.taglist) $scope.taglist = [];
 		var index = jQuery.inArray(id, $scope.taglist);
@@ -1018,17 +1048,35 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 		$scope.avatarQ = retval.avatarQ;
 		$scope.answered = retval.answered;
 		$scope.quiz = retval.quiz;
+		$scope.contentLength = retval.contentLength;
 		if (retval.usertype == 'Teacher' || retval.usertype == 'Admin') {
 			$scope.instructor = true;
 		}
 		var title = retval.qtitle.length > 80 ? retval.qtitle.slice(0, 79) + '...' : retval.qtitle;
 		$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name':retval.course, 'link':'#/questionpage/'+retval.cid}, {'name':title, 'link':'#/answerpage/'+questionId}];
+		
+		var divs = jQuery('[contenteditable="true"][name*="answer"]');
+		for ( var i = 0; divs[i]; i++) {
+			jQuery(divs[i]).bind('paste', function(e) {
+				$scope.saveRange(e, $scope.contentLength);
+			});
+		}
 	});
 	$scope.submit = function() {
 		$scope.myanswer = angular.element("#myanswer").html();
 		newstring = angular.element("#myanswer").text();
 		if (!newstring) {
 			return '';
+		}
+		if ($scope.contentLength > 0) {
+			elmt = angular.element("#myanswer");
+			fullRange = rangy.createRange();
+			fullRange.setStartBefore(elmt[0]);
+			fullRange.setEndAfter(elmt[0]);
+			if (fullRange.toString().length > $scope.contentLength) {
+				flashService.flash('danger', 'The answer is too long.');
+				return '';
+			}
 		}
 		input = {"content": $scope.myanswer};
 		var newscript = answerService.save( {qid: questionId}, input, function() {
@@ -1069,6 +1117,16 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 		if (!newstring) {
 			return '';
 		}
+		if ($scope.contentLength > 0) {
+			elmt = angular.element("#editScript"+script.id);
+			fullRange = rangy.createRange();
+			fullRange.setStartBefore(elmt[0]);
+			fullRange.setEndAfter(elmt[0]);
+			if (fullRange.toString().length > $scope.contentLength) {
+				flashService.flash('danger', 'The answer is too long.');
+				return '';
+			}
+		}
 		input = {"content": newanswer};
 		var retval = answerService.put( {qid: script.id}, input, function() {
 			if (retval.msg != 'PASS') {
@@ -1077,6 +1135,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 				var index = jQuery.inArray(script, $scope.scripts);
 				$scope.scripts[index].content = newanswer;
 				flashService.flash('success', 'The answer has been successfully modified.');
+				$scope.switchEdits(-1);
 			}
 		});
 	};
@@ -1103,9 +1162,35 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 		});
 	};
 	// save the Rangy object for the selected hallo editor
+	/*
 	$scope.saveRange = function() {
 		var selRange = rangy.getSelection();
 		$rootScope.savedRange = selRange.rangeCount ? selRange.getRangeAt(0) : null;
+	};
+	*/
+	//TODO
+	$scope.saveRange = function($event, max) {
+		var selRange = rangy.getSelection();
+		$rootScope.savedRange = selRange.rangeCount ? selRange.getRangeAt(0) : null;
+		if (max) {
+			elmt = selRange.getRangeAt(0).startContainer;
+			while (elmt.contentEditable != 'true') {
+				elmt = elmt.parentNode;
+			}
+			fullRange = rangy.getSelection().getRangeAt(0);
+			fullRange.setStartBefore(elmt);
+			fullRange.setEndAfter(elmt);
+			//[backspace,shift,ctrl,alt,end,home,left,up,down,right,delete]
+			allowedKeys = [8, 16, 17, 18, 35, 36, 37, 38, 39, 40, 46];
+			if($event && allowedKeys.indexOf($event.which) == -1 && fullRange.toString().length >= max) {
+				$event.preventDefault();
+				jQuery("#" + elmt.id).effect("highlight", {"color":"#dFb5b4"}, 50);
+				jQuery("#" + elmt.id + "Error").removeClass('ng-hide');
+		    }
+			else {
+				jQuery("#" + elmt.id + "Error").addClass('ng-hide');
+			}
+		}
 	};
 }
 
@@ -1236,6 +1321,8 @@ function ImportController($rootScope, $scope, $routeParams, $http, flashService,
 
 function ReviewJudgeController($rootScope, $scope, $routeParams, loginService, reviewjudgeService) {
 	//$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name':'Review Judgements','link':''}];
+	//TODO create tutorial
+	$rootScope.$broadcast("NO_TUTORIAL", false);
 	var qid = $routeParams.qid; 
 	var login = loginService.get( function() {
 		if (login.display) {

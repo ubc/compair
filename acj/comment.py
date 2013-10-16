@@ -1,6 +1,6 @@
 from acj import app
 from general import commit
-from sqlalchemy_acj import db_session, User, CommentA, CommentQ, CommentJ
+from sqlalchemy_acj import db_session, User, CommentA, CommentQ, CommentJ, Question
 from flask import session, request
 from sqlalchemy import desc
 import json
@@ -18,7 +18,11 @@ def get_comments(type, id, sidl=None, sidr=None):
 	for comment in comments:
 		author = User.query.filter_by(id = comment.uid).first()
 		lst.append( {"id": comment.id, "author": author.display, "time": str(comment.time), "content": comment.content, "avatar": author.avatar} )
-	retval = json.dumps( {"comments": lst} )
+	if (type == 'question'):
+		question = Question.query.filter_by(id = id).first()
+	else:
+		question = None
+	retval = json.dumps( {"comments": lst, "contentLength": "0" if not question else question.contentLength} )
 	db_session.rollback()
 	return retval
 
