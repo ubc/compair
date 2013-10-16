@@ -1,0 +1,240 @@
+/***** UNIVERSAL *****/
+h1, h2 {
+  text-align: center; }
+
+form {
+  margin-top: 1em;
+  margin-bottom: 1em; }
+
+/* otherwise collides with navbar */
+.dropdown-menu {
+	z-index: 1001;
+}
+/***** INDEX PAGE *****/
+#main {
+  padding: 1em; }
+
+/***** QUESTION PAGE *****/
+div.questionContent {
+  margin-top: 0.5em;
+  margin-bottom: 1em; 
+  max-height: 300px;
+  overflow: auto;
+  padding: 0.5em;
+  border-radius: 5px;
+  background: #fcfcfc;
+  border: 1px solid #ccc;}
+
+/***** ANSWERS PAGE *****/
+div.commentsList {
+  margin-top: 1em;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 0 1em 1em 1em;
+  background: #f0faf0; }
+
+div.btn_spacing {
+  margin-top: 1em; }
+
+/***** COURSES PAGE *****/
+form.createCourse {
+  display: inline-block;
+  margin: 0;
+  padding-left: 0.5em; }
+
+form.searchCourse {
+  display: inline-block;
+  margin: 0; }
+
+table.table {
+  border-bottom: 1px solid #ddd; }
+
+/***** USER POSTINGS (COMMENTS, QUESTIONS) *****/
+p.authorHeader {
+  display: inline-block;
+  margin-left: 0.5em; }
+
+div.opbuttons {
+  display: inline-block;
+  float: right; }
+
+ul.postingsList {
+  list-style-type: none;
+  margin: 1em 0; }
+
+ul.postingsList > li {
+  margin-bottom: 1em;
+  padding: 0.5em;
+  border-radius: 5px;
+  background: #fcfcfc;
+  border: 1px solid #ccc; }
+
+ul.postingsList > li.quiz {
+	background: azure; }
+	
+ul.postingsList > li.discussion {
+	background: ivory; }
+
+div.createPosting {
+  margin-top: 1em;
+  background: white;
+  padding: 0.5em;
+  border-radius: 5px;
+  background: #fcfcfc;
+  border: 1px solid #ccc; }
+
+/***** WYSIWYG EDITOR *****/
+.entries {
+  /* width and height prevent creation of scrollbar and keep math buttons properly sized */
+  min-height: 10em;
+  border: 1px solid #ccc;
+  padding: 0.5em; }
+
+.entries, .preview {
+  width: 90%;
+  margin: 1em 0;
+  border-radius: 4px; }
+
+.preview {
+  background: #eee;
+  padding: 1em; }
+
+/***** MATH INPUT *****/
+.mathtoolbar {
+  display: block;
+  white-space: normal; }
+
+select.mathtoolbar {
+	margin-bottom: 0em;
+	display: inline-block;
+	margin-right: 1em; }
+
+/***** JUDGE PAGE *****/
+ul.judgetabs {
+  margin-top: 1em;
+  margin-bottom: 0.5em; }
+
+ul.judgetabs li {
+  width: 33.33%;
+  text-align: center; }
+
+.answer {
+  border: 1px solid #eee;
+  border-radius: 3px;
+  padding: 0.5em; 
+  max-height: 300px;
+  overflow: auto;}
+ 
+.answer.left {
+    background: azure;}
+  
+.answer.right {
+    background: ivory;}
+
+/***** FLASH MESSAGES *****/
+ol#flash-messages {
+	list-style-type: none;
+	padding: 0;}
+
+/***** FORMS *****/
+span.required {
+	color: #990044;
+}
+
+/***** EDIT COURSE PAGE PAGE *****/
+.tagTable {
+	width: 200px;
+}
+
+/***** GENERAL USE *****/
+.pointer {
+	cursor: pointer;
+}
+
+.marginT2 {
+	margin-top: 2px;
+}
+
+.marginT5 {
+	margin-top: 5px;
+}	
+
+.marginT15 {
+	margin-top: 15px;
+}
+
+.marginT50 {
+	margin-top: 50px;
+}
+
+.marginB15 {
+	margin-bottom: 15px;
+}
+
+.marginR5 {
+	margin-right: 5px;
+}
+
+.marginR50 {
+	margin-right: 50px;
+}
+
+.marginL50 {
+	margin-left: 50px;
+}
+
+.btnWidth {
+	width: 130px;
+}
+
+.selected {
+	border: 1px solid #468847;
+}
+
+.margin1 {
+	margin:1px;
+}
+
+.margin0 {
+	margin:0px;
+}
+
+.padding0 {
+	padding: 0;
+}
+
+.top {
+	vertical-align: top;	
+}
+
+.middle {
+	vertical-align: middle;	
+}
+
+.centered {
+	text-align: center;
+}
+
+.alignLeft {
+	text-align: left;
+}
+
+.alignRight {
+	text-align: right;
+}
+
+.inlineBlock {
+	display: inline-block !important;
+}
+
+@media ( max-width :767px) {
+	.minHeightMobile {
+		min-height: 90px !important;
+	}
+	.marginTopMobile {
+		margin-top: 40px !important;
+	}
+	.marginTopMobile90 {
+		margin-top: 90px !important;
+	}
+}
