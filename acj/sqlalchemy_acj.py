@@ -43,9 +43,7 @@ def reset_db():
     if TESTENV:
         print("resetting db state...")
         Base.metadata.drop_all(bind=engine)
-        print("dropped...")
         Base.metadata.create_all(bind=engine)
-        print("created...")
         with open('acj/static/test/testdata.sql', 'r') as f:
             db_session.execute(f.read().decode("utf8"))
         db_session.commit()

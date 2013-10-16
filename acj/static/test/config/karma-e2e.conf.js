@@ -1,24 +1,24 @@
 module.exports = function (config) {
   config.set({
-    basePath: '../../',
+    basePath: '../',
 
     files: [
-            'test/e2e/*.js'
+            'e2e/*.js'
     ],
 
     frameworks: ['ng-scenario', 'jasmine'],
 
-    autoWatch: true,
+    browsers: ['PhantomJS'],
 
-    browsers: ['Firefox'],
-
-    singleRun: false,
+    singleRun: true,
 
     proxies: {
       '/': 'http://127.0.0.1:5000/'
     },
 
     urlRoot: '/_karma_/',
+    
+    reporters: ['dots', 'junit'],
     
     junitReporter: {
       outputFile: 'test_out/e2e.xml',

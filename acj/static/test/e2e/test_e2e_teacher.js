@@ -39,7 +39,7 @@ describe('ACJ testsuite - Teacher', function() {
 			expect(repeater('tr[ng-repeat="tag in tags"]').count()).toBe(1);
 		});
 		it('enroll students in the new course', function() {
-			browser().navigateTo('/');
+			browser().navigateTo(rootURL);
 			element('a[href^="#/enrollpage/"]').click();
 			element('p[ng-click="add(student, \'S\')"]:eq(0)').click();
 			element('p[ng-click="add(student, \'S\')"]:eq(2)').click();
