@@ -64,6 +64,7 @@ describe('ACJ testsuite - Student', function() {
 			expect(browser().location().url()).toMatch(/\/questionpage\/./);
 		});
 	});
+	/*
 	describe('judge', function() {
 		it('random judge', function() {
 			element('a[href="#/quickjudge"]').click();
@@ -85,4 +86,5 @@ describe('ACJ testsuite - Student', function() {
 			reset = false;
 		});
 	});
+	*/
 });
