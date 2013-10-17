@@ -203,7 +203,7 @@ def total_ranking():
 		question = Question.query.filter_by(id = script.qid).first()
 		course = Course.query.filter_by(id = question.cid).first()
 		author = User.query.filter_by(id = script.uid).first().display
-		lst.append( {"course": course.name, "question": question.content, "author": author, "time": str(script.time), "content": script.content, "score": "{:10.2f}".format(script.score) } )
+		lst.append( {"course": course.name, "question": question.content, "author": author, "time": str(script.time), "content": script.content, "score": "{0:10.2f}".format(script.score) } )
 	db_session.rollback()
 	return json.dumps( {"scripts": lst} )
 '''

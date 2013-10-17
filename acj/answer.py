@@ -91,7 +91,7 @@ def post_answer(id):
     db_session.add(table)
     db_session.commit()
     script = Script.query.order_by( Script.time.desc() ).first()
-    retval = json.dumps({"id": script.id, "author": author, "time": str(script.time), "content": script.content, "score":"{:10.2f}".format(script.score), "avatar": user.avatar, "commentACount": "0"})
+    retval = json.dumps({"id": script.id, "author": author, "time": str(script.time), "content": script.content, "score":"{0:10.2f}".format(script.score), "avatar": user.avatar, "commentACount": "0"})
     db_session.rollback()
     return retval
 
@@ -132,7 +132,7 @@ def marked_scripts(id):
     for script in scripts:
         author = User.query.filter_by(id = script.uid).first()
         commentA = CommentA.query.filter_by(sid = script.id).all()
-        slst.append( {"id": script.id, "title": script.title, "author": author.display, "time": str(script.time), "content": script.content, "score": "{:10.2f}".format(script.score), "comments": [], "avatar": author.avatar, "commentACount": len(commentA)} )
+        slst.append( {"id": script.id, "title": script.title, "author": author.display, "time": str(script.time), "content": script.content, "score": "{0:10.2f}".format(script.score), "comments": [], "avatar": author.avatar, "commentACount": len(commentA)} )
         if author.username == session['username']:
             answered = True
     question = Question.query.filter_by(id = id).first()

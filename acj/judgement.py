@@ -68,7 +68,7 @@ def get_judgements(qid):
         user2 = User.query.filter_by(id = row.script2.uid).first()
         commentsCount = CommentJ.query.filter_by(sidl = row.sidl).filter_by(sidr = row.sidr).count()
         judgements.append({"scriptl": row.script1.content, "scriptr": row.script2.content, "winner": row.winner, "wins_l": int(fullrow.wins_l), "wins_r": int(fullrow.wins_r),
-                           "sidl": row.sidl, "sidr": row.sidr, "scorel": "{:10.2f}".format(row.script1.score), "scorer": "{:10.2f}".format(row.script2.score), 
+                           "sidl": row.sidl, "sidr": row.sidr, "scorel": "{0:10.2f}".format(row.script1.score), "scorer": "{0:10.2f}".format(row.script2.score), 
                            "authorl": user1.display, "authorr": user2.display, "timel": str(row.script1.time), "timer": str(row.script2.time), 
                            "avatarl": user1.avatar, "avatarr": user2.avatar, "qid": row.script1.qid, "commentsCount": commentsCount})
     ret_val = json.dumps({"judgements": judgements, "title": question.title, "question": question.content, "cid": course.id, "course": course.name,
