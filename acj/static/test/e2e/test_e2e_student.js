@@ -25,8 +25,8 @@ describe('ACJ testsuite - Student', function() {
 			var qCount = repeater("ul.postingsList.padding0 li").count();
 			qCount.execute(function(){});
 			input('title').enter("unittestquiz");
-			contenteditable('div[name=question]').enter('unit test question');
-			contenteditable('div[name=answerq]').enter('unit test answer');
+			contenteditable('div[name="question"]').enter('unit test question');
+			contenteditable('div[name="answerq"]').enter('unit test answer');
 			element(".btn.btn-primary:first").click();
 			expect(repeater("ul.postingsList.padding0 li").count()).toBe(qCount.value + 1);
 		});
@@ -48,7 +48,7 @@ describe('ACJ testsuite - Student', function() {
 		it('create answer', function() {
 			var qCount = repeater("ul.postingsList.padding0 li").count();
 			qCount.execute(function(){});
-			contenteditable('div[name=answer]').enter('unit test answer');
+			contenteditable('div[name="answer"]').enter('unit test answer');
 			element("a[ng-click='submit();submitted=true']").click();
 			expect(repeater("ul.postingsList.padding0 li").count()).toBe(qCount.value + 1);
 		});
@@ -64,7 +64,6 @@ describe('ACJ testsuite - Student', function() {
 			expect(browser().location().url()).toMatch(/\/questionpage\/./);
 		});
 	});
-	/*
 	describe('judge', function() {
 		it('random judge', function() {
 			element('a[href="#/quickjudge"]').click();
@@ -86,5 +85,4 @@ describe('ACJ testsuite - Student', function() {
 			reset = false;
 		});
 	});
-	*/
 });
