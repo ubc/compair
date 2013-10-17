@@ -20,6 +20,7 @@ from threading import Timer
 from werkzeug import secure_filename
 from flask.ext import sqlalchemy
 import Image
+import sys
 from acj import app
 
 '''
@@ -64,6 +65,13 @@ class DatetimeEncoder(json.JSONEncoder):
 			return obj.strftime("%F %r")
         return json.JSONEncoder.default(self, obj) 
 
+def shutdown_server():
+    if len(sys.argv) > 1 and str(sys.argv[1]) == '--t':
+        func = request.environ.get('werkzeug.server.shutdown')
+        if func is None:
+            raise RuntimeError('Not running with the Werkzeug Server')
+        func()
+    
 def commit():
     try:
         db_session.commit()
@@ -92,6 +100,11 @@ def submitOnline(name, time):
     user.lastOnline = time
     commit()
         
+@app.route('/shutdown', methods=['GET'])
+def shutdown():
+    shutdown_server()
+    return 'Server shutting down...'
+
 @app.route('/')
 def index():
     return redirect(url_for('static', filename="index.html"))
