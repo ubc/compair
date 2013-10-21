@@ -33,10 +33,10 @@ When running the application, any missing tables are automatically created.
 For any updates to the database model SQLAlchemy Migrate scripts are used. ([detailed information](https://sqlalchemy-migrate.readthedocs.org/en/v0.7.2/versioning.html))
 
 ###Setting up SQLALchemy Migrate
-*Create a repository: `migrate create acjDB "acj"`
-*Link the repository to the database: `python acjDB/manage.py version_control <db_connection_parameter>`
-*Create a link to execute commands on the repository: `migrate manage manage.py --repository=acjDB --url=<db_connection_parameter>`
+* Create a repository: `migrate create acjDB "acj"`
+* Link the repository to the database: `python acjDB/manage.py version_control <db_connection_parameter>`
+* Create a link to execute commands on the repository: `migrate manage manage.py --repository=acjDB --url=<db_connection_parameter>`
 
 ###Updating the databse schema
-*When the application gets updated simply run: `python manage.py upgrade`
+* When the application gets updated simply run: `python manage.py upgrade`
 
