@@ -494,7 +494,6 @@ function CourseController($rootScope, $scope, $cookieStore, $location, courseSer
 					{
 						element: '#step1',
 						intro: 'Create a new course',
-						position: 'left',
 					},
 					{
 						element: '#step2',
@@ -769,10 +768,10 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 				{
 					element: '#stepNav',
 					intro: 'Create a question',
-					position: 'left',
 				}
 		];
-		if ( retval.questions.length > 0 ) {
+		
+		if ( retval.quizzes.length > 0 || retval.questions.length > 0 ) {
 			var steps2 = [
 				{
 					element: '#stepTitle',
@@ -783,7 +782,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 					intro: "Go to Answer Page to submit answers and view answers submitted by others",
 				},
 				{
-					element: '#stepJudge',
+					element: '#stepJudge:not(.ng-hide)',
 					intro: "Go to Judge Page to judge submitted answers",
 				},
 			];
@@ -1007,11 +1006,11 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 			intro: "Title and content of the question",
 		},
 		{
-			element: '#stepAnswer',
+			element: '#stepAnswer:not(.ng-hide)',
 			intro: "Submit your answer",
 		},
 		{
-			element: '#stepJudge',
+			element: '#stepJudge:not(.ng-hide)',
 			intro: "Go to Judge Page to judge submitted answers",
 		},
 		{
@@ -1161,6 +1160,7 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 			}
 		});
 	};
+	
 	// save the Rangy object for the selected hallo editor
 	/*
 	$scope.saveRange = function() {

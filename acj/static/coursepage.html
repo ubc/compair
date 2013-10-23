@@ -27,6 +27,7 @@
 	<input type="submit" class="btn btn-primary" value="Create" />
 	<br><br>
 </form>
+<span ng-show="courses.length == 0">You are not enrolled in any courses.</span>
 <table class="table table-hover">
 <tbody>
 		<tr ng-repeat="course in courses | orderBy:orderProp | filter:cquery">

@@ -41,13 +41,13 @@ def init_db():
 
 def reset_db():
     if TESTENV:
-        print("resetting db state...")
+        print ("resetting db state...")
         Base.metadata.drop_all(bind=engine)
         Base.metadata.create_all(bind=engine)
         with open('acj/static/test/testdata.sql', 'r') as f:
             db_session.execute(f.read().decode("utf8"))
         db_session.commit()
-        print("done resetting db state")
+        print ("finished resetting db state")
 
 class User(Base):
 	__tablename__ = 'User'

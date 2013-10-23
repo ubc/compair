@@ -1,5 +1,5 @@
 from __future__ import division
-from flask import Flask, url_for, request, render_template, redirect, escape, session, jsonify, Response
+from flask import Flask, url_for, request, render_template, redirect, session, jsonify, Response
 from sqlalchemy_acj import init_db, reset_db, db_session, User, Judgement, Script, Course, Question, Enrollment, CommentA, CommentQ, CommentJ, Entry, Tags
 from flask_principal import AnonymousIdentity, Identity, identity_changed, identity_loaded, Permission, Principal, RoleNeed #ActionNeed,
 from sqlalchemy import desc, func#, select
@@ -105,7 +105,7 @@ def shutdown():
     shutdown_server()
     return 'Server shutting down...'
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
     return redirect(url_for('static', filename="index.html"))
 
@@ -145,7 +145,7 @@ def login():
     if hasher.check_password( password, hx ):
         session['username'] = username
         usertype = query.usertype
-        display = User.query.filter_by(username = username).first().display
+        display = query.display#User.query.filter_by(username = username).first().display
         db_session.rollback()
         identity = Identity('only_' + query.usertype)
         identity_changed.send(app, identity=identity)

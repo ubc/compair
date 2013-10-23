@@ -11,10 +11,13 @@
 	<a href="" class="btn btn-success" ng-click="check=!check" id="stepAnswer" ng-show="instructor || !quiz || !answered">
 		<span class="glyphicon glyphicon-list-alt"></span > Submit Answer
 	</a>
+	<button class="btn btn-success disabled" id="stepAnswer" ng-show="!instructor && quiz && answered" title="You already submitted an answer.">
+		<span class="glyphicon glyphicon-list-alt"></span > Submit Answer
+	</button>
 	<a href="#/judgepage/{{qid}}" class="btn btn-default" id="stepJudge" ng-show="(instructor || !quiz || answered) && scripts.length > 1"> 
 		<span class="glyphicon glyphicon-pencil"></span > Judge Answers
 	</a>
-	<button class="btn btn-default disabled" id="stepJudgeDisabled" ng-show="(instructor || !quiz || answered) && scripts.length <= 1" title="Not enough answers to judge yet!">
+	<button class="btn btn-default disabled" id="stepJudge" ng-show="(instructor || !quiz || answered) && scripts.length <= 1" title="Not enough answers to judge yet!">
 		<span class="glyphicon glyphicon-pencil"></span > Judge Answers
 	</button>
 	<a title="Comments" class="btn btn-default" ng-click="qcomm=!qcomm">

@@ -157,6 +157,10 @@ def edit_commentQ(id):
 		return json.dumps( {"msg": str(error)} )
 	return edit_comment('question', id, param['content'])
 
+@app.route('/question/<id>/comment', methods=['DELETE'])
+def delete_commentQ(id):
+	return delete_comment('question', id)
+
 @app.route('/judgepage/<id>/comment/<sidl>/<sidr>')
 def get_commentsJ(id, sidl, sidr):
 	return get_comments('judgement', id, sidl, sidr)

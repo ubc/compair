@@ -1,5 +1,5 @@
 angular.module('flash', [])
-.factory('flash', function($rootScope, $timeout) {
+.factory('flash', ['$rootScope', '$timeout', function($rootScope, $timeout) {
   var messages = [];
 
   var reset;
@@ -12,7 +12,7 @@ angular.module('flash', [])
     $rootScope.$emit('flash:message', messages, cleanup);
   };
 
-  $rootScope.$on('$routeChangeSuccess', emit);
+  $rootScope.$on('$locationChangeSuccess', emit);
 
   var asMessage = function(level, text) {
     if (!text) {
@@ -25,22 +25,28 @@ angular.module('flash', [])
   var asArrayOfMessages = function(level, text) {
     if (level instanceof Array) return level.map(function(message) {
       return message.text ? message : asMessage(message);
-    }); 
+    });
     return text ? [{ level: level, text: text }] : [asMessage(level)];
   };
-  
-  return function(level, text) {
+
+  var flash = function(level, text) {
     emit(messages = asArrayOfMessages(level, text));
   };
-})
 
-.directive('flashMessages', function() {
-  var directive = { restrict: 'E', replace: true };
+  ['error', 'warning', 'info', 'success'].forEach(function (level) {
+    flash[level] = function (text) { flash(level, text); };
+  });
+
+  return flash;
+}])
+
+.directive('flashMessages', [function() {
+  var directive = { restrict: 'EA', replace: true };
   directive.template =
     '<ol id="flash-messages">' +
       '<li ng-repeat="m in messages" class="{{m.level}}">{{m.text}}</li>' +
     '</ol>';
-  
+
   directive.controller = function($scope, $rootScope) {
     $rootScope.$on('flash:message', function(_, messages, done) {
       $scope.messages = messages;
@@ -49,4 +55,4 @@ angular.module('flash', [])
   };
 
   return directive;
-});
+}]);
