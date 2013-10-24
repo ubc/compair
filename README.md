@@ -19,7 +19,21 @@ The backend uses the python web application framework [Flask](http://flask.pocoo
 
 Installation
 -----------
-*list all Python dependencies here*
+The application needs Python v2.6.6 or above and the following pyhton libraries:
+* validictory
+* Flask-Principal
+* Flask
+* Flask-SQLAlchemy
+* passlib
+* PIL
+* oauth
+* requests
+ 
+When running on a MySQL database, it also needs:
+* MySQL-python
+ 
+Theoretically it should run on any relational Database, although so far it has only been tested on MySQL.
+
 
 Running the application
 -----------------------
