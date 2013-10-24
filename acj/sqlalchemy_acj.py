@@ -280,3 +280,17 @@ class Tags(Base):
 	def __repr__(self):
 		return '<Tags %r>' % self.name
 
+class LTIInfo(Base):
+    __tablename__ = 'LTIInfo'
+    id = Column(Integer, primary_key=True)
+    LTIid = Column(String(100))
+    LTIURL = Column(String(100))
+    courseName = Column(String(100))
+    
+    def __init__(self, LTIid, LTIURL, courseName):
+        self.LTIid = LTIid
+        self.LTIURL = LTIURL
+        self.courseName = courseName
+
+    def __repr__(self):
+        return '<LTIInfo %r>' % self.id
