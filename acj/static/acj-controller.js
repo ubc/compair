@@ -540,7 +540,6 @@ function CourseController($rootScope, $scope, $cookieStore, $location, courseSer
 }
 
 function StatisticController($rootScope, $routeParams, $scope, $cookieStore, $location, $filter, statisticService, ngTableParams) {
-	//TODO create tutorial
 	$rootScope.$broadcast("NO_TUTORIAL", false);
 	var cid = $routeParams.courseId;
 	$scope.cid = cid;
@@ -602,7 +601,6 @@ function StatisticController($rootScope, $routeParams, $scope, $cookieStore, $lo
 }
 
 function StatisticExportController($rootScope, $routeParams, $scope, $window, statisticExportService) {
-	//TODO create tutorial
 	$rootScope.$broadcast("NO_TUTORIAL", false);
 	$scope.cid = $routeParams.cid;
 	$scope.cname = $routeParams.cname;
@@ -645,7 +643,6 @@ function StatisticExportController($rootScope, $routeParams, $scope, $window, st
 }
 
 function EditCourseController($rootScope, $scope, $routeParams, $filter, editcourseService, tagService, ngTableParams, flashService) {
-	//TODO create tutorial
 	$rootScope.$broadcast("NO_TUTORIAL", false);
 	var courseId = $routeParams.courseId; 
 	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':'Edit Course'}];
@@ -823,7 +820,6 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 				return '';
 			}
 		}
-		//TODO print error msg when wrong limit (here and in edit)
 		input = {"title": $scope.title, "content": $scope.question, "type": $scope.type, "taglist": $scope.taglist ? $scope.taglist : new Array(), 
 				"contentLength": $scope.contentLengthCheck ? $scope.contentLength : 0};
 		var msg = questionService.save( {cid: courseId}, input, function() {
@@ -1168,7 +1164,6 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 		$rootScope.savedRange = selRange.rangeCount ? selRange.getRangeAt(0) : null;
 	};
 	*/
-	//TODO
 	$scope.saveRange = function($event, max) {
 		var selRange = rangy.getSelection();
 		$rootScope.savedRange = selRange.rangeCount ? selRange.getRangeAt(0) : null;
@@ -1321,7 +1316,6 @@ function ImportController($rootScope, $scope, $routeParams, $http, flashService,
 
 function ReviewJudgeController($rootScope, $scope, $routeParams, loginService, reviewjudgeService) {
 	//$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name':'Review Judgements','link':''}];
-	//TODO create tutorial
 	$rootScope.$broadcast("NO_TUTORIAL", false);
 	var qid = $routeParams.qid; 
 	var login = loginService.get( function() {

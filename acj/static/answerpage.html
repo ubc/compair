@@ -25,7 +25,7 @@
 	</a> 
 	
 	<div ng-show="qcomm">
-		<div ctype="Question" cinstructor="{{instructor}}" clogin="{{login}}" contentlength="{{contentLength}}" comment-block></div>
+		<div ctype="Question" cinstructor="{{instructor}}" clogin="{{login}}" contentlength="{{contentLength}}" comcount="commentQCount" comment-block></div>
 	</div>
 
 	<div ng-show="check" class="marginT15">
@@ -107,7 +107,7 @@
 				</div>
 					
 				<div ng-show="scomm">
-					<div csid="{{script.id}}" ctype="Answer" cinstructor="{{instructor}}" clogin="{{login}}" contentlength="{{contentLength}}" comment-block></div>
+					<div csid="{{script.id}}" ctype="Answer" cinstructor="{{instructor}}" clogin="{{login}}" contentlength="{{contentLength}}" comcount="script.commentACount" comment-block></div>
 				</div>
 			</li>
 		</ul>

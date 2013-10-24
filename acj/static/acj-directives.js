@@ -80,7 +80,6 @@ myApp.directive("uploadImage", function() {
 			'<input class="btn btn-primary" type="submit" value="Insert image" upload-submit="addImage(content)"></div></form>',
 		controller: function($rootScope, $scope, $element, $attrs, flashService) {
 			$scope.addImage = function(content) {
-				//TODO catch if the entered text is already at the char limit(?)
 				if (content.completed && content.file && content.file.length > 0) {
 					img = document.createElement("IMG");
 					img.src = "user_images/" + content.file;
@@ -196,7 +195,6 @@ myApp.directive("mathImage", function() {
 			$scope.add = function() {
 				divElmnt = document.getElementById($scope.editor);
 				// insert the formular at the cursor position using Rangy's insert method
-				//TODO catch if the entered text is already at the char limit
 				if ($rootScope.savedRange && $rootScope.savedRange.compareNode(divElmnt) == 2) {
 					$rootScope.savedRange.insertNode(document.createTextNode($scope.equation));
 					rgy = rangy.getSelection().setSingleRange($rootScope.savedRange);
@@ -259,6 +257,7 @@ myApp.directive("commentBlock", function() {
 			sidr: "@sidr",
 			qid: "@qid",
 			contentLength: "@contentlength",
+			comCount: "=comcount",
 		},
 		controller: function($rootScope, $scope, $element, $attrs, $routeParams, flashService, commentQService, commentAService, commentJService) {
 			var questionId = $routeParams.questionId;
@@ -353,6 +352,7 @@ myApp.directive("commentBlock", function() {
 							$scope.anyComments.push( retval.comment );
 							$scope.myComment = '';
 							$scope.lcomm = false;
+							$scope.comCount++;
 							flashService.flash('success', 'The comment has been successfully added');
 						} else {
 							flashService.flash('danger', 'Please submit a valid comment.');
@@ -364,6 +364,7 @@ myApp.directive("commentBlock", function() {
 							$scope.anyComments.push( retval.comment );
 							$scope.myComment = '';
 							$scope.lcomm = false;
+							$scope.comCount++;
 							flashService.flash('success', 'The comment has been successfully added.');
 						} else {
 							flashService.flash('danger', 'Please submit a valid comment.');
@@ -375,6 +376,7 @@ myApp.directive("commentBlock", function() {
 							$scope.anyComments.push( retval.comment );
 							$scope.myComment = '';
 							$scope.lcomm = false;
+							$scope.comCount++;
 							flashService.flash('success', 'The comment has been successfully added.');
 						} else {
 							flashService.flash('danger', 'Please submit a valid comment.');
@@ -395,6 +397,7 @@ myApp.directive("commentBlock", function() {
 							} else {
 								var index = jQuery.inArray(comment, $scope.anyComments);
 								$scope.anyComments.splice(index, 1);
+								$scope.comCount--;
 							}
 						});
 					}
@@ -406,6 +409,7 @@ myApp.directive("commentBlock", function() {
 							} else {
 								var index = jQuery.inArray(comment, $scope.anyComments);
 								$scope.anyComments.splice(index, 1);
+								$scope.comCount--;
 							}
 						});
 					}
@@ -417,6 +421,7 @@ myApp.directive("commentBlock", function() {
 							} else {
 								var index = jQuery.inArray(comment, $scope.anyComments);
 								$scope.anyComments.splice(index, 1);
+								$scope.comCount--;
 							}
 						});
 					}
@@ -482,7 +487,6 @@ myApp.directive("commentBlock", function() {
 				$scope.switchEdits(-1);
 			};
 			
-			//TODO
 			// save the Rangy object for the selected hallo editor
 			$scope.saveRange = function($event, max) {
 				var selRange = rangy.getSelection();
