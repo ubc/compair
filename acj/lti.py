@@ -1,5 +1,5 @@
 from acj import app
-from sqlalchemy_acj import db_session, User, Course, LTIInfo
+from sqlalchemy_acj import db_session, User, Course, LTIInfo, Enrollment
 from flask import request, session, redirect, url_for
 from werkzeug import urls
 from flask_principal import AnonymousIdentity, Identity, identity_changed
@@ -44,7 +44,7 @@ def updateMembership(url, id, params):
         postParams['oauth_signature'] = base64.b64encode(hmacAlg.digest())
         
         xmlString = requests.post(url, data=postParams).text
-        root = ET.fromstring(xmlString)
+        root = ET.fromstring(xmlString.encode('utf-8'))
         
         #create a list with all users in the course
         userlist = []
@@ -68,7 +68,7 @@ def updateMembership(url, id, params):
 @app.route('/', methods=['POST'])
 def sso():
     params = request.form.copy()
-    if params['oauth_consumer_key'] and params['oauth_consumer_key'] == 'LTI_ACJ':
+    if params['oauth_consumer_key'] and params['oauth_consumer_key'] == 'LTI_ACJ_dev':
         req = oauth.OAuthRequest(http_url='/', http_method='POST', parameters=params)
         hmacAlg = hmac.HMAC('acjsecret&', urls.url_quote_plus(req.get_normalized_http_method()) + '&' + urls.url_quote_plus(request.url) + '&' + urls.url_quote_plus(req.get_normalized_parameters()), hashlib.sha1)
         if request.form['oauth_signature'] == base64.b64encode(hmacAlg.digest()):
@@ -76,18 +76,30 @@ def sso():
             session['username'] = params['lis_person_sourcedid']
             query = User.query.filter_by(username = session['username']).first()
             if not query:
-                session.pop('username', None)
-                for key in ['identity.name', 'identity.auth_type']:
-                    session.pop(key, None)
-                identity_changed.send(app, identity=AnonymousIdentity())
-                return redirect(url_for('static', filename="index.html"))
-        
+                if params['roles'] == 'Instructor':
+                    #create the Instructor... the course will be created and users will be enrolled below
+                    userlist = []
+                    role = 'Teacher'
+                    userlist.append({"username": params['lis_person_sourcedid'], "password": params['lis_person_sourcedid'], 
+                                     "usertype": role, "firstname": params['lis_person_name_given'], 
+                                     "lastname": params['lis_person_name_family'], "display": params['lis_person_name_full']})
+                    if params['lis_person_contact_email_primary']:
+                        userlist[0]["email"] = params['lis_person_contact_email_primary']  
+                    import_users(userlist)
+                   
+                    query = User.query.filter_by(username = session['username']).first()
+    
+                else:
+                    session.pop('username', None)
+                    for key in ['identity.name', 'identity.auth_type']:
+                        session.pop(key, None)
+                    identity_changed.send(app, identity=AnonymousIdentity())
+                    return redirect(url_for('static', filename="index.html"))
+                    
             usertype = query.usertype
             display = query.display
-            db_session.rollback()
             identity = Identity('only_' + query.usertype)
             identity_changed.send(app, identity=identity)
-            print("type", query.usertype)
             if query.usertype != "Student":
                 updateMembership(params['ext_ims_lis_memberships_url'], params['ext_ims_lis_memberships_id'], params)
             return redirect(url_for('static', filename="index.html"))
