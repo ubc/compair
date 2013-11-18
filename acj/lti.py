@@ -68,7 +68,7 @@ def updateMembership(url, id, params):
 @app.route('/', methods=['POST'])
 def sso():
     params = request.form.copy()
-    if params['oauth_consumer_key'] and params['oauth_consumer_key'] == 'LTI_ACJ_dev':
+    if params['oauth_consumer_key'] and params['oauth_consumer_key'] == 'LTI_ACJ':
         req = oauth.OAuthRequest(http_url='/', http_method='POST', parameters=params)
         hmacAlg = hmac.HMAC('acjsecret&', urls.url_quote_plus(req.get_normalized_http_method()) + '&' + urls.url_quote_plus(request.url) + '&' + urls.url_quote_plus(req.get_normalized_parameters()), hashlib.sha1)
         if request.form['oauth_signature'] == base64.b64encode(hmacAlg.digest()):
@@ -102,10 +102,9 @@ def sso():
             identity_changed.send(app, identity=identity)
             if query.usertype != "Student":
                 updateMembership(params['ext_ims_lis_memberships_url'], params['ext_ims_lis_memberships_id'], params)
-            return redirect(url_for('static', filename="index.html"))
         else:
             session.pop('username', None)
             for key in ['identity.name', 'identity.auth_type']:
                 session.pop(key, None)
             identity_changed.send(app, identity=AnonymousIdentity())
-            return redirect(url_for('static', filename="index.html"))
+    return redirect(url_for('static', filename="index.html"))
