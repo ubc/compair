@@ -16,7 +16,7 @@ from sqlalchemy import INTEGER
 
 
 def upgrade():
-    op.add_column('Enrollment', sa.Column('usertype', Integer, ForeignKey('UserRole.id')))
+    op.add_column('Enrollment', sa.Column('usertype', INTEGER, ForeignKey('UserRole.id')))
     op.drop_column('User', 'usertype')
     op.add_column('User', sa.Column('usertype', INTEGER, ForeignKey('UserRole.id')))
 
