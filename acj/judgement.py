@@ -108,7 +108,7 @@ def get_judgements(qid):
         if str(row.sidl)+"-"+str(row.sidr) not in winCount:
             winCount[str(row.sidl)+"-"+str(row.sidr)] = {"winsl": winl, "winsr": winr}
         else:
-             winCount[str(row.sidl)+"-"+str(row.sidr)] = {winner[str(row.sidl)+"-"+str(row.sidr)].winsl + winsl, winner[str(row.sidl)+"-"+str(row.sidr)].winsr + winsr}
+             winCount[str(row.sidl)+"-"+str(row.sidr)] = {"winsl": winner[str(row.sidl)+"-"+str(row.sidr)].winsl + winsl, "winsr": winner[str(row.sidl)+"-"+str(row.sidr)].winsr + winsr}
 
     categories = JudgementCategory.query.filter_by(cid = question.cid).all()
     
