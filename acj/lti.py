@@ -1,5 +1,5 @@
 from acj import app
-from sqlalchemy_acj import db_session, User, Course, LTIInfo, Enrollment
+from sqlalchemy_acj import db_session, User, Course, LTIInfo, Enrollment, JudgementCategory
 from flask import request, session, redirect, url_for
 from werkzeug import urls
 from flask_principal import AnonymousIdentity, Identity, identity_changed
@@ -26,7 +26,10 @@ def updateMembership(url, id, params):
         newCourse = Course(name)
         db_session.add(newCourse)
         commit()
-        
+        #create the standard judgement category
+        categories = JudgementCategory(newCourse.id, "Which is Better?")
+        db_session.add(categories)
+        commit()
         postParams = {}
         postParams['lti_message_type'] = 'basic-lis-readmembershipsforcontext'
         postParams['id'] = id
@@ -62,8 +65,10 @@ def updateMembership(url, id, params):
         #enroll users to the course
         course = Course.query.filter_by(name = params['context_title']).first()
         for member in root.find('memberships').findall('member'):
-            userId = User.query.filter_by(username = member.find('person_sourcedid').text).first().id
-            ret = enrol_users( [{'user': {'id': userId}}], course.id)
+            user = User.query.filter_by(username = member.find('person_sourcedid').text).first()
+            if user:
+                userId = user.id
+                ret = enrol_users( [{'user': {'id': userId}}], course.id)
     
 @app.route('/', methods=['POST'])
 def sso():
@@ -85,26 +90,29 @@ def sso():
                                      "lastname": params['lis_person_name_family'], "display": params['lis_person_name_full']})
                     if params['lis_person_contact_email_primary']:
                         userlist[0]["email"] = params['lis_person_contact_email_primary']  
-                    import_users(userlist)
-                   
+                    result = import_users(userlist)
+                    if result["error"]:
+                        noLogin()
+                        return redirect(url_for('static', filename="index.html"))
                     query = User.query.filter_by(username = session['username']).first()
     
                 else:
-                    session.pop('username', None)
-                    for key in ['identity.name', 'identity.auth_type']:
-                        session.pop(key, None)
-                    identity_changed.send(app, identity=AnonymousIdentity())
+                    noLogin()
                     return redirect(url_for('static', filename="index.html"))
                     
-            usertype = query.usertype
+            usertype = query.userrole.role
             display = query.display
-            identity = Identity('only_' + query.usertype)
+            identity = Identity('only_' + query.userrole.role)
             identity_changed.send(app, identity=identity)
-            if query.usertype != "Student":
+            if query.userrole.role != "Student":
                 updateMembership(params['ext_ims_lis_memberships_url'], params['ext_ims_lis_memberships_id'], params)
         else:
-            session.pop('username', None)
-            for key in ['identity.name', 'identity.auth_type']:
-                session.pop(key, None)
-            identity_changed.send(app, identity=AnonymousIdentity())
+            noLogin()
+            return redirect(url_for('static', filename="index.html"))
     return redirect(url_for('static', filename="index.html"))
+
+def noLogin():
+    session.pop('username', None)
+    for key in ['identity.name', 'identity.auth_type']:
+        session.pop(key, None)
+    identity_changed.send(app, identity=AnonymousIdentity())

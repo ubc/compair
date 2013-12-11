@@ -1,65 +1,101 @@
 <h2>{{cname}}</h2>
+<ul class="nav nav-tabs">
+	<li class="pointer" ng-class="{active: type != 'user'}"><a data-toggle="tab" ng-click="type='data'">Course Data</a></li>
+	<li class="pointer" ng-class="{active: type == 'user'}"><a data-toggle="tab" ng-click="type='user'">User Data</a></li>
+</ul>
 <div class="row">
-	<div class="col-md-4">
-		<div class="input-group marginT15">
-			<div class="checkbox">
-				<label> <input type="checkbox" name="question" ng-model="question" ng-checked="question || questionTitle || questionBody || questionComments" ng-disabled="questionTitle || questionBody || questionComments"> Export Questions
-				</label>
+	<div class="tab-content">
+		<div id="data" ng-hide="type=='user'">
+			<div class="col-md-4">
+				<div class="input-group marginT15">
+					<div class="checkbox">
+						<label> <input type="checkbox" name="question" ng-model="question" ng-checked="question || questionTitle || questionBody || questionComments" ng-disabled="questionTitle || questionBody || questionComments"> Export Questions
+						</label>
+					</div>
+					<div class="marginL50">
+						<div class="checkbox">
+							<label> <input type="checkbox" name="questionTitle" ng-model="questionTitle"> Export Title
+							</label>
+						</div>
+						<div class="checkbox">
+							<label> <input type="checkbox" name="questionBody" ng-model="questionBody"> Export Body
+							</label>
+						</div>
+						<div class="checkbox">
+							<label> <input type="checkbox" name="questionComments" ng-model="questionComments"> Export Comments
+							</label>
+						</div>
+					</div>
+				</div>
 			</div>
-			<div class="marginL50">
-				<div class="checkbox">
-					<label> <input type="checkbox" name="questionTitle" ng-model="questionTitle"> Export Title
-					</label>
+			<div class="col-md-4">
+				<div class="input-group marginT15">
+					<div class="checkbox">
+						<label> <input type="checkbox" name="answer" ng-model="answer" ng-checked="answer || answerTitle || answerBody || answerComments" ng-disabled="answerTitle || answerBody || answerComments"> Export Answers
+						</label>
+					</div>
+					<div class="marginL50">
+						<div class="checkbox">
+							<label> <input type="checkbox" name="answerBody" ng-model="answerBody"> Export Body
+							</label>
+						</div>
+						<div class="checkbox">
+							<label> <input type="checkbox" name="answerComments" ng-model="answerComments"> Export Comments
+							</label>
+						</div>
+					</div>
 				</div>
-				<div class="checkbox">
-					<label> <input type="checkbox" name="questionBody" ng-model="questionBody"> Export Body
-					</label>
+			</div>
+			<div class="col-md-4">
+				<div class="input-group marginT15">
+					<div class="checkbox">
+						<label> <input type="checkbox" name="judgement" ng-model="judgement" ng-checked="judgement || judgementQuestion || judgementAnswer || judgementComments" ng-disabled="judgementQuestion || judgementAnswer || judgementComments"> Export Judgements
+						</label>
+					</div>
+					<div class="marginL50">
+						<div class="checkbox">
+							<label> <input type="checkbox" name="judgementQuestion" ng-model="judgementQuestion"> Export Question
+							</label>
+						</div>
+						<div class="checkbox">
+							<label> <input type="checkbox" name="judgementAnswer" ng-model="judgementAnswer"> Export Answers
+							</label>
+						</div>
+						<div class="checkbox">
+							<label> <input type="checkbox" name="judgementComments" ng-model="judgementComments"> Export Comments
+							</label>
+						</div>
+					</div>
 				</div>
-				<div class="checkbox">
-					<label> <input type="checkbox" name="questionComments" ng-model="questionComments"> Export Comments
-					</label>
+			</div>
+		</div>
+
+		<div id="user" ng-show="type=='user'">
+			<div class="col-md-4">
+				<div class="input-group marginT15">
+					<div class="checkbox">
+						<label> <input type="checkbox" name="userdata" ng-model="userdata" ng-checked="true" ng-disabled="true"> Export Users
+						</label>
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
-	<div class="col-md-4">
-		<div class="input-group marginT15">
-			<div class="checkbox">
-				<label> <input type="checkbox" name="answer" ng-model="answer" ng-checked="answer || answerTitle || answerBody || answerComments" ng-disabled="answerTitle || answerBody || answerComments"> Export Answers
-				</label>
-			</div>
-			<div class="marginL50">
-				<div class="checkbox">
-					<label> <input type="checkbox" name="answerBody" ng-model="answerBody"> Export Body
-					</label>
-				</div>
-				<div class="checkbox">
-					<label> <input type="checkbox" name="answerComments" ng-model="answerComments"> Export Comments
-					</label>
-				</div>
-			</div>
+</div>
+	
+<div class="row marginT50">
+	<div class="col-md-2">
+	<span>From:</span>
+		<div class="input-group">
+			<input type="text" ng-model="startdate" data-date-format="dd/mm/yyyy" bs-datepicker class="form-control" id="startdate">
+			<span class="input-group-addon" data-toggle="datepicker"><i class="icon-calendar"></i></span>
 		</div>
 	</div>
-	<div class="col-md-4">
-		<div class="input-group marginT15">
-			<div class="checkbox">
-				<label> <input type="checkbox" name="judgement" ng-model="judgement" ng-checked="judgement || judgementQuestion || judgementAnswer || judgementComments" ng-disabled="judgementQuestion || judgementAnswer || judgementComments"> Export Judgements
-				</label>
-			</div>
-			<div class="marginL50">
-				<div class="checkbox">
-					<label> <input type="checkbox" name="judgementQuestion" ng-model="judgementQuestion"> Export Question
-					</label>
-				</div>
-				<div class="checkbox">
-					<label> <input type="checkbox" name="judgementAnswer" ng-model="judgementAnswer"> Export Answers
-					</label>
-				</div>
-				<div class="checkbox">
-					<label> <input type="checkbox" name="judgementComments" ng-model="judgementComments"> Export Comments
-					</label>
-				</div>
-			</div>
+	<div class="col-md-2">
+	<span>Until:</span>
+		<div class="input-group">
+			<input type="text" ng-model="enddate" data-date-format="dd/mm/yyyy" bs-datepicker class="form-control">
+			<span class="input-group-addon" data-toggle="datepicker"><i class="icon-calendar"></i></span>
 		</div>
 	</div>
 </div>

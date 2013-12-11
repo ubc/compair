@@ -60,6 +60,7 @@ for course in courses:
         enrolled = Enrollment.query.filter_by(cid = courseId).with_entities(Enrollment.uid).all()
         enrolled =  [item for sublist in enrolled for item in sublist]
         if userId not in enrolled:
-            table = Enrollment(userId, courseId)
+            usertype = User.query.filter_by(id = userId).first().userrole.id
+            table = Enrollment(userId, courseId, usertype)
             db_session.add(table)
             commit()

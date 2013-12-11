@@ -77,7 +77,7 @@ myApp.directive("uploadImage", function() {
 		},
 		template: '<form ng-upload action="/uploadimage" class="margin0" enctype="multipart/form-data" name="uploadImg" novalidate>' +
 			'<div><label for="stepBrowse" class="marginR5">Image</label><input type=file name=file id="stepBrowse" class="inlineBlock">' + 
-			'<input class="btn btn-primary" type="submit" value="Insert image" upload-submit="addImage(content)"></div></form>',
+			'<span class="btn btn-primary" upload-submit="addImage(content)">Insert image</span></div></form>',
 		controller: function($rootScope, $scope, $element, $attrs, flashService) {
 			$scope.addImage = function(content) {
 				if (content.completed && content.file && content.file.length > 0) {
@@ -104,37 +104,6 @@ myApp.directive("uploadImage", function() {
 		}
 	};
 });
-
-//myApp.directive("insertCode", function() {
-//	return {
-//		restrict: "A",
-//		replace: true,
-//		scope: {
-//			image: "@image",
-//			editor: "@editor"
-//		},
-//		template: '<div><label class="marginR5">Code</label><textarea rows="4" cols="50" class="inlineBlock"></textarea>' + 
-//		'<input class="btn btn-primary" type="button" value="Insert Code" ng-click="insertCode()"></div>',
-//		controller: function($rootScope, $scope, $element, flashService) {
-//			$scope.insertCode = function() {
-//				txtArea = document.getElementsByTagName("TEXTAREA")[0];
-//				pre = document.createElement("pre");
-//				pre.className = "highlight";
-//				txt = document.createTextNode(txtArea.value);
-//				pre.innerHTML = txtArea.value;
-//				divElmnt = document.getElementById($scope.editor);
-//				if ($rootScope.savedRange && $rootScope.savedRange.compareNode(divElmnt) == 2) {
-//					$rootScope.savedRange.insertNode(pre);
-//					rangy.getSelection().setSingleRange($rootScope.savedRange);
-//				}
-//				else {
-//					var textarea = angular.element("div#"+$scope.editor);
-//					textarea.append(pre);
-//				}
-//			};
-//		}
-//	};
-//});
 
 myApp.directive("mathjaxBind", function() {
     return {

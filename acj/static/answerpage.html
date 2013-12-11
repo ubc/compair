@@ -53,14 +53,14 @@
 	
 		<div class="btn_spacing">
 		<a class="btn btn-default" ng-click="temp=orderProp;orderProp=nextOrder;nextOrder=temp" id="stepOrder">
-			<span class="glyphicon glyphicon-sort-by-attributes"></span > By {{nextOrder}}
+			<span class="glyphicon glyphicon-sort-by-attributes"></span > By {{nextOrder == 'time' ? nextOrder : 'score'}}
 		</a>
 		</div>
 	
 		<ul class="postingsList padding0">
 			<li ng-repeat="script in scripts | orderBy:orderProp:true" ng-class="{quiz: quiz, discussion: !quiz}">
 				<img src="http://www.gravatar.com/avatar/{{script.avatar}}?s=32&d=retro" class="avatar">
-				<p class="authorHeader">Author: <strong>{{script.author}}</strong> - {{script.time}} - Score: {{script.score}}</p>
+				<p class="authorHeader">Author: <strong>{{script.author}}</strong> - {{script.time}} - Score: {{script.score[0].score}}</p>
 				<div class="opbuttons">
 					<div class="row">
 						<div class="col-md-12 col-xs-12">

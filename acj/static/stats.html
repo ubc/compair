@@ -7,6 +7,7 @@
 		<td data-title="'Answers'" sortable="student.answerCount" class="centered">{{row.student.answerCount}}</td>
 		<td data-title="'%'" sortable="apercent" class="centered">{{row.student.answerCount/row.totalAnswers * 100 | number:2}}</td>
 		<td data-title="'Average score / answer'" sortable="student.avgScore" class="centered">{{row.student.avgScore | number:2}}</td>
+		<td data-title="'Judgements'" sortable="student.pairCount" class="centered">{{row.student.pairCount | number:0}}</td>
 	</tr>
 </table>
 <a class="btn btn-default" href="#/statexport/{{cid}}/{{coursename}}"><span class="glyphicon glyphicon-export"></span> Export Data

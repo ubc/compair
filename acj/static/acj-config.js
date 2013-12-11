@@ -67,7 +67,7 @@ myApp.factory('quickService', function($resource) {
 });
 
 myApp.factory('enrollService', function($resource) {
-	return $resource( '/enrollment/:id' );
+	return $resource( '/enrollment/:id', {}, { put: {method: 'PUT'} } );
 });
 
 myApp.factory('commentAService', function($resource) {
@@ -92,6 +92,10 @@ myApp.factory('reviewjudgeService', function($resource) {
 
 myApp.factory('notificationService', function($resource) {
 	return $resource( '/notifications' );
+});
+
+myApp.factory('critService', function($resource) {
+	return $resource( '/managecategories/:cid/:critid' );
 });
 
 myApp.factory('tagService', function($resource) {

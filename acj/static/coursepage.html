@@ -33,23 +33,21 @@
 		<tr ng-repeat="course in courses | orderBy:orderProp | filter:cquery">
 			<td ng-click="redirect('/questionpage/{{course.id}}')"
 				class="pointer" id="step2"><b>{{course.name}}</b></td>
-<!-- 			<td ng-click="redirect('/questionpage/{{course.id}}')" -->
-<!-- 				class="pointer">{{course.time}}</td> -->
 			<td ng-click="redirect('/questionpage/{{course.id}}')"
 				class="pointer"><span class="label"
 				ng-class="{'label-success': course.count > 0, 'label-default': course.count == 0}">{{course.count}} question(s)</span></td>
 			<td ng-click="redirect('/questionpage/{{course.id}}')"
 				class="pointer"><span class="label"
 				ng-class="{'label-success': course.new > 0, 'label-default': course.new == 0}">{{course.new}} new question(s)</span></td>
-			<td ng-show="instructor"><a id="step3" class="btn btn-default btn-sm"
+			<td><a id="step3" class="btn btn-default btn-sm" ng-show="course.role == 'Teacher' || course.role == 'Admin'"
 				href="#/enrollpage/{{course.id}}"> <span class="glyphicon glyphicon-plus-sign"></span >
 					Enrol Users
 			</a></td>
-			<td ng-show="instructor"><a class="btn btn-default btn-sm"
+			<td><a class="btn btn-default btn-sm" ng-show="course.role == 'Teacher' || course.role == 'Admin'"
 				href="#/editcourse/{{course.id}}"> <span class="glyphicon glyphicon-edit"></span >
 					Edit Course
 			</a></td>
-			<td ng-show="instructor"><a class="btn btn-default btn-sm"
+			<td><a class="btn btn-default btn-sm" ng-show="course.role == 'Teacher' || course.role == 'Admin'"
 				href="#/stats/{{course.id}}"> <span class="glyphicon glyphicon-stats"></span >
 					View Statistics
 			</a></td>

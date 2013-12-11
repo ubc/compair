@@ -1,6 +1,6 @@
 from __future__ import division
 from flask import Flask, url_for, request, render_template, redirect, session, jsonify, Response
-from sqlalchemy_acj import init_db, reset_db, db_session, User, Judgement, Script, Course, Question, Enrollment, CommentA, CommentQ, CommentJ, Entry, Tags
+from sqlalchemy_acj import init_db, reset_db, db_session, User, Script, Course, Question, Enrollment, CommentA, CommentQ, CommentJ, Entry, Tags
 from flask_principal import AnonymousIdentity, Identity, identity_changed, identity_loaded, Permission, Principal, RoleNeed #ActionNeed,
 from sqlalchemy import desc, func#, select
 from random import shuffle
@@ -22,7 +22,6 @@ from flask.ext import sqlalchemy
 import Image
 import sys
 from acj import app
-
 '''
 import logging
 logging.basicConfig()
@@ -127,7 +126,7 @@ def install():
 def logincheck():
     if 'username' in session:
         user = User.query.filter_by(username = session['username']).first()
-        retval = json.dumps( {"id": user.id, "display": user.display, "usertype": user.usertype} )
+        retval = json.dumps( {"id": user.id, "display": user.display, "usertype": user.userrole.role} )
         db_session.rollback()
         return retval
     return ''
@@ -144,10 +143,10 @@ def login():
     hx = query.password
     if hasher.check_password( password, hx ):
         session['username'] = username
-        usertype = query.usertype
+        usertype = query.userrole.role
         display = query.display#User.query.filter_by(username = username).first().display
         db_session.rollback()
-        identity = Identity('only_' + query.usertype)
+        identity = Identity('only_' + query.userrole.role)
         identity_changed.send(app, identity=identity)
         
         return json.dumps( {"display": display, "usertype": usertype} )
@@ -169,11 +168,11 @@ def logout():
 	return json.dumps( {"status": 'logged out'} )
 
 @app.route('/roles')
-@teacher.require(http_exception=401)
+@student.require(http_exception=401)
 def roles():
 	query = User.query.filter_by(username = session['username']).first()
 	roles = ['Student','Teacher']
-	if query.usertype == 'Admin':
+	if query.userrole.role == 'Admin':
 		roles.append('Admin')
 	return json.dumps({'roles': roles})
 
@@ -193,20 +192,6 @@ def produce_cj_model():
 	commit()
 	return '1001110100101010001011010101010'
 
-'''
-@app.route('/ranking')
-@student.require(http_exception=401)
-def total_ranking():
-	scripts = Script.query.order_by( Script.score.desc() ).all()
-	lst = []
-	for script in scripts:
-		question = Question.query.filter_by(id = script.qid).first()
-		course = Course.query.filter_by(id = question.cid).first()
-		author = User.query.filter_by(id = script.uid).first().display
-		lst.append( {"course": course.name, "question": question.content, "author": author, "time": str(script.time), "content": script.content, "score": "{0:10.2f}".format(script.score) } )
-	db_session.rollback()
-	return json.dumps( {"scripts": lst} )
-'''
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 

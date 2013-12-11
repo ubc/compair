@@ -1,6 +1,6 @@
 from acj import app
 from general import admin, teacher, commit, hasher
-from sqlalchemy_acj import db_session, User
+from sqlalchemy_acj import db_session, User, UserRole
 from flask import session, request
 from werkzeug import secure_filename
 import json
@@ -47,7 +47,7 @@ def import_users(list, group=True):
                 error.append({'user': user, 'msg': 'Username already exists'})
             else:
                 u = User.query.filter_by( username = user['username'] ).first()
-                if u.usertype == 'Student':
+                if u.userrole.role == 'Student':
                     user = {'id': u.id, 'username': u.username, 'password': 'hidden', 'usertype': 'Student',
                         'email': u.email, 'firstname': u.firstname, 'lastname': u.lastname, 'display': u.display}
                     duplicate.append(user['username'])
@@ -68,7 +68,8 @@ def import_users(list, group=True):
                 continue
         else:
             email = ''
-        table = User(user['username'], hasher.hash_password(user['password']), user['usertype'], email, user['firstname'], user['lastname'], user['display'])
+        usertype = UserRole.query.filter_by(role = user['usertype']).first().id
+        table = User(user['username'], hasher.hash_password(user['password']), usertype, email, user['firstname'], user['lastname'], user['display'])
         db_session.add(table)
         status = commit()
         if not status:
@@ -190,7 +191,7 @@ def edit_user(id):
         newpassword = param['password']['new']
         newpassword = hasher.hash_password( newpassword )
         user.password = newpassword
-    usertype = user.usertype
+    usertype = user.userrole.role
     commit()
     return json.dumps( {"msg": "PASS", "usertype": usertype} )
 
@@ -206,7 +207,7 @@ def all_users():
     query = User.query.order_by(User.lastname)
     users = []
     for user in query:
-        users.append( {"uid": user.id, "username": user.username, "fullname": user.fullname, "display": user.display, "type": user.usertype} )
+        users.append( {"uid": user.id, "username": user.username, "fullname": user.fullname, "display": user.display, "type": user.userrole.role} )
     db_session.rollback()
     return json.dumps( {'users': users})
 
@@ -226,9 +227,9 @@ def user_profile(id):
     loggedUser = User.query.filter_by(username = session['username']).first()
     if id == '0':
         user = loggedUser
-    elif id and loggedUser.usertype != 'Student':
+    elif id and loggedUser.userrole.role != 'Student':
         user = User.query.filter_by(id = id).first()
     if user:
-        retval = json.dumps({"username":user.username, "fullname":user.fullname, "display":user.display, "email":user.email, "usertype":user.usertype, "loggedType": loggedUser.usertype, "loggedName": loggedUser.username})
+        retval = json.dumps({"username":user.username, "fullname":user.fullname, "display":user.display, "email":user.email, "usertype":user.userrole.role, "loggedType": loggedUser.usertype, "loggedName": loggedUser.username})
     db_session.rollback()
     return retval

@@ -26,7 +26,6 @@ def list_question(id):
         else:
             lstQuestion.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar, "count": len(count), "tags": taglistQ, "tmptags": taglistQ, "contentLength": question.contentLength} )
     taglist = []
-   
     for tag in course.tags:
         taglist.append({"name": tag.name, "id": tag.id})
     db_session.rollback()
@@ -101,7 +100,7 @@ def create_question(id):
 def delete_question(id):
     question = Question.query.filter_by(id = id).first()
     user = User.query.filter_by(username = session['username']).first()
-    if user.id != question.uid and user.usertype != 'Teacher' and user.usertype != 'Admin':
+    if user.id != question.uid and user.userrole.role != 'Teacher' and user.userrole.role != 'Admin':
         retval = json.dumps( {"msg": user.display} )
         db_session.rollback()
         return retval

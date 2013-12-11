@@ -14,7 +14,7 @@ Frameworks
 ----------
 The frontend is purely written in Javascript, using [AngularJS](http://angularjs.org/) as a MVC-framework and [Bootstrap](http://getbootstrap.com/) for the design.
 The backend uses the python web application framework [Flask](http://flask.pocoo.org/) with [Flask SQLAlchemy](http://pythonhosted.org/Flask-SQLAlchemy/] for database persistence.
-[SQLAlchemy Migrate] (https://sqlalchemy-migrate.readthedocs.org) is used to maintain database updates.
+[Alembic] (http://alembic.readthedocs.org/) is used to maintain database updates.
 
 
 Installation
@@ -44,13 +44,12 @@ Database
 --------
 The database connection parameters can be configured in settings.py.
 When running the application, any missing tables are automatically created.
-For any updates to the database model SQLAlchemy Migrate scripts are used. ([detailed information](https://sqlalchemy-migrate.readthedocs.org/en/v0.7.2/versioning.html))
+For any updates to the database model SQLAlchemy Alembic scripts are used. ([detailed information](http://alembic.readthedocs.org/en/latest/))
 
-###Setting up SQLALchemy Migrate
-* Create a repository: `migrate create acjDB "acj"`
-* Link the repository to the database: `python acjDB/manage.py version_control <db_connection_parameter>`
-* Create a link to execute commands on the repository: `migrate manage manage.py --repository=acjDB --url=<db_connection_parameter>`
+###Setting up Alembic
+* Setup the environment: `alembic init alembic`
+* Set the "sqlalchemy.url" in alembic.ini
 
 ###Updating the databse schema
-* When the application gets updated simply run: `python manage.py upgrade`
+* When the application gets updated simply run: `alembic upgrade head`
 

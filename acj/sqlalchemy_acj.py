@@ -40,6 +40,7 @@ def init_db():
     Base.metadata.create_all(bind=engine)
 
 def reset_db():
+    #TODO create new script
     if TESTENV:
         print ("resetting db state...")
         Base.metadata.drop_all(bind=engine)
@@ -50,59 +51,61 @@ def reset_db():
         print ("finished resetting db state")
 
 class User(Base):
-	__tablename__ = 'User'
-	id = Column(Integer, primary_key=True)
-	username = Column(String(80), unique=True)
-	password = Column(String(120), unique=False)
-	usertype = Column(Enum('Admin', 'Teacher', 'Student'))
-	email = Column(String(254))
-	firstname = Column(String(254))
-	lastname = Column(String(254))
-	display = Column(String(254), unique=True)
-	lastOnline = Column(DateTime)
-
-	judgement = relationship('Judgement', cascade="all,delete")
-	enrollment = relationship('Enrollment', cascade="all,delete")
-
-	def __init__(self, username, password, usertype, email, firstname, lastname, display):
-		self.username = username
-		self.password = password
-		self.usertype = usertype
-		self.email = email
-		self.firstname = firstname
-		self.lastname = lastname
-		self.display = display
-
-	def __repr__(self):
-		return '<User %r>' % self.username
-
-	@hybrid_property
-	def fullname(self):
-		return self.firstname + ' ' + self.lastname
-
-	@hybrid_property
-	def avatar(self):
-		m = hashlib.md5()
-		m.update(self.email)
-		return m.hexdigest()
+    __tablename__ = 'User'
+    id = Column(Integer, primary_key=True)
+    username = Column(String(80), unique=True)
+    password = Column(String(120), unique=False)
+    usertype = Column(Integer, ForeignKey('UserRole.id'))
+	#usertype = Column(Enum('Admin', 'Teacher', 'Student'))
+    email = Column(String(254))
+    firstname = Column(String(254))
+    lastname = Column(String(254))
+    display = Column(String(254), unique=True)
+    lastOnline = Column(DateTime)
+    
+    judgement = relationship('Judgement', cascade="all,delete")
+    enrollment = relationship('Enrollment', cascade="all,delete")
+    userrole = relationship('UserRole', foreign_keys=[usertype], backref=backref('user'))
+    
+    def __init__(self, username, password, usertype, email, firstname, lastname, display):
+    	self.username = username
+    	self.password = password
+    	self.usertype = usertype
+    	self.email = email
+    	self.firstname = firstname
+    	self.lastname = lastname
+    	self.display = display
+    
+    def __repr__(self):
+    	return '<User %r>' % self.username
+    
+    @hybrid_property
+    def fullname(self):
+    	return self.firstname + ' ' + self.lastname
+    
+    @hybrid_property
+    def avatar(self):
+    	m = hashlib.md5()
+    	m.update(self.email)
+    	return m.hexdigest()
 
 class Course(Base):
-	__tablename__ = 'Course'
-	id = Column(Integer, primary_key=True)
-	name = Column(String(80), unique=True)
+    __tablename__ = 'Course'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(80), unique=True)
 
-	question = relationship('Question', cascade="all,delete")
-	enrollment = relationship('Enrollment', cascade="all,delete")
-
-	tags = relationship("Tags",
+    question = relationship('Question', cascade="all,delete")
+    enrollment = relationship('Enrollment', cascade="all,delete")
+    
+    tags = relationship("Tags",
 						secondary=course_tags_table,
 						backref=backref('tags', lazy='dynamic'), cascade="all,delete")
 	
-	def __init__(self, name):
-		self.name = name
-
-	def __repr__(self):
-		return '<Course %r>' % self.name
+    def __init__(self, name):
+    	self.name = name
+    
+    def __repr__(self):
+    	return '<Course %r>' % self.name
 
 class Entry(Base):
     __tablename__ = 'Entry'
@@ -158,7 +161,6 @@ class Script(Entry):
 	title = Column(String(80), default='answer')
 	wins = Column(Integer, default=0)
 	count = Column(Integer, default=0)
-	score = Column(Float, default=0)
 
 	question = relationship('Question', foreign_keys=[qid], backref=backref('Script', cascade="all,delete"))
 
@@ -175,38 +177,42 @@ class Script(Entry):
 		return '<Script %r>' % self.id
 
 class Judgement(Base):
-	__tablename__ = 'Judgement'
-	id = Column(Integer, primary_key=True)
-	uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
-	sidl= Column(Integer, ForeignKey('Script.id', ondelete='CASCADE'))
-	sidr = Column(Integer, ForeignKey('Script.id', ondelete='CASCADE'))
-	winner = Column(Integer, unique=False)
-
-	script1 = relationship('Script', foreign_keys=[sidl], backref=backref("judge1", cascade="all,delete"))
-	script2 = relationship('Script', foreign_keys=[sidr], backref=backref("judge2", cascade="all,delete"))
-
-	def __init__(self, uid, sidl, sidr, winner):
+    __tablename__ = 'Judgement'
+    id = Column(Integer, primary_key=True)
+    uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
+    sidl= Column(Integer, ForeignKey('Script.id', ondelete='CASCADE'))
+    sidr = Column(Integer, ForeignKey('Script.id', ondelete='CASCADE'))
+    time = Column(DateTime, default=datetime.datetime.now)
+     
+    script1 = relationship('Script', foreign_keys=[sidl], backref=backref("judge1", cascade="all,delete"))
+    script2 = relationship('Script', foreign_keys=[sidr], backref=backref("judge2", cascade="all,delete"))
+    
+    def __init__(self, uid, sidl, sidr, winner):
 		self.uid = uid
 		self.sidl = sidl
 		self.sidr = sidr
 		self.winner = winner
 
-	def __repr__(self):
+    def __repr__(self):
 		return '<Judgement %r>' % self.id
 
 class Enrollment(Base):
-	__tablename__ = 'Enrollment'
-	id = Column(Integer, primary_key=True)
-	uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
-	cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
-	time = Column(DateTime, default=datetime.datetime.now)
-
-	def __init__(self, uid, cid):
-		self.uid = uid
-		self.cid = cid
-
-	def __repr__(self):
-		return '<Enrollment %r>' % self.id
+    __tablename__ = 'Enrollment'
+    id = Column(Integer, primary_key=True)
+    uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
+    cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
+    time = Column(DateTime, default=datetime.datetime.now)
+    usertype = Column(Integer, ForeignKey('UserRole.id'))
+    
+    userrole = relationship('UserRole', foreign_keys=[usertype], backref=backref('enrollment'))
+    
+    def __init__(self, uid, cid, usertype):
+    	self.uid = uid
+    	self.cid = cid
+    	self.usertype = usertype
+    
+    def __repr__(self):
+    	return '<Enrollment %r>' % self.id
 
 class CommentA(Entry):
 	__tablename__ = 'CommentA'
@@ -294,3 +300,60 @@ class LTIInfo(Base):
 
     def __repr__(self):
         return '<LTIInfo %r>' % self.id
+
+class JudgementCategory(Base):
+    __tablename__ = 'JudgementCategory'
+    id = Column(Integer, primary_key=True)
+    cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
+    name = Column(String(100), unique=False)
+    
+    def __init__(self, cid, name):
+        self.cid = cid
+        self.name = name
+
+    def __repr__(self):
+        return '<JudgementCategory %r>' % self.id
+
+class JudgementWinner(Base):
+    __tablename__ = 'JudgementWinner'
+    id = Column(Integer, primary_key=True)
+    jid = Column(Integer, ForeignKey('Judgement.id', ondelete='CASCADE'))
+    jcid = Column(Integer, ForeignKey('JudgementCategory.id', ondelete='CASCADE'))
+    winner = Column(Integer, unique=False)
+    
+    def __init__(self, jid, jcid, winner):
+        self.jid = jid
+        self.jcid = jcid
+        self.winner = winner
+
+    def __repr__(self):
+        return '<JudgementWinner %r>' % self.id
+
+class ScriptScore(Base):
+    __tablename__ = 'ScriptScore'
+    id = Column(Integer, primary_key=True)
+    sid = Column(Integer, ForeignKey('Script.id', ondelete='CASCADE'))
+    jcid = Column(Integer, ForeignKey('JudgementCategory.id', ondelete='CASCADE'))
+    wins = Column(Integer, default=0)
+    count = Column(Integer, default=0)
+    score = Column(Float, default=0)
+    
+    def __init__(self, sid, jcid, wins, count):
+        self.sid = sid
+        self.jcid = jcid
+        self.wins = wins
+        self.count = count
+
+    def __repr__(self):
+        return '<ScriptScore %r>' % self.id
+
+class UserRole(Base):
+    __tablename__ = 'UserRole'
+    id = Column(Integer, primary_key=True)
+    role = Column(String(50), unique=True)
+    
+    def __init__(self, role):
+        self.role = role
+
+    def __repr__(self):
+        return '<UserRole %r>' % self.id
