@@ -10,4 +10,4 @@ DATABASE_TEST = {'drivername': 'mysql',
 			'port': '80',
 			'username': 'root',
 			'password': '',
-			'database': 'acj_test'}
+			'database': 'acj'}
