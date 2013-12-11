@@ -21,4 +21,4 @@ def upgrade():
 
 def downgrade():
     op.add_column('Script', sa.Column('score', Float, default=0))
-    op.add_column('Judgement', sa.Column('winner', Integer, unique=False))
+    op.add_column('Judgement', sa.Column('winner', INTEGER, unique=False))
