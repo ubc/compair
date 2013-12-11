@@ -12,7 +12,6 @@ down_revision = 'c237957fe60'
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy import INTEGER
 
 def upgrade():
     op.drop_column('Script', 'score')
@@ -21,4 +20,4 @@ def upgrade():
 
 def downgrade():
     op.add_column('Script', sa.Column('score', Float, default=0))
-    op.add_column('Judgement', sa.Column('winner', INTEGER, unique=False))
+    op.add_column('Judgement', sa.Column('winner', sa.Integer, unique=False))
