@@ -40,7 +40,6 @@ def init_db():
     Base.metadata.create_all(bind=engine)
 
 def reset_db():
-    #TODO create new script
     if TESTENV:
         print ("resetting db state...")
         Base.metadata.drop_all(bind=engine)
@@ -56,7 +55,6 @@ class User(Base):
     username = Column(String(80), unique=True)
     password = Column(String(120), unique=False)
     usertype = Column(Integer, ForeignKey('UserRole.id'))
-	#usertype = Column(Enum('Admin', 'Teacher', 'Student'))
     email = Column(String(254))
     firstname = Column(String(254))
     lastname = Column(String(254))
