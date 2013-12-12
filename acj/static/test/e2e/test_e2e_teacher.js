@@ -25,11 +25,10 @@ describe('ACJ testsuite - Teacher', function() {
 		});
 		it('edit the new course', function() {
 			element('a[href^="#/editcourse/"]').click();
-			element('a.edit').click();
 			input("newname").enter("test course 201");
-			element('a.submit').click();
+			element('button[ng-click="submit();submitted=true"]').click();
 			
-			expect(element("span.profile.ng-binding").text()).toBe("test course 201");
+			expect(element("h2.ng-binding").text()).toBe("Edit Course - test course 201");
 			input("newtag").enter("Testtag 1");
 			element("button.btn.btn-primary.btn-sm").click();
 			input("newtag").enter("Testtag 2");

@@ -68,14 +68,14 @@ describe('ACJ testsuite - Student', function() {
 		it('random judge', function() {
 			element('a[href="#/quickjudge"]').click();
 			element('#stepNext').click();
-			element("div[ng-click='pick=\'right\'']").click();
+			element("div[ng-click=\"sideSelect($index, \'right\', crit.id);pick=\'right\'\"]").click();
 			element("#stepSubmit").click();
 			expect(element("li.alert.alert-success.text-center").text()).toBe("Script & Judgement updated");
 		});
 		it('judge answers', function() {
 			element('a[ng-click="setType(\'discussion\');switchEdits(-1)"]').click();
 			element('a#stepJudge:not(.ng-hide):first').click();
-			element("div[ng-click='pick=\'left\'']").click();
+			element("div[ng-click=\"sideSelect($index, \'left\', crit.id);pick=\'left\'\"]").click();
 			element("#stepSubmit").click();
 			expect(element("li.alert.alert-success.text-center").text()).toBe("Script & Judgement updated");
 		});
