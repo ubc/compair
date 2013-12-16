@@ -3,7 +3,8 @@ from general import teacher, student, commit
 from sqlalchemy_acj import db_session, User, Script, Course, Question, Enrollment, CommentA, CommentQ, CommentJ, Tags, Judgement, Entry, JudgementCategory, JudgementWinner, ScriptScore, UserRole
 from flask import session, request, Response
 from flask_principal import Identity, identity_changed
-from sqlalchemy import func, cast, DATE
+from sqlalchemy import func, cast, DATE, desc, alias
+from sqlalchemy.sql import exists
 import json
 import validictory
 import datetime
@@ -31,13 +32,6 @@ def enrol_users(users, courseId):
             error.append(u)
     return {'error': error, 'success': success}
 
-@app.route('/course/<id>', methods=['DELETE'])
-def delete_course(id):
-    course = Course.query.filter_by( id = id).first()
-    db_session.delete(course)
-    commit()
-    return ''
-
 @app.route('/course', methods=['POST'])
 @teacher.require(http_exception=401)
 def create_course():
@@ -48,7 +42,7 @@ def create_course():
         db_session.rollback()
         return json.dumps( {"flash": 'Course name already exists.'} )
     name = param['name']
-    newCourse = Course(name)
+    newCourse = Course(name, 0)
     db_session.add(newCourse)
     db_session.commit()
     course = Course.query.filter_by( name = name ).first()
@@ -58,7 +52,7 @@ def create_course():
     #create the standard judgement category
     categories = JudgementCategory(course.id, "Which is Better?")
     db_session.add(categories)
-    retval = json.dumps({"id": newCourse.id, "name": newCourse.name})
+    retval = json.dumps({"id": newCourse.id, "name": newCourse.name, "role": user.userrole.role, "count": 0, "new": 0})
     commit()
     return retval
 
@@ -89,7 +83,7 @@ def list_course():
     db_session.rollback()
     return json.dumps( {"courses": lst} )
 
-@app.route('/editcourse/<cid>', methods=['GET', 'PUT'])
+@app.route('/editcourse/<cid>', methods=['GET', 'PUT', 'DELETE'])
 @student.require(http_exception=401)
 def manage_course(cid):
     if "Admin" in session["identity.id"] or "Teacher" in session["identity.id"]:
@@ -97,6 +91,8 @@ def manage_course(cid):
             return get_course(cid)
         elif request.method == "PUT":
             return edit_course(cid)
+        elif request.method == "DELETE":
+            return delete_course(cid)
     #if not teacher or admin, query if role is teacher in this course
     else:
         userId = User.query.filter_by(username = session['username']).first().id
@@ -110,6 +106,8 @@ def manage_course(cid):
                 response = get_course(cid)
             elif request.method == "PUT":
                 response = edit_course(cid)
+            elif request.method == "DELETE":
+                response = delete_course(cid)
             #and change it back after the call
             identity_changed.send(app, identity=Identity(oldIdentity))
             return response
@@ -117,6 +115,8 @@ def manage_course(cid):
             return get_course(cid)
         elif request.method == "PUT":
             return edit_course(cid)
+        elif request.method == "DELETE":
+            return delete_course(cid)
         
 @teacher.require(http_exception=401)
 def get_course(cid):
@@ -129,7 +129,14 @@ def get_course(cid):
     for crit in categories:
         critlist.append({"name": crit.name, "id": crit.id})
     db_session.rollback()
-    return json.dumps( {"id": course.id, "name": course.name, "categories": critlist, "tags": taglist} )
+    return json.dumps( {"id": course.id, "name": course.name, "categories": critlist, "tags": taglist, "contentLength": course.contentLength} )
+
+@teacher.require(http_exception=401)
+def delete_course(id):
+    course = Course.query.filter_by( id = id).first()
+    db_session.delete(course)
+    commit()
+    return json.dumps( {"flash": 'The course was successfully deleted.'} )
 
 @teacher.require(http_exception=401)
 def edit_course(cid):
@@ -137,7 +144,8 @@ def edit_course(cid):
     schema = {
         'type': 'object',
         'properties': {
-            'name': {'type': 'string'}
+            'name': {'type': 'string'},
+            'contentLength': {'type': 'integer'}
         }
     }
     try:
@@ -148,6 +156,7 @@ def edit_course(cid):
     
     course = Course.query.filter_by(id = cid).first()
     course.name = param['name']
+    course.contentLength = param['contentLength']
     commit()
     
     retval = json.dumps({"msg": "PASS"})
@@ -596,7 +605,28 @@ def manage_enrollment(id):
         
 @teacher.require(http_exception=401)
 def students_enrolled(cid):
-    users = User.query.join(UserRole).filter((User.userrole.has(UserRole.role == 'Teacher')) | (User.userrole.has(UserRole.role == 'Student'))).order_by( User.fullname ).all()
+    start = int(request.args['start'])
+    end = int(request.args['end'])
+    if request.args['type'] == 'Teacher':
+        users = User.query.join(UserRole).filter((User.userrole.has(UserRole.role == 'Teacher')))
+    else:
+        users = User.query.join(UserRole).filter((User.userrole.has(UserRole.role == 'Student')))
+    if "filter" in request.args:
+        users = users.filter(func.lower(User.fullname).like('%' + request.args['filter'] + '%'))
+    if "sorting" in request.args:
+        if request.args['sortingtype'] == "username":
+            if request.args['sorting'] == "desc":
+                users = users.order_by( User.fullname.desc() )
+            else:
+                users = users.order_by( User.fullname )
+        elif request.args['sortingtype'] == "enrolled":
+            enroll = Enrollment.query.filter_by(uid = User.id).filter_by(cid = cid).exists()
+            if request.args['sorting'] == "desc":
+                users = users.order_by( enroll.desc() )
+            else:
+                users = users.order_by( enroll )
+    usercount = users.count()
+    users = users.slice(start,end)
     studentlst = []
     teacherlst = []
     for user in users:
@@ -611,7 +641,7 @@ def students_enrolled(cid):
         else:
             teacherlst.append( {"uid": user.id, "username": user.fullname, "enrolled": enrolled, "role": userrole} )
     course = Course.query.filter_by(id = cid).first()
-    retval = json.dumps( { "course": course.name, "students": studentlst, "teachers": teacherlst } )
+    retval = json.dumps( { "course": course.name, "students": studentlst, "teachers": teacherlst, "count": usercount} )
     db_session.rollback()
     return retval
 
@@ -637,3 +667,12 @@ def drop_student(eid):
     db_session.delete(query)
     commit()
     return json.dumps( {"msg": "PASS"} )
+
+@app.route('/rolecheck/<cid>/<qid>')
+@student.require(http_exception=401)
+def check_role(cid, qid):
+    if cid == "-1":
+        cid = Question.query.filter_by(id = qid).first().cid
+    userId = User.query.filter_by(username = session['username']).first().id
+    role = Enrollment.query.filter_by(cid = cid).filter_by(uid = userId).first().userrole.role
+    return json.dumps({"msg": "PASS", "role": role})

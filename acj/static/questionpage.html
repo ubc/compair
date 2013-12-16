@@ -23,15 +23,6 @@
 
 		<div ng-show="check">
 			<ng-form class="createQuestion" name="createQuestion" novalidate>
-				<span>Limit answer and comment length: </span>
-				<div class="row">
-					<div class="col-sm-3">
-						<div class="input-group">
-							<span class="input-group-addon"> <input type="checkbox" name="contentLengthCheck" ng-model="contentLengthCheck">
-							</span> <input type="number" class="form-control" min="0" name="contentLength" ng-model="contentLength" ng-disabled="!contentLengthCheck">
-						</div>
-					</div>
-				</div>
 					
 				Question Title:
 				<div class="row">
@@ -94,7 +85,7 @@
 				src="http://www.gravatar.com/avatar/{{question.avatar}}?s=32&d=retro"
 				class="avatar">
 				<p class="authorHeader">
-					<strong>{{question.author}}</strong> - {{question.time}}<span ng-show="(login == question.author || instructor) && question.contentLength > 0"> - Limit: {{question.contentLength}}</span>
+					<strong>{{question.author}}</strong> - {{question.time}}
 				</p>
 				<div class="opbuttons">
 					<div class="row">
@@ -152,7 +143,7 @@
 								<div class="col-md-4 col-xs-5">
 									<a class="btn btn-default btn-sm btnWidth"
 										ng-show="login == question.author || instructor"
-										ng-click="switchEdits({{question.id}});newtitle=question.title;newquestion=question.content;showpreviewEdit=false;newcontentLength=question.contentLength;newcontentLengthCheck=question.contentLength>0">
+										ng-click="switchEdits({{question.id}});newtitle=question.title;newquestion=question.content;showpreviewEdit=false">
 										<span class="glyphicon glyphicon-edit"></span> Edit
 									</a>
 								</div>
@@ -185,15 +176,6 @@
 
 				<div ng-show="{{question.id}} == editId" class="marginTopMobile90">
 					<ng-form name="createQuestion" novalidate>
-						<span>Limit answer and comment length: </span>
-						<div class="row">
-							<div class="col-sm-3">
-								<div class="input-group">
-									<span class="input-group-addon"> <input type="checkbox" name="newcontentLengthCheck" ng-model="newcontentLengthCheck">
-									</span> <input type="number" min="0" class="form-control" name="newcontentLength" ng-model="newcontentLength" ng-disabled="!newcontentLengthCheck">
-								</div>
-							</div>
-						</div>
 							
 						Question Title:
 						<div class="row">
@@ -228,7 +210,7 @@
 							ng-click="previewTextEdit(question); showpreviewEdit=true;">
 							<span class="glyphicon glyphicon-eye-open"></span> Preview
 						</a> <a class="btn btn-primary"
-							ng-click="editquestion(newtitle, newquestion, question, newcontentLength, newcontentLengthCheck);submitted=true">
+							ng-click="editquestion(newtitle, newquestion, question);submitted=true">
 							<span class="glyphicon glyphicon-ok"></span> Submit
 						</a>
 

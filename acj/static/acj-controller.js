@@ -149,7 +149,7 @@ function QuickController($rootScope, $scope, $location, flashService, pickscript
 	});
 }
 
-function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $location, loginService, flashService, judgeService, pickscriptService) {
+function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $location, loginService, flashService, judgeService, pickscriptService, rolecheckService) {
 	var questionId = $routeParams.questionId;
 	if (questionId == 0) {
 		$location.path('/');
@@ -159,10 +159,16 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 	var login = loginService.get( function() {
 		if (login.display) {
 			$scope.login= login.display;
-			if (login.usertype == 'Teacher' || login.usertype == 'Admin') {
+			if (login.usertype == 'Admin') {
 				$scope.instructor = true;
 			}
-
+			else {
+				var role = rolecheckService.get({cid: -1, qid: questionId}, function() {
+					if (role.role == 'Teacher') {
+						$scope.instructor = true;
+					} 
+				});
+			}
 		} else {
 			$scope.login = '';
 		}
@@ -321,11 +327,23 @@ function UserIndexController($rootScope, $scope, $filter, $q, ngTableParams, use
 	var allUsers = allUserService.get( function() {
 		$scope.allUsers = allUsers.users;
 		$scope.userParams = new ngTableParams({
-			$liveFiltering: true,
 			page: 1,
-			total: $scope.allUsers.length,
 			count: 10,
 			sorting: {fullname: 'asc'}
+		}, {
+	        total: $scope.allUsers.length,
+	        getData: function($defer, params) {
+	            var orderedData = params.filter() ?
+	                   $filter('filter')(allUsers.users, params.filter()) :
+	                	   allUsers.users;
+               orderedData = params.sorting() ?
+                       $filter('orderBy')(orderedData, params.orderBy()) :
+                    	   orderedData;
+                
+	            $scope.allUsers = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+	            params.total(orderedData.length);
+	            $defer.resolve($scope.allUsers);
+	        }
 		});
 	});
 	
@@ -347,20 +365,20 @@ function UserIndexController($rootScope, $scope, $filter, $q, ngTableParams, use
 		return def.promise;
 	};
 
-	$scope.$watch('userParams', function(params) {
-		// wait for allUsers to become a valid object
-		if (params) {
-			var orderedData = params.sorting ? $filter('orderBy')(allUsers.users, params.orderBy()) : allUsers.users;
-			orderedData = params.filter ? $filter('filter')(orderedData, params.filter) : orderedData;
-
-			params.total = orderedData.length;
-
-			$scope.allUsers = orderedData.slice(
-				(params.page - 1) * params.count,
-				params.page * params.count
-			);
-		}
-	}, true);
+//	$scope.$watch('userParams', function(params) {
+//		// wait for allUsers to become a valid object
+//		if (params) {
+//			var orderedData = params.sorting ? $filter('orderBy')(allUsers.users, params.orderBy()) : allUsers.users;
+//			orderedData = params.filter ? $filter('filter')(orderedData, params.filter) : orderedData;
+//
+//			params.total = orderedData.length;
+//
+//			$scope.allUsers = orderedData.slice(
+//				(params.page - 1) * params.count,
+//				params.page * params.count
+//			);
+//		}
+//	}, true);
 }
 
 function UserController($rootScope, $scope, $location, flashService, roleService, userService) {
@@ -483,7 +501,7 @@ function ProfileController($rootScope, $scope, $routeParams, $location, flashSer
 //	});
 //}
 
-function CourseController($rootScope, $scope, $cookieStore, $location, courseService, loginService) {
+function CourseController($rootScope, $scope, $cookieStore, $location, courseService, loginService, flashService) {
 	// the property by which the list of courses will be sorted
 	$scope.orderProp = 'name';
 	$rootScope.breadcrumb = [{'name':'Home'}];
@@ -544,6 +562,9 @@ function CourseController($rootScope, $scope, $cookieStore, $location, courseSer
 			if (!$scope.flash) {
 				$scope.courses.push(retval);
 			}
+			else {
+				flashService.flash('danger', retval.flash);
+			}
 		});
 	};
 	$scope.redirect = function(url) {
@@ -563,53 +584,47 @@ function StatisticController($rootScope, $routeParams, $scope, $cookieStore, $lo
 		statData = stats.stats;
 		
 		$scope.tableParams = new ngTableParams({
-	        page: 1,
-	        total: statData.length,
-	        count: 10,
-	        sorting: {
+			page: 1,
+			count: 10,
+			sorting: {
 	            name: 'asc'
 	        }
-	    });
+		}, {
+	        total: statData.length,
+	        getData: function($defer, params) {
+	        	if (params.sorting() && params.orderBy().toString().indexOf("percent") > -1) {
+					if (params.orderBy().toString().indexOf("+") > -1) {
+						if(params.orderBy().toString().indexOf("qpercent") > -1) {
+							orderedData = $filter('orderBy')(statData, function(item){return orderBy(item, true, true);});
+						}
+						else {
+							orderedData = $filter('orderBy')(statData, function(item){return orderBy(item, true, false);});
+						}
+					}
+					else {
+						if(params.orderBy().toString().indexOf("qpercent") > -1) {
+							orderedData = $filter('orderBy')(statData, function(item){return orderBy(item, false, true);});
+						}
+						else {
+							orderedData = $filter('orderBy')(statData, function(item){return orderBy(item, false, false);});
+						}
+					}
+				}
+				else {
+					orderedData = params.sorting() ? $filter('orderBy')(statData, params.orderBy()) : statData;
+				}
+				orderedData = params.filter() ? $filter('filter')(orderedData, params.filter()) : orderedData;
+				$scope.stats = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+				params.total(orderedData.length);
+				$defer.resolve($scope.stats);
+	        }
+		});
 	});
 	
 	function orderBy(item, asc, question) {
 		val = (question ? item.student.questionCount : item.student.answerCount) / item.totalAnswers * 100; 
 		return asc ? val : -val;
 	}
-	
-	$scope.$watch('tableParams', function(params) {
-		if (params) {
-			if (params.sorting && params.orderBy().toString().indexOf("percent") > -1) {
-				if (params.orderBy().toString().indexOf("+") > -1) {
-					if(params.orderBy().toString().indexOf("qpercent") > -1) {
-						orderedData = $filter('orderBy')(statData, function(item){return orderBy(item, true, true);});
-					}
-					else {
-						orderedData = $filter('orderBy')(statData, function(item){return orderBy(item, true, false);});
-					}
-				}
-				else {
-					if(params.orderBy().toString().indexOf("qpercent") > -1) {
-						orderedData = $filter('orderBy')(statData, function(item){return orderBy(item, false, true);});
-					}
-					else {
-						orderedData = $filter('orderBy')(statData, function(item){return orderBy(item, false, false);});
-					}
-				}
-			}
-			else {
-				orderedData = params.sorting ? $filter('orderBy')(statData, params.orderBy()) : statData;
-			}
-			orderedData = params.filter ? $filter('filter')(orderedData, params.filter) : orderedData;
-			
-			params.total = orderedData.length;
-			
-			$scope.stats = orderedData.slice(
-				(params.page - 1) * params.count,
-				params.page * params.count
-			);
-		}
-	}, true);
 }
 
 function StatisticExportController($rootScope, $routeParams, $scope, $window, statisticExportService) {
@@ -687,7 +702,7 @@ function StatisticExportController($rootScope, $routeParams, $scope, $window, st
 	};
 }
 
-function EditCourseController($rootScope, $scope, $routeParams, $filter, editcourseService, tagService, critService, ngTableParams, flashService) {
+function EditCourseController($rootScope, $scope, $routeParams, $filter, $location, editcourseService, tagService, critService, ngTableParams, flashService) {
 	$rootScope.$broadcast("NO_TUTORIAL", false);
 	var courseId = $routeParams.courseId; 
 	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':'Edit Course'}];
@@ -700,53 +715,57 @@ function EditCourseController($rootScope, $scope, $routeParams, $filter, editcou
 		categoriesData = course.categories;
 		$scope.tags = course.tags;
 		tagData = course.tags;
+		$scope.contentLengthCheck = course.contentLength > 0;
+		$scope.contentLength = course.contentLength;
 		
 		$scope.critParams = new ngTableParams({
 			page: 1,
-			total: categoriesData.length,
 			count: 10,
 			sorting: {
 				crit: 'asc'
 			}
+		}, {
+	        total: categoriesData.length,
+	        getData: function($defer, params) {
+	            var orderedData = params.filter() ?
+	                   $filter('filter')(categoriesData, params.filter()) :
+	                	   categoriesData;
+               orderedData = params.sorting() ?
+                       $filter('orderBy')(orderedData, params.orderBy()) :
+                    	   orderedData;
+                
+	            $scope.categories = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+	            params.total(orderedData.length);
+	            $defer.resolve($scope.categories);
+	        }
 		});
-		
+
 		$scope.tagParams = new ngTableParams({
 			page: 1,
-			total: tagData.length,
 			count: 10,
 			sorting: {
 	            tag: 'asc'
 	        }
+		}, {
+			total: tagData.length,
+			getData: function($defer, params) {
+				var orderedData = params.filter() ?
+						$filter('filter')(tagData, params.filter()) :
+							tagData;
+				orderedData = params.sorting() ?
+						$filter('orderBy')(orderedData, params.orderBy()) :
+							orderedData;
+								
+				$scope.tags = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+				params.total(orderedData.length);
+				$defer.resolve($scope.tags);
+			}
 		});
 	});
 	
-	$scope.$watch('critParams', function(params) {
-		if (params) {
-			var orderedData = params.sorting ? $filter('orderBy')(categoriesData, params.orderBy()) : categoriesData;
-			orderedData = params.filter ? $filter('filter')(orderedData, params.filter) : orderedData;
-			params.total = orderedData.length;
-			$scope.categories = orderedData.slice(
-					(params.page - 1) * params.count,
-					params.page * params.count
-			);
-		}
-	}, true);
-	
-	$scope.$watch('tagParams', function(params) {
-		if (params) {
-			var orderedData = params.sorting ? $filter('orderBy')(tagData, params.orderBy()) : tagData;
-			orderedData = params.filter ? $filter('filter')(orderedData, params.filter) : orderedData;
-			params.total = orderedData.length;
-			$scope.tags = orderedData.slice(
-				(params.page - 1) * params.count,
-				params.page * params.count
-			);
-		}
-	}, true);
-	
 	$scope.submit = function() {
 		var input = {"name": $scope.newname, "option1": $scope.option1, "option2": $scope.option2, 
-				"option3": $scope.option3, "option4": $scope.option4};
+				"option3": $scope.option3, "option4": $scope.option4, "contentLength": $scope.contentLength ? $scope.contentLength : 0};
 		var retval = editcourseService.put({cid: $scope.id}, input, function() {
 			if (retval.msg != 'PASS') {
 				flashService.flash('danger', retval.msg);
@@ -757,6 +776,14 @@ function EditCourseController($rootScope, $scope, $routeParams, $filter, editcou
 				flashService.flash('success', 'The course has been successfully modified.');
 			}
 		});
+	};
+	$scope.remove = function() {
+		if (confirm(" All data in this course will irreversibly be removed. Are you sure you want to delete the course?") == true) {
+			var retval = editcourseService.remove({cid: $scope.id}, function() {
+				flashService.flash('success', retval.flash);
+				$location.path("/");
+			});
+		}
 	};
 	$scope.removeCat = function(critid) {
 		if ($scope.categories.length > 1) {
@@ -795,7 +822,7 @@ function EditCourseController($rootScope, $scope, $routeParams, $filter, editcou
 	};
 }
 
-function QuestionController($rootScope, $scope, $location, $routeParams, $filter, flashService, ngTableParams, questionService, answerService, loginService) 
+function QuestionController($rootScope, $scope, $location, $routeParams, $filter, flashService, ngTableParams, questionService, answerService, loginService, rolecheckService) 
 {
 	$scope.orderProp = 'time';
 	$scope.newQuestion = '';
@@ -809,11 +836,17 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 	}
 	var login = loginService.get( function() {
 		if (login.display) {
-			$scope.login= login.display;
-			if (login.usertype == 'Teacher' || login.usertype == 'Admin') {
+			$scope.login = login.display;
+			if (login.usertype == 'Admin') {
 				$scope.instructor = true;
 			}
-
+			else {
+				var role = rolecheckService.get({cid: courseId, qid: -1}, function() {
+					if (role.role == 'Teacher') {
+						$scope.instructor = true;
+					} 
+				});
+			}
 		} else {
 			$scope.login = '';
 		}
@@ -888,15 +921,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 		if (!$scope.title || !newstring) {
 			return '';
 		}
-		if ($scope.contentLengthCheck) {
-			limit = parseInt($scope.contentLength);
-			if (isNaN(limit) || limit < 0) {
-				flashService.flash('danger', "The limit is invalid.");
-				return '';
-			}
-		}
-		input = {"title": $scope.title, "content": $scope.question, "type": $scope.type, "taglist": $scope.taglist ? $scope.taglist : new Array(), 
-				"contentLength": $scope.contentLengthCheck ? $scope.contentLength : 0};
+		input = {"title": $scope.title, "content": $scope.question, "type": $scope.type, "taglist": $scope.taglist ? $scope.taglist : new Array()};
 		var msg = questionService.save( {cid: courseId}, input, function() {
 			if (msg.msg) {
 				// TODO: What use cases would land here? eg. validation error
@@ -928,29 +953,19 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 					$scope.submitted = '';
 					$scope.preview = '';
 					$scope.previewEdit = '';
-					$scope.contentLengthCheck = false;
-					$scope.contentLength = '';
 					flashService.flash('success', "The question has been successfully added.");
 				}
 			}
 		});
 	};
 	
-	$scope.editquestion = function(newtitle, newquestion, question, newcontentLength, newcontentLengthCheck) {
+	$scope.editquestion = function(newtitle, newquestion, question) {
 		newquestion = angular.element("#question"+question.id).html();
 		newstring = angular.element("#question"+question.id).text(); // ignore html tags
 		if (!newtitle || !newstring) {
 			return '';
 		}
-		if (newcontentLengthCheck) {
-			limit = parseInt(newcontentLength);
-			if (isNaN(limit) || limit < 0) {
-				flashService.flash('danger', "The limit is invalid.");
-				return '';
-			}
-		}
-		input = {"title": newtitle, "content": newquestion, "taglist": question.tmptags ? question.tmptags : new Array(),
-				"contentLength": newcontentLengthCheck ? newcontentLength : 0};
+		input = {"title": newtitle, "content": newquestion, "taglist": question.tmptags ? question.tmptags : new Array()};
 		var retval = questionService.put( {cid: question.id}, input, function() {
 			if (retval.msg != 'PASS') {
 				flashService.flash('danger', 'Please submit a question.');
@@ -960,15 +975,11 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 					var index = jQuery.inArray(question, $scope.quizzes);
 					$scope.quizzes[index].title = newtitle;
 					$scope.quizzes[index].content = newquestion;
-					$scope.quizzes[index].contentLengthCheck = newcontentLengthCheck;
-					$scope.quizzes[index].contentLength = newcontentLengthCheck ? newcontentLength : 0;
 				}
 				else {
 					var index = jQuery.inArray(question, $scope.discussions);
 					$scope.discussions[index].title = newtitle;
 					$scope.discussions[index].content = newquestion;
-					$scope.discussions[index].contentLengthCheck = newcontentLengthCheck;
-					$scope.discussions[index].contentLength = newcontentLengthCheck ? newcontentLength : 0;
 				}
 				$scope.switchEdits(-1);
 				flashService.flash('success', 'The question has been successfully modified.');
@@ -1048,7 +1059,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 	};
 }
 
-function AnswerController($rootScope, $scope, $routeParams, $http, flashService, answerService, rankService, commentAService, loginService) {
+function AnswerController($rootScope, $scope, $routeParams, $http, flashService, answerService, rankService, commentAService, loginService, rolecheckService) {
 	$rootScope.breadcrumb = [{'name':'Home', 'link':'#'}, {'name':'Question', 'link':''}, {'name':'Answer'}];
 	var questionId = $routeParams.questionId; 
 
@@ -1082,10 +1093,16 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 	var login = loginService.get( function() {
 		if (login.display) {
 			$scope.login = login.display;
-			if (login.usertype == 'Teacher' || login.usertype == 'Admin') {
+			if (login.usertype == 'Admin') {
 				$scope.instructor = true;
 			}
-
+			else {
+				var role = rolecheckService.get({cid: -1, qid: questionId}, function() {
+					if (role.role == 'Teacher') {
+						$scope.instructor = true;
+					} 
+				});
+			}
 		} else {
 			$scope.login = '';
 		}
@@ -1261,30 +1278,84 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 		if (adminIndex > -1) {
 			$scope.usertypes.splice(adminIndex, 1);
 		}
-		$scope.role = roles.roles[0];
 	});
 	
 	var courseId = $routeParams.courseId; 
 	var teacherData = [];
 	var studentData = [];
-	var retval = enrollService.get( {id: courseId}, function() {
-		$scope.course = retval.course;
-		studentData = retval.students;
-		$scope.students = retval.students;
-		teacherData = retval.teachers;
-		$scope.teachers = retval.teachers;
+	var retvalStudent = enrollService.get( {id: courseId, "type": "Student", "start": 0, "end": 10}, function() {
+		$scope.course = retvalStudent.course;
+		studentData = retvalStudent.students;
+		$scope.students = retvalStudent.students;
+		studentCount = retvalStudent.count;
+		
 		$scope.studentParams = new ngTableParams({
 			page: 1,
-			total: studentData.length,
-			count: 10,
+			count: 10
+		}, {
+			total: studentCount,
+			getData: function($defer, params) {
+				var args = {id: courseId, "type": "Student", "start": (params.count() * params.page()) - params.count(), "end": params.count() * params.page()};
+				if (params.filter().username) {
+					args["filter"] = params.filter().username;
+				}
+				if (params.sorting().username) {
+					args["sortingtype"] = "username";
+					args["sorting"] = params.sorting().username;
+				}
+				else if (params.sorting().enrolled) {
+					args["sortingtype"] = "enrolled";
+					args["sorting"] = params.sorting().enrolled;
+				}
+				var data = enrollService.get( args, function() {
+					studentData = data.students;
+					$scope.students = data.students;
+					studentCount = data.count;
+					params.total(studentCount);
+					$defer.resolve($scope.students);
+				});
+				
+			}
 		});
+		$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name':retvalStudent.course}];
+	});
+	
+	var retvalTeacher = enrollService.get( {id: courseId, "type": "Teacher", "start": 0, "end": 10}, function() {
+		$scope.course = retvalTeacher.course;
+		teacherData = retvalTeacher.teachers;
+		$scope.teachers = retvalTeacher.teachers;
+		teacherCount = retvalTeacher.count;
+		
 		$scope.teacherParams = new ngTableParams({
 			page: 1,
-			total: teacherData.length,
-			count: 10,
+			count: 10
+		}, {
+			total: teacherCount,
+			getData: function($defer, params) {
+				var args = {id: courseId, "type": "Teacher", "start": (params.count() * params.page()) - params.count(), "end": params.count() * params.page()};
+				if (params.filter().username) {
+					args["filter"] = params.filter().username;
+				}
+				if (params.sorting().username) {
+					args["sortingtype"] = "username";
+					args["sorting"] = params.sorting().username;
+				}
+				else if (params.sorting().enrolled) {
+					args["sortingtype"] = "enrolled";
+					args["sorting"] = params.sorting().enrolled;
+				}
+				var data = enrollService.get( args, function() {
+					teacherData = data.teachers;
+					$scope.teachers = data.teachers;
+					teacherCount = data.count;
+					params.total(teacherCount);
+					$defer.resolve($scope.teachers);
+				});
+				
+			}
 		});
-		$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name':retval.course}];
 	});
+	
 	$scope.add = function(user, type) {
 		input = {"uid": user.uid};
 		var retval = enrollService.save( {id: courseId}, input, function() {
@@ -1332,45 +1403,6 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 			}
 		});
 	};
-	$scope.$watch('teacherParams', function(params) {
-		if (params) {
-			var orderedData = params.sorting ? $filter('orderBy')(teacherData, params.orderBy()) : teacherData;
-			orderedData = params.filter ? $filter('filter')(orderedData, params.filter) : orderedData;
-
-			params.total = orderedData.length;
-		
-			$scope.teachers = orderedData.slice(
-				(params.page - 1) * params.count,
-				params.page * params.count
-			);
-		}
-	}, true);
-	$scope.$watch('studentParams', function(params) {
-		if (params) {
-			var orderedData = params.sorting ? $filter('orderBy')(studentData, params.orderBy()) : studentData;
-			orderedData = params.filter ? $filter('filter')(orderedData, params.filter) : orderedData;
-
-			params.total = orderedData.length;
-
-			$scope.students = orderedData.slice(
-				(params.page - 1) * params.count,
-				params.page * params.count
-			);
-		}
-	}, true);
-	$scope.$watch('squery', function(newValue) {
-		if ($scope.studentParams) {
-			$scope.studentParams.filter = newValue;
-			$scope.studentParams.page = 1;
-		}
-	}, true);
-	$scope.$watch('tquery', function(newValue) {
-		if ($scope.teacherParams) {
-			$scope.teacherParams.filter = newValue;
-			$scope.teacherParams.page = 1;
-		}
-	}, true);
-	
 	$scope.storeReferer = function() {
 		$rootScope.referer = "enrollpage";
 		$rootScope.refererName = $scope.course;
@@ -1402,17 +1434,23 @@ function ImportController($rootScope, $scope, $routeParams, $http, flashService,
 	$scope.resultPage = false;
 }
 
-function ReviewJudgeController($rootScope, $scope, $routeParams, loginService, reviewjudgeService, $filter, ngTableParams) {
+function ReviewJudgeController($rootScope, $scope, $routeParams, loginService, reviewjudgeService, $filter, ngTableParams, rolecheckService) {
 	//$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name':'Review Judgements','link':''}];
 	$rootScope.$broadcast("NO_TUTORIAL", false);
 	var qid = $routeParams.qid; 
 	var login = loginService.get( function() {
 		if (login.display) {
 			$scope.login = login.display;
-			if (login.usertype == 'Teacher' || login.usertype == 'Admin') {
+			if (login.usertype == 'Admin') {
 				$scope.instructor = true;
 			}
-
+			else {
+				var role = rolecheckService.get({cid: -1, qid: qid}, function() {
+					if (role.role == 'Teacher') {
+						$scope.instructor = true;
+					} 
+				});
+			}
 		} else {
 			$scope.login = '';
 		}
@@ -1431,20 +1469,21 @@ function ReviewJudgeController($rootScope, $scope, $routeParams, loginService, r
 		
 		$scope.reviewParams = new ngTableParams({
 			page: 1,
-			total: reviewData.length,
 			count: 10
+		}, {
+	        total: reviewData.length,
+	        getData: function($defer, params) {
+	            var orderedData = params.filter() ?
+	                   $filter('filter')(reviewData, params.filter()) :
+	                	   reviewData;
+               orderedData = params.sorting() ?
+                       $filter('orderBy')(orderedData, params.orderBy()) :
+                    	   orderedData;
+                
+	            $scope.judgements = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+	            params.total(orderedData.length);
+	            $defer.resolve($scope.judgements);
+	        }
 		});
 	});
-	
-	$scope.$watch('reviewParams', function(params) {
-		if (params) {
-			var orderedData = params.sorting ? $filter('orderBy')(reviewData, params.orderBy()) : reviewData;
-			orderedData = params.filter ? $filter('filter')(orderedData, params.filter) : orderedData;
-			params.total = orderedData.length;
-			$scope.judgements = orderedData.slice(
-					(params.page - 1) * params.count,
-					params.page * params.count
-			);
-		}
-	}, true);
 }

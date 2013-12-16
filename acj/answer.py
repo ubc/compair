@@ -98,6 +98,6 @@ def marked_scripts(id):
     retval = json.dumps( {"display": user.display, "usertype": user.userrole.role, "cid": course.id, "course": course.name, 
                           "qtitle": question.title, "question": question.content, "scripts": slst, "commentQCount": len(commentQ), 
                           "authorQ": userQ.display, "timeQ": str(question.time), "avatarQ": userQ.avatar, "answered": answered,
-                          "quiz": question.quiz, "contentLength":question.contentLength} )
+                          "quiz": question.quiz, "contentLength":course.contentLength} )
     db_session.rollback()
     return retval
