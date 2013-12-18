@@ -10,9 +10,6 @@ import hashlib
 import settings
 import sys
 from pw_hash import PasswordHash
-#import logging
-#logging.basicConfig()
-#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 TESTENV = False
 if len(sys.argv) > 1 and str(sys.argv[1]) == '--t':
@@ -39,6 +36,7 @@ question_tags_table = Table('QuestionTags', Base.metadata,
 def init_db():
     Base.metadata.create_all(bind=engine)
 
+#reset the database state; used in the e2e testcases
 def reset_db():
     if TESTENV:
         print ("resetting db state...")
@@ -91,7 +89,8 @@ class Course(Base):
     __tablename__ = 'Course'
     id = Column(Integer, primary_key=True)
     name = Column(String(80), unique=True)
-
+    contentLength = Column('contentLength', Integer, default=0)
+    
     question = relationship('Question', cascade="all,delete")
     enrollment = relationship('Enrollment', cascade="all,delete")
     
@@ -99,8 +98,9 @@ class Course(Base):
 						secondary=course_tags_table,
 						backref=backref('tags', lazy='dynamic'), cascade="all,delete")
 	
-    def __init__(self, name):
+    def __init__(self, name, contentLength):
     	self.name = name
+    	self.contentLength = contentLength
     
     def __repr__(self):
     	return '<Course %r>' % self.name
@@ -131,7 +131,6 @@ class Question(Entry):
     cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
     title = Column(String(255))
     quiz = Column(Boolean, default=True)
-    contentLength = Column('contentLength', Integer, default=0)
     
     tagsQ = relationship("Tags",
 						secondary=question_tags_table,
@@ -141,13 +140,12 @@ class Question(Entry):
     	'polymorphic_identity': 'Question',
     }
 
-    def __init__(self, cid, uid, title, content, quiz, contentLength):
+    def __init__(self, cid, uid, title, content, quiz):
     	self.cid = cid
     	self.uid = uid 
     	self.title = title
     	self.content = content
     	self.quiz = quiz
-    	self.contentLength = contentLength
     
     def __repr__(self):
     	return '<Question %r>' % self.id
@@ -185,11 +183,10 @@ class Judgement(Base):
     script1 = relationship('Script', foreign_keys=[sidl], backref=backref("judge1", cascade="all,delete"))
     script2 = relationship('Script', foreign_keys=[sidr], backref=backref("judge2", cascade="all,delete"))
     
-    def __init__(self, uid, sidl, sidr, winner):
+    def __init__(self, uid, sidl, sidr):
 		self.uid = uid
 		self.sidl = sidl
 		self.sidr = sidr
-		self.winner = winner
 
     def __repr__(self):
 		return '<Judgement %r>' % self.id

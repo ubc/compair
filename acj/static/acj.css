@@ -227,6 +227,7 @@ span.required {
 	display: inline-block !important;
 }
 
+/* used only on smaller (mobile) devices */
 @media ( max-width :767px) {
 	.minHeightMobile {
 		min-height: 90px !important;

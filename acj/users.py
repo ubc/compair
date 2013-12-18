@@ -169,7 +169,7 @@ def edit_user(id):
         validictory.validate(param, schema)
     except ValueError, error:
         print (str(error))
-        return ''#json.dumps( {"flash": str(error)} )
+        return ''
     display = param['display']
     query = User.query.filter(User.id != user.id).filter_by(display = display).first()
     if query:

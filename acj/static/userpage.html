@@ -4,7 +4,7 @@
 <div class="tablewrapper">
 	<table ng-table="userParams" class="table" show-filter="true">
 		<tr class="tr" ng-repeat="user in allUsers">
-			<td data-title="Username" sortable="username" filter="{ 'username': 'text' }">
+			<td data-title="'Username'" sortable="username" filter="{ 'username': 'text' }">
 				<a href="#/userprofile/{{user.uid}}">{{user.username}}</a>
 			</td>
 			<td data-title="'Full Name'" sortable="fullname" filter="{ 'fullname': 'text' }">{{user.fullname}}</td>

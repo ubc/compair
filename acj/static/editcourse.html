@@ -5,15 +5,24 @@
 		Course Name: 
 		<div class="row">
 			<div class="col-sm-4">
-				<input type="text" name="coursename" ng-model="newname" value="newname" class="form-control" required>
+				<input type="text" name="coursename" ng-model="newname" value="newname" class="form-control" required maxlength="80">
 			</div>
 		</div>
 		<span class=errMsg ng-show="submitted && editCourse.coursename.$error.required">Course name is required.</span>
-		<br><br>
-		
-		<br>
-
-	<div class="tab-content">
+	
+	<div  class="marginT50">
+		<span>Limit answer and comment length: </span>
+		<div class="row">
+			<div class="col-sm-3">
+				<div class="input-group">
+					<span class="input-group-addon"> <input type="checkbox" name="contentLengthCheck" ng-model="contentLengthCheck">
+					</span> <input type="number" class="form-control" min="0" name="contentLength" ng-model="contentLength" ng-disabled="!contentLengthCheck">
+				</div>
+			</div>
+		</div>
+	</div>
+				
+	<div class="tab-content marginT50">
 		<div class="row">
 			<div class="col-sm-4">
 			<label>Tags:</label>
@@ -67,10 +76,11 @@
 		</div>
 	</div>
 	
-	<br><br>
-	<br><br>
 	</form>
-	<button class="btn btn-primary btn-sm" ng-click="submit();submitted=true" ng-hide="username!=loggedName && loggedType!='Admin'">
+	<button class="btn btn-primary btn-sm marginT50" ng-click="submit();submitted=true">
 		<span class="glyphicon glyphicon-ok"> </span> Submit
+	</button>
+	<button class="btn btn-danger btn-sm marginT50" ng-click="remove()">
+		<span class="glyphicon glyphicon-remove"> </span> Delete
 	</button>
 </div>

@@ -90,11 +90,11 @@ def get_judgements(qid):
     judgements = []
     cats = []
     judgement = Judgement.query.filter(Judgement.script1.has(qid = qid)).group_by(Judgement.sidl, Judgement.sidr).all()
-    #.add_columns(func.sum(Judgement.winner == Judgement.sidl, type_=None).label('wins_l'), func.sum(Judgement.winner == Judgement.sidr, type_=None).label('wins_r')).all()
     question = Question.query.filter_by(id = qid).first()
     userQ = User.query.filter_by(id = question.uid).first()
     course = Course.query.filter_by(id = question.cid).first()
     
+    #calculate the win total over all categories
     winCount = {}
     for row in judgement:
         win = JudgementWinner.query.filter_by(jid = row.id).first()
@@ -125,6 +125,7 @@ def get_judgements(qid):
         user2 = User.query.filter_by(id = row.script2.uid).first()
         commentsCount = CommentJ.query.filter_by(sidl = row.sidl).filter_by(sidr = row.sidr).count()
         
+        #get the answers scores for all categories
         score = ScriptScore.query.filter_by(sid = row.script1.id).order_by(ScriptScore.score.desc()).all()
         scoresl = []
         for score in score:
@@ -237,8 +238,7 @@ def mark_script(id):
         sidr = sidl
         sidl = temp
         
-    #TODO winner is not needed in judgement tab anymore
-    judgement = Judgement(uid, sidl, sidr, id)
+    judgement = Judgement(uid, sidl, sidr)
     db_session.add(judgement)
     commit()
     winners = param['winner']

@@ -110,6 +110,10 @@ myApp.factory('statisticExportService', function($resource) {
 	return $resource( '/statisticexport/', {}, { put: {method: 'POST'} } );
 });
 
+myApp.factory('rolecheckService', function($resource) {
+	return $resource( '/rolecheck/:cid/:qid' );
+});
+
 //used for testing
 myApp.factory('resetDB', function($resource) {
 	return $resource( '/resetdb' );

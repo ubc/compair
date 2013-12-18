@@ -47,9 +47,9 @@ describe('ACJ testsuite - Teacher', function() {
 			element('p[ng-click="drop(student, \'S\')"]').click();
 			expect(repeater('p[ng-click="drop(student, \'S\')"]').count()).toBe(0);
 			
-			input("tquery").enter("Three");
+			input("params.filter()[name]").enter("Three");
 			expect(repeater('tr[ng-repeat="teacher in teachers"]').count()).toBe(1);
-			input("squery").enter("Seven");
+			input("params.filter()[name]").enter("Seven");
 			expect(repeater('tr[ng-repeat="student in students"]').count()).toBe(1);
 		});
 	});
