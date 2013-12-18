@@ -650,6 +650,7 @@ function StatisticExportController($rootScope, $routeParams, $scope, $window, st
 	$scope.userdata = true;
 	
 	$scope.export = function() {
+		// create a hidden form to send the selected checkboxes to the backend
 		if ($scope.type != 'user') {
 			formString = '<form action="/statisticexport/" method="post" id="csvForm">' +
 			'<input type="hidden" name="cid" value="' + $scope.cid + '" />' +
@@ -764,8 +765,7 @@ function EditCourseController($rootScope, $scope, $routeParams, $filter, $locati
 	});
 	
 	$scope.submit = function() {
-		var input = {"name": $scope.newname, "option1": $scope.option1, "option2": $scope.option2, 
-				"option3": $scope.option3, "option4": $scope.option4, "contentLength": $scope.contentLength ? $scope.contentLength : 0};
+		var input = {"name": $scope.newname, "contentLength": $scope.contentLength ? $scope.contentLength : 0};
 		var retval = editcourseService.put({cid: $scope.id}, input, function() {
 			if (retval.msg != 'PASS') {
 				flashService.flash('danger', retval.msg);
@@ -1019,7 +1019,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 		var selRange = rangy.getSelection();
 		$rootScope.savedRange = selRange.rangeCount ? selRange.getRangeAt(0) : null;
 	};
-
+	// select or deselect the clicked Tag
 	$scope.tagActionN = function(id) {
 		if (!$scope.taglist) $scope.taglist = [];
 		var index = jQuery.inArray(id, $scope.taglist);
@@ -1040,6 +1040,7 @@ function QuestionController($rootScope, $scope, $location, $routeParams, $filter
 			list.push(name);
 		}
 	};
+	// check if a Tag is selected
 	$scope.checkTagN = function(id) {
 		return jQuery.inArray(id, $scope.taglist) >= 0;
 	};
@@ -1237,12 +1238,6 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 	};
 	
 	// save the Rangy object for the selected hallo editor
-	/*
-	$scope.saveRange = function() {
-		var selRange = rangy.getSelection();
-		$rootScope.savedRange = selRange.rangeCount ? selRange.getRangeAt(0) : null;
-	};
-	*/
 	$scope.saveRange = function($event, max) {
 		var selRange = rangy.getSelection();
 		$rootScope.savedRange = selRange.rangeCount ? selRange.getRangeAt(0) : null;
@@ -1254,7 +1249,8 @@ function AnswerController($rootScope, $scope, $routeParams, $http, flashService,
 			fullRange = rangy.getSelection().getRangeAt(0);
 			fullRange.setStartBefore(elmt);
 			fullRange.setEndAfter(elmt);
-			//[backspace,shift,ctrl,alt,end,home,left,up,down,right,delete]
+			// specify the keys that can be pressed at all times [backspace,shift,ctrl,alt,end,home,left,up,down,right,delete]
+			// all other keys will be ignored when the limit is reached to prevent any more text being entered
 			allowedKeys = [8, 16, 17, 18, 35, 36, 37, 38, 39, 40, 46];
 			if($event && allowedKeys.indexOf($event.which) == -1 && fullRange.toString().length >= max) {
 				$event.preventDefault();
@@ -1273,7 +1269,7 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 
 	roles = roleService.get(function() {
 		$scope.usertypes = roles.roles;
-		// remove Admin from list
+		// remove Admin from list, users can only have instructor or student role in a course
 		adminIndex = $scope.usertypes.indexOf("Admin");
 		if (adminIndex > -1) {
 			$scope.usertypes.splice(adminIndex, 1);
@@ -1283,6 +1279,7 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 	var courseId = $routeParams.courseId; 
 	var teacherData = [];
 	var studentData = [];
+	// get all students
 	var retvalStudent = enrollService.get( {id: courseId, "type": "Student", "start": 0, "end": 10}, function() {
 		$scope.course = retvalStudent.course;
 		studentData = retvalStudent.students;
@@ -1294,6 +1291,7 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 			count: 10
 		}, {
 			total: studentCount,
+			// the table only loads a limited dataset via AJAX to prevent querying and sending a huge amount of data
 			getData: function($defer, params) {
 				var args = {id: courseId, "type": "Student", "start": (params.count() * params.page()) - params.count(), "end": params.count() * params.page()};
 				if (params.filter().username) {
@@ -1319,7 +1317,7 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 		});
 		$rootScope.breadcrumb = [{'name':'Home','link':'#'}, {'name':retvalStudent.course}];
 	});
-	
+	// get all instructors
 	var retvalTeacher = enrollService.get( {id: courseId, "type": "Teacher", "start": 0, "end": 10}, function() {
 		$scope.course = retvalTeacher.course;
 		teacherData = retvalTeacher.teachers;
@@ -1387,6 +1385,7 @@ function EnrollController($rootScope, $scope, $routeParams, $filter, flashServic
 			}
 		});
 	};
+	// users can have a different role in certain courses than they usually have in the system
 	$scope.changeRole = function(user, type, role) {
 		input = {"uid": user.uid, "role": role};
 		var retval = enrollService.put( {id: courseId}, input, function() {

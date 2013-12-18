@@ -75,11 +75,14 @@ myApp.directive("uploadImage", function() {
 			image: "@image",
 			editor: "@editor"
 		},
+		// create a file upload field and submit button
 		template: '<form ng-upload action="/uploadimage" class="margin0" enctype="multipart/form-data" name="uploadImg" novalidate>' +
 			'<div><label for="stepBrowse" class="marginR5">Image</label><input type=file name=file id="stepBrowse" class="inlineBlock">' + 
 			'<span class="btn btn-primary" upload-submit="addImage(content)">Insert image</span></div></form>',
 		controller: function($rootScope, $scope, $element, $attrs, flashService) {
 			$scope.addImage = function(content) {
+				// insert the image at the cursor position
+				// (don't allow image upload if the text is already at the given limit)
 				if (content.completed && content.file && content.file.length > 0) {
 					img = document.createElement("IMG");
 					img.src = "user_images/" + content.file;

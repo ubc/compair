@@ -64,6 +64,7 @@ class DatetimeEncoder(json.JSONEncoder):
 			return obj.strftime("%F %r")
         return json.JSONEncoder.default(self, obj) 
 
+#only used on the CI server
 def shutdown_server():
     if len(sys.argv) > 1 and str(sys.argv[1]) == '--t':
         func = request.environ.get('werkzeug.server.shutdown')
@@ -85,6 +86,7 @@ def shutdown_session(exception=None):
 
 @app.before_request
 def registerOnline():
+    #sets a timer, if the user was unactive for one minute the time of his last login is updated in the database
     global events
     if 'username' in session:
         if session['username'] in events:
@@ -144,7 +146,7 @@ def login():
     if hasher.check_password( password, hx ):
         session['username'] = username
         usertype = query.userrole.role
-        display = query.display#User.query.filter_by(username = username).first().display
+        display = query.display
         db_session.rollback()
         identity = Identity('only_' + query.userrole.role)
         identity_changed.send(app, identity=identity)
@@ -203,13 +205,16 @@ def allowed_image_file(filename):
 def get_notifications():
     user = User.query.filter_by(username = session['username']).first()
     if user.lastOnline is not None:
+        #get all answers, that were submitted after the users last login, to questions the user posted
         scripts = Script.query.join(Question, Script.qid == Question.id).filter(Question.uid == user.id).filter(Script.time > user.lastOnline).all()
         questions = []
         dummy = []
         for answer in scripts:
             if answer.qid not in dummy:
-               questions.append({"qid": answer.qid, "title": answer.question.title})
-               dummy.append(answer.qid)
+                #filter out duplicates
+                questions.append({"qid": answer.qid, "title": answer.question.title})
+                dummy.append(answer.qid)
+        #return all questions with new answers in it
         return json.dumps({"count": len(questions), "questions": questions})
     else:
         return json.dumps({"count": 0, "questions": {}})
@@ -272,7 +277,3 @@ def on_identity_loaded(sender, identity):
 		identity.provides.add(n)
 
 app.secret_key = 'asdf1234'
-
-#if __name__=='__main__':
-	#app.run(debug=True)
-	#app.run('0.0.0.0',8080)

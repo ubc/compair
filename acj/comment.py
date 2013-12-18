@@ -22,7 +22,6 @@ def get_comments(type, id, sidl=None, sidr=None):
 		question = Question.query.filter_by(id = id).first()
 	else:
 		question = None
-    #TODO , "contentLength": "0" if not question else question.contentLength
 	retval = json.dumps( {"comments": lst} )
 	db_session.rollback()
 	return retval

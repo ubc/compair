@@ -83,34 +83,39 @@ def list_course():
     db_session.rollback()
     return json.dumps( {"courses": lst} )
 
+#wrapper to check if the user has a different role in the course than usually 
 @app.route('/editcourse/<cid>', methods=['GET', 'PUT', 'DELETE'])
 @student.require(http_exception=401)
 def manage_course(cid):
     if "Admin" in session["identity.id"] or "Teacher" in session["identity.id"]:
+        #call the requested method normally
         if request.method == "GET":
             return get_course(cid)
         elif request.method == "PUT":
             return edit_course(cid)
         elif request.method == "DELETE":
             return delete_course(cid)
-    #if not teacher or admin, query if role is teacher in this course
+    #if not teacher or admin, check if users role is teacher in this course
     else:
         userId = User.query.filter_by(username = session['username']).first().id
         role = Enrollment.query.filter_by(cid = cid).filter_by(uid = userId).first().userrole.role
+        #if it is, change the role temporarily
         if role == 'Teacher':
             oldIdentity = session["identity.id"]
             newIdentity = Identity('only_' + role)
             #temporarily change the identity
             identity_changed.send(app, identity=newIdentity)
+            #call the requested method, which will use the changed role
             if request.method == "GET":
                 response = get_course(cid)
             elif request.method == "PUT":
                 response = edit_course(cid)
             elif request.method == "DELETE":
                 response = delete_course(cid)
-            #and change it back after the call
+            #and change the role back after the call
             identity_changed.send(app, identity=Identity(oldIdentity))
             return response
+        #else call the requested method normally
         elif request.method == "GET":
             return get_course(cid)
         elif request.method == "PUT":
@@ -605,27 +610,34 @@ def manage_enrollment(id):
         
 @teacher.require(http_exception=401)
 def students_enrolled(cid):
+    #this is called as a AJAX request to only return a limited set of students or teachers
     start = int(request.args['start'])
     end = int(request.args['end'])
     if request.args['type'] == 'Teacher':
         users = User.query.join(UserRole).filter((User.userrole.has(UserRole.role == 'Teacher')))
     else:
         users = User.query.join(UserRole).filter((User.userrole.has(UserRole.role == 'Student')))
+    #filter the dataset
     if "filter" in request.args:
         users = users.filter(func.lower(User.fullname).like('%' + request.args['filter'] + '%'))
+    #sort the dataset
     if "sorting" in request.args:
+        #sort by name
         if request.args['sortingtype'] == "username":
             if request.args['sorting'] == "desc":
                 users = users.order_by( User.fullname.desc() )
             else:
                 users = users.order_by( User.fullname )
+        #sort by 'enrolled' attribute
         elif request.args['sortingtype'] == "enrolled":
             enroll = Enrollment.query.filter_by(uid = User.id).filter_by(cid = cid).exists()
             if request.args['sorting'] == "desc":
                 users = users.order_by( enroll.desc() )
             else:
                 users = users.order_by( enroll )
+    #get the total number of teachers / students
     usercount = users.count()
+    #but only process a limited set
     users = users.slice(start,end)
     studentlst = []
     teacherlst = []

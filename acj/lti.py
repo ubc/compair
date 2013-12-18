@@ -23,7 +23,7 @@ def updateMembership(url, id, params):
     course = Course.query.filter_by(name = params['context_title']).first()
     if not course:
         name = params['context_title']
-        newCourse = Course(name)
+        newCourse = Course(name, 0)
         db_session.add(newCourse)
         commit()
         #create the standard judgement category
@@ -58,7 +58,7 @@ def updateMembership(url, id, params):
             userlist.append({"username": member.find('person_sourcedid').text, "password": member.find('person_sourcedid').text, 
                              "usertype": role, "email": member.find('person_contact_email_primary').text, "firstname": member.find('person_name_given').text, 
                              "lastname": member.find('person_name_family').text, "display": member.find('person_name_full').text})
-        #add missing users
+        #add users that are not in the system yet
         if userlist:
             import_users(userlist)
         

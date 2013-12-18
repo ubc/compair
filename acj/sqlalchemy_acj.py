@@ -10,9 +10,6 @@ import hashlib
 import settings
 import sys
 from pw_hash import PasswordHash
-#import logging
-#logging.basicConfig()
-#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 TESTENV = False
 if len(sys.argv) > 1 and str(sys.argv[1]) == '--t':
@@ -39,6 +36,7 @@ question_tags_table = Table('QuestionTags', Base.metadata,
 def init_db():
     Base.metadata.create_all(bind=engine)
 
+#reset the database state; used in the e2e testcases
 def reset_db():
     if TESTENV:
         print ("resetting db state...")
@@ -185,11 +183,10 @@ class Judgement(Base):
     script1 = relationship('Script', foreign_keys=[sidl], backref=backref("judge1", cascade="all,delete"))
     script2 = relationship('Script', foreign_keys=[sidr], backref=backref("judge2", cascade="all,delete"))
     
-    def __init__(self, uid, sidl, sidr, winner):
+    def __init__(self, uid, sidl, sidr):
 		self.uid = uid
 		self.sidl = sidl
 		self.sidr = sidr
-		self.winner = winner
 
     def __repr__(self):
 		return '<Judgement %r>' % self.id
