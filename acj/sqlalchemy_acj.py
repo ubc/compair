@@ -343,12 +343,17 @@ class ScriptScore(Base):
         return '<ScriptScore %r>' % self.id
 
 class UserRole(Base):
-    __tablename__ = 'UserRole'
-    id = Column(Integer, primary_key=True)
-    role = Column(String(50), unique=True)
-    
-    def __init__(self, role):
-        self.role = role
+	ADMIN_ROLE = "Admin"
+	STUDENT_ROLE = "Student"
+	INSTRUCTOR_ROLE = "Teacher"
+	__tablename__ = "UserRole"
 
-    def __repr__(self):
-        return '<UserRole %r>' % self.id
+	id = Column(Integer, primary_key=True)
+	role = Column(String(50), unique=True)
+
+	def __init__(self, role):
+		self.role = role
+
+	def __repr__(self):
+		return '<UserRole %r>' % self.id
+

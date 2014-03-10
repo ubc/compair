@@ -55,6 +55,8 @@ Running the application
 -----------------------
 Edit `acj/settings.py` with the proper configurations for database access.
 
+Run `acj/install.py` to initialize the database.
+
 To start the application execute `python runacj.py`.
 
 To start the application in a testing environment use the parameter '--t'. This enables functionality such as resetting the database and shutting down the webserver via URL.
