@@ -1,0 +1,142 @@
+<div ng-controller="InstallController">
+<h1>Installer</h1>
+
+<h2>System Requirements Check</h2>
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th>Requirement</th>
+			<th>Status</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-repeat="require in requirements">
+			<td>{{ require.text }}</td>
+			<td ng-class="{success: require.boolean, danger: !require.boolean}">
+				{{ require.boolean }}
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<h2>Create an Administrator</h2>
+<div class="alert alert-danger" ng-show="failMsg">{{ failMsg }}</div>
+<form class="form-horizontal" role="form" ng-submit="submit()" name="createAdmin" novalidate>
+	<div class="form-group">
+		<label for="usernameInput" class="col-sm-2 control-label">
+			Username
+		</label>
+		<div class="col-sm-9">
+			<input id="usernameInput" type="text" class="form-control"
+			placeholder="root" name="username" ng-model="username" 
+			required />
+			<p class="text-danger" ng-show="submitted &&
+				createAdmin.username.$error.required">
+				A username is required.
+			</p>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="firstnameInput" class="col-sm-2 control-label">
+			First Name 
+		</label> 
+		<div class="col-sm-9">
+			<input id="firstnameInput" type="text" class="form-control"
+			placeholder="John" name="firstname" ng-model="firstname"
+			required />
+			<p class="text-danger" ng-show="submitted &&
+				createAdmin.firstname.$error.required">
+				First name is required.
+			</p>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="lastnameInput" class="col-sm-2 control-label">
+			Last Name
+		</label>
+		<div class="col-sm-9">
+			<input id="lastnameInput" type="text" class="form-control"
+			placeholder="Smith" name="lastname" ng-model="lastname"
+			required>
+			<p class="text-danger" ng-show="submitted &&
+			createAdmin.lastname.$error.required">
+			Last name is required.
+			</p>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="displaynameInput" class="col-sm-2 control-label">
+			Display Name
+		</label>
+		<div class="col-sm-9">
+			<input id="displaynameInput" type="text" class="form-control"
+			placeholder="root" name="display" ng-model="display"
+			required>
+			<p class="text-danger" ng-show="submitted &&
+			createAdmin.display.$error.required">
+			Display name is required.
+			</p>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="emailInput" class="col-sm-2 control-label">
+			Email
+		</label>
+		<div class="col-sm-9">
+			<input id="emailInput" type="text" class="form-control"
+			placeholder="root@example.org" name="email" ng-model="email"
+			required>
+			<p class="text-danger" ng-show="submitted &&
+			createAdmin.email.$error.required">
+			Incorrect email format.
+			</p>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="passwordInput" class="col-sm-2 control-label">
+			Password
+		</label>
+		<div class="col-sm-9">
+			<input id="passwordInput" type="password" class="form-control"
+			name="password" ng-model="password" required>
+			<p class="text-danger" ng-show="submitted &&
+			createAdmin.password.$error.required">
+			A password is required.
+			</p>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="retypepwInput" class="col-sm-2 control-label">
+			Retype Password
+		</label>
+		<div class="col-sm-9">
+			<input id="retypepwInput" type="password" class="form-control"
+			name="retypepw" ng-model="retypepw" required>
+			<p class="text-danger" ng-show="submitted && (password !=
+			retypepw)">
+			The passwords do not match.
+			</p>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<div class="col-sm-offset-2 col-sm-10">
+			<input id="submitButton" type="submit" name="submit" value=Confirm
+			ng-hide="done" ng-click="submitted=true" class="btn btn-default"
+			ng-disabled="createAdmin.$invalid" />
+		</div>
+	</div>
+</form>
+</div>
+<div class="next" ng-show="done">
+<a href="#/login">
+	<input type="button" class="next" value="Login">
+</a>
+
+</div>

@@ -71,3 +71,9 @@ For any updates to the database model SQLAlchemy Alembic scripts are used. ([det
 ###Updating the databse schema
 * When the application gets updated simply run: `alembic upgrade head`
 
+Conventions
+-----------
+
+Each page and route should be in their own modules. The primary Javascript import should be named `<module name>-module.js`. The primary template for the module should be named `<module name>-partial.html`. See `static/modules/example` for an example template that can be used as a base for new modules.
+
+Common code shared across many modules in the application should be abstracted out into it's own module and placed in `static/modules/common`.

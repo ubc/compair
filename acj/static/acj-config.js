@@ -1,18 +1,17 @@
-var myApp = angular.module('myApp', ['flash', 'ngRoute', 'ngResource', 'ngTable', 'http-auth-interceptor', 'ngCookies', 'ngUpload', '$strap.directives']);
+var myApp = angular.module('myApp', [
+	'ngRoute', 
+	'ngResource',
+	'ngTable', 
+	'http-auth-interceptor', 
+	'ngCookies', 
+	'ngUpload',
+	'$strap.directives', 
+	'ubc.ctlt.acj.common.flash', // TODO Remove once split into modules done
+	'ubc.ctlt.acj.common.installed', // TODO Remove once split into modules done
+	'ubc.ctlt.acj.installer'
+]);
 
 //Global Variables
-
-myApp.factory('installService', function($resource) {
-	return $resource('/install');
-});
-
-myApp.factory('createAdmin', function($resource) {
-	return $resource( '/admin' );
-});
-
-myApp.factory('isInstalled', function($resource) {
-	return $resource( '/isinstalled' );
-});
 
 myApp.factory('judgeService', function($resource) {
 	return $resource( '/script/:scriptId' );
@@ -119,25 +118,14 @@ myApp.factory('resetDB', function($resource) {
 	return $resource( '/resetdb' );
 });
 
-myApp.factory('flashService', function(flash) {
-	return {
-		flash: function (type, msg) {
-			type = 'alert alert-' + type + ' text-center';
-			flash([{ level: type, text: msg}]);
-		}		
-	};
-});
-
 myApp.config( function ($routeProvider) {
 	$routeProvider
 		.when ('/install', 
 			{
-				controller: InstallController,
-				templateUrl: 'install.html'
+				templateUrl: 'modules/installer/installer-partial.html'
 			})
 		.when ('/install2', 
 			{
-				controller: InstallController,
 				templateUrl: 'install2.html'
 			})
 		.when ('/', 

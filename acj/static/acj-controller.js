@@ -1,36 +1,3 @@
-function InstallController($rootScope, $scope, $location, $cookieStore, flashService, installService, createAdmin, isInstalled) {
-	$rootScope.breadcrumb = [{'name':'Installer'}];
-	var criteria = installService.get( function() {
-		//$scope.username = criteria.username;
-		$scope.requirements = criteria.requirements;
-		$scope.username = 'root';
-	});
-
-	$scope.submit = function() {
-		if ($scope.password != $scope.retypepw) {
-			return '';
-		}
-		var re = /[^@]+@[^@]+/;
-		if ($scope.email == undefined || $scope.email == '') {
-			$scope.email = undefined;
-		} else if (!re.exec($scope.email)) {
-			$scope.formaterr = true;
-			return;
-		}
-		input = {"username": $scope.username, "password": $scope.password, "usertype": 'Admin', "email": $scope.email, "firstname": $scope.firstname, "lastname": $scope.lastname, "display": $scope.display};
-		var user = createAdmin.save( input, function() {
-			$scope.flash = user.flash;
-			if (!user.msg && !$scope.flash) {
-				$scope.done = true;
-				flashService.flash('success', 'Administrator created. Click Login to try logging in with your administrator account');
-				return '';
-			} else if ($scope.flash) {
-				flashService.flash ('danger', $scope.flash);
-			}
-			return '';
-		});
-	};
-}
 
 function IndexController($rootScope, $scope, $location, $cookieStore, loginService, logoutService, isInstalled, notificationService) {
 	$rootScope.intro = introJs();
