@@ -17,8 +17,6 @@ module.factory('isInstalled', function($resource) {
 });
 
 /***** Controllers *****/
-// TODO declare controllers here, e.g.:
-// module.controller(...)
 
 // End anonymous function
 })();

@@ -119,7 +119,7 @@ def is_installed():
 @app.route('/install', methods=['GET'])
 def install():
 	requirements = []
-	writable = True if os.access('tmp', os.W_OK) else False
+	writable = os.access('tmp', os.W_OK)
 	requirements.append( { 'text': 'tmp folder is writable', 'boolean': writable } )
 	return json.dumps( {'requirements': requirements} )
 
