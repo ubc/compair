@@ -52,17 +52,13 @@ module.controller(
 				// request successful
 				function(ret) {
 					console.log(ret);
-					if (!('error' in ret)) {
-						$scope.flash = user.flash;
-						if (!user.msg && !$scope.flash) {
-							$scope.done = true;
-							flashService.flash('success', 'Administrator created. Click Login to try logging in with your administrator account');
-							return '';
-						} else if ($scope.flash) {
-							flashService.flash ('danger', $scope.flash);
-						}
+					if (ret['error'].length > 0) {
+						$scope.failMsg = ret['error'][0]['msg'];
 					}
-					return '';
+					else {
+						$scope.done = true;
+						flashService.flash('success', 'Administrator created. Click Login to try logging in with your administrator account');
+					}
 				},
 				// request error
 				function(error) {
