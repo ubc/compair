@@ -1,323 +1,375 @@
-from flask import Flask
-from flask.ext.sqlalchemy import SQLAlchemy
-from sqlalchemy import create_engine, Column, Integer, String, Enum, ForeignKey, DateTime, Text, Float, Boolean, Table
-from sqlalchemy.orm import backref, scoped_session, sessionmaker, relationship
-from sqlalchemy.ext.declarative import declarative_base
+## Template for creating a new table. Note, the first 3 are taken care of by
+## the default_table_args defined in database.py.
+## * If MySQL, table engine must be InnoDB, for native foreign key support.
+## * The default character set must be utf8, cause utf8 everywhere makes
+##	 text encodings much easier to deal with.
+## * Collation is using the slightly slower utf8_unicode_ci due to it's better
+##	 conformance to human expectations for sorting. 
+## * There must always be a primary key id field. 
+## * creation_time and modification_time fields are self updating, they're nice
+##	 to have for troubleshooting, but not all tables need them.
+## * Additional fields given are meant for reference only. 
+## * Foreign keys must be named in the format of <tablename>_id for
+##	 consistency. 
+## * 'ON DELETE CASCADE' is the preferred resolution method so that we don't
+##	 have to worry about database consistency as much.
+## * Junction tables names must be the two table's names, connected by
+##	 "And".
+## * Some tables might have subcategories, use the word "For" to indicated the
+##	 subcategory, e.g.: we have a "Posts" table for all posts and a 
+##	 "PostsForQuestions" table for posts that are meant to be questions
+
+
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text, TIMESTAMP
+from sqlalchemy import event # TODO merge with top
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.engine.url import URL
-import datetime
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func, text
+
 import hashlib
-import settings
+import datetime
 import sys
-from pw_hash import PasswordHash
 
-class User(Base):
-    __tablename__ = 'User'
-    id = Column(Integer, primary_key=True)
-    username = Column(String(80), unique=True)
-    password = Column(String(120), unique=False)
-    usertype = Column(Integer, ForeignKey('UserRole.id'))
-    email = Column(String(254))
-    firstname = Column(String(254))
-    lastname = Column(String(254))
-    display = Column(String(254), unique=True)
-    lastOnline = Column(DateTime)
-    
-    judgement = relationship('Judgement', cascade="all,delete")
-    enrollment = relationship('Enrollment', cascade="all,delete")
-    userrole = relationship('UserRole', foreign_keys=[usertype], backref=backref('user'))
-    
-    def __init__(self, username, password, usertype, email, firstname, lastname, display):
-    	self.username = username
-    	self.password = password
-    	self.usertype = usertype
-    	self.email = email
-    	self.firstname = firstname
-    	self.lastname = lastname
-    	self.display = display
-    
-    def __repr__(self):
-    	return '<User %r>' % self.username
-    
-    @hybrid_property
-    def fullname(self):
-    	return self.firstname + ' ' + self.lastname
-    
-    @hybrid_property
-    def avatar(self):
-    	m = hashlib.md5()
-    	m.update(self.email)
-    	return m.hexdigest()
+from acj.database import Base, db_session, default_table_args
 
-class Course(Base):
-    __tablename__ = 'Course'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(80), unique=True)
-    contentLength = Column('contentLength', Integer, default=0)
-    
-    question = relationship('Question', cascade="all,delete")
-    enrollment = relationship('Enrollment', cascade="all,delete")
-    
-    tags = relationship("Tags",
-						secondary=course_tags_table,
-						backref=backref('tags', lazy='dynamic'), cascade="all,delete")
-	
-    def __init__(self, name, contentLength):
-    	self.name = name
-    	self.contentLength = contentLength
-    
-    def __repr__(self):
-    	return '<Course %r>' % self.name
+#################################################
+# Users
+#################################################
 
-class Entry(Base):
-    __tablename__ = 'Entry'
-    id = Column(Integer, primary_key=True)
-    uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
-    type = Column(String(50))
-    time = Column(DateTime, default=datetime.datetime.now)
-    content = Column(Text)
+# User types at the course level
+class UserTypesForCourse(Base):
+	__tablename__ = "UserTypesForCourse"
+	__table_args__ = default_table_args
 
-    __mapper_args__ = {
-    	'polymorphic_identity': 'Entry',
-    	'polymorphic_on': type
-    }
+	id = Column(Integer, primary_key = True, nullable=False)
+	name = Column(String(255), unique=True, nullable=False)
 
-    def __init__(self, uid, content):
-    	self.uid = uid
-    	self.content = content
-    
-    def __repr__(self):
-    	return '<Entry %r>' % self.id
+# initialize the database with preloaded data using the event system
+@event.listens_for(UserTypesForCourse.__table__, "after_create", propagate=True)
+def populate_usertypesforcourse(target, connection, **kw):
+	usertypes = ["Student", "Teaching Assistant", "Instructor"]
+	for usertype in usertypes:
+		entry = UserTypesForCourse(name=usertype)
+		db_session.add(entry)
+	db_session.commit()
 
-class Question(Entry):
-    __tablename__ = 'Question'
-    id = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'), primary_key=True)
-    cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
-    title = Column(String(255))
-    quiz = Column(Boolean, default=True)
-    
-    tagsQ = relationship("Tags",
-						secondary=question_tags_table,
-						backref=backref('tagsQ', lazy='dynamic'), cascade="all,delete")
+# User types at the system level
+class UserTypesForSystem(Base):
+	__tablename__ = "UserTypesForSystem"
+	__table_args__ = default_table_args
 
-    __mapper_args__ = {
-    	'polymorphic_identity': 'Question',
-    }
+	id = Column(Integer, primary_key = True, nullable=False)
+	name = Column(String(255), unique=True, nullable=False)
 
-    def __init__(self, cid, uid, title, content, quiz):
-    	self.cid = cid
-    	self.uid = uid 
-    	self.title = title
-    	self.content = content
-    	self.quiz = quiz
-    
-    def __repr__(self):
-    	return '<Question %r>' % self.id
+@event.listens_for(UserTypesForSystem.__table__, "after_create", propagate=True)
+def populate_usertypesforsystem(target, connection, **kw):
+	usertypes = ["Normal User", "System Administrator"]
+	for usertype in usertypes:
+		entry = UserTypesForSystem(name=usertype)
+		db_session.add(entry)
+	db_session.commit()
 
-class Script(Entry):
-	__tablename__ = 'Script'
-	id = Column(Integer, ForeignKey('Entry.id', ondelete="CASCADE"), primary_key=True)
-	qid = Column(Integer, ForeignKey('Question.id', ondelete='CASCADE'))
-	title = Column(String(80), default='answer')
-	wins = Column(Integer, default=0)
-	count = Column(Integer, default=0)
+class Users(Base):
+	__tablename__ = 'Users'
+	__table_args__ = default_table_args
 
-	question = relationship('Question', foreign_keys=[qid], backref=backref('Script', cascade="all,delete"))
+	id = Column(Integer, primary_key=True, nullable=False)
+	username = Column(String(255), unique=True, nullable=False)
+	password = Column(String(255), unique=False, nullable=False)
 
-	__mapper_args__ = {
-		'polymorphic_identity': 'Script',
-	}
+	# Apparently, enabling the equivalent of ON DELETE CASCADE requires
+	# the ondelete option in the foreign key and the cascade + passive_deletes
+	# option in relationship().
+	usertypesforsystem_id = Column(
+			Integer, 
+			ForeignKey('UserTypesForSystem.id', ondelete="CASCADE"),
+			nullable=False)
+	usertypesforsystem = relationship("UserTypesForSystem")
 
-	def __init__(self, qid, uid, content):
-		self.qid = qid
-		self.uid = uid 
-		self.content = content
+	email = Column(String(254)) # email addresses are max 254 characters, no
+								# idea if the unicode encoding of email addr
+								# changes this.
+	firstname = Column(String(255))
+	lastname = Column(String(255))
+	displayname = Column(String(255), unique=True)
+	lastonline = Column(DateTime)
+	# Note that MySQL before 5.6.5 doesn't allow more than one auto init/update
+	# column for timestamps! Auto init/update after 5.6.5 allows multiple 
+	# columns and can be applied to the DateTime field as well. This means that
+	# 'modified' can be counted on to be auto init/updated for manual
+	# (non-SQLAlchemy) database operations while 'created' will not.
+	modified = Column(
+			TIMESTAMP, 
+			default=func.current_timestamp(), 
+			onupdate=func.current_timestamp(), 
+			nullable=False)
+	created = Column(TIMESTAMP, default=func.current_timestamp(), 
+			nullable=False)
 
-	def __repr__(self):
-		return '<Script %r>' % self.id
+	# TODO determine if fullname and avatar is needed
+	@hybrid_property
+	def fullname(self):
+		return self.firstname + ' ' + self.lastname
 
-class Judgement(Base):
-    __tablename__ = 'Judgement'
-    id = Column(Integer, primary_key=True)
-    uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
-    sidl= Column(Integer, ForeignKey('Script.id', ondelete='CASCADE'))
-    sidr = Column(Integer, ForeignKey('Script.id', ondelete='CASCADE'))
-    time = Column(DateTime, default=datetime.datetime.now)
-     
-    script1 = relationship('Script', foreign_keys=[sidl], backref=backref("judge1", cascade="all,delete"))
-    script2 = relationship('Script', foreign_keys=[sidr], backref=backref("judge2", cascade="all,delete"))
-    
-    def __init__(self, uid, sidl, sidr):
-		self.uid = uid
-		self.sidl = sidl
-		self.sidr = sidr
+	@hybrid_property
+	def avatar(self):
+		m = hashlib.md5()
+		m.update(self.email)
+		return m.hexdigest()
 
-    def __repr__(self):
-		return '<Judgement %r>' % self.id
+#################################################
+# Courses and Enrolment
+#################################################
 
-class Enrollment(Base):
-    __tablename__ = 'Enrollment'
-    id = Column(Integer, primary_key=True)
-    uid = Column(Integer, ForeignKey('User.id', ondelete='CASCADE'))
-    cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
-    time = Column(DateTime, default=datetime.datetime.now)
-    usertype = Column(Integer, ForeignKey('UserRole.id'))
-    
-    userrole = relationship('UserRole', foreign_keys=[usertype], backref=backref('enrollment'))
-    
-    def __init__(self, uid, cid, usertype):
-    	self.uid = uid
-    	self.cid = cid
-    	self.usertype = usertype
-    
-    def __repr__(self):
-    	return '<Enrollment %r>' % self.id
+class Courses(Base):
+	__tablename__ = 'Courses'
+	id = Column(Integer, primary_key=True, nullable=False)
+	name = Column(String(255), unique=True, nullable=False)
+	description = Column(Text)
+	available = Column(Boolean, default=True, nullable=False)
+	users = relationship("CoursesAndUsers", backref="parent")
+	modified = Column(
+			TIMESTAMP, 
+			default=func.current_timestamp(), 
+			onupdate=func.current_timestamp(), 
+			nullable=False)
+	created = Column(TIMESTAMP, default=func.current_timestamp(), 
+			nullable=False)
 
-class CommentA(Entry):
-	__tablename__ = 'CommentA'
-	id = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'), primary_key=True)
-	sid = Column(Integer, ForeignKey('Script.id', ondelete='CASCADE'))
+# A "junction table" in sqlalchemy is called a many-to-many pattern. Such a
+# table can be automatically created by sqlalchemy from relationship
+# definitions along. But if additional fields are needed, then we can
+# explicitly definte such a table using the "association object" pattern.
+# For determining a course's users, we're using the association object approach
+# since we need to declare the user's role in the course.
+class CoursesAndUsers(Base):
+	__tablename__ = 'CoursesAndUsers'
+	id = Column(Integer, primary_key=True, nullable=False)
+	courses_id = Column(Integer, ForeignKey("Courses.id"), nullable=False)
+	users_id = Column(Integer, ForeignKey("Users.id"), nullable=False)
+	user = relationship("Users", backref="parent_assocs")
+	usertypesforcourse_id = Column(
+			Integer, 
+			ForeignKey('UserTypesForCourse.id', ondelete="CASCADE"),
+			nullable=False)
+	usertypesforcourse = relationship("UserTypesForCourse")
+	modified = Column(
+			TIMESTAMP, 
+			default=func.current_timestamp(), 
+			onupdate=func.current_timestamp(), 
+			nullable=False)
+	created = Column(TIMESTAMP, default=func.current_timestamp(), 
+			nullable=False)
 
-	script = relationship('Script', foreign_keys=[sid], backref=backref('CommentA', cascade="all,delete"))
-
-	__mapper_args__ = {
-		'polymorphic_identity': 'CommentA',
-	}
-
-	def __init__(self, sid, uid, content):
-		self.sid = sid
-		self.uid = uid 
-		self.content = content
-
-	def __repr__(self):
-		return '<CommentA %r>' % self.id
-
-class CommentQ(Entry):
-	__tablename__ = 'CommentQ'
-	id = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'), primary_key=True)
-	qid = Column(Integer, ForeignKey('Question.id', ondelete='CASCADE'))
-
-	question = relationship('Question', foreign_keys=[qid], backref=backref('CommentQ', cascade="all,delete"))
-
-	__mapper_args__ = {
-		'polymorphic_identity': 'CommentQ',
-	}
-	
-	def __init__(self, qid, uid, content):
-		self.qid = qid
-		self.uid = uid 
-		self.content = content
-
-	def __repr__(self):
-		return '<CommentQ %r>' % self.id
-
-class CommentJ(Entry):
-	__tablename__ = 'CommentJ'
-	id = Column(Integer, ForeignKey('Entry.id', ondelete='CASCADE'), primary_key=True)
-	qid = Column(Integer, ForeignKey('Question.id', ondelete='CASCADE'))
-	sidl = Column(Integer, ForeignKey('Judgement.sidl', ondelete='CASCADE'))
-	sidr = Column(Integer, ForeignKey('Judgement.sidr', ondelete='CASCADE'))
-
-	#judgement = relationship('Judgement', foreign_keys=[id], backref=backref('CommentJ', cascade="all,delete"))
-
-	__mapper_args__ = {
-		'polymorphic_identity': 'CommentJ',
-	}
-	
-	def __init__(self, qid, sidl, sidr, uid, content):
-		self.qid = qid
-		self.sidl = sidl
-		self.sidr = sidr
-		self.uid = uid 
-		self.content = content
-
-	def __repr__(self):
-		return '<CommentJ %r>' % self.id
+#################################################
+# Tags for Posts, each course has their own set of tags
+#################################################
 
 class Tags(Base):
 	__tablename__ = 'Tags'
-	id = Column(Integer, primary_key=True)
-	name = Column(String(80), unique=True)
-	
-	def __init__(self, name):
-		self.name = name
+	id = Column(Integer, primary_key=True, nullable=False)
+	name = Column(String(255), unique=True, nullable=False)
+	courses_id = Column(
+			Integer, 
+			ForeignKey('Courses.id', ondelete="CASCADE"),
+			nullable=False)
+	course = relationship("Courses")
+	created = Column(TIMESTAMP, default=func.current_timestamp(), 
+			nullable=False)
 
-	def __repr__(self):
-		return '<Tags %r>' % self.name
+#################################################
+# Posts - content postings made by users
+#################################################
+
+class Posts(Base):
+	__tablename__ = 'Posts'
+	id = Column(Integer, primary_key=True, nullable=False)
+	users_id = Column(
+			Integer, 
+			ForeignKey('Users.id', ondelete="CASCADE"),
+			nullable=False)
+	user = relationship("Users")
+	courses_id = Column(
+			Integer, 
+			ForeignKey('Courses.id', ondelete="CASCADE"),
+			nullable=False)
+	course = relationship("Courses")
+	content = Column(Text)
+	modified = Column(
+			TIMESTAMP, 
+			default=func.current_timestamp(), 
+			onupdate=func.current_timestamp(), 
+			nullable=False)
+	created = Column(TIMESTAMP, default=func.current_timestamp(), 
+			nullable=False)
+
+class PostsForQuestions(Base):
+	__tablename__ = 'PostsForQuestions'
+	id = Column(Integer, primary_key=True, nullable=False)
+	posts_id = Column(
+			Integer, 
+			ForeignKey('Posts.id', ondelete="CASCADE"),
+			nullable=False)
+	post = relationship("Posts")
+	title = Column(String(255))
+	modified = Column(
+			TIMESTAMP, 
+			default=func.current_timestamp(), 
+			onupdate=func.current_timestamp(), 
+			nullable=False)
+	# don't need created time, posts store that info
+
+class PostsForAnswers(Base):
+	__tablename__ = 'PostsForAnswers'
+	id = Column(Integer, primary_key=True, nullable=False)
+	posts_id = Column(
+			Integer, 
+			ForeignKey('Posts.id', ondelete="CASCADE"),
+			nullable=False)
+	post = relationship("Posts")
+
+class PostsForComments(Base):
+	__tablename__ = 'PostsForComments'
+	id = Column(Integer, primary_key=True, nullable=False)
+	posts_id = Column(
+			Integer, 
+			ForeignKey('Posts.id', ondelete="CASCADE"),
+			nullable=False)
+	post = relationship("Posts")
+
+
+#################################################
+# Criteria - What users should judge answers by
+#################################################
+
+class Criteria(Base):
+	__tablename__ = 'Criteria'
+	id = Column(Integer, primary_key=True, nullable=False)
+	name = Column(String(255), unique=True, nullable=False)
+	description = Column(Text)
+	# user who made this criteria
+	users_id = Column(
+			Integer, 
+			ForeignKey('Users.id', ondelete="CASCADE"),
+			nullable=False)
+	user = relationship("Users")
+	modified = Column(
+			TIMESTAMP, 
+			default=func.current_timestamp(), 
+			onupdate=func.current_timestamp(), 
+			nullable=False)
+	created = Column(TIMESTAMP, default=func.current_timestamp(), 
+			nullable=False)
+
+# each course can have different criterias
+class CriteriaAndCourses(Base):
+	__tablename__ = 'CriteriaAndCourses'
+	id = Column(Integer, primary_key=True, nullable=False)
+	criteria_id = Column(
+			Integer, 
+			ForeignKey('Criteria.id', ondelete="CASCADE"),
+			nullable=False)
+	criteria = relationship("Criteria")
+	courses_id = Column(
+			Integer, 
+			ForeignKey('Courses.id', ondelete="CASCADE"),
+			nullable=False)
+	course = relationship("Courses")
+
+#################################################
+# Scores - The calculated score of the answer
+#################################################
+
+class Scores(Base):
+	__tablename__ = 'Scores'
+	id = Column(Integer, primary_key=True, nullable=False)
+	name = Column(String(255), unique=True, nullable=False)
+	criteria_id = Column(
+			Integer, 
+			ForeignKey('Criteria.id', ondelete="CASCADE"),
+			nullable=False)
+	criteria = relationship("Criteria")
+	postsforanswers_id = Column(
+			Integer, 
+			ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
+			nullable=False)
+	answer = relationship("PostsForAnswers")
+	# number of times this answer has been judged
+	rounds = Column(Integer, default=0)
+	# number of times this answer has been picked as the better one
+	wins = Column(Integer, default=0)
+	# calculated score based on all previous judgements
+	score = Column(Float, default=0)
+
+#################################################
+# Judgements - User's judgements on the answers
+#################################################
+
+class AnswerPairings(Base):
+	__tablename__ = 'AnswerPairings'
+	id = Column(Integer, primary_key=True)
+	postsforquestions_id = Column(
+			Integer, 
+			ForeignKey('PostsForQuestions.id', ondelete="CASCADE"),
+			nullable=False)
+	question = relationship("PostsForQuestions")
+	postsforanswers_id1 = Column(
+			Integer, 
+			ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
+			nullable=False)
+	answer1 = relationship("PostsForAnswers", foreign_keys=[postsforanswers_id1])
+	postsforanswers_id2 = Column(
+			Integer, 
+			ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
+			nullable=False)
+	answer2 = relationship("PostsForAnswers", foreign_keys=[postsforanswers_id2])
+	winner_id = Column(
+			Integer, 
+			ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
+			nullable=False)
+	winner = relationship("PostsForAnswers", foreign_keys=[winner_id])
+	modified = Column(
+			TIMESTAMP, 
+			default=func.current_timestamp(), 
+			onupdate=func.current_timestamp(), 
+			nullable=False)
+	created = Column(TIMESTAMP, default=func.current_timestamp(), 
+			nullable=False)
+
+class Judgements(Base):
+	__tablename__ = 'Judgements'
+	id = Column(Integer, primary_key=True)
+	users_id = Column(
+			Integer, 
+			ForeignKey('Users.id', ondelete="CASCADE"),
+			nullable=False)
+	user = relationship("Users")
+	answerpairings_id = Column(
+			Integer, 
+			ForeignKey('AnswerPairings.id', ondelete="CASCADE"),
+			nullable=False)
+	answerpairing = relationship("AnswerPairings")
+	criteria_id = Column(
+			Integer, 
+			ForeignKey('Criteria.id', ondelete="CASCADE"),
+			nullable=False)
+	criteria = relationship("Criteria")
+	modified = Column(
+			TIMESTAMP, 
+			default=func.current_timestamp(), 
+			onupdate=func.current_timestamp(), 
+			nullable=False)
+	created = Column(TIMESTAMP, default=func.current_timestamp(), 
+			nullable=False)
 
 class LTIInfo(Base):
-    __tablename__ = 'LTIInfo'
-    id = Column(Integer, primary_key=True)
-    LTIid = Column(String(100))
-    LTIURL = Column(String(100))
-    courseName = Column(String(100))
-    
-    def __init__(self, LTIid, LTIURL, courseName):
-        self.LTIid = LTIid
-        self.LTIURL = LTIURL
-        self.courseName = courseName
-
-    def __repr__(self):
-        return '<LTIInfo %r>' % self.id
-
-class JudgementCategory(Base):
-    __tablename__ = 'JudgementCategory'
-    id = Column(Integer, primary_key=True)
-    cid = Column(Integer, ForeignKey('Course.id', ondelete='CASCADE'))
-    name = Column(String(100), unique=False)
-    
-    def __init__(self, cid, name):
-        self.cid = cid
-        self.name = name
-
-    def __repr__(self):
-        return '<JudgementCategory %r>' % self.id
-
-class JudgementWinner(Base):
-    __tablename__ = 'JudgementWinner'
-    id = Column(Integer, primary_key=True)
-    jid = Column(Integer, ForeignKey('Judgement.id', ondelete='CASCADE'))
-    jcid = Column(Integer, ForeignKey('JudgementCategory.id', ondelete='CASCADE'))
-    winner = Column(Integer, unique=False)
-    
-    def __init__(self, jid, jcid, winner):
-        self.jid = jid
-        self.jcid = jcid
-        self.winner = winner
-
-    def __repr__(self):
-        return '<JudgementWinner %r>' % self.id
-
-class ScriptScore(Base):
-    __tablename__ = 'ScriptScore'
-    id = Column(Integer, primary_key=True)
-    sid = Column(Integer, ForeignKey('Script.id', ondelete='CASCADE'))
-    jcid = Column(Integer, ForeignKey('JudgementCategory.id', ondelete='CASCADE'))
-    wins = Column(Integer, default=0)
-    count = Column(Integer, default=0)
-    score = Column(Float, default=0)
-    
-    def __init__(self, sid, jcid, wins, count):
-        self.sid = sid
-        self.jcid = jcid
-        self.wins = wins
-        self.count = count
-
-    def __repr__(self):
-        return '<ScriptScore %r>' % self.id
-
-class UserRole(Base):
-	ADMIN_ROLE = "Admin"
-	STUDENT_ROLE = "Student"
-	INSTRUCTOR_ROLE = "Teacher"
-	__tablename__ = "UserRole"
-
+	__tablename__ = 'LTIInfo'
 	id = Column(Integer, primary_key=True)
-	role = Column(String(50), unique=True)
-
-	def __init__(self, role):
-		self.role = role
-
-	def __repr__(self):
-		return '<UserRole %r>' % self.id
+	LTIid = Column(String(100))
+	LTIURL = Column(String(100))
+	courses_id = Column(
+			Integer, 
+			ForeignKey('Courses.id', ondelete="CASCADE"),
+			nullable=False)
+	course = relationship("Courses")
 

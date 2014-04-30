@@ -30,9 +30,7 @@ Base = declarative_base()
 Base.query = db_session.query_property()
 
 def init_db():
-	import acj.models.UserTypesForSystem
-	import acj.models.UserTypesForCourse
-	import acj.models.Users
+	import acj.models
 	Base.metadata.create_all(bind=engine)
 
 #reset the database state; used in the e2e testcases
