@@ -34,6 +34,7 @@ def init_db():
 	Base.metadata.create_all(bind=engine)
 
 #reset the database state; used in the e2e testcases
+# TODO Should be redone
 def reset_db():
 	print ("resetting db state...")
 	Base.metadata.drop_all(bind=engine)

@@ -257,36 +257,6 @@ function JudgepageController($rootScope, $scope, $cookieStore, $routeParams, $lo
 	};
 }
 
-function LoginController($rootScope, $cookieStore, $scope, $location, flashService, loginService, authService, isInstalled) {
-	$rootScope.breadcrumb = [{'name':'Login'}];
-	$rootScope.$broadcast("NO_TUTORIAL", false);
-
-	var installed = isInstalled.get( function() {
-		if (!installed.installed) {
-			$location.path('/install');
-		}
-	});
-	if ($cookieStore.get('loggedIn')) {
-		$location.path('/');
-	}
-	$scope.submit = function() {
-		if ( !($scope.username && $scope.password) ) {
-			flashService.flash('danger', 'Please provide a username and a password');
-			return '';
-		}
-		input = {"username": $scope.username, "password": $scope.password};
-		var user = loginService.save( input, function() {
-			if (user.display) {
-				authService.loginConfirmed();
-				$rootScope.$broadcast("LOGGED_IN", user); 
-				$location.path('/');
-			} else {
-				flashService.flash('danger', 'Incorrect username or password');
-			}
-		});
-	};
-}
-
 function UserIndexController($rootScope, $scope, $filter, $q, ngTableParams, userService, allUserService) {
 	$rootScope.$broadcast("NO_TUTORIAL", false);
 	$rootScope.breadcrumb = [{'name':'Home','link':'#'},{'name':'Users'}];

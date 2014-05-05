@@ -8,7 +8,8 @@ var myApp = angular.module('myApp', [
 	'$strap.directives', 
 	'ubc.ctlt.acj.common.flash', // TODO Remove once split into modules done
 	'ubc.ctlt.acj.common.installed', // TODO Remove once split into modules done
-	'ubc.ctlt.acj.installer'
+	'ubc.ctlt.acj.installer',
+	'ubc.ctlt.acj.login'
 ]);
 
 //Global Variables
@@ -140,8 +141,7 @@ myApp.config( function ($routeProvider) {
 			})
 		.when ('/login',
 			{
-				controller: LoginController,
-				templateUrl: 'login.html'
+				templateUrl: 'modules/login/login-partial.html'
 			})
 		.when ('/createuser',
 			{

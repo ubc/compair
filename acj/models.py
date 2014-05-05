@@ -27,8 +27,10 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func, text
 
 import hashlib
-import datetime
-import sys
+#  import the context under an app-specific name (so it can easily be replaced later)
+from passlib.apps import custom_app_context as pwd_context
+
+from flask.ext.login import UserMixin
 
 from acj.database import Base, db_session, default_table_args
 
@@ -44,10 +46,18 @@ class UserTypesForCourse(Base):
 	id = Column(Integer, primary_key = True, nullable=False)
 	name = Column(String(255), unique=True, nullable=False)
 
+	# constants for the user types
+	TYPE_STUDENT = "Student"
+	TYPE_TA = "Teaching Assistant"
+	TYPE_INSTRUCTOR = "Instructor"
+
+
 # initialize the database with preloaded data using the event system
 @event.listens_for(UserTypesForCourse.__table__, "after_create", propagate=True)
 def populate_usertypesforcourse(target, connection, **kw):
-	usertypes = ["Student", "Teaching Assistant", "Instructor"]
+	usertypes = [UserTypesForCourse.TYPE_STUDENT,
+				 UserTypesForCourse.TYPE_TA,
+				 UserTypesForCourse.TYPE_INSTRUCTOR]
 	for usertype in usertypes:
 		entry = UserTypesForCourse(name=usertype)
 		db_session.add(entry)
@@ -61,15 +71,21 @@ class UserTypesForSystem(Base):
 	id = Column(Integer, primary_key = True, nullable=False)
 	name = Column(String(255), unique=True, nullable=False)
 
+	TYPE_NORMAL = "Normal User"
+	TYPE_SYSADMIN = "System Administrator"
+
 @event.listens_for(UserTypesForSystem.__table__, "after_create", propagate=True)
 def populate_usertypesforsystem(target, connection, **kw):
-	usertypes = ["Normal User", "System Administrator"]
+	usertypes = [UserTypesForSystem.TYPE_NORMAL,
+				 UserTypesForSystem.TYPE_SYSADMIN]
 	for usertype in usertypes:
 		entry = UserTypesForSystem(name=usertype)
 		db_session.add(entry)
 	db_session.commit()
 
-class Users(Base):
+# Flask-Login requires the user class to have some methods, the easiest way
+# to get those methods is to inherit from the UserMixin class.
+class Users(Base, UserMixin):
 	__tablename__ = 'Users'
 	__table_args__ = default_table_args
 
@@ -116,6 +132,29 @@ class Users(Base):
 		m = hashlib.md5()
 		m.update(self.email)
 		return m.hexdigest()
+
+	def set_password(self, password, is_admin = False):
+		category = None
+		if is_admin:
+			# enables more rounds for admin passwords
+			category = "admin"
+		self.password = pwd_context.encrypt(password, category=category)
+
+
+	def verify_password(self, password):
+		return pwd_context.verify(password, self.password)
+
+
+# create a default root user with sysadmin role
+@event.listens_for(Users.__table__, "after_create", propagate=True)
+def populate_users(target, connection, **kw):
+	sysadmintype = UserTypesForSystem.query.filter(
+		UserTypesForSystem.name == UserTypesForSystem.TYPE_SYSADMIN).first()
+	user = Users(username="root", displayname="root")
+	user.set_password("password", True)
+	user.usertypesforsystem = sysadmintype
+	db_session.add(user)
+	db_session.commit()
 
 #################################################
 # Courses and Enrolment
