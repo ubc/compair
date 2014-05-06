@@ -37,3 +37,7 @@ nosetests.xml
 *.swp
 
 tmp/*
+
+# idea project file
+.idea
+.ropeproject/
