@@ -19,7 +19,7 @@ import time
 from threading import Timer
 from werkzeug import secure_filename
 from flask.ext import sqlalchemy
-import Image
+from PIL import Image
 import sys
 from acj import app
 '''
