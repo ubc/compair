@@ -122,16 +122,27 @@ class Users(Base, UserMixin):
 	created = Column(TIMESTAMP, default=func.current_timestamp(), 
 			nullable=False)
 
-	# TODO determine if fullname and avatar is needed
 	@hybrid_property
 	def fullname(self):
-		return self.firstname + ' ' + self.lastname
+		if self.firstname and self.lastname:
+			return '%s %s' % (self.firstname, self.lastname)
+		elif self.firstname: # only first name provided
+			return self.firstname
+		elif self.lastname: # only last name provided
+			return self.lastname
+		else:
+			return None
 
-	@hybrid_property
+	# Note that in order for avatar to be provided with Flask-Restless, it can't
+	# be a hybrid_property due to self.email not being resolved yet when
+	# Flask-Restless tries to use it.
 	def avatar(self):
-		m = hashlib.md5()
-		m.update(self.email)
-		return m.hexdigest()
+		if self.email:
+			m = hashlib.md5()
+			m.update(self.email)
+			return m.hexdigest()
+		else:
+			return None
 
 	def set_password(self, password, is_admin = False):
 		category = None

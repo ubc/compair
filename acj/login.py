@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 login_api = Blueprint("login_api", __name__)
 
-@login_api.route('/login', methods=['POST'])
+@login_api.route('/login/login', methods=['POST'])
 def login():
 	# expecting login params to be in json format
 	param = request.json
@@ -27,12 +27,13 @@ def login():
 		# username valid, password valid, login successful
 		# "remember me" functionality is available, do we want to implement?
 		login_user(user)
-		return ""
+		logger.debug("Login successful for: " + user.username);
+		return json.dumps( {"userid": user.id} )
 
 	# login unsuccessful
-	return json.dumps( {"error": 'Incorrect username or password'} ), 401
+	return json.dumps( {"error": 'Sorry, unrecognized username or password.'} ), 400
 
-@login_api.route('/logout')
+@login_api.route('/login/logout', methods=['DELETE'])
 @login_required
 def logout():
 	logout_user()

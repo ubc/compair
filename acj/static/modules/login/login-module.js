@@ -3,42 +3,69 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.login', ['ngResource']);
+var module = angular.module('ubc.ctlt.acj.login',
+	[
+		'ngResource',
+		'ubc.ctlt.acj.authentication',
+		'ubc.ctlt.acj.user'
+	]
+);
 
 /***** Providers *****/
-// TODO declare providers here, e.g.:
-// module.factory(...)
+module.factory('LoginResource', function($resource) {
+	return $resource(
+		'/login/:operation',
+		{},
+		{
+			login: { method:'POST', params: {operation: "login"} },
+			logout: { method:'DELETE', params: {operation: "logout"} }
+		}
+	);
+});
 
 /***** Controllers *****/
 module.controller(
 	"LoginController",
-	function LoginController($rootScope, $cookieStore, $scope, $location, flashService, loginService, authService, isInstalled) {
+	function LoginController($rootScope, $scope, $location, $log,
+							 LoginResource, UserResource, AuthenticationService) {
+		// TODO REFACTOR BREADCRUMB AND NO_TUTORIAL BROADCAST
 		$rootScope.breadcrumb = [{'name':'Login'}];
 		$rootScope.$broadcast("NO_TUTORIAL", false);
 
-		var installed = isInstalled.get( function() {
-			if (!installed.installed) {
-				$location.path('/install');
-			}
-		});
-		if ($cookieStore.get('loggedIn')) {
-			$location.path('/');
-		}
+		$scope.submitted = false;
+
 		$scope.submit = function() {
-			if ( !($scope.username && $scope.password) ) {
-				flashService.flash('danger', 'Please provide a username and a password');
-				return '';
-			}
-			input = {"username": $scope.username, "password": $scope.password};
-			var user = loginService.save( input, function() {
-				if (user.display) {
-					authService.loginConfirmed();
-					$rootScope.$broadcast("LOGGED_IN", user);
-					$location.path('/');
-				} else {
-					flashService.flash('danger', 'Incorrect username or password');
+			$scope.submitted = true;
+			var params = {"username": $scope.username, "password": $scope.password};
+			LoginResource.login(params).$promise.then(
+				function(ret) {
+					// login successful
+					$log.debug("Login authentication successful!");
+					userid = ret.userid
+					$log.debug("Login User ID: " + userid);
+					// retrieve logged in user's information
+					user = UserResource.get({id: userid}).$promise.then(
+						function(ret) {
+							$log.debug("Retrived logged in user's data: " + JSON.stringify(ret));
+							AuthenticationService.set(ret);
+							$location.path("/");
+						},
+						function(ret) {
+							$log.debug("Failed to retrieve logged in user's data: " +
+								JSON.stringify(ret));
+							$scope.login_err = "Unable to retrieve user information, server problem?";
+							$scope.submitted = false;
+						}
+					);
+				},
+				function(ret) {
+					// login failed
+					$log.debug("Login authentication failed.");
+					$scope.login_err = ret.data.error;
+					$scope.submitted = false;
 				}
-			});
+			);
+
 		};
 	}
 );

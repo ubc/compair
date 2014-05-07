@@ -18,10 +18,10 @@ myApp.factory('judgeService', function($resource) {
 	return $resource( '/script/:scriptId' );
 });
 
+// TODO REMOVE LOGINSERVICE AND LOGOUTSERVICE LATER ONCE ALL REFERENCES HAVE BEEN REMOVED
 myApp.factory('loginService', function($resource) {
 	return $resource( '/login' );
 });
-
 myApp.factory('logoutService', function($resource) {
 	return $resource( '/logout' );
 });
