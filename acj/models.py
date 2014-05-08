@@ -20,8 +20,7 @@
 ##	 "PostsForQuestions" table for posts that are meant to be questions
 
 
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text, TIMESTAMP
-from sqlalchemy import event # TODO merge with top
+from sqlalchemy import Boolean, Column, DateTime, event, Float, ForeignKey, Integer, String, Text, TIMESTAMP
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func, text
@@ -43,7 +42,7 @@ class UserTypesForCourse(Base):
 	__tablename__ = "UserTypesForCourse"
 	__table_args__ = default_table_args
 
-	id = Column(Integer, primary_key = True, nullable=False)
+	id = Column(Integer, primary_key=True, nullable=False)
 	name = Column(String(255), unique=True, nullable=False)
 
 	# constants for the user types
@@ -63,16 +62,18 @@ def populate_usertypesforcourse(target, connection, **kw):
 		db_session.add(entry)
 	db_session.commit()
 
+
 # User types at the system level
 class UserTypesForSystem(Base):
 	__tablename__ = "UserTypesForSystem"
 	__table_args__ = default_table_args
 
-	id = Column(Integer, primary_key = True, nullable=False)
+	id = Column(Integer, primary_key=True, nullable=False)
 	name = Column(String(255), unique=True, nullable=False)
 
 	TYPE_NORMAL = "Normal User"
 	TYPE_SYSADMIN = "System Administrator"
+
 
 @event.listens_for(UserTypesForSystem.__table__, "after_create", propagate=True)
 def populate_usertypesforsystem(target, connection, **kw):
@@ -82,6 +83,7 @@ def populate_usertypesforsystem(target, connection, **kw):
 		entry = UserTypesForSystem(name=usertype)
 		db_session.add(entry)
 	db_session.commit()
+
 
 # Flask-Login requires the user class to have some methods, the easiest way
 # to get those methods is to inherit from the UserMixin class.
@@ -97,14 +99,14 @@ class Users(Base, UserMixin):
 	# the ondelete option in the foreign key and the cascade + passive_deletes
 	# option in relationship().
 	usertypesforsystem_id = Column(
-			Integer, 
-			ForeignKey('UserTypesForSystem.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('UserTypesForSystem.id', ondelete="CASCADE"),
+		nullable=False)
 	usertypesforsystem = relationship("UserTypesForSystem")
 
-	email = Column(String(254)) # email addresses are max 254 characters, no
-								# idea if the unicode encoding of email addr
-								# changes this.
+	email = Column(String(254))  # email addresses are max 254 characters, no
+	# idea if the unicode encoding of email addr
+	# changes this.
 	firstname = Column(String(255))
 	lastname = Column(String(255))
 	displayname = Column(String(255), unique=True)
@@ -115,20 +117,20 @@ class Users(Base, UserMixin):
 	# 'modified' can be counted on to be auto init/updated for manual
 	# (non-SQLAlchemy) database operations while 'created' will not.
 	modified = Column(
-			TIMESTAMP, 
-			default=func.current_timestamp(), 
-			onupdate=func.current_timestamp(), 
-			nullable=False)
-	created = Column(TIMESTAMP, default=func.current_timestamp(), 
-			nullable=False)
+		TIMESTAMP,
+		default=func.current_timestamp(),
+		onupdate=func.current_timestamp(),
+		nullable=False)
+	created = Column(TIMESTAMP, default=func.current_timestamp(),
+					 nullable=False)
 
 	@hybrid_property
 	def fullname(self):
 		if self.firstname and self.lastname:
 			return '%s %s' % (self.firstname, self.lastname)
-		elif self.firstname: # only first name provided
+		elif self.firstname:  # only first name provided
 			return self.firstname
-		elif self.lastname: # only last name provided
+		elif self.lastname:  # only last name provided
 			return self.lastname
 		else:
 			return None
@@ -144,7 +146,7 @@ class Users(Base, UserMixin):
 		else:
 			return None
 
-	def set_password(self, password, is_admin = False):
+	def set_password(self, password, is_admin=False):
 		category = None
 		if is_admin:
 			# enables more rounds for admin passwords
@@ -167,6 +169,7 @@ def populate_users(target, connection, **kw):
 	db_session.add(user)
 	db_session.commit()
 
+
 #################################################
 # Courses and Enrolment
 #################################################
@@ -179,12 +182,13 @@ class Courses(Base):
 	available = Column(Boolean, default=True, nullable=False)
 	users = relationship("CoursesAndUsers", backref="parent")
 	modified = Column(
-			TIMESTAMP, 
-			default=func.current_timestamp(), 
-			onupdate=func.current_timestamp(), 
-			nullable=False)
-	created = Column(TIMESTAMP, default=func.current_timestamp(), 
-			nullable=False)
+		TIMESTAMP,
+		default=func.current_timestamp(),
+		onupdate=func.current_timestamp(),
+		nullable=False)
+	created = Column(TIMESTAMP, default=func.current_timestamp(),
+					 nullable=False)
+
 
 # A "junction table" in sqlalchemy is called a many-to-many pattern. Such a
 # table can be automatically created by sqlalchemy from relationship
@@ -199,17 +203,18 @@ class CoursesAndUsers(Base):
 	users_id = Column(Integer, ForeignKey("Users.id"), nullable=False)
 	user = relationship("Users", backref="parent_assocs")
 	usertypesforcourse_id = Column(
-			Integer, 
-			ForeignKey('UserTypesForCourse.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('UserTypesForCourse.id', ondelete="CASCADE"),
+		nullable=False)
 	usertypesforcourse = relationship("UserTypesForCourse")
 	modified = Column(
-			TIMESTAMP, 
-			default=func.current_timestamp(), 
-			onupdate=func.current_timestamp(), 
-			nullable=False)
-	created = Column(TIMESTAMP, default=func.current_timestamp(), 
-			nullable=False)
+		TIMESTAMP,
+		default=func.current_timestamp(),
+		onupdate=func.current_timestamp(),
+		nullable=False)
+	created = Column(TIMESTAMP, default=func.current_timestamp(),
+					 nullable=False)
+
 
 #################################################
 # Tags for Posts, each course has their own set of tags
@@ -220,12 +225,13 @@ class Tags(Base):
 	id = Column(Integer, primary_key=True, nullable=False)
 	name = Column(String(255), unique=True, nullable=False)
 	courses_id = Column(
-			Integer, 
-			ForeignKey('Courses.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('Courses.id', ondelete="CASCADE"),
+		nullable=False)
 	course = relationship("Courses")
-	created = Column(TIMESTAMP, default=func.current_timestamp(), 
-			nullable=False)
+	created = Column(TIMESTAMP, default=func.current_timestamp(),
+					 nullable=False)
+
 
 #################################################
 # Posts - content postings made by users
@@ -235,56 +241,59 @@ class Posts(Base):
 	__tablename__ = 'Posts'
 	id = Column(Integer, primary_key=True, nullable=False)
 	users_id = Column(
-			Integer, 
-			ForeignKey('Users.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('Users.id', ondelete="CASCADE"),
+		nullable=False)
 	user = relationship("Users")
 	courses_id = Column(
-			Integer, 
-			ForeignKey('Courses.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('Courses.id', ondelete="CASCADE"),
+		nullable=False)
 	course = relationship("Courses")
 	content = Column(Text)
 	modified = Column(
-			TIMESTAMP, 
-			default=func.current_timestamp(), 
-			onupdate=func.current_timestamp(), 
-			nullable=False)
-	created = Column(TIMESTAMP, default=func.current_timestamp(), 
-			nullable=False)
+		TIMESTAMP,
+		default=func.current_timestamp(),
+		onupdate=func.current_timestamp(),
+		nullable=False)
+	created = Column(TIMESTAMP, default=func.current_timestamp(),
+					 nullable=False)
+
 
 class PostsForQuestions(Base):
 	__tablename__ = 'PostsForQuestions'
 	id = Column(Integer, primary_key=True, nullable=False)
 	posts_id = Column(
-			Integer, 
-			ForeignKey('Posts.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('Posts.id', ondelete="CASCADE"),
+		nullable=False)
 	post = relationship("Posts")
 	title = Column(String(255))
 	modified = Column(
-			TIMESTAMP, 
-			default=func.current_timestamp(), 
-			onupdate=func.current_timestamp(), 
-			nullable=False)
-	# don't need created time, posts store that info
+		TIMESTAMP,
+		default=func.current_timestamp(),
+		onupdate=func.current_timestamp(),
+		nullable=False)
+# don't need created time, posts store that info
+
 
 class PostsForAnswers(Base):
 	__tablename__ = 'PostsForAnswers'
 	id = Column(Integer, primary_key=True, nullable=False)
 	posts_id = Column(
-			Integer, 
-			ForeignKey('Posts.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('Posts.id', ondelete="CASCADE"),
+		nullable=False)
 	post = relationship("Posts")
+
 
 class PostsForComments(Base):
 	__tablename__ = 'PostsForComments'
 	id = Column(Integer, primary_key=True, nullable=False)
 	posts_id = Column(
-			Integer, 
-			ForeignKey('Posts.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('Posts.id', ondelete="CASCADE"),
+		nullable=False)
 	post = relationship("Posts")
 
 
@@ -299,32 +308,34 @@ class Criteria(Base):
 	description = Column(Text)
 	# user who made this criteria
 	users_id = Column(
-			Integer, 
-			ForeignKey('Users.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('Users.id', ondelete="CASCADE"),
+		nullable=False)
 	user = relationship("Users")
 	modified = Column(
-			TIMESTAMP, 
-			default=func.current_timestamp(), 
-			onupdate=func.current_timestamp(), 
-			nullable=False)
-	created = Column(TIMESTAMP, default=func.current_timestamp(), 
-			nullable=False)
+		TIMESTAMP,
+		default=func.current_timestamp(),
+		onupdate=func.current_timestamp(),
+		nullable=False)
+	created = Column(TIMESTAMP, default=func.current_timestamp(),
+					 nullable=False)
+
 
 # each course can have different criterias
 class CriteriaAndCourses(Base):
 	__tablename__ = 'CriteriaAndCourses'
 	id = Column(Integer, primary_key=True, nullable=False)
 	criteria_id = Column(
-			Integer, 
-			ForeignKey('Criteria.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('Criteria.id', ondelete="CASCADE"),
+		nullable=False)
 	criteria = relationship("Criteria")
 	courses_id = Column(
-			Integer, 
-			ForeignKey('Courses.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('Courses.id', ondelete="CASCADE"),
+		nullable=False)
 	course = relationship("Courses")
+
 
 #################################################
 # Scores - The calculated score of the answer
@@ -335,14 +346,14 @@ class Scores(Base):
 	id = Column(Integer, primary_key=True, nullable=False)
 	name = Column(String(255), unique=True, nullable=False)
 	criteria_id = Column(
-			Integer, 
-			ForeignKey('Criteria.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('Criteria.id', ondelete="CASCADE"),
+		nullable=False)
 	criteria = relationship("Criteria")
 	postsforanswers_id = Column(
-			Integer, 
-			ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
+		nullable=False)
 	answer = relationship("PostsForAnswers")
 	# number of times this answer has been judged
 	rounds = Column(Integer, default=0)
@@ -350,6 +361,7 @@ class Scores(Base):
 	wins = Column(Integer, default=0)
 	# calculated score based on all previous judgements
 	score = Column(Float, default=0)
+
 
 #################################################
 # Judgements - User's judgements on the answers
@@ -359,58 +371,60 @@ class AnswerPairings(Base):
 	__tablename__ = 'AnswerPairings'
 	id = Column(Integer, primary_key=True)
 	postsforquestions_id = Column(
-			Integer, 
-			ForeignKey('PostsForQuestions.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('PostsForQuestions.id', ondelete="CASCADE"),
+		nullable=False)
 	question = relationship("PostsForQuestions")
 	postsforanswers_id1 = Column(
-			Integer, 
-			ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
+		nullable=False)
 	answer1 = relationship("PostsForAnswers", foreign_keys=[postsforanswers_id1])
 	postsforanswers_id2 = Column(
-			Integer, 
-			ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
+		nullable=False)
 	answer2 = relationship("PostsForAnswers", foreign_keys=[postsforanswers_id2])
 	winner_id = Column(
-			Integer, 
-			ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
+		nullable=False)
 	winner = relationship("PostsForAnswers", foreign_keys=[winner_id])
 	modified = Column(
-			TIMESTAMP, 
-			default=func.current_timestamp(), 
-			onupdate=func.current_timestamp(), 
-			nullable=False)
-	created = Column(TIMESTAMP, default=func.current_timestamp(), 
-			nullable=False)
+		TIMESTAMP,
+		default=func.current_timestamp(),
+		onupdate=func.current_timestamp(),
+		nullable=False)
+	created = Column(TIMESTAMP, default=func.current_timestamp(),
+					 nullable=False)
+
 
 class Judgements(Base):
 	__tablename__ = 'Judgements'
 	id = Column(Integer, primary_key=True)
 	users_id = Column(
-			Integer, 
-			ForeignKey('Users.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('Users.id', ondelete="CASCADE"),
+		nullable=False)
 	user = relationship("Users")
 	answerpairings_id = Column(
-			Integer, 
-			ForeignKey('AnswerPairings.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('AnswerPairings.id', ondelete="CASCADE"),
+		nullable=False)
 	answerpairing = relationship("AnswerPairings")
 	criteria_id = Column(
-			Integer, 
-			ForeignKey('Criteria.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('Criteria.id', ondelete="CASCADE"),
+		nullable=False)
 	criteria = relationship("Criteria")
 	modified = Column(
-			TIMESTAMP, 
-			default=func.current_timestamp(), 
-			onupdate=func.current_timestamp(), 
-			nullable=False)
-	created = Column(TIMESTAMP, default=func.current_timestamp(), 
-			nullable=False)
+		TIMESTAMP,
+		default=func.current_timestamp(),
+		onupdate=func.current_timestamp(),
+		nullable=False)
+	created = Column(TIMESTAMP, default=func.current_timestamp(),
+					 nullable=False)
+
 
 class LTIInfo(Base):
 	__tablename__ = 'LTIInfo'
@@ -418,8 +432,8 @@ class LTIInfo(Base):
 	LTIid = Column(String(100))
 	LTIURL = Column(String(100))
 	courses_id = Column(
-			Integer, 
-			ForeignKey('Courses.id', ondelete="CASCADE"),
-			nullable=False)
+		Integer,
+		ForeignKey('Courses.id', ondelete="CASCADE"),
+		nullable=False)
 	course = relationship("Courses")
 
