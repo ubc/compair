@@ -10,7 +10,7 @@ var module = angular.module('ubc.ctlt.acj.user', ['ngResource']);
 
 /***** Providers *****/
 module.factory('UserResource', function($resource) {
-	return $resource('/api/Users/:id', {id: '@id'});
+	return $resource('/api/users/:id', {id: '@id'});
 });
 
 /***** Controllers *****/

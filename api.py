@@ -20,8 +20,8 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 # initialize Flask-Restless
 manager = flask.ext.restless.APIManager(app, session=db_session)
-manager.create_api(Courses)
-manager.create_api(Users, exclude_columns=['password'], include_methods=['avatar'])
+manager.create_api(Courses, collection_name="courses")
+manager.create_api(Users, exclude_columns=['password'], include_methods=['avatar'], collection_name="users")
 # initialize rest of the api modules
 app.register_blueprint(login_api)
 
