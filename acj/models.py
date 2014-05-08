@@ -124,6 +124,8 @@ class Users(Base, UserMixin):
 	created = Column(TIMESTAMP, default=func.current_timestamp(),
 					 nullable=False)
 
+	courses = relationship("CoursesAndUsers")
+
 	@hybrid_property
 	def fullname(self):
 		if self.firstname and self.lastname:
@@ -152,7 +154,6 @@ class Users(Base, UserMixin):
 			# enables more rounds for admin passwords
 			category = "admin"
 		self.password = pwd_context.encrypt(password, category=category)
-
 
 	def verify_password(self, password):
 		return pwd_context.verify(password, self.password)
@@ -189,11 +190,13 @@ class Courses(Base):
 	created = Column(TIMESTAMP, default=func.current_timestamp(),
 					 nullable=False)
 
+	users = relationship("CoursesAndUsers")
+
 
 # A "junction table" in sqlalchemy is called a many-to-many pattern. Such a
 # table can be automatically created by sqlalchemy from relationship
 # definitions along. But if additional fields are needed, then we can
-# explicitly definte such a table using the "association object" pattern.
+# explicitly define such a table using the "association object" pattern.
 # For determining a course's users, we're using the association object approach
 # since we need to declare the user's role in the course.
 class CoursesAndUsers(Base):
