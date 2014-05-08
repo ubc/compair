@@ -34,12 +34,12 @@ module.factory('AuthenticationService', function($rootScope, $resource, $cookieS
 			}
 			return false;
 		},
-		set: function (newUser) {
+		login: function (newUser) {
 			_user = newUser;
 			$cookieStore.put('current.user', newUser);
 			$rootScope.$broadcast(this.LOGIN_EVENT);
 		},
-		remove: function() {
+		logout: function() {
 			_user = null
 			$cookieStore.remove('current.user', _user);
 			$rootScope.$broadcast(this.LOGOUT_EVENT);

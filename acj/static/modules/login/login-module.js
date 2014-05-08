@@ -47,7 +47,7 @@ module.controller(
 					user = UserResource.get({id: userid}).$promise.then(
 						function(ret) {
 							$log.debug("Retrived logged in user's data: " + JSON.stringify(ret));
-							AuthenticationService.set(ret);
+							AuthenticationService.login(ret);
 							$location.path("/");
 						},
 						function(ret) {
@@ -70,5 +70,20 @@ module.controller(
 	}
 );
 
+module.controller(
+	"LogoutController",
+	function LogoutController($scope, $location, $log, LoginResource, AuthenticationService) {
+		$scope.logout = function() {
+			LoginResource.logout().$promise.then(
+				function() {
+					$log.debug("Logging out user successful.");
+					AuthenticationService.logout();
+					$location.path("/login");
+				}
+				// TODO do we care about logout failure? if so, handle it here
+			);
+		};
+	}
+);
 // End anonymous function
 })();

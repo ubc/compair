@@ -5,11 +5,11 @@ var myApp = angular.module('myApp', [
 	'http-auth-interceptor', 
 	'ngCookies', 
 	'ngUpload',
-	'$strap.directives', 
 	'ubc.ctlt.acj.common.flash', // TODO Remove once split into modules done
 	'ubc.ctlt.acj.common.installed', // TODO Remove once split into modules done
 	'ubc.ctlt.acj.installer',
-	'ubc.ctlt.acj.login'
+	'ubc.ctlt.acj.login',
+	'ubc.ctlt.acj.navbar'
 ]);
 
 //Global Variables
