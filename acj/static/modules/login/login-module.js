@@ -26,6 +26,23 @@ module.factory('LoginResource', function($resource) {
 	);
 });
 
+/***** Directives *****/
+// TODO this might be useful elsewhere, if we need to autofocus something
+// html5 property autofocus behaves differently on Firefox than in Chrome, in Firefox
+// it only works before onload, so it doesn't do anything if we pop the login modal
+// after the entire page has been loaded.
+// The timeout forces a wait for the loginbox to be rendered.
+module.directive('autoFocus', function($timeout) {
+    return {
+        restrict: 'AC',
+        link: function(_scope, _element) {
+            $timeout(function(){
+                _element[0].focus();
+            }, 0);
+        }
+    };
+});
+
 /***** Listeners *****/
 // display the login page if user is not logged in
 module.run(function ($rootScope, $log, $modal, AuthenticationService) {

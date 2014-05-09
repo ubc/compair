@@ -13,16 +13,6 @@ myApp.directive('backButton', function(){
     };
 });
 
-myApp.directive('inputFocus', function() {
-	return {
-		restrict: 'A',
-		
-		link: function(scope, element, attrs) {
-			angular.element(element).focus();
-		}
-	};
-});
- 
 myApp.directive('halloEditor', function() {
     return {
         restrict: 'A',
