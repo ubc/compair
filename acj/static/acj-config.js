@@ -139,10 +139,6 @@ myApp.config( function ($routeProvider) {
 				controller: JudgepageController,
 				templateUrl: 'judgepage.html'
 			})
-		.when ('/login',
-			{
-				templateUrl: 'modules/login/login-partial.html'
-			})
 		.when ('/createuser',
 			{
 				controller: UserController,

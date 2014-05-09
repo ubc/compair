@@ -5,8 +5,6 @@
 
 var module = angular.module('ubc.ctlt.acj.navbar',
 	[
-		'ngAnimate',
-		'mgcrea.ngStrap',
 		'ubc.ctlt.acj.authentication',
 		'ubc.ctlt.acj.login' // for LogoutController
 	]
@@ -43,6 +41,10 @@ module.controller(
 		$scope.$on(AuthenticationService.LOGOUT_EVENT, updateAuthentication);
 		// initialize authentication information
 		updateAuthentication();
+
+		$scope.showLogin = function() {
+			$scope.$emit(AuthenticationService.LOGIN_REQUIRED_EVENT);
+		};
 
 		// TODO Not sure what listening to judgement, steps do
 		$scope.$on("JUDGEMENT", function(event) {

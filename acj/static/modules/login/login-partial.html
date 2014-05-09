@@ -1,11 +1,11 @@
 <div ng-controller="LoginController" class="center-block">
 	<div class="alert alert-danger text-center" ng-show="login_err">{{login_err}}</div>
 
-	<form name="loginForm" class="form-inline" ng-submit="submit()" novalidate>
-		<div class="form-group"><h4>Login</h4></div>
+	<form name="loginForm" class="form" ng-submit="submit()" novalidate>
+		<div class="form-group"><h3 class="text-center">Login</h3></div>
 		<div class="form-group has-feedback"
 			 ng-class="{'has-error': loginForm.username.$invalid, 'has-success': loginForm.username.$valid}">
-			<label for="inputUser" class="sr-only">Username</label>
+			<label for="inputUser">Username</label>
 			<input type="text" id="inputUser" name="username" ng-model="username" required
 				   placeholder="Username" class="form-control" input-focus>
 			<span ng-show="!loginForm.username.$invalid" class="fa fa-check form-control-feedback"></span>
@@ -13,13 +13,16 @@
 		</div>
 		<div class="form-group has-feedback"
 			ng-class="{'has-error': loginForm.password.$invalid, 'has-success': loginForm.password.$valid}">
-			<label for="inputPass" class="sr-only">Password</label>
+			<label for="inputPass">Password</label>
 			<input type="password" id="inputPass" name="password" ng-model="password" required
 				   placeholder="Password" class="form-control">
 			<span ng-show="loginForm.password.$valid" class="fa fa-check form-control-feedback"></span>
 			<span ng-show="loginForm.password.$invalid" class="fa fa-times form-control-feedback"></span>
 		</div>
-		<input type="submit" ng-disabled="loginForm.$invalid || submitted" class="btn btn-primary" value="Sign In">
-		<span class="label label-info" ng-show="submitted">Logging in...</span>
+		<input type="submit" ng-disabled="loginForm.$invalid || submitted"
+			   class="btn btn-primary center-block" value="Sign In">
+		<span class="label label-info" ng-show="submitted">
+			<i class="fa fa-refresh"></i>
+		</span>
 	</form>
 </div>

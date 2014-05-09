@@ -1,17 +1,3 @@
-myApp.directive('authLogin', function($location, $cookieStore) {
-	return {
-		link: function(scope, elem, attrs) {
-			scope.$on('event:auth-loginRequired', function() {
-				$location.path('/login');
-			});
-			scope.$on('event:auth-loginConfirmed', function() {
-				$location.path('/');
-				$cookieStore.put('loggedIn', true);
-			});
-		}
-	};
-});
-
 myApp.directive('backButton', function(){
     return {
       restrict: 'A',

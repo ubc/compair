@@ -1,3 +1,21 @@
+/***** AngularStrap's Modal *****/
+.modal-backdrop.am-fade {
+  opacity: .5;
+  transition: opacity .15s linear;
+  &.ng-enter {
+    opacity: 0;
+    &.ng-enter-active {
+      opacity: .5;
+    }
+  }
+  &.ng-leave {
+    opacity: .5;
+    &.ng-leave-active {
+      opacity: 0;
+    }
+  }
+}
+
 /***** UNIVERSAL *****/
 h1, h2 {
   text-align: center; }
@@ -5,14 +23,6 @@ h1, h2 {
 form {
   margin-top: 1em;
   margin-bottom: 1em; }
-
-/* otherwise collides with navbar */
-.dropdown-menu {
-	z-index: 1001;
-}
-/***** INDEX PAGE *****/
-#main {
-  padding: 1em; }
 
 /***** QUESTION PAGE *****/
 div.questionContent {
