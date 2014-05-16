@@ -140,10 +140,14 @@ class Users(Base, UserMixin):
 	# Note that in order for avatar to be provided with Flask-Restless, it can't
 	# be a hybrid_property due to self.email not being resolved yet when
 	# Flask-Restless tries to use it.
+	# According to gravatar's hash specs
+	# 	1.Trim leading and trailing whitespace from an email address
+	# 	2.Force all characters to lower-case
+	# 	3.md5 hash the final string
 	def avatar(self):
 		if self.email:
 			m = hashlib.md5()
-			m.update(self.email)
+			m.update(self.email.strip().lower())
 			return m.hexdigest()
 		else:
 			return None
