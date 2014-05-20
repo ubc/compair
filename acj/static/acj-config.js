@@ -7,6 +7,7 @@ var myApp = angular.module('myApp', [
 	'ngUpload',
 	'ubc.ctlt.acj.common.flash', // TODO Remove once split into modules done
 	'ubc.ctlt.acj.common.installed', // TODO Remove once split into modules done
+	'ubc.ctlt.acj.home',
 	'ubc.ctlt.acj.installer',
 	'ubc.ctlt.acj.login',
 	'ubc.ctlt.acj.navbar'
@@ -131,8 +132,7 @@ myApp.config( function ($routeProvider) {
 			})
 		.when ('/', 
 			{
-				controller: CourseController,
-				templateUrl: 'coursepage.html'
+				templateUrl: 'modules/home/home-partial.html'
 			})
 		.when ('/judgepage/:questionId',
 			{

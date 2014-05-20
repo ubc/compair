@@ -48,7 +48,9 @@
 		<!-- - Non-Route Modules -->
 		<script src="modules/authentication/authentication-service.js"></script>
 		<script src="modules/user/user-resource.js"></script>
+		<script src="modules/course/course-resource.js"></script>
 		<!-- - Individual Route Modules -->
+		<script src="modules/home/home-module.js"></script>
 		<script src="modules/installer/installer-module.js"></script>
 		<script src="modules/login/login-module.js"></script>
 		<script src="modules/navbar/navbar-module.js"></script>
@@ -150,12 +152,8 @@
 				<flash-messages></flash-messages>
 			</div>
 		</div>
-		<!-- ngView row -->
-		<div class="row">
-			<div class="col-sm-12">
-				<div ng-view=""></div>
-			</div>
-		</div>
+		<!-- ngView, should have it's own row and column css organization -->
+		<div ng-view=""></div>
 	</div>
 	</body>
 </html>

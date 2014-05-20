@@ -117,7 +117,14 @@ module.controller(
 				function(ret) {
 					// login failed
 					$log.debug("Login authentication failed.");
-					$scope.login_err = ret.data.error;
+					if (ret.data.error)
+					{
+						$scope.login_err = ret.data.error;
+					}
+					else
+					{
+						$scope.login_err = "Server error during authentication.";
+					}
 					$scope.submitted = false;
 				}
 			);

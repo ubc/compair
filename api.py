@@ -21,11 +21,18 @@ login_manager.init_app(app)
 # initialize Flask-Restless
 manager = flask.ext.restless.APIManager(app, session=db_session)
 manager.create_api(
-	Courses, collection_name="courses",
-	exclude_columns=['user.password'], include_methods=['user.avatar'])
+	Courses,
+	collection_name="courses" # default API route created is the table name,
+								# which results in caps in url /api/Courses.
+								# this overrides that so we get the standard
+								# lower case /api/courses
+)
+
 manager.create_api(
-	Users, collection_name="users",
-	exclude_columns=['password'], include_methods=['avatar'])
+	Users,
+	collection_name="users"
+)
+
 # initialize rest of the api modules
 app.register_blueprint(login_api)
 
@@ -35,9 +42,11 @@ def load_user(user_id):
 	logger.debug("User logging in, ID: " + user_id)
 	return Users.query.get(int(user_id))
 
-
+# Looks like exception=None is required. Without it, I got sqlalchemy exception
+# about transactions needing to be rolled back, failing login. Seems to have
+# something to do with the session connection expiring and not being renewed?
 @app.teardown_appcontext
-def shutdown_session():
+def shutdown_session(exception=None):
 	db_session.remove()
 
 # start the web server
