@@ -1,8 +1,7 @@
-import json
 import logging
 
-from flask import Blueprint, request
-from flask.ext.login import login_required, login_user, logout_user
+from flask import Blueprint, jsonify, request
+from flask.ext.login import current_user, login_required, login_user, logout_user
 
 from acj.models import Users
 
@@ -26,16 +25,18 @@ def login():
 	else:
 		# username valid, password valid, login successful
 		# "remember me" functionality is available, do we want to implement?
-		login_user(user)
+		user.update_lastonline()
+		login_user(user) # flask-login store user info
 		logger.debug("Login successful for: " + user.username)
-		return json.dumps({"userid": user.id})
+		return jsonify({"userid": user.id})
 
 	# login unsuccessful
-	return json.dumps({"error": 'Sorry, unrecognized username or password.'}), 400
+	return jsonify({"error": 'Sorry, unrecognized username or password.'}), 400
 
 
 @login_api.route('/login/logout', methods=['DELETE'])
 @login_required
 def logout():
-	logout_user()
+	current_user.update_lastonline()
+	logout_user() # flask-login delete user info
 	return ""

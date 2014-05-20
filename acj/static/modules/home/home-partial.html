@@ -2,21 +2,21 @@
 <h1>My Courses</h1>
 
 <div class="navbar">
-	<form class="form-inline searchCourse pull-right" ng-show="admin">
+	<form class="form-inline searchCourse pull-right">
 		<span>Search Course:</span> 
 		<div class="form-group">
 			<input class="form-control" type="text" ng-model="cquery">
 		</div>
 	</form>
 	<a ng-click="check = !check" class="btn btn-default"
-		ng-show="instructor" ng-disabled="check" id="step1"> <span
+		ng-disabled="check" id="step1"> <span
 		class="glyphicon glyphicon-book"></span> Create Course
-	</a> <a id="step4" class="btn btn-default" ng-show="instructor"
+	</a> <a id="step4" class="btn btn-default"
 		href="#/classimport"> <span class="glyphicon glyphicon-upload"></span>
 		Import Students
 	</a>
 </div>
-<form class="form-inline createCourse" ng-show="check" ng-submit="submit()">
+<form class="form-inline createCourse" ng-submit="submit()">
 	<label for="courseName">Course Name: </label>
 	<div class="input-append form-group">
 		<input id="courseName" type="text" ng-model="course" class="form-control" maxlength="80"/>
@@ -25,27 +25,28 @@
 	<br><br>
 </form>
 <span ng-show="courses.length == 0">You are not enrolled in any courses.</span>
+	{{courses}}
 <table class="table table-hover">
 <tbody>
 		<tr ng-repeat="course in courses | orderBy:orderProp | filter:cquery">
-			<td ng-click="redirect('/questionpage/{{course.id}}')"
-				class="pointer" id="step2"><b>{{course.name}}</b></td>
-			<td ng-click="redirect('/questionpage/{{course.id}}')"
+			<td ng-click="redirect('/questionpage/{{course.course.id}}')"
+				class="pointer" id="step2"><b>{{course.course.name}}</b></td>
+			<td ng-click="redirect('/questionpage/{{course.course.id}}')"
 				class="pointer"><span class="label"
-				ng-class="{'label-success': course.count > 0, 'label-default': course.count == 0}">{{course.count}} question(s)</span></td>
-			<td ng-click="redirect('/questionpage/{{course.id}}')"
+				ng-class="{'label-success': course.course.count > 0, 'label-default': course.course.count == 0}">{{course.course.count}} question(s)</span></td>
+			<td ng-click="redirect('/questionpage/{{course.course.id}}')"
 				class="pointer"><span class="label"
-				ng-class="{'label-success': course.new > 0, 'label-default': course.new == 0}">{{course.new}} new question(s)</span></td>
-			<td><a id="step3" class="btn btn-default btn-sm" ng-show="course.role == 'Teacher' || course.role == 'Admin'"
-				href="#/enrollpage/{{course.id}}"> <span class="glyphicon glyphicon-plus-sign"></span >
+				ng-class="{'label-success': course.course.new > 0, 'label-default': course.course.new == 0}">{{course.course.new}} new question(s)</span></td>
+			<td><a id="step3" class="btn btn-default btn-sm" ng-show="course.course.role == 'Teacher' || course.course.role == 'Admin'"
+				href="#/enrollpage/{{course.course.id}}"> <span class="glyphicon glyphicon-plus-sign"></span >
 					Enrol Users
 			</a></td>
-			<td><a class="btn btn-default btn-sm" ng-show="course.role == 'Teacher' || course.role == 'Admin'"
-				href="#/editcourse/{{course.id}}"> <span class="glyphicon glyphicon-edit"></span >
+			<td><a class="btn btn-default btn-sm" ng-show="course.course.role == 'Teacher' || course.course.role == 'Admin'"
+				href="#/editcourse/{{course.course.id}}"> <span class="glyphicon glyphicon-edit"></span >
 					Edit Course
 			</a></td>
-			<td><a class="btn btn-default btn-sm" ng-show="course.role == 'Teacher' || course.role == 'Admin'"
-				href="#/stats/{{course.id}}"> <span class="glyphicon glyphicon-stats"></span >
+			<td><a class="btn btn-default btn-sm" ng-show="course.course.role == 'Teacher' || course.course.role == 'Admin'"
+				href="#/stats/{{course.course.id}}"> <span class="glyphicon glyphicon-stats"></span >
 					View Statistics
 			</a></td>
 		</tr>

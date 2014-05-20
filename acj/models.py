@@ -19,19 +19,23 @@
 ##	 subcategory, e.g.: we have a "Posts" table for all posts and a 
 ##	 "PostsForQuestions" table for posts that are meant to be questions
 
+import logging
+import hashlib
 
-from sqlalchemy import Boolean, Column, DateTime, event, Float, ForeignKey, Integer, String, Text, TIMESTAMP
+from sqlalchemy import Boolean, Column, DateTime, event, Float, ForeignKey, Integer, String, Text, TIMESTAMP, \
+	UniqueConstraint
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func, text
 
-import hashlib
 #  import the context under an app-specific name (so it can easily be replaced later)
 from passlib.apps import custom_app_context as pwd_context
 
 from flask.ext.login import UserMixin
 
 from acj.database import Base, db_session, default_table_args
+
+logger = logging.getLogger(__name__)
 
 #################################################
 # Users
@@ -46,6 +50,7 @@ class UserTypesForCourse(Base):
 	name = Column(String(255), unique=True, nullable=False)
 
 	# constants for the user types
+	TYPE_DROPPED = "Dropped"
 	TYPE_STUDENT = "Student"
 	TYPE_TA = "Teaching Assistant"
 	TYPE_INSTRUCTOR = "Instructor"
@@ -54,9 +59,12 @@ class UserTypesForCourse(Base):
 # initialize the database with preloaded data using the event system
 @event.listens_for(UserTypesForCourse.__table__, "after_create", propagate=True)
 def populate_usertypesforcourse(target, connection, **kw):
-	usertypes = [UserTypesForCourse.TYPE_STUDENT,
-				 UserTypesForCourse.TYPE_TA,
-				 UserTypesForCourse.TYPE_INSTRUCTOR]
+	usertypes = [
+		UserTypesForCourse.TYPE_DROPPED,
+		UserTypesForCourse.TYPE_STUDENT,
+		UserTypesForCourse.TYPE_TA,
+		UserTypesForCourse.TYPE_INSTRUCTOR
+	]
 	for usertype in usertypes:
 		entry = UserTypesForCourse(name=usertype)
 		db_session.add(entry)
@@ -102,7 +110,7 @@ class Users(Base, UserMixin):
 		Integer,
 		ForeignKey('UserTypesForSystem.id', ondelete="CASCADE"),
 		nullable=False)
-	usertypesforsystem = relationship("UserTypesForSystem")
+	usertypeforsystem = relationship("UserTypesForSystem")
 
 	email = Column(String(254))  # email addresses are max 254 characters, no
 	# idea if the unicode encoding of email addr
@@ -123,8 +131,7 @@ class Users(Base, UserMixin):
 		nullable=False)
 	created = Column(TIMESTAMP, default=func.current_timestamp(),
 					 nullable=False)
-
-	courses = relationship("CoursesAndUsers")
+	coursesandusers = relationship("CoursesAndUsers")
 
 	@hybrid_property
 	def fullname(self):
@@ -162,6 +169,12 @@ class Users(Base, UserMixin):
 	def verify_password(self, password):
 		return pwd_context.verify(password, self.password)
 
+	def update_lastonline(self):
+		logger.debug("Update Last Online");
+		self.lastonline = func.current_timestamp()
+		db_session.add(self)
+		db_session.commit()
+
 
 # create a default root user with sysadmin role
 @event.listens_for(Users.__table__, "after_create", propagate=True)
@@ -170,7 +183,7 @@ def populate_users(target, connection, **kw):
 		UserTypesForSystem.name == UserTypesForSystem.TYPE_SYSADMIN).first()
 	user = Users(username="root", displayname="root")
 	user.set_password("password", True)
-	user.usertypesforsystem = sysadmintype
+	user.usertypeforsystem = sysadmintype
 	db_session.add(user)
 	db_session.commit()
 
@@ -185,7 +198,7 @@ class Courses(Base):
 	name = Column(String(255), unique=True, nullable=False)
 	description = Column(Text)
 	available = Column(Boolean, default=True, nullable=False)
-	users = relationship("CoursesAndUsers", backref="parent")
+	coursesandusers = relationship("CoursesAndUsers")
 	modified = Column(
 		TIMESTAMP,
 		default=func.current_timestamp(),
@@ -193,9 +206,6 @@ class Courses(Base):
 		nullable=False)
 	created = Column(TIMESTAMP, default=func.current_timestamp(),
 					 nullable=False)
-
-	users = relationship("CoursesAndUsers")
-
 
 # A "junction table" in sqlalchemy is called a many-to-many pattern. Such a
 # table can be automatically created by sqlalchemy from relationship
@@ -207,13 +217,14 @@ class CoursesAndUsers(Base):
 	__tablename__ = 'CoursesAndUsers'
 	id = Column(Integer, primary_key=True, nullable=False)
 	courses_id = Column(Integer, ForeignKey("Courses.id"), nullable=False)
+	course = relationship("Courses")
 	users_id = Column(Integer, ForeignKey("Users.id"), nullable=False)
-	user = relationship("Users", backref="parent_assocs")
+	user = relationship("Users")
 	usertypesforcourse_id = Column(
 		Integer,
 		ForeignKey('UserTypesForCourse.id', ondelete="CASCADE"),
 		nullable=False)
-	usertypesforcourse = relationship("UserTypesForCourse")
+	usertypeforcourse = relationship("UserTypesForCourse")
 	modified = Column(
 		TIMESTAMP,
 		default=func.current_timestamp(),
@@ -221,6 +232,10 @@ class CoursesAndUsers(Base):
 		nullable=False)
 	created = Column(TIMESTAMP, default=func.current_timestamp(),
 					 nullable=False)
+	__table_args__ = (
+		# prevent duplicate user in courses
+		UniqueConstraint('courses_id', 'users_id', name='_unique_user_and_course'),
+	)
 
 
 #################################################

@@ -13,6 +13,7 @@
 // name.
 var module = angular.module('ubc.ctlt.acj.home',
 	[
+		'ubc.ctlt.acj.authentication',
 		'ubc.ctlt.acj.course',
 		'ubc.ctlt.acj.user'
 	]
@@ -25,12 +26,27 @@ var module = angular.module('ubc.ctlt.acj.home',
 /***** Controllers *****/
 module.controller(
 	'HomeController',
-	function HomeController($rootScope, $scope, $location, CourseResource,
+	function HomeController($rootScope, $scope, $location, $log,
+							AuthenticationService,
+							CourseResource,
 							UserResource,
 							loginService, flashService) {
 		// the property by which the list of courses will be sorted
 		$scope.orderProp = 'name';
 		$rootScope.breadcrumb = [{'name':'Home'}];
+
+		$log.debug("Getting authen service user id: " );
+		$log.debug(AuthenticationService.getUser().id);
+		UserResource.getUserCourses({id: AuthenticationService.getUser().id}).$promise.then(
+			function(ret) {
+				$log.debug("Success!");
+				$log.debug(ret);
+				$scope.courses = ret.objects;
+			},
+			function (ret) {
+				$log.debug("Failure!");
+			}
+		);
 
 		var login = loginService.get( function() {
 			type = login.usertype;
