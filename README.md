@@ -53,24 +53,38 @@ This results in the following commands:
 
 Running the application
 -----------------------
-Edit `acj/settings.py` with the proper configurations for database access.
+Create `config.py` with the proper configurations.
 
-Run `acj/install.py` to initialize the database.
+Run the following commands from terminal:
 
-To start the application execute `python runacj.py`.
-
-To start the application in a testing environment use the parameter '--t'. This enables functionality such as resetting the database and shutting down the webserver via URL.
+    # install the dependencies
+    pip install -r /path/to/requirements.txt
+    # create database tables and populate initial data
+    python manage.py database create
+    # run the server
+    python manage.py runserver
 
 Database
 --------
-When running the application, any missing tables are automatically created.
-For any updates to the database model SQLAlchemy Alembic scripts are used. ([detailed information](http://alembic.readthedocs.org/en/latest/))
+###Initial Setup
+To create the tables in the database:
 
+    python manage.py database create
+
+Or drop the existing data and recreate the tables:
+
+    python manage.py database recreate
+
+For the full list commands for the database management:
+
+    python manage.py database
+
+For any updates to the database model SQLAlchemy Alembic scripts are used. ([detailed information](http://alembic.readthedocs.org/en/latest/))
 ###Setting up Alembic
 * Setup the environment: `alembic init alembic`
 * Set the "sqlalchemy.url" in alembic.ini
 
-###Updating the databse schema
+###Updating the database schema
 * When the application gets updated simply run: `alembic upgrade head`
 
 Conventions

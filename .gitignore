@@ -41,3 +41,5 @@ tmp/*
 # idea project file
 .idea
 .ropeproject/
+*.db
+config.py

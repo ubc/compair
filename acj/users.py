@@ -22,17 +22,17 @@ def get_users():
 	pagination_result = to_dict_paginated(["coursesandusers"], request, Users.query)
 	# strip password hash
 	for user in pagination_result["objects"]:
-		del user["password"]
+		del user["_password"]
 	return jsonify(pagination_result)
 
 @users_api.route('/<id>')
 @login_required
 def get_user(id):
 	user = Users.query.get(id)
-	ensure(READ, user) # check that the logged in user can read this user
+	ensure(READ, user)  # check that the logged in user can read this user
 	user_ret = to_dict(user, ["coursesandusers"])
 	# strip password hash
-	del user_ret['password']
+	del user_ret['_password']
 	return jsonify(user_ret)
 
 # returns a list of courses that this user is enroled in
