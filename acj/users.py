@@ -1,28 +1,16 @@
-import csv
-import datetime
-import json
 import logging
-import os
-import pprint
-import random
-import re
-import string
 
-from flask import Blueprint, current_app, jsonify, request, session
-from flask.ext.login import current_user, login_required
-from flask.ext.bouncer import requires, ensure
-from bouncer.constants import READ, MANAGE, DELETE
-import flask.ext.restless.helpers as restless_helper
+from flask import Blueprint, jsonify, request
+from bouncer.constants import READ, MANAGE
 
-from werkzeug.utils import secure_filename
-
-import validictory
+from flask_bouncer import requires, ensure
+from flask_login import login_required
+from acj.util import to_dict, to_dict_paginated
 
 logger = logging.getLogger(__name__)
 
 #from general import admin, teacher, commit, hasher
-from acj.database import db_session
-from acj.models import CoursesAndUsers, Users, UserTypesForSystem
+from acj.models import Users
 
 users_api = Blueprint('users_api', __name__)
 
@@ -31,29 +19,18 @@ users_api = Blueprint('users_api', __name__)
 @login_required
 @requires(MANAGE, Users)
 def get_users():
-	# pagination parameters from GET
-	page = request.args.get('page', 1)
-	page = int(page) # they need to be ints
-	results_per_page = request.args.get('results_per_page', 1)
-	results_per_page = int(results_per_page)
-	# calculate offset
-	offset = (page - 1) * results_per_page
-	# get data
-	users_rows = Users.query.limit(results_per_page).offset(offset).all()
-	users_ret = _to_dict(users_rows, ["coursesandusers"])
+	pagination_result = to_dict_paginated(["coursesandusers"], request, Users.query)
 	# strip password hash
-	for user in users_ret:
+	for user in pagination_result["objects"]:
 		del user["password"]
-	return jsonify({
-		"num_results": len(users_ret), "objects": users_ret, "pages": 1, "total_pages": 1})
-
+	return jsonify(pagination_result)
 
 @users_api.route('/<id>')
 @login_required
 def get_user(id):
 	user = Users.query.get(id)
 	ensure(READ, user) # check that the logged in user can read this user
-	user_ret = _to_dict(user, ["coursesandusers"])
+	user_ret = to_dict(user, ["coursesandusers"])
 	# strip password hash
 	del user_ret['password']
 	return jsonify(user_ret)
@@ -69,43 +46,15 @@ def get_courses_that_user_is_enroled_in(id):
 		ensure(READ, courseanduser)
 		coursesandusers.append(courseanduser)
 
-	courses_ret = _to_dict(coursesandusers, ["user"])
+	# sort alphabetically by course name
+	coursesandusers.sort(key=lambda courseanduser: courseanduser.course.name)
+	# convert to dict
+	courses_ret = to_dict(coursesandusers, ["user"])
 
 	# TODO REMOVE COURSES WHERE USER IS DROPPED?
+	# TODO REMOVE COURSES WHERE COURSE IS UNAVAILABLE?
 
 	return jsonify({"objects": courses_ret})
-
-# Use Flask-Restless to convert sqlalchemy results into an array or dict that ca be fed to Flask's
-# jsonify() method.
-#
-# objects - can be a list or a single instance of sqlalchemy model objects to be converted, can be a list or a single object
-# relations_to_remove - model relations that should be ignored as part of the resulting dict
-def _to_dict(objects, relations_to_remove):
-	single_instance = True
-	if type(objects) is list:
-		if not objects: # empty list
-			return []
-		single_instance = False
-	else:
-		# treat single instance objects like a multi-instance to save some code
-		objects = [objects]
-
-	# get all of the related models that can be pulled
-	relations = restless_helper.get_relations(objects[0].__class__)
-	# conversion required for restless helper's to_dict method
-	relations = dict((r, {}) for r in relations)
-	# remove the related models that we don't want to pull
-	for relation in relations_to_remove:
-		del relations[relation]
-	# perform conversion
-	ret = []
-	for object in objects:
-		ret.append(restless_helper.to_dict(object, deep=relations))
-
-	if single_instance:
-		return ret[0]
-	else:
-		return ret
 
 #def import_users(list, group=True):
 #	schema = {

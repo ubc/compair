@@ -21,6 +21,12 @@ module.factory('AuthenticationService',
 			getUser: function() {
 				return _user;
 			},
+			isSuperAdmin: function() {
+				if (_user && _user.usertypeforsystem.name == "System Admin") {
+					return true;
+				}
+				return false;
+			},
 			isAuthenticated: function() {
 				if (_user)
 				{ // user stored in service

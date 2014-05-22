@@ -1,0 +1,31 @@
+<div ng-controller="CourseController">
+	<div class="alert alert-danger text-center" ng-show="courseErr">
+		{{courseErr}}
+	</div>
+
+	<form name="newCourseForm" class="form" ng-submit="newCourseSubmit()" 
+		novalidate>
+		<h2>Create New Course</h2>
+		<div class="form-group has-feedback" ng-class="{
+			'has-error': newCourseForm.courseName.$invalid, 
+			'has-success': newCourseForm.courseName.$valid}">
+			<label for="courseName">Name: </label>
+			<input id="courseName" name="courseName" ng-model="course.name" 
+				type="text" class="form-control" required maxlength="255" 
+				auto-focus />
+			<span ng-show="!newCourseForm.courseName.$invalid" 
+				class="fa fa-check form-control-feedback"></span>
+			<span ng-show="newCourseForm.courseName.$invalid" 
+				class="fa fa-times form-control-feedback"></span>
+		</div>
+		<div class="form-group">
+			<label for="courseDescription">Description: </label>
+			<textarea ng-model="course.description" id="courseDescription" class="form-control" rows="4"></textarea>
+		</div>
+		<input type="submit" class="btn btn-primary" value="Create Course" 
+			ng-disabled="newCourseForm.$invalid || submitted" />
+		<span class="label label-info" ng-show="submitted">
+			<i class="fa fa-refresh"></i>
+		</span>
+	</form>
+</div>

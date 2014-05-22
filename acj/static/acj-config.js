@@ -7,11 +7,18 @@ var myApp = angular.module('myApp', [
 	'ngUpload',
 	'ubc.ctlt.acj.common.flash', // TODO Remove once split into modules done
 	'ubc.ctlt.acj.common.installed', // TODO Remove once split into modules done
+	'ubc.ctlt.acj.course',
 	'ubc.ctlt.acj.home',
 	'ubc.ctlt.acj.installer',
 	'ubc.ctlt.acj.login',
 	'ubc.ctlt.acj.navbar'
 ]);
+
+// Disable stripping trailing slashes from ngResource configured URLs. Flask
+// likes to complain when the trailing slashes are missing.
+myApp.config(function($resourceProvider) {
+	$resourceProvider.defaults.stripTrailingSlashes = false;
+});
 
 //Global Variables
 
@@ -133,6 +140,10 @@ myApp.config( function ($routeProvider) {
 		.when ('/', 
 			{
 				templateUrl: 'modules/home/home-partial.html'
+			})
+		.when ('/course/new', 
+			{
+				templateUrl: 'modules/course/course-create-partial.html'
 			})
 		.when ('/judgepage/:questionId',
 			{

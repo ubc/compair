@@ -80,12 +80,14 @@ class UserTypesForSystem(Base):
 	name = Column(String(255), unique=True, nullable=False)
 
 	TYPE_NORMAL = "Normal User"
+	TYPE_INSTRUCTOR = "Instructor"
 	TYPE_SYSADMIN = "System Administrator"
 
 
 @event.listens_for(UserTypesForSystem.__table__, "after_create", propagate=True)
 def populate_usertypesforsystem(target, connection, **kw):
 	usertypes = [UserTypesForSystem.TYPE_NORMAL,
+				 UserTypesForSystem.TYPE_INSTRUCTOR,
 				 UserTypesForSystem.TYPE_SYSADMIN]
 	for usertype in usertypes:
 		entry = UserTypesForSystem(name=usertype)

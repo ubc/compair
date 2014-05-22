@@ -29,73 +29,34 @@ module.controller(
 	function HomeController($rootScope, $scope, $location, $log,
 							AuthenticationService,
 							CourseResource,
-							UserResource,
-							loginService, flashService) {
-		// the property by which the list of courses will be sorted
-		$scope.orderProp = 'name';
+							UserResource) {
 		$rootScope.breadcrumb = [{'name':'Home'}];
 
-		$log.debug("Getting authen service user id: " );
-		$log.debug(AuthenticationService.getUser().id);
+		$scope.canAddCourse = false;
+		if (AuthenticationService.isSuperAdmin()) {
+			$log.debug("User has permission to add courses.");
+			$scope.canAddCourse = true;
+		}
 		UserResource.getUserCourses({id: AuthenticationService.getUser().id}).$promise.then(
 			function(ret) {
-				$log.debug("Success!");
+				$log.debug("Retrieved the logged in user's courses.");
 				$log.debug(ret);
 				$scope.courses = ret.objects;
+				$log.debug($scope.courses);
+				for (var i = 0; i < $scope.courses.length; i++) {
+					courseanduser = $scope.courses[i];
+					if (courseanduser.usertypeforcourse.name == "Instructor") {
+						$log.debug("User has permission to add courses.");
+						$scope.canAddCourse = true;
+						break;
+					}
+				}
 			},
 			function (ret) {
-				$log.debug("Failure!");
+				$log.debug("Failed to retrieve the user's courses.");
 			}
 		);
 
-		var login = loginService.get( function() {
-			type = login.usertype;
-			if (type && (type=='Teacher' || type=='Admin')) {
-				$scope.instructor = true;
-				$scope.admin = type=='Admin';
-			} else {
-				$scope.instructor = false;
-			}
-
-			var courses = CourseResource.get( function() {
-				var steps = [];
-				var intro = '';
-				$scope.courses = courses.courses;
-				if ( $scope.instructor ) {
-					steps = [
-						{
-							element: '#step1',
-							intro: 'Create a new course',
-						},
-						{
-							element: '#step2',
-							intro: "Go to Question Page to view questions and create questions",
-						},
-						{
-							element: '#step3',
-							intro: "Go to Enrol Page to enrol students or drop students",
-						},
-						{
-							element: "#step4",
-							intro: "Go to Import Page to import students from a file",
-						},
-					];
-					intro = "Lists all the courses you are enrolled in. As an instructor, creating a new course is also an option. From here you can go to Question Page, Enrolment Page, or Import Page.";
-				} else {
-					steps = [
-						{
-							element: '#step2',
-							intro: "Go to Question Page to view questions and create question",
-						},
-					];
-					intro = "Lists all the courses you are enrolled in. From here, you can go to Question Page.";
-				}
-				if ( courses.courses.length < 1 ) {
-					steps = [];
-				}
-				$rootScope.$broadcast("STEPS", {"steps": steps, "intro": intro});
-			});
-		});
 		$scope.submit = function() {
 			input = {"name": $scope.course};
 			var retval = courseService.save( input, function() {

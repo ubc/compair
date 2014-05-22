@@ -7,6 +7,7 @@ from flask.ext.bouncer import Bouncer
 import logging
 
 from acj.authorization import define_authorization
+from acj.course import courses_api
 from acj.database import init_db, db_session
 from acj.models import Courses, CoursesAndUsers, Users
 
@@ -37,20 +38,13 @@ login_manager.init_app(app)
 # initialize Flask-Restless
 manager = flask.ext.restless.APIManager(app, session=db_session)
 manager.create_api(
-	Courses,
-	collection_name="courses" # default API route created is the table name,
-								# which results in caps in url /api/Courses.
-								# this overrides that so we get the standard
-								# lower case /api/courses
-)
-
-manager.create_api(
 	CoursesAndUsers
 )
 
 # initialize rest of the api modules
 app.register_blueprint(login_api)
 app.register_blueprint(users_api, url_prefix='/api/users')
+app.register_blueprint(courses_api, url_prefix='/api/courses')
 
 
 @login_manager.user_loader
