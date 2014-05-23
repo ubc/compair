@@ -10,7 +10,7 @@ import json
 import validictory
 import datetime
 from decimal import Decimal
-from acj.database import db_session
+from acj.core import db
 from acj.models import Courses, UserTypesForCourse, CoursesAndUsers
 from acj.util import to_dict, to_dict_paginated
 
@@ -32,21 +32,21 @@ def create_course():
 	new_course = Courses(name=params.get("name"), description=params.get("description", None))
 	try:
 		# create the course
-		db_session.add(new_course)
-		db_session.commit()
+		db.session.add(new_course)
+		db.session.commit()
 		# also need to enrol the user as an instructor
 		instructor_role = UserTypesForCourse.query\
 			.filter_by(name = UserTypesForCourse.TYPE_INSTRUCTOR).first()
 		new_courseanduser = CoursesAndUsers(
 			course = new_course, users_id = current_user.id, usertypeforcourse = instructor_role)
-		db_session.add(new_courseanduser)
-		db_session.commit()
+		db.session.add(new_courseanduser)
+		db.session.commit()
 	except exc.IntegrityError as e:
-		db_session.rollback()
+		db.session.rollback()
 		logger.error("Failed to add new course. Duplicate. " + e.message)
 		return jsonify({"error":"A course with the same name already exists."}), 400
 	except exc.SQLAlchemyError as e:
-		db_session.rollback()
+		db.session.rollback()
 		logger.error("Failed to add new course. " + e.message)
 		raise
 	course_ret = to_dict(new_course, ["coursesandusers"])
@@ -72,7 +72,7 @@ def get_course(id):
 #            continue
 #        usertype = User.query.filter_by(id = u['user']['id']).first().userrole.id
 #        table = Enrollment(u['user']['id'], courseId, usertype)
-#        db_session.add(table)
+#        db.session.add(table)
 #        status = commit()
 #        if status:
 #            u['eid'] = table.id
@@ -125,7 +125,7 @@ def get_course(id):
 #@teacher.require(http_exception=401)
 #def delete_course(id):
 #    course = Course.query.filter_by( id = id).first()
-#    db_session.delete(course)
+#    db.session.delete(course)
 #    commit()
 #    return json.dumps( {"flash": 'The course was successfully deleted.'} )
 #
@@ -205,8 +205,8 @@ def get_course(id):
 #        return json.dumps( {"msg": str(error)} )
 #
 #    newCrit = JudgementCategory(param['cid'], param['name'])
-#    db_session.add(newCrit)
-#    db_session.commit()
+#    db.session.add(newCrit)
+#    db.session.commit()
 #
 #    categories = JudgementCategory.query.filter_by(cid = param['cid']).all()
 #    critlist = []
@@ -218,7 +218,7 @@ def get_course(id):
 #def remove_categories(cid, critid):
 #    param = request.json
 #    crit = JudgementCategory.query.filter_by(id = critid).first()
-#    db_session.delete(crit)
+#    db.session.delete(crit)
 #    commit()
 #
 #    categories = JudgementCategory.query.filter_by(cid = cid).all()
@@ -288,7 +288,7 @@ def get_course(id):
 #    taglist = []
 #    for tag in course.tags:
 #        taglist.append({"name": tag.name, "id": tag.id})
-#    db_session.rollback()
+#    db.session.rollback()
 #    return json.dumps( {"id": course.id, "name": course.name, "tags": taglist} )
 #
 #@teacher.require(http_exception=401)
@@ -302,7 +302,7 @@ def get_course(id):
 #    taglist = []
 #    for tag in course.tags:
 #        taglist.append({"name": tag.name, "id": tag.id})
-#    db_session.rollback()
+#    db.session.rollback()
 #    return json.dumps( {"id": course.id, "name": course.name, "tags": taglist} )
 #
 #@app.route('/statistics/<cid>', methods=['GET'])
@@ -640,7 +640,7 @@ def get_course(id):
 #            teacherlst.append( {"uid": user.id, "username": user.fullname, "enrolled": enrolled, "role": userrole} )
 #    course = Course.query.filter_by(id = cid).first()
 #    retval = json.dumps( { "course": course.name, "students": studentlst, "teachers": teacherlst, "count": usercount} )
-#    db_session.rollback()
+#    db.session.rollback()
 #    return retval
 #
 #@teacher.require(http_exception=401)
@@ -662,7 +662,7 @@ def get_course(id):
 #@teacher.require(http_exception=401)
 #def drop_student(eid):
 #    query = Enrollment.query.filter_by( id = eid ).first()
-#    db_session.delete(query)
+#    db.session.delete(query)
 #    commit()
 #    return json.dumps( {"msg": "PASS"} )
 #
