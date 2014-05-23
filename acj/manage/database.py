@@ -34,12 +34,6 @@ def recreate(default_data=True, sample_data=False):
 	print ("Resetting database state...")
 	if drop():
 		create(default_data, sample_data)
-	# TODO This is going to be broken with new db
-	# also hard to update, should use the db models to insert data
-	#with open('acj/static/test/testdata.sql', 'r') as f:
-	#	db.execute(f.read().decode("utf8"))
-	#db.commit()
-	#print ("finished resetting db state")
 
 
 @manager.command

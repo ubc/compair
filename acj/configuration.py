@@ -42,7 +42,7 @@ if os.environ.get('OPENSHIFT_MYSQL_DB_HOST'):
 elif os.environ.get('DATABASE_URI'):
 	config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
 elif "DATABASE" in config and 'DATABASE_URI' not in config:
-	config['SQLALCHEMY_DATABASE_URI'] = URL(**config.DATABASE)
+	config['SQLALCHEMY_DATABASE_URI'] = URL(**config['DATABASE'])
 elif "DATABASE_URI" in config:
 	config['SQLALCHEMY_DATABASE_URI'] = config['DATABASE_URI']
 

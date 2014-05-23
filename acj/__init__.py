@@ -3,9 +3,7 @@ from flask.ext.login import current_user
 from authorization import define_authorization
 from core import login_manager, auth_func, api_manager, bouncer
 from configuration import config
-from course import courses_api
 from models import CoursesAndUsers, Users
-from users import users_api
 
 
 def create_app(conf=config, settings_override={}):
@@ -22,10 +20,28 @@ def create_app(conf=config, settings_override={}):
 	from core import db
 	db.init_app(app)
 
-	bouncer.init_app(app)
-
+	# Flask-Login initialization
 	login_manager.init_app(app)
+	# This is how Flask-Login loads the newly logged in user's information
+	@login_manager.user_loader
+	def load_user(user_id):
+		app.logger.debug("User logging in, ID: " + user_id)
+		return Users.query.get(int(user_id))
 
+	# Flask-Bouncer initialization
+	bouncer.init_app(app)
+	# Assigns permissions to the current logged in user
+	@bouncer.authorization_method
+	def bouncer_define_authorization(user, they):
+		define_authorization(user, they)
+	# Loads the current logged in user. Note that although Flask-Bouncer advertises
+	# compatibility with Flask-Login, it looks like it's compatible with an older
+	# version than we're using, so we have to override their loader.
+	@bouncer.user_loader
+	def bouncer_user_loader():
+		return current_user
+
+	# Flask-Restless definitions
 	api_manager.init_app(
 		app,
 		flask_sqlalchemy_db=db,
@@ -42,32 +58,15 @@ def create_app(conf=config, settings_override={}):
 		CoursesAndUsers
 	)
 
-	# initialize rest of the api modules
+	# Initialize rest of the api modules
+	from authorization import authorization_api
+	app.register_blueprint(authorization_api, url_prefix='/api/authorization')
+	from course import courses_api
+	app.register_blueprint(courses_api, url_prefix='/api/courses')
 	from login import login_api
 	app.register_blueprint(login_api)
+	from users import users_api
 	app.register_blueprint(users_api, url_prefix='/api/users')
-	app.register_blueprint(courses_api, url_prefix='/api/courses')
-
-	@login_manager.user_loader
-	def load_user(user_id):
-		app.logger.debug("User logging in, ID: " + user_id)
-		return Users.query.get(int(user_id))
-
-	# Looks like exception=None is required. Without it, I got sqlalchemy exception
-	# about transactions needing to be rolled back, failing login. Seems to have
-	# something to do with the session connection expiring and not being renewed?
-	# def shutdown_session(exception=None):
-	# 	app.db_session.remove()
-	#
-	# app.teardown_appcontext(shutdown_session)
 
 	return app
-
-
-@bouncer.authorization_method
-def bouncer_define_authorization(user, they):
-	define_authorization(user, they)
-@bouncer.user_loader
-def bouncer_user_loader():
-	return current_user
 

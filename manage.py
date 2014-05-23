@@ -10,4 +10,4 @@ manager.add_command("database", database_manager)
 manager.add_command("runserver", Server(port=8080))
 
 if __name__ == "__main__":
-    manager.run()
+	manager.run()
