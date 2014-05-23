@@ -7,7 +7,11 @@ var module = angular.module('ubc.ctlt.acj.course', ['ngResource']);
 
 /***** Providers *****/
 module.factory('CourseResource', function($resource) {
-	return $resource('/api/courses/:id', {id: '@id'});
+	var ret = $resource('/api/courses/:id', {id: '@id'})
+	ret.MODEL = "Courses"; // add constant to identify the model
+						// being used, this is for permissions checking
+						// and should match the server side model name
+	return ret;
 });
 
 /***** Controllers *****/

@@ -14,6 +14,7 @@
 var module = angular.module('ubc.ctlt.acj.home',
 	[
 		'ubc.ctlt.acj.authentication',
+		'ubc.ctlt.acj.authorization',
 		'ubc.ctlt.acj.course',
 		'ubc.ctlt.acj.user'
 	]
@@ -28,12 +29,14 @@ module.controller(
 	'HomeController',
 	function HomeController($rootScope, $scope, $location, $log,
 							AuthenticationService,
+							Authorize,
 							CourseResource,
 							UserResource) {
 		$rootScope.breadcrumb = [{'name':'Home'}];
 
+
 		$scope.canAddCourse = false;
-		if (AuthenticationService.isSuperAdmin()) {
+		if (Authorize.can(Authorize.CREATE, CourseResource.MODEL)) {
 			$log.debug("User has permission to add courses.");
 			$scope.canAddCourse = true;
 		}
@@ -45,11 +48,6 @@ module.controller(
 				$log.debug($scope.courses);
 				for (var i = 0; i < $scope.courses.length; i++) {
 					courseanduser = $scope.courses[i];
-					if (courseanduser.usertypeforcourse.name == "Instructor") {
-						$log.debug("User has permission to add courses.");
-						$scope.canAddCourse = true;
-						break;
-					}
 				}
 			},
 			function (ret) {

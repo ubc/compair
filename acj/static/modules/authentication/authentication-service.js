@@ -12,7 +12,7 @@ var module = angular.module(
 
 module.factory('AuthenticationService',
 	function ($rootScope, $resource, $cookieStore, $log, authService) {
-		var _user = null
+		var _user = null;
 		return {
 			// Use these constants to listen to login or logout events.
 			LOGIN_EVENT: "event:Authentication-Login",
@@ -20,12 +20,6 @@ module.factory('AuthenticationService',
 			LOGIN_REQUIRED_EVENT: "event:auth-loginRequired",
 			getUser: function() {
 				return _user;
-			},
-			isSuperAdmin: function() {
-				if (_user && _user.usertypeforsystem.name == "System Admin") {
-					return true;
-				}
-				return false;
 			},
 			isAuthenticated: function() {
 				if (_user)
