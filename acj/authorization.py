@@ -2,11 +2,8 @@ from bouncer.constants import ALL, MANAGE, EDIT, READ, CREATE, DELETE
 from flask import Blueprint, jsonify
 from flask_bouncer import ensure
 from flask_login import login_required, current_user
-import logging
 from werkzeug.exceptions import Unauthorized
 from acj.models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTypesForSystem
-
-logger = logging.getLogger(__name__)
 
 # Server side permissions is taken care of by Flask-Bouncer, which leaves the client side.
 # We have to set up an API for the client side to get information about a user's permissions.

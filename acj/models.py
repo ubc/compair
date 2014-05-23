@@ -19,7 +19,6 @@
 ##	 subcategory, e.g.: we have a "Posts" table for all posts and a 
 ##	 "PostsForQuestions" table for posts that are meant to be questions
 
-import logging
 import hashlib
 
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -30,8 +29,6 @@ from sqlalchemy.sql import func
 from passlib.apps import custom_app_context as pwd_context
 
 from flask.ext.login import UserMixin
-
-logger = logging.getLogger(__name__)
 
 #################################################
 # Users
@@ -185,7 +182,6 @@ class Users(db.Model, UserMixin):
 		return pwd_context.verify(password, self.password)
 
 	def update_lastonline(self):
-		logger.debug("Update Last Online")
 		self.lastonline = func.current_timestamp()
 		db.session.add(self)
 		db.session.commit()

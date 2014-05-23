@@ -1,9 +1,8 @@
 from bouncer.constants import MANAGE, READ, CREATE
-from flask import session, request, Response, Blueprint, jsonify
+from flask import session, request, Response, Blueprint, jsonify, current_app
 from flask_bouncer import requires, ensure
 from flask_login import login_required, current_user
 from flask_principal import Identity, identity_changed
-import logging
 from sqlalchemy import func, cast, DATE, desc, alias, exc
 from sqlalchemy.sql import exists
 import json
@@ -13,8 +12,6 @@ from decimal import Decimal
 from acj.core import db
 from acj.models import Courses, UserTypesForCourse, CoursesAndUsers
 from acj.util import to_dict, to_dict_paginated
-
-logger = logging.getLogger(__name__)
 
 courses_api = Blueprint('courses_api', __name__)
 
@@ -43,11 +40,11 @@ def create_course():
 		db.session.commit()
 	except exc.IntegrityError as e:
 		db.session.rollback()
-		logger.error("Failed to add new course. Duplicate. " + e.message)
+		current_app.logger.error("Failed to add new course. Duplicate. " + e.message)
 		return jsonify({"error":"A course with the same name already exists."}), 400
 	except exc.SQLAlchemyError as e:
 		db.session.rollback()
-		logger.error("Failed to add new course. " + e.message)
+		current_app.logger.error("Failed to add new course. " + e.message)
 		raise
 	course_ret = to_dict(new_course, ["coursesandusers"])
 	return jsonify(course_ret)

@@ -1,13 +1,9 @@
-import logging
-
 from flask import Blueprint, jsonify, request
 from bouncer.constants import READ, MANAGE
 
 from flask_bouncer import requires, ensure
 from flask_login import login_required
 from acj.util import to_dict, to_dict_paginated
-
-logger = logging.getLogger(__name__)
 
 #from general import admin, teacher, commit, hasher
 from acj.models import Users

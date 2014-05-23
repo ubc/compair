@@ -1,11 +1,7 @@
-import logging
-
-from flask import Blueprint, jsonify, request
-from flask.ext.login import current_user, login_required, login_user, logout_user
+from flask import Blueprint, jsonify, request, current_app
+from flask_login import current_user, login_required, login_user, logout_user
 
 from acj.models import Users
-
-logger = logging.getLogger(__name__)
 
 login_api = Blueprint("login_api", __name__)
 
@@ -19,15 +15,15 @@ def login():
 	# grab the user from the username
 	user = Users.query.filter_by(username=username).first()
 	if not user:
-		logger.debug("Login failed, invalid username for: " + username)
+		current_app.logger.debug("Login failed, invalid username for: " + username)
 	elif not user.verify_password(password):
-		logger.debug("Login failed, invalid password for: " + username)
+		current_app.logger.debug("Login failed, invalid password for: " + username)
 	else:
 		# username valid, password valid, login successful
 		# "remember me" functionality is available, do we want to implement?
 		user.update_lastonline()
 		login_user(user) # flask-login store user info
-		logger.debug("Login successful for: " + user.username)
+		current_app.logger.debug("Login successful for: " + user.username)
 		return jsonify({"userid": user.id})
 
 	# login unsuccessful
