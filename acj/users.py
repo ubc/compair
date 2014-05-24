@@ -11,7 +11,7 @@ from acj.models import Users
 users_api = Blueprint('users_api', __name__)
 
 # List all users in the system
-@users_api.route('/')
+@users_api.route('')
 @login_required
 @requires(MANAGE, Users)
 def get_users():

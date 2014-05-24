@@ -15,7 +15,7 @@ from acj.util import to_dict, to_dict_paginated
 
 courses_api = Blueprint('courses_api', __name__)
 
-@courses_api.route('/')
+@courses_api.route('')
 @login_required
 @requires(MANAGE, Courses)
 def list_course():

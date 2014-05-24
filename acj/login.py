@@ -10,6 +10,8 @@ login_api = Blueprint("login_api", __name__)
 def login():
 	# expecting login params to be in json format
 	param = request.json
+	if param == None:
+		return jsonify({"error": 'Invalid login data format. Expecting json.'}), 400
 	username = param['username']
 	password = param['password']
 	# grab the user from the username

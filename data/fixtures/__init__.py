@@ -2,16 +2,12 @@
 	Fixture package, also contain default seed data to be populated
 """
 
-from fixture import SQLAlchemyFixture, DataSet
+from fixture import SQLAlchemyFixture, DataSet, NamedDataStyle
 from acj.models import Users, UserTypesForCourse, UserTypesForSystem
-from acj.core import db
 
 
-dbfixture = SQLAlchemyFixture(engine=db.engine, env={
-	'UserTypesForCourseData': UserTypesForCourse,
-	'UserTypesForSystemData': UserTypesForSystem,
-	'UserData': Users
-})
+def get_dbfixture(db):
+	return SQLAlchemyFixture(engine=db.engine, env=globals(), style=NamedDataStyle())
 
 
 class UserTypesForCourseData(DataSet):
@@ -39,7 +35,7 @@ class UserTypesForSystemData(DataSet):
 		name = UserTypesForSystem.TYPE_SYSADMIN
 
 
-class UserData(DataSet):
+class UsersData(DataSet):
 	class Root:
 		username = 'root'
 		password = 'password'
@@ -47,4 +43,4 @@ class UserData(DataSet):
 		usertypeforsystem = UserTypesForSystemData.SysAdmin
 
 
-all_data = (UserTypesForSystemData, UserTypesForCourseData, UserData)
+all_data = (UserTypesForSystemData, UserTypesForCourseData, UsersData)
