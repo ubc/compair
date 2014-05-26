@@ -1,41 +1,51 @@
 <div ng-controller="HomeController">
-<h1>My Courses</h1>
 
-<div class="navbar navbar-default" role="navigation">
-	<a class="btn btn-default navbar-btn" href="#/course/new"><i class="fa fa-plus"></i> Add Course</a>
-	<form class="navbar-form navbar-right" role="search">
-		<div class="form-group">
-			<input class="form-control" type="text" placeholder="Search Course" ng-model="cquery">
-		</div>
-		<button type="submit" class="btn btn-default">Search</button>
-	</form>
-</div>
-<span ng-show="courses.length == 0">You are not enrolled in any courses.</span>
-<table class="table table-hover">
-<tbody>
-		<tr ng-repeat="course in courses | filter:cquery">
-			<td ng-click="redirect('/questionpage/{{course.course.id}}')"
-				class="pointer" id="step2"><b>{{course.course.name}}</b></td>
-			<td ng-click="redirect('/questionpage/{{course.course.id}}')"
-				class="pointer"><span class="label"
-				ng-class="{'label-success': course.course.count > 0, 'label-default': course.course.count == 0}">{{course.course.count}} question(s)</span></td>
-			<td ng-click="redirect('/questionpage/{{course.course.id}}')"
-				class="pointer"><span class="label"
-				ng-class="{'label-success': course.course.new > 0, 'label-default': course.course.new == 0}">{{course.course.new}} new question(s)</span></td>
-			<td><a id="step3" class="btn btn-default btn-sm" ng-show="canAddCourse"
-				href="#/enrollpage/{{course.course.id}}"> <span class="glyphicon glyphicon-plus-sign"></span >
-					Enrol Users
-			</a></td>
-			<td><a class="btn btn-default btn-sm" ng-show="canAddCourse"
-				href="#/editcourse/{{course.course.id}}"> <span class="glyphicon glyphicon-edit"></span >
-					Edit Course
-			</a></td>
-			<td><a class="btn btn-default btn-sm" ng-show="canAddCourse"
-				href="#/stats/{{course.course.id}}"> <span class="glyphicon glyphicon-stats"></span >
-					View Statistics
-			</a></td>
-		</tr>
-	</tbody>
-</table>
-</div>
+<h1>
+	My Courses
+</h1>
 
+<div class="panel panel-default">
+	<!-- Default panel contents -->
+	<div class="panel-body">
+		<form class="form-inline" role="search">
+			<div class="form-group">
+				<a class="btn btn-default" href="#/course/new">
+					<i class="fa fa-plus"></i> New Course
+				</a>
+			</div>
+			<div class="form-group pull-right">
+				<input class="form-control" type="text" 
+					placeholder="Search Course" ng-model="courseFilter">
+			</div>
+		</form>
+	</div>
+
+	<!-- Table -->
+	<table class="table table-hover">
+		<tbody>
+			<tr ng-repeat="course in courses | filter:courseFilter">
+				<td ng-click="redirect('/questionpage/{{course.course.id}}')"
+					class="pointer" id="step2"><b>{{course.course.name}}</b></td>
+				<td ng-click="redirect('/questionpage/{{course.course.id}}')"
+					class="pointer"><span class="label"
+					ng-class="{'label-success': course.course.count > 0, 'label-default': course.course.count == 0}">{{course.course.count}} question(s)</span></td>
+				<td ng-click="redirect('/questionpage/{{course.course.id}}')"
+					class="pointer"><span class="label"
+					ng-class="{'label-success': course.course.new > 0, 'label-default': course.course.new == 0}">{{course.course.new}} new question(s)</span></td>
+				<td><a id="step3" class="btn btn-default btn-sm" ng-show="canAddCourse"
+					href="#/enrollpage/{{course.course.id}}"> <span class="glyphicon glyphicon-plus-sign"></span >
+						Enrol Users
+				</a></td>
+				<td><a class="btn btn-default btn-sm" ng-show="canAddCourse"
+					href="#/editcourse/{{course.course.id}}"> <span class="glyphicon glyphicon-edit"></span >
+						Edit Course
+				</a></td>
+				<td><a class="btn btn-default btn-sm" ng-show="canAddCourse"
+					href="#/stats/{{course.course.id}}"> <span class="glyphicon glyphicon-stats"></span >
+						View Statistics
+				</a></td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+</div>
