@@ -28,4 +28,3 @@ python-mimeparse==0.1.4
 requests==2.3.0
 six==1.6.1
 validictory==0.9.3
-wsgiref==0.1.2
