@@ -5,4 +5,4 @@ python:
 # command to install dependencies
 install:
   - "pip install -r requirements.txt"
-script: python -m unittest discover -s tests/
+script: make test
