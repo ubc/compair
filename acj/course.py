@@ -2,16 +2,10 @@ from bouncer.constants import MANAGE, READ, CREATE
 from flask import session, request, Response, Blueprint, jsonify, current_app
 from flask_bouncer import requires, ensure
 from flask_login import login_required, current_user
-from flask_principal import Identity, identity_changed
-from sqlalchemy import func, cast, DATE, desc, alias, exc
-from sqlalchemy.sql import exists
-import json
-import validictory
-import datetime
-from decimal import Decimal
-from acj.core import db
-from acj.models import Courses, UserTypesForCourse, CoursesAndUsers
-from acj.util import to_dict, to_dict_paginated
+from sqlalchemy import exc
+from .core import db
+from .models import Courses, UserTypesForCourse, CoursesAndUsers
+from .util import to_dict, to_dict_paginated
 
 courses_api = Blueprint('courses_api', __name__)
 

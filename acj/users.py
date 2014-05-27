@@ -3,10 +3,10 @@ from bouncer.constants import READ, MANAGE
 
 from flask_bouncer import requires, ensure
 from flask_login import login_required
-from acj.util import to_dict, to_dict_paginated
+from .util import to_dict, to_dict_paginated
 
 #from general import admin, teacher, commit, hasher
-from acj.models import Users
+from .models import Users
 
 users_api = Blueprint('users_api', __name__)
 

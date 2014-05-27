@@ -1,9 +1,9 @@
 from flask import Flask
 from flask.ext.login import current_user
-from authorization import define_authorization
-from core import login_manager, auth_func, api_manager, bouncer
-from configuration import config
-from models import CoursesAndUsers, Users
+from .authorization import define_authorization
+from .core import login_manager, auth_func, api_manager, bouncer, db
+from .configuration import config
+from .models import CoursesAndUsers, Users
 
 
 def create_app(conf=config, settings_override={}):
@@ -17,7 +17,6 @@ def create_app(conf=config, settings_override={}):
 
 	app.logger.debug("Application Configuration: " + str(app.config))
 
-	from core import db
 	db.init_app(app)
 
 	# Flask-Login initialization
@@ -59,13 +58,13 @@ def create_app(conf=config, settings_override={}):
 	)
 
 	# Initialize rest of the api modules
-	from authorization import authorization_api
+	from .authorization import authorization_api
 	app.register_blueprint(authorization_api, url_prefix='/api/authorization')
-	from course import courses_api
+	from .course import courses_api
 	app.register_blueprint(courses_api, url_prefix='/api/courses')
-	from login import login_api
+	from .login import login_api
 	app.register_blueprint(login_api)
-	from users import users_api
+	from .users import users_api
 	app.register_blueprint(users_api, url_prefix='/api/users')
 
 	return app

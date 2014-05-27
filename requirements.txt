@@ -4,7 +4,7 @@ Flask-Principal==0.4.0
 Flask-Restless==0.13.1
 -e git+https://github.com/mitsuhiko/flask-sqlalchemy@d4560013c1c51ef035381e35dd42a1628bb212ee#egg=Flask_SQLAlchemy-origin
 Flask-Script==2.0.5
-Flask-Testing==0.4.1
+-e git+https://github.com/jarus/flask-testing.git@bbc471cd5fa37efff1c3418534038bc8db654b1e#egg=Flask_Testing-origin
 Jinja2==2.7.2
 MarkupSafe==0.23
 Pillow==2.4.0

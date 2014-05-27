@@ -35,7 +35,7 @@ from flask.ext.login import UserMixin
 #################################################
 
 # User types at the course level
-from core import db
+from .core import db
 
 # All tables should have this set of options enabled to make porting easier.
 # In case we have to move to MariaDB instead of MySQL, e.g.: InnoDB in MySQL
@@ -173,7 +173,7 @@ class Users(db.Model, UserMixin):
 	def avatar(self):
 		if self.email:
 			m = hashlib.md5()
-			m.update(self.email.strip().lower())
+			m.update(self.email.strip().lower().encode('utf-8'))
 			return m.hexdigest()
 		else:
 			return None
