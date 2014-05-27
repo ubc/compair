@@ -32,8 +32,6 @@ module.controller(
 							Authorize,
 							CourseResource,
 							UserResource) {
-		$rootScope.breadcrumb = [{'name':'Home'}];
-
 
 		$scope.canAddCourse = false;
 		if (Authorize.can(Authorize.CREATE, CourseResource.MODEL)) {

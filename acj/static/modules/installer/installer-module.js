@@ -28,7 +28,6 @@ module.controller(
 	"InstallController",
 	function InstallController($rootScope, $scope, $location, $cookieStore, flashService, installService, createAdmin, isInstalled) {
 		$scope.failMsg = "";
-		$rootScope.breadcrumb = [{'name':'Installer'}];
 		var criteria = installService.get( function() {
 			//$scope.username = criteria.username;
 			$scope.requirements = criteria.requirements;

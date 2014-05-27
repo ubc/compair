@@ -170,18 +170,6 @@ myApp.directive("mathToolbar", function() {
 	};
 });
 
-myApp.directive("breadcrumb", function() {
-	return {		
-		restrict: "A",
-		replace: true,
-		scope: true,
-		template: '<ul class="breadcrumb">' + 
-			'<li ng-class="{active: $last}" ng-repeat="crumb in breadcrumb"><a href="{{crumb.link}}" ng-if="!$last">{{crumb.name}}</a>' +
-			'<span ng-if="$last">{{crumb.name}}</span>' +
-			'</li></ul>'	
-	};
-});
-
 myApp.directive("notification", function() {
 	return {		
 		restrict: "A",

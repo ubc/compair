@@ -5,6 +5,7 @@ var myApp = angular.module('myApp', [
 	'http-auth-interceptor', 
 	'ngCookies', 
 	'ngUpload',
+	'ng-breadcrumbs',
 	'ubc.ctlt.acj.common.flash', // TODO Remove once split into modules done
 	'ubc.ctlt.acj.common.installed', // TODO Remove once split into modules done
 	'ubc.ctlt.acj.course',
@@ -129,21 +130,25 @@ myApp.factory('resetDB', function($resource) {
 
 myApp.config( function ($routeProvider) {
 	$routeProvider
-		.when ('/install', 
-			{
-				templateUrl: 'modules/installer/installer-partial.html'
-			})
-		.when ('/install2', 
-			{
-				templateUrl: 'install2.html'
-			})
 		.when ('/', 
 			{
-				templateUrl: 'modules/home/home-partial.html'
+				templateUrl: 'modules/home/home-partial.html',
+				label: "Home" // breadcrumb label
 			})
 		.when ('/course/new', 
 			{
-				templateUrl: 'modules/course/course-create-partial.html'
+				templateUrl: 'modules/course/course-create-partial.html',
+				label: "Create New Course"
+			})
+		.when ('/install', 
+			{
+				templateUrl: 'modules/installer/installer-partial.html',
+				label: "Installer Step 1"
+			})
+		.when ('/install2', 
+			{
+				templateUrl: 'install2.html',
+				label: "Installer Step 2"
 			})
 		.when ('/judgepage/:questionId',
 			{

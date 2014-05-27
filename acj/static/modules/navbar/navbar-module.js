@@ -6,6 +6,7 @@
 var module = angular.module('ubc.ctlt.acj.navbar',
 	[
 		'ubc.ctlt.acj.authentication',
+		'ng-breadcrumbs',
 		'ubc.ctlt.acj.login' // for LogoutController
 	]
 );
@@ -17,10 +18,8 @@ var module = angular.module('ubc.ctlt.acj.navbar',
 /***** Controllers *****/
 module.controller(
 	"NavbarController",
-	function NavbarController($scope, $log, AuthenticationService) {
-
-		// TODO determine if breadcrumbs can be improved
-		$scope.breadcrumbs = [];
+	function NavbarController($scope, $log, AuthenticationService, breadcrumbs) {
+		$scope.breadcrumbs = breadcrumbs;
 
 		// get information about the currently logged in user
 		var updateAuthentication = function() {

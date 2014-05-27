@@ -83,10 +83,6 @@ module.controller(
 	"LoginController",
 	function LoginController($rootScope, $scope, $location, $log,
 							 LoginResource, UserResource, AuthenticationService) {
-		// TODO REFACTOR BREADCRUMB AND NO_TUTORIAL BROADCAST
-		$rootScope.breadcrumb = [{'name':'Login'}];
-		$rootScope.$broadcast("NO_TUTORIAL", false);
-
 		$scope.submitted = false;
 
 		$scope.submit = function() {
