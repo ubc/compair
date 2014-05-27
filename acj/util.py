@@ -46,7 +46,8 @@ def to_dict(objects, relations_to_remove=[]):
 	relations = dict((r, {}) for r in relations)
 	# remove the related models that we don't want to pull
 	for relation in relations_to_remove:
-		del relations[relation]
+		if relation in relations:
+			del relations[relation]
 	# perform conversion
 	ret = []
 	for object in objects:

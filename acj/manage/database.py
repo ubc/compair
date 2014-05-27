@@ -38,18 +38,13 @@ def recreate(default_data=True, sample_data=False):
 @manager.command
 def populate(default_data=False, sample_data=False):
 	"""Populate database with default data"""
-	from data.fixtures import get_dbfixture, all_data
 
 	if default_data:
 		#from fixtures.default_data import all
-
-		fixture_data = get_dbfixture(db).data(*all_data)
+		from data.fixtures import DefaultFixture
+		DefaultFixture()
+		db.session.commit()
 
 	if sample_data:
-		#from fixtures.sample_data import all
+		pass
 
-		fixture_data = get_dbfixture(db).data(*all_data)
-
-	fixture_data.setup()
-
-	return fixture_data
