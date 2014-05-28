@@ -1,13 +1,8 @@
 from bouncer.constants import ALL, MANAGE, EDIT, READ, CREATE, DELETE
-from flask import Blueprint, jsonify
 from flask_bouncer import ensure
-from flask_login import login_required, current_user
+from flask_login import current_user
 from werkzeug.exceptions import Unauthorized
 from .models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTypesForSystem
-
-# Server side permissions is taken care of by Flask-Bouncer, which leaves the client side.
-# We have to set up an API for the client side to get information about a user's permissions.
-authorization_api = Blueprint('authorization_api', __name__)
 
 # Sets up user permissions for Flask-Bouncer
 def define_authorization(user, they):
@@ -48,8 +43,6 @@ def define_authorization(user, they):
 # on an model if they're allowed to operate on one instance of it.
 # E.g.: A user who can only EDIT their own User object would have
 # ensure(READ, Users) return True
-@authorization_api.route('/')
-@login_required
 def get_logged_in_user_permissions():
 	user = Users.query.get(current_user.id)
 	ensure(READ, user)
@@ -77,5 +70,5 @@ def get_logged_in_user_permissions():
 			except Unauthorized:
 				permissions[model_name][operation] = False
 
-	return jsonify(permissions)
+	return permissions
 

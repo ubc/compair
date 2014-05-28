@@ -32,13 +32,10 @@ module.controller(
 							Authorize,
 							CourseResource,
 							UserResource) {
-
-		$scope.canAddCourse = false;
-		if (Authorize.can(Authorize.CREATE, CourseResource.MODEL)) {
-			$log.debug("User has permission to add courses.");
-			$scope.canAddCourse = true;
-		}
-		UserResource.getUserCourses({id: AuthenticationService.getUser().id}).$promise.then(
+		$scope.canAddCourse = 
+			Authorize.can(Authorize.CREATE, CourseResource.MODEL);
+		UserResource.getUserCourses(
+			{id: AuthenticationService.getUser().id}).$promise.then(
 			function(ret) {
 				$log.debug("Retrieved the logged in user's courses.");
 				$log.debug(ret);

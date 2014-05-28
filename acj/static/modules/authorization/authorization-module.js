@@ -5,32 +5,30 @@
 
 var module = angular.module('ubc.ctlt.acj.authorization', 
 	[
-		'ngResource',
+		'ngCookies',
 		'ubc.ctlt.acj.authentication'
 	]
 );
 
 /***** Providers *****/
-module.factory('AuthorizationResource',
-	function($resource)
-	{
-		return $resource('/api/authorization');
-	}
-);
-
 // normally, there would be a "Service" at the end of the name, but it seems
 // too much to type if it's going to be used a lot
 module.factory('Authorize',
-	function($log, $q, AuthenticationService, AuthorizationResource)
+	function($log, $q, $cookieStore, AuthenticationService)
 	{
 		var _permissions = null;
 
-		var _allow_operation = function(operation, resource) {
-			if (resource in _permissions)
+		var _allow_operation = function(operation, resource, permissions) {
+			if (resource in permissions)
 			{
-				if (operation in _permissions[resource])
+				if (operation in permissions[resource])
 				{
-					return _permissions[resource][operation];
+					$log.debug("Here");
+					$log.debug(resource);
+					$log.debug(operation);
+					$log.debug(permissions[resource]);
+					$log.debug(permissions[resource][operation]);
+					return permissions[resource][operation];
 				}
 			}
 			return false;
@@ -42,8 +40,28 @@ module.factory('Authorize',
 			READ: "read",
 			EDIT: "edit",
 			DELETE: "delete",
+			storePermissions: function(permissions) {
+				_permissions = permissions;
+				$cookieStore.put('current.permissions', permissions);
+				$log.debug("Stored Permissions");
+				$log.debug(_permissions);
+			},
+			getPermissions: function() {
+				if (_permissions)
+				{
+					return _permissions;
+				}
+				var cookie_permissions = $cookieStore.get('current.permissions');
+				if (cookie_permissions)
+				{
+					_permissions = cookie_permissions;
+					return _permissions;
+				}
+				$log.error("Stored permissions not found!");
+				return null;
+			},
 			can: function(operation, resource) {
-				if (!AuthenticationService.isAuthenticated)
+				if (!AuthenticationService.isAuthenticated())
 				{
 					// in case of logout, we should clear permissions
 					_permissions = null;
@@ -54,33 +72,8 @@ module.factory('Authorize',
 				{
 					return true;
 				}
-				// Need to get permissions from the server side.
-				// This is complicated by the async nature of angularjs,
-				// since we have to wait for the request to the server to
-				// complete, we have to return a promise.
-				if (_permissions == null)
-				{
-					$log.debug("Authorize: Get permissions info from server.");
-					var deferred = $q.defer()
-					AuthorizationResource.get().$promise.then(
-						function (ret)
-						{
-							_permissions = ret;
-							deferred.resolve(
-								_allow_operation(operation, resource));
-						},
-						function (ret)
-						{
-							// Assume that there's nothing we can do
-							// on the client side if we can't 
-							$log.error("Failed to get permissions info!");
-							deferred.resolve(false);
-						}
-					);
-					return deferred.promise;
-				}
-				// already have permissions from the server
-				return _allow_operation(operation, resource);
+				var permissions = this.getPermissions();
+				return _allow_operation(operation, resource, permissions);
 			}
 		};
 	}

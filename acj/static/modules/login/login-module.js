@@ -10,6 +10,7 @@ var module = angular.module('ubc.ctlt.acj.login',
 		'ngRoute',
 		'mgcrea.ngStrap',
 		'ubc.ctlt.acj.authentication',
+		'ubc.ctlt.acj.authorization',
 		'ubc.ctlt.acj.user'
 	]
 );
@@ -32,20 +33,20 @@ module.factory('LoginResource', function($resource) {
 // it only works before onload, so it doesn't do anything if we pop the login modal
 // after the entire page has been loaded.
 // The timeout forces a wait for the loginbox to be rendered.
-module.directive('autoFocus', function($timeout) {
+module.directive('autoFocus', function($timeout, $log) {
     return {
         restrict: 'AC',
-        link: function(_scope, _element) {
+        link: function(scope, _element, attr) {
             $timeout(function(){
                 _element[0].focus();
-            }, 0);
+            }, 100);
         }
     };
 });
 
 /***** Listeners *****/
 // display the login page if user is not logged in
-module.run(function ($rootScope, $log, $modal, AuthenticationService) {
+module.run(function ($rootScope, $route, $location, $log, $modal, AuthenticationService) {
 	// Create a modal dialog box for containing the login form
 	var loginBox = $modal(
 		{
@@ -64,46 +65,53 @@ module.run(function ($rootScope, $log, $modal, AuthenticationService) {
 	// Hide the login form on login
 	$rootScope.$on(AuthenticationService.LOGIN_EVENT, loginBox.hide);
 
-	// probably not necessary since the login box will show up if
-	// we make any requests that require auth
-	// requires authentication on all routes
-	/*$rootScope.$on("$routeChangeStart", function () {
-		$log.debug("Checking Auth 1");
-
+	// Requires the user to be logged in for every single route
+	$rootScope.$on('$locationChangeStart', function(event, next) {
 		if (!AuthenticationService.isAuthenticated())
 		{
+			event.preventDefault();
+			// user needs to be logged in
 			$rootScope.$broadcast(AuthenticationService.LOGIN_REQUIRED_EVENT);
+			// wipe out current data displayed on screen
+			$route.reload();
 		}
-	});*/
+	});
 });
 
 
 /***** Controllers *****/
 module.controller(
 	"LoginController",
-	function LoginController($rootScope, $scope, $location, $log,
-							 LoginResource, UserResource, AuthenticationService) {
+	function LoginController($rootScope, $scope, $location, $log, $route,
+							 LoginResource, 
+							 UserResource, 
+							 AuthenticationService,
+							 Authorize) 
+	{
 		$scope.submitted = false;
 
 		$scope.submit = function() {
 			$scope.submitted = true;
-			var params = {"username": $scope.username, "password": $scope.password};
+			var params = {"username": $scope.username, 
+							"password": $scope.password};
 			LoginResource.login(params).$promise.then(
 				function(ret) {
 					// login successful
 					$log.debug("Login authentication successful!");
 					userid = ret.userid
+					Authorize.storePermissions(ret.permissions);
 					$log.debug("Login User ID: " + userid);
 					// retrieve logged in user's information
 					user = UserResource.get({id: userid}).$promise.then(
 						function(ret) {
-							$log.debug("Retrived logged in user's data: " + JSON.stringify(ret));
 							AuthenticationService.login(ret);
 							$scope.login_err = "";
 							$scope.submitted = false;
+							$route.reload();
 						},
 						function(ret) {
-							$log.debug("Failed to retrieve logged in user's data: " +
+							$log.error(
+								"Failed to retrieve logged in user's data: " +
 								JSON.stringify(ret));
 							$scope.login_err = "Unable to retrieve user information, server problem?";
 							$scope.submitted = false;
@@ -137,7 +145,12 @@ module.controller(
 				function() {
 					$log.debug("Logging out user successful.");
 					AuthenticationService.logout();
-					$route.reload();
+					// this is a non-existant route, we use it as a reliable
+					// way to trigger a onLocationChange event so the login
+					// mechanism will fire again. Reliable because if we set
+					// path to /, then if we're already on /, it won't fire the
+					// event.
+					$location.path("/logout");
 				}
 				// TODO do we care about logout failure? if so, handle it here
 			);

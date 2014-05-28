@@ -58,8 +58,6 @@ def create_app(conf=config, settings_override={}):
 	)
 
 	# Initialize rest of the api modules
-	from .authorization import authorization_api
-	app.register_blueprint(authorization_api, url_prefix='/api/authorization')
 	from .course import courses_api
 	app.register_blueprint(courses_api, url_prefix='/api/courses')
 	from .login import login_api

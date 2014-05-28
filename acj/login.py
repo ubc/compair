@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import current_user, login_required, login_user, logout_user
+from acj.authorization import get_logged_in_user_permissions
 
 from acj.models import Users
 
@@ -26,7 +27,8 @@ def login():
 		user.update_lastonline()
 		login_user(user) # flask-login store user info
 		current_app.logger.debug("Login successful for: " + user.username)
-		return jsonify({"userid": user.id})
+		permissions = get_logged_in_user_permissions()
+		return jsonify({"userid": user.id, "permissions": permissions})
 
 	# login unsuccessful
 	return jsonify({"error": 'Sorry, unrecognized username or password.'}), 400
