@@ -1,0 +1,52 @@
+{
+  "name": "ng-breadcrumbs",
+  "version": "0.1.0",
+  "description": "A better AngularJS service to help with breadcrumb-style navigation between views",
+  "keywords": [
+    "ng-breadcrumbs",
+    "angular",
+    "angularjs",
+    "breadcrumbs",
+    "navigation",
+    "route"
+  ],
+  "authors": [
+    "Ian Kennington Walter (http://ianvonwalter.com)"
+  ],
+  "license": "MIT",
+  "homepage": "http://ianwalter.github.io/ng-breadcrumbs/",
+  "main": [
+    "dist/ng-breadcrumbs.min.js",
+    "README.md"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "test",
+    "public",
+    "src",
+    "index.html",
+    "gulpfile.js",
+    "package.json"
+  ],
+  "dependencies": {
+    "angular": ">= 1.2.5",
+    "angular-route": ">= 1.2.5"
+  },
+  "resolutions": {
+    "angular": "1.2.11"
+  },
+  "devDependencies": {
+    "angular-mocks": "v1.2.11"
+  },
+  "_release": "0.1.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.1.0",
+    "commit": "9d84e6351bb2c6cf5c184ede40213cc5e3562863"
+  },
+  "_source": "git://github.com/ianwalter/ng-breadcrumbs.git",
+  "_target": "~0.1.0",
+  "_originalSource": "ng-breadcrumbs",
+  "_direct": true
+}
