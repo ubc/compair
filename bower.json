@@ -1,0 +1,31 @@
+{
+  "name": "acj",
+  "version": "0.0.1",
+  "homepage": "https://github.com/ubc/acj-versus",
+  "authors": [
+    "UBC CTLT"
+  ],
+  "description": "Student learning tool where instructors and students may post and respond to questions. A method called Adaptive Comparative Judgement is used to give a ranking to the question responses.",
+  "main": "acj/static/acj.css",
+  "license": "GPLv3",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "~1.3.0",
+    "angular-animate": "~1.3.0",
+    "angular-cookies": "~1.3.0",
+    "angular-resource": "~1.3.0",
+    "angular-route": "~1.3.0",
+    "fontawesome": "~4.1.0",
+    "ng-ckeditor": "~0.2.1",
+    "ng-breadcrumbs": "~0.1.0",
+    "angular-http-auth": "~1.2.1",
+    "angular-strap": "~2.0.3"
+  }
+}
