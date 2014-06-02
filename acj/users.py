@@ -24,7 +24,7 @@ def get_users():
 @users_api.route('/<id>')
 @login_required
 def get_user(id):
-	user = Users.query.get(id)
+	user = Users.query.get_or_404(id)
 	ensure(READ, user)  # check that the logged in user can read this user
 	user_ret = to_dict(user, ["coursesandusers"])
 	# strip password hash
@@ -35,7 +35,7 @@ def get_user(id):
 @users_api.route('/<id>/courses')
 @login_required
 def get_courses_that_user_is_enroled_in(id):
-	user = Users.query.get(id)
+	user = Users.query.get_or_404(id)
 	# we want to list courses only, so only check the association table
 	coursesandusers = []
 	for courseanduser in user.coursesandusers:

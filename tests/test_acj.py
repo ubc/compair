@@ -6,6 +6,7 @@ from acj.manage.database import populate
 from acj.core import db
 from data.fixtures import DefaultFixture
 from tests import test_app_settings
+from tests.factories import UserFactory
 
 
 class ACJTestCase(TestCase):
@@ -36,6 +37,19 @@ class ACJTestCase(TestCase):
 		root = rv.json
 		self.assertEqual(root['username'], 'root')
 		self.assertEqual(root['displayname'], 'root')
+
+	def test_users_invalid_id(self):
+		self.login('root', 'password')
+		rv = self.client.get('/api/users/99999')
+		self.assert404(rv)
+
+	def test_users_unauthorized(self):
+		user = UserFactory(password='password', usertypeforsystem=DefaultFixture.SYS_ROLE_INSTRUCTOR)
+		db.session.commit()
+
+		self.login(user.username, 'password')
+		rv = self.client.get('/api/users/' + str(DefaultFixture.ROOT_USER.id))
+		self.assert401(rv)
 
 	def login(self, username, password):
 		payload = json.dumps(dict(
