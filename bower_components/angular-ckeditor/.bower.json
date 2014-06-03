@@ -1,0 +1,39 @@
+{
+  "name": "angular-ckeditor",
+  "main": "angular-ckeditor.js",
+  "version": "0.1.1",
+  "homepage": "https://github.com/lemonde/angular-ckeditor",
+  "authors": [
+    "Greg Bergé <neoziro@gmail.com>"
+  ],
+  "description": "CKEditor directive for Angular.",
+  "keywords": [
+    "angular",
+    "directive",
+    "ckeditor"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "package.json",
+    "karma.conf.js",
+    "node_modules",
+    "bower_components",
+    "Gruntfile.js",
+    "test"
+  ],
+  "devDependencies": {
+    "angular-mocks": "~1.2.16",
+    "jquery": "~2.1.0",
+    "ckeditor": "#basic/4.3.4"
+  },
+  "_release": "0.1.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.1.1",
+    "commit": "7d09b7ac3397f4fbfa3790867a527dfe3f2cbb62"
+  },
+  "_source": "git://github.com/lemonde/angular-ckeditor.git",
+  "_target": "~0.1.1",
+  "_originalSource": "angular-ckeditor"
+}

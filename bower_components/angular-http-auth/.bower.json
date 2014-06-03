@@ -19,6 +19,5 @@
   },
   "_source": "git://github.com/witoldsz/angular-http-auth.git",
   "_target": "~1.2.1",
-  "_originalSource": "angular-http-auth",
-  "_direct": true
+  "_originalSource": "angular-http-auth"
 }

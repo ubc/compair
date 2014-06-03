@@ -47,6 +47,5 @@
   },
   "_source": "git://github.com/ianwalter/ng-breadcrumbs.git",
   "_target": "~0.1.0",
-  "_originalSource": "ng-breadcrumbs",
-  "_direct": true
+  "_originalSource": "ng-breadcrumbs"
 }
