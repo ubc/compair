@@ -6,8 +6,9 @@
 		<div class="form-group has-feedback"
 			 ng-class="{'has-error': loginForm.username.$invalid, 'has-success': loginForm.username.$valid}">
 			<label for="inputUser">Username</label>
-			<input type="text" id="inputUser" name="username" ng-model="username" required
-				   placeholder="Username" class="form-control" auto-focus>
+			<input type="text" id="inputUser" name="username"
+				ng-model="username" required placeholder="Username"
+				class="form-control" auto-focus>
 			<span ng-show="!loginForm.username.$invalid" class="fa fa-check form-control-feedback"></span>
 			<span ng-show="loginForm.username.$invalid" class="fa fa-times form-control-feedback"></span>
 		</div>

@@ -3,7 +3,7 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.course', ['ngResource']);
+var module = angular.module('ubc.ctlt.acj.course', ['ngResource', 'ckeditor']);
 
 /***** Providers *****/
 module.factory('CourseResource', function($resource) {
@@ -19,6 +19,16 @@ module.controller(
 	'CourseController',
 	function($scope, $log, CourseResource)
 	{
+		$scope.editorOptions = 
+		{
+			language: 'en',
+			disableInline: true,
+			removeButtons: 'Anchor,Strike,Subscript,Superscript',
+			toolbarGroups: [
+				{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
+				{ name: 'links' }
+			]
+		};
 		$scope.newCourseSubmit = function() {
 			$scope.submitted = true;
 			CourseResource.save($scope.course).$promise.then(

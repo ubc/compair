@@ -3,39 +3,33 @@
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>ACJ</title>
-		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
-		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"></script>
 
-		<!-- Bootstrap, not managed by bower cause it installs jquery, and we'll
-		try to avoid jquery if possible this time around. -->
-		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
-		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
-		<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+		<!-- CKEditor, need to add custom plugins -->
+		<script src="lib/ckeditor/ckeditor.js"></script>
 
 		<!-- Bower Installed Libs, automatically inserted using gulp modules -->
 		<!-- bower:css -->
-		<link rel="stylesheet" href="lib/fontawesome/css/font-awesome.css" />
 		<link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.css" />
+		<link rel="stylesheet" href="lib/fontawesome/css/font-awesome.css" />
 		<!-- endbower -->
 
 		<!-- bower:js -->
 		<script src="lib/jquery/dist/jquery.js"></script>
+		<script src="lib/bootstrap/dist/js/bootstrap.js"></script>
 		<script src="lib/angular/angular.js"></script>
 		<script src="lib/angular-animate/angular-animate.js"></script>
 		<script src="lib/angular-cookies/angular-cookies.js"></script>
 		<script src="lib/angular-resource/angular-resource.js"></script>
 		<script src="lib/angular-route/angular-route.js"></script>
-		<script src="lib/ng-ckeditor/ng-ckeditor.js"></script>
-		<script src="lib/ng-breadcrumbs/dist/ng-breadcrumbs.min.js"></script>
+		<script src="lib/angular-sanitize/angular-sanitize.js"></script>
 		<script src="lib/angular-http-auth/src/http-auth-interceptor.js"></script>
-		<script src="lib/bootstrap/dist/js/bootstrap.js"></script>
 		<script src="lib/angular-strap/dist/angular-strap.min.js"></script>
 		<script src="lib/angular-strap/dist/angular-strap.tpl.min.js"></script>
+		<script src="lib/angular-ckeditor/angular-ckeditor.js"></script>
+		<script src="lib/ng-breadcrumbs/dist/ng-breadcrumbs.min.js"></script>
 		<!-- endbower -->
 
 		<script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.2.0/js/bootstrap-datepicker.min.js"></script>
-		<script src="//rangy.googlecode.com/svn/trunk/currentrelease/rangy-core.js"></script>
-		<script src="lib/hallo.js"></script>
 
 		<script src="http://bazalt-cms.com/assets/ng-table/0.3.0/ng-table.js"></script>
     	<link rel="stylesheet" href="http://bazalt-cms.com/assets/ng-table/0.3.1/ng-table.css" />    
@@ -68,9 +62,6 @@
 		<link href="//cdnjs.cloudflare.com/ajax/libs/intro.js/0.5.0/introjs.min.css" rel="stylesheet">
 		<link href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.2.0/css/datepicker.min.css" rel="stylesheet">
 		<link rel="stylesheet" type="text/css" href="acj.css" />
-		<script type="text/javascript">
-			jQuery('.myeditor').hallo();
-		</script>
 		<!--[if lte IE 8]>
 		<script>
 			document.createElement('flash-messages');

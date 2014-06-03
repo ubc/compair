@@ -20,7 +20,7 @@
 		</div>
 		<div class="form-group">
 			<label for="courseDescription">Description: </label>
-			<textarea ng-model="course.description" id="courseDescription" class="form-control" rows="4"></textarea>
+			<textarea ng-model="course.description" id="courseDescription" class="form-control" ckeditor="editorOptions" rows="4"></textarea>
 		</div>
 		<input type="submit" class="btn btn-primary" value="Create Course" 
 			ng-disabled="newCourseForm.$invalid || submitted" />

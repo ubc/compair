@@ -5,10 +5,10 @@
 </h1>
 
 <div class="panel panel-default">
-	<!-- Default panel contents -->
+	<!-- Course listing toolbar -->
 	<div class="panel-body">
 		<form class="form-inline" role="search">
-			<div class="form-group">
+			<div class="form-group" ng-if="canAddCourse">
 				<a class="btn btn-default" href="#/course/new">
 					<i class="fa fa-plus"></i> New Course
 				</a>
@@ -19,33 +19,17 @@
 			</div>
 		</form>
 	</div>
-
-	<!-- Table -->
-	<table class="table table-hover">
-		<tbody>
-			<tr ng-repeat="course in courses | filter:courseFilter">
-				<td ng-click="redirect('/questionpage/{{course.course.id}}')"
-					class="pointer" id="step2"><b>{{course.course.name}}</b></td>
-				<td ng-click="redirect('/questionpage/{{course.course.id}}')"
-					class="pointer"><span class="label"
-					ng-class="{'label-success': course.course.count > 0, 'label-default': course.course.count == 0}">{{course.course.count}} question(s)</span></td>
-				<td ng-click="redirect('/questionpage/{{course.course.id}}')"
-					class="pointer"><span class="label"
-					ng-class="{'label-success': course.course.new > 0, 'label-default': course.course.new == 0}">{{course.course.new}} new question(s)</span></td>
-				<td><a id="step3" class="btn btn-default btn-sm" ng-show="canAddCourse"
-					href="#/enrollpage/{{course.course.id}}"> <span class="glyphicon glyphicon-plus-sign"></span >
-						Enrol Users
-				</a></td>
-				<td><a class="btn btn-default btn-sm" ng-show="canAddCourse"
-					href="#/editcourse/{{course.course.id}}"> <span class="glyphicon glyphicon-edit"></span >
-						Edit Course
-				</a></td>
-				<td><a class="btn btn-default btn-sm" ng-show="canAddCourse"
-					href="#/stats/{{course.course.id}}"> <span class="glyphicon glyphicon-stats"></span >
-						View Statistics
-				</a></td>
-			</tr>
-		</tbody>
-	</table>
+	<!-- Course listing -->
+	<div class="list-group">
+		<a ng-repeat="course in courses | filter:courseFilter" 
+			ng-href="/questionpage/{{course.course.id}}" class="list-group-item">
+			<h3 class="list-group-item-heading">
+				{{course.course.name}}
+			</h3>
+			<div class="list-group-item-text" 
+				ng-bind-html="course.course.description">
+			</div>
+		</a>
+	</div>
 </div>
 </div>

@@ -19,15 +19,11 @@ module.factory('Authorize',
 		var _permissions = null;
 
 		var _allow_operation = function(operation, resource, permissions) {
+			$log.debug(permissions);
 			if (resource in permissions)
 			{
 				if (operation in permissions[resource])
 				{
-					$log.debug("Here");
-					$log.debug(resource);
-					$log.debug(operation);
-					$log.debug(permissions[resource]);
-					$log.debug(permissions[resource][operation]);
 					return permissions[resource][operation];
 				}
 			}
@@ -43,8 +39,6 @@ module.factory('Authorize',
 			storePermissions: function(permissions) {
 				_permissions = permissions;
 				$cookieStore.put('current.permissions', permissions);
-				$log.debug("Stored Permissions");
-				$log.debug(_permissions);
 			},
 			getPermissions: function() {
 				if (_permissions)
