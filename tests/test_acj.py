@@ -1,7 +1,10 @@
 import json
 import unittest
 from flask.ext.testing import TestCase
-from acj import create_app
+from flask_bouncer import ensure
+from flask_login import login_user, logout_user
+from werkzeug.exceptions import Unauthorized
+from acj import create_app, Users
 from acj.manage.database import populate
 from acj.core import db
 from data.fixtures import DefaultFixture
@@ -28,7 +31,9 @@ class ACJTestCase(TestCase):
 
 	def test_login(self):
 		rv = self.login('root', 'password')
-		self.assertEqual(rv.json, {'userid': 1})
+		userid = rv.json['userid']
+		self.assertEqual(userid, 1, "Logged in user's id does not match!")
+		self._verifyPermissions(userid, rv.json['permissions'])
 
 	def test_users_1(self):
 		self.login('root', 'password')
@@ -63,6 +68,23 @@ class ACJTestCase(TestCase):
 
 	def logout(self):
 		return self.client.get('/login/logout', follow_redirects=True)
+
+	def _verifyPermissions(self, userid, permissions):
+		user = Users.query.get(userid)
+		with self.app.app_context():
+			# can't figure out how to get into logged in app context, so just force a login here
+			login_user(user, force=True)
+			for model_name, operations in permissions.items():
+				for operation, permission in operations.items():
+					expected = True
+					try:
+						ensure(operation, model_name)
+					except Unauthorized:
+						expected = False
+					self.assertEqual(permission, expected,
+						"Expected permission " + operation + " on " +  model_name + " to be " + str(expected))
+			# undo the forced login earlier
+			logout_user()
 
 
 if __name__ == '__main__':
