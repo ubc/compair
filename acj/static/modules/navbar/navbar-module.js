@@ -5,8 +5,8 @@
 
 var module = angular.module('ubc.ctlt.acj.navbar',
 	[
-		'ubc.ctlt.acj.authentication',
 		'ng-breadcrumbs',
+		'ubc.ctlt.acj.authentication',
 		'ubc.ctlt.acj.login' // for LogoutController
 	]
 );
