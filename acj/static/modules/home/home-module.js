@@ -10,6 +10,7 @@ var module = angular.module('ubc.ctlt.acj.home',
 		'ubc.ctlt.acj.authentication',
 		'ubc.ctlt.acj.authorization',
 		'ubc.ctlt.acj.course',
+		'ubc.ctlt.acj.toaster',
 		'ubc.ctlt.acj.user'
 	]
 );
@@ -24,6 +25,7 @@ module.controller(
 							AuthenticationService,
 							Authorize,
 							CourseResource,
+							Toaster,
 							UserResource) {
 		$scope.canAddCourse = 
 			Authorize.can(Authorize.CREATE, CourseResource.MODEL);
@@ -36,26 +38,10 @@ module.controller(
 				}
 			},
 			function (ret) {
+				Toaster.reqerror("Unable to retrieve your courses.");
 				$log.error("Failed to retrieve the user's courses.");
 			}
 		);
-
-		$scope.submit = function() {
-			input = {"name": $scope.course};
-			var retval = courseService.save( input, function() {
-				$scope.check = false;
-				$scope.flash = retval.flash;
-				if (!$scope.flash) {
-					$scope.courses.push(retval);
-				}
-				else {
-					flashService.flash('danger', retval.flash);
-				}
-			});
-		};
-		$scope.redirect = function(url) {
-			$location.path(unescape(url));
-		};
 	}
 );
 // End anonymous function

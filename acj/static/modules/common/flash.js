@@ -4,14 +4,14 @@
 (function() {
 
 // Create the module with a unique name.
-var module = angular.module('ubc.ctlt.acj.common.flash', ['flash']);
+var module = angular.module('ubc.ctlt.acj.common.flash', 
+	['ubc.ctlt.acj.toaster']);
 
 /***** Providers *****/
-module.factory('flashService', function(flash) {
+module.factory('flashService', function(Toaster) {
 	return {
 		flash: function (type, msg) {
-			type = 'alert alert-' + type + ' text-center';
-			flash([{ level: type, text: msg}]);
+			Toaster.info(msg);
 		}		
 	};
 });

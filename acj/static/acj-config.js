@@ -6,6 +6,7 @@ var myApp = angular.module('myApp', [
 	'ngCookies', 
 	'ngUpload',
 	'ng-breadcrumbs',
+	'angular-loading-bar',
 	'ubc.ctlt.acj.common.flash', // TODO Remove once split into modules done
 	'ubc.ctlt.acj.common.installed', // TODO Remove once split into modules done
 	'ubc.ctlt.acj.course',

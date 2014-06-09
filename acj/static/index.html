@@ -4,7 +4,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>ACJ</title>
 
-		<!-- CKEditor, need to add custom plugins -->
+		<!-- CKEditor, not bower managed since need mathjax plugin -->
 		<script src="lib/ckeditor/ckeditor.js"></script>
 
 		<!-- Bower Installed Libs, automatically inserted using gulp modules -->
@@ -33,14 +33,19 @@
 		<script src="lib/AngularJS-Toaster/toaster.js"></script>
 		<!-- endbower -->
 
+		<!-- Non-Bower Managed Includes -->
+		<link href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.2.0/css/datepicker.min.css" rel="stylesheet">
 		<script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.2.0/js/bootstrap-datepicker.min.js"></script>
 
 		<script src="http://bazalt-cms.com/assets/ng-table/0.3.0/ng-table.js"></script>
     	<link rel="stylesheet" href="http://bazalt-cms.com/assets/ng-table/0.3.1/ng-table.css" />    
 
-		<script src="lib/angular-flash.js"></script>
 		<script src="lib/ng-upload.min.js"></script>
 		<script src="//cdn.jsdelivr.net/intro.js/0.5.0/intro.min.js"></script>
+		<link href="//cdnjs.cloudflare.com/ajax/libs/intro.js/0.5.0/introjs.min.css" rel="stylesheet">
+
+		<!-- MathJax, should figure out how to bower manage this -->
+		<script type="text/javascript" src="//cdn.mathjax.org/mathjax/2.2-latest/MathJax.js?config=AM_HTMLorMML"></script>
 
 		<!-- AngularJS Modules/Controllers/Services/etc -->
 		<script src="acj-config.js" type="text/javascript"></script>
@@ -52,6 +57,7 @@
 		<!-- - Non-Route Modules -->
 		<script src="modules/authentication/authentication-service.js"></script>
 		<script src="modules/authorization/authorization-module.js"></script>
+		<script src="modules/toaster/toaster-module.js"></script>
 		<script src="modules/user/user-resource.js"></script>
 		<!-- - Individual Route Modules -->
 		<script src="modules/course/course-module.js"></script>
@@ -59,19 +65,8 @@
 		<script src="modules/installer/installer-module.js"></script>
 		<script src="modules/login/login-module.js"></script>
 		<script src="modules/navbar/navbar-module.js"></script>
-
-
-
-
-		<link href="//cdnjs.cloudflare.com/ajax/libs/intro.js/0.5.0/introjs.min.css" rel="stylesheet">
-		<link href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.2.0/css/datepicker.min.css" rel="stylesheet">
+		<!-- ACJ Stylesheet -->
 		<link rel="stylesheet" type="text/css" href="acj.css" />
-		<!--[if lte IE 8]>
-		<script>
-			document.createElement('flash-messages');
-		</script>
-		<![endif]-->
-		<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/2.2-latest/MathJax.js?config=AM_HTMLorMML"></script>
 	</head>
 	<body>
 	<!-- Main Navbar -->
@@ -162,18 +157,11 @@
 	<!-- Main Navbar -->
 	<ng-include src="'modules/navbar/navbar-partial.html'"></ng-include>
 
-	<!-- No idea what this is -->
-	<div class="messagesList" app-messages></div>
+	<!-- Toast Messages from AngularJS-Toaster -->
+	<toaster-container></toaster-container>
 
 	<!-- Main Viewport, where all the module partials are shown -->
 	<div class="container">
-		<!-- Flash messages row TODO uncomment if used
-		<div class="row">
-			<div class="col-sm-12">
-				<flash-messages></flash-messages>
-			</div>
-		</div>
-		-->
 		<!-- ngView, should have it's own row and column css organization -->
 		<div ng-view=""></div>
 	</div>

@@ -115,3 +115,12 @@ Conventions
 Each page and route should be in their own modules. The primary Javascript import should be named `<module name>-module.js`. The primary template for the module should be named `<module name>-partial.html`. See `static/modules/example` for an example template that can be used as a base for new modules.
 
 Common code shared across many modules in the application should be abstracted out into it's own module and placed in `static/modules/common`.
+
+Dev Notes
+-----------
+
+Breadcrumbs are taken care of by [ng-breadcrumbs](https://github.com/ianwalter/ng-breadcrumbs). 
+
+Loading indicators are automatically shown by [angular-loading-bar](http://chieffancypants.github.io/angular-loading-bar/).
+
+Toasts/flash messages are provided by [AngularJS-Toaster](https://github.com/jirikavi/AngularJS-Toaster). Customized with success(), error(), etc. methods in the `Toaster` provider, so we don't have to always provide all the params in pop().
