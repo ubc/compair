@@ -11,6 +11,8 @@
 		<!-- bower:css -->
 		<link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.css" />
 		<link rel="stylesheet" href="lib/fontawesome/css/font-awesome.css" />
+		<link rel="stylesheet" href="lib/angular-loading-bar/src/loading-bar.css" />
+		<link rel="stylesheet" href="lib/AngularJS-Toaster/toaster.css" />
 		<!-- endbower -->
 
 		<!-- bower:js -->
@@ -27,6 +29,8 @@
 		<script src="lib/angular-strap/dist/angular-strap.tpl.min.js"></script>
 		<script src="lib/angular-ckeditor/angular-ckeditor.js"></script>
 		<script src="lib/ng-breadcrumbs/dist/ng-breadcrumbs.min.js"></script>
+		<script src="lib/angular-loading-bar/src/loading-bar.js"></script>
+		<script src="lib/AngularJS-Toaster/toaster.js"></script>
 		<!-- endbower -->
 
 		<script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.2.0/js/bootstrap-datepicker.min.js"></script>
@@ -155,6 +159,8 @@
 		</div>
 	</div>
 
+	<!-- Main Navbar -->
+	<ng-include src="'modules/navbar/navbar-partial.html'"></ng-include>
 
 	<!-- No idea what this is -->
 	<div class="messagesList" app-messages></div>
