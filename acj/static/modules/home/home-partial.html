@@ -1,6 +1,6 @@
 <div ng-controller="HomeController">
 
-<h1>
+<h1 class="text-center">
 	My Courses
 </h1>
 
@@ -22,7 +22,7 @@
 	<!-- Course listing -->
 	<div class="list-group">
 		<a ng-repeat="course in courses | filter:courseFilter" 
-			ng-href="/questionpage/{{course.course.id}}" class="list-group-item">
+			ng-href="#/course/{{course.course.id}}" class="list-group-item">
 			<h3 class="list-group-item-heading">
 				{{course.course.name}}
 			</h3>

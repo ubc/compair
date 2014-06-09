@@ -1,8 +1,4 @@
-<div ng-controller="CourseController">
-	<div class="alert alert-danger text-center" ng-show="courseErr">
-		{{courseErr}}
-	</div>
-
+<div ng-controller="CourseCreateController">
 	<form name="newCourseForm" class="form" ng-submit="newCourseSubmit()" 
 		novalidate>
 		<h2>Create New Course</h2>
@@ -24,8 +20,5 @@
 		</div>
 		<input type="submit" class="btn btn-primary" value="Create Course" 
 			ng-disabled="newCourseForm.$invalid || submitted" />
-		<span class="label label-info" ng-show="submitted">
-			<i class="fa fa-refresh"></i>
-		</span>
 	</form>
 </div>

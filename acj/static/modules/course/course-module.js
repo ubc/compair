@@ -3,7 +3,14 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.course', ['ngResource', 'ckeditor']);
+var module = angular.module('ubc.ctlt.acj.course', 
+	[
+		'ngResource', 
+		'ckeditor',
+		'ng-breadcrumbs',
+		'ubc.ctlt.acj.toaster'
+	]
+);
 
 /***** Providers *****/
 module.factory('CourseResource', function($resource) {
@@ -16,8 +23,8 @@ module.factory('CourseResource', function($resource) {
 
 /***** Controllers *****/
 module.controller(
-	'CourseController',
-	function($scope, $log, CourseResource)
+	'CourseCreateController',
+	function($scope, $log, $location, CourseResource, Toaster)
 	{
 		$scope.editorOptions = 
 		{
@@ -35,12 +42,15 @@ module.controller(
 				function (ret)
 				{
 					$scope.submitted = false;
-					// TODO REDIRECT TO NEWLY CREATED COURSE
+					Toaster.success(ret.name + " created successfully!");
+					$location.path('/course/' + ret.id);
 				},
 				function (ret)
 				{
 					$scope.submitted = false;
-					$scope.courseErr = ret.data.error
+					Toaster.error(ret.data.error);
+					$log.error("Request to create new course failed: " +
+						ret.data.error);
 				}
 			);
 		};
