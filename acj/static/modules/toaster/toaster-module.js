@@ -13,7 +13,7 @@ var module = angular.module('ubc.ctlt.acj.toaster',
 );
 
 /***** Providers *****/
-module.factory('Toaster', function(toaster) {
+module.factory('Toaster', function($log, toaster) {
 	// should be short, so don't need that much time
 	toaster.success = function(title, msg) {
 		this.pop("success", title, msg, 5000);
@@ -34,6 +34,7 @@ module.factory('Toaster', function(toaster) {
 	// preset error messages for certain errors. This is for any ajax requests
 	// that fails.
 	toaster.reqerror = function(title) {
+		$log.error(title);
 		// TODO Tell them what support to contact
 		this.error(title, "Unable to connect to the server, this might be a server issue or your internet connection might be down. Please contact support if it looks to be a server issue.");
 	};
