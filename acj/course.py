@@ -2,9 +2,10 @@ from bouncer.constants import MANAGE, READ, CREATE
 from flask import session, request, Response, Blueprint, jsonify, current_app
 from flask_bouncer import requires, ensure
 from flask_login import login_required, current_user
-from sqlalchemy import exc
+from sqlalchemy import exc, desc
+from acj.users import get_user
 from .core import db
-from .models import Courses, UserTypesForCourse, CoursesAndUsers
+from .models import Courses, UserTypesForCourse, CoursesAndUsers, PostsForQuestions, Posts
 from .util import to_dict, to_dict_paginated
 
 courses_api = Blueprint('courses_api', __name__)
@@ -50,6 +51,26 @@ def get_course(id):
 	ensure(READ, course)
 	course_ret = to_dict(course, ["coursesandusers"])
 	return jsonify(course_ret)
+
+@courses_api.route('/<id>/questions')
+@login_required
+def get_course_questions(id):
+	course = Courses.query.get_or_404(id)
+	ensure(READ, course)
+	# Get all questions for this course, default order is most recent first
+	questions = PostsForQuestions.query.\
+		join(Posts). \
+		filter(Posts.courses_id==id). \
+		order_by(desc(Posts.created)). \
+		all()
+	# have to get info from tables with these relations: PostsForQuestions > Posts > Users,
+	# can't do it with to_dict, which only follows relations of the original query object, and so
+	# misses out on Users
+	questions_ret = to_dict(questions)
+	for question in questions_ret:
+		user = get_user(question['post']['users_id'])
+		question['post']['user'] = user
+	return jsonify({"questions": questions_ret})
 
 #@teacher.require(http_exception=401)
 #def enrol_users(users, courseId):
