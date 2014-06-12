@@ -53,6 +53,7 @@ angular.module('controllers.ckeditor', ['ckeditor'])
 - "ckeditor" Specify editor options. Accepts an Object.
 - "ng-model" Binded scope variable.
 - "ready" Called when the editor is completely ready. Accepts an Angular expression.
+- Inline editing mode is enabled if element has a `contenteditable` attribute set to true.
 
 ## License
 

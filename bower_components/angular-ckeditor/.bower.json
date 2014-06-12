@@ -1,7 +1,7 @@
 {
   "name": "angular-ckeditor",
   "main": "angular-ckeditor.js",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "homepage": "https://github.com/lemonde/angular-ckeditor",
   "authors": [
     "Greg Bergé <neoziro@gmail.com>"
@@ -27,13 +27,13 @@
     "jquery": "~2.1.0",
     "ckeditor": "#basic/4.3.4"
   },
-  "_release": "0.1.1",
+  "_release": "0.2.0",
   "_resolution": {
     "type": "version",
-    "tag": "v0.1.1",
-    "commit": "7d09b7ac3397f4fbfa3790867a527dfe3f2cbb62"
+    "tag": "v0.2.0",
+    "commit": "d437eeb2935eee3a13879d65c225a2ee63e8b6e5"
   },
   "_source": "git://github.com/lemonde/angular-ckeditor.git",
-  "_target": "~0.1.1",
+  "_target": "~0.2.0",
   "_originalSource": "angular-ckeditor"
 }

@@ -68,7 +68,15 @@
   function ckeditorController($scope, $element, $attrs, $parse, $q) {
     // Create editor instance.
     var config = $parse($attrs.ckeditor)($scope) || {};
-    var instance = this.instance = CKEDITOR.inline($element[0], config);
+    var editorElement = $element[0];
+    var instance;
+    if (editorElement.hasAttribute('contenteditable') &&
+        editorElement.getAttribute('contenteditable').toLowerCase() == 'true') {
+      instance = this.instance = CKEDITOR.inline(editorElement, config);
+    }
+    else {
+      instance = this.instance = CKEDITOR.replace(editorElement, config);
+    }
 
     /**
      * Listen on events of a given type.
