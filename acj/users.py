@@ -1,12 +1,13 @@
 from flask import Blueprint, jsonify, request
-from bouncer.constants import READ, MANAGE
+from bouncer.constants import READ, MANAGE, EDIT
 
 from flask_bouncer import requires, ensure
 from flask_login import login_required
+from werkzeug.exceptions import Unauthorized
 from .util import to_dict, to_dict_paginated
 
 #from general import admin, teacher, commit, hasher
-from .models import Users
+from .models import Users, CoursesAndUsers
 
 users_api = Blueprint('users_api', __name__)
 
@@ -23,12 +24,8 @@ def get_users():
 
 @users_api.route('/<id>')
 @login_required
-def get_user(id):
-	user = Users.query.get_or_404(id)
-	ensure(READ, user)  # check that the logged in user can read this user
-	user_ret = to_dict(user, ["coursesandusers"])
-	# strip password hash
-	del user_ret['_password']
+def api_get_user(id):
+	user_ret = get_user(id)
 	return jsonify(user_ret)
 
 # returns a list of courses that this user is enroled in
@@ -49,8 +46,43 @@ def get_courses_that_user_is_enroled_in(id):
 
 	# TODO REMOVE COURSES WHERE USER IS DROPPED?
 	# TODO REMOVE COURSES WHERE COURSE IS UNAVAILABLE?
-
 	return jsonify({"objects": courses_ret})
+
+# Get user which checks permissions to restrict what information the client gets about other users.
+# This provides a measure of anonymity among students, while instructors and above can see real names.
+def get_user(id):
+	user = Users.query.get_or_404(id)
+	# Determine if the logged in user can view full info on the target user
+	access_restricted = True
+	try:
+		ensure(READ, user)  # check that the logged in user can read this user
+		access_restricted = False
+	except Unauthorized:
+		pass
+	if access_restricted:
+		enrolments = CoursesAndUsers.query.filter_by(users_id = id).all()
+		# if the logged in user can edit the target user's enrolments, then we let them see full info
+		for enrolment in enrolments:
+			try:
+				ensure(EDIT, enrolment)
+				access_restricted = False
+				break
+			except Unauthorized:
+				pass
+	user_ret = to_dict(user, ["coursesandusers"])
+	# Insert other information
+	user_ret['avatar'] = user.avatar()
+	# Delete information that should not be transmitted
+	del user_ret['_password'] # having to manually strip passwords is a bit annoying
+	if access_restricted:
+		del user_ret['username'] # should only need displayname
+		del user_ret['fullname']
+		del user_ret['firstname']
+		del user_ret['lastname']
+		del user_ret['email']
+		del user_ret['created']
+		del user_ret['modified']
+	return user_ret
 
 #def import_users(list, group=True):
 #	schema = {

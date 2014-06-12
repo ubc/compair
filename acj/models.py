@@ -170,13 +170,14 @@ class Users(db.Model, UserMixin):
 	# 	1.Trim leading and trailing whitespace from an email address
 	# 	2.Force all characters to lower-case
 	# 	3.md5 hash the final string
+	# Defaults to a hash of the user's username if no email is available
 	def avatar(self):
+		hash_input = self.username
 		if self.email:
-			m = hashlib.md5()
-			m.update(self.email.strip().lower().encode('utf-8'))
-			return m.hexdigest()
-		else:
-			return None
+			hash_input = self.email
+		m = hashlib.md5()
+		m.update(hash_input.strip().lower().encode('utf-8'))
+		return m.hexdigest()
 
 	def verify_password(self, password):
 		return pwd_context.verify(password, self.password)
