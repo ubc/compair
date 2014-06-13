@@ -35,11 +35,12 @@ class ACJTestCase(TestCase):
 		self.assertEqual(userid, 1, "Logged in user's id does not match!")
 		self._verifyPermissions(userid, rv.json['permissions'])
 
-	def test_users_1(self):
+	def test_users_root(self):
 		self.login('root', 'password')
 		rv = self.client.get('/api/users/' + str(DefaultFixture.ROOT_USER.id))
 		self.assert200(rv)
 		root = rv.json
+		print root
 		self.assertEqual(root['username'], 'root')
 		self.assertEqual(root['displayname'], 'root')
 		self.assertNotIn('_password', root)
@@ -77,6 +78,15 @@ class ACJTestCase(TestCase):
 		self.assertNotIn('lastname', root)
 		self.assertNotIn('fullname', root)
 		self.assertNotIn('email', root)
+
+	def test_users_list(self):
+		self.login('root', 'password')
+		rv = self.client.get('/api/users')
+		self.assert200(rv)
+		users = rv.json
+		print users
+		self.assertEqual(users['num_results'], 1)
+		self.assertEqual(users['objects'][0]['username'], 'root')
 
 	def login(self, username, password):
 		payload = json.dumps(dict(

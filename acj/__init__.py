@@ -1,7 +1,7 @@
 from flask import Flask
 from flask.ext.login import current_user
 from .authorization import define_authorization
-from .core import login_manager, auth_func, api_manager, bouncer, db
+from .core import login_manager, bouncer, db
 from .configuration import config
 from .models import CoursesAndUsers, Users
 
@@ -41,21 +41,21 @@ def create_app(conf=config, settings_override={}):
 		return current_user
 
 	# Flask-Restless definitions
-	api_manager.init_app(
-		app,
-		flask_sqlalchemy_db=db,
-		preprocessors=dict(
-			GET_SINGLE=[auth_func],
-			GET_MANY=[auth_func],
-			POST=[auth_func],
-			DELETE=[auth_func],
-			PUT=[auth_func],
-			)
-	)
+	# api_manager.init_app(
+	# 	app,
+	# 	flask_sqlalchemy_db=db,
+	# 	preprocessors=dict(
+	# 		GET_SINGLE=[auth_func],
+	# 		GET_MANY=[auth_func],
+	# 		POST=[auth_func],
+	# 		DELETE=[auth_func],
+	# 		PUT=[auth_func],
+	# 		)
+	# )
 
-	api_manager.create_api(
-		CoursesAndUsers
-	)
+	# api_manager.create_api(
+	# 	CoursesAndUsers
+	# )
 
 	# Initialize rest of the api modules
 	from .course import courses_api

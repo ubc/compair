@@ -1,52 +1,82 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify
 from bouncer.constants import READ, MANAGE, EDIT
+from flask.ext.restful import Resource, Api, fields, marshal_with
 
 from flask_bouncer import requires, ensure
 from flask_login import login_required
 from werkzeug.exceptions import Unauthorized
-from .util import to_dict, to_dict_paginated
+from .util import to_dict, pagination
 
 #from general import admin, teacher, commit, hasher
 from .models import Users, CoursesAndUsers
 
 users_api = Blueprint('users_api', __name__)
 
-# List all users in the system
-@users_api.route('')
-@login_required
-@requires(MANAGE, Users)
-def get_users():
-	pagination_result = to_dict_paginated(["coursesandusers"], request, Users.query)
-	# strip password hash
-	for user in pagination_result["objects"]:
-		del user["_password"]
-	return jsonify(pagination_result)
+sysrole_fields = {
+	'id': fields.Integer,
+	'name': fields.String,
+}
 
-@users_api.route('/<id>')
-@login_required
-def api_get_user(id):
-	user_ret = get_user(id)
-	return jsonify(user_ret)
+user_fields = {
+	'id': fields.Integer,
+	'username': fields.String,
+	'displayname': fields.String,
+	'firstname': fields.String,
+	'lastname': fields.String,
+	'email': fields.String,
+	'fullname': fields.String,
+	'created': fields.DateTime,
+	'modified': fields.DateTime,
+	'lastonline': fields.DateTime,
+	'usertypesforsystem_id': fields.Integer,
+	'usertypeforsystem': fields.Nested(sysrole_fields),
+}
 
-# returns a list of courses that this user is enroled in
-@users_api.route('/<id>/courses')
-@login_required
-def get_courses_that_user_is_enroled_in(id):
-	user = Users.query.get_or_404(id)
-	# we want to list courses only, so only check the association table
-	coursesandusers = []
-	for courseanduser in user.coursesandusers:
-		ensure(READ, courseanduser)
-		coursesandusers.append(courseanduser)
 
-	# sort alphabetically by course name
-	coursesandusers.sort(key=lambda courseanduser: courseanduser.course.name)
-	# convert to dict
-	courses_ret = to_dict(coursesandusers, ["user"])
+class UserAPI(Resource):
+	@login_required
+	@marshal_with(user_fields)
+	def get(self, id):
+		user = Users.query.get_or_404(id)
+		# check that the logged in user can read this user
+		ensure(READ, user)
+		return user
 
-	# TODO REMOVE COURSES WHERE USER IS DROPPED?
-	# TODO REMOVE COURSES WHERE COURSE IS UNAVAILABLE?
-	return jsonify({"objects": courses_ret})
+
+class UserListAPI(Resource):
+	@login_required
+	@requires(MANAGE, Users)
+	@pagination(Users)
+	@marshal_with(user_fields)
+	def get(self, objects):
+
+		return objects
+
+
+class UserCourseListAPI(Resource):
+	@login_required
+	def get(self, id):
+		user = Users.query.get_or_404(id)
+		# we want to list courses only, so only check the association table
+		coursesandusers = []
+		for courseanduser in user.coursesandusers:
+			ensure(READ, courseanduser)
+			coursesandusers.append(courseanduser)
+
+		# sort alphabetically by course name
+		coursesandusers.sort(key=lambda courseanduser: courseanduser.course.name)
+		# convert to dict
+		courses_ret = to_dict(coursesandusers, ["user"])
+
+		# TODO REMOVE COURSES WHERE USER IS DROPPED?
+		# TODO REMOVE COURSES WHERE COURSE IS UNAVAILABLE?
+
+		return jsonify({"objects": courses_ret})
+
+api = Api(users_api)
+api.add_resource(UserAPI, '/<int:id>')
+api.add_resource(UserListAPI, '')
+api.add_resource(UserCourseListAPI, '/<int:id>/courses')
 
 # Get user which checks permissions to restrict what information the client gets about other users.
 # This provides a measure of anonymity among students, while instructors and above can see real names.
