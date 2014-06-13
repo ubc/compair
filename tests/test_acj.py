@@ -40,7 +40,6 @@ class ACJTestCase(TestCase):
 		rv = self.client.get('/api/users/' + str(DefaultFixture.ROOT_USER.id))
 		self.assert200(rv)
 		root = rv.json
-		print root
 		self.assertEqual(root['username'], 'root')
 		self.assertEqual(root['displayname'], 'root')
 		self.assertNotIn('_password', root)
@@ -50,13 +49,11 @@ class ACJTestCase(TestCase):
 		rv = self.client.get('/api/users/99999')
 		self.assert404(rv)
 
-
 	def test_users_info_unrestricted(self):
 		self.login('root', 'password')
 		rv = self.client.get('/api/users/' + str(DefaultFixture.ROOT_USER.id))
 		self.assert200(rv)
 		root = rv.json
-		print(root)
 		self.assertEqual(root['displayname'], 'root')
 		# personal information should be transmitted
 		self.assertIn('firstname', root)
@@ -84,7 +81,6 @@ class ACJTestCase(TestCase):
 		rv = self.client.get('/api/users')
 		self.assert200(rv)
 		users = rv.json
-		print users
 		self.assertEqual(users['num_results'], 1)
 		self.assertEqual(users['objects'][0]['username'], 'root')
 

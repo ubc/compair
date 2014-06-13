@@ -1,10 +1,11 @@
 from flask import Blueprint, jsonify
 from bouncer.constants import READ, MANAGE, EDIT
-from flask.ext.restful import Resource, Api, fields, marshal_with
+from flask.ext.restful import Resource, Api, fields, marshal_with, marshal
 
 from flask_bouncer import requires, ensure
 from flask_login import login_required
 from werkzeug.exceptions import Unauthorized
+from authorization import is_access_restricted
 from .util import to_dict, pagination
 
 #from general import admin, teacher, commit, hasher
@@ -19,12 +20,19 @@ sysrole_fields = {
 
 user_fields = {
 	'id': fields.Integer,
+	'displayname': fields.String,
+	'avatar': fields.String,
+}
+
+user_full_fields = {
+	'id': fields.Integer,
 	'username': fields.String,
 	'displayname': fields.String,
 	'firstname': fields.String,
 	'lastname': fields.String,
 	'email': fields.String,
 	'fullname': fields.String,
+	'avatar': fields.String,
 	'created': fields.DateTime,
 	'modified': fields.DateTime,
 	'lastonline': fields.DateTime,
@@ -35,19 +43,19 @@ user_fields = {
 
 class UserAPI(Resource):
 	@login_required
-	@marshal_with(user_fields)
 	def get(self, id):
 		user = Users.query.get_or_404(id)
-		# check that the logged in user can read this user
-		ensure(READ, user)
-		return user
+		if is_access_restricted(user):
+			return marshal(user, user_fields)
+		else:
+			return marshal(user, user_full_fields)
 
 
 class UserListAPI(Resource):
 	@login_required
 	@requires(MANAGE, Users)
 	@pagination(Users)
-	@marshal_with(user_fields)
+	@marshal_with(user_full_fields)
 	def get(self, objects):
 
 		return objects
@@ -103,7 +111,6 @@ def get_user(id):
 	# Insert other information
 	user_ret['avatar'] = user.avatar()
 	# Delete information that should not be transmitted
-	del user_ret['_password'] # having to manually strip passwords is a bit annoying
 	if access_restricted:
 		del user_ret['username'] # should only need displayname
 		del user_ret['fullname']

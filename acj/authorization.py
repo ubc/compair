@@ -72,3 +72,28 @@ def get_logged_in_user_permissions():
 
 	return permissions
 
+
+def is_access_restricted(user):
+	"""
+	determine if the current user has full view of another user
+	This provides a measure of anonymity among students, while instructors and above can see real names.
+	"""
+	# Determine if the logged in user can view full info on the target user
+	access_restricted = True
+	try:
+		ensure(READ, user)  # check that the logged in user can read this user
+		access_restricted = False
+	except Unauthorized:
+		pass
+	if access_restricted:
+		enrolments = CoursesAndUsers.query.filter_by(users_id=user.id).all()
+		# if the logged in user can edit the target user's enrolments, then we let them see full info
+		for enrolment in enrolments:
+			try:
+				ensure(EDIT, enrolment)
+				access_restricted = False
+				break
+			except Unauthorized:
+				pass
+
+	return access_restricted
