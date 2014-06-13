@@ -42,19 +42,41 @@ class ACJTestCase(TestCase):
 		root = rv.json
 		self.assertEqual(root['username'], 'root')
 		self.assertEqual(root['displayname'], 'root')
+		self.assertNotIn('_password', root)
 
 	def test_users_invalid_id(self):
 		self.login('root', 'password')
 		rv = self.client.get('/api/users/99999')
 		self.assert404(rv)
 
-	def test_users_unauthorized(self):
-		user = UserFactory(password='password', usertypeforsystem=DefaultFixture.SYS_ROLE_INSTRUCTOR)
+
+	def test_users_info_unrestricted(self):
+		self.login('root', 'password')
+		rv = self.client.get('/api/users/' + str(DefaultFixture.ROOT_USER.id))
+		self.assert200(rv)
+		root = rv.json
+		print(root)
+		self.assertEqual(root['displayname'], 'root')
+		# personal information should be transmitted
+		self.assertIn('firstname', root)
+		self.assertIn('lastname', root)
+		self.assertIn('fullname', root)
+		self.assertIn('email', root)
+
+	def test_users_info_restricted(self):
+		user = UserFactory(password='password', usertypeforsystem=DefaultFixture.SYS_ROLE_NORMAL)
 		db.session.commit()
 
 		self.login(user.username, 'password')
 		rv = self.client.get('/api/users/' + str(DefaultFixture.ROOT_USER.id))
-		self.assert401(rv)
+		self.assert200(rv)
+		root = rv.json
+		self.assertEqual(root['displayname'], 'root')
+		# personal information shouldn't be transmitted
+		self.assertNotIn('firstname', root)
+		self.assertNotIn('lastname', root)
+		self.assertNotIn('fullname', root)
+		self.assertNotIn('email', root)
 
 	def login(self, username, password):
 		payload = json.dumps(dict(
