@@ -1,76 +1,77 @@
-from bouncer.constants import MANAGE, READ, CREATE
+from bouncer.constants import MANAGE, READ, CREATE, EDIT
 from flask import session, request, Response, Blueprint, jsonify, current_app
+from flask.ext.restful import Resource, Api, marshal_with, marshal, reqparse
 from flask_bouncer import requires, ensure
 from flask_login import login_required, current_user
 from sqlalchemy import exc, desc
-from acj.users import get_user
+from acj import dataformat
+from acj.authorization import allow
 from .core import db
 from .models import Courses, UserTypesForCourse, CoursesAndUsers, PostsForQuestions, Posts
-from .util import to_dict, to_dict_paginated
+from .util import pagination
 
 courses_api = Blueprint('courses_api', __name__)
+api = Api(courses_api)
 
-@courses_api.route('')
-@login_required
-@requires(MANAGE, Courses)
-def list_course():
-	pagination_results = to_dict_paginated(["coursesandusers"], request, Courses.query)
-	return jsonify(pagination_results)
+course_parser = reqparse.RequestParser()
+course_parser.add_argument('name', type=str)
+course_parser.add_argument('description', type=str)
+# /
+class CourseListAPI(Resource):
+	@login_required
+	@pagination(Courses)
+	@requires(MANAGE, Courses)
+	@marshal_with(dataformat.getCourses())
+	def get(self, objects):
+		return objects
 
-@courses_api.route('/', methods=['POST'])
-@requires(CREATE, Courses)
-def create_course():
-	params = request.get_json()
-	new_course = Courses(name=params.get("name"), description=params.get("description", None))
-	try:
-		# create the course
-		db.session.add(new_course)
-		db.session.commit()
-		# also need to enrol the user as an instructor
-		instructor_role = UserTypesForCourse.query\
-			.filter_by(name = UserTypesForCourse.TYPE_INSTRUCTOR).first()
-		new_courseanduser = CoursesAndUsers(
-			course = new_course, users_id = current_user.id, usertypeforcourse = instructor_role)
-		db.session.add(new_courseanduser)
-		db.session.commit()
-	except exc.IntegrityError as e:
-		db.session.rollback()
-		current_app.logger.error("Failed to add new course. Duplicate. " + e.message)
-		return jsonify({"error":"A course with the same name already exists."}), 400
-	except exc.SQLAlchemyError as e:
-		db.session.rollback()
-		current_app.logger.error("Failed to add new course. " + e.message)
-		raise
-	course_ret = to_dict(new_course, ["coursesandusers"])
-	return jsonify(course_ret)
+	def post(self):
+		params = course_parser.parse_args()
+		new_course = Courses(name=params.get("name"), description=params.get("description", None))
+		try:
+			# create the course
+			db.session.add(new_course)
+			db.session.commit()
+			# also need to enrol the user as an instructor
+			instructor_role = UserTypesForCourse.query \
+				.filter_by(name = UserTypesForCourse.TYPE_INSTRUCTOR).first()
+			new_courseanduser = CoursesAndUsers(
+				course = new_course, users_id = current_user.id, usertypeforcourse = instructor_role)
+			db.session.add(new_courseanduser)
+			db.session.commit()
+		except exc.IntegrityError as e:
+			db.session.rollback()
+			current_app.logger.error("Failed to add new course. Duplicate. " + e.message)
+			return {"error":"A course with the same name already exists."}, 400
+		except exc.SQLAlchemyError as e:
+			db.session.rollback()
+			current_app.logger.error("Failed to add new course. " + e.message)
+			raise
+		return marshal(new_course, dataformat.getCourses())
+api.add_resource(CourseListAPI, '')
 
-@courses_api.route('/<id>')
-@login_required
-def get_course(id):
-	course = Courses.query.get(id)
-	ensure(READ, course)
-	course_ret = to_dict(course, ["coursesandusers"])
-	return jsonify(course_ret)
+# /id
+class CourseAPI(Resource):
+	@login_required
+	def get(self, id):
+		course = Courses.query.get(id)
+		ensure(READ, course)
+		return marshal(course, dataformat.getCourses())
+api.add_resource(CourseAPI, '/<int:id>')
 
-@courses_api.route('/<id>/questions')
-@login_required
-def get_course_questions(id):
-	course = Courses.query.get_or_404(id)
-	ensure(READ, course)
-	# Get all questions for this course, default order is most recent first
-	questions = PostsForQuestions.query.\
-		join(Posts). \
-		filter(Posts.courses_id==id). \
-		order_by(desc(Posts.created)). \
-		all()
-	# have to get info from tables with these relations: PostsForQuestions > Posts > Users,
-	# can't do it with to_dict, which only follows relations of the original query object, and so
-	# misses out on Users
-	questions_ret = to_dict(questions)
-	for question in questions_ret:
-		user = get_user(question['post']['users_id'])
-		question['post']['user'] = user
-	return jsonify({"questions": questions_ret})
+# /id/questions
+class CourseQuestionsAPI(Resource):
+	@login_required
+	def get(self, id):
+		course = Courses.query.get_or_404(id)
+		ensure(READ, course)
+		# Get all questions for this course, default order is most recent first
+		questions = PostsForQuestions.query.join(Posts).filter(Posts.courses_id==id). \
+			order_by(desc(Posts.created)).all()
+
+		restrict_users = allow(EDIT, CoursesAndUsers(courses_id=id))
+		return marshal(questions, dataformat.getPostsForQuestions(restrict_users))
+api.add_resource(CourseQuestionsAPI, '/<int:id>/questions')
 
 #@teacher.require(http_exception=401)
 #def enrol_users(users, courseId):

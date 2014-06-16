@@ -5,62 +5,34 @@ from flask.ext.restful import Resource, Api, fields, marshal_with, marshal
 from flask_bouncer import requires, ensure
 from flask_login import login_required
 from werkzeug.exceptions import Unauthorized
-from authorization import is_access_restricted
-from .util import to_dict, pagination
+from acj import dataformat
+from .authorization import is_user_access_restricted
+from .util import pagination
 
 #from general import admin, teacher, commit, hasher
-from .models import Users, CoursesAndUsers
+from .models import Users, CoursesAndUsers, UserTypesForSystem, Courses
 
 users_api = Blueprint('users_api', __name__)
 
-sysrole_fields = {
-	'id': fields.Integer,
-	'name': fields.String,
-}
 
-user_fields = {
-	'id': fields.Integer,
-	'displayname': fields.String,
-	'avatar': fields.String,
-}
-
-user_full_fields = {
-	'id': fields.Integer,
-	'username': fields.String,
-	'displayname': fields.String,
-	'firstname': fields.String,
-	'lastname': fields.String,
-	'email': fields.String,
-	'fullname': fields.String,
-	'avatar': fields.String,
-	'created': fields.DateTime,
-	'modified': fields.DateTime,
-	'lastonline': fields.DateTime,
-	'usertypesforsystem_id': fields.Integer,
-	'usertypeforsystem': fields.Nested(sysrole_fields),
-}
-
-
+# /id
 class UserAPI(Resource):
 	@login_required
 	def get(self, id):
 		user = Users.query.get_or_404(id)
-		if is_access_restricted(user):
-			return marshal(user, user_fields)
-		else:
-			return marshal(user, user_full_fields)
+		return marshal(user, dataformat.getUsers(is_user_access_restricted(user)))
 
-
+# /
 class UserListAPI(Resource):
 	@login_required
 	@requires(MANAGE, Users)
 	@pagination(Users)
-	@marshal_with(user_full_fields)
+	@marshal_with(dataformat.getUsers(False))
 	def get(self, objects):
-
 		return objects
 
 
+# /id/courses
 class UserCourseListAPI(Resource):
 	@login_required
 	def get(self, id):
@@ -73,53 +45,16 @@ class UserCourseListAPI(Resource):
 
 		# sort alphabetically by course name
 		coursesandusers.sort(key=lambda courseanduser: courseanduser.course.name)
-		# convert to dict
-		courses_ret = to_dict(coursesandusers, ["user"])
 
 		# TODO REMOVE COURSES WHERE USER IS DROPPED?
 		# TODO REMOVE COURSES WHERE COURSE IS UNAVAILABLE?
 
-		return jsonify({"objects": courses_ret})
+		return {'objects': marshal(coursesandusers, dataformat.getCoursesAndUsers(include_user=False))}
 
 api = Api(users_api)
 api.add_resource(UserAPI, '/<int:id>')
 api.add_resource(UserListAPI, '')
 api.add_resource(UserCourseListAPI, '/<int:id>/courses')
-
-# Get user which checks permissions to restrict what information the client gets about other users.
-# This provides a measure of anonymity among students, while instructors and above can see real names.
-def get_user(id):
-	user = Users.query.get_or_404(id)
-	# Determine if the logged in user can view full info on the target user
-	access_restricted = True
-	try:
-		ensure(READ, user)  # check that the logged in user can read this user
-		access_restricted = False
-	except Unauthorized:
-		pass
-	if access_restricted:
-		enrolments = CoursesAndUsers.query.filter_by(users_id = id).all()
-		# if the logged in user can edit the target user's enrolments, then we let them see full info
-		for enrolment in enrolments:
-			try:
-				ensure(EDIT, enrolment)
-				access_restricted = False
-				break
-			except Unauthorized:
-				pass
-	user_ret = to_dict(user, ["coursesandusers"])
-	# Insert other information
-	user_ret['avatar'] = user.avatar()
-	# Delete information that should not be transmitted
-	if access_restricted:
-		del user_ret['username'] # should only need displayname
-		del user_ret['fullname']
-		del user_ret['firstname']
-		del user_ret['lastname']
-		del user_ret['email']
-		del user_ret['created']
-		del user_ret['modified']
-	return user_ret
 
 #def import_users(list, group=True):
 #	schema = {

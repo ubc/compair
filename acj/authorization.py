@@ -72,28 +72,31 @@ def get_logged_in_user_permissions():
 
 	return permissions
 
+def allow(operation, target):
+	"""
+	This duplicates bouncer's can() operation since flask-bouncer doesn't implement it.
+	Named allow() to avoid namespace confusion with bouncer.
+	"""
+	try:
+		ensure(operation, target)
+		return True
+	except Unauthorized:
+		return False
 
-def is_access_restricted(user):
+def is_user_access_restricted(user):
 	"""
 	determine if the current user has full view of another user
 	This provides a measure of anonymity among students, while instructors and above can see real names.
 	"""
 	# Determine if the logged in user can view full info on the target user
-	access_restricted = True
-	try:
-		ensure(READ, user)  # check that the logged in user can read this user
-		access_restricted = False
-	except Unauthorized:
-		pass
+	access_restricted = not allow(READ, user)
 	if access_restricted:
 		enrolments = CoursesAndUsers.query.filter_by(users_id=user.id).all()
 		# if the logged in user can edit the target user's enrolments, then we let them see full info
 		for enrolment in enrolments:
-			try:
-				ensure(EDIT, enrolment)
+			if allow(EDIT, enrolment):
 				access_restricted = False
 				break
-			except Unauthorized:
-				pass
 
 	return access_restricted
+
