@@ -57,21 +57,6 @@ class UserTypesForCourse(db.Model):
 	TYPE_TA = "Teaching Assistant"
 	TYPE_INSTRUCTOR = "Instructor"
 
-
-# @event.listens_for(UserTypesForCourse.__table__, "after_create", propagate=True)
-# def populate_usertypesforcourse(target, connection, **kw):
-# 	usertypes = [
-# 		UserTypesForCourse.TYPE_DROPPED,
-# 		UserTypesForCourse.TYPE_STUDENT,
-# 		UserTypesForCourse.TYPE_TA,
-# 		UserTypesForCourse.TYPE_INSTRUCTOR
-# 	]
-# 	for usertype in usertypes:
-# 		entry = UserTypesForCourse(name=usertype)
-# 		db_session.add(entry)
-# 	db_session.commit()
-
-
 # User types at the system level
 class UserTypesForSystem(db.Model):
 	__tablename__ = "UserTypesForSystem"
@@ -83,18 +68,6 @@ class UserTypesForSystem(db.Model):
 	TYPE_NORMAL = "Normal User"
 	TYPE_INSTRUCTOR = "Instructor"
 	TYPE_SYSADMIN = "System Administrator"
-
-
-# @event.listens_for(UserTypesForSystem.__table__, "after_create", propagate=True)
-# def populate_usertypesforsystem(target, connection, **kw):
-# 	usertypes = [UserTypesForSystem.TYPE_NORMAL,
-# 				 UserTypesForSystem.TYPE_INSTRUCTOR,
-# 				 UserTypesForSystem.TYPE_SYSADMIN]
-# 	for usertype in usertypes:
-# 		entry = UserTypesForSystem(name=usertype)
-# 		db_session.add(entry)
-# 	db_session.commit()
-
 
 def hash_password(password, is_admin=False):
 	category = None
@@ -163,14 +136,12 @@ class Users(db.Model, UserMixin):
 		else:
 			return None
 
-	# Note that in order for avatar to be provided with Flask-Restless, it can't
-	# be a hybrid_property due to self.email not being resolved yet when
-	# Flask-Restless tries to use it.
 	# According to gravatar's hash specs
 	# 	1.Trim leading and trailing whitespace from an email address
 	# 	2.Force all characters to lower-case
 	# 	3.md5 hash the final string
 	# Defaults to a hash of the user's username if no email is available
+	@hybrid_property
 	def avatar(self):
 		hash_input = self.username
 		if self.email:
@@ -218,7 +189,6 @@ class Courses(db.Model):
 		nullable=False)
 	created = db.Column(db.TIMESTAMP, default=func.current_timestamp(),
 					 nullable=False)
-
 
 # A "junction table" in sqlalchemy is called a many-to-many pattern. Such a
 # table can be automatically created by sqlalchemy from db.relationship
@@ -294,7 +264,6 @@ class Posts(db.Model):
 	created = db.Column(db.TIMESTAMP, default=func.current_timestamp(),
 					 nullable=False)
 
-
 class PostsForQuestions(db.Model):
 	__tablename__ = 'PostsForQuestions'
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -309,10 +278,6 @@ class PostsForQuestions(db.Model):
 		default=func.current_timestamp(),
 		onupdate=func.current_timestamp(),
 		nullable=False)
-
-
-# don't need created time, posts store that info
-
 
 class PostsForAnswers(db.Model):
 	__tablename__ = 'PostsForAnswers'
