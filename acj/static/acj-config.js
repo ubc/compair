@@ -16,12 +16,6 @@ var myApp = angular.module('myApp', [
 	'ubc.ctlt.acj.navbar'
 ]);
 
-// Disable stripping trailing slashes from ngResource configured URLs. Flask
-// likes to complain when the trailing slashes are missing.
-myApp.config(function($resourceProvider) {
-	$resourceProvider.defaults.stripTrailingSlashes = false;
-});
-
 //Global Variables
 
 myApp.factory('judgeService', function($resource) {
