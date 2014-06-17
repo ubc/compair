@@ -9,7 +9,7 @@ from acj.manage.database import populate
 from acj.core import db
 from data.fixtures import DefaultFixture
 from tests import test_app_settings
-from tests.factories import UserFactory
+from tests.factories import CourseFactory, UserFactory
 
 
 class ACJTestCase(TestCase):
@@ -83,6 +83,45 @@ class ACJTestCase(TestCase):
 		users = rv.json
 		self.assertEqual(users['num_results'], 1)
 		self.assertEqual(users['objects'][0]['username'], 'root')
+
+	def test_get_course(self):
+		course_expected = CourseFactory()
+		db.session.commit()
+
+		# Test login required
+		rv = self.client.get('/api/courses/' + str(course_expected.id))
+		self.assert401(rv)
+		# TODO easy way to test permissions?
+		# Test info
+		self.login('root', 'password')
+		rv = self.client.get('/api/courses/' + str(course_expected.id))
+		self.assert200(rv)
+		course_actual = rv.json
+		self.assertEqual(course_expected.name, course_actual['name'],
+			"Expected course name does not match actual.")
+		self.assertEqual(course_expected.id, course_actual['id'],
+			"Expected course id does not match actual.")
+
+	def test_create_course(self):
+		course_expected = {
+			'name':'TestCourse1',
+			'description':'Test Course One Description Test'
+		}
+		# Test course creation
+		self.login('root', 'password')
+		rv = self.client.post('/api/courses',
+			data=json.dumps(course_expected), content_type='application/json')
+		self.assert200(rv)
+		# Verify return
+		course_actual = rv.json
+		self.assertEqual(course_expected['name'], course_actual['name'])
+		self.assertEqual(course_expected['description'], course_actual['description'])
+		# Verify you can get the course again
+		rv = self.client.get('/api/courses/' + str(course_actual['id']))
+		self.assert200(rv)
+		course_actual = rv.json
+		self.assertEqual(course_expected['name'], course_actual['name'])
+		self.assertEqual(course_expected['description'], course_actual['description'])
 
 	def login(self, username, password):
 		payload = json.dumps(dict(
