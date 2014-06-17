@@ -50,7 +50,7 @@ module.controller(
 		CourseResource.getQuestions({'id': $scope.courseId}).$promise.then(
 			function (ret)
 			{
-				$scope.questions = ret.questions;
+				$scope.questions = ret.objects;
 			},
 			function (ret)
 			{

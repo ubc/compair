@@ -70,7 +70,7 @@ class CourseQuestionsAPI(Resource):
 			order_by(desc(Posts.created)).all()
 
 		restrict_users = allow(EDIT, CoursesAndUsers(courses_id=id))
-		return marshal(questions, dataformat.getPostsForQuestions(restrict_users))
+		return {"objects":marshal(questions, dataformat.getPostsForQuestions(restrict_users))}
 api.add_resource(CourseQuestionsAPI, '/<int:id>/questions')
 
 #@teacher.require(http_exception=401)
