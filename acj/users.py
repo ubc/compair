@@ -7,7 +7,7 @@ from flask_login import login_required
 from werkzeug.exceptions import Unauthorized
 from acj import dataformat
 from .authorization import is_user_access_restricted
-from .util import pagination
+from .util import pagination, new_restful_api
 
 #from general import admin, teacher, commit, hasher
 from .models import Users, CoursesAndUsers, UserTypesForSystem, Courses
@@ -51,7 +51,7 @@ class UserCourseListAPI(Resource):
 
 		return {'objects': marshal(coursesandusers, dataformat.getCoursesAndUsers(include_user=False))}
 
-api = Api(users_api)
+api = new_restful_api(users_api)
 api.add_resource(UserAPI, '/<int:id>')
 api.add_resource(UserListAPI, '')
 api.add_resource(UserCourseListAPI, '/<int:id>/courses')

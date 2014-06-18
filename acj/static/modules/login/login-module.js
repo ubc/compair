@@ -56,14 +56,22 @@ module.run(function ($rootScope, $route, $location, $log, $modal, Authentication
 			keyboard: false, // can't close login on pressing Esc key
 			show: false // don't show login on initialization
 		});
-	// Function to display the login form
+	// Track whether loginBox is visible to prevent .show() creating duplicates
+	var loginBoxVisible = false;
+	// Functions to display/hide the login form
 	$rootScope.showLogin = function() {
+		if (loginBoxVisible) return;
 		loginBox.$promise.then(loginBox.show);
+		loginBoxVisible = true;
+	};
+	$rootScope.hideLogin = function() {
+		loginBox.hide();
+		loginBoxVisible = false;
 	};
 	// Show the login form when we have a login required event
 	$rootScope.$on(AuthenticationService.LOGIN_REQUIRED_EVENT, $rootScope.showLogin);
 	// Hide the login form on login
-	$rootScope.$on(AuthenticationService.LOGIN_EVENT, loginBox.hide);
+	$rootScope.$on(AuthenticationService.LOGIN_EVENT, $rootScope.hideLogin);
 
 	// Requires the user to be logged in for every single route
 	$rootScope.$on('$locationChangeStart', function(event, next) {

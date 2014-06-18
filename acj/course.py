@@ -8,10 +8,10 @@ from acj import dataformat
 from acj.authorization import allow
 from .core import db
 from .models import Courses, UserTypesForCourse, CoursesAndUsers, PostsForQuestions, Posts
-from .util import pagination
+from .util import pagination, new_restful_api
 
 courses_api = Blueprint('courses_api', __name__)
-api = Api(courses_api)
+api = new_restful_api(courses_api)
 
 course_parser = reqparse.RequestParser()
 course_parser.add_argument('name', type=str)

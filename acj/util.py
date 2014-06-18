@@ -1,5 +1,7 @@
 from functools import wraps
-from flask import request
+from flask import request, jsonify
+from flask.ext.restful import Api
+
 
 def pagination(model):
 	"""
@@ -46,3 +48,17 @@ def pagination(model):
 		return paging
 	return wrap
 
+
+def _unauthorized_override(response):
+	return jsonify({"error":"Authentication Required."}), 401
+
+def new_restful_api(blueprint):
+	"""
+	Flask-Restful asks for authentication on 401 error through http basic-auth. Since
+	we're not using http basic-auth, we have to disable this default handler.
+	:param blueprint:
+	:return:
+	"""
+	api = Api(blueprint)
+	api.unauthorized = _unauthorized_override
+	return api
