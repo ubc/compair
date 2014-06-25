@@ -48,8 +48,8 @@ def get_logged_in_user_permissions():
 	ensure(READ, user)
 	permissions = {}
 	models = {
-		"Courses" : Courses,
-		"Users" : Users
+		Courses.__name__ : Courses,
+		Users.__name__ : Users
 	}
 	operations = {
 		MANAGE,

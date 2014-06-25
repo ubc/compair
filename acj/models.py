@@ -177,6 +177,8 @@ class Users(db.Model, UserMixin):
 
 class Courses(db.Model):
 	__tablename__ = 'Courses'
+	__table_args__ = default_table_args
+
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	name = db.Column(db.String(255), unique=True, nullable=False)
 	description = db.Column(db.Text)
@@ -198,6 +200,7 @@ class Courses(db.Model):
 # since we need to declare the user's role in the course.
 class CoursesAndUsers(db.Model):
 	__tablename__ = 'CoursesAndUsers'
+
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	courses_id = db.Column(db.Integer, db.ForeignKey("Courses.id"), nullable=False)
 	course = db.relationship("Courses")
@@ -218,6 +221,7 @@ class CoursesAndUsers(db.Model):
 	__table_args__ = (
 		# prevent duplicate user in courses
 		db.UniqueConstraint('courses_id', 'users_id', name='_unique_user_and_course'),
+		default_table_args
 	)
 
 
@@ -227,6 +231,8 @@ class CoursesAndUsers(db.Model):
 
 class Tags(db.Model):
 	__tablename__ = 'Tags'
+	__table_args__ = default_table_args
+
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	name = db.Column(db.String(255), unique=True, nullable=False)
 	courses_id = db.Column(
@@ -244,6 +250,8 @@ class Tags(db.Model):
 
 class Posts(db.Model):
 	__tablename__ = 'Posts'
+	__table_args__ = default_table_args
+
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	users_id = db.Column(
 		db.Integer,
@@ -266,6 +274,8 @@ class Posts(db.Model):
 
 class PostsForQuestions(db.Model):
 	__tablename__ = 'PostsForQuestions'
+	__table_args__ = default_table_args
+
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	posts_id = db.Column(
 		db.Integer,
@@ -281,6 +291,8 @@ class PostsForQuestions(db.Model):
 
 class PostsForAnswers(db.Model):
 	__tablename__ = 'PostsForAnswers'
+	__table_args__ = default_table_args
+
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	posts_id = db.Column(
 		db.Integer,
@@ -291,6 +303,8 @@ class PostsForAnswers(db.Model):
 
 class PostsForComments(db.Model):
 	__tablename__ = 'PostsForComments'
+	__table_args__ = default_table_args
+
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	posts_id = db.Column(
 		db.Integer,
@@ -305,6 +319,8 @@ class PostsForComments(db.Model):
 
 class Criteria(db.Model):
 	__tablename__ = 'Criteria'
+	__table_args__ = default_table_args
+
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	name = db.Column(db.String(255), unique=True, nullable=False)
 	description = db.Column(db.Text)
@@ -326,6 +342,8 @@ class Criteria(db.Model):
 # each course can have different criterias
 class CriteriaAndCourses(db.Model):
 	__tablename__ = 'CriteriaAndCourses'
+	__table_args__ = default_table_args
+
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	criteria_id = db.Column(
 		db.Integer,
@@ -345,6 +363,8 @@ class CriteriaAndCourses(db.Model):
 
 class Scores(db.Model):
 	__tablename__ = 'Scores'
+	__table_args__ = default_table_args
+
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	name = db.Column(db.String(255), unique=True, nullable=False)
 	criteria_id = db.Column(
@@ -371,6 +391,8 @@ class Scores(db.Model):
 
 class AnswerPairings(db.Model):
 	__tablename__ = 'AnswerPairings'
+	__table_args__ = default_table_args
+
 	id = db.Column(db.Integer, primary_key=True)
 	postsforquestions_id = db.Column(
 		db.Integer,
@@ -403,6 +425,8 @@ class AnswerPairings(db.Model):
 
 class Judgements(db.Model):
 	__tablename__ = 'Judgements'
+	__table_args__ = default_table_args
+
 	id = db.Column(db.Integer, primary_key=True)
 	users_id = db.Column(
 		db.Integer,
@@ -430,6 +454,8 @@ class Judgements(db.Model):
 
 class LTIInfo(db.Model):
 	__tablename__ = 'LTIInfo'
+	__table_args__ = default_table_args
+
 	id = db.Column(db.Integer, primary_key=True)
 	LTIid = db.Column(db.String(100))
 	LTIURL = db.Column(db.String(100))
