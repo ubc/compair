@@ -10,6 +10,7 @@ var module = angular.module('ubc.ctlt.acj.course',
 		'ngRoute',
 		'ckeditor',
 		'ng-breadcrumbs',
+		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.toaster'
 	]
 );
@@ -32,22 +33,18 @@ module.controller(
 	'CourseQuestionsController',
 	function($scope, $log, $routeParams, breadcrumbs, CourseResource, Toaster)
 	{
-		$scope.courseId = $routeParams['courseId'];
-		// get course record
-		CourseResource.get({'id': $scope.courseId}).$promise.then(
-			function (ret)
-			{
+		// get course info
+		var courseId = $routeParams['courseId'];
+		CourseResource.get({'id': courseId}).$promise.then(
+			function (ret) {
 				$scope.course = ret;
-				// update breadcrumbs with course name
-				breadcrumbs.options = {'Course Questions': $scope.course.name};
 			},
-			function (ret)
-			{
-				Toaster.reqerror("Unable to retrieve course: "+ $scope.courseId);
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve course: "+ courseId);
 			}
 		);
 		// get course questions
-		CourseResource.getQuestions({'id': $scope.courseId}).$promise.then(
+		CourseResource.getQuestions({'id': courseId}).$promise.then(
 			function (ret)
 			{
 				$scope.questions = ret.objects;
@@ -55,7 +52,7 @@ module.controller(
 			function (ret)
 			{
 				Toaster.reqerror("Unable to retrieve course questions: " +
-					$scope.courseId);
+					courseId);
 			}
 		);
 
@@ -64,20 +61,14 @@ module.controller(
 
 module.controller(
 	'CourseCreateController',
-	function($scope, $log, $location, CourseResource, Toaster)
+	function($scope, $log, $location, CourseResource, EditorOptions, Toaster)
 	{
-		$scope.editorOptions = 
-		{
-			language: 'en',
-			disableInline: true,
-			removeButtons: 'Anchor,Strike,Subscript,Superscript',
-			toolbarGroups: [
-				{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
-				{ name: 'links' }
-			]
-		};
-		$scope.newCourseSubmit = function() {
+		$scope.editorOptions = EditorOptions.basic;
+		//initialize course so this scope can access data from included form
+		$scope.course = {};
+		$scope.courseSubmit = function() {
 			$scope.submitted = true;
+			$log.debug($scope.course);
 			CourseResource.save($scope.course).$promise.then(
 				function (ret)
 				{

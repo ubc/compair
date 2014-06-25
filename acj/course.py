@@ -13,9 +13,11 @@ from .util import pagination, new_restful_api
 courses_api = Blueprint('courses_api', __name__)
 api = new_restful_api(courses_api)
 
-course_parser = reqparse.RequestParser()
-course_parser.add_argument('name', type=str)
-course_parser.add_argument('description', type=str)
+new_course_parser = reqparse.RequestParser()
+new_course_parser.add_argument('name', type=str, required=True, help='Course name is required.')
+new_course_parser.add_argument('description', type=str)
+new_course_parser.add_argument('enable_student_posts', type=bool)
+new_course_parser.add_argument('enable_student_create_tags', type=bool)
 # /
 class CourseListAPI(Resource):
 	@login_required
@@ -24,10 +26,15 @@ class CourseListAPI(Resource):
 	@marshal_with(dataformat.getCourses())
 	def get(self, objects):
 		return objects
-
+	# Create new course
 	def post(self):
-		params = course_parser.parse_args()
-		new_course = Courses(name=params.get("name"), description=params.get("description", None))
+		params = new_course_parser.parse_args()
+		new_course = Courses(
+			name=params.get("name"),
+			description=params.get("description", None),
+			enable_student_posts=params.get("enable_student_posts", False),
+			enable_student_create_tags=params.get("enable_student_create_tags", False)
+		)
 		try:
 			# create the course
 			db.session.add(new_course)

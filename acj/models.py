@@ -184,6 +184,9 @@ class Courses(db.Model):
 	description = db.Column(db.Text)
 	available = db.Column(db.Boolean, default=True, nullable=False)
 	coursesandusers = db.relationship("CoursesAndUsers")
+	# allow students to make question posts
+	enable_student_posts = db.Column(db.Boolean, default=False, nullable=False)
+	enable_student_create_tags = db.Column(db.Boolean, default=False, nullable=False)
 	modified = db.Column(
 		db.TIMESTAMP,
 		default=func.current_timestamp(),

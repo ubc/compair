@@ -42,6 +42,8 @@ def getCourses():
 		'name': fields.String,
 		'description': fields.String,
 		'available': fields.Boolean,
+		'enable_student_posts': fields.Boolean,
+		'enable_student_create_tags': fields.Boolean,
 		'modified': fields.DateTime,
 		'created': fields.DateTime
 	}
