@@ -35,6 +35,14 @@
 						</li>
 					</ul>
 				</li>
+				<!-- When in a course -->
+				<li ng-if="inCourse && canEditCourse">
+					<a ng-href="#/course/{{courseId}}/configure">
+						<i class="fa fa-cog"></i>
+						Configure Course
+					</a>
+				</li>
+				<!-- Leftover -->
 				<li data-match-route="/judgepage.*" ng-show="check">
 					<a href="#/quickjudge">Random Judge</a>
 				</li>

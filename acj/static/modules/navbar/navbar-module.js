@@ -6,7 +6,9 @@
 var module = angular.module('ubc.ctlt.acj.navbar',
 	[
 		'ng-breadcrumbs',
+		'ngRoute',
 		'ubc.ctlt.acj.authentication',
+		'ubc.ctlt.acj.course',
 		'ubc.ctlt.acj.login' // for LogoutController
 	]
 );
@@ -18,8 +20,36 @@ var module = angular.module('ubc.ctlt.acj.navbar',
 /***** Controllers *****/
 module.controller(
 	"NavbarController",
-	function NavbarController($scope, $log, AuthenticationService, breadcrumbs) {
+	function NavbarController($scope, $log, $route, breadcrumbs,
+		AuthenticationService, Authorize, CourseResource) 
+	{
 		$scope.breadcrumbs = breadcrumbs;
+
+		// determine if we're in a course so we know whether to show
+		// the course settings
+		$scope.inCourse = false;
+		$scope.setInCourse = function() {
+			var courseId = $route.current.params['courseId'];
+			$scope.inCourse = false;
+			if (courseId) {
+				$scope.inCourse = true;
+				// update breadcrumb to show the course name
+				CourseResource.get({'id': courseId}).$promise.then(
+					function(ret)
+					{
+						breadcrumbs.options = {'Course Questions': ret.name};
+					}
+				);
+			}
+			$scope.courseId = courseId;
+		};
+		$scope.setInCourse(); // init for first page load
+		$scope.$on('$locationChangeSuccess', function(event, next) {
+			// update for further navigation after the page has loaded
+			$scope.setInCourse();
+		});
+		// show course configure options if user can edit courses
+		$scope.canEditCourse=Authorize.can(Authorize.EDIT, CourseResource.MODEL);
 
 		// get information about the currently logged in user
 		var updateAuthentication = function() {
