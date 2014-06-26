@@ -2,7 +2,7 @@
 	Fixture package, also contain default seed data to be populated
 """
 from acj.models import UserTypesForCourse, UserTypesForSystem
-from tests.factories import UserFactory, UserTypesForCourseFactory, UserTypesForSystemFactory
+from tests.factories import UserFactory, UserTypesForCourseFactory, UserTypesForSystemFactory, CriteriaFactory
 
 
 class DefaultFixture(object):
@@ -28,3 +28,4 @@ class DefaultFixture(object):
 		DefaultFixture.ROOT_USER = UserFactory(
 			username='root', password='password', displayname='root',
 			usertypeforsystem=DefaultFixture.SYS_ROLE_ADMIN)
+		DefaultFixture.DEFAULT_CRITERIA = CriteriaFactory(user=DefaultFixture.ROOT_USER)

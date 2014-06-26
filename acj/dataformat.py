@@ -36,12 +36,28 @@ def getUsers(restrict_users=True):
 	unrestricted.update(restricted)
 	return unrestricted
 
+def getCriteria():
+	return {
+		'id': fields.Integer,
+		'name': fields.String,
+		'description': fields.String,
+		'modified': fields.DateTime,
+		'created': fields.DateTime
+	}
+
+def getCriteriaAndCourses():
+	return {
+		'id': fields.Integer,
+		'criteria': fields.Nested(getCriteria())
+	}
+
 def getCourses():
 	return {
 		'id': fields.Integer,
 		'name': fields.String,
 		'description': fields.String,
 		'available': fields.Boolean,
+		'criteriaandcourses': fields.Nested(getCriteriaAndCourses()),
 		'enable_student_posts': fields.Boolean,
 		'enable_student_create_tags': fields.Boolean,
 		'modified': fields.DateTime,

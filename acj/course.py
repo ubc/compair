@@ -7,7 +7,7 @@ from sqlalchemy import exc, desc
 from acj import dataformat
 from acj.authorization import allow
 from .core import db
-from .models import Courses, UserTypesForCourse, CoursesAndUsers, PostsForQuestions, Posts
+from .models import Courses, UserTypesForCourse, CoursesAndUsers, PostsForQuestions, Posts, Criteria, CriteriaAndCourses
 from .util import pagination, new_restful_api
 
 courses_api = Blueprint('courses_api', __name__)
@@ -74,6 +74,12 @@ class CourseAPI(Resource):
 	def get(self, id):
 		course = Courses.query.get(id)
 		ensure(READ, course)
+		# add default criteria to this course if it doesn't have any criteria
+		if not course.criteriaandcourses:
+			default_criteria = Criteria.query.first()
+			criteria_and_course = CriteriaAndCourses(criteria=default_criteria, course=course)
+			db.session.add(criteria_and_course)
+			db.session.commit()
 		return marshal(course, dataformat.getCourses())
 	# Save existing course
 	def post(self, id):

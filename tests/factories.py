@@ -1,7 +1,7 @@
 import factory
 from factory.alchemy import SQLAlchemyModelFactory
 from acj.core import db
-from acj.models import Courses, Users, UserTypesForCourse, UserTypesForSystem
+from acj.models import Courses, Users, UserTypesForCourse, UserTypesForSystem, Criteria
 
 __author__ = 'compass'
 
@@ -46,3 +46,8 @@ class CourseFactory(SQLAlchemyModelFactory):
 	description = "Some Course Description"
 	available = True
 
+class CriteriaFactory(SQLAlchemyModelFactory):
+	FACTORY_FOR = Criteria
+	FACTORY_SESSION = db.session
+	name = "Which is better?"
+	description = "<p>Choose the response that you think is the better of the two.</p>"
