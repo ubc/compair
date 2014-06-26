@@ -140,6 +140,11 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/course/course-questions-partial.html',
 				label: "Course Questions"
 			})
+		.when ('/course/:courseId/configure', 
+			{
+				templateUrl: 'modules/course/course-configure-partial.html',
+				label: "Course Configuration"
+			})
 		.when ('/course/:courseId/question/create', 
 			{
 				templateUrl: 'modules/question/question-create-partial.html',
@@ -209,11 +214,6 @@ myApp.config( function ($routeProvider) {
 			{
 				controller: ReviewJudgeController,
 				templateUrl: 'reviewjudge.html'
-			})
-		.when ('/editcourse/:courseId',
-			{
-				controller: EditCourseController,
-				templateUrl: 'editcourse.html'
 			})
 		.when ('/stats/:courseId',
 			{

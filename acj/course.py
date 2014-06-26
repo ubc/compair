@@ -18,6 +18,17 @@ new_course_parser.add_argument('name', type=str, required=True, help='Course nam
 new_course_parser.add_argument('description', type=str)
 new_course_parser.add_argument('enable_student_posts', type=bool)
 new_course_parser.add_argument('enable_student_create_tags', type=bool)
+
+# parser copy() has not been pushed into stable release yet, so we have to wait till then to
+# use it, it'll save duplicate code since these two parsers are pretty much identical
+# existing_course_parser = new_course_parser.copy()
+existing_course_parser = reqparse.RequestParser()
+existing_course_parser.add_argument('id', type=int, required=True, help='Course id is required.')
+existing_course_parser.add_argument('name', type=str, required=True, help='Course name is required.')
+existing_course_parser.add_argument('description', type=str)
+existing_course_parser.add_argument('enable_student_posts', type=bool)
+existing_course_parser.add_argument('enable_student_create_tags', type=bool)
+
 # /
 class CourseListAPI(Resource):
 	@login_required
@@ -63,6 +74,23 @@ class CourseAPI(Resource):
 	def get(self, id):
 		course = Courses.query.get(id)
 		ensure(READ, course)
+		return marshal(course, dataformat.getCourses())
+	# Save existing course
+	def post(self, id):
+		course = Courses.query.get(id)
+		ensure(EDIT, course)
+		params = existing_course_parser.parse_args()
+		# make sure the course id in the url and the course id in the params match
+		if params['id'] != id:
+			return {"error":"Course id does not match URL."}, 400
+		# modify course according to new values, preserve original values if values not passed
+		course.name = params.get("name", course.name)
+		course.description = params.get("description", course.description)
+		course.enable_student_posts = params.get("enable_student_posts", course.enable_student_posts)
+		course.enable_student_create_tags = params.get("enable_student_create_tags",
+													   course.enable_student_create_tags)
+		db.session.add(course)
+		db.session.commit()
 		return marshal(course, dataformat.getCourses())
 api.add_resource(CourseAPI, '/<int:id>')
 

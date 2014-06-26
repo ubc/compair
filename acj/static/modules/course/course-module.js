@@ -16,10 +16,14 @@ var module = angular.module('ubc.ctlt.acj.course',
 );
 
 /***** Providers *****/
-module.factory('CourseResource', function($resource) {
+module.factory('CourseResource', function($q, $routeParams, $log, $resource, 
+	breadcrumbs) 
+{
 	var ret = $resource('/api/courses/:id', {id: '@id'},
 		{
-			getQuestions: {url: '/api/courses/:id/questions'}
+			// would enable caching for GET but there's no automatic cache
+			// invalidation, I don't want to deal with that manually
+			'getQuestions': {url: '/api/courses/:id/questions'}
 		}
 	)
 	ret.MODEL = "Courses"; // add constant to identify the model
@@ -29,6 +33,32 @@ module.factory('CourseResource', function($resource) {
 });
 
 /***** Controllers *****/
+module.controller(
+	'CourseConfigureController',
+	function($scope, $log, $routeParams, CourseResource, EditorOptions, Toaster)
+	{
+		$scope.editorOptions = EditorOptions.basic;
+		// get course info
+		$scope.course = {};
+		var courseId = $routeParams['courseId'];
+		CourseResource.get({'id':courseId}).$promise.then(
+			function (ret) {
+				$scope.course = ret;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve course: "+ courseId);
+			}
+		);
+		// save course info
+		$scope.courseSubmit = function() {
+			CourseResource.save($scope.course).$promise.then(
+				function() { Toaster.success("Course Information Updated!"); },
+				function() { Toaster.reqerror("Course Save Failed."); }
+			);
+		};
+	}
+);
+
 module.controller(
 	'CourseQuestionsController',
 	function($scope, $log, $routeParams, breadcrumbs, CourseResource, Toaster)
