@@ -2,7 +2,8 @@
 	<h1 class="text-center">{{course.name}}</h1>
 
 	<div class="navbar marginT5">
-		<a href="" class="btn btn-primary" ng-click="check=!check" id="stepNav">
+		<a ng-href="#/course/{{course.id}}/question/create" 
+			class="btn btn-primary" id="stepNav">
 			<i class="fa fa-plus"></i>
 			New Question
 		</a>

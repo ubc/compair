@@ -13,7 +13,8 @@ var myApp = angular.module('myApp', [
 	'ubc.ctlt.acj.home',
 	'ubc.ctlt.acj.installer',
 	'ubc.ctlt.acj.login',
-	'ubc.ctlt.acj.navbar'
+	'ubc.ctlt.acj.navbar',
+	'ubc.ctlt.acj.question'
 ]);
 
 //Global Variables

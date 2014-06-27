@@ -64,6 +64,8 @@ def create_app(conf=config, settings_override={}):
 	app.register_blueprint(login_api)
 	from .users import users_api
 	app.register_blueprint(users_api, url_prefix='/api/users')
+	from .question import questions_api
+	app.register_blueprint(questions_api, url_prefix='/api/courses/<int:course_id>/questions')
 
 	return app
 

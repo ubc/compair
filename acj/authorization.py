@@ -2,10 +2,13 @@ from bouncer.constants import ALL, MANAGE, EDIT, READ, CREATE, DELETE
 from flask_bouncer import ensure
 from flask_login import current_user
 from werkzeug.exceptions import Unauthorized
-from .models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTypesForSystem
+from .models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTypesForSystem, Posts
 
-# Sets up user permissions for Flask-Bouncer
+
 def define_authorization(user, they):
+	"""
+	Sets up user permissions for Flask-Bouncer
+	"""
 	if not user.is_authenticated():
 		return # user isn't logged in
 
@@ -29,10 +32,12 @@ def define_authorization(user, they):
 	for entry in user.coursesandusers:
 		course_id = entry.course.id
 		they.can(READ, Courses, id=course_id)
+		they.can(READ, Posts, courses_id=course_id)
 		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_INSTRUCTOR:
 			they.can(EDIT, Courses, id=course_id)
 			they.can(READ, CoursesAndUsers, courses_id=course_id)
 			they.can(EDIT, CoursesAndUsers, courses_id=course_id)
+			they.can(MANAGE, Posts, courses_id=course_id)
 
 # Tell the client side about a user's permissions.
 # This is necessarily more simplified than Flask-Bouncer's implementation.

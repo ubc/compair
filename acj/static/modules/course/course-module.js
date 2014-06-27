@@ -9,15 +9,13 @@ var module = angular.module('ubc.ctlt.acj.course',
 		'ngResource', 
 		'ngRoute',
 		'ckeditor',
-		'ng-breadcrumbs',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.toaster'
 	]
 );
 
 /***** Providers *****/
-module.factory('CourseResource', function($q, $routeParams, $log, $resource, 
-	breadcrumbs) 
+module.factory('CourseResource', function($q, $routeParams, $log, $resource) 
 {
 	var ret = $resource('/api/courses/:id', {id: '@id'},
 		{
@@ -61,7 +59,7 @@ module.controller(
 
 module.controller(
 	'CourseQuestionsController',
-	function($scope, $log, $routeParams, breadcrumbs, CourseResource, Toaster)
+	function($scope, $log, $routeParams, CourseResource, Toaster)
 	{
 		// get course info
 		var courseId = $routeParams['courseId'];
@@ -109,7 +107,7 @@ module.controller(
 				function (ret)
 				{
 					$scope.submitted = false;
-					Toaster.error(ret.data.error);
+					Toaster.reqerror(ret.data.error);
 				}
 			);
 		};

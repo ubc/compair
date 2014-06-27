@@ -1,105 +1,57 @@
-from acj import app
-from general import student, commit
-from sqlalchemy_acj import db_session, User, Script, Course, Question, Tags
-from flask import session, request
+from bouncer.constants import READ, EDIT, CREATE
+from flask import Blueprint
+from flask.ext.bouncer import ensure
+from flask.ext.login import login_required, current_user
+from flask.ext.restful import Resource, marshal
+from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import desc
-import json
-import validictory
+from acj import dataformat, db
+from acj.authorization import allow
+from acj.models import PostsForQuestions, Courses, Posts, CoursesAndUsers
+from acj.util import new_restful_api
 
-@app.route('/question/<id>')
-@student.require(http_exception=401)
-def list_question(id):
-    course = Course.query.filter_by(id = id).first()
-    questions = Question.query.filter_by(cid = id).order_by( Question.time.desc() ).all()
-    lstQuestion = []
-    lstQuiz = []
-    for question in questions:
-        taglistQ = []
-        for tag in question.tagsQ:
-            taglistQ.append(tag.name)
-        author = User.query.filter_by(id = question.uid).first()
-        count = Script.query.filter_by(qid = question.id).all()
-        if question.quiz:
-            user = User.query.filter_by(username = session['username']).first()
-            answered = Script.query.filter(Script.qid == question.id).filter(Script.uid == user.id).first()
-            lstQuiz.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar, "count": len(count), "answered": answered != None, "tags": taglistQ, "tmptags": taglistQ, "contentLength": course.contentLength} )
-        else:
-            lstQuestion.append( {"id": question.id, "author": author.display, "time": str(question.time), "title": question.title, "content": question.content, "avatar": author.avatar, "count": len(count), "tags": taglistQ, "tmptags": taglistQ, "contentLength": course.contentLength} )
-    taglist = []
-    for tag in course.tags:
-        taglist.append({"name": tag.name, "id": tag.id})
-    db_session.rollback()
-    
-    return json.dumps( {"course": course.name, "tags": taglist, "questions": lstQuestion, "quizzes": lstQuiz} )
+questions_api = Blueprint('questions_api', __name__)
+api = new_restful_api(questions_api)
 
-@app.route('/question/<id>', methods=['PUT'])
-def edit_question(id):
-    param = request.json
-    schema = {
-        'type': 'object',
-        'properties': {
-            'title': {'type': 'string'},
-            'content': {'type': 'string'},
-            'taglist': {'type': 'array'}
-        }
-    }
-    try:
-        validictory.validate(param, schema)
-    except ValueError, error:
-        print (str(error))
-        return json.dumps( {"msg": str(error)} )
-    question = Question.query.filter_by(id = id).first()
-    question.title = param['title']
-    question.content = param['content']
-    question.tagsQ = []
-    for tagname in param['taglist']:
-        tag = Tags.query.filter_by(name = tagname).first()
-        question.tagsQ.append(tag)
-    commit()
-    return json.dumps({"msg": "PASS"})
+new_question_parser = RequestParser()
+new_question_parser.add_argument('title', type=str, required=True, help="Question title is required.")
+new_question_parser.add_argument('post', type=dict, default={})
 
-@app.route('/question/<id>', methods=['POST'])
-@student.require(http_exception=401)
-def create_question(id):
-    param = request.json
-    schema = {
-        'type': 'object',
-        'properties': {
-            'title': {'type': 'string'},
-            'content': {'type': 'string'},
-            'type': {'type': 'string'},
-            'taglist': {'type': 'array'}
-        }
-    }
-    try:
-        validictory.validate(param, schema)
-    except ValueError, error:
-        print (str(error))
-        return json.dumps( {"msg": str(error)} )
-    content = param['content']
-    title = param['title']
-    type = param['type']
-    user = User.query.filter_by(username = session['username']).first()
-    newQuestion = Question(id, user.id, title, content, type=='quiz')
-    db_session.add(newQuestion)
-    for id in param['taglist']:
-        tag = Tags.query.filter_by(id = id).first()
-        newQuestion.tagsQ.append(tag)
-    db_session.commit()
-    course = Course.query.filter_by(id = id).first()
-    retval = json.dumps({"id": newQuestion.id, "author": user.display, "time": str(newQuestion.time), "title": newQuestion.title, "content": newQuestion.content, "avatar": user.avatar, "count": "1" if type=='quiz' else "0", "answered": True})
-    db_session.rollback()
-    return retval
+# /id
+class QuestionIdAPI(Resource):
+	@login_required
+	def get(self, course_id, question_id):
+		if not question_id:
+			question_id = 1
+		question = PostsForQuestions.query.get_or_404(question_id)
+		ensure(READ, question.post)
+		return marshal(question, dataformat.getPostsForQuestions())
+api.add_resource(QuestionIdAPI, '/<int:question_id>')
 
-@app.route('/question/<id>', methods=['DELETE'])
-@student.require(http_exception=401)
-def delete_question(id):
-    question = Question.query.filter_by(id = id).first()
-    user = User.query.filter_by(username = session['username']).first()
-    if user.id != question.uid and user.userrole.role != 'Teacher' and user.userrole.role != 'Admin':
-        retval = json.dumps( {"msg": user.display} )
-        db_session.rollback()
-        return retval
-    db_session.delete(question)
-    commit()
-    return ''
+# /
+class QuestionRootAPI(Resource):
+	@login_required
+	def get(self, course_id):
+		course = Courses.query.get_or_404(course_id)
+		ensure(READ, course)
+		# Get all questions for this course, default order is most recent first
+		questions = PostsForQuestions.query.join(Posts).filter(Posts.courses_id==course_id). \
+			order_by(desc(Posts.created)).all()
+
+		restrict_users = allow(EDIT, CoursesAndUsers(courses_id=course_id))
+		return {"objects":marshal(questions, dataformat.getPostsForQuestions(restrict_users))}
+	@login_required
+	def post(self, course_id):
+		# check permission first before reading parser arguments
+		post = Posts(courses_id=course_id)
+		ensure(CREATE, post)
+		params = new_question_parser.parse_args()
+		post.content = params.get("post").get("content")
+		post.courses_id = course_id
+		post.users_id = current_user.id
+		db.session.add(post)
+		question = PostsForQuestions(post=post, title=params.get("title"))
+		db.session.add(question)
+		db.session.commit()
+		return marshal(question, dataformat.getPostsForQuestions())
+api.add_resource(QuestionRootAPI, '')

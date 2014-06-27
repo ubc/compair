@@ -37,6 +37,9 @@ class CourseListAPI(Resource):
 	@marshal_with(dataformat.getCourses())
 	def get(self, objects):
 		return objects
+
+	@login_required
+	@requires(CREATE, Courses)
 	# Create new course
 	def post(self):
 		params = new_course_parser.parse_args()
@@ -72,7 +75,7 @@ api.add_resource(CourseListAPI, '')
 class CourseAPI(Resource):
 	@login_required
 	def get(self, id):
-		course = Courses.query.get(id)
+		course = Courses.query.get_or_404(id)
 		ensure(READ, course)
 		# add default criteria to this course if it doesn't have any criteria
 		if not course.criteriaandcourses:
@@ -83,7 +86,7 @@ class CourseAPI(Resource):
 		return marshal(course, dataformat.getCourses())
 	# Save existing course
 	def post(self, id):
-		course = Courses.query.get(id)
+		course = Courses.query.get_or_404(id)
 		ensure(EDIT, course)
 		params = existing_course_parser.parse_args()
 		# make sure the course id in the url and the course id in the params match
@@ -99,20 +102,6 @@ class CourseAPI(Resource):
 		db.session.commit()
 		return marshal(course, dataformat.getCourses())
 api.add_resource(CourseAPI, '/<int:id>')
-
-# /id/questions
-class CourseQuestionsAPI(Resource):
-	@login_required
-	def get(self, id):
-		course = Courses.query.get_or_404(id)
-		ensure(READ, course)
-		# Get all questions for this course, default order is most recent first
-		questions = PostsForQuestions.query.join(Posts).filter(Posts.courses_id==id). \
-			order_by(desc(Posts.created)).all()
-
-		restrict_users = allow(EDIT, CoursesAndUsers(courses_id=id))
-		return {"objects":marshal(questions, dataformat.getPostsForQuestions(restrict_users))}
-api.add_resource(CourseQuestionsAPI, '/<int:id>/questions')
 
 #@teacher.require(http_exception=401)
 #def enrol_users(users, courseId):
