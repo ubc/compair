@@ -1,0 +1,27 @@
+<div ng-controller="QuestionViewController">
+
+<h2>{{question.title}}</h2>
+<hr />
+<div mathjax="question.post.content" 
+	ng-bind-html="question.post.content">
+</div>
+<hr class="questionFooterSeparator" />
+<div class="row questionFooter">
+	<div class="col-sm-6">
+		<a ng-if="canDeletePosts || question.post.user.id == loggedInUserId" href="" class="btn btn-sm btn-primary">Edit</a>
+		<a href="" class="btn btn-sm btn-success">Answer</a>
+		<a href="" class="btn btn-sm btn-info">Comment</a>
+		<a ng-if="canDeletePosts" href="" class="btn btn-xs btn-danger">Delete</a>
+	</div>
+	<div class="col-sm-6">
+		<a ng-href="#/user/{{question.post.user.id}}" class="nounderline">
+			<img src="//www.gravatar.com/avatar/{{question.post.user.avatar}}?s=32&d=retro" />
+		</a>
+		<a ng-href="#/user/{{question.post.user.id}}">
+			{{question.post.user.displayname}}
+		</a>
+		- {{question.post.created | amDateFormat: 'lll'}}
+	</div>
+</div>
+	
+</div>

@@ -84,22 +84,6 @@ myApp.directive("uploadImage", function() {
 	};
 });
 
-myApp.directive("mathjaxBind", function() {
-    return {
-        restrict: "A",
-        controller: ["$scope", "$element", "$attrs",
-                function($scope, $element, $attrs) {
-            $scope.$watch($attrs.mathjaxBind, function(value) {
-                var $script = angular.element("<span class='renderContent'>")
-                    .html(value == undefined ? "" : value);
-                $element.html("");
-                $element.append($script);
-                MathJax.Hub.Queue(["Typeset", MathJax.Hub, $element[0]]);
-            });
-        }]
-    };
-});
-
 myApp.directive("mathFormula", function() {
 	return {
 		restrict: "A",

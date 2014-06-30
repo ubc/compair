@@ -5,7 +5,10 @@
 var module = angular.module('ubc.ctlt.acj.question', 
 	[
 		'ngResource',
+		'ubc.ctlt.acj.authentication',
+		'ubc.ctlt.acj.authorization',
 		'ubc.ctlt.acj.common.form',
+		'ubc.ctlt.acj.common.mathjax',
 		'ubc.ctlt.acj.toaster'
 	]
 );
@@ -25,6 +28,28 @@ module.factory(
 );
 
 /***** Controllers *****/
+module.controller("QuestionViewController",
+	function($scope, $log, $routeParams, AuthenticationService, Authorize, QuestionResource, Toaster)
+	{
+		var courseId = $routeParams['courseId'];
+		var questionId = $routeParams['questionId'];
+		$scope.loggedInUserId = AuthenticationService.getUser().id;
+		$scope.canDeletePosts = 
+			Authorize.can(Authorize.DELETE, QuestionResource.MODEL);
+		$scope.question = {};
+		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).
+			$promise.then(
+				function (ret)
+				{
+					$scope.question = ret;
+				},
+				function (ret)
+				{
+					Toaster.reqerror("Unable to retrieve question "+ questionId);
+				}
+			);
+	}
+);
 module.controller("QuestionCreateController",
 	function($scope, $log, $location, $routeParams, QuestionResource, Toaster)
 	{

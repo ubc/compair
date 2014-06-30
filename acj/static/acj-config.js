@@ -151,6 +151,11 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/question/question-create-partial.html',
 				label: "Create Question"
 			})
+		.when ('/course/:courseId/question/:questionId', 
+			{
+				templateUrl: 'modules/question/question-view-partial.html',
+				label: "View Question"
+			})
 		.when ('/install', 
 			{
 				templateUrl: 'modules/installer/installer-partial.html',
