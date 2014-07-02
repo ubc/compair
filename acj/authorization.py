@@ -1,7 +1,7 @@
 from bouncer.constants import ALL, MANAGE, EDIT, READ, CREATE, DELETE
 from flask_bouncer import ensure
 from flask_login import current_user
-from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import Unauthorized, Forbidden
 from .models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTypesForSystem, Posts, PostsForQuestions
 
 
@@ -30,20 +30,17 @@ def define_authorization(user, they):
 	# Assign permissions based on course roles
 	# give access to courses the user is enroled in
 	for entry in user.coursesandusers:
-		course_id = entry.course.id
-		they.can(READ, Courses, id=course_id)
-		they.can(READ, Posts, courses_id=course_id)
-		they.can(CREATE, Posts, courses_id=course_id)
-		they.can(EDIT, Posts, users_id=user.id)
+		course = entry.course
+		they.can(READ, Courses, id=course.id)
+		if course.enable_student_create_questions:
+			they.can(MANAGE, PostsForQuestions, courses_id=course.id)
 		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_INSTRUCTOR:
-			they.can(EDIT, Courses, id=course_id)
-			they.can(READ, CoursesAndUsers, courses_id=course_id)
-			they.can(EDIT, CoursesAndUsers, courses_id=course_id)
-			they.can(MANAGE, Posts, courses_id=course_id)
-			they.can(MANAGE, PostsForQuestions, courses_id=course_id)
+			they.can(EDIT, Courses, id=course.id)
+			they.can(READ, CoursesAndUsers, courses_id=course.id)
+			they.can(EDIT, CoursesAndUsers, courses_id=course.id)
+			they.can(MANAGE, PostsForQuestions, courses_id=course.id)
 		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_TA:
-			they.can(MANAGE, Posts, courses_id=course_id)
-			they.can(MANAGE, PostsForQuestions, courses_id=course_id)
+			they.can(MANAGE, PostsForQuestions, courses_id=course.id)
 
 # Tell the client side about a user's permissions.
 # This is necessarily more simplified than Flask-Bouncer's implementation.
@@ -56,7 +53,7 @@ def define_authorization(user, they):
 # ensure(READ, Users) return True
 def get_logged_in_user_permissions():
 	user = Users.query.get(current_user.id)
-	ensure(READ, user)
+	require(READ, user)
 	permissions = {}
 	models = {
 		Courses.__name__ : Courses,
@@ -94,6 +91,21 @@ def allow(operation, target):
 		return True
 	except Unauthorized:
 		return False
+
+def require(operation, target):
+	"""
+	This is basically Flask-Bouncer's ensure except it throws a 403 instead of a 401
+	if the permission check fails. A 403 is more accurate since authentication would
+	not help and it would prevent the login box from showing up. Named require() to avoid
+	confusion with Flask-Bouncer
+	:param action: same as Flask-Bouncer's ensure
+	:param subject: same as Flask-Bouncer's ensure
+	:return:same as Flask-Bouncer's ensure
+	"""
+	try:
+		ensure(operation,target)
+	except Unauthorized as e:
+		raise Forbidden(e.message)
 
 def is_user_access_restricted(user):
 	"""

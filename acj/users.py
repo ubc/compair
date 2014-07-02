@@ -2,11 +2,10 @@ from flask import Blueprint, jsonify
 from bouncer.constants import READ, MANAGE, EDIT
 from flask.ext.restful import Resource, Api, fields, marshal_with, marshal
 
-from flask_bouncer import requires, ensure
 from flask_login import login_required
 from werkzeug.exceptions import Unauthorized
 from acj import dataformat
-from .authorization import is_user_access_restricted
+from .authorization import is_user_access_restricted, require
 from .util import pagination, new_restful_api
 
 #from general import admin, teacher, commit, hasher
@@ -25,10 +24,10 @@ class UserAPI(Resource):
 # /
 class UserListAPI(Resource):
 	@login_required
-	@requires(MANAGE, Users)
 	@pagination(Users)
 	@marshal_with(dataformat.getUsers(False))
 	def get(self, objects):
+		require(MANAGE, Users)
 		return objects
 
 
@@ -40,7 +39,7 @@ class UserCourseListAPI(Resource):
 		# we want to list courses only, so only check the association table
 		coursesandusers = []
 		for courseanduser in user.coursesandusers:
-			ensure(READ, courseanduser)
+			require(READ, courseanduser)
 			coursesandusers.append(courseanduser)
 
 		# sort alphabetically by course name

@@ -1,11 +1,10 @@
 from bouncer.constants import MANAGE, READ, CREATE, EDIT
 from flask import session, request, Response, Blueprint, jsonify, current_app
 from flask.ext.restful import Resource, Api, marshal_with, marshal, reqparse
-from flask_bouncer import requires, ensure
 from flask_login import login_required, current_user
 from sqlalchemy import exc, desc
 from acj import dataformat
-from acj.authorization import allow
+from acj.authorization import allow, require
 from .core import db
 from .models import Courses, UserTypesForCourse, CoursesAndUsers, PostsForQuestions, Posts, Criteria, CriteriaAndCourses
 from .util import pagination, new_restful_api
@@ -33,15 +32,15 @@ existing_course_parser.add_argument('enable_student_create_tags', type=bool)
 class CourseListAPI(Resource):
 	@login_required
 	@pagination(Courses)
-	@requires(MANAGE, Courses)
 	@marshal_with(dataformat.getCourses())
 	def get(self, objects):
+		require(MANAGE, Courses)
 		return objects
 
 	@login_required
-	@requires(CREATE, Courses)
 	# Create new course
 	def post(self):
+		require(CREATE, Courses)
 		params = new_course_parser.parse_args()
 		new_course = Courses(
 			name=params.get("name"),
@@ -76,7 +75,7 @@ class CourseAPI(Resource):
 	@login_required
 	def get(self, id):
 		course = Courses.query.get_or_404(id)
-		ensure(READ, course)
+		require(READ, course)
 		# add default criteria to this course if it doesn't have any criteria
 		if not course.criteriaandcourses:
 			default_criteria = Criteria.query.first()
@@ -87,7 +86,7 @@ class CourseAPI(Resource):
 	# Save existing course
 	def post(self, id):
 		course = Courses.query.get_or_404(id)
-		ensure(EDIT, course)
+		require(EDIT, course)
 		params = existing_course_parser.parse_args()
 		# make sure the course id in the url and the course id in the params match
 		if params['id'] != id:
