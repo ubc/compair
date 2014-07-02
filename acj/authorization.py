@@ -2,7 +2,8 @@ from bouncer.constants import ALL, MANAGE, EDIT, READ, CREATE, DELETE
 from flask_bouncer import ensure
 from flask_login import current_user
 from werkzeug.exceptions import Unauthorized, Forbidden
-from .models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTypesForSystem, Posts, PostsForQuestions
+from .models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTypesForSystem, Posts, \
+	PostsForQuestions, PostsForAnswers, PostsForComments
 
 
 def define_authorization(user, they):

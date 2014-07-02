@@ -134,7 +134,7 @@ class ACJTestCase(TestCase):
 		return rv
 
 	def logout(self):
-		return self.client.get('/login/logout', follow_redirects=True)
+		return self.client.delete('/login/logout', follow_redirects=True)
 
 	def _verifyPermissions(self, userid, permissions):
 		user = Users.query.get(userid)
