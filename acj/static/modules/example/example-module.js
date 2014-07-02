@@ -11,7 +11,7 @@
 // The module needs a unique name that prevents conflicts with 3rd party modules
 // We're using "ubc.ctlt.acj" as the project's prefix, followed by the module 
 // name.
-var module = angular.module('ubc.ctlt.acj.exampleModule', []);
+var module = angular.module('ubc.ctlt.acj.example', []);
 
 /***** Providers *****/
 // TODO declare providers here, e.g.:
