@@ -15,7 +15,7 @@ api = new_restful_api(courses_api)
 new_course_parser = reqparse.RequestParser()
 new_course_parser.add_argument('name', type=str, required=True, help='Course name is required.')
 new_course_parser.add_argument('description', type=str)
-new_course_parser.add_argument('enable_student_posts', type=bool)
+new_course_parser.add_argument('enable_student_create_questions', type=bool)
 new_course_parser.add_argument('enable_student_create_tags', type=bool)
 
 # parser copy() has not been pushed into stable release yet, so we have to wait till then to
@@ -25,7 +25,7 @@ existing_course_parser = reqparse.RequestParser()
 existing_course_parser.add_argument('id', type=int, required=True, help='Course id is required.')
 existing_course_parser.add_argument('name', type=str, required=True, help='Course name is required.')
 existing_course_parser.add_argument('description', type=str)
-existing_course_parser.add_argument('enable_student_posts', type=bool)
+existing_course_parser.add_argument('enable_student_create_questions', type=bool)
 existing_course_parser.add_argument('enable_student_create_tags', type=bool)
 
 # /
@@ -45,7 +45,7 @@ class CourseListAPI(Resource):
 		new_course = Courses(
 			name=params.get("name"),
 			description=params.get("description", None),
-			enable_student_posts=params.get("enable_student_posts", False),
+			enable_student_create_questions=params.get("enable_student_create_questions", False),
 			enable_student_create_tags=params.get("enable_student_create_tags", False)
 		)
 		try:
@@ -94,7 +94,8 @@ class CourseAPI(Resource):
 		# modify course according to new values, preserve original values if values not passed
 		course.name = params.get("name", course.name)
 		course.description = params.get("description", course.description)
-		course.enable_student_posts = params.get("enable_student_posts", course.enable_student_posts)
+		course.enable_student_create_questions = params.get("enable_student_create_questions",
+															course.enable_student_create_questions)
 		course.enable_student_create_tags = params.get("enable_student_create_tags",
 													   course.enable_student_create_tags)
 		db.session.add(course)

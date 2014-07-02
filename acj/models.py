@@ -186,7 +186,7 @@ class Courses(db.Model):
 	coursesandusers = db.relationship("CoursesAndUsers")
 	criteriaandcourses = db.relationship("CriteriaAndCourses")
 	# allow students to make question posts
-	enable_student_posts = db.Column(db.Boolean, default=False, nullable=False)
+	enable_student_create_questions = db.Column(db.Boolean, default=False, nullable=False)
 	enable_student_create_tags = db.Column(db.Boolean, default=False, nullable=False)
 	modified = db.Column(
 		db.TIMESTAMP,

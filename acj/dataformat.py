@@ -58,7 +58,7 @@ def getCourses():
 		'description': fields.String,
 		'available': fields.Boolean,
 		'criteriaandcourses': fields.Nested(getCriteriaAndCourses()),
-		'enable_student_posts': fields.Boolean,
+		'enable_student_create_questions': fields.Boolean,
 		'enable_student_create_tags': fields.Boolean,
 		'modified': fields.DateTime,
 		'created': fields.DateTime
