@@ -33,10 +33,22 @@ module.factory('Toaster', function($log, toaster) {
 	// Not sure what the best way to do this would be yet, but we can have 
 	// preset error messages for certain errors. This is for any ajax requests
 	// that fails.
-	toaster.reqerror = function(title) {
+	toaster.reqerror = function(title, response) {
 		$log.error(title);
-		// TODO Tell them what support to contact
-		this.error(title, "Unable to connect to the server, this might be a server issue or your internet connection might be down. Please contact support if it looks to be a server issue.");
+		switch (response.status) {
+			case 400:
+				this.warning(title, response.data.error);
+				break;
+			case 401:
+				this.warning(title, "Please login again.");
+				break;
+			case 403:
+				this.error(title, "You do not have the required permissions.");
+				break;
+			default:
+			// TODO Tell them what support to contact
+				this.error(title, "Unable to connect to the server, this might be a server issue or your internet connection might be down. Please contact support if it looks to be a server issue.");
+		}
 	};
 	return toaster;
 });

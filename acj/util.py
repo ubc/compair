@@ -48,7 +48,6 @@ def pagination(model):
 		return paging
 	return wrap
 
-
 def _unauthorized_override(response):
 	return jsonify({"error":"Authentication Required."}), 401
 

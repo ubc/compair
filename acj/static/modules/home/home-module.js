@@ -38,7 +38,7 @@ module.controller(
 				}
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve your courses.");
+				Toaster.reqerror("Unable to retrieve your courses.", ret);
 				$log.error("Failed to retrieve the user's courses.");
 			}
 		);

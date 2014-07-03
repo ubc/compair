@@ -95,3 +95,11 @@ def getPostsForQuestions(restrict_users=True):
 		'title': fields.String,
 		'modified': fields.DateTime
 	}
+
+def getPostsForAnswers(restrict_users=True):
+	post = getPosts(restrict_users)
+	del post['course']
+	return {
+		'id': fields.Integer,
+		'post': fields.Nested(post)
+	}

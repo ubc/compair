@@ -31,13 +31,13 @@ module.factory(
 module.controller("QuestionViewController",
 	function($scope, $log, $routeParams, AuthenticationService, Authorize, QuestionResource, Toaster)
 	{
-		var courseId = $routeParams['courseId'];
+		$scope.courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
 		$scope.loggedInUserId = AuthenticationService.getUser().id;
-		$scope.canDeletePosts = 
-			Authorize.can(Authorize.DELETE, QuestionResource.MODEL);
+		$scope.canManagePosts = 
+			Authorize.can(Authorize.MANAGE, QuestionResource.MODEL);
 		$scope.question = {};
-		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).
+		QuestionResource.get({'courseId': $scope.courseId, 'questionId': questionId}).
 			$promise.then(
 				function (ret)
 				{
@@ -45,7 +45,8 @@ module.controller("QuestionViewController",
 				},
 				function (ret)
 				{
-					Toaster.reqerror("Unable to retrieve question "+ questionId);
+					Toaster.reqerror("Unable to retrieve question "
+						+ questionId, ret);
 				}
 			);
 	}
@@ -69,7 +70,7 @@ module.controller("QuestionCreateController",
 					function (ret)
 					{
 						$scope.submitted = false;
-						Toaster.reqerror("Unable to create new question.");
+						Toaster.reqerror("Unable to create new question.", ret);
 					}
 				);
 		};

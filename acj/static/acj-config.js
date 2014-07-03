@@ -9,6 +9,7 @@ var myApp = angular.module('myApp', [
 	'angular-loading-bar',
 	'ubc.ctlt.acj.common.flash', // TODO Remove once split into modules done
 	'ubc.ctlt.acj.common.installed', // TODO Remove once split into modules done
+	'ubc.ctlt.acj.answer',
 	'ubc.ctlt.acj.course',
 	'ubc.ctlt.acj.home',
 	'ubc.ctlt.acj.installer',
@@ -155,6 +156,11 @@ myApp.config( function ($routeProvider) {
 			{
 				templateUrl: 'modules/question/question-view-partial.html',
 				label: "View Question"
+			})
+		.when ('/course/:courseId/question/:questionId/answer/create', 
+			{
+				templateUrl: 'modules/answer/answer-create-partial.html',
+				label: "Post Answer"
 			})
 		.when ('/install', 
 			{

@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint
 from bouncer.constants import READ, MANAGE, EDIT
 from flask.ext.restful import Resource, Api, fields, marshal_with, marshal
 

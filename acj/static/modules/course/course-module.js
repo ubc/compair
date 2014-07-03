@@ -44,14 +44,14 @@ module.controller(
 				$scope.course = ret;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve course: "+ courseId);
+				Toaster.reqerror("Unable to retrieve course: "+ courseId, ret);
 			}
 		);
 		// save course info
 		$scope.courseSubmit = function() {
 			CourseResource.save($scope.course).$promise.then(
 				function() { Toaster.success("Course Information Updated!"); },
-				function() { Toaster.reqerror("Course Save Failed."); }
+				function(ret) { Toaster.reqerror("Course Save Failed.", ret); }
 			);
 		};
 	}
@@ -68,7 +68,7 @@ module.controller(
 				$scope.course = ret;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve course: "+ courseId);
+				Toaster.reqerror("Unable to retrieve course: "+ courseId, ret);
 			}
 		);
 		// get course questions
@@ -80,7 +80,7 @@ module.controller(
 			function (ret)
 			{
 				Toaster.reqerror("Unable to retrieve course questions: " +
-					courseId);
+					courseId, ret);
 			}
 		);
 
@@ -107,7 +107,7 @@ module.controller(
 				function (ret)
 				{
 					$scope.submitted = false;
-					Toaster.reqerror(ret.data.error);
+					Toaster.reqerror("Create course failed.", ret);
 				}
 			);
 		};

@@ -293,6 +293,10 @@ class PostsForQuestions(db.Model):
 		onupdate=func.current_timestamp(),
 		nullable=False)
 
+	@hybrid_property
+	def courses_id(self):
+		return self.post.courses_id
+
 class PostsForAnswers(db.Model):
 	__tablename__ = 'PostsForAnswers'
 	__table_args__ = default_table_args
@@ -304,6 +308,12 @@ class PostsForAnswers(db.Model):
 		nullable=False)
 	post = db.relationship("Posts")
 
+	@hybrid_property
+	def courses_id(self):
+		return self.post.courses_id
+	@hybrid_property
+	def users_id(self):
+		return self.post.user.id
 
 class PostsForComments(db.Model):
 	__tablename__ = 'PostsForComments'

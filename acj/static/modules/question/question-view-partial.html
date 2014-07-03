@@ -8,10 +8,18 @@
 <hr class="questionFooterSeparator" />
 <div class="row questionFooter">
 	<div class="col-sm-6">
-		<a ng-if="canDeletePosts || question.post.user.id == loggedInUserId" href="" class="btn btn-sm btn-primary">Edit</a>
-		<a href="" class="btn btn-sm btn-success">Answer</a>
-		<a href="" class="btn btn-sm btn-info">Comment</a>
-		<a ng-if="canDeletePosts" href="" class="btn btn-xs btn-danger">Delete</a>
+		<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" class="btn btn-sm btn-success">
+			<i class="fa fa-lightbulb-o"></i> Answer
+		</a>
+		<a href="" class="btn btn-sm btn-info">
+			<i class="fa fa-comment-o"></i> Comment
+		</a>
+		<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" href="" class="btn btn-sm btn-primary">
+			<i class="fa fa-edit"></i> Edit
+		</a>
+		<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" href="" class="btn btn-xs btn-danger">
+			<i class="fa fa-trash-o"></i> Delete
+		</a>
 	</div>
 	<div class="col-sm-6">
 		<a ng-href="#/user/{{question.post.user.id}}" class="nounderline">
