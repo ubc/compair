@@ -5,6 +5,7 @@
 var module = angular.module('ubc.ctlt.acj.question', 
 	[
 		'ngResource',
+		'ubc.ctlt.acj.answer',
 		'ubc.ctlt.acj.authentication',
 		'ubc.ctlt.acj.authorization',
 		'ubc.ctlt.acj.common.form',
@@ -29,7 +30,7 @@ module.factory(
 
 /***** Controllers *****/
 module.controller("QuestionViewController",
-	function($scope, $log, $routeParams, AuthenticationService, Authorize, QuestionResource, Toaster)
+	function($scope, $log, $routeParams, AnswerResource, AuthenticationService, Authorize, QuestionResource, Toaster)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
@@ -37,8 +38,8 @@ module.controller("QuestionViewController",
 		$scope.canManagePosts = 
 			Authorize.can(Authorize.MANAGE, QuestionResource.MODEL);
 		$scope.question = {};
-		QuestionResource.get({'courseId': $scope.courseId, 'questionId': questionId}).
-			$promise.then(
+		QuestionResource.get({'courseId': $scope.courseId, 
+			'questionId': questionId}).$promise.then(
 				function (ret)
 				{
 					$scope.question = ret;
@@ -47,6 +48,17 @@ module.controller("QuestionViewController",
 				{
 					Toaster.reqerror("Unable to retrieve question "
 						+ questionId, ret);
+				}
+			);
+		AnswerResource.get({'courseId': $scope.courseId, 
+			'questionId': questionId}).$promise.then(
+				function (ret)
+				{
+					$scope.answers = ret.objects;
+				},
+				function (ret)
+				{
+					Toaster.reqerror("Unable to retrieve answers.", ret);
 				}
 			);
 	}

@@ -2,8 +2,7 @@
 
 <h2>{{question.title}}</h2>
 <hr />
-<div mathjax="question.post.content" 
-	ng-bind-html="question.post.content">
+<div mathjax="question.post.content" ng-bind-html="question.post.content">
 </div>
 <hr class="questionFooterSeparator" />
 <div class="row questionFooter">
@@ -30,6 +29,22 @@
 		</a>
 		- {{question.post.created | amDateFormat: 'lll'}}
 	</div>
+</div>
+
+<hr />
+<div ng-repeat="answer in answers">
+	<div mathjax="answer.post.content" ng-bind-html="answer.post.content">
+	</div>
+	<div class="questionFooter">
+		<a ng-href="#/user/{{answer.post.user.id}}" class="nounderline">
+			<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
+		</a>
+		<a ng-href="#/user/{{answer.post.user.id}}">
+			{{answer.post.user.displayname}}
+		</a>
+		- {{answer.post.created | amDateFormat: 'lll'}}
+	</div>
+	<hr />
 </div>
 	
 </div>

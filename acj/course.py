@@ -76,12 +76,6 @@ class CourseAPI(Resource):
 	def get(self, id):
 		course = Courses.query.get_or_404(id)
 		require(READ, course)
-		# add default criteria to this course if it doesn't have any criteria
-		if not course.criteriaandcourses:
-			default_criteria = Criteria.query.first()
-			criteria_and_course = CriteriaAndCourses(criteria=default_criteria, course=course)
-			db.session.add(criteria_and_course)
-			db.session.commit()
 		return marshal(course, dataformat.getCourses())
 	# Save existing course
 	def post(self, id):

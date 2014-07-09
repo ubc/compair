@@ -29,6 +29,7 @@ api.add_resource(QuestionIdAPI, '/<int:question_id>')
 
 # /
 class QuestionRootAPI(Resource):
+	# TODO Pagination
 	@login_required
 	def get(self, course_id):
 		course = Courses.query.get_or_404(course_id)
@@ -43,14 +44,15 @@ class QuestionRootAPI(Resource):
 	def post(self, course_id):
 		# check permission first before reading parser arguments
 		post = Posts(courses_id=course_id)
-		require(CREATE, post)
+		question = PostsForQuestions(post=post)
+		require(CREATE, question)
 		params = new_question_parser.parse_args()
 		post.content = params.get("post").get("content")
 		if not post.content:
 			return {"error":"The answer content is empty!"}, 400
 		post.users_id = current_user.id
+		question.title = params.get("title")
 		db.session.add(post)
-		question = PostsForQuestions(post=post, title=params.get("title"))
 		db.session.add(question)
 		db.session.commit()
 		return marshal(question, dataformat.getPostsForQuestions())

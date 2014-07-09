@@ -20,9 +20,10 @@
 ##	 "PostsForQuestions" table for posts that are meant to be questions
 
 import hashlib
+from sqlalchemy import event
 
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import synonym
+from sqlalchemy.orm import reconstructor, synonym, validates
 from sqlalchemy.sql import func
 
 #  import the context under an app-specific name (so it can easily be replaced later)
@@ -184,7 +185,7 @@ class Courses(db.Model):
 	description = db.Column(db.Text)
 	available = db.Column(db.Boolean, default=True, nullable=False)
 	coursesandusers = db.relationship("CoursesAndUsers")
-	criteriaandcourses = db.relationship("CriteriaAndCourses")
+	_criteriaandcourses = db.relationship("CriteriaAndCourses")
 	# allow students to make question posts
 	enable_student_create_questions = db.Column(db.Boolean, default=False, nullable=False)
 	enable_student_create_tags = db.Column(db.Boolean, default=False, nullable=False)
@@ -195,6 +196,19 @@ class Courses(db.Model):
 		nullable=False)
 	created = db.Column(db.TIMESTAMP, default=func.current_timestamp(),
 					 nullable=False)
+	@hybrid_property
+	def criteriaandcourses(self):
+		'''
+		Adds the default criteria to newly created courses which doesn't have any criteria yet.
+		This is a complete hack. I'd implement this using sqlalchemy's event system instead but
+		it seems that events doesn't work right during test cases for some reason.
+		'''
+		if not self._criteriaandcourses:
+			default_criteria = Criteria.query.first()
+			criteria_and_course = CriteriaAndCourses(criteria=default_criteria, courses_id=self.id)
+			db.session.add(criteria_and_course)
+			db.session.commit()
+		return self._criteriaandcourses
 
 # A "junction table" in sqlalchemy is called a many-to-many pattern. Such a
 # table can be automatically created by sqlalchemy from db.relationship
@@ -307,6 +321,11 @@ class PostsForAnswers(db.Model):
 		db.ForeignKey('Posts.id', ondelete="CASCADE"),
 		nullable=False)
 	post = db.relationship("Posts")
+	postsforquestions_id = db.Column(
+		db.Integer,
+		db.ForeignKey('PostsForQuestions.id', ondelete="CASCADE"),
+		nullable=False)
+	question = db.relationship("PostsForQuestions")
 
 	@hybrid_property
 	def courses_id(self):
