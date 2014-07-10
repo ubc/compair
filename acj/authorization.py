@@ -109,7 +109,7 @@ def require(operation, target):
 	try:
 		ensure(operation,target)
 	except Unauthorized as e:
-		raise Forbidden(e.message)
+		raise Forbidden(e.get_description())
 
 def is_user_access_restricted(user):
 	"""

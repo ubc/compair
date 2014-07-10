@@ -61,11 +61,11 @@ class CourseListAPI(Resource):
 			db.session.commit()
 		except exc.IntegrityError as e:
 			db.session.rollback()
-			current_app.logger.error("Failed to add new course. Duplicate. " + e.message)
+			current_app.logger.error("Failed to add new course. Duplicate.")
 			return {"error":"A course with the same name already exists."}, 400
 		except exc.SQLAlchemyError as e:
 			db.session.rollback()
-			current_app.logger.error("Failed to add new course. " + e.message)
+			current_app.logger.error("Failed to add new course. " + str(e))
 			raise
 		return marshal(new_course, dataformat.getCourses())
 api.add_resource(CourseListAPI, '')
