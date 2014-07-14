@@ -27,6 +27,5 @@
   },
   "_source": "git://github.com/urish/angular-moment.git",
   "_target": "~0.7.1",
-  "_originalSource": "angular-moment",
-  "_direct": true
+  "_originalSource": "angular-moment"
 }
