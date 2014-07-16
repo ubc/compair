@@ -157,6 +157,11 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/question/question-view-partial.html',
 				label: "View Question"
 			})
+		.when ('/course/:courseId/question/:questionId/edit',
+			{
+				templateUrl: 'modules/question/question-edit-partial.html',
+				label: "Question Configuration"
+			})
 		.when ('/course/:courseId/question/:questionId/answer/create', 
 			{
 				templateUrl: 'modules/answer/answer-create-partial.html',

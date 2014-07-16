@@ -16,6 +16,12 @@ new_question_parser = RequestParser()
 new_question_parser.add_argument('title', type=str, required=True, help="Question title is required.")
 new_question_parser.add_argument('post', type=dict, default={})
 
+# existing_question_parser = new_question_parser.copy()
+existing_question_parser = RequestParser()
+existing_question_parser.add_argument('id', type=int, required=True, help="Question id is required.")
+existing_question_parser.add_argument('title', type=str, required=True, help="Question title is required.")
+existing_question_parser.add_argument('post', type=dict, default={})
+
 # /id
 class QuestionIdAPI(Resource):
 	@login_required
@@ -24,6 +30,22 @@ class QuestionIdAPI(Resource):
 			question_id = 1
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
+		return marshal(question, dataformat.getPostsForQuestions())
+	def post(self, course_id, question_id):
+		question = PostsForQuestions.query.get_or_404(question_id)
+		require(EDIT, question)
+		params = existing_question_parser.parse_args()
+		# make sure the question id in the url and the id in the url match
+		if params['id'] != question_id:
+			return {"error":"Question id does not match URL."}, 400
+		# modify question according to new values, perserve original values if values not passed
+		question.post.content = params.get("post").get("content")
+		if not question.post.content:
+			return {"error":"The answer content is empty!"}, 400
+		question.title = params.get("title", question.title)
+		db.session.add(question.post)
+		db.session.add(question)
+		db.session.commit()
 		return marshal(question, dataformat.getPostsForQuestions())
 api.add_resource(QuestionIdAPI, '/<int:question_id>')
 

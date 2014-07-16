@@ -89,5 +89,27 @@ module.controller("QuestionCreateController",
 	}
 );
 
+module.controller("QuestionEditController",
+	function($scope, $log, $location, $routeParams, QuestionResource, Toaster)
+	{
+		var courseId = $routeParams['courseId'];
+		$scope.questionId = $routeParams['questionId'];
+		$scope.question = {};
+		QuestionResource.get({'courseId': courseId, 'questionId': $scope.questionId}).$promise.then(
+			function (ret) {
+				$scope.question = ret;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve question "+$scope.questionId, ret);
+			}
+		);
+		$scope.questionSubmit = function () {
+			QuestionResource.save({'courseId': courseId}, $scope.question).$promise.then(
+				function() { Toaster.success("Question Updated!"); },
+				function(ret) { Toaster.reqerror("Question Save Failed.", ret); }
+			);
+		};
+	}
+);
 // End anonymous function
 })();
