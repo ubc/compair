@@ -17,3 +17,6 @@ require('./core/resolverFactory');
 require('./core/resolveCache');
 require('./core/packageRepository');
 require('./core/scripts');
+require('./core/Manager');
+require('./commands/index.js');
+require('./util/index.js');

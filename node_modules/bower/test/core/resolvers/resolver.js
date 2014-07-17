@@ -13,7 +13,7 @@ var Resolver = require('../../../lib/core/resolvers/Resolver');
 var defaultConfig = require('../../../lib/config');
 
 describe('Resolver', function () {
-    var tempDir = path.resolve(__dirname, '../../assets/tmp');
+    var tempDir = path.resolve(__dirname, '../../tmp/tmp');
     var testPackage = path.resolve(__dirname, '../../assets/package-a');
     var logger;
     var dirMode0777;
@@ -676,7 +676,7 @@ describe('Resolver', function () {
             .done();
         });
 
-        it('should remove files that match the ignore patterns', function (next) {
+        it('should remove files that match the ignore patterns excluding main files', function (next) {
             var resolver = create({ source: 'foo', name: 'foo' });
 
             mkdirp.sync(tempDir);
@@ -701,6 +701,8 @@ describe('Resolver', function () {
                     expect(fs.existsSync(path.join(tempDir, 'foo'))).to.be(true);
                     expect(fs.existsSync(path.join(tempDir, 'baz'))).to.be(true);
                     expect(fs.existsSync(path.join(tempDir, 'test'))).to.be(false);
+                    expect(fs.existsSync(path.join(tempDir, 'bower.json'))).to.be(true);
+                    expect(fs.existsSync(path.join(tempDir, 'main.js'))).to.be(true);
                     expect(fs.existsSync(path.join(tempDir, 'more/docs'))).to.be(false);
                     expect(fs.existsSync(path.join(tempDir, 'more/assets'))).to.be(false);
                     next();
@@ -783,6 +785,32 @@ describe('Resolver', function () {
                 });
             })
             .done();
+        });
+
+        it('should warn user for missing attributes in bower.json', function (next) {
+            var resolver = create('fooooo');
+            resolver._tempDir = tempDir;
+            var notifiedCount = 0;
+            logger.on('log', function (log) {
+                notifiedCount ++;
+                expect(log).to.be.an('object');
+                expect(log.level).to.be('warn');
+                if (notifiedCount === 1) {
+                    expect(log.message).to.contain('bar is missing "main" entry in bower.json');
+                } else {
+                    expect(log.message).to.contain('bar is missing "ignore" entry in bower.json');
+                }
+            });
+            resolver._savePkgMeta({ name: 'bar' });
+            expect(notifiedCount).to.be(2);
+
+            resolver._savePkgMeta({ name: 'bar', main: 'foo' });
+            expect(notifiedCount).to.be(3);
+
+            // should not warn again
+            resolver._savePkgMeta({ name: 'bar', main: 'flart', ignore: 'blat' });
+            expect(notifiedCount).to.be(3);
+            next();
         });
     });
 

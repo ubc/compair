@@ -13,7 +13,7 @@ var GitResolver = require('../../../lib/core/resolvers/GitResolver');
 var defaultConfig = require('../../../lib/config');
 
 describe('GitResolver', function () {
-    var tempDir = path.resolve(__dirname, '../../assets/tmp');
+    var tempDir = path.resolve(__dirname, '../../tmp/tmp');
     var originalrefs = GitResolver.refs;
     var logger;
 
@@ -744,6 +744,27 @@ describe('GitResolver', function () {
                 expect(resolution).to.eql({
                     type: 'commit',
                     commit: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+                });
+                next();
+            })
+            .done();
+        });
+
+        it('should resolve to the specified short commit', function (next) {
+            var resolver;
+
+            GitResolver.refs = function () {
+                return Q.resolve([
+                    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa refs/heads/master'
+                ]);
+            };
+
+            resolver = create('foo');
+            resolver._findResolution('bbbbbbb')
+            .then(function (resolution) {
+                expect(resolution).to.eql({
+                    type: 'commit',
+                    commit: 'bbbbbbb'
                 });
                 next();
             })
