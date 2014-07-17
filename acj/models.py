@@ -301,6 +301,7 @@ class PostsForQuestions(db.Model):
 		nullable=False)
 	post = db.relationship("Posts")
 	title = db.Column(db.String(255))
+	answers = db.relationship("PostsForAnswers")
 	modified = db.Column(
 		db.TIMESTAMP,
 		default=func.current_timestamp(),
@@ -310,6 +311,9 @@ class PostsForQuestions(db.Model):
 	@hybrid_property
 	def courses_id(self):
 		return self.post.courses_id
+	@hybrid_property
+	def answers_count(self):
+		return len(self.answers)
 
 class PostsForAnswers(db.Model):
 	__tablename__ = 'PostsForAnswers'
