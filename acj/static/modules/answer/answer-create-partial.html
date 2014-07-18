@@ -1,23 +1,4 @@
 <div ng-controller="AnswerCreateController">
 	<h1 class="text-center">Post New Answer</h1>
-
-	<div class="panel panel-info">
-		<div class="panel-heading">
-			<h4>{{question.title}}</h4>
-		</div>
-		<div class="panel-body" mathjax="question.post.content" 
-			ng-bind-html="question.post.content">
-		</div>
-	</div>
-
-	<form class="form" name="answerForm" ng-submit="answerSubmit()" novalidate>
-		<div class="form-group">
-			<textarea ng-model="answer.post.content" id="answerContent"
-				class="form-control" rows="8" ckeditor required>
-			</textarea>
-		</div>
-		<input type="submit" class="btn btn-primary" value="Save"
-			ng-disabled="answerForm.$invalid || submitted" />
-	</form>
-
+	<ng-include src="'modules/answer/answer-form-partial.html'"></ng-include>
 </div>

@@ -35,7 +35,7 @@
 <div ng-repeat="answer in answers">
 	<div mathjax="answer.post.content" ng-bind-html="answer.post.content">
 	</div>
-	<div class="questionFooter">
+	<div>
 		<a ng-href="#/user/{{answer.post.user.id}}" class="nounderline">
 			<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
 		</a>
@@ -43,6 +43,11 @@
 			{{answer.post.user.displayname}}
 		</a>
 		- {{answer.post.created | amDateFormat: 'lll'}}
+	</div>
+	<div class="postFooter">
+		<a ng-if="canManagePosts || answer.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit" class="btn btn-sm btn-primary">
+			<i class="fa fa-edit"></i> Edit
+		</a>
 	</div>
 	<hr />
 </div>

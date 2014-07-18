@@ -35,10 +35,10 @@ class QuestionIdAPI(Resource):
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(EDIT, question)
 		params = existing_question_parser.parse_args()
-		# make sure the question id in the url and the id in the url match
+		# make sure the question id in the url and the id matches
 		if params['id'] != question_id:
 			return {"error":"Question id does not match URL."}, 400
-		# modify question according to new values, perserve original values if values not passed
+		# modify question according to new values, preserve original values if values not passed
 		question.post.content = params.get("post").get("content")
 		if not question.post.content:
 			return {"error":"The answer content is empty!"}, 400

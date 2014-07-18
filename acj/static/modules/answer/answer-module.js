@@ -73,5 +73,46 @@ module.controller(
 	}
 );
 
+module.controller(
+	"AnswerEditController",
+	function ($scope, $log, $location, $routeParams, AnswerResource, 
+		QuestionResource, Toaster)
+	{
+		var courseId = $routeParams['courseId'];
+		var questionId = $routeParams['questionId'];
+		$scope.answerId = $routeParams['answerId'];
+		
+		$scope.question = {};
+		$scope.answer = {};
+		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
+			function (ret) {
+				$scope.question = ret;	
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve question "+questionId, ret);
+			}
+		);
+		AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': $scope.answerId}).$promise.then(
+			function (ret) {
+				$scope.answer = ret;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
+			}
+		);
+		$scope.answerSubmit = function () {
+			AnswerResource.save({'courseId': courseId, 'questionId': questionId}, $scope.answer).$promise.then(
+				function() { 
+					Toaster.success("Answer Updated!");
+					$location.path('/course/' + courseId + '/question/' +questionId);
+					
+				},
+				function(ret) { Toaster.reqerror("Answer Save Failed.", ret); }
+			);
+		};
+	}
+);
+
 // End anonymous function
 })();
+
