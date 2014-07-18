@@ -93,6 +93,7 @@ def getPostsForQuestions(restrict_users=True):
 		'id': fields.Integer,
 		'post': fields.Nested(post),
 		'title': fields.String,
+		'answers_count': fields.Integer,
 		'modified': fields.DateTime
 	}
 
