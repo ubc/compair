@@ -10,6 +10,7 @@ var myApp = angular.module('myApp', [
 	'ubc.ctlt.acj.common.flash', // TODO Remove once split into modules done
 	'ubc.ctlt.acj.common.installed', // TODO Remove once split into modules done
 	'ubc.ctlt.acj.answer',
+	'ubc.ctlt.acj.comment',
 	'ubc.ctlt.acj.course',
 	'ubc.ctlt.acj.home',
 	'ubc.ctlt.acj.installer',
@@ -171,6 +172,16 @@ myApp.config( function ($routeProvider) {
 			{
 				templateUrl: 'modules/answer/answer-edit-partial.html',
 				label: "Edit Answer"
+			})
+		.when ('/course/:courseId/question/:questionId/comment/create',
+			{
+				templateUrl: 'modules/comment/comment-question-create-partial.html',
+				label: "Post Comment"
+			})
+		.when('/course/:courseId/question/:questionId/answer/:answerId/comment/create',
+			{
+				templateUrl: 'modules/comment/comment-answer-create-partial.html',
+				label: "Post Comment"
 			})
 		.when ('/install', 
 			{

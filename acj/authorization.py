@@ -3,7 +3,8 @@ from flask_bouncer import ensure
 from flask_login import current_user
 from werkzeug.exceptions import Unauthorized, Forbidden
 from .models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTypesForSystem, Posts, \
-	PostsForQuestions, PostsForAnswers, PostsForComments
+	PostsForQuestions, PostsForAnswers, PostsForComments, \
+	PostsForAnswersAndPostsForComments, PostsForQuestionsAndPostsForComments
 
 
 def define_authorization(user, they):

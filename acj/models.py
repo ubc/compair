@@ -330,6 +330,7 @@ class PostsForAnswers(db.Model):
 		db.ForeignKey('PostsForQuestions.id', ondelete="CASCADE"),
 		nullable=False)
 	question = db.relationship("PostsForQuestions")
+	comments = db.relationship("PostsForAnswersAndPostsForComments")
 
 	@hybrid_property
 	def courses_id(self):
@@ -349,6 +350,38 @@ class PostsForComments(db.Model):
 		nullable=False)
 	post = db.relationship("Posts")
 
+class PostsForQuestionsAndPostsForComments(db.Model):
+	__tablename__ = 'PostsForQuestionsAndPostsForComments'
+	__table_args__ = default_table_args
+
+	id = db.Column(db.Integer, primary_key=True, nullable=False)
+	postsforquestions_id = db.Column(
+		db.Integer,
+		db.ForeignKey('PostsForQuestions.id', ondelete="CASCADE"),
+		nullable=False)
+	postsforquestions = db.relationship("PostsForQuestions")
+	postsforcomments_id = db.Column(
+		db.Integer,
+		db.ForeignKey('PostsForComments.id', ondelete="CASCADE"),
+		nullable=False)
+	postsforcomments = db.relationship("PostsForComments")
+
+class PostsForAnswersAndPostsForComments(db.Model):
+	__tablename__ = 'PostsForAnswersAndPostsForComments'
+	__table_args__ = default_table_args
+
+	id = db.Column(db.Integer, primary_key=True, nullable=False)
+	postsforanswers_id = db.Column(
+		db.Integer,
+		db.ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
+		nullable=False)
+	postsforanswers = db.relationship("PostsForAnswers")
+	postsforcomments_id = db.Column(
+		db.Integer,
+		db.ForeignKey('PostsForComments.id', ondelete="CASCADE"),
+		nullable=False)
+	postsforcomments = db.relationship("PostsForComments")
+	
 
 #################################################
 # Criteria - What users should judge answers by

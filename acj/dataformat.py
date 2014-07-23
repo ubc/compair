@@ -88,19 +88,38 @@ def getPosts(restrict_users=True):
 
 def getPostsForQuestions(restrict_users=True):
 	post = getPosts(restrict_users)
+	answer = getPostsForAnswers(restrict_users)
 	del post['course']
 	return {
 		'id': fields.Integer,
 		'post': fields.Nested(post),
 		'title': fields.String,
 		'answers_count': fields.Integer,
-		'modified': fields.DateTime
+		'modified': fields.DateTime,
+		'answers': fields.List(fields.Nested(answer))
 	}
 
 def getPostsForAnswers(restrict_users=True):
 	post = getPosts(restrict_users)
+	comments = getPostsForQuestionsOrAnswersAndPostsForComments(restrict_users)
+	del post['course']
+	return {
+		'id': fields.Integer,
+		'post': fields.Nested(post),
+		'comments': fields.List(fields.Nested(comments))
+	}
+
+def getPostsForComments(retrict_users=True):
+	post = getPosts(retrict_users)
 	del post['course']
 	return {
 		'id': fields.Integer,
 		'post': fields.Nested(post)
+	}
+
+def getPostsForQuestionsOrAnswersAndPostsForComments(restrict_users=True):
+	comment = getPostsForComments(restrict_users)
+	return {
+		'id': fields.Integer,
+		'postsforcomments': fields.Nested(comment)
 	}

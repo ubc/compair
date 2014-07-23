@@ -1,0 +1,9 @@
+<form name="commentForm" class="form" ng-submit="commentSubmit()" novalidate>
+	<div class="form-group">
+		<label for="commentcontent">Comment:</label>
+		<textarea ng-model="comment.post.content" id="commentContent" class="form-control" rows="8" ckeditor required>
+		</textarea>
+	</div>
+	<input type="submit" class="btn btn-primary" vale="Save"
+		ng-disabled="commentForm.$invalid || submitted" />
+</form>

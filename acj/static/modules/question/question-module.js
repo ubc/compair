@@ -8,6 +8,7 @@ var module = angular.module('ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.answer',
 		'ubc.ctlt.acj.authentication',
 		'ubc.ctlt.acj.authorization',
+		'ubc.ctlt.acj.comment',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.mathjax',
 		'ubc.ctlt.acj.toaster'
@@ -30,7 +31,7 @@ module.factory(
 
 /***** Controllers *****/
 module.controller("QuestionViewController",
-	function($scope, $log, $routeParams, AnswerResource, AuthenticationService, Authorize, QuestionResource, Toaster)
+	function($scope, $log, $routeParams, AnswerResource, AuthenticationService, Authorize, QuestionResource, QuestionCommentResource, Toaster)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
@@ -59,6 +60,17 @@ module.controller("QuestionViewController",
 				function (ret)
 				{
 					Toaster.reqerror("Unable to retrieve answers.", ret);
+				}
+			);
+		QuestionCommentResource.get({'courseId': $scope.courseId,
+			'questionId': questionId}).$promise.then(
+				function (ret)
+				{
+					$scope.comments = ret.objects;
+				},
+				function (ret)
+				{
+					Toaster.reqerror("Unable to retrieve comments.", ret);
 				}
 			);
 	}

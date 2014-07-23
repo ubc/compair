@@ -10,7 +10,7 @@
 		<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" class="btn btn-sm btn-success">
 			<i class="fa fa-lightbulb-o"></i> Answer
 		</a>
-		<a href="" class="btn btn-sm btn-info">
+		<a href="#/course/{{courseId}}/question/{{question.id}}/comment/create" class="btn btn-sm btn-info">
 			<i class="fa fa-comment-o"></i> Comment
 		</a>
 		<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" href="" class="btn btn-sm btn-primary">
@@ -32,9 +32,18 @@
 </div>
 
 <hr />
+<div ng-repeat="comment in comments" class="quesAnsComments">
+	<div mathjax="comment.postsforcomments.post.content" ng-bind-html="comment.postsforcomments.post.content">
+	</div>
+	<img src="//www.gravatar.com/avatar/{{question.post.user.avatar}}?s=32&d=retro" />
+	{{comment.postsforcomments.post.user.displayname}}
+	- {{comment.postsforcomments.post.created | amDateFormat: 'lll'}}
+	<hr />
+</div>
+
 <div ng-repeat="answer in answers">
 	<div mathjax="answer.post.content" ng-bind-html="answer.post.content">
-	</div>
+	</div>	
 	<div>
 		<a ng-href="#/user/{{answer.post.user.id}}" class="nounderline">
 			<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
@@ -45,11 +54,22 @@
 		- {{answer.post.created | amDateFormat: 'lll'}}
 	</div>
 	<div class="postFooter">
+		<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-info">
+			<i class="fa fa-comment-o"></i> Comment
+		</a>
 		<a ng-if="canManagePosts || answer.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit" class="btn btn-sm btn-primary">
 			<i class="fa fa-edit"></i> Edit
 		</a>
 	</div>
 	<hr />
+	<div ng-repeat="comment in answer.comments" class="quesAnsComments">
+		<div mathjax="comment.postsforcomments.post.content" ng-bind-html="comment.postsforcomments.post.content">
+		</div>
+		<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
+		{{comment.postsforcomments.post.user.displayname}}
+		- {{comment.postsforcomments.post.created | amDateFormat: 'lll'}}
+		<hr />
+	</div>
 </div>
 	
 </div>

@@ -6,7 +6,7 @@ from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from acj import dataformat, db
 from acj.authorization import require
-from acj.models import Posts, PostsForAnswers, PostsForQuestions, Courses
+from acj.models import Posts, PostsForAnswers, PostsForQuestions, Courses, PostsForAnswersAndPostsForComments
 from acj.util import new_restful_api
 
 answers_api = Blueprint('answers_api', __name__)
