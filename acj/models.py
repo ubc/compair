@@ -366,6 +366,13 @@ class PostsForQuestionsAndPostsForComments(db.Model):
 		nullable=False)
 	postsforcomments = db.relationship("PostsForComments")
 
+	@hybrid_property
+	def courses_id(self):
+		return self.postsforcomments.post.courses_id
+	@hybrid_property
+	def users_id(self):
+		return self.postsforcomments.post.user.id
+
 class PostsForAnswersAndPostsForComments(db.Model):
 	__tablename__ = 'PostsForAnswersAndPostsForComments'
 	__table_args__ = default_table_args
@@ -381,6 +388,13 @@ class PostsForAnswersAndPostsForComments(db.Model):
 		db.ForeignKey('PostsForComments.id', ondelete="CASCADE"),
 		nullable=False)
 	postsforcomments = db.relationship("PostsForComments")
+
+	@hybrid_property
+	def courses_id(self):
+		return self.postsforcomments.post.courses_id
+	@hybrid_property
+	def users_id(self):
+		return self.postsforcomments.post.user.id
 	
 
 #################################################

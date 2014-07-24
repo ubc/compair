@@ -23,6 +23,7 @@ class QuestionCommentRootAPI(Resource):
 	#TODO pagination
 	@login_required
 	def get(self, course_id, question_id):
+		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
 		comments = PostsForQuestionsAndPostsForComments.query.\
@@ -32,6 +33,8 @@ class QuestionCommentRootAPI(Resource):
 		return {"objects":marshal(comments, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())}
 	@login_required
 	def post(self, course_id, question_id):
+		course = Courses.query.get_or_404(course_id)
+		question = PostsForQuestions.query.get_or_404(question_id)
 		post = Posts(courses_id=course_id)
 		comment = PostsForComments(post=post)
 		commentForQuestion = PostsForQuestionsAndPostsForComments(postsforcomments=comment, postsforquestions_id=question_id)
@@ -53,19 +56,24 @@ class AnswerCommentRootAPI(Resource):
 	#TODO pagination
 	@login_required
 	def get(self, course_id, question_id, answer_id):
+		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
-		comments = PostsForQuestionsAndPostsForComments.query.\
+		answer = PostsForAnswers.query.get_or_404(answer_id)
+		comments = PostsForAnswersAndPostsForComments.query.\
 			join(PostsForComments, Posts).\
-			filter(PostsForQuestionsAndPostsForComments.postsforquestions_id==question.id, Posts.courses_id==course_id).\
+			filter(PostsForAnswersAndPostsForComments.postsforanswers_id==answer.id, Posts.courses_id==course_id).\
 			order_by(Posts.created.desc()).all()
-		return {"objects":marshal(comments, dataformat.getPostsforQuestionsOrAnswersAndPostsForComments())}
+		return {"objects":marshal(comments, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())}
 
 	@login_required
 	def post(self, course_id, question_id, answer_id):
+		course = Courses.query.get_or_404(course_id)
+		question = PostsForQuestions.query.get_or_404(question_id)
+		answer = PostsForAnswers.query.get_or_404(answer_id)
 		post = Posts(courses_id=course_id)
 		comment = PostsForComments(post=post)
-		commentForAnswer = PostsForAnswersAndPostsForComments(postsforcomments=comment, postsforanswers_id=answer_id)
+		commentForAnswer = PostsForAnswersAndPostsForComments(postsforcomments=comment, postsforanswers_id=answer.id)
 		require(CREATE, commentForAnswer)
 		params = new_comment_parser.parse_args()
 		post.content = params.get("post").get("content")

@@ -26,12 +26,14 @@ existing_question_parser.add_argument('post', type=dict, default={})
 class QuestionIdAPI(Resource):
 	@login_required
 	def get(self, course_id, question_id):
+		course = Courses.query.get_or_404(course_id)
 		if not question_id:
 			question_id = 1
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
 		return marshal(question, dataformat.getPostsForQuestions())
 	def post(self, course_id, question_id):
+		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(EDIT, question)
 		params = existing_question_parser.parse_args()
@@ -64,6 +66,7 @@ class QuestionRootAPI(Resource):
 		return {"objects":marshal(questions, dataformat.getPostsForQuestions(restrict_users))}
 	@login_required
 	def post(self, course_id):
+		course = Courses.query.get_or_404(course_id)
 		# check permission first before reading parser arguments
 		post = Posts(courses_id=course_id)
 		question = PostsForQuestions(post=post)

@@ -37,6 +37,10 @@ def define_authorization(user, they):
 		they.can(READ, PostsForQuestions, courses_id=course.id)
 		they.can((READ, CREATE), PostsForAnswers, courses_id=course.id)
 		they.can((EDIT, DELETE), PostsForAnswers, users_id=user.id)
+		they.can((READ, CREATE), PostsForQuestionsAndPostsForComments, courses_id=course.id)
+		they.can((EDIT, DELETE), PostsForQuestionsAndPostsForComments, users_id=user.id)
+		they.can((READ, CREATE), PostsForAnswersAndPostsForComments, courses_id=course.id)
+		they.can((EDIT, DELETE), PostsForAnswersAndPostsForComments, users_id=user.id)
 		# instructors can modify the course and enrolment
 		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_INSTRUCTOR:
 			they.can(EDIT, Courses, id=course.id)
@@ -46,6 +50,8 @@ def define_authorization(user, they):
 			entry.usertypeforcourse.name == UserTypesForCourse.TYPE_TA:
 			they.can(MANAGE, PostsForQuestions, courses_id=course.id)
 			they.can(MANAGE, PostsForAnswers, courses_id=course.id)
+			they.can(MANAGE, PostsForQuestionsAndPostsForComments, courses_id=course.id)
+			they.can(MANAGE, PostsForAnswersAndPostsForComments, courses_id=course.id)
 
 # Tell the client side about a user's permissions.
 # This is necessarily more simplified than Flask-Bouncer's implementation.

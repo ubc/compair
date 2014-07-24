@@ -8,11 +8,13 @@ from werkzeug.exceptions import Unauthorized
 from acj import create_app, Users
 from acj.manage.database import populate
 from acj.core import db
-from acj.models import UserTypesForSystem, UserTypesForCourse, Courses, PostsForAnswers
+from acj.models import UserTypesForSystem, UserTypesForCourse, Courses, PostsForAnswers, PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments
 from data.fixtures import DefaultFixture
 from tests import test_app_settings
 from tests.factories import CoursesFactory, UsersFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, \
-	PostsForAnswersFactory
+	PostsForAnswersFactory, PostsForCommentsFactory,\
+	PostsForQuestionsAndPostsForCommentsFactory,\
+	PostsForAnswersAndPostsForCommentsFactory
 
 # Tests Checklist
 # - Unauthenticated users refused access with 401
@@ -59,14 +61,22 @@ class TestData():
 		self.enrol_user(self.enroled_student, self.course, UserTypesForCourse.TYPE_STUDENT)
 		# add 2 questions, each with 2 answers, to the course
 		self.questions = []
+		self.answers = []
 		question = self.create_question(self.course, self.enroled_instructor)
 		self.questions.append(question)
-		self.create_answer(question, self.enroled_student)
-		self.create_answer(question, self.enroled_student)
+		answer = self.create_answer(question, self.enroled_student)
+		self.answers.append(answer)
+
+		self.post_answer_comment(self.enroled_student, self.course, question, answer)
+		answer = self.create_answer(question, self.enroled_student)
+		self.answers.append(answer)
+		self.post_question_comment(self.enroled_student, self.course, question)
 		question = self.create_question(self.course, self.enroled_instructor)
 		self.questions.append(question)
-		self.create_answer(question, self.enroled_student)
-		self.create_answer(question, self.enroled_student)
+		answer = self.create_answer(question, self.enroled_student)
+		self.answers.append(answer)
+		answer = self.create_answer(question, self.enroled_student)
+		self.answers.append(answer)
 
 	def create_answer(self, question, author):
 		post = PostsFactory(courses_id = question.post.courses_id, users_id = author.id)
@@ -96,6 +106,22 @@ class TestData():
 							   usertypesforcourse_id=course_type.id)
 		db.session.commit()
 
+	def post_question_comment(self, author, course, question):
+		post = PostsFactory(courses_id = course.id, users_id = author.id)
+		db.session.commit()
+		comment = PostsForCommentsFactory(posts_id = post.id) 
+		db.session.commit()
+		quesComment = PostsForQuestionsAndPostsForCommentsFactory(postsforcomments_id = comment.id, postsforquestions_id = question.id)
+		db.session.commit()
+
+	def post_answer_comment(self, author, course, question, answer):
+		post = PostsFactory(courses_id = course.id, users_id = author.id)
+		db.session.commit()
+		comment = PostsForCommentsFactory(posts_id = post.id)
+		db.session.commit()
+		answerComment = PostsForAnswersAndPostsForCommentsFactory(postsforcomments_id = comment.id, postsforanswers_id = answer.id)
+		db.session.commit()
+
 	def get_course(self):
 		return self.course
 	def get_enroled_instructor(self):
@@ -108,6 +134,8 @@ class TestData():
 		return self.unenroled_student
 	def get_questions(self):
 		return self.questions
+	def get_answers(self):
+		return self.answers
 
 class CoursesAPITests(ACJTestCase):
 	def setUp(self):
@@ -458,8 +486,7 @@ class AnswersAPITests(ACJTestCase):
 		self.assert401(rv)
 		# test unauthorized users
 		self.login(self.data.get_unenroled_student().username)
-		rv = self.client.post(self.url,
-							  data=json.dumps(expected_answer), content_type='application/json')
+		rv = self.client.post(self.url, data=json.dumps(expected_answer), content_type='application/json')
 		self.assert403(rv)
 		self.logout()
 		self.login(self.data.get_unenroled_instructor().username)
@@ -475,12 +502,12 @@ class AnswersAPITests(ACJTestCase):
 		self.assert400(rv)
 		# test invalid question
 		rv = self.client.post(
-			'/api/courses/' + str(self.data.get_course().id) + '/question/9392402/answers',
+			'/api/courses/' + str(self.data.get_course().id) + '/questions/9392402/answers',
 			data=json.dumps(expected_answer), content_type='application/json')
 		self.assert404(rv)
 		# test invalid course
 		rv = self.client.post(
-			'/api/courses/9334023/question/'+ str(self.question.id) +'/answers',
+			'/api/courses/9334023/questions/'+ str(self.question.id) +'/answers',
 			data=json.dumps(expected_answer), content_type='application/json')
 		self.assert404(rv)
 		# test create successful
@@ -492,6 +519,173 @@ class AnswersAPITests(ACJTestCase):
 		actual_answer = answers[2]
 		self.assertEqual(expected_answer['post']['content'], actual_answer.post.content)
 
+class QuestionCommentsAPITests(ACJTestCase):
+	def setUp(self):
+		super(QuestionCommentsAPITests, self).setUp()
+		self.data = TestData()
+		self.question = self.data.get_questions()[0]
+		self.answer = self.data.get_answers()[0]
+		self.url = '/api/courses/' + str(self.data.get_course().id) + '/questions/' + \
+				str(self.question.id) + '/comments'
+
+	def test_get_all_comments(self):
+		# Test login required
+		rv = self.client.get(self.url)
+		self.assert401(rv)
+		# test unauthorized users
+		self.login(self.data.get_unenroled_instructor().username)
+		rv = self.client.get(self.url)
+		self.assert403(rv)
+		self.logout()
+		self.login(self.data.get_unenroled_student().username)
+		rv = self.client.get(self.url)
+		self.assert403(rv)
+		self.logout()
+		# test non-existent entry
+		self.login(self.data.get_enroled_student().username)
+		rv = self.client.get('/api/courses/' + str(self.data.get_course().id) + \
+			'/questions/4903409/comments')
+		self.assert404(rv)
+		# test data retrieved is correct
+		rv = self.client.get(self.url)
+		self.assert200(rv)
+		actual_comments = rv.json['objects']
+		expected_answers = PostsForQuestionsAndPostsForComments.query.\
+			filter_by(postsforquestions_id=self.question.id).all()
+		for i, expected in enumerate(expected_answers):
+			actual = actual_comments[i]
+			self.assertEqual(expected.postsforcomments.post.content, 				actual['postsforcomments']['post']['content'])
+
+	def test_post_question_comments(self):
+		# test login required
+		expected_comment = {'post': {'content':'this is some question comment'}}
+		rv = self.client.post(self.url, data=json.dumps(expected_comment), content_type='application/json')
+		self.assert401(rv)
+		# test unauthorized users
+		self.login(self.data.get_unenroled_student().username)
+		rv = self.client.post(self.url, data=json.dumps(expected_comment), content_type='application/json')
+		self.assert403(rv)
+		self.logout()
+		self.login(self.data.get_unenroled_instructor().username)
+		rv = self.client.post(self.url, data=json.dumps(expected_comment), content_type='application/json')
+		self.assert403(rv)
+		self.logout()
+		# test invalid format
+		self.login(self.data.get_enroled_student().username)
+		invalid_comment = {'post':{'blah':'blah'}}
+		rv = self.client.post(self.url, data=json.dumps(invalid_comment), content_type='application/json')
+		self.assert400(rv)
+		# test invalid question
+		rv = self.client.post(
+			'/api/courses/' + str(self.data.get_course().id) +\
+			'/questions/9392402/comments',
+			data=json.dumps(expected_comment), 
+			content_type='application/json')
+		self.assert404(rv)
+		# test invalid course
+		rv = self.client.post(
+			'/api/courses/9334023/questions/' +\
+			str(self.question.id) + '/answers',
+			data=json.dumps(expected_comment),
+			content_type='application/json')
+		self.assert404(rv)
+		# test create successful
+		rv = self.client.post(self.url,
+			data=json.dumps(expected_comment),
+			content_type='application/json')
+		self.assert200(rv)
+		# retrieve again and verify
+		comments = PostsForQuestionsAndPostsForComments.query.filter_by(
+			postsforquestions_id=self.question.id).all()
+		actual_comment = comments[1]
+		self.assertEqual(expected_comment['post']['content'], actual_comment.postsforcomments.post.content)
+
+class AnswerCommentsAPITests(ACJTestCase):
+	def setUp(self):
+		super(AnswerCommentsAPITests, self).setUp()
+		self.data = TestData()
+		self.question = self.data.get_questions()[0]
+		self.answer = self.data.get_answers()[0]
+		self.url = '/api/courses/' + str(self.data.get_course().id) + \
+				'/questions/' + str(self.question.id) + \
+				'/answers/' + str(self.answer.id) + '/comments'
+
+	def test_get_all_comments(self):
+		# Test login required
+		rv = self.client.get(self.url)
+		self.assert401(rv)
+		# test unauthorized users
+		self.login(self.data.get_unenroled_instructor().username)
+		rv = self.client.get(self.url)
+		self.assert403(rv)
+		self.logout()
+		self.login(self.data.get_unenroled_student().username)
+		rv = self.client.get(self.url)
+		self.assert403(rv)
+		self.logout()
+		# test non-existent entry
+		self.login(self.data.get_enroled_student().username)
+		rv = self.client.get('/api/courses/' +\
+			str(self.data.get_course().id) + '/questions/' + \
+			str(self.question.id) + '/answers/142154156/comments')
+		self.assert404(rv)
+		# test data retrieved is correct
+		rv = self.client.get(self.url)
+		self.assert200(rv)
+		actual_comments = rv.json['objects']
+		expected_comments = PostsForAnswersAndPostsForComments.query.\
+			filter_by(postsforanswers_id=self.answer.id).all()
+		for i, expected in enumerate(expected_comments):
+			actual = actual_comments[i]
+			self.assertEqual(expected.postsforcomments.post.content, actual['postsforcomments']['post']['content'])
+
+	def test_create_comment(self):
+		# test login required
+		expected_comment = {'post':{'content':'this is some comment'}}
+		rv = self.client.post(self.url, data=json.dumps(expected_comment), content_type='application/json')
+		self.assert401(rv)
+		# test unauthorized users
+		self.login(self.data.get_unenroled_student().username)
+		rv = self.client.post(self.url, data=json.dumps(expected_comment), content_type='application/json')
+		self.assert403(rv)
+		self.logout()
+		self.login(self.data.get_unenroled_instructor().username)
+		rv = self.client.post(self.url, data=json.dumps(expected_comment), content_type='application/json')
+		self.assert403(rv)
+		self.logout()
+		# test invalid format
+		self.login(self.data.get_enroled_student().username)
+		invalid_comment = {'post':{'blah':'blah'}}
+		rv = self.client.post(self.url, data=json.dumps(invalid_comment), content_type='application/json')
+		self.assert400(rv)
+		# test invalid question
+		rv = self.client.post(
+			'/api/courses/' + str(self.data.get_course().id) +\
+			'/questions/546465465/answers/' + str(self.answer.id)+\
+			'/comments', data=json.dumps(expected_comment),
+			content_type='application/json')
+		self.assert404(rv)
+		# test invalid answer
+		rv = self.client.post(
+			'/api/courses/' + str(self.data.get_course().id) +\
+			'/questions/' + str(self.question.id) + '/answers'+\
+			'/4545645/comments', data=json.dumps(expected_comment),
+			content_type='application/json')
+		self.assert404(rv)
+		# test invalid course
+		rv = self.client.post(
+			'/api/courses/45545646645/questions/' + \
+			str(self.question.id)+'/answers/'+str(self.answer.id)+\
+			'/comments', data=json.dumps(expected_comment),
+			content_type='application/json')
+		self.assert404(rv)
+		# test create successful
+		rv = self.client.post(self.url,data=json.dumps(expected_comment),content_type='application/json')
+		self.assert200(rv)
+		# retrieve again and verify
+		comments = PostsForAnswersAndPostsForComments.query.filter_by(postsforanswers_id=self.answer.id).all()
+		actual_comment = comments[1]
+		self.assertEqual(expected_comment['post']['content'], actual_comment.postsforcomments.post.content)
 
 if __name__ == '__main__':
 	unittest.main()
