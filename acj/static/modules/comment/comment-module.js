@@ -49,6 +49,14 @@ module.controller(
 		var questionId = $routeParams['questionId'];
 	
 		$scope.comment = {};
+		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
+			function(ret) {
+				$scope.parent = ret;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve the question "+questionId, ret);
+			}
+		);
 		$scope.commentSubmit = function () {
 			$scope.submitted = true;
 			QuestionCommentResource.save({'courseId': courseId, 'questionId': questionId},
@@ -78,6 +86,7 @@ module.controller(
 		var commentId = $routeParams['commentId'];
 
 		$scope.comment = {};
+		$scope.parent = {}; // question
 		QuestionCommentResource.get({'courseId': courseId, 'questionId': questionId, 'commentId': commentId}).$promise.then(
 			function(ret) {
 				$scope.comment = ret;
@@ -86,9 +95,20 @@ module.controller(
 				Toaster.reqerror("Unable to retrieve comment "+commentId, ret);
 			}
 		);
+		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
+			function(ret) {
+				$scope.parent = ret;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve the question "+questionId, ret);
+			}
+		);
 		$scope.commentSubmit = function () {
 			QuestionCommentResource.save({'courseId': courseId, 'questionId': questionId}, $scope.comment).$promise.then(
-				function() { Toaster.success("Comment Updated!"); },
+				function() { 
+					Toaster.success("Comment Updated!");
+					$location.path('/course/' + courseId + '/question/' +questionId);
+				},
 				function(ret) { Toaster.reqerror("Comment Save Failed.", ret);}
 			);
 		};
@@ -104,6 +124,14 @@ module.controller(
 		var answerId = $routeParams['answerId'];
 
 		$scope.comment = {};
+		AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId}).$promise.then(
+			function (ret) {
+				$scope.parent = ret;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
+			}
+		);
 		$scope.commentSubmit = function () {
 			$scope.submitted = true;
 			AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': answerId},
@@ -134,6 +162,7 @@ module.controller(
 		var commentId = $routeParams['commentId'];
 
 		$scope.comment = {};
+		$scope.parent = {}; // answer
 		AnswerCommentResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId, 'commentId': commentId}).$promise.then(
 			function(ret) {
 				$scope.comment = ret;
@@ -142,9 +171,20 @@ module.controller(
 				Toaster.reqerror("Unable to retrieve comment "+commentId, ret);
 			}
 		);
+		AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId}).$promise.then(
+			function (ret) {
+				$scope.parent = ret;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
+			}
+		);
 		$scope.commentSubmit = function () {
 			AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': answerId}, $scope.comment).$promise.then(
-				function() { Toaster.success("Comment Updated!"); },
+				function() {
+					Toaster.success("Comment Updated!");
+					$location.path('/course/' + courseId + '/question/' +questionId);
+				},
 				function(ret) { Toaster.reqerror("Comment Save Failed.", ret);}
 			);
 		};

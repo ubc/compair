@@ -117,7 +117,10 @@ module.controller("QuestionEditController",
 		);
 		$scope.questionSubmit = function () {
 			QuestionResource.save({'courseId': courseId}, $scope.question).$promise.then(
-				function() { Toaster.success("Question Updated!"); },
+				function() { 
+					Toaster.success("Question Updated!");
+					$location.path('/course/' + courseId);
+				 },
 				function(ret) { Toaster.reqerror("Question Save Failed.", ret); }
 			);
 		};

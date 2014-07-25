@@ -13,7 +13,7 @@
 		<a href="#/course/{{courseId}}/question/{{question.id}}/comment/create" class="btn btn-sm btn-info">
 			<i class="fa fa-comment-o"></i> Comment
 		</a>
-		<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" href="" class="btn btn-sm btn-primary">
+		<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/edit" class="btn btn-sm btn-primary">
 			<i class="fa fa-edit"></i> Edit
 		</a>
 		<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" href="" class="btn btn-xs btn-danger">

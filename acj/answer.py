@@ -60,7 +60,7 @@ class AnswerIdAPI(Resource):
 		return marshal(answer, dataformat.getPostsForAnswers())
 	def post(self, course_id, question_id, answer_id):
 		course = Courses.query.get_or_404(course_id)
-		question = Questions.query.get_or_404(question_id)
+		question = PostsForQuestions.query.get_or_404(question_id)
 		answer = PostsForAnswers.query.get_or_404(answer_id)
 		require(EDIT, answer)
 		params = existing_answer_parser.parse_args()

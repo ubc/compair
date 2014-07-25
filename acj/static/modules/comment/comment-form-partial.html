@@ -1,6 +1,14 @@
+<div class="panel panel-info">
+	<div ng-if="parent.title" class="panel-heading">
+		<h4>{{parent.title}}</h4>
+	</div>
+	<div class="panel-body" mathjax="parent.post.content"
+		ng-bind-html="parent.post.content">
+	</div>
+</div>
+
 <form name="commentForm" class="form" ng-submit="commentSubmit()" novalidate>
 	<div class="form-group">
-		<label for="commentcontent">Comment:</label>
 		<textarea ng-model="comment.content" id="commentContent" class="form-control" rows="8" ckeditor required>
 		</textarea>
 	</div>
