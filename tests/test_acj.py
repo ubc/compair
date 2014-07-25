@@ -558,7 +558,7 @@ class QuestionCommentsAPITests(ACJTestCase):
 
 	def test_post_question_comments(self):
 		# test login required
-		expected_comment = {'post': {'content':'this is some question comment'}}
+		expected_comment = {'content':'this is some question comment'}
 		rv = self.client.post(self.url, data=json.dumps(expected_comment), content_type='application/json')
 		self.assert401(rv)
 		# test unauthorized users
@@ -598,7 +598,7 @@ class QuestionCommentsAPITests(ACJTestCase):
 		comments = PostsForQuestionsAndPostsForComments.query.filter_by(
 			postsforquestions_id=self.question.id).all()
 		actual_comment = comments[1]
-		self.assertEqual(expected_comment['post']['content'], actual_comment.postsforcomments.post.content)
+		self.assertEqual(expected_comment['content'], actual_comment.postsforcomments.post.content)
 
 class AnswerCommentsAPITests(ACJTestCase):
 	def setUp(self):
@@ -641,7 +641,7 @@ class AnswerCommentsAPITests(ACJTestCase):
 
 	def test_create_comment(self):
 		# test login required
-		expected_comment = {'post':{'content':'this is some comment'}}
+		expected_comment = {'content':'this is some comment'}
 		rv = self.client.post(self.url, data=json.dumps(expected_comment), content_type='application/json')
 		self.assert401(rv)
 		# test unauthorized users
@@ -685,7 +685,7 @@ class AnswerCommentsAPITests(ACJTestCase):
 		# retrieve again and verify
 		comments = PostsForAnswersAndPostsForComments.query.filter_by(postsforanswers_id=self.answer.id).all()
 		actual_comment = comments[1]
-		self.assertEqual(expected_comment['post']['content'], actual_comment.postsforcomments.post.content)
+		self.assertEqual(expected_comment['content'], actual_comment.postsforcomments.post.content)
 
 if __name__ == '__main__':
 	unittest.main()

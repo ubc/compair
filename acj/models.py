@@ -372,6 +372,9 @@ class PostsForQuestionsAndPostsForComments(db.Model):
 	@hybrid_property
 	def users_id(self):
 		return self.postsforcomments.post.user.id
+	@hybrid_property
+	def content(self):
+		return self.postsforcomments.post.content
 
 class PostsForAnswersAndPostsForComments(db.Model):
 	__tablename__ = 'PostsForAnswersAndPostsForComments'
@@ -395,6 +398,9 @@ class PostsForAnswersAndPostsForComments(db.Model):
 	@hybrid_property
 	def users_id(self):
 		return self.postsforcomments.post.user.id
+	@hybrid_property
+	def content(self):
+		return self.postsforcomments.post.content
 	
 
 #################################################

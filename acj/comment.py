@@ -16,7 +16,11 @@ commentsforanswers_api = Blueprint('commentsforanswers_api', __name__)
 apiA = new_restful_api(commentsforanswers_api)
 
 new_comment_parser = RequestParser()
-new_comment_parser.add_argument('post', type=dict, default={})
+new_comment_parser.add_argument('content', type=str, required=True)
+
+existing_comment_parser = RequestParser()
+existing_comment_parser.add_argument('id', type=int, required=True, help="Comment id is required.")
+existing_comment_parser.add_argument('content', type=str, required=True)
 
 # /
 class QuestionCommentRootAPI(Resource):
@@ -40,7 +44,7 @@ class QuestionCommentRootAPI(Resource):
 		commentForQuestion = PostsForQuestionsAndPostsForComments(postsforcomments=comment, postsforquestions_id=question_id)
 		require(CREATE, commentForQuestion)
 		params = new_comment_parser.parse_args()
-		post.content = params.get("post").get("content")
+		post.content = params.get("content")
 		if not post.content:
 			return {"error":"The comment content is empty!"}, 400
 		post.users_id = current_user.id
@@ -50,6 +54,34 @@ class QuestionCommentRootAPI(Resource):
 		db.session.commit()
 		return marshal(commentForQuestion, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
 apiQ.add_resource(QuestionCommentRootAPI, '')
+
+# / id
+class QuestionCommentIdAPI(Resource):
+	@login_required
+	def get(self, course_id, question_id, comment_id):
+		course = Courses.query.get_or_404(course_id)
+		question = PostsForQuestions.query.get_or_404(question_id)
+		comment = PostsForQuestionsAndPostsForComments.query.get_or_404(comment_id)
+		require(READ, comment)
+		return marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+	@login_required
+	def post(self, course_id, question_id, comment_id):
+		course = Courses.query.get_or_404(course_id)
+		question = PostsForQuestions.query.get_or_404(question_id)
+		comment = PostsForQuestionsAndPostsForComments.query.get_or_404(comment_id)
+		require(EDIT, comment)
+		params = existing_comment_parser.parse_args()
+		# make sure the comment id in the rul and the id matches
+		if params['id'] != comment.id:
+			return {"error":"Comment id does not match URL."}, 400
+		# modify comment according to new values, preserve original values if values not passed
+		comment.postsforcomments.post.content = params.get("content")
+		if not comment.postsforcomments.post.content:
+			return {"error":"The comment content is empty!"}, 400
+		db.session.add(comment.postsforcomments.post)
+		db.session.commit()
+		return marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+apiQ.add_resource(QuestionCommentIdAPI, '/<int:comment_id>')
 
 # /
 class AnswerCommentRootAPI(Resource):
@@ -76,7 +108,7 @@ class AnswerCommentRootAPI(Resource):
 		commentForAnswer = PostsForAnswersAndPostsForComments(postsforcomments=comment, postsforanswers_id=answer.id)
 		require(CREATE, commentForAnswer)
 		params = new_comment_parser.parse_args()
-		post.content = params.get("post").get("content")
+		post.content = params.get("content")
 		if not post.content:
 			return {"error":"The comment content is empty!"}, 400
 		post.users_id = current_user.id
@@ -87,3 +119,30 @@ class AnswerCommentRootAPI(Resource):
 		return marshal(commentForAnswer, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
 apiA.add_resource(AnswerCommentRootAPI, '')
 
+# / id
+class AnswerCommentIdAPI(Resource):
+	@login_required
+	def get(self, course_id, question_id, answer_id, comment_id):
+		course = Courses.query.get_or_404(course_id)
+		answer = PostsForAnswers.query.get_or_404(answer_id)
+		comment = PostsForAnswersAndPostsForComments.query.get_or_404(comment_id)
+		require(READ, comment)
+		return marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+	@login_required
+	def post(self, course_id, question_id, answer_id, comment_id):
+		course = Courses.query.get_or_404(course_id)
+		answer = PostsForAnswers.query.get_or_404(answer_id)
+		comment = PostsForAnswersAndPostsForComments.query.get_or_404(comment_id)
+		require(EDIT, comment)
+		params = existing_comment_parser.parse_args()
+		# make sure the comment id in the rul and the id matches
+		if params['id'] != comment.id:
+			return {"error":"Comment id does not match URL."}, 400
+		# modify comment according to new values, preserve original values if values not passed
+		comment.postsforcomments.post.content = params.get("content")
+		if not comment.postsforcomments.post.content:
+			return {"error":"The comment content is empty!"}, 400
+		db.session.add(comment.postsforcomments.post)
+		db.session.commit()
+		return marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+apiA.add_resource(AnswerCommentIdAPI, '/<int:comment_id>')

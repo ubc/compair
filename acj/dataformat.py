@@ -121,5 +121,6 @@ def getPostsForQuestionsOrAnswersAndPostsForComments(restrict_users=True):
 	comment = getPostsForComments(restrict_users)
 	return {
 		'id': fields.Integer,
-		'postsforcomments': fields.Nested(comment)
+		'postsforcomments': fields.Nested(comment),
+		'content': fields.String
 	}

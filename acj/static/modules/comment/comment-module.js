@@ -70,6 +70,32 @@ module.controller(
 );
 
 module.controller(
+	"QuestionCommentEditController",
+	function ($scope, $log, $location, $routeParams, QuestionCommentResource, QuestionResource, Toaster)
+	{
+		var courseId = $routeParams['courseId'];
+		var questionId = $routeParams['questionId'];
+		var commentId = $routeParams['commentId'];
+
+		$scope.comment = {};
+		QuestionCommentResource.get({'courseId': courseId, 'questionId': questionId, 'commentId': commentId}).$promise.then(
+			function(ret) {
+				$scope.comment = ret;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve comment "+commentId, ret);
+			}
+		);
+		$scope.commentSubmit = function () {
+			QuestionCommentResource.save({'courseId': courseId, 'questionId': questionId}, $scope.comment).$promise.then(
+				function() { Toaster.success("Comment Updated!"); },
+				function(ret) { Toaster.reqerror("Comment Save Failed.", ret);}
+			);
+		};
+	}
+);
+
+module.controller(
 	"AnswerCommentCreateController",
 	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, Toaster)
 	{
@@ -95,6 +121,33 @@ module.controller(
 					}
 				);
 		};	
+	}
+);
+
+module.controller(
+	"AnswerCommentEditController",
+	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, Toaster)
+	{
+		var courseId = $routeParams['courseId'];
+		var questionId = $routeParams['questionId'];
+		var answerId = $routeParams['answerId'];
+		var commentId = $routeParams['commentId'];
+
+		$scope.comment = {};
+		AnswerCommentResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId, 'commentId': commentId}).$promise.then(
+			function(ret) {
+				$scope.comment = ret;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve comment "+commentId, ret);
+			}
+		);
+		$scope.commentSubmit = function () {
+			AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': answerId}, $scope.comment).$promise.then(
+				function() { Toaster.success("Comment Updated!"); },
+				function(ret) { Toaster.reqerror("Comment Save Failed.", ret);}
+			);
+		};
 	}
 );
 

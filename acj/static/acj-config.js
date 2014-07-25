@@ -178,10 +178,20 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/comment/comment-question-create-partial.html',
 				label: "Post Comment"
 			})
+		.when ('/course/:courseId/question/:questionId/comment/:commentId/edit',
+			{
+				templateUrl: 'modules/comment/comment-question-edit-partial.html',
+				label: "Edit Comment"
+			})
 		.when('/course/:courseId/question/:questionId/answer/:answerId/comment/create',
 			{
 				templateUrl: 'modules/comment/comment-answer-create-partial.html',
 				label: "Post Comment"
+			})
+		.when('/course/:courseId/question/:questionId/answer/:answerId/comment/:commentId/edit',
+			{
+				templateUrl: 'modules/comment/comment-answer-edit-partial.html',
+				label: "Edit Comment"
 			})
 		.when ('/install', 
 			{
