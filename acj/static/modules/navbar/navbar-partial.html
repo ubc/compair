@@ -42,6 +42,12 @@
 						Configure Course
 					</a>
 				</li>
+				<li ng-if="canCreateUsers">
+					<a ng-href="#/user/create">
+						<i class="fa fa-user"></i>
+						Create User
+					</a>
+				</li>
 				<!-- Leftover -->
 				<li data-match-route="/judgepage.*" ng-show="check">
 					<a href="#/quickjudge">Random Judge</a>

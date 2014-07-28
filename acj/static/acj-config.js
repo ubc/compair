@@ -193,6 +193,11 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/comment/comment-answer-edit-partial.html',
 				label: "Edit Comment"
 			})
+		.when('/user/create',
+			{
+				templateUrl: 'modules/user/user-create-partial.html',
+				label: "Create User"
+			})
 		.when ('/install', 
 			{
 				templateUrl: 'modules/installer/installer-partial.html',

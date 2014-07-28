@@ -1,3 +1,19 @@
+/* check for matching passwords; can be modified to be more general to check for the matching of any fields*/
+myApp.directive('pwMatch', function(){
+	return {
+		require: 'ngModel',
+		link: function (scope, elem, attrs, ctrl) {
+			var firstPassword = '#' + attrs.pwMatch;
+			elem.add(firstPassword).on('keyup', function () {
+				scope.$apply(function () {
+					var v = elem.val()===$(firstPassword).val();
+					ctrl.$setValidity('pwMatch', v);
+				});
+			});
+		}
+	}
+});
+
 myApp.directive('backButton', function(){
     return {
       restrict: 'A',

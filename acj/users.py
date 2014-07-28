@@ -1,10 +1,11 @@
 from flask import Blueprint
-from bouncer.constants import READ, MANAGE, EDIT
+from bouncer.constants import READ, MANAGE, EDIT, CREATE
 from flask.ext.restful import Resource, Api, fields, marshal_with, marshal
+from flask.ext.restful.reqparse import RequestParser
 
 from flask_login import login_required
 from werkzeug.exceptions import Unauthorized
-from acj import dataformat
+from acj import dataformat, db
 from .authorization import is_user_access_restricted, require
 from .util import pagination, new_restful_api
 
@@ -12,6 +13,16 @@ from .util import pagination, new_restful_api
 from .models import Users, CoursesAndUsers, UserTypesForSystem, Courses
 
 users_api = Blueprint('users_api', __name__)
+user_types_api = Blueprint('user_types_api', __name__)
+
+new_user_parser = RequestParser()
+new_user_parser.add_argument('username', type=str, required=True)
+new_user_parser.add_argument('usertypesforsystem_id', type=int, required=True)
+new_user_parser.add_argument('firstname', type=str, required=True)
+new_user_parser.add_argument('lastname', type=str, required=True)
+new_user_parser.add_argument('displayname', type=str, required=True)
+new_user_parser.add_argument('email', type=str, required=True)
+new_user_parser.add_argument('password', type=str, required=True)
 
 
 # /id
@@ -29,6 +40,26 @@ class UserListAPI(Resource):
 	def get(self, objects):
 		require(MANAGE, Users)
 		return objects
+	def post(self):
+		user = Users()
+		require(CREATE, user)
+		params = new_user_parser.parse_args()
+		user.username = params.get("username")
+		username = Users.query.filter(Users.username==user.username).first()
+		if username is not None:
+			return {"error":"This username already exists. Please pick another."}, 409
+		user.password = params.get("password")
+		user.usertypesforsystem_id = params.get("usertypesforsystem_id")
+		user.email = params.get("email")
+		user.firstname = params.get("firstname")
+		user.lastname = params.get("lastname")
+		user.displayname = params.get("displayname")
+		displayname = Users.query.filter(Users.displayname==user.displayname).first()
+		if displayname is not None:
+			return {"error":"This display name already exists. Please pick another."}, 409
+		db.session.add(user)
+		db.session.commit()
+		return marshal(user, dataformat.getUsers())
 
 
 # /id/courses
@@ -50,10 +81,20 @@ class UserCourseListAPI(Resource):
 
 		return {'objects': marshal(coursesandusers, dataformat.getCoursesAndUsers(include_user=False))}
 
+# /
+class UserTypesAPI(Resource):
+	@login_required
+	def get(self):
+		types = UserTypesForSystem.query.\
+			order_by("id").all()
+		return marshal(types, dataformat.getUserTypesForSystem())
+
 api = new_restful_api(users_api)
 api.add_resource(UserAPI, '/<int:id>')
 api.add_resource(UserListAPI, '')
 api.add_resource(UserCourseListAPI, '/<int:id>/courses')
+apiT = new_restful_api(user_types_api)
+apiT.add_resource(UserTypesAPI, '')
 
 #def import_users(list, group=True):
 #	schema = {

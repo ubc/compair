@@ -9,7 +9,8 @@ var module = angular.module('ubc.ctlt.acj.navbar',
 		'ngRoute',
 		'ubc.ctlt.acj.authentication',
 		'ubc.ctlt.acj.course',
-		'ubc.ctlt.acj.login' // for LogoutController
+		'ubc.ctlt.acj.login', // for LogoutController
+		'ubc.ctlt.acj.user'
 	]
 );
 
@@ -21,13 +22,14 @@ var module = angular.module('ubc.ctlt.acj.navbar',
 module.controller(
 	"NavbarController",
 	function NavbarController($scope, $log, $route, breadcrumbs,
-		AuthenticationService, Authorize, CourseResource) 
+		AuthenticationService, Authorize, CourseResource, UserResource) 
 	{
 		$scope.breadcrumbs = breadcrumbs;
 
 		// determine if we're in a course so we know whether to show
 		// the course settings
 		$scope.inCourse = false;
+		$scope.canCreateUsers = Authorize.can(Authorize.CREATE, UserResource.MODEL);
 		$scope.setInCourse = function() {
 			var courseId = $route.current.params['courseId'];
 			$scope.inCourse = false;

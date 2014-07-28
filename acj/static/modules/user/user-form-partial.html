@@ -1,0 +1,50 @@
+<form name="userForm" class="form" ng-submit="userSubmit()" novalidate>
+	<acj-field-with-feedback form-control="userForm.username">
+		<label for="username">Username: </label>
+		<input class="form-control" id="username" type="text"
+			name="username" ng-model="user.username"
+			required auto-focus />
+	</acj-field-with-feedback>
+	<div class="form-group">
+		<label for="userType">User Type: </label>
+		<select class="form-control" id="userType" name="userType"
+			ng-model="user.usertypesforsystem_id" required 
+			ng-options="usertype.id as usertype.name for usertype in usertypes"></select>
+	</div>
+	<acj-field-with-feedback form-control="userForm.firstName">
+		<label for="firstName">First Name: </label>
+		<input class="form-control" id="firstName" type="text"
+			name="firstName" ng-model="user.firstname"
+			required />
+	</acj-field-with-feedback>
+	<acj-field-with-feedback form-control="userForm.lastName">
+		<label for="lastName">Last Name: </label>
+		<input class="form-control" id="lastName" type="text"
+			name="lastName" ng-model="user.lastname"
+			required />
+	</acj-field-with-feedback>
+	<acj-field-with-feedback form-control="userForm.displayName">
+		<label for="displayName">Display Name: </label>
+		<input class="form-control" id="displayName" type="text"
+			name="displayName" ng-model="user.displayname"
+			required />
+	</acj-field-with-feedback>
+	<acj-field-with-feedback form-control="userForm.email">
+		<label for="email">Email: </label>
+		<input class="form-control" id="email" type="text"
+			name="email" ng-model="user.email" required />
+	</acj-field-with-feedback>
+	<acj-field-with-feedback form-control="userForm.password">
+		<label for=password">Password: </label>
+		<input class="form-control" id="password" type="password"
+			name="password" ng-model="user.password" required />
+	</acj-field-with-feedback>
+	<acj-field-with-feedback form-control="userForm.verifyPassword">
+		<label for=verifyPassword">Verify Password: </label>
+		<input class="form-control" id="verifyPassword" type="password"
+			name="verifyPassword" ng-model="user.verifyPassword"
+			required />
+	</acj-field-with-feedback>
+	<input type="submit" class="btn btn-primary" value="Save"
+		ng-disabled="userForm.$invalid || submitted" />
+</form>
