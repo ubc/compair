@@ -27,6 +27,11 @@ module.factory('UserTypeResource', function($resource) {
 	ret.MODEL = "UserTypesForSystem";
 	return ret;
 });
+module.factory('UserPasswordResource', function($resource) {
+	var ret = $resource('/api/users/password/:id', {id: '@id'});
+	ret.MODEL = "Users";
+	return ret;
+});
 
 
 /***** Controllers *****/
@@ -36,6 +41,7 @@ module.controller("UserCreateController",
 	{
 		$scope.usertypes = {};
 		$scope.user = {};
+		$scope.create = true;
 		UserTypeResource.query(
 			function (ret)
 			{
@@ -67,6 +73,107 @@ module.controller("UserCreateController",
 				}
 			);
 		};
+	}
+);
+
+module.controller("UserEditController",
+	function($scope, $log, $routeParams, UserResource, AuthenticationService, Authorize, UserTypeResource, Toaster)
+	{
+		var userId = $routeParams['userId'];
+		$scope.canManageUsers = Authorize.can(Authorize.MANAGE, UserResource.MODEL);
+		$scope.user = {}
+		$scope.usertypes = {};
+		UserTypeResource.query(
+			function (ret) {
+				$scope.usertypes = ret;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve the user types", ret);
+			}
+		);
+		UserResource.get({'id':userId}).$promise.then(
+			function (ret) {
+				$scope.user = ret;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve user "+ userId, ret);
+			}
+		);
+		$scope.userSubmit = function() {
+			$scope.submitted = true;
+			UserResource.save({'id': userId}, $scope.user).$promise.then(
+				function(ret) {
+					$scope.submitted = false;
+					Toaster.success("User Updated!");
+				},
+				function(ret) {
+					$scope.submitted = false; 
+					Toaster.reqerror("User Update Failed.", ret); 
+				}
+			);
+		}
+	}
+);
+
+module.controller("UserEditProfileController",
+	function($scope, $log, $routeParams, UserResource, AuthenticationService, Authorize, UserTypeResource, Toaster)
+	{
+		var userId = AuthenticationService.getUser().id;
+		$scope.user = {}
+		$scope.usertypes = {};
+		$scope.changePassword = true;
+		UserTypeResource.query(
+			function(ret) { $scope.usertypes = ret; },
+			function(ret) {
+				Toaster.reqerror("Unable to retrieve the user types", ret);
+			}
+		);
+		UserResource.get({"id":userId}).$promise.then(
+			function (ret) {
+				$scope.user = ret;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve your profile", ret);
+			}
+		);
+		$scope.userSubmit = function () {
+			$scope.submitted = true;
+			UserResource.save({'id': userId}, $scope.user).$promise.then(
+				function (ret) {
+					$scope.submitted = false;
+					Toaster.success("User Profile Updated!");
+				},
+				function (ret) {
+					$scope.submitted = false;
+					Toaster.reqerror("User Profile Update Failed.", ret);
+				}
+			);
+		}
+	}
+);
+
+module.controller("UserUpdatePasswordController",
+	function($scope, $log, $routeParams, UserPasswordResource, AuthenticationService, Authorize, Toaster)
+	{
+		var userId = AuthenticationService.getUser().id;
+		$scope.password = {};
+		$scope.changePassword = function() {
+			$scope.submitted = true;
+			UserPasswordResource.save({'id': userId}, $scope.password).$promise.then(
+				function (ret) {
+					$scope.submitted = false;
+					Toaster.success("Password Updated!");
+				},
+				function (ret) {
+					$scope.submitted = false;
+					if (ret.status == '401') {
+						Toaster.error(ret.data.error);
+					} else {
+						Toaster.reqerror("Unable to update your password.", ret);
+					}
+				}
+			);
+		}
 	}
 );
 

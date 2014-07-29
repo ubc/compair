@@ -24,6 +24,19 @@ new_user_parser.add_argument('displayname', type=str, required=True)
 new_user_parser.add_argument('email', type=str, required=True)
 new_user_parser.add_argument('password', type=str, required=True)
 
+existing_user_parser = RequestParser()
+existing_user_parser.add_argument('id', type=int, required=True)
+existing_user_parser.add_argument('username', type=str, required=True)
+existing_user_parser.add_argument('usertypesforsystem_id', type=int, required=True)
+existing_user_parser.add_argument('firstname', type=str, required=True)
+existing_user_parser.add_argument('lastname', type=str, required=True)
+existing_user_parser.add_argument('displayname', type=str, required=True)
+existing_user_parser.add_argument('email', type=str, required=True)
+
+update_password_parser = RequestParser()
+update_password_parser.add_argument('oldpassword', type=str, required=True)
+update_password_parser.add_argument('newpassword', type=str, required=True)
+
 
 # /id
 class UserAPI(Resource):
@@ -31,6 +44,24 @@ class UserAPI(Resource):
 	def get(self, id):
 		user = Users.query.get_or_404(id)
 		return marshal(user, dataformat.getUsers(is_user_access_restricted(user)))
+	@login_required
+	def post(self, id):
+		user = Users.query.get_or_404(id)
+		require(EDIT, user)
+		params = existing_user_parser.parse_args()
+		# make sure the user id in the url and the id matches
+		if params['id'] != id:
+			return {"error":"User id does not match URL."}, 400
+		user.username = params.get("username", user.username)
+		user.usertypesforsystem_id = params.get("usertypesforsystem_id", user.usertypesforsystem_id)
+		user.firstname = params.get("firstname", user.firstname)
+		user.lastname = params.get("lastname", user.lastname)
+		user.displayname = params.get("displayname", user.displayname)
+		user.email = params.get("email", user.email)
+		db.session.add(user)
+		db.session.commit()
+		return marshal(user, dataformat.getUsers())
+
 
 # /
 class UserListAPI(Resource):
@@ -89,10 +120,27 @@ class UserTypesAPI(Resource):
 			order_by("id").all()
 		return marshal(types, dataformat.getUserTypesForSystem())
 
+# /password
+class UserUpdatePasswordAPI(Resource):
+	@login_required
+	def post(self, id):
+		user = Users.query.get_or_404(id)
+		require(EDIT, user)
+		params = update_password_parser.parse_args()
+		oldpassword = params.get('oldpassword')
+		if user.verify_password(oldpassword):
+			user.password = params.get('newpassword')
+			db.session.add(user)
+			db.session.commit()
+			return marshal(user, dataformat.getUsers(False))
+		else:
+			return {"error":"The old password is incorrect."}, 401
+
 api = new_restful_api(users_api)
 api.add_resource(UserAPI, '/<int:id>')
 api.add_resource(UserListAPI, '')
 api.add_resource(UserCourseListAPI, '/<int:id>/courses')
+api.add_resource(UserUpdatePasswordAPI, '/password/<int:id>')
 apiT = new_restful_api(user_types_api)
 apiT.add_resource(UserTypesAPI, '')
 

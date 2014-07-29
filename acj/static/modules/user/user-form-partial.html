@@ -34,6 +34,7 @@
 		<input class="form-control" id="email" type="text"
 			name="email" ng-model="user.email" required />
 	</acj-field-with-feedback>
+	<div ng-if="create">
 	<acj-field-with-feedback form-control="userForm.password">
 		<label for=password">Password: </label>
 		<input class="form-control" id="password" type="password"
@@ -45,6 +46,7 @@
 			name="verifyPassword" ng-model="user.verifyPassword"
 			required />
 	</acj-field-with-feedback>
+	</div>
 	<input type="submit" class="btn btn-primary" value="Save"
 		ng-disabled="userForm.$invalid || submitted" />
 </form>

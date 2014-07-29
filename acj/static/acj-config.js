@@ -198,6 +198,16 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/user/user-create-partial.html',
 				label: "Create User"
 			})
+		.when('/user/:userId/edit',
+			{
+				templateUrl: 'modules/user/user-edit-partial.html',
+				label: "Edit User"
+			})
+		.when('/user/profile',
+			{
+				templateUrl: 'modules/user/user-edit-profile-partial.html',
+				label: "User Profile"
+			})
 		.when ('/install', 
 			{
 				templateUrl: 'modules/installer/installer-partial.html',
