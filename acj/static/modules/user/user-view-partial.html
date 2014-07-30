@@ -1,0 +1,21 @@
+<div ng-controller="UserViewController">
+	<h2>{{user.username}}</h2>
+	<hr>
+	<div class="col-md-4">
+		<img class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
+	</div>
+	<div class="col-md-8">
+		<div class="row">
+			<strong class="col-md-3">Name:</strong>
+			<div class="col-md-9">{{user.firstname}} {{user.lastname}}</div>
+		</div>
+		<div class="row">
+			<strong class="col-md-3">User Type:</strong>
+			<div class="col-md-9">{{user.usertypeforsystem.name}}</div>
+		</div>
+		<div class="row">
+			<strong class="col-md-3">Email:</strong>
+			<div class="col-md-9">{{user.email}}</div>
+		</div>
+	</div>
+</div>

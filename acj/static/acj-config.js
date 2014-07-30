@@ -209,6 +209,11 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/user/user-edit-partial.html',
 				label: "Edit User"
 			})
+		.when('/user/:userId',
+			{
+				templateUrl: 'modules/user/user-view-partial.html',
+				label: "View User"
+			})
 		.when('/user/profile',
 			{
 				templateUrl: 'modules/user/user-edit-profile-partial.html',

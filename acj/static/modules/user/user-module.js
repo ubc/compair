@@ -179,5 +179,22 @@ module.controller("UserUpdatePasswordController",
 	}
 );
 
+module.controller("UserViewController",
+	function($scope, $log, $routeParams, UserResource, AuthenticationService, Authorize, Toaster)
+	{
+		var userId = $routeParams['userId'];
+		$scope.user = {}
+		UserResource.get({"id":userId}).$promise.then(
+			function (ret) {
+				$scope.user = ret;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve your profile", ret);
+			}
+		);
+
+	}
+);
+
 // End anonymous function
 })();
