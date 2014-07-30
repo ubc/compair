@@ -73,7 +73,7 @@ def getCoursesAndUsers(restrict_user=True, include_user=True):
 		'created': fields.DateTime
 	}
 	if include_user:
-		format['user'] = getUsers(restrict_user)
+		format['user'] = fields.Nested(getUsers(restrict_user))
 	return format
 
 def getPosts(restrict_users=True):
@@ -124,3 +124,4 @@ def getPostsForQuestionsOrAnswersAndPostsForComments(restrict_users=True):
 		'postsforcomments': fields.Nested(comment),
 		'content': fields.String
 	}
+

@@ -42,6 +42,12 @@
 						Configure Course
 					</a>
 				</li>
+				<li ng-if="inCourse && canEditCourse">
+					<a ng-href="#/course/{{courseId}}/classlist">
+						<i class="fa fa-users"></i>
+						Class List
+					</a>
+				</li>
 				<li ng-if="canCreateUsers">
 					<a ng-href="#/user/create">
 						<i class="fa fa-user"></i>

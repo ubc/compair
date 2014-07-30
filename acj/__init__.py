@@ -60,6 +60,8 @@ def create_app(conf=config, settings_override={}):
 	# Initialize rest of the api modules
 	from .course import courses_api
 	app.register_blueprint(courses_api, url_prefix='/api/courses')
+	from .classlist import classlist_api
+	app.register_blueprint(classlist_api, url_prefix='/api/courses/<int:course_id>/users')
 	from .login import login_api
 	app.register_blueprint(login_api)
 	from .users import users_api, user_types_api

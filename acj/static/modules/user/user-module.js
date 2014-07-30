@@ -83,6 +83,7 @@ module.controller("UserEditController",
 		$scope.canManageUsers = Authorize.can(Authorize.MANAGE, UserResource.MODEL);
 		$scope.user = {}
 		$scope.usertypes = {};
+		$scope.create = false;
 		UserTypeResource.query(
 			function (ret) {
 				$scope.usertypes = ret;
@@ -121,7 +122,7 @@ module.controller("UserEditProfileController",
 		var userId = AuthenticationService.getUser().id;
 		$scope.user = {}
 		$scope.usertypes = {};
-		$scope.changePassword = true;
+		$scope.create = false;
 		UserTypeResource.query(
 			function(ret) { $scope.usertypes = ret; },
 			function(ret) {
@@ -157,6 +158,7 @@ module.controller("UserUpdatePasswordController",
 	{
 		var userId = AuthenticationService.getUser().id;
 		$scope.password = {};
+		$scope.create = true;
 		$scope.changePassword = function() {
 			$scope.submitted = true;
 			UserPasswordResource.save({'id': userId}, $scope.password).$promise.then(

@@ -1,0 +1,23 @@
+<div ng-controller="ClassViewController">
+	<h1 class="text-center">{{course.name}}</h1>
+	<table class="table table-striped">
+		<tr class>
+			<th>First Name</th>
+			<th>Last Name</th>
+			<th>Display Name</th>
+			<th>User Type</th>
+			<th>Email</th>
+			<th>Action</th>
+		</tr>
+		<tr ng-repeat="user in classlist">
+			<td>{{user.user.firstname}}</td>
+			<td>{{user.user.lastname}}</td>
+			<td>{{user.user.displayname}}</td>
+			<td>{{user.user.usertypeforsystem.name}}</td>
+			<td>{{user.user.email}}</td>
+			<td><a href="#/user/{{user.user.id}}/edit">
+				<i class="fa fa-edit"></i>
+			</a></td>
+		</tr>
+	</table>
+</div>
