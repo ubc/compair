@@ -22,6 +22,7 @@ def define_authorization(user, they):
 	elif user_system_role == UserTypesForSystem.TYPE_INSTRUCTOR:
 		# instructors can create courses
 		they.can(CREATE, Courses)
+		they.can(CREATE, Users)
 
 	# users can edit and read their own user account
 	they.can(READ, Users, id=user.id)

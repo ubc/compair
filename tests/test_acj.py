@@ -8,7 +8,7 @@ from werkzeug.exceptions import Unauthorized
 from acj import create_app, Users
 from acj.manage.database import populate
 from acj.core import db
-from acj.models import UserTypesForSystem, UserTypesForCourse, Courses, PostsForAnswers, PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments
+from acj.models import UserTypesForSystem, UserTypesForCourse, Courses, PostsForAnswers, PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, CoursesAndUsers
 from data.fixtures import DefaultFixture
 from tests import test_app_settings
 from tests.factories import CoursesFactory, UsersFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, \
@@ -686,6 +686,45 @@ class AnswerCommentsAPITests(ACJTestCase):
 		comments = PostsForAnswersAndPostsForComments.query.filter_by(postsforanswers_id=self.answer.id).all()
 		actual_comment = comments[1]
 		self.assertEqual(expected_comment['content'], actual_comment.postsforcomments.post.content)
+
+class ClassListsAPITests(ACJTestCase):
+	def setUp(self):
+		super(ClassListsAPITests, self).setUp()
+		self.data = TestData()
+		self.courseId = str(self.data.get_course().id)
+		self.url = '/api/courses/' + str(self.data.get_course().id) + '/users'
+ 
+	def test_get_all_students(self):
+		# Test login required
+		rv = self.client.get(self.url)
+		self.assert401(rv)
+		# test unauthorized users
+		self.login(self.data.get_unenroled_instructor().username)
+		rv = self.client.get(self.url)
+		self.assert403(rv)
+		self.logout()
+		self.login(self.data.get_unenroled_student().username)
+		rv = self.client.get(self.url)
+		self.assert403(rv)
+		self.logout()
+		# test non-existent entry
+		self.login(self.data.get_enroled_student().username)
+		rv = self.client.get('/api/courses/5656478/users/')
+		self.assert404(rv)
+		# test student can't retrieve the data
+		rv = self.client.get(self.url)
+		self.assert403(rv)
+		# test data retrieved is correct
+		self.logout()
+		self.login(self.data.get_enroled_instructor().username)
+		rv = self.client.get(self.url)
+		self.assert200(rv)
+		actual_users = rv.json['objects']
+		expected_users = CoursesAndUsers.query.\
+			filter_by(courses_id=self.courseId).all()
+		for i, expected in enumerate(expected_users):
+			actual = actual_users[i]
+			self.assertEqual(expected.user.username, actual['user']['username'])
 
 if __name__ == '__main__':
 	unittest.main()

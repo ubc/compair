@@ -10,6 +10,7 @@ var module = angular.module('ubc.ctlt.acj.course',
 		'ngRoute',
 		'ckeditor',
 		'ubc.ctlt.acj.common.form',
+		'ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.toaster'
 	]
 );
@@ -59,10 +60,11 @@ module.controller(
 
 module.controller(
 	'CourseQuestionsController',
-	function($scope, $log, $routeParams, CourseResource, Toaster)
+	function($scope, $log, $routeParams, CourseResource, QuestionResource, Authorize, Toaster)
 	{
 		// get course info
 		var courseId = $routeParams['courseId'];
+		$scope.canCreateQuestions = Authorize.can(Authorize.CREATE, QuestionResource.MODEL);
 		CourseResource.get({'id': courseId}).$promise.then(
 			function (ret) {
 				$scope.course = ret;

@@ -149,7 +149,7 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/course/course-configure-partial.html',
 				label: "Course Configuration"
 			})
-		.when ('/course/:courseId/classlist',
+		.when ('/course/:courseId/user',
 			{
 				templateUrl: 'modules/classlist/classlist-view-partial.html',
 				label: "Class List"

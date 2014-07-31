@@ -2,11 +2,13 @@
 	<h1 class="text-center">{{course.name}}</h1>
 
 	<div class="navbar marginT5">
+		<span ng-if="canCreateQuestions">
 		<a ng-href="#/course/{{course.id}}/question/create" 
 			class="btn btn-primary" id="stepNav">
 			<i class="fa fa-plus"></i>
 			New Question
 		</a>
+		</span>
 		<form class="form-inline searchCourse pull-right">
 			<div class="form-group">
 				<input class="form-control" type="text" ng-model="questionFilter"
@@ -53,7 +55,7 @@
 					<!-- Total number of comments -->
 					<li class="text-info answer-comment-count" title="6 comments"> 
 						<i class="fa fa-comments-o"></i>
-						6
+						{{question.total_comments_count}}
 					</li>
 					<!-- Question Tags -->
 					<li class="label label-default">

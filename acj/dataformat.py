@@ -96,7 +96,9 @@ def getPostsForQuestions(restrict_users=True):
 		'title': fields.String,
 		'answers_count': fields.Integer,
 		'modified': fields.DateTime,
-		'answers': fields.List(fields.Nested(answer))
+		'answers': fields.List(fields.Nested(answer)),
+		'comments_count': fields.Integer,
+		'total_comments_count': fields.Integer
 	}
 
 def getPostsForAnswers(restrict_users=True):
@@ -106,7 +108,8 @@ def getPostsForAnswers(restrict_users=True):
 	return {
 		'id': fields.Integer,
 		'post': fields.Nested(post),
-		'comments': fields.List(fields.Nested(comments))
+		'comments': fields.List(fields.Nested(comments)),
+		'comments_count': fields.Integer
 	}
 
 def getPostsForComments(retrict_users=True):

@@ -5,17 +5,26 @@
 		<img class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
 	</div>
 	<div class="col-md-8">
-		<div class="row">
+		<div class="row" ng-if="canCreateUser">
 			<strong class="col-md-3">Name:</strong>
-			<div class="col-md-9">{{user.firstname}} {{user.lastname}}</div>
+			<div class="col-md-9">{{user.fullname}}</div>
 		</div>
-		<div class="row">
+		<div class="row" ng-if="canCreateUser">
 			<strong class="col-md-3">User Type:</strong>
 			<div class="col-md-9">{{user.usertypeforsystem.name}}</div>
 		</div>
-		<div class="row">
+		<div class="row" ng-if="canCreateUser">
 			<strong class="col-md-3">Email:</strong>
 			<div class="col-md-9">{{user.email}}</div>
+		</div>
+		<div class="row">
+			<strong class="col-md-3">Last Online:</strong>
+			<div class="col-md-9">{{user.lastonline}}</div>
+		</div>
+		<div class="row">
+			<strong class="col-md-3">Created On:</strong>
+			<div class="col-md-9">{{user.created}}</div>
+		</div>
 		</div>
 	</div>
 </div>

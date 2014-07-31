@@ -35,8 +35,11 @@
 <div ng-repeat="comment in comments" class="quesAnsComments">
 	<div mathjax="comment.content" ng-bind-html="comment.content">
 	</div>
-	<img src="//www.gravatar.com/avatar/{{question.post.user.avatar}}?s=32&d=retro" />
-	{{comment.postsforcomments.post.user.displayname}}
+	<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">
+		<img src="//www.gravatar.com/avatar/{{question.post.user.avatar}}?s=32&d=retro" />
+	</a>
+	<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">
+		{{comment.postsforcomments.post.user.displayname}}</a>
 	- {{comment.postsforcomments.post.created | amDateFormat: 'lll'}}i
 	<div class="postFooter">
 		<a ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/comment/{{comment.id}}/edit" class="btn btn-sm btn-primary">
@@ -70,8 +73,12 @@
 	<div ng-repeat="comment in answer.comments" class="quesAnsComments">
 		<div mathjax="comment.content" ng-bind-html="comment.content">
 		</div>
-		<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
-		{{comment.postsforcomments.post.user.displayname}}
+		<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">
+			<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
+		</a>
+		<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">
+			{{comment.postsforcomments.post.user.displayname}}
+		</a>
 		- {{comment.postsforcomments.post.created | amDateFormat: 'lll'}}
 		<div class="postFooter">
 			<a ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit" class="btn btn-sm btn-primary">
