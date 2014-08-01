@@ -24,7 +24,7 @@ module.factory('CourseResource', function($q, $routeParams, $log, $resource)
 			// invalidation, I don't want to deal with that manually
 			'getQuestions': {url: '/api/courses/:id/questions'}
 		}
-	)
+	);
 	ret.MODEL = "Courses"; // add constant to identify the model
 						// being used, this is for permissions checking
 						// and should match the server side model name

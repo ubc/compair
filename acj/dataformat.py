@@ -76,6 +76,16 @@ def getCoursesAndUsers(restrict_user=True, include_user=True):
 		format['user'] = fields.Nested(getUsers(restrict_user))
 	return format
 
+def getCriteria():
+	format = {
+		'id': fields.Integer,
+		'name': fields.String,
+		'description': fields.String,
+		'modified': fields.DateTime,
+		'created': fields.DateTime
+	}
+	return format
+
 def getPosts(restrict_users=True):
 	return  {
 		'id': fields.Integer,

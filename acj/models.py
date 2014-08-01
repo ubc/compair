@@ -205,7 +205,7 @@ class Courses(db.Model):
 		'''
 		if not self._criteriaandcourses:
 			default_criteria = Criteria.query.first()
-			criteria_and_course = CriteriaAndCourses(criteria=default_criteria, courses_id=self.id)
+			criteria_and_course = CriteriaAndCourses(criterion=default_criteria, courses_id=self.id)
 			db.session.add(criteria_and_course)
 			db.session.commit()
 		return self._criteriaandcourses
@@ -450,7 +450,7 @@ class CriteriaAndCourses(db.Model):
 		db.Integer,
 		db.ForeignKey('Criteria.id', ondelete="CASCADE"),
 		nullable=False)
-	criteria = db.relationship("Criteria")
+	criterion = db.relationship("Criteria")
 	courses_id = db.Column(
 		db.Integer,
 		db.ForeignKey('Courses.id', ondelete="CASCADE"),
@@ -510,11 +510,6 @@ class AnswerPairings(db.Model):
 		db.ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
 		nullable=False)
 	answer2 = db.relationship("PostsForAnswers", foreign_keys=[postsforanswers_id2])
-	winner_id = db.Column(
-		db.Integer,
-		db.ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
-		nullable=False)
-	winner = db.relationship("PostsForAnswers", foreign_keys=[winner_id])
 	modified = db.Column(
 		db.TIMESTAMP,
 		default=func.current_timestamp(),
@@ -539,11 +534,16 @@ class Judgements(db.Model):
 		db.ForeignKey('AnswerPairings.id', ondelete="CASCADE"),
 		nullable=False)
 	answerpairing = db.relationship("AnswerPairings")
-	criteria_id = db.Column(
+	criteriaandcourses_id = db.Column(
 		db.Integer,
-		db.ForeignKey('Criteria.id', ondelete="CASCADE"),
+		db.ForeignKey('CriteriaAndCourses.id', ondelete="CASCADE"),
 		nullable=False)
-	criteria = db.relationship("Criteria")
+	course_criterion = db.relationship("CriteriaAndCourses")
+	postsforanswers_id_winner = db.Column(
+		db.Integer,
+		db.ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
+		nullable=False)
+	answer_winner = db.relationship("PostsForAnswers")
 	modified = db.Column(
 		db.TIMESTAMP,
 		default=func.current_timestamp(),

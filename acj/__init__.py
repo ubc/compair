@@ -71,11 +71,13 @@ def create_app(conf=config, settings_override={}):
 	app.register_blueprint(questions_api, url_prefix='/api/courses/<int:course_id>/questions')
 	from .answer import answers_api
 	app.register_blueprint(answers_api,
-						   url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answers')
+		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answers')
 	from .comment import commentsforquestions_api
 	app.register_blueprint(commentsforquestions_api, url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/comments')
 	from .comment import commentsforanswers_api
 	app.register_blueprint(commentsforanswers_api, url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answers/<int:answer_id>/comments')
+	from .criteria import criteria_api
+	app.register_blueprint(criteria_api, url_prefix='/api/courses/<int:course_id>/criteria')
 
 	return app
 

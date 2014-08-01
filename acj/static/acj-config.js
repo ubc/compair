@@ -13,6 +13,7 @@ var myApp = angular.module('myApp', [
 	'ubc.ctlt.acj.classlist',
 	'ubc.ctlt.acj.comment',
 	'ubc.ctlt.acj.course',
+	'ubc.ctlt.acj.criteria',
 	'ubc.ctlt.acj.home',
 	'ubc.ctlt.acj.installer',
 	'ubc.ctlt.acj.login',
