@@ -86,6 +86,14 @@ def getCriteria():
 	}
 	return format
 
+def getCriteriaAndCourses():
+	format = {
+		'id': fields.Integer,
+		'criterion': fields.Nested(getCriteria()),
+		'courses_id': fields.Integer
+	}
+	return format
+
 def getPosts(restrict_users=True):
 	return  {
 		'id': fields.Integer,
@@ -111,16 +119,18 @@ def getPostsForQuestions(restrict_users=True):
 		'total_comments_count': fields.Integer
 	}
 
-def getPostsForAnswers(restrict_users=True):
+def getPostsForAnswers(restrict_users=True, include_comments=True):
 	post = getPosts(restrict_users)
 	comments = getPostsForQuestionsOrAnswersAndPostsForComments(restrict_users)
 	del post['course']
-	return {
+	ret = {
 		'id': fields.Integer,
 		'post': fields.Nested(post),
-		'comments': fields.List(fields.Nested(comments)),
-		'comments_count': fields.Integer
 	}
+	if include_comments:
+		ret['comments'] = fields.List(fields.Nested(comments))
+		ret['comments_count'] = fields.Integer
+	return ret
 
 def getPostsForComments(retrict_users=True):
 	post = getPosts(retrict_users)

@@ -1,80 +1,73 @@
-<div>
-	<h2>Judge peer responses</h2>
+<div ng-controller="JudgementController">
+	<h1 class='text-center'>Evaluate Answers</h1>
 
-	<div id="stepTitle">
-		<h3>{{qtitle}}</h3>
-
-		<div class="questionContent" mathjax-bind="question"></div>
+	<div ng-show="answerPairError" class="alert alert-danger" role="alert">
+		Answer evaluation is not available at this time. Please try again later.
 	</div>
-
-	<ul id="stepViews" class="judgetabs nav nav-tabs">
-		<li id="stepLeft" class="pointer"><a data-toggle="tab"
-			data-target="#left">Left</a></li>
-		<li class="active pointer" id="stepVS"><a data-toggle="tab"
-			data-target="#vs">VS</a></li>
-		<li id="stepRight" class="pointer"><a data-toggle="tab"
-			data-target="#right">Right</a></li>
-	</ul>
-	<div class="row">
-		<div class="tab-content">
-			<div id="left" class="tab-pane fade">
-				<div class="answer left" mathjax-bind="scriptl"></div>
-			</div>
-			<div id="vs" class="tab-pane fade active in">
-				<div class="answer left col-md-6 col-xs-6" mathjax-bind="scriptl"></div>
-				<div class="answer right col-md-6 col-xs-6" mathjax-bind="scriptr"></div>
-				<div class="versus"></div>
-			</div>
-			<div id="right" class="tab-pane fade">
-				<div class="answer right" mathjax-bind="scriptr"></div>
-			</div>
-		</div>
-	</div>
-
-	<form class="form-inline">
-	
-		<div ng-repeat="crit in categories">
-			<div class="col-md-12">
-				<h3 class="text-center">{{crit.name}}</h3>
-			</div>
-			<div class="row" id="stepPick">
-				<div class="col-md-6 col-xs-6 answer left alignRight pointer"
-					ng-class="{selected: pick=='left'}" ng-click="sideSelect($index, 'left', crit.id);pick='left'">
-					<span class="marginR50"> <span
-						class="glyphicon glyphicon-unchecked"
-						ng-show="pick!='left'"></span> <span
-						class="glyphicon glyphicon-check" ng-show="pick=='left'"></span>
-					</span>
-				</div>
-				<div class="col-md-6 col-xs-6 answer right alignLeft pointer"
-					ng-class="{selected: pick=='right'}" ng-click="sideSelect($index, 'right', crit.id);pick='right'">
-					<span class="marginL50"> <span
-						class="glyphicon glyphicon-unchecked"
-						ng-show="pick!='right'"></span> <span
-						class="glyphicon glyphicon-check"
-						ng-show="pick=='right'"></span>
-					</span>
+	<div ng-hide="answerPairError">
+	<!-- Show the answers side by side -->
+	<div class='row'>
+		<div class="col-md-6">
+			<h2 class="text-center">
+				Answer 1
+			</h2>
+			<div class="panel panel-default">
+				<div class="panel-body" 
+					ng-bind-html="answerPair.answer1.post.content">
 				</div>
 			</div>
 		</div>
-		
-		<div class="col-md-12 centered marginT15">
-			<a class="btn btn-primary" ng-click="submit()" id="stepSubmit"> <span
-				class="glyphicon glyphicon-ok"></span> Submit
-			</a>
+		<div class="col-md-6">
+			<h2 class="text-center">
+				Answer 2
+			</h2>
+			<div class="panel panel-default">
+				<div class="panel-body"
+					ng-bind-html="answerPair.answer2.post.content">
+				</div>
+			</div>
 		</div>
-
+	</div>
+	<!-- Show the judgement criterias -->
+	<form name="judgementForm" ng-submit="judgementSubmit()" novalidate>
+		<div class="form-group" ng-repeat="courseCriterion in courseCriteria">
+			<h3 class='text-center'>{{courseCriterion.criterion.name}}</h3>
+			<div class='text-center' 
+				ng-bind-html="courseCriterion.criterion.description">
+			</div>
+			<div class="row">
+				<div class="col-sm-2">
+					<!-- cosmetic spacing for larger screens -->
+				</div>
+				<div class="btn-group col-xs-12 col-sm-8">
+					<label class="btn btn-default col-xs-6" ng-class=
+						"{active:courseCriterion.winner==answerPair.answer1.id}">
+						<input type="radio" class="btn btn-default hideRadio" 
+							name="answer{{answerPair.answer1.id}}" required
+							ng-model="courseCriterion.winner"
+							ng-value="answerPair.answer1.id">
+						Answer 1
+					</label>
+					<label class="btn btn-default col-xs-6" ng-class=
+						"{active:courseCriterion.winner==answerPair.answer2.id}">
+						<input type="radio" class="btn btn-default hideRadio" 
+							name="answer{{answerPair.answer1.id}}" required
+							ng-model="courseCriterion.winner"
+							ng-value="answerPair.answer2.id">
+						Answer 2
+					</label>
+				</div>
+				<div class="col-sm-2">
+				</div>
+			</div>
+		</div>
+		<div class="form-group text-center">
+			<input ng-disabled="judgementForm.$invalid" type="submit" 
+				value="Submit" class="btn btn-primary" />
+		</div>
 	</form>
 
-	<a id="stepNext" class="btn btn-default"
-		ng-click="nextpair();jcomm=false"> <span
-		class="glyphicon glyphicon-random"></span> Next Pair
-	</a> <a class="btn btn-info" ng-click="jcomm=!jcomm;"> <span
-		class="glyphicon glyphicon-comment"></span> Comments
-	</a>
-	<div ng-if="jcomm">
-		<div ctype="Judgement" sidl="{{sidl}}" sidr="{{sidr}}"
-			cinstructor="{{instructor}}" clogin="{{login}}" comment-block></div>
-	</div>
+	</div> <!-- Hidden on answer pair error -->
+
 </div>
 

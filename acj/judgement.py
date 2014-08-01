@@ -1,276 +1,170 @@
 from __future__ import division
-from acj import app
-from general import student, commit
-from sqlalchemy_acj import db_session, User, Course, Question, CommentJ, Judgement, Enrollment, Script, JudgementCategory, JudgementWinner, ScriptScore
-from sqlalchemy import func
-from random import shuffle
-from flask import session, request
-import json
+import random
 
-def estimate_score(id, winners):
-    #get all scripts in that question
-    scripts = Script.query.filter_by(qid = id).order_by( Script.id ).all()
-    for script in scripts:
-        #check if the script has received scores for all categories yet, if not add it to the table
-        for winner in winners:
-            scriptTmp = ScriptScore.query.filter_by(sid = script.id).filter_by(jcid = winner['jcid']).first()
-            if not scriptTmp:
-                scriptTmp = ScriptScore(script.id, winner['jcid'], 0, 0)
-                db_session.add(scriptTmp)
-    db_session.commit()
-    #recalculate the scores
-    for winner in winners:
-        for scriptsl in scripts:
-            scriptl = ScriptScore.query.filter_by(sid = scriptsl.id).filter_by(jcid = winner['jcid']).first()
-            sidl = scriptl.id
-            sigma = 0
-            lwins = scriptl.wins
-            for scriptsr in scripts:
-                scriptr = ScriptScore.query.filter_by(sid = scriptsr.id).filter_by(jcid = winner['jcid']).first()
-                if scriptl != scriptr:
-                    rwins = scriptr.wins
-                    if lwins + rwins == 0:
-                        prob = 0
-                    else:
-                        prob = lwins / (lwins + rwins)
-                    sigma = sigma + prob
-            scriptl.score = sigma
-    db_session.commit()
-    return '101010100010110'
+from flask import Blueprint
+from flask.ext.login import login_required, current_user
+from flask.ext.restful import Resource, marshal
+from flask.ext.restful.reqparse import RequestParser
+from acj import dataformat, db
+from acj.models import PostsForAnswers, Posts, Judgements, AnswerPairings, Courses, CriteriaAndCourses, \
+	PostsForQuestions
+from acj.util import new_restful_api
 
-@student.require(http_exception=401)
-def get_fresh_pair(scripts, cursidl, cursidr):
-    uid = User.query.filter_by(username = session['username']).first().id
-    samepair = False
-    index = 0
-    for scriptl in scripts:
-        index = index + 1
-        if uid != scriptl.uid:
-            for scriptr in scripts[index:]:
-                if uid != scriptr.uid:
-                    sidl = scriptl.id
-                    sidr = scriptr.id
-                    if sidl > sidr:
-                        temp = sidr
-                        sidr = sidl
-                        sidl = temp
-                    query = Judgement.query.filter_by(uid = uid).filter_by(sidl = sidl).filter_by(sidr = sidr).first()
-                    if not query:
-                        if sidr == int(cursidr) and sidl == int(cursidl):
-                            samepair = True
-                            continue
-                        db_session.rollback()
-                        return [sidl, sidr]
-    db_session.rollback()
-    if (samepair):
-        return 'SAME PAIR'
-    return ''
+# First declare a Flask Blueprint for this module
+judgements_api = Blueprint('judgements_api', __name__)
+# Then pack the blueprint into a Flask-Restful API
+api = new_restful_api(judgements_api)
 
-def hi_priority_pool(id, size):
-    script = Script.query.filter_by(qid = id).order_by( Script.count.desc() ).first()
-    max = script.count
-    script = Script.query.filter_by(qid = id).order_by( Script.count ).first()
-    min = script.count
-    if max == min:
-        max = max + 1
-    scripts = Script.query.filter_by(qid = id).order_by( Script.count ).limit( size ).all()
-    index = 0
-    for script in scripts:
-        if script.count >= max:
-            scripts[:index]
-            break
-        index = index + 1
-    shuffle( scripts )
-    return scripts
+new_judgement_parser = RequestParser()
+new_judgement_parser.add_argument('answer1_id', type=int, required=True, help="Missing answer1 id.")
+new_judgement_parser.add_argument('answer2_id', type=int, required=True, help="Missing answer2 id.")
+new_judgement_parser.add_argument('judgements', type=list, required=True, help="Missing judgements.")
 
 
-@app.route('/judgements/<qid>', methods=['GET'])
-@student.require(http_exception=401)
-def get_judgements(qid):
-    judgements = []
-    cats = []
-    judgement = Judgement.query.filter(Judgement.script1.has(qid = qid)).group_by(Judgement.sidl, Judgement.sidr).all()
-    question = Question.query.filter_by(id = qid).first()
-    userQ = User.query.filter_by(id = question.uid).first()
-    course = Course.query.filter_by(id = question.cid).first()
-    
-    #calculate the win total over all categories
-    winCount = {}
-    for row in judgement:
-        win = JudgementWinner.query.filter_by(jid = row.id).first()
-        winl = 0
-        winr = 0
-        if win:
-            if win.winner == row.sidl:
-                winl = 1
-            else:
-                winr = 1
-        if str(row.sidl)+"-"+str(row.sidr) not in winCount:
-            winCount[str(row.sidl)+"-"+str(row.sidr)] = {"winsl": winl, "winsr": winr}
-        else:
-             winCount[str(row.sidl)+"-"+str(row.sidr)] = {"winsl": winner[str(row.sidl)+"-"+str(row.sidr)].winsl + winsl, "winsr": winner[str(row.sidl)+"-"+str(row.sidr)].winsr + winsr}
+# /
+class JudgementRootAPI(Resource):
+	@login_required
+	def post(self, course_id, question_id):
+		'''
+		Stores a judgement into the database.
+		'''
+		course = Courses.query.get_or_404(course_id)
+		question = PostsForQuestions.query.get_or_404(question_id)
+		course_criteria = CriteriaAndCourses.query.filter_by(course=course).all()
+		params = new_judgement_parser.parse_args()
+		# check if number of judgements matches number of criteria
+		if len(course_criteria) != len(params['judgements']):
+			return {"error":"Not all criteria were evaluated!"}, 400
+		# check if each judgement has an courseCriteria Id and a winner id
+		for judgement in params['judgements']:
+			if not 'course_criterion_id' in judgement:
+				return {"error": "Missing course_criterion_id in judgement."}, 400
+			if not 'answer_id_winner' in judgement:
+				return {"error": "Missing winner for one of criteria."}, 400
+			# check that we're using criteria that were assigned to the course and that we didn't
+			# get duplicate criteria in judgements
+			known_criterion = False
+			for course_criterion in course_criteria[:]:
+				if judgement['course_criterion_id'] == course_criterion.id:
+					known_criterion = True
+					course_criteria.remove(course_criterion)
+			if not known_criterion:
+				return {"error": "Unknown criterion submitted in judgement!"}, 400
+			# check that the winner id matches one of the answer pairs
+			winner_id = judgement['answer_id_winner']
+			if winner_id != params['answer1_id'] and winner_id != params['answer2_id']:
+				return {"error": "Winner ID does not match the available pair of answers."}, 400
+		# check that the answer ids are valid
+		answer_pair = []
+		answer_pair.append(PostsForAnswers.query.get_or_404(params['answer1_id']))
+		answer_pair.append(PostsForAnswers.query.get_or_404(params['answer2_id']))
+		# check if pair has already been judged by this user
+		if is_already_judged_answer_pair(answer_pair, question_id):
+			return {"error": "You've already judged this pair of answers!"}, 400
+		# save judgement
+		answerpairing = get_existing_answer_pair(answer_pair, question_id)
+		if not answerpairing:
+			answerpairing = AnswerPairings(answer1=answer_pair[0], answer2=answer_pair[1],
+										   question=question)
+			db.session.add(answerpairing)
+		for judgement in params['judgements']:
+			judgement = Judgements(answerpairing=answerpairing, users_id=current_user.id,
+				criteriaandcourses_id=judgement['course_criterion_id'],
+				postsforanswers_id_winner=judgement['answer_id_winner'])
+			db.session.add(judgement)
+			db.session.commit()
+		return {"success":"Judgement submitted!"}
+api.add_resource(JudgementRootAPI, '')
 
-    categories = JudgementCategory.query.filter_by(cid = question.cid).all()
-    
-    for cat in categories:
-        cats.append({"id": cat.id, "name": cat.name})
-    
-    for row in judgement:
-        winners = {}
-        for cat in categories:
-            win = JudgementWinner.query.filter_by(jid = row.id).filter_by(jcid = cat.id).first()
-            if win:
-                winners[cat.id] = win.winner
-        user1 = User.query.filter_by(id = row.script1.uid).first()
-        user2 = User.query.filter_by(id = row.script2.uid).first()
-        commentsCount = CommentJ.query.filter_by(sidl = row.sidl).filter_by(sidr = row.sidr).count()
-        
-        #get the answers scores for all categories
-        score = ScriptScore.query.filter_by(sid = row.script1.id).order_by(ScriptScore.score.desc()).all()
-        scoresl = []
-        for score in score:
-            scoresl.append({"jcid": score.jcid, "score": "{0:10.2f}".format(score.score)})
-        score = ScriptScore.query.filter_by(sid = row.script2.id).order_by(ScriptScore.score.desc()).all()
-        scoresr = []
-        for score in score:
-            scoresr.append({"jcid": score.jcid, "score": "{0:10.2f}".format(score.score)})
-            
-        judgements.append({"scriptl": row.script1.content, "scriptr": row.script2.content, "winner":  winCount[str(row.sidl)+"-"+str(row.sidr)], "winners": winners,
-                           "sidl": row.sidl, "sidr": row.sidr, "scorel": scoresl, "scorer": scoresr, 
-                           "authorl": user1.display, "authorr": user2.display, "timel": str(row.script1.time), "timer": str(row.script2.time), 
-                           "avatarl": user1.avatar, "avatarr": user2.avatar, "qid": row.script1.qid, "commentsCount": commentsCount})
-    ret_val = json.dumps({"judgements": judgements, "title": question.title, "question": question.content, "cid": course.id, "course": course.name,
-                          "authorQ": userQ.display, "timeQ": str(question.time), "avatarQ": userQ.avatar, "categories": cats})
-    db_session.rollback()
-    return ret_val
+# /pair
+class JudgementPairAPI(Resource):
+	@login_required
+	def get(self, course_id, question_id):
+		'''
+		Get an answer pair for judgement.
+		'''
+		course = Courses.query.get_or_404(course_id)
+		question = PostsForQuestions.query.get_or_404(question_id)
+		# count number of times judged for each answer
+		## get all answers for this question
+		answers = PostsForAnswers.query.join(Posts).\
+			filter(Posts.courses_id==course_id, PostsForAnswers.postsforquestions_id==question_id).all()
+		answers_judge_count = {} # keeps track of number of times each answer has been judged
+		for answer in answers:
+			answers_judge_count[answer] = 0
+		answers_already_judged_by_user = {} # track whether user has already judged this answer
+		for answer in answers:
+			answers_already_judged_by_user[answer] = False
+		## get all judgements for this question
+		judgements = Judgements.query.join(AnswerPairings).\
+			filter(AnswerPairings.postsforquestions_id==question_id).all()
+		## go through each judgement, check answer pair, add 1 to each answer
+		for judgement in judgements:
+			answer1 = judgement.answerpairing.answer1
+			answer2 = judgement.answerpairing.answer2
+			answers_judge_count[answer1] += 1
+			answers_judge_count[answer2] += 1
+			# record that the user has already judged these answers
+			if judgement.users_id == current_user.id:
+				answers_already_judged_by_user[answer1] = True
+				answers_already_judged_by_user[answer2] = True
+		## abort if all answers has already been judged by the user at least once
+		all_answers_judged = True
+		for answer, judged in answers_already_judged_by_user.iteritems():
+			if not judged:
+				all_answers_judged = False
+		if all_answers_judged:
+			return {"error": "You've already judged all answers!"}, 400
+		# group answers with same number of times judged together, sorted ascending
+		judge_counts = {}
+		for key, value in sorted(answers_judge_count.iteritems()):
+			judge_counts.setdefault(value, []).append(key)
+		# starting from the pool of lowest number of times judged answers, form a pair, return pair
+		answer_pair = []
+		for count,answers in judge_counts.iteritems():
+			random.shuffle(answers) # we want to randomly pick answers
+			while answers:
+				answer_pair.append(answers.pop())
+				if len(answer_pair) >= 2:
+					if is_already_judged_answer_pair(answer_pair, question_id):
+						answer_pair.pop() # it's a duplicate pair, remove the first answer and try again
+					else:
+						break # still need to stop outer loop
+			# have sufficient answers to make a pair, can stop now
+			if len(answer_pair) >= 2:
+				break
+		if len(answer_pair) < 2:
+			return {"error":"Insufficient answers for judgement yet!"}, 400
+		return {"answer1":
+					marshal(answer_pair[0], dataformat.getPostsForAnswers(include_comments=False)),
+				"answer2":
+					marshal(answer_pair[1], dataformat.getPostsForAnswers(include_comments=False))}
 
-@app.route('/pickscript/<id>/<sl>/<sr>', methods=['GET'])
-@student.require(http_exception=401)
-def pick_script(id, sl, sr):
-    query = hi_priority_pool(id, 10)
-    question = Question.query.filter_by(id = id).first()
-    course = Course.query.filter_by(id = question.cid).first()
-    if not query:
-        retval = json.dumps( {"cid": course.id, "course": course.name, "question": question.content} )
-        db_session.rollback()
-        return retval
-    fresh = get_fresh_pair( query, sl, sr )
-    if not fresh:
-        retval = json.dumps( {"cid": course.id, "question": question.content, "course": course.name} ) 
-        db_session.rollback()
-        return retval
-    if fresh == 'SAME PAIR':
-        db_session.rollback()
-        return json.dumps( {"nonew": 'No new pair'} )
-    critList = []
-    categories = JudgementCategory.query.filter_by(cid = question.cid).all()
-    if not categories:
-        category = JudgementCategory(course.id, "Which is Better?")
-        db_session.add(category)
-        db_session.commit()
-        critList.append({"id": category.id, "name": category.name})
-    for crit in categories:
-        critList.append({"id": crit.id, "name": crit.name})
-    retval = json.dumps( {"cid": course.id, "course": course.name, "categories": critList, "question": question.content, "qtitle": question.title, "sidl": fresh[0], "sidr": fresh[1]} )
-    db_session.rollback()
-    return retval
+def is_already_judged_answer_pair(answer_pair, question_id):
+	answer1 = answer_pair[0]
+	answer2 = answer_pair[1]
+	# see if user has already judged this answer pair
+	existing_answer_pair = get_existing_answer_pair(answer_pair, question_id)
+	if existing_answer_pair:
+		judgement = Judgements.query.filter_by(answerpairing=existing_answer_pair, \
+			users_id=current_user.id).first()
+		if judgement:
+			return True
+	else:
+		return False
 
-@app.route('/randquestion')
-@student.require(http_exception=401)
-def random_question():
-    scripts = Script.query.order_by( Script.count ).limit(10).all()
-    #if not script:
-    #    return ''
-    #count = script.count
-    #scripts = Script.query.filter_by( count = count ).all()
-    #while len(scripts) < 2:
-    #    count = count + 1
-    #    nextscripts = Script.query.filter_by( count = count).all()
-    #    scripts.extend( nextscripts )
-    user = User.query.filter_by( username = session['username'] ).first()
-    shuffle( scripts )
-    lowest0 = ''
-    retqid = ''
-    lowest1 = ''
-    for script in scripts:
-        if lowest0 == 0:
-            break
-        qid = script.qid
-        question = Question.query.filter_by( id = qid ).first()
-        if user.userrole.role != 'Admin':
-            enrolled = Enrollment.query.filter_by( cid = question.cid ).filter_by( uid = user.id ).first()
-            if not enrolled:
-                continue
-            if question.quiz:
-                answered = Script.query.filter(Script.qid == qid).filter(Script.uid == user.id).first()
-                if not answered:
-                    continue
-        query = Script.query.filter_by(qid = qid).order_by( Script.count ).limit(10).all()
-        shuffle( query )
-        fresh = get_fresh_pair( query, 0, 0 )
-        if fresh:
-            sum = Script.query.filter_by(id = fresh[0]).first().count + Script.query.filter_by(id = fresh[1]).first().count
-            if lowest0 == '':
-                lowest0 = sum
-                retqid = qid
-            else:
-                lowest1 = sum
-                if lowest0 > lowest1:
-                    lowest0 = lowest1
-                    retqid = qid
-    if lowest0 != '':
-        retval = json.dumps( {"question": retqid} )
-        db_session.rollback()
-        return retval
-    db_session.rollback()
-    return ''
+def get_existing_answer_pair(answer_pair, question_id):
+	answer1 = answer_pair[0]
+	answer2 = answer_pair[1]
+	ret = AnswerPairings.query.filter_by(answer1=answer1, answer2=answer2, \
+		postsforquestions_id=question_id).first()
+	if ret:
+		return ret
+	ret = AnswerPairings.query.filter_by(answer1=answer2, answer2=answer1, \
+		postsforquestions_id=question_id).first()
+	if ret:
+		return ret
+	return False
 
-@app.route('/script/<id>', methods=['POST'])
-@student.require(http_exception=401)
-def mark_script(id):
-    param = request.json
-    sidl = param['sidl']
-    sidr = param['sidr']
-    query = User.query.filter_by(username = session['username']).first()
-    uid = query.id
-    if sidl > sidr:
-        temp = sidr
-        sidr = sidl
-        sidl = temp
-        
-    judgement = Judgement(uid, sidl, sidr)
-    db_session.add(judgement)
-    commit()
-    winners = param['winner']
-    for winner in winners:
-        judgementwinner = JudgementWinner(judgement.id, winner['jcid'], winner['winner'])
-        db_session.add(judgementwinner)
-        db_session.commit()
-        
-        #add or update the winning script
-        query = ScriptScore.query.filter_by(sid = winner['winner']).filter_by(jcid = winner['jcid']).first()
-        if not query:
-            query = ScriptScore(winner['winner'], winner['jcid'], 0, 0)
-            db_session.add(query)
-        query.wins = query.wins + 1
-        query.count = query.count + 1
-        db_session.commit()
-        #add or update the losing script
-        sid = 0
-        if sidl == int(winner['winner']):
-            sid = sidr
-        elif sidr == int(winner['winner']):
-            sid = sidl
-        query = ScriptScore.query.filter_by(sid = sid).filter_by(jcid = winner['jcid']).first()
-        if not query:
-            query = ScriptScore(sid, winner['jcid'], 0, 0)
-            db_session.add(query)
-        query.count = query.count + 1
-        db_session.commit()
-    
-    db_session.commit()
-    #calculate the new scores for all scripts in that question
-    query = Script.query.filter_by(id = sidl).first()
-    estimate_score(query.qid, winners)
-        
-    return json.dumps({"msg": "Script & Judgement updated"})
+
+api.add_resource(JudgementPairAPI, '/pair')

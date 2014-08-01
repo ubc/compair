@@ -16,6 +16,7 @@ var myApp = angular.module('myApp', [
 	'ubc.ctlt.acj.criteria',
 	'ubc.ctlt.acj.home',
 	'ubc.ctlt.acj.installer',
+	'ubc.ctlt.acj.judgement',
 	'ubc.ctlt.acj.login',
 	'ubc.ctlt.acj.navbar',
 	'ubc.ctlt.acj.question'
@@ -199,6 +200,11 @@ myApp.config( function ($routeProvider) {
 			{
 				templateUrl: 'modules/comment/comment-answer-edit-partial.html',
 				label: "Edit Comment"
+			})
+		.when ('/course/:courseId/question/:questionId/judgement', 
+			{
+				templateUrl: 'modules/judgement/judgement-partial.html',
+				label: "Evaluate Answers"
 			})
 		.when('/user/create',
 			{
