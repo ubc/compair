@@ -148,3 +148,19 @@ def getPostsForQuestionsOrAnswersAndPostsForComments(restrict_users=True):
 		'content': fields.String
 	}
 
+def getAnswerPairings():
+	return {
+		'id': fields.Integer,
+		'postsforquestions_id': fields.Integer,
+		'postsforanswers_id1': fields.Integer,
+		'postsforanswers_id2': fields.Integer
+	}
+
+def getJudgements():
+	return {
+		'id': fields.Integer,
+		'answerpairing': fields.Nested(getAnswerPairings()),
+		'users_id': fields.Integer,
+		'postsforanswers_id_winner': fields.Integer,
+		'course_criterion': fields.Nested(getCriteriaAndCourses())
+	}

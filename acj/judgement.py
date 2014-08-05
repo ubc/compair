@@ -1,11 +1,13 @@
 from __future__ import division
 import random
+from bouncer.constants import READ, CREATE
 
 from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from acj import dataformat, db
+from acj.authorization import require
 from acj.models import PostsForAnswers, Posts, Judgements, AnswerPairings, Courses, CriteriaAndCourses, \
 	PostsForQuestions
 from acj.util import new_restful_api
@@ -30,6 +32,7 @@ class JudgementRootAPI(Resource):
 		'''
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
+		require(READ, question)
 		course_criteria = CriteriaAndCourses.query.filter_by(course=course).all()
 		params = new_judgement_parser.parse_args()
 		# check if number of judgements matches number of criteria
@@ -44,10 +47,10 @@ class JudgementRootAPI(Resource):
 			# check that we're using criteria that were assigned to the course and that we didn't
 			# get duplicate criteria in judgements
 			known_criterion = False
-			for course_criterion in course_criteria[:]:
-				if judgement['course_criterion_id'] == course_criterion.id:
+			for course_criterion_entry in course_criteria[:]:
+				if judgement['course_criterion_id'] == course_criterion_entry.id:
 					known_criterion = True
-					course_criteria.remove(course_criterion)
+					course_criteria.remove(course_criterion_entry)
 			if not known_criterion:
 				return {"error": "Unknown criterion submitted in judgement!"}, 400
 			# check that the winner id matches one of the answer pairs
@@ -67,13 +70,18 @@ class JudgementRootAPI(Resource):
 			answerpairing = AnswerPairings(answer1=answer_pair[0], answer2=answer_pair[1],
 										   question=question)
 			db.session.add(answerpairing)
-		for judgement in params['judgements']:
+		judgements = []
+		for judgement_params in params['judgements']:
+			course_criterion = CriteriaAndCourses.query.get_or_404(
+				judgement_params['course_criterion_id'])
 			judgement = Judgements(answerpairing=answerpairing, users_id=current_user.id,
-				criteriaandcourses_id=judgement['course_criterion_id'],
-				postsforanswers_id_winner=judgement['answer_id_winner'])
+				course_criterion=course_criterion,
+				postsforanswers_id_winner=judgement_params['answer_id_winner'])
 			db.session.add(judgement)
+			require(CREATE, judgement)
 			db.session.commit()
-		return {"success":"Judgement submitted!"}
+			judgements.append(judgement)
+		return {'objects': marshal(judgements, dataformat.getJudgements())}
 api.add_resource(JudgementRootAPI, '')
 
 # /pair
@@ -83,8 +91,9 @@ class JudgementPairAPI(Resource):
 		'''
 		Get an answer pair for judgement.
 		'''
-		course = Courses.query.get_or_404(course_id)
+		course = Courses.query.get_or_404(course_id) # this is just to make sure course exists
 		question = PostsForQuestions.query.get_or_404(question_id)
+		require(READ, question)
 		# count number of times judged for each answer
 		## get all answers for this question
 		answers = PostsForAnswers.query.join(Posts).\
@@ -110,18 +119,18 @@ class JudgementPairAPI(Resource):
 				answers_already_judged_by_user[answer2] = True
 		## abort if all answers has already been judged by the user at least once
 		all_answers_judged = True
-		for answer, judged in answers_already_judged_by_user.iteritems():
+		for answer, judged in answers_already_judged_by_user.items():
 			if not judged:
 				all_answers_judged = False
 		if all_answers_judged:
 			return {"error": "You've already judged all answers!"}, 400
 		# group answers with same number of times judged together, sorted ascending
 		judge_counts = {}
-		for key, value in sorted(answers_judge_count.iteritems()):
+		for key, value in sorted(answers_judge_count.items(), key=lambda x: x[1]):
 			judge_counts.setdefault(value, []).append(key)
 		# starting from the pool of lowest number of times judged answers, form a pair, return pair
 		answer_pair = []
-		for count,answers in judge_counts.iteritems():
+		for count,answers in judge_counts.items():
 			random.shuffle(answers) # we want to randomly pick answers
 			while answers:
 				answer_pair.append(answers.pop())

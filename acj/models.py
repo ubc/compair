@@ -552,6 +552,9 @@ class Judgements(db.Model):
 	created = db.Column(db.TIMESTAMP, default=func.current_timestamp(),
 					 nullable=False)
 
+	@hybrid_property
+	def courses_id(self):
+		return self.course_criterion.courses_id
 
 class LTIInfo(db.Model):
 	__tablename__ = 'LTIInfo'

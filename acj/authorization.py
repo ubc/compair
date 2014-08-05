@@ -4,7 +4,7 @@ from flask_login import current_user
 from werkzeug.exceptions import Unauthorized, Forbidden
 from .models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTypesForSystem, Posts, \
 	PostsForQuestions, PostsForAnswers, PostsForComments, \
-	PostsForAnswersAndPostsForComments, PostsForQuestionsAndPostsForComments
+	PostsForAnswersAndPostsForComments, PostsForQuestionsAndPostsForComments, Judgements
 
 
 def define_authorization(user, they):
@@ -53,6 +53,9 @@ def define_authorization(user, they):
 			they.can(MANAGE, PostsForAnswers, courses_id=course.id)
 			they.can(MANAGE, PostsForQuestionsAndPostsForComments, courses_id=course.id)
 			they.can(MANAGE, PostsForAnswersAndPostsForComments, courses_id=course.id)
+		# only students can submit judgements for now
+		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_STUDENT:
+			they.can(CREATE, Judgements, courses_id=course.id)
 
 # Tell the client side about a user's permissions.
 # This is necessarily more simplified than Flask-Bouncer's implementation.
