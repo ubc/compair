@@ -46,7 +46,6 @@ def import_users(course_id, users):
 	else:
 		return {}
 
-	print users
 	# generate a list of existing users from the list of imported usernames
 	usernames = [u[USERNAME] for u in users]
 	exist_users = Users.query.filter(Users.username.in_(usernames)).all()
@@ -165,7 +164,6 @@ class ClasslistRootAPI(Resource):
 	def post(self, course_id):
 		require(CREATE, Users())
 		file = request.files['file']
-		print file
 		if file and allowed_file(file.filename):
 			unique = str(uuid.uuid4())
 			filename = unique + secure_filename(file.filename)
