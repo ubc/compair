@@ -118,10 +118,5 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/user/user-view-partial.html',
 				label: "View User"
 			})
-		.when('/user/profile',
-			{
-				templateUrl: 'modules/user/user-edit-profile-partial.html',
-				label: "User Profile"
-			})
 		.otherwise({redirectTo: '/'});
 });

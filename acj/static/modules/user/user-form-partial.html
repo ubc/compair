@@ -44,7 +44,7 @@
 		<label for=verifyPassword">Verify Password: </label>
 		<input class="form-control" id="verifyPassword" type="password"
 			name="verifyPassword" ng-model="user.verifyPassword"
-			required />
+			required pw-match="password" />
 	</acj-field-with-feedback>
 	</div>
 	<input type="submit" class="btn btn-primary" value="Save"

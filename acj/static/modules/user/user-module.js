@@ -81,6 +81,7 @@ module.controller("UserEditController",
 	{
 		var userId = $routeParams['userId'];
 		$scope.canManageUsers = Authorize.can(Authorize.MANAGE, UserResource.MODEL);
+		$scope.ownProfile = userId == AuthenticationService.getUser().id;
 		$scope.user = {}
 		$scope.usertypes = {};
 		$scope.create = false;
@@ -110,43 +111,6 @@ module.controller("UserEditController",
 				function(ret) {
 					$scope.submitted = false; 
 					Toaster.reqerror("User Update Failed.", ret); 
-				}
-			);
-		}
-	}
-);
-
-module.controller("UserEditProfileController",
-	function($scope, $log, $routeParams, UserResource, AuthenticationService, Authorize, UserTypeResource, Toaster)
-	{
-		var userId = AuthenticationService.getUser().id;
-		$scope.user = {}
-		$scope.usertypes = {};
-		$scope.create = false;
-		UserTypeResource.query(
-			function(ret) { $scope.usertypes = ret; },
-			function(ret) {
-				Toaster.reqerror("Unable to retrieve the user types", ret);
-			}
-		);
-		UserResource.get({"id":userId}).$promise.then(
-			function (ret) {
-				$scope.user = ret;
-			},
-			function (ret) {
-				Toaster.reqerror("Unable to retrieve your profile", ret);
-			}
-		);
-		$scope.userSubmit = function () {
-			$scope.submitted = true;
-			UserResource.save({'id': userId}, $scope.user).$promise.then(
-				function (ret) {
-					$scope.submitted = false;
-					Toaster.success("User Profile Updated!");
-				},
-				function (ret) {
-					$scope.submitted = false;
-					Toaster.reqerror("User Profile Update Failed.", ret);
 				}
 			);
 		}
@@ -183,6 +147,7 @@ module.controller("UserViewController",
 	function($scope, $log, $routeParams, UserResource, AuthenticationService, Authorize, Toaster)
 	{
 		var userId = $routeParams['userId'];
+		$scope.ownProfile = userId == AuthenticationService.getUser().id;
 		$scope.canCreateUser=Authorize.can(Authorize.CREATE, UserResource.MODEL);
 		$scope.user = {}
 		UserResource.get({"id":userId}).$promise.then(

@@ -61,6 +61,7 @@ module.controller(
 				var user = AuthenticationService.getUser();
 				$scope.loggedInUser = user.displayname ? user.displayname : user.username;
 				$log.info("Logged in as " + $scope.loggedInUser);
+				$scope.userId = user.id;
 			}
 			else
 			{

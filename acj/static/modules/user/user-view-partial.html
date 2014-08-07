@@ -2,18 +2,25 @@
 	<h2>{{user.username}}</h2>
 	<hr>
 	<div class="col-md-4">
-		<img class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
+		<div class="row">
+			<img class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
+		</div/>
+		<div class="row optionsFooter" ng-if="ownProfile">
+			<a ng-href="#/user/{{user.id}}/edit" class="btn btn-sm btn-primary">
+				<i class="fa fa-edit"></i> Edit
+			</a>
+		</div>
 	</div>
 	<div class="col-md-8">
-		<div class="row" ng-if="canCreateUser">
+		<div class="row" ng-if="canCreateUser || ownProfile">
 			<strong class="col-md-3">Name:</strong>
 			<div class="col-md-9">{{user.fullname}}</div>
 		</div>
-		<div class="row" ng-if="canCreateUser">
+		<div class="row" ng-if="canCreateUser || ownProfile">
 			<strong class="col-md-3">User Type:</strong>
 			<div class="col-md-9">{{user.usertypeforsystem.name}}</div>
 		</div>
-		<div class="row" ng-if="canCreateUser">
+		<div class="row" ng-if="canCreateUser || ownProfile">
 			<strong class="col-md-3">Email:</strong>
 			<div class="col-md-9">{{user.email}}</div>
 		</div>
