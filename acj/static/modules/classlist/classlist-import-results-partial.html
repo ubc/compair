@@ -1,0 +1,60 @@
+<div ng-controller="ClassImportResultsController">
+	<h1 class="text-center">Upload Enrolment Results - {{course.name}}</h1>
+	<div ng-show="results.success.length">
+		<h2 class="text-center">Users Enroled</h2>
+		<table class="table table-striped">
+			<tr>
+				<th ng-repeat="header in headers">{{header}}</th>
+			</tr>
+			<tr ng-repeat="success in results.success">
+				<td>{{success.user.username}}</td>
+				<td>{{success.user.firstname}}</td>
+				<td>{{success.user.lastname}}</td>
+				<td>{{success.user.email}}</td>
+			</tr>
+		</table>
+	</div>
+	<div ng-show="results.invalids.length">
+		<h2 class="text-center">Invalid Entries</h2>
+		<table class="table table-striped">
+			<tr>
+				<th ng-repeat="header in headers">{{header}}</th>
+			</tr>
+			<tr ng-repeat="invalid in results.invalids">
+				<td>{{invalid.user.username}}</td>
+				<td>{{invalid.user.firstname}}</td>
+				<td>{{invalid.user.lastname}}</td>
+				<td>{{invalid.user.email}}</td>
+			</tr>
+		</table>
+	</div>
+	<div ng-show="results.dropped.length">
+		<h2 class="text-center">Dropped Students</h2>
+		<table class="table table-striped">
+			<tr>
+				<th ng-repeat="header in headers">{{header}}</th>
+			</tr>
+			<tr ng-repeat="dropped in results.dropped">
+				<td>{{dropped.user.username}}</td>
+				<td>{{dropped.user.firstname}}</td>
+				<td>{{dropped.user.lastname}}</td>
+				<td>{{dropped.user.email}}</td>
+			</tr>
+		</table>
+	</div>
+	<div ng-show="results.created.length">
+		<h2 class="text-center">New Users Created</h2>
+		<h4 class="help-block text-center">Users that do not have a specified password has their username set as their current password.</h4>
+		<table class="table table-striped">
+			<tr>
+				<th ng-repeat="header in headers">{{header}}</th>
+			</tr>
+			<tr ng-repeat="created in results.created">
+				<td>{{created.user.username}}</td>
+				<td>{{created.user.firstname}}</td>
+				<td>{{created.user.lastname}}</td>
+				<td>{{created.user.email}}</td>
+			</tr>
+		</table>
+	</div>
+</div>

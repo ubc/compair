@@ -43,6 +43,16 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/classlist/classlist-view-partial.html',
 				label: "Class List"
 			})
+		.when ('/course/:courseId/user/import',
+			{
+				templateUrl: 'modules/classlist/classlist-import-partial.html',
+				label: "Import Class List"
+			})
+		.when ('/course/:courseId/user/import/results',
+			{
+				templateUrl: 'modules/classlist/classlist-import-results-partial.html',
+				label: "Results"
+			})
 		.when ('/course/:courseId/question/create', 
 			{
 				templateUrl: 'modules/question/question-create-partial.html',

@@ -1,0 +1,40 @@
+<div ng-controller="ClassImportController">
+	<h1 class="text-center">Upload Enrolment - {{course.name}}</h1>
+	<h2>Format (CSV)</h2>
+	<p class="h4 format">
+	Username,First Name,Last Name,Email,Display Name,Password
+	</p>
+	<ul class="helptext">
+		<li><span class="help-block">Only usernames are required. All the other fields are optional.</span></li>
+		<li><span class="help-block">If a password is not given, the password for the user is their username.</span></li>
+	</ul>
+	</p>
+	<h2>Example</h2>
+	<ul>
+	<li>
+		<span class="h4">student1,Jack,Smith,jack.smith@student.ca</span>
+		<ul><li><span class="help-block">No Display Name and Password</span></li></ul>
+	</li>
+	<li>
+		<span class="h4">student1,Jack,Smith,jack.smith@student.ca,,password123</span>
+		<ul><li><span class="help-block">No Display Name</span></li></ul>
+	</li>
+	<li>
+		<span class="h4">student1,Jack,Smith,jack.smith@student.ca,display0001</span>
+		<ul><li><span class="help-block">No Password</span></li></ul>
+	</li>
+	<li>
+		<span class="h4">student1,Jack,Smith,jack.smith@student.ca,display0001,password123</span>
+	</li>
+	</ul>
+	<h2>Import</h2>
+	<div class="form-group">
+		<label for="importFile">File:</label>
+		<input type="file" nv-file-select uploader="uploader" 
+			id="importFile"/>
+	</div>
+	<input type="submit" class="btn btn-primary" value="Import"
+		ng-click="uploader.queue[0].upload();"
+		ng-disabled="!uploader.queue[0]" />
+	
+</div>

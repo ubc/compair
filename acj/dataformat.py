@@ -164,3 +164,11 @@ def getJudgements():
 		'postsforanswers_id_winner': fields.Integer,
 		'course_criterion': fields.Nested(getCriteriaAndCourses())
 	}
+
+def getImportUsersResults(restrict_users=True):
+	user = getUsers(restrict_users)
+	return {
+		'user': fields.Nested(user),
+		'message': fields.String
+	}
+

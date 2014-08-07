@@ -54,6 +54,12 @@
 						Create User
 					</a>
 				</li>
+				<li ng-if="inCourse && canCreateUsers">
+					<a ng-href="#/course/{{courseId}}/user/import">
+						<i class="fa fa-file-text-o"></i>
+						Enrol Students
+					</a>
+				</li>
 				<!-- Leftover -->
 				<li data-match-route="/judgepage.*" ng-show="check">
 					<a href="#/quickjudge">Random Judge</a>
