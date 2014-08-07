@@ -37,6 +37,7 @@ nosetests.xml
 *.swp
 
 tmp/*
+tmpUpload/*.csv
 
 # idea project file
 .idea
