@@ -16,6 +16,7 @@ env:
 
 deps:
 	pip install -r requirements.txt
+	bower install
 
 clean:
 	find . -name '*.pyc' -exec rm -f {} \;
