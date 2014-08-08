@@ -46,5 +46,7 @@ def populate(default_data=False, sample_data=False):
 		db.session.commit()
 
 	if sample_data:
-		pass
+		from data.fixtures import SampleDataFixture
+		SampleDataFixture()
+		db.session.commit()
 

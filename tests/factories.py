@@ -1,5 +1,6 @@
 import datetime
 import factory
+import factory.fuzzy
 from factory.alchemy import SQLAlchemyModelFactory
 from acj.core import db
 from acj.models import Courses, Users, UserTypesForCourse, UserTypesForSystem, Criteria, CoursesAndUsers, Posts, \
@@ -14,9 +15,9 @@ class UsersFactory(SQLAlchemyModelFactory):
 	FACTORY_SESSION = db.session
 
 	username = factory.Sequence(lambda n: u'user%d' % n)
-	firstname = 'John'
-	lastname = 'Smith'
-	displayname = factory.Sequence(lambda n: u'John Smith %d' % n)
+	firstname = factory.fuzzy.FuzzyText(length=4)
+	lastname = factory.fuzzy.FuzzyText(length=4)
+	displayname = factory.fuzzy.FuzzyText(length=8)
 	password = 'password'
 	usertypesforsystem_id = 2
 
@@ -45,8 +46,8 @@ class CoursesFactory(SQLAlchemyModelFactory):
 	FACTORY_FOR = Courses
 	FACTORY_SESSION = db.session
 
-	name = factory.Sequence(lambda n: u'course%d' % n)
-	description = "Some Course Description"
+	name = factory.Sequence(lambda n: u'TestCourse%d' %n)
+	description = factory.fuzzy.FuzzyText(length=36)
 	available = True
 
 class CoursesAndUsersFactory(SQLAlchemyModelFactory):
