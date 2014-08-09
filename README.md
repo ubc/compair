@@ -56,14 +56,11 @@ Developer Installation
 
 We're testing out using Bower for package management and gulp for build system.
 
-Bower and gulp both needs to be installed globally, this can be done with:
-	`npm install -g gulp bower`
-
-Next, we need to install the necessary gulp plugins:
+Install the necessary gulp, bower and plugins locally:
 	`npm install`
 
 All the dependencies should now be satisfied, we'll now start the build process, which should download all the front-end packages managed by Bower and include them into `index.html`, run:
-	`gulp`
+	`node_modules/.bin/gulp`
 
 Note that we're using the latest version of AngularJS beta (1.3.0), which may have conflicts that require user interaction to resolve. If you get an error about not finding a suitable version Angular, run `bower install` alone, which will let you interactively choose the proper 1.3.0 version. Then run `gulp bowerInstall` and `gulp bowerWiredep` in sequence, which should resolve this.
 

@@ -43,3 +43,6 @@ tmp/*
 .ropeproject/
 *.db
 config.py
+
+# compiled files
+acj/static/acj.css
