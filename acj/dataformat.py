@@ -17,7 +17,9 @@ def getUsers(restrict_users=True):
 	restricted = {
 		'id': fields.Integer,
 		'displayname': fields.String,
-		'avatar': fields.String
+		'avatar': fields.String,
+		'lastonline': fields.DateTime,
+		'created': fields.DateTime
 	}
 	if restrict_users:
 		return restricted
@@ -27,9 +29,7 @@ def getUsers(restrict_users=True):
 		'lastname': fields.String,
 		'email': fields.String,
 		'fullname': fields.String,
-		'created': fields.DateTime,
 		'modified': fields.DateTime,
-		'lastonline': fields.DateTime,
 		'usertypesforsystem_id': fields.Integer,
 		'usertypeforsystem': fields.Nested(getUserTypesForSystem())
 	}
