@@ -149,6 +149,8 @@ module.controller(
 	"LogoutController",
 	function LogoutController($scope, $location, $log, $route, LoginResource, AuthenticationService) {
 		$scope.logout = function() {
+			$location.path("/"); //redirect user to home screen
+			$route.reload();
 			LoginResource.logout().$promise.then(
 				function() {
 					$log.debug("Logging out user successful.");
