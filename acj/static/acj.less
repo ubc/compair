@@ -29,15 +29,13 @@
 }
 
 /***** UNIVERSAL *****/
-.navbar {
-  margin-bottom: 0.5em;
-}
+
 body {
   margin-bottom: 1em;
 }
 
 
-/***** LOGIN *****/
+/***** LOGIN SCREEN *****/
 
 .login-screen {
   
@@ -71,6 +69,33 @@ body {
   }
 
 }//closes login-screen
+
+
+/***** NAVIGATION & BREADCRUMBS  *****/
+
+/* outermost containing div for the navigation */
+.navbar {
+  margin-bottom: 0.5em;
+}
+
+/* ul for breadcrumbs */
+.breadcrumb-trail {
+  
+  margin: 0 0 1em 1em;
+  padding: 0;
+  color: #5D5D5D;
+  
+  li {
+    display: inline-block;
+    list-style: none;
+  }
+  
+  /* class for the last li */
+  .last-crumb {
+    color: #5D5D5D;
+  }
+  
+}//closes breadcrumb-trail
 
 
 /***** VIEW SINGLE QUESTION PAGE *****/
