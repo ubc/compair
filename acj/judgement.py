@@ -9,8 +9,9 @@ from flask.ext.restful.reqparse import RequestParser
 from acj import dataformat, db
 from acj.authorization import require
 from acj.models import PostsForAnswers, Posts, Judgements, AnswerPairings, Courses, CriteriaAndCourses, \
-	PostsForQuestions
+	PostsForQuestions, Scores
 from acj.util import new_restful_api
+from itertools import chain
 
 # First declare a Flask Blueprint for this module
 judgements_api = Blueprint('judgements_api', __name__)
@@ -71,9 +72,11 @@ class JudgementRootAPI(Resource):
 										   question=question)
 			db.session.add(answerpairing)
 		judgements = []
+		criteria = []
 		for judgement_params in params['judgements']:
 			course_criterion = CriteriaAndCourses.query.get_or_404(
 				judgement_params['course_criterion_id'])
+			criteria.append(judgement_params['course_criterion_id'])
 			judgement = Judgements(answerpairing=answerpairing, users_id=current_user.id,
 				course_criterion=course_criterion,
 				postsforanswers_id_winner=judgement_params['answer_id_winner'])
@@ -81,6 +84,13 @@ class JudgementRootAPI(Resource):
 			require(CREATE, judgement)
 			db.session.commit()
 			judgements.append(judgement)
+		answers = PostsForAnswers.query.filter(PostsForAnswers.postsforquestions_id==question.id).count()
+		pairs = AnswerPairings.query.filter(AnswerPairings.postsforquestions_id==question.id).all()
+		judged_answers = list(chain.from_iterable((i.postsforanswers_id1, i.postsforanswers_id2) for i in pairs))
+		judged_answers = list(set(judged_answers))
+		if answers == len(judged_answers):
+			for criterion in criteria:
+				rank_answers(question.id, judged_answers, criterion)
 		return {'objects': marshal(judgements, dataformat.getJudgements())}
 api.add_resource(JudgementRootAPI, '')
 
@@ -175,5 +185,57 @@ def get_existing_answer_pair(answer_pair, question_id):
 		return ret
 	return False
 
+def rank_answers(question_id, judged_answers, criterion):
+	actual = []
+	expected = []
+	pairs = AnswerPairings.query.filter_by(postsforquestions_id=question_id).all()
+	scores = Scores.query.filter_by(criteriaandcourses_id=criterion).filter(Scores.postsforanswers_id.in_(judged_answers)).all()
+	formatted_scores = {} #store previously saved scores
+	for score in scores:
+		formatted_scores[score.postsforanswers_id] = score
+	accessed_scores = {}	#store new scores from this round of ranking
+
+	# accumulate scores from all the pairings
+	for x in pairs:
+		if (x.postsforanswers_id1 in formatted_scores):
+			score1 = formatted_scores.get(x.postsforanswers_id1)
+			score1.rounds = score1.wins = score1.score = 0
+			del formatted_scores[x.postsforanswers_id1]
+		elif (x.postsforanswers_id1 in accessed_scores):
+			score1 = accessed_scores[x.postsforanswers_id1]
+		else:
+			score1 = Scores(criteriaandcourses_id=criterion, rounds=0, wins=0, score=0) 
+			score1.postsforanswers_id = x.postsforanswers_id1
+		accessed_scores[x.postsforanswers_id1] = score1 
+
+		if (x.postsforanswers_id2 in formatted_scores):
+			score2 = formatted_scores.get(x.postsforanswers_id2)
+			score2.rounds = score2.wins = score2.score = 0
+			del formatted_scores[x.postsforanswers_id2]
+		elif (x.postsforanswers_id2 in accessed_scores):
+			score2 = accessed_scores[x.postsforanswers_id2]
+		else:
+			score2 = Scores(criteriaandcourses_id=criterion, rounds=0, wins=0, score=0) 
+			score2.postsforanswers_id = x.postsforanswers_id2 
+		accessed_scores[x.postsforanswers_id2] = score2
+	
+		total = x.answer1_win + x.answer2_win
+		score1.rounds = score1.rounds + total
+		score2.rounds = score2.rounds + total
+
+		ans1 = x.answer1_win / total
+		score1.wins += x.answer1_win
+		score1.score += ans1
+
+		ans2 = x.answer2_win / total
+		score2.wins += x.answer2_win
+		score2.score += ans2
+
+		accessed_scores[x.postsforanswers_id1] = score1
+		accessed_scores[x.postsforanswers_id2] = score2
+
+	for id in accessed_scores.iterkeys():
+		db.session.add(accessed_scores[id])
+	db.session.commit()
 
 api.add_resource(JudgementPairAPI, '/pair')

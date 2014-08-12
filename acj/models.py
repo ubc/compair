@@ -31,6 +31,9 @@ from passlib.apps import custom_app_context as pwd_context
 
 from flask.ext.login import UserMixin
 
+# need to update to filterfalse whn upgrading python
+from itertools import ifilterfalse
+
 #################################################
 # Users
 #################################################
@@ -339,6 +342,7 @@ class PostsForAnswers(db.Model):
 		nullable=False)
 	question = db.relationship("PostsForQuestions")
 	comments = db.relationship("PostsForAnswersAndPostsForComments")
+	scores = db.relationship("Scores")
 
 	@hybrid_property
 	def courses_id(self):
@@ -467,12 +471,11 @@ class Scores(db.Model):
 	__table_args__ = default_table_args
 
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	name = db.Column(db.String(255), unique=True, nullable=False)
-	criteria_id = db.Column(
+	criteriaandcourses_id = db.Column(
 		db.Integer,
-		db.ForeignKey('Criteria.id', ondelete="CASCADE"),
+		db.ForeignKey('CriteriaAndCourses.id', ondelete="CASCADE"),
 		nullable=False)
-	criteria = db.relationship("Criteria")
+	course_criterion = db.relationship("CriteriaAndCourses")
 	postsforanswers_id = db.Column(
 		db.Integer,
 		db.ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
@@ -510,6 +513,7 @@ class AnswerPairings(db.Model):
 		db.ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
 		nullable=False)
 	answer2 = db.relationship("PostsForAnswers", foreign_keys=[postsforanswers_id2])
+	judgements = db.relationship("Judgements")
 	modified = db.Column(
 		db.TIMESTAMP,
 		default=func.current_timestamp(),
@@ -517,6 +521,14 @@ class AnswerPairings(db.Model):
 		nullable=False)
 	created = db.Column(db.TIMESTAMP, default=func.current_timestamp(),
 					 nullable=False)
+
+	@hybrid_property
+	def answer1_win(self):
+		return len(list(ifilterfalse(lambda x: x.postsforanswers_id_winner==self.postsforanswers_id2, self.judgements)))
+
+	@hybrid_property
+	def answer2_win(self):
+		return len(list(ifilterfalse(lambda x: x.postsforanswers_id_winner==self.postsforanswers_id1, self.judgements)))	
 
 
 class Judgements(db.Model):
