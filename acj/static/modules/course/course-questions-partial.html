@@ -6,8 +6,18 @@
 		<a ng-href="#/course/{{course.id}}/question/create" 
 			class="btn btn-primary" id="stepNav">
 			<i class="fa fa-plus"></i>
-			New Question
+			Add Question
 		</a>
+		</span>
+		<span ng-if="canEditCourse">
+			<a ng-href="#/course/{{courseId}}/configure" class="btn btn-primary">
+				<i class="fa fa-edit"></i>
+				Edit Course
+			</a>
+			<a ng-href="#/course/{{courseId}}/user" class="btn btn-primary">
+				<i class="fa fa-users"></i>
+				Manage Students
+			</a>
 		</span>
 		<form class="form-inline searchCourse pull-right">
 			<div class="form-group">
