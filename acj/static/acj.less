@@ -1,3 +1,15 @@
+/***** VARIABLES & MIXINS *****/
+
+@light-blue: #EDF5FC; /* light-blue = #EDF5FC */
+@light-gray: #F9F9F9; /* light-gray = #F9F9F9 */
+
+/* border radius */
+.border-radius(@l-top:5px, @r-top:5px, @r-bottom:5px, @l-bottom:5px) {
+  -webkit-border-radius: @l-top @r-top @r-bottom @l-bottom;
+  -moz-border-radius: @l-top @r-top @r-bottom @l-bottom;
+  border-radius: @l-top @r-top @r-bottom @l-bottom;
+}
+
 /***** AngularStrap's Modal *****/
 .modal-backdrop.am-fade {
   opacity: .5;
@@ -23,6 +35,43 @@
 body {
   margin-bottom: 1em;
 }
+
+
+/***** LOGIN *****/
+
+.login-screen {
+  
+  /* application title *?
+  h1 {
+    margin-top: .2em;
+  }
+  
+  /* container for username and password */
+  fieldset {
+    margin: 2em 0;
+    padding: 1.5em;
+    background: @light-blue;
+    .border-radius();
+  }
+  
+  /* override green input showing success */
+  .has-success .form-control {
+    
+    border-color: #ccc;
+    
+    &:focus {
+      box-shadow: 0 1px 1px #ccc;
+    }
+  
+  }//closes form-control
+  
+  /* change default alert margin for bottom placement */
+  .alert {
+    margin: 1em 0 0 0;
+  }
+
+}//closes login-screen
+
 
 /***** VIEW SINGLE QUESTION PAGE *****/
 a.nounderline {
