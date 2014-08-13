@@ -54,7 +54,7 @@
 </div>
 
 <select ng-hide=true ng-model="sortby" ng-options="key as c.criterion.name for (key, c) in criteria"></select>
-<div ng-repeat="answer in answers | orderBy:order:reverse">
+<div ng-repeat="answer in answers | orderBy:order:reverse | notScoredEnd:sortby">
 	<div mathjax="answer.post.content" ng-bind-html="answer.post.content">
 	</div>
 	<div>

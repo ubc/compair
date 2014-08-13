@@ -29,6 +29,20 @@ module.factory(
 	}
 );
 
+/***** Filters *****/
+module.filter("notScoredEnd", function () {
+	return function (array, key) {
+		if (!angular.isArray(array)) return;
+		var scored = array.filter(function(item) {
+			return item.scores[key]
+		});
+		var not_scored = array.filter(function(item) {
+			return !item.scores[key]
+		});
+		return scored.concat(not_scored);
+	}
+});
+
 /***** Controllers *****/
 module.controller("QuestionViewController",
 	function($scope, $log, $routeParams, AnswerResource, AuthenticationService, Authorize, QuestionResource, QuestionCommentResource, Toaster)
