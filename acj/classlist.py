@@ -169,8 +169,10 @@ class ClasslistRootAPI(Resource):
 		require(EDIT, course)
 		restrict_users = not allow(EDIT, CoursesAndUsers(courses_id=course_id))
 		include_user = True
+		dropped = UserTypesForCourse.query.filter_by(name="Dropped").first().id
 		classlist = CoursesAndUsers.query. \
-			filter(CoursesAndUsers.courses_id == course_id).all()
+			filter_by(courses_id=course_id).\
+			filter(CoursesAndUsers.usertypesforcourse_id!=dropped).all()
 		return {'objects':marshal(classlist, dataformat.getCoursesAndUsers(restrict_users, include_user))}
 	@login_required
 	def post(self, course_id):
@@ -191,4 +193,4 @@ class ClasslistRootAPI(Resource):
 			return results
 		else:
 			return {'error':'Wrong file type'}, 400
-api.add_resource(ClasslistRootAPI, '') 
+api.add_resource(ClasslistRootAPI, '')
