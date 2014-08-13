@@ -17,7 +17,9 @@ def getUsers(restrict_users=True):
 	restricted = {
 		'id': fields.Integer,
 		'displayname': fields.String,
-		'avatar': fields.String
+		'avatar': fields.String,
+		'lastonline': fields.DateTime,
+		'created': fields.DateTime
 	}
 	if restrict_users:
 		return restricted
@@ -27,9 +29,7 @@ def getUsers(restrict_users=True):
 		'lastname': fields.String,
 		'email': fields.String,
 		'fullname': fields.String,
-		'created': fields.DateTime,
 		'modified': fields.DateTime,
-		'lastonline': fields.DateTime,
 		'usertypesforsystem_id': fields.Integer,
 		'usertypeforsystem': fields.Nested(getUserTypesForSystem())
 	}
@@ -122,10 +122,12 @@ def getPostsForQuestions(restrict_users=True):
 def getPostsForAnswers(restrict_users=True, include_comments=True):
 	post = getPosts(restrict_users)
 	comments = getPostsForQuestionsOrAnswersAndPostsForComments(restrict_users)
+	score = getScores()
 	del post['course']
 	ret = {
 		'id': fields.Integer,
 		'post': fields.Nested(post),
+		'scores': fields.Nested(score)
 	}
 	if include_comments:
 		ret['comments'] = fields.List(fields.Nested(comments))
@@ -172,3 +174,12 @@ def getImportUsersResults(restrict_users=True):
 		'message': fields.String
 	}
 
+def getScores():
+	return {
+		'id': fields.Integer,
+		'criteriaandcourses_id': fields.Integer,
+		'postsforanswers_id': fields.Integer,
+		'rounds': fields.Integer,
+		'wins': fields.Integer,
+		'score': fields.Float
+	}

@@ -8,7 +8,7 @@ from acj.authorization import allow, require
 from acj.models import CoursesAndUsers, Courses, Users, UserTypesForSystem, UserTypesForCourse
 from acj.util import new_restful_api
 from werkzeug.utils import secure_filename
-import os, uuid, csv
+import os, uuid, csv, string, random
 
 classlist_api = Blueprint('classlist_api', __name__)
 api = new_restful_api(classlist_api)
@@ -30,6 +30,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def allowed_file(filename):
 	return '.' in filename and \
 		filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+def random_generator(size=8, chars=string.ascii_uppercase + string.digits):
+	return ''.join(random.choice(chars) for _ in range(size))
 
 def import_users(course_id, users):
 	# initialize list of users and their statuses
@@ -94,7 +97,13 @@ def import_users(course_id, users):
 		if length > DISPLAYNAME and user[DISPLAYNAME] != '' and user[DISPLAYNAME] not in exist_displaynames.keys():
 			u.displayname = user[DISPLAYNAME]
 		else:
-			u.displayname = None
+			# auto-generate if one is not given
+			tmp_displayname = random_generator()
+			exists = Users.query.filter(Users.displayname==tmp_displayname).scalar()
+			while (exists is not None):
+				tmp_displayname = random_generator()
+				exists = Users.query.filter(Users.displayname==tmp_displayname).scalar()
+			u.displayname = tmp_displayname
 
 		# password
 		if length > PASSWORD and user[PASSWORD] != '':
@@ -103,6 +112,9 @@ def import_users(course_id, users):
 			u.password = user[USERNAME]
 		created.append({'user': u, 'message': 'created'})
 		db.session.add(u)
+		# add new user to list of existing users
+		existing_users[u.username] = u.username
+		exist_displaynames[u.displayname] = u.displayname
 		valid.append(u.username)
 	db.session.commit() # commit the new users first
 
@@ -157,8 +169,10 @@ class ClasslistRootAPI(Resource):
 		require(EDIT, course)
 		restrict_users = not allow(EDIT, CoursesAndUsers(courses_id=course_id))
 		include_user = True
+		dropped = UserTypesForCourse.query.filter_by(name="Dropped").first().id
 		classlist = CoursesAndUsers.query. \
-			filter(CoursesAndUsers.courses_id == course_id).all()
+			filter_by(courses_id=course_id).\
+			filter(CoursesAndUsers.usertypesforcourse_id!=dropped).all()
 		return {'objects':marshal(classlist, dataformat.getCoursesAndUsers(restrict_users, include_user))}
 	@login_required
 	def post(self, course_id):
@@ -179,4 +193,4 @@ class ClasslistRootAPI(Resource):
 			return results
 		else:
 			return {'error':'Wrong file type'}, 400
-api.add_resource(ClasslistRootAPI, '') 
+api.add_resource(ClasslistRootAPI, '')

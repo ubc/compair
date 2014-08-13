@@ -367,7 +367,7 @@ class QuestionsAPITests(ACJTestCase):
 		# Test get actual question
 		rv = self.client.get(questions_api_url)
 		self.assert200(rv)
-		self._verify_question(question_expected, rv.json)
+		self._verify_question(question_expected, rv.json['question'])
 
 	def test_get_all_questions(self):
 		# Test login required
@@ -432,9 +432,9 @@ class QuestionsAPITests(ACJTestCase):
 		# Test getting the question again
 		rv = self.client.get(self.url + '/' + str(rv.json['id']))
 		self.assert200(rv)
-		self.assertEqual(question_expected['title'], rv.json['title'],
+		self.assertEqual(question_expected['title'], rv.json['question']['title'],
 						 "Question create did not save title properly!")
-		self.assertEqual(question_expected['post']['content'], rv.json['post']['content'],
+		self.assertEqual(question_expected['post']['content'], rv.json['question']['post']['content'],
 						 "Question create did not save content proeprly!")
 
 	def _verify_question(self, expected, actual):

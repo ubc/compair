@@ -31,6 +31,14 @@ from passlib.apps import custom_app_context as pwd_context
 
 from flask.ext.login import UserMixin
 
+# need to update to filterfalse whn upgrading python
+try:
+	from itertools import filterfalse
+except ImportError:
+	from itertools import ifilterfalse
+	def filterfalse(predicate, iterable):
+		return ifilterfalse(predicate, iterable)
+
 #################################################
 # Users
 #################################################
@@ -301,7 +309,7 @@ class PostsForQuestions(db.Model):
 		nullable=False)
 	post = db.relationship("Posts")
 	title = db.Column(db.String(255))
-	answers = db.relationship("PostsForAnswers")
+	_answers = db.relationship("PostsForAnswers")
 	comments = db.relationship("PostsForQuestionsAndPostsForComments")
 	modified = db.Column(
 		db.TIMESTAMP,
@@ -322,6 +330,9 @@ class PostsForQuestions(db.Model):
 	def total_comments_count(self):
 		counts = [a.comments_count for a in self.answers]
 		return (sum(counts) + self.comments_count)
+	@hybrid_property
+	def answers(self):
+		return sorted(self._answers, key=lambda answer: answer.post.created, reverse=True)
 
 class PostsForAnswers(db.Model):
 	__tablename__ = 'PostsForAnswers'
@@ -339,6 +350,7 @@ class PostsForAnswers(db.Model):
 		nullable=False)
 	question = db.relationship("PostsForQuestions")
 	comments = db.relationship("PostsForAnswersAndPostsForComments")
+	_scores = db.relationship("Scores")
 
 	@hybrid_property
 	def courses_id(self):
@@ -349,6 +361,9 @@ class PostsForAnswers(db.Model):
 	@hybrid_property
 	def comments_count(self):
 		return len(self.comments)
+	@hybrid_property
+	def scores(self):
+		return sorted(self._scores, key=lambda score: score.criteriaandcourses_id)
 
 class PostsForComments(db.Model):
 	__tablename__ = 'PostsForComments'
@@ -467,12 +482,11 @@ class Scores(db.Model):
 	__table_args__ = default_table_args
 
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	name = db.Column(db.String(255), unique=True, nullable=False)
-	criteria_id = db.Column(
+	criteriaandcourses_id = db.Column(
 		db.Integer,
-		db.ForeignKey('Criteria.id', ondelete="CASCADE"),
+		db.ForeignKey('CriteriaAndCourses.id', ondelete="CASCADE"),
 		nullable=False)
-	criteria = db.relationship("Criteria")
+	course_criterion = db.relationship("CriteriaAndCourses")
 	postsforanswers_id = db.Column(
 		db.Integer,
 		db.ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
@@ -510,6 +524,7 @@ class AnswerPairings(db.Model):
 		db.ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
 		nullable=False)
 	answer2 = db.relationship("PostsForAnswers", foreign_keys=[postsforanswers_id2])
+	judgements = db.relationship("Judgements")
 	modified = db.Column(
 		db.TIMESTAMP,
 		default=func.current_timestamp(),
@@ -517,6 +532,14 @@ class AnswerPairings(db.Model):
 		nullable=False)
 	created = db.Column(db.TIMESTAMP, default=func.current_timestamp(),
 					 nullable=False)
+
+	@hybrid_property
+	def answer1_win(self):
+		return len(list(filterfalse(lambda x: x.postsforanswers_id_winner==self.postsforanswers_id2, self.judgements)))
+
+	@hybrid_property
+	def answer2_win(self):
+		return len(list(filterfalse(lambda x: x.postsforanswers_id_winner==self.postsforanswers_id1, self.judgements)))	
 
 
 class Judgements(db.Model):

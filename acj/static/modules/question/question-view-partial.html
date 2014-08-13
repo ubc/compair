@@ -13,6 +13,10 @@
 		<a href="#/course/{{courseId}}/question/{{question.id}}/comment/create" class="btn btn-sm btn-info">
 			<i class="fa fa-comment-o"></i> Comment
 		</a>
+		<a class="btn btn-default" title="Evaluate Answers"
+		 ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement">
+			<i class="fa fa-gavel"></i> Judge
+		</a>
 		<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/edit" class="btn btn-sm btn-primary">
 			<i class="fa fa-edit"></i> Edit
 		</a>
@@ -40,7 +44,7 @@
 	</a>
 	<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">
 		{{comment.postsforcomments.post.user.displayname}}</a>
-	- {{comment.postsforcomments.post.created | amDateFormat: 'lll'}}i
+	- {{comment.postsforcomments.post.created | amDateFormat: 'lll'}}
 	<div class="postFooter">
 		<a ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/comment/{{comment.id}}/edit" class="btn btn-sm btn-primary">
 			<i class="fa fa-edit"></i> Edit
@@ -49,9 +53,10 @@
 	<hr />
 </div>
 
-<div ng-repeat="answer in answers">
+<select ng-hide=true ng-model="sortby" ng-options="key as c.criterion.name for (key, c) in criteria"></select>
+<div ng-repeat="answer in answers | orderBy:order:reverse">
 	<div mathjax="answer.post.content" ng-bind-html="answer.post.content">
-	</div>	
+	</div>
 	<div>
 		<a ng-href="#/user/{{answer.post.user.id}}" class="nounderline">
 			<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
@@ -60,6 +65,9 @@
 			{{answer.post.user.displayname}}
 		</a>
 		- {{answer.post.created | amDateFormat: 'lll'}}
+		<span ng-show="key==sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores">
+		- Score: {{score.score | number: 3}}
+		</span>
 	</div>
 	<div class="postFooter">
 		<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-info">
