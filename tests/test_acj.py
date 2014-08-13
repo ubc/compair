@@ -512,6 +512,9 @@ class AnswersAPITests(ACJTestCase):
 			data=json.dumps(expected_answer), content_type='application/json')
 		self.assert404(rv)
 		# test create successful
+		self.logout()
+		self.login(self.data.get_enroled_instructor().username)
+
 		rv = self.client.post(self.url,
 							  data=json.dumps(expected_answer), content_type='application/json')
 		self.assert200(rv)

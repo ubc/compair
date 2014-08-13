@@ -6,7 +6,7 @@ from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import desc
 from acj import dataformat, db
 from acj.authorization import allow, require
-from acj.models import PostsForQuestions, Courses, Posts, CoursesAndUsers, CriteriaAndCourses, UserTypesForCourse
+from acj.models import PostsForQuestions, Courses, Posts, CoursesAndUsers, CriteriaAndCourses, UserTypesForCourse, PostsForAnswers
 from acj.util import new_restful_api
 
 questions_api = Blueprint('questions_api', __name__)
@@ -33,11 +33,14 @@ class QuestionIdAPI(Resource):
 		criteria = CriteriaAndCourses.query.filter_by(courses_id=course_id).order_by(CriteriaAndCourses.id).all()
 		student = UserTypesForCourse.query.filter_by(name="Student").first().id
 		count = CoursesAndUsers.query.filter_by(courses_id=course_id).filter_by(usertypesforcourse_id=student).count()
+		answers = PostsForAnswers.query.filter_by(postsforquestions_id=question_id).join(Posts).filter(Posts.users_id==current_user.id).count()
 		require(READ, question)
 		return {
 			'question':marshal(question, dataformat.getPostsForQuestions()),
 			'criteria':marshal(criteria, dataformat.getCriteriaAndCourses()),
-			'count': count
+			'count': count,
+
+			'answers': answers
 		}
 	def post(self, course_id, question_id):
 		course = Courses.query.get_or_404(course_id)

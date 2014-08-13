@@ -47,6 +47,9 @@ class AnswerRootAPI(Resource):
 		post.content = params.get("post").get("content")
 		if not post.content:
 			return {"error":"The answer content is empty!"}, 400
+		prev_answer = PostsForAnswers.query.filter_by(postsforquestions_id=question_id).join(Posts).filter(Posts.users_id==current_user.id).first()
+		if prev_answer:
+			return {"error":"An answer has already been submitted"}, 400
 		post.users_id = current_user.id
 		db.session.add(post)
 		db.session.add(answer)

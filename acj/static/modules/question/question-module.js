@@ -43,9 +43,11 @@ module.filter("notScoredEnd", function () {
 	}
 });
 
+module.constant('required_rounds', 6);
+
 /***** Controllers *****/
 module.controller("QuestionViewController",
-	function($scope, $log, $routeParams, AnswerResource, AuthenticationService, Authorize, QuestionResource, QuestionCommentResource, Toaster)
+	function($scope, $log, $routeParams, AnswerResource, AuthenticationService, Authorize, QuestionResource, QuestionCommentResource, required_rounds, Toaster)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
@@ -64,9 +66,9 @@ module.controller("QuestionViewController",
 					$scope.answers = ret.question.answers;
 					$scope.reverse = true;
 
+					$scope.answered = ret.answers > 0 ? true:false;
 					var min_pairs = $scope.answers.length/2;
-					var rounds = 6;
-					var required = Math.ceil(min_pairs * rounds / ret.count);
+					var required = ret.count > 0 ? Math.ceil(min_pairs * required_rounds / ret.count) : '0';
 				},
 				function (ret)
 				{
