@@ -304,7 +304,7 @@ class PostsForQuestions(db.Model):
 		nullable=False)
 	post = db.relationship("Posts")
 	title = db.Column(db.String(255))
-	answers = db.relationship("PostsForAnswers")
+	_answers = db.relationship("PostsForAnswers")
 	comments = db.relationship("PostsForQuestionsAndPostsForComments")
 	modified = db.Column(
 		db.TIMESTAMP,
@@ -325,6 +325,9 @@ class PostsForQuestions(db.Model):
 	def total_comments_count(self):
 		counts = [a.comments_count for a in self.answers]
 		return (sum(counts) + self.comments_count)
+	@hybrid_property
+	def answers(self):
+		return sorted(self._answers, key=lambda answer: answer.post.created, reverse=True)
 
 class PostsForAnswers(db.Model):
 	__tablename__ = 'PostsForAnswers'
@@ -342,7 +345,7 @@ class PostsForAnswers(db.Model):
 		nullable=False)
 	question = db.relationship("PostsForQuestions")
 	comments = db.relationship("PostsForAnswersAndPostsForComments")
-	scores = db.relationship("Scores")
+	_scores = db.relationship("Scores")
 
 	@hybrid_property
 	def courses_id(self):
@@ -353,6 +356,9 @@ class PostsForAnswers(db.Model):
 	@hybrid_property
 	def comments_count(self):
 		return len(self.comments)
+	@hybrid_property
+	def scores(self):
+		return sorted(self._scores, key=lambda score: score.criteriaandcourses_id)
 
 class PostsForComments(db.Model):
 	__tablename__ = 'PostsForComments'

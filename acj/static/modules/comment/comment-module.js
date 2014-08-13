@@ -51,7 +51,7 @@ module.controller(
 		$scope.comment = {};
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
 			function(ret) {
-				$scope.parent = ret;
+				$scope.parent = ret.question;
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve the question "+questionId, ret);
@@ -97,7 +97,7 @@ module.controller(
 		);
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
 			function(ret) {
-				$scope.parent = ret;
+				$scope.parent = ret.question;
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve the question "+questionId, ret);

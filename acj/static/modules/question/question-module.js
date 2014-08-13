@@ -43,23 +43,21 @@ module.controller("QuestionViewController",
 			'questionId': questionId}).$promise.then(
 				function (ret)
 				{
-					$scope.question = ret;
+					$scope.question = ret.question;
+					$scope.criteria = ret.criteria;
+					$scope.sortby = '0';
+					$scope.order = 'scores.'+$scope.sortby+'.score';
+					$scope.answers = ret.question.answers;
+					$scope.reverse = true;
+
+					var min_pairs = $scope.answers.length/2;
+					var rounds = 6;
+					var required = Math.ceil(min_pairs * rounds / ret.count);
 				},
 				function (ret)
 				{
 					Toaster.reqerror("Unable to retrieve question "
 						+ questionId, ret);
-				}
-			);
-		AnswerResource.get({'courseId': $scope.courseId, 
-			'questionId': questionId}).$promise.then(
-				function (ret)
-				{
-					$scope.answers = ret.objects;
-				},
-				function (ret)
-				{
-					Toaster.reqerror("Unable to retrieve answers.", ret);
 				}
 			);
 		QuestionCommentResource.get({'courseId': $scope.courseId,
@@ -109,7 +107,7 @@ module.controller("QuestionEditController",
 		$scope.question = {};
 		QuestionResource.get({'courseId': courseId, 'questionId': $scope.questionId}).$promise.then(
 			function (ret) {
-				$scope.question = ret;
+				$scope.question = ret.question;
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve question "+$scope.questionId, ret);
