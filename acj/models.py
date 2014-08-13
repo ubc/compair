@@ -34,7 +34,7 @@ from flask.ext.login import UserMixin
 # need to update to filterfalse whn upgrading python
 try:
 	from itertools import filterfalse
-except ImportError, e:
+except ImportError:
 	from itertools import ifilterfalse
 	def filterfalse(predicate, iterable):
 		return ifilterfalse(predicate, iterable)
