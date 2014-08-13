@@ -234,7 +234,7 @@ def rank_answers(question_id, judged_answers, criterion):
 		accessed_scores[x.postsforanswers_id1] = score1
 		accessed_scores[x.postsforanswers_id2] = score2
 
-	for id in accessed_scores.iterkeys():
+	for id in accessed_scores.keys():
 		db.session.add(accessed_scores[id])
 	db.session.commit()
 
