@@ -1,29 +1,31 @@
 <div ng-controller="HomeController" class="home-screen">
 
-<h1>Adaptive Comparative Judgement</h1>
-
-<p class="intro-text">Welcome to the ACJ application! With this application, you will show your mastery of course content by providing answers to course-related questions and anonymously judging the answers given by your classmates.</p>
-
-<form class="form-inline" role="search">
-	<div class="form-group pull-right">
-		<input class="form-control" type="text" 
-			placeholder="Search for courses" ng-model="courseFilter">
+	<h1>Adaptive Comparative Judgement</h1>
+	
+	<p class="intro-text">Welcome to the ACJ application! With this application, you will show your mastery of course content by answering course-related questions and anonymously judging the answers given by your classmates.</p>
+	
+	<form class="form-inline" role="search" ng-if="canAddCourse">
+		<div class="form-group pull-right">
+			<input class="form-control" type="text" 
+				placeholder="Search for courses" ng-model="courseFilter">
+		</div>
+	</form>
+	
+	<h2>Select a course</h2>
+	
+	<!-- Course listing -->
+	<div class="course-list" ng-if="courses.length">
+		<a ng-repeat="course in courses | filter:courseFilter" 
+			ng-href="#/course/{{course.course.id}}" class="each-course">
+			<h3>
+				<i class="fa fa-book"></i>
+				{{course.course.name}}
+				<i class="fa fa-arrow-right fa-2x pull-right"></i>
+			</h3>
+			<div ng-bind-html="course.course.description"></div>
+		</a>
 	</div>
-</form>
 
-<h2>Select a course</h2>
-
-<!-- Course listing -->
-<div class="course-list">
-	<a ng-repeat="course in courses | filter:courseFilter" 
-		ng-href="#/course/{{course.course.id}}" class="each-course">
-		<h3>
-			<i class="fa fa-book"></i>
-			{{course.course.name}}
-			<i class="fa fa-arrow-right fa-2x pull-right"></i>
-		</h3>
-		<div ng-bind-html="course.course.description"></div>
-	</a>
-</div>
+	<h3 ng-if="!courses.length">No courses currently available.</h3>
 
 </div>
