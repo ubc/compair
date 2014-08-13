@@ -32,7 +32,12 @@ from passlib.apps import custom_app_context as pwd_context
 from flask.ext.login import UserMixin
 
 # need to update to filterfalse whn upgrading python
-from itertools import ifilterfalse
+try:
+	from itertools import filterfalse
+except ImportError, e:
+	from itertools import ifilterfalse
+	def filterfalse(predicate, iterable):
+		return ifilterfalse(predicate, iterable)
 
 #################################################
 # Users
@@ -530,11 +535,11 @@ class AnswerPairings(db.Model):
 
 	@hybrid_property
 	def answer1_win(self):
-		return len(list(ifilterfalse(lambda x: x.postsforanswers_id_winner==self.postsforanswers_id2, self.judgements)))
+		return len(list(filterfalse(lambda x: x.postsforanswers_id_winner==self.postsforanswers_id2, self.judgements)))
 
 	@hybrid_property
 	def answer2_win(self):
-		return len(list(ifilterfalse(lambda x: x.postsforanswers_id_winner==self.postsforanswers_id1, self.judgements)))	
+		return len(list(filterfalse(lambda x: x.postsforanswers_id_winner==self.postsforanswers_id1, self.judgements)))	
 
 
 class Judgements(db.Model):
