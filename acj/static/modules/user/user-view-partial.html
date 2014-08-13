@@ -1,24 +1,30 @@
 <div ng-controller="UserViewController">
-	<h2>{{user.displayname}}</h2>
+	<div class="row pull-right" ng-if="ownProfile">
+		<a ng-href="#/user/{{user.id}}/edit" class="btn btn-primary">
+			<i class="fa fa-edit"></i> Edit
+		</a>
+	</div>
+	<h1><i class="fa fa-user"></i> {{user.displayname}}'s Profile</h1>
 	<hr>
 	<div class="col-md-4">
 		<div class="row">
-			<img class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
-		</div/>
-		<div class="row optionsFooter" ng-if="ownProfile">
-			<a ng-href="#/user/{{user.id}}/edit" class="btn btn-sm btn-primary">
-				<i class="fa fa-edit"></i> Edit
+			<a href="https://en.gravatar.com/" title="Add or edit your user image with Gravatar">
+			   <img class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
 			</a>
 		</div>
 	</div>
 	<div class="col-md-8">
 		<div class="row" ng-if="canCreateUser || ownProfile">
-			<strong class="col-md-3">Name:</strong>
-			<div class="col-md-9">{{user.fullname}}</div>
+			<strong class="col-md-3">Application Role:</strong>
+			<div class="col-md-9">{{user.usertypeforsystem.name}}</div>
 		</div>
 		<div class="row" ng-if="canCreateUser || ownProfile">
-			<strong class="col-md-3">User Type:</strong>
-			<div class="col-md-9">{{user.usertypeforsystem.name}}</div>
+			<strong class="col-md-3">Username:</strong>
+			<div class="col-md-9">{{user.username}}</div>
+		</div>
+		<div class="row" ng-if="canCreateUser || ownProfile">
+			<strong class="col-md-3">Name:</strong>
+			<div class="col-md-9">{{user.fullname}}</div>
 		</div>
 		<div class="row" ng-if="canCreateUser || ownProfile">
 			<strong class="col-md-3">Email:</strong>
@@ -26,12 +32,12 @@
 		</div>
 		<div class="row">
 			<strong class="col-md-3">Last Online:</strong>
-			<div class="col-md-9">{{user.lastonline}}</div>
+			<div class="col-md-9">{{readDate | date:"EEEE, MMM d, yyyy @ h:mm a"}}</div>
 		</div>
-		<div class="row">
+		<!-- <div class="row">
 			<strong class="col-md-3">Created On:</strong>
 			<div class="col-md-9">{{user.created}}</div>
-		</div>
+		</div> -->
 		</div>
 	</div>
 </div>

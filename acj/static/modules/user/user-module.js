@@ -77,7 +77,7 @@ module.controller("UserCreateController",
 );
 
 module.controller("UserEditController",
-	function($scope, $log, $routeParams, UserResource, AuthenticationService, Authorize, UserTypeResource, Toaster)
+	function($scope, $log, $routeParams, breadcrumbs, UserResource, AuthenticationService, Authorize, UserTypeResource, Toaster)
 	{
 		var userId = $routeParams['userId'];
 		$scope.canManageUsers = Authorize.can(Authorize.MANAGE, UserResource.MODEL);
@@ -96,6 +96,7 @@ module.controller("UserEditController",
 		UserResource.get({'id':userId}).$promise.then(
 			function (ret) {
 				$scope.user = ret;
+				breadcrumbs.options = {'View User': ret.username+"'s Profile"};
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve user "+ userId, ret);
@@ -154,6 +155,7 @@ module.controller("UserViewController",
 			function (ret) {
 				$scope.user = ret;
 				breadcrumbs.options = {'View User': ret.username+"'s Profile"};
+				$scope.readDate = Date.parse(ret.lastonline);
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve the user's data", ret);
