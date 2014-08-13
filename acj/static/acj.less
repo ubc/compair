@@ -51,6 +51,31 @@ body {
   margin-bottom: 1em;
 }
 
+fieldset {
+  margin: 2em 0;
+  padding: 1.5em;
+  background: @bkgrd-blue;
+  .border-radius();
+}
+
+fieldset + fieldset {
+  margin-top: 0;
+}
+
+legend {
+  padding: .3em .6em;
+  position: relative;
+  top:.5em;
+  color: #fff;
+  font-size: 1.2em;
+  width: auto;
+  background: @link-blue;  
+}
+
+.btn[type=submit] {
+  margin-bottom: 2em;
+}
+
 
 /***** LOGIN SCREEN *****/
 
@@ -59,14 +84,6 @@ body {
   /* application title */
   h1 {
     margin-top: .2em;
-  }
-  
-  /* container for username and password */
-  fieldset {
-    margin: 2em 0;
-    padding: 1.5em;
-    background: @bkgrd-blue;
-    .border-radius();
   }
   
   /* override green input showing success */
@@ -147,6 +164,7 @@ body {
       }
       
       &:hover {
+        color: @link-blue;
         text-decoration: none;
         background: #DBEBF9;
       }

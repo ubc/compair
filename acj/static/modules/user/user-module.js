@@ -144,7 +144,7 @@ module.controller("UserUpdatePasswordController",
 );
 
 module.controller("UserViewController",
-	function($scope, $log, $routeParams, UserResource, AuthenticationService, Authorize, Toaster)
+	function($scope, $log, $routeParams, breadcrumbs, UserResource, AuthenticationService, Authorize, Toaster)
 	{
 		var userId = $routeParams['userId'];
 		$scope.ownProfile = userId == AuthenticationService.getUser().id;
@@ -153,6 +153,7 @@ module.controller("UserViewController",
 		UserResource.get({"id":userId}).$promise.then(
 			function (ret) {
 				$scope.user = ret;
+				breadcrumbs.options = {'View User': ret.username+"'s Profile"};
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve the user's data", ret);
