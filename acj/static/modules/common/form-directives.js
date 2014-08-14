@@ -20,7 +20,7 @@ module.directive('acjFieldWithFeedback', function() {
 });
 
 /* check for matching passwords; can be modified to be more general to check for the matching of any fields*/
-myApp.directive('pwMatch', function(){
+module.directive('pwMatch', function(){
 	return {
 		require: 'ngModel',
 		link: function (scope, elem, attrs, ctrl) {

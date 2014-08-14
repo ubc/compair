@@ -60,7 +60,7 @@ module.controller(
 
         Session.getUser().then(function(user) {
             $scope.loggedInUser = user;
-            $log.info("Logged in as " + $scope.loggedInUser);
+            $log.info("Logged in as " + $scope.loggedInUser.username);
         });
 
 		// listen for changes in authentication state

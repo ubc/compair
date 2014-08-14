@@ -928,13 +928,13 @@ class JudgementAPITests(ACJTestCase):
 class SessionTests(ACJTestCase):
 	def test_loggedin_user_session(self):
 		self.login('root', 'password')
-		rv = self.client.get('/login/session')
+		rv = self.client.get('/session')
 		self.assert200(rv)
 		root = rv.json
 		self.assertEqual(root['id'], 1)
 
 	def test_non_loggedin_user_session(self):
-		rv = self.client.get('/login/session')
+		rv = self.client.get('/session')
 		self.assert401(rv)
 
 if __name__ == '__main__':

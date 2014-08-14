@@ -93,15 +93,15 @@ module.run(function ($rootScope, $route, $location, $log, $modal, Authentication
 module.controller(
 	"LoginController",
 	function LoginController($rootScope, $scope, $location, $log, $route,
-							 LoginResource, 
-							 UserResource, 
+							 LoginResource,
+							 UserResource,
 							 AuthenticationService)
 	{
 		$scope.submitted = false;
 
 		$scope.submit = function() {
 			$scope.submitted = true;
-			var params = {"username": $scope.username, 
+			var params = {"username": $scope.username,
 							"password": $scope.password};
 			LoginResource.login(params).$promise.then(
 				function(ret) {
@@ -145,18 +145,12 @@ module.controller(
 	"LogoutController",
 	function LogoutController($scope, $location, $log, $route, LoginResource, AuthenticationService) {
 		$scope.logout = function() {
-			$location.path("/"); //redirect user to home screen
-			$route.reload();
 			LoginResource.logout().$promise.then(
 				function() {
 					$log.debug("Logging out user successful.");
 					AuthenticationService.logout();
-					// this is a non-existant route, we use it as a reliable
-					// way to trigger a onLocationChange event so the login
-					// mechanism will fire again. Reliable because if we set
-					// path to /, then if we're already on /, it won't fire the
-					// event.
-					$location.path("/logout");
+					$location.path("/"); //redirect user to home screen
+					$route.reload();
 				}
 				// TODO do we care about logout failure? if so, handle it here
 			);
