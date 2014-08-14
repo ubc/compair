@@ -7,6 +7,7 @@ var module = angular.module('ubc.ctlt.acj.comment',
 		'ngResource',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.mathjax',
+		'ubc.ctlt.acj.judgement',
 		'ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.answer',
 		'ubc.ctlt.acj.toaster'
@@ -117,7 +118,7 @@ module.controller(
 
 module.controller(
 	"AnswerCommentCreateController",
-	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, Toaster)
+	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, QuestionResource, required_rounds, Toaster)
 	{
 		var courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
@@ -130,6 +131,21 @@ module.controller(
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
+			}
+		);
+		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
+			function (ret)
+			{
+				var min_pairs = ret.question.answers.length/2;
+				var required = ret.students > 0 ? Math.ceil(min_pairs * required_rounds / ret.students): 0;
+				if (ret.judged < required) {
+					Toaster.error("The required number of judgements have to be made before any comments can be made.");
+					$location.path('/course/' + courseId + '/question/' + questionId);
+				}
+			},
+			function (ret)
+			{
+				Toaster.reqerror("Unable to retrieve judgement records.", ret);
 			}
 		);
 		$scope.commentSubmit = function () {

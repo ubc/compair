@@ -28,6 +28,10 @@ module.factory('JudgementResource',
 		return ret;
 });
 
+
+/***** Constants *****/
+module.constant('required_rounds', 6);
+
 /***** Controllers *****/
 module.controller(
 	'JudgementController', 

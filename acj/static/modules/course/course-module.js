@@ -10,6 +10,7 @@ var module = angular.module('ubc.ctlt.acj.course',
 		'ngRoute',
 		'ckeditor',
 		'ubc.ctlt.acj.common.form',
+		'ubc.ctlt.acj.judgement',
 		'ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.toaster'
 	]
@@ -30,9 +31,6 @@ module.factory('CourseResource', function($q, $routeParams, $log, $resource)
 		// and should match the server side model name
 	return ret;
 });
-
-/***** Constants *****/
-module.constant('required_rounds', 6);
 
 /***** Controllers *****/
 module.controller(

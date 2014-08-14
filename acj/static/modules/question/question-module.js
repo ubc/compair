@@ -11,6 +11,7 @@ var module = angular.module('ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.comment',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.mathjax',
+		'ubc.ctlt.acj.judgement',
 		'ubc.ctlt.acj.toaster'
 	]
 );
@@ -45,7 +46,7 @@ module.filter("notScoredEnd", function () {
 
 /***** Controllers *****/
 module.controller("QuestionViewController",
-	function($scope, $log, $routeParams, AnswerResource, AuthenticationService, Authorize, QuestionResource, QuestionCommentResource, Toaster)
+	function($scope, $log, $routeParams, AnswerResource, AuthenticationService, Authorize, QuestionResource, QuestionCommentResource, required_rounds, Toaster)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
@@ -64,7 +65,11 @@ module.controller("QuestionViewController",
 					$scope.answers = ret.question.answers;
 					$scope.reverse = true;
 
-					$scope.answered = ret.answers > 0 ? true:false;
+					$scope.answered = ret.answers > 0;
+					var min_pairs = ret.question.answers.length / 2;
+					var required = ret.students > 0 ? Math.ceil(min_pairs * required_rounds / ret.students) : 0;
+					$scope.judged_req_met = ret.judged >= required;
+					
 				},
 				function (ret)
 				{
