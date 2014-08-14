@@ -1,9 +1,10 @@
-from flask import Flask
+from flask import Flask, redirect
 from flask.ext.login import current_user
 from .authorization import define_authorization
-from .core import login_manager, bouncer, db
+from .core import login_manager, bouncer, db, cas
 from .configuration import config
-from .models import CoursesAndUsers, Users
+from .models import Users
+from .login import authenticate
 
 
 def create_app(conf=config, settings_override={}):
@@ -26,6 +27,11 @@ def create_app(conf=config, settings_override={}):
 	def load_user(user_id):
 		app.logger.debug("User logging in, ID: " + user_id)
 		return Users.query.get(int(user_id))
+
+	app.config['CAS_SERVER'] = 'http://localhost:8088'
+	app.config['CAS_AFTER_LOGIN'] = 'route_root'
+
+	cas.init_app(app)
 
 	# Flask-Bouncer initialization
 	bouncer.init_app(app)
@@ -81,6 +87,18 @@ def create_app(conf=config, settings_override={}):
 	from .judgement import judgements_api
 	app.register_blueprint(judgements_api,
 		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/judgements')
+
+
+	@app.route('/')
+	def route_root():
+		username = cas.username
+		user = Users.query.filter_by(username=username).first()
+		if not user:
+			app.logger.debug("Login failed, invalid username for: " + username)
+		else:
+			authenticate(user)
+
+		return redirect('/static/index.html#/')
 
 	return app
 

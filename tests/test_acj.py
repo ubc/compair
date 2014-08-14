@@ -726,5 +726,18 @@ class ClassListsAPITests(ACJTestCase):
 			actual = actual_users[i]
 			self.assertEqual(expected.user.username, actual['user']['username'])
 
+
+class SessionTests(ACJTestCase):
+	def test_loggedin_user_session(self):
+		self.login('root', 'password')
+		rv = self.client.get('/login/session')
+		self.assert200(rv)
+		root = rv.json
+		self.assertEqual(root['id'], 1)
+
+	def test_non_loggedin_user_session(self):
+		rv = self.client.get('/login/session')
+		self.assert401(rv)
+
 if __name__ == '__main__':
 	unittest.main()
