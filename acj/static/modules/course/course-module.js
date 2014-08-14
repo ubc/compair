@@ -3,20 +3,21 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.course', 
+var module = angular.module('ubc.ctlt.acj.course',
 	[
 		'angularMoment',
-		'ngResource', 
+		'ngResource',
 		'ngRoute',
 		'ckeditor',
 		'ubc.ctlt.acj.common.form',
+		'ubc.ctlt.acj.judgement',
 		'ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.toaster'
 	]
 );
 
 /***** Providers *****/
-module.factory('CourseResource', function($q, $routeParams, $log, $resource) 
+module.factory('CourseResource', function($q, $routeParams, $log, $resource)
 {
 	var ret = $resource('/api/courses/:id', {id: '@id'},
 		{
@@ -30,9 +31,6 @@ module.factory('CourseResource', function($q, $routeParams, $log, $resource)
 		// and should match the server side model name
 	return ret;
 });
-
-/***** Constants *****/
-module.constant('required_rounds', 6);
 
 /***** Controllers *****/
 module.controller(
@@ -63,16 +61,19 @@ module.controller(
 
 module.controller(
 	'CourseQuestionsController',
-	function($scope, $log, $routeParams, CourseResource, QuestionResource, Authorize, required_rounds, Toaster)
+	function($scope, $log, $routeParams, CourseResource, QuestionResource, Authorize, AuthenticationService, required_rounds, Toaster)
 	{
 		// get course info
 		var courseId = $routeParams['courseId'];
 		Authorize.can(Authorize.CREATE, QuestionResource.MODEL).then(function(result) {
-            $scope.canCreateQuestions = resulst;
-        });
-        Authorize.can(Authorize.EDIT, CourseResource.MODEL).then(function(result) {
-            $scope.canEditCourse = resulst;
-        });
+				$scope.canCreateQuestions = resulst;
+		});
+		Authorize.can(Authorize.EDIT, CourseResource.MODEL).then(function(result) {
+				$scope.canEditCourse = resulst;
+		});
+		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(result) {
+				$scope.canManagePosts = resulst;
+		});
 		CourseResource.get({'id': courseId}).$promise.then(
 			function (ret) {
 				$scope.course = ret;

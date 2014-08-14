@@ -2,7 +2,7 @@
 //
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.question', 
+var module = angular.module('ubc.ctlt.acj.question',
 	[
 		'ngResource',
 		'ubc.ctlt.acj.answer',
@@ -11,6 +11,7 @@ var module = angular.module('ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.comment',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.mathjax',
+		'ubc.ctlt.acj.judgement',
 		'ubc.ctlt.acj.toaster'
 	]
 );
@@ -21,7 +22,7 @@ module.factory(
 	function ($resource)
 	{
 		var ret = $resource(
-			'/api/courses/:courseId/questions/:questionId', 
+			'/api/courses/:courseId/questions/:questionId',
 			{questionId: '@id'}
 		);
 		ret.MODEL = "PostsForQuestions";
@@ -45,7 +46,7 @@ module.filter("notScoredEnd", function () {
 
 /***** Controllers *****/
 module.controller("QuestionViewController",
-	function($scope, $log, $routeParams, AnswerResource, Authorize, QuestionResource, QuestionCommentResource, Toaster)
+	function($scope, $log, $routeParams, AnswerResource, Authorize, QuestionResource, QuestionCommentResource, required_rounds, Toaster)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
@@ -56,7 +57,7 @@ module.controller("QuestionViewController",
             $scope.canManagePosts = result;
         });
 		$scope.question = {};
-		QuestionResource.get({'courseId': $scope.courseId, 
+		QuestionResource.get({'courseId': $scope.courseId,
 			'questionId': questionId}).$promise.then(
 				function (ret)
 				{
@@ -67,7 +68,11 @@ module.controller("QuestionViewController",
 					$scope.answers = ret.question.answers;
 					$scope.reverse = true;
 
-					$scope.answered = ret.answers > 0 ? true:false;
+					$scope.answered = $scope.canManagePosts || ret.answers > 0;
+					var min_pairs = ret.question.answers.length / 2;
+					var required = ret.students > 0 ? Math.ceil(min_pairs * required_rounds / ret.students) : 0;
+					$scope.judged_req_met = $scope.canManagePosts || ret.judged >= required;
+
 				},
 				function (ret)
 				{
@@ -100,7 +105,7 @@ module.controller("QuestionCreateController",
 					function (ret)
 					{
 						$scope.submitted = false;
-						Toaster.success("New Question Created!", 
+						Toaster.success("New Question Created!",
 							'"' + ret.title + '" should now be listed.');
 						$location.path('/course/' + courseId);
 					},
@@ -130,7 +135,7 @@ module.controller("QuestionEditController",
 		);
 		$scope.questionSubmit = function () {
 			QuestionResource.save({'courseId': courseId}, $scope.question).$promise.then(
-				function() { 
+				function() {
 					Toaster.success("Question Updated!");
 					$location.path('/course/' + courseId);
 				 },

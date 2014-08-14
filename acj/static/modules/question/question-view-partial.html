@@ -71,7 +71,7 @@
 		</span>
 	</div>
 	<div class="postFooter">
-		<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-info">
+		<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-info" ng-if="judged_req_met">
 			<i class="fa fa-comment-o"></i> Comment
 		</a>
 		<a ng-if="canManagePosts || answer.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit" class="btn btn-sm btn-primary">
@@ -79,7 +79,7 @@
 		</a>
 	</div>
 	<hr />
-	<div ng-repeat="comment in answer.comments" class="quesAnsComments">
+	<div ng-repeat="comment in answer.comments" class="quesAnsComments" ng-if="judged_req_met">
 		<div mathjax="comment.content" ng-bind-html="comment.content">
 		</div>
 		<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">

@@ -32,11 +32,16 @@ class QuestionIdAPI(Resource):
 		question = PostsForQuestions.query.get_or_404(question_id)
 		criteria = CriteriaAndCourses.query.filter_by(courses_id=course_id).order_by(CriteriaAndCourses.id).all()
 		answers = PostsForAnswers.query.filter_by(postsforquestions_id=question.id).join(Posts).filter(Posts.users_id==current_user.id).count()
+		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses).filter_by(courses_id=course.id).join(AnswerPairings).filter(AnswerPairings.postsforquestions_id==question.id).count()
+		student = UserTypesForCourse.query.filter_by(name="Student").first().id
+		count = CoursesAndUsers.query.filter_by(courses_id=course_id).filter_by(usertypesforcourse_id=student).count()
 		require(READ, question)
 		return {
 			'question':marshal(question, dataformat.getPostsForQuestions()),
 			'criteria':marshal(criteria, dataformat.getCriteriaAndCourses()),
-			'answers': answers
+			'answers':answers,
+			'judged':judgements,
+			'students':count
 		}
 	def post(self, course_id, question_id):
 		course = Courses.query.get_or_404(course_id)
