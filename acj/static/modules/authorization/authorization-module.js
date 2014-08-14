@@ -6,7 +6,7 @@
 var module = angular.module('ubc.ctlt.acj.authorization', 
 	[
 		'ngCookies',
-		'ubc.ctlt.acj.authentication'
+        'ubc.ctlt.acj.session'
 	]
 );
 
@@ -14,10 +14,8 @@ var module = angular.module('ubc.ctlt.acj.authorization',
 // normally, there would be a "Service" at the end of the name, but it seems
 // too much to type if it's going to be used a lot
 module.factory('Authorize',
-	function($log, $q, $cookieStore, AuthenticationService)
+	function($log, $q, $cookieStore, Session)
 	{
-		var _permissions = null;
-
 		var _allow_operation = function(operation, resource, permissions) {
 			$log.debug(permissions);
 			if (resource in permissions)
@@ -36,38 +34,21 @@ module.factory('Authorize',
 			READ: "read",
 			EDIT: "edit",
 			DELETE: "delete",
-			storePermissions: function(permissions) {
-				_permissions = permissions;
-				$cookieStore.put('current.permissions', permissions);
-			},
-			getPermissions: function() {
-				if (_permissions)
-				{
-					return _permissions;
-				}
-				var cookie_permissions = $cookieStore.get('current.permissions');
-				if (cookie_permissions)
-				{
-					_permissions = cookie_permissions;
-					return _permissions;
-				}
-				$log.error("Stored permissions not found!");
-				return null;
-			},
 			can: function(operation, resource) {
-				if (!AuthenticationService.isAuthenticated())
-				{
-					// in case of logout, we should clear permissions
-					_permissions = null;
-					return false;
-				}
-				user = AuthenticationService.getUser()
-				if (user.usertypeforsystem.name == "System Admin")
-				{
-					return true;
-				}
-				var permissions = this.getPermissions();
-				return _allow_operation(operation, resource, permissions);
+				return Session.getUser().then(function(user) {
+                    if (user == null) {
+                        return $q.when(false);
+                    }
+
+                    if (user.usertypeforsystem.name == "System Administrator")
+                    {
+                        return $q.when(true);
+                    }
+
+                    return Session.getPermissions().then(function(permissions) {
+                        return $q.when(_allow_operation(operation, resource, permissions));
+                    });
+                });
 			}
 		};
 	}

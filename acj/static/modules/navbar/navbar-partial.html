@@ -66,13 +66,13 @@
 				</li>
 			</ul>
 			<!-- Not Logged In Options -->
-			<ul class="nav navbar-nav navbar-right" ng-hide="isLoggedIn">
+			<ul class="nav navbar-nav navbar-right" ng-hide="loggedInUser.isLoggedIn()">
 				<li>
 					<a href="" ng-click="showLogin();">Login</a>
 				</li>
 			</ul>
 			<!-- Logged In Options -->
-			<ul class="nav navbar-nav navbar-right" ng-show="isLoggedIn">
+			<ul class="nav navbar-nav navbar-right" ng-show="loggedInUser.isLoggedIn()">
 				<li class="dropdown" id="notifications">
 					<a class="dropdown-toggle" data-toggle="dropdown" href="#notifications">
 						<i class="fa fa-envelope-o"></i>
@@ -81,7 +81,7 @@
 				</li>
 				<li class="dropdown">
 					<a class="dropdown-toggle" href="" data-toggle="dropdown">
-						{{loggedInUser}} <i class='fa fa-angle-down'></i>
+						{{loggedInUser.displayname}} <i class='fa fa-angle-down'></i>
 					</a>
 					<!-- User drop down menu -->
 					<ul class="dropdown-menu">

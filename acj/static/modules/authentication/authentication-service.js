@@ -11,41 +11,29 @@ var module = angular.module(
 );
 
 module.factory('AuthenticationService',
-	function ($rootScope, $resource, $cookieStore, $log, authService) {
-		var _user = null;
+	function ($rootScope, $resource, $cookieStore, $log, $http, $q, authService, Session) {
 		return {
 			// Use these constants to listen to login or logout events.
 			LOGIN_EVENT: "event:Authentication-Login",
 			LOGOUT_EVENT: "event:Authentication-Logout",
 			LOGIN_REQUIRED_EVENT: "event:auth-loginRequired",
-			getUser: function() {
-				return _user;
-			},
 			isAuthenticated: function() {
-				if (_user)
-				{ // user stored in service
-					return true
-				}
-				else
-				{ // no user stored in service, check cookies
-					var cookie_user = $cookieStore.get('current.user');
-					if (cookie_user)
-					{
-						_user = cookie_user;
-						return true;
-					}
-				}
-				return false;
+                return Session.getUser().then(function(result) {
+                    if (result) {
+                        return $q.when(true);
+                    }
+
+                   return $q.when(false);
+                });
 			},
-			login: function (newUser) {
-				_user = newUser;
-				$cookieStore.put('current.user', newUser);
-				authService.loginConfirmed();
-				$rootScope.$broadcast(this.LOGIN_EVENT);
+			login: function () {
+                return Session.getUser().then(function() {
+                    authService.loginConfirmed();
+                    $rootScope.$broadcast(this.LOGIN_EVENT);
+                });
 			},
 			logout: function() {
-				_user = null
-				$cookieStore.remove('current.user', _user);
+                Session.destroy();
 				$rootScope.$broadcast(this.LOGOUT_EVENT);
 			}
 		};

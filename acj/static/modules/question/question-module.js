@@ -31,13 +31,16 @@ module.factory(
 
 /***** Controllers *****/
 module.controller("QuestionViewController",
-	function($scope, $log, $routeParams, AnswerResource, AuthenticationService, Authorize, QuestionResource, QuestionCommentResource, Toaster)
+	function($scope, $log, $routeParams, AnswerResource, Authorize, QuestionResource, QuestionCommentResource, Toaster)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
-		$scope.loggedInUserId = AuthenticationService.getUser().id;
-		$scope.canManagePosts = 
-			Authorize.can(Authorize.MANAGE, QuestionResource.MODEL);
+		Session.getUser().then(function(user) {
+            $scope.loggedInUserId = user.id;
+        });
+        Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(result) {
+            $scope.canManagePosts = result;
+        });
 		$scope.question = {};
 		QuestionResource.get({'courseId': $scope.courseId, 
 			'questionId': questionId}).$promise.then(
