@@ -57,16 +57,18 @@ module.run(function ($rootScope, $route, $location, $log, $modal, Authentication
 			show: false // don't show login on initialization
 		});
 	// Track whether loginBox is visible to prevent .show() creating duplicates
-	var loginBoxVisible = false;
+    loginBox.visible = false;
 	// Functions to display/hide the login form
 	$rootScope.showLogin = function() {
-		if (loginBoxVisible) return;
+		if (loginBox.visible) return;
 		loginBox.$promise.then(loginBox.show);
-		loginBoxVisible = true;
+        loginBox.visible = true;
 	};
 	$rootScope.hideLogin = function() {
-		loginBox.hide();
-		loginBoxVisible = false;
+        if (loginBox.visible) {
+            loginBox.hide();
+            loginBox.visible = false;
+        }
 	};
 	// Show the login form when we have a login required event
 	$rootScope.$on(AuthenticationService.LOGIN_REQUIRED_EVENT, $rootScope.showLogin);
@@ -74,16 +76,16 @@ module.run(function ($rootScope, $route, $location, $log, $modal, Authentication
 	$rootScope.$on(AuthenticationService.LOGIN_EVENT, $rootScope.hideLogin);
 
 	// Requires the user to be logged in for every single route
-	$rootScope.$on('$locationChangeStart', function(event, next) {
-		if (!AuthenticationService.isAuthenticated())
-		{
-			event.preventDefault();
-			// user needs to be logged in
-			$rootScope.$broadcast(AuthenticationService.LOGIN_REQUIRED_EVENT);
-			// wipe out current data displayed on screen
-			$route.reload();
-		}
-	});
+//	$rootScope.$on('$locationChangeStart', function(event, next) {
+//		if (!AuthenticationService.isAuthenticated())
+//		{
+//			event.preventDefault();
+//			// user needs to be logged in
+//			$rootScope.$broadcast(AuthenticationService.LOGIN_REQUIRED_EVENT);
+//			// wipe out current data displayed on screen
+//			$route.reload();
+//		}
+//	});
 });
 
 
@@ -93,8 +95,7 @@ module.controller(
 	function LoginController($rootScope, $scope, $location, $log, $route,
 							 LoginResource, 
 							 UserResource, 
-							 AuthenticationService,
-							 Authorize) 
+							 AuthenticationService)
 	{
 		$scope.submitted = false;
 
@@ -107,24 +108,19 @@ module.controller(
 					// login successful
 					$log.debug("Login authentication successful!");
 					userid = ret.userid
-					Authorize.storePermissions(ret.permissions);
 					$log.debug("Login User ID: " + userid);
 					// retrieve logged in user's information
-					user = UserResource.get({id: userid}).$promise.then(
-						function(ret) {
-							AuthenticationService.login(ret);
-							$scope.login_err = "";
-							$scope.submitted = false;
-							$route.reload();
-						},
-						function(ret) {
-							$log.error(
-								"Failed to retrieve logged in user's data: " +
-								JSON.stringify(ret));
-							$scope.login_err = "Unable to retrieve user information, server problem?";
-							$scope.submitted = false;
-						}
-					);
+                    AuthenticationService.login().then(function() {
+                        $scope.login_err = "";
+                        $scope.submitted = false;
+                        $route.reload();
+                    }, function() {
+                        $log.error(
+                                "Failed to retrieve logged in user's data: " +
+                                JSON.stringify(ret));
+                        $scope.login_err = "Unable to retrieve user information, server problem?";
+                        $scope.submitted = false;
+                    });
 				},
 				function(ret) {
 					// login failed

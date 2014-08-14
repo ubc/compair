@@ -110,7 +110,7 @@ class TestData():
 	def post_question_comment(self, author, course, question):
 		post = PostsFactory(courses_id = course.id, users_id = author.id)
 		db.session.commit()
-		comment = PostsForCommentsFactory(posts_id = post.id) 
+		comment = PostsForCommentsFactory(posts_id = post.id)
 		db.session.commit()
 		quesComment = PostsForQuestionsAndPostsForCommentsFactory(postsforcomments_id = comment.id, postsforquestions_id = question.id)
 		db.session.commit()
@@ -583,7 +583,7 @@ class QuestionCommentsAPITests(ACJTestCase):
 		rv = self.client.post(
 			'/api/courses/' + str(self.data.get_course().id) +\
 			'/questions/9392402/comments',
-			data=json.dumps(expected_comment), 
+			data=json.dumps(expected_comment),
 			content_type='application/json')
 		self.assert404(rv)
 		# test invalid course
@@ -697,7 +697,7 @@ class ClassListsAPITests(ACJTestCase):
 		self.data = TestData()
 		self.courseId = str(self.data.get_course().id)
 		self.url = '/api/courses/' + str(self.data.get_course().id) + '/users'
- 
+
 	def test_get_all_students(self):
 		# Test login required
 		rv = self.client.get(self.url)
@@ -924,6 +924,18 @@ class JudgementAPITests(ACJTestCase):
 				(actual_answer_pair['answer1']['id'] == expected_answer4.id or
 				 actual_answer_pair['answer2']['id'] == expected_answer4.id),
 				"Answer pair did not consist of only high priority answers.")
+
+class SessionTests(ACJTestCase):
+	def test_loggedin_user_session(self):
+		self.login('root', 'password')
+		rv = self.client.get('/login/session')
+		self.assert200(rv)
+		root = rv.json
+		self.assertEqual(root['id'], 1)
+
+	def test_non_loggedin_user_session(self):
+		rv = self.client.get('/login/session')
+		self.assert401(rv)
 
 if __name__ == '__main__':
 	unittest.main()

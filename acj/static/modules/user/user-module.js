@@ -10,7 +10,7 @@ var module = angular.module('ubc.ctlt.acj.user', ['ngResource']);
 
 /***** Providers *****/
 module.factory('UserResource', function($resource) {
-	var ret = $resource('/api/users/:id', {id: '@id'},
+	var User = $resource('/api/users/:id', {id: '@id'},
 		{
 			'getUserCourses':
 			{
@@ -19,8 +19,13 @@ module.factory('UserResource', function($resource) {
 			}
 		}
 	);
-	ret.MODEL = "Users";
-	return ret;
+	User.MODEL = "Users";
+
+    User.prototype.isLoggedIn = function() {
+        return this.hasOwnProperty('id');
+    };
+
+	return User;
 });
 module.factory('UserTypeResource', function($resource) {
 	var ret = $resource('/api/usertypes/:id', {id: '@id'});
@@ -37,7 +42,7 @@ module.factory('UserPasswordResource', function($resource) {
 /***** Controllers *****/
 // TODO declare controllers here, e.g.:
 module.controller("UserCreateController",
-	function($scope, $log, $routeParams, UserResource, AuthenticationService, Authorize, UserTypeResource, Toaster)
+	function($scope, $log, $routeParams, UserResource, UserTypeResource, Toaster)
 	{
 		$scope.usertypes = {};
 		$scope.user = {};
@@ -77,11 +82,15 @@ module.controller("UserCreateController",
 );
 
 module.controller("UserEditController",
-	function($scope, $log, $routeParams, breadcrumbs, UserResource, AuthenticationService, Authorize, UserTypeResource, Toaster)
+	function($scope, $log, $routeParams, Session, UserResource, Authorize, UserTypeResource, Toaster)
 	{
 		var userId = $routeParams['userId'];
-		$scope.canManageUsers = Authorize.can(Authorize.MANAGE, UserResource.MODEL);
-		$scope.ownProfile = userId == AuthenticationService.getUser().id;
+		Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
+            $scope.canManageUsers = result;
+        });
+        Seession.getUser().then(function(user) {
+            $scope.ownProfile = userId == user.id;
+        });
 		$scope.user = {}
 		$scope.usertypes = {};
 		$scope.create = false;
@@ -110,8 +119,8 @@ module.controller("UserEditController",
 					Toaster.success("User Updated!");
 				},
 				function(ret) {
-					$scope.submitted = false; 
-					Toaster.reqerror("User Update Failed.", ret); 
+					$scope.submitted = false;
+					Toaster.reqerror("User Update Failed.", ret);
 				}
 			);
 		}
@@ -119,37 +128,42 @@ module.controller("UserEditController",
 );
 
 module.controller("UserUpdatePasswordController",
-	function($scope, $log, $routeParams, UserPasswordResource, AuthenticationService, Authorize, Toaster)
+	function($scope, $log, $routeParams, UserPasswordResource, Toaster)
 	{
-		var userId = AuthenticationService.getUser().id;
-		$scope.password = {};
-		$scope.create = true;
-		$scope.changePassword = function() {
-			$scope.submitted = true;
-			UserPasswordResource.save({'id': userId}, $scope.password).$promise.then(
-				function (ret) {
-					$scope.submitted = false;
-					Toaster.success("Password Updated!");
-				},
-				function (ret) {
-					$scope.submitted = false;
-					if (ret.status == '401') {
-						Toaster.error(ret.data.error);
-					} else {
-						Toaster.reqerror("Unable to update your password.", ret);
-					}
-				}
-			);
-		}
+        $scope.password = {};
+        $scope.create = true;
+		Session.getUser().then(function(user) {
+            $scope.changePassword = function() {
+                $scope.submitted = true;
+                UserPasswordResource.save({'id': user.id}, $scope.password).$promise.then(
+                    function (ret) {
+                        $scope.submitted = false;
+                        Toaster.success("Password Updated!");
+                    },
+                    function (ret) {
+                        $scope.submitted = false;
+                        if (ret.status == '401') {
+                            Toaster.error(ret.data.error);
+                        } else {
+                            Toaster.reqerror("Unable to update your password.", ret);
+                        }
+                    }
+                );
+            }
+        });
 	}
 );
 
 module.controller("UserViewController",
-	function($scope, $log, $routeParams, breadcrumbs, UserResource, AuthenticationService, Authorize, Toaster)
+	function($scope, $log, $routeParams, UserResource, Authorize, Toaster)
 	{
 		var userId = $routeParams['userId'];
-		$scope.ownProfile = userId == AuthenticationService.getUser().id;
-		$scope.canCreateUser=Authorize.can(Authorize.CREATE, UserResource.MODEL);
+		Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function(result) {
+            $scope.canCreateUser = result;
+        });
+        Seession.getUser().then(function(user) {
+            $scope.ownProfile = userId == user.id;
+        });
 		$scope.user = {}
 		UserResource.get({"id":userId}).$promise.then(
 			function (ret) {

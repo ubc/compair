@@ -22,12 +22,7 @@ def login():
 	elif not user.verify_password(password):
 		current_app.logger.debug("Login failed, invalid password for: " + username)
 	else:
-		# username valid, password valid, login successful
-		# "remember me" functionality is available, do we want to implement?
-		user.update_lastonline()
-		login_user(user) # flask-login store user info
-		current_app.logger.debug("Login successful for: " + user.username)
-		permissions = get_logged_in_user_permissions()
+		permissions = authenticate(user)
 		return jsonify({"userid": user.id, "permissions": permissions})
 
 	# login unsuccessful
@@ -38,5 +33,24 @@ def login():
 @login_required
 def logout():
 	current_user.update_lastonline()
-	logout_user() # flask-login delete user info
+	logout_user()  # flask-login delete user info
 	return ""
+
+@login_api.route('/session', methods=['GET'])
+@login_required
+def session():
+	return jsonify({"id": current_user.id, "permissions": get_logged_in_user_permissions()})
+
+@login_api.route('/session/permission', methods=['GET'])
+@login_required
+def get_permission():
+	return jsonify(get_logged_in_user_permissions())
+
+
+def authenticate(user):
+	# username valid, password valid, login successful
+	# "remember me" functionality is available, do we want to implement?
+	user.update_lastonline()
+	login_user(user)  # flask-login store user info
+	current_app.logger.debug("Login successful for: " + user.username)
+	return get_logged_in_user_permissions()

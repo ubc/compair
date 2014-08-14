@@ -16,6 +16,8 @@ env:
 
 deps:
 	pip install -r requirements.txt
+	npm install
+	node_modules/.bin/gulp
 
 clean:
 	find . -name '*.pyc' -exec rm -f {} \;

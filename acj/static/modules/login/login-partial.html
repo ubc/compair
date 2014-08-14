@@ -2,6 +2,13 @@
 	<h1 class="text-center">Adaptive Comparative Judgement Application</h1>
 	<form name="loginForm" class="form" ng-submit="submit()" novalidate>
 		<fieldset>
+            <div class="form-group"><h3 class="text-center">Login</h3></div>
+            <div class="form-group">
+                <a href="/login">
+                    <img class="center-block" src="https://www.auth.cwl.ubc.ca/CWL_login_button.gif" width="76" height="25" alt="CWL Login" border="0" valign="middle">
+                </a>
+            </div>
+            <div class="form-group text-center">OR</div>
 			<div class="form-group has-feedback"
 				ng-class="{'has-error': loginForm.username.$invalid, 'has-success': loginForm.username.$valid}">
 				<label for="inputUser">Username</label>

@@ -22,14 +22,17 @@ var module = angular.module('ubc.ctlt.acj.navbar',
 module.controller(
 	"NavbarController",
 	function NavbarController($scope, $log, $route, breadcrumbs,
-		AuthenticationService, Authorize, CourseResource, UserResource) 
+		Session, AuthenticationService, Authorize, CourseResource, UserResource)
 	{
 		$scope.breadcrumbs = breadcrumbs;
+        $scope.isLoggedIn = false;
 
 		// determine if we're in a course so we know whether to show
 		// the course settings
 		$scope.inCourse = false;
-		$scope.canCreateUsers = Authorize.can(Authorize.CREATE, UserResource.MODEL);
+		Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function(result) {
+            $scope.canCreateUsers = result;
+        });
 		$scope.setInCourse = function() {
 			var courseId = $route.current.params['courseId'];
 			$scope.inCourse = false;
@@ -51,28 +54,18 @@ module.controller(
 			$scope.setInCourse();
 		});
 		// show course configure options if user can edit courses
-		$scope.canEditCourse=Authorize.can(Authorize.EDIT, CourseResource.MODEL);
+		Authorize.can(Authorize.EDIT, CourseResource.MODEL).then(function(result) {
+            $scope.canEditCourse = result;
+        })
 
-		// get information about the currently logged in user
-		var updateAuthentication = function() {
-			$scope.isLoggedIn = AuthenticationService.isAuthenticated();
-			if ($scope.isLoggedIn)
-			{
-				var user = AuthenticationService.getUser();
-				$scope.loggedInUser = user.displayname ? user.displayname : user.username;
-				$log.info("Logged in as " + $scope.loggedInUser);
-				$scope.userId = user.id;
-			}
-			else
-			{
-				$log.info("No user login.");
-			}
-		};
+        Session.getUser().then(function(user) {
+            $scope.loggedInUser = user;
+            $log.info("Logged in as " + $scope.loggedInUser);
+        });
+
 		// listen for changes in authentication state
-		$scope.$on(AuthenticationService.LOGIN_EVENT, updateAuthentication);
-		$scope.$on(AuthenticationService.LOGOUT_EVENT, updateAuthentication);
-		// initialize authentication information
-		updateAuthentication();
+//		$scope.$on(AuthenticationService.LOGIN_EVENT, updateAuthentication);
+//		$scope.$on(AuthenticationService.LOGOUT_EVENT, updateAuthentication);
 
 		$scope.showLogin = function() {
 			$scope.$emit(AuthenticationService.LOGIN_REQUIRED_EVENT);

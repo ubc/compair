@@ -22,26 +22,32 @@ var module = angular.module('ubc.ctlt.acj.home',
 module.controller(
 	'HomeController',
 	function HomeController($rootScope, $scope, $location, $log,
+                            Session,
 							AuthenticationService,
 							Authorize,
 							CourseResource,
 							Toaster,
 							UserResource) {
-		$scope.canAddCourse = 
-			Authorize.can(Authorize.CREATE, CourseResource.MODEL);
-		UserResource.getUserCourses(
-			{id: AuthenticationService.getUser().id}).$promise.then(
-			function(ret) {
-				$scope.courses = ret.objects;
-				for (var i = 0; i < $scope.courses.length; i++) {
-					courseanduser = $scope.courses[i];
-				}
-			},
-			function (ret) {
-				Toaster.reqerror("Unable to retrieve your courses.", ret);
-				$log.error("Failed to retrieve the user's courses.");
-			}
-		);
+        Authorize.can(Authorize.CREATE, CourseResource.MODEL).then(function(canAddCourse){
+            $scope.canAddCourse = canAddCourse;
+        });
+        Session.getUser().then(function(user) {
+            //TODO: why do we need a LOGIN_EVENT here?
+            $rootScope.$broadcast(AuthenticationService.LOGIN_EVENT);
+            UserResource.getUserCourses(
+                {id: user.id}).$promise.then(
+                function(ret) {
+                    $scope.courses = ret.objects;
+                    for (var i = 0; i < $scope.courses.length; i++) {
+                        courseanduser = $scope.courses[i];
+                    }
+                },
+                function (ret) {
+                    Toaster.reqerror("Unable to retrieve your courses.", ret);
+                    $log.error("Failed to retrieve the user's courses.");
+                }
+            );
+        });
 	}
 );
 // End anonymous function
