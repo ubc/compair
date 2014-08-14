@@ -118,12 +118,14 @@ module.controller(
 
 module.controller(
 	"AnswerCommentCreateController",
-	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, QuestionResource, required_rounds, Toaster)
+	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, QuestionResource, Authorize, required_rounds, Toaster)
 	{
 		var courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
 		var answerId = $routeParams['answerId'];
 
+		$scope.canManagePosts = 
+			Authorize.can(Authorize.MANAGE, QuestionResource.MODEL)
 		$scope.comment = {};
 		AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId}).$promise.then(
 			function (ret) {
@@ -138,7 +140,7 @@ module.controller(
 			{
 				var min_pairs = ret.question.answers.length/2;
 				var required = ret.students > 0 ? Math.ceil(min_pairs * required_rounds / ret.students): 0;
-				if (ret.judged < required) {
+				if (!$scope.canManagePosts && ret.judged < required) {
 					Toaster.error("The required number of judgements have to be made before any comments can be made.");
 					$location.path('/course/' + courseId + '/question/' + questionId);
 				}
