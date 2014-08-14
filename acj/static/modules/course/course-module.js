@@ -26,10 +26,13 @@ module.factory('CourseResource', function($q, $routeParams, $log, $resource)
 		}
 	);
 	ret.MODEL = "Courses"; // add constant to identify the model
-						// being used, this is for permissions checking
-						// and should match the server side model name
+		// being used, this is for permissions checking
+		// and should match the server side model name
 	return ret;
 });
+
+/***** Constants *****/
+module.constant('required_rounds', 6);
 
 /***** Controllers *****/
 module.controller(
@@ -60,7 +63,7 @@ module.controller(
 
 module.controller(
 	'CourseQuestionsController',
-	function($scope, $log, $routeParams, CourseResource, QuestionResource, Authorize, Toaster)
+	function($scope, $log, $routeParams, CourseResource, QuestionResource, Authorize, required_rounds, Toaster)
 	{
 		// get course info
 		var courseId = $routeParams['courseId'];
@@ -78,7 +81,27 @@ module.controller(
 		CourseResource.getQuestions({'id': courseId}).$promise.then(
 			function (ret)
 			{
-				$scope.questions = ret.objects;
+				$scope.questions = ret.questions;
+				var judge = ret.judgements;
+				count = {}
+				for (id in judge) {
+					quesId = judge[id].answerpairing.postsforquestions_id;
+					if (!(quesId in count))
+						count[quesId] = 0;
+					count[quesId]++;
+				}
+
+				var required = 0;
+				var min_pairs = 0;
+				for (key in ret.questions) {
+					ques = ret.questions[key];
+					min_pairs = ques.answers_count / 2;
+					required = ret.count > 0 ? Math.ceil(min_pairs * required_rounds / ret.count) : 0;
+					if (!(ques.id in count))
+						count[ques.id] = 0;
+					ques['left'] = count[ques.id] <= required ?
+						required - count[ques.id] : 0;
+				}
 			},
 			function (ret)
 			{
@@ -86,7 +109,6 @@ module.controller(
 					courseId, ret);
 			}
 		);
-
 	}
 );
 

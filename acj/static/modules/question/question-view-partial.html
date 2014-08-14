@@ -7,7 +7,7 @@
 <hr class="questionFooterSeparator" />
 <div class="row questionFooter">
 	<div class="col-sm-6">
-		<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" class="btn btn-sm btn-success">
+		<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" class="btn btn-sm btn-success" ng-hide="answered">
 			<i class="fa fa-lightbulb-o"></i> Answer
 		</a>
 		<a href="#/course/{{courseId}}/question/{{question.id}}/comment/create" class="btn btn-sm btn-info">
@@ -54,7 +54,8 @@
 </div>
 
 <select ng-hide=true ng-model="sortby" ng-options="key as c.criterion.name for (key, c) in criteria"></select>
-<div ng-repeat="answer in answers | orderBy:order:reverse">
+<div ng-show="answered">
+<div ng-repeat="answer in answers | orderBy:order:reverse | notScoredEnd:sortby">
 	<div mathjax="answer.post.content" ng-bind-html="answer.post.content">
 	</div>
 	<div>
@@ -95,6 +96,11 @@
 		</div>
 		<hr />
 	</div>
+</div>
+</div>
+
+<div ng-hide="answered" class="h3 text-center">
+	Answers are hidden until you have submitted an answer for this question.
 </div>
 	
 </div>

@@ -29,6 +29,20 @@ module.factory(
 	}
 );
 
+/***** Filters *****/
+module.filter("notScoredEnd", function () {
+	return function (array, key) {
+		if (!angular.isArray(array)) return;
+		var scored = array.filter(function(item) {
+			return item.scores[key]
+		});
+		var not_scored = array.filter(function(item) {
+			return !item.scores[key]
+		});
+		return scored.concat(not_scored);
+	}
+});
+
 /***** Controllers *****/
 module.controller("QuestionViewController",
 	function($scope, $log, $routeParams, AnswerResource, AuthenticationService, Authorize, QuestionResource, QuestionCommentResource, Toaster)
@@ -50,9 +64,7 @@ module.controller("QuestionViewController",
 					$scope.answers = ret.question.answers;
 					$scope.reverse = true;
 
-					var min_pairs = $scope.answers.length/2;
-					var rounds = 6;
-					var required = Math.ceil(min_pairs * rounds / ret.count);
+					$scope.answered = ret.answers > 0 ? true:false;
 				},
 				function (ret)
 				{
