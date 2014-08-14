@@ -37,7 +37,6 @@ nosetests.xml
 *.swp
 
 tmp/*
-tmpUpload/*.csv
 
 # idea project file
 .idea
@@ -47,3 +46,5 @@ config.py
 
 # compiled files
 acj/static/acj.css
+bower_components
+node_modules
