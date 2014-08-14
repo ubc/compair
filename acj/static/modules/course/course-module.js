@@ -63,12 +63,15 @@ module.controller(
 
 module.controller(
 	'CourseQuestionsController',
-	function($scope, $log, $routeParams, CourseResource, QuestionResource, Authorize, required_rounds, Toaster)
+	function($scope, $log, $routeParams, CourseResource, QuestionResource, Authorize, AuthenticationService, required_rounds, Toaster)
 	{
 		// get course info
 		var courseId = $routeParams['courseId'];
 		$scope.canCreateQuestions = Authorize.can(Authorize.CREATE, QuestionResource.MODEL);
 		$scope.canEditCourse=Authorize.can(Authorize.EDIT, CourseResource.MODEL);
+		$scope.loggedInUserId = AuthenticationService.getUser().id;
+		$scope.canManagePosts = 
+			Authorize.can(Authorize.MANAGE, QuestionResource.MODEL);
 		CourseResource.get({'id': courseId}).$promise.then(
 			function (ret) {
 				$scope.course = ret;

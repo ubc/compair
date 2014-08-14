@@ -91,7 +91,8 @@
 		<!-- Question Controls -->
 		<div class="col-sm-2">
 			<a ng-href="#/course/{{course.id}}/question/{{question.id}}/edit"
-				class="btn btn-default" title="Edit">
+				class="btn btn-default" title="Edit"
+				ng-if="canManagePosts || question.post.user.id == loggedInUserId">
 				<i class="fa fa-edit"></i>
 			</a>
 			<a class="btn btn-default" title="Evaluate Answers"
