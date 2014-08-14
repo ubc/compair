@@ -1,25 +1,25 @@
 describe('Testing a controller', function() {
 
-    var ctrl, scope, httpMock;
-    beforeEach(module('myApp'));
-    beforeEach(inject(function($controller, $rootScope, $httpBackend, $http) {
-    	$rootScope.$digest();
-    	httpMock = $httpBackend;
-       
-        scope = $rootScope.$new();
-        httpMock.when('GET', '/tactical/api/listOrderForms').respond("an order form");
-        ctrl = $controller;
-        ctrl(QuestionController, {
-            $scope: scope,
-            $http: $http
-        });
-    }));
-
-    it("gets the list from the api and assigns it to scope", function() {
-    	httpMock.expectGET('tactical/api/listOrderForms');
-		httpMock.flush();
-		expect(scope.orderFormList).toMatch("an order form");
-    });
+//    var ctrl, scope, httpMock;
+//    beforeEach(module('myApp'));
+//    beforeEach(inject(function($controller, $rootScope, $httpBackend, $http) {
+//    	$rootScope.$digest();
+//    	httpMock = $httpBackend;
+//
+//        scope = $rootScope.$new();
+//        httpMock.when('GET', '/tactical/api/listOrderForms').respond("an order form");
+//        ctrl = $controller;
+//        ctrl(QuestionController, {
+//            $scope: scope,
+//            $http: $http
+//        });
+//    }));
+//
+//    it("gets the list from the api and assigns it to scope", function() {
+//    	httpMock.expectGET('tactical/api/listOrderForms');
+//		httpMock.flush();
+//		expect(scope.orderFormList).toMatch("an order form");
+//    });
 });
 /*
 describe('ACJ', function() {
