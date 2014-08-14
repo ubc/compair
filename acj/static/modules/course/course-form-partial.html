@@ -1,17 +1,16 @@
 <form name="courseForm" class="form" ng-submit="courseSubmit()" 
 	novalidate>
-	<h2>Information</h2>
+	<fieldset>
 	<acj-field-with-feedback form-control="courseForm.courseName">
-		<label for="courseName">Name: </label>
+		<label for="courseName">Course: </label>
 		<input id="courseName" name="courseName" ng-model="course.name" 
-			type="text" class="form-control" required maxlength="255" 
-			auto-focus />
+			type="text" class="form-control" required maxlength="255" placeholder="e.g. BIOL 112 - Biology of the Cell" auto-focus />
 	</acj-field-with-feedback>
 	<div class="form-group">
 		<label for="courseDescription">Description: </label>
-		<textarea ng-model="course.description" id="courseDescription" class="form-control" ckeditor="editorOptions" rows="4"></textarea>
+		<textarea ng-model="course.description" id="courseDescription" class="form-control" ckeditor="editorOptions" rows="4" placeholder="Add any additional details about the course"></textarea>
 	</div>
-	<div class="form-group">
+	<!-- <div class="form-group">
 		<label>Options:</label>
 		<div class="btn-group">
 			<button type="button" class="btn btn-default" 
@@ -23,8 +22,9 @@
 				Allow Students to Create Tags
 			</button>
 		</div>
-	</div>
-	<input type="submit" class="btn btn-primary" value="Save" 
+	</div> -->
+	</fieldset>
+	<input type="submit" class="btn btn-success btn-lg center-block" value="Save" 
 		ng-disabled="courseForm.$invalid || submitted" />
 </form>
 

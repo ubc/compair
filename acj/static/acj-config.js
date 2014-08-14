@@ -26,7 +26,7 @@ myApp.config( function ($routeProvider) {
 		.when ('/course/new', 
 			{
 				templateUrl: 'modules/course/course-create-partial.html',
-				label: "Create New Course"
+				label: "Add Course"
 			})
 		.when ('/course/:courseId', 
 			{
@@ -36,17 +36,17 @@ myApp.config( function ($routeProvider) {
 		.when ('/course/:courseId/configure', 
 			{
 				templateUrl: 'modules/course/course-configure-partial.html',
-				label: "Course Configuration"
+				label: "Edit Course"
 			})
 		.when ('/course/:courseId/user',
 			{
 				templateUrl: 'modules/classlist/classlist-view-partial.html',
-				label: "Class List"
+				label: "Manage Users"
 			})
 		.when ('/course/:courseId/user/import',
 			{
 				templateUrl: 'modules/classlist/classlist-import-partial.html',
-				label: "Import Class List"
+				label: "Import Students"
 			})
 		.when ('/course/:courseId/user/import/results',
 			{
@@ -56,7 +56,7 @@ myApp.config( function ($routeProvider) {
 		.when ('/course/:courseId/question/create', 
 			{
 				templateUrl: 'modules/question/question-create-partial.html',
-				label: "Create Question"
+				label: "Add Question"
 			})
 		.when ('/course/:courseId/question/:questionId', 
 			{
@@ -66,7 +66,7 @@ myApp.config( function ($routeProvider) {
 		.when ('/course/:courseId/question/:questionId/edit',
 			{
 				templateUrl: 'modules/question/question-edit-partial.html',
-				label: "Question Configuration"
+				label: "Edit Question"
 			})
 		.when ('/course/:courseId/question/:questionId/answer/create', 
 			{
@@ -91,12 +91,12 @@ myApp.config( function ($routeProvider) {
 		.when('/course/:courseId/question/:questionId/answer/:answerId/comment/create',
 			{
 				templateUrl: 'modules/comment/comment-answer-create-partial.html',
-				label: "Post Comment"
+				label: "Post Reply"
 			})
 		.when('/course/:courseId/question/:questionId/answer/:answerId/comment/:commentId/edit',
 			{
 				templateUrl: 'modules/comment/comment-answer-edit-partial.html',
-				label: "Edit Comment"
+				label: "Edit Reply"
 			})
 		.when ('/course/:courseId/question/:questionId/judgement', 
 			{
