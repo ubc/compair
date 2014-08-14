@@ -22,7 +22,7 @@ module.factory('JudgementResource',
 			resourceUrl,
 			{},
 			{
-				'getAnswerPair': {url: resourceUrl + '/pair'} 
+				'getAnswerPair': {url: resourceUrl + '/pair'}
 			}
 		);
 		return ret;

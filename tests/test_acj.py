@@ -390,7 +390,7 @@ class QuestionsAPITests(ACJTestCase):
 		rv = self.client.get(self.url)
 		self.assert200(rv)
 		for i, expected in enumerate(self.data.get_questions()):
-			actual = rv.json['objects'][i]
+			actual = rv.json['questions'][i]
 			self._verify_question(expected, actual)
 
 	def test_create_question(self):

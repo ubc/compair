@@ -6,7 +6,7 @@ from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import desc
 from acj import dataformat, db
 from acj.authorization import allow, require
-from acj.models import PostsForQuestions, Courses, Posts, CoursesAndUsers, CriteriaAndCourses, UserTypesForCourse, PostsForAnswers
+from acj.models import PostsForQuestions, Courses, Posts, CoursesAndUsers, CriteriaAndCourses, UserTypesForCourse, PostsForAnswers, AnswerPairings, Judgements
 from acj.util import new_restful_api
 
 questions_api = Blueprint('questions_api', __name__)
@@ -31,15 +31,11 @@ class QuestionIdAPI(Resource):
 			question_id = 1
 		question = PostsForQuestions.query.get_or_404(question_id)
 		criteria = CriteriaAndCourses.query.filter_by(courses_id=course_id).order_by(CriteriaAndCourses.id).all()
-		student = UserTypesForCourse.query.filter_by(name="Student").first().id
-		count = CoursesAndUsers.query.filter_by(courses_id=course_id).filter_by(usertypesforcourse_id=student).count()
-		answers = PostsForAnswers.query.filter_by(postsforquestions_id=question_id).join(Posts).filter(Posts.users_id==current_user.id).count()
+		answers = PostsForAnswers.query.filter_by(postsforquestions_id=question.id).join(Posts).filter(Posts.users_id==current_user.id).count()
 		require(READ, question)
 		return {
 			'question':marshal(question, dataformat.getPostsForQuestions()),
 			'criteria':marshal(criteria, dataformat.getCriteriaAndCourses()),
-			'count': count,
-
 			'answers': answers
 		}
 	def post(self, course_id, question_id):
@@ -73,7 +69,14 @@ class QuestionRootAPI(Resource):
 			order_by(desc(Posts.created)).all()
 
 		restrict_users = allow(EDIT, CoursesAndUsers(courses_id=course_id))
-		return {"objects":marshal(questions, dataformat.getPostsForQuestions(restrict_users))}
+		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses).filter_by(courses_id=course.id).join(AnswerPairings).all()
+		student = UserTypesForCourse.query.filter_by(name="Student").first().id
+		count = CoursesAndUsers.query.filter_by(courses_id=course_id).filter_by(usertypesforcourse_id=student).count()
+		return {
+			"questions":marshal(questions, dataformat.getPostsForQuestions(restrict_users)),
+			"judgements":marshal(judgements, dataformat.getJudgements()),
+			"count": count
+		}
 	@login_required
 	def post(self, course_id):
 		course = Courses.query.get_or_404(course_id)
