@@ -5,8 +5,11 @@
 
 var module = angular.module('ubc.ctlt.acj.judgement', 
 	[
+		'ubc.ctlt.acj.answer',
 		'ubc.ctlt.acj.criteria',
-		'ubc.ctlt.acj.toaster'
+		'ubc.ctlt.acj.toaster',
+		'ubc.ctlt.acj.common.form',
+		'ubc.ctlt.acj.common.mathjax'
 	]
 );
 
@@ -28,8 +31,8 @@ module.factory('JudgementResource',
 /***** Controllers *****/
 module.controller(
 	'JudgementController', 
-	function($log, $location, $scope, $routeParams, CriteriaResource,
-		JudgementResource, Toaster) 
+	function($log, $location, $scope, $routeParams, AnswerResource,
+		CriteriaResource, JudgementResource, Toaster) 
 	{
 		var courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
@@ -47,13 +50,15 @@ module.controller(
 		);
 		// get an answerpair to be judged from the server
 		$scope.answerPair = {};
-		$log.debug("here");
 		$scope.answerPairError = false;
 		JudgementResource.getAnswerPair(
 			{'courseId': courseId, 'questionId': questionId}).$promise.then(
 				function (ret)
 				{
 					$scope.answerPair = ret;
+					$scope.answerPair.list = [];
+					$scope.answerPair.list.push(ret['answer1']);
+					$scope.answerPair.list.push(ret['answer2']);
 				},
 				function (ret)
 				{
@@ -69,7 +74,6 @@ module.controller(
 			judgement['judgements'] = [];
 			angular.forEach($scope.courseCriteria, 
 				function(courseCriterion, index) {
-					$log.debug(courseCriterion);
 					var criterionWinner = {
 						'course_criterion_id': courseCriterion.id,
 						'answer_id_winner': courseCriterion.winner
@@ -89,6 +93,27 @@ module.controller(
 					}
 			);
 			
+		};
+
+		// flag answer for instructor
+		$scope.toggleAnswerFlag = function(answer) {
+			var params = {'flagged': !answer['flagged']};
+			var resultMsg = 
+				"Answer has been flagged as inappropriate or incomplete.";
+			if (answer['flagged']) {
+				resultMsg = "Answer has been unflagged.";
+			}
+			AnswerResource.flagged({'courseId':courseId,'questionId':questionId, 
+				'answerId': answer['id']}, params).$promise.then(
+				function() {
+					answer.flagged = params['flagged'];
+					Toaster.success(resultMsg);
+				},
+				function(ret) {
+					Toaster.reqerror("Unable to change answer flag.", ret);
+				}
+			);
+
 		};
 	}
 );

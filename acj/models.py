@@ -351,6 +351,12 @@ class PostsForAnswers(db.Model):
 	question = db.relationship("PostsForQuestions")
 	comments = db.relationship("PostsForAnswersAndPostsForComments")
 	_scores = db.relationship("Scores")
+	# flagged for instructor review as inappropriate or incomplete
+	flagged = db.Column(db.Boolean, default=False, nullable=False)
+	users_id_flagger = db.Column(
+		db.Integer,
+		db.ForeignKey('Users.id', ondelete="CASCADE"))
+	flagger = db.relationship("Users")
 
 	@hybrid_property
 	def courses_id(self):
@@ -427,7 +433,7 @@ class PostsForAnswersAndPostsForComments(db.Model):
 	@hybrid_property
 	def content(self):
 		return self.postsforcomments.post.content
-	
+
 
 #################################################
 # Criteria - What users should judge answers by

@@ -20,7 +20,13 @@ module.factory(
 	{
 		var ret = $resource(
 			'/api/courses/:courseId/questions/:questionId/answers/:answerId',
-			{answerId: '@id'}
+			{answerId: '@id'},
+			{
+				flagged: {
+					method: 'POST', 
+					url: '/api/courses/:courseId/questions/:questionId/answers/:answerId/flagged'
+				}
+			}
 		);
 		ret.MODEL = "PostsForAnswers";
 		return ret;

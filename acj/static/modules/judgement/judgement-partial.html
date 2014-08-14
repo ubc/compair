@@ -7,25 +7,24 @@
 	<div ng-hide="answerPairError">
 	<!-- Show the answers side by side -->
 	<div class='row'>
-		<div class="col-md-6">
+		<div class="col-md-6" ng-repeat="answer in answerPair.list">
 			<h2 class="text-center">
-				Answer 1
+				Answer {{$index + 1}}
 			</h2>
 			<div class="panel panel-default">
 				<div class="panel-body" 
-					ng-bind-html="answerPair.answer1.post.content">
+					mathjax="answer.post.content"
+					ng-bind-html="answer.post.content">
 				</div>
 			</div>
-		</div>
-		<div class="col-md-6">
-			<h2 class="text-center">
-				Answer 2
-			</h2>
-			<div class="panel panel-default">
-				<div class="panel-body"
-					ng-bind-html="answerPair.answer2.post.content">
-				</div>
-			</div>
+			<a href="" class="btn btn-default btn-xs"
+				title="Flag as incomplete or inappropriate."
+				ng-class="{'btn-danger': answer.flagged}"
+				ng-click="toggleAnswerFlag(answer)">
+				<i class="fa fa-exclamation"></i>
+				<span ng-if="answer.flagged">Flagged</span>
+				<span ng-if="!answer.flagged">Flag</span>
+			</a>
 		</div>
 	</div>
 	<!-- Show the judgement criterias -->

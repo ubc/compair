@@ -1,11 +1,11 @@
-from bouncer.constants import CREATE, READ, EDIT
+from bouncer.constants import CREATE, READ, EDIT, MANAGE
 from flask import Blueprint
 from flask.ext.bouncer import ensure
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from acj import dataformat, db
-from acj.authorization import require
+from acj.authorization import require, allow
 from acj.models import Posts, PostsForAnswers, PostsForQuestions, Courses, PostsForAnswersAndPostsForComments
 from acj.util import new_restful_api
 
@@ -18,6 +18,10 @@ new_answer_parser.add_argument('post', type=dict, default={})
 existing_answer_parser = RequestParser()
 existing_answer_parser.add_argument('id', type=int, required=True, help="Answer id is required.")
 existing_answer_parser.add_argument('post', type=dict, default={})
+
+flag_parser = RequestParser()
+flag_parser.add_argument('flagged', type=bool, required=True,
+	help="Expected boolean value 'flagged' is missing.")
 
 # /
 class AnswerRootAPI(Resource):
@@ -58,6 +62,7 @@ class AnswerIdAPI(Resource):
 		answer = PostsForAnswers.query.get_or_404(answer_id)
 		require(READ, answer)
 		return marshal(answer, dataformat.getPostsForAnswers())
+	@login_required
 	def post(self, course_id, question_id, answer_id):
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
@@ -76,3 +81,22 @@ class AnswerIdAPI(Resource):
 		db.session.commit()
 		return marshal(answer, dataformat.getPostsForAnswers())
 api.add_resource(AnswerIdAPI, '/<int:answer_id>')
+
+# /flag, mark an answer as inappropriate or incomplete to instructors
+class AnswerFlagAPI(Resource):
+	@login_required
+	def post(self, course_id, question_id, answer_id):
+		answer = PostsForAnswers.query.get_or_404(answer_id)
+		require(READ, answer)
+		# anyone can flag an answer, but only the original flagger or someone who can manage
+		# the answer can unflag it
+		if answer.flagged and \
+			answer.flagger.id != current_user.id and \
+			not allow(MANAGE, answer):
+			return {"error":"You do not have permission to unflag this answer."}, 400
+		params = flag_parser.parse_args()
+		answer.flagged = params['flagged']
+		answer.users_id_flagger = current_user.id
+		db.session.add(answer)
+		db.session.commit()
+api.add_resource(AnswerFlagAPI, '/<int:answer_id>/flagged')

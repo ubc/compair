@@ -127,8 +127,12 @@ def getPostsForAnswers(restrict_users=True, include_comments=True):
 	ret = {
 		'id': fields.Integer,
 		'post': fields.Nested(post),
-		'scores': fields.Nested(score)
+		'scores': fields.Nested(score),
+		'flagged': fields.Boolean
 	}
+	# can see who flagged this post if user can view unrestricted data
+	if not restrict_users:
+		ret['flagger'] = fields.Nested(getUsers(restrict_users))
 	if include_comments:
 		ret['comments'] = fields.List(fields.Nested(comments))
 		ret['comments_count'] = fields.Integer
