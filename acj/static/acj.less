@@ -30,22 +30,34 @@
 
 
 /***** AngularStrap's Modal *****/
+
 .modal-backdrop.am-fade {
+  
   opacity: .5;
   transition: opacity .15s linear;
+  
   &.ng-enter {
+  
     opacity: 0;
+    
     &.ng-enter-active {
       opacity: .5;
     }
-  }
+  
+  }//closes ng-enter
+  
   &.ng-leave {
+    
     opacity: .5;
+    
     &.ng-leave-active {
       opacity: 0;
     }
-  }
-}
+  
+  }//closes ng-leave
+  
+}//closes am-fade
+
 
 /***** UNIVERSAL *****/
 
@@ -53,6 +65,7 @@ body {
   margin-bottom: 1em;
 }
 
+/* serif font for headings */
 h1,
 h2,
 h3,
@@ -63,6 +76,7 @@ h6 {
   font-weight: bold;
 }
 
+/* fieldsets like blue box */
 fieldset {
   margin: 2em 0;
   padding: 1.5em;
@@ -74,6 +88,7 @@ fieldset + fieldset {
   margin-top: 0;
 }
 
+/* legends like blue buttons */
 legend {
   padding: .3em .6em;
   position: relative;
@@ -84,6 +99,7 @@ legend {
   background: @link-blue;  
 }
 
+/* submit buttons need spacing */
 .btn[type=submit] {
   margin-bottom: 2em;
 }
@@ -191,12 +207,13 @@ legend {
       font-size: 1.5em;
     }
   
-  }
+  }//closes course-list
   
 }//closes home-screen
 
 
 /***** VIEW SINGLE QUESTION PAGE *****/
+
 a.nounderline {
   text-decoration: none;
 }
@@ -218,7 +235,7 @@ div.quesAnsComments {
 
 .course-screen {
   
-  /* class for div surrounding course action buttons */
+  /* class for div surrounding course action/nav buttons */
   .course-nav {
     margin: 1.5em 0 2em 0;
     text-align: right;
@@ -229,13 +246,14 @@ div.quesAnsComments {
     margin-top: 1.5em;
   }
   
-  /* class for div surrounding each question row */
+  /* class for div surrounding each question */
   .each-question {
     
     padding: 1.5em 0;
     .gray-box();
     border-bottom: none;
     
+    /* alternating rows */
     &:nth-child(odd) {
       background: #fff;
     }
@@ -258,6 +276,7 @@ div.quesAnsComments {
       color: @breadcrumb-gray;
       border-top: 2px dotted @border-gray;
     
+      /* each piece of data */
       li {
         
         padding: .2em .5em;
@@ -266,10 +285,10 @@ div.quesAnsComments {
         &:last-child {
           border-right: none;
         }
-        
+          
       }//closes li
-    
-      /* style aplied when evaluations needed */
+
+     /* label is applied when evaluations needed */
       .label {
         font-size: 100%;
       }
