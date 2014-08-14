@@ -1,39 +1,44 @@
-<div ng-controller="CourseQuestionsController">
-	<h1 class="text-center">{{course.name}}</h1>
-
-	<div class="navbar marginT5">
-		<span ng-if="canCreateQuestions">
-		<a ng-href="#/course/{{course.id}}/question/create" 
-			class="btn btn-primary" id="stepNav">
-			<i class="fa fa-plus"></i>
-			Add Question
-		</a>
-		</span>
-		<span ng-if="canEditCourse">
-			<a ng-href="#/course/{{course.id}}/configure" class="btn btn-primary">
-				<i class="fa fa-edit"></i>
-				Edit Course
-			</a>
-			<a ng-href="#/course/{{course.id}}/user/import" class="btn btn-primary">
-				<i class="fa fa-file-text-o"></i>
-				Enrol Students
-			</a>
-			<a ng-href="#/course/{{course.id}}/user" class="btn btn-primary">
-				<i class="fa fa-users"></i>
-				Manage Students
-			</a>
-		</span>
-		<form class="form-inline searchCourse pull-right">
-			<div class="form-group">
-				<input class="form-control" type="text" ng-model="questionFilter"
-					placeholder="Search Questions">
-			</div>
-		</form>
+<div ng-controller="CourseQuestionsController" class="course-screen">
+	<div class="row">
+		<header class="col-sm-6">
+			<h1><i class="fa fa-book"></i> {{course.name}}</h1>
+		</header>
+		<div class="col-sm-6 course-nav">
+			<span ng-if="canCreateQuestions">
+				<a ng-href="#/course/{{course.id}}/question/create" 
+					class="btn btn-primary" id="stepNav">
+					<i class="fa fa-plus"></i>
+					Add Question
+				</a>
+			</span>
+			<span ng-if="canEditCourse">
+				<a ng-href="#/course/{{course.id}}/configure" class="btn btn-primary">
+					<i class="fa fa-edit"></i>
+					Edit Course
+				</a>
+				<a ng-href="#/course/{{course.id}}/user/import" class="btn btn-primary">
+					<i class="fa fa-file-text-o"></i>
+					Enrol Users
+				</a>
+				<a ng-href="#/course/{{course.id}}/user" class="btn btn-primary">
+					<i class="fa fa-users"></i>
+					Manage Users
+				</a>
+			</span>
+		</div>
 	</div>
 	
+	<form class="form-inline searchCourse" role="search">
+		<div class="form-group pull-right">
+			<input class="form-control" type="text" ng-model="questionFilter"
+				placeholder="Search for questions">
+		</div>
+	</form>
+	
+	<h2>Course questions</h2>
+	
 	<!-- Questions List -->
-	<div class="row" style="padding-top: 0.8em; padding-bottom: 0.7em; 
-		border-top: 1px solid #ccc;"
+	<div class="row" class="each-question"
 		ng-repeat="question in questions | filter:questionFilter">
 		<!-- Question Display -->
 		<div class="col-sm-10 media">
@@ -41,42 +46,54 @@
 			<!-- 
 			custom margin to fix tags being cut off on small screens when it goes
 			to the second row, moved to padding in question-info
-			-->
 			<a class="pull-left" ng-href="#/user/" style="margin-right: 0;">
 				<img class="media-object" src="//www.gravatar.com/avatar/{{question.post.user.avatar}}?s=48&d=retro">
-			</a>
+			</a> -->
 			<!-- Question Info -->
-			<div class="media-body" style="padding-left: 0.5em;">
+			<div class="media-body">
 				<!-- Title -->
 				<a ng-href="#/course/{{course.id}}/question/{{question.id}}">
 					<h3 class="media-heading">
-						{{question.title}} 
+						<i class="fa fa-comments"></i> {{question.title}} &raquo;
 					</h3>
 				</a>
-				<ul class="list-inline" style="margin-bottom: 0px;">
+				<!-- Details -->
+				<div ng-bind-html="question.post.content"></div>
+				<!-- Metadata -->
+				<ul class="list-inline">
+					<!-- Edit and Delete Links -->
+					<li>	
+						<a ng-href="#/course/{{course.id}}/question/{{question.id}}/edit" title="Edit"
+				ng-if="canManagePosts || question.post.user.id == loggedInUserId">
+							Edit
+						</a>
+					</li>
+					<li>
+						<a ng-href="#/course/{{course.id}}/question/{{question.id}}/delete" title="Delete">
+							<i class="fa fa-trash-o"></i>
+						</a>
+					</li>
 					<!-- Time Posted and Author -->
 					<li>
-						<span am-time-ago="question.post.created"></span> - 
+						Posted by 
 						<a ng-href="#/user/{{question.post.user.id}}">
 						{{question.post.user.displayname}}
 						</a>
 					</li>
 					<!-- Total number of answers -->
 					<li class="text-success answer-comment-count" title="{{question.answers_count}} answers">
-						<i class="fa fa-comment-o"></i>
-						{{question.answers_count}}
+						{{question.answers_count}} answer<span ng-if="question.answers_count != 1">s</span>
 					</li>
 					<!-- Total number of comments -->
-					<li class="text-info answer-comment-count" title="6 comments"> 
-						<i class="fa fa-comments-o"></i>
-						{{question.total_comments_count}}
+					<li class="text-info answer-comment-count" title="{{question.total_comments_count}} comments"> 
+						{{question.total_comments_count}} comment<span ng-if="question.total_comments_count != 1">s</span>
 					</li>
 					<!-- Judgements Left counter -->
-					<li class="label label-primary">
-						Judgements Left: {{question.left}}
+					<li ng-class="{label label-warning : question.left > 0}">
+						{{question.left}} evaluation<span ng-if="question.left != 1">s</span> needed
 					</li>
 					<!-- Question Tags -->
-					<li class="label label-default">
+					<!-- <li class="label label-default">
 						tag 1
 					</li>
 					<li class="label label-default">
@@ -84,24 +101,19 @@
 					</li>
 					<li class="label label-default">
 						tag 3
-					</li>
+					</li> -->
 				</ul>
 			</div>
 		</div>
 		<!-- Question Controls -->
 		<div class="col-sm-2">
-			<a ng-href="#/course/{{course.id}}/question/{{question.id}}/edit"
-				class="btn btn-default" title="Edit"
-				ng-if="canManagePosts || question.post.user.id == loggedInUserId">
-				<i class="fa fa-edit"></i>
+			<a class="btn btn-success" title="Answer Question"
+				ng-href="#/course/{{course.id}}/question/{{question.id}}/answer/create">
+				Answer
 			</a>
-			<a class="btn btn-default" title="Evaluate Answers"
-			 ng-href="#/course/{{course.id}}/question/{{question.id}}/judgement">
-				<i class="fa fa-gavel"></i>
-			</a>
-			<a ng-href="#/course/{{course.id}}/question/{{question.id}}/delete"
-				class="btn btn-danger pull-right btn-xs" title="Delete">
-				<i class="fa fa-trash-o"></i>
+			<a class="btn btn-success" title="Evaluate Answers"
+				ng-href="#/course/{{course.id}}/question/{{question.id}}/judgement">
+				Evaluate
 			</a>
 		</div>
 	</div>
