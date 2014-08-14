@@ -82,7 +82,7 @@ module.controller("UserCreateController",
 );
 
 module.controller("UserEditController",
-	function($scope, $log, $routeParams, Session, UserResource, Authorize, UserTypeResource, Toaster)
+	function($scope, $log, $routeParams, breadcrumbs, Session, UserResource, Authorize, UserTypeResource, Toaster)
 	{
 		var userId = $routeParams['userId'];
 		Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
@@ -155,13 +155,13 @@ module.controller("UserUpdatePasswordController",
 );
 
 module.controller("UserViewController",
-	function($scope, $log, $routeParams, UserResource, Authorize, Toaster)
+	function($scope, $log, $routeParams, breadcrumbs, Session, UserResource, Authorize, Toaster)
 	{
 		var userId = $routeParams['userId'];
 		Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function(result) {
             $scope.canCreateUser = result;
         });
-        Seession.getUser().then(function(user) {
+        Session.getUser().then(function(user) {
             $scope.ownProfile = userId == user.id;
         });
 		$scope.user = {}
