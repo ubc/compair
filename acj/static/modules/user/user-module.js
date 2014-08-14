@@ -88,7 +88,7 @@ module.controller("UserEditController",
 		Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
             $scope.canManageUsers = result;
         });
-        Seession.getUser().then(function(user) {
+        Session.getUser().then(function(user) {
             $scope.ownProfile = userId == user.id;
         });
 		$scope.user = {}
@@ -128,7 +128,7 @@ module.controller("UserEditController",
 );
 
 module.controller("UserUpdatePasswordController",
-	function($scope, $log, $routeParams, UserPasswordResource, Toaster)
+	function($scope, $log, $routeParams, Session, UserPasswordResource, Toaster)
 	{
         $scope.password = {};
         $scope.create = true;
