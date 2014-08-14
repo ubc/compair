@@ -83,7 +83,7 @@
 						{{question.total_comments_count}} comment<span ng-if="question.total_comments_count != 1">s</span>
 					</li>
 					<!-- Judgements Left counter -->
-					<li ng-class="{label label-warning : question.left > 0}">
+					<li ng-class="{'label label-warning': question.left > 0}">
 						{{question.left}} evaluation<span ng-if="question.left != 1">s</span> needed from you
 					</li>
 					<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">

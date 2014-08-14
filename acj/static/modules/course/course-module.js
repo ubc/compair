@@ -66,13 +66,13 @@ module.controller(
 		// get course info
 		var courseId = $routeParams['courseId'];
 		Authorize.can(Authorize.CREATE, QuestionResource.MODEL).then(function(result) {
-				$scope.canCreateQuestions = resulst;
+				$scope.canCreateQuestions = result;
 		});
 		Authorize.can(Authorize.EDIT, CourseResource.MODEL).then(function(result) {
-				$scope.canEditCourse = resulst;
+				$scope.canEditCourse = result;
 		});
 		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(result) {
-				$scope.canManagePosts = resulst;
+				$scope.canManagePosts = result;
 		});
 		CourseResource.get({'id': courseId}).$promise.then(
 			function (ret) {
