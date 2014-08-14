@@ -45,6 +45,7 @@
 	<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">
 		{{comment.postsforcomments.post.user.displayname}}</a>
 	- {{comment.postsforcomments.post.created | amDateFormat: 'lll'}}
+	<span class="label label-success" ng-if="instructors[comment.postsforcomments.post.user.id]">{{instructors[comment.postsforcomments.post.user.id]}}</span>
 	<div class="postFooter">
 		<a ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/comment/{{comment.id}}/edit" class="btn btn-sm btn-primary">
 			<i class="fa fa-edit"></i> Edit
@@ -89,6 +90,7 @@
 			{{comment.postsforcomments.post.user.displayname}}
 		</a>
 		- {{comment.postsforcomments.post.created | amDateFormat: 'lll'}}
+	<span class="label label-success" ng-if="instructors[comment.postsforcomments.post.user.id]">{{instructors[comment.postsforcomments.post.user.id]}}</span>
 		<div class="postFooter">
 			<a ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit" class="btn btn-sm btn-primary">
 				<i class="fa fa-edit"></i> Edit

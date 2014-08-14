@@ -33,12 +33,13 @@ class QuestionIdAPI(Resource):
 		criteria = CriteriaAndCourses.query.filter_by(courses_id=course_id).order_by(CriteriaAndCourses.id).all()
 		answers = PostsForAnswers.query.filter_by(postsforquestions_id=question.id).join(Posts).filter(Posts.users_id==current_user.id).count()
 		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses).filter_by(courses_id=course.id).join(AnswerPairings).filter(AnswerPairings.postsforquestions_id==question.id).count()
-		student = UserTypesForCourse.query.filter_by(name="Student").first().id
-		count = CoursesAndUsers.query.filter_by(courses_id=course_id).filter_by(usertypesforcourse_id=student).count()
+		count = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter(UserTypesForCourse.name==UserTypesForCourse.TYPE_STUDENT).count()
+		instructors = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter(UserTypesForCourse.name.in_([UserTypesForCourse.TYPE_TA, UserTypesForCourse.TYPE_INSTRUCTOR])).all()
 		require(READ, question)
 		return {
 			'question':marshal(question, dataformat.getPostsForQuestions()),
 			'criteria':marshal(criteria, dataformat.getCriteriaAndCourses()),
+			'instructors':marshal(instructors, dataformat.getCoursesAndUsers()),
 			'answers':answers,
 			'judged':judgements,
 			'students':count
@@ -75,8 +76,7 @@ class QuestionRootAPI(Resource):
 
 		restrict_users = allow(EDIT, CoursesAndUsers(courses_id=course_id))
 		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses).filter_by(courses_id=course.id).join(AnswerPairings).all()
-		student = UserTypesForCourse.query.filter_by(name="Student").first().id
-		count = CoursesAndUsers.query.filter_by(courses_id=course_id).filter_by(usertypesforcourse_id=student).count()
+		count = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter(UserTypesForCourse.name==UserTypesForCourse.TYPE_STUDENT).count()
 		return {
 			"questions":marshal(questions, dataformat.getPostsForQuestions(restrict_users)),
 			"judgements":marshal(judgements, dataformat.getJudgements()),

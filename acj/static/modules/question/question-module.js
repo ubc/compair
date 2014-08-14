@@ -68,11 +68,16 @@ module.controller("QuestionViewController",
 					$scope.answers = ret.question.answers;
 					$scope.reverse = true;
 
+					var instructors = {}
+					for (key in ret.instructors) {
+						instructors[ret.instructors[key].user.id] = ret.instructors[key].usertypeforcourse.name;
+					}
+					$scope.instructors = instructors;
+
 					$scope.answered = $scope.canManagePosts || ret.answers > 0;
 					var min_pairs = ret.question.answers.length / 2;
 					var required = ret.students > 0 ? Math.ceil(min_pairs * required_rounds / ret.students) : 0;
 					$scope.judged_req_met = $scope.canManagePosts || ret.judged >= required;
-
 				},
 				function (ret)
 				{
