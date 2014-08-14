@@ -38,7 +38,7 @@
 	<h2>Course questions</h2>
 	
 	<!-- Questions List -->
-	<div class="row" class="each-question"
+	<div class="row each-question"
 		ng-repeat="question in questions | filter:questionFilter">
 		<!-- Question Display -->
 		<div class="col-sm-10 media">
@@ -58,20 +58,14 @@
 					</h3>
 				</a>
 				<!-- Details -->
-				<div ng-bind-html="question.post.content"></div>
+				<div ng-bind-html="question.post.content" class="question-desc"></div>
 				<!-- Metadata -->
 				<ul class="list-inline">
 					<!-- Edit and Delete Links -->
-					<li>	
-						<a ng-href="#/course/{{course.id}}/question/{{question.id}}/edit" title="Edit"
-				ng-if="canManagePosts || question.post.user.id == loggedInUserId">
+					<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">	
+						<a ng-href="#/course/{{course.id}}/question/{{question.id}}/edit" title="Edit">
 							Edit
-						</a>
-					</li>
-					<li>
-						<a ng-href="#/course/{{course.id}}/question/{{question.id}}/delete" title="Delete">
-							<i class="fa fa-trash-o"></i>
-						</a>
+						</a> 
 					</li>
 					<!-- Time Posted and Author -->
 					<li>
@@ -90,7 +84,12 @@
 					</li>
 					<!-- Judgements Left counter -->
 					<li ng-class="{label label-warning : question.left > 0}">
-						{{question.left}} evaluation<span ng-if="question.left != 1">s</span> needed
+						{{question.left}} evaluation<span ng-if="question.left != 1">s</span> needed from you
+					</li>
+					<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
+						<a ng-href="#/course/{{course.id}}/question/{{question.id}}/delete" title="Delete">
+							<i class="fa fa-trash-o"></i>
+						</a>
 					</li>
 					<!-- Question Tags -->
 					<!-- <li class="label label-default">
