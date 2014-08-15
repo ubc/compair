@@ -75,7 +75,9 @@
 					<li>
 						Posted by 
 						<a ng-href="#/user/{{question.post.user.id}}">
-						{{question.post.user.displayname}}
+							{{question.post.user.displayname}}
+							<span ng-if="canManagePosts && question.post.user.fullname">({{question.post.user.fullname}})</span>
+							<span ng-if="canManagePosts && !question.post.user.fullname">({{question.post.user.username}})</span>
 						</a>
 					</li>
 					<!-- Total number of answers -->
