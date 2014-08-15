@@ -68,6 +68,11 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/question/question-edit-partial.html',
 				label: "Edit Question"
 			})
+		.when('/course/:courseId/question/:questionId/delete',
+			{
+				template: '',
+				controller: 'QuestionDeleteController'
+			})
 		.when ('/course/:courseId/question/:questionId/answer/create', 
 			{
 				templateUrl: 'modules/answer/answer-create-partial.html',

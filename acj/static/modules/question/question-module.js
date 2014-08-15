@@ -157,5 +157,31 @@ module.controller("QuestionEditController",
 		};
 	}
 );
+
+module.controller("QuestionDeleteController",
+	function($scope, $log, $location, $routeParams, QuestionResource, Toaster)
+	{
+		var courseId = $routeParams['courseId'];
+		var questionId = $routeParams['questionId'];
+		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
+			function (ret) {
+				QuestionResource.delete({'courseId': courseId, 'questionId': ret.question.id}).$promise.then(
+					function (ret) {
+						Toaster.success("Successfully deleted question " + ret.id);	
+						$location.path('/course/'+courseId);
+					},
+					function (ret) {
+						Toaster.reqerror("Question deletion failed", ret);
+						$location.path('/course/'+courseId);
+					}
+				);
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve question "+questionId, ret);
+			}
+		);
+	}
+);
+
 // End anonymous function
 })();

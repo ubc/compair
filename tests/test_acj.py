@@ -430,12 +430,26 @@ class QuestionsAPITests(ACJTestCase):
 		self.assertEqual(question_expected['post']['content'], rv.json['post']['content'],
 						 "Question create did not return the same content!")
 		# Test getting the question again
+		quesId = rv.json['id']
 		rv = self.client.get(self.url + '/' + str(rv.json['id']))
 		self.assert200(rv)
 		self.assertEqual(question_expected['title'], rv.json['question']['title'],
 						 "Question create did not save title properly!")
 		self.assertEqual(question_expected['post']['content'], rv.json['question']['post']['content'],
-						 "Question create did not save content proeprly!")
+						 "Question create did not save content properly!")
+		# Test deleting the question
+		self.logout()
+		expected_ret = {'id': quesId}
+		self.login(self.data.get_enroled_student().username)
+		rv = self.client.delete(self.url + '/' + str(quesId))
+		self.assert403(rv)
+		self.assertEqual('Forbidden', rv.json['message'], "User does not have the authorization to delete the question.")
+		self.logout()
+		self.login(self.data.get_enroled_instructor().username)
+		rv = self.client.delete(self.url + '/' + str(quesId))
+		self.assert200(rv)
+		self.assertEqual(expected_ret['id'], rv.json['id'], "Question "+str(rv.json['id']) + " deleted successfully")
+
 
 	def _verify_question(self, expected, actual):
 		self.assertEqual(expected.title, actual['title'])

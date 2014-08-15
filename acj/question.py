@@ -1,4 +1,4 @@
-from bouncer.constants import READ, EDIT, CREATE
+from bouncer.constants import READ, EDIT, CREATE, DELETE
 from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
@@ -61,6 +61,13 @@ class QuestionIdAPI(Resource):
 		db.session.add(question)
 		db.session.commit()
 		return marshal(question, dataformat.getPostsForQuestions())
+	@login_required
+	def delete(self, course_id, question_id):
+		question = PostsForQuestions.query.get_or_404(question_id)
+		require(DELETE, question)
+		db.session.delete(question)
+		db.session.commit()
+		return {'id': question.id} 
 api.add_resource(QuestionIdAPI, '/<int:question_id>')
 
 # /
