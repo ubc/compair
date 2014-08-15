@@ -19,11 +19,18 @@ h6 {
 
 /* fieldsets like blue box */
 fieldset {
+  
   margin: 2em 0;
   padding: 1.5em;
   background: @bkgrd-blue;
   .border-radius();
-}
+
+  hr {
+    margin: 2em 0 2.5em 0;
+    border-color: @green-blue;  
+  }
+
+}//closes fieldset
 
 fieldset + fieldset {
   margin-top: 0;

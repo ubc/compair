@@ -1,18 +1,16 @@
-<div class="panel panel-info">
-	<div class="panel-heading">
-		<h4>{{question.title}}</h4>
-	</div>
-	<div class="panel-body" mathjax="question.post.content"
-		ng-bind-html="question.post.content">
-	</div>
-</div>
-	
 <form class="form" name="answerForm" ng-submit="answerSubmit()" novalidate>
-	<div class="form-group">
-		<textarea ng-model="answer.post.content" id="answerContent"
-			class="form-control" rows="8" ckeditor required>
-		</textarea>
-	</div>
-	<input type="submit" class="btn btn-primary" value="Save"
+	<fieldset>
+		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
+		<div mathjax="question.post.content"
+			ng-bind-html="question.post.content">
+		</div>
+		<hr />
+		<div class="form-group">
+			<textarea ng-model="answer.post.content" id="answerContent"
+				class="form-control" rows="8" ckeditor required>
+			</textarea>
+		</div>
+	</fieldset>
+	<input type="submit" class="btn btn-success btn-lg center-block" value="Save"
 		ng-disabled="answerForm.$invalid || sumbmitted" />
 </form>
