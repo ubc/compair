@@ -4,7 +4,7 @@ python:
   - "3.3"
 # command to install dependencies
 install:
-  - "pip install -r requirements.txt"
-script: make test
+  - "make deps"
+script: make testci
 notifications:
   slack: ubcctlt:cyfS7OeXqRjqhyrpIMHJ0SRd

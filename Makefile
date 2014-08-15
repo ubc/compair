@@ -5,7 +5,9 @@ help:
 	@echo "  deps        install dependencies using pip"
 	@echo "  clean       remove unwanted files like .pyc's"
 	@echo "  lint        check style with flake8"
-	@echo "  test        run all your tests using py.test"
+	@echo "  test        run all tests"
+	@echo "  testf       run all front end tests"
+	@echo "  testb       run all backend tests"
 
 env:
 	sudo easy_install pip && \
@@ -27,5 +29,20 @@ clean:
 lint:
 	flake8 --exclude=env .
 
-test:
+testf:
+	node_modules/karma/bin/karma start acj/static/test/config/karma.conf.js --single-run
+
+testb:
 	python -m unittest discover -s tests/
+
+tdd:
+	node_modules/karma/bin/karma start acj/static/test/config/karma.conf.js
+
+test: testf testb
+
+testci:
+	node_modules/karma/bin/karma start acj/static/test/config/karma.conf.js --single-run --browsers PhantomJS
+	python -m unittest discover -s tests/
+
+run:
+	python manage.py runserver -h 0.0.0.0

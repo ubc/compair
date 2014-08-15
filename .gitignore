@@ -48,3 +48,6 @@ config.py
 acj/static/acj.css
 bower_components
 node_modules
+
+#vagrant files
+.vagrant
