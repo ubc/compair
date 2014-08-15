@@ -1,17 +1,17 @@
-<div class="panel panel-info">
-	<div ng-if="parent.title" class="panel-heading">
-		<h4>{{parent.title}}</h4>
-	</div>
-	<div class="panel-body" mathjax="parent.post.content"
-		ng-bind-html="parent.post.content">
-	</div>
-</div>
-
 <form name="commentForm" class="form" ng-submit="commentSubmit()" novalidate>
-	<div class="form-group">
-		<textarea ng-model="comment.content" id="commentContent" class="form-control" rows="8" ckeditor required>
-		</textarea>
-	</div>
-	<input type="submit" class="btn btn-primary" vale="Save"
+	<fieldset>
+		<h2 ng-if="parent.title"><i class="fa fa-comments"></i> {{parent.title}}</h2>
+		<i class="fa fa-quote-left pull-left" ng-if="!parent.title"></i>
+		<i class="fa fa-quote-right pull-right" ng-if="!parent.title"></i>
+		<div mathjax="parent.post.content"
+			ng-bind-html="parent.post.content">
+		</div>
+		<hr />
+		<div class="form-group">
+			<textarea ng-model="comment.content" id="commentContent" class="form-control" rows="8" ckeditor required>
+			</textarea>
+		</div>
+	</fieldset>
+	<input type="submit" class="btn btn-success btn-lg center-block" value="Save"
 		ng-disabled="commentForm.$invalid || submitted" />
 </form>
