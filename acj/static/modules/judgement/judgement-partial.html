@@ -1,72 +1,86 @@
-<div ng-controller="JudgementController">
-	<h1 class='text-center'>Evaluate Answers</h1>
+<div ng-controller="JudgementController" class="evaluate-screen">
+	
+	<h1>Evaluate Answers</h1>
 
 	<div ng-show="answerPairError" class="alert alert-danger" role="alert">
 		Answer evaluation is not available at this time. Please try again later.
 	</div>
-	<div ng-hide="answerPairError">
-	<!-- Show the answers side by side -->
-	<div class='row'>
-		<div class="col-md-6" ng-repeat="answer in answerPair.list">
-			<h2 class="text-center">
-				Answer {{$index + 1}}
-			</h2>
-			<div class="panel panel-default">
-				<div class="panel-body" 
-					mathjax="answer.post.content"
-					ng-bind-html="answer.post.content">
-				</div>
-			</div>
-			<a href="" class="btn btn-default btn-xs"
-				title="Flag as incomplete or inappropriate."
-				ng-class="{'btn-danger': answer.flagged}"
-				ng-click="toggleAnswerFlag(answer)">
-				<i class="fa fa-exclamation"></i>
-				<span ng-if="answer.flagged">Flagged</span>
-				<span ng-if="!answer.flagged">Flag</span>
-			</a>
+	
+	<div>
+		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
+		<div mathjax="question.post.content"
+			ng-bind-html="question.post.content">
 		</div>
 	</div>
+	
+	<hr />
+	
 	<!-- Show the judgement criterias -->
 	<form name="judgementForm" ng-submit="judgementSubmit()" novalidate>
+	
 		<div class="form-group" ng-repeat="courseCriterion in courseCriteria">
-			<h3 class='text-center'>{{courseCriterion.criterion.name}}</h3>
-			<div class='text-center' 
+			<h2 class="text-center">{{courseCriterion.criterion.name}}</h2>
+			<div class="text-center" 
 				ng-bind-html="courseCriterion.criterion.description">
 			</div>
+		</div>
+		
+		<div ng-hide="answerPairError" class="answer-pair">
 			<div class="row">
-				<div class="col-sm-2">
-					<!-- cosmetic spacing for larger screens -->
-				</div>
-				<div class="btn-group col-xs-12 col-sm-8">
-					<label class="btn btn-default col-xs-6" ng-class=
+				<div class="col-md-6 answer-top">
+					<label class="btn btn-default" ng-class=
 						"{active:courseCriterion.winner==answerPair.answer1.id}">
 						<input type="radio" class="btn btn-default hideRadio" 
 							name="answer{{answerPair.answer1.id}}" required
 							ng-model="courseCriterion.winner"
 							ng-value="answerPair.answer1.id">
-						Answer 1
+						<i class="fa fa-arrow-left"></i>
+						&nbsp; Select Answer 1
 					</label>
-					<label class="btn btn-default col-xs-6" ng-class=
+				</div>
+				<div class="col-md-6 answer-top">
+					<label class="btn btn-default" ng-class=
 						"{active:courseCriterion.winner==answerPair.answer2.id}">
 						<input type="radio" class="btn btn-default hideRadio" 
 							name="answer{{answerPair.answer1.id}}" required
 							ng-model="courseCriterion.winner"
 							ng-value="answerPair.answer2.id">
-						Answer 2
+						Select Answer 2 &nbsp;
+						<i class="fa fa-arrow-right"></i>
 					</label>
 				</div>
-				<div class="col-sm-2">
+			</div>
+			
+			<!-- Show the answers side by side -->
+			<div class="row">
+				<div class="col-md-6 answer-bottom" ng-repeat="answer in answerPair.list">
+					<div>
+						<h2 class="text-center">Answer {{$index + 1}}</h2>
+						<div mathjax="answer.post.content"
+							ng-bind-html="answer.post.content">
+						</div>
+						<a href="" class="btn btn-danger btn-xs"
+							title="Flag as incomplete or inappropriate."
+							ng-class="{'btn-danger': answer.flagged}"
+							ng-click="toggleAnswerFlag(answer)">
+							<i class="fa fa-warning"></i>
+							<span ng-if="answer.flagged">Flagged</span>
+							<span ng-if="!answer.flagged">Flag</span>
+						</a>
+					</div>
 				</div>
 			</div>
+			<div class="form-group">
+				<input ng-disabled="judgementForm.$invalid" type="submit" 
+					value="Submit" class="btn btn-success btn-lg center-block" />
+			</div>
+		</div><!-- Hidden on answer pair error -->
+	
+		<div ng-hide="!answerPairError">
+			<p>Answers not properly loaded. Please refresh the page.</p>
 		</div>
-		<div class="form-group text-center">
-			<input ng-disabled="judgementForm.$invalid" type="submit" 
-				value="Submit" class="btn btn-primary" />
-		</div>
+	
 	</form>
-
-	</div> <!-- Hidden on answer pair error -->
 
 </div>
 

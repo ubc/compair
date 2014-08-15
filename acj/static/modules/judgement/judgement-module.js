@@ -7,6 +7,7 @@ var module = angular.module('ubc.ctlt.acj.judgement',
 	[
 		'ubc.ctlt.acj.answer',
 		'ubc.ctlt.acj.criteria',
+		'ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.toaster',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.mathjax'
@@ -35,11 +36,24 @@ module.constant('required_rounds', 6);
 /***** Controllers *****/
 module.controller(
 	'JudgementController', 
-	function($log, $location, $scope, $routeParams, AnswerResource,
+	function($log, $location, $scope, $routeParams, QuestionResource, AnswerResource,
 		CriteriaResource, JudgementResource, Toaster) 
 	{
 		var courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
+		
+		$scope.question = {};
+		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
+			function (ret)
+			{
+				$scope.question = ret.question;
+			},
+			function (ret)
+			{
+				Toaster.reqerror("Unable to load question.", ret);
+			}
+		);
+		
 		// get all the criterias we're using for this course
 		$scope.courseCriteria = {};
 		CriteriaResource.get({'courseId': courseId}).$promise.then(
