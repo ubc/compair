@@ -1,0 +1,64 @@
+
+
+/***** COURSE SCREEN *****/
+
+.course-screen {
+  
+  /* search box */
+  .searchCourse {
+    margin-top: 1.5em;
+  }
+  
+  /* class for div surrounding each question */
+  .each-question {
+    
+    padding: 1.5em 0;
+    .gray-box();
+    border-bottom: none;
+    
+    /* alternating rows */
+    &:nth-child(odd) {
+      background: #fff;
+    }
+    
+    &:last-child {
+      border-bottom: 1px solid @border-gray;
+    }
+    
+    /* div for question description */
+    .question-desc {
+      margin: 1em 0 1.5em 0;
+      font-size: 1.1em;
+    }
+    
+    /* ul for metadata */
+    .list-inline {
+      
+      margin-bottom: 0;
+      padding-top: .5em;
+      color: @breadcrumb-gray;
+      border-top: 2px dotted @border-gray;
+    
+      /* each piece of data */
+      li {
+        
+        padding: .2em .5em;
+        border-right: 1px solid @border-gray;
+        
+        &:last-child {
+          border-right: none;
+        }
+          
+      }//closes li
+
+     /* label is applied to li when evaluations are needed */
+      .label {
+        font-size: 100%;
+      }
+    
+    }//closes list-inline
+    
+  }//closes each-question
+  
+}//closes course-screen
+

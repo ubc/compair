@@ -1,0 +1,91 @@
+
+
+/***** OVERALL *****/
+
+body {
+  margin-bottom: 1em;
+}
+
+/* serif font for headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Clarendon Std', 'Century Old Style Std', 'Century Schoolbook', Georgia, serif;
+  font-weight: bold;
+}
+
+/* fieldsets like blue box */
+fieldset {
+  margin: 2em 0;
+  padding: 1.5em;
+  background: @bkgrd-blue;
+  .border-radius();
+}
+
+fieldset + fieldset {
+  margin-top: 0;
+}
+
+/* legends like blue buttons */
+legend {
+  padding: .3em .6em;
+  position: relative;
+  top:.5em;
+  color: #fff;
+  font-size: 1.2em;
+  width: auto;
+  background: @link-blue;  
+}
+
+dt {
+  font-size: 1.1em;
+  font-style: italic;
+  font-weight: normal;
+}
+
+dd {
+  margin-bottom: .5em;
+  padding-left: 2em;
+}
+
+.btn[type=submit] {
+  margin-bottom: 2em;
+}
+
+/* class for sub-navigation i.e. header action buttons */
+.sub-nav {
+  margin: 1.5em 0 2em 0;
+  text-align: right;
+}
+
+/* angularstrap's modal */
+.modal-backdrop.am-fade {
+  
+  opacity: .5;
+  transition: opacity .15s linear;
+  
+  &.ng-enter {
+  
+    opacity: 0;
+    
+    &.ng-enter-active {
+      opacity: .5;
+    }
+  
+  }//closes ng-enter
+  
+  &.ng-leave {
+    
+    opacity: .5;
+    
+    &.ng-leave-active {
+      opacity: 0;
+    }
+  
+  }//closes ng-leave
+  
+}//closes am-fade
+

@@ -1,0 +1,32 @@
+
+
+/***** VARIABLES & MIXINS *****/
+
+@bkgrd-blue: #EDF5FC;        /*   bkgrd-blue = #EDF5FC       */
+@link-blue: #428BCA;         /*   link-blue = #428BCA        */
+@hover-blue: #2A6496;        /*   hover-blue = #2A6496       */
+@breadcrumb-gray: #5D5D5D;   /*   breadcrumb-gray = #5D5D5D  */
+@bkgrd-gray: #F9F9F9;        /*   bkgrd-gray = #F9F9F9       */
+@border-gray: #E7E7E7;       /*   border-gray = #E7E7E7      */
+@text-color: #333;           /*   text-color = #333          */
+
+/* border radius */
+.border-radius(@l-top:5px, @r-top:5px, @r-bottom:5px, @l-bottom:5px) {
+  -webkit-border-radius: @l-top @r-top @r-bottom @l-bottom;
+  -moz-border-radius: @l-top @r-top @r-bottom @l-bottom;
+  border-radius: @l-top @r-top @r-bottom @l-bottom;
+}
+
+/* gray-colored boxes */
+.gray-box() {
+  background: @bkgrd-gray;
+  border: 1px solid @border-gray;
+}
+
+/* blue-colored boxes */
+.blue-box() {
+  background: @bkgrd-blue;
+  border: 2px solid @link-blue;
+  .border-radius();
+}
+

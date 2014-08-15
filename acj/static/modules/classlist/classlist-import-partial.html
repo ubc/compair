@@ -1,15 +1,15 @@
 <div ng-controller="ClassImportController">
 	
 	<h1>Import Users for {{course.name}}</h1>
-	<h2>Import a CSV file</h2>
+	<br />
 	<ul>
 		<li>This application supports importing files that use the <strong>CSV (comma-separated values) format</strong>.</li>
-		<li><strong>Only usernames are required</strong>. All the other fields are optional.</li>
 		<li>Data is expected in this order: <strong>Username,First Name,Last Name,Email,Display Name,Password</strong></li>
+		<li><strong>Only usernames are required</strong>. All the other fields are optional.</li>
 	</ul>
 	<div class="form-group">
 		<fieldset>
-			<label for="importFile">Choose File</label>
+			<label for="importFile">Choose CSV File</label>
 			<input type="file" nv-file-select uploader="uploader" 
 				id="importFile"/>
 		</fieldset>
