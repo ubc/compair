@@ -1,17 +1,19 @@
 <form name="questionForm" class="form" ng-submit="questionSubmit()"
 	novalidate>
-	<acj-field-with-feedback form-control="questionForm.questionTitle">
-		<label for="questionTitle">Title: </label>
-		<input class="form-control" id="questionTitle" type="text"
-			name="questionTitle" ng-model="question.title" 
-			required auto-focus />
-	</acj-field-with-feedback>
-	<div class="form-group">
-		<label for="questionContent">Content:</label>
-		<textarea ng-model="question.post.content" id="questionContent"
-			class="form-control" rows="8" ckeditor>
-		</textarea>
-	</div>
-	<input type="submit" class="btn btn-primary" value="Save"
+	<fieldset>
+		<acj-field-with-feedback form-control="questionForm.questionTitle">
+			<label for="questionTitle">Question</label>
+			<input class="form-control" id="questionTitle" type="text"
+				name="questionTitle" ng-model="question.title" placeholder="short form of the question"
+				required auto-focus />
+		</acj-field-with-feedback>
+		<div class="form-group">
+			<label for="questionContent">Additional Information</label>
+			<textarea ng-model="question.post.content" id="questionContent"
+				class="form-control" rows="8" ckeditor>
+			</textarea>
+		</div>
+	</fieldset>
+	<input type="submit" class="btn btn-success btn-lg center-block" value="Save"
 		ng-disabled="questionForm.$invalid || submitted" />
 </form>
