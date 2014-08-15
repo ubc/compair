@@ -32,3 +32,15 @@ Now you should be able to open your browser and access ACJ instance using the fo
 
 	http://localhost:8080/static/index.html#/
 	
+### Access Database
+
+A MySQL database is installed and the port 3306 is forwarded to host 3306 (in case there is a conflict, vagrant will pick another port, watch for the information when vagrant starts). From host, database can be connect by:
+
+	mysql -u acj -P 3306 -p acj
+	
+The default password is `acjacj`
+
+If you already have a MySQL server running on your host, you may need to use the following command:
+
+	mysql -u acj --protocol=TCP -P 3306 -p acj
+

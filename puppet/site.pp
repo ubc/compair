@@ -29,8 +29,14 @@ python::virtualenv { '/vagrant':
   timeout      => 0,
 }
 
+$override_options = {
+  'mysqld' => {
+    'bind_address' => '0.0.0.0',
+  }
+}
 class { '::mysql::server':
   root_password    => 'acjacj',
+  restart          => true,
   override_options => $override_options
 }
 
@@ -39,7 +45,7 @@ include mysql::client
 mysql::db { 'acj':
   user     => 'acj',
   password => 'acjacj',
-  host     => 'localhost',
+  host     => '%',
   grant    => ['ALL'],
 }
 
