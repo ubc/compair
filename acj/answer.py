@@ -5,7 +5,7 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from acj import dataformat, db
-from acj.authorization import require, allow
+from acj.authorization import require, allow, is_user_access_restricted
 from acj.models import Posts, PostsForAnswers, PostsForQuestions, Courses, PostsForAnswersAndPostsForComments
 from acj.util import new_restful_api
 
@@ -102,4 +102,6 @@ class AnswerFlagAPI(Resource):
 		answer.users_id_flagger = current_user.id
 		db.session.add(answer)
 		db.session.commit()
+		return marshal(answer,
+			dataformat.getPostsForAnswers(restrict_users=is_user_access_restricted(current_user)))
 api.add_resource(AnswerFlagAPI, '/<int:answer_id>/flagged')

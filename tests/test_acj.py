@@ -449,29 +449,32 @@ class AnswersAPITests(ACJTestCase):
 		super(AnswersAPITests, self).setUp()
 		self.data = TestData()
 		self.question = self.data.get_questions()[0]
-		self.url = '/api/courses/' + str(self.data.get_course().id) + '/questions/' + \
-				   str(self.question.id) + '/answers'
+		self.base_url = self._build_url(self.data.get_course().id, self.question.id)
+
+	def _build_url(self, course_id, question_id, tail=""):
+		url = '/api/courses/' + str(course_id) + '/questions/' + str(question_id) + '/answers' + \
+			  tail
+		return url
 
 	def test_get_all_answers(self):
 		# Test login required
-		rv = self.client.get(self.url)
+		rv = self.client.get(self.base_url)
 		self.assert401(rv)
 		# test unauthorized users
 		self.login(self.data.get_unenroled_instructor().username)
-		rv = self.client.get(self.url)
+		rv = self.client.get(self.base_url)
 		self.assert403(rv)
 		self.logout()
 		self.login(self.data.get_unenroled_student().username)
-		rv = self.client.get(self.url)
+		rv = self.client.get(self.base_url)
 		self.assert403(rv)
 		self.logout()
 		# test non-existent entry
 		self.login(self.data.get_enroled_student().username)
-		rv = self.client.get('/api/courses/' + str(self.data.get_course().id) +
-							 '/questions/4903409/answers')
+		rv = self.client.get(self._build_url(self.data.get_course().id, 4903409))
 		self.assert404(rv)
 		# test data retrieve is correct
-		rv = self.client.get(self.url)
+		rv = self.client.get(self.base_url)
 		self.assert200(rv)
 		actual_answers = rv.json['objects']
 		expected_answers = PostsForAnswers.query.filter_by(postsforquestions_id=self.question.id).all()
@@ -482,46 +485,99 @@ class AnswersAPITests(ACJTestCase):
 	def test_create_answer(self):
 		# test login required
 		expected_answer = {'post': {'content':'this is some answer content'}}
-		rv = self.client.post(self.url,
+		rv = self.client.post(self.base_url,
 							  data=json.dumps(expected_answer), content_type='application/json')
 		self.assert401(rv)
 		# test unauthorized users
 		self.login(self.data.get_unenroled_student().username)
-		rv = self.client.post(self.url, data=json.dumps(expected_answer), content_type='application/json')
+		rv = self.client.post(self.base_url, data=json.dumps(expected_answer), content_type='application/json')
 		self.assert403(rv)
 		self.logout()
 		self.login(self.data.get_unenroled_instructor().username)
-		rv = self.client.post(self.url,
+		rv = self.client.post(self.base_url,
 							  data=json.dumps(expected_answer), content_type='application/json')
 		self.assert403(rv)
 		self.logout()
 		# test invalid format
 		self.login(self.data.get_enroled_student().username)
 		invalid_answer = {'post': {'blah':'blah'}}
-		rv = self.client.post(self.url,
+		rv = self.client.post(self.base_url,
 							  data=json.dumps(invalid_answer), content_type='application/json')
 		self.assert400(rv)
 		# test invalid question
 		rv = self.client.post(
-			'/api/courses/' + str(self.data.get_course().id) + '/questions/9392402/answers',
+			self._build_url(self.data.get_course().id, 9392402),
 			data=json.dumps(expected_answer), content_type='application/json')
 		self.assert404(rv)
 		# test invalid course
 		rv = self.client.post(
-			'/api/courses/9334023/questions/'+ str(self.question.id) +'/answers',
+			self._build_url(9392402, self.question.id),
 			data=json.dumps(expected_answer), content_type='application/json')
 		self.assert404(rv)
 		# test create successful
 		self.logout()
 		self.login(self.data.get_enroled_instructor().username)
 
-		rv = self.client.post(self.url,
+		rv = self.client.post(self.base_url,
 							  data=json.dumps(expected_answer), content_type='application/json')
 		self.assert200(rv)
 		# retrieve again and verify
 		answers = PostsForAnswers.query.filter_by(postsforquestions_id=self.question.id).all()
 		actual_answer = answers[2]
 		self.assertEqual(expected_answer['post']['content'], actual_answer.post.content)
+
+	def test_flag_answer(self):
+		answer = self.question.answers[0]
+		flag_url = self.base_url + "/" + str(answer.id) + "/flagged"
+		# test login required
+		expected_flag_on = {'flagged': True}
+		expected_flag_off = {'flagged': False}
+		rv = self.client.post(flag_url,
+			data=json.dumps(expected_flag_on), content_type='application/json')
+		self.assert401(rv)
+		# test unauthorized users
+		self.login(self.data.get_unenroled_student().username)
+		rv = self.client.post(flag_url, data=json.dumps(expected_flag_on),
+							  content_type='application/json')
+		self.assert403(rv)
+		self.logout()
+		# test flagging
+		self.login(self.data.get_enroled_student().username)
+		rv = self.client.post(flag_url, data=json.dumps(expected_flag_on),
+							  content_type='application/json')
+		self.assert200(rv)
+		self.assertEqual(expected_flag_on['flagged'], rv.json['flagged'],
+						 "Expected answer to be flagged.")
+		# test unflagging
+		rv = self.client.post(flag_url, data=json.dumps(expected_flag_off),
+							  content_type='application/json')
+		self.assert200(rv)
+		self.assertEqual(expected_flag_off['flagged'], rv.json['flagged'],
+						 "Expected answer to be flagged.")
+		# test prevent unflagging by other students
+		self.login(self.data.get_enroled_student().username)
+		rv = self.client.post(flag_url, data=json.dumps(expected_flag_on),
+							  content_type='application/json')
+		self.assert200(rv)
+		self.logout()
+		## create another student
+		other_student = self.data.create_user(UserTypesForSystem.TYPE_NORMAL)
+		self.data.enrol_user(other_student, self.data.get_course(), UserTypesForCourse.TYPE_STUDENT)
+		## try to unflag answer as other student, should fail
+		self.login(other_student.username)
+		rv = self.client.post(flag_url, data=json.dumps(expected_flag_off),
+							  content_type='application/json')
+		self.assert400(rv)
+		self.logout()
+		# test allow unflagging by instructor
+		self.login(self.data.get_enroled_instructor().username)
+		rv = self.client.post(flag_url, data=json.dumps(expected_flag_off),
+							  content_type='application/json')
+		self.assert200(rv)
+		self.assertEqual(expected_flag_off['flagged'], rv.json['flagged'],
+						 "Expected answer to be flagged.")
+
+
 
 class QuestionCommentsAPITests(ACJTestCase):
 	def setUp(self):
