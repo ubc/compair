@@ -1,28 +1,36 @@
 <div ng-controller="ClassViewController">
-	<h1 class="text-center">{{course.name}}</h1>
+	<div class="row">	
+		<header class="col-sm-6">
+			<h1>Manage Users</h1>
+		</header>
+		<div class="col-sm-6 sub-nav">
+			<a ng-href="#/course/{{course.id}}/user/import" class="btn btn-primary">
+				<i class="fa fa-download"></i>
+				Import Users
+			</a>
+		</div>
+	</div>
+	<h2>{{course.name}}</h2>
 	<table class="table table-striped">
 		<tr class>
+			<th>Action</th>
 			<th>First Name</th>
 			<th>Last Name</th>
 			<th>Display Name</th>
-			<th>User Type</th>
 			<th>Email</th>
-			<th>Action</th>
+			<th>Application Role</th>
 		</tr>
 		<tr ng-repeat="user in classlist">
+			<td>
+				<a href="#/user/{{user.user.id}}/edit">
+					Edit
+				</a>
+			</td>
 			<td>{{user.user.firstname}}</td>
 			<td>{{user.user.lastname}}</td>
 			<td>{{user.user.displayname}}</td>
-			<td>{{user.user.usertypeforsystem.name}}</td>
 			<td>{{user.user.email}}</td>
-			<td>
-				<a href="#/user/{{user.user.id}}">
-					<i class="fa fa-search"></i>
-				</a>
-				<a href="#/user/{{user.user.id}}/edit">
-					<i class="fa fa-edit"></i>
-				</a>
-			</td>
+			<td>{{user.user.usertypeforsystem.name}}</td>
 		</tr>
 	</table>
 </div>

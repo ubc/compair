@@ -99,9 +99,26 @@ legend {
   background: @link-blue;  
 }
 
+dt {
+  font-size: 1.1em;
+  font-style: italic;
+  font-weight: normal;
+}
+
+dd {
+  margin-bottom: .5em;
+  padding-left: 2em;
+}
+
 /* submit buttons need spacing */
 .btn[type=submit] {
   margin-bottom: 2em;
+}
+
+/* class for sub-navigation, i.e., header action buttons */
+.sub-nav {
+  margin: 1.5em 0 2em 0;
+  text-align: right;
 }
 
 
@@ -235,12 +252,6 @@ div.quesAnsComments {
 
 .course-screen {
   
-  /* class for div surrounding course action/nav buttons */
-  .course-nav {
-    margin: 1.5em 0 2em 0;
-    text-align: right;
-  }
-  
   /* search box */
   .searchCourse {
     margin-top: 1.5em;
@@ -303,18 +314,4 @@ div.quesAnsComments {
 /***** JUDGEMENTS PAGE *****/
 .hideRadio {
   opacity: 0;
-}
-
-/***** IMPORT PAGE *****/
-p.format {
-  margin-left: 2em;
-}
-
-ul.helptext {
-  margin-left: 3em;
-}
-
-/***** USER PAGE *****/
-div.optionsFooter {
-  margin-top: 0.5em;
 }

@@ -3,7 +3,7 @@
 		<header class="col-sm-6">
 			<h1><i class="fa fa-book"></i> {{course.name}}</h1>
 		</header>
-		<div class="col-sm-6 course-nav">
+		<div class="col-sm-6 sub-nav">
 			<span ng-if="canCreateQuestions">
 				<a ng-href="#/course/{{course.id}}/question/create" 
 					class="btn btn-primary" id="stepNav">
@@ -15,10 +15,6 @@
 				<a ng-href="#/course/{{course.id}}/configure" class="btn btn-primary">
 					<i class="fa fa-edit"></i>
 					Edit Course
-				</a>
-				<a ng-href="#/course/{{course.id}}/user/import" class="btn btn-primary">
-					<i class="fa fa-file-text-o"></i>
-					Enrol Users
 				</a>
 				<a ng-href="#/course/{{course.id}}/user" class="btn btn-primary">
 					<i class="fa fa-users"></i>

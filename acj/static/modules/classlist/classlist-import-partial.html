@@ -1,40 +1,32 @@
 <div ng-controller="ClassImportController">
-	<h1 class="text-center">Upload Enrolment - {{course.name}}</h1>
-	<h2>Format (CSV)</h2>
-	<p class="h4 format">
-	Username,First Name,Last Name,Email,Display Name,Password
-	</p>
-	<ul class="helptext">
-		<li><span class="help-block">Only usernames are required. All the other fields are optional.</span></li>
-		<li><span class="help-block">If a password is not given, the password for the user is their username.</span></li>
-	</ul>
-	</p>
-	<h2>Example</h2>
+	
+	<h1>Import Users for {{course.name}}</h1>
+	<h2>Import a CSV file</h2>
 	<ul>
-	<li>
-		<span class="h4">student1,Jack,Smith,jack.smith@student.ca</span>
-		<ul><li><span class="help-block">No Display Name and Password</span></li></ul>
-	</li>
-	<li>
-		<span class="h4">student1,Jack,Smith,jack.smith@student.ca,,password123</span>
-		<ul><li><span class="help-block">No Display Name</span></li></ul>
-	</li>
-	<li>
-		<span class="h4">student1,Jack,Smith,jack.smith@student.ca,display0001</span>
-		<ul><li><span class="help-block">No Password</span></li></ul>
-	</li>
-	<li>
-		<span class="h4">student1,Jack,Smith,jack.smith@student.ca,display0001,password123</span>
-	</li>
+		<li>This application supports importing files that use the <strong>CSV (comma-separated values) format</strong>.</li>
+		<li><strong>Only usernames are required</strong>. All the other fields are optional.</li>
+		<li>Data is expected in this order: <strong>Username,First Name,Last Name,Email,Display Name,Password</strong></li>
 	</ul>
-	<h2>Import</h2>
 	<div class="form-group">
-		<label for="importFile">File:</label>
-		<input type="file" nv-file-select uploader="uploader" 
-			id="importFile"/>
+		<fieldset>
+			<label for="importFile">Choose File</label>
+			<input type="file" nv-file-select uploader="uploader" 
+				id="importFile"/>
+		</fieldset>
 	</div>
-	<input type="submit" class="btn btn-primary" value="Import"
+	<input type="submit" class="btn btn-success btn-lg center-block" value="Import"
 		ng-click="uploader.queue[0].upload();"
 		ng-disabled="!uploader.queue[0]" />
+	<hr />
+	<h2>Formatting examples</h2>
+	<p>The data examples below show how to drop non-required fields. If a password is <em>not</em> given, the password saved for the user is the username.</p>
+	<dl>
+		<dt>No Display Name or Password:</dt>
+			<dd>student1,Jack,Smith,jack.smith@student.ca</dd>
+		<dt>No Display Name:</dt>
+			<dd>student1,Jack,Smith,jack.smith@student.ca,,password123</dd>
+		<dt>No First Name or Last Name:</dt>
+			<dd>student1,,,jack.smith@student.ca,display0001, password123</dd>
+	</dl>
 	
 </div>

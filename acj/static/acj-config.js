@@ -46,7 +46,7 @@ myApp.config( function ($routeProvider) {
 		.when ('/course/:courseId/user/import',
 			{
 				templateUrl: 'modules/classlist/classlist-import-partial.html',
-				label: "Import Students"
+				label: "Import Users"
 			})
 		.when ('/course/:courseId/user/import/results',
 			{
@@ -71,7 +71,7 @@ myApp.config( function ($routeProvider) {
 		.when ('/course/:courseId/question/:questionId/answer/create', 
 			{
 				templateUrl: 'modules/answer/answer-create-partial.html',
-				label: "Post Answer"
+				label: "Answer"
 			})
 		.when ('/course/:courseId/question/:questionId/answer/:answerId/edit',
 			{
@@ -81,7 +81,7 @@ myApp.config( function ($routeProvider) {
 		.when ('/course/:courseId/question/:questionId/comment/create',
 			{
 				templateUrl: 'modules/comment/comment-question-create-partial.html',
-				label: "Post Comment"
+				label: "Comment"
 			})
 		.when ('/course/:courseId/question/:questionId/comment/:commentId/edit',
 			{
@@ -91,7 +91,7 @@ myApp.config( function ($routeProvider) {
 		.when('/course/:courseId/question/:questionId/answer/:answerId/comment/create',
 			{
 				templateUrl: 'modules/comment/comment-answer-create-partial.html',
-				label: "Post Reply"
+				label: "Reply"
 			})
 		.when('/course/:courseId/question/:questionId/answer/:answerId/comment/:commentId/edit',
 			{
