@@ -1,14 +1,15 @@
 <form name="courseForm" class="form" ng-submit="courseSubmit()" 
 	novalidate>
 	<fieldset>
+	<legend>Course Details</legend>
 	<acj-field-with-feedback form-control="courseForm.courseName">
-		<label for="courseName">Course: </label>
+		<label for="courseName">Course</label>
 		<input id="courseName" name="courseName" ng-model="course.name" 
 			type="text" class="form-control" required maxlength="255" placeholder="e.g. BIOL 112 - Biology of the Cell" auto-focus />
 	</acj-field-with-feedback>
 	<div class="form-group">
-		<label for="courseDescription">Description: </label>
-		<textarea ng-model="course.description" id="courseDescription" class="form-control" ckeditor="editorOptions" rows="4" placeholder="Add any additional details about the course"></textarea>
+		<label for="courseDescription">Description</label>
+		<textarea ng-model="course.description" id="courseDescription" class="form-control" ckeditor="editorOptions" rows="4"></textarea>
 	</div>
 	<!-- <div class="form-group">
 		<label>Options:</label>
@@ -24,45 +25,50 @@
 		</div>
 	</div> -->
 	</fieldset>
+
+	<!-- hide this section when creating new course -->
+	<div ng-if="course.id">
+		<fieldset>
+			<legend>Criteria</legend>
+			<div class="list-group">
+				<a class="list-group-item">
+					<h4 class="list-group-item-heading">
+						Criteria Name Test Test Test
+					</h4>
+					<p class="list-group-item-text">
+					Criteria Description
+					</p>
+				</a>
+			</div>
+			<a href="#" class="btn btn-default btn-sm pull-right">
+				<i class="fa fa-plus"></i>
+				Add Criteria
+			</a>
+		</fieldset>
+	
+		<fieldset>
+			<legend>Tags</legend>
+			<table ng-table class="table">
+				<tr>
+					<th data-title="Title">Test</th>
+					<th data-title="Title 2">Test2</th>
+				</tr>
+				<tr>
+					<td>Test</td>
+					<td>Test2</td>
+				</tr>
+				<tr>
+					<td>Test</td>
+					<td>Test2</td>
+				</tr>
+			</table>
+			<a class="btn btn-default btn-sm">
+				<i class="fa fa-plus"></i> Add Tag
+			</a>
+		</fieldset>
+	</div>
+
 	<input type="submit" class="btn btn-success btn-lg center-block" value="Save" 
 		ng-disabled="courseForm.$invalid || submitted" />
 </form>
-
-<!-- hide this section when creating new course -->
-<div ng-if="course.id">
-	<h2>Criteria</h2>
-	<div class="list-group">
-		<a class="list-group-item">
-			<h4 class="list-group-item-heading">
-				Criteria Name Test Test Test
-			</h4>
-			<p class="list-group-item-text">
-			Criteria Description
-			</p>
-		</a>
-	</div>
-	<a href="#" class="btn btn-default btn-sm">
-		<i class="fa fa-plus"></i>
-		Add Criteria
-	</a>
-
-	<h2>Tags</h2>
-	<table ng-table class="table">
-		<tr>
-			<th data-title="Title">Test</th>
-			<th data-title="Title 2">Test2</th>
-		</tr>
-		<tr>
-			<td>Test</td>
-			<td>Test2</td>
-		</tr>
-		<tr>
-			<td>Test</td>
-			<td>Test2</td>
-		</tr>
-	</table>
-	<a class="btn btn-default btn-sm">
-		<i class="fa fa-plus"></i> Add Tag
-	</a>
-</div>
 
