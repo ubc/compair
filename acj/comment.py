@@ -1,4 +1,4 @@
-from bouncer.constants import CREATE, READ, EDIT
+from bouncer.constants import CREATE, READ, EDIT, DELETE
 from flask import Blueprint
 from flask.ext.bouncer import ensure
 from flask.ext.login import login_required, current_user
@@ -81,6 +81,13 @@ class QuestionCommentIdAPI(Resource):
 		db.session.add(comment.postsforcomments.post)
 		db.session.commit()
 		return marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+	@login_required
+	def delete(self, course_id, question_id, comment_id):
+		comment = PostsForQuestionsAndPostsForComments.query.get_or_404(comment_id)
+		require(DELETE, comment)
+		db.session.delete(comment)
+		db.session.commit()
+		return {'id': comment.id}
 apiQ.add_resource(QuestionCommentIdAPI, '/<int:comment_id>')
 
 # /
@@ -145,4 +152,11 @@ class AnswerCommentIdAPI(Resource):
 		db.session.add(comment.postsforcomments.post)
 		db.session.commit()
 		return marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+	@login_required
+	def delete(self, course_id, question_id, answer_id, comment_id):
+		comment = PostsForAnswersAndPostsForComments.query.get_or_404(comment_id)
+		require(DELETE, comment)
+		db.session.delete(comment)
+		db.session.commit()
+		return {'id': comment.id}
 apiA.add_resource(AnswerCommentIdAPI, '/<int:comment_id>')

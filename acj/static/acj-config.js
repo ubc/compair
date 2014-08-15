@@ -98,6 +98,11 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/comment/comment-question-edit-partial.html',
 				label: "Edit Comment"
 			})
+		.when ('/course/:courseId/question/:questionId/comment/:commentId/delete',
+			{
+				template: '',
+				controller: 'QuestionCommentDeleteController'
+			})
 		.when('/course/:courseId/question/:questionId/answer/:answerId/comment/create',
 			{
 				templateUrl: 'modules/comment/comment-answer-create-partial.html',
@@ -107,6 +112,11 @@ myApp.config( function ($routeProvider) {
 			{
 				templateUrl: 'modules/comment/comment-answer-edit-partial.html',
 				label: "Edit Reply"
+			})
+		.when ('/course/:courseId/question/:questionId/answer/:answerId/comment/:commentId/delete',
+			{
+				template: '',
+				controller: 'AnswerCommentDeleteController'
 			})
 		.when ('/course/:courseId/question/:questionId/judgement', 
 			{

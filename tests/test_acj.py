@@ -9,7 +9,7 @@ from werkzeug.exceptions import Unauthorized
 from acj import create_app, Users
 from acj.manage.database import populate
 from acj.core import db
-from acj.models import UserTypesForSystem, UserTypesForCourse, Courses, PostsForAnswers, PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, CoursesAndUsers
+from acj.models import UserTypesForSystem, UserTypesForCourse, Courses, PostsForAnswers, PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, CoursesAndUsers, PostsForQuestions
 from data.fixtures import DefaultFixture
 from tests import test_app_settings
 from tests.factories import CoursesFactory, UsersFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, \
@@ -430,14 +430,16 @@ class QuestionsAPITests(ACJTestCase):
 		self.assertEqual(question_expected['post']['content'], rv.json['post']['content'],
 						 "Question create did not return the same content!")
 		# Test getting the question again
-		quesId = rv.json['id']
 		rv = self.client.get(self.url + '/' + str(rv.json['id']))
 		self.assert200(rv)
 		self.assertEqual(question_expected['title'], rv.json['question']['title'],
 						 "Question create did not save title properly!")
 		self.assertEqual(question_expected['post']['content'], rv.json['question']['post']['content'],
 						 "Question create did not save content properly!")
+
+	def test_delete_question(self):
 		# Test deleting the question
+		quesId = PostsForQuestions.query.first().id
 		self.logout()
 		expected_ret = {'id': quesId}
 		self.login(self.data.get_enroled_student().username)
@@ -539,17 +541,28 @@ class AnswersAPITests(ACJTestCase):
 		answers = PostsForAnswers.query.filter_by(postsforquestions_id=self.question.id).all()
 		actual_answer = answers[2]
 		self.assertEqual(expected_answer['post']['content'], actual_answer.post.content)
+
+	def test_delete_answer(self):
+		self.logout()
+		self.login(self.data.get_enroled_instructor().username)
+		expected_answer = {'post': {'content':'this is some answer content'}}
+		rv = self.client.post(self.base_url,
+							  data=json.dumps(expected_answer), content_type='application/json')
+
+		self.logout()
+		self.login(self.data.get_enroled_student().username)
+		answerId = PostsForAnswers.query.filter_by(postsforquestions_id=self.question.id).all()[2].id
 		# test delete unsuccessful
 		self.logout()
 		self.login(self.data.get_enroled_student().username)
-		rv = self.client.delete(self.base_url + '/' + str(answers[2].id))
+		rv = self.client.delete(self.base_url + '/' + str(answerId))
 		self.assert403(rv)
 		self.logout()
 		# test delete successful
 		self.login(self.data.get_enroled_instructor().username)
-		rv = self.client.delete(self.base_url + '/' + str(answers[2].id))
+		rv = self.client.delete(self.base_url + '/' + str(answerId))
 		self.assert200(rv)
-		self.assertEqual(answers[2].id, rv.json['id'])
+		self.assertEqual(answerId, rv.json['id'])
 		
 
 	def test_flag_answer(self):
@@ -686,6 +699,29 @@ class QuestionCommentsAPITests(ACJTestCase):
 		actual_comment = comments[1]
 		self.assertEqual(expected_comment['content'], actual_comment.postsforcomments.post.content)
 
+	def test_delete_question_comment(self):
+		expected_comment = {'content':'this is some question comment'}
+		self.logout()
+		self.login(self.data.get_enroled_instructor().username)
+		self.client.post(self.url,
+			data=json.dumps(expected_comment),
+			content_type='application/json')
+		self.logout()
+		self.login(self.data.get_enroled_student().username)
+		commentId = PostsForQuestionsAndPostsForComments.query.filter_by(postsforquestions_id=self.question.id).all()[1].id
+		# test delete unsuccessful
+		self.logout()
+		self.login(self.data.get_enroled_student().username)
+		rv = self.client.delete(self.url + '/' + str(commentId))
+		self.assert403(rv)
+		self.logout()
+		# test delete successful
+		self.login(self.data.get_enroled_instructor().username)
+		rv = self.client.delete(self.url + '/' + str(commentId))
+		self.assert200(rv)
+		self.assertEqual(commentId, rv.json['id'])
+
+
 class AnswerCommentsAPITests(ACJTestCase):
 	def setUp(self):
 		super(AnswerCommentsAPITests, self).setUp()
@@ -772,6 +808,28 @@ class AnswerCommentsAPITests(ACJTestCase):
 		comments = PostsForAnswersAndPostsForComments.query.filter_by(postsforanswers_id=self.answer.id).all()
 		actual_comment = comments[1]
 		self.assertEqual(expected_comment['content'], actual_comment.postsforcomments.post.content)
+
+	def test_delete_question_comment(self):
+		expected_comment = {'content':'this is some question comment'}
+		self.logout()
+		self.login(self.data.get_enroled_instructor().username)
+		self.client.post(self.url,
+			data=json.dumps(expected_comment),
+			content_type='application/json')
+		self.logout()
+		self.login(self.data.get_enroled_student().username)
+		commentId = PostsForAnswersAndPostsForComments.query.filter_by(postsforanswers_id=self.answer.id).all()[1].id
+		# test delete unsuccessful
+		self.logout()
+		self.login(self.data.get_enroled_student().username)
+		rv = self.client.delete(self.url + '/' + str(commentId))
+		self.assert403(rv)
+		self.logout()
+		# test delete successful
+		self.login(self.data.get_enroled_instructor().username)
+		rv = self.client.delete(self.url + '/' + str(commentId))
+		self.assert200(rv)
+		self.assertEqual(commentId, rv.json['id'])
 
 class ClassListsAPITests(ACJTestCase):
 	def setUp(self):
