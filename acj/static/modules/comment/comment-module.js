@@ -151,6 +151,7 @@ module.controller(
 		AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId}).$promise.then(
 			function (ret) {
 				$scope.parent = ret;
+				$scope.replyToUser = ret.post.user.displayname;
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
@@ -205,6 +206,7 @@ module.controller(
 		AnswerCommentResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId, 'commentId': commentId}).$promise.then(
 			function(ret) {
 				$scope.comment = ret;
+				$scope.replyToUser = ret.post.user.displayname;
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve comment "+commentId, ret);
