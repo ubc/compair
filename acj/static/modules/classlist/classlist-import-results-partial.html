@@ -1,5 +1,5 @@
 <div ng-controller="ClassImportResultsController">
-	<h1>Import Users Results for {{course.name}}</h1>
+	<h1>Import Results for {{course.name}}</h1>
 	<div ng-show="results.success.length">
 		<h2>Users Enrolled</h2>
 		<table class="table table-striped">
@@ -44,7 +44,7 @@
 	</div>
 	<div ng-show="results.created.length">
 		<h2>Users Created</h2>
-		<h4>Users without a specified password will have their username as a default password.</h4>
+		<p>Users without a specified password will have their username as a default password.</p>
 		<table class="table table-striped">
 			<tr>
 				<th ng-repeat="header in headers">{{header}}</th>
