@@ -24,7 +24,7 @@
 		</div>
 	</div>
 	
-	<form class="form-inline searchCourse" role="search">
+	<form class="form-inline searchCourse" role="search" ng-if="questions.length">
 		<div class="form-group pull-right">
 			<input class="form-control" type="text" ng-model="questionFilter"
 				placeholder="Search for questions">
@@ -32,6 +32,14 @@
 	</form>
 	
 	<h2>Course questions</h2>
+	
+	<div ng-if="!questions.length">
+		<hr />
+		<p>No questions currently posted.</p>
+		<p ng-if="canCreateQuestions">Would you like to <a ng-href="#/course/{{course.id}}/question/create">add a question</a>?</p>
+	</div>
+	
+
 	
 	<!-- Questions List -->
 	<div class="row each-question"
