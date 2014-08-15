@@ -17,7 +17,6 @@ module.factory('Authorize',
 	function($log, $q, $cookieStore, Session)
 	{
 		var _allow_operation = function(operation, resource, permissions) {
-			$log.debug(permissions);
 			if (resource in permissions)
 			{
 				if (operation in permissions[resource])

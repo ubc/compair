@@ -12,7 +12,8 @@ var module = angular.module('ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.mathjax',
 		'ubc.ctlt.acj.judgement',
-		'ubc.ctlt.acj.toaster'
+		'ubc.ctlt.acj.toaster',
+		'ubc.ctlt.acj.session'
 	]
 );
 
@@ -46,7 +47,7 @@ module.filter("notScoredEnd", function () {
 
 /***** Controllers *****/
 module.controller("QuestionViewController",
-	function($scope, $log, $routeParams, AnswerResource, Authorize, QuestionResource, QuestionCommentResource, required_rounds, Toaster)
+	function($scope, $log, $routeParams, AnswerResource, Authorize, QuestionResource, QuestionCommentResource, required_rounds, Session, Toaster)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
@@ -64,9 +65,16 @@ module.controller("QuestionViewController",
 					$scope.question = ret.question;
 					$scope.criteria = ret.criteria;
 					$scope.sortby = '0';
-					$scope.order = 'scores.'+$scope.sortby+'.score';
+					$scope.order = 'answer.post.created';
 					$scope.answers = ret.question.answers;
 					$scope.reverse = true;
+					// only sort by scores if scores are available
+					if ($scope.answers.length > 0) {
+						var answer = $scope.answers[0];
+						if (answer['scores'].length > 0) {
+							$scope.order = 'scores.'+$scope.sortby+'.score';
+						}
+					}
 
 					var instructors = {}
 					for (key in ret.instructors) {

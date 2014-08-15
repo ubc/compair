@@ -126,7 +126,6 @@ module.controller(
 		$scope.course = {};
 		$scope.courseSubmit = function() {
 			$scope.submitted = true;
-			$log.debug($scope.course);
 			CourseResource.save($scope.course).$promise.then(
 				function (ret)
 				{
