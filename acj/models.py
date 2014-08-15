@@ -309,8 +309,8 @@ class PostsForQuestions(db.Model):
 		nullable=False)
 	post = db.relationship("Posts")
 	title = db.Column(db.String(255))
-	_answers = db.relationship("PostsForAnswers")
-	comments = db.relationship("PostsForQuestionsAndPostsForComments")
+	_answers = db.relationship("PostsForAnswers", cascade="delete")
+	comments = db.relationship("PostsForQuestionsAndPostsForComments", cascade="delete")
 	modified = db.Column(
 		db.TIMESTAMP,
 		default=func.current_timestamp(),
@@ -349,7 +349,7 @@ class PostsForAnswers(db.Model):
 		db.ForeignKey('PostsForQuestions.id', ondelete="CASCADE"),
 		nullable=False)
 	question = db.relationship("PostsForQuestions")
-	comments = db.relationship("PostsForAnswersAndPostsForComments")
+	comments = db.relationship("PostsForAnswersAndPostsForComments", cascade="delete")
 	_scores = db.relationship("Scores")
 	# flagged for instructor review as inappropriate or incomplete
 	flagged = db.Column(db.Boolean, default=False, nullable=False)

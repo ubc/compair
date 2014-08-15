@@ -539,6 +539,18 @@ class AnswersAPITests(ACJTestCase):
 		answers = PostsForAnswers.query.filter_by(postsforquestions_id=self.question.id).all()
 		actual_answer = answers[2]
 		self.assertEqual(expected_answer['post']['content'], actual_answer.post.content)
+		# test delete unsuccessful
+		self.logout()
+		self.login(self.data.get_enroled_student().username)
+		rv = self.client.delete(self.base_url + '/' + str(answers[2].id))
+		self.assert403(rv)
+		self.logout()
+		# test delete successful
+		self.login(self.data.get_enroled_instructor().username)
+		rv = self.client.delete(self.base_url + '/' + str(answers[2].id))
+		self.assert200(rv)
+		self.assertEqual(answers[2].id, rv.json['id'])
+		
 
 	def test_flag_answer(self):
 		answer = self.question.answers[0]

@@ -20,7 +20,7 @@
 		<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/edit" class="btn btn-sm btn-primary">
 			<i class="fa fa-edit"></i> Edit
 		</a>
-		<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" href="" class="btn btn-xs btn-danger">
+		<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/delete" class="btn btn-xs btn-danger">
 			<i class="fa fa-trash-o"></i> Delete
 		</a>
 	</div>
@@ -77,6 +77,9 @@
 		</a>
 		<a ng-if="canManagePosts || answer.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit" class="btn btn-sm btn-primary">
 			<i class="fa fa-edit"></i> Edit
+		</a>
+		<a ng-if="canManagePosts || answer.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/delete" class="btn btn-xs btn-danger">
+			<i class="fa fa-trash-o"></i> Delete
 		</a>
 	</div>
 	<hr />

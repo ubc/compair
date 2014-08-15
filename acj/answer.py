@@ -1,4 +1,4 @@
-from bouncer.constants import CREATE, READ, EDIT, MANAGE
+from bouncer.constants import CREATE, READ, EDIT, MANAGE, DELETE
 from flask import Blueprint
 from flask.ext.bouncer import ensure
 from flask.ext.login import login_required, current_user
@@ -83,6 +83,13 @@ class AnswerIdAPI(Resource):
 		db.session.add(answer)
 		db.session.commit()
 		return marshal(answer, dataformat.getPostsForAnswers())
+	@login_required
+	def delete(self, course_id, question_id, answer_id):
+		answer = PostsForAnswers.query.get_or_404(answer_id)
+		require(DELETE, answer)
+		db.session.delete(answer)
+		db.session.commit()
+		return {'id': answer.id}
 api.add_resource(AnswerIdAPI, '/<int:answer_id>')
 
 # /flag, mark an answer as inappropriate or incomplete to instructors
