@@ -33,6 +33,8 @@ class JudgementRootAPI(Resource):
 		'''
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
+		if not question.judging_period:
+			return {'error':'Judging Period is not in session.'}, 403
 		require(READ, question)
 		course_criteria = CriteriaAndCourses.query.filter_by(course=course).all()
 		params = new_judgement_parser.parse_args()
@@ -104,6 +106,8 @@ class JudgementPairAPI(Resource):
 		course = Courses.query.get_or_404(course_id) # this is just to make sure course exists
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
+		if not question.judging_period:
+			return {'error':'Judging Period is not in session.'}, 403
 		# count number of times judged for each answer
 		## get all answers for this question
 		answers = PostsForAnswers.query.join(Posts).\

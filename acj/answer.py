@@ -40,6 +40,8 @@ class AnswerRootAPI(Resource):
 	def post(self, course_id, question_id):
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
+		if not question.answer_period:
+			return {'error':'Answer Period is not in session.'}, 403
 		post = Posts(courses_id=course_id)
 		answer = PostsForAnswers(post=post, postsforquestions_id=question_id)
 		require(CREATE, answer)
@@ -69,6 +71,8 @@ class AnswerIdAPI(Resource):
 	def post(self, course_id, question_id, answer_id):
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
+		if not question.answer_period:
+			return {'error':'Answer Period is not in session.'}, 403
 		answer = PostsForAnswers.query.get_or_404(answer_id)
 		require(EDIT, answer)
 		params = existing_answer_parser.parse_args()

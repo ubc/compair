@@ -346,6 +346,14 @@ class PostsForQuestions(db.Model):
 		now = datetime.datetime.utcnow()
 		available = not self.answer_start or self.answer_start <= now < self.judge_end
 		return available
+	@hybrid_property
+	def answer_period(self):
+		now = datetime.datetime.utcnow()
+		return not self.answer_start or self.answer_start <= now < self.answer_end
+	@hybrid_property
+	def judging_period(self):
+		now = datetime.datetime.utcnow()
+		return not self.judge_start or self.judge_start <= now < self.judge_end
 
 class PostsForAnswers(db.Model):
 	__tablename__ = 'PostsForAnswers'

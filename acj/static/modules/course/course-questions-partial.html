@@ -114,11 +114,11 @@
 		<!-- Question Controls -->
 		<div class="col-sm-2">
 			<a class="btn btn-success" title="Answer Question"
-				ng-href="#/course/{{course.id}}/question/{{question.id}}/answer/create">
+				ng-href="#/course/{{course.id}}/question/{{question.id}}/answer/create" ng-show="question.answer_period">
 				Answer
 			</a>
 			<a class="btn btn-success" title="Evaluate Answers"
-				ng-href="#/course/{{course.id}}/question/{{question.id}}/judgement">
+				ng-href="#/course/{{course.id}}/question/{{question.id}}/judgement" ng-show="question.judging_period">
 				Evaluate
 			</a>
 		</div>

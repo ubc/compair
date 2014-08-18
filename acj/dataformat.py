@@ -118,6 +118,8 @@ def getPostsForQuestions(restrict_users=True):
 		'comments_count': fields.Integer,
 		'total_comments_count': fields.Integer,
 		'available': fields.Boolean,
+		'answer_period': fields.Boolean,
+		'judging_period': fields.Boolean,
 		'answer_start': fields.DateTime,
 		'answer_end': fields.DateTime,
 		'judge_start': fields.DateTime,

@@ -12,7 +12,7 @@
 		</div>
 		<ul class="list-inline">
 			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">	
-				<a ng-href="#/course/{{course.id}}/question/{{question.id}}/edit" title="Edit">
+				<a ng-href="#/course/{{course.id}}/question/{{question.id}}/edit" ng-if="canManagePosts || question.post.user.id == loggedInUserId" title="Edit">
 					Edit
 				</a> 
 			</li>
@@ -32,7 +32,7 @@
 				{{question.post.created | amDateFormat: "MMM d @ h:mm a"}}
 			</li>
 			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
-				<a ng-href="#/course/{{course.id}}/question/{{question.id}}/delete" title="Delete">
+				<a ng-href="#/course/{{course.id}}/question/{{question.id}}/delete" ng-if="canManagePosts || question.post.user.id == loggedInUserId" title="Delete">
 					<i class="fa fa-trash-o"></i>
 				</a>
 			</li>
@@ -43,7 +43,7 @@
 		<a class="btn btn-success" ng-show="answered" title="You have answered" disabled>
 			Answered
 		</a>
-		<a class="btn btn-success" title="Evaluate Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" ng-show="judging_period">
+		<a class="btn btn-success" title="Evaluate Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" ng-show="question.judging_period">
 			Evaluate
 		</a>
 	</div>
