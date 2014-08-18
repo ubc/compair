@@ -86,6 +86,7 @@ module.controller("QuestionViewController",
 					var min_pairs = ret.question.answers.length / 2;
 					var required = ret.students > 0 ? Math.ceil(min_pairs * required_rounds / ret.students) : 0;
 					$scope.judged_req_met = $scope.canManagePosts || ret.judged >= required;
+					$scope.readDate = Date.parse(ret.question.post.created);
 				},
 				function (ret)
 				{
@@ -104,6 +105,14 @@ module.controller("QuestionViewController",
 					Toaster.reqerror("Unable to retrieve comments.", ret);
 				}
 			);
+		$('#answers a').click(function (e) {
+			e.preventDefault();
+			$(this).tab('show');
+		});
+		$('#comments a').click(function (e) {
+			e.preventDefault();
+			$(this).tab('show');
+		});
 	}
 );
 module.controller("QuestionCreateController",

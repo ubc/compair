@@ -1,117 +1,144 @@
-<div ng-controller="QuestionViewController">
+<div ng-controller="QuestionViewController" class="question-screen">
 
-<h2>{{question.title}}</h2>
-<hr />
-<div mathjax="question.post.content" ng-bind-html="question.post.content">
-</div>
-<hr class="questionFooterSeparator" />
-<div class="row questionFooter">
-	<div class="col-sm-6">
-		<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" class="btn btn-sm btn-success" ng-hide="answered">
-			<i class="fa fa-lightbulb-o"></i> Answer
-		</a>
-		<a href="#/course/{{courseId}}/question/{{question.id}}/comment/create" class="btn btn-sm btn-info">
-			<i class="fa fa-comment-o"></i> Comment
-		</a>
-		<a class="btn btn-default" title="Evaluate Answers"
-		 ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement">
-			<i class="fa fa-gavel"></i> Judge
-		</a>
-		<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/edit" class="btn btn-sm btn-primary">
-			<i class="fa fa-edit"></i> Edit
-		</a>
-		<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/delete" class="btn btn-xs btn-danger">
-			<i class="fa fa-trash-o"></i> Delete
-		</a>
-	</div>
-	<div class="col-sm-6">
-		<a ng-href="#/user/{{question.post.user.id}}" class="nounderline">
-			<img src="//www.gravatar.com/avatar/{{question.post.user.avatar}}?s=32&d=retro" />
-		</a>
-		<a ng-href="#/user/{{question.post.user.id}}">
-			{{question.post.user.displayname}}
-		</a>
-		- {{question.post.created | amDateFormat: 'lll'}}
-	</div>
-</div>
-
-<hr />
-<div ng-repeat="comment in comments" class="quesAnsComments">
-	<div mathjax="comment.content" ng-bind-html="comment.content">
-	</div>
-	<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">
-		<img src="//www.gravatar.com/avatar/{{question.post.user.avatar}}?s=32&d=retro" />
-	</a>
-	<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">
-		{{comment.postsforcomments.post.user.displayname}}</a>
-	- {{comment.postsforcomments.post.created | amDateFormat: 'lll'}}
-	<span class="label label-success" ng-if="instructors[comment.postsforcomments.post.user.id]">{{instructors[comment.postsforcomments.post.user.id]}}</span>
-	<div class="postFooter">
-		<a ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/comment/{{comment.id}}/edit" class="btn btn-sm btn-primary">
-			<i class="fa fa-edit"></i> Edit
-		</a>
-		<a ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/comment/{{comment.id}}/delete" class="btn btn-xs btn-danger">
-			<i class="fa fa-trash-o"></i> Delete
-		</a>
-	</div>
-	<hr />
-</div>
-
-<select ng-hide=true ng-model="sortby" ng-options="key as c.criterion.name for (key, c) in criteria"></select>
-<div ng-show="answered">
-<div ng-repeat="answer in answers | orderBy:order:reverse | notScoredEnd:sortby">
-	<div mathjax="answer.post.content" ng-bind-html="answer.post.content">
-	</div>
-	<div>
-		<a ng-href="#/user/{{answer.post.user.id}}" class="nounderline">
-			<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
-		</a>
-		<a ng-href="#/user/{{answer.post.user.id}}">
-			{{answer.post.user.displayname}}
-		</a>
-		- {{answer.post.created | amDateFormat: 'lll'}}
-		<span ng-show="key==sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores">
-		- Score: {{score.score | number: 3}}
-		</span>
-	</div>
-	<div class="postFooter">
-		<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-info" ng-if="judged_req_met">
-			<i class="fa fa-comment-o"></i> Comment
-		</a>
-		<a ng-if="canManagePosts || answer.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit" class="btn btn-sm btn-primary">
-			<i class="fa fa-edit"></i> Edit
-		</a>
-		<a ng-if="canManagePosts || answer.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/delete" class="btn btn-xs btn-danger">
-			<i class="fa fa-trash-o"></i> Delete
-		</a>
-	</div>
-	<hr />
-	<div ng-repeat="comment in answer.comments" class="quesAnsComments" ng-if="judged_req_met">
-		<div mathjax="comment.content" ng-bind-html="comment.content">
+	<div class="standalone-question">
+		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
+		<div class="questionmathjax question-desc"
+		     ng-bind-html="question.post.content">
 		</div>
-		<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">
-			<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
+		<ul class="list-inline">
+			<!-- Edit Link -->
+			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">	
+				<a ng-href="#/course/{{course.id}}/question/{{question.id}}/edit" title="Edit">
+					Edit
+				</a> 
+			</li>
+			<!-- Author -->
+			<li>
+				Posted by 
+				<a ng-href="#/user/{{question.post.user.id}}">
+					{{question.post.user.displayname}}
+					<span ng-if="canManagePosts && question.post.user.fullname">({{question.post.user.fullname}})</span>
+					<span ng-if="canManagePosts && !question.post.user.fullname">({{question.post.user.username}})</span>
+				</a>
+			</li>
+			<li>
+				{{readDate | date:"EEE, MMM d @ h:mm a"}}
+			</li>
+			<!-- Delete Link -->
+			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
+				<a ng-href="#/course/{{course.id}}/question/{{question.id}}/delete" title="Delete">
+					<i class="fa fa-trash-o"></i>
+				</a>
+			</li>
+		</ul>
+		<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" class="btn btn-success" ng-hide="answered">
+			Answer
 		</a>
-		<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">
-			{{comment.postsforcomments.post.user.displayname}}
+		<a class="btn btn-success" ng-show="answered" disabled>
+			Answered
 		</a>
-		- {{comment.postsforcomments.post.created | amDateFormat: 'lll'}}
-	<span class="label label-success" ng-if="instructors[comment.postsforcomments.post.user.id]">{{instructors[comment.postsforcomments.post.user.id]}}</span>
-		<div class="postFooter">
-			<a ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit" class="btn btn-sm btn-primary">
-				<i class="fa fa-edit"></i> Edit
-			</a>
-			<a ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/delete" class="btn btn-xs btn-danger">
-				<i class="fa fa-trash-o"></i> Delete
-			</a>
-		</div>
-		<hr />
+		<a class="btn btn-success" title="Evaluate Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement">
+			Evaluate
+		</a>
+		<a href="#/course/{{courseId}}/question/{{question.id}}/comment/create" class="btn btn-primary pull-right">
+			Comment
+		</a>
 	</div>
-</div>
-</div>
-
-<div ng-hide="answered" class="h3 text-center">
-	Answers are hidden until you have submitted an answer for this question.
-</div>
+	
+	<ul class="nav nav-tabs" role="tablist">
+	  <li id="answers" class="active"><a href="#answers-tab">Answers</a></li>
+	  <li id="comments"><a href="#comments-tab">Comments</a></li>
+	</ul>
+	
+	<div class="tab-content">
+	
+		<div class="tab-pane" id="comments-tab">
+			<h2>Question comments</h2>
+			<div ng-repeat="comment in comments" class="question-response">
+				<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">
+					<img src="//www.gravatar.com/avatar/{{question.post.user.avatar}}?s=32&d=retro" />
+				</a>
+				<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">
+					{{comment.postsforcomments.post.user.displayname}}
+				</a>
+				<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">{{instructors[comment.postsforcomments.post.user.id]}}</span>
+				commented on {{comment.postsforcomments.post.created | amDateFormat: 'lll'}}:
+				<a ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/comment/{{comment.id}}/delete">
+					<i class="fa fa-trash-o"></i>
+				</a>
+				<div mathjax="comment.content"
+				     ng-bind-html="comment.content">
+				</div>
+				<div class="postFooter">
+					<a ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/comment/{{comment.id}}/edit">
+						Edit
+					</a>
+				</div>
+			</div>
+		</div>
+	
+		<div class="tab-pane active" id="answers-tab">
+			<h2>Answers</h2>
+			<select ng-hide=true ng-model="sortby" ng-options="key as c.criterion.name for (key, c) in criteria"></select>
+			<div ng-show="answered">
+				<div ng-repeat="answer in answers | orderBy:order:reverse | notScoredEnd:sortby">
+					<div>
+						<a ng-href="#/user/{{answer.post.user.id}}" class="nounderline">
+							<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
+						</a>
+						<a ng-href="#/user/{{answer.post.user.id}}">
+							{{answer.post.user.displayname}}
+						</a>
+						answered on {{answer.post.created | amDateFormat: 'lll'}}:
+						<a ng-if="canManagePosts || answer.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/delete">
+							<i class="fa fa-trash-o"></i>
+						</a>
+					</div>
+					<div mathjax="answer.post.content"
+					     ng-bind-html="answer.post.content">
+					</div>
+					<div class="postFooter">
+						<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-primary" ng-if="judged_req_met">
+							Reply
+						</a>
+						<a ng-if="canManagePosts || answer.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit" class="btn btn-primary">
+							Edit
+						</a>
+						<span ng-show="key==sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores" class="pull-right">
+						Score: {{score.score | number: 3}}
+						</span>
+					</div>
+					<div ng-repeat="comment in answer.comments" class="quesAnsComments" ng-if="judged_req_met">
+						<hr />
+						<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">
+							<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
+						</a>
+						<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">
+							{{comment.postsforcomments.post.user.displayname}}
+						</a>
+						<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">{{instructors[comment.postsforcomments.post.user.id]}}</span>
+						replied on {{comment.postsforcomments.post.created | amDateFormat: 'lll'}}:
+						<a ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/delete">
+								<i class="fa fa-trash-o"></i>
+						</a>
+						<div mathjax="comment.content"
+						     ng-bind-html="comment.content">
+						</div>
+						<div class="postFooter">
+							<a ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit" class="btn  btn-primary">
+								Edit
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div ng-hide="answered" class="h3 text-center">
+				Answers are hidden until you have submitted an answer for this question.
+			</div>
+		
+		</div>
+		
+	</div>
 	
 </div>

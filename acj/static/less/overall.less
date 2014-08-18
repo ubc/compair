@@ -17,7 +17,7 @@ h6 {
   font-weight: bold;
 }
 
-/* fieldsets like blue box */
+/* fieldsets for forms look like blue box */
 fieldset {
   
   margin: 2em 0;
@@ -40,7 +40,7 @@ fieldset + fieldset {
   margin-top: 0;
 }
 
-/* legends like blue buttons */
+/* legends for forms look like blue buttons */
 legend {
   padding: .3em .6em;
   position: relative;
@@ -51,17 +51,19 @@ legend {
   background: @link-blue;  
 }
 
+/* dl used for examples on import screen */
 dt {
   font-size: 1.1em;
   font-style: italic;
   font-weight: normal;
 }
 
-dd {
-  margin-bottom: .5em;
-  padding-left: 2em;
-}
+  dd {
+    margin-bottom: .5em;
+    padding-left: 2em;
+  }
 
+/* submit buttons */
 .btn[type=submit] {
   margin-bottom: 2em;
 }
@@ -72,7 +74,7 @@ dd {
   text-align: right;
 }
 
-/* class for divs surrounding questions on question, evaluation screens */
+/* class for divs surrounding questions */
 .standalone-question {
   
   margin: 2em 0 4em 0;
@@ -90,6 +92,12 @@ dd {
   }
 
 }//closes standalone-question
+
+/* class for question description divs (for non-standalone-questions */
+.question-desc {
+  margin: 1em 0 1.5em 0;
+  font-size: 1.1em;
+}
 
 /* angularstrap's modal */
 .modal-backdrop.am-fade {
