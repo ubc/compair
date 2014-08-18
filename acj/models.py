@@ -31,6 +31,8 @@ from passlib.apps import custom_app_context as pwd_context
 
 from flask.ext.login import UserMixin
 
+import datetime
+
 # need to update to filterfalse whn upgrading python
 try:
 	from itertools import filterfalse
@@ -191,6 +193,8 @@ class Courses(db.Model):
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	name = db.Column(db.String(255), unique=True, nullable=False)
 	description = db.Column(db.Text)
+	num_rounds = db.Column(db.Integer, default=6, nullable=False)
+	num_comments_req = db.Column(db.Integer, default=0, nullable=False)
 	available = db.Column(db.Boolean, default=True, nullable=False)
 	coursesandusers = db.relationship("CoursesAndUsers")
 	_criteriaandcourses = db.relationship("CriteriaAndCourses")
@@ -311,6 +315,10 @@ class PostsForQuestions(db.Model):
 	title = db.Column(db.String(255))
 	_answers = db.relationship("PostsForAnswers", cascade="delete")
 	comments = db.relationship("PostsForQuestionsAndPostsForComments", cascade="delete")
+	answer_start = db.Column(db.DateTime(timezone=True), nullable=True)
+	answer_end = db.Column(db.DateTime(timezone=True), nullable=True)
+	judge_start = db.Column(db.DateTime(timezone=True), nullable=True)
+	judge_end = db.Column(db.DateTime(timezone=True), nullable=True)
 	modified = db.Column(
 		db.TIMESTAMP,
 		default=func.current_timestamp(),
@@ -333,6 +341,11 @@ class PostsForQuestions(db.Model):
 	@hybrid_property
 	def answers(self):
 		return sorted(self._answers, key=lambda answer: answer.post.created, reverse=True)
+	@hybrid_property
+	def available(self):
+		now = datetime.datetime.utcnow()
+		available = not self.answer_start or self.answer_start <= now < self.judge_end
+		return available
 
 class PostsForAnswers(db.Model):
 	__tablename__ = 'PostsForAnswers'

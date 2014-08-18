@@ -59,6 +59,7 @@
 				<a ng-href="#/course/{{course.id}}/question/{{question.id}}">
 					<h3 class="media-heading">
 						<i class="fa fa-comments"></i> {{question.title}} &raquo;
+						<span class="label label-danger" ng-if="!question.available">Unavailable</span>
 					</h3>
 				</a>
 				<!-- Details -->

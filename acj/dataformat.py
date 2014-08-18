@@ -116,7 +116,12 @@ def getPostsForQuestions(restrict_users=True):
 		'modified': fields.DateTime,
 		'answers': fields.List(fields.Nested(answer)),
 		'comments_count': fields.Integer,
-		'total_comments_count': fields.Integer
+		'total_comments_count': fields.Integer,
+		'available': fields.Boolean,
+		'answer_start': fields.DateTime,
+		'answer_end': fields.DateTime,
+		'judge_start': fields.DateTime,
+		'judge_end': fields.DateTime
 	}
 
 def getPostsForAnswers(restrict_users=True, include_comments=True):

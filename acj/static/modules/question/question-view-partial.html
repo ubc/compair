@@ -5,6 +5,11 @@
 		<div class="questionmathjax question-desc"
 		     ng-bind-html="question.post.content">
 		</div>
+		<div ng-show="question.answer_start">
+			<div><span class="h4">Answering Period:</span> {{question.answer_start | date: 'MMM d, y h:mm a'}} - {{question.answer_end | date: 'MMM d, y h:mm a'}}</div>
+			<div><span class="h4">Judging Period:</span> {{question.judge_start | date: 'MMM d, y h:mm a'}} - {{question.judge_end | date: 'MMM d, y h:mm a'}}</div>
+		<hr class="questionFooterSeparator" />
+		</div>
 		<ul class="list-inline">
 			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">	
 				<a ng-href="#/course/{{course.id}}/question/{{question.id}}/edit" title="Edit">
@@ -32,13 +37,13 @@
 				</a>
 			</li>
 		</ul>
-		<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" class="btn btn-success" title="Answer" ng-hide="answered">
+		<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" class="btn btn-success" title="Answer" ng-show="!answered && (canManagePosts || question.answer_period">
 			Answer
 		</a>
 		<a class="btn btn-success" ng-show="answered" title="You have answered" disabled>
 			Answered
 		</a>
-		<a class="btn btn-success" title="Evaluate Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement">
+		<a class="btn btn-success" title="Evaluate Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" ng-show="judging_period">
 			Evaluate
 		</a>
 	</div>

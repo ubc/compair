@@ -1,13 +1,15 @@
-from bouncer.constants import READ, EDIT, CREATE, DELETE
+from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
-from sqlalchemy import desc
+from sqlalchemy import desc, or_, between
 from acj import dataformat, db
 from acj.authorization import allow, require
 from acj.models import PostsForQuestions, Courses, Posts, CoursesAndUsers, CriteriaAndCourses, UserTypesForCourse, PostsForAnswers, AnswerPairings, Judgements
 from acj.util import new_restful_api
+
+import datetime
 
 questions_api = Blueprint('questions_api', __name__)
 api = new_restful_api(questions_api)
@@ -15,12 +17,20 @@ api = new_restful_api(questions_api)
 new_question_parser = RequestParser()
 new_question_parser.add_argument('title', type=str, required=True, help="Question title is required.")
 new_question_parser.add_argument('post', type=dict, default={})
+new_question_parser.add_argument('answer_start', type=str, default=None)
+new_question_parser.add_argument('answer_end', type=str, default=None)
+new_question_parser.add_argument('judge_start', type=str, default=None)
+new_question_parser.add_argument('judge_end', type=str, default=None)
 
 # existing_question_parser = new_question_parser.copy()
 existing_question_parser = RequestParser()
 existing_question_parser.add_argument('id', type=int, required=True, help="Question id is required.")
 existing_question_parser.add_argument('title', type=str, required=True, help="Question title is required.")
 existing_question_parser.add_argument('post', type=dict, default={})
+existing_question_parser.add_argument('answer_start', type=str, default=None)
+existing_question_parser.add_argument('answer_end', type=str, default=None)
+existing_question_parser.add_argument('judge_start', type=str, default=None)
+existing_question_parser.add_argument('judge_end', type=str, default=None)
 
 # /id
 class QuestionIdAPI(Resource):
@@ -30,12 +40,15 @@ class QuestionIdAPI(Resource):
 		if not question_id:
 			question_id = 1
 		question = PostsForQuestions.query.get_or_404(question_id)
+		require(READ, question)
+		now = datetime.datetime.utcnow()
+		if not allow(MANAGE, question) and not (question.answer_start <= now < question.judge_end):
+			return {"error":"The question is unavailable!"}, 403
 		criteria = CriteriaAndCourses.query.filter_by(courses_id=course_id).order_by(CriteriaAndCourses.id).all()
 		answers = PostsForAnswers.query.filter_by(postsforquestions_id=question.id).join(Posts).filter(Posts.users_id==current_user.id).count()
 		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses).filter_by(courses_id=course.id).join(AnswerPairings).filter(AnswerPairings.postsforquestions_id==question.id).count()
 		count = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter(UserTypesForCourse.name==UserTypesForCourse.TYPE_STUDENT).count()
 		instructors = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter(UserTypesForCourse.name.in_([UserTypesForCourse.TYPE_TA, UserTypesForCourse.TYPE_INSTRUCTOR])).all()
-		require(READ, question)
 		return {
 			'question':marshal(question, dataformat.getPostsForQuestions()),
 			'criteria':marshal(criteria, dataformat.getCriteriaAndCourses()),
@@ -55,8 +68,12 @@ class QuestionIdAPI(Resource):
 		# modify question according to new values, preserve original values if values not passed
 		question.post.content = params.get("post").get("content")
 		if not question.post.content:
-			return {"error":"The answer content is empty!"}, 400
+			return {"error":"The question content is empty!"}, 400
 		question.title = params.get("title", question.title)
+		question.answer_start = params.get('answer_start', None)
+		question.answer_end = params.get('answer_end', None)
+		question.judge_start = params.get('judge_start', None)
+		question.judge_end = params.get('judge_end', None)
 		db.session.add(question.post)
 		db.session.add(question)
 		db.session.commit()
@@ -78,10 +95,18 @@ class QuestionRootAPI(Resource):
 		course = Courses.query.get_or_404(course_id)
 		require(READ, course)
 		# Get all questions for this course, default order is most recent first
-		questions = PostsForQuestions.query.join(Posts).filter(Posts.courses_id==course_id). \
-			order_by(desc(Posts.created)).all()
-
 		restrict_users = not allow(EDIT, CoursesAndUsers(courses_id=course_id))
+		post = Posts(courses_id=course_id)
+		question = PostsForQuestions(post=post)
+		if allow(MANAGE, question):
+			questions = PostsForQuestions.query.join(Posts).filter(Posts.courses_id==course_id). \
+				order_by(desc(Posts.created)).all()
+		else:
+			now = datetime.datetime.utcnow()
+			questions = PostsForQuestions.query.join(Posts).filter(Posts.courses_id==course_id).\
+				filter(or_(PostsForQuestions.answer_start==None,between(now, PostsForQuestions.answer_start, PostsForQuestions.judge_end))).\
+				order_by(desc(Posts.created)).all()
+		restrict_users = allow(EDIT, CoursesAndUsers(courses_id=course_id))
 		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses).filter_by(courses_id=course.id).join(AnswerPairings).all()
 		count = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter(UserTypesForCourse.name==UserTypesForCourse.TYPE_STUDENT).count()
 		return {
@@ -102,6 +127,10 @@ class QuestionRootAPI(Resource):
 			return {"error":"The answer content is empty!"}, 400
 		post.users_id = current_user.id
 		question.title = params.get("title")
+		question.answer_start = params.get('answer_start', None)
+		question.answer_end = params.get('answer_end', None)
+		question.judge_start = params.get('judge_start', None)
+		question.judge_end = params.get('judge_end', None)
 		db.session.add(post)
 		db.session.add(question)
 		db.session.commit()
