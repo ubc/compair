@@ -42,7 +42,7 @@ class QuestionIdAPI(Resource):
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
 		now = datetime.datetime.utcnow()
-		if not allow(MANAGE, question) and not (question.answer_start <= now < question.judge_end):
+		if not allow(MANAGE, question) and not (question.answer_start <= now):
 			return {"error":"The question is unavailable!"}, 403
 		criteria = CriteriaAndCourses.query.filter_by(courses_id=course_id).order_by(CriteriaAndCourses.id).all()
 		answers = PostsForAnswers.query.filter_by(postsforquestions_id=question.id).join(Posts).filter(Posts.users_id==current_user.id).count()
@@ -104,7 +104,7 @@ class QuestionRootAPI(Resource):
 		else:
 			now = datetime.datetime.utcnow()
 			questions = PostsForQuestions.query.join(Posts).filter(Posts.courses_id==course_id).\
-				filter(or_(PostsForQuestions.answer_start==None,between(now, PostsForQuestions.answer_start, PostsForQuestions.judge_end))).\
+				filter(or_(PostsForQuestions.answer_start==None,now >= PostsForQuestions.answer_start)).\
 				order_by(desc(Posts.created)).all()
 		restrict_users = allow(EDIT, CoursesAndUsers(courses_id=course_id))
 		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses).filter_by(courses_id=course.id).join(AnswerPairings).all()

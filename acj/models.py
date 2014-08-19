@@ -344,7 +344,7 @@ class PostsForQuestions(db.Model):
 	@hybrid_property
 	def available(self):
 		now = datetime.datetime.utcnow()
-		available = not self.answer_start or self.answer_start <= now < self.judge_end
+		available = not self.answer_start or self.answer_start <= now
 		return available
 	@hybrid_property
 	def answer_period(self):
