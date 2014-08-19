@@ -15,7 +15,7 @@
 		
 		<ul class="list-inline">
 			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">	
-				<a ng-href="#/course/{{course.id}}/question/{{question.id}}/edit" ng-if="canManagePosts || question.post.user.id == loggedInUserId" title="Edit">
+				<a ng-href="#/course/{{courseId}}/question/{{question.id}}/edit" ng-if="canManagePosts || question.post.user.id == loggedInUserId" title="Edit">
 					Edit
 				</a> 
 			</li>
@@ -35,7 +35,7 @@
 				{{question.post.created | amDateFormat: "MMM d @ h:mm a"}}
 			</li>
 			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
-				<a ng-href="#/course/{{course.id}}/question/{{question.id}}/delete" ng-if="canManagePosts || question.post.user.id == loggedInUserId" title="Delete">
+				<a ng-href="#/course/{{courseId}}/question/{{question.id}}/delete" ng-if="canManagePosts || question.post.user.id == loggedInUserId" title="Delete">
 					<i class="fa fa-trash-o"></i>
 				</a>
 			</li>
@@ -103,7 +103,7 @@
 					
 				</div>
 				
-				<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-primary" ng-if="judged_req_met">
+				<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary" ng-if="judged_req_met">
 					Reply
 				</a>
 				
@@ -144,7 +144,8 @@
 			
 			<div ng-if="answered || canManagePosts">
 				
-				<div class="each-answer" ng-repeat="answer in answers | orderBy:order:reverse | notScoredEnd:sortby" ng-hide="instructors[answer.post.user.id]">
+				<!-- <div class="each-answer" ng-repeat="answer in answers | orderBy:order:reverse | notScoredEnd:sortby" ng-hide="instructors[answer.post.user.id]"> -->
+				<div class="each-answer" ng-repeat="answer in answers" ng-hide="instructors[answer.post.user.id]">
 					
 					<a ng-href="#/user/{{answer.post.user.id}}">
 						<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
@@ -172,14 +173,16 @@
 					     ng-bind-html="answer.post.content">
 					</div>
 					
-					<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-primary" ng-if="judged_req_met">
+					<!-- <a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-primary" ng-if="judged_req_met"> -->
+					<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary pull-left">
 						Reply
 					</a>
-					<span ng-show="key==sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores" class="pull-right">
+					<p ng-show="key==sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores" class="score-display">
 						<em>Score: {{score.score | number: 3}}</em>
-					</span>
+					</p>
 					
-					<div ng-repeat="comment in answer.comments" class="each-reply" ng-if="judged_req_met">
+					<!-- <div ng-repeat="comment in answer.comments" class="each-reply" ng-if="judged_req_met"> -->
+					<div ng-repeat="comment in answer.comments" class="each-reply">
 						<hr />
 						<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
 							<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />

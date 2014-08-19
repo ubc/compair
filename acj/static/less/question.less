@@ -4,23 +4,7 @@
 
 .question-screen {
 
-a.nounderline {
-  text-decoration: none;
-}
-
-hr.questionFooterSeparator {
-  margin: 0.5em 0;
-}
-
-div.postFooter {
-  margin: 0.5em 0;
-}
-
-div.quesAnsComments {
-  margin-left: 4em;
-}
-
-  /* ul for metadata */
+  /* ul for metadata in question box */
   .list-inline {
     
     margin: 2em 0;
@@ -44,7 +28,90 @@ div.quesAnsComments {
         
     }//closes li
     
+  }//closes list-inline
+  
+  /*  class for ul creating tab navigation */
+  .nav-tabs {
+    border-color: @border-gray;
   }
+  
+    /* tab color to match alternating answer color */
+    .nav-tabs > .active > a,
+    .nav > li > a:hover {
+      background: @bkgrd-gray;
+    }
+    
+  /* class on div wrapping all tab content */
+  .tab-content {
+    
+    /* class on div wrapping tab header */
+    .tab-header {
+      margin: 0;
+      padding: 1em;
+      background: @bkgrd-gray;
+    }
+    
+    /* add spacing to instructor labels */
+    .label-info {
+      display: inline-block;
+    }
+    
+    /* manager-actions is class for action buttons div */
+    .manager-actions a {
       
+      margin-left: 1.2em;
+      padding-left: 1.2em;
+      display: inline-block;
+      border-left: 1px solid @border-gray;
+      
+      &:first-child {
+        border-left: none;
+      }
+      
+    }//closes manager-actions a
+    
+    /* class for answer, comment divs */
+    .each-answer,
+    .each-comment {
+      
+      padding: 1em;
+      color: @breadcrumb-gray;
+      border-bottom: 1px solid @border-gray;
+      
+      /* when score is shown */
+      .score-display {
+        margin-bottom: 2em;
+        text-align: right;
+      }
+    
+    }//closes each-answer, each-comment
+    
+    .each-answer:nth-child(odd),
+    .each-comment:nth-child(even){
+        background: @bkgrd-gray;
+    }
+    
+    /* class for reply divs */
+    .each-reply {
+      
+      padding-left: 4em;
+      
+      /* hr divides answer from reply and replies from each other */
+      hr {
+        border: none;
+        border-bottom: 2px dotted @border-gray;
+      }
+    
+    }//closes each-reply
+    
+    /* class used on all main content divs (answers, replies, comments) */
+    .content {
+      margin: 1em 0 2em 0;
+      color: #333;
+      font-size: 1.1em;
+    }
+    
+  }//closes tab-content
+  
 }//closes question-screen
 
