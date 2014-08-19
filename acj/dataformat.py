@@ -120,10 +120,12 @@ def getPostsForQuestions(restrict_users=True):
 		'available': fields.Boolean,
 		'answer_period': fields.Boolean,
 		'judging_period': fields.Boolean,
+		'after_judging': fields.Boolean,
 		'answer_start': fields.DateTime,
 		'answer_end': fields.DateTime,
 		'judge_start': fields.DateTime,
-		'judge_end': fields.DateTime
+		'judge_end': fields.DateTime,
+		'date_set': fields.Boolean
 	}
 
 def getPostsForAnswers(restrict_users=True, include_comments=True):

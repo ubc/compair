@@ -1,11 +1,10 @@
 <div ng-controller="QuestionViewController" class="question-screen">
-
 	<div class="standalone-question">
 		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
 		<div class="questionmathjax question-desc"
 		     ng-bind-html="question.post.content">
 		</div>
-		<div ng-show="question.answer_start">
+		<div ng-show="question.date_set">
 			<div><span class="h4">Answering Period:</span> {{question.answer_start | date: 'MMM d, y h:mm a'}} - {{question.answer_end | date: 'MMM d, y h:mm a'}}</div>
 			<div><span class="h4">Judging Period:</span> {{question.judge_start | date: 'MMM d, y h:mm a'}} - {{question.judge_end | date: 'MMM d, y h:mm a'}}</div>
 		<hr class="questionFooterSeparator" />
@@ -46,7 +45,53 @@
 		<a class="btn btn-success" title="Evaluate Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" ng-show="question.judging_period">
 			Evaluate
 		</a>
-	</div>
+
+		<div ng-repeat="answer in instructor_answers" ng-show="canManagePosts || question.after_judging">
+			<div mathjax="answer.post.content" ng-bind-html="answer.post.content"></div>
+			<div>
+				<a ng-href="#/user/{{answer.post.user.id}}" class="nounderline">
+					<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
+				</a>
+				<a ng-href="#/user/{{answer.post.user.id}}">
+					{{answer.post.user.displayname}}
+				</a>
+				- {{answer.post.created | amDateFormat: 'lll'}}
+				<span class="label label-success" ng-if="instructors[answer.post.user.id]">{{instructors[answer.post.user.id]}}'s Answer</span>
+			</div>
+			<div class="postFooter">
+				<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-info" ng-if="judged_req_met">
+					<i class="fa fa-comment-o"></i> Comment
+				</a>
+				<a ng-if="canManagePosts || question.answer_period" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit" class="btn btn-sm btn-primary">
+					<i class="fa fa-edit"></i> Edit
+				</a>
+				<a ng-if="canManagePosts" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/delete" class="btn btn-xs btn-danger">
+					<i class="fa fa-trash-o"></i> Delete
+				</a>
+			</div>
+			<hr />
+			<div ng-repeat="comment in answer.comments" class="quesAnsComments" ng-if="judged_req_met">
+				<div mathjax="comment.content" ng-bind-html="comment.content">
+				</div>
+				<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">
+					<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
+				</a>
+				<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}" class="nounderline">
+					{{comment.postsforcomments.post.user.displayname}}
+				</a>
+				- {{comment.postsforcomments.post.created | amDateFormat: 'lll'}}
+			<span class="label label-success" ng-if="instructors[comment.postsforcomments.post.user.id]">{{instructors[comment.postsforcomments.post.user.id]}}</span>
+				<div class="postFooter">
+					<a ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit" class="btn btn-sm btn-primary">
+						<i class="fa fa-edit"></i> Edit
+					</a>
+					<a ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/delete" class="btn btn-xs btn-danger">
+						<i class="fa fa-trash-o"></i> Delete
+					</a>
+				</div>
+				<hr />
+			</div>
+		</div>
 	
 	<ul class="nav nav-tabs" role="tablist">
 	  <li id="answers" class="active">
@@ -69,7 +114,7 @@
 			
 			<div ng-if="answered">
 				
-				<div class="each-answer" ng-repeat="answer in answers | orderBy:order:reverse | notScoredEnd:sortby">
+				<div class="each-answer" ng-repeat="answer in answers | orderBy:order:reverse | notScoredEnd:sortby ng-hide="instructors[answer.post.user.id]">
 				<!-- <div class="each-answer" ng-repeat="answer in answers"> -->
 					<a ng-href="#/user/{{answer.post.user.id}}">
 						<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
@@ -194,5 +239,4 @@
 		</div>
 		
 	</div>
-	
 </div>
