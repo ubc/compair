@@ -103,9 +103,12 @@
 					
 				</div>
 				
-				<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary" ng-if="judged_req_met">
+				<!-- <a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary pull-left" ng-if="judged_req_met"> -->
+				<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary pull-left">
 					Reply
 				</a>
+				
+				<h3 class="reply-heading" ng-if="answer.comments.length">{{answer.comments.length}} replies</h3>
 				
 				<div ng-repeat="comment in answer.comments" class="each-reply" ng-if="judged_req_met">
 					
@@ -180,6 +183,8 @@
 					<p ng-show="key==sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores" class="score-display">
 						<em>Score: {{score.score | number: 3}}</em>
 					</p>
+					
+					<h3 class="reply-heading" ng-if="answer.comments.length">{{answer.comments.length}} replies</h3>
 					
 					<!-- <div ng-repeat="comment in answer.comments" class="each-reply" ng-if="judged_req_met"> -->
 					<div ng-repeat="comment in answer.comments" class="each-reply">

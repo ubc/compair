@@ -35,9 +35,10 @@
     border-color: @border-gray;
   }
   
-    /* tab color to match alternating answer color */
+    /* tab color to match alternating answer/comment color */
     .nav-tabs > .active > a,
-    .nav > li > a:hover {
+    .nav > li > a:hover,
+    .nav > .active > a:focus {
       background: @bkgrd-gray;
     }
     
@@ -78,7 +79,7 @@
       color: @breadcrumb-gray;
       border-bottom: 1px solid @border-gray;
       
-      /* when score is shown */
+      /* when answer score is shown */
       .score-display {
         margin-bottom: 2em;
         text-align: right;
@@ -86,18 +87,28 @@
     
     }//closes each-answer, each-comment
     
+    
+    /* alternating answer/comment color to match tab color */
     .each-answer:nth-child(odd),
     .each-comment:nth-child(even){
         background: @bkgrd-gray;
     }
     
+    /* h3 reply heading (conditionally displayed) */
+    .reply-heading {
+      margin: 2em 0 0 3.2em;
+      font-size: 1.1em;
+    }
+    
     /* class for reply divs */
     .each-reply {
       
-      padding-left: 4em;
+      margin-left: 4em;
+      font-size: .85em;
       
       /* hr divides answer from reply and replies from each other */
       hr {
+        margin: 1.5em 0;
         border: none;
         border-bottom: 2px dotted @border-gray;
       }
@@ -108,7 +119,7 @@
     .content {
       margin: 1em 0 2em 0;
       color: #333;
-      font-size: 1.1em;
+      font-size: 1.15em;
     }
     
   }//closes tab-content
