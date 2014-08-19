@@ -20,6 +20,7 @@
 ##	 "PostsForQuestions" table for posts that are meant to be questions
 
 import hashlib
+import pytz
 from sqlalchemy import event
 
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -666,4 +667,25 @@ class LTIInfo(db.Model):
 		db.ForeignKey('Courses.id', ondelete="CASCADE"),
 		nullable=False)
 	course = db.relationship("Courses")
+
+
+class Activities(db.Model):
+	__tablename__ = 'Activities'
+	__table_args__ = default_table_args
+
+	id = db.Column(db.Integer, primary_key=True)
+	users_id = db.Column(db.Integer, db.ForeignKey("Users.id"), nullable=True)
+	user = db.relationship("Users")
+	courses_id = db.Column(
+		db.Integer,
+		db.ForeignKey('Courses.id', ondelete="CASCADE"),
+		nullable=True)
+	course = db.relationship("Courses")
+	timestamp = db.Column(db.TIMESTAMP, default=func.current_timestamp(),
+						nullable=False)
+	event = db.Column(db.String(50))
+	data = db.Column(db.Text)
+	status = db.Column(db.String(20))
+	message = db.Column(db.Text)
+	session_id = db.Column(db.String(100))
 

@@ -5,9 +5,9 @@ from flask_login import login_required, current_user
 from sqlalchemy import exc, desc
 from acj import dataformat
 from acj.authorization import allow, require
-from .core import db
+from .core import db, event
 from .models import Courses, UserTypesForCourse, CoursesAndUsers, PostsForQuestions, Posts, Criteria, CriteriaAndCourses
-from .util import pagination, new_restful_api
+from .util import pagination, new_restful_api, get_model_changes
 
 courses_api = Blueprint('courses_api', __name__)
 api = new_restful_api(courses_api)
@@ -28,6 +28,13 @@ existing_course_parser.add_argument('description', type=str)
 existing_course_parser.add_argument('enable_student_create_questions', type=bool)
 existing_course_parser.add_argument('enable_student_create_tags', type=bool)
 
+# events
+on_course_modified = event.signal('COURSE_MODIFIED')
+on_course_get = event.signal('COURSE_GET')
+on_course_list_get = event.signal('COURSE_LIST_GET')
+on_course_create = event.signal('COURSE_CREATE')
+
+
 # /
 class CourseListAPI(Resource):
 	@login_required
@@ -35,6 +42,10 @@ class CourseListAPI(Resource):
 	@marshal_with(dataformat.getCourses())
 	def get(self, objects):
 		require(MANAGE, Courses)
+		on_course_list_get.send(
+			current_app._get_current_object(),
+			event_name=on_course_list_get.name,
+			user=current_user)
 		return objects
 
 	@login_required
@@ -59,6 +70,13 @@ class CourseListAPI(Resource):
 				course = new_course, users_id = current_user.id, usertypeforcourse = instructor_role)
 			db.session.add(new_courseanduser)
 			db.session.commit()
+
+			on_course_create.send(
+				current_app._get_current_object(),
+				event_name=on_course_create.name,
+				user=current_user,
+				data=marshal(new_course, dataformat.getCourses()))
+
 		except exc.IntegrityError as e:
 			db.session.rollback()
 			current_app.logger.error("Failed to add new course. Duplicate.")
@@ -70,13 +88,20 @@ class CourseListAPI(Resource):
 		return marshal(new_course, dataformat.getCourses())
 api.add_resource(CourseListAPI, '')
 
+
 # /id
 class CourseAPI(Resource):
 	@login_required
 	def get(self, id):
 		course = Courses.query.get_or_404(id)
 		require(READ, course)
+		on_course_get.send(
+			current_app._get_current_object(),
+			event_name=on_course_get.name,
+			user=current_user,
+			data={'id': id})
 		return marshal(course, dataformat.getCourses())
+
 	# Save existing course
 	def post(self, id):
 		course = Courses.query.get_or_404(id)
@@ -84,7 +109,7 @@ class CourseAPI(Resource):
 		params = existing_course_parser.parse_args()
 		# make sure the course id in the url and the course id in the params match
 		if params['id'] != id:
-			return {"error":"Course id does not match URL."}, 400
+			return {"error": "Course id does not match URL."}, 400
 		# modify course according to new values, preserve original values if values not passed
 		course.name = params.get("name", course.name)
 		course.description = params.get("description", course.description)
@@ -92,9 +117,14 @@ class CourseAPI(Resource):
 															course.enable_student_create_questions)
 		course.enable_student_create_tags = params.get("enable_student_create_tags",
 													   course.enable_student_create_tags)
-		db.session.add(course)
+		on_course_modified.send(
+			current_app._get_current_object(),
+			event_name=on_course_modified.name,
+			user=current_user,
+			data=get_model_changes(course))
 		db.session.commit()
 		return marshal(course, dataformat.getCourses())
+
 api.add_resource(CourseAPI, '/<int:id>')
 
 #@teacher.require(http_exception=401)

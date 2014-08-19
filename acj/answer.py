@@ -1,14 +1,14 @@
 from bouncer.constants import CREATE, READ, EDIT, MANAGE, DELETE
-from flask import Blueprint
-from flask.ext.bouncer import ensure
+from flask import Blueprint, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from acj import dataformat, db
 from acj.authorization import require, allow, is_user_access_restricted
 from acj.models import Posts, PostsForAnswers, PostsForQuestions, Courses, Users
-from acj.util import new_restful_api
+from acj.util import new_restful_api, get_model_changes
 from acj.attachment import addNewFile, deleteFile
+from acj.core import event
 
 answers_api = Blueprint('answers_api', __name__)
 api = new_restful_api(answers_api)
@@ -32,6 +32,14 @@ flag_parser = RequestParser()
 flag_parser.add_argument('flagged', type=bool, required=True,
 	help="Expected boolean value 'flagged' is missing.")
 
+
+# events
+on_answer_modified = event.signal('ANSWER_MODIFIED')
+on_answer_get = event.signal('ANSWER_GET')
+on_answer_list_get = event.signal('ANSWER_LIST_GET')
+on_answer_create = event.signal('ANSWER_CREATE')
+on_answer_flag = event.signal('ANSWER_FLAG')
+
 # /
 class AnswerRootAPI(Resource):
 	#TODO pagination
@@ -43,6 +51,14 @@ class AnswerRootAPI(Resource):
 		answers = PostsForAnswers.query.join(Posts).\
 			filter(PostsForAnswers.postsforquestions_id==question.id).\
 			order_by(Posts.created.desc()).all()
+
+		on_answer_list_get.send(
+			current_app._get_current_object(),
+			event_name=on_answer_list_get.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id})
+
 		return {"objects":marshal(answers, dataformat.getPostsForAnswers())}
 
 	@login_required
@@ -65,6 +81,14 @@ class AnswerRootAPI(Resource):
 		post.users_id = current_user.id
 		db.session.add(post)
 		db.session.add(answer)
+
+		on_answer_create.send(
+			current_app._get_current_object(),
+			event_name=on_answer_create.name,
+			user=current_user,
+			course_id=course_id,
+			data=marshal(answer, dataformat.getPostsForAnswers(False)))
+
 		db.session.commit()
 		if name:
 			addNewFile(params.get('alias'), name, course_id, question_id, post.id)
@@ -78,7 +102,16 @@ class AnswerIdAPI(Resource):
 		course = Courses.query.get_or_404(course_id)
 		answer = PostsForAnswers.query.get_or_404(answer_id)
 		require(READ, answer)
+
+		on_answer_get.send(
+			current_app._get_current_object(),
+			event_name=on_answer_get.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id, 'answer_id': answer_id})
+
 		return marshal(answer, dataformat.getPostsForAnswers())
+
 	@login_required
 	def post(self, course_id, question_id, answer_id):
 		course = Courses.query.get_or_404(course_id)
@@ -99,6 +132,14 @@ class AnswerIdAPI(Resource):
 			return {"error":"The answer content is empty!"}, 400
 		db.session.add(answer.post)
 		db.session.add(answer)
+
+		on_answer_modified.send(
+			current_app._get_current_object(),
+			event_name=on_answer_modified.name,
+			user=current_user,
+			course_id=course_id,
+			data=get_model_changes(answer))
+
 		db.session.commit()
 		if name:
 			addNewFile(params.get('alias'), name, course_id, question_id, answer.post.id)
@@ -129,6 +170,15 @@ class AnswerFlagAPI(Resource):
 		answer.flagged = params['flagged']
 		answer.users_id_flagger = current_user.id
 		db.session.add(answer)
+
+		on_answer_flag.send(
+			current_app._get_current_object(),
+			event_name=on_answer_flag.name,
+			user=current_user,
+			course_id=course_id,
+			quesiton_id=question_id,
+			data={'answer_id': answer_id, 'flag': answer.flagged})
+
 		db.session.commit()
 		return marshal(answer,
 			dataformat.getPostsForAnswers(restrict_users=is_user_access_restricted(current_user)))

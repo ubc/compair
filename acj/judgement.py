@@ -10,6 +10,7 @@ import math
 from sqlalchemy import func
 from acj import dataformat, db
 from acj.authorization import require
+from acj.core import event
 from acj.models import PostsForAnswers, Posts, Judgements, AnswerPairings, Courses, CriteriaAndCourses, \
 	PostsForQuestions, Scores, CoursesAndUsers, UserTypesForCourse
 from acj.util import new_restful_api
@@ -27,6 +28,10 @@ new_judgement_parser.add_argument('answerpair_id', type=int, required=True,
 								  help="Missing answer pair id.")
 new_judgement_parser.add_argument('judgements', type=list, required=True, help="Missing judgements.")
 
+
+# events
+on_answer_pair_get = event.signal('ANSWER_PAIR_GET')
+on_judgement_create = event.signal('JUDGEMENT_CREATE')
 
 # /
 class JudgementRootAPI(Resource):
@@ -90,7 +95,16 @@ class JudgementRootAPI(Resource):
 		if round > 1:
 			current_app.logger.debug("Doing scoring")
 			_calculate_scores(course_id, question_id)
+
+		on_judgement_create.send(
+			current_app._get_current_object(),
+			event_name=on_judgement_create.name,
+			user=current_user,
+			course_id=course_id,
+			data=marshal(judgement, dataformat.getJudgements()))
+
 		return {'objects': marshal(judgements, dataformat.getJudgements())}
+
 api.add_resource(JudgementRootAPI, '')
 
 # /pair
@@ -173,6 +187,14 @@ class JudgementPairAPI(Resource):
 		if selected_pair == None:
 			return {"error":"You've already judged all currently available answer pairs! There might be more available later."}, 400
 		current_app.logger.debug("Return one of the unjudged pairings")
+
+		on_answer_pair_get.send(
+			current_app._get_current_object(),
+			event_name=on_answer_pair_get.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id, 'answer_pair': marshal(selected_pair, dataformat.getAnswerPairings(include_answers=True))})
+
 		return marshal(selected_pair, dataformat.getAnswerPairings(include_answers=True))
 
 	def _generate_random_pairings(self, question_id, answers):

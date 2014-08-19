@@ -5,6 +5,7 @@ from .core import login_manager, bouncer, db, cas
 from .configuration import config
 from .models import Users
 from .login import authenticate
+import activity
 
 
 def create_app(conf=config, settings_override={}):

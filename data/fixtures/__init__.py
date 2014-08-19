@@ -3,8 +3,9 @@
 """
 from datetime import datetime, timedelta
 import random
+
 from acj.models import UserTypesForCourse, UserTypesForSystem
-from tests.factories import UsersFactory, UserTypesForCourseFactory, UserTypesForSystemFactory, CriteriaFactory, \
+from data.fixtures.factories import UsersFactory, UserTypesForCourseFactory, UserTypesForSystemFactory, CriteriaFactory, \
 	CoursesFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, PostsForAnswersFactory
 
 

@@ -1,11 +1,11 @@
 """
 	The app core, initialize necessary objects
 """
+from blinker import Namespace
 from flask.ext.bouncer import Bouncer
 from flask.ext.cas import CAS
 
-from flask.ext.login import LoginManager, current_user
-from flask.ext.restful import Api
+from flask.ext.login import LoginManager
 from flask.ext.sqlalchemy import SQLAlchemy
 
 
@@ -29,3 +29,6 @@ cas = CAS()
 # def auth_func(*args, **kw):
 # 	if not current_user.is_authenticated():
 # 		raise ProcessingException(description='Not authenticated!', code=401)
+
+# create custom namespace for signals
+event = Namespace()

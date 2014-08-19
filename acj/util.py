@@ -1,6 +1,11 @@
 from functools import wraps
 from flask import request, jsonify
 from flask.ext.restful import Api
+from flask.ext.sqlalchemy import Model
+from sqlalchemy import inspect
+from sqlalchemy.orm.attributes import get_history
+from sqlalchemy.orm.util import object_state
+from acj.core import db
 
 
 def pagination(model):
@@ -61,3 +66,32 @@ def new_restful_api(blueprint):
 	api = Api(blueprint)
 	api.unauthorized = _unauthorized_override
 	return api
+
+
+def get_model_changes(model):
+	# disble db session autoflush, otherwise changes will be flushed and lost
+	with db.session.no_autoflush:
+		changes = dict()
+		insp = inspect(model)
+
+		#skip no changed model
+		if not insp.modified:
+			return
+
+		synonyms = insp.mapper.synonyms.keys()
+		for attr in insp.attrs:
+			# skip synonym attributes, who has problem with .history
+			if attr.key in synonyms:
+				continue
+
+			if isinstance(attr.value, Model):
+				# recursive call on related model
+				ret = get_model_changes(attr.value)
+				if ret is not None:
+					changes[attr.key] = ret
+			else:
+				history = attr.history
+				if attr.state.modified and history.has_changes():
+					changes[attr.key] = {history.deleted[0]: history.added[0]}
+
+	return changes

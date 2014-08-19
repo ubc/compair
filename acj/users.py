@@ -1,16 +1,15 @@
-from flask import Blueprint
+from flask import Blueprint, current_app
 from bouncer.constants import READ, MANAGE, EDIT, CREATE
-from flask.ext.restful import Resource, Api, fields, marshal_with, marshal
+from flask.ext.restful import Resource, marshal_with, marshal
 from flask.ext.restful.reqparse import RequestParser
 
-from flask_login import login_required
-from werkzeug.exceptions import Unauthorized
+from flask_login import login_required, current_user
 from acj import dataformat, db
 from .authorization import is_user_access_restricted, require
-from .util import pagination, new_restful_api
+from core import event
+from .util import pagination, new_restful_api, get_model_changes
 
-#from general import admin, teacher, commit, hasher
-from .models import Users, CoursesAndUsers, UserTypesForSystem, Courses
+from .models import Users, UserTypesForSystem
 
 users_api = Blueprint('users_api', __name__)
 user_types_api = Blueprint('user_types_api', __name__)
@@ -37,12 +36,22 @@ update_password_parser = RequestParser()
 update_password_parser.add_argument('oldpassword', type=str, required=True)
 update_password_parser.add_argument('newpassword', type=str, required=True)
 
+# events
+on_user_modified = event.signal('USER_MODIFIED')
+on_user_get = event.signal('USER_GET')
+on_user_list_get = event.signal('USER_LIST_GET')
+on_user_create = event.signal('USER_CREATE')
+on_user_course_get = event.signal('USER_COURSE_GET')
+on_user_password_update = event.signal('USER_PASSWORD_UPDATE')
+
 
 # /id
 class UserAPI(Resource):
 	@login_required
 	def get(self, id):
 		user = Users.query.get_or_404(id)
+		on_user_get.send(current_app._get_current_object(), event_name=on_user_get.name,
+							  user=current_user, data={'id': id})
 		return marshal(user, dataformat.getUsers(is_user_access_restricted(user)))
 	@login_required
 	def post(self, id):
@@ -58,8 +67,13 @@ class UserAPI(Resource):
 		user.lastname = params.get("lastname", user.lastname)
 		user.displayname = params.get("displayname", user.displayname)
 		user.email = params.get("email", user.email)
-		db.session.add(user)
+		changes = get_model_changes(user)
 		db.session.commit()
+		on_user_modified.send(
+			current_app._get_current_object(),
+			event_name=on_user_modified.name,
+			user=current_user,
+			data={'id': id, 'changes': changes})
 		return marshal(user, dataformat.getUsers())
 
 
@@ -70,7 +84,12 @@ class UserListAPI(Resource):
 	@marshal_with(dataformat.getUsers(False))
 	def get(self, objects):
 		require(MANAGE, Users)
+		on_user_list_get.send(
+			current_app._get_current_object(),
+			event_name=on_user_list_get.name,
+			user=current_user)
 		return objects
+
 	def post(self):
 		user = Users()
 		require(CREATE, user)
@@ -90,6 +109,11 @@ class UserListAPI(Resource):
 			return {"error":"This display name already exists. Please pick another."}, 409
 		db.session.add(user)
 		db.session.commit()
+		on_user_create.send(
+			current_app._get_current_object(),
+			event_name=on_user_create.name,
+			user=current_user,
+			data=marshal(user, dataformat.getUsers(False)))
 		return marshal(user, dataformat.getUsers())
 
 
@@ -110,7 +134,14 @@ class UserCourseListAPI(Resource):
 		# TODO REMOVE COURSES WHERE USER IS DROPPED?
 		# TODO REMOVE COURSES WHERE COURSE IS UNAVAILABLE?
 
+		on_user_course_get.send(
+			current_app._get_current_object(),
+			event_name=on_user_course_get.name,
+			user=current_user,
+			data={'userid': id})
+
 		return {'objects': marshal(coursesandusers, dataformat.getCoursesAndUsers(include_user=False))}
+
 
 # /
 class UserTypesAPI(Resource):
@@ -119,6 +150,7 @@ class UserTypesAPI(Resource):
 		types = UserTypesForSystem.query.\
 			order_by("id").all()
 		return marshal(types, dataformat.getUserTypesForSystem())
+
 
 # /password
 class UserUpdatePasswordAPI(Resource):
@@ -132,9 +164,13 @@ class UserUpdatePasswordAPI(Resource):
 			user.password = params.get('newpassword')
 			db.session.add(user)
 			db.session.commit()
+			on_user_password_update.send(
+				current_app._get_current_object(),
+				event_name=on_user_password_update.name,
+				user=current_user)
 			return marshal(user, dataformat.getUsers(False))
 		else:
-			return {"error":"The old password is incorrect."}, 401
+			return {"error": "The old password is incorrect."}, 401
 
 api = new_restful_api(users_api)
 api.add_resource(UserAPI, '/<int:id>')

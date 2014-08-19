@@ -1,13 +1,14 @@
 from bouncer.constants import CREATE, READ, EDIT, DELETE
-from flask import Blueprint
-from flask.ext.bouncer import ensure
+from flask import Blueprint, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from acj import dataformat, db
 from acj.authorization import require, allow
-from acj.models import Posts, PostsForComments, PostsForAnswers, PostsForQuestions, Courses, PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, CoursesAndUsers
-from acj.util import new_restful_api
+from acj.core import event
+from acj.models import Posts, PostsForComments, PostsForAnswers, PostsForQuestions, Courses, PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, \
+	CoursesAndUsers
+from acj.util import new_restful_api, get_model_changes
 
 commentsforquestions_api = Blueprint('commentsforquestions_api', __name__)
 apiQ = new_restful_api(commentsforquestions_api)
@@ -25,6 +26,19 @@ existing_comment_parser = RequestParser()
 existing_comment_parser.add_argument('id', type=int, required=True, help="Comment id is required.")
 existing_comment_parser.add_argument('content', type=str, required=True)
 
+# events
+on_comment_modified = event.signal('COMMENT_MODIFIED')
+on_comment_get = event.signal('COMMENT_GET')
+on_comment_list_get = event.signal('COMMENT_LIST_GET')
+on_comment_create = event.signal('COMMENT_CREATE')
+on_comment_delete = event.signal('COMMENT_DELETE')
+
+on_answer_comment_modified = event.signal('ANSWER_COMMENT_MODIFIED')
+on_answer_comment_get = event.signal('ANSWER_COMMENT_GET')
+on_answer_comment_list_get = event.signal('ANSWER_COMMENT_LIST_GET')
+on_answer_comment_create = event.signal('ANSWER_COMMENT_CREATE')
+on_answer_comment_delete = event.signal('ANSWER_COMMENT_DELETE')
+
 # /
 class QuestionCommentRootAPI(Resource):
 	#TODO pagination
@@ -38,7 +52,16 @@ class QuestionCommentRootAPI(Resource):
 			join(PostsForComments, Posts).\
 			filter(PostsForQuestionsAndPostsForComments.postsforquestions_id==question.id, Posts.courses_id==course_id).\
 			order_by(Posts.created.desc()).all()
+
+		on_comment_list_get.send(
+			current_app._get_current_object(),
+			event_name=on_comment_list_get.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id})
+
 		return {"objects":marshal(comments, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments(restrict_users))}
+
 	@login_required
 	def post(self, course_id, question_id):
 		course = Courses.query.get_or_404(course_id)
@@ -55,8 +78,17 @@ class QuestionCommentRootAPI(Resource):
 		db.session.add(post)
 		db.session.add(comment)
 		db.session.add(commentForQuestion)
+
+		on_comment_create.send(
+			current_app._get_current_object(),
+			event_name=on_comment_create.name,
+			user=current_user,
+			course_id=course_id,
+			data=marshal(commentForQuestion, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments(False)))
+
 		db.session.commit()
 		return marshal(commentForQuestion, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+
 apiQ.add_resource(QuestionCommentRootAPI, '')
 
 # / id
@@ -67,7 +99,16 @@ class QuestionCommentIdAPI(Resource):
 		question = PostsForQuestions.query.get_or_404(question_id)
 		comment = PostsForQuestionsAndPostsForComments.query.get_or_404(comment_id)
 		require(READ, comment)
+
+		on_comment_get.send(
+			current_app._get_current_object(),
+			event_name=on_comment_get.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id, 'comment_id': comment_id})
+
 		return marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+
 	@login_required
 	def post(self, course_id, question_id, comment_id):
 		course = Courses.query.get_or_404(course_id)
@@ -83,14 +124,31 @@ class QuestionCommentIdAPI(Resource):
 		if not comment.postsforcomments.post.content:
 			return {"error":"The comment content is empty!"}, 400
 		db.session.add(comment.postsforcomments.post)
+
+		on_comment_modified.send(
+			current_app._get_current_object(),
+			event_name=on_comment_modified.name,
+			user=current_user,
+			course_id=course_id,
+			data=get_model_changes(comment.postsforcomments.post))
+
 		db.session.commit()
 		return marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+
 	@login_required
 	def delete(self, course_id, question_id, comment_id):
 		comment = PostsForQuestionsAndPostsForComments.query.get_or_404(comment_id)
 		require(DELETE, comment)
 		db.session.delete(comment)
 		db.session.commit()
+
+		on_comment_delete.send(
+			current_app._get_current_object(),
+			event_name=on_comment_delete.name,
+			user=current_user,
+			course_id=course_id,
+			data=marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments(False)))
+
 		return {'id': comment.id}
 apiQ.add_resource(QuestionCommentIdAPI, '/<int:comment_id>')
 
@@ -107,6 +165,14 @@ class AnswerCommentRootAPI(Resource):
 			join(PostsForComments, Posts).\
 			filter(PostsForAnswersAndPostsForComments.postsforanswers_id==answer.id, Posts.courses_id==course_id).\
 			order_by(Posts.created.desc()).all()
+
+		on_answer_comment_list_get.send(
+			current_app._get_current_object(),
+			event_name=on_answer_comment_list_get.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id, 'answer_id': answer_id})
+
 		return {"objects":marshal(comments, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())}
 
 	@login_required
@@ -126,8 +192,17 @@ class AnswerCommentRootAPI(Resource):
 		db.session.add(post)
 		db.session.add(comment)
 		db.session.add(commentForAnswer)
+
+		on_answer_comment_create.send(
+			current_app._get_current_object(),
+			event_name=on_answer_comment_create.name,
+			user=current_user,
+			course_id=course_id,
+			data=marshal(commentForAnswer, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments(False)))
+
 		db.session.commit()
 		return marshal(commentForAnswer, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+
 apiA.add_resource(AnswerCommentRootAPI, '')
 
 # / id
@@ -138,7 +213,16 @@ class AnswerCommentIdAPI(Resource):
 		answer = PostsForAnswers.query.get_or_404(answer_id)
 		comment = PostsForAnswersAndPostsForComments.query.get_or_404(comment_id)
 		require(READ, comment)
+
+		on_answer_comment_get.send(
+			current_app._get_current_object(),
+			event_name=on_answer_comment_get.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id, 'answer_id': answer_id, 'comment_id': comment_id})
+
 		return marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+
 	@login_required
 	def post(self, course_id, question_id, answer_id, comment_id):
 		course = Courses.query.get_or_404(course_id)
@@ -154,15 +238,33 @@ class AnswerCommentIdAPI(Resource):
 		if not comment.postsforcomments.post.content:
 			return {"error":"The comment content is empty!"}, 400
 		db.session.add(comment.postsforcomments.post)
+
+		on_answer_comment_modified.send(
+			current_app._get_current_object(),
+			event_name=on_answer_comment_modified.name,
+			user=current_user,
+			course_id=course_id,
+			data=get_model_changes(comment.postsforcomments))
+
 		db.session.commit()
 		return marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+
 	@login_required
 	def delete(self, course_id, question_id, answer_id, comment_id):
 		comment = PostsForAnswersAndPostsForComments.query.get_or_404(comment_id)
 		require(DELETE, comment)
 		db.session.delete(comment)
 		db.session.commit()
+
+		on_answer_comment_delete.send(
+			current_app._get_current_object(),
+			event_name=on_answer_comment_delete.name,
+			user=current_user,
+			course_id=course_id,
+			data=marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments(False)))
+
 		return {'id': comment.id}
+
 apiA.add_resource(AnswerCommentIdAPI, '/<int:comment_id>')
 
 # /

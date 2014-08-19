@@ -1,7 +1,7 @@
 import datetime
 from acj import db
 from acj.models import UserTypesForSystem, UserTypesForCourse
-from tests.factories import CoursesFactory, UsersFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, \
+from data.fixtures import CoursesFactory, UsersFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, \
 	PostsForAnswersFactory
 
 

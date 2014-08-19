@@ -2,9 +2,9 @@ from bouncer.constants import EDIT, CREATE
 from flask import Blueprint, Flask, request, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
-from flask.ext.restful.reqparse import RequestParser
 from acj import dataformat, db
 from acj.authorization import allow, require
+from acj.core import event
 from acj.models import CoursesAndUsers, Courses, Users, UserTypesForSystem, UserTypesForCourse
 from acj.util import new_restful_api
 from werkzeug.utils import secure_filename
@@ -26,6 +26,11 @@ ALLOWED_EXTENSIONS = set(['csv'])
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+# events
+on_classlist_get = event.signal('CLASSLIST_GET')
+on_classlist_upload = event.signal('CLASSSLIST_UPLOAD')
 
 def allowed_file(filename):
 	return '.' in filename and \
@@ -173,6 +178,13 @@ class ClasslistRootAPI(Resource):
 		classlist = CoursesAndUsers.query. \
 			filter_by(courses_id=course_id).\
 			filter(CoursesAndUsers.usertypesforcourse_id!=dropped).all()
+
+		on_classlist_get.send(
+			current_app._get_current_object(),
+			event_name=on_classlist_get.name,
+			user=current_user,
+			course_id=course_id)
+
 		return {'objects':marshal(classlist, dataformat.getCoursesAndUsers(restrict_users, include_user))}
 	@login_required
 	def post(self, course_id):
@@ -191,6 +203,11 @@ class ClasslistRootAPI(Resource):
 					if row:
 						users.append(row)
 				results = import_users(course_id, users)
+				on_classlist_upload.send(
+					current_app._get_current_object(),
+					event_name=on_classlist_upload.name,
+					user=current_user,
+					course_id=course_id)
 			os.remove(os.path.join(app.config['UPLOAD_FOLDER'], tmpName))
 			current_app.logger.debug("Class Import for course " + str(course_id) + " is successful. Removed file.")
 			return results
