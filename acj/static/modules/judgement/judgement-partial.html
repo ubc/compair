@@ -50,11 +50,11 @@
 							</div>
 							<a href="" class="btn btn-default btn-xs"
 								title="Flag as incomplete or inappropriate."
-								ng-class="{'btn-danger': answer.flagged}"
-								ng-click="toggleAnswerFlag(answer)">
+								ng-class="{'btn-danger': answerPair.answer1.flagged}"
+								ng-click="toggleAnswerFlag(answerPair.answer1)">
 								<i class="fa fa-warning"></i>
-								<span ng-if="answer.flagged">Flagged</span>
-								<span ng-if="!answer.flagged">Flag</span>
+								<span ng-if="answerPair.answer1.flagged">Flagged</span>
+								<span ng-if="!answerPair.answer1.flagged">Flag</span>
 							</a>
 						</div>
 					</div>
@@ -77,11 +77,11 @@
 							</div>
 							<a href="" class="btn btn-default btn-xs pull-right"
 								title="Flag as incomplete or inappropriate."
-								ng-class="{'btn-danger': answer.flagged}"
-								ng-click="toggleAnswerFlag(answer)">
+								ng-class="{'btn-danger': answerPair.answer2.flagged}"
+								ng-click="toggleAnswerFlag(answerPair.answer2)">
 								<i class="fa fa-warning"></i>
-								<span ng-if="answer.flagged">Flagged</span>
-								<span ng-if="!answer.flagged">Flag</span>
+								<span ng-if="answerPair.answer2.flagged">Flagged</span>
+								<span ng-if="!answerPair.answer2.flagged">Flag</span>
 							</a>
 						</div>
 					</div>
