@@ -29,13 +29,14 @@ module.factory(
 /***** Services *****/
 module.service('importService', function(FileUploader, $location, CourseResource, Toaster) {
 	var results = {};
-	var uploader = new FileUploader({
-		url: '/api/courses/1/users',
-		queueLimit: 1,
-		removeAfterUpload: true
-	});
+	var uploader = null; 
 	
-	var getUploader = function() {
+	var getUploader = function(courseId) {
+		var uploader = new FileUploader({
+			url: '/api/courses/'+courseId+'/users',
+			queueLimit: 1,
+			removeAfterUpload: true
+		});
 		return uploader;
 	}
 
@@ -112,7 +113,7 @@ module.controller(
 				Toaster.reqerror("Unable to retrieve course: "+courseId, ret);
 			}
 		);
-		$scope.uploader = importService.getUploader();
+		$scope.uploader = importService.getUploader(courseId);
 		$scope.uploader.onCompleteItem = importService.onComplete(courseId);
 		$scope.uploader.onErrorItem = importService.onError();
 	}
