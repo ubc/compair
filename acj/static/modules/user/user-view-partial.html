@@ -1,17 +1,15 @@
 <div ng-controller="UserViewController">
-	<div class="row pull-right" ng-if="ownProfile">
+	<div class="pull-right" ng-if="ownProfile">
 		<a ng-href="#/user/{{user.id}}/edit" class="btn btn-primary">
-			<i class="fa fa-edit"></i> Edit
+			Edit
 		</a>
 	</div>
 	<h1><i class="fa fa-user"></i> {{user.displayname}}'s Profile</h1>
 	<hr>
 	<div class="col-md-4">
-		<div class="row">
-			<a href="https://en.gravatar.com/" title="Add or edit your user image with Gravatar">
-			   <img class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
-			</a>
-		</div>
+		<a href="https://en.gravatar.com/" title="Add or edit your user image with Gravatar">
+		   <img class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
+		</a>
 	</div>
 	<div class="col-md-8">
 		<div class="row" ng-if="canCreateUser || ownProfile">
@@ -38,6 +36,5 @@
 			<strong class="col-md-3">Created On:</strong>
 			<div class="col-md-9">{{user.created}}</div>
 		</div> -->
-		</div>
 	</div>
 </div>
