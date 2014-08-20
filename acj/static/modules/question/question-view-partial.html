@@ -73,7 +73,7 @@
 				<p ng-if="!canManagePosts && !answered && question.answer_period"><a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" title="Answer the question">Answer</a> the question first, then read answers written by your classmates here.</p>
 			</div>
 			
-			<div class="each-answer" ng-repeat="answer in instructor_answers" ng-show="canManagePosts || question.after_judging">
+			<div class="each-answer clearfix" ng-repeat="answer in instructor_answers" ng-show="canManagePosts || question.after_judging">
 		
 				<a ng-href="#/user/{{answer.post.user.id}}">
 					<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
@@ -148,7 +148,7 @@
 			<div ng-if="answered || canManagePosts">
 				
 				<!-- <div class="each-answer" ng-repeat="answer in answers | orderBy:order:reverse | notScoredEnd:sortby" ng-hide="instructors[answer.post.user.id]"> -->
-				<div class="each-answer" ng-repeat="answer in answers" ng-hide="instructors[answer.post.user.id]">
+				<div class="each-answer clearfix" ng-repeat="answer in answers" ng-hide="instructors[answer.post.user.id]">
 					
 					<a ng-href="#/user/{{answer.post.user.id}}">
 						<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
