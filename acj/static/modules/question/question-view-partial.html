@@ -4,8 +4,8 @@
 		
 		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
 		
-		<div class="content" class="questionmathjax question-desc"
-		     ng-bind-html="question.post.content">
+		<div class="content" class="questionmathjax question-desc" 
+			mathjax="question.post.content" ng-bind-html="question.post.content">
 		</div>
 		
 		<div ng-show="question.date_set">
