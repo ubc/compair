@@ -89,7 +89,7 @@ module.controller("QuestionViewController",
 
 					$scope.answered = ret.answers > 0;
 					var min_pairs = ret.question.answers.length / 2;
-					var required = ret.students > 0 ? Math.ceil(min_pairs * required_rounds / ret.students) : 0;
+					var required = ret.students > 0 ? Math.floor(min_pairs * required_rounds / ret.students) : 0;
 					$scope.judged_req_met = $scope.canManagePosts || ret.judged >= required;
 					$scope.readDate = Date.parse(ret.question.post.created);
 				},

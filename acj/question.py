@@ -44,6 +44,7 @@ class QuestionIdAPI(Resource):
 		now = datetime.datetime.utcnow()
 		if question.answer_start and not allow(MANAGE, question) and not (question.answer_start <= now):
 			return {"error":"The question is unavailable!"}, 403
+		restrict_users = not allow(EDIT, CoursesAndUsers(courses_id=course_id))
 		criteria = CriteriaAndCourses.query.filter_by(courses_id=course_id).order_by(CriteriaAndCourses.id).all()
 		answers = PostsForAnswers.query.filter_by(postsforquestions_id=question.id).join(Posts).filter(Posts.users_id==current_user.id).count()
 		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses).filter_by(courses_id=course.id).join(AnswerPairings).filter(AnswerPairings.postsforquestions_id==question.id).count()
@@ -52,13 +53,13 @@ class QuestionIdAPI(Resource):
 		instructor_ids = [u.users_id for u in instructors]
 		instructor_answers = PostsForAnswers.query.filter_by(postsforquestions_id=question.id).join(Posts).filter(Posts.users_id.in_(instructor_ids)).all()
 		return {
-			'question':marshal(question, dataformat.getPostsForQuestions()),
+			'question':marshal(question, dataformat.getPostsForQuestions(restrict_users)),
 			'criteria':marshal(criteria, dataformat.getCriteriaAndCourses()),
 			'instructors':marshal(instructors, dataformat.getCoursesAndUsers()),
 			'answers':answers,
 			'judged':judgements,
 			'students':count,
-			'instructor_answers':marshal(instructor_answers, dataformat.getPostsForAnswers())
+			'instructor_answers':marshal(instructor_answers, dataformat.getPostsForAnswers(restrict_users))
 		}
 	def post(self, course_id, question_id):
 		course = Courses.query.get_or_404(course_id)

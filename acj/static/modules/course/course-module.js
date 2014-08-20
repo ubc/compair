@@ -101,7 +101,7 @@ module.controller(
 				for (key in ret.questions) {
 					ques = ret.questions[key];
 					min_pairs = ques.answers_count / 2;
-					required = ret.count > 0 ? Math.ceil(min_pairs * required_rounds / ret.count) : 0;
+					required = ret.count > 0 ? Math.floor(min_pairs * required_rounds / ret.count) : 0;
 					if (!(ques.id in count))
 						count[ques.id] = 0;
 					ques['left'] = count[ques.id] <= required ?
