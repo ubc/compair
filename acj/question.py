@@ -109,7 +109,6 @@ class QuestionRootAPI(Resource):
 			questions = PostsForQuestions.query.join(Posts).filter(Posts.courses_id==course_id).\
 				filter(or_(PostsForQuestions.answer_start==None,now >= PostsForQuestions.answer_start)).\
 				order_by(desc(Posts.created)).all()
-		restrict_users = allow(EDIT, CoursesAndUsers(courses_id=course_id))
 		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses).filter_by(courses_id=course.id).join(AnswerPairings).all()
 		count = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter(UserTypesForCourse.name==UserTypesForCourse.TYPE_STUDENT).count()
 		return {
