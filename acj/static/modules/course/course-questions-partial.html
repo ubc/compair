@@ -24,10 +24,10 @@
 		</div>
 	</div>
 	
-	<form class="form-inline searchCourse" role="search" ng-if="questions.length">
+	<form class="form-inline searchCourse" role="search" ng-show="questions.length">
 		<div class="form-group pull-right">
-			<input class="form-control" type="text" ng-model="questionFilter"
-				placeholder="Search for questions">
+			<input class="form-control" type="text" ng-model="questionFilter.title"
+				placeholder="Search for question title">
 		</div>
 	</form>
 	
