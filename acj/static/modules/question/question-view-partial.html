@@ -47,7 +47,7 @@
 		<a class="btn btn-success" ng-show="answered" title="You have answered" disabled>
 			Answered
 		</a>
-		<a class="btn btn-success" title="Evaluate Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" ng-show="question.judging_period">
+		<a class="btn btn-success" title="Evaluate Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" ng-if="!canManagePosts && question.judging_period">
 			Evaluate
 		</a>
 		

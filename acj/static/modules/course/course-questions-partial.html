@@ -90,7 +90,7 @@
 						{{question.total_comments_count}} comment<span ng-if="question.total_comments_count != 1">s</span>
 					</li>
 					<!-- Judgements Left counter -->
-					<li ng-class="{'label label-warning': question.left > 0}">
+					<li ng-if="!canManagePosts && question.judging_period" ng-class="{'label label-warning': question.left > 0}">
 						{{question.left}} evaluation<span ng-if="question.left != 1">s</span> needed from you
 					</li>
 					<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
@@ -118,7 +118,7 @@
 				Answer
 			</a>
 			<a class="btn btn-success" title="Evaluate Answers"
-				ng-href="#/course/{{course.id}}/question/{{question.id}}/judgement" ng-show="question.judging_period">
+				ng-href="#/course/{{course.id}}/question/{{question.id}}/judgement" ng-if="!canManagePosts && question.judging_period">
 				Evaluate
 			</a>
 		</div>
