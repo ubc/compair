@@ -4,7 +4,7 @@
 	
 	<p class="intro-text">Welcome to the ACJ application! With this application, you will show your mastery of course content by answering course-related questions and anonymously evaluating the answers given by your classmates.</p>
 	
-	<form class="form-inline" role="search" ng-if="canAddCourse && courses.length">
+	<form class="form-inline" role="search" ng-show="canAddCourse && courses.length">
 		<div class="form-group pull-right">
 			<input class="form-control" type="text" 
 				placeholder="Search for courses" ng-model="courseFilter">
