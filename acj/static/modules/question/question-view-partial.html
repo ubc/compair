@@ -239,7 +239,7 @@
 			<div ng-repeat="comment in comments" class="each-comment">
 				
 				<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
-					<img src="//www.gravatar.com/avatar/{{question.post.user.avatar}}?s=32&d=retro" />
+					<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
 				</a>
 				<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
 					{{comment.postsforcomments.post.user.displayname}}
