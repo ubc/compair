@@ -132,6 +132,13 @@ module.controller("QuestionCreateController",
 				$scope.submitted = false;
 				return;
 			}
+			// if option is not checked; make sure no dates are saved.
+			if (!$scope.question.availableCheck) {
+				$scope.question.answer_start = null;
+				$scope.question.answer_end = null;
+				$scope.question.judge_start = null;
+				$scope.question.judge_end = null;
+			}
 			QuestionResource.save({'courseId': courseId}, $scope.question).
 				$promise.then(
 					function (ret)
