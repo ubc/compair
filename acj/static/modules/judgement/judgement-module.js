@@ -36,7 +36,7 @@ module.constant('required_rounds', 6);
 /***** Controllers *****/
 module.controller(
 	'JudgementController', 
-	function($log, $location, $scope, $routeParams, QuestionResource, AnswerResource,
+	function($log, $location, $scope, $routeParams, $anchorScroll, QuestionResource, AnswerResource,
 		CriteriaResource, JudgementResource, Toaster) 
 	{
 		var courseId = $routeParams['courseId'];
@@ -84,6 +84,15 @@ module.controller(
 					Toaster.reqerror("Unable to retrieve an answer pair.", ret);
 				}
 		);
+		
+		/* $scope.scrollTo = function() {
+			var oldHash = $location.hash();
+			$location.hash('#step-2');
+			$anchorScroll();
+			$location.hash(oldHash);
+			alert('called');
+		}; */
+		
 		// save judgement to server
 		$scope.judgementSubmit = function() {
 			var judgement = {};

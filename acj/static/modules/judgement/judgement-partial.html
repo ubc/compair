@@ -3,7 +3,7 @@
 	<h1>Evaluate Answers</h1>
 
 	<div ng-show="answerPairError" class="alert alert-danger" role="alert">
-		Answer evaluation is not available at this time. Please try again later.
+		<p>Answer evaluation is not available at this time. Please try again later.</p>
 	</div>
 	
 	<div class="standalone-question">
@@ -12,92 +12,170 @@
 			ng-bind-html="question.post.content">
 		</div>
 	</div>
+		
+	<div ng-show="answerPairError">
+		<p>Answers not properly loaded. Please refresh the page.</p>
+	</div>
 	
-	<form name="judgementForm" ng-submit="judgementSubmit()" novalidate>
-	
-		<div class="form-group" ng-repeat="courseCriterion in courseCriteria">
+	<form name="judgementForm" ng-submit="judgementSubmit()" novalidate ng-hide="answerPairError">
+
+		<div class="answer-pair">
 			
-			<hr />
+			<h2>1) Evaluate each answer</h2>
 			
-			<!-- Show the judgement criteria -->
-			<div class="criteria">
-				<h2 class="text-center">{{courseCriterion.criterion.name}}</h2>
-				<div class="text-center criteria" 
-					ng-bind-html="courseCriterion.criterion.description">
+			<!-- Show the answers side by side -->
+			<div class="row">			
+				<div class="col-md-6">
+					<div class="answer-choice">
+						<h2 class="text-center">Answer 1</h2>
+						<div mathjax="answerPair.answer1.post.content"
+							ng-bind-html="answerPair.answer1.post.content">
+						</div>
+						<a href="" class="btn btn-default btn-xs"
+							title="Flag as incomplete or inappropriate."
+							ng-class="{'btn-danger': answerPair.answer1.flagged}"
+							ng-click="toggleAnswerFlag(answerPair.answer1)">
+							<i class="fa fa-warning"></i>
+							<span ng-if="answerPair.answer1.flagged">Flagged</span>
+							<span ng-if="!answerPair.answer1.flagged">Flag</span>
+						</a>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="answer-choice">
+						<h2 class="text-center">Answer 2</h2>
+						<div mathjax="answerPair.answer2.post.content"
+							ng-bind-html="answerPair.answer2.post.content">
+						</div>
+						<a href="" class="btn btn-default btn-xs pull-right"
+							title="Flag as incomplete or inappropriate."
+							ng-class="{'btn-danger': answerPair.answer2.flagged}"
+							ng-click="toggleAnswerFlag(answerPair.answer2)">
+							<i class="fa fa-warning"></i>
+							<span ng-if="answerPair.answer2.flagged">Flagged</span>
+							<span ng-if="!answerPair.answer2.flagged">Flag</span>
+						</a>
+					</div>
 				</div>
 			</div>
 			
-			<div ng-hide="answerPairError" class="answer-pair">
-			
-				<!-- Show the answers side by side -->
-				<div class="row">
-					<div class="col-md-6">
-						<div class="answer-choice">
-							<div class="answer-top">
-								<label class="btn btn-default" ng-class=
-									"{active:courseCriterion.winner==answerPair.answer1.id}">
-									<input type="radio" class="btn btn-default hideRadio" 
-										name="answer{{answerPair.answer1.id}}" required
-										ng-model="courseCriterion.winner"
-										ng-value="answerPair.answer1.id">
-									<i class="fa fa-arrow-down"></i>
-									&nbsp; Select this
-								</label>
-							</div>
-							<h2 class="text-center">Answer 1</h2>
-							<div mathjax="answerPair.list[0].post.content"
-								ng-bind-html="answerPair.list[0].post.content">
-							</div>
-							<a href="" class="btn btn-default btn-xs"
-								title="Flag as incomplete or inappropriate."
-								ng-class="{'btn-danger': answerPair.answer1.flagged}"
-								ng-click="toggleAnswerFlag(answerPair.answer1)">
-								<i class="fa fa-warning"></i>
-								<span ng-if="answerPair.answer1.flagged">Flagged</span>
-								<span ng-if="!answerPair.answer1.flagged">Flag</span>
-							</a>
-						</div>
-					</div>
-					<div class="col-md-6">
-						<div class="answer-choice">
-							<div class="answer-top">
-								<label class="btn btn-default" ng-class=
-									"{active:courseCriterion.winner==answerPair.answer2.id}">
-									<input type="radio" class="btn btn-default hideRadio" 
-										name="answer{{answerPair.answer1.id}}" required
-										ng-model="courseCriterion.winner"
-										ng-value="answerPair.answer2.id">
-									Select this &nbsp;
-									<i class="fa fa-arrow-down"></i>
-								</label>
-							</div>
-							<h2 class="text-center">Answer 2</h2>
-							<div mathjax="answerPair.list[1].post.content"
-								ng-bind-html="answerPair.list[1].post.content">
-							</div>
-							<a href="" class="btn btn-default btn-xs pull-right"
-								title="Flag as incomplete or inappropriate."
-								ng-class="{'btn-danger': answerPair.answer2.flagged}"
-								ng-click="toggleAnswerFlag(answerPair.answer2)">
-								<i class="fa fa-warning"></i>
-								<span ng-if="answerPair.answer2.flagged">Flagged</span>
-								<span ng-if="!answerPair.answer2.flagged">Flag</span>
-							</a>
-						</div>
-					</div>
+			<div class="row">
+				<div class="col-md-6">
+					<label>Reply to Answer 1</label>
+					<textarea ng-model="answerPair.answer1.post.comment.content" rows="8" ckeditor required>
+					</textarea>
 				</div>
-			
-			</div><!-- Hidden on answer pair error -->
-			
-			<div ng-hide="!answerPairError">
-				<p>Answers not properly loaded. Please refresh the page.</p>
+				<div class="col-md-6">
+					<label>Reply to Answer 2</label>
+					<textarea ng-model="answerPair.answer2.post.comment.content" rows="8" ckeditor required>
+					</textarea>
+				</div>
 			</div>
 			
 		</div>
 		
 		<div class="form-group">
-			<input ng-disabled="judgementForm.$invalid" type="submit" 
-				value="Submit" class="btn btn-success btn-lg center-block" />
+			<input
+				ng-disabled="!(!!answerPair.answer1.post.comment.content && !!answerPair.answer2.post.comment.content)"
+				ng-click="isStep2Shown = !isStep2Shown" 
+				value="Next" class="btn btn-success btn-lg center-block" />
+		</div>
+		
+		<div ng-show="isStep2Shown" id="step-2">
+		
+			<hr />
+			
+			<h2>2) Choose an answer</h2>
+			
+			<div class="form-group" ng-repeat="courseCriterion in courseCriteria">
+				
+				<!-- Show the judgement criteria -->
+				<div class="each-criterion text-center">
+					<fieldset>
+						<h3><i class="fa fa-gavel"></i> {{courseCriterion.criterion.name}}</h3>
+						
+						<div class="criteria"
+							ng-bind-html="courseCriterion.criterion.description">
+						</div>
+						
+						<div class="btn-group">
+							<label class="btn btn-default" ng-class=
+								"{active:courseCriterion.winner==answerPair.answer1.id}">
+								<input type="radio" class="btn btn-default hideRadio" 
+									name="answer{{answerPair.answer1.id}}" required
+									ng-model="courseCriterion.winner"
+									ng-value="answerPair.answer1.id">
+								<i class="fa fa-arrow-left"></i>
+								&nbsp; Select Answer 1
+							</label>
+							<label class="btn btn-default" ng-class=
+								"{active:courseCriterion.winner==answerPair.answer2.id}">
+								<input type="radio" class="btn btn-default hideRadio" 
+									name="answer{{answerPair.answer1.id}}" required
+									ng-model="courseCriterion.winner"
+									ng-value="answerPair.answer2.id">
+								Select Answer 2
+								<i class="fa fa-arrow-right"></i>
+							</label>
+						</div>
+						
+						<h4 class="text-left">Explain your selection</h4>
+						<textarea ng-model="" rows="8" ckeditor required>
+						</textarea>
+					</fieldset>
+				</div>
+				
+			</div>
+			
+			
+			<!-- FOR TESING ONLY -->
+			<div class="form-group" ng-repeat="courseCriterion in courseCriteria">
+				
+				<!-- Show the judgement criteria -->
+				<div class="each-criterion text-center">
+					<fieldset>
+						<h3><i class="fa fa-gavel"></i> {{courseCriterion.criterion.name}}</h3>
+						
+						<div class="criteria"
+							ng-bind-html="courseCriterion.criterion.description">
+						</div>
+						
+						<div class="btn-group">
+							<label class="btn btn-default" ng-class=
+								"{active:courseCriterion.winner==answerPair.answer1.id}">
+								<input type="radio" class="btn btn-default hideRadio" 
+									name="answer{{answerPair.answer1.id}}" required
+									ng-model="courseCriterion.winner"
+									ng-value="answerPair.answer1.id">
+								<i class="fa fa-arrow-left"></i>
+								&nbsp; Select Answer 1
+							</label>
+							<label class="btn btn-default" ng-class=
+								"{active:courseCriterion.winner==answerPair.answer2.id}">
+								<input type="radio" class="btn btn-default hideRadio" 
+									name="answer{{answerPair.answer1.id}}" required
+									ng-model="courseCriterion.winner"
+									ng-value="answerPair.answer2.id">
+								Select Answer 2
+								<i class="fa fa-arrow-right"></i>
+							</label>
+						</div>
+						
+						<h4 class="text-left">Explain your selection</h4>
+						<textarea ng-model="" rows="8" ckeditor required>
+						</textarea>
+					</fieldset>
+				</div>
+				
+			</div>
+			<!-- ^ FOR TESTING ONLY -->
+			
+			
+			<div class="form-group">
+				<input ng-disabled="judgementForm.$invalid" type="submit" 
+					value="Submit" class="btn btn-success btn-lg center-block" />
+			</div>
+			
 		</div>
 		
 	</form>
