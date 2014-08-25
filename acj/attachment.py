@@ -41,7 +41,7 @@ class AttachmentIdAPI(Resource):
 	def get(self, post_id):
 		file = FilesForPosts.query.filter_by(posts_id = post_id).first()
 		if file:
-			return {'file': {'id': file.posts_id, 'alias': file.alias}}
+			return {'file': {'id': file.posts_id, 'name': file.name, 'alias': file.alias}}
 		return {'file': False}
 	@login_required
 	def delete(self, post_id):

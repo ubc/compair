@@ -89,17 +89,16 @@ class QuestionIdAPI(Resource):
 		db.session.add(question)
 		db.session.commit()
 		if name:
-			alias = params.get('alias')
-			tmpName = str(course_id) + '_' + str(question.id) + '_' + str(question.post.id) + '.pdf'
-			shutil.move(os.getcwd() + '/tmpUpload/' + name, os.getcwd() + '/acj/static/pdf/' + tmpName)
-			file = FilesForPosts(posts_id=question.post.id, author_id=current_user.id, name=tmpName, alias=alias)
-			db.session.add(file)
-			db.session.commit()
+			addNewFile(params.get('alias'), name, course_id, question.id, question.post.id)
 		return marshal(question, dataformat.getPostsForQuestions())
 	@login_required
 	def delete(self, course_id, question_id):
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(DELETE, question)
+		# delete file when question is deleted
+		file = FilesForPosts.query.filter_by(posts_id = question.post.id).first()
+		if file:
+			os.remove(os.getcwd() + '/acj/static/pdf/' + file.name)
 		db.session.delete(question)
 		db.session.commit()
 		return {'id': question.id} 
@@ -153,11 +152,13 @@ class QuestionRootAPI(Resource):
 		db.session.add(question)
 		db.session.commit()
 		if name:
-			alias = params.get('alias')
-			tmpName = str(course_id) + '_' + str(question.id) + '_' + str(question.post.id) + '.pdf'
-			shutil.move(os.getcwd() + '/tmpUpload/' + name, os.getcwd() + '/acj/static/pdf/' + tmpName)
-			file = FilesForPosts(posts_id=post.id, author_id=current_user.id, name=tmpName, alias=alias)
-			db.session.add(file)
-			db.session.commit()
+			addNewFile(params.get('alias'), name, course_id, question.id, post.id)	
 		return marshal(question, dataformat.getPostsForQuestions())
 api.add_resource(QuestionRootAPI, '')
+
+def addNewFile(alias, name, course_id, question_id, post_id):
+	tmpName = str(course_id) + '_' + str(question_id) + '_' + str(post_id) + '.pdf'
+	shutil.move(os.getcwd() + '/tmpUpload/' + name, os.getcwd() + '/acj/static/pdf/' + tmpName)
+	file = FilesForPosts(posts_id=post_id, author_id=current_user.id, name=tmpName, alias=alias)
+	db.session.add(file)
+	db.session.commit()

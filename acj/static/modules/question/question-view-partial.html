@@ -3,11 +3,14 @@
 	<div class="standalone-question">
 		
 		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
-		
+		<div ng-if="question.uploadedFile">
+			<a target="_blank" ng-href="pdf/{{question.uploadedFile.name}}">{{question.uploadedFile.alias}}</a>
+		</div>
+	
 		<div class="content questionmathjax question-desc" mathjax="question.post.content"
 		     ng-bind-html="question.post.content">
 		</div>
-		
+
 		<div ng-show="question.date_set">
 			<p><strong>Answering Period:</strong> {{question.answer_start | date: 'MMM d @ h:mm a'}} - {{question.answer_end | date: 'MMM d @ h:mm a'}}<br />
 			<strong>Evaluation Period:</strong> {{question.judge_start | date: 'MMM d @ h:mm a'}} - {{question.judge_end | date: 'MMM d @ h:mm a'}}</p>

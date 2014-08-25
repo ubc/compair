@@ -116,7 +116,7 @@ module.filter("notScoredEnd", function () {
 
 /***** Controllers *****/
 module.controller("QuestionViewController",
-	function($scope, $log, $routeParams, AnswerResource, Authorize, QuestionResource, QuestionCommentResource, required_rounds, Session, Toaster)
+	function($scope, $log, $routeParams, AnswerResource, Authorize, QuestionResource, QuestionCommentResource, AttachmentResource, required_rounds, Session, Toaster)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
@@ -161,6 +161,14 @@ module.controller("QuestionViewController",
 					var required = ret.students > 0 ? Math.floor(min_pairs * required_rounds / ret.students) : 0;
 					$scope.judged_req_met = $scope.canManagePosts || ret.judged >= required;
 					$scope.readDate = Date.parse(ret.question.post.created);
+					AttachmentResource.get({'postId': ret.question.post.id}).$promise.then(
+						function (ret) {
+							$scope.question.uploadedFile = ret.file;
+						},
+						function (ret) {
+							Toaster.reqerror("Unable to retrieve attachment", ret);
+						}
+					);
 				},
 				function (ret)
 				{
