@@ -1,4 +1,5 @@
 <div ng-controller="CourseQuestionsController" class="course-screen">
+	
 	<div class="row">
 		<header class="col-sm-6">
 			<h1><i class="fa fa-book"></i> {{course.name}}</h1>
@@ -27,7 +28,7 @@
 	<form class="form-inline searchCourse" role="search" ng-show="questions.length">
 		<div class="form-group pull-right">
 			<input class="form-control" type="text" ng-model="questionFilter.title"
-				placeholder="Search for question title">
+				placeholder="Search question titles">
 		</div>
 	</form>
 	
@@ -39,11 +40,10 @@
 		<p ng-if="canCreateQuestions">Would you like to <a ng-href="#/course/{{course.id}}/question/create">add a question</a>?</p>
 	</div>
 	
-
-	
 	<!-- Questions List -->
 	<div class="row each-question"
 		ng-repeat="question in questions | filter:questionFilter">
+		
 		<!-- Question Display -->
 		<div class="col-sm-10 media">
 			<!-- Gravatar, link to user profile -->
@@ -59,7 +59,6 @@
 				<a ng-href="#/course/{{course.id}}/question/{{question.id}}">
 					<h3 class="media-heading">
 						<i class="fa fa-comments"></i> {{question.title}} &raquo;
-						<span class="label label-danger" ng-if="!question.available">Unavailable</span>
 					</h3>
 				</a>
 				<!-- Details -->
@@ -86,12 +85,15 @@
 						{{question.answers_count}} answer<span ng-if="question.answers_count != 1">s</span>
 					</li>
 					<!-- Total number of comments -->
-					<li title="{{question.total_comments_count}} comments"> 
-						{{question.total_comments_count}} comment<span ng-if="question.total_comments_count != 1">s</span>
+					<li title="{{question.comments_count}} comments"> 
+						{{question.comments_count}} comment<span ng-if="question.comments_count != 1">s</span>
 					</li>
 					<!-- Judgements Left counter -->
 					<li ng-if="!canManagePosts && question.judging_period" ng-class="{'label label-warning': question.left > 0}">
 						{{question.left}} evaluation<span ng-if="question.left != 1">s</span> needed from you
+					</li>
+					<li ng-if="!question.available">
+						<span class="label label-warning">Answers not yet available</span>
 					</li>
 					<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
 						<a ng-href="#/course/{{course.id}}/question/{{question.id}}/delete" title="Delete">
@@ -111,6 +113,7 @@
 				</ul>
 			</div>
 		</div>
+		
 		<!-- Question Controls -->
 		<div class="col-sm-2">
 			<a class="btn btn-success" title="Answer Question"
