@@ -6,10 +6,10 @@ from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import desc, or_, between
 from acj import dataformat, db
 from acj.authorization import allow, require
-from acj.models import PostsForQuestions, Courses, Posts, CoursesAndUsers, CriteriaAndCourses, UserTypesForCourse, PostsForAnswers, AnswerPairings, Judgements
+from acj.models import PostsForQuestions, Courses, Posts, CoursesAndUsers, CriteriaAndCourses, UserTypesForCourse, PostsForAnswers, AnswerPairings, Judgements, FilesForPosts
 from acj.util import new_restful_api
 
-import datetime
+import datetime, shutil, os
 
 questions_api = Blueprint('questions_api', __name__)
 api = new_restful_api(questions_api)
@@ -21,6 +21,8 @@ new_question_parser.add_argument('answer_start', type=str, default=None)
 new_question_parser.add_argument('answer_end', type=str, default=None)
 new_question_parser.add_argument('judge_start', type=str, default=None)
 new_question_parser.add_argument('judge_end', type=str, default=None)
+new_question_parser.add_argument('name', type=str, default=None)
+new_question_parser.add_argument('alias', type=str, default=None)
 
 # existing_question_parser = new_question_parser.copy()
 existing_question_parser = RequestParser()
@@ -31,6 +33,9 @@ existing_question_parser.add_argument('answer_start', type=str, default=None)
 existing_question_parser.add_argument('answer_end', type=str, default=None)
 existing_question_parser.add_argument('judge_start', type=str, default=None)
 existing_question_parser.add_argument('judge_end', type=str, default=None)
+existing_question_parser.add_argument('name', type=str, default=None)
+existing_question_parser.add_argument('alias', type=str, default=None)
+existing_question_parser.add_argument('uploadedFile', type=bool, default=False)
 
 # /id
 class QuestionIdAPI(Resource):
@@ -71,7 +76,9 @@ class QuestionIdAPI(Resource):
 			return {"error":"Question id does not match URL."}, 400
 		# modify question according to new values, preserve original values if values not passed
 		question.post.content = params.get("post").get("content")
-		if not question.post.content:
+		uploaded = params.get('uploadedFile')
+		name = params.get('name')
+		if not (question.post.content or uploaded or name):
 			return {"error":"The question content is empty!"}, 400
 		question.title = params.get("title", question.title)
 		question.answer_start = params.get('answer_start', None)
@@ -81,6 +88,13 @@ class QuestionIdAPI(Resource):
 		db.session.add(question.post)
 		db.session.add(question)
 		db.session.commit()
+		if name:
+			alias = params.get('alias')
+			tmpName = str(course_id) + '_' + str(question.id) + '_' + str(question.post.id) + '.pdf'
+			shutil.move(os.getcwd() + '/tmpUpload/' + name, os.getcwd() + '/acj/static/pdf/' + tmpName)
+			file = FilesForPosts(posts_id=question.post.id, author_id=current_user.id, name=tmpName, alias=alias)
+			db.session.add(file)
+			db.session.commit()
 		return marshal(question, dataformat.getPostsForQuestions())
 	@login_required
 	def delete(self, course_id, question_id):
@@ -126,7 +140,8 @@ class QuestionRootAPI(Resource):
 		require(CREATE, question)
 		params = new_question_parser.parse_args()
 		post.content = params.get("post").get("content")
-		if not post.content:
+		name = params.get('name')
+		if not (post.content or name):
 			return {"error":"The answer content is empty!"}, 400
 		post.users_id = current_user.id
 		question.title = params.get("title")
@@ -137,5 +152,12 @@ class QuestionRootAPI(Resource):
 		db.session.add(post)
 		db.session.add(question)
 		db.session.commit()
+		if name:
+			alias = params.get('alias')
+			tmpName = str(course_id) + '_' + str(question.id) + '_' + str(question.post.id) + '.pdf'
+			shutil.move(os.getcwd() + '/tmpUpload/' + name, os.getcwd() + '/acj/static/pdf/' + tmpName)
+			file = FilesForPosts(posts_id=post.id, author_id=current_user.id, name=tmpName, alias=alias)
+			db.session.add(file)
+			db.session.commit()
 		return marshal(question, dataformat.getPostsForQuestions())
 api.add_resource(QuestionRootAPI, '')

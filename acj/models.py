@@ -294,6 +294,7 @@ class Posts(db.Model):
 		nullable=False)
 	course = db.relationship("Courses")
 	content = db.Column(db.Text)
+	files = db.relationship("FilesForPosts", cascade="delete")
 	modified = db.Column(
 		db.TIMESTAMP,
 		default=func.current_timestamp(),
@@ -462,6 +463,23 @@ class PostsForAnswersAndPostsForComments(db.Model):
 	def content(self):
 		return self.postsforcomments.post.content
 
+class FilesForPosts(db.Model):
+	__tablename__ = 'FilesForPosts'
+	__table_args__ = default_table_args
+
+	id = db.Column(db.Integer, primary_key=True, nullable=False)
+	posts_id = db.Column(
+		db.Integer,
+		db.ForeignKey('Posts.id', ondelete="CASCADE"),
+		nullable=False)
+	post = db.relationship("Posts")
+	author_id = db.Column(
+		db.Integer,
+		db.ForeignKey('Users.id', ondelete="CASCADE"),
+		nullable=False)
+	author = db.relationship("Users")
+	name = db.Column(db.String(255), nullable=False)
+	alias = db.Column(db.String(255), nullable=False)
 
 #################################################
 # Criteria - What users should judge answers by

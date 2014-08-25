@@ -4,6 +4,7 @@
 
 var module = angular.module('ubc.ctlt.acj.question',
 	[
+		'angularFileUpload',
 		'ngResource',
 		'ubc.ctlt.acj.answer',
 		'ubc.ctlt.acj.authentication',
@@ -30,6 +31,74 @@ module.factory(
 		return ret;
 	}
 );
+
+module.factory(
+	"AttachmentResource",
+	function ($resource)
+	{
+		var ret = $resource(
+			'/api/tmpAttachment/:postId',
+			{postId: '@id'}
+		);
+		ret.MODEL = "FilesForPosts";
+		return ret;
+	}
+);
+
+/***** Services *****/
+module.service('attachService', function(FileUploader, $location, CourseResource, Toaster) {
+	var filename = '';
+	var alias = '';
+	
+	var getUploader = function() {
+		var uploader = new FileUploader({
+			url: '/api/tmpAttachment',
+			queueLimit: 1,
+			autoUpload: true
+		});
+
+		return uploader;
+	}
+
+	var onComplete = function() {
+		return function(fileItem, response, status, headers) {
+			if (!('error' in response)) {
+				filename = response['name'];
+				alias = fileItem.file.name;	
+			}	
+		};
+	}
+
+	var onError = function() {
+		return function(fileItem, response, status, headers) {
+			Toaster.reqerror("Attachment Fail", status);
+		};
+	}
+
+	var resetName = function() {
+		return function() {
+			filename = '';
+			alias = '';
+		}
+	}
+
+	var getName = function() {
+		return filename;
+	}
+
+	var getAlias = function() {
+		return alias;
+	}	
+
+	return {
+		getUploader: getUploader,
+		onComplete: onComplete,
+		onError: onError,
+		getName: getName,
+		getAlias: getAlias,
+		resetName: resetName
+	};
+});
 
 /***** Filters *****/
 module.filter("notScoredEnd", function () {
@@ -121,10 +190,14 @@ module.controller("QuestionViewController",
 	}
 );
 module.controller("QuestionCreateController",
-	function($scope, $log, $location, $routeParams, QuestionResource, Toaster)
+	function($scope, $log, $location, $routeParams, QuestionResource, Toaster, attachService)
 	{
 		var courseId = $routeParams['courseId'];
 		$scope.question = {};
+		$scope.uploader = attachService.getUploader();
+		$scope.uploader.onCompleteItem = attachService.onComplete();
+		$scope.uploader.onErrorItem = attachService.onError();
+		$scope.resetName = attachService.resetName();
 		$scope.questionSubmit = function () {
 			$scope.submitted = true;
 			if ($scope.question.availableCheck && !($scope.question.answer_start < $scope.question.answer_end && $scope.question.answer_end <= $scope.question.judge_start && $scope.question.judge_start < $scope.question.judge_end)) {
@@ -139,6 +212,8 @@ module.controller("QuestionCreateController",
 				$scope.question.judge_start = null;
 				$scope.question.judge_end = null;
 			}
+			$scope.question.name = attachService.getName();
+			$scope.question.alias = attachService.getAlias();
 			QuestionResource.save({'courseId': courseId}, $scope.question).
 				$promise.then(
 					function (ret)
@@ -159,11 +234,28 @@ module.controller("QuestionCreateController",
 );
 
 module.controller("QuestionEditController",
-	function($scope, $log, $location, $routeParams, QuestionResource, Toaster)
+	function($scope, $log, $location, $routeParams, QuestionResource, AttachmentResource, Toaster, attachService)
 	{
 		var courseId = $routeParams['courseId'];
 		$scope.questionId = $routeParams['questionId'];
+		$scope.uploader = attachService.getUploader();
+		$scope.uploader.onCompleteItem = attachService.onComplete();
+		$scope.uploader.onErrorItem = attachService.onError();
+		$scope.resetName = attachService.resetName();
 		$scope.question = {};
+
+		$scope.deleteFile = function(post_id) {
+			AttachmentResource.delete({'postId': post_id}).$promise.then(
+				function (ret) {
+					Toaster.success('Attachment deleted successfully');
+					$scope.question.uploadedFile = false;
+				},
+				function (ret) {
+					Toaster.reqerror('Attachment deletion failed', ret);
+				}
+			);
+		}
+
 		QuestionResource.get({'courseId': courseId, 'questionId': $scope.questionId}).$promise.then(
 			function (ret) {
 				if (ret.question.answer_start && ret.question.answer_end && ret.question.judge_start && ret.question.judge_end) {
@@ -174,6 +266,14 @@ module.controller("QuestionEditController",
 					ret.question.judge_end = new Date(ret.question.judge_end);
 				}
 				$scope.question = ret.question;
+				AttachmentResource.get({'postId': ret.question.post.id}).$promise.then(
+					function (ret) {
+						$scope.question.uploadedFile = ret.file;
+					},
+					function (ret) {
+						Toaster.reqerror("Unable to retrieve attachment", ret);
+					}
+				);
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve question "+$scope.questionId, ret);
@@ -186,6 +286,8 @@ module.controller("QuestionEditController",
 				$scope.submitted = false;
 				return;
 			}
+			$scope.question.name = attachService.getName();
+			$scope.question.alias = attachService.getAlias();
 			QuestionResource.save({'courseId': courseId}, $scope.question).$promise.then(
 				function() {
 					$scope.submitted = false;
