@@ -36,7 +36,7 @@ module.constant('required_rounds', 6);
 /***** Controllers *****/
 module.controller(
 	'JudgementController', 
-	function($log, $location, $scope, $routeParams, $anchorScroll, QuestionResource, AnswerResource,
+	function($log, $location, $scope, $timeout, $routeParams, $anchorScroll, QuestionResource, AnswerResource,
 		CriteriaResource, JudgementResource, Toaster) 
 	{
 		var courseId = $routeParams['courseId'];
@@ -85,13 +85,14 @@ module.controller(
 				}
 		);
 		
-		/* $scope.scrollTo = function() {
-			var oldHash = $location.hash();
-			$location.hash('#step-2');
-			$anchorScroll();
-			$location.hash(oldHash);
-			alert('called');
-		}; */
+		// enable scrolling to evaluation step 2, when step 2 revealed
+		$scope.showNext = function(selector) {
+			// ensure hidden step revealed first
+			$timeout(function(){
+				// jump to revealed step
+				window.scrollTo(0, $(selector)[0].offsetTop - 80);
+			}, 0);
+		};
 		
 		// save judgement to server
 		$scope.judgementSubmit = function() {

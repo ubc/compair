@@ -1,10 +1,6 @@
 <div ng-controller="JudgementController" class="evaluate-screen">
 	
 	<h1>Evaluate Answers</h1>
-
-	<div ng-show="answerPairError" class="alert alert-danger" role="alert">
-		<p>Answer evaluation is not available at this time. Please try again later.</p>
-	</div>
 	
 	<div class="standalone-question">
 		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
@@ -12,9 +8,9 @@
 			ng-bind-html="question.post.content">
 		</div>
 	</div>
-		
-	<div ng-show="answerPairError">
-		<p>Answers not properly loaded. Please refresh the page.</p>
+	
+	<div ng-show="answerPairError" class="alert alert-warning" role="alert">
+		<p>Answer evaluation is not available at this time. Please try again later.</p>
 	</div>
 	
 	<form name="judgementForm" ng-submit="judgementSubmit()" novalidate ng-hide="answerPairError">
@@ -27,7 +23,7 @@
 			<div class="row">			
 				<div class="col-md-6">
 					<div class="answer-choice">
-						<h2 class="text-center">Answer 1</h2>
+						<h3 class="text-center">Answer 1</h3>
 						<div mathjax="answerPair.answer1.post.content"
 							ng-bind-html="answerPair.answer1.post.content">
 						</div>
@@ -43,7 +39,7 @@
 				</div>
 				<div class="col-md-6">
 					<div class="answer-choice">
-						<h2 class="text-center">Answer 2</h2>
+						<h3 class="text-center">Answer 2</h3>
 						<div mathjax="answerPair.answer2.post.content"
 							ng-bind-html="answerPair.answer2.post.content">
 						</div>
@@ -61,13 +57,21 @@
 			
 			<div class="row">
 				<div class="col-md-6">
-					<label>Reply to Answer 1</label>
-					<textarea ng-model="answerPair.answer1.post.comment.content" rows="8" ckeditor required>
+					<label class="cke-label">
+						Reply to Answer 1 (will be visible to classmates)
+						<i class="fa fa-arrow-down"></i>
+					</label>
+					<textarea
+						ng-model="answerPair.answer1.post.comment.content" rows="8" ckeditor required>
 					</textarea>
 				</div>
 				<div class="col-md-6">
-					<label>Reply to Answer 2</label>
-					<textarea ng-model="answerPair.answer2.post.comment.content" rows="8" ckeditor required>
+					<label class="cke-label">
+						Reply to Answer 2 (will be visible to classmates)
+						<i class="fa fa-arrow-down"></i>
+					</label>
+					<textarea
+						ng-model="answerPair.answer2.post.comment.content" rows="8" ckeditor required>
 					</textarea>
 				</div>
 			</div>
@@ -77,7 +81,8 @@
 		<div class="form-group">
 			<input
 				ng-disabled="!(!!answerPair.answer1.post.comment.content && !!answerPair.answer2.post.comment.content)"
-				ng-click="isStep2Shown = !isStep2Shown" 
+				ng-click="isStep2Shown = !isStep2Shown; showNext('#step-2');"
+				ng-show="!isStep2Shown"
 				value="Next" class="btn btn-success btn-lg center-block" />
 		</div>
 		
@@ -99,77 +104,35 @@
 						</div>
 						
 						<div class="btn-group">
-							<label class="btn btn-default" ng-class=
+							<label class="btn btn-primary" ng-class=
 								"{active:courseCriterion.winner==answerPair.answer1.id}">
-								<input type="radio" class="btn btn-default hideRadio" 
+								<input type="radio" class="hideRadio" 
 									name="answer{{answerPair.answer1.id}}" required
 									ng-model="courseCriterion.winner"
 									ng-value="answerPair.answer1.id">
-								<i class="fa fa-arrow-left"></i>
-								&nbsp; Select Answer 1
+								Select Answer 1
 							</label>
-							<label class="btn btn-default" ng-class=
+							<label class="btn btn-primary" ng-class=
 								"{active:courseCriterion.winner==answerPair.answer2.id}">
-								<input type="radio" class="btn btn-default hideRadio" 
+								<input type="radio" class="hideRadio" 
 									name="answer{{answerPair.answer1.id}}" required
 									ng-model="courseCriterion.winner"
 									ng-value="answerPair.answer2.id">
 								Select Answer 2
-								<i class="fa fa-arrow-right"></i>
 							</label>
 						</div>
 						
-						<h4 class="text-left">Explain your selection</h4>
-						<textarea ng-model="" rows="8" ckeditor required>
+						<label class="text-left cke-label">
+							Explain this selection (shown only to instructor)
+							<i class="fa fa-arrow-down"></i>
+						</label>
+						<textarea
+							  ng-model="" rows="8" ckeditor required>
 						</textarea>
 					</fieldset>
 				</div>
 				
 			</div>
-			
-			
-			<!-- FOR TESING ONLY -->
-			<div class="form-group" ng-repeat="courseCriterion in courseCriteria">
-				
-				<!-- Show the judgement criteria -->
-				<div class="each-criterion text-center">
-					<fieldset>
-						<h3><i class="fa fa-gavel"></i> {{courseCriterion.criterion.name}}</h3>
-						
-						<div class="criteria"
-							ng-bind-html="courseCriterion.criterion.description">
-						</div>
-						
-						<div class="btn-group">
-							<label class="btn btn-default" ng-class=
-								"{active:courseCriterion.winner==answerPair.answer1.id}">
-								<input type="radio" class="btn btn-default hideRadio" 
-									name="answer{{answerPair.answer1.id}}" required
-									ng-model="courseCriterion.winner"
-									ng-value="answerPair.answer1.id">
-								<i class="fa fa-arrow-left"></i>
-								&nbsp; Select Answer 1
-							</label>
-							<label class="btn btn-default" ng-class=
-								"{active:courseCriterion.winner==answerPair.answer2.id}">
-								<input type="radio" class="btn btn-default hideRadio" 
-									name="answer{{answerPair.answer1.id}}" required
-									ng-model="courseCriterion.winner"
-									ng-value="answerPair.answer2.id">
-								Select Answer 2
-								<i class="fa fa-arrow-right"></i>
-							</label>
-						</div>
-						
-						<h4 class="text-left">Explain your selection</h4>
-						<textarea ng-model="" rows="8" ckeditor required>
-						</textarea>
-					</fieldset>
-				</div>
-				
-			</div>
-			<!-- ^ FOR TESTING ONLY -->
-			
 			
 			<div class="form-group">
 				<input ng-disabled="judgementForm.$invalid" type="submit" 

@@ -6,25 +6,59 @@
   
   /* class for div surrounding each answer choice */
   .answer-choice {
-    margin-bottom: 2em;
+    
+    margin: 2em 0;
     padding: 2em;
     .gray-box();
-  }
+    
+    /* answer number titles */
+    h3 {
+      margin-top: 0;
+    }
+    
+  }//closes answer-choice
   
-  /* class for div containing criteria (question and judging details) */
-  .criteria {
+  /* class automatically applied to ckeditor */
+  .cke {
     margin-bottom: 2em;
   }
-
-  /* class for div around answer buttons */
-  .btn-group {
+  
+  /* class given to labels for ckeditors */
+  .cke-label {
+    margin: 1em 0 .5em 0;
+    display: block;
+    font-size: 1.15em;
+    font-weight: normal;
+  }
+  
+  /* step divider */
+  hr {
+    margin: 2em 0;
+  }
+  
+  /* class for div containing each criterion */
+  .each-criterion {
     
-    /* hide the actual answer inputs (radio buttosn) */
+    /* class for div containing the criteria (question and judging details) */
+    .criteria {
+      margin-bottom: 1.5em;
+      font-size: 1.1em;
+    }
+    
+    /* answer buttons */
+    .btn {
+      margin-bottom: 1em;
+      padding: .6em 2em;
+      font-weight: bold;
+    }
+    
+    /* hide the actual answer inputs (radio buttons) */
     .hideRadio {
+      width: 0;
       opacity: 0;
     }
     
-  }//closes answer-top
+  }//closes each-criterion
 
 }//closes evaluate-screen
 
