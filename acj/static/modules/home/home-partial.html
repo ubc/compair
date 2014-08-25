@@ -2,7 +2,7 @@
 
 	<h1>Adaptive Comparative Judgement</h1>
 	
-	<p class="intro-text">Welcome to the ACJ application! With this application, you will show your mastery of course content by answering course-related questions and anonymously evaluating the answers given by your classmates.</p>
+	<p class="intro-text">Welcome to the ACJ application! With this application, you will show your mastery of course content by answering course-related questions and evaluating the answers given by your classmates.</p>
 	
 	<form class="form-inline" role="search" ng-show="canAddCourse && courses.length">
 		<div class="form-group pull-right">
@@ -17,7 +17,7 @@
 	<div class="course-list" ng-if="courses.length">
 		<a ng-repeat="course in courses | filter:courseFilter" 
 			ng-href="#/course/{{course.course.id}}" class="each-course">
-			<h3>
+			<h3 class="clearfix">
 				<i class="fa fa-book"></i>
 				{{course.course.name}}
 				<i class="fa fa-arrow-right fa-2x pull-right"></i>
