@@ -2,19 +2,17 @@
 	<h1 class="text-center">Adaptive Comparative Judgement Application</h1>
 	<form name="loginForm" class="form" ng-submit="submit()" novalidate>
 		<fieldset>
-            <div class="form-group"><h3 class="text-center">Login</h3></div>
-            <div class="form-group">
-                <a href="/login">
-                    <img class="center-block" src="https://www.auth.cwl.ubc.ca/CWL_login_button.gif" width="76" height="25" alt="CWL Login" border="0" valign="middle">
-                </a>
-            </div>
-            <div class="form-group text-center">OR</div>
+			<p class="text-center"><strong>UBC users, please log in with CWL first:</strong></p>
+			<a href="/login">
+			    <img class="center-block" src="https://www.auth.cwl.ubc.ca/CWL_login_button.gif" width="76" height="25" alt="CWL Login" border="0" valign="middle">
+			</a>
+			<hr />
 			<div class="form-group has-feedback"
 				ng-class="{'has-error': loginForm.username.$invalid, 'has-success': loginForm.username.$valid}">
 				<label for="inputUser">Username</label>
 				<input type="text" id="inputUser" name="username"
 					ng-model="username" required placeholder=""
-					class="form-control" auto-focus>
+					class="form-control">
 				<!-- <span ng-show="!loginForm.username.$invalid" class="fa fa-check form-control-feedback"></span>
 				<span ng-show="loginForm.username.$invalid" class="fa fa-times form-control-feedback"></span> -->
 			</div>
@@ -28,7 +26,7 @@
 			</div>
 		</fieldset>
 		<input type="submit" ng-disabled="loginForm.$invalid || submitted"
-			   class="btn btn-primary center-block" value="Log In">
+			class="btn btn-primary center-block" value="Log In">
 		<!-- <span class="label label-info" ng-show="submitted">
 			<i class="fa fa-refresh"></i>
 		</span> -->
