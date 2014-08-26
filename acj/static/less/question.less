@@ -30,7 +30,7 @@
     
   }//closes list-inline
   
-  /*  class for ul creating tab navigation */
+  /* class for ul creating tab navigation */
   .nav-tabs {
     border-color: @border-gray;
   }
@@ -75,13 +75,12 @@
     .each-answer,
     .each-comment {
       
-      padding: 1em;
+      padding: 1em 1em 2em 1em;
       color: @breadcrumb-gray;
       border-bottom: 1px solid @border-gray;
       
       /* when answer score is shown */
       .score-display {
-        margin-bottom: 2em;
         text-align: right;
       }
     
@@ -89,14 +88,16 @@
     
     
     /* alternating answer/comment color to match tab color */
-    .each-answer:nth-child(odd),
+    .all-answers > .each-answer:nth-child(odd),
     .each-comment:nth-child(even){
         background: @bkgrd-gray;
     }
     
     /* h3 reply heading (conditionally displayed) */
     .reply-heading {
-      margin: 2em 0 0 3.2em;
+      margin: 0;
+      padding: 2em 0 0 3.2em;
+      clear: both;
       font-size: 1.1em;
     }
     
@@ -119,9 +120,9 @@
     
     }//closes each-reply
     
-    /* class used on all main content divs (answers, replies, comments) */
+    /* class used on ALL main content divs (answers, replies, comments) */
     .content {
-      margin: 1em 0 2em 0;
+      margin: 1em 0 1.5em 0;
       color: #333;
       font-size: 1.15em;
     }
