@@ -10,7 +10,7 @@
 		</acj-field-with-feedback>
 		<div>
 			<label for="importFile">Attach File</label>
-			<input type="file" nv-file-select uploader="uploader" id="importFile" ng-disabled="uploader.queue.length || uploadedFile"/>
+			<input type="file" nv-file-select uploader="uploader" id="importFile" ng-disabled="uploader.queue.length || question.uploadedFile"/>
 			<div class="row" ng-repeat="item in uploader.queue">
 				<div class="col-md-4"><strong>{{item.file.name}}</strong></div>
 				<div class="col-md-1">{{item.file.size/1024/1024|number:2}} MB</div>
@@ -38,7 +38,7 @@
 					<strong>{{question.uploadedFile.alias}}</strong>
 				</div>
 				<div class="col-md-1">
-					<a ng-click="deleteFile(question.uploadedFile.id)" class="btn btn-danger btn-xs">
+					<a ng-click="deleteFile(question.uploadedFile.posts_id, question.uploadedFile.id)" class="btn btn-danger btn-xs">
 						<i class="fa fa-trash-o"></i> Delete
 					</a>
 				</div>

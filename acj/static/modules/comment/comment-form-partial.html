@@ -1,8 +1,12 @@
 <form name="commentForm" class="form" ng-submit="commentSubmit()" novalidate>
 	<fieldset>
 		<h2 ng-if="parent.title"><i class="fa fa-comments"></i> {{parent.title}}</h2>
-		<i class="fa fa-quote-left pull-left" ng-if="!parent.title"></i>
-		<i class="fa fa-quote-right pull-right" ng-if="!parent.title"></i>
+		<!-- Attachment -->
+		<div ng-if="parent.post.files.length" ng-repeat="file in parent.post.files">
+			<a target="_blank" ng-href="pdf/{{file.name}}">{{file.alias}}</a>
+		</div>
+		<i class="fa fa-quote-left pull-left" ng-if="!parent.title && parent.post.content"></i>
+		<i class="fa fa-quote-right pull-right" ng-if="!parent.title && parent.post.content"></i>
 		<div mathjax="parent.post.content"
 			ng-bind-html="parent.post.content">
 		</div>

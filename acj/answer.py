@@ -6,18 +6,26 @@ from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from acj import dataformat, db
 from acj.authorization import require, allow, is_user_access_restricted
-from acj.models import Posts, PostsForAnswers, PostsForQuestions, Courses, PostsForAnswersAndPostsForComments
+from acj.models import Posts, PostsForAnswers, PostsForQuestions, Courses, PostsForAnswersAndPostsForComments, FilesForPosts
 from acj.util import new_restful_api
+from acj.attachment import addNewFile, deleteFile
+
+import os
 
 answers_api = Blueprint('answers_api', __name__)
 api = new_restful_api(answers_api)
 
 new_answer_parser = RequestParser()
 new_answer_parser.add_argument('post', type=dict, default={})
+new_answer_parser.add_argument('name', type=str, default=None)
+new_answer_parser.add_argument('alias', type=str, default=None)
 
 existing_answer_parser = RequestParser()
 existing_answer_parser.add_argument('id', type=int, required=True, help="Answer id is required.")
 existing_answer_parser.add_argument('post', type=dict, default={})
+existing_answer_parser.add_argument('name', type=str, default=None)
+existing_answer_parser.add_argument('alias', type=str, default=None)
+existing_answer_parser.add_argument('uploadedFile', type=bool, default=False)
 
 flag_parser = RequestParser()
 flag_parser.add_argument('flagged', type=bool, required=True,
@@ -47,7 +55,8 @@ class AnswerRootAPI(Resource):
 		require(CREATE, answer)
 		params = new_answer_parser.parse_args()
 		post.content = params.get("post").get("content")
-		if not post.content:
+		name = params.get('name')
+		if not (post.content or name):
 			return {"error":"The answer content is empty!"}, 400
 		prev_answer = PostsForAnswers.query.filter_by(postsforquestions_id=question_id).join(Posts).filter(Posts.users_id==current_user.id).first()
 		if prev_answer:
@@ -56,6 +65,8 @@ class AnswerRootAPI(Resource):
 		db.session.add(post)
 		db.session.add(answer)
 		db.session.commit()
+		if name:
+			addNewFile(params.get('alias'), name, course_id, question_id, post.id)
 		return marshal(answer, dataformat.getPostsForAnswers())
 api.add_resource(AnswerRootAPI, '')
 
@@ -81,16 +92,21 @@ class AnswerIdAPI(Resource):
 			return {"error":"Answer id does not match the URL."}, 400
 		# modify answer according to new values, preserve original values if values not passed
 		answer.post.content = params.get("post").get("content")
-		if not answer.post.content:
+		uploaded = params.get('uploadFile')
+		name = params.get('name')
+		if not (answer.post.content or uploaded or name):
 			return {"error":"The answer content is empty!"}, 400
 		db.session.add(answer.post)
 		db.session.add(answer)
 		db.session.commit()
+		if name:
+			addNewFile(params.get('alias'), name, course_id, question_id, answer.post.id)
 		return marshal(answer, dataformat.getPostsForAnswers())
 	@login_required
 	def delete(self, course_id, question_id, answer_id):
 		answer = PostsForAnswers.query.get_or_404(answer_id)
 		require(DELETE, answer)
+		deleteFile(answer.post.id)
 		db.session.delete(answer)
 		db.session.commit()
 		return {'id': answer.id}

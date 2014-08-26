@@ -312,7 +312,7 @@ class PostsForQuestions(db.Model):
 		db.Integer,
 		db.ForeignKey('Posts.id', ondelete="CASCADE"),
 		nullable=False)
-	post = db.relationship("Posts")
+	post = db.relationship("Posts", cascade="delete")
 	title = db.Column(db.String(255))
 	_answers = db.relationship("PostsForAnswers", cascade="delete")
 	comments = db.relationship("PostsForQuestionsAndPostsForComments", cascade="delete")
@@ -372,7 +372,7 @@ class PostsForAnswers(db.Model):
 		db.Integer,
 		db.ForeignKey('Posts.id', ondelete="CASCADE"),
 		nullable=False)
-	post = db.relationship("Posts")
+	post = db.relationship("Posts", cascade="delete")
 	postsforquestions_id = db.Column(
 		db.Integer,
 		db.ForeignKey('PostsForQuestions.id', ondelete="CASCADE"),

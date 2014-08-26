@@ -61,6 +61,11 @@
 						<i class="fa fa-comments"></i> {{question.title}} &raquo;
 					</h3>
 				</a>
+				<!-- Attachment -->
+				<div ng-if="question.post.files.length" ng-repeat="file in question.post.files">
+					<a target="_blank" ng-href="pdf/{{file.name}}">{{file.alias}}</a>
+				</div>
+
 				<!-- Details -->
 				<div mathjax ng-bind-html="question.post.content" class="question-desc"></div>
 				<!-- Metadata -->

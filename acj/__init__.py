@@ -80,7 +80,7 @@ def create_app(conf=config, settings_override={}):
 		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answers')
 	from .attachment import attachment_api
 	app.register_blueprint(attachment_api,
-		url_prefix='/api/tmpAttachment')
+		url_prefix='/api/attachment')
 	from .comment import commentsforquestions_api
 	app.register_blueprint(commentsforquestions_api, url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/comments')
 	from .comment import commentsforanswers_api

@@ -37,8 +37,8 @@ module.factory(
 	function ($resource)
 	{
 		var ret = $resource(
-			'/api/tmpAttachment/:postId',
-			{postId: '@id'}
+			'/api/attachment/post/:postId/:fileId',
+			{postId: '@post_id', fileId: '@file_id'}
 		);
 		ret.MODEL = "FilesForPosts";
 		return ret;
@@ -46,16 +46,22 @@ module.factory(
 );
 
 /***** Services *****/
-module.service('attachService', function(FileUploader, $location, CourseResource, Toaster) {
+module.service('attachService', function(FileUploader, $location, Toaster) {
 	var filename = '';
 	var alias = '';
 	
 	var getUploader = function() {
 		var uploader = new FileUploader({
-			url: '/api/tmpAttachment',
+			url: '/api/attachment',
 			queueLimit: 1,
 			autoUpload: true
 		});
+
+		filename = '';
+		alias = '';
+
+		uploader.onCompleteItem = onComplete();
+		uploader.onErrorItem = onError();
 
 		return uploader;
 	}
@@ -92,8 +98,6 @@ module.service('attachService', function(FileUploader, $location, CourseResource
 
 	return {
 		getUploader: getUploader,
-		onComplete: onComplete,
-		onError: onError,
 		getName: getName,
 		getAlias: getAlias,
 		resetName: resetName
@@ -121,11 +125,11 @@ module.controller("QuestionViewController",
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
 		Session.getUser().then(function(user) {
-            $scope.loggedInUserId = user.id;
-        });
-        Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(result) {
-            $scope.canManagePosts = result;
-        });
+		    $scope.loggedInUserId = user.id;
+		});
+		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(result) {
+		    $scope.canManagePosts = result;
+		});
 		$scope.question = {};
 		QuestionResource.get({'courseId': $scope.courseId,
 			'questionId': questionId}).$promise.then(
@@ -203,8 +207,6 @@ module.controller("QuestionCreateController",
 		var courseId = $routeParams['courseId'];
 		$scope.question = {};
 		$scope.uploader = attachService.getUploader();
-		$scope.uploader.onCompleteItem = attachService.onComplete();
-		$scope.uploader.onErrorItem = attachService.onError();
 		$scope.resetName = attachService.resetName();
 		$scope.questionSubmit = function () {
 			$scope.submitted = true;
@@ -247,13 +249,11 @@ module.controller("QuestionEditController",
 		var courseId = $routeParams['courseId'];
 		$scope.questionId = $routeParams['questionId'];
 		$scope.uploader = attachService.getUploader();
-		$scope.uploader.onCompleteItem = attachService.onComplete();
-		$scope.uploader.onErrorItem = attachService.onError();
 		$scope.resetName = attachService.resetName();
 		$scope.question = {};
 
-		$scope.deleteFile = function(post_id) {
-			AttachmentResource.delete({'postId': post_id}).$promise.then(
+		$scope.deleteFile = function(post_id, file_id) {
+			AttachmentResource.delete({'postId': post_id, 'fileId': file_id}).$promise.then(
 				function (ret) {
 					Toaster.success('Attachment deleted successfully');
 					$scope.question.uploadedFile = false;
@@ -277,6 +277,7 @@ module.controller("QuestionEditController",
 				AttachmentResource.get({'postId': ret.question.post.id}).$promise.then(
 					function (ret) {
 						$scope.question.uploadedFile = ret.file;
+						
 					},
 					function (ret) {
 						Toaster.reqerror("Unable to retrieve attachment", ret);

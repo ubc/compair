@@ -37,10 +37,13 @@ module.factory(
 module.controller(
 	"AnswerCreateController",
 	function ($scope, $log, $location, $routeParams, AnswerResource, 
-		QuestionResource, Toaster)
+		QuestionResource, Toaster, attachService)
 	{
 		var courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
+
+		$scope.uploader = attachService.getUploader();
+		$scope.resetName = attachService.resetName();
 
 		$scope.question = {};
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).
@@ -58,6 +61,8 @@ module.controller(
 		$scope.answer = {};
 		$scope.answerSubmit = function () {
 			$scope.submitted = true;
+			$scope.answer.name = attachService.getName();
+			$scope.answer.alias = attachService.getAlias();
 			AnswerResource.save({'courseId': courseId, 'questionId': questionId},
 				$scope.answer).$promise.then(
 					function (ret)
@@ -82,14 +87,30 @@ module.controller(
 module.controller(
 	"AnswerEditController",
 	function ($scope, $log, $location, $routeParams, AnswerResource, 
-		QuestionResource, Toaster)
+		QuestionResource, AttachmentResource, attachService, Toaster)
 	{
 		var courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
 		$scope.answerId = $routeParams['answerId'];
+
+		$scope.uploader = attachService.getUploader();
+		$scope.resetName = attachService.resetName();
 		
 		$scope.question = {};
 		$scope.answer = {};
+
+		$scope.deleteFile = function(post_id, file_id) {
+			AttachmentResource.delete({'postId': post_id, 'fileId': file_id}).$promise.then(
+				function (ret) {
+					Toaster.success('Attachment deleted successfully');
+					$scope.answer.uploadedFile = false;
+				},
+				function (ret) {
+					Toaster.reqerror('Attachment deletion failed', ret);
+				}
+			);
+		}
+
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
 			function (ret) {
 				$scope.question = ret.question;	
@@ -101,12 +122,22 @@ module.controller(
 		AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': $scope.answerId}).$promise.then(
 			function (ret) {
 				$scope.answer = ret;
+				AttachmentResource.get({'postId': ret.post.id}).$promise.then(
+					function (ret) {
+						$scope.answer.uploadedFile = ret.file;
+					},
+					function (ret) {
+						Toaster.reqerror("Unable to retrieve attachment", ret);
+					}
+				);
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
 			}
 		);
 		$scope.answerSubmit = function () {
+			$scope.answer.name = attachService.getName();
+			$scope.answer.alias = attachService.getAlias();
 			AnswerResource.save({'courseId': courseId, 'questionId': questionId}, $scope.answer).$promise.then(
 				function() { 
 					Toaster.success("Answer Updated!");

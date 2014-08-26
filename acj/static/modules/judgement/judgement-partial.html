@@ -4,6 +4,10 @@
 	
 	<div class="standalone-question">
 		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
+		<!-- Attachment -->
+		<div ng-if="question.post.files.length" ng-repeat="file in question.post.files">
+			<a target="_blank" ng-href="pdf/{{file.name}}">{{file.alias}}</a>
+		</div>
 		<div mathjax="question.post.content"
 			ng-bind-html="question.post.content">
 		</div>
@@ -24,6 +28,10 @@
 				<div class="col-md-6">
 					<div class="answer-choice">
 						<h3 class="text-center">Answer 1</h3>
+						<!-- Attachment -->
+						<div ng-if="answerPair.answer1.post.files.length" ng-repeat="file in answerPair.answer1.post.files">
+							<a target="_blank" ng-href="pdf/{{file.name}}">{{file.alias}}</a>
+						</div>
 						<div mathjax="answerPair.answer1.post.content"
 							ng-bind-html="answerPair.answer1.post.content">
 						</div>
@@ -40,6 +48,10 @@
 				<div class="col-md-6">
 					<div class="answer-choice">
 						<h3 class="text-center">Answer 2</h3>
+						<!-- Attachment -->
+						<div ng-if="answerPair.answer2.post.files.length" ng-repeat="file in answerPair.answer2.post.files">
+							<a target="_blank" ng-href="pdf/{{file.name}}">{{file.alias}}</a>
+						</div>
 						<div mathjax="answerPair.answer2.post.content"
 							ng-bind-html="answerPair.answer2.post.content">
 						</div>

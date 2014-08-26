@@ -8,8 +8,9 @@ from acj import dataformat, db
 from acj.authorization import allow, require
 from acj.models import PostsForQuestions, Courses, Posts, CoursesAndUsers, CriteriaAndCourses, UserTypesForCourse, PostsForAnswers, AnswerPairings, Judgements, FilesForPosts
 from acj.util import new_restful_api
+from acj.attachment import addNewFile, deleteFile
 
-import datetime, shutil, os
+import datetime, os
 
 questions_api = Blueprint('questions_api', __name__)
 api = new_restful_api(questions_api)
@@ -96,9 +97,7 @@ class QuestionIdAPI(Resource):
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(DELETE, question)
 		# delete file when question is deleted
-		file = FilesForPosts.query.filter_by(posts_id = question.post.id).first()
-		if file:
-			os.remove(os.getcwd() + '/acj/static/pdf/' + file.name)
+		deleteFile(question.post.id)	
 		db.session.delete(question)
 		db.session.commit()
 		return {'id': question.id} 
@@ -155,10 +154,3 @@ class QuestionRootAPI(Resource):
 			addNewFile(params.get('alias'), name, course_id, question.id, post.id)	
 		return marshal(question, dataformat.getPostsForQuestions())
 api.add_resource(QuestionRootAPI, '')
-
-def addNewFile(alias, name, course_id, question_id, post_id):
-	tmpName = str(course_id) + '_' + str(question_id) + '_' + str(post_id) + '.pdf'
-	shutil.move(os.getcwd() + '/tmpUpload/' + name, os.getcwd() + '/acj/static/pdf/' + tmpName)
-	file = FilesForPosts(posts_id=post_id, author_id=current_user.id, name=tmpName, alias=alias)
-	db.session.add(file)
-	db.session.commit()

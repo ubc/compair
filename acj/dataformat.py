@@ -101,7 +101,8 @@ def getPosts(restrict_users=True):
 		'course': fields.Nested(getCourses()),
 		'content': fields.String,
 		'modified': fields.DateTime,
-		'created': fields.DateTime
+		'created': fields.DateTime,
+		'files': fields.Nested(getFilesForPosts())
 	}
 
 def getPostsForQuestions(restrict_users=True):
@@ -161,6 +162,14 @@ def getPostsForQuestionsOrAnswersAndPostsForComments(restrict_users=True):
 		'id': fields.Integer,
 		'postsforcomments': fields.Nested(comment),
 		'content': fields.String
+	}
+
+def getFilesForPosts(): 
+	return {
+		'id': fields.Integer,
+		'posts_id': fields.Integer,
+		'name': fields.String,
+		'alias': fields.String
 	}
 
 def getAnswerPairings():
