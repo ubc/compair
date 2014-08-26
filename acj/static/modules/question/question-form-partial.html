@@ -1,5 +1,5 @@
-<form name="questionForm" class="form" ng-submit="questionSubmit()"
-	novalidate>
+<form name="questionForm" class="form" ng-submit="questionSubmit()" novalidate>
+	
 	<fieldset>
 		<legend>Question</legend>
 		<acj-field-with-feedback form-control="questionForm.questionTitle">
@@ -10,69 +10,87 @@
 		</acj-field-with-feedback>
 		<div class="form-group">
 			<label for="questionContent">Additional Information</label>
-			<textarea ng-model="question.post.content" id="questionContent"
-				class="form-control" rows="8" ckeditor>
+			<textarea ckeditor rows="8"
+				ng-model="question.post.content" class="form-control" id="questionContent">
 			</textarea>
 		</div>
 	</fieldset>
+	
 	<fieldset>
-		<legend>Schedule (Optional)</legend>
-		<div class="form-group">
-			<input id="availableCheck" type="checkbox" ng-model="question.availableCheck">
-			<label for="availableCheck">Set when students can answer and evaluate this question</label>
-			<br><br />
-			<div ng-show="question.availableCheck">
-				<div class="col-md-6 form-group">
-					<acj-field-with-feedback form-control="questionForm.answerStartDate">
-						<label>Answer Start Date</label>
-						<input type="text" id="answerStartDate" name="answerStartDate" class="form-control" ng-model="question.answer_start" data-autoclose="1" ng-required="question.availableCheck" min-date="today" bs-datepicker>
-					</acj-field-with-feedback>
-				</div>
-				<div class="col-md-6 form-group">
-					<acj-field-with-feedback form-control="questionForm.answerStartTime">	
-						<label>Answer Start Time</label>
-						<input type="text" id="answerStartTime" name="answerStartTime" class="form-control" ng-model="question.answer_start" data-autoclose="1" ng-required="question.availableCheck" timeType="iso" bs-timepicker>
-					</acj-field-with-feedback>
-				</div>
-				<div class="col-md-6 form-group">
-					<acj-field-with-feedback form-control="questionForm.answerEndDate">
-						<label>Answer End Date</label>
-						<input type="text" id=answerEndDate" name="answerEndDate" class="form-control" ng-model="question.answer_end" data-autoclose="1" ng-required="question.availableCheck" min-date="today" bs-datepicker>
-					</acj-field-with-feedback>
-				</div>
-				<div class="col-md-6 form-group">
-					<acj-field-with-feedback form-control="questionForm.answerEndTime">
-						<label>Answer End Time</label>
-						<input type="text" id="answerEndTime" name="answerEndTime" class="form-control" ng-model="question.answer_end" data-autoclose="1" ng-required="question.availableCheck" bs-timepicker>
-					</acj-field-with-feedback>
-				</div>
+		<legend>Schedule</legend>
+		<div class="instructional-text">
+			<p><strong>Students can answer and edit their answers only during the dates and times you set.</strong> Students do not see a question until the answering period begins. Students do not see other answers until they have evaluated the required number of answer pairs.</p>
+			<p><strong>After the answering period has passed, students can evaluate answers.</strong> If you want to set specific dates and times for an evaluation period, click the checkbox below.</p>
+		</div>
+		
+		<div class="row">
+			<div class="col-md-6 form-group">
+				<acj-field-with-feedback form-control="questionForm.answerStartDate">
+					<label>Date Answering Begins</label>
+					<input type="text" id="answerStartDate" name="answerStartDate" class="form-control" ng-model="question.answer_start" data-autoclose="1" required min-date="today" bs-datepicker>
+				</acj-field-with-feedback>
+			</div>
+			<div class="col-md-6 form-group">
+				<acj-field-with-feedback form-control="questionForm.answerStartTime">	
+					<label>Time Answering Begins</label>
+					<input type="text" id="answerStartTime" name="answerStartTime" class="form-control" ng-model="question.answer_start" data-autoclose="1" required timeType="iso" bs-timepicker>
+				</acj-field-with-feedback>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-6 form-group">
+				<acj-field-with-feedback form-control="questionForm.answerEndDate">
+					<label>Date Answering Ends</label>
+					<input type="text" id=answerEndDate" name="answerEndDate" class="form-control" ng-model="question.answer_end" data-autoclose="1" required min-date="today" bs-datepicker>
+				</acj-field-with-feedback>
+			</div>
+			<div class="col-md-6 form-group">
+				<acj-field-with-feedback form-control="questionForm.answerEndTime">
+					<label>Time Answering Ends</label>
+					<input type="text" id="answerEndTime" name="answerEndTime" class="form-control" ng-model="question.answer_end" data-autoclose="1" required bs-timepicker>
+				</acj-field-with-feedback>
+			</div>
+		</div>
+		
+		<hr />
+		<input id="availableCheck" type="checkbox" ng-model="question.availableCheck">
+		<label for="availableCheck">Set when students can evaluate this question (optional)</label>
+		<br /><br />
+		
+		<div ng-show="question.availableCheck">
+			
+			<div class="row">
 				<div class="col-md-6 form-group">
 					<acj-field-with-feedback form-control="questionForm.judgeStartDate">
-						<label>Evaluation Start Date</label>
+						<label>Date Evaluations Begin</label>
 						<input type="text" id="judgeStartDate" name="judgeStartDate" class="form-control" ng-model="question.judge_start" data-autoclose="1" ng-required="question.availableCheck" min-date="today" bs-datepicker>
 					</acj-field-with-feedback>
 				</div>
 				<div class="col-md-6 form-group">
 					<acj-field-with-feedback form-control="questionForm.judgeStartTime">	
-						<label>Evaluation Start Time</label>
+						<label>Time Evaluations Begin</label>
 						<input type="text" id="judgeStartTime" name="judgeStartTime" class="form-control" ng-model="question.judge_start" data-autoclose="1" ng-required="question.availableCheck" timeType="iso" bs-timepicker>
 					</acj-field-with-feedback>
 				</div>
+			</div>
+			<div class="row">
 				<div class="col-md-6 form-group">
 					<acj-field-with-feedback form-control="questionForm.judgeEndDate">
-						<label>Evaluation End Date</label>
+						<label>Date Evaluations End</label>
 						<input type="text" id="judgeEndDate" name="judgeEndDate" class="form-control" ng-model="question.judge_end" data-autoclose="1" ng-required="question.availableCheck" min-date="today" bs-datepicker>
 					</acj-field-with-feedback>
 				</div>
 				<div class="col-md-6 form-group">
 					<acj-field-with-feedback form-control="questionForm.judgeEndTime">
-						<label>Evaluation End Time</label>
+						<label>Time Evaluations End</label>
 						<input type="text" id="judgeEndTime" name="judgeEndTime" class="form-control" ng-model="question.judge_end" data-autoclose="1" ng-required="question.availableCheck" bs-timepicker>
 					</acj-field-with-feedback>
 				</div>
 			</div>
 		</div>
 	</fieldset>
-	<input type="submit" class="btn btn-success btn-lg center-block" value="Save"
-		ng-disabled="questionForm.$invalid || submitted" />
+	
+	<input type="submit" class="btn btn-success btn-lg center-block"
+	       value="Save" ng-disabled="questionForm.$invalid || submitted" />
+	
 </form>
