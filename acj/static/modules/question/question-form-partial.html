@@ -9,7 +9,7 @@
 				required auto-focus />
 		</acj-field-with-feedback>
 		<div>
-			<label for="importFile">Attach File</label>
+			<label for="importFile">Attach PDF</label>
 			<input type="file" nv-file-select uploader="uploader" id="importFile" ng-disabled="uploader.queue.length || question.uploadedFile"/>
 			<div class="row" ng-repeat="item in uploader.queue">
 				<div class="col-md-4"><strong>{{item.file.name}}</strong></div>

@@ -2,22 +2,23 @@
 	
 	<div class="standalone-question">
 		
+		<!-- Question -->
 		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
-<<<<<<< HEAD
-		<div ng-if="question.uploadedFile">
-			<a target="_blank" ng-href="pdf/{{question.uploadedFile.name}}">{{question.uploadedFile.alias}}</a>
-=======
-
-		<!-- Attachment -->
-		<div ng-if="question.post.files.length" ng-repeat="file in question.post.files">
-			<a target="_blank" ng-href="pdf/{{file.name}}">{{file.alias}}</a>
->>>>>>> implemented attaching files to answers
-		</div>
-	
-		<div class="content questionmathjax question-desc" mathjax="question.post.content"
+		
+		<!-- Question Details -->
+		<div class="questionmathjax question-desc" mathjax="question.post.content"
 		     ng-bind-html="question.post.content">
 		</div>
-
+		
+		<!-- Attachment -->
+		<p class="question-desc" ng-if="question.post.files.length">
+			See question details:
+			<span ng-repeat="file in question.post.files">
+				<a target="_blank" ng-href="pdf/{{file.name}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
+			</span>
+		</p>
+		
+		<!-- Answer/Evaluation Periods -->
 		<div ng-show="question.date_set">
 			<p><strong>Answering Period:</strong> {{question.answer_start | date: 'MMM d @ h:mm a'}} - {{question.answer_end | date: 'MMM d @ h:mm a'}}<br />
 			<strong>Evaluation Period:</strong> {{question.judge_start | date: 'MMM d @ h:mm a'}} - {{question.judge_end | date: 'MMM d @ h:mm a'}}</p>
@@ -93,48 +94,6 @@
 			
 				<!-- Instructor Answers Section -->
 				<div class="each-answer clearfix" ng-repeat="answer in instructor_answers" ng-show="canManagePosts || question.after_judging">
-			
-					<a ng-href="#/user/{{answer.post.user.id}}">
-						<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
-					</a>
-					<a ng-href="#/user/{{answer.post.user.id}}">
-						{{answer.post.user.displayname}}
-						<span ng-if="canManagePosts && answer.post.user.fullname">
-							({{answer.post.user.fullname}})
-						</span>
-						<span ng-if="canManagePosts && !answer.post.user.fullname">
-							({{answer.post.user.username}})
-						</span>
-					</a>
-					<span class="label label-info" ng-if="instructors[answer.post.user.id]">{{instructors[answer.post.user.id]}}&nbsp;</span>
-					answered on {{answer.post.created | amDateFormat: 'MMM d @ h:mm a'}}:
-					<div class="manager-actions pull-right" ng-if="canManagePosts">
-						<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/delete">
-							<i class="fa fa-trash-o"></i>
-						</a>
-						<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit">
-							Edit
-						</a>
-					</div>
-
-					<!-- Attachment -->
-					<div ng-if="answer.post.files.length" ng-repeat="file in answer.post.files">
-						<a target="_blank" ng-href="pdf/{{file.name}}">{{file.alias}}</a>
-					</div>
-		
-					<div clas="content" mathjax="answer.post.content"
-					     ng-bind-html="answer.post.content">
-						
-					</div>
-					
-					<!-- <a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary pull-left" ng-if="judged_req_met"> -->
-					<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary pull-left">
-						Reply
-					</a>
-					
-					<h3 class="reply-heading" ng-if="answer.comments.length">{{answer.comments.length}} replies</h3>
-					
-					<div ng-repeat="comment in answer.comments" class="each-reply" ng-if="judged_req_met">
 					
 					<!-- Answer Metadata Header -->
 					<a ng-href="#/user/{{answer.post.user.id}}">
@@ -162,8 +121,18 @@
 					
 					<!-- Answer -->
 					<div class="content" mathjax="answer.post.content"
-					     ng-bind-html="answer.post.content">
+						ng-bind-html="answer.post.content">
 					</div>
+					
+					<!-- Attachment -->
+					<p ng-if="answer.post.files.length" class="content">
+						See answer details:
+						<span ng-repeat="file in answer.post.files">
+							<a target="_blank" ng-href="pdf/{{file.name}}">
+								{{file.alias}} <i class="fa fa-file-pdf-o"></i>
+							</a>
+						</span>
+					</p>
 					
 					<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary pull-left">
 						Reply
@@ -238,20 +207,20 @@
 							Edit
 						</a>
 					</div>
-<<<<<<< HEAD
 					
 					<!-- Answer -->
-=======
-
-					<!-- Attachment -->
-					<div ng-if="answer.post.files.length" ng-repeat="file in answer.post.files">
-						<a target="_blank" ng-href="pdf/{{file.name}}">{{file.alias}}</a>
-					</div>
-	
->>>>>>> implemented attaching files to answers
 					<div class="content" mathjax="answer.post.content"
 					     ng-bind-html="answer.post.content">
 					</div>
+					
+					<p ng-if="answer.post.files.length" class="content">
+						See answer details:
+						<span ng-repeat="file in answer.post.files">
+							<a target="_blank" ng-href="pdf/{{file.name}}">
+								{{file.alias}} <i class="fa fa-file-pdf-o"></i>
+							</a>
+						</span>
+					</p>
 					
 					<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary pull-left">
 						Reply

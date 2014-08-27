@@ -45,32 +45,32 @@
 		ng-repeat="question in questions | filter:questionFilter">
 		
 		<!-- Question Display -->
-		<div class="col-sm-10 media">
-			<!-- Gravatar, link to user profile -->
-			<!-- 
-			custom margin to fix tags being cut off on small screens when it goes
-			to the second row, moved to padding in question-info
-			<a class="pull-left" ng-href="#/user/" style="margin-right: 0;">
-				<img class="media-object" src="//www.gravatar.com/avatar/{{question.post.user.avatar}}?s=48&d=retro">
-			</a> -->
+		<div class="col-sm-9 media">
+
 			<!-- Question Info -->
 			<div class="media-body">
+				
 				<!-- Title -->
 				<a ng-href="#/course/{{course.id}}/question/{{question.id}}">
 					<h3 class="media-heading">
 						<i class="fa fa-comments"></i> {{question.title}} &raquo;
 					</h3>
 				</a>
-				<!-- Attachment -->
-				<div ng-if="question.post.files.length" ng-repeat="file in question.post.files">
-					<a target="_blank" ng-href="pdf/{{file.name}}">{{file.alias}}</a>
-				</div>
-
+				
 				<!-- Details -->
 				<div mathjax ng-bind-html="question.post.content" class="question-desc"></div>
+				
+				<!-- Attachment -->
+				<p class="question-desc" ng-if="question.post.files.length">
+					See question details:
+					<span ng-repeat="file in question.post.files">
+						<a target="_blank" ng-href="pdf/{{file.name}}">{{file.alias}} (PDF)</a>
+					</span>
+				</p>
+				
 				<!-- Metadata -->
 				<ul class="list-inline">
-					<!-- Edit and Delete Links -->
+					<!-- Edit Link -->
 					<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">	
 						<a ng-href="#/course/{{course.id}}/question/{{question.id}}/edit" title="Edit">
 							Edit
@@ -81,24 +81,28 @@
 						Posted by 
 						<a ng-href="#/user/{{question.post.user.id}}">
 							{{question.post.user.displayname}}
-							<span ng-if="canManagePosts && question.post.user.fullname">({{question.post.user.fullname}})</span>
-							<span ng-if="canManagePosts && !question.post.user.fullname">({{question.post.user.username}})</span>
+							<span ng-if="canManagePosts && question.post.user.fullname">
+								({{question.post.user.fullname}})
+							</span>
+							<span ng-if="canManagePosts && !question.post.user.fullname">
+								({{question.post.user.username}})
+							</span>
 						</a>
 					</li>
-					<!-- Total number of answers -->
+					<!-- Total Answers -->
 					<li title="{{question.answers_count}} answers">
 						{{question.answers_count}} answer<span ng-if="question.answers_count != 1">s</span>
 					</li>
-					<!-- Total number of comments -->
+					<!-- Total Comments -->
 					<li title="{{question.comments_count}} comments"> 
 						{{question.comments_count}} comment<span ng-if="question.comments_count != 1">s</span>
 					</li>
-					<!-- Judgements Left counter -->
+					<!-- Evaluations counter -->
 					<li ng-if="!canManagePosts && question.judging_period" ng-class="{'label label-warning': question.left > 0}">
 						{{question.left}} evaluation<span ng-if="question.left != 1">s</span> needed from you
 					</li>
 					<li ng-if="!question.available">
-						<span class="label label-warning">Answers not yet available</span>
+						<span class="label label-warning">Answering not yet available</span>
 					</li>
 					<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
 						<a ng-href="#/course/{{course.id}}/question/{{question.id}}/delete" title="Delete">
@@ -116,21 +120,28 @@
 						tag 3
 					</li> -->
 				</ul>
+				
 			</div>
+			
 		</div>
 		
 		<!-- Question Controls -->
-		<div class="col-sm-2">
+		<div class="col-sm-3 text-right">
+			
 			<a class="btn btn-success" title="Answer Question"
-				ng-href="#/course/{{course.id}}/question/{{question.id}}/answer/create" ng-show="canManagePosts || question.answer_period">
+				ng-href="#/course/{{course.id}}/question/{{question.id}}/answer/create" ng-show="(canManagePosts || question.answer_period)">
 				Answer
 			</a>
+			<a class="btn btn-success" ng-hide="true" title="You have answered" disabled>
+				Answered
+			</a>
 			<a class="btn btn-success" title="Evaluate Answers"
-				ng-href="#/course/{{course.id}}/question/{{question.id}}/judgement" ng-if="!canManagePosts && question.judging_period">
+				ng-href="#/course/{{course.id}}/question/{{question.id}}/judgement" ng-show="!canManagePosts && question.judging_period">
 				Evaluate
 			</a>
+			
 		</div>
+		
 	</div>
-
 
 </div>
