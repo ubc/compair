@@ -924,18 +924,21 @@ class JudgementAPITests(ACJTestCase):
 		# additional testing in submit judgement
 
 	def test_submit_judgement(self):
-		expected_answer1 = self.question.answers[0]
-		expected_answer2 = self.question.answers[1]
+		# establish expected data by first getting an answer pair
+		self.login(self.data.get_enroled_student().username)
+		rv = self.client.get(self.answer_pair_url)
+		self.assert200(rv)
+		expected_answer_pair = rv.json
 		expected_judgements = {
-			'answer1_id': expected_answer1.id,
-			'answer2_id': expected_answer2.id,
+			'answerpair_id': rv.json['id'],
 			'judgements': [
 				{
 					'course_criterion_id': self.course.criteriaandcourses[0].id,
-					'answer_id_winner': expected_answer1.id
+					'answer_id_winner': rv.json['answer1']['id']
 				}
 			]
 		}
+		self.logout()
 		# test login required
 		rv = self.client.post(self.base_url, data=json.dumps(expected_judgements),
 							  content_type='application/json')
@@ -999,13 +1002,7 @@ class JudgementAPITests(ACJTestCase):
 		self.assert400(rv)
 		# test invalid answer pair
 		faulty_judgements = copy.deepcopy(expected_judgements)
-		faulty_judgements['answer1_id'] = 2382301
-		faulty_judgements['judgements'][0]['answer_id_winner'] = 2382301 # to pass winner id check
-		rv = self.client.post(self.base_url, data=json.dumps(faulty_judgements),
-							  content_type='application/json')
-		self.assert404(rv)
-		faulty_judgements = copy.deepcopy(expected_judgements)
-		faulty_judgements['answer2_id'] = 2382301
+		faulty_judgements['answerpair_id'] = 2382301
 		rv = self.client.post(self.base_url, data=json.dumps(faulty_judgements),
 							  content_type='application/json')
 		self.assert404(rv)
@@ -1017,10 +1014,10 @@ class JudgementAPITests(ACJTestCase):
 		self.assertEqual(len(actual_judgements), len(expected_judgements['judgements']),
 			"The number of judgements saved does not match the number sent")
 		for actual_judgement in actual_judgements:
-			self.assertEqual(expected_judgements['answer1_id'],
+			self.assertEqual(expected_answer_pair['answer1']['id'],
 				actual_judgement['answerpairing']['postsforanswers_id1'],
 				"Expected and actual judgement answer1 id did not match")
-			self.assertEqual(expected_judgements['answer2_id'],
+			self.assertEqual(expected_answer_pair['answer2']['id'],
 				actual_judgement['answerpairing']['postsforanswers_id2'],
 				"Expected and actual judgement answer2 id did not match")
 			found_judgement = False
@@ -1042,28 +1039,6 @@ class JudgementAPITests(ACJTestCase):
 		# all answers has been judged by the user, errors out when trying to get another pair
 		rv = self.client.get(self.answer_pair_url)
 		self.assert400(rv)
-		# add single new answers to question, expect every new answer pair to contain it
-		expected_answer3 = self.data.create_answer(self.question, self.data.get_enroled_student())
-		for i in range(10):
-			rv = self.client.get(self.answer_pair_url)
-			self.assert200(rv)
-			actual_answer_pair = rv.json
-			self.assertTrue(actual_answer_pair['answer1']['id'] == expected_answer3.id or
-				actual_answer_pair['answer2']['id'] == expected_answer3.id,
-				"New answer not found in answer pair.")
-		# add another new answer to question, expect new answer pairs to contain only the new ones
-		expected_answer4 = self.data.create_answer(self.question, self.data.get_enroled_student())
-		for i in range(10):
-			rv = self.client.get(self.answer_pair_url)
-			self.assert200(rv)
-			actual_answer_pair = rv.json
-			self.assertTrue(
-				(actual_answer_pair['answer1']['id'] == expected_answer3.id or
-				actual_answer_pair['answer2']['id'] == expected_answer3.id)
-				and
-				(actual_answer_pair['answer1']['id'] == expected_answer4.id or
-				 actual_answer_pair['answer2']['id'] == expected_answer4.id),
-				"Answer pair did not consist of only high priority answers.")
 
 class SessionTests(ACJTestCase):
 	def test_loggedin_user_session(self):

@@ -165,7 +165,7 @@ def getPostsForQuestionsOrAnswersAndPostsForComments(restrict_users=True):
 		'content': fields.String
 	}
 
-def getFilesForPosts(): 
+def getFilesForPosts():
 	return {
 		'id': fields.Integer,
 		'posts_id': fields.Integer,
@@ -173,13 +173,17 @@ def getFilesForPosts():
 		'alias': fields.String
 	}
 
-def getAnswerPairings():
-	return {
+def getAnswerPairings(include_answers=False):
+	ret = {
 		'id': fields.Integer,
 		'postsforquestions_id': fields.Integer,
 		'postsforanswers_id1': fields.Integer,
 		'postsforanswers_id2': fields.Integer
 	}
+	if include_answers:
+		ret['answer1'] = fields.Nested(getPostsForAnswers(include_comments=False))
+		ret['answer2'] = fields.Nested(getPostsForAnswers(include_comments=False))
+	return ret
 
 def getJudgements():
 	return {

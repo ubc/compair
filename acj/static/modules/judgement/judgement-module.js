@@ -74,9 +74,6 @@ module.controller(
 				function (ret)
 				{
 					$scope.answerPair = ret;
-					$scope.answerPair.list = [];
-					$scope.answerPair.list.push(ret['answer1']);
-					$scope.answerPair.list.push(ret['answer2']);
 				},
 				function (ret)
 				{
@@ -97,8 +94,7 @@ module.controller(
 		// save judgement to server
 		$scope.judgementSubmit = function() {
 			var judgement = {};
-			judgement['answer1_id'] = $scope.answerPair.answer1.id;
-			judgement['answer2_id'] = $scope.answerPair.answer2.id;
+			judgement['answerpair_id'] = $scope.answerPair.id;
 			judgement['judgements'] = [];
 			angular.forEach($scope.courseCriteria, 
 				function(courseCriterion, index) {

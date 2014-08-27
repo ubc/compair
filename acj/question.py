@@ -3,10 +3,10 @@ from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
-from sqlalchemy import desc, or_, between
+from sqlalchemy import desc, or_
 from acj import dataformat, db
 from acj.authorization import allow, require
-from acj.models import PostsForQuestions, Courses, Posts, CoursesAndUsers, CriteriaAndCourses, UserTypesForCourse, PostsForAnswers, AnswerPairings, Judgements, FilesForPosts, Users
+from acj.models import PostsForQuestions, Courses, Posts, CoursesAndUsers, CriteriaAndCourses, UserTypesForCourse, PostsForAnswers, AnswerPairings, Judgements, Users
 from acj.util import new_restful_api
 from acj.attachment import addNewFile, deleteFile
 

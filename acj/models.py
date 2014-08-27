@@ -577,6 +577,8 @@ class AnswerPairings(db.Model):
 		nullable=False)
 	answer2 = db.relationship("PostsForAnswers", foreign_keys=[postsforanswers_id2])
 	judgements = db.relationship("Judgements")
+	# the round of judgements that this answer pairing belongs to
+	round = db.Column(db.Integer, default=1)
 	modified = db.Column(
 		db.TIMESTAMP,
 		default=func.current_timestamp(),
