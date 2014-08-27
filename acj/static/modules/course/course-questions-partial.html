@@ -129,15 +129,18 @@
 		<div class="col-sm-3 text-right">
 			
 			<a class="btn btn-success" title="Answer Question"
-				ng-href="#/course/{{course.id}}/question/{{question.id}}/answer/create" ng-show="(canManagePosts || question.answer_period)">
+				ng-href="#/course/{{course.id}}/question/{{question.id}}/answer/create" ng-show="!answered[question.id] && (canManagePosts || question.answer_period)">
 				Answer
 			</a>
-			<a class="btn btn-success" ng-hide="true" title="You have answered" disabled>
+			<a class="btn btn-success" ng-show="answered[question.id] && (canManagePosts || question.answer_period)" title="You have answered" disabled>
 				Answered
 			</a>
 			<a class="btn btn-success" title="Evaluate Answers"
-				ng-href="#/course/{{course.id}}/question/{{question.id}}/judgement" ng-show="!canManagePosts && question.judging_period">
+				ng-href="#/course/{{course.id}}/question/{{question.id}}/judgement" ng-show="!canManagePosts && question.judging_period && question.left">
 				Evaluate
+			</a>
+			<a class="btn btn-success" title="You have evaluated" ng-show="!canManagePosts && question.judging_period && !question.left" disabled>
+				Evaluated
 			</a>
 			
 		</div>

@@ -191,6 +191,7 @@ module.controller("QuestionViewController",
 					Toaster.reqerror("Unable to retrieve comments.", ret);
 				}
 			);
+		// enable tabs
 		$('#answers a').click(function (e) {
 			e.preventDefault();
 			$(this).tab('show');
