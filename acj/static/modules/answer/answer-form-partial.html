@@ -1,7 +1,6 @@
 <form class="form" name="answerForm" ng-submit="answerSubmit()" novalidate>
 	<fieldset>
 		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
-
 		<div class="question-desc" mathjax="question.post.content"
 			ng-bind-html="question.post.content">
 		</div>
@@ -10,10 +9,9 @@
 		<p class="question-desc" ng-if="question.post.files.length">
 			See question details:
 			<span ng-repeat="file in question.post.files">
-				<a target="_blank" ng-href="pdf/{{file.name}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
+				<a target="_blank" ng-href="#/course/{{courseId}}/question/{{question.id}}/post/{{question.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
 			</span>
 		</p>
-		
 		<hr />
 		
 		<div>

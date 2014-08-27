@@ -40,6 +40,7 @@ module.controller(
 		QuestionResource, Toaster, attachService)
 	{
 		var courseId = $routeParams['courseId'];
+		$scope.courseId = courseId;
 		var questionId = $routeParams['questionId'];
 
 		$scope.uploader = attachService.getUploader();
@@ -90,6 +91,7 @@ module.controller(
 		QuestionResource, AttachmentResource, attachService, Toaster)
 	{
 		var courseId = $routeParams['courseId'];
+		$scope.courseId = courseId;
 		var questionId = $routeParams['questionId'];
 		$scope.answerId = $routeParams['answerId'];
 

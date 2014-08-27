@@ -8,9 +8,9 @@
 		</div>
 		<!-- Attachment -->
 		<p class="question-desc" ng-if="parent.post.files.length">
-			See answer details:
+			See details:
 			<span ng-repeat="file in parent.post.files">
-				<a target="_blank" ng-href="pdf/{{file.name}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
+				<a target="_blank" ng-href="#/course/{{courseId}}/question/{{questionId}}/post/{{parent.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
 			</span>
 		</p>
 		<hr />

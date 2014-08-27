@@ -67,7 +67,7 @@ module.controller(
 	function($scope, $log, $routeParams, CourseResource, QuestionResource, Authorize, AuthenticationService, required_rounds, Toaster)
 	{
 		// get course info
-		var courseId = $routeParams['courseId'];
+		var courseId = $scope.courseId = $routeParams['courseId'];
 		Authorize.can(Authorize.CREATE, QuestionResource.MODEL).then(function(result) {
 				$scope.canCreateQuestions = result;
 		});

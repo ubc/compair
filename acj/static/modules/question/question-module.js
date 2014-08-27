@@ -123,7 +123,7 @@ module.controller("QuestionViewController",
 	function($scope, $log, $routeParams, AnswerResource, Authorize, QuestionResource, QuestionCommentResource, AttachmentResource, required_rounds, Session, Toaster)
 	{
 		$scope.courseId = $routeParams['courseId'];
-		var questionId = $routeParams['questionId'];
+		var questionId = $scope.questionId = $routeParams['questionId'];
 		Session.getUser().then(function(user) {
 		    $scope.loggedInUserId = user.id;
 		});

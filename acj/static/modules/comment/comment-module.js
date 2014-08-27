@@ -46,8 +46,8 @@ module.controller(
 	"QuestionCommentCreateController",
 	function ($scope, $log, $location, $routeParams, QuestionCommentResource, QuestionResource, Toaster)
 	{
-		var courseId = $routeParams['courseId'];
-		var questionId = $routeParams['questionId'];
+		var courseId = $scope.courseId = $routeParams['courseId'];
+		var questionId = $scope.questionId = $routeParams['questionId'];
 	
 		$scope.comment = {};
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
@@ -82,8 +82,8 @@ module.controller(
 	"QuestionCommentEditController",
 	function ($scope, $log, $location, $routeParams, QuestionCommentResource, QuestionResource, Toaster)
 	{
-		var courseId = $routeParams['courseId'];
-		var questionId = $routeParams['questionId'];
+		var courseId = $scope.courseId = $routeParams['courseId'];
+		var questionId = $scope.questionId = $routeParams['questionId'];
 		var commentId = $routeParams['commentId'];
 
 		$scope.comment = {};
@@ -141,8 +141,8 @@ module.controller(
 	"AnswerCommentCreateController",
 	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, QuestionResource, Authorize, required_rounds, Toaster)
 	{
-		var courseId = $routeParams['courseId'];
-		var questionId = $routeParams['questionId'];
+		var courseId = $scope.courseId = $routeParams['courseId']
+		var questionId = $scope.questionId = $routeParams['questionId'];
 		var answerId = $routeParams['answerId'];
 
 		$scope.canManagePosts = 
@@ -196,8 +196,8 @@ module.controller(
 	"AnswerCommentEditController",
 	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, Toaster)
 	{
-		var courseId = $routeParams['courseId'];
-		var questionId = $routeParams['questionId'];
+		var courseId = $scope.courseId = $routeParams['courseId'];
+		var questionId = $scope.questionId = $routeParams['questionId'];
 		var answerId = $routeParams['answerId'];
 		var commentId = $routeParams['commentId'];
 

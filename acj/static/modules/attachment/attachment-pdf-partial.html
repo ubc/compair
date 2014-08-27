@@ -1,0 +1,12 @@
+<div ng-controller="AttachmentPDFController">
+	<div class="row text-center">
+		<a class="btn btn-success" ng-click="gotoPage(1)">First</a>
+		<a class="btn btn-success" ng-click="prevPage()">Prev</a>
+		{{currentPage}} / {{totalPages}}
+		<a class="btn btn-success" ng-click="nextPage()">Next</a>
+		<a class="btn btn-success" ng-click="gotoPage(totalPages)">Last</a>
+	</div>
+	<div class="row">
+		<pdfviewer src="{{pdfURL}}" id="viewer" on-page-load='pageLoaded(page, total)'></pdfviewer>
+	</div>
+</div>

@@ -39,8 +39,8 @@ module.controller(
 	function($log, $location, $scope, $timeout, $routeParams, $anchorScroll, QuestionResource, AnswerResource,
 		CriteriaResource, JudgementResource, Toaster) 
 	{
-		var courseId = $routeParams['courseId'];
-		var questionId = $routeParams['questionId'];
+		var courseId = $scope.courseId = $routeParams['courseId'];
+		var questionId = $scope.questionId = $routeParams['questionId'];
 		
 		$scope.question = {};
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(

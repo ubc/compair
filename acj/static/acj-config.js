@@ -5,6 +5,7 @@ var myApp = angular.module('myApp', [
 	'ng-breadcrumbs',
 	'angular-loading-bar',
 	'ubc.ctlt.acj.answer',
+	'ubc.ctlt.acj.attachment',
 	'ubc.ctlt.acj.classlist',
 	'ubc.ctlt.acj.comment',
 	'ubc.ctlt.acj.course',
@@ -122,6 +123,11 @@ myApp.config( function ($routeProvider) {
 			{
 				templateUrl: 'modules/judgement/judgement-partial.html',
 				label: "Evaluate Answers"
+			})
+		.when('/course/:courseId/question/:questionId/post/:postId',
+			{
+				templateUrl: 'modules/attachment/attachment-pdf-partial.html',
+				label: "View Attachment"
 			})
 		.when('/user/create',
 			{

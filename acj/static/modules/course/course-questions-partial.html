@@ -64,7 +64,7 @@
 				<p class="question-desc" ng-if="question.post.files.length">
 					See question details:
 					<span ng-repeat="file in question.post.files">
-						<a target="_blank" ng-href="pdf/{{file.name}}">{{file.alias}} (PDF)</a>
+						<a target="_blank" ng-href="#/course/{{courseId}}/question/{{question.id}}/post/{{question.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
 					</span>
 				</p>
 				
