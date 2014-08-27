@@ -2,17 +2,22 @@
 	<fieldset>
 		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
 
-		<!-- Attachment -->
-		<div ng-if="question.post.files.length" ng-repeat="file in question.post.files">
-			<a target="_blank" ng-href="pdf/{{file.name}}">{{file.alias}}</a>
-		</div>
-
-		<div mathjax="question.post.content"
+		<div class="question-desc" mathjax="question.post.content"
 			ng-bind-html="question.post.content">
 		</div>
+		
+		<!-- Attachment -->
+		<p class="question-desc" ng-if="question.post.files.length">
+			See question details:
+			<span ng-repeat="file in question.post.files">
+				<a target="_blank" ng-href="pdf/{{file.name}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
+			</span>
+		</p>
+		
 		<hr />
+		
 		<div>
-			<label for="importFile">Attach File</label>
+			<label for="importFile">Attach PDF</label>
 			<input type="file" nv-file-select uploader="uploader" id="importFile" ng-disabled="uploader.queue.length || answer.uploadedFile"/>
 			<div class="row" ng-repeat="item in uploader.queue">
 				<div class="col-md-4"><strong>{{item.file.name}}</strong></div>
