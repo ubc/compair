@@ -1,7 +1,8 @@
 <div ng-controller="ClassImportResultsController">
 	<h1>Import Results for {{course.name}}</h1>
+	<p><a href="#/course/{{course.id}}">&laquo; Back to course?</a></p>
 	<div ng-show="results.success.length">
-		<h2>Users Enrolled</h2>
+		<h2>Users enrolled</h2>
 		<table class="table table-striped">
 			<tr>
 				<th ng-repeat="header in headers">{{header}}</th>
@@ -14,8 +15,23 @@
 			</tr>
 		</table>
 	</div>
+	<div ng-show="results.created.length">
+		<h2>Users created</h2>
+		<p><strong>Note:</strong> Users without a specified password will have their username as a default password.</p>
+		<table class="table table-striped">
+			<tr>
+				<th ng-repeat="header in headers">{{header}}</th>
+			</tr>
+			<tr ng-repeat="created in results.created">
+				<td>{{created.user.username}}</td>
+				<td>{{created.user.firstname}}</td>
+				<td>{{created.user.lastname}}</td>
+				<td>{{created.user.email}}</td>
+			</tr>
+		</table>
+	</div>
 	<div ng-show="results.invalids.length">
-		<h2>Invalid Entries</h2>
+		<h2>Users without valid data (not enrolled or created)</h2>
 		<table class="table table-striped">
 			<tr>
 				<th ng-repeat="header in headers">{{header}}</th>
@@ -28,8 +44,8 @@
 			</tr>
 		</table>
 	</div>
-	<div ng-show="results.dropped.length">
-		<h2>Users Dropped</h2>
+		<div ng-show="results.dropped.length">
+		<h2>Users dropped</h2>
 		<table class="table table-striped">
 			<tr>
 				<th ng-repeat="header in headers">{{header}}</th>
@@ -39,21 +55,6 @@
 				<td>{{dropped.user.firstname}}</td>
 				<td>{{dropped.user.lastname}}</td>
 				<td>{{dropped.user.email}}</td>
-			</tr>
-		</table>
-	</div>
-	<div ng-show="results.created.length">
-		<h2>Users Created</h2>
-		<p>Users without a specified password will have their username as a default password.</p>
-		<table class="table table-striped">
-			<tr>
-				<th ng-repeat="header in headers">{{header}}</th>
-			</tr>
-			<tr ng-repeat="created in results.created">
-				<td>{{created.user.username}}</td>
-				<td>{{created.user.firstname}}</td>
-				<td>{{created.user.lastname}}</td>
-				<td>{{created.user.email}}</td>
 			</tr>
 		</table>
 	</div>

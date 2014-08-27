@@ -35,7 +35,7 @@ module.factory('CourseResource', function($q, $routeParams, $log, $resource)
 /***** Controllers *****/
 module.controller(
 	'CourseConfigureController',
-	function($scope, $log, $routeParams, CourseResource, EditorOptions, Toaster)
+	function($scope, $log, $routeParams, $location, CourseResource, EditorOptions, Toaster)
 	{
 		$scope.editorOptions = EditorOptions.basic;
 		// get course info
@@ -52,7 +52,10 @@ module.controller(
 		// save course info
 		$scope.courseSubmit = function() {
 			CourseResource.save($scope.course).$promise.then(
-				function() { Toaster.success("Course Information Updated!"); },
+				function(ret) {
+					Toaster.success("Course Information Updated!");
+					$location.path('/course/' + ret.id);
+				},
 				function(ret) { Toaster.reqerror("Course Save Failed.", ret); }
 			);
 		};

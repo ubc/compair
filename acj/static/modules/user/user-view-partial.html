@@ -30,7 +30,7 @@
 		</div>
 		<div class="row">
 			<strong class="col-md-3">Last Online:</strong>
-			<div class="col-md-9">{{readDate | date:"EEEE, MMM d, yyyy @ h:mm a"}}</div>
+			<div ng-show="readDate" class="col-md-9">{{readDate | date:"EEEE, MMM d, yyyy @ h:mm a"}}</div>
 		</div>
 		<!-- <div class="row">
 			<strong class="col-md-3">Created On:</strong>

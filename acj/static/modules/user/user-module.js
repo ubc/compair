@@ -42,7 +42,7 @@ module.factory('UserPasswordResource', function($resource) {
 /***** Controllers *****/
 // TODO declare controllers here, e.g.:
 module.controller("UserCreateController",
-	function($scope, $log, $routeParams, UserResource, UserTypeResource, Toaster)
+	function($scope, $log, $routeParams, $location, UserResource, UserTypeResource, Toaster)
 	{
 		$scope.usertypes = {};
 		$scope.user = {};
@@ -66,6 +66,7 @@ module.controller("UserCreateController",
 					$scope.submitted = false;
 					Toaster.success("New User Created!",
 						'"' + ret.displayname + '"' +'should now have access.');
+					$location.path('/user/' + ret.id);
 				},
 				function (ret)
 				{
@@ -82,7 +83,7 @@ module.controller("UserCreateController",
 );
 
 module.controller("UserEditController",
-	function($scope, $log, $routeParams, breadcrumbs, Session, UserResource, Authorize, UserTypeResource, Toaster)
+	function($scope, $log, $routeParams, $location, breadcrumbs, Session, UserResource, Authorize, UserTypeResource, Toaster)
 	{
 		var userId = $routeParams['userId'];
 		Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
@@ -117,6 +118,7 @@ module.controller("UserEditController",
 				function(ret) {
 					$scope.submitted = false;
 					Toaster.success("User Updated!");
+					$location.path('/user/' + ret.id);
 				},
 				function(ret) {
 					$scope.submitted = false;
@@ -128,7 +130,7 @@ module.controller("UserEditController",
 );
 
 module.controller("UserUpdatePasswordController",
-	function($scope, $log, $routeParams, Session, UserPasswordResource, Toaster)
+	function($scope, $log, $routeParams, $location, Session, UserPasswordResource, Toaster)
 	{
         $scope.password = {};
         $scope.create = true;
@@ -139,6 +141,7 @@ module.controller("UserUpdatePasswordController",
                     function (ret) {
                         $scope.submitted = false;
                         Toaster.success("Password Updated!");
+			$location.path('/user/' + ret.id);
                     },
                     function (ret) {
                         $scope.submitted = false;
