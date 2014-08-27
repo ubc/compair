@@ -6,7 +6,7 @@ from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import desc, or_, between
 from acj import dataformat, db
 from acj.authorization import allow, require
-from acj.models import PostsForQuestions, Courses, Posts, CoursesAndUsers, CriteriaAndCourses, UserTypesForCourse, PostsForAnswers, AnswerPairings, Judgements, FilesForPosts
+from acj.models import PostsForQuestions, Courses, Posts, CoursesAndUsers, CriteriaAndCourses, UserTypesForCourse, PostsForAnswers, AnswerPairings, Judgements, FilesForPosts, Users
 from acj.util import new_restful_api
 from acj.attachment import addNewFile, deleteFile
 
@@ -124,10 +124,12 @@ class QuestionRootAPI(Resource):
 				order_by(desc(Posts.created)).all()
 		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses).filter_by(courses_id=course.id).join(AnswerPairings).all()
 		count = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter(UserTypesForCourse.name==UserTypesForCourse.TYPE_STUDENT).count()
+		answered = PostsForAnswers.query.join(Posts).filter_by(courses_id=course_id).join(Users).filter_by(id=current_user.id).all()
 		return {
 			"questions":marshal(questions, dataformat.getPostsForQuestions(restrict_users)),
 			"judgements":marshal(judgements, dataformat.getJudgements()),
-			"count": count
+			"count": count,
+			"answered": marshal(answered, dataformat.getPostsForAnswers())
 		}
 	@login_required
 	def post(self, course_id):

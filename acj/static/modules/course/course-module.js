@@ -111,6 +111,11 @@ module.controller(
 					ques['left'] = count[ques.id] <= required ?
 						required - count[ques.id] : 0;
 				}
+
+				$scope.answered = {};
+				for (key in ret.answered) {
+					$scope.answered[ret.answered[key].postsforquestions_id] = 1;	
+				}
 			},
 			function (ret)
 			{

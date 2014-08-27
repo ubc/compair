@@ -138,7 +138,8 @@ def getPostsForAnswers(restrict_users=True, include_comments=True):
 		'id': fields.Integer,
 		'post': fields.Nested(post),
 		'scores': fields.Nested(score),
-		'flagged': fields.Boolean
+		'flagged': fields.Boolean,
+		'postsforquestions_id': fields.Integer
 	}
 	# can see who flagged this post if user can view unrestricted data
 	if not restrict_users:
