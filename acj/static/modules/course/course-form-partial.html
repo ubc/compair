@@ -11,7 +11,8 @@
 			<label for="courseDescription">Description</label>
 			<textarea ng-model="course.description" id="courseDescription" class="form-control" ckeditor="editorOptions" rows="4"></textarea>
 		</div>
-		<!-- <div class="form-group">
+		<!-- Before adding, labels and styling need updating
+		<div class="form-group">
 			<label>Options:</label>
 			<div class="btn-group">
 				<button type="button" class="btn btn-default" 
@@ -23,57 +24,55 @@
 					Allow Students to Create Tags
 				</button>
 			</div>
-		</div> -->
+		</div>
+		-->
 	</fieldset>
-
-	<!-- hide this section when creating new course -->
-	<div ng-if="course.id">
 		
-		<fieldset>
-			<legend>Evaluation Criteria</legend>
-			<p class="instructional-text"><strong>Evaluation criteria are the questions with instructions that students see when evaluating answers.</strong> Set your custom criteria for the overall course here, then select one or more to use when you create a question. (If you do not need custom criteria, simply use the default below.)</p>
-			<div class="criterion-pair">
-				<div class="form-group">
-					<label for="criteriaName">Evaluation Question</label>
-					<input type="text" maxlength="255" placeholder="e.g. Which answer is better?"
-					       ng-model="" id="criteriaName" name="criteriaName" class="form-control" />
-				</div>
-				<div class="form-group">
-					<label for="criteriaDescription">Evaluation Instructions</label>
-					<textarea ckeditor="editorOptions" rows="4" 
-						ng-model="course.description" id="criteriaDescription" name="criteriaDescription" class="form-control">
-					</textarea>
-				</div>
-				<hr />
+	<!-- Neither evaluation criteria nor tagging is enabled yet, so hide code for both
+	<fieldset>
+		<legend>Evaluation Criteria</legend>
+		<p class="instructional-text"><strong>Evaluation criteria are the questions with instructions that students see when evaluating answers.</strong> Set your custom criteria for the overall course here, then select one or more to use when you create a question. (If you do not need custom criteria, simply use the default below.)</p>
+		<div class="criterion-pair">
+			<div class="form-group">
+				<label for="criteriaName">Evaluation Question</label>
+				<input type="text" maxlength="255" placeholder="e.g. Which answer is better?"
+				       ng-model="" id="criteriaName" name="criteriaName" class="form-control" />
 			</div>
-			<a href="#" class="btn btn-default btn-sm pull-right">
-				<i class="fa fa-plus"></i>
-				Add Criteria
-			</a>
-		</fieldset>
-		
-		<!--<fieldset>
-			<legend>Tags</legend>
-			<table ng-table class="table">
-				<tr>
-					<th data-title="Title">Test</th>
-					<th data-title="Title 2">Test2</th>
-				</tr>
-				<tr>
-					<td>Test</td>
-					<td>Test2</td>
-				</tr>
-				<tr>
-					<td>Test</td>
-					<td>Test2</td>
-				</tr>
-			</table>
-			<a class="btn btn-default btn-sm pull-right">
-				<i class="fa fa-plus"></i> Add Tag
-			</a>
-		</fieldset>-->
-		
-	</div>
+			<div class="form-group">
+				<label for="criteriaDescription">Evaluation Instructions</label>
+				<textarea ckeditor="editorOptions" rows="4" 
+					ng-model="course.description" id="criteriaDescription" name="criteriaDescription" class="form-control">
+				</textarea>
+			</div>
+			<hr />
+		</div>
+		<a href="#" class="btn btn-default btn-sm pull-right">
+			<i class="fa fa-plus"></i>
+			Add Criteria
+		</a>
+	</fieldset>
+	
+	<fieldset>
+		<legend>Tags</legend>
+		<table ng-table class="table">
+			<tr>
+				<th data-title="Title">Test</th>
+				<th data-title="Title 2">Test2</th>
+			</tr>
+			<tr>
+				<td>Test</td>
+				<td>Test2</td>
+			</tr>
+			<tr>
+				<td>Test</td>
+				<td>Test2</td>
+			</tr>
+		</table>
+		<a class="btn btn-default btn-sm pull-right">
+			<i class="fa fa-plus"></i> Add Tag
+		</a>
+	</fieldset>
+	-->
 
 	<input type="submit" class="btn btn-success btn-lg center-block" value="Save" 
 		ng-disabled="courseForm.$invalid || submitted" />
