@@ -129,7 +129,6 @@
 		
 		<!-- Question Controls -->
 		<div class="col-sm-3 text-right">
-			<p class="due-date" ng-show="!answered[question.id] && !canManagePosts && question.answer_period">Answer due {{question.answer_end | amDateFormat: 'MMM D'}}</p>
 			<a class="btn btn-success" title="Answer Question"
 				ng-href="#/course/{{course.id}}/question/{{question.id}}/answer/create" ng-show="!answered[question.id] && (canManagePosts || question.answer_period)">
 				Answer
@@ -144,7 +143,7 @@
 			<a class="btn btn-success" title="You have evaluated" ng-show="!canManagePosts && question.judging_period && !question.left" disabled>
 				Evaluated
 			</a>
-			
+			<p class="due-date" ng-show="!answered[question.id] && !canManagePosts && question.answer_period">Answer due {{question.answer_end | amDateFormat: 'MMM D'}}</p>
 		</div>
 		
 	</div>
