@@ -92,12 +92,13 @@
 				<p ng-if="!canManagePosts && !answered && question.answer_period"><a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" title="Answer the question">Answer</a> and evaluate the question first, then read answers written by your classmates here.</p>
 				<p ng-if="!canManagePosts && answered && !judged_req_met && question.judging_period"><a ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" title="Answer the question">Evaluate</a> the question first, then read answers written by your classmates here.</p>
 				<p ng-if="canManagePosts && !question.answer_period">Answering period begins {{question.answer_start | date: 'MMM d @ h:mm a'}}. Would you like to <a ng-href="#/course/{{courseId}}/question/{{question.id}}/edit" title="Edit the question">change the answer dates</a> for this question?</p>
+				<p ng-if="question.answer_period && !question.answers_count">No answers given for this question yet.</p>
 			</div>
 			
 			<div class="all-answers" ng-if="(answered && judged_req_met) || canManagePosts">
 			
 				<!-- Instructor Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="answer in instructor_answers" ng-show="canManagePosts || question.after_judging">
+				<div class="each-answer clearfix" ng-repeat="answer in instructor_answers" ng-show="canManagePosts">
 					
 					<!-- Answer Metadata Header -->
 					<a ng-href="#/user/{{answer.post.user.id}}">

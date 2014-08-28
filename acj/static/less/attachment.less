@@ -1,3 +1,29 @@
-pdfviewer#viewer canvas{
-	width: 100%;
+
+
+/***** ATTACHMENT SCREEN *****/
+
+/* class for div surrounding page navigation buttons */
+.page-control {
+	
+  margin: 2em 0;
+  
+  /* span is page numbers */
+  span {
+    padding: 0 1em;
+    display: inline-block;
+    font-size: 1.2em;
+  }
+
+}//closes page-control
+
+/* class for div surrounding pdfviewer */
+.pdf-viewer {
+  margin: 2em 0;
+  border: 1px solid @border-gray;
 }
+
+/* pdfviewer */
+pdfviewer canvas{
+  width: 100%;
+}
+
