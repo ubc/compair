@@ -235,6 +235,18 @@ class JudgementPairAPI(Resource):
 				score_matched_pairings[answerpairing.id] = answerpairing
 		db.session.commit()
 		return score_matched_pairings
+api.add_resource(JudgementPairAPI, '/pair')
+
+class UserJudgementCount(Resource):
+	def get(self, course_id, question_id, user_id):
+		course = Courses.query.get_or_404(course_id)
+		require(READ, course)
+		question = PostsForQuestions.query.get_or_404(question_id)
+		require(READ, question)
+		judgements = Judgements.query.join(AnswerPairings).filter(Judgements.users_id==user_id,
+			 AnswerPairings.postsforquestions_id==question_id).all()
+		return {"count":len(judgements)}
+api.add_resource(UserJudgementCount, '/count/users/<int:user_id>')
 
 def _get_judgement_round(question_id):
 	round = 1
@@ -347,4 +359,3 @@ def _calculate_scores(course_id, question_id):
 			db.session.add(score)
 	db.session.commit()
 
-api.add_resource(JudgementPairAPI, '/pair')
