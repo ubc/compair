@@ -19,9 +19,9 @@
 		</p>
 		
 		<!-- Answer/Evaluation Periods -->
-		<div ng-show="question.date_set">
-			<p><strong>Answering Period:</strong> {{question.answer_start | date: 'MMM d @ h:mm a'}} - {{question.answer_end | date: 'MMM d @ h:mm a'}}<br />
-			<strong>Evaluation Period:</strong> {{question.judge_start | date: 'MMM d @ h:mm a'}} - {{question.judge_end | date: 'MMM d @ h:mm a'}}</p>
+		<div ng-show="canManagePosts && question.date_set">
+			<p><strong>Answering Period:</strong> {{question.answer_start | amDateFormat: 'MMM D @ h:mm a'}} - {{question.answer_end | amDateFormat: 'MMM D @ h:mm a'}}
+			<span ng-if="question.judge_start > 0 && question.judge_end > 0"><br /><strong>Evaluation Period:</strong> {{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}} - {{question.judge_end | amDateFormat: 'MMM D @ h:mm a'}}</p>
 		</div>
 		
 		<!-- Question Metadata Footer -->
@@ -43,8 +43,8 @@
 					</span>
 				</a>
 			</li>
-			<li>
-				{{question.post.created | amDateFormat: "MMM d @ h:mm a"}}
+			<li ng-if="!canManagePosts && question.answer_period">
+				Answer due {{question.answer_end | amDateFormat: 'MMM D @ h:mm a'}}
 			</li>
 			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
 				<a ng-href="#/course/{{courseId}}/question/{{question.id}}/delete" ng-if="canManagePosts || question.post.user.id == loggedInUserId" title="Delete">
