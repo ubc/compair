@@ -1,6 +1,6 @@
 <div ng-controller="JudgementController" class="evaluate-screen">
 	
-	<h1>Evaluate Answers</h1>
+	<h1>Evaluate Answers (Round # / #)</h1>
 	
 	<div class="standalone-question">
 		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
@@ -8,13 +8,17 @@
 			ng-bind-html="question.post.content">
 		</div>
 		<!-- Attachment -->
-		<div ng-if="question.post.files.length" ng-repeat="file in question.post.files">
-			<a target="_blank" ng-href="#/course/{{courseId}}/question/{{questionId}}/post/{{question.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
+		<div ng-if="question.post.files.length">
+			<p>See question details:
+				<span ng-repeat="file in question.post.files">
+					<a target="_blank" ng-href="#/course/{{courseId}}/question/{{questionId}}/post/{{question.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
+				</span>
+			</p>
 		</div>
 	</div>
 	
 	<div ng-show="answerPairError" class="alert alert-warning" role="alert">
-		<p>Answer evaluation is not available at this time. Please try again later.</p>
+		<p>Answer evaluation for this question is not available at this time.</p>
 	</div>
 	
 	<form name="judgementForm" ng-submit="judgementSubmit()" novalidate ng-hide="answerPairError">
@@ -32,9 +36,12 @@
 							ng-bind-html="answerPair.answer1.post.content">
 						</div>
 						<!-- Attachment -->
-						<div ng-if="answerPair.answer1.post.files.length" ng-repeat="file in answerPair.answer1.post.files">
-							<a target="_blank" ng-href="#/course/{{courseId}}/question/{{questionId}}/post/{{answerPair.answer1.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
-						</div>
+						<p ng-if="answerPair.answer1.post.files.length">
+							See details:
+							<span ng-repeat="file in answerPair.answer1.post.files">
+								<a target="_blank" ng-href="#/course/{{courseId}}/question/{{questionId}}/post/{{answerPair.answer1.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
+							</span>
+						</p>
 						<a href="" class="btn btn-default btn-xs"
 							title="Flag as incomplete or inappropriate."
 							ng-class="{'btn-danger': answerPair.answer1.flagged}"
@@ -52,8 +59,12 @@
 							ng-bind-html="answerPair.answer2.post.content">
 						</div>
 						<!-- Attachment -->
-						<div ng-if="answerPair.answer2.post.files.length" ng-repeat="file in answerPair.answer2.post.files">
-							<a target="_blank" ng-href="#/course/{{courseId}}/question/{{questionId}}/post/{{answerPair.answer2.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>						</div>
+						<p ng-if="answerPair.answer2.post.files.length">
+							See details:	
+							<span ng-repeat="file in answerPair.answer2.post.files">
+								<a target="_blank" ng-href="#/course/{{courseId}}/question/{{questionId}}/post/{{answerPair.answer2.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
+							</span>
+						</p>
 						<a href="" class="btn btn-default btn-xs pull-right"
 							title="Flag as incomplete or inappropriate."
 							ng-class="{'btn-danger': answerPair.answer2.flagged}"
@@ -105,7 +116,7 @@
 			
 			<div class="form-group" ng-repeat="courseCriterion in courseCriteria">
 				
-				<!-- Show the judgement criteria -->
+				<!-- Show the judgement criteria (needs ng-repeat) -->
 				<div class="each-criterion text-center">
 					<fieldset>
 						<h3><i class="fa fa-gavel"></i> {{courseCriterion.criterion.name}}</h3>
@@ -146,6 +157,7 @@
 			</div>
 			
 			<div class="form-group">
+				<!-- button to submit and refresh page IF evaluations remain for user -->
 				<input ng-disabled="judgementForm.$invalid" type="submit" 
 					value="Submit" class="btn btn-success btn-lg center-block" />
 			</div>
