@@ -67,6 +67,7 @@ module.run(function ($rootScope, $route, $location, $log, $modal, Authentication
 	$rootScope.hideLogin = function() {
         if (loginBox.visible) {
             loginBox.hide();
+	    $("body").removeClass('modal-open modal-with-am-fade'); //classes not properly being removed on logout
             loginBox.visible = false;
         }
 	};
