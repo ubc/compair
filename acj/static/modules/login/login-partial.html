@@ -9,7 +9,7 @@
 			<hr />
 			<div class="form-group has-feedback"
 				ng-class="{'has-error': loginForm.username.$invalid, 'has-success': loginForm.username.$valid}">
-				<label for="inputUser">Username</label>
+				<label for="inputUser" class="required-star">Username</label>
 				<input type="text" id="inputUser" name="username"
 					ng-model="username" required placeholder=""
 					class="form-control">
@@ -18,7 +18,7 @@
 			</div>
 			<div class="form-group has-feedback"
 				ng-class="{'has-error': loginForm.password.$invalid, 'has-success': loginForm.password.$valid}">
-				<label for="inputPass">Password</label>
+				<label for="inputPass" class="required-star">Password</label>
 				<input type="password" id="inputPass" name="password" ng-model="password" required
 					   placeholder="" class="form-control">
 				<!-- <span ng-show="loginForm.password.$valid" class="fa fa-check form-control-feedback"></span>
@@ -27,9 +27,6 @@
 		</fieldset>
 		<input type="submit" ng-disabled="loginForm.$invalid || submitted"
 			class="btn btn-primary center-block" value="Log In">
-		<!-- <span class="label label-info" ng-show="submitted">
-			<i class="fa fa-refresh"></i>
-		</span> -->
 	</form>
 	<div class="alert alert-danger text-center" ng-show="login_err">{{login_err}}</div>
 </div>

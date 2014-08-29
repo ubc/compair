@@ -5,19 +5,19 @@
 			<fieldset>
 				<legend>Password</legend>
 				<acj-field-with-feedback form-control="changePasswordForm.oldpassword">
-					<label for="oldpassword">Old Password: </label>
+					<label for="oldpassword" class="required-star">Old Password</label>
 					<input class="form-control" id="oldpassword" type="password"
 						name="oldpassword" ng-model="password.oldpassword"
 						required />
 				</acj-field-with-feedback>
 				<acj-field-with-feedback form-control="changePasswordForm.newpassword">
-					<label for="newpassword">New Password: </label>
+					<label for="newpassword" class="required-star">New Password</label>
 					<input class="form-control" id="newpassword" type="password"
 						name="newpassword" ng-model="password.newpassword"
 						required />
 				</acj-field-with-feedback>
 				<acj-field-with-feedback form-control="changePasswordForm.verifypassword">
-					<label for="verifypassword">Verify Password: </label>
+					<label for="verifypassword" class="required-star">Verify Password</label>
 					<input class="form-control" id="verifypassword" type="password"
 						name="verifypassword" ng-model="password.verifypassword"
 						required pw-match="newpassword" />

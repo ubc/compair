@@ -59,6 +59,22 @@ legend {
   background: @link-blue;  
 }
 
+/* for adding a required star after labels */
+.required-star:after {
+  color: @required-red;
+  content: ' *';
+}
+
+/* checkbox inputs */
+input[type=checkbox] {
+  margin: 0 0.4em 0 0;
+}
+
+/* submit buttons */
+.btn[type=submit] {
+  margin-bottom: 2em;
+}
+
 /* dl used for examples on import screen */
 dt {
   font-size: 1.1em;
@@ -70,16 +86,6 @@ dt {
     margin-bottom: .5em;
     padding-left: 2em;
   }
-
-/* checbox inputs */
-input[type=checkbox] {
-  margin: 0 0.4em 0 0;
-}
-
-/* submit buttons */
-.btn[type=submit] {
-  margin-bottom: 2em;
-}
 
 /* class for sub-navigation i.e. header action buttons */
 .sub-nav {

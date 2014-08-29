@@ -3,25 +3,25 @@
 		<legend>User Login</legend>
 		<p class="instructional-text">This application provides three user roles with increasing levels of permission. <strong>Students</strong> can post and edit their own answers, comments, and replies. <strong>Instructors</strong> can additionally add and edit their own courses and questions. <strong>System Administrators</strong> can additionally create users and manage which users can access a course.</p>
 		<div class="form-group">
-			<label for="userType">Application Role </label>
+			<label for="userType" class="required-star">Application Role </label>
 			<select class="form-control" id="userType" name="userType"
 				ng-model="user.usertypesforsystem_id" required 
 				ng-options="usertype.id as usertype.name for usertype in usertypes"></select>
 		</div>
 		<acj-field-with-feedback form-control="userForm.username">
-			<label for="username">Username </label>
+			<label for="username" class="required-star">Username </label>
 			<input class="form-control" id="username" type="text"
 				name="username" ng-model="user.username"
 				required />
 		</acj-field-with-feedback>
 		<div ng-if="create">
 			<acj-field-with-feedback form-control="userForm.password">
-				<label for=password">Password </label>
+				<label for=password" class="required-star">Password </label>
 				<input class="form-control" id="password" type="password"
 					name="password" ng-model="user.password" required />
 			</acj-field-with-feedback>
 			<acj-field-with-feedback form-control="userForm.verifyPassword">
-				<label for=verifyPassword">Verify Password </label>
+				<label for=verifyPassword" class="required-star">Verify Password </label>
 				<input class="form-control" id="verifyPassword" type="password"
 					name="verifyPassword" ng-model="user.verifyPassword"
 					required pw-match="password" />
@@ -31,25 +31,25 @@
 	<fieldset>
 		<legend>User Details</legend>
 		<acj-field-with-feedback form-control="userForm.firstName">
-			<label for="firstName">First Name </label>
+			<label for="firstName" class="required-star">First Name </label>
 			<input class="form-control" id="firstName" type="text"
 				name="firstName" ng-model="user.firstname"
 				required />
 		</acj-field-with-feedback>
 		<acj-field-with-feedback form-control="userForm.lastName">
-			<label for="lastName">Last Name </label>
+			<label for="lastName" class="required-star">Last Name </label>
 			<input class="form-control" id="lastName" type="text"
 				name="lastName" ng-model="user.lastname"
 				required />
 		</acj-field-with-feedback>
 		<acj-field-with-feedback form-control="userForm.displayName">
-			<label for="displayName">Display Name </label>
+			<label for="displayName" class="required-star">Display Name </label>
 			<input class="form-control" id="displayName" type="text"
 				name="displayName" ng-model="user.displayname"
 				required />
 		</acj-field-with-feedback>
 		<acj-field-with-feedback form-control="userForm.email">
-			<label for="email">Email </label>
+			<label for="email" class="required-star">Email </label>
 			<input class="form-control" id="email" type="email"
 				name="email" ng-model="user.email" required />
 		</acj-field-with-feedback>

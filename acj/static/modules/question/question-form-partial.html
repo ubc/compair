@@ -3,7 +3,7 @@
 	<fieldset>
 		<legend>Question</legend>
 		<acj-field-with-feedback form-control="questionForm.questionTitle">
-			<label for="questionTitle">Question</label>
+			<label for="questionTitle" class="required-star">Question</label>
 			<input class="form-control" id="questionTitle" type="text"
 				name="questionTitle" ng-model="question.title" placeholder="short form of the question"
 				required auto-focus />
@@ -46,7 +46,7 @@
 			<br>
 		</div>
 		<div class="form-group">
-			<label for="questionContent">Additional Information</label>
+			<label for="questionContent" class="required-star">Additional Information</label>
 			<textarea ckeditor rows="8"
 				ng-model="question.post.content" class="form-control" id="questionContent">
 			</textarea>
@@ -60,13 +60,13 @@
 		<div class="row">
 			<div class="col-md-6 form-group">
 				<acj-field-with-feedback form-control="questionForm.answerStartDate">
-					<label>Date Answering Begins</label>
+					<label class="required-star">Date Answering Begins</label>
 					<input type="text" id="answerStartDate" name="answerStartDate" class="form-control" ng-model="question.answer_start" data-autoclose="1" required min-date="today" bs-datepicker>
 				</acj-field-with-feedback>
 			</div>
 			<div class="col-md-6 form-group">
 				<acj-field-with-feedback form-control="questionForm.answerStartTime">	
-					<label>Time Answering Begins</label>
+					<label class="required-star">Time Answering Begins</label>
 					<input type="text" id="answerStartTime" name="answerStartTime" class="form-control" ng-model="question.answer_start" data-autoclose="1" required timeType="iso" bs-timepicker>
 				</acj-field-with-feedback>
 			</div>
@@ -74,13 +74,13 @@
 		<div class="row">
 			<div class="col-md-6 form-group">
 				<acj-field-with-feedback form-control="questionForm.answerEndDate">
-					<label>Date Answering Ends</label>
+					<label class="required-star">Date Answering Ends</label>
 					<input type="text" id=answerEndDate" name="answerEndDate" class="form-control" ng-model="question.answer_end" data-autoclose="1" required min-date="today" bs-datepicker>
 				</acj-field-with-feedback>
 			</div>
 			<div class="col-md-6 form-group">
 				<acj-field-with-feedback form-control="questionForm.answerEndTime">
-					<label>Time Answering Ends</label>
+					<label class="required-star">Time Answering Ends</label>
 					<input type="text" id="answerEndTime" name="answerEndTime" class="form-control" ng-model="question.answer_end" data-autoclose="1" required timeType="iso" bs-timepicker>
 				</acj-field-with-feedback>
 			</div>
@@ -96,7 +96,7 @@
 				
 		<div class="form-group">
 			<acj-field-with-feedback form-control="questionForm.reqJudge">
-				<label>Number of evaluations required from each student</label>
+				<label class="required-star">Number of evaluations required from each student</label>
 				<input type="text" id="reqJudge" name="reqJudge" class="form-control" ng-model="question.num_judgement_req" ng-pattern="/^[1-9]\d*$/" required>
 			</acj-field-with-feedback>
 		</div>
@@ -104,7 +104,7 @@
 		<hr />
 		
 		<input id="availableCheck" type="checkbox" ng-model="question.availableCheck">
-		<label for="availableCheck">Set when students can evaluate this question (optional)</label>
+		<label for="availableCheck">Set when students can evaluate this question</label>
 		<br /><br />
 		
 		<div ng-show="question.availableCheck">
@@ -112,13 +112,13 @@
 			<div class="row">
 				<div class="col-md-6 form-group">
 					<acj-field-with-feedback form-control="questionForm.judgeStartDate">
-						<label>Date Evaluations Begin</label>
+						<label class="required-star">Date Evaluations Begin</label>
 						<input type="text" id="judgeStartDate" name="judgeStartDate" class="form-control" ng-model="question.judge_start" data-autoclose="1" ng-required="question.availableCheck" min-date="today" bs-datepicker>
 					</acj-field-with-feedback>
 				</div>
 				<div class="col-md-6 form-group">
 					<acj-field-with-feedback form-control="questionForm.judgeStartTime">	
-						<label>Time Evaluations Begin</label>
+						<label class="required-star">Time Evaluations Begin</label>
 						<input type="text" id="judgeStartTime" name="judgeStartTime" class="form-control" ng-model="question.judge_start" data-autoclose="1" ng-required="question.availableCheck" timeType="iso" bs-timepicker>
 					</acj-field-with-feedback>
 				</div>
@@ -126,13 +126,13 @@
 			<div class="row">
 				<div class="col-md-6 form-group">
 					<acj-field-with-feedback form-control="questionForm.judgeEndDate">
-						<label>Date Evaluations End</label>
+						<label class="required-star">Date Evaluations End</label>
 						<input type="text" id="judgeEndDate" name="judgeEndDate" class="form-control" ng-model="question.judge_end" data-autoclose="1" ng-required="question.availableCheck" min-date="today" bs-datepicker>
 					</acj-field-with-feedback>
 				</div>
 				<div class="col-md-6 form-group">
 					<acj-field-with-feedback form-control="questionForm.judgeEndTime">
-						<label>Time Evaluations End</label>
+						<label class="required-star">Time Evaluations End</label>
 						<input type="text" id="judgeEndTime" name="judgeEndTime" class="form-control" ng-model="question.judge_end" data-autoclose="1" ng-required="question.availableCheck" timeType="iso" bs-timepicker>
 					</acj-field-with-feedback>
 				</div>
