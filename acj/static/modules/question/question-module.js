@@ -311,6 +311,11 @@ module.controller("QuestionEditController",
 			}
 			$scope.question.name = attachService.getName();
 			$scope.question.alias = attachService.getAlias();
+			// if option is not checked; make sure no judge dates are saved.
+			if (!$scope.question.availableCheck) {
+				$scope.question.judge_start = null;
+				$scope.question.judge_end = null;
+			}
 			QuestionResource.save({'courseId': courseId}, $scope.question).$promise.then(
 				function() {
 					$scope.submitted = false;

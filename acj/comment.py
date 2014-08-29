@@ -5,8 +5,8 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from acj import dataformat, db
-from acj.authorization import require
-from acj.models import Posts, PostsForComments, PostsForAnswers, PostsForQuestions, Courses, PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments
+from acj.authorization import require, allow
+from acj.models import Posts, PostsForComments, PostsForAnswers, PostsForQuestions, Courses, PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, CoursesAndUsers
 from acj.util import new_restful_api
 
 commentsforquestions_api = Blueprint('commentsforquestions_api', __name__)
@@ -30,11 +30,12 @@ class QuestionCommentRootAPI(Resource):
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
+		restrict_users = not allow(EDIT, CoursesAndUsers(courses_id=course_id))
 		comments = PostsForQuestionsAndPostsForComments.query.\
 			join(PostsForComments, Posts).\
 			filter(PostsForQuestionsAndPostsForComments.postsforquestions_id==question.id, Posts.courses_id==course_id).\
 			order_by(Posts.created.desc()).all()
-		return {"objects":marshal(comments, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())}
+		return {"objects":marshal(comments, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments(restrict_users))}
 	@login_required
 	def post(self, course_id, question_id):
 		course = Courses.query.get_or_404(course_id)

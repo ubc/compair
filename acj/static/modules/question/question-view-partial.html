@@ -19,7 +19,7 @@
 		</p>
 		
 		<!-- Answer/Evaluation Periods -->
-		<div ng-show="canManagePosts && question.date_set">
+		<div ng-show="canManagePosts">
 			<p><strong>Answering Period:</strong> {{question.answer_start | amDateFormat: 'MMM D @ h:mm a'}} - {{question.answer_end | amDateFormat: 'MMM D @ h:mm a'}}
 			<span ng-if="question.judge_start > 0 && question.judge_end > 0"><br /><strong>Evaluation Period:</strong> {{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}} - {{question.judge_end | amDateFormat: 'MMM D @ h:mm a'}}</p>
 		</div>
@@ -227,7 +227,7 @@
 					<a ng-if="question.can_reply || canManagePosts" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary pull-left">
 						Reply
 					</a>
-					<p ng-show="key==sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores" class="score-display">
+					<p ng-show="canManagePosts && key==sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores" class="score-display">
 						<em>Score: {{score.score | number: 3}}</em>
 					</p>
 					<h3 class="reply-heading" ng-if="answer.comments.length">

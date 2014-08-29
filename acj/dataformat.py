@@ -126,7 +126,6 @@ def getPostsForQuestions(restrict_users=True):
 		'answer_end': fields.DateTime,
 		'judge_start': fields.DateTime,
 		'judge_end': fields.DateTime,
-		'date_set': fields.Boolean,
 		'can_reply': fields.Boolean,
 		'num_judgement_req': fields.Integer
 	}

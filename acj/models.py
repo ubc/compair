@@ -371,9 +371,6 @@ class PostsForQuestions(db.Model):
 		# judgement period is set
 		else:
 			return now >= self.judge_end.replace(tzinfo=pytz.utc)
-	@hybrid_property
-	def date_set(self):
-		return self.judge_start and self.judge_end
 
 class PostsForAnswers(db.Model):
 	__tablename__ = 'PostsForAnswers'
