@@ -6,6 +6,7 @@
 var module = angular.module('ubc.ctlt.acj.judgement', 
 	[
 		'ubc.ctlt.acj.answer',
+		'ubc.ctlt.acj.comment',
 		'ubc.ctlt.acj.criteria',
 		'ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.toaster',
@@ -29,6 +30,15 @@ module.factory('JudgementResource',
 		return ret;
 });
 
+module.factory('EvalCommentResource',
+	function($resource) {
+		var ret = $resource(
+			'/api/courses/:courseId/questions/:questionId/judgements/comments'
+		);
+		ret.MODEL = "PostsForJudgements";
+		return ret;
+});
+
 
 /***** Constants *****/
 module.constant('required_rounds', 6);
@@ -37,7 +47,7 @@ module.constant('required_rounds', 6);
 module.controller(
 	'JudgementController', 
 	function($log, $location, $scope, $timeout, $routeParams, $anchorScroll, QuestionResource, AnswerResource,
-		CriteriaResource, JudgementResource, Toaster) 
+		CriteriaResource, JudgementResource, AnswerCommentResource, EvalCommentResource, Toaster) 
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
@@ -96,27 +106,66 @@ module.controller(
 			var judgement = {};
 			judgement['answerpair_id'] = $scope.answerPair.id;
 			judgement['judgements'] = [];
+			var comments = {};
 			angular.forEach($scope.courseCriteria, 
 				function(courseCriterion, index) {
 					var criterionWinner = {
 						'course_criterion_id': courseCriterion.id,
-						'answer_id_winner': courseCriterion.winner
+						'answer_id_winner': courseCriterion.winner,
 					};
 					judgement['judgements'].push(criterionWinner);
+					comments[courseCriterion.id] = courseCriterion.comment;
 				}
 			);
 			JudgementResource.save(
 				{'courseId': courseId, 'questionId': questionId}, judgement).
 				$promise.then(
-					function() {
-						Toaster.success("Judgement Submitted Successfully!");
-						$location.path('/course/' + courseId);
+					function(ret) {
+						var evaluations = {};
+						evaluations['judgements'] = [];
+						angular.forEach(ret.objects,
+							function(judge, index) {
+								var temp = judge;								temp['comment'] = comments[judge.course_criterion.id];
+								evaluations['judgements'].push(temp);
+							}
+						);
+						EvalCommentResource.save(
+							{'courseId': courseId, 'questionId': questionId}, evaluations).
+							$promise.then(
+								function() {
+									Toaster.success("Judgement Submitted Successfully!");
+									$location.path('/course/' + courseId);
+								},
+								function(ret) {
+									Toaster.reqerror("Judgement Comment Submit Failed.", ret);
+								}
+						);
 					},
 					function(ret) {
 						Toaster.reqerror("Judgement Submit Failed.", ret);
 					}
 			);
-			
+			// save comments for each individual answer
+			AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': $scope.answerPair.answer1.id},
+				$scope.answerPair.answer1.post.comment).$promise.then(
+					function (ret)
+					{
+					},
+					function (ret)
+					{
+						Toaster.reqerror("Unable to post new comment.", ret);
+					}
+			);
+			AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': $scope.answerPair.answer2.id},
+				$scope.answerPair.answer2.post.comment).$promise.then(
+					function (ret)
+					{
+					},
+					function (ret)
+					{
+						Toaster.reqerror("Unable to post new comment.", ret);
+					}
+			);
 		};
 
 		// flag answer for instructor
