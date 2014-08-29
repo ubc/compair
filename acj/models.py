@@ -76,7 +76,7 @@ class UserTypesForSystem(db.Model):
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	name = db.Column(db.String(255), unique=True, nullable=False)
 
-	TYPE_NORMAL = "Normal User"
+	TYPE_NORMAL = "Student"
 	TYPE_INSTRUCTOR = "Instructor"
 	TYPE_SYSADMIN = "System Administrator"
 

@@ -43,7 +43,7 @@ def import_users(course_id, users):
 
 	# variables used in the intermediate steps
 	valid = []	# successfully created new users' usernames
-	normal_user = UserTypesForSystem.query.filter_by(name = 'Normal User').first().id
+	normal_user = UserTypesForSystem.query.filter_by(name = UserTypesForSystem.TYPE_NORMAL).first().id
 	if len(users) > 0: 	# check that there is a minimum of one entry
 		length = len(users[0])		# get number of columns
 	else:
