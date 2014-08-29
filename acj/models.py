@@ -31,7 +31,7 @@ from passlib.apps import custom_app_context as pwd_context
 
 from flask.ext.login import UserMixin
 
-import datetime
+import dateutil.parser, datetime, pytz 
 
 # need to update to filterfalse whn upgrading python
 try:
@@ -193,8 +193,6 @@ class Courses(db.Model):
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	name = db.Column(db.String(255), unique=True, nullable=False)
 	description = db.Column(db.Text)
-	num_rounds = db.Column(db.Integer, default=6, nullable=False)
-	num_comments_req = db.Column(db.Integer, default=0, nullable=False)
 	available = db.Column(db.Boolean, default=True, nullable=False)
 	coursesandusers = db.relationship("CoursesAndUsers")
 	_criteriaandcourses = db.relationship("CriteriaAndCourses")
@@ -316,10 +314,12 @@ class PostsForQuestions(db.Model):
 	title = db.Column(db.String(255))
 	_answers = db.relationship("PostsForAnswers", cascade="delete")
 	comments = db.relationship("PostsForQuestionsAndPostsForComments", cascade="delete")
-	answer_start = db.Column(db.DateTime(timezone=True), nullable=True)
-	answer_end = db.Column(db.DateTime(timezone=True), nullable=True)
+	answer_start = db.Column(db.DateTime(timezone=True))
+	answer_end = db.Column(db.DateTime(timezone=True))
 	judge_start = db.Column(db.DateTime(timezone=True), nullable=True)
 	judge_end = db.Column(db.DateTime(timezone=True), nullable=True)
+	num_judgement_req = db.Column(db.Integer, nullable=False)
+	can_reply = db.Column(db.Boolean, default=False, nullable=False)
 	modified = db.Column(
 		db.TIMESTAMP,
 		default=func.current_timestamp(),
@@ -344,24 +344,36 @@ class PostsForQuestions(db.Model):
 		return sorted(self._answers, key=lambda answer: answer.post.created, reverse=True)
 	@hybrid_property
 	def available(self):
-		now = datetime.datetime.utcnow()
-		available = not self.answer_start or self.answer_start <= now
-		return available
+		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+		answer_start = self.answer_start.replace(tzinfo=pytz.utc)
+		return answer_start <= now
 	@hybrid_property
 	def answer_period(self):
-		now = datetime.datetime.utcnow()
-		return not self.answer_start or self.answer_start <= now < self.answer_end
+		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+		answer_start = self.answer_start.replace(tzinfo=pytz.utc)
+		answer_end = self.answer_end.replace(tzinfo=pytz.utc)
+		return answer_start <= now and now < answer_end
 	@hybrid_property
 	def judging_period(self):
-		now = datetime.datetime.utcnow()
-		return not self.judge_start or self.judge_start <= now < self.judge_end
+		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+		answer_end = self.answer_end.replace(tzinfo=pytz.utc)
+		if not self.judge_start:
+			return now >= answer_end
+		else:
+			return self.judge_start.replace(tzinfo=pytz.utc) <= now < self.judge_end.replace(tzinfo=pytz.utc)
 	@hybrid_property
 	def after_judging(self):
-		now = datetime.datetime.utcnow()
-		return not self.judge_start or now >= self.judge_end
+		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+		answer_end = self.answer_end.replace(tzinfo=pytz.utc)
+		# judgement period not set
+		if not self.judge_start:
+			return now >= answer_end
+		# judgement period is set
+		else:
+			return now >= self.judge_end.replace(tzinfo=pytz.utc)
 	@hybrid_property
 	def date_set(self):
-		return self.answer_start is not None
+		return self.judge_start and self.judge_end
 
 class PostsForAnswers(db.Model):
 	__tablename__ = 'PostsForAnswers'

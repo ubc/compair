@@ -138,7 +138,7 @@
 						</span>
 					</p>
 					
-					<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary pull-left">
+					<a ng-if="question.can_reply" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary pull-left">
 						Reply
 					</a>				
 					<h3 class="reply-heading" ng-if="answer.comments.length">
@@ -224,7 +224,7 @@
 						</span>
 					</p>
 					
-					<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary pull-left">
+					<a ng-if="question.can_reply" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary pull-left">
 						Reply
 					</a>
 					<p ng-show="key==sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores" class="score-display">

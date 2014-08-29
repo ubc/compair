@@ -161,8 +161,7 @@ module.controller("QuestionViewController",
 					$scope.instructor_answers = ret.instructor_answers;
 
 					$scope.answered = ret.answers > 0;
-					var min_pairs = ret.question.answers.length / 2;
-					var required = ret.students > 0 ? Math.floor(min_pairs * required_rounds / ret.students) : 0;
+					var required = ret.question.num_judgement_req;
 					$scope.judged_req_met = $scope.canManagePosts || ret.judged >= required;
 					$scope.readDate = Date.parse(ret.question.post.created);
 					AttachmentResource.get({'postId': ret.question.post.id}).$promise.then(
@@ -203,23 +202,29 @@ module.controller("QuestionViewController",
 	}
 );
 module.controller("QuestionCreateController",
-	function($scope, $log, $location, $routeParams, QuestionResource, Toaster, attachService)
+	function($scope, $log, $location, $routeParams, QuestionResource, required_rounds, Toaster, attachService)
 	{
 		var courseId = $routeParams['courseId'];
 		$scope.question = {};
 		$scope.uploader = attachService.getUploader();
 		$scope.resetName = attachService.resetName();
+		$scope.recommended_eval = Math.floor(required_rounds / 2);
+		// default the setting to the recommended # of evaluations
+		$scope.question.num_judgement_req = $scope.recommended_eval; 
 		$scope.questionSubmit = function () {
 			$scope.submitted = true;
-			if ($scope.question.availableCheck && !($scope.question.answer_start < $scope.question.answer_end && $scope.question.answer_end <= $scope.question.judge_start && $scope.question.judge_start < $scope.question.judge_end)) {
+			// answer end datetime has to be after answer start datetime
+			if ($scope.question.answer_start > $scope.question.answer_end) {
+				Toaster.error('The answer period is invalid');
+				$scope.submitted = false;
+				return;
+			} else if ($scope.question.availableCheck && !($scope.question.answer_end <= $scope.question.judge_start && $scope.question.judge_start < $scope.question.judge_end)) {
 				Toaster.error('The answer and/or judging period is invalid.');
 				$scope.submitted = false;
 				return;
 			}
-			// if option is not checked; make sure no dates are saved.
+			// if option is not checked; make sure no judge dates are saved.
 			if (!$scope.question.availableCheck) {
-				$scope.question.answer_start = null;
-				$scope.question.answer_end = null;
 				$scope.question.judge_start = null;
 				$scope.question.judge_end = null;
 			}
@@ -245,12 +250,13 @@ module.controller("QuestionCreateController",
 );
 
 module.controller("QuestionEditController",
-	function($scope, $log, $location, $routeParams, QuestionResource, AttachmentResource, Toaster, attachService)
+	function($scope, $log, $location, $routeParams, QuestionResource, AttachmentResource, required_rounds, Toaster, attachService)
 	{
 		var courseId = $routeParams['courseId'];
 		$scope.questionId = $routeParams['questionId'];
 		$scope.uploader = attachService.getUploader();
 		$scope.resetName = attachService.resetName();
+		$scope.recommended_eval = Math.floor(required_rounds / 2);
 		$scope.question = {};
 
 		$scope.deleteFile = function(post_id, file_id) {
@@ -267,10 +273,10 @@ module.controller("QuestionEditController",
 
 		QuestionResource.get({'courseId': courseId, 'questionId': $scope.questionId}).$promise.then(
 			function (ret) {
-				if (ret.question.answer_start && ret.question.answer_end && ret.question.judge_start && ret.question.judge_end) {
+				ret.question.answer_start = new Date(ret.question.answer_start);
+				ret.question.answer_end = new Date(ret.question.answer_end);	
+				if (ret.question.judge_start && ret.question.judge_end) {
 					ret.question.availableCheck = true;
-					ret.question.answer_start = new Date(ret.question.answer_start);
-					ret.question.answer_end = new Date(ret.question.answer_end);
 					ret.question.judge_start = new Date(ret.question.judge_start);
 					ret.question.judge_end = new Date(ret.question.judge_end);
 				}
@@ -291,7 +297,13 @@ module.controller("QuestionEditController",
 		);
 		$scope.questionSubmit = function () {
 			$scope.submitted = true;
-			if ($scope.question.availableCheck && !($scope.question.answer_start < $scope.question.answer_end && $scope.question.answer_end <= $scope.question.judge_start && $scope.question.judge_start < $scope.question.judge_end)) {
+			// answer end datetime has to be after answer start datetime
+			if ($scope.question.answer_start > $scope.question.answer_end) {
+				Toaster.error('The answer period is invalid');
+				$scope.submitted = false;
+				return;
+			} else if ($scope.question.availableCheck && !($scope.question.answer_end <= $scope.question.judge_start
+				&& $scope.question.judge_start < $scope.question.judge_end)) {
 				Toaster.error('The answer and/or judging period is invalid.');
 				$scope.submitted = false;
 				return;

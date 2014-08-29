@@ -84,7 +84,7 @@
 			<div class="col-md-6 form-group">
 				<acj-field-with-feedback form-control="questionForm.answerEndTime">
 					<label>Time Answering Ends</label>
-					<input type="text" id="answerEndTime" name="answerEndTime" class="form-control" ng-model="question.answer_end" data-autoclose="1" required bs-timepicker>
+					<input type="text" id="answerEndTime" name="answerEndTime" class="form-control" ng-model="question.answer_end" data-autoclose="1" required timeType="iso" bs-timepicker>
 				</acj-field-with-feedback>
 			</div>
 		</div>
@@ -120,11 +120,28 @@
 				<div class="col-md-6 form-group">
 					<acj-field-with-feedback form-control="questionForm.judgeEndTime">
 						<label>Time Evaluations End</label>
-						<input type="text" id="judgeEndTime" name="judgeEndTime" class="form-control" ng-model="question.judge_end" data-autoclose="1" ng-required="question.availableCheck" bs-timepicker>
+						<input type="text" id="judgeEndTime" name="judgeEndTime" class="form-control" ng-model="question.judge_end" data-autoclose="1" ng-required="question.availableCheck" timeType="iso" bs-timepicker>
 					</acj-field-with-feedback>
 				</div>
 			</div>
 		</div>
+	</fieldset>
+	<fieldset>
+		<legend>Options</legend>
+		<div class="form-group">
+			<div class="form-group">
+				<input id="canReply" type="checkbox" ng-model="question.can_reply">
+				<label for="canReply">Can comment on peers' replies to their answers</label>
+			</div>
+			<hr />
+			<div class="col-md-6 form-group">
+				<acj-field-with-feedback form-control="questionForm.reqJudge">
+					<label>Required number of evaluations for each student</label>
+					<input type="text" id="reqJudge" name="reqJudge" class="form-control" ng-model="question.num_judgement_req" ng-pattern="/^[1-9]\d*$/" required>
+					<p class="help-block">The minimum number recommended is {{recommended_eval}}. If a lower number is entered it may cause the answers' ranking to be unreliable.</p>
+				</acj-field-with-feedback>
+			</div>
+		<div>
 	</fieldset>
 	<input type="submit" class="btn btn-success btn-lg center-block" value="Save"
 		ng-disabled="questionForm.$invalid || submitted || uploader.isUploading" />

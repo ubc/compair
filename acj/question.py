@@ -11,6 +11,7 @@ from acj.util import new_restful_api
 from acj.attachment import addNewFile, deleteFile
 
 import datetime, os
+import dateutil.parser
 
 questions_api = Blueprint('questions_api', __name__)
 api = new_restful_api(questions_api)
@@ -18,25 +19,29 @@ api = new_restful_api(questions_api)
 new_question_parser = RequestParser()
 new_question_parser.add_argument('title', type=str, required=True, help="Question title is required.")
 new_question_parser.add_argument('post', type=dict, default={})
-new_question_parser.add_argument('answer_start', type=str, default=None)
-new_question_parser.add_argument('answer_end', type=str, default=None)
+new_question_parser.add_argument('answer_start', type=str, required=True)
+new_question_parser.add_argument('answer_end', type=str, required=True)
 new_question_parser.add_argument('judge_start', type=str, default=None)
 new_question_parser.add_argument('judge_end', type=str, default=None)
 new_question_parser.add_argument('name', type=str, default=None)
 new_question_parser.add_argument('alias', type=str, default=None)
+new_question_parser.add_argument('can_reply', type=bool, default=False)
+new_question_parser.add_argument('num_judgement_req', type=int, required=True) 
 
 # existing_question_parser = new_question_parser.copy()
 existing_question_parser = RequestParser()
 existing_question_parser.add_argument('id', type=int, required=True, help="Question id is required.")
 existing_question_parser.add_argument('title', type=str, required=True, help="Question title is required.")
 existing_question_parser.add_argument('post', type=dict, default={})
-existing_question_parser.add_argument('answer_start', type=str, default=None)
-existing_question_parser.add_argument('answer_end', type=str, default=None)
+existing_question_parser.add_argument('answer_start', type=str, required=True)
+existing_question_parser.add_argument('answer_end', type=str, required=True)
 existing_question_parser.add_argument('judge_start', type=str, default=None)
 existing_question_parser.add_argument('judge_end', type=str, default=None)
 existing_question_parser.add_argument('name', type=str, default=None)
 existing_question_parser.add_argument('alias', type=str, default=None)
 existing_question_parser.add_argument('uploadedFile', type=bool, default=False)
+existing_question_parser.add_argument('can_reply', type=bool, default=False)
+existing_question_parser.add_argument('num_judgement_req', type=int, required=True)
 
 # /id
 class QuestionIdAPI(Resource):
@@ -54,7 +59,6 @@ class QuestionIdAPI(Resource):
 		criteria = CriteriaAndCourses.query.filter_by(courses_id=course_id).order_by(CriteriaAndCourses.id).all()
 		answers = PostsForAnswers.query.filter_by(postsforquestions_id=question.id).join(Posts).filter(Posts.users_id==current_user.id).count()
 		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses).filter_by(courses_id=course.id).join(AnswerPairings).filter(AnswerPairings.postsforquestions_id==question.id).count()
-		count = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter(UserTypesForCourse.name==UserTypesForCourse.TYPE_STUDENT).count()
 		instructors = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter(UserTypesForCourse.name.in_([UserTypesForCourse.TYPE_TA, UserTypesForCourse.TYPE_INSTRUCTOR])).all()
 		instructor_ids = [u.users_id for u in instructors]
 		instructor_answers = PostsForAnswers.query.filter_by(postsforquestions_id=question.id).join(Posts).filter(Posts.users_id.in_(instructor_ids)).all()
@@ -64,7 +68,6 @@ class QuestionIdAPI(Resource):
 			'instructors':marshal(instructors, dataformat.getCoursesAndUsers()),
 			'answers':answers,
 			'judged':judgements,
-			'students':count,
 			'instructor_answers':marshal(instructor_answers, dataformat.getPostsForAnswers(restrict_users))
 		}
 	def post(self, course_id, question_id):
@@ -82,10 +85,16 @@ class QuestionIdAPI(Resource):
 		if not (question.post.content or uploaded or name):
 			return {"error":"The question content is empty!"}, 400
 		question.title = params.get("title", question.title)
-		question.answer_start = params.get('answer_start', None)
-		question.answer_end = params.get('answer_end', None)
+		question.answer_start = params.get('answer_start', question.answer_start)
+		question.answer_end = params.get('answer_end', question.answer_end)
 		question.judge_start = params.get('judge_start', None)
+		if question.judge_start is not None:
+			question.judge_start = params.get('judge_start', None)
 		question.judge_end = params.get('judge_end', None)
+		if question.judge_end is not None:
+			question.judge_end = params.get('judge_end', None)
+		question.can_reply = params.get('can_reply', False)
+		question.num_judgement_req = params.get('num_judgement_req', question.num_judgement_req)
 		db.session.add(question.post)
 		db.session.add(question)
 		db.session.commit()
@@ -123,12 +132,10 @@ class QuestionRootAPI(Resource):
 				filter(or_(PostsForQuestions.answer_start==None,now >= PostsForQuestions.answer_start)).\
 				order_by(desc(Posts.created)).all()
 		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses).filter_by(courses_id=course.id).join(AnswerPairings).all()
-		count = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter(UserTypesForCourse.name==UserTypesForCourse.TYPE_STUDENT).count()
 		answered = PostsForAnswers.query.join(Posts).filter_by(courses_id=course_id).join(Users).filter_by(id=current_user.id).all()
 		return {
 			"questions":marshal(questions, dataformat.getPostsForQuestions(restrict_users)),
 			"judgements":marshal(judgements, dataformat.getJudgements()),
-			"count": count,
 			"answered": marshal(answered, dataformat.getPostsForAnswers())
 		}
 	@login_required
@@ -145,10 +152,16 @@ class QuestionRootAPI(Resource):
 			return {"error":"The answer content is empty!"}, 400
 		post.users_id = current_user.id
 		question.title = params.get("title")
-		question.answer_start = params.get('answer_start', None)
-		question.answer_end = params.get('answer_end', None)
+		question.answer_start = dateutil.parser.parse(params.get('answer_start'))
+		question.answer_end = dateutil.parser.parse(params.get('answer_end'))
 		question.judge_start = params.get('judge_start', None)
+		if question.judge_start is not None:
+			question.judge_start = dateutil.parser.parse(params.get('judge_start', None))
 		question.judge_end = params.get('judge_end', None)
+		if question.judge_end is not None:
+			question.judge_end = dateutil.parser.parse(params.get('judge_end', None))
+		question.can_reply = params.get('can_reply', False)
+		question.num_judgement_req = params.get('num_judgement_req') 
 		db.session.add(post)
 		db.session.add(question)
 		db.session.commit()

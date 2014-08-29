@@ -16,6 +16,7 @@ from tests.factories import CoursesFactory, UsersFactory, CoursesAndUsersFactory
 	PostsForAnswersFactory, PostsForCommentsFactory,\
 	PostsForQuestionsAndPostsForCommentsFactory,\
 	PostsForAnswersAndPostsForCommentsFactory
+import datetime, pytz
 
 # Tests Checklist
 # - Unauthenticated users refused access with 401
@@ -63,7 +64,9 @@ class TestData():
 		# add 2 questions, each with 2 answers, to the course
 		self.questions = []
 		self.answers = []
-		question = self.create_question(self.course, self.enroled_instructor)
+		answer_start = datetime.datetime.now() - datetime.timedelta(days=2)
+		answer_end = datetime.datetime.now() - datetime.timedelta(days=1)
+		question = self.create_question(self.course, self.enroled_instructor, answer_start, answer_end)
 		self.questions.append(question)
 		answer = self.create_answer(question, self.enroled_student)
 		self.answers.append(answer)
@@ -72,7 +75,9 @@ class TestData():
 		answer = self.create_answer(question, self.enroled_student)
 		self.answers.append(answer)
 		self.post_question_comment(self.enroled_student, self.course, question)
-		question = self.create_question(self.course, self.enroled_instructor)
+		answer_start = datetime.datetime.now()
+		answer_end = datetime.datetime.now() +  datetime.timedelta(days=7)
+		question = self.create_question(self.course, self.enroled_instructor, answer_start, answer_end)
 		self.questions.append(question)
 		answer = self.create_answer(question, self.enroled_student)
 		self.answers.append(answer)
@@ -86,10 +91,10 @@ class TestData():
 		db.session.commit()
 		return answer
 
-	def create_question(self, course, author):
+	def create_question(self, course, author, answer_start, answer_end):
 		post = PostsFactory(courses_id = course.id, users_id = author.id)
 		db.session.commit()
-		question = PostsForQuestionsFactory(posts_id = post.id)
+		question = PostsForQuestionsFactory(posts_id = post.id, answer_start = answer_start, answer_end = answer_end)
 		db.session.commit()
 		return question
 
@@ -394,8 +399,12 @@ class QuestionsAPITests(ACJTestCase):
 			self._verify_question(expected, actual)
 
 	def test_create_question(self):
+		now = datetime.datetime.utcnow()
 		question_expected = {'title':'this is a new question\'s title',
-				  'post': {'content':'this is the new question\'s content.'}}
+				'post': {'content':'this is the new question\'s content.'},
+				'answer_start': now.isoformat() + 'Z',
+				'answer_end': (now + datetime.timedelta(days=7)).isoformat() + 'Z',
+				'num_judgement_req': 3}
 		# Test login required
 		rv = self.client.post(self.url,
 							  data=json.dumps(question_expected), content_type='application/json')
@@ -464,7 +473,7 @@ class AnswersAPITests(ACJTestCase):
 	def setUp(self):
 		super(AnswersAPITests, self).setUp()
 		self.data = TestData()
-		self.question = self.data.get_questions()[0]
+		self.question = self.data.get_questions()[1]
 		self.base_url = self._build_url(self.data.get_course().id, self.question.id)
 
 	def _build_url(self, course_id, question_id, tail=""):
