@@ -102,9 +102,9 @@
 						{{question.left}} evaluation<span ng-if="question.left != 1">s</span> needed from you
 					</li>
 					<!-- Answers Active (for instructors) -->
-					<li ng-class="{'label label-warning': question.available}" ng-if="canManagePosts">
-						<span ng-if="question.available">Students answering until {{question.answer_end | amDateFormat: 'MMM D'}}</span>
-						<span ng-if="!question.available">Students answer {{question.answer_start | amDateFormat: 'MMM D'}}-{{question.answer_end | amDateFormat: 'MMM D'}}</span>
+					<li ng-class="{'label label-warning': question.answer_period}" ng-if="canManagePosts">
+						<span ng-if="question.answer_period">Students answering until {{question.answer_end | amDateFormat: 'MMM D'}}</span>
+						<span ng-if="!question.answer_period">Students answer {{question.answer_start | amDateFormat: 'MMM D'}}-{{question.answer_end | amDateFormat: 'MMM D'}}</span>
 					</li>
 					<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
 						<a ng-href="#/course/{{course.id}}/question/{{question.id}}/delete" title="Delete">
