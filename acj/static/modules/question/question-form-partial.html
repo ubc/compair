@@ -54,11 +54,8 @@
 	</fieldset>
 	
 	<fieldset>
-		<legend>Schedule</legend>
-		<div class="instructional-text">
-			<p><strong>Students can answer and edit their answers only during the dates and times you set.</strong> Students do not see a question until the answering period begins. Students do not see other answers until they have evaluated the required number of answer pairs.</p>
-			<p><strong>After the answering period has passed, students can evaluate answers.</strong> If you want to set specific dates and times for an evaluation period, click the checkbox below.</p>
-		</div>
+		<legend>Answers</legend>
+		<p class="instructional-text"><strong>Students can answer and edit their answers only during the dates and times you set.</strong> Students do not see a question until the answering period begins. Students do not see other answers until they have evaluated the required number of answer pairs.</p>
 		
 		<div class="row">
 			<div class="col-md-6 form-group">
@@ -88,8 +85,24 @@
 				</acj-field-with-feedback>
 			</div>
 		</div>
+	</fieldset>
+	
+	<fieldset>
+		<legend>Evaluations</legend>
+		<div class="instructional-text">
+			<p>The <strong>recommended minimum number of evaluations per student is {{recommended_eval}}</strong>. Using this number (or higher) creates a more accurate ranking of the answers. If you set a lower number, the answers will not be ranked as accurately.</p>
+			<p><strong>After the answering period has passed, students can evaluate answers.</strong> If you want to set specific dates and times for an evaluation period, click the checkbox below.</p>
+		</div>
+				
+		<div class="form-group">
+			<acj-field-with-feedback form-control="questionForm.reqJudge">
+				<label>Number of evaluations required from each student</label>
+				<input type="text" id="reqJudge" name="reqJudge" class="form-control" ng-model="question.num_judgement_req" ng-pattern="/^[1-9]\d*$/" required>
+			</acj-field-with-feedback>
+		</div>
 		
 		<hr />
+		
 		<input id="availableCheck" type="checkbox" ng-model="question.availableCheck">
 		<label for="availableCheck">Set when students can evaluate this question (optional)</label>
 		<br /><br />
@@ -124,25 +137,19 @@
 					</acj-field-with-feedback>
 				</div>
 			</div>
+			
 		</div>
 	</fieldset>
+	
 	<fieldset>
-		<legend>Options</legend>
+		<legend>Replies</legend>
 		<div class="form-group">
-			<div class="form-group">
-				<input id="canReply" type="checkbox" ng-model="question.can_reply">
-				<label for="canReply">Can comment on peers' replies to their answers</label>
-			</div>
-			<hr />
-			<div class="col-md-6 form-group">
-				<acj-field-with-feedback form-control="questionForm.reqJudge">
-					<label>Required number of evaluations for each student</label>
-					<input type="text" id="reqJudge" name="reqJudge" class="form-control" ng-model="question.num_judgement_req" ng-pattern="/^[1-9]\d*$/" required>
-					<p class="help-block">The minimum number recommended is {{recommended_eval}}. If a lower number is entered it may cause the answers' ranking to be unreliable.</p>
-				</acj-field-with-feedback>
-			</div>
-		<div>
+			<input id="canReply" type="checkbox" ng-model="question.can_reply">
+			<label for="canReply">Allow students to reply to classmates' answers</label>
+		</div>
 	</fieldset>
+	
 	<input type="submit" class="btn btn-success btn-lg center-block" value="Save"
 		ng-disabled="questionForm.$invalid || submitted || uploader.isUploading" />
+	
 </form>

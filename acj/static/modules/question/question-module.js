@@ -206,6 +206,7 @@ module.controller("QuestionCreateController",
 	{
 		var courseId = $routeParams['courseId'];
 		$scope.question = {};
+		$scope.question.can_reply = true; //want default to encourage discussion
 		$scope.uploader = attachService.getUploader();
 		$scope.resetName = attachService.resetName();
 		$scope.recommended_eval = Math.floor(required_rounds / 2);
