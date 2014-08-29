@@ -72,14 +72,14 @@ class SampleDataFixture(object):
 			# create 5 questions by the instructor
 			for i in range(5):
 				minutes=random.randint(0,59)
-				created = datetime.now() - timedelta(days=1,minutes=minutes)
+				created = datetime.utcnow() - timedelta(days=1,minutes=minutes)
 				post = PostsFactory(course=course, user=self.INSTRUCTOR,
 									content=content, created=created)
 				postforquestion = PostsForQuestionsFactory(post=post, title=generator.get_question())
 				# create answers by each student for this question
 				for student in self.STUDENTS:
 					minutes=random.randint(0,59)
-					created = datetime.now() - timedelta(minutes=minutes)
+					created = datetime.utcnow() - timedelta(minutes=minutes)
 					post = PostsFactory(course=course, user=student, content=generator.get_answer(),
 						created=created)
 					PostsForAnswersFactory(post=post, question=postforquestion)

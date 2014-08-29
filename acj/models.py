@@ -119,11 +119,11 @@ class Users(db.Model, UserMixin):
 	# 'modified' can be counted on to be auto init/updated for manual
 	# (non-SQLAlchemy) database operations while 'created' will not.
 	modified = db.Column(
-		db.TIMESTAMP,
-		default=func.current_timestamp(),
-		onupdate=func.current_timestamp(),
+		db.DateTime,
+		default=datetime.datetime.utcnow,
+		onupdate=datetime.datetime.utcnow,
 		nullable=False)
-	created = db.Column(db.TIMESTAMP, default=func.current_timestamp(),
+	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
 					 nullable=False)
 	coursesandusers = db.relationship("CoursesAndUsers")
 
@@ -165,7 +165,7 @@ class Users(db.Model, UserMixin):
 		return pwd_context.verify(password, self.password)
 
 	def update_lastonline(self):
-		self.lastonline = func.current_timestamp()
+		self.lastonline = datetime.datetime.utcnow()
 		db.session.add(self)
 		db.session.commit()
 
@@ -200,11 +200,11 @@ class Courses(db.Model):
 	enable_student_create_questions = db.Column(db.Boolean, default=False, nullable=False)
 	enable_student_create_tags = db.Column(db.Boolean, default=False, nullable=False)
 	modified = db.Column(
-		db.TIMESTAMP,
-		default=func.current_timestamp(),
-		onupdate=func.current_timestamp(),
+		db.DateTime,
+		default=datetime.datetime.utcnow,
+		onupdate=datetime.datetime.utcnow,
 		nullable=False)
-	created = db.Column(db.TIMESTAMP, default=func.current_timestamp(),
+	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
 					 nullable=False)
 	@hybrid_property
 	def criteriaandcourses(self):
@@ -240,11 +240,11 @@ class CoursesAndUsers(db.Model):
 		nullable=False)
 	usertypeforcourse = db.relationship("UserTypesForCourse")
 	modified = db.Column(
-		db.TIMESTAMP,
-		default=func.current_timestamp(),
-		onupdate=func.current_timestamp(),
+		db.DateTime,
+		default=datetime.datetime.utcnow,
+		onupdate=datetime.datetime.utcnow,
 		nullable=False)
-	created = db.Column(db.TIMESTAMP, default=func.current_timestamp(),
+	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
 					 nullable=False)
 	__table_args__ = (
 		# prevent duplicate user in courses
@@ -268,7 +268,7 @@ class Tags(db.Model):
 		db.ForeignKey('Courses.id', ondelete="CASCADE"),
 		nullable=False)
 	course = db.relationship("Courses")
-	created = db.Column(db.TIMESTAMP, default=func.current_timestamp(),
+	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
 					 nullable=False)
 
 
@@ -294,11 +294,11 @@ class Posts(db.Model):
 	content = db.Column(db.Text)
 	files = db.relationship("FilesForPosts", cascade="delete")
 	modified = db.Column(
-		db.TIMESTAMP,
-		default=func.current_timestamp(),
-		onupdate=func.current_timestamp(),
+		db.DateTime,
+		default=datetime.datetime.utcnow,
+		onupdate=datetime.datetime.utcnow,
 		nullable=False)
-	created = db.Column(db.TIMESTAMP, default=func.current_timestamp(),
+	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
 					 nullable=False)
 
 class PostsForQuestions(db.Model):
@@ -321,9 +321,9 @@ class PostsForQuestions(db.Model):
 	num_judgement_req = db.Column(db.Integer, nullable=False)
 	can_reply = db.Column(db.Boolean, default=False, nullable=False)
 	modified = db.Column(
-		db.TIMESTAMP,
-		default=func.current_timestamp(),
-		onupdate=func.current_timestamp(),
+		db.DateTime,
+		default=datetime.datetime.utcnow,
+		onupdate=datetime.datetime.utcnow,
 		nullable=False)
 
 	@hybrid_property
@@ -508,11 +508,11 @@ class Criteria(db.Model):
 		nullable=False)
 	user = db.relationship("Users")
 	modified = db.Column(
-		db.TIMESTAMP,
-		default=func.current_timestamp(),
-		onupdate=func.current_timestamp(),
+		db.DateTime,
+		default=datetime.datetime.utcnow,
+		onupdate=datetime.datetime.utcnow,
 		nullable=False)
-	created = db.Column(db.TIMESTAMP, default=func.current_timestamp(),
+	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
 					 nullable=False)
 
 
@@ -589,11 +589,11 @@ class AnswerPairings(db.Model):
 	# the round of judgements that this answer pairing belongs to
 	round = db.Column(db.Integer, default=1)
 	modified = db.Column(
-		db.TIMESTAMP,
-		default=func.current_timestamp(),
-		onupdate=func.current_timestamp(),
+		db.DateTime,
+		default=datetime.datetime.utcnow,
+		onupdate=datetime.datetime.utcnow,
 		nullable=False)
-	created = db.Column(db.TIMESTAMP, default=func.current_timestamp(),
+	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
 					 nullable=False)
 
 	@hybrid_property
@@ -631,11 +631,11 @@ class Judgements(db.Model):
 		nullable=False)
 	answer_winner = db.relationship("PostsForAnswers")
 	modified = db.Column(
-		db.TIMESTAMP,
-		default=func.current_timestamp(),
-		onupdate=func.current_timestamp(),
+		db.DateTime,
+		default=datetime.datetime.utcnow,
+		onupdate=datetime.datetime.utcnow,
 		nullable=False)
-	created = db.Column(db.TIMESTAMP, default=func.current_timestamp(),
+	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
 					 nullable=False)
 
 	@hybrid_property
