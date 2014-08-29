@@ -86,17 +86,35 @@
 			
 			<!-- Answers Tab Header -->
 			<div class="tab-header">
-				<select ng-hide=true ng-model="sortby" ng-options="key as c.criterion.name for (key, c) in criteria" class="pull-right"></select>
-				<label class="pull-right" ng-hide=true>Sort by: &nbsp;</label>
+				
+				<select ng-hide="true" ng-model="sortby" ng-options="key as c.criterion.name for (key, c) in criteria" class="pull-right"></select>
+				<label class="pull-right" ng-hide="true">Sort by: &nbsp;</label>
+				
 				<h2>Answers</h2>
-				<p ng-if="!canManagePosts && !answered && question.answer_period"><a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" title="Answer the question">Answer</a> and evaluate the question first, then read answers written by your classmates and instructors here.</p>
-				<p ng-if="!canManagePosts && !judged_req_met && question.judging_period"><a ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" title="Answer the question">Evaluate</a> the question first, then read answers written by your classmates and instructors here.</p>
-				<p ng-if="!canManagePosts && answered && !judged_req_met && !question.judging_period">Evaluation period begins <span ng-if="question.judge_start > 0">{{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}}</span><span ng-if="question.judge_start <= 0">after the answer period ends</span>. After evaluating, you will be able to read answers written by your classmates and instructors here.</p>
-				<p ng-if="canManagePosts && !question.answer_period && !answers">Answering period begins {{question.answer_start | amDateFormat: 'MMM D @ h:mm a'}}. Would you like to <a ng-href="#/course/{{courseId}}/question/{{question.id}}/edit" title="Edit the question">change the answer dates</a> for this question?</p>
-				<p ng-if="question.answer_period && !question.answers_count">No answers given for this question yet.</p>
+				
+				<!-- Instructors see before the answer period -->
+				<p ng-if="canManagePosts && !question.answer_period && !question.answers_count">
+					Answering period begins {{question.answer_start | amDateFormat: 'MMM D @ h:mm a'}}. Would you like to <a ng-href="#/course/{{courseId}}/question/{{question.id}}/edit" title="Edit the question">change the answer dates</a> for this question?
+				</p>
+				<!-- Students see before answering during the answer period -->
+				<p ng-if="!canManagePosts && !answered && question.answer_period">
+					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" title="Answer the question">Answer</a> and evaluate the question first, then read answers written by your classmates and instructors here.
+				</p>
+				<!-- Students see before evaluating before the evaluation period -->
+				<p ng-if="!canManagePosts && answered && !judged_req_met && !question.judging_period">
+					Evaluation period begins <span ng-if="question.judge_start > 0">{{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}}</span><span ng-if="question.judge_start <= 0">after the answer period ends</span>. After evaluating, you will be able to read answers written by your classmates and instructors here.
+				</p>
+				<!-- Students see before evaluating during the evaluation period -->
+				<p ng-if="!canManagePosts && !judged_req_met && question.judging_period">
+					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" title="Answer the question">Evaluate</a> the question first, then read answers written by your classmates and instructors here.
+				</p>
+				<!-- Anyone sees during the answer period, if no answers provided yet -->
+				<p ng-if="question.answer_period && !question.answers_count">
+					No answers given for this question yet.
+				</p>
 			</div>
 			
-			<div class="all-answers" ng-if="(answered && judged_req_met) || canManagePosts">
+			<div class="all-answers" ng-if="judged_req_met || canManagePosts">
 			
 				<!-- Instructor Answers Section -->
 				<div class="each-answer clearfix" ng-repeat="answer in instructor_answers" ng-show="canManagePosts">
@@ -204,7 +222,12 @@
 					</a>
 					<strong>answered</strong> on {{answer.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 					<div class="manager-actions pull-right" ng-if="canManagePosts || (answer.post.user.id == loggedInUserId && question.answer_period)">
+						<span ng-if="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
+							<i class="fa fa-warning"></i>
+							Flagged
+						</span>
 						<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/delete">
+							
 							<i class="fa fa-trash-o"></i>
 						</a>
 						<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit">
