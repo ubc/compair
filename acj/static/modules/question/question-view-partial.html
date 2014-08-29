@@ -166,7 +166,7 @@
 						<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">
 							{{instructors[comment.postsforcomments.post.user.id]}} 
 						</span>
-						<strong>replied</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM d @ h:mm a'}}:
+						<strong>replied</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 						<div class="manager-actions pull-right" ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId">
 							<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/delete">
 								<i class="fa fa-trash-o"></i>
@@ -202,7 +202,7 @@
 							({{answer.post.user.username}})
 						</span>
 					</a>
-					<strong>answered</strong> on {{answer.post.created | amDateFormat: 'MMM d @ h:mm a'}}:
+					<strong>answered</strong> on {{answer.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 					<div class="manager-actions pull-right" ng-if="canManagePosts || (answer.post.user.id == loggedInUserId && question.answer_period)">
 						<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/delete">
 							<i class="fa fa-trash-o"></i>
@@ -257,7 +257,7 @@
 						<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">
 							{{instructors[comment.postsforcomments.post.user.id]}} 
 						</span>
-						<strong>replied</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM d @ h:mm a'}}:
+						<strong>replied</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 						<div class="manager-actions pull-right" ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId">
 							<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/delete">
 								<i class="fa fa-trash-o"></i>
@@ -310,7 +310,7 @@
 				<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">
 					{{instructors[comment.postsforcomments.post.user.id]}} 
 				</span>
-				<strong>commented</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM d @ h:mm a'}}:
+				<strong>commented</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 				<div class="manager-actions pull-right" ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId">
 					<a href="#/course/{{courseId}}/question/{{question.id}}/comment/{{comment.id}}/delete">
 						<i class="fa fa-trash-o"></i>
