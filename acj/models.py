@@ -642,6 +642,22 @@ class Judgements(db.Model):
 	def courses_id(self):
 		return self.course_criterion.courses_id
 
+class PostsForJudgements(db.Model):
+	__tablename__ = 'PostsForJudgements'
+	__table_args__ = default_table_args
+
+	id = db.Column(db.Integer, primary_key=True, nullable=False)
+	postsforcomments_id = db.Column(
+		db.Integer,
+		db.ForeignKey('PostsForComments.id', ondelete="CASCADE"),
+		nullable=False)
+	postsforcomments = db.relationship("PostsForComments")
+	judgements_id = db.Column(
+		db.Integer,
+		db.ForeignKey('Judgements.id', ondelete="CASCADE"),
+		nullable=False)
+	judgement = db.relationship("Judgements")
+
 class LTIInfo(db.Model):
 	__tablename__ = 'LTIInfo'
 	__table_args__ = default_table_args

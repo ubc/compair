@@ -195,6 +195,14 @@ def getJudgements():
 		'course_criterion': fields.Nested(getCriteriaAndCourses())
 	}
 
+def getPostsForJudgements(restrict_users=True):
+	judgement = getJudgements()
+	comment = getPostsForComments(restrict_users)
+	return {
+		'postsforcomments': fields.Nested(comment),
+		'judgements': fields.Nested(judgement) 
+	}
+
 def getImportUsersResults(restrict_users=True):
 	user = getUsers(restrict_users)
 	return {
