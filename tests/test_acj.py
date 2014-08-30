@@ -887,6 +887,17 @@ class JudgementAPITests(ACJTestCase):
 		self.question = self.data.get_questions()[0]
 		self.base_url = self._build_url(self.course.id, self.question.id)
 		self.answer_pair_url = self.base_url + '/pair'
+		# delete answers made by enroled student, so we'll only get other student's answers
+		for answer in self.data.get_answers():
+			db.session.delete(answer)
+			db.session.commit()
+		# need to add additional student answers, since students can't judge their own answers
+		extra_student1 = self.data.create_user(UserTypesForSystem.TYPE_NORMAL)
+		extra_student2 = self.data.create_user(UserTypesForSystem.TYPE_NORMAL)
+		self.data.enrol_user(extra_student1, self.course, UserTypesForCourse.TYPE_STUDENT)
+		self.data.enrol_user(extra_student2, self.course, UserTypesForCourse.TYPE_STUDENT)
+		self.expected_answer1 = self.data.create_answer(self.question, extra_student1)
+		self.expected_answer2 = self.data.create_answer(self.question, extra_student2)
 
 	def _build_url(self, course_id, question_id, tail=""):
 		url = '/api/courses/' + str(course_id) + '/questions/' + str(question_id) + '/judgements' +\
@@ -926,10 +937,8 @@ class JudgementAPITests(ACJTestCase):
 			actual_answer1 = actual_answer_pair['answer2']
 			actual_answer2 = actual_answer_pair['answer1']
 		# make sure that we actually got answers for the question we're targetting
-		expected_answer1 = self.question.answers[0]
-		expected_answer2 = self.question.answers[1]
-		self.assertEqual(actual_answer1['id'], expected_answer1.id)
-		self.assertEqual(actual_answer2['id'], expected_answer2.id)
+		self.assertEqual(actual_answer1['id'], self.expected_answer1.id)
+		self.assertEqual(actual_answer2['id'], self.expected_answer2.id)
 		# additional testing in submit judgement
 
 	def test_submit_judgement(self):
