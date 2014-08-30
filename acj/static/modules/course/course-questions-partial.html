@@ -107,7 +107,7 @@
 						<span ng-if="!question.answer_period">Students answer {{question.answer_start | amDateFormat: 'MMM D'}}-{{question.answer_end | amDateFormat: 'MMM D'}}</span>
 					</li>
 					<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
-						<a ng-href="#/course/{{course.id}}/question/{{question.id}}/delete" title="Delete">
+						<a ng-href="#/course/{{course.id}}/question/{{question.id}}/delete" title="Delete" onclick="return confirm('Are you sure you want to delete this item?');">
 							<i class="fa fa-trash-o"></i>
 						</a>
 					</li>
