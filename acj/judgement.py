@@ -7,13 +7,12 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 import math
-from sqlalchemy import and_, func
+from sqlalchemy import func
 from acj import dataformat, db
 from acj.authorization import require
 from acj.models import PostsForAnswers, Posts, Judgements, AnswerPairings, Courses, CriteriaAndCourses, \
-	PostsForQuestions, Scores
+	PostsForQuestions, Scores, CoursesAndUsers, UserTypesForCourse
 from acj.util import new_restful_api
-from itertools import chain
 
 # First declare a Flask Blueprint for this module
 judgements_api = Blueprint('judgements_api', __name__)
@@ -104,8 +103,16 @@ class JudgementPairAPI(Resource):
 		require(READ, question)
 		if not question.judging_period:
 			return {'error':'Judging Period is not in session.'}, 403
-		answers = PostsForAnswers.query. \
-			filter(PostsForAnswers.postsforquestions_id==question_id).all()
+		# Get a list of user ids that are not students in this course
+		student_type = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first()
+		not_student_users = CoursesAndUsers.query.filter(CoursesAndUsers.courses_id==course_id,
+			CoursesAndUsers.usertypeforcourse!=student_type).\
+			values(CoursesAndUsers.users_id)
+		not_student_users = [not_student_user[0] for not_student_user in not_student_users]
+		# Get only answers that are made by students
+		answers = PostsForAnswers.query.join(Posts). \
+			filter(PostsForAnswers.postsforquestions_id==question_id,
+				   Posts.users_id.notin_(not_student_users)).all()
 		if len(answers) < 2:
 			return {"error":"Insufficient answers available for judgement."}, 400
 		current_app.logger.debug("Checking judgement round for this question.")
@@ -150,6 +157,11 @@ class JudgementPairAPI(Resource):
 					current_app.logger.debug("User has already judged this pair.")
 					used_pair = True
 					break
+			# don't let students judge their own answers
+			if unjudged_pairing.answer1.users_id == current_user.id or \
+				unjudged_pairing.answer2.users_id == current_user.id:
+				current_app.logger.debug("Skipping pair with student's own answer in it.")
+				used_pair = True
 			if not used_pair:
 				current_app.logger.debug("Found a pair that the user hasn't judged yet.")
 				selected_pair = unjudged_pairing
