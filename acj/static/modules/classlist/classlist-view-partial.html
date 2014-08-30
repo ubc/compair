@@ -20,7 +20,7 @@
 			<th>Email</th>
 			<th>Application Role</th>
 		</tr>
-		<tr ng-repeat="user in classlist">
+		<tr ng-repeat="user in classlist | orderBy:'user.firstname'">
 			<td>
 				<a href="#/user/{{user.user.id}}/edit" target="_blank">
 					Edit
