@@ -11,7 +11,8 @@ var module = angular.module('ubc.ctlt.acj.judgement',
 		'ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.toaster',
 		'ubc.ctlt.acj.common.form',
-		'ubc.ctlt.acj.common.mathjax'
+		'ubc.ctlt.acj.common.mathjax',
+		'ubc.ctlt.acj.session'
 	]
 );
 
@@ -24,7 +25,8 @@ module.factory('JudgementResource',
 			resourceUrl,
 			{},
 			{
-				'getAnswerPair': {url: resourceUrl + '/pair'}
+				'getAnswerPair': {url: resourceUrl + '/pair'},
+				'count': {url: resourceUrl + '/count/users/:userId'}
 			}
 		);
 		return ret;
@@ -46,8 +48,8 @@ module.constant('required_rounds', 6);
 /***** Controllers *****/
 module.controller(
 	'JudgementController', 
-	function($log, $location, $scope, $timeout, $routeParams, $anchorScroll, QuestionResource, AnswerResource,
-		CriteriaResource, JudgementResource, AnswerCommentResource, EvalCommentResource, Toaster) 
+	function($log, $location, $route, $scope, $timeout, $routeParams, $anchorScroll, QuestionResource, AnswerResource,
+		CriteriaResource, JudgementResource, AnswerCommentResource, EvalCommentResource, Session, Toaster) 
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
@@ -57,13 +59,27 @@ module.controller(
 			function (ret)
 			{
 				$scope.question = ret.question;
+				$scope.total = ret.question.num_judgement_req;
 			},
 			function (ret)
 			{
 				Toaster.reqerror("Unable to load question.", ret);
 			}
 		);
-		
+		Session.getUser().then(function(user) {
+		    	var userId = user.id;
+			var count = JudgementResource.count(
+				{'courseId': courseId, 'questionId': questionId, 'userId': userId}).
+				$promise.then(
+					function(ret) {
+						$scope.current = ret.count + 1;
+					},
+					function(ret) {
+						Toaster.reqerror("Unable to load number of evaluations completed.", ret);
+					}
+				);
+		});	
+
 		// get all the criterias we're using for this course
 		$scope.courseCriteria = {};
 		CriteriaResource.get({'courseId': courseId}).$promise.then(
@@ -125,7 +141,8 @@ module.controller(
 						evaluations['judgements'] = [];
 						angular.forEach(ret.objects,
 							function(judge, index) {
-								var temp = judge;								temp['comment'] = comments[judge.course_criterion.id];
+								var temp = judge;								
+								temp['comment'] = comments[judge.course_criterion.id];
 								evaluations['judgements'].push(temp);
 							}
 						);
@@ -133,8 +150,27 @@ module.controller(
 							{'courseId': courseId, 'questionId': questionId}, evaluations).
 							$promise.then(
 								function() {
-									Toaster.success("Judgement Submitted Successfully!");
-									$location.path('/course/' + courseId);
+									Session.getUser().then(function(user) {
+		    								var userId = user.id;
+										var count = JudgementResource.count(
+											{'courseId': courseId, 'questionId': questionId, 'userId': userId}).
+											$promise.then(
+												function(ret) {
+													if ($scope.question.num_judgement_req > ret.count) {
+														var left = $scope.question.num_judgement_req - ret.count;
+														Toaster.success("Judgement Submitted Successfully! Please submit " + left + " more evaluation(s).");
+														$route.reload();
+													} else {
+														Toaster.success("Judgement Submitted Successfully!");
+														$location.path('/course/' + courseId);
+													}
+												},
+												function(ret) {
+													Toaster.success("Judgement Submitted Successfully!");
+													$location.path('/course/' + courseId);
+												}
+											);
+									});
 								},
 								function(ret) {
 									Toaster.reqerror("Judgement Comment Submit Failed.", ret);
