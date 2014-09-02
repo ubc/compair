@@ -365,7 +365,7 @@ def _calculate_scores(course_id, question_id):
 			score = Scores.query.filter_by(answer=answer, course_criterion=course_criterion).first()
 			if not score:
 				score = Scores(answer=answer, course_criterion=course_criterion)
-			score.rounds = rounds[answer.id]
+			score.rounds = rounds.get(answer.id, 0)
 			score.score = wins.get_score(answer, course_criterion)
 			score.wins = wins.get_total_wins(answer, course_criterion)
 			db.session.add(score)
