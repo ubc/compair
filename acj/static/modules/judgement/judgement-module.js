@@ -160,6 +160,7 @@ module.controller(
 														var left = $scope.question.num_judgement_req - ret.count;
 														Toaster.success("Judgement Submitted Successfully! Please submit " + left + " more evaluation(s).");
 														$route.reload();
+														window.scrollTo(0, 0);
 													} else {
 														Toaster.success("Judgement Submitted Successfully!");
 														$location.path('/course/' + courseId);
