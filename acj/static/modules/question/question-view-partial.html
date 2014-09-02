@@ -72,7 +72,7 @@
 	<!-- Tabs -->
 	<ul class="nav nav-tabs" role="tablist">
 	  <li id="answers" class="active">
-		<a href="#answers-tab">Answers ({{question.answers_count}})</a>
+		<a href="#answers-tab">Answers <span ng-show="canManagePosts || !question.answer_period">({{question.answers_count}})</span></a>
 	  </li>
 	  <li id="comments">
 		<a href="#comments-tab">Comments ({{question.comments_count}})</a>
@@ -114,10 +114,10 @@
 				</p>
 			</div>
 			
-			<div class="all-answers" ng-if="judged_req_met || canManagePosts">
+			<div class="all-answers">
 			
 				<!-- Instructor Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="answer in instructor_answers" ng-show="canManagePosts">
+				<div class="each-answer clearfix" ng-repeat="answer in instructor_answers" ng-if="judged_req_met || canManagePosts">
 					
 					<!-- Answer Metadata Header -->
 					<a ng-href="#/user/{{answer.post.user.id}}">
@@ -204,8 +204,8 @@
 				</div><!-- closes each-answer (instructor) -->
 				
 				<!-- Student Answers Section -->
-				<!-- <div class="each-answer clearfix" ng-repeat="answer in answers | orderBy:order:reverse | notScoredEnd:sortby" ng-hide="instructors[answer.post.user.id]"> -->
-				<div class="each-answer clearfix" ng-repeat="answer in answers" ng-if="!instructors[answer.post.user.id]">
+				<!-- <div class="each-answer clearfix" ng-repeat="answer in answers | orderBy:order:reverse | notScoredEnd:sortby" ng-if="instructors[answer.post.user.id]"> -->
+				<div class="each-answer clearfix" ng-repeat="answer in answers" ng-if="!instructors[answer.post.user.id] && (judged_req_met || (answer.post.user.id == loggedInUserId && question.answer_period) || canManagePosts)">
 					
 					<!-- Answer Metadata Header -->
 					<a ng-href="#/user/{{answer.post.user.id}}">
