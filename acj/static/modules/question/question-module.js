@@ -68,7 +68,7 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 
 	var onComplete = function() {
 		return function(fileItem, response, status, headers) {
-			if (!('error' in response)) {
+			if (response) {
 				filename = response['name'];
 				alias = fileItem.file.name;	
 			}	

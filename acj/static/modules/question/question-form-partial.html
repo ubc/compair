@@ -26,7 +26,7 @@
 					</a>
 				</div>
 				<div class="col-md-1">
-					<a class="btn btn-danger btn-xs" ng-click="item.remove();resetName();" ng-disabled="!item.isUploaded">
+					<a class="btn btn-danger btn-xs" ng-click="item.remove();resetName();">
 						<i class="fa fa-trash-o"></i> Delete
 					</a>
 			</div>
@@ -48,7 +48,7 @@
 		<div class="form-group">
 			<label for="questionContent" class="required-star">Additional Information</label>
 			<textarea ckeditor rows="8"
-				ng-model="question.post.content" class="form-control" id="questionContent">
+				ng-model="question.post.content" class="form-control" id="questionContent" ng-required="!(uploader.queue.length || uploadedFile)">
 			</textarea>
 		</div>
 	</fieldset>
@@ -150,6 +150,6 @@
 	</fieldset>
 	
 	<input type="submit" class="btn btn-success btn-lg center-block" value="Save"
-		ng-disabled="questionForm.$invalid || submitted || uploader.isUploading" />
+		ng-disabled="questionForm.$invalid || submitted || (uploader.queue.length && uploader.progress != 100)" />
 	
 </form>
