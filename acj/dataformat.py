@@ -105,17 +105,15 @@ def getPosts(restrict_users=True):
 		'files': fields.Nested(getFilesForPosts())
 	}
 
-def getPostsForQuestions(restrict_users=True):
+def getPostsForQuestions(restrict_users=True, include_answers=True):
 	post = getPosts(restrict_users)
-	answer = getPostsForAnswers(restrict_users)
 	del post['course']
-	return {
+	ret = {
 		'id': fields.Integer,
 		'post': fields.Nested(post),
 		'title': fields.String,
 		'answers_count': fields.Integer,
 		'modified': fields.DateTime,
-		'answers': fields.List(fields.Nested(answer)),
 		'comments_count': fields.Integer,
 		'total_comments_count': fields.Integer,
 		'available': fields.Boolean,
@@ -129,6 +127,10 @@ def getPostsForQuestions(restrict_users=True):
 		'can_reply': fields.Boolean,
 		'num_judgement_req': fields.Integer
 	}
+	if include_answers:
+		answer = getPostsForAnswers(restrict_users)
+		ret['answers'] = fields.List(fields.Nested(answer))
+	return ret
 
 def getPostsForAnswers(restrict_users=True, include_comments=True):
 	post = getPosts(restrict_users)

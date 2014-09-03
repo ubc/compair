@@ -10,7 +10,7 @@ from acj.models import PostsForQuestions, Courses, Posts, CoursesAndUsers, Crite
 from acj.util import new_restful_api
 from acj.attachment import addNewFile, deleteFile
 
-import datetime, os
+import datetime
 import dateutil.parser
 
 questions_api = Blueprint('questions_api', __name__)
@@ -134,7 +134,7 @@ class QuestionRootAPI(Resource):
 		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses).filter_by(courses_id=course.id).join(AnswerPairings).all()
 		answered = PostsForAnswers.query.join(Posts).filter_by(courses_id=course_id).join(Users).filter_by(id=current_user.id).all()
 		return {
-			"questions":marshal(questions, dataformat.getPostsForQuestions(restrict_users)),
+			"questions":marshal(questions, dataformat.getPostsForQuestions(restrict_users, include_answers=False)),
 			"judgements":marshal(judgements, dataformat.getJudgements()),
 			"answered": marshal(answered, dataformat.getPostsForAnswers())
 		}
