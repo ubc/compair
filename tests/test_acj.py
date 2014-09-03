@@ -4,19 +4,16 @@ import copy
 from flask.ext.testing import TestCase
 from flask_bouncer import ensure
 from flask_login import login_user, logout_user
-import logging
 from werkzeug.exceptions import Unauthorized
 from acj import create_app, Users
 from acj.manage.database import populate
 from acj.core import db
-from acj.models import UserTypesForSystem, UserTypesForCourse, Courses, PostsForAnswers, PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, CoursesAndUsers, PostsForQuestions
+from acj.models import UserTypesForSystem, UserTypesForCourse, PostsForAnswers, PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, CoursesAndUsers, PostsForQuestions
 from data.fixtures import DefaultFixture
 from tests import test_app_settings
-from tests.factories import CoursesFactory, UsersFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, \
-	PostsForAnswersFactory, PostsForCommentsFactory,\
-	PostsForQuestionsAndPostsForCommentsFactory,\
-	PostsForAnswersAndPostsForCommentsFactory
-import datetime, pytz
+from tests.factories import UsersFactory
+import datetime
+from tests.test_data import SimpleTestData
 
 # Tests Checklist
 # - Unauthenticated users refused access with 401
@@ -50,103 +47,10 @@ class ACJTestCase(TestCase):
 	def logout(self):
 		return self.client.delete('/login/logout', follow_redirects=True)
 
-class TestData():
-	def __init__(self):
-		self.course = CoursesFactory()
-		db.session.commit()
-		# create 2 instructors and 2 students, 1 of each will be enroled in the course
-		self.unenroled_instructor = self.create_user(UserTypesForSystem.TYPE_INSTRUCTOR)
-		self.unenroled_student = self.create_user(UserTypesForSystem.TYPE_NORMAL)
-		self.enroled_instructor = self.create_user(UserTypesForSystem.TYPE_INSTRUCTOR)
-		self.enrol_user(self.enroled_instructor, self.course, UserTypesForCourse.TYPE_INSTRUCTOR)
-		self.enroled_student = self.create_user(UserTypesForSystem.TYPE_NORMAL)
-		self.enrol_user(self.enroled_student, self.course, UserTypesForCourse.TYPE_STUDENT)
-		# add 2 questions, each with 2 answers, to the course
-		self.questions = []
-		self.answers = []
-		answer_start = datetime.datetime.now() - datetime.timedelta(days=2)
-		answer_end = datetime.datetime.now() - datetime.timedelta(days=1)
-		question = self.create_question(self.course, self.enroled_instructor, answer_start, answer_end)
-		self.questions.append(question)
-		answer = self.create_answer(question, self.enroled_student)
-		self.answers.append(answer)
-
-		self.post_answer_comment(self.enroled_student, self.course, question, answer)
-		answer = self.create_answer(question, self.enroled_student)
-		self.answers.append(answer)
-		self.post_question_comment(self.enroled_student, self.course, question)
-		answer_start = datetime.datetime.now()
-		answer_end = datetime.datetime.now() +  datetime.timedelta(days=7)
-		question = self.create_question(self.course, self.enroled_instructor, answer_start, answer_end)
-		self.questions.append(question)
-		answer = self.create_answer(question, self.enroled_student)
-		self.answers.append(answer)
-		answer = self.create_answer(question, self.enroled_student)
-		self.answers.append(answer)
-
-	def create_answer(self, question, author):
-		post = PostsFactory(courses_id = question.post.courses_id, users_id = author.id)
-		db.session.commit()
-		answer = PostsForAnswersFactory(postsforquestions_id=question.id, posts_id = post.id)
-		db.session.commit()
-		return answer
-
-	def create_question(self, course, author, answer_start, answer_end):
-		post = PostsFactory(courses_id = course.id, users_id = author.id)
-		db.session.commit()
-		question = PostsForQuestionsFactory(posts_id = post.id, answer_start = answer_start, answer_end = answer_end)
-		db.session.commit()
-		return question
-
-	def create_user(self, type):
-		sys_type = UserTypesForSystem.query.filter_by(name=type). \
-			first()
-		user = UsersFactory(usertypesforsystem_id=sys_type.id)
-		db.session.commit()
-		return user
-
-	def enrol_user(self, user, course, type):
-		course_type = UserTypesForCourse.query. \
-			filter_by(name=type).first()
-		CoursesAndUsersFactory(courses_id=course.id, users_id=user.id,
-							   usertypesforcourse_id=course_type.id)
-		db.session.commit()
-
-	def post_question_comment(self, author, course, question):
-		post = PostsFactory(courses_id = course.id, users_id = author.id)
-		db.session.commit()
-		comment = PostsForCommentsFactory(posts_id = post.id)
-		db.session.commit()
-		quesComment = PostsForQuestionsAndPostsForCommentsFactory(postsforcomments_id = comment.id, postsforquestions_id = question.id)
-		db.session.commit()
-
-	def post_answer_comment(self, author, course, question, answer):
-		post = PostsFactory(courses_id = course.id, users_id = author.id)
-		db.session.commit()
-		comment = PostsForCommentsFactory(posts_id = post.id)
-		db.session.commit()
-		answerComment = PostsForAnswersAndPostsForCommentsFactory(postsforcomments_id = comment.id, postsforanswers_id = answer.id)
-		db.session.commit()
-
-	def get_course(self):
-		return self.course
-	def get_enroled_instructor(self):
-		return self.enroled_instructor
-	def get_unenroled_instructor(self):
-		return self.unenroled_instructor
-	def get_enroled_student(self):
-		return self.enroled_student
-	def get_unenroled_student(self):
-		return self.unenroled_student
-	def get_questions(self):
-		return self.questions
-	def get_answers(self):
-		return self.answers
-
 class CoursesAPITests(ACJTestCase):
 	def setUp(self):
 		super(CoursesAPITests, self).setUp()
-		self.data = TestData()
+		self.data = SimpleTestData()
 
 	def _verify_course_info(self, course_expected, course_actual):
 		self.assertEqual(course_expected.name, course_actual['name'],
@@ -348,7 +252,7 @@ class UsersAPITests(ACJTestCase):
 class QuestionsAPITests(ACJTestCase):
 	def setUp(self):
 		super(QuestionsAPITests, self).setUp()
-		self.data = TestData()
+		self.data = SimpleTestData()
 		self.url = '/api/courses/' + str(self.data.get_course().id) + '/questions'
 
 	def test_get_single_question(self):
@@ -472,7 +376,7 @@ class QuestionsAPITests(ACJTestCase):
 class AnswersAPITests(ACJTestCase):
 	def setUp(self):
 		super(AnswersAPITests, self).setUp()
-		self.data = TestData()
+		self.data = SimpleTestData()
 		self.question = self.data.get_questions()[1]
 		self.base_url = self._build_url(self.data.get_course().id, self.question.id)
 
@@ -630,7 +534,7 @@ class AnswersAPITests(ACJTestCase):
 class QuestionCommentsAPITests(ACJTestCase):
 	def setUp(self):
 		super(QuestionCommentsAPITests, self).setUp()
-		self.data = TestData()
+		self.data = SimpleTestData()
 		self.question = self.data.get_questions()[0]
 		self.answer = self.data.get_answers()[0]
 		self.url = '/api/courses/' + str(self.data.get_course().id) + '/questions/' + \
@@ -734,7 +638,7 @@ class QuestionCommentsAPITests(ACJTestCase):
 class AnswerCommentsAPITests(ACJTestCase):
 	def setUp(self):
 		super(AnswerCommentsAPITests, self).setUp()
-		self.data = TestData()
+		self.data = SimpleTestData()
 		self.question = self.data.get_questions()[0]
 		self.answer = self.data.get_answers()[0]
 		self.url = '/api/courses/' + str(self.data.get_course().id) + \
@@ -843,7 +747,7 @@ class AnswerCommentsAPITests(ACJTestCase):
 class ClassListsAPITests(ACJTestCase):
 	def setUp(self):
 		super(ClassListsAPITests, self).setUp()
-		self.data = TestData()
+		self.data = SimpleTestData()
 		self.courseId = str(self.data.get_course().id)
 		self.url = '/api/courses/' + str(self.data.get_course().id) + '/users'
 
@@ -882,7 +786,7 @@ class ClassListsAPITests(ACJTestCase):
 class JudgementAPITests(ACJTestCase):
 	def setUp(self):
 		super(JudgementAPITests, self).setUp()
-		self.data = TestData()
+		self.data = SimpleTestData()
 		self.course= self.data.get_course()
 		self.question = self.data.get_questions()[0]
 		self.base_url = self._build_url(self.course.id, self.question.id)
