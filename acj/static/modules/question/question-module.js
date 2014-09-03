@@ -23,14 +23,12 @@ module.directive(
 	'confirmationNeeded',
 	function () {
 		return {
-			priority: 1,
 			restrict: 'A',
 			link: function(scope, element, attrs){
 				var msg = "Are you sure you want to delete this "+attrs.confirmationNeeded+"?";
-				var clickAction = attrs.ngClick;
 				element.bind('click', function() {
 					if ( window.confirm(msg) ) {
-						scope.$eval(clickAction);
+						return true;
 					} else {
 						return false;
 					}
