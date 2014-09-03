@@ -241,7 +241,8 @@ class JudgementPairAPI(Resource):
 					answerpairing.answer2 = scores_sorted.pop().answer
 				else: # only 1 answer left, need to reuse a previously paired answer
 					answerpairing.answer1 = scores_sorted.pop().answer
-					odd_one_out_partner = random.choice(answers)
+					random_pair = random.choice(score_matched_pairings.values())
+					odd_one_out_partner = random.choice([random_pair.answer1, random_pair.answer2])
 					answerpairing.answer2 = odd_one_out_partner
 				db.session.add(answerpairing)
 				score_matched_pairings[answerpairing.id] = answerpairing
