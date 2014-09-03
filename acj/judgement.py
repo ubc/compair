@@ -116,10 +116,11 @@ class JudgementPairAPI(Resource):
 		if len(answers) < 2:
 			return {"error":"Insufficient answers available for judgement."}, 400
 		current_app.logger.debug("Checking judgement round for this question.")
-		current_round_pairings = AnswerPairings.query.filter_by(
-			postsforquestions_id=question_id, round=func.max(AnswerPairings.round).select()).all()
 		round = _get_judgement_round(question_id)
 		current_app.logger.debug("We're in round " + str(round))
+		# all existing pairings for this question and this round
+		current_round_pairings = AnswerPairings.query.filter_by(postsforquestions_id=question_id,
+																round=round).all()
 		if round == 1 and not current_round_pairings:
 			current_round_pairings = self._generate_random_pairings(question_id, answers)
 		# check to see if we've used up all pairs
@@ -263,8 +264,11 @@ api.add_resource(UserJudgementCount, '/count/users/<int:user_id>')
 
 def _get_judgement_round(question_id):
 	round = 1
-	current_round_pairing = AnswerPairings.query.filter_by(
-		postsforquestions_id=question_id, round=func.max(AnswerPairings.round).select()).first()
+	# all answer pairings for this question
+	all_round_pairings = AnswerPairings.query.filter_by(postsforquestions_id=question_id).subquery()
+	# get max round from all answer pairings for this question
+	current_round_pairing = AnswerPairings.query.outerjoin(all_round_pairings, AnswerPairings.id == all_round_pairings.c.id). \
+		filter_by(round=func.max(all_round_pairings.c.round).select()).first()
 	if current_round_pairing:
 		round = current_round_pairing.round
 	return round
