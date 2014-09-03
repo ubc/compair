@@ -41,6 +41,18 @@ module.factory(
 	}
 );
 
+module.factory(
+	"UserAnswerCommentResource",
+	function ($resource)
+	{
+		var ret = $resource(
+			'/api/courses/:courseId/questions/:questionId/answers/:answerId/users/comments'
+		);
+		ret.MODEL = "PostsForAnswersAndPostsForComments";
+		return ret;
+	}
+)
+
 /***** Controllers *****/
 module.controller(
 	"QuestionCommentCreateController",

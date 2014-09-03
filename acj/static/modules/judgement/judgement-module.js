@@ -49,7 +49,7 @@ module.constant('required_rounds', 6);
 module.controller(
 	'JudgementController', 
 	function($log, $location, $route, $scope, $timeout, $routeParams, $anchorScroll, QuestionResource, AnswerResource,
-		CriteriaResource, JudgementResource, AnswerCommentResource, EvalCommentResource, Session, Toaster) 
+		CriteriaResource, JudgementResource, AnswerCommentResource, EvalCommentResource, UserAnswerCommentResource, Session, Toaster)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
@@ -95,11 +95,25 @@ module.controller(
 		// get an answerpair to be judged from the server
 		$scope.answerPair = {};
 		$scope.answerPairError = false;
+		$scope.ansComments = {answer1: true, answer2: true};
 		JudgementResource.getAnswerPair(
 			{'courseId': courseId, 'questionId': questionId}).$promise.then(
 				function (ret)
 				{
 					$scope.answerPair = ret;
+					angular.forEach($scope.ansComments, function(value, key) {
+						UserAnswerCommentResource.get({'courseId':courseId, 'questionId':questionId,
+							'answerId': ret[key]['id']}).$promise.then(
+								function (ret) {
+									if (ret.object.length) {
+										$scope.answerPair[key]['comment'] = ret.object['0'].postsforcomments;
+										$scope.answerPair[key]['comment']['post']['id'] = ret.object['0'].id;
+										$scope.ansComments[key] = false;
+									}
+								},
+								function (ret) {}
+						);
+					});
 				},
 				function (ret)
 				{
@@ -183,26 +197,32 @@ module.controller(
 					}
 			);
 			// save comments for each individual answer
-			AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': $scope.answerPair.answer1.id},
-				$scope.answerPair.answer1.post.comment).$promise.then(
-					function (ret)
-					{
-					},
-					function (ret)
-					{
-						Toaster.reqerror("Unable to post new comment.", ret);
-					}
-			);
-			AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': $scope.answerPair.answer2.id},
-				$scope.answerPair.answer2.post.comment).$promise.then(
-					function (ret)
-					{
-					},
-					function (ret)
-					{
-						Toaster.reqerror("Unable to post new comment.", ret);
-					}
-			);
+			angular.forEach($scope.ansComments, function(value, key) {
+				if (value) {
+					// save new comment
+					AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': $scope.answerPair[key]['id']},
+						$scope.answerPair[key]['comment']['post']).$promise.then(
+							function (ret)
+							{},
+							function (ret)
+							{
+								Toaster.reqerror("Unable to post new comment.", ret);
+							}
+					);
+				} else {
+					// update previous comment
+					AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': $scope.answerPair[key]['id'],
+						'commentId': $scope.answerPair[key]['comment']['post']['id']},
+						$scope.answerPair[key]['comment']['post']).$promise.then(
+							function (ret)
+							{},
+							function (ret)
+							{
+								Toaster.reqerror("Unable to post new comment.", ret);
+							}
+					);
+				}
+			});
 		};
 
 		// flag answer for instructor

@@ -15,6 +15,9 @@ apiQ = new_restful_api(commentsforquestions_api)
 commentsforanswers_api = Blueprint('commentsforanswers_api', __name__)
 apiA = new_restful_api(commentsforanswers_api)
 
+usercommentsforanswers_api = Blueprint('usercommentsforanswers_api', __name__)
+apiU = new_restful_api(usercommentsforanswers_api)
+
 new_comment_parser = RequestParser()
 new_comment_parser.add_argument('content', type=str, required=True)
 
@@ -161,3 +164,15 @@ class AnswerCommentIdAPI(Resource):
 		db.session.commit()
 		return {'id': comment.id}
 apiA.add_resource(AnswerCommentIdAPI, '/<int:comment_id>')
+
+# /
+class UserAnswerCommentIdAPI(Resource):
+	@login_required
+	def get(self, course_id, question_id, answer_id):
+		course = Courses.query.get_or_404(course_id)
+		question = PostsForQuestions.query.get_or_404(question_id)
+		answer = PostsForAnswers.query.get_or_404(answer_id)
+		comments = PostsForAnswersAndPostsForComments.query.filter_by(postsforanswers_id=answer_id)\
+			.join(PostsForComments, Posts).filter(Posts.users_id==current_user.id).all()
+		return {'object':marshal(comments, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())}
+apiU.add_resource(UserAnswerCommentIdAPI, '')

@@ -84,7 +84,7 @@
 						<i class="fa fa-arrow-down"></i>
 					</label>
 					<textarea
-						ng-model="answerPair.answer1.post.comment.content" rows="8" ckeditor required>
+						ng-model="answerPair.answer1.comment.post.content" rows="8" ckeditor required>
 					</textarea>
 				</div>
 				<div class="col-md-6">
@@ -93,7 +93,7 @@
 						<i class="fa fa-arrow-down"></i>
 					</label>
 					<textarea
-						ng-model="answerPair.answer2.post.comment.content" rows="8" ckeditor required>
+						ng-model="answerPair.answer2.comment.post.content" rows="8" ckeditor required>
 					</textarea>
 				</div>
 			</div>
@@ -102,7 +102,7 @@
 		
 		<div class="form-group">
 			<input
-				ng-disabled="!(!!answerPair.answer1.post.comment.content && !!answerPair.answer2.post.comment.content)"
+				ng-disabled="!(!!answerPair.answer1.comment.post.content && !!answerPair.answer2.comment.post.content)"
 				ng-click="isStep2Shown = !isStep2Shown; showNext('#step-2');"
 				ng-show="!isStep2Shown"
 				value="Next" class="btn btn-success btn-lg center-block" />
