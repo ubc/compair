@@ -1,5 +1,5 @@
 from bouncer.constants import EDIT, CREATE
-from flask import Blueprint, Flask, request
+from flask import Blueprint, Flask, request, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
@@ -183,6 +183,7 @@ class ClasslistRootAPI(Resource):
 			filename = unique + secure_filename(file.filename)
 			tmpName = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 			file.save(tmpName)
+			current_app.logger.debug("Importing for course " + str(course_id) + " with " + filename)
 			with open(tmpName, 'rU') as csvfile:
 				spamreader = csv.reader(csvfile)
 				users = []
@@ -190,6 +191,8 @@ class ClasslistRootAPI(Resource):
 					if row:
 						users.append(row)
 				results = import_users(course_id, users)
+			os.remove(os.path.join(app.config['UPLOAD_FOLDER'], tmpName))
+			current_app.logger.debug("Class Import for course " + str(course_id) + " is successful. Removed file.")
 			return results
 		else:
 			return {'error':'Wrong file type'}, 400

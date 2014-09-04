@@ -1,5 +1,5 @@
 from bouncer.constants import EDIT, CREATE
-from flask import Blueprint, Flask, request
+from flask import Blueprint, Flask, request, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from acj import dataformat, db
@@ -32,6 +32,7 @@ class AttachmentAPI(Resource):
 			name = str(uuid.uuid4()) + '.pdf'
 			tmpName = os.path.join(app.config['UPLOAD_FOLDER'], name)
 			file.save(tmpName)
+			current_app.logger.debug("Temporarily saved tmpUpload/" + name)
 			return {'name': name} 
 		return False
 api.add_resource(AttachmentAPI, '')
@@ -57,6 +58,7 @@ class AttachmentPostIdFileIdAPI(Resource):
 			os.remove(tmpName)
 			db.session.delete(file)
 			db.session.commit()
+			current_app.logger.debug("SuccessFully deleted " + file.name + " for post " + str(post_id))
 
 api.add_resource(AttachmentPostIdFileIdAPI, '/post/<int:post_id>/<int:file_id>')
 
@@ -68,6 +70,7 @@ def addNewFile(alias, name, course_id, question_id, post_id):
 	file = FilesForPosts(posts_id=post_id, author_id=current_user.id, name=tmpName, alias=alias)
 	db.session.add(file)
 	db.session.commit()
+	current_app.logger.debug("Moved and renamed " + name + " from " + app.config['UPLOAD_FOLDER'] + " to " + os.path.join(app.config['PERMANENT_UPLOAD_FOLDER'], tmpName))
 
 # delete file from Post
 def deleteFile(post_id):
@@ -75,3 +78,4 @@ def deleteFile(post_id):
 	file = FilesForPosts.query.filter_by(posts_id=post_id).first()
 	if file:
 		os.remove(os.path.join(app.config['PERMANENT_UPLOAD_FOLDER'], file.name))
+		current_app.logger.debug("Successfully deleted file " + file.name + " for post " + str(post_id))

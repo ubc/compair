@@ -37,6 +37,15 @@ module.service('importService', function(FileUploader, $location, CourseResource
 			queueLimit: 1,
 			removeAfterUpload: true
 		});
+
+		uploader.filters.push({
+			name: 'pdfFilter',
+			fn: function(item, options) {
+				var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
+				return '|csv|'.indexOf(type) !== -1;
+			}
+		});
+
 		return uploader;
 	}
 

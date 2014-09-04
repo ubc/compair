@@ -83,6 +83,14 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 		uploader.onCompleteItem = onComplete();
 		uploader.onErrorItem = onError();
 
+		uploader.filters.push({
+			name: 'pdfFilter',
+			fn: function(item, options) {
+				var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
+				return '|pdf|'.indexOf(type) !== -1;
+			}
+		});
+
 		return uploader;
 	}
 
