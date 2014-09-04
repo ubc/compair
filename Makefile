@@ -46,3 +46,6 @@ testci:
 
 run:
 	python manage.py runserver -h 0.0.0.0
+
+rundev:
+	python manage.py runserver -h 0.0.0.0 -dr

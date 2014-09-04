@@ -26,7 +26,7 @@ Developer Installation
 	
 ### Start Up the ACJ server
 
-	vagrant ssh -c "cd /vagrant && make run"
+	vagrant ssh -c "cd /vagrant && make rundev"
 	
 Now you should be able to open your browser and access ACJ instance using the following address:
 
