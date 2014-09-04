@@ -336,10 +336,6 @@ class PostsForQuestions(db.Model):
 	def comments_count(self):
 		return len(self.comments)
 	@hybrid_property
-	def total_comments_count(self):
-		counts = [a.comments_count for a in self.answers]
-		return (sum(counts) + self.comments_count)
-	@hybrid_property
 	def answers(self):
 		return sorted(self._answers, key=lambda answer: answer.post.created, reverse=True)
 	@hybrid_property

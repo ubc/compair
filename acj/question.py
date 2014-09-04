@@ -3,7 +3,7 @@ from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, or_, func
 from acj import dataformat, db
 from acj.authorization import allow, require
 from acj.models import PostsForQuestions, Courses, Posts, CoursesAndUsers, CriteriaAndCourses, UserTypesForCourse, PostsForAnswers, AnswerPairings, Judgements, Users
@@ -131,11 +131,15 @@ class QuestionRootAPI(Resource):
 			questions = PostsForQuestions.query.join(Posts).filter(Posts.courses_id==course_id).\
 				filter(or_(PostsForQuestions.answer_start==None,now >= PostsForQuestions.answer_start)).\
 				order_by(desc(Posts.created)).all()
-		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses).filter_by(courses_id=course.id).join(AnswerPairings).all()
+		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses)\
+			.filter_by(courses_id=course.id).join(AnswerPairings)\
+			.group_by(AnswerPairings.postsforquestions_id)\
+			.add_columns(func.count(Judgements.id), AnswerPairings.postsforquestions_id).all()
+		judgements = {x[2]: x[1] for x in judgements} # postsforquestions_id: count
 		answered = PostsForAnswers.query.join(Posts).filter_by(courses_id=course_id).join(Users).filter_by(id=current_user.id).all()
 		return {
 			"questions":marshal(questions, dataformat.getPostsForQuestions(restrict_users, include_answers=False)),
-			"judgements":marshal(judgements, dataformat.getJudgements()),
+			"judgements":judgements,
 			"answered": marshal(answered, dataformat.getPostsForAnswers())
 		}
 	@login_required

@@ -90,23 +90,15 @@ module.controller(
 			function (ret)
 			{
 				$scope.questions = ret.questions;
-				var judge = ret.judgements;
-				count = {}
-				for (id in judge) {
-					quesId = judge[id].answerpairing.postsforquestions_id;
-					if (!(quesId in count))
-						count[quesId] = 0;
-					count[quesId]++;
-				}
-				
+				var judged = ret.judgements;
 				var required = 0;
 				for (key in ret.questions) {
 					ques = ret.questions[key];
 					required = ques.num_judgement_req;
-					if (!(ques.id in count))
-						count[ques.id] = 0;
-					ques['left'] = count[ques.id] <= required ?
-						required - count[ques.id] : 0;
+					if (!(ques.id in judged))
+						judged[ques.id] = 0;
+					ques['left'] = judged[ques.id] <= required ?
+						required - judged[ques.id] : 0;
 				}
 
 				$scope.answered = {};

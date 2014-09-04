@@ -115,7 +115,6 @@ def getPostsForQuestions(restrict_users=True, include_answers=True):
 		'answers_count': fields.Integer,
 		'modified': fields.DateTime,
 		'comments_count': fields.Integer,
-		'total_comments_count': fields.Integer,
 		'available': fields.Boolean,
 		'answer_period': fields.Boolean,
 		'judging_period': fields.Boolean,
