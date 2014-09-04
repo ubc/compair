@@ -74,4 +74,4 @@ def deleteFile(post_id):
 	# TODO: delete ALL files under post with post_id
 	file = FilesForPosts.query.filter_by(posts_id=post_id).first()
 	if file:
-		os.remove.remove(app.config['PERMANENT_UPLOAD_FOLDER'], file.name)
+		os.remove(os.path.join(app.config['PERMANENT_UPLOAD_FOLDER'], file.name))

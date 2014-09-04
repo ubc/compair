@@ -10,8 +10,6 @@ from acj.models import Posts, PostsForAnswers, PostsForQuestions, Courses, Posts
 from acj.util import new_restful_api
 from acj.attachment import addNewFile, deleteFile
 
-import os
-
 answers_api = Blueprint('answers_api', __name__)
 api = new_restful_api(answers_api)
 
