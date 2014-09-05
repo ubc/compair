@@ -10,8 +10,7 @@ from acj.models import PostsForQuestions, Courses, Posts, CoursesAndUsers, Crite
 from acj.util import new_restful_api
 from acj.attachment import addNewFile, deleteFile
 
-import datetime
-import dateutil.parser
+import datetime, dateutil.parser
 
 questions_api = Blueprint('questions_api', __name__)
 api = new_restful_api(questions_api)
@@ -131,16 +130,8 @@ class QuestionRootAPI(Resource):
 			questions = PostsForQuestions.query.join(Posts).filter(Posts.courses_id==course_id).\
 				filter(or_(PostsForQuestions.answer_start==None,now >= PostsForQuestions.answer_start)).\
 				order_by(desc(Posts.created)).all()
-		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses)\
-			.filter_by(courses_id=course.id).join(AnswerPairings)\
-			.group_by(AnswerPairings.postsforquestions_id)\
-			.add_columns(func.count(Judgements.id), AnswerPairings.postsforquestions_id).all()
-		judgements = {x[2]: x[1] for x in judgements} # postsforquestions_id: count
-		answered = PostsForAnswers.query.join(Posts).filter_by(courses_id=course_id).join(Users).filter_by(id=current_user.id).all()
 		return {
-			"questions":marshal(questions, dataformat.getPostsForQuestions(restrict_users, include_answers=False)),
-			"judgements":judgements,
-			"answered": marshal(answered, dataformat.getPostsForAnswers())
+			"questions":marshal(questions, dataformat.getPostsForQuestions(restrict_users, include_answers=False))
 		}
 	@login_required
 	def post(self, course_id):

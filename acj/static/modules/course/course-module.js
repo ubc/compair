@@ -23,7 +23,9 @@ module.factory('CourseResource', function($q, $routeParams, $log, $resource)
 		{
 			// would enable caching for GET but there's no automatic cache
 			// invalidation, I don't want to deal with that manually
-			'getQuestions': {url: '/api/courses/:id/questions'}
+			'getQuestions': {url: '/api/courses/:id/questions'},
+			'getJudgementCount': {url: '/api/courses/:id/judgements/count'},
+			'getAnswered': {url: '/api/courses/:id/answers/count'}
 		}
 	);
 	ret.MODEL = "Courses"; // add constant to identify the model
@@ -64,7 +66,8 @@ module.controller(
 
 module.controller(
 	'CourseQuestionsController',
-	function($scope, $log, $routeParams, CourseResource, QuestionResource, Authorize, AuthenticationService, required_rounds, Toaster)
+	function($scope, $log, $routeParams, CourseResource, QuestionResource, Authorize,
+			 AuthenticationService, required_rounds, Toaster)
 	{
 		// get course info
 		var courseId = $scope.courseId = $routeParams['courseId'];
@@ -90,26 +93,36 @@ module.controller(
 			function (ret)
 			{
 				$scope.questions = ret.questions;
-				var judged = ret.judgements;
-				var required = 0;
-				for (key in ret.questions) {
-					ques = ret.questions[key];
-					required = ques.num_judgement_req;
-					if (!(ques.id in judged))
-						judged[ques.id] = 0;
-					ques['left'] = judged[ques.id] <= required ?
-						required - judged[ques.id] : 0;
-				}
-
-				$scope.answered = {};
-				for (key in ret.answered) {
-					$scope.answered[ret.answered[key].postsforquestions_id] = 1;	
-				}
+				CourseResource.getJudgementCount({'id': courseId}).$promise.then(
+					function (ret) {
+						var judged = ret.judgements;
+						var required = 0;
+						for (key in $scope.questions) {
+							ques = $scope.questions[key];
+							required = ques.num_judgement_req;
+							if (!(ques.id in judged))
+								judged[ques.id] = 0;
+							ques['left'] = judged[ques.id] <= required ?
+								required - judged[ques.id] : 0;
+						}
+					},
+					function (ret) {
+						Toaster.reqerror("Unable to retrieve your judgement counts.", ret)
+					}
+				);
 			},
 			function (ret)
 			{
 				Toaster.reqerror("Unable to retrieve course questions: " +
 					courseId, ret);
+			}
+		);
+		CourseResource.getAnswered({'id': courseId}).$promise.then(
+			function(ret) {
+				$scope.answered = ret.answered;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve your answer history.", ret)
 			}
 		);
 	}

@@ -75,9 +75,11 @@ def create_app(conf=config, settings_override={}):
 	app.register_blueprint(user_types_api, url_prefix='/api/usertypes')
 	from .question import questions_api
 	app.register_blueprint(questions_api, url_prefix='/api/courses/<int:course_id>/questions')
-	from .answer import answers_api
+	from .answer import answers_api, all_answers_api
 	app.register_blueprint(answers_api,
 		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answers')
+	app.register_blueprint(all_answers_api,
+		url_prefix='/api/courses/<int:course_id>/answers')
 	from .attachment import attachment_api
 	app.register_blueprint(attachment_api,
 		url_prefix='/api/attachment')
@@ -89,9 +91,11 @@ def create_app(conf=config, settings_override={}):
 	app.register_blueprint(evalcomments_api, url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/judgements/comments')
 	from .criteria import criteria_api
 	app.register_blueprint(criteria_api, url_prefix='/api/courses/<int:course_id>/criteria')
-	from .judgement import judgements_api
+	from .judgement import judgements_api, all_judgements_api
 	app.register_blueprint(judgements_api,
 		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/judgements')
+	app.register_blueprint(all_judgements_api,
+		url_prefix='/api/courses/<int:course_id>/judgements')
 
 
 	@app.route('/')

@@ -6,12 +6,15 @@ from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from acj import dataformat, db
 from acj.authorization import require, allow, is_user_access_restricted
-from acj.models import Posts, PostsForAnswers, PostsForQuestions, Courses, PostsForAnswersAndPostsForComments, FilesForPosts
+from acj.models import Posts, PostsForAnswers, PostsForQuestions, Courses, Users
 from acj.util import new_restful_api
 from acj.attachment import addNewFile, deleteFile
 
 answers_api = Blueprint('answers_api', __name__)
 api = new_restful_api(answers_api)
+
+all_answers_api = Blueprint('all_answers_api', __name__)
+apiAll = new_restful_api(all_answers_api)
 
 new_answer_parser = RequestParser()
 new_answer_parser.add_argument('post', type=dict, default={})
@@ -130,3 +133,11 @@ class AnswerFlagAPI(Resource):
 		return marshal(answer,
 			dataformat.getPostsForAnswers(restrict_users=is_user_access_restricted(current_user)))
 api.add_resource(AnswerFlagAPI, '/<int:answer_id>/flagged')
+
+class AnsweredAPI(Resource):
+	@login_required
+	def get(self, course_id):
+		answered = PostsForAnswers.query.join(Posts).filter_by(courses_id=course_id).join(Users).filter_by(id=current_user.id).all()
+		answered = {x.postsforquestions_id: 1 for x in answered}
+		return {'answered': answered}
+apiAll.add_resource(AnsweredAPI, '/count')

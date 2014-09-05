@@ -19,6 +19,9 @@ judgements_api = Blueprint('judgements_api', __name__)
 # Then pack the blueprint into a Flask-Restful API
 api = new_restful_api(judgements_api)
 
+all_judgements_api = Blueprint('all_judgements_api', __name__)
+apiAll = new_restful_api(all_judgements_api)
+
 new_judgement_parser = RequestParser()
 new_judgement_parser.add_argument('answerpair_id', type=int, required=True,
 								  help="Missing answer pair id.")
@@ -261,6 +264,20 @@ class UserJudgementCount(Resource):
 			 AnswerPairings.postsforquestions_id==question_id).all()
 		return {"count":len(judgements)}
 api.add_resource(UserJudgementCount, '/count/users/<int:user_id>')
+
+# /count
+class UserAllJudgementCount(Resource):
+	@login_required
+	def get(self, course_id):
+		course = Courses.query.get_or_404(course_id)
+		require(READ, course)
+		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses)\
+			.filter_by(courses_id=course.id).join(AnswerPairings)\
+			.group_by(AnswerPairings.postsforquestions_id)\
+			.add_columns(func.count(Judgements.id), AnswerPairings.postsforquestions_id).all()
+		judgements = {x[2]: x[1] for x in judgements} # postsforquestions_id: count
+		return {'judgements': judgements}
+apiAll.add_resource(UserAllJudgementCount, '/count')
 
 def _get_judgement_round(question_id):
 	round = 1
