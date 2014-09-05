@@ -12,6 +12,7 @@ var module = angular.module('ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.comment',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.mathjax',
+		'ubc.ctlt.acj.criteria',
 		'ubc.ctlt.acj.judgement',
 		'ubc.ctlt.acj.toaster',
 		'ubc.ctlt.acj.session'
@@ -45,7 +46,10 @@ module.factory(
 	{
 		var ret = $resource(
 			'/api/courses/:courseId/questions/:questionId',
-			{questionId: '@id'}
+			{questionId: '@id'},
+			{
+				'getAnswered': {url: '/api/courses/:id/questions/:questionId/answers/count'}
+			}
 		);
 		ret.MODEL = "PostsForQuestions";
 		return ret;
@@ -148,7 +152,8 @@ module.filter("notScoredEnd", function () {
 
 /***** Controllers *****/
 module.controller("QuestionViewController",
-	function($scope, $log, $routeParams, AnswerResource, Authorize, QuestionResource, QuestionCommentResource, AttachmentResource, required_rounds, Session, Toaster)
+	function($scope, $log, $routeParams, AnswerResource, Authorize, QuestionResource, QuestionCommentResource,
+			 AttachmentResource, CriteriaResource, JudgementResource, CourseResource, required_rounds, Session, Toaster)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
@@ -168,7 +173,7 @@ module.controller("QuestionViewController",
 					ret.question.judge_start = new Date(ret.question.judge_start);
 					ret.question.judge_end = new Date(ret.question.judge_end);
 					$scope.question = ret.question;
-					$scope.criteria = ret.criteria;
+
 					$scope.sortby = '0';
 					$scope.order = 'answer.post.created';
 					$scope.answers = ret.question.answers;
@@ -181,17 +186,17 @@ module.controller("QuestionViewController",
 						}
 					}
 
-					var instructors = {}
-					for (key in ret.instructors) {
-						instructors[ret.instructors[key].user.id] = ret.instructors[key].usertypeforcourse.name;
-					}
-					$scope.instructors = instructors;
-					$scope.instructor_answers = ret.instructor_answers;
-
-					$scope.answered = ret.answers > 0;
-					var required = ret.question.num_judgement_req;
-					$scope.judged_req_met = $scope.canManagePosts || ret.judged >= required;
 					$scope.readDate = Date.parse(ret.question.post.created);
+
+					JudgementResource.count({'courseId': $scope.courseId, 'questionId': questionId,
+								'userId': $scope.loggedInUserId}).$promise.then(
+						function (ret) {
+							$scope.judged_req_met = $scope.canManagePosts || ret.count > $scope.question.num_judgement_req;
+						},
+						function (ret) {
+							Toaster.reqerror("Unable to retrieve the evaluation count", ret);
+						}
+					);
 					AttachmentResource.get({'postId': ret.question.post.id}).$promise.then(
 						function (ret) {
 							$scope.question.uploadedFile = ret.file;
@@ -218,6 +223,32 @@ module.controller("QuestionViewController",
 					Toaster.reqerror("Unable to retrieve comments.", ret);
 				}
 			);
+		CriteriaResource.get({'courseId': $scope.courseId}).$promise.then(
+			function (ret) {
+				$scope.criteria = ret.objects;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve the criteria.", ret);
+			}
+		);
+		QuestionResource.getAnswered({'id': $scope.courseId,
+			'questionId': questionId}).$promise.then(
+				function (ret) {
+					$scope.answered = ret.answered > 0;
+				},
+				function (ret) {
+					Toaster.reqerror("Unable to retrieve your answers", ret);
+				}
+		);
+
+		CourseResource.getInstructors({'id': $scope.courseId}).$promise.then(
+			function (ret) {
+				$scope.instructors = ret.instructors;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve instructors", ret);
+			}
+		);
 		// enable tabs
 		$('#answers a').click(function (e) {
 			e.preventDefault();

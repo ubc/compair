@@ -117,7 +117,7 @@
 			<div class="all-answers">
 			
 				<!-- Instructor Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="answer in instructor_answers" ng-if="judged_req_met || canManagePosts">
+				<div class="each-answer clearfix" ng-repeat="answer in answers" ng-if="instructors[answer.post.user.id] && (judged_req_met || canManagePosts)">
 					
 					<!-- Answer Metadata Header -->
 					<a ng-href="#/user/{{answer.post.user.id}}">

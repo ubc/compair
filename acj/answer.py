@@ -134,6 +134,15 @@ class AnswerFlagAPI(Resource):
 			dataformat.getPostsForAnswers(restrict_users=is_user_access_restricted(current_user)))
 api.add_resource(AnswerFlagAPI, '/<int:answer_id>/flagged')
 
+# /count, return number of answers submitted for the question
+class AnswerCountAPI(Resource):
+	@login_required
+	def get(self, course_id, question_id):
+		answered = PostsForAnswers.query.filter_by(postsforquestions_id=question_id).join(Posts)\
+			.filter(Posts.users_id==current_user.id).count()
+		return {'answered': answered }
+api.add_resource(AnswerCountAPI, '/count')
+
 class AnsweredAPI(Resource):
 	@login_required
 	def get(self, course_id):

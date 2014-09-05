@@ -25,7 +25,8 @@ module.factory('CourseResource', function($q, $routeParams, $log, $resource)
 			// invalidation, I don't want to deal with that manually
 			'getQuestions': {url: '/api/courses/:id/questions'},
 			'getJudgementCount': {url: '/api/courses/:id/judgements/count'},
-			'getAnswered': {url: '/api/courses/:id/answers/count'}
+			'getAnswered': {url: '/api/courses/:id/answers/count'},
+			'getInstructors': {url: '/api/courses/:id/users/instructors'}
 		}
 	);
 	ret.MODEL = "Courses"; // add constant to identify the model

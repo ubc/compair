@@ -197,3 +197,12 @@ class ClasslistRootAPI(Resource):
 		else:
 			return {'error':'Wrong file type'}, 400
 api.add_resource(ClasslistRootAPI, '')
+
+# /instructors - return list of TAs and Instructors
+class TeachersAPI(Resource):
+	@login_required
+	def get(self, course_id):
+		instructors = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter(UserTypesForCourse.name.in_([UserTypesForCourse.TYPE_TA, UserTypesForCourse.TYPE_INSTRUCTOR])).all()
+		instructor_ids = {u.users_id: u.usertypeforcourse.name for u in instructors}
+		return {'instructors': instructor_ids}
+api.add_resource(TeachersAPI, '/instructors')
