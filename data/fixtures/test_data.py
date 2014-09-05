@@ -100,3 +100,17 @@ class SimpleAnswersTestData(SimpleQuestionsTestData):
 
 	def get_answers(self):
 		return self.answers
+
+class JudgmentsTestData(SimpleAnswersTestData):
+	def __init__(self):
+		SimpleAnswersTestData.__init__(self)
+		for question in self.get_questions():
+			self.set_question_to_judgement_period(question)
+
+	def set_question_to_judgement_period(self, question):
+		question.answer_start = datetime.datetime.now() - datetime.timedelta(days=2)
+		question.answer_end = datetime.datetime.now() - datetime.timedelta(days=1)
+		db.session.add(question)
+		db.session.commit()
+		return question
+

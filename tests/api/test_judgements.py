@@ -2,15 +2,15 @@ import json
 import copy
 from acj import db
 from acj.models import UserTypesForSystem, UserTypesForCourse
+from data.fixtures.test_data import JudgmentsTestData
 from tests.test_acj import ACJTestCase
-from tests.test_data import SimpleTestData
 
 __author__ = 'john'
 
 class JudgementAPITests(ACJTestCase):
 	def setUp(self):
 		super(JudgementAPITests, self).setUp()
-		self.data = SimpleTestData()
+		self.data = JudgmentsTestData()
 		self.course= self.data.get_course()
 		self.question = self.data.get_questions()[0]
 		self.base_url = self._build_url(self.course.id, self.question.id)
@@ -38,16 +38,16 @@ class JudgementAPITests(ACJTestCase):
 		rv = self.client.get(self.answer_pair_url)
 		self.assert401(rv)
 		# test deny access to unenroled users
-		self.login(self.data.get_unenroled_student().username)
+		self.login(self.data.get_unauthorized_student().username)
 		rv = self.client.get(self.answer_pair_url)
 		self.assert403(rv)
 		self.logout()
-		self.login(self.data.get_unenroled_instructor().username)
+		self.login(self.data.get_unauthorized_instructor().username)
 		rv = self.client.get(self.answer_pair_url)
 		self.assert403(rv)
 		self.logout()
 		# enroled user from this point on
-		self.login(self.data.get_enroled_student().username)
+		self.login(self.data.get_authorized_student().username)
 		# test non-existent course
 		rv = self.client.get(self._build_url(9993929, self.question.id, '/pair'))
 		self.assert404(rv)
@@ -72,7 +72,7 @@ class JudgementAPITests(ACJTestCase):
 
 	def test_submit_judgement(self):
 		# establish expected data by first getting an answer pair
-		self.login(self.data.get_enroled_student().username)
+		self.login(self.data.get_authorized_student().username)
 		rv = self.client.get(self.answer_pair_url)
 		self.assert200(rv)
 		expected_answer_pair = rv.json
@@ -91,24 +91,24 @@ class JudgementAPITests(ACJTestCase):
 							  content_type='application/json')
 		self.assert401(rv)
 		# test deny access to unenroled users
-		self.login(self.data.get_unenroled_student().username)
+		self.login(self.data.get_unauthorized_student().username)
 		rv = self.client.post(self.base_url, data=json.dumps(expected_judgements),
 							  content_type='application/json')
 		self.assert403(rv)
 		self.logout()
-		self.login(self.data.get_unenroled_instructor().username)
+		self.login(self.data.get_unauthorized_instructor().username)
 		rv = self.client.post(self.base_url, data=json.dumps(expected_judgements),
 							  content_type='application/json')
 		self.assert403(rv)
 		self.logout()
 		# test deny access to non-students
-		self.login(self.data.get_enroled_instructor().username)
+		self.login(self.data.get_authorized_instructor().username)
 		rv = self.client.post(self.base_url, data=json.dumps(expected_judgements),
 							  content_type='application/json')
 		self.assert403(rv)
 		self.logout()
 		# authorized user from this point
-		self.login(self.data.get_enroled_student().username)
+		self.login(self.data.get_authorized_student().username)
 		# test non-existent course
 		rv = self.client.post(self._build_url(9999999, self.question.id),
 			data=json.dumps(expected_judgements), content_type='application/json')
