@@ -21,10 +21,6 @@ Developer Installation
 
 ### Install Dependencies
 
-After running the following command to install the dependencies, a warning is given saying that the pdfjs library is not injected. This has been noted in Issue #79. The temporary solution is to run "git checkout acj/static/index.html".
-
-	make deps
-
 ### Vagrant up the VM
 
 	git clone --branch model_refactor git@github.com:ubc/acj-versus.git acj 
