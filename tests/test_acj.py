@@ -2,19 +2,13 @@ import json
 import unittest
 
 from flask.ext.testing import TestCase
-from flask_bouncer import ensure
-from flask_login import login_user, logout_user
-from werkzeug.exceptions import Unauthorized
 
-from acj import create_app, Users
+from acj import create_app
 from acj.manage.database import populate
 from acj.core import db
-from acj.models import UserTypesForSystem, UserTypesForCourse, PostsForAnswers, PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, CoursesAndUsers, PostsForQuestions
-from data.fixtures import DefaultFixture
+from acj.models import PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, CoursesAndUsers
+from data.fixtures.test_data import SimpleAnswersTestData, BasicTestData
 from tests import test_app_settings
-from tests.factories import UsersFactory
-import datetime
-from tests.test_data import SimpleTestData
 
 # Tests Checklist
 # - Unauthenticated users refused access with 401
@@ -48,494 +42,10 @@ class ACJTestCase(TestCase):
 	def logout(self):
 		return self.client.delete('/login/logout', follow_redirects=True)
 
-class CoursesAPITests(ACJTestCase):
-	def setUp(self):
-		super(CoursesAPITests, self).setUp()
-		self.data = SimpleTestData()
-
-	def _verify_course_info(self, course_expected, course_actual):
-		self.assertEqual(course_expected.name, course_actual['name'],
-						 "Expected course name does not match actual.")
-		self.assertEqual(course_expected.id, course_actual['id'],
-						 "Expected course id does not match actual.")
-		self.assertTrue(course_expected.criteriaandcourses, "Course is missing a criteria")
-
-	def test_get_single_course(self):
-		course_api_url = '/api/courses/' + str(self.data.get_course().id)
-
-		# Test login required
-		rv = self.client.get(course_api_url)
-		self.assert401(rv)
-
-		# Test root get course
-		self.login('root')
-		rv = self.client.get(course_api_url)
-		self.assert200(rv)
-		self._verify_course_info(self.data.get_course(), rv.json)
-		self.logout()
-
-		# Test enroled users get course info
-		self.login(self.data.get_enroled_instructor().username)
-		rv = self.client.get(course_api_url)
-		self.assert200(rv)
-		self._verify_course_info(self.data.get_course(), rv.json)
-		self.logout()
-
-		self.login(self.data.get_enroled_student().username)
-		rv = self.client.get(course_api_url)
-		self.assert200(rv)
-		self._verify_course_info(self.data.get_course(), rv.json)
-		self.logout()
-
-		# Test unenroled user not permitted to get info
-		self.login(self.data.get_unenroled_instructor().username)
-		rv = self.client.get(course_api_url)
-		self.assert403(rv)
-		self.logout()
-
-		self.login(self.data.get_unenroled_student().username)
-		rv = self.client.get(course_api_url)
-		self.assert403(rv)
-		self.logout()
-
-		# Test get invalid course
-		self.login("root")
-		rv = self.client.get('/api/courses/38940450')
-		self.assert404(rv)
-
-	def test_get_all_courses(self):
-		course_api_url = '/api/courses'
-
-		# Test login required
-		rv = self.client.get(course_api_url)
-		self.assert401(rv)
-
-		# Test only root can get a list of all courses
-		self.login(self.data.get_enroled_instructor().username)
-		rv = self.client.get(course_api_url)
-		self.assert403(rv)
-		self.logout()
-
-		self.login(self.data.get_enroled_student().username)
-		rv = self.client.get(course_api_url)
-		self.assert403(rv)
-		self.logout()
-
-		self.login("root")
-		rv = self.client.get(course_api_url)
-		self.assert200(rv)
-		self._verify_course_info(self.data.get_course(), rv.json['objects'][0])
-		self.logout()
-
-	def test_create_course(self):
-		course_expected = {
-			'name':'TestCourse1',
-			'description':'Test Course One Description Test'
-		}
-		# Test login required
-		rv = self.client.post('/api/courses',
-							  data=json.dumps(course_expected), content_type='application/json')
-		self.assert401(rv)
-		# Test unauthorized user
-		self.login(self.data.get_enroled_student().username)
-		rv = self.client.post('/api/courses',
-							  data=json.dumps(course_expected), content_type='application/json')
-		self.assert403(rv)
-		self.logout()
-
-		# Test course creation
-		self.login(self.data.get_enroled_instructor().username)
-		rv = self.client.post('/api/courses',
-							  data=json.dumps(course_expected), content_type='application/json')
-		self.assert200(rv)
-		# Verify return
-		course_actual = rv.json
-		self.assertEqual(course_expected['name'], course_actual['name'])
-		self.assertEqual(course_expected['description'], course_actual['description'])
-
-		# Verify you can get the course again
-		rv = self.client.get('/api/courses/' + str(course_actual['id']))
-		self.assert200(rv)
-		course_actual = rv.json
-		self.assertEqual(course_expected['name'], course_actual['name'])
-		self.assertEqual(course_expected['description'], course_actual['description'])
-
-		# Create the same course again, should fail
-		rv = self.client.post('/api/courses',
-							  data=json.dumps(course_expected), content_type='application/json')
-		self.assert400(rv)
-
-		# Test bad data format
-		self.login(self.data.get_enroled_instructor().username)
-		rv = self.client.post('/api/courses',
-							  data=json.dumps({'description':'d'}), content_type='application/json')
-		self.assert400(rv)
-
-
-class UsersAPITests(ACJTestCase):
-	def test_unauthorized(self):
-		rv = self.client.get('/api/users')
-		self.assert401(rv)
-
-	def test_login(self):
-		rv = self.login('root', 'password')
-		userid = rv.json['userid']
-		self.assertEqual(userid, 1, "Logged in user's id does not match!")
-		self._verify_permissions(userid, rv.json['permissions'])
-
-	def test_users_root(self):
-		self.login('root', 'password')
-		rv = self.client.get('/api/users/' + str(DefaultFixture.ROOT_USER.id))
-		self.assert200(rv)
-		root = rv.json
-		self.assertEqual(root['username'], 'root')
-		self.assertEqual(root['displayname'], 'root')
-		self.assertNotIn('_password', root)
-
-	def test_users_invalid_id(self):
-		self.login('root', 'password')
-		rv = self.client.get('/api/users/99999')
-		self.assert404(rv)
-
-	def test_users_info_unrestricted(self):
-		self.login('root', 'password')
-		rv = self.client.get('/api/users/' + str(DefaultFixture.ROOT_USER.id))
-		self.assert200(rv)
-		root = rv.json
-		self.assertEqual(root['displayname'], 'root')
-		# personal information should be transmitted
-		self.assertIn('firstname', root)
-		self.assertIn('lastname', root)
-		self.assertIn('fullname', root)
-		self.assertIn('email', root)
-
-	def test_users_info_restricted(self):
-		user = UsersFactory(password='password', usertypeforsystem=DefaultFixture.SYS_ROLE_NORMAL)
-		db.session.commit()
-
-		self.login(user.username, 'password')
-		rv = self.client.get('/api/users/' + str(DefaultFixture.ROOT_USER.id))
-		self.assert200(rv)
-		root = rv.json
-		self.assertEqual(root['displayname'], 'root')
-		# personal information shouldn't be transmitted
-		self.assertNotIn('firstname', root)
-		self.assertNotIn('lastname', root)
-		self.assertNotIn('fullname', root)
-		self.assertNotIn('email', root)
-
-	def test_users_list(self):
-		self.login('root', 'password')
-		rv = self.client.get('/api/users')
-		self.assert200(rv)
-		users = rv.json
-		self.assertEqual(users['num_results'], 1)
-		self.assertEqual(users['objects'][0]['username'], 'root')
-
-	def _verify_permissions(self, userid, permissions):
-		user = Users.query.get(userid)
-		with self.app.app_context():
-			# can't figure out how to get into logged in app context, so just force a login here
-			login_user(user, force=True)
-			for model_name, operations in permissions.items():
-				for operation, permission in operations.items():
-					expected = True
-					try:
-						ensure(operation, model_name)
-					except Unauthorized:
-						expected = False
-					self.assertEqual(permission, expected,
-									 "Expected permission " + operation + " on " +  model_name + " to be " + str(expected))
-			# undo the forced login earlier
-			logout_user()
-
-
-class QuestionsAPITests(ACJTestCase):
-	def setUp(self):
-		super(QuestionsAPITests, self).setUp()
-		self.data = SimpleTestData()
-		self.url = '/api/courses/' + str(self.data.get_course().id) + '/questions'
-
-	def test_get_single_question(self):
-		question_expected = self.data.get_questions()[0]
-		questions_api_url = self.url + '/' + str(question_expected.id)
-		# Test login required
-		rv = self.client.get(questions_api_url)
-		self.assert401(rv)
-		# Test unauthorized user
-		self.login(self.data.get_unenroled_instructor().username)
-		rv = self.client.get(questions_api_url)
-		self.assert403(rv)
-		self.logout()
-		self.login(self.data.get_unenroled_student().username)
-		rv = self.client.get(questions_api_url)
-		self.assert403(rv)
-		# Test non-existent question
-		self.login(self.data.get_enroled_instructor().username)
-		rv = self.client.get(self.url + '/939023')
-		self.assert404(rv)
-		# Test get actual question
-		rv = self.client.get(questions_api_url)
-		self.assert200(rv)
-		self._verify_question(question_expected, rv.json['question'])
-
-	def test_get_all_questions(self):
-		# Test login required
-		rv = self.client.get(self.url)
-		self.assert401(rv)
-		# Test unauthorized user
-		self.login(self.data.get_unenroled_instructor().username)
-		rv = self.client.get(self.url)
-		self.assert403(rv)
-		self.logout()
-		self.login(self.data.get_unenroled_student().username)
-		rv = self.client.get(self.url)
-		self.assert403(rv)
-		# Test non-existent course
-		rv = self.client.get('/api/courses/390484/questions')
-		self.assert404(rv)
-		self.logout()
-		# Test receives all questions
-		self.login(self.data.get_enroled_instructor().username)
-		rv = self.client.get(self.url)
-		self.assert200(rv)
-		for i, expected in enumerate(self.data.get_questions()):
-			actual = rv.json['questions'][i]
-			self._verify_question(expected, actual)
-
-	def test_create_question(self):
-		now = datetime.datetime.utcnow()
-		question_expected = {'title':'this is a new question\'s title',
-				'post': {'content':'this is the new question\'s content.'},
-				'answer_start': now.isoformat() + 'Z',
-				'answer_end': (now + datetime.timedelta(days=7)).isoformat() + 'Z',
-				'num_judgement_req': 3}
-		# Test login required
-		rv = self.client.post(self.url,
-							  data=json.dumps(question_expected), content_type='application/json')
-		self.assert401(rv)
-		# Test unauthorized user
-		self.login(self.data.get_unenroled_instructor().username)
-		rv = self.client.post(self.url,
-							  data=json.dumps(question_expected), content_type='application/json')
-		self.assert403(rv)
-		self.logout()
-		self.login(self.data.get_unenroled_student().username)
-		rv = self.client.post(self.url,
-							  data=json.dumps(question_expected), content_type='application/json')
-		self.assert403(rv)
-		self.logout()
-		self.login(self.data.get_enroled_student().username) # student post questions not implemented
-		rv = self.client.post(self.url,
-							  data=json.dumps(question_expected), content_type='application/json')
-		self.assert403(rv)
-		self.logout()
-		# Test bad format
-		self.login(self.data.get_enroled_instructor().username)
-		rv = self.client.post(self.url,
-							  data=json.dumps({'title':'blah'}), content_type='application/json')
-		self.assert400(rv)
-		# Test actual creation
-		rv = self.client.post(self.url,
-							  data=json.dumps(question_expected), content_type='application/json')
-		self.assert200(rv)
-		self.assertEqual(question_expected['title'], rv.json['title'],
-						 "Question create did not return the same title!")
-		self.assertEqual(question_expected['post']['content'], rv.json['post']['content'],
-						 "Question create did not return the same content!")
-		# Test getting the question again
-		rv = self.client.get(self.url + '/' + str(rv.json['id']))
-		self.assert200(rv)
-		self.assertEqual(question_expected['title'], rv.json['question']['title'],
-						 "Question create did not save title properly!")
-		self.assertEqual(question_expected['post']['content'], rv.json['question']['post']['content'],
-						 "Question create did not save content properly!")
-
-	def test_delete_question(self):
-		# Test deleting the question
-		quesId = PostsForQuestions.query.first().id
-		self.logout()
-		expected_ret = {'id': quesId}
-		self.login(self.data.get_enroled_student().username)
-		rv = self.client.delete(self.url + '/' + str(quesId))
-		self.assert403(rv)
-		self.assertEqual('Forbidden', rv.json['message'], "User does not have the authorization to delete the question.")
-		self.logout()
-		self.login(self.data.get_enroled_instructor().username)
-		rv = self.client.delete(self.url + '/' + str(quesId))
-		self.assert200(rv)
-		self.assertEqual(expected_ret['id'], rv.json['id'], "Question "+str(rv.json['id']) + " deleted successfully")
-
-
-	def _verify_question(self, expected, actual):
-		self.assertEqual(expected.title, actual['title'])
-		self.assertEqual(expected.posts_id, actual['post']['id'])
-		self.assertEqual(expected.post.content, actual['post']['content'])
-		self.assertEqual(expected.post.user.id, actual['post']['user']['id'])
-
-
-class AnswersAPITests(ACJTestCase):
-	def setUp(self):
-		super(AnswersAPITests, self).setUp()
-		self.data = SimpleTestData()
-		self.question = self.data.get_questions()[1]
-		self.base_url = self._build_url(self.data.get_course().id, self.question.id)
-
-	def _build_url(self, course_id, question_id, tail=""):
-		url = '/api/courses/' + str(course_id) + '/questions/' + str(question_id) + '/answers' + \
-			  tail
-		return url
-
-	def test_get_all_answers(self):
-		# Test login required
-		rv = self.client.get(self.base_url)
-		self.assert401(rv)
-		# test unauthorized users
-		self.login(self.data.get_unenroled_instructor().username)
-		rv = self.client.get(self.base_url)
-		self.assert403(rv)
-		self.logout()
-		self.login(self.data.get_unenroled_student().username)
-		rv = self.client.get(self.base_url)
-		self.assert403(rv)
-		self.logout()
-		# test non-existent entry
-		self.login(self.data.get_enroled_student().username)
-		rv = self.client.get(self._build_url(self.data.get_course().id, 4903409))
-		self.assert404(rv)
-		# test data retrieve is correct
-		rv = self.client.get(self.base_url)
-		self.assert200(rv)
-		actual_answers = rv.json['objects']
-		expected_answers = PostsForAnswers.query.filter_by(postsforquestions_id=self.question.id).all()
-		for i, expected in enumerate(expected_answers):
-			actual = actual_answers[i]
-			self.assertEqual(expected.post.content, actual['post']['content'])
-
-	def test_create_answer(self):
-		# test login required
-		expected_answer = {'post': {'content':'this is some answer content'}}
-		rv = self.client.post(self.base_url,
-							  data=json.dumps(expected_answer), content_type='application/json')
-		self.assert401(rv)
-		# test unauthorized users
-		self.login(self.data.get_unenroled_student().username)
-		rv = self.client.post(self.base_url, data=json.dumps(expected_answer), content_type='application/json')
-		self.assert403(rv)
-		self.logout()
-		self.login(self.data.get_unenroled_instructor().username)
-		rv = self.client.post(self.base_url,
-							  data=json.dumps(expected_answer), content_type='application/json')
-		self.assert403(rv)
-		self.logout()
-		# test invalid format
-		self.login(self.data.get_enroled_student().username)
-		invalid_answer = {'post': {'blah':'blah'}}
-		rv = self.client.post(self.base_url,
-							  data=json.dumps(invalid_answer), content_type='application/json')
-		self.assert400(rv)
-		# test invalid question
-		rv = self.client.post(
-			self._build_url(self.data.get_course().id, 9392402),
-			data=json.dumps(expected_answer), content_type='application/json')
-		self.assert404(rv)
-		# test invalid course
-		rv = self.client.post(
-			self._build_url(9392402, self.question.id),
-			data=json.dumps(expected_answer), content_type='application/json')
-		self.assert404(rv)
-		# test create successful
-		self.logout()
-		self.login(self.data.get_enroled_instructor().username)
-
-		rv = self.client.post(self.base_url,
-							  data=json.dumps(expected_answer), content_type='application/json')
-		self.assert200(rv)
-		# retrieve again and verify
-		answers = PostsForAnswers.query.filter_by(postsforquestions_id=self.question.id).all()
-		actual_answer = answers[2]
-		self.assertEqual(expected_answer['post']['content'], actual_answer.post.content)
-
-	def test_delete_answer(self):
-		self.logout()
-		self.login(self.data.get_enroled_instructor().username)
-		expected_answer = {'post': {'content':'this is some answer content'}}
-		rv = self.client.post(self.base_url,
-							  data=json.dumps(expected_answer), content_type='application/json')
-
-		self.logout()
-		self.login(self.data.get_enroled_student().username)
-		answerId = PostsForAnswers.query.filter_by(postsforquestions_id=self.question.id).all()[2].id
-		# test delete unsuccessful
-		self.logout()
-		self.login(self.data.get_enroled_student().username)
-		rv = self.client.delete(self.base_url + '/' + str(answerId))
-		self.assert403(rv)
-		self.logout()
-		# test delete successful
-		self.login(self.data.get_enroled_instructor().username)
-		rv = self.client.delete(self.base_url + '/' + str(answerId))
-		self.assert200(rv)
-		self.assertEqual(answerId, rv.json['id'])
-		
-
-	def test_flag_answer(self):
-		answer = self.question.answers[0]
-		flag_url = self.base_url + "/" + str(answer.id) + "/flagged"
-		# test login required
-		expected_flag_on = {'flagged': True}
-		expected_flag_off = {'flagged': False}
-		rv = self.client.post(flag_url,
-			data=json.dumps(expected_flag_on), content_type='application/json')
-		self.assert401(rv)
-		# test unauthorized users
-		self.login(self.data.get_unenroled_student().username)
-		rv = self.client.post(flag_url, data=json.dumps(expected_flag_on),
-							  content_type='application/json')
-		self.assert403(rv)
-		self.logout()
-		# test flagging
-		self.login(self.data.get_enroled_student().username)
-		rv = self.client.post(flag_url, data=json.dumps(expected_flag_on),
-							  content_type='application/json')
-		self.assert200(rv)
-		self.assertEqual(expected_flag_on['flagged'], rv.json['flagged'],
-						 "Expected answer to be flagged.")
-		# test unflagging
-		rv = self.client.post(flag_url, data=json.dumps(expected_flag_off),
-							  content_type='application/json')
-		self.assert200(rv)
-		self.assertEqual(expected_flag_off['flagged'], rv.json['flagged'],
-						 "Expected answer to be flagged.")
-		# test prevent unflagging by other students
-		self.login(self.data.get_enroled_student().username)
-		rv = self.client.post(flag_url, data=json.dumps(expected_flag_on),
-							  content_type='application/json')
-		self.assert200(rv)
-		self.logout()
-		## create another student
-		other_student = self.data.create_user(UserTypesForSystem.TYPE_NORMAL)
-		self.data.enrol_user(other_student, self.data.get_course(), UserTypesForCourse.TYPE_STUDENT)
-		## try to unflag answer as other student, should fail
-		self.login(other_student.username)
-		rv = self.client.post(flag_url, data=json.dumps(expected_flag_off),
-							  content_type='application/json')
-		self.assert400(rv)
-		self.logout()
-		# test allow unflagging by instructor
-		self.login(self.data.get_enroled_instructor().username)
-		rv = self.client.post(flag_url, data=json.dumps(expected_flag_off),
-							  content_type='application/json')
-		self.assert200(rv)
-		self.assertEqual(expected_flag_off['flagged'], rv.json['flagged'],
-						 "Expected answer to be flagged.")
-
-
-
 class QuestionCommentsAPITests(ACJTestCase):
 	def setUp(self):
 		super(QuestionCommentsAPITests, self).setUp()
-		self.data = SimpleTestData()
+		self.data = SimpleAnswersTestData()
 		self.question = self.data.get_questions()[0]
 		self.answer = self.data.get_answers()[0]
 		self.url = '/api/courses/' + str(self.data.get_course().id) + '/questions/' + \
@@ -546,16 +56,16 @@ class QuestionCommentsAPITests(ACJTestCase):
 		rv = self.client.get(self.url)
 		self.assert401(rv)
 		# test unauthorized users
-		self.login(self.data.get_unenroled_instructor().username)
+		self.login(self.data.get_unauthorized_instructor().username)
 		rv = self.client.get(self.url)
 		self.assert403(rv)
 		self.logout()
-		self.login(self.data.get_unenroled_student().username)
+		self.login(self.data.get_unauthorized_student().username)
 		rv = self.client.get(self.url)
 		self.assert403(rv)
 		self.logout()
 		# test non-existent entry
-		self.login(self.data.get_enroled_student().username)
+		self.login(self.data.get_authorized_student().username)
 		rv = self.client.get('/api/courses/' + str(self.data.get_course().id) + \
 			'/questions/4903409/comments')
 		self.assert404(rv)
@@ -575,16 +85,16 @@ class QuestionCommentsAPITests(ACJTestCase):
 		rv = self.client.post(self.url, data=json.dumps(expected_comment), content_type='application/json')
 		self.assert401(rv)
 		# test unauthorized users
-		self.login(self.data.get_unenroled_student().username)
+		self.login(self.data.get_unauthorized_student().username)
 		rv = self.client.post(self.url, data=json.dumps(expected_comment), content_type='application/json')
 		self.assert403(rv)
 		self.logout()
-		self.login(self.data.get_unenroled_instructor().username)
+		self.login(self.data.get_unauthorized_instructor().username)
 		rv = self.client.post(self.url, data=json.dumps(expected_comment), content_type='application/json')
 		self.assert403(rv)
 		self.logout()
 		# test invalid format
-		self.login(self.data.get_enroled_student().username)
+		self.login(self.data.get_authorized_student().username)
 		invalid_comment = {'post':{'blah':'blah'}}
 		rv = self.client.post(self.url, data=json.dumps(invalid_comment), content_type='application/json')
 		self.assert400(rv)
@@ -610,27 +120,27 @@ class QuestionCommentsAPITests(ACJTestCase):
 		# retrieve again and verify
 		comments = PostsForQuestionsAndPostsForComments.query.filter_by(
 			postsforquestions_id=self.question.id).all()
-		actual_comment = comments[1]
+		actual_comment = comments[0]
 		self.assertEqual(expected_comment['content'], actual_comment.postsforcomments.post.content)
 
 	def test_delete_question_comment(self):
 		expected_comment = {'content':'this is some question comment'}
 		self.logout()
-		self.login(self.data.get_enroled_instructor().username)
+		self.login(self.data.get_authorized_instructor().username)
 		self.client.post(self.url,
 			data=json.dumps(expected_comment),
 			content_type='application/json')
 		self.logout()
-		self.login(self.data.get_enroled_student().username)
-		commentId = PostsForQuestionsAndPostsForComments.query.filter_by(postsforquestions_id=self.question.id).all()[1].id
+		self.login(self.data.get_authorized_student().username)
+		commentId = PostsForQuestionsAndPostsForComments.query.filter_by(postsforquestions_id=self.question.id).all()[0].id
 		# test delete unsuccessful
 		self.logout()
-		self.login(self.data.get_enroled_student().username)
+		self.login(self.data.get_authorized_student().username)
 		rv = self.client.delete(self.url + '/' + str(commentId))
 		self.assert403(rv)
 		self.logout()
 		# test delete successful
-		self.login(self.data.get_enroled_instructor().username)
+		self.login(self.data.get_authorized_instructor().username)
 		rv = self.client.delete(self.url + '/' + str(commentId))
 		self.assert200(rv)
 		self.assertEqual(commentId, rv.json['id'])
@@ -639,7 +149,7 @@ class QuestionCommentsAPITests(ACJTestCase):
 class AnswerCommentsAPITests(ACJTestCase):
 	def setUp(self):
 		super(AnswerCommentsAPITests, self).setUp()
-		self.data = SimpleTestData()
+		self.data = SimpleAnswersTestData()
 		self.question = self.data.get_questions()[0]
 		self.answer = self.data.get_answers()[0]
 		self.url = '/api/courses/' + str(self.data.get_course().id) + \
@@ -651,16 +161,16 @@ class AnswerCommentsAPITests(ACJTestCase):
 		rv = self.client.get(self.url)
 		self.assert401(rv)
 		# test unauthorized users
-		self.login(self.data.get_unenroled_instructor().username)
+		self.login(self.data.get_unauthorized_instructor().username)
 		rv = self.client.get(self.url)
 		self.assert403(rv)
 		self.logout()
-		self.login(self.data.get_unenroled_student().username)
+		self.login(self.data.get_unauthorized_student().username)
 		rv = self.client.get(self.url)
 		self.assert403(rv)
 		self.logout()
 		# test non-existent entry
-		self.login(self.data.get_enroled_student().username)
+		self.login(self.data.get_authorized_student().username)
 		rv = self.client.get('/api/courses/' +\
 			str(self.data.get_course().id) + '/questions/' + \
 			str(self.question.id) + '/answers/142154156/comments')
@@ -681,16 +191,16 @@ class AnswerCommentsAPITests(ACJTestCase):
 		rv = self.client.post(self.url, data=json.dumps(expected_comment), content_type='application/json')
 		self.assert401(rv)
 		# test unauthorized users
-		self.login(self.data.get_unenroled_student().username)
+		self.login(self.data.get_unauthorized_student().username)
 		rv = self.client.post(self.url, data=json.dumps(expected_comment), content_type='application/json')
 		self.assert403(rv)
 		self.logout()
-		self.login(self.data.get_unenroled_instructor().username)
+		self.login(self.data.get_unauthorized_instructor().username)
 		rv = self.client.post(self.url, data=json.dumps(expected_comment), content_type='application/json')
 		self.assert403(rv)
 		self.logout()
 		# test invalid format
-		self.login(self.data.get_enroled_student().username)
+		self.login(self.data.get_authorized_student().username)
 		invalid_comment = {'post':{'blah':'blah'}}
 		rv = self.client.post(self.url, data=json.dumps(invalid_comment), content_type='application/json')
 		self.assert400(rv)
@@ -720,27 +230,27 @@ class AnswerCommentsAPITests(ACJTestCase):
 		self.assert200(rv)
 		# retrieve again and verify
 		comments = PostsForAnswersAndPostsForComments.query.filter_by(postsforanswers_id=self.answer.id).all()
-		actual_comment = comments[1]
+		actual_comment = comments[0]
 		self.assertEqual(expected_comment['content'], actual_comment.postsforcomments.post.content)
 
 	def test_delete_question_comment(self):
 		expected_comment = {'content':'this is some question comment'}
 		self.logout()
-		self.login(self.data.get_enroled_instructor().username)
+		self.login(self.data.get_authorized_instructor().username)
 		self.client.post(self.url,
 			data=json.dumps(expected_comment),
 			content_type='application/json')
 		self.logout()
-		self.login(self.data.get_enroled_student().username)
-		commentId = PostsForAnswersAndPostsForComments.query.filter_by(postsforanswers_id=self.answer.id).all()[1].id
+		self.login(self.data.get_authorized_student().username)
+		commentId = PostsForAnswersAndPostsForComments.query.filter_by(postsforanswers_id=self.answer.id).all()[0].id
 		# test delete unsuccessful
 		self.logout()
-		self.login(self.data.get_enroled_student().username)
+		self.login(self.data.get_authorized_student().username)
 		rv = self.client.delete(self.url + '/' + str(commentId))
 		self.assert403(rv)
 		self.logout()
 		# test delete successful
-		self.login(self.data.get_enroled_instructor().username)
+		self.login(self.data.get_authorized_instructor().username)
 		rv = self.client.delete(self.url + '/' + str(commentId))
 		self.assert200(rv)
 		self.assertEqual(commentId, rv.json['id'])
@@ -748,7 +258,7 @@ class AnswerCommentsAPITests(ACJTestCase):
 class ClassListsAPITests(ACJTestCase):
 	def setUp(self):
 		super(ClassListsAPITests, self).setUp()
-		self.data = SimpleTestData()
+		self.data = BasicTestData()
 		self.courseId = str(self.data.get_course().id)
 		self.url = '/api/courses/' + str(self.data.get_course().id) + '/users'
 
@@ -757,16 +267,16 @@ class ClassListsAPITests(ACJTestCase):
 		rv = self.client.get(self.url)
 		self.assert401(rv)
 		# test unauthorized users
-		self.login(self.data.get_unenroled_instructor().username)
+		self.login(self.data.get_unauthorized_instructor().username)
 		rv = self.client.get(self.url)
 		self.assert403(rv)
 		self.logout()
-		self.login(self.data.get_unenroled_student().username)
+		self.login(self.data.get_unauthorized_student().username)
 		rv = self.client.get(self.url)
 		self.assert403(rv)
 		self.logout()
 		# test non-existent entry
-		self.login(self.data.get_enroled_student().username)
+		self.login(self.data.get_authorized_student().username)
 		rv = self.client.get('/api/courses/5656478/users/')
 		self.assert404(rv)
 		# test student can't retrieve the data
@@ -774,7 +284,7 @@ class ClassListsAPITests(ACJTestCase):
 		self.assert403(rv)
 		# test data retrieved is correct
 		self.logout()
-		self.login(self.data.get_enroled_instructor().username)
+		self.login(self.data.get_authorized_instructor().username)
 		rv = self.client.get(self.url)
 		self.assert200(rv)
 		actual_users = rv.json['objects']
