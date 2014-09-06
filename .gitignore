@@ -37,6 +37,7 @@ nosetests.xml
 *.swp
 
 tmp/*
+tmpUpload/*
 
 # idea project file
 .idea
@@ -51,3 +52,5 @@ node_modules
 
 #vagrant files
 .vagrant
+
+.env
