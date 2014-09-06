@@ -101,6 +101,10 @@ def create_app(conf=config, settings_override={}):
 	@app.route('/')
 	def route_root():
 		username = cas.username
+
+		if username is None:
+			return redirect('/static/index.html#/')
+
 		user = Users.query.filter_by(username=username).first()
 		if not user:
 			app.logger.debug("Login failed, invalid username for: " + username)
