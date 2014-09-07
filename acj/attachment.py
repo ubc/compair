@@ -1,12 +1,15 @@
-from bouncer.constants import EDIT, CREATE
+import os
+import uuid
+import shutil
+
 from flask import Blueprint, Flask, request, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
-from acj import dataformat, db
-from acj.authorization import allow, require
-from acj.models import PostsForQuestions, FilesForPosts
-from acj.util import new_restful_api
-import os, uuid, shutil
+from . import dataformat
+from .core import db
+from .models import FilesForPosts
+from .util import new_restful_api
+
 
 attachment_api = Blueprint('attachment_api', __name__)
 api = new_restful_api(attachment_api)

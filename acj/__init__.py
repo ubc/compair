@@ -1,11 +1,24 @@
 from flask import Flask, redirect
 from flask.ext.login import current_user
+
+from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, on_answer_flag
+from .classlist import on_classlist_get, on_classlist_upload
+from .comment import on_comment_modified, on_comment_get, on_comment_list_get, on_comment_create, on_comment_delete, \
+	on_answer_comment_modified, on_answer_comment_get, on_answer_comment_list_get, on_answer_comment_create, \
+	on_answer_comment_delete
+from .course import on_course_modified, on_course_get, on_course_list_get, on_course_create
+from .criteria import on_criteria_list_get
+from .judgement import on_answer_pair_get, on_judgement_create
+from .question import on_question_modified, on_question_get, on_question_list_get, on_question_create, \
+	on_question_delete
+from acj.users import on_user_modified, on_user_get, on_user_list_get, on_user_create, on_user_course_get, \
+	on_user_password_update
 from .authorization import define_authorization
 from .core import login_manager, bouncer, db, cas
 from .configuration import config
 from .models import Users
 from .login import authenticate
-import activity
+from .activity import log
 
 
 def create_app(conf=config, settings_override={}):
@@ -115,4 +128,58 @@ def create_app(conf=config, settings_override={}):
 		return redirect('/static/index.html#/')
 
 	return app
+
+
+# user events
+on_user_modified.connect(log)
+on_user_get.connect(log)
+on_user_list_get.connect(log)
+on_user_create.connect(log)
+on_user_course_get.connect(log)
+on_user_password_update.connect(log)
+
+# course events
+on_course_modified.connect(log)
+on_course_get.connect(log)
+on_course_list_get.connect(log)
+on_course_create.connect(log)
+
+# question events
+on_question_modified.connect(log)
+on_question_get.connect(log)
+on_question_list_get.connect(log)
+on_question_create.connect(log)
+on_question_delete.connect(log)
+
+# comment events
+on_comment_modified.connect(log)
+on_comment_get.connect(log)
+on_comment_list_get.connect(log)
+on_comment_create.connect(log)
+on_comment_delete.connect(log)
+
+# answer comment events
+on_answer_comment_modified.connect(log)
+on_answer_comment_get.connect(log)
+on_answer_comment_list_get.connect(log)
+on_answer_comment_create.connect(log)
+on_answer_comment_delete.connect(log)
+
+# criteria events
+on_criteria_list_get.connect(log)
+
+# answer events
+on_answer_modified.connect(log)
+on_answer_get.connect(log)
+on_answer_list_get.connect(log)
+on_answer_create.connect(log)
+on_answer_flag.connect(log)
+
+# judgement events
+on_answer_pair_get.connect(log)
+on_judgement_create.connect(log)
+
+# classlist events
+on_classlist_get.connect(log)
+on_classlist_upload.connect(log)
 

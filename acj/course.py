@@ -1,13 +1,15 @@
 from bouncer.constants import MANAGE, READ, CREATE, EDIT
-from flask import session, request, Response, Blueprint, jsonify, current_app
-from flask.ext.restful import Resource, Api, marshal_with, marshal, reqparse
+from flask import Blueprint, current_app
+from flask.ext.restful import Resource, marshal_with, marshal, reqparse
 from flask_login import login_required, current_user
-from sqlalchemy import exc, desc
-from acj import dataformat
-from acj.authorization import allow, require
+from sqlalchemy import exc
+
+from . import dataformat
+from .authorization import require
 from .core import db, event
-from .models import Courses, UserTypesForCourse, CoursesAndUsers, PostsForQuestions, Posts, Criteria, CriteriaAndCourses
+from .models import Courses, UserTypesForCourse, CoursesAndUsers
 from .util import pagination, new_restful_api, get_model_changes
+
 
 courses_api = Blueprint('courses_api', __name__)
 api = new_restful_api(courses_api)

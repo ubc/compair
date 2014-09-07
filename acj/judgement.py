@@ -1,19 +1,24 @@
 from __future__ import division
 import random
-from bouncer.constants import READ, CREATE
+import math
 
+from bouncer.constants import READ, CREATE
 from flask import Blueprint, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
-import math
 from sqlalchemy import func
-from acj import dataformat, db
-from acj.authorization import require
-from acj.core import event
-from acj.models import PostsForAnswers, Posts, Judgements, AnswerPairings, Courses, CriteriaAndCourses, \
+
+from . import dataformat
+from .core import db
+from .authorization import require
+from .core import event
+from .models import PostsForAnswers, Posts, Judgements, AnswerPairings, Courses, CriteriaAndCourses, \
 	PostsForQuestions, Scores, CoursesAndUsers, UserTypesForCourse
-from acj.util import new_restful_api
+from .util import new_restful_api
+
+
+
 
 # First declare a Flask Blueprint for this module
 judgements_api = Blueprint('judgements_api', __name__)

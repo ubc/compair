@@ -3,7 +3,9 @@
 from flask import Blueprint
 from flask.ext.login import login_required
 from flask.ext.restful import Resource
-from acj.util import new_restful_api
+
+from .util import new_restful_api
+
 
 # First declare a Flask Blueprint for this module
 example_api = Blueprint('example_api', __name__)

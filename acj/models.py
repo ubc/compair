@@ -20,19 +20,21 @@
 ##	 "PostsForQuestions" table for posts that are meant to be questions
 
 import hashlib
+import datetime
+
+import dateutil.parser
 import pytz
-from sqlalchemy import event
 
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import reconstructor, synonym, validates
+from sqlalchemy.orm import synonym
 from sqlalchemy.sql import func
+
 
 #  import the context under an app-specific name (so it can easily be replaced later)
 from passlib.apps import custom_app_context as pwd_context
 
 from flask.ext.login import UserMixin
 
-import dateutil.parser, datetime, pytz 
 
 # need to update to filterfalse whn upgrading python
 try:

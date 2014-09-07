@@ -2,9 +2,12 @@ from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
-from acj import dataformat, db
-from acj.models import Judgements, PostsForComments, PostsForJudgements, Courses, PostsForQuestions, Posts
-from acj.util import new_restful_api
+
+from . import dataformat
+from .core import db
+from .models import Judgements, PostsForComments, PostsForJudgements, Courses, PostsForQuestions, Posts
+from .util import new_restful_api
+
 
 evalcomments_api = Blueprint('evalcomments_api', __name__)
 api = new_restful_api(evalcomments_api)

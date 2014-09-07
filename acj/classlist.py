@@ -1,14 +1,23 @@
+import os
+import uuid
+import csv
+import string
+import random
+
 from bouncer.constants import EDIT, CREATE
 from flask import Blueprint, Flask, request, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
-from acj import dataformat, db
-from acj.authorization import allow, require
-from acj.core import event
-from acj.models import CoursesAndUsers, Courses, Users, UserTypesForSystem, UserTypesForCourse
-from acj.util import new_restful_api
 from werkzeug.utils import secure_filename
-import os, uuid, csv, string, random
+from . import dataformat
+
+from .core import db
+
+from .authorization import allow, require
+from .core import event
+from .models import CoursesAndUsers, Courses, Users, UserTypesForSystem, UserTypesForCourse
+from .util import new_restful_api
+
 
 classlist_api = Blueprint('classlist_api', __name__)
 api = new_restful_api(classlist_api)

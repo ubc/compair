@@ -3,12 +3,15 @@ from flask import Blueprint, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
-from acj import dataformat, db
-from acj.authorization import require, allow
-from acj.core import event
-from acj.models import Posts, PostsForComments, PostsForAnswers, PostsForQuestions, Courses, PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, \
+from . import dataformat
+
+from .core import db
+from .authorization import require, allow
+from .core import event
+from .models import Posts, PostsForComments, PostsForAnswers, PostsForQuestions, Courses, PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, \
 	CoursesAndUsers
-from acj.util import new_restful_api, get_model_changes
+from .util import new_restful_api, get_model_changes
+
 
 commentsforquestions_api = Blueprint('commentsforquestions_api', __name__)
 apiQ = new_restful_api(commentsforquestions_api)

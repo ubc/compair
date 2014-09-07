@@ -1,10 +1,12 @@
 from flask import Blueprint, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
-from acj import dataformat
-from acj.core import event
-from acj.models import CriteriaAndCourses, Courses
-from acj.util import new_restful_api
+
+from . import dataformat
+from .core import event
+from .models import CriteriaAndCourses, Courses
+from .util import new_restful_api
+
 
 criteria_api = Blueprint('criteria_api', __name__)
 api = new_restful_api(criteria_api)

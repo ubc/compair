@@ -1,8 +1,9 @@
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import current_user, login_required, login_user, logout_user
-from acj.authorization import get_logged_in_user_permissions
 
-from acj.models import Users
+from .authorization import get_logged_in_user_permissions
+from .models import Users
+
 
 login_api = Blueprint("login_api", __name__)
 
