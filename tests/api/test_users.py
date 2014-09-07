@@ -3,7 +3,7 @@ from flask.ext.login import login_user, logout_user
 from werkzeug.exceptions import Unauthorized
 from acj import db, Users
 from data.fixtures import DefaultFixture
-from tests.factories import UsersFactory
+from data.fixtures import UsersFactory
 from tests.test_acj import ACJTestCase
 
 
