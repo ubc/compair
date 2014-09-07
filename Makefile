@@ -25,6 +25,7 @@ clean:
 	find . -name '*.pyc' -exec rm -f {} \;
 	find . -name '*.pyo' -exec rm -f {} \;
 	find . -name '*~' -exec rm -f {} \;
+	rm -rf bower_components node_modules
 
 lint:
 	flake8 --exclude=env .

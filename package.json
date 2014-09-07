@@ -13,6 +13,7 @@
        "karma": "~0.12",
        "karma-jasmine": "~0.2.2",
        "karma-phantomjs-launcher": "~0.1",
+       "karma-chrome-launcher": "~0.1.4",
        "protractor": "~0.20.1",
        "karma-junit-reporter": "^0.2.2",
        "lodash": "^2.4.1"
