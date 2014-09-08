@@ -17,7 +17,7 @@ class DbUtilTests(ACJTestCase):
 		oldname = question.title
 		question.title = 'new title'
 
-		self.assertDictEqual(get_model_changes(question), {'title': {oldname: 'new title'}},
+		self.assertDictEqual(get_model_changes(question), {'title': {'before': oldname, 'after': 'new title'}},
 							 'should find the change when attribute changes')
 
 		oldcontent = question.post.content
@@ -25,5 +25,6 @@ class DbUtilTests(ACJTestCase):
 
 		self.assertDictEqual(
 			get_model_changes(question),
-			{'title': {oldname: 'new title'}, 'post': {'content': {oldcontent: 'new content'}}},
+			{'title': {'before': oldname, 'after': 'new title'},
+			 'post': {'content': {'before': oldcontent, 'after': 'new content'}}},
 			'should find the change when attribute changes')
