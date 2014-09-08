@@ -8,6 +8,7 @@ from .comment import on_comment_modified, on_comment_get, on_comment_list_get, o
 	on_answer_comment_delete
 from .course import on_course_modified, on_course_get, on_course_list_get, on_course_create
 from .criteria import on_criteria_list_get
+from .evalcomment import on_evalcomment_create
 from .judgement import on_answer_pair_get, on_judgement_create
 from .question import on_question_modified, on_question_get, on_question_list_get, on_question_create, \
 	on_question_delete
@@ -183,3 +184,5 @@ on_judgement_create.connect(log)
 on_classlist_get.connect(log)
 on_classlist_upload.connect(log)
 
+# evalcomment event
+on_evalcomment_create.connect(log)

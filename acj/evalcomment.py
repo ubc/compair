@@ -1,10 +1,10 @@
-from flask import Blueprint
+from flask import Blueprint, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 
 from . import dataformat
-from .core import db
+from .core import db, event
 from .models import Judgements, PostsForComments, PostsForJudgements, Courses, PostsForQuestions, Posts
 from .util import new_restful_api
 
@@ -14,6 +14,10 @@ api = new_restful_api(evalcomments_api)
 
 new_comment_parser = RequestParser()
 new_comment_parser.add_argument('judgements', type=list, required=True)
+
+# events
+on_evalcomment_create = event.signal('EVALCOMMENT_CREATE')
+
 
 # /
 class EvalCommentRootAPI(Resource):
@@ -36,5 +40,13 @@ class EvalCommentRootAPI(Resource):
 			db.session.add(evalcomment)
 			db.session.commit()
 			results.append(evalcomment)
+
+		on_evalcomment_create.send(
+			current_app._get_current_object(),
+			event_name=on_evalcomment_create.name,
+			user=current_user,
+			course_id=course_id,
+			data=marshal(results, dataformat.getPostsForJudgements(False)))
+
 		return {'objects': marshal(results, dataformat.getPostsForJudgements())}
 api.add_resource(EvalCommentRootAPI, '')
