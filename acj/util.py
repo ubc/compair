@@ -92,6 +92,6 @@ def get_model_changes(model):
 			else:
 				history = attr.history
 				if attr.state.modified and history.has_changes():
-					changes[attr.key] = {history.deleted[0]: history.added[0]}
+					changes[attr.key] = {'before': history.deleted[0], 'after': history.added[0]}
 
 	return changes

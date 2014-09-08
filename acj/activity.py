@@ -1,4 +1,5 @@
 import json
+import datetime
 
 from flask import session
 from flask.ext.login import user_logged_in, user_logged_out
@@ -21,7 +22,7 @@ def log(sender, event_name='UNKNOWN', **extra):
 		if isinstance(extra['data'], str):
 			params['data'] = extra['data']
 		else:
-			params['data'] = json.dumps(extra['data'])
+			params['data'] = json.dumps(extra['data'], cls=JSONDateTimeEncoder)
 	if 'status' in extra:
 		params['status'] = extra['status']
 	if 'message' in extra:
@@ -42,3 +43,11 @@ def logged_in_wrapper(sender, user, **extra):
 @user_logged_out.connect
 def logged_out_wrapper(sender, user, **extra):
 	log(sender, 'USER_LOGGED_OUT', user=user, **extra)
+
+
+class JSONDateTimeEncoder(json.JSONEncoder):
+	def default(self, obj):
+		if isinstance(obj, (datetime.date, datetime.datetime)):
+			return obj.isoformat()
+		else:
+			return json.JSONEncoder.default(self, obj)

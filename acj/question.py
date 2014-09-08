@@ -94,8 +94,8 @@ class QuestionIdAPI(Resource):
 		if not (question.post.content or uploaded or name):
 			return {"error":"The question content is empty!"}, 400
 		question.title = params.get("title", question.title)
-		question.answer_start = params.get('answer_start', question.answer_start)
-		question.answer_end = params.get('answer_end', question.answer_end)
+		question.answer_start = datetime.datetime.strptime(params.get('answer_start', question.answer_start), '%Y-%m-%dT%H:%M:%S.%fZ')
+		question.answer_end = datetime.datetime.strptime(params.get('answer_end', question.answer_end), '%Y-%m-%dT%H:%M:%S.%fZ')
 		question.judge_start = params.get('judge_start', None)
 		if question.judge_start is not None:
 			question.judge_start = params.get('judge_start', None)
