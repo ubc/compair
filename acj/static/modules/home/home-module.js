@@ -38,9 +38,6 @@ module.controller(
                 {id: user.id}).$promise.then(
                 function(ret) {
                     $scope.courses = ret.objects;
-                    for (var i = 0; i < $scope.courses.length; i++) {
-                        courseanduser = $scope.courses[i];
-                    }
                 },
                 function (ret) {
                     Toaster.reqerror("Unable to retrieve your courses.", ret);
