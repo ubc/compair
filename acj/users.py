@@ -5,11 +5,11 @@ from flask.ext.restful.reqparse import RequestParser
 
 from flask_login import login_required, current_user
 from . import dataformat
-from .authorization import is_user_access_restricted, require
+from .authorization import is_user_access_restricted, require, allow
 from .core import db, event
 from .util import pagination, new_restful_api, get_model_changes
 
-from .models import Users, UserTypesForSystem
+from .models import Users, UserTypesForSystem, Courses
 
 users_api = Blueprint('users_api', __name__)
 user_types_api = Blueprint('user_types_api', __name__)
@@ -122,14 +122,18 @@ class UserCourseListAPI(Resource):
 	@login_required
 	def get(self, id):
 		user = Users.query.get_or_404(id)
+		course = Courses()
 		# we want to list courses only, so only check the association table
-		coursesandusers = []
-		for courseanduser in user.coursesandusers:
-			require(READ, courseanduser)
-			coursesandusers.append(courseanduser)
+		if allow(MANAGE, course):
+			courses = Courses.query.all()
+		else:
+			courses = []
+			for courseanduser in user.coursesandusers:
+				require(READ, courseanduser)
+				courses.append(courseanduser.course)
 
 		# sort alphabetically by course name
-		coursesandusers.sort(key=lambda courseanduser: courseanduser.course.name)
+		courses.sort(key=lambda course: course.name)
 
 		# TODO REMOVE COURSES WHERE USER IS DROPPED?
 		# TODO REMOVE COURSES WHERE COURSE IS UNAVAILABLE?
@@ -140,7 +144,7 @@ class UserCourseListAPI(Resource):
 			user=current_user,
 			data={'userid': id})
 
-		return {'objects': marshal(coursesandusers, dataformat.getCoursesAndUsers(include_user=False))}
+		return {'objects': marshal(courses, dataformat.getCourses(include_details=False))}
 
 
 # /

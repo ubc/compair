@@ -51,18 +51,23 @@ def getCriteriaAndCourses():
 		'criteria': fields.Nested(getCriteria())
 	}
 
-def getCourses():
-	return {
+def getCourses(include_details=True):
+	format = {
 		'id': fields.Integer,
 		'name': fields.String,
-		'description': fields.String,
-		'available': fields.Boolean,
-		'criteriaandcourses': fields.Nested(getCriteriaAndCourses()),
-		'enable_student_create_questions': fields.Boolean,
-		'enable_student_create_tags': fields.Boolean,
-		'modified': fields.DateTime,
-		'created': fields.DateTime
+		'description': fields.String
 	}
+	if (include_details):
+		details = {
+			'available': fields.Boolean,
+			'criteriaandcourses': fields.Nested(getCriteriaAndCourses()),
+			'enable_student_create_questions': fields.Boolean,
+			'enable_student_create_tags': fields.Boolean,
+			'modified': fields.DateTime,
+			'created': fields.DateTime
+		}
+		format.update(details)
+	return format
 
 def getCoursesAndUsers(restrict_user=True, include_user=True):
 	format = {

@@ -16,13 +16,13 @@
 	<!-- Course listing -->
 	<div class="course-list" ng-if="courses.length">
 		<a ng-repeat="course in courses | filter:courseFilter" 
-			ng-href="#/course/{{course.course.id}}" class="each-course">
+			ng-href="#/course/{{course.id}}" class="each-course">
 			<h3 class="clearfix">
 				<i class="fa fa-book"></i>
-				{{course.course.name}}
+				{{course.name}}
 				<i class="fa fa-arrow-right fa-2x pull-right"></i>
 			</h3>
-			<div ng-bind-html="course.course.description"></div>
+			<div ng-bind-html="course.description"></div>
 		</a>
 	</div>
 
