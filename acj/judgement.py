@@ -1,4 +1,5 @@
 from __future__ import division
+import operator
 import random
 import math
 
@@ -7,7 +8,7 @@ from flask import Blueprint, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
-from sqlalchemy import func
+from sqlalchemy import func, or_, and_
 
 from . import dataformat
 from .core import db
@@ -94,12 +95,10 @@ class JudgementRootAPI(Resource):
 			require(CREATE, judgement)
 			db.session.commit()
 			judgements.append(judgement)
-		# update answer scores once we've passed round 1
-		round = _get_judgement_round(question_id)
-		current_app.logger.debug("Round: " + str(round))
-		if round > 1:
-			current_app.logger.debug("Doing scoring")
-			_calculate_scores(course_id, question_id)
+
+		# update answer scores
+		current_app.logger.debug("Doing scoring")
+		self._calculate_scores(course_id, question_id)
 
 		on_judgement_create.send(
 			current_app._get_current_object(),
@@ -110,6 +109,41 @@ class JudgementRootAPI(Resource):
 
 		return {'objects': marshal(judgements, dataformat.getJudgements())}
 
+	def _calculate_scores(self, course_id, question_id):
+		# get all judgements for this question
+		judgements = Judgements.query.join(AnswerPairings). \
+			filter(AnswerPairings.postsforquestions_id == question_id).all()
+		answers = set() # stores answers that've been judged
+		course_criteria = CriteriaAndCourses.query.filter_by(courses_id=course_id).all()
+		# 2D array, keep tracks of wins, e.g.: wins[A][B] is the number of times A won vs B
+		wins = WinsTable(course_criteria)
+		# keeps track of number of times judged for each answer
+		rounds = {}
+		for judgement in judgements:
+			answer1 = judgement.answerpairing.answer1
+			answer2 = judgement.answerpairing.answer2
+			winner = judgement.answer_winner
+			loser = answer1
+			if winner.id == answer1.id:
+				loser = answer2
+			wins.add(winner, loser, judgement.course_criterion)
+			# update number of times judged
+			rounds[answer1.id] = rounds.get(answer1.id, 0) + 1
+			rounds[answer2.id] = rounds.get(answer2.id, 0) + 1
+			answers.add(answer1)
+			answers.add(answer2)
+		current_app.logger.debug("Wins table: " + str(wins))
+		# create scores for each answer
+		for answer in answers:
+			for course_criterion in course_criteria:
+				score = Scores.query.filter_by(answer=answer, course_criterion=course_criterion).first()
+				if not score:
+					score = Scores(answer=answer, course_criterion=course_criterion)
+				score.rounds = rounds.get(answer.id, 0)
+				score.score = wins.get_score(answer, course_criterion)
+				score.wins = wins.get_total_wins(answer, course_criterion)
+				db.session.add(score)
+		db.session.commit()
 api.add_resource(JudgementRootAPI, '')
 
 # /pair
@@ -119,166 +153,33 @@ class JudgementPairAPI(Resource):
 		'''
 		Get an answer pair for judgement.
 		'''
-		# Make sure the course and question exists
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
 		if not question.judging_period:
 			return {'error':'Judging Period is not in session.'}, 403
-		# Get a list of user ids that are not students in this course
-		student_type = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first()
-		not_student_users = CoursesAndUsers.query.filter(CoursesAndUsers.courses_id==course_id,
-			CoursesAndUsers.usertypeforcourse!=student_type).\
-			values(CoursesAndUsers.users_id)
-		not_student_users = [not_student_user[0] for not_student_user in not_student_users]
-		# Get only answers that are made by students
-		answers = PostsForAnswers.query.join(Posts). \
-			filter(PostsForAnswers.postsforquestions_id==question_id,
-				   Posts.users_id.notin_(not_student_users)).all()
-		if len(answers) < 2:
+		pair_generator = AnswerPairGenerator(course_id, question_id)
+		try:
+			answerpairing = pair_generator.get_pair()
+
+			on_answer_pair_get.send(
+				current_app._get_current_object(),
+				event_name=on_answer_pair_get.name,
+				user=current_user,
+				course_id=course_id,
+				data={'question_id': question_id, 'answer_pair': marshal(answerpairing, dataformat.getAnswerPairings(include_answers=True))})
+			return marshal(answerpairing, dataformat.getAnswerPairings(include_answers=True))
+		except InsufficientAnswersException:
 			return {"error":"Insufficient answers available for judgement."}, 400
-		current_app.logger.debug("Checking judgement round for this question.")
-		round = _get_judgement_round(question_id)
-		current_app.logger.debug("We're in round " + str(round))
-		# all existing pairings for this question and this round
-		current_round_pairings = AnswerPairings.query.filter_by(postsforquestions_id=question_id,
-																round=round).all()
-		if round == 1 and not current_round_pairings:
-			current_round_pairings = self._generate_random_pairings(question_id, answers)
-		# check to see if we've used up all pairs
-		current_app.logger.debug("Checking to see if all available pairs has been judged already.")
-		## get already judged pairings (couldn't figure out how to write query to get unjudged pairs)
-		judged_pairings = AnswerPairings.query.join(Judgements).filter(
-			AnswerPairings.postsforquestions_id==question_id,
-			AnswerPairings.round==round)
-		## map this round's pairings by id
-		unjudged_pairings = dict(map(lambda e: [e.id, e], current_round_pairings))
-		current_app.logger.debug("All current round's pairings mapped by id")
-		## remove judged pairings
-		for pairing in judged_pairings:
-			del unjudged_pairings[pairing.id]
-		# no unjudged pairings left, so need to generate a new set
-		if not unjudged_pairings:
-			# in all rounds after 1, we have to pair answers up by how many times they've won
-			current_app.logger.debug("No unjudged pairings left, need to generate new set.")
-			unjudged_pairings = self._generate_score_matched_pairings(course_id, question_id,
-																	 answers, round + 1)
-		unjudged_pairings = unjudged_pairings.values()
-		random.shuffle(unjudged_pairings) # randomly give the user an answer pair
-		current_app.logger.debug("Making sure the user isn't getting a pair they've seen before.")
-		# get all judgements made by this user
-		user_judgements = Judgements.query.join(AnswerPairings).filter(
-			Judgements.users_id == current_user.id,
-			AnswerPairings.postsforquestions_id == question_id).all()
-		# get all pairs judged by user
-		selected_pair = None
-		user_judged_pairs = [judgement.answerpairing for judgement in user_judgements]
-		for unjudged_pairing in unjudged_pairings:
-			used_pair = False
-			for user_judged_pair in user_judged_pairs:
-				if _same_answers_in_pair(unjudged_pairing, user_judged_pair):
-					current_app.logger.debug("User has already judged this pair.")
-					used_pair = True
-					break
-			# don't let students judge their own answers
-			if unjudged_pairing.answer1.users_id == current_user.id or \
-				unjudged_pairing.answer2.users_id == current_user.id:
-				current_app.logger.debug("Skipping pair with student's own answer in it.")
-				used_pair = True
-			if not used_pair:
-				current_app.logger.debug("Found a pair that the user hasn't judged yet.")
-				selected_pair = unjudged_pairing
-				break
-		if selected_pair == None:
-			return {"error":"You've already judged all currently available answer pairs! There might be more available later."}, 400
-		current_app.logger.debug("Return one of the unjudged pairings")
-
-		on_answer_pair_get.send(
-			current_app._get_current_object(),
-			event_name=on_answer_pair_get.name,
-			user=current_user,
-			course_id=course_id,
-			data={'question_id': question_id, 'answer_pair': marshal(selected_pair, dataformat.getAnswerPairings(include_answers=True))})
-
-		return marshal(selected_pair, dataformat.getAnswerPairings(include_answers=True))
-
-	def _generate_random_pairings(self, question_id, answers):
-		'''
-		Generate random answer pairings
-		'''
-		random_pairings = []
-		# we're in round 1, where pairings are generated randomly
-		current_app.logger.debug("No previously generated rounds, generating round 1.")
-		# generate random pairings from available answers
-		random.shuffle(answers)
-		while answers:
-			answerpairing = AnswerPairings(postsforquestions_id=question_id, round=1)
-			if len(answers) > 1:
-				answerpairing.answer1 = answers.pop()
-				answerpairing.answer2 = answers.pop()
-			else: # only 1 answer left, need to reuse a previously paired answer
-				answerpairing.answer1 = answers.pop()
-				random_pair = random.choice(random_pairings)
-				odd_one_out_partner = random.choice([random_pair.answer1, random_pair.answer2])
-				answerpairing.answer2 = odd_one_out_partner
-			current_app.logger.debug(answerpairing)
-			db.session.add(answerpairing)
-			random_pairings.append(answerpairing)
-		db.session.commit()
-		return random_pairings
-
-	def _generate_score_matched_pairings(self, course_id, question_id, answers, round):
-		'''
-		Generate answer pairings by matching answers with scores close to each other together
-		'''
-		score_matched_pairings = {}
-		# randomize here
-		random.shuffle(answers)
-		# Multiple criteria means multiple scores, so we'd have to make different pairs according
-		# to different criteria.
-		# sort scores into the criteria they belong to, scores_by_criteria[criterion_id] = [scores]
-		scores_by_criteria= {}
-		for answer in answers:
-			scores = answer.scores
-			if not scores:
-				current_app.logger.debug("No scores detected, try to calculate them.")
-				_calculate_scores(course_id, question_id)
-				scores = answer.scores
-			for score in scores:
-				criterion_id = score.criteriaandcourses_id
-				scores_by_criterion = scores_by_criteria.get(criterion_id, [])
-				scores_by_criterion.append(score)
-				scores_by_criteria[criterion_id] = scores_by_criterion
-		current_app.logger.debug("Scores By Criteria: " + str(scores_by_criteria))
-		# generate answerpairs by matching scores for each criteria. This means that each criteria
-		# will have their own set of answerpairs
-		for criterion_id, scores_in_criterion in scores_by_criteria.items():
-			# convert to a map of # wins to scores
-			scores_by_wins = {}
-			for score in scores_in_criterion:
-				scores = scores_by_wins.get(score.wins, [])
-				scores.append(score)
-				scores_by_wins[score.wins] = scores
-			# convert to a list of scores, sorted by # wins
-			scores_sorted = []
-			for wins in sorted(scores_by_wins):
-				scores_sorted.extend(scores_by_wins[wins])
-			current_app.logger.debug("Scores Sorted By Wins: " + str(scores_sorted))
-			# make pairs
-			while scores_sorted:
-				answerpairing = AnswerPairings(postsforquestions_id=question_id, round=round)
-				if len(scores_sorted) > 1:
-					answerpairing.answer1 = scores_sorted.pop().answer
-					answerpairing.answer2 = scores_sorted.pop().answer
-				else: # only 1 answer left, need to reuse a previously paired answer
-					answerpairing.answer1 = scores_sorted.pop().answer
-					random_pair = random.choice(score_matched_pairings.values())
-					odd_one_out_partner = random.choice([random_pair.answer1, random_pair.answer2])
-					answerpairing.answer2 = odd_one_out_partner
-				db.session.add(answerpairing)
-				score_matched_pairings[answerpairing.id] = answerpairing
-		db.session.commit()
-		return score_matched_pairings
+		except UserHasJudgedAllAnswers:
+			return {"error":"You have judged all answers available!"}, 400
+		except AnswerMissingScoreCalculation:
+			return {"error":"An answer is missing a calculated score!"}, 400
+		except MissingScoreFromAnswer:
+			return {"error":"A score is missing from an answer!"}, 400
+		except UnknownAnswerPairError:
+			return {"error":"Generating scored pairs failed, this really shouldn't happen."}, 500
+		return {"error":"Answer pair generation failed for an unknown reason."}, 500
 api.add_resource(JudgementPairAPI, '/pair')
 
 class UserJudgementCount(Resource):
@@ -288,7 +189,7 @@ class UserJudgementCount(Resource):
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
 		judgements = Judgements.query.join(AnswerPairings).filter(Judgements.users_id==user_id,
-			 AnswerPairings.postsforquestions_id==question_id).all()
+																  AnswerPairings.postsforquestions_id==question_id).all()
 		return {"count":len(judgements)}
 api.add_resource(UserJudgementCount, '/count/users/<int:user_id>')
 
@@ -306,31 +207,193 @@ class UserAllJudgementCount(Resource):
 		return {'judgements': judgements}
 apiAll.add_resource(UserAllJudgementCount, '/count')
 
-def _get_judgement_round(question_id):
-	round = 1
-	# all answer pairings for this question
-	all_round_pairings = AnswerPairings.query.filter_by(postsforquestions_id=question_id).subquery()
-	# get max round from all answer pairings for this question
-	current_round_pairing = AnswerPairings.query.outerjoin(all_round_pairings, AnswerPairings.id == all_round_pairings.c.id). \
-		filter_by(round=func.max(all_round_pairings.c.round).select()).first()
-	if current_round_pairing:
-		round = current_round_pairing.round
-	return round
+class InsufficientAnswersException(Exception):
+	pass
+class UserHasJudgedAllAnswers(Exception):
+	pass
+class MissingScoreFromAnswer(Exception):
+	pass
+class AnswerMissingScoreCalculation(Exception):
+	pass
+class UnknownAnswerPairError(Exception):
+	pass
+class AnswerPairGenerator():
+	def __init__(self, course_id, question_id):
+		self.course_id = course_id
+		self.question_id = question_id
+		self.judged_answer_partners = self._generate_judged_answer_partners()
+		self.answers = self._get_eligible_answers()
 
-def _same_answers_in_pair(answer_pair1, answer_pair2):
-	'''
-	Check if two answer pairs have the same answers.
-	:param answer_pair1:
-	:param answer_pair2:
-	:return:
-	'''
-	if answer_pair1.postsforanswers_id1 == answer_pair2.postsforanswers_id1 and \
-		answer_pair1.postsforanswers_id2 == answer_pair2.postsforanswers_id2:
-		return True
-	if answer_pair1.postsforanswers_id1 == answer_pair2.postsforanswers_id2 and \
-		answer_pair1.postsforanswers_id2 == answer_pair2.postsforanswers_id1:
-		return True
-	return False
+	def get_pair(self):
+		# Restrictions:
+		# - Non-student answers and your own answer isn't eligible for judgment.
+		# - There must be sufficient answers to form at least 1 pair
+		# - There must still be at least 1 answer the user hasn't judged
+		# - Cannot return a pair that the user has already seen before
+		if len(self.answers) < 2:
+			raise InsufficientAnswersException
+		if self._has_user_judged_all_answers():
+			raise UserHasJudgedAllAnswers
+		unscored_answers = [answer for answer in self.answers if not answer.scores]
+		# if there are any answers that hasn't been scored, we need to judge those first
+		if unscored_answers:
+			pair = self._get_unscored_pair(unscored_answers)
+			return self._create_or_get_existing_pairing(pair)
+		# match by closest score, when we have many criteria, match score on only one criterion
+		course_criteria = CriteriaAndCourses.query.filter_by(courses_id=self.course_id).all()
+		pair = self._get_scored_pair(random.choice(course_criteria))
+		return self._create_or_get_existing_pairing(pair)
+
+	def _create_or_get_existing_pairing(self, pair_array):
+		'''
+		If there is an exisiting AnswerPairing already in the database, we should return that
+		instead of making a new entry. If there's not existing one, then create one.
+		:param pair_array: An array of 2 answers
+		:return: the AnswerPairing entry in the database
+		'''
+		answer1 = pair_array[0]
+		answer2 = pair_array[1]
+		answerpairing = AnswerPairings.query.filter(
+			or_(
+				and_(AnswerPairings.answer1 == answer1, AnswerPairings.answer2 == answer2),
+				and_(AnswerPairings.answer1 == answer2, AnswerPairings.answer2 == answer1)
+			)).first()
+		if not answerpairing:
+			answerpairing = AnswerPairings(postsforquestions_id=self.question_id)
+			answerpairing.answer1 = answer1
+			answerpairing.answer2 = answer2
+			db.session.add(answerpairing)
+			db.session.commit()
+		return answerpairing
+
+	def _get_scored_pair(self, course_criterion):
+		'''
+		Create an answer pair by matching them up by score.
+		- Sort answers by scores
+		- Make pairs with neighbours
+		- Calculate difference between pairs, sort into lowest first
+		- Return the first pair that the user hasn't judged already, starting from the lowest
+			difference one.
+		:param course_criterion: The course criteria that we're checking the score on
+		:return: An array of 2 answers
+		'''
+		answer_scores = {}
+		for answer in self.answers:
+			score = None
+			for score_iter in answer.scores:
+				if score_iter.criteriaandcourses_id == course_criterion.id:
+					score = score_iter
+			if score == None:
+				raise MissingScoreFromAnswer
+			answer_scores[answer] = score
+		sorted_answers = sorted(answer_scores.iteritems(), key=operator.itemgetter(1))
+		pairs = self._pair_with_neighbours(sorted_answers)
+		pair_score_differences = {}
+		for pair in pairs:
+			answer1 = pair[0][0]
+			answer1_score = pair[0][1]
+			answer2 = pair[1][0]
+			answer2_score = pair[1][1]
+			difference = abs(answer1_score.score - answer2_score.score)
+			pair_score_differences.setdefault(difference, []).append([answer1, answer2])
+		# check the pairs with the smallest differences first
+		for score_difference in sorted(pair_score_differences):
+			pairs = pair_score_differences[score_difference]
+			random.shuffle(pairs)
+			for pair in pairs:
+				if not self._has_user_already_judged_pair(pair):
+					return pair
+		raise UnknownAnswerPairError
+
+	def _get_unscored_pair(self, unscored_answers):
+		'''
+		Unscored pairs can be matched up randomly.
+		:return: A pair of answers [answer1, answer2]
+		'''
+		random.shuffle(unscored_answers)
+		pairs = self._pair_with_neighbours(unscored_answers)
+		if not pairs: # edge case where there's insufficient unscored answers to form a pair
+			random_partner = random.choice(self.answers)
+			return [unscored_answers[0], random_partner]
+		for pair in pairs:
+			if not self._has_user_already_judged_pair(pair):
+				return pair
+		raise AnswerMissingScoreCalculation	# Can only get here if the user has judged all pairs,
+											# which is only possible if score wasn't calculated
+											# on Judgement submit
+
+	def _has_user_already_judged_pair(self, pair):
+		'''
+		Check if the user has already judged this pair of answers
+		:param pair: an array of 2 answers
+		:return: True if the user has already judged the pair, False otherwise
+		'''
+		answer1 = pair[0]
+		answer2 = pair[1]
+		if answer1.id in self.judged_answer_partners:
+			return answer2.id in self.judged_answer_partners[answer1.id]
+		return False
+
+	def _pair_with_neighbours(self, answers):
+		'''
+		For each answer, pair it up with the next answer in the list. Return a list of such pairs.
+		:param answers:
+		:return:
+		'''
+		return [[answer, answers[i+1]] for i,answer in enumerate(answers) if i+1 < len(answers)]
+
+	def _has_user_judged_all_answers(self):
+		'''
+		Returns True if the user has already judged all answers, False otherwise.
+		:param answers:
+		:return:
+		'''
+		judged_answer_ids = set(self.judged_answer_partners.keys())
+		# since we plan to allow soft delete of answers, there might be judgements in here on
+		# 'deleted' answers, hence the set subtract instead of the simpler size comparison
+		all_answer_ids = set([answer.id for answer in self.answers])
+		# remove all judged answers ids from the list of known answers
+		all_answer_ids -= judged_answer_ids
+		if not all_answer_ids:
+			return True
+		return False
+
+	def _generate_judged_answer_partners(self):
+		'''
+		Maps every answer id that has been judged to a set of answer ids that they've paired up with.
+		Used to quickly check if an answer pair has already been seen by a user.
+		:return:
+		'''
+		answer_partners = {}
+		user_judgements = Judgements.query.join(AnswerPairings).filter(
+			Judgements.users_id == current_user.id,
+			AnswerPairings.postsforquestions_id == self.question_id).all()
+		for user_judgement in user_judgements:
+			answer1 = user_judgement.answerpairing.answer1
+			answer2 = user_judgement.answerpairing.answer2
+			answer1_partners = answer_partners.setdefault(answer1.id, set())
+			answer1_partners.add(answer2.id)
+			answer2_partners = answer_partners.setdefault(answer2.id, set())
+			answer2_partners.add(answer1.id)
+		return answer_partners
+
+	def _get_eligible_answers(self):
+		'''
+		Some answers cannot be used in judgement. E.g.: Instructor/TA answers and the logged in user's
+		own answer. This method retrieves only answers that can be used in judgement.
+		'''
+		# Exclude non-student users
+		student_type = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first()
+		excluded_user_ids = CoursesAndUsers.query.filter(CoursesAndUsers.courses_id==self.course_id,
+														 CoursesAndUsers.usertypeforcourse!=student_type).values(CoursesAndUsers.users_id)
+		excluded_user_ids = [excluded_user_id[0] for excluded_user_id in excluded_user_ids]
+		# Exclude currently logged in user
+		excluded_user_ids.append(current_user.id)
+		# Get only answers that are made by students
+		answers = PostsForAnswers.query.join(Posts).filter(
+			PostsForAnswers.postsforquestions_id==self.question_id,
+			Posts.users_id.notin_(excluded_user_ids)).all()
+		return answers
 
 class WinsTable:
 	def __init__(self, course_criteria):
@@ -384,39 +447,4 @@ class WinsTable:
 			expected_score += prob_answer_wins
 			current_app.logger.debug("\tE(S) = " + str(expected_score))
 		return expected_score
-
-def _calculate_scores(course_id, question_id):
-	# get all judgements for this question
-	judgements = Judgements.query.join(AnswerPairings).\
-		filter(AnswerPairings.postsforquestions_id == question_id).all()
-	# get all answers for this question
-	answers = PostsForAnswers.query.filter_by(postsforquestions_id=question_id).all()
-	course_criteria = CriteriaAndCourses.query.filter_by(courses_id=course_id).all()
-	# 2D array, keep tracks of wins, e.g.: wins[A][B] is the number of times A won vs B
-	wins = WinsTable(course_criteria)
-	# keeps track of number of times judged for each answer
-	rounds = {}
-	for judgement in judgements:
-		answer1 = judgement.answerpairing.answer1
-		answer2 = judgement.answerpairing.answer2
-		winner = judgement.answer_winner
-		loser = answer1
-		if winner.id == answer1.id:
-			loser = answer2
-		wins.add(winner, loser, judgement.course_criterion)
-		# update number of times judged
-		rounds[answer1.id] = rounds.get(answer1.id, 0) + 1
-		rounds[answer2.id] = rounds.get(answer2.id, 0) + 1
-	current_app.logger.debug("Wins table: " + str(wins))
-	# create scores for each answer
-	for answer in answers:
-		for course_criterion in course_criteria:
-			score = Scores.query.filter_by(answer=answer, course_criterion=course_criterion).first()
-			if not score:
-				score = Scores(answer=answer, course_criterion=course_criterion)
-			score.rounds = rounds.get(answer.id, 0)
-			score.score = wins.get_score(answer, course_criterion)
-			score.wins = wins.get_total_wins(answer, course_criterion)
-			db.session.add(score)
-	db.session.commit()
 
