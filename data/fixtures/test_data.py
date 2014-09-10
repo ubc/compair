@@ -1,14 +1,18 @@
 import datetime
 from acj import db
-from acj.models import UserTypesForSystem, UserTypesForCourse
+import factory.fuzzy
+from acj.models import UserTypesForSystem, UserTypesForCourse, Criteria
 from data.fixtures import CoursesFactory, UsersFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, \
-	PostsForAnswersFactory
+	PostsForAnswersFactory, CriteriaFactory, CriteriaAndCoursesFactory
 
 
 class BasicTestData():
 	def __init__(self):
+		self.default_criteria = Criteria.query.first()
 		self.main_course = self.create_course()
 		self.secondary_course = self.create_course()
+		self.main_course_default_criteria = self.add_criteria_course(self.default_criteria, self.main_course)
+		self.secondary_course_default_criteria = self.add_criteria_course(self.default_criteria, self.secondary_course)
 		self.authorized_instructor = self.create_instructor()
 		self.authorized_student = self.create_student()
 		self.unauthorized_instructor = self.create_instructor() # unauthorized to the main course
@@ -21,6 +25,10 @@ class BasicTestData():
 		course = CoursesFactory()
 		db.session.commit()
 		return course
+	def add_criteria_course(self, criteria, course):
+		course_criteria = CriteriaAndCoursesFactory(criteria_id=criteria.id, courses_id=course.id)
+		db.session.commit()
+		return course_criteria
 	def create_instructor(self):
 		return self.create_user(UserTypesForSystem.TYPE_INSTRUCTOR)
 	def create_student(self):
@@ -49,6 +57,8 @@ class BasicTestData():
 		return self.unauthorized_instructor
 	def get_unauthorized_student(self):
 		return self.unauthorized_student
+	def get_default_criteria(self):
+		return self.default_criteria
 
 class SimpleQuestionsTestData(BasicTestData):
 	def __init__(self):
@@ -113,4 +123,19 @@ class JudgmentsTestData(SimpleAnswersTestData):
 		db.session.add(question)
 		db.session.commit()
 		return question
+
+class CriteriaTestData(BasicTestData):
+	def __init__(self):
+		BasicTestData.__init__(self)
+		self.criteria = self.create_criteria()
+
+	def create_criteria(self):
+		name = factory.fuzzy.FuzzyText(length=4)
+		description = factory.fuzzy.FuzzyText(length=8)
+		criteria = CriteriaFactory(name=name, description=description, user=self.get_authorized_instructor())
+		db.session.commit()
+		return criteria
+
+	def get_criteria(self):
+		return self.criteria
 

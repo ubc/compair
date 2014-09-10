@@ -5,7 +5,7 @@ from factory.alchemy import SQLAlchemyModelFactory
 from acj.core import db
 from acj.models import Courses, Users, UserTypesForCourse, UserTypesForSystem, Criteria, CoursesAndUsers, Posts, \
 	PostsForQuestions, PostsForAnswers, PostsForComments,\
-	PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments
+	PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, CriteriaAndCourses
 
 __author__ = 'compass'
 
@@ -61,8 +61,10 @@ class CoursesAndUsersFactory(SQLAlchemyModelFactory):
 class CriteriaFactory(SQLAlchemyModelFactory):
 	FACTORY_FOR = Criteria
 	FACTORY_SESSION = db.session
-	name = "Which is better?"
-	description = "<p>Choose the response that you think is the better of the two.</p>"
+
+class CriteriaAndCoursesFactory(SQLAlchemyModelFactory):
+	FACTORY_FOR = CriteriaAndCourses
+	FACTORY_SESSION = db.session
 
 class PostsFactory(SQLAlchemyModelFactory):
 	FACTORY_FOR = Posts

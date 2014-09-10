@@ -6,7 +6,8 @@ import random
 
 from acj.models import UserTypesForCourse, UserTypesForSystem
 from data.fixtures.factories import UsersFactory, UserTypesForCourseFactory, UserTypesForSystemFactory, CriteriaFactory, \
-	CoursesFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, PostsForAnswersFactory
+	CoursesFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, PostsForAnswersFactory, \
+	CriteriaAndCoursesFactory
 
 
 class DefaultFixture(object):
@@ -32,7 +33,10 @@ class DefaultFixture(object):
 		DefaultFixture.ROOT_USER = UsersFactory(
 			username='root', password='password', displayname='root',
 			usertypeforsystem=DefaultFixture.SYS_ROLE_ADMIN)
-		DefaultFixture.DEFAULT_CRITERIA = CriteriaFactory(user=DefaultFixture.ROOT_USER)
+
+		name = "Which is better?"
+		description = "<p>Choose the response that you think is the better of the two.</p>"
+		DefaultFixture.DEFAULT_CRITERIA = CriteriaFactory(name=name, description=description, user=DefaultFixture.ROOT_USER)
 
 class SampleDataFixture(object):
 	COURSE_NAMES = ["CDEF102", "BCDE101","ABCD100", "DEFG103", "EFGH104"]
