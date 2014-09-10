@@ -1,4 +1,4 @@
-from flask import Flask, redirect
+from flask import Flask, redirect, session
 from flask.ext.login import current_user
 
 from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, on_answer_flag
@@ -125,6 +125,7 @@ def create_app(conf=config, settings_override={}):
 			app.logger.debug("Login failed, invalid username for: " + username)
 		else:
 			authenticate(user)
+			session['CAS_LOGIN'] = True
 
 		return redirect('/static/index.html#/')
 

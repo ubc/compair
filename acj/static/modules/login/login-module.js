@@ -147,12 +147,16 @@ module.controller(
 	function LogoutController($scope, $location, $log, $route, LoginResource, AuthenticationService, Toaster) {
 		$scope.logout = function() {
 			LoginResource.logout().$promise.then(
-				function() {
+				function(data) {
 					$log.debug("Logging out user successful.");
 					AuthenticationService.logout();
-					$location.path("/"); //redirect user to home screen
-					$route.reload();
-					Toaster.success("Successfully Logged Out!");
+                    if ("redirect" in data) {
+                        window.location = data.redirect;
+                    } else {
+                        $location.path("/"); //redirect user to home screen
+                        $route.reload();
+                        Toaster.success("Successfully Logged Out!");
+                    }
 				}
 				// TODO do we care about logout failure? if so, handle it here
 			);

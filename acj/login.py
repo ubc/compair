@@ -1,5 +1,6 @@
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect
 from flask_login import current_user, login_required, login_user, logout_user
+from flask_cas.routing import logout as cas_logout
 
 from .authorization import get_logged_in_user_permissions
 from .models import Users
@@ -35,7 +36,11 @@ def login():
 def logout():
 	current_user.update_lastonline()
 	logout_user()  # flask-login delete user info
-	return ""
+	if 'CAS_LOGIN' in sess:
+		sess.pop('CAS_LOGIN')
+		return jsonify({'redirect': url_for('cas.logout')})
+	else:
+		return ""
 
 @login_api.route('/session', methods=['GET'])
 @login_required
