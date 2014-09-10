@@ -49,7 +49,7 @@ module.constant('required_rounds', 6);
 module.controller(
 	'JudgementController', 
 	function($log, $location, $route, $scope, $timeout, $routeParams, $anchorScroll, QuestionResource, AnswerResource,
-		CriteriaResource, JudgementResource, AnswerCommentResource, EvalCommentResource, UserAnswerCommentResource, Session, Toaster)
+		CoursesCriteriaResource, JudgementResource, AnswerCommentResource, EvalCommentResource, UserAnswerCommentResource, Session, Toaster)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
@@ -82,7 +82,7 @@ module.controller(
 
 		// get all the criterias we're using for this course
 		$scope.courseCriteria = {};
-		CriteriaResource.get({'courseId': courseId}).$promise.then(
+		CoursesCriteriaResource.get({'courseId': courseId}).$promise.then(
 			function (ret)
 			{
 				$scope.courseCriteria = ret.objects

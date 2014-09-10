@@ -153,7 +153,7 @@ module.filter("notScoredEnd", function () {
 /***** Controllers *****/
 module.controller("QuestionViewController",
 	function($scope, $log, $routeParams, AnswerResource, Authorize, QuestionResource, QuestionCommentResource,
-			 AttachmentResource, CriteriaResource, JudgementResource, CourseResource, required_rounds, Session, Toaster)
+			 AttachmentResource, CoursesCriteriaResource, JudgementResource, CourseResource, required_rounds, Session, Toaster)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
@@ -223,7 +223,7 @@ module.controller("QuestionViewController",
 					Toaster.reqerror("Unable to retrieve comments.", ret);
 				}
 			);
-		CriteriaResource.get({'courseId': $scope.courseId}).$promise.then(
+		CoursesCriteriaResource.get({'courseId': $scope.courseId}).$promise.then(
 			function (ret) {
 				$scope.criteria = ret.objects;
 			},

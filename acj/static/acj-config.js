@@ -129,6 +129,11 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/attachment/attachment-pdf-partial.html',
 				label: "View Attachment"
 			})
+		.when('/course/:courseId/criterion/:criterionId/edit',
+			{
+				templateUrl: 'modules/criteria/criteria-configure-partial.html',
+				label: "Edit Criterion"
+		  	})
 		.when('/user/create',
 			{
 				templateUrl: 'modules/user/user-create-partial.html',

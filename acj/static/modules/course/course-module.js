@@ -10,6 +10,7 @@ var module = angular.module('ubc.ctlt.acj.course',
 		'ngRoute',
 		'ckeditor',
 		'ubc.ctlt.acj.common.form',
+		'ubc.ctlt.acj.criteria',
 		'ubc.ctlt.acj.judgement',
 		'ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.toaster'
@@ -38,18 +39,33 @@ module.factory('CourseResource', function($q, $routeParams, $log, $resource)
 /***** Controllers *****/
 module.controller(
 	'CourseConfigureController',
-	function($scope, $log, $routeParams, $location, CourseResource, EditorOptions, Toaster)
+	function($scope, $log, $routeParams, $location, CourseResource, CoursesCriteriaResource, EditorOptions, Authorize, Session, Toaster)
 	{
 		$scope.editorOptions = EditorOptions.basic;
 		// get course info
 		$scope.course = {};
-		var courseId = $routeParams['courseId'];
-		CourseResource.get({'id':courseId}).$promise.then(
+		$scope.criterion = {};
+		$scope.courseId = $routeParams['courseId'];
+		Authorize.can(Authorize.MANAGE, CoursesCriteriaResource.MODEL).then(function(result) {
+			$scope.canManageCriteriaCourses = result;
+		});
+		Session.getUser().then(function(user) {
+		    $scope.loggedInUserId = user.id;
+		});
+		CourseResource.get({'id':$scope.courseId}).$promise.then(
 			function (ret) {
 				$scope.course = ret;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve course: "+ courseId, ret);
+				Toaster.reqerror("Unable to retrieve course: "+ $scope.courseId, ret);
+			}
+		);
+		CoursesCriteriaResource.get({'courseId': $scope.courseId}).$promise.then(
+			function (ret) {
+				$scope.criteria = ret.objects;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve this course's criteria", ret);
 			}
 		);
 		// save course info
@@ -60,6 +76,22 @@ module.controller(
 					$location.path('/course/' + ret.id);
 				},
 				function(ret) { Toaster.reqerror("Course Save Failed.", ret); }
+			);
+		};
+		// save new criterion
+		$scope.criterionSubmit = function() {
+			$scope.criterionSubmitted = true;
+			CoursesCriteriaResource.save({'courseId': $scope.courseId}, $scope.criterion).$promise.then(
+				function (ret) {
+					$scope.criterion = {'name': '', 'description': ''}; // reset form
+					$scope.criterionSubmitted = false;
+					$scope.criteria.push(ret.criterion);
+					Toaster.success("Successfully added a new criterion.");
+				},
+				function (ret) {
+					$scope.criterionSubmitted = false;
+					Toaster.reqerror("Unable to create a new criterion.", ret);
+				}
 			);
 		};
 	}

@@ -87,7 +87,8 @@ def getCriteria():
 		'name': fields.String,
 		'description': fields.String,
 		'modified': fields.DateTime,
-		'created': fields.DateTime
+		'created': fields.DateTime,
+		'users_id': fields.Integer
 	}
 	return format
 

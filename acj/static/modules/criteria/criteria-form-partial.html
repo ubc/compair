@@ -1,0 +1,16 @@
+<form name="criterionForm" class="form" ng-submit="criterionSubmit()" novalidate>
+	<acj-field-with-feedback form-control="criterionForm.criteriaName">
+		<label for="criterionName">Evaluation Question</label>
+		<input type="text" maxlength="255" placeholder="e.g. Which answer is better?"
+			   ng-model="criterion.name" id="criterionName" name="criterionName" class="form-control" required/>
+	</acj-field-with-feedback>
+	<div class="form-group">
+		<label for="criterionDescription">Evaluation Instructions</label>
+		<textarea ckeditor="editorOptions" rows="4"
+			ng-model="criterion.description" id="criterionDescription" name="criterionDescription" class="form-control">
+		</textarea>
+	</div>
+	<hr />
+	<input type="submit" class="btn btn-success btn-lg center-block" value="Save"
+		ng-disabled="criterionForm.$invalid || criterionSubmitted" />
+</form>

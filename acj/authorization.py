@@ -4,7 +4,7 @@ from flask_login import current_user
 from werkzeug.exceptions import Unauthorized, Forbidden
 
 from .models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTypesForSystem, PostsForQuestions, PostsForAnswers, \
-	PostsForAnswersAndPostsForComments, PostsForQuestionsAndPostsForComments, Judgements
+	PostsForAnswersAndPostsForComments, PostsForQuestionsAndPostsForComments, Judgements, Criteria, CriteriaAndCourses
 
 
 def define_authorization(user, they):
@@ -23,12 +23,16 @@ def define_authorization(user, they):
 		# instructors can create courses
 		they.can(CREATE, Courses)
 		they.can(CREATE, Users)
+		they.can(CREATE, Criteria)
 
 	# users can edit and read their own user account
 	they.can(READ, Users, id=user.id)
 	they.can(EDIT, Users, id=user.id)
 	# they can also look at their own course enrolments
 	they.can(READ, CoursesAndUsers, users_id=user.id)
+	# they can read and edit their own criteria
+	they.can(READ, Criteria, users_id=user.id)
+	they.can(EDIT, Criteria, users_id=user.id)
 
 	# Assign permissions based on course roles
 	# give access to courses the user is enroled in
@@ -46,6 +50,7 @@ def define_authorization(user, they):
 		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_INSTRUCTOR:
 			they.can(EDIT, Courses, id=course.id)
 			they.can((READ, EDIT), CoursesAndUsers, courses_id=course.id)
+			they.can((CREATE, DELETE), CriteriaAndCourses, courses_id=course.id)
 		# instructors and ta can do anything they want to posts
 		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_INSTRUCTOR or \
 			entry.usertypeforcourse.name == UserTypesForCourse.TYPE_TA:
