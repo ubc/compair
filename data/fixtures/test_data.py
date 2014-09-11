@@ -127,15 +127,29 @@ class JudgmentsTestData(SimpleAnswersTestData):
 class CriteriaTestData(BasicTestData):
 	def __init__(self):
 		BasicTestData.__init__(self)
-		self.criteria = self.create_criteria()
+		self.criteria = self.create_criteria(self.get_authorized_instructor())
+		self.secondary_criteria = self.create_criteria(self.get_unauthorized_instructor())
+		self.inactive_criteria_course = self.add_inactive_criteria_course(self.criteria, self.get_course())
 
-	def create_criteria(self):
+	def create_criteria(self, user):
 		name = factory.fuzzy.FuzzyText(length=4)
 		description = factory.fuzzy.FuzzyText(length=8)
-		criteria = CriteriaFactory(name=name, description=description, user=self.get_authorized_instructor())
+		criteria = CriteriaFactory(name=name, description=description, user=user)
 		db.session.commit()
 		return criteria
 
+	def add_inactive_criteria_course(self, criteria, course):
+		criteria_course = CriteriaAndCoursesFactory(courses_id=course.id, criteria_id=criteria.id, active=False)
+		db.session.add(criteria_course)
+		db.session.commit()
+		return criteria_course
+
 	def get_criteria(self):
 		return self.criteria
+
+	def get_secondary_criteria(self):
+		return self.secondary_criteria
+
+	def get_inactive_criteria_course(self):
+		return self.inactive_criteria_course
 

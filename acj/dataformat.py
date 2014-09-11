@@ -96,7 +96,8 @@ def getCriteriaAndCourses():
 	format = {
 		'id': fields.Integer,
 		'criterion': fields.Nested(getCriteria()),
-		'courses_id': fields.Integer
+		'courses_id': fields.Integer,
+		'active': fields.Boolean
 	}
 	return format
 
