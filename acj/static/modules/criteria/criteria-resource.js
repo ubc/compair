@@ -43,7 +43,6 @@ module.controller(
 			$scope.criterionSubmitted = true;
 			CriteriaResource.save({'criteriaId': criterionId}, $scope.criterion).$promise.then(
 				function (ret) {
-					//$scope.criterion = {'name': '', 'description': ''}; // reset form
 					$scope.criterionSubmitted = false;
 					Toaster.success("Successfully updated the criterion.");
 					$location.path('/course/' + courseId + '/configure');

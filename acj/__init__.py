@@ -7,7 +7,7 @@ from .comment import on_comment_modified, on_comment_get, on_comment_list_get, o
 	on_answer_comment_modified, on_answer_comment_get, on_answer_comment_list_get, on_answer_comment_create, \
 	on_answer_comment_delete
 from .course import on_course_modified, on_course_get, on_course_list_get, on_course_create
-from .criteria import on_criteria_list_get
+from .criteria import on_criteria_list_get, criteria_get, criteria_post, criteria_update
 from .evalcomment import on_evalcomment_create
 from .judgement import on_answer_pair_get, on_judgement_create
 from .question import on_question_modified, on_question_get, on_question_list_get, on_question_create, \
@@ -170,6 +170,9 @@ on_answer_comment_delete.connect(log)
 
 # criteria events
 on_criteria_list_get.connect(log)
+criteria_get.connect(log)
+criteria_post.connect(log)
+criteria_update.connect(log)
 
 # answer events
 on_answer_modified.connect(log)

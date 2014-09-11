@@ -3,7 +3,13 @@
             <span>{{ key + 1 }}. {{ criterion.criterion.name }}</span>
             <a href="#/course/{{ courseId }}/criterion/{{ criterion.criterion.id }}/edit" ng-if="canManageCriteriaCourses || criterion.criterion.users_id==loggedInUserId">
 				Edit</a>
-            <!--<a href="#"><i class="fa fa-trash-o"></i></a> <!-- disable from course / add to dropdown -->
+            <a ng-click="remove(key)"><i class="fa fa-trash-o"></i></a> <!-- disable from course / add to dropdown -->
 		</div>
+		<br/>
         <!-- dropdown with leftover criteria / Add button-->
+		<select ng-model="selected" ng-options="key as c.name for (key, c) in availableCriteria">
+			<option value="">-- Available Criteria --</option>
+		</select>
+		<!-- used length because when list is empty the empty option gets a value of 0 which is valid -->
+		<a class="btn btn-primary" ng-click="add(selected)" ng-disabled="!selected || !availableCriteria.length">Add To Course</a>
 </div>

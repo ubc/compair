@@ -36,7 +36,8 @@ class DefaultFixture(object):
 
 		name = "Which is better?"
 		description = "<p>Choose the response that you think is the better of the two.</p>"
-		DefaultFixture.DEFAULT_CRITERIA = CriteriaFactory(name=name, description=description, user=DefaultFixture.ROOT_USER)
+		public = True
+		DefaultFixture.DEFAULT_CRITERIA = CriteriaFactory(name=name, description=description, public=public, user=DefaultFixture.ROOT_USER)
 
 class SampleDataFixture(object):
 	COURSE_NAMES = ["CDEF102", "BCDE101","ABCD100", "DEFG103", "EFGH104"]

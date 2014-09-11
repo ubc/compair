@@ -498,7 +498,7 @@ class Criteria(db.Model):
 	__table_args__ = default_table_args
 
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	name = db.Column(db.String(255), unique=True, nullable=False)
+	name = db.Column(db.String(255), nullable=False)
 	description = db.Column(db.Text)
 	# user who made this criteria
 	users_id = db.Column(
@@ -506,6 +506,7 @@ class Criteria(db.Model):
 		db.ForeignKey('Users.id', ondelete="CASCADE"),
 		nullable=False)
 	user = db.relationship("Users")
+	public = db.Column(db.Boolean, default=False, nullable=False)
 	modified = db.Column(
 		db.DateTime,
 		default=datetime.datetime.utcnow,
@@ -531,7 +532,7 @@ class CriteriaAndCourses(db.Model):
 		db.ForeignKey('Courses.id', ondelete="CASCADE"),
 		nullable=False)
 	course = db.relationship("Courses")
-
+	active = db.Column(db.Boolean, default=True, nullable=False)
 
 #################################################
 # Scores - The calculated score of the answer

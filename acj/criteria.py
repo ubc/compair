@@ -1,11 +1,12 @@
 from flask import Blueprint, current_app
-from bouncer.constants import READ, EDIT, CREATE
+from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal, reqparse
+from sqlalchemy import or_
 
 from . import dataformat
 from .core import event, db
-from .authorization import require
+from .authorization import require, allow
 from .models import CriteriaAndCourses, Courses, Criteria
 from .util import new_restful_api
 
@@ -36,8 +37,7 @@ class CriteriaRootAPI(Resource):
 	@login_required
 	def get(self, course_id):
 		course = Courses.query.get_or_404(course_id)
-		course_criteria = CriteriaAndCourses.query.filter_by(course=course)\
-			.order_by(CriteriaAndCourses.id).all()
+		course_criteria = criteriaInCourse(course_id)
 
 		on_criteria_list_get.send(
 			current_app._get_current_object(),
@@ -66,6 +66,44 @@ class CriteriaRootAPI(Resource):
 		return {'criterion': marshal(course_criterion, dataformat.getCriteriaAndCourses())}
 api.add_resource(CriteriaRootAPI, '')
 
+# /id
+class CourseCriteriaIdAPI(Resource):
+	@login_required
+	def delete(self, course_id, criteria_id):
+		course_criterion = CriteriaAndCourses.query.filter_by(criteria_id=criteria_id)\
+			.filter_by(courses_id=course_id).first_or_404()
+		require(DELETE, course_criterion)
+		course_criterion.active = False
+		db.session.add(course_criterion)
+		db.session.commit()
+		return {'criterionId': criteria_id}
+	@login_required
+	def post(self, course_id, criteria_id):
+		course = Courses.query.get_or_404(course_id)
+		criterion = Criteria.query.get_or_404(criteria_id)
+		course_criterion = CriteriaAndCourses.query.filter_by(criteria_id=criteria_id)\
+			.filter_by(courses_id=course_id).first()
+		if course_criterion:
+			course_criterion.active = True
+			db.session.add(course_criterion)
+		else:
+			course_criterion = addCourseCriteria(criterion, course)
+		require(CREATE, course_criterion)
+		db.session.commit()
+		return {'criterion': marshal(course_criterion, dataformat.getCriteriaAndCourses())}
+api.add_resource(CourseCriteriaIdAPI, '/<int:criteria_id>')
+
+#/criteria - public + authored
+class CriteriaAPI(Resource):
+	@login_required
+	def get(self):
+		if allow(MANAGE, Criteria):
+			criteria = Criteria.query.all()
+		else:
+			criteria = Criteria.query.filter(or_(Criteria.users_id==current_user.id, Criteria.public==True)).all()
+		return {'criteria': marshal(criteria, dataformat.getCriteria())}
+apiC.add_resource(CriteriaAPI, '')
+
 # /criteria/:id
 class CriteriaIdAPI(Resource):
 	@login_required
@@ -76,8 +114,7 @@ class CriteriaIdAPI(Resource):
 		criteria_get.send(
 			current_app._get_current_object(),
 			event_name = criteria_get.name,
-			user = current_user,
-			criterion_id = criterion.id
+			user = current_user
 		)
 
 		return {'criterion': marshal(criterion, dataformat.getCriteria())}
@@ -94,8 +131,7 @@ class CriteriaIdAPI(Resource):
 		criteria_update.send(
 			current_app._get_current_object(),
 			event_name = criteria_update.name,
-			user=current_user,
-			criterion_id=criterion.id
+			user=current_user
 		)
 
 		return {'criterion': marshal(criterion, dataformat.getCriteria())}
@@ -117,3 +153,8 @@ def addCourseCriteria(criterion, course):
 	)
 	db.session.add(course_criterion)
 	return course_criterion
+
+def criteriaInCourse(course_id):
+	course_criteria = CriteriaAndCourses.query.filter_by(courses_id=course_id)\
+		.filter_by(active=True).order_by(CriteriaAndCourses.id).all()
+	return course_criteria

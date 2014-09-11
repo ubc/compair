@@ -39,7 +39,7 @@ module.factory('CourseResource', function($q, $routeParams, $log, $resource)
 /***** Controllers *****/
 module.controller(
 	'CourseConfigureController',
-	function($scope, $log, $routeParams, $location, CourseResource, CoursesCriteriaResource, EditorOptions, Authorize, Session, Toaster)
+	function($scope, $log, $routeParams, $location, CourseResource, CriteriaResource, CoursesCriteriaResource, EditorOptions, Authorize, Session, Toaster)
 	{
 		$scope.editorOptions = EditorOptions.basic;
 		// get course info
@@ -63,6 +63,22 @@ module.controller(
 		CoursesCriteriaResource.get({'courseId': $scope.courseId}).$promise.then(
 			function (ret) {
 				$scope.criteria = ret.objects;
+				var inCourse = {};
+				angular.forEach($scope.criteria, function(c, key) {
+					inCourse[c.criterion.id] = 1;
+				});
+				CriteriaResource.get().$promise.then(
+					function (ret) {
+						$scope.availableCriteria = ret.criteria.filter(
+							function(c) {
+								return !(c.id in inCourse);
+							}
+						);
+					},
+					function (ret) {
+						Toaster.reqerror("Unable to retrieve available criteria.", ret);
+					}
+				);
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve this course's criteria", ret);
@@ -94,6 +110,34 @@ module.controller(
 				}
 			);
 		};
+		$scope.add = function(key) {
+			// not proceed if empty option is being added
+			if (!key)
+				return;
+			var criterionId = $scope.availableCriteria[key].id;
+			CoursesCriteriaResource.save({'courseId': $scope.courseId, 'criteriaId': criterionId}, {}).$promise.then(
+				function (ret) {
+					$scope.availableCriteria.splice(key, 1);
+					$scope.criteria.push(ret.criterion);
+				},
+				function (ret) {
+					Toaster.reqerror("Unable to add the criterion to the course", ret);
+				}
+			);
+		}
+		// remove criterion from course - eg. make it inactive
+		$scope.remove = function(key) {
+			var criterionId = $scope.criteria[key].criterion.id;
+			CoursesCriteriaResource.delete({'courseId': $scope.courseId, 'criteriaId': criterionId}).$promise.then(
+				function (ret) {
+					$scope.availableCriteria.push($scope.criteria[key].criterion);
+					$scope.criteria.splice(key, 1);
+				},
+				function (ret) {
+					Toaster.reqerror("Unable to remove criterion " + ret.criterionId, ret);
+				}
+			);
+		}
 	}
 );
 
