@@ -160,3 +160,94 @@ class AnswersAPITests(ACJTestCase):
 		self.assertEqual(expected_flag_off['flagged'], rv.json['flagged'],
 						 "Expected answer to be flagged.")
 
+	def test_get_question_answered(self):
+		count_url = self.base_url + '/count'
+
+		# test login required
+		rv = self.client.get(count_url)
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_student().username)
+		rv = self.client.get(count_url)
+		self.assert403(rv)
+		self.logout()
+
+		# test invalid course id
+		self.login(self.data.get_authorized_student().username)
+		rv = self.client.get('/api/courses/999/questions/1/answers/count')
+		self.assert404(rv)
+
+		# test invalid question id
+		rv = self.client.get('/api/courses/1/questions/999/answers/count')
+		self.assert404(rv)
+
+		# test successful query - no answers
+		rv = self.client.get(count_url)
+		self.assert200(rv)
+		self.assertEqual(0, rv.json['answered'])
+		self.logout()
+
+		# test successful query - answered
+		self.login(self.data.get_extra_student1().username)
+		rv = self.client.get(count_url)
+		self.assert200(rv)
+		self.assertEqual(1, rv.json['answered'])
+		self.logout()
+
+	def test_get_answered_count(self):
+		answered_url = '/api/courses/' + str(self.data.get_course().id) + '/answers/answered'
+
+		# test login required
+		rv = self.client.get(answered_url)
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_student().username)
+		rv = self.client.get(answered_url)
+		self.assert403(rv)
+		self.logout()
+
+		# test invalid course id
+		self.login(self.data.get_authorized_student().username)
+		rv = self.client.get('/api/courses/999/answered')
+		self.assert404(rv)
+
+		# test successful query - have not answered any questions in the course
+		rv = self.client.get(answered_url)
+		self.assert200(rv)
+		self.assertEqual(0, len(rv.json['answered']))
+		self.logout()
+
+		# test successful query - have submitted one answer per question
+		self.login(self.data.get_extra_student1().username)
+		rv = self.client.get(answered_url)
+		self.assert200(rv)
+		expected = {str(question.id): 1 for question in self.data.get_questions()}
+		self.assertEqual(expected, rv.json['answered'])
+		self.logout()
+
+	def test_get_answer_count(self):
+		count_url = '/api/courses/' + str(self.data.get_course().id) + '/answers/count'
+
+		# test login required
+		rv = self.client.get(count_url)
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_instructor().username)
+		rv = self.client.get(count_url)
+		self.assert403(rv)
+		self.logout()
+
+		# test invalid course id
+		self.login(self.data.get_authorized_instructor().username)
+		rv = self.client.get('/api/courses/999/answers/count')
+		self.assert404(rv)
+
+		# test successful query
+		rv = self.client.get(count_url)
+		self.assert200(rv)
+		expected = {str(question.id): 2 for question in self.data.get_questions()}
+		self.assertEqual(expected, rv.json['count'])
+		self.logout()

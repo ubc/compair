@@ -92,14 +92,14 @@ class SimpleQuestionsTestData(BasicTestData):
 class SimpleAnswersTestData(SimpleQuestionsTestData):
 	def __init__(self):
 		SimpleQuestionsTestData.__init__(self)
-		extra_student1 = self.create_student()
-		extra_student2 = self.create_student()
-		self.enrol_student(extra_student1, self.get_course())
-		self.enrol_student(extra_student2, self.get_course())
+		self.extra_student1 = self.create_student()
+		self.extra_student2 = self.create_student()
+		self.enrol_student(self.extra_student1, self.get_course())
+		self.enrol_student(self.extra_student2, self.get_course())
 		self.answers = []
 		for question in self.get_questions():
-			self.answers.append(self.create_answer(question, extra_student1))
-			self.answers.append(self.create_answer(question, extra_student2))
+			self.answers.append(self.create_answer(question, self.extra_student1))
+			self.answers.append(self.create_answer(question, self.extra_student2))
 
 	def create_answer(self, question, author):
 		post = PostsFactory(courses_id = question.post.courses_id, users_id = author.id)
@@ -110,6 +110,9 @@ class SimpleAnswersTestData(SimpleQuestionsTestData):
 
 	def get_answers(self):
 		return self.answers
+
+	def get_extra_student1(self):
+		return self.extra_student1
 
 class JudgmentsTestData(SimpleAnswersTestData):
 	def __init__(self):

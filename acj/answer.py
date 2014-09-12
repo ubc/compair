@@ -3,6 +3,7 @@ from flask import Blueprint, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
+from sqlalchemy import func
 
 from . import dataformat
 from .core import db
@@ -191,6 +192,11 @@ api.add_resource(AnswerFlagAPI, '/<int:answer_id>/flagged')
 class AnswerCountAPI(Resource):
 	@login_required
 	def get(self, course_id, question_id):
+		Courses.query.get_or_404(course_id)
+		PostsForQuestions.query.get_or_404(question_id)
+		post = Posts(courses_id=course_id)
+		answer = PostsForAnswers(post=post)
+		require(READ, answer)
 		answered = PostsForAnswers.query.filter_by(postsforquestions_id=question_id).join(Posts)\
 			.filter(Posts.users_id==current_user.id).count()
 		return {'answered': answered }
@@ -199,7 +205,24 @@ api.add_resource(AnswerCountAPI, '/count')
 class AnsweredAPI(Resource):
 	@login_required
 	def get(self, course_id):
-		answered = PostsForAnswers.query.join(Posts).filter_by(courses_id=course_id).join(Users).filter_by(id=current_user.id).all()
-		answered = {x.postsforquestions_id: 1 for x in answered}
+		Courses.query.get_or_404(course_id)
+		post = Posts(courses_id=course_id)
+		answer = PostsForAnswers(post=post)
+		require(READ, answer)
+		answered = PostsForAnswers.query.with_entities(PostsForAnswers.postsforquestions_id, func.count(PostsForAnswers.id)).join(Posts)\
+			.filter_by(courses_id=course_id).join(Users).filter_by(id=current_user.id).group_by(PostsForAnswers.postsforquestions_id).all()
+		answered = {qId: count for (qId, count) in answered}
 		return {'answered': answered}
-apiAll.add_resource(AnsweredAPI, '/count')
+apiAll.add_resource(AnsweredAPI, '/answered')
+
+class AnswerCountAPI(Resource):
+	@login_required
+	def get(self, course_id):
+		Courses.query.get_or_404(course_id)
+		post = Posts(courses_id=course_id)
+		answer = PostsForAnswers(post=post)
+		require(READ, answer)
+		answers = PostsForAnswers.query.with_entities(PostsForAnswers.postsforquestions_id, func.count(PostsForAnswers.id)).join(Posts).filter_by(courses_id=course_id).group_by(PostsForAnswers.postsforquestions_id).all()
+		count = {qId: count for (qId, count) in answers}
+		return {'count': count}
+apiAll.add_resource(AnswerCountAPI, '/count')

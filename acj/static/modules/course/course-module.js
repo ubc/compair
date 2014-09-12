@@ -26,8 +26,9 @@ module.factory('CourseResource', function($q, $routeParams, $log, $resource)
 			// invalidation, I don't want to deal with that manually
 			'getQuestions': {url: '/api/courses/:id/questions'},
 			'getJudgementCount': {url: '/api/courses/:id/judgements/count'},
-			'getAnswered': {url: '/api/courses/:id/answers/count'},
-			'getInstructors': {url: '/api/courses/:id/users/instructors'}
+			'getAnswered': {url: '/api/courses/:id/answers/answered'},
+			'getInstructors': {url: '/api/courses/:id/users/instructors'},
+			'getAnswerCount': {url: '/api/courses/:id/answers/count'}
 		}
 	);
 	ret.MODEL = "Courses"; // add constant to identify the model
@@ -148,6 +149,8 @@ module.controller(
 	{
 		// get course info
 		var courseId = $scope.courseId = $routeParams['courseId'];
+		$scope.answered = {};
+		$scope.count = {};
 		Authorize.can(Authorize.CREATE, QuestionResource.MODEL).then(function(result) {
 				$scope.canCreateQuestions = result;
 		});
@@ -173,14 +176,19 @@ module.controller(
 				CourseResource.getJudgementCount({'id': courseId}).$promise.then(
 					function (ret) {
 						var judged = ret.judgements;
-						var required = 0;
 						for (key in $scope.questions) {
 							ques = $scope.questions[key];
-							required = ques.num_judgement_req;
+							var required = ques.num_judgement_req;
 							if (!(ques.id in judged))
 								judged[ques.id] = 0;
 							ques['left'] = judged[ques.id] <= required ?
 								required - judged[ques.id] : 0;
+							var answered = ques.id in $scope.answered ? $scope.answered[ques.id] : 0;
+							var count = ques.id in $scope.count ? $scope.count[ques.id] : 0;
+							var diff = count - answered;
+							ques['eval_left'] = ((diff * (diff - 1)) / 2);
+							ques['warning'] = (required - judged[ques.id]) <= ques['eval_left'];
+							ques['leftover'] = ques['left'] - ques['eval_left'];
 						}
 					},
 					function (ret) {
@@ -199,7 +207,15 @@ module.controller(
 				$scope.answered = ret.answered;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve your answer history.", ret)
+				Toaster.reqerror("Unable to retrieve your answer history.", ret);
+			}
+		);
+		CourseResource.getAnswerCount({'id': courseId}).$promise.then(
+			function (ret) {
+				$scope.count = ret.count;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve the answer counts for the questions.", ret);
 			}
 		);
 	}
