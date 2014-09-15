@@ -274,11 +274,11 @@ module.controller("QuestionCreateController",
 		$scope.questionSubmit = function () {
 			$scope.submitted = true;
 			// answer end datetime has to be after answer start datetime
-			if ($scope.question.answer_start > $scope.question.answer_end) {
+			if ($scope.question.answer_start >= $scope.question.answer_end) {
 				Toaster.error('The answer period is invalid');
 				$scope.submitted = false;
 				return;
-			} else if ($scope.question.availableCheck && !($scope.question.answer_end <= $scope.question.judge_start && $scope.question.judge_start < $scope.question.judge_end)) {
+			} else if ($scope.question.availableCheck && !($scope.question.answer_end <= $scope.question.judge_start && $scope.question.judge_start <= $scope.question.judge_end)) {
 				Toaster.error('The answer and/or judging period is invalid.');
 				$scope.submitted = false;
 				return;
