@@ -223,7 +223,7 @@ module.controller(
 
 module.controller(
 	'CourseCreateController',
-	function($scope, $log, $location, CourseResource, EditorOptions, Toaster)
+	function($scope, $log, $location, Session, CourseResource, EditorOptions, Toaster)
 	{
 		$scope.editorOptions = EditorOptions.basic;
 		//initialize course so this scope can access data from included form
@@ -233,9 +233,11 @@ module.controller(
 			CourseResource.save($scope.course).$promise.then(
 				function (ret)
 				{
-					$scope.submitted = false;
-					Toaster.success(ret.name + " created successfully!");
-					$location.path('/course/' + ret.id);
+					Session.refresh().then(function(){
+						$scope.submitted = false;
+						Toaster.success(ret.name + " created successfully!");
+						$location.path('/course/' + ret.id);
+					});
 				},
 				function (ret)
 				{

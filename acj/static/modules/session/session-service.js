@@ -74,7 +74,7 @@
 
                 $log.debug('Getting permission from server');
                 var scope = this;
-                return $http.get('/session/permissions')
+                return $http.get('/session/permission')
                     .then(function (result) {
                         scope._permissions = result.data;
                         $cookieStore.put('current.permissions', scope._permissions);
@@ -98,7 +98,16 @@
                 this._permissions = null;
                 $cookieStore.remove('current.user');
                 $cookieStore.remove('current.permissions');
-            }
+            },
+			refresh: function() {
+				var scope = this;
+				return $http.get('/session/permission')
+                    .then(function (result) {
+						scope._permissions = result.data;
+						$cookieStore.put('current.permissions', result.data);
+						return true;
+                    });
+			}
         };
     });
 
