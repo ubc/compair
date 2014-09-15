@@ -124,7 +124,7 @@ describe('Service: Session', function() {
             var permissions = null;
 
             beforeEach(function() {
-                $httpBackend.expectGET('/session/permissions').respond(expectedSession.permissions);
+                $httpBackend.expectGET('/session/permission').respond(expectedSession.permissions);
 
                 mockSession.getPermissions().then(function(result) {
                     permissions = result;
