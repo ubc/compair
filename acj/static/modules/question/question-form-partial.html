@@ -6,7 +6,8 @@
 			<label for="questionTitle" class="required-star">Question</label>
 			<input class="form-control" id="questionTitle" type="text"
 				name="questionTitle" ng-model="question.title" placeholder="short form of the question"
-				required auto-focus />
+				required ng-maxlength="255" auto-focus />
+			<span ng-if="questionForm.questionTitle.$error.maxlength" class="help-block has-error">Maximum length is 255 characters</span>
 		</acj-field-with-feedback>
 		<div>
 			<label for="importFile">Attach PDF</label>
