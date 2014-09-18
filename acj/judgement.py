@@ -230,18 +230,19 @@ class AnswerPairGenerator():
 		# - There must be sufficient answers to form at least 1 pair
 		# - There must still be at least 1 answer the user hasn't judged
 		# - Cannot return a pair that the user has already seen before
-		if len(self.answers) < 2:
+		if len(self.answers) < 3:
 			raise InsufficientAnswersException
 		if self._has_user_judged_all_answers():
 			raise UserHasJudgedAllAnswers
 		unscored_answers = [answer for answer in self.answers if not answer.scores]
 		# if there are any answers that hasn't been scored, we need to judge those first
+		pair = None
 		if unscored_answers:
 			pair = self._get_unscored_pair(unscored_answers)
-			return self._create_or_get_existing_pairing(pair)
-		# match by closest score, when we have many criteria, match score on only one criterion
-		course_criteria = CriteriaAndCourses.query.filter_by(courses_id=self.course_id).all()
-		pair = self._get_scored_pair(random.choice(course_criteria))
+		if not pair:
+			# match by closest score, when we have many criteria, match score on only one criterion
+			course_criteria = CriteriaAndCourses.query.filter_by(courses_id=self.course_id).all()
+			pair = self._get_scored_pair(random.choice(course_criteria))
 		return self._create_or_get_existing_pairing(pair)
 
 	def _create_or_get_existing_pairing(self, pair_array):
@@ -313,14 +314,15 @@ class AnswerPairGenerator():
 		random.shuffle(unscored_answers)
 		pairs = self._pair_with_neighbours(unscored_answers)
 		if not pairs: # edge case where there's insufficient unscored answers to form a pair
-			random_partner = random.choice(self.answers)
+			# need to prevent picking the same answer for partner
+			answers = [answer for answer in self.answers if answer.id != unscored_answers[0].id]
+			answer_ids = [answer.id for answer in answers]
+			random_partner = random.choice(answers)
 			return [unscored_answers[0], random_partner]
 		for pair in pairs:
 			if not self._has_user_already_judged_pair(pair):
 				return pair
-		raise AnswerMissingScoreCalculation	# Can only get here if the user has judged all pairs,
-											# which is only possible if score wasn't calculated
-											# on Judgement submit
+		return None
 
 	def _has_user_already_judged_pair(self, pair):
 		'''
