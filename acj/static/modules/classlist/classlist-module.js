@@ -9,7 +9,8 @@ var module = angular.module('ubc.ctlt.acj.classlist',
 		'ngResource',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.course',
-		'ubc.ctlt.acj.toaster'
+		'ubc.ctlt.acj.toaster',
+		'ubc.ctlt.acj.user'
 	]
 );
 
@@ -18,8 +19,14 @@ module.factory(
 	"ClassListResource",
 	function ($resource)
 	{
+		var enrolUrl = '/api/courses/:courseId/users/:userId/enrol';
 		var ret = $resource(
-			'/api/courses/:courseId/users'
+			'/api/courses/:courseId/users',
+			{},
+			{
+				enrol: {method: 'POST', url: enrolUrl},
+				unenrol: {method: 'DELETE', url: enrolUrl}
+			}
 		);
 		ret.MODEL = "CoursesAndUsers";
 		return ret;
@@ -144,8 +151,89 @@ module.controller(
 				Toaster.reqerror("Unable to retrieve course: "+courseId, ret);
 			}
 		);
-		
+
 		$scope.headers = ['Username', 'First Name', 'Last Name', 'Email'];
+	}
+);
+
+module.controller(
+	'EnrolInstructorController',
+	function($scope, $log, $routeParams, $route, $location, ClassListResource, Toaster, Session, CourseResource, UserTypeResource)
+	{
+
+		$scope.course = {};
+		$scope.user = {};
+		var courseId = $routeParams['courseId'];
+		// TODO: generate drop down menu to select role
+		CourseResource.get({'id':courseId}).$promise.then(
+			function (ret) {
+				$scope.course = ret;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve course: "+courseId, ret);
+			}
+		);
+		CourseResource.getInstructors({'id': courseId}).$promise.then(
+			function (ret) {
+				$scope.enroled = ret.instructors;
+				UserTypeResource.getInstructors().$promise.then(
+					function (ret) {
+						// remove already enroled instructors from list
+						angular.forEach($scope.enroled, function(c, key) {
+							if (key in ret.instructors) {
+								delete ret.instructors[key];
+							}
+						});
+						$scope.instructors = ret.instructors;
+					},
+					function (ret) {
+						Toaster.reqerror("Unable to retrieve instructors", ret);
+					}
+				);
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve instructors", ret);
+			}
+		);
+		$scope.enrolSubmit = function() {
+			$scope.submitted = true;
+			ClassListResource.enrol({'courseId': courseId, 'userId': $scope.user.user_id}, $scope.user).$promise.then(
+				function (ret) {
+					$scope.submitted = false;
+					delete $scope.instructors[ret.user.id];
+					$scope.enroled[ret.user.id] = ret.user.fullname;
+					$scope.user.user_id = null; // reset form
+					Toaster.success('Successfully enroled '+ ret.user.fullname +' with the role ' + ret.usertypesforcourse.name);
+				},
+				function (ret) {
+					$scope.submitted = false;
+					Toaster.reqerror("Failed to enrol user " + $scope.user_id, ret);
+				}
+			);
+		};
+
+		$scope.remove = function (user_id) {
+			Session.getUser().then(function(user) {
+				$scope.loggedInUserId = user.id;
+			});
+			ClassListResource.unenrol({'courseId': courseId, 'userId': user_id}).$promise.then(
+				function (ret) {
+					Toaster.success('Successfully unenroled '+ ret.user.fullname +' from the course.');
+					// refresh permissions and redirect them to home if they unenroll themselves
+					if ($scope.loggedInUserId == ret.user.id) {
+						Session.refresh().then(function () {
+							$location.path("#/");
+						});
+					} else {
+						delete $scope.enroled[ret.user.id];
+						$scope.instructors[ret.user.id] = ret.user.fullname;
+					}
+				},
+				function (ret) {
+					Toaster.reqerror('Failed to unenrol the user from the course.', ret);
+				}
+			);
+		}
 	}
 );
 

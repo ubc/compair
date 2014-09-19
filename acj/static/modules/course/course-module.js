@@ -27,6 +27,7 @@ module.factory('CourseResource', function($q, $routeParams, $log, $resource)
 			'getQuestions': {url: '/api/courses/:id/questions'},
 			'getJudgementCount': {url: '/api/courses/:id/judgements/count'},
 			'getAnswered': {url: '/api/courses/:id/answers/answered'},
+			'getInstructorsLabels': {url: '/api/courses/:id/users/instructors/labels'},
 			'getInstructors': {url: '/api/courses/:id/users/instructors'},
 			'getAnswerCount': {url: '/api/courses/:id/answers/count'}
 		}

@@ -6,7 +6,8 @@ from flask.ext.testing import TestCase
 from acj import create_app
 from acj.manage.database import populate
 from acj.core import db
-from acj.models import PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, CoursesAndUsers
+from acj.models import PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, CoursesAndUsers,\
+	UserTypesForCourse
 from data.fixtures.test_data import SimpleAnswersTestData, BasicTestData
 from tests import test_app_settings
 
@@ -288,8 +289,9 @@ class ClassListsAPITests(ACJTestCase):
 		rv = self.client.get(self.url)
 		self.assert200(rv)
 		actual_users = rv.json['objects']
+		drop_id = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
 		expected_users = CoursesAndUsers.query.\
-			filter_by(courses_id=self.courseId).all()
+			filter_by(courses_id=self.courseId).filter(CoursesAndUsers.usertypesforcourse_id!=drop_id).all()
 		for i, expected in enumerate(expected_users):
 			actual = actual_users[i]
 			self.assertEqual(expected.user.username, actual['user']['username'])

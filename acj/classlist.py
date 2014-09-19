@@ -4,11 +4,12 @@ import csv
 import string
 import random
 
-from bouncer.constants import EDIT, CREATE
+from bouncer.constants import EDIT, CREATE, READ
 from flask import Blueprint, Flask, request, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from werkzeug.utils import secure_filename
+from flask.ext.restful.reqparse import RequestParser
 from . import dataformat
 
 from .core import db
@@ -18,9 +19,11 @@ from .core import event
 from .models import CoursesAndUsers, Courses, Users, UserTypesForSystem, UserTypesForCourse
 from .util import new_restful_api
 
-
 classlist_api = Blueprint('classlist_api', __name__)
 api = new_restful_api(classlist_api)
+
+new_course_user_parser = RequestParser()
+new_course_user_parser.add_argument('usertypesforcourse_id', type=int)
 
 #upload file column name to index number
 USERNAME = 0
@@ -224,11 +227,60 @@ class ClasslistRootAPI(Resource):
 			return {'error':'Wrong file type'}, 400
 api.add_resource(ClasslistRootAPI, '')
 
-# /instructors - return list of TAs and Instructors
+class EnrolAPI(Resource):
+	@login_required
+	def post(self, course_id, user_id):
+		course = Courses.query.get_or_404(course_id)
+		user = Users.query.get_or_404(user_id)
+		coursesandusers = CoursesAndUsers.query.filter_by(users_id=user.id, courses_id=course.id).first()
+		if not coursesandusers:
+			coursesandusers = CoursesAndUsers(courses_id = course.id)
+		require(EDIT, coursesandusers)
+		params = new_course_user_parser.parse_args()
+		# defaults to instructor if no usertypesforcourse_id is given
+		role_id = params.get('usertypesforcourse_id')
+		if not role_id:
+			role_id = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_INSTRUCTOR).first().id
+		type = UserTypesForCourse.query.get_or_404(role_id)
+		coursesandusers.users_id = user.id
+		coursesandusers.usertypesforcourse_id = type.id
+		result = {'user': {'id': user.id, 'fullname': user.fullname}, 'usertypesforcourse': {'id': type.id, 'name': type.name}}
+		db.session.add(coursesandusers)
+		db.session.commit()
+		return result
+	@login_required
+	def delete(self, course_id, user_id):
+		course = Courses.query.get_or_404(course_id)
+		user = Users.query.get_or_404(user_id)
+		coursesandusers = CoursesAndUsers.query.filter_by(users_id=user.id, courses_id=course.id).first_or_404()
+		require(EDIT, coursesandusers)
+		drop = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first()
+		coursesandusers.usertypesforcourse_id = drop.id
+		result = {'user': {'id': user.id, 'fullname': user.fullname}, 'usertypesforcourse': {'id': drop.id, 'name': drop.name}}
+		db.session.add(coursesandusers)
+		db.session.commit()
+		return result
+api.add_resource(EnrolAPI, '/<int:user_id>/enrol')
+
+# /instructors/labels - return list of TAs and Instructors labels
 class TeachersAPI(Resource):
 	@login_required
 	def get(self, course_id):
+		course = Courses.query.get_or_404(course_id)
+		require(READ, course)
 		instructors = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter(UserTypesForCourse.name.in_([UserTypesForCourse.TYPE_TA, UserTypesForCourse.TYPE_INSTRUCTOR])).all()
 		instructor_ids = {u.users_id: u.usertypeforcourse.name for u in instructors}
 		return {'instructors': instructor_ids}
-api.add_resource(TeachersAPI, '/instructors')
+api.add_resource(TeachersAPI, '/instructors/labels')
+
+# /instructors/names - return list of Instructors in the course
+class InstructorsAPI(Resource):
+	@login_required
+	def get(self, course_id):
+		Courses.query.get_or_404(course_id)
+		coursesandusers = CoursesAndUsers(courses_id=course_id)
+		require(READ, coursesandusers)
+		instructors = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_INSTRUCTOR).all()
+		instructor_ids = {u.users_id: u.user.fullname for u in instructors}
+		return {'instructors': instructor_ids}
+api.add_resource(InstructorsAPI, '/instructors')

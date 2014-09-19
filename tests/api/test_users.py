@@ -5,9 +5,15 @@ from acj import db, Users
 from data.fixtures import DefaultFixture
 from data.fixtures import UsersFactory
 from tests.test_acj import ACJTestCase
+from acj.models import UserTypesForSystem
+from data.fixtures.test_data import BasicTestData
 
 
 class UsersAPITests(ACJTestCase):
+	def setUp(self):
+		super(UsersAPITests, self).setUp()
+		self.data = BasicTestData()
+
 	def test_unauthorized(self):
 		rv = self.client.get('/api/users')
 		self.assert401(rv)
@@ -64,8 +70,44 @@ class UsersAPITests(ACJTestCase):
 		rv = self.client.get('/api/users')
 		self.assert200(rv)
 		users = rv.json
-		self.assertEqual(users['num_results'], 1)
+		self.assertEqual(users['num_results'], 6)
 		self.assertEqual(users['objects'][0]['username'], 'root')
+
+	def test_usertypes(self):
+		# test login required
+		rv = self.client.get('/api/usertypes')
+		self.assert401(rv)
+
+		# test results
+		self.login('root', 'password')
+		rv = self.client.get('/api/usertypes')
+		self.assert200(rv)
+		types = rv.json
+		self.assertEqual(len(types), 3)
+		self.assertEqual(types[0]['name'], UserTypesForSystem.TYPE_NORMAL)
+		self.assertEqual(types[1]['name'], UserTypesForSystem.TYPE_INSTRUCTOR)
+		self.assertEqual(types[2]['name'], UserTypesForSystem.TYPE_SYSADMIN)
+		self.logout()
+
+	def test_get_instructors(self):
+		# test login required
+		rv = self.client.get('/api/usertypes/instructors')
+		self.assert401(rv)
+
+		# test results
+		self.login('root', 'password')
+		rv = self.client.get('/api/usertypes/instructors')
+		self.assert200(rv)
+		instructors = rv.json['instructors']
+		expected = {
+			str(self.data.get_authorized_instructor().id): self.data.get_authorized_instructor().fullname,
+			str(self.data.get_unauthorized_instructor().id): self.data.get_unauthorized_instructor().fullname,
+			str(self.data.get_dropped_instructor().id): self.data.get_dropped_instructor().fullname
+		}
+		for id in instructors:
+			self.assertEqual(expected[id], instructors[id])
+		self.logout()
+
 
 	def _verify_permissions(self, userid, permissions):
 		user = Users.query.get(userid)

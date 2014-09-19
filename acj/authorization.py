@@ -37,6 +37,8 @@ def define_authorization(user, they):
 	# Assign permissions based on course roles
 	# give access to courses the user is enroled in
 	for entry in user.coursesandusers:
+		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_DROPPED:
+			continue
 		course = entry.course
 		they.can(READ, Courses, id=course.id)
 		they.can(READ, PostsForQuestions, courses_id=course.id)

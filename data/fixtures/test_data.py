@@ -19,11 +19,13 @@ class BasicTestData():
 		self.authorized_student = self.create_normal_user()
 		self.unauthorized_instructor = self.create_instructor() # unauthorized to the main course
 		self.unauthorized_student = self.create_normal_user()
+		self.dropped_instructor = self.create_instructor() # dropped from the main course
 		self.enrol_instructor(self.authorized_instructor, self.main_course)
 		self.enrol_ta(self.authorized_ta, self.main_course)
 		self.enrol_student(self.authorized_student, self.main_course)
 		self.enrol_instructor(self.unauthorized_instructor, self.secondary_course)
 		self.enrol_student(self.unauthorized_student, self.secondary_course)
+		self.unenrol(self.dropped_instructor, self.main_course)
 	def create_course(self):
 		course = CoursesFactory()
 		db.session.commit()
@@ -47,6 +49,8 @@ class BasicTestData():
 		self.enrol_user(user, course, UserTypesForCourse.TYPE_INSTRUCTOR)
 	def enrol_ta(self, user, course):
 		self.enrol_user(user, course, UserTypesForCourse.TYPE_TA)
+	def unenrol(self, user, course):
+		self.enrol_user(user, course, UserTypesForCourse.TYPE_DROPPED)
 	def enrol_user(self, user, course, type):
 		course_type = UserTypesForCourse.query.filter_by(name=type).first()
 		CoursesAndUsersFactory(courses_id=course.id, users_id=user.id,
@@ -64,6 +68,8 @@ class BasicTestData():
 		return self.unauthorized_instructor
 	def get_unauthorized_student(self):
 		return self.unauthorized_student
+	def get_dropped_instructor(self):
+		return self.dropped_instructor
 	def get_default_criteria(self):
 		return self.default_criteria
 

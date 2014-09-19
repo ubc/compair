@@ -241,7 +241,7 @@ module.controller("QuestionViewController",
 				}
 		);
 
-		CourseResource.getInstructors({'id': $scope.courseId}).$promise.then(
+		CourseResource.getInstructorsLabels({'id': $scope.courseId}).$promise.then(
 			function (ret) {
 				$scope.instructors = ret.instructors;
 			},

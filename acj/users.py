@@ -9,7 +9,7 @@ from .authorization import is_user_access_restricted, require, allow
 from .core import db, event
 from .util import pagination, new_restful_api, get_model_changes
 
-from .models import Users, UserTypesForSystem, Courses
+from .models import Users, UserTypesForSystem, Courses, UserTypesForCourse
 
 users_api = Blueprint('users_api', __name__)
 user_types_api = Blueprint('user_types_api', __name__)
@@ -122,6 +122,7 @@ class UserCourseListAPI(Resource):
 	@login_required
 	def get(self, id):
 		user = Users.query.get_or_404(id)
+		dropped = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
 		course = Courses()
 		# we want to list courses only, so only check the association table
 		if allow(MANAGE, course):
@@ -129,6 +130,8 @@ class UserCourseListAPI(Resource):
 		else:
 			courses = []
 			for courseanduser in user.coursesandusers:
+				if courseanduser.usertypesforcourse_id == dropped:
+					continue
 				require(READ, courseanduser)
 				courses.append(courseanduser.course)
 
@@ -155,6 +158,14 @@ class UserTypesAPI(Resource):
 			order_by("id").all()
 		return marshal(types, dataformat.getUserTypesForSystem())
 
+# /instructors
+class UserTypesInstructorsAPI(Resource):
+	@login_required
+	def get(self):
+		id = UserTypesForSystem.query.filter_by(name=UserTypesForSystem.TYPE_INSTRUCTOR).first().id
+		instructors = Users.query.filter_by(usertypesforsystem_id=id).order_by(Users.firstname).all()
+		instructors = {i.id: i.fullname for i in instructors}
+		return {'instructors': instructors}
 
 # /password
 class UserUpdatePasswordAPI(Resource):
@@ -183,6 +194,7 @@ api.add_resource(UserCourseListAPI, '/<int:id>/courses')
 api.add_resource(UserUpdatePasswordAPI, '/password/<int:id>')
 apiT = new_restful_api(user_types_api)
 apiT.add_resource(UserTypesAPI, '')
+apiT.add_resource(UserTypesInstructorsAPI, '/instructors')
 
 #def import_users(list, group=True):
 #	schema = {
