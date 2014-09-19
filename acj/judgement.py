@@ -287,7 +287,7 @@ class AnswerPairGenerator():
 			if score == None:
 				raise MissingScoreFromAnswer
 			answer_scores[answer] = score.score
-		sorted_answers = sorted(answer_scores.iteritems(), key=operator.itemgetter(1))
+		sorted_answers = sorted(answer_scores.items(), key=operator.itemgetter(1))
 		pairs = self._pair_with_neighbours(sorted_answers)
 		pair_score_differences = {}
 		# group together pairs that have the same score differences

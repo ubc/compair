@@ -1,4 +1,5 @@
 import datetime
+import copy
 from acj import db
 import factory.fuzzy
 from acj.models import UserTypesForSystem, UserTypesForCourse, Criteria
@@ -14,10 +15,12 @@ class BasicTestData():
 		self.main_course_default_criteria = self.add_criteria_course(self.default_criteria, self.main_course)
 		self.secondary_course_default_criteria = self.add_criteria_course(self.default_criteria, self.secondary_course)
 		self.authorized_instructor = self.create_instructor()
-		self.authorized_student = self.create_student()
+		self.authorized_ta = self.create_normal_user()
+		self.authorized_student = self.create_normal_user()
 		self.unauthorized_instructor = self.create_instructor() # unauthorized to the main course
-		self.unauthorized_student = self.create_student()
+		self.unauthorized_student = self.create_normal_user()
 		self.enrol_instructor(self.authorized_instructor, self.main_course)
+		self.enrol_ta(self.authorized_ta, self.main_course)
 		self.enrol_student(self.authorized_student, self.main_course)
 		self.enrol_instructor(self.unauthorized_instructor, self.secondary_course)
 		self.enrol_student(self.unauthorized_student, self.secondary_course)
@@ -31,7 +34,7 @@ class BasicTestData():
 		return course_criteria
 	def create_instructor(self):
 		return self.create_user(UserTypesForSystem.TYPE_INSTRUCTOR)
-	def create_student(self):
+	def create_normal_user(self):
 		return self.create_user(UserTypesForSystem.TYPE_NORMAL)
 	def create_user(self, type):
 		sys_type = UserTypesForSystem.query.filter_by(name=type).first()
@@ -42,6 +45,8 @@ class BasicTestData():
 		self.enrol_user(user, course, UserTypesForCourse.TYPE_STUDENT)
 	def enrol_instructor(self, user, course):
 		self.enrol_user(user, course, UserTypesForCourse.TYPE_INSTRUCTOR)
+	def enrol_ta(self, user, course):
+		self.enrol_user(user, course, UserTypesForCourse.TYPE_TA)
 	def enrol_user(self, user, course, type):
 		course_type = UserTypesForCourse.query.filter_by(name=type).first()
 		CoursesAndUsersFactory(courses_id=course.id, users_id=user.id,
@@ -49,6 +54,8 @@ class BasicTestData():
 		db.session.commit()
 	def get_authorized_instructor(self):
 		return self.authorized_instructor
+	def get_authorized_ta(self):
+		return self.authorized_ta
 	def get_authorized_student(self):
 		return self.authorized_student
 	def get_course(self):
@@ -92,8 +99,8 @@ class SimpleQuestionsTestData(BasicTestData):
 class SimpleAnswersTestData(SimpleQuestionsTestData):
 	def __init__(self):
 		SimpleQuestionsTestData.__init__(self)
-		self.extra_student1 = self.create_student()
-		self.extra_student2 = self.create_student()
+		self.extra_student1 = self.create_normal_user()
+		self.extra_student2 = self.create_normal_user()
 		self.enrol_student(self.extra_student1, self.get_course())
 		self.enrol_student(self.extra_student2, self.get_course())
 		self.answers = []
@@ -117,8 +124,45 @@ class SimpleAnswersTestData(SimpleQuestionsTestData):
 class JudgmentsTestData(SimpleAnswersTestData):
 	def __init__(self):
 		SimpleAnswersTestData.__init__(self)
+		self.secondary_authorized_student = self.create_normal_user()
+		self.enrol_student(self.secondary_authorized_student , self.get_course())
+		self.authorized_student_with_no_answers = self.create_normal_user()
+		self.enrol_student(self.authorized_student_with_no_answers , self.get_course())
+		self.student_answers = copy.copy(self.answers)
 		for question in self.get_questions():
+			# make sure we're allowed to judge existing questions
 			self.set_question_to_judgement_period(question)
+			answer = self.create_answer(question, self.secondary_authorized_student )
+			self.answers.append(answer)
+			self.student_answers.append(answer)
+			self.answers.append(answer)
+			answer = self.create_answer(question, self.get_authorized_student())
+			self.answers.append(answer)
+			self.student_answers.append(answer)
+			# add a TA and Instructor answer
+			answer = self.create_answer(question, self.get_authorized_ta())
+			self.answers.append(answer)
+			answer = self.create_answer(question, self.get_authorized_instructor())
+			self.answers.append(answer)
+		self.answer_period_question = self.create_question_in_answer_period(
+			self.get_course(), self.get_authorized_ta())
+		self.questions.append(self.answer_period_question)
+
+	def get_student_answers(self):
+		return self.student_answers
+
+	def get_question_in_answer_period(self):
+		return self.answer_period_question
+
+	def get_secondary_authorized_student(self):
+		return self.secondary_authorized_student
+
+	def get_authorized_student_with_no_answers(self):
+		'''
+		This user is required to make sure that the same answers don't show up in a pair. MUST keep
+		make sure that this user does not submit any answers.
+		'''
+		return self.authorized_student_with_no_answers
 
 	def set_question_to_judgement_period(self, question):
 		question.answer_start = datetime.datetime.now() - datetime.timedelta(days=2)
