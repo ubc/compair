@@ -286,16 +286,17 @@ class AnswerPairGenerator():
 					score = score_iter
 			if score == None:
 				raise MissingScoreFromAnswer
-			answer_scores[answer] = score
+			answer_scores[answer] = score.score
 		sorted_answers = sorted(answer_scores.iteritems(), key=operator.itemgetter(1))
 		pairs = self._pair_with_neighbours(sorted_answers)
 		pair_score_differences = {}
+		# group together pairs that have the same score differences
 		for pair in pairs:
 			answer1 = pair[0][0]
 			answer1_score = pair[0][1]
 			answer2 = pair[1][0]
 			answer2_score = pair[1][1]
-			difference = abs(answer1_score.score - answer2_score.score)
+			difference = abs(answer1_score - answer2_score)
 			pair_score_differences.setdefault(difference, []).append([answer1, answer2])
 		# check the pairs with the smallest differences first
 		for score_difference in sorted(pair_score_differences):

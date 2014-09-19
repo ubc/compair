@@ -47,7 +47,7 @@ If you already have a MySQL server running on your host, you may need to use the
 	mysql -u acj --protocol=TCP -P 3306 -p acj
 
 
-Databsae Upgrade
+Database Upgrade
 ----------------
 
     vagrant ssh # only for developer installation
