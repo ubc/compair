@@ -70,7 +70,7 @@ class UsersAPITests(ACJTestCase):
 		rv = self.client.get('/api/users')
 		self.assert200(rv)
 		users = rv.json
-		self.assertEqual(users['num_results'], 6)
+		self.assertEqual(users['num_results'], 7)
 		self.assertEqual(users['objects'][0]['username'], 'root')
 
 	def test_usertypes(self):

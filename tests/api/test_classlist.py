@@ -38,7 +38,10 @@ class ClassListAPITest(ACJTestCase):
 		rv = self.client.get(url)
 		self.assert200(rv)
 		labels = rv.json['instructors']
-		expected = {str(self.data.get_authorized_instructor().id): 'Instructor'}
+		expected = {
+			str(self.data.get_authorized_ta().id): 'Teaching Assistant',
+			str(self.data.get_authorized_instructor().id): 'Instructor'
+		}
 		self.assertEqual(labels, expected)
 		self.logout()
 
