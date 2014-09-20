@@ -188,9 +188,9 @@ class UserJudgementCount(Resource):
 		require(READ, course)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
-		judgements = Judgements.query.join(AnswerPairings).filter(Judgements.users_id==user_id,
-																  AnswerPairings.postsforquestions_id==question_id).all()
-		return {"count":len(judgements)}
+		count = judgement_count(course_id, question_id, user_id)
+
+		return {"count":count}
 api.add_resource(UserJudgementCount, '/count/users/<int:user_id>')
 
 # /count
@@ -199,13 +199,25 @@ class UserAllJudgementCount(Resource):
 	def get(self, course_id):
 		course = Courses.query.get_or_404(course_id)
 		require(READ, course)
-		judgements = Judgements.query.filter_by(users_id=current_user.id).join(CriteriaAndCourses)\
-			.filter_by(courses_id=course.id).join(AnswerPairings)\
-			.group_by(AnswerPairings.postsforquestions_id)\
-			.add_columns(func.count(Judgements.id), AnswerPairings.postsforquestions_id).all()
-		judgements = {x[2]: x[1] for x in judgements} # postsforquestions_id: count
+		questions = PostsForQuestions.query.join(Posts).filter_by(courses_id=course.id).all()
+		judgements = {}
+		for ques in questions:
+			judgements[ques.id] = judgement_count(course_id, ques.id, current_user.id)
 		return {'judgements': judgements}
 apiAll.add_resource(UserAllJudgementCount, '/count')
+
+def judgement_count(course_id, question_id, user_id):
+	# try to get first criteria a user has evaluated in this question
+	judge = Judgements.query.join(AnswerPairings).filter(AnswerPairings.postsforquestions_id==question_id).first()
+	if not judge:
+		# if not judgements are found - grab the first criteria in the course
+		criteriaandcourses = CriteriaAndCourses.query.filter_by(courses_id=course_id).first_or_404()
+		criteriaandcourses_id = criteriaandcourses.id
+	else:
+		criteriaandcourses_id = judge.criteriaandcourses_id
+	count = Judgements.query.filter_by(users_id=user_id, criteriaandcourses_id=criteriaandcourses_id).count()
+
+	return count
 
 class InsufficientAnswersException(Exception):
 	pass
