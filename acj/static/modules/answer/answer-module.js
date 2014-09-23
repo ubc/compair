@@ -25,6 +25,9 @@ module.factory(
 				flagged: {
 					method: 'POST', 
 					url: '/api/courses/:courseId/questions/:questionId/answers/:answerId/flagged'
+				},
+				getAuthors: {
+					url: '/api/courses/:courseId/questions/:questionId/answers/authors'
 				}
 			}
 		);

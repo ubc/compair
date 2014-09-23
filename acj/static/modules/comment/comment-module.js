@@ -5,8 +5,12 @@
 var module = angular.module('ubc.ctlt.acj.comment',
 	[
 		'ngResource',
+		'ubc.ctlt.acj.answer',
+		'ubc.ctlt.acj.classlist',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.mathjax',
+		'ubc.ctlt.acj.course',
+		'ubc.ctlt.acj.criteria',
 		'ubc.ctlt.acj.judgement',
 		'ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.answer',
@@ -51,7 +55,7 @@ module.factory(
 		ret.MODEL = "PostsForAnswersAndPostsForComments";
 		return ret;
 	}
-)
+);
 
 /***** Controllers *****/
 module.controller(
@@ -263,6 +267,69 @@ module.controller(
 				$location.path('/course/'+courseId+'/question/'+questionId);
 			}
 		);
+	}
+);
+
+module.controller(
+	"JudgementCommentController",
+	function ($scope, $log, $routeParams, EvalCommentResource, CoursesCriteriaResource, CourseResource,
+			  AnswerPairingResource, AnswerResource, Toaster)
+	{
+		var courseId = $routeParams['courseId'];
+		var questionId = $routeParams['questionId'];
+		$scope.search = {'judgement': {'course_criterion': {}}};
+		$scope.answer = {'one': null, 'two': null};
+
+		EvalCommentResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
+			function (ret) {
+				$scope.comments = ret.comments;
+			},
+			function (ret) {
+				Toaster.reqerror("Comment retrieval failed", ret);
+			}
+		);
+		// currently we assume that the criteria in the question are all of the criteria in the course
+		CoursesCriteriaResource.get({'courseId': courseId}).$promise.then(
+			function (ret) {
+				$scope.criteria = ret.objects;
+				$scope.search.judgement.course_criterion.id = $scope.criteria[0].id;
+			},
+			function (ret) {
+				Toaster.reqerror("Criteria filter retrieval failed", ret);
+			}
+		);
+
+		AnswerPairingResource.getAnswerPairingList({'courseId': courseId, 'questionId': questionId}).$promise.then(
+			function (ret) {
+				$scope.answerpairings = ret.answerpairings;
+			},
+			function (ret) {
+				Toaster.reqerror("Answer pairs retrieval failed.", ret);
+			}
+		);
+
+		AnswerResource.getAuthors({'courseId': courseId, 'questionId': questionId}).$promise.then(
+			function (ret) {
+				$scope.authors = ret.authors;
+			},
+			function (ret) {
+				Toaster.reqerror("Answer author retrieval failed.", ret);
+			}
+		);
+
+		$scope.reset = function() {
+			$scope.answer.two = null;
+		};
+
+		$scope.answerFilter = function (answer_id) {
+			return function (comment) {
+				if (answer_id == null) {
+					return true;
+				}
+				var answerpair = comment.judgement.answerpairing;
+				return answerpair.postsforanswers_id1 == answer_id || answerpair.postsforanswers_id2 == answer_id;
+			}
+		}
 	}
 );
 

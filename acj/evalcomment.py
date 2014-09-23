@@ -2,12 +2,13 @@ from flask import Blueprint, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
+from bouncer.constants import EDIT
 
 from . import dataformat
 from .core import db, event
-from .models import Judgements, PostsForComments, PostsForJudgements, Courses, PostsForQuestions, Posts
+from .models import Judgements, PostsForComments, PostsForJudgements, Courses, PostsForQuestions, Posts, AnswerPairings, CoursesAndUsers
 from .util import new_restful_api
-
+from .authorization import allow
 
 evalcomments_api = Blueprint('evalcomments_api', __name__)
 api = new_restful_api(evalcomments_api)
@@ -21,6 +22,15 @@ on_evalcomment_create = event.signal('EVALCOMMENT_CREATE')
 
 # /
 class EvalCommentRootAPI(Resource):
+	@login_required
+	def get(self, course_id, question_id):
+		course = Courses.query.get_or_404(course_id)
+		question = PostsForQuestions.query.get_or_404(question_id)
+		comments = PostsForJudgements.query.join(PostsForComments, Posts).filter(Posts.courses_id==course.id)\
+			.join(Judgements, AnswerPairings).filter_by(postsforquestions_id=question.id).all()
+		restrict_users = not allow(EDIT, CoursesAndUsers(courses_id=course.id))
+
+		return {'comments': marshal(comments, dataformat.getPostsForJudgements(restrict_users))}
 	@login_required
 	def post(self, course_id, question_id):
 		course = Courses.query.get_or_404(course_id)

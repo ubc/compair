@@ -112,6 +112,9 @@ def create_app(conf=config, settings_override={}):
 		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/judgements')
 	app.register_blueprint(all_judgements_api,
 		url_prefix='/api/courses/<int:course_id>/judgements')
+	from .answerpairing import answerpairing_api
+	app.register_blueprint(answerpairing_api,
+		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answerpairing')
 
 
 	@app.route('/')

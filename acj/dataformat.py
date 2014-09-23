@@ -208,7 +208,7 @@ def getPostsForJudgements(restrict_users=True):
 	comment = getPostsForComments(restrict_users)
 	return {
 		'postsforcomments': fields.Nested(comment),
-		'judgements': fields.Nested(judgement) 
+		'judgement': fields.Nested(judgement)
 	}
 
 def getImportUsersResults(restrict_users=True):
