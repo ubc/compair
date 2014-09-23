@@ -53,6 +53,7 @@ module.controller(
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
+		$scope.submitted = false;
 		
 		$scope.question = {};
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
@@ -172,19 +173,16 @@ module.controller(
 											$promise.then(
 												function(ret) {
 													if ($scope.question.num_judgement_req > ret.count) {
-														$scope.submitted = false;
 														var left = $scope.question.num_judgement_req - ret.count;
 														Toaster.success("Judgement Submitted Successfully! Please submit " + left + " more evaluation(s).");
 														$route.reload();
 														window.scrollTo(0, 0);
 													} else {
-														$scope.submitted = false;
 														Toaster.success("Judgement Submitted Successfully!");
 														$location.path('/course/' + courseId);
 													}
 												},
 												function(ret) {
-													$scope.submitted = false;
 													Toaster.success("Judgement Submitted Successfully!");
 													$location.path('/course/' + courseId);
 												}
@@ -192,13 +190,11 @@ module.controller(
 									});
 								},
 								function(ret) {
-									$scope.submitted = false;
 									Toaster.reqerror("Judgement Comment Submit Failed.", ret);
 								}
 						);
 					},
 					function(ret) {
-						$scope.submitted = false;
 						Toaster.reqerror("Judgement Submit Failed.", ret);
 					}
 			);
@@ -209,9 +205,7 @@ module.controller(
 					AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': $scope.answerPair[key]['id']},
 						$scope.answerPair[key]['comment']['post']).$promise.then(
 							function (ret)
-							{
-								$scope.submitted = false;
-							},
+							{},
 							function (ret)
 							{
 								Toaster.reqerror("Unable to post new comment.", ret);
@@ -223,9 +217,7 @@ module.controller(
 						'commentId': $scope.answerPair[key]['comment']['post']['id']},
 						$scope.answerPair[key]['comment']['post']).$promise.then(
 							function (ret)
-							{
-								$scope.submitted = false;
-							},
+							{},
 							function (ret)
 							{
 								Toaster.reqerror("Unable to post new comment.", ret);
