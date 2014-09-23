@@ -7,7 +7,8 @@ import random
 from acj.models import UserTypesForCourse, UserTypesForSystem
 from data.fixtures.factories import UsersFactory, UserTypesForCourseFactory, UserTypesForSystemFactory, CriteriaFactory, \
 	CoursesFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, PostsForAnswersFactory, \
-	CriteriaAndCoursesFactory
+	CriteriaAndCoursesFactory, AnswerPairingsFactory, JudgementsFactory, PostsForJudgementsFactory, \
+	PostsForCommentsFactory
 
 
 class DefaultFixture(object):

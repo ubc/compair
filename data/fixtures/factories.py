@@ -5,7 +5,8 @@ from factory.alchemy import SQLAlchemyModelFactory
 from acj.core import db
 from acj.models import Courses, Users, UserTypesForCourse, UserTypesForSystem, Criteria, CoursesAndUsers, Posts, \
 	PostsForQuestions, PostsForAnswers, PostsForComments,\
-	PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, CriteriaAndCourses
+	PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, CriteriaAndCourses, AnswerPairings, \
+	Judgements, PostsForJudgements
 
 __author__ = 'compass'
 
@@ -107,3 +108,19 @@ class PostsForAnswersAndPostsForCommentsFactory(SQLAlchemyModelFactory):
 	FACTORY_SESSION = db.session
 	postsforanswers_id = 1
 	postsforcomments_id = 1
+
+class AnswerPairingsFactory(SQLAlchemyModelFactory):
+	FACTORY_FOR = AnswerPairings
+	FACTORY_SESSION = db.session
+
+class JudgementsFactory(SQLAlchemyModelFactory):
+	FACTORY_FOR = Judgements
+	FACTORY_SESSION = db.session
+
+class PostsForJudgementsFactory(SQLAlchemyModelFactory):
+	FACTORY_FOR = PostsForJudgements
+	FACTORY_SESSION = db.session
+
+class PostsForCommentsFactory(SQLAlchemyModelFactory):
+	FACTORY_FOR = PostsForComments
+	FACTORY_SESSION = db.session

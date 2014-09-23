@@ -4,7 +4,8 @@ from flask_login import current_user
 from werkzeug.exceptions import Unauthorized, Forbidden
 
 from .models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTypesForSystem, PostsForQuestions, PostsForAnswers, \
-	PostsForAnswersAndPostsForComments, PostsForQuestionsAndPostsForComments, Judgements, Criteria, CriteriaAndCourses
+	PostsForAnswersAndPostsForComments, PostsForQuestionsAndPostsForComments, Judgements, Criteria, CriteriaAndCourses, \
+	PostsForJudgements
 
 
 def define_authorization(user, they):
@@ -60,6 +61,7 @@ def define_authorization(user, they):
 			they.can(MANAGE, PostsForAnswers, courses_id=course.id)
 			they.can(MANAGE, PostsForQuestionsAndPostsForComments, courses_id=course.id)
 			they.can(MANAGE, PostsForAnswersAndPostsForComments, courses_id=course.id)
+			they.can(MANAGE, PostsForJudgements, courses_id=course.id)
 		# only students can submit judgements for now
 		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_STUDENT:
 			they.can(CREATE, Judgements, courses_id=course.id)

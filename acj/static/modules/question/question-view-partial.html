@@ -66,6 +66,9 @@
 		<a class="btn btn-success" title="You have evaluated" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" ng-show="!canManagePosts && question.judging_period && judged_req_met" disabled>
 			Evaluated
 		</a>
+		<a class="btn btn-info" title="Evaluation Comments" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement/comment" ng-show="canManagePosts && (question.judging_period || question.after_judging)">
+			Evaluation Comments
+		</a>
 		
 	</div><!-- closes question box -->
 	

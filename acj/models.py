@@ -656,6 +656,10 @@ class PostsForJudgements(db.Model):
 		nullable=False)
 	judgement = db.relationship("Judgements")
 
+	@hybrid_property
+	def courses_id(self):
+		return self.postsforcomments.post.courses_id
+
 class LTIInfo(db.Model):
 	__tablename__ = 'LTIInfo'
 	__table_args__ = default_table_args

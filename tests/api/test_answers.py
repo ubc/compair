@@ -1,6 +1,6 @@
 import json
-from acj.models import UserTypesForSystem, UserTypesForCourse, PostsForAnswers
-from data.fixtures.test_data import BasicTestData, SimpleQuestionsTestData, SimpleAnswersTestData
+from acj.models import UserTypesForSystem, UserTypesForCourse, PostsForAnswers, Posts
+from data.fixtures.test_data import SimpleAnswersTestData
 from tests.test_acj import ACJTestCase
 
 
@@ -250,4 +250,40 @@ class AnswersAPITests(ACJTestCase):
 		self.assert200(rv)
 		expected = {str(question.id): 2 for question in self.data.get_questions()}
 		self.assertEqual(expected, rv.json['count'])
+		self.logout()
+
+	def test_get_authors(self):
+		author_url = self._build_url(self.data.get_course().id, self.question.id, '/authors')
+
+		# test login required
+		rv = self.client.get(author_url)
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_instructor().username)
+		rv = self.client.get(author_url)
+		self.assert403(rv)
+		self.logout()
+
+		# test invalid course id
+		self.login(self.data.get_authorized_instructor().username)
+		rv = self.client.get(self._build_url(999, self.question.id, '/authors'))
+		self.assert404(rv)
+
+		# test invalid question id
+		rv = self.client.get(self._build_url(self.data.get_course().id, 999, '/authors'))
+		self.assert404(rv)
+
+		# test successful query
+		rv = self.client.get(author_url)
+		self.assert200(rv)
+		answer1_id = PostsForAnswers.query.filter_by(postsforquestions_id=self.question.id).join(Posts)\
+			.filter_by(users_id=self.data.get_extra_student1().id).first().id
+		answer2_id = PostsForAnswers.query.filter_by(postsforquestions_id=self.question.id).join(Posts)\
+			.filter_by(users_id=self.data.get_extra_student2().id).first().id
+		expected = {
+			str(answer1_id): self.data.get_extra_student1().fullname,
+			str(answer2_id): self.data.get_extra_student2().fullname
+		}
+		self.assertEqual(expected, rv.json['authors'])
 		self.logout()

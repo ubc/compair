@@ -2,9 +2,10 @@ import datetime
 import copy
 from acj import db
 import factory.fuzzy
-from acj.models import UserTypesForSystem, UserTypesForCourse, Criteria
+from acj.models import UserTypesForSystem, UserTypesForCourse, Criteria, PostsForAnswers
 from data.fixtures import CoursesFactory, UsersFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, \
-	PostsForAnswersFactory, CriteriaFactory, CriteriaAndCoursesFactory
+	PostsForAnswersFactory, CriteriaFactory, CriteriaAndCoursesFactory, AnswerPairingsFactory, JudgementsFactory, \
+	PostsForJudgementsFactory, PostsForCommentsFactory
 
 
 class BasicTestData():
@@ -110,9 +111,13 @@ class SimpleAnswersTestData(SimpleQuestionsTestData):
 		self.enrol_student(self.extra_student1, self.get_course())
 		self.enrol_student(self.extra_student2, self.get_course())
 		self.answers = []
+		self.answersByQuestion = {}
 		for question in self.get_questions():
-			self.answers.append(self.create_answer(question, self.extra_student1))
-			self.answers.append(self.create_answer(question, self.extra_student2))
+			answer1 = self.create_answer(question, self.extra_student1)
+			answer2 = self.create_answer(question, self.extra_student2)
+			self.answers.append(answer1)
+			self.answers.append(answer2)
+			self.answersByQuestion[question.id] = [answer1, answer2]
 
 	def create_answer(self, question, author):
 		post = PostsFactory(courses_id = question.post.courses_id, users_id = author.id)
@@ -124,8 +129,14 @@ class SimpleAnswersTestData(SimpleQuestionsTestData):
 	def get_answers(self):
 		return self.answers
 
+	def get_answers_by_question(self):
+		return self.answersByQuestion
+
 	def get_extra_student1(self):
 		return self.extra_student1
+
+	def get_extra_student2(self):
+		return self.extra_student2
 
 class JudgmentsTestData(SimpleAnswersTestData):
 	def __init__(self):
@@ -205,4 +216,73 @@ class CriteriaTestData(BasicTestData):
 
 	def get_inactive_criteria_course(self):
 		return self.inactive_criteria_course
+
+class JudgementCommentsTestData(SimpleAnswersTestData):
+	def __init__(self):
+		SimpleAnswersTestData.__init__(self)
+		# create & enrol extra student to do the judging
+		self.judging_student = self.create_normal_user()
+		self.enrol_student(self.judging_student, self.get_course())
+
+		# create course criteria
+		self.criterion = self.create_course_criteria(self.get_course())
+
+		# generate pairs
+		self.answer_pair1 = self.create_answer_pair(self.get_questions()[0])
+		self.answer_pair2 = self.create_answer_pair(self.get_questions()[1])
+
+		self.judge_1 = self.create_judgement(self.judging_student, self.answer_pair1, self.criterion,
+				self.get_answers_by_question()[self.get_questions()[0].id][0])
+		self.judge_2 = self.create_judgement(self.judging_student, self.answer_pair2, self.criterion,
+				self.get_answers_by_question()[self.get_questions()[1].id][0])
+
+		self.judge_comment = self.create_judge_comment(self.judge_1)
+
+	def get_judge_comment(self):
+		return self.judge_comment
+
+	def get_judge_2(self):
+		return self.judge_2
+
+	def get_judging_student(self):
+		return self.judging_student
+
+	def create_answer_pair(self, question):
+		# creates an answer pair with the first two answers for the question
+		answers = self.get_answers_by_question()[question.id]
+		answer_pair = AnswerPairingsFactory(postsforquestions_id=question.id, postsforanswers_id1=answers[0].id,
+				postsforanswers_id2=answers[1].id)
+		db.session.commit()
+		return answer_pair
+
+	def create_judgement(self, user, answerpairing, course_criterion, answer):
+		judgement = JudgementsFactory(user=user, answerpairing=answerpairing,course_criterion=course_criterion,
+					answer_winner=answer)
+		db.session.commit()
+		return judgement
+
+	def create_course_criteria(self, course):
+		name = factory.fuzzy.FuzzyText(length=4)
+		description = factory.fuzzy.FuzzyText(length=8)
+		criteria = CriteriaFactory(name=name, description=description, user=self.get_authorized_instructor())
+		db.session.commit()
+		course_criteria = CriteriaAndCoursesFactory(courses_id=course.id, criteria_id=criteria.id, active=False)
+		db.session.add(course_criteria)
+		db.session.commit()
+		return course_criteria
+
+	def create_judge_comment(self, judgement):
+		comment_content = factory.fuzzy.FuzzyText(length=12)
+		comment = self.create_comment(self.judging_student, self.get_course(), comment_content)
+		judge_comment = PostsForJudgementsFactory(postsforcomments=comment, judgement=judgement)
+		db.session.commit()
+		return judge_comment
+
+	def create_comment(self, user, course, content):
+		post = PostsFactory(user=user,course=course,content=content)
+		db.session.commit()
+		postforcomment = PostsForCommentsFactory(post=post)
+		db.session.commit()
+		return postforcomment
+
 
