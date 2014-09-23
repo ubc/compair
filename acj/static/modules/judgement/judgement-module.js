@@ -66,6 +66,7 @@ module.controller(
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
+		$scope.submitted = false;
 		
 		$scope.question = {};
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
@@ -147,6 +148,7 @@ module.controller(
 		// save judgement to server
 		$scope.judgementSubmit = function() {
 			var judgement = {};
+			$scope.submitted = true;
 			judgement['answerpair_id'] = $scope.answerPair.id;
 			judgement['judgements'] = [];
 			var comments = {};

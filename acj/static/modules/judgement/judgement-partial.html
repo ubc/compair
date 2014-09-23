@@ -158,7 +158,7 @@
 			
 			<div class="form-group">
 				<!-- button to submit and refresh page IF evaluations remain for user -->
-				<input ng-disabled="judgementForm.$invalid" type="submit" 
+				<input ng-disabled="judgementForm.$invalid || submitted" type="submit"
 					value="Submit" class="btn btn-success btn-lg center-block" />
 			</div>
 			
