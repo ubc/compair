@@ -1,8 +1,8 @@
 <div ng-controller="ClassImportResultsController">
-	<h1>Import Results for {{course.name}}</h1>
+	<h1>Results</h1>
 	<p><a href="#/course/{{course.id}}">&laquo; Back to course?</a></p>
 	<div ng-show="results.success.length">
-		<h2>Users enrolled</h2>
+		<h2>Users added to {{course.name}}</h2>
 		<table class="table table-striped">
 			<tr>
 				<th ng-repeat="header in headers">{{header}}</th>
@@ -16,7 +16,7 @@
 		</table>
 	</div>
 	<div ng-show="results.created.length">
-		<h2>Users created</h2>
+		<h2>Users created in the application</h2>
 		<p><strong>Note:</strong> Users without a specified password will have their username as a default password.</p>
 		<table class="table table-striped">
 			<tr>
@@ -31,7 +31,7 @@
 		</table>
 	</div>
 	<div ng-show="results.invalids.length">
-		<h2>Users without valid data (not enrolled or created)</h2>
+		<h2>Users without valid data (not added or created)</h2>
 		<table class="table table-striped">
 			<tr>
 				<th ng-repeat="header in headers">{{header}}</th>
@@ -45,7 +45,7 @@
 		</table>
 	</div>
 		<div ng-show="results.dropped.length">
-		<h2>Users dropped</h2>
+		<h2>Users dropped from {{course.name}}</h2>
 		<table class="table table-striped">
 			<tr>
 				<th ng-repeat="header in headers">{{header}}</th>
