@@ -62,7 +62,7 @@ module.controller("UserCreateController",
 			},
 			function (ret)
 			{
-				Toaster.reqerror("Unable to retrieve the user types", ret);
+				Toaster.reqerror("System Issue: User Types Not Found", ret);
 			}
 		);
 		$scope.userSubmit = function () {
@@ -71,7 +71,7 @@ module.controller("UserCreateController",
 				function (ret)
 				{
 					$scope.submitted = false;
-					Toaster.success("New User Created!",
+					Toaster.success("New User Created",
 						'"' + ret.displayname + '"' +'should now have access.');
 					$location.path('/user/' + ret.id);
 				},
@@ -81,7 +81,7 @@ module.controller("UserCreateController",
 					if (ret.status == '409') {
 						Toaster.error(ret.data.error);
 					} else {
-						Toaster.reqerror("Unable to create new user.", ret);
+						Toaster.reqerror("No New User Created", ret);
 					}
 				}
 			);
@@ -107,16 +107,16 @@ module.controller("UserEditController",
 				$scope.usertypes = ret;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve the user types", ret);
+				Toaster.reqerror("System Issue: User Types Not Found", ret);
 			}
 		);
 		UserResource.get({'id':userId}).$promise.then(
 			function (ret) {
 				$scope.user = ret;
-				breadcrumbs.options = {'View User': ret.username+"'s Profile"};
+				breadcrumbs.options = {'View User': ret.displayname+"'s Profile"};
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve user "+ userId, ret);
+				Toaster.reqerror("No User Found For ID "+ userId, ret);
 			}
 		);
 		$scope.userSubmit = function() {
@@ -124,12 +124,12 @@ module.controller("UserEditController",
 			UserResource.save({'id': userId}, $scope.user).$promise.then(
 				function(ret) {
 					$scope.submitted = false;
-					Toaster.success("User Updated!");
+					Toaster.success("User Successfully Updated", "Your changes were saved.");
 					$location.path('/user/' + ret.id);
 				},
 				function(ret) {
 					$scope.submitted = false;
-					Toaster.reqerror("User Update Failed.", ret);
+					Toaster.reqerror("User Update Failed", ret);
 				}
 			);
 		}
@@ -147,7 +147,7 @@ module.controller("UserUpdatePasswordController",
                 UserPasswordResource.save({'id': user.id}, $scope.password).$promise.then(
                     function (ret) {
                         $scope.submitted = false;
-                        Toaster.success("Password Updated!");
+                        Toaster.success("Password Successfully Updated", "Your password has been changed.");
 			$location.path('/user/' + ret.id);
                     },
                     function (ret) {
@@ -155,7 +155,7 @@ module.controller("UserUpdatePasswordController",
                         if (ret.status == '401') {
                             Toaster.error(ret.data.error);
                         } else {
-                            Toaster.reqerror("Unable to update your password.", ret);
+                            Toaster.reqerror("Password Update Failed", ret);
                         }
                     }
                 );
@@ -178,11 +178,11 @@ module.controller("UserViewController",
 		UserResource.get({"id":userId}).$promise.then(
 			function (ret) {
 				$scope.user = ret;
-				breadcrumbs.options = {'View User': ret.username+"'s Profile"};
+				breadcrumbs.options = {'View User': ret.displayname+"'s Profile"};
 				$scope.readDate = Date.parse(ret.lastonline);
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve the user's data", ret);
+				Toaster.reqerror("User Information Not Found", ret);
 			}
 		);
 

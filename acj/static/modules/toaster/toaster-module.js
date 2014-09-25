@@ -25,10 +25,8 @@ module.factory('Toaster', function($log, toaster) {
 	toaster.warning = function(title, msg) {
 		this.pop("warning", title, msg, 10000);
 	};
-	// Error messages will not automatically fade, will instead stay in place
-	// until clicked to dismiss
 	toaster.error = function(title, msg) {
-		this.pop("error", title, msg, 0);
+		this.pop("error", title, msg, 10000);
 	};
 	// Not sure what the best way to do this would be yet, but we can have 
 	// preset error messages for certain errors. This is for any ajax requests
@@ -40,14 +38,14 @@ module.factory('Toaster', function($log, toaster) {
 				this.warning(title, response.data.error);
 				break;
 			case 401:
-				this.warning(title, "Please login again.");
+				this.warning(title, "Please log in again.");
 				break;
 			case 403:
-				this.error(title, "You do not have the required permissions.");
+				this.error(title, "Sorry, you don't have permission for this action.");
 				break;
 			default:
 			// TODO Tell them what support to contact
-				this.error(title, "Unable to connect to the server, this might be a server issue or your internet connection might be down. Please contact support if it looks to be a server issue.");
+				this.error(title, "Unable to connect. This might be a server issue or your connection might be down. Please contact support if the problem continues.");
 		}
 	};
 	return toaster;
