@@ -57,7 +57,7 @@ myApp.config( function ($routeProvider) {
 		.when ('/course/:courseId/user/enrol',
 			   {
 				   templateUrl: 'modules/classlist/classlist-enrol-partial.html',
-				   label: "Enrol User"
+				   label: "Set Instructors"
 			   })
 		.when ('/course/:courseId/question/create', 
 			{

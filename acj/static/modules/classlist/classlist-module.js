@@ -61,7 +61,7 @@ module.service('importService', function(FileUploader, $location, CourseResource
 			results = response;
 			if (!('error' in results)) {
 				count = results.success.length;
-				Toaster.success("Successfully enroled "+ count +" students.");
+				Toaster.success("Students Added", "Successfully added "+ count +" students.");
 				$location.path('/course/' + courseId + '/user/import/results');		
 			}	
 		};
@@ -69,9 +69,9 @@ module.service('importService', function(FileUploader, $location, CourseResource
 
 	var onError = function() {
 		return function(fileItem, response, status, headers) {
-			Toaster.reqerror("Unable to upload the class list. Please try again.", status);
+			Toaster.reqerror("Unable To Upload", status);
 			if ('error' in response) {
-				Toaster.error("Only csv files can be uploaded.");
+				Toaster.error("File Type Error", "Only CSV files can be uploaded.");
 			}
 		};
 	}	
@@ -101,7 +101,7 @@ module.controller(
 				$scope.course = ret;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve course: "+courseId, ret);
+				Toaster.reqerror("No Course Found For ID "+courseId, ret);
 			}
 		);
 		ClassListResource.get({'courseId':courseId}).$promise.then(
@@ -109,7 +109,7 @@ module.controller(
 				$scope.classlist = ret.objects;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve class list for course: "+courseId, ret);
+				Toaster.reqerror("No Users Found For Course ID "+courseId, ret);
 			}
 		);
 	}
@@ -126,7 +126,7 @@ module.controller(
 				$scope.course = ret;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve course: "+courseId, ret);
+				Toaster.reqerror("No Course Found For ID "+courseId, ret);
 			}
 		);
 		$scope.uploader = importService.getUploader(courseId);
@@ -148,7 +148,7 @@ module.controller(
 				$scope.course = ret;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve course: "+courseId, ret);
+				Toaster.reqerror("No Course Found For ID "+courseId, ret);
 			}
 		);
 
@@ -170,7 +170,7 @@ module.controller(
 				$scope.course = ret;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve course: "+courseId, ret);
+				Toaster.reqerror("No Course Found For ID "+courseId, ret);
 			}
 		);
 		CourseResource.getInstructors({'id': courseId}).$promise.then(
@@ -187,12 +187,12 @@ module.controller(
 						$scope.instructors = ret.instructors;
 					},
 					function (ret) {
-						Toaster.reqerror("Unable to retrieve instructors", ret);
+						Toaster.reqerror("No Instructors Found", ret);
 					}
 				);
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve instructors", ret);
+				Toaster.reqerror("No Instructors Found", ret);
 			}
 		);
 		$scope.enrolSubmit = function() {
@@ -203,11 +203,11 @@ module.controller(
 					delete $scope.instructors[ret.user.id];
 					$scope.enroled[ret.user.id] = ret.user.fullname;
 					$scope.user.user_id = null; // reset form
-					Toaster.success('Successfully enroled '+ ret.user.fullname +' with the role ' + ret.usertypesforcourse.name);
+					Toaster.success("User Added", 'Successfully added '+ ret.user.fullname +' as ' + ret.usertypesforcourse.name + ' to the course.');
 				},
 				function (ret) {
 					$scope.submitted = false;
-					Toaster.reqerror("Failed to enrol user " + $scope.user_id, ret);
+					Toaster.reqerror("User Add Failed For ID " + $scope.user_id, ret);
 				}
 			);
 		};
@@ -218,7 +218,7 @@ module.controller(
 			});
 			ClassListResource.unenrol({'courseId': courseId, 'userId': user_id}).$promise.then(
 				function (ret) {
-					Toaster.success('Successfully unenroled '+ ret.user.fullname +' from the course.');
+					Toaster.success("User Dropped", 'Successfully dropped '+ ret.user.fullname +' from the course.');
 					// refresh permissions and redirect them to home if they unenroll themselves
 					if ($scope.loggedInUserId == ret.user.id) {
 						Session.refresh().then(function () {
@@ -230,7 +230,7 @@ module.controller(
 					}
 				},
 				function (ret) {
-					Toaster.reqerror('Failed to unenrol the user from the course.', ret);
+					Toaster.reqerror('User Drop Failed', ret);
 				}
 			);
 		}

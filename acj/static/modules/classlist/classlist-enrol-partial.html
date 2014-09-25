@@ -1,18 +1,41 @@
 <div ng-controller="EnrolInstructorController">
 
-	<h1>Enrol Instructors for {{course.name}}</h1>
+	<h1>Set Instructors</h1>
+	
 	<br />
-	<h3>Enroled Instructors</h3>
-	<ul>
-		<li ng-repeat="(id, name) in enroled"><span>{{ name }}</span><a ng-click="remove(id)"> Unenrol</a></li>
-	</ul>
+	
+	<p>Setting users as instructors means they can post and edit their own questions, answers, comments, and replies for this course. Instructors can also see all answers to a question regardless of answering period, but they cannot evaluate the answers.</p>
+	
 	<form name="enrolForm" class="form" ng-submit="enrolSubmit()" novalidate>
 		<fieldset>
+			<legend>Add Instructor</legend>
 			<div class="form-group">
-				<label for="user">User</label>
-				<select class="form-control" ng-model="user.user_id" name="user" required ng-options="id as name for (id, name) in instructors"></select>
+				<label for="user">Name</label>
+				<select class="form-control" ng-model="user.user_id" name="user" required ng-options="id as name for (id, name) in instructors">
+					<option value="">- choose an existing user -</option>
+				</select>
 			</div>
 		</fieldset>
-		<input type="submit" class="btn btn-success btn-lg center-block" value="Enrol" ng-disabled="submitted || enrolForm.$invalid"/>
+		<input type="submit" class="btn btn-success btn-lg center-block" value="Add" ng-disabled="submitted || enrolForm.$invalid"/>
 	</form>
+	
+	<hr />
+	
+	<h2>Instructors for {{course.name}}</h2>
+	
+	<table class="table table-striped">
+		<tr class>
+			<th>Action</th>
+			<th>Name</th>
+		</tr>
+		<tr ng-repeat="(id, name) in enroled">
+			<td>
+				<a href="" ng-click="remove(id)">
+					Drop
+				</a>
+			</td>
+			<td>{{ name }}</td>
+		</tr>
+	</table>
+	
 </div>
