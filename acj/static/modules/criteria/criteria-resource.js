@@ -35,7 +35,7 @@ module.controller(
 				$scope.criterion = ret.criterion;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve the criterion.", ret);
+				Toaster.reqerror("Criterion Not Found", ret);
 			}
 		);
 		// update criterion
@@ -44,12 +44,12 @@ module.controller(
 			CriteriaResource.save({'criteriaId': criterionId}, $scope.criterion).$promise.then(
 				function (ret) {
 					$scope.criterionSubmitted = false;
-					Toaster.success("Successfully updated the criterion.");
+					Toaster.success("Criterion Updated", "Successfully saved your criterion changes.");
 					$location.path('/course/' + courseId + '/configure');
 				},
 				function (ret) {
 					$scope.criterionSubmitted = false;
-					Toaster.reqerror("Unable to update the criterion.", ret);
+					Toaster.reqerror("Criterion Update Failed", ret);
 				}
 			);
 		};

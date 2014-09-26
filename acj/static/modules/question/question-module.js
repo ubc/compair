@@ -24,13 +24,15 @@ module.directive(
 	'confirmationNeeded',
 	function () {
 		return {
+			priority: -100, //need negative priority to override ng-click
 			restrict: 'A',
 			link: function(scope, element, attrs){
 				var msg = "Are you sure you want to delete this "+attrs.confirmationNeeded+"?";
-				element.bind('click', function() {
+				element.bind('click', function(e) {
 					if ( window.confirm(msg) ) {
 						return true;
 					} else {
+						e.stopImmediatePropagation();
 						return false;
 					}
 				});
