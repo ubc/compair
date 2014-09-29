@@ -133,27 +133,6 @@ module.controller(
 );
 
 module.controller(
-	"QuestionCommentDeleteController",
-	function ($scope, $log, $location, $routeParams, QuestionCommentResource, Toaster)
-	{
-		var courseId = $routeParams['courseId'];
-		var questionId = $routeParams['questionId'];
-		var commentId = $routeParams['commentId'];
-		
-		QuestionCommentResource.delete({'courseId': courseId, 'questionId': questionId, 'commentId': commentId}).$promise.then(
-			function (ret) {
-				Toaster.success("Successfully deleted comment " + ret.id);
-				$location.path('/course/'+courseId+'/question/'+questionId);
-			},
-			function (ret) {
-				Toaster.reqerror("Comment deletion failed", ret);
-				$location.path('/course/'+courseId+'/question/'+questionId);
-			}
-		);
-	}
-);
-
-module.controller(
 	"AnswerCommentCreateController",
 	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, QuestionResource, Authorize, required_rounds, Toaster)
 	{
@@ -245,28 +224,6 @@ module.controller(
 				function(ret) { Toaster.reqerror("Comment Save Failed.", ret);}
 			);
 		};
-	}
-);
-
-module.controller(
-	"AnswerCommentDeleteController",
-	function ($scope, $log, $location, $routeParams, AnswerCommentResource, Toaster)
-	{
-		var courseId = $routeParams['courseId'];
-		var questionId = $routeParams['questionId'];
-		var answerId = $routeParams['answerId'];
-		var commentId = $routeParams['commentId'];
-		
-		AnswerCommentResource.delete({'courseId': courseId, 'questionId': questionId, 'answerId': answerId, 'commentId': commentId}).$promise.then(
-			function (ret) {
-				Toaster.success("Successfully deleted comment " + ret.id);
-				$location.path('/course/'+courseId+'/question/'+questionId);
-			},
-			function (ret) {
-				Toaster.reqerror("Comment deletion failed", ret);
-				$location.path('/course/'+courseId+'/question/'+questionId);
-			}
-		);
 	}
 );
 

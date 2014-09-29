@@ -219,6 +219,18 @@ module.controller(
 				Toaster.reqerror("Unable to retrieve the answer counts for the questions.", ret);
 			}
 		);
+
+		$scope.deleteQuestion = function(key, course_id, question_id) {
+			QuestionResource.delete({'courseId': course_id, 'questionId': question_id}).$promise.then(
+				function (ret) {
+					$scope.questions.splice(key, 1);
+					Toaster.success("Successfully deleted question " + ret.id);
+				},
+				function (ret) {
+					Toaster.reqerror("Question deletion failed", ret);
+				}
+			);
+		};
 	}
 );
 

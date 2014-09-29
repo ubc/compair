@@ -47,7 +47,7 @@
 				Answer due {{question.answer_end | amDateFormat: 'MMM D @ h:mm a'}}
 			</li>
 			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
-				<a ng-href="#/course/{{courseId}}/question/{{question.id}}/delete" ng-if="canManagePosts || question.post.user.id == loggedInUserId" title="Delete" confirmation-needed="question">
+				<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" title="Delete" confirmation-needed="deleteQuestion(courseId, question.id)" keyword="question">
 					<i class="fa fa-trash-o"></i>
 				</a>
 			</li>
@@ -120,7 +120,7 @@
 			<div class="all-answers">
 			
 				<!-- Instructor Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="answer in answers" ng-if="instructors[answer.post.user.id] && (judged_req_met || canManagePosts)">
+				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="instructors[answer.post.user.id] && (judged_req_met || canManagePosts)">
 					
 					<!-- Answer Metadata Header -->
 					<a ng-href="#/user/{{answer.post.user.id}}">
@@ -138,7 +138,7 @@
 					<span class="label label-info" ng-if="instructors[answer.post.user.id]">{{instructors[answer.post.user.id]}}&nbsp;</span>
 					<strong>final answer</strong>:
 					<div class="manager-actions pull-right" ng-if="canManagePosts">
-						<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/delete" confirmation-needed="instructor answer">
+						<a confirmation-needed="deleteAnswer(answerKey, courseId, question.id, answer.id)" keyword="instructor answer">
 							<i class="fa fa-trash-o"></i>
 						</a>
 						<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit">
@@ -169,7 +169,7 @@
 					</h3>
 					
 					<!-- Instructor Answer Replies Section -->
-					<div ng-repeat="comment in answer.comments" class="each-reply">
+					<div ng-repeat="(commentKey, comment) in answer.comments" class="each-reply">
 						
 						<!-- Reply Metadata Header -->
 						<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
@@ -189,7 +189,7 @@
 						</span>
 						<strong>replied</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 						<div class="manager-actions pull-right" ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId">
-							<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/delete" confirmation-needed="reply">
+							<a confirmation-needed="deleteReply(answerKey, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
 								<i class="fa fa-trash-o"></i>
 							</a>
 							<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
@@ -208,7 +208,7 @@
 				
 				<!-- Student Answers Section -->
 				<!-- <div class="each-answer clearfix" ng-repeat="answer in answers | orderBy:order:reverse | notScoredEnd:sortby" ng-if="instructors[answer.post.user.id]"> -->
-				<div class="each-answer clearfix" ng-repeat="answer in answers" ng-if="!instructors[answer.post.user.id] && (judged_req_met || (answer.post.user.id == loggedInUserId && question.answer_period) || canManagePosts)">
+				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.post.user.id] && (judged_req_met || (answer.post.user.id == loggedInUserId && question.answer_period) || canManagePosts)">
 					
 					<!-- Answer Metadata Header -->
 					<a ng-href="#/user/{{answer.post.user.id}}">
@@ -229,7 +229,7 @@
 							<i class="fa fa-warning"></i>
 							Flagged
 						</span>
-						<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/delete" confirmation-needed="answer">
+						<a confirmation-needed="deleteAnswer(answerKey, courseId, question.id, answer.id)" keyword="answer">
 							<i class="fa fa-trash-o"></i>
 						</a>
 						<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit">
@@ -284,7 +284,7 @@
 						</span>
 						<strong>replied</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 						<div class="manager-actions pull-right" ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId">
-							<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/delete" confirmation-needed="reply">
+							<a confirmation-needed="deleteReply(answerKey, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
 								<i class="fa fa-trash-o"></i>
 							</a>
 							<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
@@ -317,7 +317,7 @@
 			</div>
 			
 			<!-- Comments Section -->
-			<div ng-repeat="comment in comments" class="each-comment">
+			<div ng-repeat="(commentKey, comment) in comments" class="each-comment">
 				
 				<!-- Comment Metadata Header -->
 				<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
@@ -337,7 +337,7 @@
 				</span>
 				<strong>commented</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 				<div class="manager-actions pull-right" ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId">
-					<a href="#/course/{{courseId}}/question/{{question.id}}/comment/{{comment.id}}/delete" confirmation-needed="comment">
+					<a confirmation-needed="deleteComment(commentKey, courseId, question.id, comment.id)" keyword="comment">
 						<i class="fa fa-trash-o"></i>
 					</a>
 					<a href="#/course/{{courseId}}/question/{{question.id}}/comment/{{comment.id}}/edit">

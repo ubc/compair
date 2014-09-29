@@ -155,27 +155,6 @@ module.controller(
 	}
 );
 
-module.controller(
-	"AnswerDeleteController",
-	function ($scope, $log, $location, $routeParams, AnswerResource, 
-		Toaster)
-	{
-		var courseId = $routeParams['courseId'];
-		var questionId = $routeParams['questionId'];
-		var answerId = $routeParams['answerId'];
-		AnswerResource.delete({'courseId':courseId, 'questionId':questionId, 'answerId':answerId}).$promise.then(
-			function (ret) {
-				Toaster.success("Successfully deleted answer "+ ret.id);
-				$location.path('/course/'+courseId+'/question/'+questionId);
-			},
-			function (ret) {
-				Toaster.reqerror("Answer deletion failed", ret);
-				$location.path('/course/'+courseId+'/question/'+questionId);
-			}
-		);
-	}
-);
-
 // End anonymous function
 })();
 

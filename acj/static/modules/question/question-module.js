@@ -27,13 +27,13 @@ module.directive(
 			priority: -100, //need negative priority to override ng-click
 			restrict: 'A',
 			link: function(scope, element, attrs){
-				var msg = "Are you sure you want to delete this "+attrs.confirmationNeeded+"?";
+				var msg = attrs.keyword ? " "+attrs.keyword : "";
+				msg = "Are you sure you want to remove this"+msg+"?";
 				element.bind('click', function(e) {
 					if ( window.confirm(msg) ) {
-						return true;
+						scope.$eval(attrs.confirmationNeeded);
 					} else {
 						e.stopImmediatePropagation();
-						return false;
 					}
 				});
 			}
@@ -154,11 +154,13 @@ module.filter("notScoredEnd", function () {
 
 /***** Controllers *****/
 module.controller("QuestionViewController",
-	function($scope, $log, $routeParams, AnswerResource, Authorize, QuestionResource, QuestionCommentResource,
-			 AttachmentResource, CoursesCriteriaResource, JudgementResource, CourseResource, required_rounds, Session, Toaster)
+	function($scope, $log, $routeParams, $location, AnswerResource, Authorize, QuestionResource, QuestionCommentResource,
+			 AttachmentResource, CoursesCriteriaResource, JudgementResource, CourseResource, required_rounds, Session, Toaster,
+			AnswerCommentResource)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
+		var myAnsCount = 0; // for the event of deleting own answer
 		Session.getUser().then(function(user) {
 		    $scope.loggedInUserId = user.id;
 		});
@@ -236,6 +238,7 @@ module.controller("QuestionViewController",
 		QuestionResource.getAnswered({'id': $scope.courseId,
 			'questionId': questionId}).$promise.then(
 				function (ret) {
+					myAnsCount = ret.answered;
 					$scope.answered = ret.answered > 0;
 				},
 				function (ret) {
@@ -260,6 +263,63 @@ module.controller("QuestionViewController",
 			e.preventDefault();
 			$(this).tab('show');
 		});
+
+		// question delete function
+		$scope.deleteQuestion = function(course_id, question_id) {
+			QuestionResource.delete({'courseId': course_id, 'questionId': question_id}).$promise.then(
+				function (ret) {
+					Toaster.success("Successfully deleted question " + ret.id);
+					$location.path('/course/'+course_id);
+				},
+				function (ret) {
+					Toaster.reqerror("Question deletion failed", ret);
+					$location.path('/course/'+course_id);
+				}
+			);
+		};
+
+		$scope.deleteAnswer = function(key, course_id, question_id, answer_id) {
+			AnswerResource.delete({'courseId':course_id, 'questionId':question_id, 'answerId':answer_id}).$promise.then(
+				function (ret) {
+					Toaster.success("Successfully deleted answer "+ ret.id);
+					var authorId = $scope.answers[key]['post']['user']['id'];
+					$scope.answers.splice(key, 1);
+					$scope.question.answers_count -= 1;
+					if ($scope.loggedInUserId == authorId) {
+						myAnsCount--;
+						$scope.answered = myAnsCount > 0;
+					}
+				},
+				function (ret) {
+					Toaster.reqerror("Answer deletion failed", ret);
+				}
+			);
+		};
+
+		$scope.deleteComment = function(key, course_id, question_id, comment_id) {
+			QuestionCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'commentId': comment_id}).$promise.then(
+				function (ret) {
+					Toaster.success("Successfully deleted comment " + ret.id);
+					$scope.comments.splice(key, 1);
+					$scope.question.comments_count--;
+				},
+				function (ret) {
+					Toaster.reqerror("Comment deletion failed", ret);
+				}
+			);
+		}
+
+		$scope.deleteReply = function(answerKey, commentKey, course_id, question_id, answer_id, comment_id) {
+			AnswerCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'answerId': answer_id, 'commentId': comment_id}).$promise.then(
+				function (ret) {
+					Toaster.success("Successfully deleted comment " + ret.id);
+					$scope.answers[answerKey]['comments'].splice(commentKey, 1);
+				},
+				function (ret) {
+					Toaster.reqerror("Comment deletion failed", ret);
+				}
+			);
+		}
 	}
 );
 module.controller("QuestionCreateController",
@@ -389,24 +449,6 @@ module.controller("QuestionEditController",
 				}
 			);
 		};
-	}
-);
-
-module.controller("QuestionDeleteController",
-	function($scope, $log, $location, $routeParams, QuestionResource, Toaster)
-	{
-		var courseId = $routeParams['courseId'];
-		var questionId = $routeParams['questionId'];
-		QuestionResource.delete({'courseId': courseId, 'questionId': questionId}).$promise.then(
-			function (ret) {
-				Toaster.success("Successfully deleted question " + ret.id);	
-				$location.path('/course/'+courseId);
-			},
-			function (ret) {
-				Toaster.reqerror("Question deletion failed", ret);
-				$location.path('/course/'+courseId);
-			}
-		);
 	}
 );
 
