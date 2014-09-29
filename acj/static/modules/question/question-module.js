@@ -111,7 +111,11 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 
 	var onError = function() {
 		return function(fileItem, response, status, headers) {
-			Toaster.reqerror("Attachment Fail", status);
+			if (response == '413') {
+				Toaster.error("The file is too large. Please upload a smaller file.");
+			} else {
+				Toaster.reqerror("Attachment Fail", status);
+			}
 		};
 	}
 
