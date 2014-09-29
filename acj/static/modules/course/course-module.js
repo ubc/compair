@@ -59,7 +59,7 @@ module.controller(
 				$scope.course = ret;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve course: "+ $scope.courseId, ret);
+				Toaster.reqerror("Course Not Found For ID "+ $scope.courseId, ret);
 			}
 		);
 		CoursesCriteriaResource.get({'courseId': $scope.courseId}).$promise.then(
@@ -78,22 +78,22 @@ module.controller(
 						);
 					},
 					function (ret) {
-						Toaster.reqerror("Unable to retrieve available criteria.", ret);
+						Toaster.reqerror("Default Criteria Not Found", ret);
 					}
 				);
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve this course's criteria", ret);
+				Toaster.reqerror("Criteria Not Found", ret);
 			}
 		);
 		// save course info
 		$scope.courseSubmit = function() {
 			CourseResource.save($scope.course).$promise.then(
 				function(ret) {
-					Toaster.success("Course Information Updated!");
+					Toaster.success("Course Successfully Updated", "Your course changes have been saved.");
 					$location.path('/course/' + ret.id);
 				},
-				function(ret) { Toaster.reqerror("Course Save Failed.", ret); }
+				function(ret) { Toaster.reqerror("Course Update Failed", ret); }
 			);
 		};
 		// save new criterion
@@ -104,11 +104,14 @@ module.controller(
 					$scope.criterion = {'name': '', 'description': ''}; // reset form
 					$scope.criterionSubmitted = false;
 					$scope.criteria.push(ret.criterion);
-					Toaster.success("Successfully added a new criterion.");
+					Toaster.success("New Criterion Created", "Successfully added a new criterion.");
+					$(".create-form").remove(); // remove inner form from DOM so user can save outer form
+					$(".fa-chevron-right").removeClass("ng-hide"); // reset classes so UI matches current state
+					$(".fa-chevron-down").addClass("ng-hide");
 				},
 				function (ret) {
 					$scope.criterionSubmitted = false;
-					Toaster.reqerror("Unable to create a new criterion.", ret);
+					Toaster.reqerror("No New Criterion Created", ret);
 				}
 			);
 		};
@@ -123,7 +126,7 @@ module.controller(
 					$scope.criteria.push(ret.criterion);
 				},
 				function (ret) {
-					Toaster.reqerror("Unable to add the criterion to the course", ret);
+					Toaster.reqerror("Unable To Add Criterion", ret);
 				}
 			);
 		}
@@ -136,7 +139,7 @@ module.controller(
 					$scope.criteria.splice(key, 1);
 				},
 				function (ret) {
-					Toaster.reqerror("Unable to remove criterion " + ret.criterionId, ret);
+					Toaster.reqerror("Unable To Remove Criterion " + ret.criterionId, ret);
 				}
 			);
 		}
@@ -166,7 +169,7 @@ module.controller(
 				$scope.course = ret;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve course: "+ courseId, ret);
+				Toaster.reqerror("Course Not Found For ID "+ courseId, ret);
 			}
 		);
 		// get course questions
@@ -193,13 +196,13 @@ module.controller(
 						}
 					},
 					function (ret) {
-						Toaster.reqerror("Unable to retrieve your judgement counts.", ret)
+						Toaster.reqerror("Evaluations Not Found", ret)
 					}
 				);
 			},
 			function (ret)
 			{
-				Toaster.reqerror("Unable to retrieve course questions: " +
+				Toaster.reqerror("Questions Not Found For Course ID " +
 					courseId, ret);
 			}
 		);
@@ -208,7 +211,7 @@ module.controller(
 				$scope.answered = ret.answered;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve your answer history.", ret);
+				Toaster.reqerror("Answers Not Found", ret);
 			}
 		);
 		CourseResource.getAnswerCount({'id': courseId}).$promise.then(
@@ -216,7 +219,7 @@ module.controller(
 				$scope.count = ret.count;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve the answer counts for the questions.", ret);
+				Toaster.reqerror("Answer Totals Not Found", ret);
 			}
 		);
 
@@ -248,14 +251,14 @@ module.controller(
 				{
 					Session.refresh().then(function(){
 						$scope.submitted = false;
-						Toaster.success(ret.name + " created successfully!");
+						Toaster.success("Course Created", ret.name + " created successfully.");
 						$location.path('/course/' + ret.id);
 					});
 				},
 				function (ret)
 				{
 					$scope.submitted = false;
-					Toaster.reqerror("Create course failed.", ret);
+					Toaster.reqerror("No Course Created", ret);
 				}
 			);
 		};

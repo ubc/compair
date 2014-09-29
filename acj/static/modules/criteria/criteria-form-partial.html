@@ -1,16 +1,21 @@
-<form name="criterionForm" class="form" ng-submit="criterionSubmit()" novalidate>
+<ng-form name="criterionForm" class="form">
 	<acj-field-with-feedback form-control="criterionForm.criteriaName">
-		<label for="criterionName">Evaluation Question</label>
+		<label class="required-star" for="criterionName">Evaluation Question</label>
 		<input type="text" maxlength="255" placeholder="e.g. Which answer is better?"
 			   ng-model="criterion.name" id="criterionName" name="criterionName" class="form-control" required/>
 	</acj-field-with-feedback>
 	<div class="form-group">
-		<label for="criterionDescription">Evaluation Instructions</label>
+		<label for="criterionDescription">How Students Should Evaluate Answers</label>
 		<textarea ckeditor="editorOptions" rows="4"
 			ng-model="criterion.description" id="criterionDescription" name="criterionDescription" class="form-control">
 		</textarea>
 	</div>
-	<hr />
-	<input type="submit" class="btn btn-success btn-lg center-block" value="Save"
+	<div class="form-group">
+		<!-- checkbox placeholders! (not hooked into back end) -->
+		<input type="checkbox" name="" id="" checked="checked" />
+		<label for="">Add this to my list of default criteria</label>
+		<!--   end placeholders! (not hooked into back end)    -->
+	</div>
+	<input type="button" ng-click="criterionSubmit()" class="btn btn-default center-block" value="Add New"
 		ng-disabled="criterionForm.$invalid || criterionSubmitted" />
-</form>
+</ng-form>

@@ -28,30 +28,13 @@
 		-->
 	</fieldset>
 		
-	<!-- Neither evaluation criteria nor tagging is enabled yet, so hide code for both
 	<fieldset>
-		<legend>Evaluation Criteria</legend>
-		<p class="instructional-text"><strong>Evaluation criteria are the questions with instructions that students see when evaluating answers.</strong> Set your custom criteria for the overall course here, then select one or more to use when you create a question. (If you do not need custom criteria, simply use the default below.)</p>
-		<div class="criterion-pair">
-			<div class="form-group">
-				<label for="criteriaName">Evaluation Question</label>
-				<input type="text" maxlength="255" placeholder="e.g. Which answer is better?"
-				       ng-model="" id="criteriaName" name="criteriaName" class="form-control" />
-			</div>
-			<div class="form-group">
-				<label for="criteriaDescription">Evaluation Instructions</label>
-				<textarea ckeditor="editorOptions" rows="4" 
-					ng-model="course.description" id="criteriaDescription" name="criteriaDescription" class="form-control">
-				</textarea>
-			</div>
-			<hr />
-		</div>
-		<a href="#" class="btn btn-default btn-sm pull-right">
-			<i class="fa fa-plus"></i>
-			Add Criteria
-		</a>
+		<legend>Course Criteria</legend>
+		<p class="instructional-text"><strong>Criteria are the questions and instructions that tell students what to look for when evaluating answers</strong> in this course. Set the criteria you want to use for the overall course here, then select one or more of these when you create each individual question.</p>
+		<ng-include src="'modules/criteria/criteria-course-partial.html'"></ng-include>
 	</fieldset>
 	
+	<!-- Tagging is enabled yet, so hide code for it
 	<fieldset>
 		<legend>Tags</legend>
 		<table ng-table class="table">

@@ -1,13 +1,4 @@
 <div ng-controller="CourseConfigureController">
 	<h1>Edit {{course.name}}</h1>
 	<ng-include src="'modules/course/course-form-partial.html'"></ng-include>
-	<fieldset>
-		<legend>Evaluation Criteria</legend>
-		<p class="instructional-text"><strong>Evaluation criteria are the questions with instructions that students see when evaluating answers.</strong> Set your custom criteria for the overall course here, then select one or more to use when you create a question. (If you do not need custom criteria, simply use the default below.)</p>
-		<ng-include src="'modules/criteria/criteria-course-partial.html'"></ng-include>
-	</fieldset>
-	<fieldset>
-		<legend>New Criterion</legend>
-		<ng-include src="'modules/criteria/criteria-form-partial.html'"></ng-include>
-	</fieldset>
 </div>
