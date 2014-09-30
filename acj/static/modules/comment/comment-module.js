@@ -229,14 +229,25 @@ module.controller(
 
 module.controller(
 	"JudgementCommentController",
-	function ($scope, $log, $routeParams, EvalCommentResource, CoursesCriteriaResource, CourseResource,
+	function ($scope, $log, $routeParams, breadcrumbs, EvalCommentResource, CoursesCriteriaResource, CourseResource,
 			  AnswerPairingResource, AnswerResource, Toaster)
 	{
 		var courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
 		$scope.search = {'judgement': {'course_criterion': {}}};
 		$scope.answer = {'one': null, 'two': null};
-
+		$scope.course = {};
+		
+		CourseResource.get({'id':courseId}).$promise.then(
+			function (ret) {
+				$scope.course = ret;
+				breadcrumbs.options = {'Course Questions': ret.name, 'Evaluate Answers': ""};
+			},
+			function (ret) {
+				Toaster.reqerror("Course Not Found For ID "+ courseId, ret);
+			}
+		);
+		
 		EvalCommentResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
 			function (ret) {
 				$scope.comments = ret.comments;
@@ -273,6 +284,7 @@ module.controller(
 				Toaster.reqerror("Answer author retrieval failed.", ret);
 			}
 		);
+		
 
 		$scope.reset = function() {
 			$scope.answer.two = null;
