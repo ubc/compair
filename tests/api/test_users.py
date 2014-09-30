@@ -100,12 +100,12 @@ class UsersAPITests(ACJTestCase):
 		self.assert200(rv)
 		instructors = rv.json['instructors']
 		expected = {
-			str(self.data.get_authorized_instructor().id): self.data.get_authorized_instructor().fullname,
-			str(self.data.get_unauthorized_instructor().id): self.data.get_unauthorized_instructor().fullname,
-			str(self.data.get_dropped_instructor().id): self.data.get_dropped_instructor().fullname
+			self.data.get_authorized_instructor().id: self._generate_search_users(self.data.get_authorized_instructor()),
+			self.data.get_unauthorized_instructor().id: self._generate_search_users(self.data.get_unauthorized_instructor()),
+			self.data.get_dropped_instructor().id: self._generate_search_users(self.data.get_dropped_instructor())
 		}
-		for id in instructors:
-			self.assertEqual(expected[id], instructors[id])
+		for instructor in instructors:
+			self.assertEqual(expected[instructor['id']], instructor)
 		self.logout()
 
 
@@ -125,3 +125,6 @@ class UsersAPITests(ACJTestCase):
 									 "Expected permission " + operation + " on " +  model_name + " to be " + str(expected))
 			# undo the forced login earlier
 			logout_user()
+
+	def _generate_search_users(self, user):
+		return {'id': user.id, 'display': user.fullname+' ('+user.displayname+') - '+user.usertypeforsystem.name, 'name': user.fullname}

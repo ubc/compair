@@ -164,7 +164,7 @@ class UserTypesInstructorsAPI(Resource):
 	def get(self):
 		id = UserTypesForSystem.query.filter_by(name=UserTypesForSystem.TYPE_INSTRUCTOR).first().id
 		instructors = Users.query.filter_by(usertypesforsystem_id=id).order_by(Users.firstname).all()
-		instructors = {i.id: i.fullname for i in instructors}
+		instructors = [{'id': i.id, 'display': i.fullname+' ('+i.displayname+') - '+i.usertypeforsystem.name, 'name': i.fullname} for i in instructors]
 		return {'instructors': instructors}
 
 # /password

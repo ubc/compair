@@ -273,7 +273,7 @@ class TeachersAPI(Resource):
 		return {'instructors': instructor_ids}
 api.add_resource(TeachersAPI, '/instructors/labels')
 
-# /instructors/names - return list of Instructors in the course
+# /instructors - return list of Instructors in the course
 class InstructorsAPI(Resource):
 	@login_required
 	def get(self, course_id):

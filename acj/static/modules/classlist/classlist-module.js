@@ -10,7 +10,8 @@ var module = angular.module('ubc.ctlt.acj.classlist',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.course',
 		'ubc.ctlt.acj.toaster',
-		'ubc.ctlt.acj.user'
+		'ubc.ctlt.acj.user',
+		'ui.bootstrap'
 	]
 );
 
@@ -179,20 +180,14 @@ module.controller(
 		CourseResource.getInstructors({'id': courseId}).$promise.then(
 			function (ret) {
 				$scope.enroled = ret.instructors;
-				UserTypeResource.getInstructors().$promise.then(
-					function (ret) {
-						// remove already enroled instructors from list
-						angular.forEach($scope.enroled, function(c, key) {
-							if (key in ret.instructors) {
-								delete ret.instructors[key];
-							}
-						});
-						$scope.instructors = ret.instructors;
-					},
-					function (ret) {
-						Toaster.reqerror("No Instructors Found", ret);
-					}
-				);
+			},
+			function (ret) {
+				Toaster.reqerror("No Instructors Found", ret);
+			}
+		);
+		UserTypeResource.getInstructors().$promise.then(
+			function (ret) {
+				$scope.instructors = ret.instructors;
 			},
 			function (ret) {
 				Toaster.reqerror("No Instructors Found", ret);
@@ -200,12 +195,22 @@ module.controller(
 		);
 		$scope.enrolSubmit = function() {
 			$scope.submitted = true;
-			ClassListResource.enrol({'courseId': courseId, 'userId': $scope.user.user_id}, $scope.user).$promise.then(
+			if (!$scope.user.id) {
+				Toaster.error("Invalid user selected. Please try again.");
+				$scope.user = {};
+				$scope.submitted = false;
+				return;
+			} else if ($scope.enroled[$scope.user.id]) {
+				Toaster.success("User is already enroled.");
+				$scope.user = {};
+				$scope.submitted = false;
+				return;
+			}
+			ClassListResource.enrol({'courseId': courseId, 'userId': $scope.user.id}, $scope.user).$promise.then(
 				function (ret) {
 					$scope.submitted = false;
-					delete $scope.instructors[ret.user.id];
 					$scope.enroled[ret.user.id] = ret.user.fullname;
-					$scope.user.user_id = null; // reset form
+					$scope.user = {}; // reset form
 					Toaster.success("User Added", 'Successfully added '+ ret.user.fullname +' as ' + ret.usertypesforcourse.name + ' to the course.');
 				},
 				function (ret) {
@@ -229,7 +234,6 @@ module.controller(
 						});
 					} else {
 						delete $scope.enroled[ret.user.id];
-						$scope.instructors[ret.user.id] = ret.user.fullname;
 					}
 				},
 				function (ret) {
