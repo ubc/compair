@@ -163,6 +163,9 @@ module.controller(
 
 		$scope.course = {};
 		$scope.user = {};
+		Session.getUser().then(function(user) {
+		    $scope.loggedInUserId = user.id;
+		});
 		var courseId = $routeParams['courseId'];
 		// TODO: generate drop down menu to select role
 		CourseResource.get({'id':courseId}).$promise.then(

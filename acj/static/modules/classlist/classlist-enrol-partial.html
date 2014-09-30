@@ -30,12 +30,18 @@
 		</tr>
 		<tr ng-repeat="(id, name) in enroled">
 			<td>
-				<a href="" ng-click="remove(id)">
+				<span ng-if="id == loggedInUserId">
+					-
+				</span>
+				<a href="" ng-click="remove(id)" ng-if="id != loggedInUserId">
 					Drop
 				</a>
 			</td>
-			<td>{{ name }}</td>
-		</tr>
+			<td>
+				{{ name }}
+				<span ng-if="id == loggedInUserId">&nbsp;[<em>You</em>]</span>
+			</td>
+		</tr>                                                                   
 	</table>
 	
 </div>
