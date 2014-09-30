@@ -93,7 +93,23 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 			name: 'pdfFilter',
 			fn: function(item, options) {
 				var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
-				return '|pdf|'.indexOf(type) !== -1;
+				var valid = '|pdf|'.indexOf(type) !== -1;
+				if (!valid) {
+					Toaster.error("Only pdf files are accepted.")
+				}
+				return valid;
+			}
+		});
+
+		uploader.filters.push({
+			name: 'sizeFilter',
+			fn: function(item) {
+				var valid = item.size <= 26214400; // 1024 * 1024 * 25 -> max 25MB
+				if (!valid) {
+					var size = item.size / 1048576; // convert to MB
+					Toaster.error("The file size is "+size.toFixed(2)+"MB. The maximum file size allowed is 25MB")
+				}
+				return valid;
 			}
 		});
 
@@ -112,7 +128,7 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 	var onError = function() {
 		return function(fileItem, response, status, headers) {
 			if (response == '413') {
-				Toaster.error("The file is too large. Please upload a smaller file.");
+				Toaster.error("The file is larger than 25 MB. Please upload a smaller file.");
 			} else {
 				Toaster.reqerror("Attachment Fail", status);
 			}
