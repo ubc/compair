@@ -60,14 +60,14 @@
 		<a class="btn btn-success" ng-show="answered && (canManagePosts || question.answer_period)" title="You have answered" disabled>
 			Answered
 		</a>
-		<a class="btn btn-success" title="Evaluate Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" ng-show="!canManagePosts && question.judging_period && !judged_req_met">
+		<a class="btn btn-success" title="Evaluate Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" ng-show="!canManagePosts && question.judging_period && question.left" ng-disabled="question.leftover > 0">
 			Evaluate
 		</a>
-		<a class="btn btn-success" title="You have evaluated" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" ng-show="!canManagePosts && question.judging_period && judged_req_met" disabled>
+		<a class="btn btn-success" title="You have evaluated" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" ng-show="!canManagePosts && question.judging_period && !question.left" disabled>
 			Evaluated
 		</a>
-		<a class="btn btn-info" title="Evaluation Comments" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement/comment" ng-show="canManagePosts && (question.judging_period || question.after_judging)">
-			Evaluation Comments
+		<a class="btn btn-success" title="Evaluations" ng-href="#/course/{{courseId}}/question/{{question.id}}/evaluations" ng-show="canManagePosts && (question.judging_period || question.after_judging)">
+			See Evaluations
 		</a>
 		
 	</div><!-- closes question box -->
@@ -90,8 +90,17 @@
 			<!-- Answers Tab Header -->
 			<div class="tab-header">
 				
-				<select ng-hide="true" ng-model="sortby" ng-options="key as c.criterion.name for (key, c) in criteria" class="pull-right"></select>
-				<label class="pull-right" ng-hide="true">Sort by: &nbsp;</label>
+				<!-- placeholder for filter **DOES NOT YET WORK** -->
+				<div ng-if="canManagePosts" class="pull-right">
+					<label>Sort by ranking for: &nbsp;</label>
+					<select ng-model="sortby" class="nullable"
+						ng-options="key as c.criterion.name for (key, c) in criteria">
+						<option value="">- select criterion -</option>
+					</select>
+					<a class="print-btn" href="" onclick="window.print();">
+						<i class="fa fa-print"></i>
+					</a>
+				</div>
 				
 				<h2>Answers</h2>
 				
@@ -104,11 +113,11 @@
 					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" title="Answer the question">Answer</a> and evaluate the question first, then read answers written by your classmates and instructors here.
 				</p>
 				<!-- Students see before evaluating before the evaluation period -->
-				<p ng-if="!canManagePosts && answered && !judged_req_met && !question.judging_period">
+				<p ng-if="!canManagePosts && answered && question.left && !question.judging_period">
 					Evaluation period begins <span ng-if="question.judge_start > 0">{{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}}</span><span ng-if="question.judge_start <= 0">after the answer period ends</span>. After evaluating, you will be able to read answers written by your classmates and instructors here.
 				</p>
 				<!-- Students see before evaluating during the evaluation period -->
-				<p ng-if="!canManagePosts && !judged_req_met && question.judging_period">
+				<p ng-if="!canManagePosts && question.left && question.judging_period">
 					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" title="Answer the question">Evaluate</a> the question first, then read answers written by your classmates and instructors here.
 				</p>
 				<!-- Anyone sees during the answer period, if no answers provided yet -->
@@ -120,7 +129,7 @@
 			<div class="all-answers">
 			
 				<!-- Instructor Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="instructors[answer.post.user.id] && (judged_req_met || canManagePosts)">
+				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="instructors[answer.post.user.id] && (!question.left || canManagePosts)">
 					
 					<!-- Answer Metadata Header -->
 					<a ng-href="#/user/{{answer.post.user.id}}">
@@ -138,7 +147,7 @@
 					<span class="label label-info" ng-if="instructors[answer.post.user.id]">{{instructors[answer.post.user.id]}}&nbsp;</span>
 					<strong>final answer</strong>:
 					<div class="manager-actions pull-right" ng-if="canManagePosts">
-						<a confirmation-needed="deleteAnswer(answerKey, courseId, question.id, answer.id)" keyword="instructor answer">
+						<a href="" confirmation-needed="deleteAnswer(answerKey, courseId, question.id, answer.id)" keyword="instructor answer">
 							<i class="fa fa-trash-o"></i>
 						</a>
 						<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit">
@@ -189,7 +198,7 @@
 						</span>
 						<strong>replied</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 						<div class="manager-actions pull-right" ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId">
-							<a confirmation-needed="deleteReply(answerKey, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
+							<a href="" confirmation-needed="deleteReply(answerKey, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
 								<i class="fa fa-trash-o"></i>
 							</a>
 							<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
@@ -207,8 +216,8 @@
 				</div><!-- closes each-answer (instructor) -->
 				
 				<!-- Student Answers Section -->
-				<!-- <div class="each-answer clearfix" ng-repeat="answer in answers | orderBy:order:reverse | notScoredEnd:sortby" ng-if="instructors[answer.post.user.id]"> -->
-				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.post.user.id] && (judged_req_met || (answer.post.user.id == loggedInUserId && question.answer_period) || canManagePosts)">
+				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers | orderBy:order:reverse | notScoredEnd:sortby" ng-if="!instructors[answer.post.user.id] && (!question.left || (answer.post.user.id == loggedInUserId && question.answer_period) || canManagePosts)">
+				<!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.post.user.id] && (!question.left || (answer.post.user.id == loggedInUserId && question.answer_period) || canManagePosts)"> -->
 					
 					<!-- Answer Metadata Header -->
 					<a ng-href="#/user/{{answer.post.user.id}}">
@@ -229,7 +238,7 @@
 							<i class="fa fa-warning"></i>
 							Flagged
 						</span>
-						<a confirmation-needed="deleteAnswer(answerKey, courseId, question.id, answer.id)" keyword="answer">
+						<a href="" confirmation-needed="deleteAnswer(answerKey, courseId, question.id, answer.id)" keyword="answer">
 							<i class="fa fa-trash-o"></i>
 						</a>
 						<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit">
@@ -284,7 +293,7 @@
 						</span>
 						<strong>replied</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 						<div class="manager-actions pull-right" ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId">
-							<a confirmation-needed="deleteReply(answerKey, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
+							<a href="" confirmation-needed="deleteReply(answerKey, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
 								<i class="fa fa-trash-o"></i>
 							</a>
 							<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
