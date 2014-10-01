@@ -49,22 +49,22 @@ class JudgementRootAPI(Resource):
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		if not question.judging_period:
-			return {'error':'Judging Period is not in session.'}, 403
+			return {'error':'Evaluation period is not active.'}, 403
 		require(READ, question)
-		course_criteria = CriteriaAndCourses.query.filter_by(course=course).all()
+		course_criteria = CriteriaAndCourses.query.filter_by(course=course, active=True).all()
 		params = new_judgement_parser.parse_args()
 		answer_pair = AnswerPairings.query.get(params['answerpair_id'])
 		if not answer_pair:
 			return {"error":"Invalid Answer Pair ID"}, 404
 		# check if number of judgements matches number of criteria
 		if len(course_criteria) != len(params['judgements']):
-			return {"error":"Not all criteria were evaluated!"}, 400
+			return {"error":"Not all criteria were evaluated."}, 400
 		# check if each judgement has an courseCriteria Id and a winner id
 		for judgement in params['judgements']:
 			if not 'course_criterion_id' in judgement:
-				return {"error": "Missing course_criterion_id in judgement."}, 400
+				return {"error": "Missing course_criterion_id in evaluation."}, 400
 			if not 'answer_id_winner' in judgement:
-				return {"error": "Missing winner for one of criteria."}, 400
+				return {"error": "Missing selected answer for one of the criteria."}, 400
 			# check that we're using criteria that were assigned to the course and that we didn't
 			# get duplicate criteria in judgements
 			known_criterion = False
@@ -77,11 +77,11 @@ class JudgementRootAPI(Resource):
 			# check that the winner id matches one of the answer pairs
 			winner_id = judgement['answer_id_winner']
 			if winner_id != answer_pair.answer1.id and winner_id != answer_pair.answer2.id:
-				return {"error": "Winner ID does not match the available pair of answers."}, 400
+				return {"error": "Selected answer ID does not match the available pair of answers."}, 400
 		# check if pair has already been judged by this user
 		if Judgements.query.filter_by(users_id = current_user.id,
 			answerpairings_id = answer_pair.id).first():
-			return {"error": "You've already judged this pair of answers!"}, 400
+			return {"error": "You've already evaluated this pair of answers."}, 400
 		judgements = []
 		criteria = []
 		for judgement_params in params['judgements']:
@@ -157,7 +157,7 @@ class JudgementPairAPI(Resource):
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
 		if not question.judging_period:
-			return {'error':'Judging Period is not in session.'}, 403
+			return {'error':'Evaluation period is not active.'}, 403
 		pair_generator = AnswerPairGenerator(course_id, question_id)
 		try:
 			answerpairing = pair_generator.get_pair()
@@ -170,13 +170,13 @@ class JudgementPairAPI(Resource):
 				data={'question_id': question_id, 'answer_pair': marshal(answerpairing, dataformat.getAnswerPairings(include_answers=True))})
 			return marshal(answerpairing, dataformat.getAnswerPairings(include_answers=True))
 		except InsufficientAnswersException:
-			return {"error":"Insufficient answers available for judgement."}, 400
+			return {"error":"Not enough answers are available for an evaluation."}, 400
 		except UserHasJudgedAllAnswers:
-			return {"error":"You have judged all answers available!"}, 400
+			return {"error":"You have judged all the currently available answers."}, 400
 		except AnswerMissingScoreCalculation:
-			return {"error":"An answer is missing a calculated score!"}, 400
+			return {"error":"An answer is missing a calculated score."}, 400
 		except MissingScoreFromAnswer:
-			return {"error":"A score is missing from an answer!"}, 400
+			return {"error":"A score is missing from an answer."}, 400
 		except UnknownAnswerPairError:
 			return {"error":"Generating scored pairs failed, this really shouldn't happen."}, 500
 		return {"error":"Answer pair generation failed for an unknown reason."}, 500

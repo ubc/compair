@@ -77,7 +77,7 @@ module.controller(
 			},
 			function (ret)
 			{
-				Toaster.reqerror("Unable to load question.", ret);
+				Toaster.reqerror("Question Not Loaded", ret);
 			}
 		);
 		Session.getUser().then(function(user) {
@@ -89,7 +89,7 @@ module.controller(
 						$scope.current = ret.count + 1;
 					},
 					function(ret) {
-						Toaster.reqerror("Unable to load number of evaluations completed.", ret);
+						Toaster.reqerror("Evaluations Total Not Found", ret);
 					}
 				);
 		});	
@@ -103,7 +103,7 @@ module.controller(
 			},
 			function (ret)
 			{
-				Toaster.reqerror("Unable to load criteria.", ret);
+				Toaster.reqerror("Criteria Not Found", ret);
 			}
 		);
 		// get an answerpair to be judged from the server
@@ -132,7 +132,7 @@ module.controller(
 				function (ret)
 				{
 					$scope.answerPairError = true;
-					Toaster.reqerror("Unable to retrieve an answer pair.", ret);
+					Toaster.reqerror("Answer Pair Not Found", ret);
 				}
 		);
 		
@@ -187,28 +187,28 @@ module.controller(
 												function(ret) {
 													if ($scope.question.num_judgement_req > ret.count) {
 														var left = $scope.question.num_judgement_req - ret.count;
-														Toaster.success("Judgement Submitted Successfully! Please submit " + left + " more evaluation(s).");
+														Toaster.success("Evaluation Submitted Successfully", "Please submit " + left + " more evaluation(s).");
 														$route.reload();
 														window.scrollTo(0, 0);
 													} else {
-														Toaster.success("Judgement Submitted Successfully!");
+														Toaster.success("Evaluation Submitted Successfully");
 														$location.path('/course/' + courseId);
 													}
 												},
 												function(ret) {
-													Toaster.success("Judgement Submitted Successfully!");
+													Toaster.success("Evaluation Submitted Successfully");
 													$location.path('/course/' + courseId);
 												}
 											);
 									});
 								},
 								function(ret) {
-									Toaster.reqerror("Judgement Comment Submit Failed.", ret);
+									Toaster.reqerror("Evaluation Submit Failed", ret);
 								}
 						);
 					},
 					function(ret) {
-						Toaster.reqerror("Judgement Submit Failed.", ret);
+						Toaster.reqerror("Evaluation Submit Failed", ret);
 					}
 			);
 			// save comments for each individual answer
@@ -221,7 +221,7 @@ module.controller(
 							{},
 							function (ret)
 							{
-								Toaster.reqerror("Unable to post new comment.", ret);
+								Toaster.reqerror("Unable To Save Reply", ret);
 							}
 					);
 				} else {
@@ -233,7 +233,7 @@ module.controller(
 							{},
 							function (ret)
 							{
-								Toaster.reqerror("Unable to post new comment.", ret);
+								Toaster.reqerror("Unable To Save Reply", ret);
 							}
 					);
 				}
@@ -255,7 +255,7 @@ module.controller(
 					Toaster.success(resultMsg);
 				},
 				function(ret) {
-					Toaster.reqerror("Unable to change answer flag.", ret);
+					Toaster.reqerror("Unable To Change Flag", ret);
 				}
 			);
 
