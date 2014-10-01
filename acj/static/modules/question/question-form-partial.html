@@ -11,7 +11,7 @@
 		</acj-field-with-feedback>
 		<div>
 			<label for="importFile">Attach PDF</label>
-			<input type="file" nv-file-select uploader="uploader" id="importFile" ng-disabled="uploader.queue.length || question.uploadedFile"/>
+			<input type="file" nv-file-select uploader="uploader" id="importFile" ng-disabled="uploader.queue.length || question.uploadedFile" multiple/>
 			<div class="row" ng-repeat="item in uploader.queue">
 				<div class="col-md-4"><strong>{{item.file.name}}</strong></div>
 				<div class="col-md-1">{{item.file.size/1024/1024|number:2}} MB</div>
