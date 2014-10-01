@@ -109,7 +109,7 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/judgement/judgement-partial.html',
 				label: "Evaluate Answers"
 			})
-		.when ('/course/:courseId/question/:questionId/judgement/comment',
+		.when ('/course/:courseId/question/:questionId/evaluations',
 			   {
 				   templateUrl: 'modules/judgement/judgement-comment-partial.html',
 				   label: "Evaluations"
