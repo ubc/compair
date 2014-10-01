@@ -1,5 +1,5 @@
 <form name="commentForm" class="form" ng-submit="commentSubmit()" novalidate>
-	<fieldset>
+	<fieldset class="table-cell">
 		<h2 ng-if="parent.title"><i class="fa fa-comments"></i> {{parent.title}}</h2>
 		<i class="fa fa-quote-left pull-left" ng-if="!parent.title && parent.post.content"></i>
 		<i class="fa fa-quote-right pull-right" ng-if="!parent.title && parent.post.content"></i>

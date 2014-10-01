@@ -4,6 +4,17 @@
 
 .course-screen {
   
+  ::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 7px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: rgba(0,0,0,.5);
+    -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+  }
+  
   /* search box */
   .searchCourse {
     margin-top: 1.5em;
@@ -33,6 +44,12 @@
     .due-date {
       color: @breadcrumb-gray;
       font-style: italic;
+    }
+    
+    /* limit how much of the question description appears on course page */
+    .question-desc {
+      max-height: 9em;
+      overflow: scroll;
     }
     
     /* ul for metadata */

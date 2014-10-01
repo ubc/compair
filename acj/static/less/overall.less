@@ -48,6 +48,11 @@ fieldset + fieldset {
   margin-top: 0;
 }
 
+/* some fieldsets need table-cell display to contain oversized images */
+.table-cell {
+  display: table-cell
+}
+
 /* legends for forms look like blue buttons */
 legend {
   padding: .3em .6em;
@@ -116,6 +121,13 @@ dt {
 .question-desc {
   margin: 1.5em 0;
   font-size: 1.1em;
+}
+
+/* need to constrain oversized images submitted by users */
+.question-desc img,
+.each-answer .content img,
+.answer-choice img {
+  max-width: 100%;
 }
 
 /* ul/ol class for spacing out some of the instrucitonal text */
