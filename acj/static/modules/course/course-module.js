@@ -105,7 +105,7 @@ module.controller(
 					$scope.criterionSubmitted = false;
 					$scope.criteria.push(ret.criterion);
 					Toaster.success("New Criterion Created", "Successfully added a new criterion.");
-					$(".create-form").remove(); // remove inner form from DOM so user can save outer form
+					$scope.toggleForm();
 					$(".fa-chevron-right").removeClass("ng-hide"); // reset classes so UI matches current state
 					$(".fa-chevron-down").addClass("ng-hide");
 				},
@@ -142,6 +142,10 @@ module.controller(
 					Toaster.reqerror("Unable To Remove Criterion " + ret.criterionId, ret);
 				}
 			);
+		}
+
+		$scope.toggleForm = function() {
+			$scope.isCreateFormShown = !$scope.isCreateFormShown;
 		}
 	}
 );
