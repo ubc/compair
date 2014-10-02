@@ -32,6 +32,7 @@ module.directive(
 				element.bind('click', function(e) {
 					if ( window.confirm(msg) ) {
 						scope.$eval(attrs.confirmationNeeded);
+						scope.$apply();
 					} else {
 						e.stopImmediatePropagation();
 					}

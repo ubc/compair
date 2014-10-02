@@ -18,7 +18,11 @@ module.factory('CoursesCriteriaResource', function($resource) {
 });
 
 module.factory('CriteriaResource', function($resource) {
-	return $resource('/api/criteria/:criteriaId', {criteriaId: '@id'});
+	return $resource('/api/criteria/:criteriaId', {criteriaId: '@id'},
+		 {
+			 'getDefault': {'url': '/api/criteria/default'}
+		 }
+	);
 });
 
 /***** Controllers *****/

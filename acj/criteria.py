@@ -102,7 +102,22 @@ class CriteriaAPI(Resource):
 		else:
 			criteria = Criteria.query.filter(or_(Criteria.users_id==current_user.id, Criteria.public==True)).all()
 		return {'criteria': marshal(criteria, dataformat.getCriteria())}
+	@login_required
+	def post(self):
+		params = new_criterion_parser.parse_args()
+		criterion = addCriteria(params)
+		require(CREATE, criterion)
+		db.session.commit()
+		return marshal(criterion, dataformat.getCriteria())
 apiC.add_resource(CriteriaAPI, '')
+
+# /default - get default criteria - eg. first criterion
+class DefaultCriteria(Resource):
+	@login_required
+	def get(self):
+		default = Criteria.query.first()
+		return marshal(default, dataformat.getCriteria())
+apiC.add_resource(DefaultCriteria, '/default')
 
 # /criteria/:id
 class CriteriaIdAPI(Resource):
