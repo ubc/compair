@@ -2,7 +2,7 @@ from flask import Blueprint, current_app
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal, reqparse
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 
 from . import dataformat
 from .core import event, db
@@ -20,11 +20,13 @@ apiC = new_restful_api(criteria_api)
 new_criterion_parser = reqparse.RequestParser()
 new_criterion_parser.add_argument('name', type=str, required=True)
 new_criterion_parser.add_argument('description', type=str)
+new_criterion_parser.add_argument('default', type=bool, default=True)
 
 existing_criterion_parser = reqparse.RequestParser()
 existing_criterion_parser.add_argument('id', type=int, required=True)
 existing_criterion_parser.add_argument('name', type=str, required=True)
 existing_criterion_parser.add_argument('description', type=str)
+existing_criterion_parser.add_argument('default', type=bool, default=True)
 
 # events
 on_criteria_list_get = event.signal('CRITERIA_LIST_GET')
@@ -93,14 +95,15 @@ class CourseCriteriaIdAPI(Resource):
 		return {'criterion': marshal(course_criterion, dataformat.getCriteriaAndCourses())}
 api.add_resource(CourseCriteriaIdAPI, '/<int:criteria_id>')
 
-#/criteria - public + authored
+#/criteria - public + authored/default
+# default = want criterion available to all of the author's courses
 class CriteriaAPI(Resource):
 	@login_required
 	def get(self):
 		if allow(MANAGE, Criteria):
 			criteria = Criteria.query.all()
 		else:
-			criteria = Criteria.query.filter(or_(Criteria.users_id==current_user.id, Criteria.public==True)).all()
+			criteria = Criteria.query.filter(or_(and_(Criteria.users_id==current_user.id, Criteria.default==True), Criteria.public==True)).all()
 		return {'criteria': marshal(criteria, dataformat.getCriteria())}
 	@login_required
 	def post(self):
@@ -140,6 +143,7 @@ class CriteriaIdAPI(Resource):
 		params = existing_criterion_parser.parse_args()
 		criterion.name = params.get('name', criterion.name)
 		criterion.description = params.get('description', criterion.description)
+		criterion.default = params.get('default', criterion.default)
 		db.session.add(criterion)
 		db.session.commit()
 
@@ -156,7 +160,8 @@ def addCriteria(params):
 	criterion = Criteria(
 		name = params.get("name"),
 		description = params.get("description", None),
-		users_id = current_user.id
+		users_id = current_user.id,
+		default = params.get("default")
 	)
 	db.session.add(criterion)
 	return criterion

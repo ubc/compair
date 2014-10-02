@@ -507,6 +507,7 @@ class Criteria(db.Model):
 		nullable=False)
 	user = db.relationship("Users")
 	public = db.Column(db.Boolean, default=False, nullable=False)
+	default = db.Column(db.Boolean, default=True, nullable=False)
 	modified = db.Column(
 		db.DateTime,
 		default=datetime.datetime.utcnow,

@@ -46,7 +46,7 @@ module.controller(
 		$scope.editorOptions = EditorOptions.basic;
 		// get course info
 		$scope.course = {};
-		$scope.criterion = {};
+		$scope.criterion = {'default': true};	// initialize default attribute to true
 		$scope.courseId = $routeParams['courseId'];
 		Authorize.can(Authorize.MANAGE, CoursesCriteriaResource.MODEL).then(function(result) {
 			$scope.canManageCriteriaCourses = result;
@@ -103,7 +103,7 @@ module.controller(
 			$scope.criterionSubmitted = true;
 			CoursesCriteriaResource.save({'courseId': $scope.courseId}, $scope.criterion).$promise.then(
 				function (ret) {
-					$scope.criterion = {'name': '', 'description': ''}; // reset form
+					$scope.criterion = {'name': '', 'description': '', 'default': true}; // reset form
 					$scope.criterionSubmitted = false;
 					$scope.criteria.push(ret.criterion);
 					Toaster.success("New Criterion Created", "Successfully added a new criterion.");
@@ -252,7 +252,7 @@ module.controller(
 		//initialize course so this scope can access data from included form
 		$scope.course = {};
 		$scope.criteria = [];
-		$scope.criterion = {};
+		$scope.criterion = {'default': true};	// initialize default attribute to true
 		var def = {};
 
 		// initialize default criterion
@@ -304,7 +304,7 @@ module.controller(
 			$scope.criterionSubmitted = true;
 			CriteriaResource.save({}, $scope.criterion).$promise.then(
 				function (ret) {
-					$scope.criterion = {'name': '', 'description': ''}; // reset form
+					$scope.criterion = {'name': '', 'description': '', 'default': true}; // reset form
 					$scope.criterionSubmitted = false;
 					$scope.criteria.push({'criterion': ret});
 					$scope.toggleForm();

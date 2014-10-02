@@ -11,10 +11,8 @@
 		</textarea>
 	</div>
 	<div class="form-group">
-		<!-- checkbox placeholders! (not hooked into back end) -->
-		<input type="checkbox" name="" id="" checked="checked" />
-		<label for="">Add this to my list of default criteria</label>
-		<!--   end placeholders! (not hooked into back end)    -->
+		<input type="checkbox" ng-model="criterion.default" name="criterionDefault" id="criterionDefault" />
+		<label for="criterionDefault">Add this to my list of default criteria</label>
 	</div>
 	<input type="button" ng-click="criterionSubmit()" class="btn btn-default center-block" value="Add New"
 		ng-disabled="criterionForm.$invalid || criterionSubmitted" />
