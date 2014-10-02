@@ -272,3 +272,47 @@ class CriteriaAPITests(ACJTestCase):
 		self.assert200(rv)
 		self.assertTrue(rv.json['criterion']['active'])
 		self.logout()
+
+	def test_add_critera_course(self):
+		criteria_api_url = '/api/criteria'
+		criteria_expected = {
+			'name': 'Which is more elaborate?',
+			'description': 'Please answer accurately.'
+		}
+
+		# Test login required
+		rv = self.client.post(criteria_api_url, \
+				data=json.dumps(criteria_expected), content_type='application/json')
+		self.assert401(rv)
+
+		# Test unauthorized user - eg. student
+		self.login(self.data.get_authorized_student().username)
+		rv = self.client.post(criteria_api_url, \
+				data=json.dumps(criteria_expected), content_type='application/json')
+		self.assert403(rv)
+		self.logout()
+
+		# Test authorized user
+		self.login(self.data.get_authorized_instructor().username)
+		rv = self.client.post(criteria_api_url, \
+				data=json.dumps(criteria_expected), content_type='application/json')
+		self.assert200(rv)
+		self.assertEqual(criteria_expected['name'], rv.json['name'])
+		self.assertEqual(criteria_expected['description'], rv.json['description'])
+		self.logout()
+
+	def test_get_default_criteria(self):
+		default_api_url = '/api/criteria/default'
+
+		# Test login required
+		rv = self.client.get(default_api_url)
+		self.assert401(rv)
+
+		# Test successful query
+		self.login(self.data.get_authorized_instructor().username)
+		rv = self.client.get(default_api_url)
+		self.assert200(rv)
+		self.assertEqual(self.data.get_default_criteria().name, rv.json['name'])
+		self.assertEqual(self.data.get_default_criteria().description, rv.json['description'])
+		self.logout()
+
