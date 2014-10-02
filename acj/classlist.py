@@ -48,6 +48,10 @@ def allowed_file(filename):
 	return '.' in filename and \
 		filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
+def display_name_generator(firstname=None, role="Student"):
+	name = firstname+"_" if firstname else ""
+	return role.lower()+"_"+name+random_generator(4, string.digits)
+
 def random_generator(size=8, chars=string.ascii_uppercase + string.digits):
 	return ''.join(random.choice(chars) for _ in range(size))
 
@@ -57,6 +61,7 @@ def import_users(course_id, users):
 	success = []	# successfully enroled
 	created = []	# successfully created new users
 	dropped_users = []	# users not on new list; therefore dropped
+	exist_displaynames = []
 
 	# variables used in the intermediate steps
 	valid = []	# successfully created new users' usernames
@@ -70,17 +75,15 @@ def import_users(course_id, users):
 	usernames = [u[USERNAME] for u in users]
 	exist_users = Users.query.filter(Users.username.in_(usernames)).all()
 	exist_usernames = [e.username for e in exist_users]
-	existing_users = dict(zip(exist_usernames, exist_users))
 
 	# generate a list of existing display names from list of imported dp names
 	if length > DISPLAYNAME:
 		displaynames = [u[DISPLAYNAME] for u in users]
 		exist_users = Users.query.filter(Users.displayname.in_(displaynames)).all()
 		exist_displaynames = [e.displayname for e in exist_users]
-		exist_displaynames = dict(zip(exist_displaynames, exist_displaynames))	
-	for user in users:	
+	for user in users:
 		# user already exists
-		if user[USERNAME] in existing_users.keys():
+		if user[USERNAME] in exist_usernames:
 			valid.append(user[USERNAME])
 			continue 
 		elif user[USERNAME] == '':
@@ -111,14 +114,14 @@ def import_users(course_id, users):
 		u.usertypesforsystem_id = normal_user
 
 		# display name
-		if length > DISPLAYNAME and user[DISPLAYNAME] != '' and user[DISPLAYNAME] not in exist_displaynames.keys():
+		if length > DISPLAYNAME and user[DISPLAYNAME] != '' and user[DISPLAYNAME] not in exist_displaynames:
 			u.displayname = user[DISPLAYNAME]
 		else:
 			# auto-generate if one is not given
-			tmp_displayname = random_generator()
+			tmp_displayname = display_name_generator(u.firstname)
 			exists = Users.query.filter(Users.displayname==tmp_displayname).scalar()
 			while (exists is not None):
-				tmp_displayname = random_generator()
+				tmp_displayname = display_name_generator(u.firstname)
 				exists = Users.query.filter(Users.displayname==tmp_displayname).scalar()
 			u.displayname = tmp_displayname
 
@@ -130,8 +133,8 @@ def import_users(course_id, users):
 		created.append({'user': u, 'message': 'created'})
 		db.session.add(u)
 		# add new user to list of existing users
-		existing_users[u.username] = u.username
-		exist_displaynames[u.displayname] = u.displayname
+		exist_usernames.append(u.username)
+		exist_displaynames.append(u.displayname)
 		valid.append(u.username)
 	db.session.commit() # commit the new users first
 
@@ -143,8 +146,6 @@ def import_users(course_id, users):
 	enroled_userIds = dict(zip(enroled_userIds, enroled_userIds))
 
 	users = Users.query.filter(Users.username.in_(valid)).all()
-	usernames = [u.username for u in users]
-	usernames = dict(zip(usernames, users))
 	for user in users:
 		enrol = CoursesAndUsers()
 		if user.id in enroled_userIds.keys():
