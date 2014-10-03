@@ -62,6 +62,7 @@ def import_users(course_id, users):
 	created = []	# successfully created new users
 	dropped_users = []	# users not on new list; therefore dropped
 	exist_displaynames = []
+	usernames_infile = [] # for catching duplicate usernames in the file
 
 	# variables used in the intermediate steps
 	valid = []	# successfully created new users' usernames
@@ -82,15 +83,21 @@ def import_users(course_id, users):
 		exist_users = Users.query.filter(Users.displayname.in_(displaynames)).all()
 		exist_displaynames = [e.displayname for e in exist_users]
 	for user in users:
+		u = Users()
+		if user[USERNAME] in usernames_infile:
+			u.username = user[USERNAME]
+			invalids.append({'user': u, 'message': 'This username already exists in the file.'})
+			continue
 		# user already exists
-		if user[USERNAME] in exist_usernames:
+		elif user[USERNAME] in exist_usernames:
+			usernames_infile.append(user[USERNAME])
 			valid.append(user[USERNAME])
 			continue 
 		elif user[USERNAME] == '':
 			invalids.append({'user': user, 'message':'The username is required.'})
 			continue	# skip blank row
-		u = Users()
 		u.username = user[USERNAME]
+		usernames_infile.append(user[USERNAME])
 
 		# firstname
 		if length > FIRSTNAME and user[FIRSTNAME] != '':

@@ -154,6 +154,8 @@ module.controller(
 		);
 
 		$scope.headers = ['Username', 'First Name', 'Last Name', 'Email'];
+		$scope.invalidHeaders = angular.copy($scope.headers);
+		$scope.invalidHeaders.push('Message');
 	}
 );
 

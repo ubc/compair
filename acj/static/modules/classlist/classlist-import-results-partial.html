@@ -1,6 +1,21 @@
 <div ng-controller="ClassImportResultsController">
 	<h1>Results</h1>
 	<p><a href="#/course/{{course.id}}">&laquo; Back to course?</a></p>
+	<div ng-show="results.invalids.length">
+		<h2>Users without valid data (not added or created)</h2>
+		<table class="table table-striped">
+			<tr>
+				<th ng-repeat="header in invalidHeaders">{{header}}</th>
+			</tr>
+			<tr ng-repeat="invalid in results.invalids">
+				<td>{{invalid.user.username}}</td>
+				<td>{{invalid.user.firstname}}</td>
+				<td>{{invalid.user.lastname}}</td>
+				<td>{{invalid.user.email}}</td>
+				<td>{{invalid.message}}</td>
+			</tr>
+		</table>
+	</div>
 	<div ng-show="results.success.length">
 		<h2>Users added to {{course.name}}</h2>
 		<table class="table table-striped">
@@ -30,21 +45,7 @@
 			</tr>
 		</table>
 	</div>
-	<div ng-show="results.invalids.length">
-		<h2>Users without valid data (not added or created)</h2>
-		<table class="table table-striped">
-			<tr>
-				<th ng-repeat="header in headers">{{header}}</th>
-			</tr>
-			<tr ng-repeat="invalid in results.invalids">
-				<td>{{invalid.user.username}}</td>
-				<td>{{invalid.user.firstname}}</td>
-				<td>{{invalid.user.lastname}}</td>
-				<td>{{invalid.user.email}}</td>
-			</tr>
-		</table>
-	</div>
-		<div ng-show="results.dropped.length">
+	<div ng-show="results.dropped.length">
 		<h2>Users dropped from {{course.name}}</h2>
 		<table class="table table-striped">
 			<tr>
