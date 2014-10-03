@@ -72,9 +72,41 @@ class ClassListAPITest(ACJTestCase):
 		# test success
 		rv = self.client.get(url)
 		self.assert200(rv)
-		labels = rv.json['instructors']
+		instructors = rv.json['instructors']
 		expected = {str(self.data.get_authorized_instructor().id): self.data.get_authorized_instructor().fullname}
-		self.assertEqual(labels, expected)
+		self.assertEqual(instructors, expected)
+		self.logout()
+
+	def test_get_students_course(self):
+		url = self.url + "/students"
+
+		# test login required
+		rv = self.client.get(url)
+		self.assert401(rv)
+
+		# test dropped instructor - unauthorized
+		self.login(self.data.get_dropped_instructor().username)
+		rv = self.client.get(url)
+		self.assert403(rv)
+		self.logout()
+
+		# test unauthorized instructor
+		self.login(self.data.get_unauthorized_instructor().username)
+		rv = self.client.get(url)
+		self.assert403(rv)
+		self.logout()
+
+		# test invalid course id
+		self.login(self.data.get_authorized_instructor().username)
+		rv = self.client.get('/api/courses/999/users/students')
+		self.assert404(rv)
+
+		# test success
+		rv = self.client.get(url)
+		self.assert200(rv)
+		students = rv.json['students']
+		expected = {str(self.data.get_authorized_student().id): self.data.get_authorized_student().fullname}
+		self.assertEqual(students, expected)
 		self.logout()
 
 	def test_enrol_instructor(self):

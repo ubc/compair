@@ -1,21 +1,17 @@
 <div ng-controller="JudgementCommentController">
 	<h1>Evaluation Comments</h1>
-	<!-- filters: criteria, answer1, answer2 - make criteria required? -->
-	<strong>Criterion</strong>
-	<select ng-model="search.judgement.course_criterion.id" ng-options="c.id as c.criterion.name for (k, c) in criteria"></select>
-	<strong>Author 1</strong>
-	<select ng-change="reset()" ng-model="answer.one" ng-options="k as a for (k, a) in authors">
-		<option value="">-- First Author --</option>
+	<strong>Evaluator</strong>
+	<select ng-model="search.userId" ng-options="id as name for (id, name) in students">
+		<option value="">-- All Students --</option>
 	</select>
-	<strong>Author 2</strong>
-	<select ng-model="answer.two" ng-options="id as authors[id] for id in answerpairings[answer.one]">
-		<option value="">-- Second Author --</option>
+	<strong>Criterion</strong>
+	<select ng-model="search.criteriaId" ng-options="c.id as c.criterion.name for (k, c) in criteria">
+		<option value="">-- All Criteria --</option>
 	</select>
 
 	<hr>
 
-	<div ng-repeat="comment in comments | filter:search | filter:answerFilter(answer.one) |
-		filter: answerFilter(answer.two)" style="font-size: .85em;">
+	<div ng-repeat="(key, comment) in comments | filter:commentFilter(search.userId, search.criteriaId) as results" style="font-size: .85em;">
 
 		<!-- Comment Header -->
 		<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
@@ -31,6 +27,7 @@
 			</span>
 		</a>
 		<strong>commented</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
+		{{ comment.judgement.users_id }}
 
 		<!-- TODO: criteria -->
 
@@ -39,10 +36,18 @@
 			 ng-bind-html="comment.postsforcomments.post.content">
 		</div>
 
+		<!-- Answers -->
+		<a ng-click="answers(comment)">Answers</a>
+		<!-- TODO: attachment -->
+		<div mathjax="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id1].post.content"
+			 ng-bind-html="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id1]['post']['content']"></div>
+		<div mathjax="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id2].post.content"
+			 ng-bind-html="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id2]['post']['content']"></div>
+
 	</div>
 
 	<!-- if no comments are available - eg. none submitted or after filter -->
-	<div ng-if="comments.length < 1">
+	<div ng-if="results.length < 1">
 		<h2>No comments are found</h2>
 	</div>
 </div>

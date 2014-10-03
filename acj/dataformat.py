@@ -45,12 +45,6 @@ def getCriteria():
 		'created': fields.DateTime
 	}
 
-def getCriteriaAndCourses():
-	return {
-		'id': fields.Integer,
-		'criteria': fields.Nested(getCriteria())
-	}
-
 def getCourses(include_details=True):
 	format = {
 		'id': fields.Integer,

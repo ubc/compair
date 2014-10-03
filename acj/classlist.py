@@ -285,3 +285,15 @@ class InstructorsAPI(Resource):
 		instructor_ids = {u.users_id: u.user.fullname for u in instructors}
 		return {'instructors': instructor_ids}
 api.add_resource(InstructorsAPI, '/instructors')
+
+# /students - return list of Students in the course
+class StudentsAPI(Resource):
+	@login_required
+	def get(self, course_id):
+		Courses.query.get_or_404(course_id)
+		coursesandusers = CoursesAndUsers(courses_id=course_id)
+		require(READ, coursesandusers)
+		students = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_STUDENT).all()
+		student_ids = {u.users_id: u.user.fullname for u in students}
+		return {'students': student_ids}
+api.add_resource(StudentsAPI, '/students')

@@ -230,12 +230,11 @@ module.controller(
 module.controller(
 	"JudgementCommentController",
 	function ($scope, $log, $routeParams, breadcrumbs, EvalCommentResource, CoursesCriteriaResource, CourseResource,
-			  AnswerPairingResource, AnswerResource, Toaster)
+			  AnswerResource, AttachmentResource, Toaster)
 	{
 		var courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
-		$scope.search = {'judgement': {'course_criterion': {}}};
-		$scope.answer = {'one': null, 'two': null};
+		$scope.search = {'userId': null, 'criteriaId': null};
 		$scope.course = {};
 		
 		CourseResource.get({'id':courseId}).$promise.then(
@@ -260,44 +259,71 @@ module.controller(
 		CoursesCriteriaResource.get({'courseId': courseId}).$promise.then(
 			function (ret) {
 				$scope.criteria = ret.objects;
-				$scope.search.judgement.course_criterion.id = $scope.criteria[0].id;
+				$scope.search.criteriaId = $scope.criteria[0].id;
 			},
 			function (ret) {
 				Toaster.reqerror("Criteria filter retrieval failed", ret);
 			}
 		);
 
-		AnswerPairingResource.getAnswerPairingList({'courseId': courseId, 'questionId': questionId}).$promise.then(
+		CourseResource.getStudents({'id': courseId}).$promise.then(
 			function (ret) {
-				$scope.answerpairings = ret.answerpairings;
+				$scope.students = ret.students;
 			},
 			function (ret) {
-				Toaster.reqerror("Answer pairs retrieval failed.", ret);
+				Toaster.reqerror("Class list retrieval failed", ret);
 			}
 		);
 
-		AnswerResource.getAuthors({'courseId': courseId, 'questionId': questionId}).$promise.then(
-			function (ret) {
-				$scope.authors = ret.authors;
-			},
-			function (ret) {
-				Toaster.reqerror("Answer author retrieval failed.", ret);
-			}
-		);
-		
+		$scope.commentFilter = function(user_id, criteria_id) {
+			return function(comment) {
+				var criteria = false;
+				var user = false;
+				if (user_id == null || comment.judgement.users_id == user_id) {
+					user = true;
+				}
+				if (criteria_id == null || comment.judgement.course_criterion.criterion.id == criteria_id) {
+					criteria = true;
+				}
 
-		$scope.reset = function() {
-			$scope.answer.two = null;
+				return user && criteria;
+			}
 		};
 
-		$scope.answerFilter = function (answer_id) {
-			return function (comment) {
-				if (answer_id == null) {
-					return true;
+		$scope.answers = function(comment) {
+			var answerpair = comment.judgement.answerpairing;
+			AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerpair.postsforanswers_id1}).$promise.then(
+				function (ret) {
+					answerpair[answerpair.postsforanswers_id1] = ret;
+					AttachmentResource.get({'postId': ret.post.id}).$promise.then(
+						function (ret) {
+							answerpair[answerpair.postsforanswers_id1]['file'] = ret.file;
+						},
+						function (ret) {
+							Toaster.reqerror("Unable to retrieve attachment", ret);
+						}
+					);
+				},
+				function (ret) {
+					Toaster.reqerror("Unable to retrieve answer 1", ret);
 				}
-				var answerpair = comment.judgement.answerpairing;
-				return answerpair.postsforanswers_id1 == answer_id || answerpair.postsforanswers_id2 == answer_id;
-			}
+			);
+			AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerpair.postsforanswers_id2}).$promise.then(
+				function (ret) {
+					answerpair[answerpair.postsforanswers_id2] = ret;
+					AttachmentResource.get({'postId': ret.post.id}).$promise.then(
+						function (ret) {
+							answerpair[answerpair.postsforanswers_id2]['file'] = ret.file;
+						},
+						function (ret) {
+							Toaster.reqerror("Unable to retrieve attachment", ret);
+						}
+					);
+				},
+				function (ret) {
+					Toaster.reqerror("Unable to retrieve answer 1", ret);
+				}
+			);
 		}
 	}
 );

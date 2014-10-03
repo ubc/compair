@@ -45,11 +45,7 @@ module.factory('AnswerPairingResource',
 	function($resource) {
 		var resourceUrl = '/api/courses/:courseId/questions/:questionId/answerpairing';
 		var ret = $resource(
-			resourceUrl,
-			{},
-			{
-				'getAnswerPairingList': {url: resourceUrl + '/list'}
-			}
+			resourceUrl
 		);
 		return ret;
 });

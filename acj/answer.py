@@ -114,7 +114,7 @@ class AnswerIdAPI(Resource):
 			course_id=course_id,
 			data={'question_id': question_id, 'answer_id': answer_id})
 
-		return marshal(answer, dataformat.getPostsForAnswers())
+		return marshal(answer, dataformat.getPostsForAnswers(True, False))
 
 	@login_required
 	def post(self, course_id, question_id, answer_id):
@@ -226,17 +226,3 @@ class AnswerCountAPI(Resource):
 		count = {qId: count for (qId, count) in answers}
 		return {'count': count}
 apiAll.add_resource(AnswerCountAPI, '/count')
-
-# /authors
-class AnswerAuthorListAPI(Resource):
-	@login_required
-	def get(self, course_id, question_id):
-		Courses.query.get_or_404(course_id)
-		PostsForQuestions.query.get_or_404(question_id)
-		post = Posts(courses_id = course_id)
-		answer = PostsForAnswers(post=post)
-		require(MANAGE, answer)
-		answers = PostsForAnswers.query.filter_by(postsforquestions_id=question_id).all()
-		authors = {answer.id: answer.post.user.fullname for answer in answers}
-		return {'authors': authors}
-api.add_resource(AnswerAuthorListAPI, '/authors')

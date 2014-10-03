@@ -163,11 +163,14 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 module.filter("notScoredEnd", function () {
 	return function (array, key) {
 		if (!angular.isArray(array)) return;
-		var scored = array.filter(function(item) {
-			return item.scores[key]
-		});
-		var not_scored = array.filter(function(item) {
-			return !item.scores[key]
+		var scored = [];
+		var not_scored = [];
+		angular.forEach(array, function(item, index) {
+			if (key in item.scores) {
+				scored.push(item);
+			} else {
+				not_scored.push(item);
+			}
 		});
 		return scored.concat(not_scored);
 	}
@@ -207,7 +210,7 @@ module.controller("QuestionViewController",
 					if ($scope.answers.length > 0) {
 						var answer = $scope.answers[0];
 						if (answer['scores'].length > 0) {
-							$scope.order = 'scores.'+$scope.sortby+'.score';
+							$scope.order = 'scores['+$scope.sortby+'].score';
 						}
 					}
 
