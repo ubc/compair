@@ -21,6 +21,8 @@ from .models import Users
 from .login import authenticate
 from .activity import log
 
+import os
+
 
 def create_app(conf=config, settings_override={}):
 	"""Return a :class:`Flask` application instance
@@ -45,6 +47,12 @@ def create_app(conf=config, settings_override={}):
 
 	app.config['CAS_SERVER'] = 'http://localhost:8088'
 	app.config['CAS_AFTER_LOGIN'] = 'route_root'
+
+	# for uploads
+	app.config['UPLOAD_FOLDER'] = os.getcwd() + '/tmpUpload'
+	app.config['ATTACHMENT_UPLOAD_FOLDER'] = os.getcwd() + '/acj/static/pdf'
+	app.config['ATTACHMENT_ALLOWED_EXTENSIONS'] = set(['pdf'])
+	app.config['UPLOAD_ALLOWED_EXTENSIONS'] = set(['csv'])
 
 	cas.init_app(app)
 
@@ -83,6 +91,8 @@ def create_app(conf=config, settings_override={}):
 	app.register_blueprint(courses_api, url_prefix='/api/courses')
 	from .classlist import classlist_api
 	app.register_blueprint(classlist_api, url_prefix='/api/courses/<int:course_id>/users')
+	from .group import groups_api
+	app.register_blueprint(groups_api, url_prefix='/api/courses/<int:course_id>/groups')
 	from .login import login_api
 	app.register_blueprint(login_api)
 	from .users import users_api, user_types_api

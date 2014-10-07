@@ -1,6 +1,4 @@
-import os
-import uuid
-import shutil
+import os, uuid, shutil, random, string
 
 from flask import Blueprint, Flask, request, current_app
 from flask.ext.login import login_required, current_user
@@ -14,26 +12,21 @@ from .util import new_restful_api
 attachment_api = Blueprint('attachment_api', __name__)
 api = new_restful_api(attachment_api)
 
-# TODO put in config file
-UPLOAD_FOLDER = os.getcwd() + '/tmpUpload'
-PERMANENT_UPLOAD_FOLDER = os.getcwd() + '/acj/static/pdf'
-ALLOWED_EXTENSIONS = set(['pdf'])
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['PERMANENT_UPLOAD_FOLDER'] = PERMANENT_UPLOAD_FOLDER
-
-def allowed_file(filename):
+def allowed_file(filename, allowed):
 	return '.' in filename and \
-		filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+		filename.rsplit('.', 1)[1] in allowed
+
+def random_generator(size=8, chars=string.ascii_uppercase + string.digits):
+	return ''.join(random.choice(chars) for _ in range(size))
 
 #/
 class AttachmentAPI(Resource):
 	@login_required
 	def post(self):
 		file = request.files['file']
-		if file and allowed_file(file.filename):
+		if file and allowed_file(file.filename, current_app.config['ATTACHMENT_ALLOWED_EXTENSIONS']):
 			name = str(uuid.uuid4()) + '.pdf'
-			tmpName = os.path.join(app.config['UPLOAD_FOLDER'], name)
+			tmpName = os.path.join(current_app.config['UPLOAD_FOLDER'], name)
 			file.save(tmpName)
 			current_app.logger.debug("Temporarily saved tmpUpload/" + name)
 			return {'name': name} 
@@ -57,7 +50,7 @@ class AttachmentPostIdFileIdAPI(Resource):
 	def delete(self, post_id, file_id):
 		file = FilesForPosts.query.filter_by(posts_id=post_id).filter_by(id=file_id).first()
 		if file:
-			tmpName = os.path.join(app.config['PERMANENT_UPLOAD_FOLDER'], file.name)
+			tmpName = os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], file.name)
 			os.remove(tmpName)
 			db.session.delete(file)
 			db.session.commit()
@@ -69,16 +62,16 @@ api.add_resource(AttachmentPostIdFileIdAPI, '/post/<int:post_id>/<int:file_id>')
 # makes a FilesForPosts entry
 def addNewFile(alias, name, course_id, question_id, post_id):
 	tmpName = str(course_id) + '_' + str(question_id) + '_' + str(post_id) + '.pdf'
-	shutil.move(os.path.join(app.config['UPLOAD_FOLDER'], name), os.path.join(app.config['PERMANENT_UPLOAD_FOLDER'], tmpName))
+	shutil.move(os.path.join(current_app.config['UPLOAD_FOLDER'], name), os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], tmpName))
 	file = FilesForPosts(posts_id=post_id, author_id=current_user.id, name=tmpName, alias=alias)
 	db.session.add(file)
 	db.session.commit()
-	current_app.logger.debug("Moved and renamed " + name + " from " + app.config['UPLOAD_FOLDER'] + " to " + os.path.join(app.config['PERMANENT_UPLOAD_FOLDER'], tmpName))
+	current_app.logger.debug("Moved and renamed " + name + " from " + current_app.config['UPLOAD_FOLDER'] + " to " + os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], tmpName))
 
 # delete file from Post
 def deleteFile(post_id):
 	# TODO: delete ALL files under post with post_id
 	file = FilesForPosts.query.filter_by(posts_id=post_id).first()
 	if file:
-		os.remove(os.path.join(app.config['PERMANENT_UPLOAD_FOLDER'], file.name))
+		os.remove(os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], file.name))
 		current_app.logger.debug("Successfully deleted file " + file.name + " for post " + str(post_id))

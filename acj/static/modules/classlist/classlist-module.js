@@ -5,8 +5,8 @@
 
 var module = angular.module('ubc.ctlt.acj.classlist',
 	[
-		'angularFileUpload',
 		'ngResource',
+		'ubc.ctlt.acj.attachment',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.course',
 		'ubc.ctlt.acj.toaster',
@@ -33,61 +33,6 @@ module.factory(
 		return ret;
 	}
 );
-
-/***** Services *****/
-module.service('importService', function(FileUploader, $location, CourseResource, Toaster) {
-	var results = {};
-	var uploader = null; 
-	
-	var getUploader = function(courseId) {
-		var uploader = new FileUploader({
-			url: '/api/courses/'+courseId+'/users',
-			queueLimit: 1,
-			removeAfterUpload: true
-		});
-
-		uploader.filters.push({
-			name: 'pdfFilter',
-			fn: function(item, options) {
-				var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
-				return '|csv|'.indexOf(type) !== -1;
-			}
-		});
-
-		return uploader;
-	}
-
-	var onComplete = function(courseId) {
-		return function(fileItem, response, status, headers) {
-			results = response;
-			if (!('error' in results)) {
-				count = results.success.length;
-				Toaster.success("Students Added", "Successfully added "+ count +" students.");
-				$location.path('/course/' + courseId + '/user/import/results');		
-			}	
-		};
-	}
-
-	var onError = function() {
-		return function(fileItem, response, status, headers) {
-			Toaster.reqerror("Unable To Upload", status);
-			if ('error' in response) {
-				Toaster.error("File Type Error", "Only CSV files can be uploaded.");
-			}
-		};
-	}	
-
-	var getResults = function() {
-		return results;
-	}
-
-	return {
-		getUploader: getUploader,
-		onComplete: onComplete,
-		getResults: getResults,
-		onError: onError
-	};
-});
 
 /***** Controllers *****/
 module.controller(
@@ -130,7 +75,7 @@ module.controller(
 				Toaster.reqerror("No Course Found For ID "+courseId, ret);
 			}
 		);
-		$scope.uploader = importService.getUploader(courseId);
+		$scope.uploader = importService.getUploader(courseId, 'users');
 		$scope.uploader.onCompleteItem = importService.onComplete(courseId);
 		$scope.uploader.onErrorItem = importService.onError();
 	}

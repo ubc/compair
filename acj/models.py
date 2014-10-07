@@ -255,6 +255,64 @@ class CoursesAndUsers(db.Model):
 		default_table_args
 	)
 
+#################################################
+# Groups
+#################################################
+
+class Groups(db.Model):
+	__tablename__ = 'Groups'
+	__table_args__ = default_table_args
+
+	id = db.Column(db.Integer, primary_key=True, nullable=False)
+	name = db.Column(db.String(255), nullable=False)
+	active = db.Column(db.Boolean, default=True, nullable=False)
+	courses_id = db.Column(
+		db.Integer,
+		db.ForeignKey("Courses.id", ondelete="CASCADE"),
+		nullable=False)
+	course = db.relationship("Courses")
+	members = db.relationship("GroupsAndCoursesAndUsers")
+	modified = db.Column(
+		db.DateTime,
+		default=datetime.datetime.utcnow,
+		onupdate=datetime.datetime.utcnow,
+		nullable=False)
+	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
+					nullable=False)
+
+
+class GroupsAndCoursesAndUsers(db.Model):
+	__tablename__ = 'GroupsAndCoursesAndUsers'
+
+	id = db.Column(db.Integer, primary_key=True, nullable=False)
+	groups_id = db.Column(
+		db.Integer,
+		db.ForeignKey("Groups.id", ondelete="CASCADE"),
+		nullable=False)
+	group = db.relationship("Groups")
+	coursesandusers_id = db.Column(
+		db.Integer,
+		db.ForeignKey("CoursesAndUsers.id", ondelete="CASCADE"),
+		nullable=False)
+	coursesandusers = db.relationship("CoursesAndUsers")
+	active = db.Column(db.Boolean, default=True, nullable=False)
+	modified = db.Column(
+		db.DateTime,
+		default=datetime.datetime.utcnow,
+		onupdate=datetime.datetime.utcnow,
+		nullable=False)
+	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
+					 nullable=False)
+
+	@hybrid_property
+	def courses_id(self):
+		return self.coursesandusers.courses_id
+
+	__table_args__ = (
+		# prevent duplicate user in groups
+		db.UniqueConstraint('groups_id', 'coursesandusers_id', name='_unique_group_and_user'),
+		default_table_args
+	)
 
 #################################################
 # Tags for Posts, each course has their own set of tags

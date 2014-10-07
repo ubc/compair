@@ -2,7 +2,6 @@ import os
 import uuid
 import csv
 import string
-import random
 
 from bouncer.constants import EDIT, CREATE, READ
 from flask import Blueprint, Flask, request, current_app
@@ -18,6 +17,7 @@ from .authorization import allow, require
 from .core import event
 from .models import CoursesAndUsers, Courses, Users, UserTypesForSystem, UserTypesForCourse
 from .util import new_restful_api
+from .attachment import random_generator, allowed_file
 
 classlist_api = Blueprint('classlist_api', __name__)
 api = new_restful_api(classlist_api)
@@ -33,27 +33,13 @@ EMAIL = 3
 DISPLAYNAME = 4
 PASSWORD = 5
 
-UPLOAD_FOLDER = os.getcwd() + '/tmpUpload'
-ALLOWED_EXTENSIONS = set(['csv'])
-
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-
 # events
 on_classlist_get = event.signal('CLASSLIST_GET')
-on_classlist_upload = event.signal('CLASSSLIST_UPLOAD')
-
-def allowed_file(filename):
-	return '.' in filename and \
-		filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+on_classlist_upload = event.signal('CLASSLIST_UPLOAD')
 
 def display_name_generator(firstname=None, role="Student"):
 	name = firstname+"_" if firstname else ""
 	return role.lower()+"_"+name+random_generator(4, string.digits)
-
-def random_generator(size=8, chars=string.ascii_uppercase + string.digits):
-	return ''.join(random.choice(chars) for _ in range(size))
 
 def import_users(course_id, users):
 	# initialize list of users and their statuses
@@ -70,7 +56,7 @@ def import_users(course_id, users):
 	if len(users) > 0: 	# check that there is a minimum of one entry
 		length = len(users[0])		# get number of columns
 	else:
-		return {}
+		return {'success': success}
 
 	# generate a list of existing users from the list of imported usernames
 	usernames = [u[USERNAME] for u in users]
@@ -210,10 +196,10 @@ class ClasslistRootAPI(Resource):
 	def post(self, course_id):
 		require(CREATE, Users())
 		file = request.files['file']
-		if file and allowed_file(file.filename):
+		if file and allowed_file(file.filename, current_app.config['UPLOAD_ALLOWED_EXTENSIONS']):
 			unique = str(uuid.uuid4())
 			filename = unique + secure_filename(file.filename)
-			tmpName = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+			tmpName = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
 			file.save(tmpName)
 			current_app.logger.debug("Importing for course " + str(course_id) + " with " + filename)
 			with open(tmpName, 'rU') as csvfile:
@@ -228,7 +214,7 @@ class ClasslistRootAPI(Resource):
 					event_name=on_classlist_upload.name,
 					user=current_user,
 					course_id=course_id)
-			os.remove(os.path.join(app.config['UPLOAD_FOLDER'], tmpName))
+			os.remove(tmpName)
 			current_app.logger.debug("Class Import for course " + str(course_id) + " is successful. Removed file.")
 			return results
 		else:
