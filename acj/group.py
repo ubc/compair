@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from . import dataformat
 from .authorization import require
 from .core import db, event
-from .models import Groups, GroupsAndCoursesAndUsers, CoursesAndUsers, Users, Courses
+from .models import Groups, GroupsAndCoursesAndUsers, CoursesAndUsers, Users, Courses, UserTypesForCourse
 from .util import new_restful_api
 from .attachment import allowed_file
 
@@ -31,6 +31,7 @@ def import_members(course_id, members):
 	invalids = []  #invalid entry - eg. no group name
 	user_infile = [] # for catching duplicate users
 	count = 0	# keep track of active groups
+	dropped = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
 
 	# require at least one entry and all rows to have 2 columns
 	if len(members) < 1 and len(members[0]) != 2:
@@ -79,7 +80,8 @@ def import_members(course_id, members):
 			invalids.append({'member': json.dumps(member), 'message': message})
 			continue
 
-		enroled = CoursesAndUsers.query.filter_by(courses_id=course_id).join(Users)\
+		enroled = CoursesAndUsers.query.filter(CoursesAndUsers.courses_id==course_id,
+			CoursesAndUsers.usertypesforcourse_id!=dropped).join(Users)\
 			.filter_by(username=member[USER_IDENTIFIER]).first()
 		if enroled:
 			group_member = GroupsAndCoursesAndUsers.query.filter_by(groups_id=active_groups[member[GROUP_NAME]])\
@@ -148,10 +150,13 @@ api.add_resource(GroupRootAPI, '')
 class GroupUserIdAPI(Resource):
 	@login_required
 	def post(self, course_id, user_id, group_id):
-		Groups.query.get_or_404(group_id)	# check group exists
+		# check group exists (and active) and in course
+		Groups.query.filter_by(courses_id=course_id, id=group_id, active=True).first_or_404()
+		dropped = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
 		#TODO: permissions
 		# check that the user is enroled in the course
-		coursesandusers = CoursesAndUsers.query.filter_by(courses_id=course_id, users_id=user_id)\
+		coursesandusers = CoursesAndUsers.query.filter(CoursesAndUsers.courses_id==course_id,
+			CoursesAndUsers.users_id==user_id,CoursesAndUsers.usertypesforcourse_id!=dropped)\
 			.first_or_404()
 
 		# remove user from all groups in course
@@ -174,8 +179,10 @@ apiU.add_resource(GroupUserIdAPI, '/<int:group_id>')
 class GroupUserAPI(Resource):
 	@login_required
 	def delete(self, course_id, user_id):
+		dropped = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
 		# check that the user is enroled in the course
-		coursesandusers = CoursesAndUsers.query.filter_by(courses_id=course_id, users_id=user_id)\
+		coursesandusers = CoursesAndUsers.query.filter(CoursesAndUsers.courses_id==course_id,
+			CoursesAndUsers.users_id==user_id,CoursesAndUsers.usertypesforcourse_id!=dropped)\
 			.first_or_404()
 		unenrol_group(coursesandusers.id)
 		return {'user_id': user_id, 'course_id': course_id}

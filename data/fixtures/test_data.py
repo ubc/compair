@@ -5,7 +5,7 @@ import factory.fuzzy
 from acj.models import UserTypesForSystem, UserTypesForCourse, Criteria, PostsForAnswers
 from data.fixtures import CoursesFactory, UsersFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, \
 	PostsForAnswersFactory, CriteriaFactory, CriteriaAndCoursesFactory, AnswerPairingsFactory, JudgementsFactory, \
-	PostsForJudgementsFactory, PostsForCommentsFactory
+	PostsForJudgementsFactory, PostsForCommentsFactory, GroupsFactory, GroupsAndCoursesAndUsersFactory
 
 
 class BasicTestData():
@@ -21,9 +21,9 @@ class BasicTestData():
 		self.unauthorized_instructor = self.create_instructor() # unauthorized to the main course
 		self.unauthorized_student = self.create_normal_user()
 		self.dropped_instructor = self.create_instructor() # dropped from the main course
-		self.enrol_instructor(self.authorized_instructor, self.main_course)
-		self.enrol_ta(self.authorized_ta, self.main_course)
-		self.enrol_student(self.authorized_student, self.main_course)
+		self.enroled_instructor = self.enrol_instructor(self.authorized_instructor, self.main_course)
+		self.enroled_ta = self.enrol_ta(self.authorized_ta, self.main_course)
+		self.enroled_student = self.enrol_student(self.authorized_student, self.main_course)
 		self.enrol_instructor(self.unauthorized_instructor, self.secondary_course)
 		self.enrol_student(self.unauthorized_student, self.secondary_course)
 		self.unenrol(self.dropped_instructor, self.main_course)
@@ -45,18 +45,19 @@ class BasicTestData():
 		db.session.commit()
 		return user
 	def enrol_student(self, user, course):
-		self.enrol_user(user, course, UserTypesForCourse.TYPE_STUDENT)
+		return self.enrol_user(user, course, UserTypesForCourse.TYPE_STUDENT)
 	def enrol_instructor(self, user, course):
-		self.enrol_user(user, course, UserTypesForCourse.TYPE_INSTRUCTOR)
+		return self.enrol_user(user, course, UserTypesForCourse.TYPE_INSTRUCTOR)
 	def enrol_ta(self, user, course):
-		self.enrol_user(user, course, UserTypesForCourse.TYPE_TA)
+		return self.enrol_user(user, course, UserTypesForCourse.TYPE_TA)
 	def unenrol(self, user, course):
-		self.enrol_user(user, course, UserTypesForCourse.TYPE_DROPPED)
+		return self.enrol_user(user, course, UserTypesForCourse.TYPE_DROPPED)
 	def enrol_user(self, user, course, type):
 		course_type = UserTypesForCourse.query.filter_by(name=type).first()
-		CoursesAndUsersFactory(courses_id=course.id, users_id=user.id,
+		coursesandusers = CoursesAndUsersFactory(courses_id=course.id, users_id=user.id,
 							   usertypesforcourse_id=course_type.id)
 		db.session.commit()
+		return coursesandusers
 	def get_authorized_instructor(self):
 		return self.authorized_instructor
 	def get_authorized_ta(self):
@@ -65,6 +66,8 @@ class BasicTestData():
 		return self.authorized_student
 	def get_course(self):
 		return self.main_course
+	def get_secondary_course(self):
+		return self.secondary_course
 	def get_unauthorized_instructor(self):
 		return self.unauthorized_instructor
 	def get_unauthorized_student(self):
@@ -73,6 +76,12 @@ class BasicTestData():
 		return self.dropped_instructor
 	def get_default_criteria(self):
 		return self.default_criteria
+	def get_enroled_auth_instructor(self):
+		return self.enroled_instructor
+	def get_enroled_auth_ta(self):
+		return self.enroled_ta
+	def get_enroled_auth_student(self):
+		return self.enroled_student
 
 class SimpleQuestionsTestData(BasicTestData):
 	def __init__(self):
@@ -284,5 +293,40 @@ class JudgementCommentsTestData(SimpleAnswersTestData):
 		postforcomment = PostsForCommentsFactory(post=post)
 		db.session.commit()
 		return postforcomment
+
+class GroupsTestData(BasicTestData):
+	def __init__(self):
+		BasicTestData.__init__(self)
+		self.active_group = self.create_group(self.get_course())
+		self.inactive_group = self.create_group(self.get_course(), False)
+		self.unauthorized_group = self.create_group(self.get_secondary_course())
+		self.active_member = (self.active_group, self.get_enroled_auth_student())
+		self.inactive_member = (self.active_group, self.get_enroled_auth_ta(), False)
+
+	def get_active_group(self):
+		return self.active_group
+
+	def get_inactive_group(self):
+		return self.inactive_group
+
+	def get_unauthorized_group(self):
+		return self.unauthorized_group
+
+	def get_active_member(self):
+		return self.active_member
+
+	def get_inactive_member(self):
+		return self.inactive_member
+
+	def create_group(self, course, active=True):
+		group = GroupsFactory(course=course, active=active)
+		db.session.commit()
+		return group
+
+	def enrol_group(self, group, coursesandusers, active=True):
+		member = GroupsAndCoursesAndUsersFactory(group=group, coursesandusers=coursesandusers, active=active)
+		db.session.commit()
+		return member
+
 
 
