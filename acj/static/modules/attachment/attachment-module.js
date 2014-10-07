@@ -21,9 +21,13 @@ module.service('importService', function(FileUploader, $location, CourseResource
 	var onSuccess = function(courseId) {
 		switch(model) {
 			case 'users':
-				var count = results.success.length;
+				var count = results.success;
 				Toaster.success("Students Added", "Successfully added "+count+" students.");
-				$location.path('/course/'+courseId+'/user/import/results');
+				if (results.invalids.length > 0) {
+					$location.path('/course/' + courseId + '/user/import/results');
+				} else {
+					$location.path('/course/' + courseId + '/user');
+				}
 				break;
 			case 'groups':
 				Toaster.success("Groups Added", "Successfully added "+ results.success +" groups.");

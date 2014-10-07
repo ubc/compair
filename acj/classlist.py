@@ -44,30 +44,21 @@ def display_name_generator(firstname=None, role="Student"):
 def import_users(course_id, users):
 	# initialize list of users and their statuses
 	invalids = []	# invalid entry - eg. invalid # of columns
-	success = []	# successfully enroled
-	created = []	# successfully created new users
-	dropped_users = []	# users not on new list; therefore dropped
 	exist_displaynames = []
 	usernames_infile = [] # for catching duplicate usernames in the file
+	count = 0 # number successfully enroled
 
 	# variables used in the intermediate steps
 	valid = []	# successfully created new users' usernames
 	normal_user = UserTypesForSystem.query.filter_by(name = UserTypesForSystem.TYPE_NORMAL).first().id
-	if len(users) > 0: 	# check that there is a minimum of one entry
-		length = len(users[0])		# get number of columns
-	else:
-		return {'success': success}
+	if len(users) < 1:	# check that there is a minimum of one entry
+		return {'success': count, 'invalids': invalids}
 
 	# generate a list of existing users from the list of imported usernames
 	usernames = [u[USERNAME] for u in users]
 	exist_users = Users.query.filter(Users.username.in_(usernames)).all()
 	exist_usernames = [e.username for e in exist_users]
 
-	# generate a list of existing display names from list of imported dp names
-	if length > DISPLAYNAME:
-		displaynames = [u[DISPLAYNAME] for u in users]
-		exist_users = Users.query.filter(Users.displayname.in_(displaynames)).all()
-		exist_displaynames = [e.displayname for e in exist_users]
 	for user in users:
 		u = Users()
 		if user[USERNAME] in usernames_infile:
@@ -79,36 +70,32 @@ def import_users(course_id, users):
 			usernames_infile.append(user[USERNAME])
 			valid.append(user[USERNAME])
 			continue 
-		elif user[USERNAME] == '':
+		elif not user[USERNAME]:
 			invalids.append({'user': user, 'message':'The username is required.'})
 			continue	# skip blank row
+
+		# username
 		u.username = user[USERNAME]
 		usernames_infile.append(user[USERNAME])
 
-		# firstname
-		if length > FIRSTNAME and user[FIRSTNAME] != '':
-			u.firstname = user[FIRSTNAME]
-		else:
-			u.firstname = None
+		length = len(user)
+		# first name
+		u.firstname = user[FIRSTNAME] if length > FIRSTNAME and user[FIRSTNAME] else None
 
 		# lastname
-		if length > LASTNAME and user[LASTNAME] != '':
-			u.lastname = user[LASTNAME]
-		else:
-			u.lastname = None
+		u.lastname = user[LASTNAME] if length > LASTNAME and user[LASTNAME] else None
 
 		# email
-		if length > EMAIL and user[EMAIL] != '':
-			u.email = user[EMAIL]
-		else:
-			u.email = None
+		u.email = user[EMAIL] if length > EMAIL and user[EMAIL] else None
 
 		# default to normal user
 		u.usertypesforsystem_id = normal_user
 
 		# display name
-		if length > DISPLAYNAME and user[DISPLAYNAME] != '' and user[DISPLAYNAME] not in exist_displaynames:
+		if length > DISPLAYNAME and user[DISPLAYNAME] and user[DISPLAYNAME] not in exist_displaynames\
+				and not Users.query.filter(Users.displayname==user[DISPLAYNAME]).scalar():
 			u.displayname = user[DISPLAYNAME]
+			print(u.displayname, '1')
 		else:
 			# auto-generate if one is not given
 			tmp_displayname = display_name_generator(u.firstname)
@@ -117,17 +104,14 @@ def import_users(course_id, users):
 				tmp_displayname = display_name_generator(u.firstname)
 				exists = Users.query.filter(Users.displayname==tmp_displayname).scalar()
 			u.displayname = tmp_displayname
+		exist_displaynames.append(u.displayname)
 
-		# password
-		if length > PASSWORD and user[PASSWORD] != '':
-			u.password = user[PASSWORD]
-		else:
-			u.password = user[USERNAME]
-		created.append({'user': u, 'message': 'created'})
+		# password - set to username if one is not given
+		u.password = user[PASSWORD] if length > PASSWORD and user[PASSWORD] else user[USERNAME]
+
 		db.session.add(u)
 		# add new user to list of existing users
 		exist_usernames.append(u.username)
-		exist_displaynames.append(u.displayname)
 		valid.append(u.username)
 	db.session.commit() # commit the new users first
 
@@ -136,36 +120,31 @@ def import_users(course_id, users):
 	enroled = CoursesAndUsers.query.filter_by(courses_id=course_id).\
 		filter(CoursesAndUsers.usertypesforcourse_id.in_([student, dropped])).all()
 	enroled_userIds = [e.users_id for e in enroled]
-	enroled_userIds = dict(zip(enroled_userIds, enroled_userIds))
 
 	users = Users.query.filter(Users.username.in_(valid)).all()
 	for user in users:
 		enrol = CoursesAndUsers()
-		if user.id in enroled_userIds.keys():
+		if user.id in enroled_userIds:
 			enrol = CoursesAndUsers.query.filter_by(courses_id=course_id).filter_by(users_id=user.id).first()
 			enrol.usertypesforcourse_id = student
 			db.session.commit()
-			del enroled_userIds[enrol.users_id]
-			success.append({'user':user, 'message':"Enroled"})
+			enroled_userIds.remove(enrol.users_id)
+			count += 1
 			continue
 		enrol.courses_id = course_id
 		enrol.users_id = user.id
 		enrol.usertypesforcourse_id = student
 		db.session.add(enrol)
-		success.append({'user':user, 'message':"Enroled"})
+		count += 1
 	db.session.commit()
 
 	for id in enroled_userIds:
 		enrol = CoursesAndUsers.query.filter_by(courses_id=course_id).filter_by(users_id=id).first()
-		if enrol.usertypesforcourse_id == student:
-			dropped_users.append({'user':enrol.user, 'message':'User Dropped'})
 		enrol.usertypesforcourse_id = dropped
 		db.session.commit()
 	
 	return {
-		'created': marshal(created, dataformat.getImportUsersResults(False)),
-		'dropped': marshal(dropped_users, dataformat.getImportUsersResults(False)),
-		'success':marshal(success, dataformat.getImportUsersResults(False)),
+		'success':count,
 		'invalids':marshal(invalids, dataformat.getImportUsersResults(False))
 	}
 

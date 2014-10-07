@@ -26,14 +26,12 @@ GROUP_NAME = 1
 def import_members(course_id, members):
 	# initialize list of users and their statuses
 	invalids = []  #invalid entry - eg. no group name
-	success = []
 	user_infile = [] # for catching duplicate users
 	count = 0	# keep track of active groups
 
-	if len(members) < 1:
-		return {'success': success}
-	if len(members[0]) != 2:	# require all rows to have 2 columns
-		return {'success': success}
+	# require at least one entry and all rows to have 2 columns
+	if len(members) < 1 and len(members[0]) != 2:
+		return {'success': count}
 
 	# make all groups and members inactive initially
 	exist_groups = Groups.query.filter_by(courses_id=course_id).all()
@@ -89,7 +87,6 @@ def import_members(course_id, members):
 				group_member = GroupsAndCoursesAndUsers()
 				group_member.groups_id = active_groups[member[GROUP_NAME]]
 				group_member.coursesandusers_id = enroled.id
-			success.append(group_member)
 			user_infile.append(member[USER_IDENTIFIER])
 			db.session.add(group_member)
 		else:
