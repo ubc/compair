@@ -12,6 +12,10 @@
 				<i class="fa fa-download"></i>
 				Import Users
 			</a>
+			<a ng-href="#/course/{{course.id}}/group/import" class="btn btn-primary">
+				<i class="fa fa-users"></i>
+				Import Groups
+			</a>
 		</div>
 	</div>
 	<h2>Users in {{course.name}}</h2>
@@ -23,6 +27,7 @@
 			<th>Display Name</th>
 			<th>Email</th>
 			<th>Application Role</th>
+			<th>Group</th>
 		</tr>
 		<tr ng-repeat="user in classlist | orderBy:'user.firstname'">
 			<td>
@@ -35,6 +40,7 @@
 			<td>{{user.user.displayname}}</td>
 			<td>{{user.user.email}}</td>
 			<td>{{user.user.usertypeforsystem.name}}</td>
+			<td>{{user.groups[0].groups_name}}</td>
 		</tr>
 	</table>
 </div>

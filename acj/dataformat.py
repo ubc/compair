@@ -73,6 +73,14 @@ def getCoursesAndUsers(restrict_user=True, include_user=True):
 	}
 	if include_user:
 		format['user'] = fields.Nested(getUsers(restrict_user))
+		format['groups'] = fields.Nested(getGroupsAndCoursesAndUsers())
+	return format
+
+def getGroupsAndCoursesAndUsers():
+	format = {
+		'groups_id': fields.Integer,
+		'groups_name': fields.String
+	}
 	return format
 
 def getCriteria():

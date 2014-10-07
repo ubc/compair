@@ -242,6 +242,9 @@ class CoursesAndUsers(db.Model):
 		db.ForeignKey('UserTypesForCourse.id', ondelete="CASCADE"),
 		nullable=False)
 	usertypeforcourse = db.relationship("UserTypesForCourse")
+	groups = db.relationship("GroupsAndCoursesAndUsers",
+				primaryjoin="and_(CoursesAndUsers.id==GroupsAndCoursesAndUsers.coursesandusers_id,\
+							GroupsAndCoursesAndUsers.active)")
 	modified = db.Column(
 		db.DateTime,
 		default=datetime.datetime.utcnow,
@@ -307,6 +310,10 @@ class GroupsAndCoursesAndUsers(db.Model):
 	@hybrid_property
 	def courses_id(self):
 		return self.coursesandusers.courses_id
+
+	@hybrid_property
+	def groups_name(self):
+		return self.group.name
 
 	__table_args__ = (
 		# prevent duplicate user in groups
