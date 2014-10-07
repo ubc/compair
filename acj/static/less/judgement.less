@@ -62,3 +62,30 @@
 
 }//closes evaluate-screen
 
+
+/***** EVALUATIONS SCREEN *****/
+
+.evaluations-screen {
+  
+  /* each evaluation matches look of each answer/comment/etc. */
+  .each-evaluation {
+    padding: 1em 1em 2em 1em;
+    border-bottom: 1px solid @border-gray;
+  }
+    .each-evaluation:nth-child(even){
+      background: @bkgrd-gray;
+    }
+    
+    /* main content also matches */
+    .content {
+      margin: 1em 0 1.5em 0;
+      font-size: 1.15em;
+    }
+    
+    /* shrink answers, when shown */
+    .answer-choice {
+      font-size: .9em;
+    }
+    
+}//closes evaluations-screen
+

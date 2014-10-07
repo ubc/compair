@@ -229,7 +229,7 @@ module.controller(
 
 module.controller(
 	"JudgementCommentController",
-	function ($scope, $log, $routeParams, breadcrumbs, EvalCommentResource, CoursesCriteriaResource, CourseResource,
+	function ($scope, $log, $routeParams, breadcrumbs, EvalCommentResource, CoursesCriteriaResource, CourseResource, QuestionResource,
 			  AnswerResource, AttachmentResource, Toaster)
 	{
 		var courseId = $routeParams['courseId'];
@@ -272,6 +272,15 @@ module.controller(
 			},
 			function (ret) {
 				Toaster.reqerror("Class list retrieval failed", ret);
+			}
+		);
+		
+		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
+			function(ret) {
+				$scope.parent = ret.question;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve the question "+questionId, ret);
 			}
 		);
 
