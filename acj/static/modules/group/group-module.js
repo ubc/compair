@@ -18,7 +18,13 @@ module.factory(
 	function ($resource)
 	{
 		var url = '/api/courses/:courseId/groups/:groupId';
-		var ret = $resource(url, {groupId: '@groupId'});
+		var unenrolUrl = '/api/courses/:courseId/users/:userId/groups'
+		var ret = $resource(url, {groupId: '@groupId'},
+			{
+				enrol: {method: 'POST', url: unenrolUrl+'/:groupId'},
+				unenrol: {method: 'DELETE', url: unenrolUrl}
+			}
+		);
 
 		ret.MODEL = 'Groups';
 		return ret;

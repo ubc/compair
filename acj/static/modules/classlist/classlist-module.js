@@ -9,6 +9,7 @@ var module = angular.module('ubc.ctlt.acj.classlist',
 		'ubc.ctlt.acj.attachment',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.course',
+		'ubc.ctlt.acj.group',
 		'ubc.ctlt.acj.toaster',
 		'ubc.ctlt.acj.user',
 		'ui.bootstrap'
@@ -37,7 +38,7 @@ module.factory(
 /***** Controllers *****/
 module.controller(
 	'ClassViewController',
-	function($scope, $log, $routeParams, ClassListResource, CourseResource, Toaster)
+	function($scope, $log, $routeParams, ClassListResource, CourseResource, GroupResource, Toaster)
 	{
 		$scope.course = {};
 		$scope.classlist = {};
@@ -58,6 +59,36 @@ module.controller(
 				Toaster.reqerror("No Users Found For Course ID "+courseId, ret);
 			}
 		);
+		GroupResource.get({'courseId':courseId}).$promise.then(
+			function (ret) {
+				$scope.groups = ret.groups;
+			},
+			function (ret) {
+				Toaster.reqerror("Groups Retrieval Failed", ret);
+			}
+		);
+
+		$scope.update = function(userId, groupId) {
+			if (groupId) {
+				GroupResource.enrol({'courseId': courseId, 'userId': userId, 'groupId': groupId}, {}).$promise.then(
+					function (ret) {
+						Toaster.success("Successfully enroled the user into " + ret.groups_name);
+					},
+					function (ret) {
+						Toaster.reqerror("Failed to enrol the user into the group.");
+					}
+				);
+			} else {
+				GroupResource.unenrol({'courseId': courseId, 'userId': userId}).$promise.then(
+					function (ret) {
+						Toaster.success("Successfully removed the user from the group.");
+					},
+					function (ret) {
+						Toaster.reqerror("Failed to remove the user from the group.");
+					}
+				);
+			}
+		}
 	}
 );
 

@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from . import dataformat
 from .authorization import require
 from .core import db, event
-from .models import Groups, GroupsAndCoursesAndUsers, CoursesAndUsers, Users
+from .models import Groups, GroupsAndCoursesAndUsers, CoursesAndUsers, Users, Courses
 from .util import new_restful_api
 from .attachment import allowed_file
 
@@ -15,6 +15,9 @@ import uuid, os, csv, json
 
 groups_api = Blueprint('groups_api', __name__)
 api = new_restful_api(groups_api)
+
+groups_users_api = Blueprint('groups_users_api', __name__)
+apiU = new_restful_api(groups_users_api)
 
 USER_IDENTIFIER = 0
 GROUP_NAME = 1
@@ -100,8 +103,22 @@ def import_members(course_id, members):
 		'invalids': invalids
 	}
 
+# remove the user from all other groups in the course
+def unenrol_group(coursesandusers_id):
+		# remove the user from all other groups in the course
+		groups = GroupsAndCoursesAndUsers.query.filter_by(coursesandusers_id=coursesandusers_id, active=True).all()
+		for group in groups:
+			group.active = False
+			db.session.add(group)
+		db.session.commit()
+
 # /
 class GroupRootAPI(Resource):
+	@login_required
+	def get(self, course_id):
+		course = Courses.query.get_or_404(course_id)
+		groups = Groups.query.filter(Groups.courses_id==course.id, Groups.active).all()
+		return {'groups': marshal(groups, dataformat.getGroups())}
 	@login_required
 	def post(self, course_id):
 		# require(CREATE, Groups())
@@ -126,3 +143,40 @@ class GroupRootAPI(Resource):
 		else:
 			return {'error': 'Wrong file type'}, 400
 api.add_resource(GroupRootAPI, '')
+
+# /users/:user_id/groups/:group_id
+class GroupUserIdAPI(Resource):
+	@login_required
+	def post(self, course_id, user_id, group_id):
+		Groups.query.get_or_404(group_id)	# check group exists
+		#TODO: permissions
+		# check that the user is enroled in the course
+		coursesandusers = CoursesAndUsers.query.filter_by(courses_id=course_id, users_id=user_id)\
+			.first_or_404()
+
+		# remove user from all groups in course
+		unenrol_group(coursesandusers.id)
+
+		group = GroupsAndCoursesAndUsers.query.filter_by(coursesandusers_id=coursesandusers.id,
+			groups_id=group_id).first()
+		if group:
+			group.active = True
+		else:
+			group = GroupsAndCoursesAndUsers()
+			group.groups_id = group_id
+			group.coursesandusers_id = coursesandusers.id
+		db.session.add(group)
+		db.session.commit()
+		return {'groups_name': group.groups_name}
+apiU.add_resource(GroupUserIdAPI, '/<int:group_id>')
+
+# /users/:user_id/groups
+class GroupUserAPI(Resource):
+	@login_required
+	def delete(self, course_id, user_id):
+		# check that the user is enroled in the course
+		coursesandusers = CoursesAndUsers.query.filter_by(courses_id=course_id, users_id=user_id)\
+			.first_or_404()
+		unenrol_group(coursesandusers.id)
+		return {'user_id': user_id, 'course_id': course_id}
+apiU.add_resource(GroupUserAPI, '')

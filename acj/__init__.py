@@ -91,8 +91,9 @@ def create_app(conf=config, settings_override={}):
 	app.register_blueprint(courses_api, url_prefix='/api/courses')
 	from .classlist import classlist_api
 	app.register_blueprint(classlist_api, url_prefix='/api/courses/<int:course_id>/users')
-	from .group import groups_api
+	from .group import groups_api, groups_users_api
 	app.register_blueprint(groups_api, url_prefix='/api/courses/<int:course_id>/groups')
+	app.register_blueprint(groups_users_api, url_prefix='/api/courses/<int:course_id>/users/<int:user_id>/groups')
 	from .login import login_api
 	app.register_blueprint(login_api)
 	from .users import users_api, user_types_api

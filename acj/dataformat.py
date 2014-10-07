@@ -83,6 +83,13 @@ def getGroupsAndCoursesAndUsers():
 	}
 	return format
 
+def getGroups():
+	format = {
+		'id': fields.Integer,
+		'name': fields.String
+	}
+	return format
+
 def getCriteria():
 	format = {
 		'id': fields.Integer,

@@ -27,7 +27,7 @@
 			<th>Display Name</th>
 			<th>Email</th>
 			<th>Application Role</th>
-			<th>Group</th>
+			<th ng-if="groups.length > 0">Group</th>
 		</tr>
 		<tr ng-repeat="user in classlist | orderBy:'user.firstname'">
 			<td>
@@ -40,7 +40,12 @@
 			<td>{{user.user.displayname}}</td>
 			<td>{{user.user.email}}</td>
 			<td>{{user.user.usertypeforsystem.name}}</td>
-			<td>{{user.groups[0].groups_name}}</td>
+			<td ng-if="groups.length > 0">
+				<select ng-model="user.groups[0].groups_id" ng-options="g.id as g.name for g in groups"
+						ng-change="update(user.user.id, user.groups[0].groups_id)">
+					<option value="">-- None --</option>
+				</select>
+			</td>
 		</tr>
 	</table>
 </div>
