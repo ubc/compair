@@ -14,7 +14,11 @@ class GroupsAPITests(ACJTestCase):
 		rv = self.client.get(url)
 		self.assert401(rv)
 
-		# TODO: test unauthorized user
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_instructor().username)
+		rv = self.client.get(url)
+		self.assert403(rv)
+		self.logout()
 
 		# test invalid course id
 		self.login(self.data.get_authorized_instructor().username)
@@ -30,6 +34,18 @@ class GroupsAPITests(ACJTestCase):
 		self.assertEqual(actual[0]['id'], self.data.get_active_group().id)
 		self.assertEqual(actual[0]['name'], self.data.get_active_group().name)
 
+		self.logout()
+
+		# test TA
+		self.login(self.data.get_authorized_ta().username)
+		self.assert200(rv)
+		actual = rv.json['groups']
+		self.assertEqual(len(actual), 1)
+		self.assertEqual(actual[0]['id'], self.data.get_active_group().id)
+		self.assertEqual(actual[0]['name'], self.data.get_active_group().name)
+
+		self.logout()
+
 	def test_group_enrolment(self):
 		# frequently used objects
 		course = self.data.get_course()
@@ -40,7 +56,12 @@ class GroupsAPITests(ACJTestCase):
 		rv = self.client.post(url, data={}, content_type='application/json')
 		self.assert401(rv)
 
-		# TODO: test unauthorized user
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_instructor().username)
+		url = self._create_group_user_url(course, self.data.get_authorized_student(), group)
+		rv = self.client.post(url, data={}, content_type='application/json')
+		self.assert403(rv)
+		self.logout()
 
 		self.login(self.data.get_authorized_instructor().username)
 		# test user that is already in group
@@ -106,7 +127,12 @@ class GroupsAPITests(ACJTestCase):
 		rv = self.client.delete(url)
 		self.assert401(rv)
 
-		# TODO: test unauthorzied user
+		# test unauthorzied user
+		self.login(self.data.get_unauthorized_instructor().username)
+		url = self._create_group_user_url(course, self.data.get_authorized_student())
+		rv = self.client.delete(url)
+		self.assert403(rv)
+		self.logout()
 
 		self.login(self.data.get_authorized_instructor().username)
 		# test user in course

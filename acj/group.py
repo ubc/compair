@@ -1,4 +1,4 @@
-from bouncer.constants import MANAGE
+from bouncer.constants import READ, POST, DELETE
 from flask import Blueprint, current_app, request
 from flask.ext.restful import Resource, marshal_with, marshal, reqparse
 from flask_login import login_required
@@ -119,10 +119,15 @@ class GroupRootAPI(Resource):
 	@login_required
 	def get(self, course_id):
 		course = Courses.query.get_or_404(course_id)
+		group = Groups(courses_id=course_id)
+		require(READ, group)
 		groups = Groups.query.filter(Groups.courses_id==course.id, Groups.active).all()
 		return {'groups': marshal(groups, dataformat.getGroups())}
 	@login_required
 	def post(self, course_id):
+		Courses.query.get_or_404(course_id)
+		group = Groups(courses_id=course_id)
+		require(POST, group)
 		# require(CREATE, Groups())
 		file = request.files['file']
 		if file and allowed_file(file.filename, current_app.config['UPLOAD_ALLOWED_EXTENSIONS']):
@@ -153,11 +158,14 @@ class GroupUserIdAPI(Resource):
 		# check group exists (and active) and in course
 		Groups.query.filter_by(courses_id=course_id, id=group_id, active=True).first_or_404()
 		dropped = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
-		#TODO: permissions
+
 		# check that the user is enroled in the course
 		coursesandusers = CoursesAndUsers.query.filter(CoursesAndUsers.courses_id==course_id,
 			CoursesAndUsers.users_id==user_id,CoursesAndUsers.usertypesforcourse_id!=dropped)\
 			.first_or_404()
+
+		member = GroupsAndCoursesAndUsers(coursesandusers=coursesandusers)
+		require(POST, member)
 
 		# remove user from all groups in course
 		unenrol_group(coursesandusers.id)
@@ -184,6 +192,10 @@ class GroupUserAPI(Resource):
 		coursesandusers = CoursesAndUsers.query.filter(CoursesAndUsers.courses_id==course_id,
 			CoursesAndUsers.users_id==user_id,CoursesAndUsers.usertypesforcourse_id!=dropped)\
 			.first_or_404()
+
+		member = GroupsAndCoursesAndUsers(coursesandusers=coursesandusers)
+		require(DELETE, member)
+
 		unenrol_group(coursesandusers.id)
 		return {'user_id': user_id, 'course_id': course_id}
 apiU.add_resource(GroupUserAPI, '')
