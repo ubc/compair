@@ -67,12 +67,17 @@
 
 .evaluations-screen {
   
+  /* class for div surroundings evaluations */
+  .evaluations {
+    border: 1px solid @border-gray;
+  }
+  
   /* each evaluation matches look of each answer/comment/etc. */
   .each-evaluation {
     padding: 1em 1em 2em 1em;
     border-bottom: 1px solid @border-gray;
   }
-    .each-evaluation:nth-child(even){
+    .each-evaluation:nth-child(odd){
       background: @bkgrd-gray;
     }
     
