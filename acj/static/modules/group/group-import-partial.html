@@ -1,0 +1,20 @@
+<div ng-controller="GroupImportController">
+
+	<h1>Import Groups</h1>
+	<br />
+	<ul class="li-spacing">
+		<li>Information</li>
+		<li>Information</li>
+	</ul>
+	<div class="form-group">
+		<fieldset>
+			<legend>For {{ course.name }}</legend>
+			<label for="importFile">Choose CSV File</label>
+			<input type="file" nv-file-select uploader="uploader"
+				   id="importFile" />
+		</fieldset>
+	</div>
+	<input type="submit" class="btn btn-success btn-lg center-block" value="Import"
+		   ng-click="uploader.queue[0].upload();"
+		   ng-disabled="!uploader.queue[0]" />
+</div>

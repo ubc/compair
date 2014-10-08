@@ -8,7 +8,7 @@ from acj.models import UserTypesForCourse, UserTypesForSystem
 from data.fixtures.factories import UsersFactory, UserTypesForCourseFactory, UserTypesForSystemFactory, CriteriaFactory, \
 	CoursesFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, PostsForAnswersFactory, \
 	CriteriaAndCoursesFactory, AnswerPairingsFactory, JudgementsFactory, PostsForJudgementsFactory, \
-	PostsForCommentsFactory
+	PostsForCommentsFactory, GroupsFactory, GroupsAndCoursesAndUsersFactory
 
 
 class DefaultFixture(object):

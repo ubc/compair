@@ -5,10 +5,11 @@
 
 var module = angular.module('ubc.ctlt.acj.classlist',
 	[
-		'angularFileUpload',
 		'ngResource',
+		'ubc.ctlt.acj.attachment',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.course',
+		'ubc.ctlt.acj.group',
 		'ubc.ctlt.acj.toaster',
 		'ubc.ctlt.acj.user',
 		'ui.bootstrap'
@@ -34,65 +35,10 @@ module.factory(
 	}
 );
 
-/***** Services *****/
-module.service('importService', function(FileUploader, $location, CourseResource, Toaster) {
-	var results = {};
-	var uploader = null; 
-	
-	var getUploader = function(courseId) {
-		var uploader = new FileUploader({
-			url: '/api/courses/'+courseId+'/users',
-			queueLimit: 1,
-			removeAfterUpload: true
-		});
-
-		uploader.filters.push({
-			name: 'pdfFilter',
-			fn: function(item, options) {
-				var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
-				return '|csv|'.indexOf(type) !== -1;
-			}
-		});
-
-		return uploader;
-	}
-
-	var onComplete = function(courseId) {
-		return function(fileItem, response, status, headers) {
-			results = response;
-			if (!('error' in results)) {
-				count = results.success.length;
-				Toaster.success("Students Added", "Successfully added "+ count +" students.");
-				$location.path('/course/' + courseId + '/user/import/results');		
-			}	
-		};
-	}
-
-	var onError = function() {
-		return function(fileItem, response, status, headers) {
-			Toaster.reqerror("Unable To Upload", status);
-			if ('error' in response) {
-				Toaster.error("File Type Error", "Only CSV files can be uploaded.");
-			}
-		};
-	}	
-
-	var getResults = function() {
-		return results;
-	}
-
-	return {
-		getUploader: getUploader,
-		onComplete: onComplete,
-		getResults: getResults,
-		onError: onError
-	};
-});
-
 /***** Controllers *****/
 module.controller(
 	'ClassViewController',
-	function($scope, $log, $routeParams, ClassListResource, CourseResource, Toaster)
+	function($scope, $log, $routeParams, ClassListResource, CourseResource, GroupResource, Toaster)
 	{
 		$scope.course = {};
 		$scope.classlist = {};
@@ -113,6 +59,36 @@ module.controller(
 				Toaster.reqerror("No Users Found For Course ID "+courseId, ret);
 			}
 		);
+		GroupResource.get({'courseId':courseId}).$promise.then(
+			function (ret) {
+				$scope.groups = ret.groups;
+			},
+			function (ret) {
+				Toaster.reqerror("Groups Retrieval Failed", ret);
+			}
+		);
+
+		$scope.update = function(userId, groupId) {
+			if (groupId) {
+				GroupResource.enrol({'courseId': courseId, 'userId': userId, 'groupId': groupId}, {}).$promise.then(
+					function (ret) {
+						Toaster.success("Successfully enroled the user into " + ret.groups_name);
+					},
+					function (ret) {
+						Toaster.reqerror("Failed to enrol the user into the group.");
+					}
+				);
+			} else {
+				GroupResource.unenrol({'courseId': courseId, 'userId': userId}).$promise.then(
+					function (ret) {
+						Toaster.success("Successfully removed the user from the group.");
+					},
+					function (ret) {
+						Toaster.reqerror("Failed to remove the user from the group.");
+					}
+				);
+			}
+		}
 	}
 );
 
@@ -130,7 +106,7 @@ module.controller(
 				Toaster.reqerror("No Course Found For ID "+courseId, ret);
 			}
 		);
-		$scope.uploader = importService.getUploader(courseId);
+		$scope.uploader = importService.getUploader(courseId, 'users');
 		$scope.uploader.onCompleteItem = importService.onComplete(courseId);
 		$scope.uploader.onErrorItem = importService.onError();
 	}
@@ -153,9 +129,7 @@ module.controller(
 			}
 		);
 
-		$scope.headers = ['Username', 'First Name', 'Last Name', 'Email'];
-		$scope.invalidHeaders = angular.copy($scope.headers);
-		$scope.invalidHeaders.push('Message');
+		$scope.headers = ['Username', 'First Name', 'Last Name', 'Email', 'Message'];
 	}
 );
 

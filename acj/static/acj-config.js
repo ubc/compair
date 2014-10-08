@@ -10,6 +10,7 @@ var myApp = angular.module('myApp', [
 	'ubc.ctlt.acj.comment',
 	'ubc.ctlt.acj.course',
 	'ubc.ctlt.acj.criteria',
+	'ubc.ctlt.acj.group',
 	'ubc.ctlt.acj.home',
 	'ubc.ctlt.acj.judgement',
 	'ubc.ctlt.acj.login',
@@ -54,11 +55,21 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/classlist/classlist-import-results-partial.html',
 				label: "Results"
 			})
+		.when ('/course/:courseId/group/import',
+		   {
+				templateUrl: 'modules/group/group-import-partial.html',
+				label: "Import Groups"
+		   })
+		.when ('/course/:courseId/group/import/results',
+			{
+				templateUrl: 'modules/group/group-import-results-partial.html',
+				label: "Results"
+			})
 		.when ('/course/:courseId/user/enrol',
-			   {
-				   templateUrl: 'modules/classlist/classlist-enrol-partial.html',
-				   label: "Set Instructors"
-			   })
+		   {
+			   templateUrl: 'modules/classlist/classlist-enrol-partial.html',
+			   label: "Set Instructors"
+		   })
 		.when ('/course/:courseId/question/create', 
 			{
 				templateUrl: 'modules/question/question-create-partial.html',
