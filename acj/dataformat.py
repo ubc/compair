@@ -25,6 +25,7 @@ def getUsers(restrict_users=True):
 		return restricted
 	unrestricted = {
 		'username': fields.String,
+		'student_no': fields.String,
 		'firstname': fields.String,
 		'lastname': fields.String,
 		'email': fields.String,
