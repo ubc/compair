@@ -46,7 +46,19 @@ module.controller(
 				Toaster.reqerror("No Course Found For ID "+courseId, ret);
 			}
 		);
+
+		$scope.userIdentifiers = [
+			{'key': 'username', 'label': 'Username'},
+			{'key': 'student_no', 'label': 'Student Number'}
+		];
+		$scope.userIdentifier = $scope.userIdentifiers[0].key;
+
 		$scope.uploader = importService.getUploader(courseId, 'groups');
+
+		$scope.uploader.onBeforeUploadItem = function(item) {
+			item.formData.push({'userIdentifier': $scope.userIdentifier});
+		};
+
 		$scope.uploader.onCompleteItem = importService.onComplete(courseId);
 		$scope.uploader.onErrorItem = importService.onError();
 	}

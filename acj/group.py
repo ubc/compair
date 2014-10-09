@@ -1,8 +1,9 @@
-from bouncer.constants import READ, POST, DELETE
+from bouncer.constants import READ, CREATE, DELETE
 from flask import Blueprint, current_app, request
 from flask.ext.restful import Resource, marshal_with, marshal, reqparse
 from flask_login import login_required
 from werkzeug.utils import secure_filename
+from flask.ext.restful.reqparse import RequestParser
 
 from . import dataformat
 from .authorization import require
@@ -22,20 +23,26 @@ apiU = new_restful_api(groups_users_api)
 USER_IDENTIFIER = 0
 GROUP_NAME = 1
 
+import_parser = RequestParser()
+import_parser.add_argument('userIdentifier', type=str, required=True)
+
 # events
 #on_group_create = event.signal('GROUP_POST')
 #on_group_disable = event.signal('GROUP_DELETE')
 
-def import_members(course_id, members):
+def import_members(course_id, identifier, members):
 	# initialize list of users and their statuses
 	invalids = []  #invalid entry - eg. no group name
 	user_infile = [] # for catching duplicate users
 	count = 0	# keep track of active groups
 	dropped = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
 
-	# require at least one entry and all rows to have 2 columns
-	if len(members) < 1 and len(members[0]) != 2:
+	# require all rows to have two columns if there are a minimum of one entry
+	if len(members) > 0 and len(members[0]) != 2:
 		return {'success': count}
+	elif identifier not in ['username', 'student_no']:
+		invalids.append({'member': {}, 'message': 'A valid user identifier is not given.'})
+		return {'success': count, 'invalids': invalids}
 
 	# make all groups and members inactive initially
 	exist_groups = Groups.query.filter_by(courses_id=course_id).all()
@@ -80,9 +87,19 @@ def import_members(course_id, members):
 			invalids.append({'member': json.dumps(member), 'message': message})
 			continue
 
+		if identifier == 'username':
+			user = Users.query.filter_by(username=member[USER_IDENTIFIER]).first()
+			value = identifier
+		else:
+			user = Users.query.filter_by(student_no=member[USER_IDENTIFIER]).first()
+			value = 'student number'
+
+		if not user:
+			invalids.append({'member': json.dumps(member), 'message': 'No user with this '+value+' exists.'})
+			continue
+
 		enroled = CoursesAndUsers.query.filter(CoursesAndUsers.courses_id==course_id,
-			CoursesAndUsers.usertypesforcourse_id!=dropped).join(Users)\
-			.filter_by(username=member[USER_IDENTIFIER]).first()
+			CoursesAndUsers.usertypesforcourse_id!=dropped, CoursesAndUsers.users_id==user.id).first()
 		if enroled:
 			group_member = GroupsAndCoursesAndUsers.query.filter_by(groups_id=active_groups[member[GROUP_NAME]])\
 				.filter_by(coursesandusers_id=enroled.id).first()
@@ -127,8 +144,9 @@ class GroupRootAPI(Resource):
 	def post(self, course_id):
 		Courses.query.get_or_404(course_id)
 		group = Groups(courses_id=course_id)
-		require(POST, group)
-		# require(CREATE, Groups())
+		require(CREATE, group)
+		params = import_parser.parse_args()
+		identifier = params.get('userIdentifier')
 		file = request.files['file']
 		if file and allowed_file(file.filename, current_app.config['UPLOAD_ALLOWED_EXTENSIONS']):
 			unique = str(uuid.uuid4())
@@ -142,7 +160,7 @@ class GroupRootAPI(Resource):
 				for row in spamreader:
 					if row:
 						members.append(row)
-				results = import_members(course_id, members)
+				results = import_members(course_id, identifier, members)
 				# TODO: event
 			os.remove(tmpName)
 			current_app.logger.debug("Group Import for course " + str(course_id) + " is successful. Removed file.")
@@ -165,7 +183,7 @@ class GroupUserIdAPI(Resource):
 			.first_or_404()
 
 		member = GroupsAndCoursesAndUsers(coursesandusers=coursesandusers)
-		require(POST, member)
+		require(CREATE, member)
 
 		# remove user from all groups in course
 		unenrol_group(coursesandusers.id)

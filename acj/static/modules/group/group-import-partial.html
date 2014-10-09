@@ -9,6 +9,10 @@
 	<div class="form-group">
 		<fieldset>
 			<legend>For {{ course.name }}</legend>
+			<label>User Identifier</label>
+			<select class="form-control" ng-model="userIdentifier" id="userIdentifier"
+					ng-options="u.key as u.label for u in userIdentifiers" required></select>
+			<br />
 			<label for="importFile">Choose CSV File</label>
 			<input type="file" nv-file-select uploader="uploader"
 				   id="importFile" />
