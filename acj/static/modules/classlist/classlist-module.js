@@ -203,14 +203,7 @@ module.controller(
 			ClassListResource.unenrol({'courseId': courseId, 'userId': user_id}).$promise.then(
 				function (ret) {
 					Toaster.success("User Dropped", 'Successfully dropped '+ ret.user.fullname +' from the course.');
-					// refresh permissions and redirect them to home if they unenroll themselves
-					if ($scope.loggedInUserId == ret.user.id) {
-						Session.refresh().then(function () {
-							$location.path("#/");
-						});
-					} else {
-						delete $scope.enroled[ret.user.id];
-					}
+					delete $scope.enroled[ret.user.id];
 				},
 				function (ret) {
 					Toaster.reqerror('User Drop Failed', ret);
