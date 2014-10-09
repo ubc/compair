@@ -14,6 +14,11 @@
 				name="username" ng-model="user.username"
 				required />
 		</acj-field-with-feedback>
+		<acj-field-with-feedback form-control="userForm.student_no">
+			<label for="student_no">Student Number </label>
+			<input class="form-control" id="student_no" type="text"
+				name="student_no" ng-model="user.student_no"/>
+		</acj-field-with-feedback>
 		<div ng-if="create">
 			<acj-field-with-feedback form-control="userForm.password">
 				<label for=password" class="required-star">Password </label>

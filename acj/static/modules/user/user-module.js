@@ -129,7 +129,11 @@ module.controller("UserEditController",
 				},
 				function(ret) {
 					$scope.submitted = false;
-					Toaster.reqerror("User Update Failed", ret);
+					if (ret.status == '409') {
+						Toaster.error(ret.data.error);
+					} else {
+						Toaster.reqerror("User Update Failed", ret);
+					}
 				}
 			);
 		}

@@ -21,6 +21,10 @@
 			<div class="col-md-9">{{user.username}}</div>
 		</div>
 		<div class="row" ng-if="canCreateUser || ownProfile">
+			<strong class="col-md-3">Student Number:</strong>
+			<div class="col-md-9">{{user.student_no}}</div>
+		</div>
+		<div class="row" ng-if="canCreateUser || ownProfile">
 			<strong class="col-md-3">Name:</strong>
 			<div class="col-md-9">{{user.fullname}}</div>
 		</div>
