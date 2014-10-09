@@ -129,7 +129,7 @@ module.controller(
 			}
 		);
 
-		$scope.headers = ['Username', 'First Name', 'Last Name', 'Email', 'Message'];
+		$scope.headers = ['Username', 'Student Number', 'First Name', 'Last Name', 'Email', 'Message'];
 	}
 );
 

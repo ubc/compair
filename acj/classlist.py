@@ -27,11 +27,12 @@ new_course_user_parser.add_argument('usertypesforcourse_id', type=int)
 
 #upload file column name to index number
 USERNAME = 0
-FIRSTNAME = 1
-LASTNAME = 2
-EMAIL = 3
-DISPLAYNAME = 4
-PASSWORD = 5
+STUDENTNO = 1
+FIRSTNAME = 2
+LASTNAME = 3
+EMAIL = 4
+DISPLAYNAME = 5
+PASSWORD = 6
 
 # events
 on_classlist_get = event.signal('CLASSLIST_GET')
@@ -42,110 +43,132 @@ def display_name_generator(firstname=None, role="Student"):
 	return role.lower()+"_"+name+random_generator(4, string.digits)
 
 def import_users(course_id, users):
-	# initialize list of users and their statuses
-	invalids = []	# invalid entry - eg. invalid # of columns
+	invalids = [] # invalid entries - eg. invalid # of columns
+	# store unique user identifiers - eg. student number - throws error if duplicate in file
+	exist_usernames = []
+	exist_studentnos = []
 	exist_displaynames = []
-	usernames_infile = [] # for catching duplicate usernames in the file
-	count = 0 # number successfully enroled
+	count = 0 # store number of successful enrolments
 
-	# variables used in the intermediate steps
-	valid = []	# successfully created new users' usernames
+	# create / update users in file
 	normal_user = UserTypesForSystem.query.filter_by(name = UserTypesForSystem.TYPE_NORMAL).first().id
-	if len(users) < 1:	# check that there is a minimum of one entry
-		return {'success': count, 'invalids': invalids}
-
-	# generate a list of existing users from the list of imported usernames
-	usernames = [u[USERNAME] for u in users]
-	exist_users = Users.query.filter(Users.username.in_(usernames)).all()
-	exist_usernames = [e.username for e in exist_users]
-
 	for user in users:
-		u = Users()
-		if user[USERNAME] in usernames_infile:
-			u.username = user[USERNAME]
-			invalids.append({'user': u, 'message': 'This username already exists in the file.'})
-			continue
-		# user already exists
-		elif user[USERNAME] in exist_usernames:
-			usernames_infile.append(user[USERNAME])
-			valid.append(user[USERNAME])
-			continue 
-		elif not user[USERNAME]:
-			invalids.append({'user': user, 'message':'The username is required.'})
-			continue	# skip blank row
-
-		# username
-		u.username = user[USERNAME]
-		usernames_infile.append(user[USERNAME])
-
 		length = len(user)
-		# first name
-		u.firstname = user[FIRSTNAME] if length > FIRSTNAME and user[FIRSTNAME] else None
+		if (length < 1):
+			continue	# skip empty row
 
-		# lastname
-		u.lastname = user[LASTNAME] if length > LASTNAME and user[LASTNAME] else None
+		# TEMP USER
+		temp = Users()
+		temp.username = user[USERNAME] if length > USERNAME and user[USERNAME] else None
+		temp.student_no = user[STUDENTNO] if length > STUDENTNO and user[STUDENTNO] else None
+		temp.firstname = user[FIRSTNAME] if length > FIRSTNAME and user[FIRSTNAME] else None
+		temp.lastname = user[LASTNAME] if length > LASTNAME and user[LASTNAME] else None
+		temp.email = user[EMAIL] if length > EMAIL and user[EMAIL] else None
+		temp.displayname = user[DISPLAYNAME] if length > DISPLAYNAME and user[DISPLAYNAME] else None
 
-		# email
-		u.email = user[EMAIL] if length > EMAIL and user[EMAIL] else None
-
-		# default to normal user
-		u.usertypesforsystem_id = normal_user
-
-		# display name
-		if length > DISPLAYNAME and user[DISPLAYNAME] and user[DISPLAYNAME] not in exist_displaynames\
-				and not Users.query.filter(Users.displayname==user[DISPLAYNAME]).scalar():
-			u.displayname = user[DISPLAYNAME]
-			print(u.displayname, '1')
-		else:
-			# auto-generate if one is not given
-			tmp_displayname = display_name_generator(u.firstname)
-			exists = Users.query.filter(Users.displayname==tmp_displayname).scalar()
-			while (exists is not None):
-				tmp_displayname = display_name_generator(u.firstname)
-				exists = Users.query.filter(Users.displayname==tmp_displayname).scalar()
-			u.displayname = tmp_displayname
-		exist_displaynames.append(u.displayname)
-
-		# password - set to username if one is not given
-		u.password = user[PASSWORD] if length > PASSWORD and user[PASSWORD] else user[USERNAME]
-
-		db.session.add(u)
-		# add new user to list of existing users
-		exist_usernames.append(u.username)
-		valid.append(u.username)
-	db.session.commit() # commit the new users first
-
-	student = UserTypesForCourse.query.filter_by(name="Student").first().id
-	dropped = UserTypesForCourse.query.filter_by(name="Dropped").first().id
-	enroled = CoursesAndUsers.query.filter_by(courses_id=course_id).\
-		filter(CoursesAndUsers.usertypesforcourse_id.in_([student, dropped])).all()
-	enroled_userIds = [e.users_id for e in enroled]
-
-	users = Users.query.filter(Users.username.in_(valid)).all()
-	for user in users:
-		enrol = CoursesAndUsers()
-		if user.id in enroled_userIds:
-			enrol = CoursesAndUsers.query.filter_by(courses_id=course_id).filter_by(users_id=user.id).first()
-			enrol.usertypesforcourse_id = student
-			db.session.commit()
-			enroled_userIds.remove(enrol.users_id)
-			count += 1
+		# VALIDATION
+		# validate username
+		if not temp.username:
+			invalids.append({'user': temp, 'message': 'The username is required.'})
 			continue
-		enrol.courses_id = course_id
-		enrol.users_id = user.id
+		elif temp.username in exist_usernames:
+			invalids.append({'user': temp, 'message': 'This username already exists in the file.'})
+			continue
+
+		u = Users.query.filter_by(username=temp.username).first()
+		update = True
+		if not u:
+			u = Users(username=temp.username)
+			update = False
+
+		temp.password = user[PASSWORD] if length > PASSWORD and user[PASSWORD] else temp.username
+
+		# validate student number (if not None)
+		if temp.student_no:
+			student_no_exist = Users.query.filter_by(student_no=temp.student_no).first()
+			# invalid if exists but not the same user
+			if update and student_no_exist and student_no_exist.id != u.id:
+				invalids.append({'user': temp, 'message': 'This student number already exists in the system.'})
+				continue
+			# invalid if already showed up in file
+			elif not update and temp.student_no in exist_studentnos:
+				invalids.append({'user': temp, 'message': 'This student number already exists in the file.'})
+				continue
+			# invalid if student number already exists in the system
+			elif not update and student_no_exist:
+				invalids.append({'user': temp, 'message': 'This student number already exists in the system.'})
+				continue
+
+		# validate display name
+		if temp.displayname:
+			display_name_exists = Users.query.filter_by(displayname=temp.displayname).first()
+			# reset to None when invalid
+			if update and ((display_name_exists and display_name_exists != u.id) or (temp.displayname in exist_displaynames)):
+				temp.displayname = None
+			elif not update and (display_name_exists or temp.displayname in exist_displaynames):
+				temp.displayname = None
+
+		# update
+		if update:
+			u.student_no = temp.student_no if temp.student_no else u.student_no
+			u.firstname = temp.firstname if temp.firstname else u.firstname
+			u.lastname = temp.lastname if temp.lastname else u.lastname
+			u.email = temp.email if temp.email else u.email
+			u.displayname = temp.displayname if temp.displayname else u.displayname
+		# create
+		else:
+			u = temp
+			u.usertypesforsystem_id = normal_user
+			if not temp.displayname:	# if display name is None
+				tmp_displayname = display_name_generator(u.firstname)
+				exists = Users.query.filter_by(displayname=tmp_displayname).scalar()
+				while (exists is not None):
+					tmp_displayname = display_name_generator(u.firstname)
+					exists = Users.query.filter_by(displayname=tmp_displayname).scalar()
+				u.displayname = tmp_displayname
+
+		exist_usernames.append(u.username)
+		exist_studentnos.append(u.student_no)
+		exist_displaynames.append(u.displayname)
+		db.session.add(u)
+	db.session.commit()
+
+	student = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first().id
+	dropped = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
+	enroled = CoursesAndUsers.query.filter_by(courses_id=course_id).\
+		filter_by(usertypesforcourse_id=student).all()
+	enroled = {e.users_id:e.users_id for e in enroled}
+
+	# enrol valid users in file
+	to_enrol = Users.query.filter(Users.username.in_(exist_usernames)).all()
+	for user in to_enrol:
+		enrol = CoursesAndUsers.query.filter_by(courses_id=course_id).filter_by(users_id=user.id).first()
+		if not enrol:
+			enrol = CoursesAndUsers(courses_id=course_id, users_id=user.id)
 		enrol.usertypesforcourse_id = student
 		db.session.add(enrol)
+		if user.id in enroled:
+			del enroled[user.id]
 		count += 1
 	db.session.commit()
 
-	for id in enroled_userIds:
-		enrol = CoursesAndUsers.query.filter_by(courses_id=course_id).filter_by(users_id=id).first()
-		enrol.usertypesforcourse_id = dropped
-		db.session.commit()
-	
+	# unenrol users not in file anymore
+	for userId in enroled:
+		unenrol = CoursesAndUsers.query.filter_by(courses_id=course_id).filter_by(users_id=userId).first()
+		unenrol.usertypesforcourse_id = dropped
+		db.session.add(unenrol)
+	db.session.commit()
+
+	on_classlist_upload.send(
+		current_app._get_current_object(),
+		event_name=on_classlist_upload.name,
+		user=current_user,
+		course_id=course_id
+	)
+
 	return {
-		'success':count,
-		'invalids':marshal(invalids, dataformat.getImportUsersResults(False))
+		'success': count,
+		'invalids': marshal(invalids, dataformat.getImportUsersResults(False))
 	}
 
 # /
