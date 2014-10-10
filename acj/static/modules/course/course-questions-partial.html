@@ -26,6 +26,13 @@
 					Manage Users
 				</a>
 			</span>
+			<span ng-if="canCreateQuestions">
+				<a ng-href="#/course/{{course.id}}/gradebook" 
+					class="btn btn-primary">
+					<i class="fa fa-book"></i>
+					Gradebook
+				</a>
+			</span>
 		</div>
 	</div>
 	

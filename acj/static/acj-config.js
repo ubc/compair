@@ -11,6 +11,7 @@ var myApp = angular.module('myApp', [
 	'ubc.ctlt.acj.course',
 	'ubc.ctlt.acj.criteria',
 	'ubc.ctlt.acj.group',
+	'ubc.ctlt.acj.gradebook',
 	'ubc.ctlt.acj.home',
 	'ubc.ctlt.acj.judgement',
 	'ubc.ctlt.acj.login',
@@ -140,6 +141,11 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/report/report-create-partial.html',
 				label: "Reports"
 			})
+		.when('/course/:courseId/gradebook',
+			{
+				templateUrl: 'modules/gradebook/gradebook-partial.html',
+				label: "Gradebook"
+		  	})
 		.when('/user/create',
 			{
 				templateUrl: 'modules/user/user-create-partial.html',

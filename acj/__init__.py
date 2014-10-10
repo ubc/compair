@@ -130,6 +130,8 @@ def create_app(conf=config, settings_override={}):
 		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answerpairing')
 	from .report import report_api
 	app.register_blueprint(report_api, url_prefix='/api/courses/<int:course_id>/report')
+	from .gradebook import gradebook_api
+	app.register_blueprint(gradebook_api, url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/gradebook')
 
 
 	@app.route('/')

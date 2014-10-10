@@ -1,0 +1,47 @@
+<div ng-controller="GradebookController">
+	<h1>Gradebook</h1>
+	<div>
+		<form class="form-inline" role="form">
+			<div class="form-group">
+				<select class="form-control" ng-model="selectedQuestionId" 
+					ng-change="changeQuestion(selectedQuestionId);">
+					<option value="">-- Please Select a Question --</option>
+					<option	ng-repeat="question in questions" 
+						value="{{question.id}}">
+						{{question.title}}
+					</option>
+				</select>
+			</div>
+		</form>
+		<table class="table table-hover">
+			<thead>
+				<th>Username</th>
+				<th>First Name</th>
+				<th>Last Name</th>
+				<th>Answer Submitted</th>
+				<th>Judgements Submitted</th>
+			</thead>
+			<tbody>
+				<tr ng-repeat="entry in gradebook">
+					<td>
+						<a ng-href="#/user/{{entry.userid}}">
+							{{entry.username}}
+						</a>
+					</td>
+					<td>{{entry.firstname}}</td>
+					<td>{{entry.lastname}}</td>
+					<td ng-if="entry.num_answers > 0" class="success">Yes</td>
+					<td ng-if="entry.num_answers == 0" class="danger">No</td>
+					<td ng-class="{
+						danger: entry.num_judgements == 0, 
+						warning: entry.num_judgements > 0 && 
+								 entry.num_judgements < numJudgementsRequired,
+						success: entry.num_judgements >= numJudgementsRequired
+						}">
+						{{entry.num_judgements}}
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>

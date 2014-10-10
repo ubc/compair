@@ -79,6 +79,7 @@ class QuestionIdAPI(Resource):
 			'question':marshal(question, dataformat.getPostsForQuestions(restrict_users))
 		}
 
+	@login_required
 	def post(self, course_id, question_id):
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
