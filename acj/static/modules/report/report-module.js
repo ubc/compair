@@ -81,7 +81,6 @@ module.controller(
 				function (ret) {
 					$scope.reportFile = ret.file;
 					$scope.submitted = false;
-					Toaster.succes("Report successfully exported. Click Download below to get a copy.");
 				},
 				function (ret) {
 					$scope.submitted = false;
