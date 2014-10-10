@@ -139,7 +139,7 @@ myApp.config( function ($routeProvider) {
 		  	})
 		.when('/report',{
 				templateUrl: 'modules/report/report-create-partial.html',
-				label: "Reports"
+				label: "Run Reports"
 			})
 		.when('/course/:courseId/gradebook',
 			{

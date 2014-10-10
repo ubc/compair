@@ -1,37 +1,37 @@
 <div ng-controller="ReportCreateController">
 	
-	<h1>Reports</h1>
-	<br />
-	<ul>
-		<li>Information</li>
-		<li>Information</li>
-		<li>Information</li>
-		<li>Information</li>
-	</ul>
+	<h1><i class="fa fa-bar-chart-o"></i> Run Reports</h1>
+
+	<p class="intro-text">Run a report for your course, then download the data as a CSV (comma-separated values) file. You can create reports for the course as a whole or for individual questions. To run a course-level report, select "All" from the Question drop-down below.</p>
+	
 	<form name="reportForm" class="form" ng-submit="reportSubmit()" novalidate>
 		<fieldset>
+			<legend>Report Details</legend>
 			<div class="form-group">
-				<label for="reportCourseId">Course</label>
+				<label for="reportCourseId" class="required-star">Course</label>
 				<select class="form-control" ng-model="report.course_id" name="reportCourseId" ng-change="getAssignments()"
 						ng-options="c.id as c.name for c in courses" required>
-					<option value="">-- Pick a course --</option>
+					<option value="">- Select course -</option>
 				</select>
 			</div>
 			<div class="form-group">
-				<label for="reportType">Choose Type of Report</label>
+				<label for="reportType">Report Type</label>
 				<!-- currently only one type of report -->
 				<!--<select class="form-control" ng-model="report.type" name="reportType" required ng-options="id as name for (id, name) in types"></select>-->
-				<div>Participation Report</div>
+				<p><em>Participation Report</em></p>
 			</div>
 			<div class="form-group">
-				<label for="reportAssignment">Assignment</label>
+				<label for="reportAssignment" class="required-star">Question</label>
 				<select class="form-control" ng-disabled="assignments.length < 1" ng-model="report.assignment" name="reportAssignment"
 						ng-options="a.id as a.title for a in assignments" required>
-					<option value="">-- Pick an assignment --</option>
+					<option value="">- Select question -</option>
 				</select>
 			</div>
 		</fieldset>
-		<input type="submit" class="btn btn-success btn-lg center-block" value="Export" ng-disabled="reportForm.$invalid || submitted"/>
-		<a href="{{ reportFile }}" class="btn btn-info btn-lg" ng-disabled="!reportFile"><i class="fa fa-download"></i> Download</a>
+		<div class="alert alert-success text-center" ng-show="reportFile">
+			<h4>Report Complete</h4>
+			<p>Your report is ready for <strong><a href="{{ reportFile }}">download <i class="fa fa-file-excel-o"></i></a></strong> now.</p>
+		</div>
+		<input type="submit" class="btn btn-success btn-lg center-block" value="Run" ng-disabled="reportForm.$invalid || submitted"/>
 	</form>
 </div>

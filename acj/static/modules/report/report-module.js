@@ -35,7 +35,7 @@ module.controller(
 
 		var all = [{
 			'id': 'all',
-			'title': '-- All Assignments --'
+			'title': 'All'
 		}];
 
         Session.getUser().then(function(user) {
