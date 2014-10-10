@@ -12,6 +12,7 @@ from .evalcomment import on_evalcomment_create
 from .judgement import on_answer_pair_get, on_judgement_create
 from .question import on_question_modified, on_question_get, on_question_list_get, on_question_create, \
 	on_question_delete
+from .report import on_export_report
 from acj.users import on_user_modified, on_user_get, on_user_list_get, on_user_create, on_user_course_get, \
 	on_user_password_update
 from .authorization import define_authorization
@@ -47,6 +48,7 @@ def create_app(conf=config, settings_override={}):
 
 	app.config['CAS_SERVER'] = 'http://localhost:8088'
 	app.config['CAS_AFTER_LOGIN'] = 'route_root'
+	app.config['REPORT_FOLDER'] =  os.getcwd() + '/acj/static/report'
 
 	# for uploads
 	app.config['UPLOAD_FOLDER'] = os.getcwd() + '/tmpUpload'
@@ -126,6 +128,8 @@ def create_app(conf=config, settings_override={}):
 	from .answerpairing import answerpairing_api
 	app.register_blueprint(answerpairing_api,
 		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answerpairing')
+	from .report import report_api
+	app.register_blueprint(report_api, url_prefix='/api/courses/<int:course_id>/report')
 
 
 	@app.route('/')
@@ -205,3 +209,6 @@ on_classlist_upload.connect(log)
 
 # evalcomment event
 on_evalcomment_create.connect(log)
+
+# report event
+on_export_report.connect(log)

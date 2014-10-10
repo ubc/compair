@@ -15,7 +15,8 @@ var myApp = angular.module('myApp', [
 	'ubc.ctlt.acj.judgement',
 	'ubc.ctlt.acj.login',
 	'ubc.ctlt.acj.navbar',
-	'ubc.ctlt.acj.question'
+	'ubc.ctlt.acj.question',
+	'ubc.ctlt.acj.report'
 ]);
 
 myApp.config( function ($routeProvider) {
@@ -135,6 +136,10 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/criteria/criteria-configure-partial.html',
 				label: "Edit Criterion"
 		  	})
+		.when('/report',{
+				templateUrl: 'modules/report/report-create-partial.html',
+				label: "Reports"
+			})
 		.when('/user/create',
 			{
 				templateUrl: 'modules/user/user-create-partial.html',
