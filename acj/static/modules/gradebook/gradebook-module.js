@@ -55,7 +55,7 @@ module.controller("GradebookController",
 				},
 				function (ret)
 				{
-					Toaster.reqerror("Unable to retrieve gradebook.", ret);
+					$scope.gradebook = [];
 				}
 			);
 		};

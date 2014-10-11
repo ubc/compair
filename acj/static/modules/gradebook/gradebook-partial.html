@@ -1,47 +1,50 @@
 <div ng-controller="GradebookController">
-	<h1>Gradebook</h1>
-	<div>
-		<form class="form-inline" role="form">
-			<div class="form-group">
-				<select class="form-control" ng-model="selectedQuestionId" 
-					ng-change="changeQuestion(selectedQuestionId);">
-					<option value="">-- Please Select a Question --</option>
-					<option	ng-repeat="question in questions" 
-						value="{{question.id}}">
-						{{question.title}}
-					</option>
-				</select>
-			</div>
-		</form>
-		<table class="table table-hover">
-			<thead>
-				<th>Username</th>
+	<h1>See Activity</h1>
+	<br />
+	<form role="form">
+		<div class="form-group">
+			<label>Show student participation for</label>
+			<select class="form-control" ng-model="selectedQuestionId" 
+				ng-change="changeQuestion(selectedQuestionId);">
+				<option value="">- Select question -</option>
+				<option	ng-repeat="question in questions" 
+					value="{{question.id}}">
+					{{question.title}}
+				</option>
+			</select>
+		</div>
+	</form>
+	<table class="table table-striped">
+		<tbody>
+			<tr>
 				<th>First Name</th>
 				<th>Last Name</th>
-				<th>Answer Submitted</th>
-				<th>Judgements Submitted</th>
-			</thead>
-			<tbody>
-				<tr ng-repeat="entry in gradebook">
-					<td>
-						<a ng-href="#/user/{{entry.userid}}">
-							{{entry.username}}
-						</a>
-					</td>
-					<td>{{entry.firstname}}</td>
-					<td>{{entry.lastname}}</td>
-					<td ng-if="entry.num_answers > 0" class="success">Yes</td>
-					<td ng-if="entry.num_answers == 0" class="danger">No</td>
-					<td ng-class="{
-						danger: entry.num_judgements == 0, 
-						warning: entry.num_judgements > 0 && 
-								 entry.num_judgements < numJudgementsRequired,
-						success: entry.num_judgements >= numJudgementsRequired
-						}">
-						{{entry.num_judgements}}
-					</td>
-				</tr>
-			</tbody>
-		</table>
-	</div>
+				<th>Display Name</th>
+				<th class="text-center">Answered</th>
+				<th class="text-center">Evaluations</th>
+			</tr>
+			<tr ng-repeat="entry in gradebook">
+				<td>{{entry.firstname}}</td>
+				<td>{{entry.lastname}}</td>
+				<td>
+					<a ng-href="#/user/{{entry.userid}}">
+						{{entry.displayname}}
+					</a>
+				</td>
+				<td class="text-center text-success" ng-if="entry.num_answers > 0"><strong>Yes</strong></td>
+				<td class="text-center text-danger" ng-if="entry.num_answers == 0"><strong>No</strong></td>
+				<td class="text-center" ng-class="{
+					'text-danger': entry.num_judgements == 0, 
+					'text-warning': entry.num_judgements > 0 && 
+							 entry.num_judgements < numJudgementsRequired,
+					'text-success': entry.num_judgements >= numJudgementsRequired
+					}">
+					<strong>{{entry.num_judgements}} / {{ numJudgementsRequired }}</strong>
+				</td>
+			</tr>
+			<tr ng-show="!gradebook || gradebook.length < 1">
+				<td colspan="5"><p>Please select a question above to see student activity.</p></td>
+			</tr>
+		</tbody>
+	</table>
 </div>

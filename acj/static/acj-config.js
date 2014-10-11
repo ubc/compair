@@ -144,7 +144,7 @@ myApp.config( function ($routeProvider) {
 		.when('/course/:courseId/gradebook',
 			{
 				templateUrl: 'modules/gradebook/gradebook-partial.html',
-				label: "Gradebook"
+				label: "See Activity"
 		  	})
 		.when('/user/create',
 			{

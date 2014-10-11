@@ -71,7 +71,7 @@ class GradebookAPI(Resource):
 		for student in students:
 			entry = {
 				'userid':student.id,
-				'username': student.username,
+				'displayname': student.displayname,
 				'firstname': student.firstname,
 				'lastname': student.lastname,
 				'num_answers': num_answers_per_student[student.id],
