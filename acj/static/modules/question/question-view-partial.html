@@ -54,19 +54,23 @@
 		</ul>
 		
 		<!-- Question Action Buttons -->
-		<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" class="btn btn-success" title="Answer" ng-show="!answered && (canManagePosts || question.answer_period)">
+		<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" class="btn btn-success" title="Answer"
+		   ng-show="!answered && (canManagePosts || question.answer_period)">
 			Answer
 		</a>
 		<a class="btn btn-success" ng-show="answered && (canManagePosts || question.answer_period)" title="You have answered" disabled>
 			Answered
 		</a>
-		<a class="btn btn-success" title="Evaluate Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" ng-show="!canManagePosts && question.judging_period && question.left" ng-disabled="question.leftover > 0">
+		<a class="btn btn-success" title="Evaluate Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement"
+		   ng-show="!canManagePosts && question.judging_period && !judged_req_met">
 			Evaluate
 		</a>
-		<a class="btn btn-success" title="You have evaluated" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" ng-show="!canManagePosts && question.judging_period && !question.left" disabled>
+		<a class="btn btn-success" title="You have evaluated" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement"
+		   ng-show="!canManagePosts && question.judging_period && judged_req_met" disabled>
 			Evaluated
 		</a>
-		<a class="btn btn-success" title="Evaluations" ng-href="#/course/{{courseId}}/question/{{question.id}}/evaluations" ng-show="canManagePosts && (question.judging_period || question.after_judging)">
+		<a class="btn btn-success" title="Evaluations" ng-href="#/course/{{courseId}}/question/{{question.id}}/evaluations"
+		   ng-show="canManagePosts && (question.judging_period || question.after_judging)">
 			See Evaluations
 		</a>
 		
@@ -113,23 +117,26 @@
 					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" title="Answer the question">Answer</a> and evaluate the question first, then read answers written by your classmates and instructors here.
 				</p>
 				<!-- Students see before evaluating before the evaluation period -->
-				<p ng-if="!canManagePosts && answered && question.left && !question.judging_period">
+				<p ng-if="!canManagePosts && answered && !judged_req_met && !question.judging_period">
 					Evaluation period begins <span ng-if="question.judge_start > 0">{{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}}</span><span ng-if="question.judge_start <= 0">after the answer period ends</span>. After evaluating, you will be able to read answers written by your classmates and instructors here.
 				</p>
 				<!-- Students see before evaluating during the evaluation period -->
-				<p ng-if="!canManagePosts && question.left && question.judging_period">
+				<p ng-if="!canManagePosts && question.judging_period && !judged_req_met">
 					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" title="Answer the question">Evaluate</a> the question first, then read answers written by your classmates and instructors here.
 				</p>
 				<!-- Anyone sees during the answer period, if no answers provided yet -->
 				<p ng-if="question.answer_period && !question.answers_count">
 					No answers given for this question yet.
 				</p>
+				<p ng-if="!canManagePosts && !see_answers && judged_req_met">
+					Answers are available beginning {{ answerAvail | amDateFormat: 'MMM D @ h:mm a'}}
+				</p>
 			</div>
 			
 			<div class="all-answers">
 			
 				<!-- Instructor Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="instructors[answer.post.user.id] && (!question.left || canManagePosts)">
+				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="instructors[answer.post.user.id] && (see_answers || canManagePosts)">
 					
 					<!-- Answer Metadata Header -->
 					<a ng-href="#/user/{{answer.post.user.id}}">
@@ -216,8 +223,8 @@
 				</div><!-- closes each-answer (instructor) -->
 				
 				<!-- Student Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers | orderBy:order:reverse | notScoredEnd:sortby" ng-if="!instructors[answer.post.user.id] && (!question.left || (answer.post.user.id == loggedInUserId && question.answer_period) || canManagePosts)">
-				<!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.post.user.id] && (!question.left || (answer.post.user.id == loggedInUserId && question.answer_period) || canManagePosts)"> -->
+				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers | orderBy:order:reverse | notScoredEnd:sortby" ng-if="!instructors[answer.post.user.id] && (see_answers || answer.post.user.id == loggedInUserId || canManagePosts)">
+				<!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.post.user.id] && (see_answers || (answer.post.user.id == loggedInUserId && question.answer_period) || canManagePosts)"> -->
 					
 					<!-- Answer Metadata Header -->
 					<a ng-href="#/user/{{answer.post.user.id}}">
@@ -264,14 +271,14 @@
 					<p ng-show="canManagePosts && key==sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores" class="score-display">
 						<em>Score: {{score.score | number: 3}}</em>
 					</p>
-					<h3 class="reply-heading" ng-if="answer.comments.length">
+					<h3 class="reply-heading" ng-if="answer.comments.length && (see_answers || canManagePosts)">
 						{{answer.comments.length}}
 						<span ng-if="answer.comments.length == 1">reply</span>
 						<span ng-if="answer.comments.length > 1">replies</span>
 					</h3>
 					
 					<!-- Student Answer Replies Section -->
-					<div ng-repeat="comment in answer.comments" class="each-reply">
+					<div ng-repeat="comment in answer.comments" class="each-reply" ng-if="see_answers || canManagePosts">
 						
 						<hr />
 						

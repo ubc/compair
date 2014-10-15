@@ -215,7 +215,8 @@ def judgement_count(course_id, question_id, user_id):
 		criteriaandcourses_id = criteriaandcourses.id
 	else:
 		criteriaandcourses_id = judge.criteriaandcourses_id
-	count = Judgements.query.filter_by(users_id=user_id, criteriaandcourses_id=criteriaandcourses_id).count()
+	count = Judgements.query.filter_by(users_id=user_id, criteriaandcourses_id=criteriaandcourses_id)\
+		.join(AnswerPairings).filter_by(postsforquestions_id=question_id).count()
 
 	return count
 

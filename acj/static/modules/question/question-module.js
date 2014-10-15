@@ -196,6 +196,7 @@ module.controller("QuestionViewController",
 			'questionId': questionId}).$promise.then(
 				function (ret)
 				{
+					var judgeEnd = ret.question.judge_end;
 					ret.question.answer_start = new Date(ret.question.answer_start);
 					ret.question.answer_end = new Date(ret.question.answer_end);
 					ret.question.judge_start = new Date(ret.question.judge_start);
@@ -216,10 +217,23 @@ module.controller("QuestionViewController",
 
 					$scope.readDate = Date.parse(ret.question.post.created);
 
+					if (judgeEnd) {
+						$scope.answerAvail = $scope.question.judge_end;
+					} else {
+						$scope.answerAvail = $scope.question.answer_end;
+					}
+
 					JudgementResource.count({'courseId': $scope.courseId, 'questionId': questionId,
 								'userId': $scope.loggedInUserId}).$promise.then(
 						function (ret) {
-							$scope.judged_req_met = $scope.canManagePosts || ret.count > $scope.question.num_judgement_req;
+							// if an evaluation period is set - assume one criterion
+							$scope.judged_req_met = ret.count >= $scope.question.num_judgement_req;
+							if (judgeEnd) {
+								$scope.see_answers = $scope.question.after_judging;
+							// if an evaluation period is NOT set
+							} else {
+								$scope.see_answers = $scope.question.after_judging && $scope.judged_req_met;
+							}
 						},
 						function (ret) {
 							Toaster.reqerror("Unable to retrieve the evaluation count", ret);
