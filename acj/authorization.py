@@ -5,7 +5,7 @@ from werkzeug.exceptions import Unauthorized, Forbidden
 
 from .models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTypesForSystem, PostsForQuestions, PostsForAnswers, \
 	PostsForAnswersAndPostsForComments, PostsForQuestionsAndPostsForComments, Judgements, Criteria, CriteriaAndCourses, \
-	PostsForJudgements, Groups, GroupsAndCoursesAndUsers
+	PostsForJudgements, Groups, GroupsAndUsers
 
 
 def define_authorization(user, they):
@@ -55,7 +55,7 @@ def define_authorization(user, they):
 			they.can((READ, EDIT), CoursesAndUsers, courses_id=course.id)
 			they.can((CREATE, DELETE), CriteriaAndCourses, courses_id=course.id)
 			they.can((CREATE, DELETE), Groups, courses_id=course.id)
-			they.can((CREATE, DELETE), GroupsAndCoursesAndUsers, courses_id=course.id)
+			they.can((CREATE, DELETE), GroupsAndUsers, courses_id=course.id)
 		# instructors and ta can do anything they want to posts
 		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_INSTRUCTOR or \
 			entry.usertypeforcourse.name == UserTypesForCourse.TYPE_TA:
@@ -65,7 +65,7 @@ def define_authorization(user, they):
 			they.can(MANAGE, PostsForAnswersAndPostsForComments, courses_id=course.id)
 			they.can(MANAGE, PostsForJudgements, courses_id=course.id)
 			they.can(READ, Groups, courses_id=course.id)
-			they.can(READ, GroupsAndCoursesAndUsers, courses_id=course.id)
+			they.can(READ, GroupsAndUsers, courses_id=course.id)
 		# only students can submit judgements for now
 		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_STUDENT:
 			they.can(CREATE, Judgements, courses_id=course.id)

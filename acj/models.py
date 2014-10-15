@@ -130,6 +130,8 @@ class Users(db.Model, UserMixin):
 	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
 					 nullable=False)
 	coursesandusers = db.relationship("CoursesAndUsers")
+	groups = db.relationship("GroupsAndUsers",
+							 primaryjoin="and_(Users.id==GroupsAndUsers.users_id, GroupsAndUsers.active)")
 
 	def _get_password(self):
 		return self._password
@@ -243,9 +245,7 @@ class CoursesAndUsers(db.Model):
 		db.ForeignKey('UserTypesForCourse.id', ondelete="CASCADE"),
 		nullable=False)
 	usertypeforcourse = db.relationship("UserTypesForCourse")
-	groups = db.relationship("GroupsAndCoursesAndUsers",
-				primaryjoin="and_(CoursesAndUsers.id==GroupsAndCoursesAndUsers.coursesandusers_id,\
-							GroupsAndCoursesAndUsers.active)")
+
 	modified = db.Column(
 		db.DateTime,
 		default=datetime.datetime.utcnow,
@@ -258,6 +258,11 @@ class CoursesAndUsers(db.Model):
 		db.UniqueConstraint('courses_id', 'users_id', name='_unique_user_and_course'),
 		default_table_args
 	)
+
+	@hybrid_property
+	def groups(self):
+		groups = self.user.groups
+		return [group for group in groups if group.courses_id == self.courses_id]
 
 #################################################
 # Groups
@@ -275,7 +280,7 @@ class Groups(db.Model):
 		db.ForeignKey("Courses.id", ondelete="CASCADE"),
 		nullable=False)
 	course = db.relationship("Courses")
-	members = db.relationship("GroupsAndCoursesAndUsers")
+	members = db.relationship("GroupsAndUsers")
 	modified = db.Column(
 		db.DateTime,
 		default=datetime.datetime.utcnow,
@@ -285,8 +290,8 @@ class Groups(db.Model):
 					nullable=False)
 
 
-class GroupsAndCoursesAndUsers(db.Model):
-	__tablename__ = 'GroupsAndCoursesAndUsers'
+class GroupsAndUsers(db.Model):
+	__tablename__ = 'GroupsAndUsers'
 
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	groups_id = db.Column(
@@ -294,11 +299,11 @@ class GroupsAndCoursesAndUsers(db.Model):
 		db.ForeignKey("Groups.id", ondelete="CASCADE"),
 		nullable=False)
 	group = db.relationship("Groups")
-	coursesandusers_id = db.Column(
+	users_id = db.Column(
 		db.Integer,
-		db.ForeignKey("CoursesAndUsers.id", ondelete="CASCADE"),
+		db.ForeignKey("Users.id", ondelete="CASCADE"),
 		nullable=False)
-	coursesandusers = db.relationship("CoursesAndUsers")
+	user = db.relationship("Users")
 	active = db.Column(db.Boolean, default=True, nullable=False)
 	modified = db.Column(
 		db.DateTime,
@@ -310,7 +315,7 @@ class GroupsAndCoursesAndUsers(db.Model):
 
 	@hybrid_property
 	def courses_id(self):
-		return self.coursesandusers.courses_id
+		return self.group.courses_id
 
 	@hybrid_property
 	def groups_name(self):
@@ -318,7 +323,7 @@ class GroupsAndCoursesAndUsers(db.Model):
 
 	__table_args__ = (
 		# prevent duplicate user in groups
-		db.UniqueConstraint('groups_id', 'coursesandusers_id', name='_unique_group_and_user'),
+		db.UniqueConstraint('groups_id', 'users_id', name='_unique_group_and_user'),
 		default_table_args
 	)
 

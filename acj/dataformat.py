@@ -74,10 +74,10 @@ def getCoursesAndUsers(restrict_user=True, include_user=True):
 	}
 	if include_user:
 		format['user'] = fields.Nested(getUsers(restrict_user))
-		format['groups'] = fields.Nested(getGroupsAndCoursesAndUsers())
+		format['groups'] = fields.Nested(getGroupsAndUsers())
 	return format
 
-def getGroupsAndCoursesAndUsers():
+def getGroupsAndUsers():
 	format = {
 		'groups_id': fields.Integer,
 		'groups_name': fields.String

@@ -1,4 +1,3 @@
-import json
 from data.fixtures.test_data import GroupsTestData
 from tests.test_acj import ACJTestCase
 
@@ -141,11 +140,6 @@ class GroupsAPITests(ACJTestCase):
 		self.assert200(rv)
 		self.assertEqual(rv.json['user_id'], self.data.get_authorized_student().id)
 		self.assertEqual(rv.json['course_id'], course.id)
-
-		# test user not in the course anymore - eg. DROPPED
-		url = self._create_group_user_url(course, self.data.get_dropped_instructor())
-		rv = self.client.delete(url)
-		self.assert404(rv)
 
 		# test user not in course
 		url = self._create_group_user_url(course, self.data.get_unauthorized_student())

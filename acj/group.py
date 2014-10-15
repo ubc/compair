@@ -8,7 +8,7 @@ from flask.ext.restful.reqparse import RequestParser
 from . import dataformat
 from .authorization import require
 from .core import db, event
-from .models import Groups, GroupsAndCoursesAndUsers, CoursesAndUsers, Users, Courses, UserTypesForCourse
+from .models import Groups, GroupsAndUsers, CoursesAndUsers, Users, Courses, UserTypesForCourse
 from .util import new_restful_api
 from .attachment import allowed_file
 
@@ -101,14 +101,14 @@ def import_members(course_id, identifier, members):
 		enroled = CoursesAndUsers.query.filter(CoursesAndUsers.courses_id==course_id,
 			CoursesAndUsers.usertypesforcourse_id!=dropped, CoursesAndUsers.users_id==user.id).first()
 		if enroled:
-			group_member = GroupsAndCoursesAndUsers.query.filter_by(groups_id=active_groups[member[GROUP_NAME]])\
-				.filter_by(coursesandusers_id=enroled.id).first()
+			group_member = GroupsAndUsers.query.filter_by(groups_id=active_groups[member[GROUP_NAME]])\
+				.filter_by(users_id=user.id).first()
 			if group_member:
 				group_member.active = 1
 			else:
-				group_member = GroupsAndCoursesAndUsers()
+				group_member = GroupsAndUsers()
 				group_member.groups_id = active_groups[member[GROUP_NAME]]
-				group_member.coursesandusers_id = enroled.id
+				group_member.users_id = user.id
 			user_infile.append(member[USER_IDENTIFIER])
 			db.session.add(group_member)
 		else:
@@ -123,9 +123,15 @@ def import_members(course_id, identifier, members):
 	}
 
 # remove the user from all other groups in the course
-def unenrol_group(coursesandusers_id):
+def unenrol_group(course_id, user_id):
+		# authenticate
+		group = Groups(courses_id=course_id)
+		member = GroupsAndUsers(group=group)
+		require(DELETE, member)
+
 		# remove the user from all other groups in the course
-		groups = GroupsAndCoursesAndUsers.query.filter_by(coursesandusers_id=coursesandusers_id, active=True).all()
+		groups = GroupsAndUsers.query.filter_by(users_id=user_id, active=True).join(Groups)\
+			.filter_by(courses_id=course_id).all()
 		for group in groups:
 			group.active = False
 			db.session.add(group)
@@ -174,28 +180,27 @@ class GroupUserIdAPI(Resource):
 	@login_required
 	def post(self, course_id, user_id, group_id):
 		# check group exists (and active) and in course
-		Groups.query.filter_by(courses_id=course_id, id=group_id, active=True).first_or_404()
+		group = Groups.query.filter_by(courses_id=course_id, id=group_id, active=True).first_or_404()
 		dropped = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
 
 		# check that the user is enroled in the course
-		coursesandusers = CoursesAndUsers.query.filter(CoursesAndUsers.courses_id==course_id,
+		CoursesAndUsers.query.filter(CoursesAndUsers.courses_id==course_id,
 			CoursesAndUsers.users_id==user_id,CoursesAndUsers.usertypesforcourse_id!=dropped)\
 			.first_or_404()
 
-		member = GroupsAndCoursesAndUsers(coursesandusers=coursesandusers)
+		member = GroupsAndUsers(group=group)
 		require(CREATE, member)
 
 		# remove user from all groups in course
-		unenrol_group(coursesandusers.id)
+		unenrol_group(course_id, user_id)
 
-		group = GroupsAndCoursesAndUsers.query.filter_by(coursesandusers_id=coursesandusers.id,
-			groups_id=group_id).first()
+		group = GroupsAndUsers.query.filter_by(users_id=user_id, groups_id=group_id).first()
 		if group:
 			group.active = True
 		else:
-			group = GroupsAndCoursesAndUsers()
+			group = GroupsAndUsers()
 			group.groups_id = group_id
-			group.coursesandusers_id = coursesandusers.id
+			group.users_id = user_id
 		db.session.add(group)
 		db.session.commit()
 		return {'groups_name': group.groups_name}
@@ -205,15 +210,9 @@ apiU.add_resource(GroupUserIdAPI, '/<int:group_id>')
 class GroupUserAPI(Resource):
 	@login_required
 	def delete(self, course_id, user_id):
-		dropped = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
-		# check that the user is enroled in the course
-		coursesandusers = CoursesAndUsers.query.filter(CoursesAndUsers.courses_id==course_id,
-			CoursesAndUsers.users_id==user_id,CoursesAndUsers.usertypesforcourse_id!=dropped)\
-			.first_or_404()
-
-		member = GroupsAndCoursesAndUsers(coursesandusers=coursesandusers)
-		require(DELETE, member)
-
-		unenrol_group(coursesandusers.id)
+		Courses.query.get_or_404(course_id)
+		Users.query.get_or_404(user_id)
+		CoursesAndUsers.query.filter_by(courses_id=course_id, users_id=user_id).first_or_404()
+		unenrol_group(course_id, user_id)
 		return {'user_id': user_id, 'course_id': course_id}
 apiU.add_resource(GroupUserAPI, '')
