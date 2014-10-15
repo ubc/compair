@@ -4,8 +4,8 @@ from bouncer.constants import MANAGE
 from flask import Blueprint, jsonify
 from flask.ext.login import login_required
 from flask.ext.restful import Resource
-from acj.authorization import require
-from acj.models import Courses, PostsForQuestions, UserTypesForCourse, Users, CoursesAndUsers, Judgements, \
+from .authorization import require
+from .models import Courses, PostsForQuestions, UserTypesForCourse, Users, CoursesAndUsers, Judgements, \
 	AnswerPairings, CriteriaAndCourses
 
 from .util import new_restful_api
@@ -23,7 +23,7 @@ class GradebookAPI(Resource):
 	def get(self, course_id, question_id):
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
-		require(MANAGE, PostsForQuestions)
+		require(MANAGE, question)
 
 		# get all students in this course
 		student_type = UserTypesForCourse.query.filter_by(name = UserTypesForCourse.TYPE_STUDENT).first()
