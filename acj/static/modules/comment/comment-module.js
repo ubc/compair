@@ -236,6 +236,8 @@ module.controller(
 		var questionId = $routeParams['questionId'];
 		$scope.search = {'userId': null, 'criteriaId': null};
 		$scope.course = {};
+		$scope.courseId = courseId;
+		$scope.questionId = questionId;
 		
 		CourseResource.get({'id':courseId}).$promise.then(
 			function (ret) {
