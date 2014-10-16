@@ -33,10 +33,11 @@ module.controller(
 		$scope.courses = {};
 		$scope.assignments = [];
 
-		var all = [{
-			'id': 'all',
-			'title': 'All'
-		}];
+		var all = [{'id': 'all', 'title': 'All'}];
+		$scope.types = [
+			{'id': 'participation', 'name': 'Participation Report'},
+			{'id': 'participation_stat', 'name': 'Participation Report - Statistics'}
+		];
 
         Session.getUser().then(function(user) {
             UserResource.getUserCourses(
@@ -50,6 +51,10 @@ module.controller(
                 }
             );
         });
+
+		$scope.changeReport = function() {
+			$scope.reportFile = null;
+		};
 
 		$scope.getAssignments = function() {
 			$scope.reportFile = null;

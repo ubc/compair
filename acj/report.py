@@ -8,7 +8,8 @@ from .authorization import allow, require
 from . import dataformat
 from .core import event
 from .models import PostsForQuestions, CoursesAndUsers, Courses, Posts, PostsForAnswers, UserTypesForCourse,\
-				Judgements, AnswerPairings, PostsForAnswersAndPostsForComments, PostsForComments
+				Judgements, AnswerPairings, PostsForAnswersAndPostsForComments, PostsForComments,\
+				CriteriaAndCourses
 from .util import new_restful_api
 
 import csv, os, time
@@ -48,18 +49,42 @@ class ReportRootAPI(Resource):
 		type = params.get('type')
 		assignment = params.get('assignment', None)
 
-		if type=="participation":
+		if type=="participation_stat":
 			if assignment:
 				question = PostsForQuestions.query.filter_by(id=assignment).join(Posts).filter_by(courses_id=course_id).first_or_404()
 				questions = [question]
-				data = participation_report(course_id, questions, False)
+				data = participation_stat_report(course_id, questions, False)
 			else:
 				questions = PostsForQuestions.query.join(Posts).filter_by(courses_id=course_id).all()
-				data = participation_report(course_id, questions, True)
+				data = participation_stat_report(course_id, questions, True)
 
 			title = ['Question', 'Username', 'Last Name', 'First Name', 'Answer Submitted', 'Answer ID',
 					 'Evaluations Submitted', 'Evaluations Required', 'Evaluation Requirements Met',
 					 'Replies Submitted']
+			titles =[title]
+		elif type=="participation":
+			user_titles = ['Last Name', 'First Name', 'Student No']
+			criteria = CriteriaAndCourses.query.filter_by(courses_id=course_id, active=True).all()
+			if assignment:
+				question = PostsForQuestions.query.filter_by(id=assignment).join(Posts).filter_by(courses_id=course_id).first_or_404()
+				questions = [question]
+			else:
+				questions = PostsForQuestions.query.join(Posts).filter_by(courses_id=course_id)\
+					.order_by(PostsForQuestions.answer_start).all()
+			data = participation_report(course_id, questions, criteria)
+
+			title_row1 = ["" for x in user_titles]
+			criteria_blank = ["" for x in criteria]
+			for ques in questions:
+				title_row1 += [ques.title] + criteria_blank
+
+			title_row2 = user_titles
+			for q in questions:
+				for c in criteria:
+					title_row2.append(c.criterion.name)
+				title_row2.append("Evaluations Submitted ("+str(ques.num_judgement_req)+' required)')
+			titles = [title_row1, title_row2]
+
 		else:
 			return {'error': 'The requested report type cannot be found'}, 400
 
@@ -68,7 +93,8 @@ class ReportRootAPI(Resource):
 
 		report = open(tmpName, 'wb')
 		out = csv.writer(report)
-		out.writerow(title)
+		for t in titles:
+			out.writerow(t)
 		for s in data:
 			out.writerow(s)
 		report.close()
@@ -76,7 +102,7 @@ class ReportRootAPI(Resource):
 		return {'file': 'report/'+name}
 api.add_resource(ReportRootAPI, '')
 
-def participation_report(course_id, assignments, overall):
+def participation_stat_report(course_id, assignments, overall):
 	report = []
 	student = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first().id
 	classlist = CoursesAndUsers.query.filter_by(courses_id=course_id).\
@@ -140,4 +166,46 @@ def participation_report(course_id, assignments, overall):
 					sum['total_evaluations'], total_req, req_met,
 					sum['total_comments']]
 			report.append(temp)
+	return report
+
+def participation_report(course_id, questions, criteriaandcourses):
+	report = []
+	student = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first().id
+	classlist = CoursesAndUsers.query.filter_by(courses_id=course_id).\
+		filter(CoursesAndUsers.usertypesforcourse_id==student).all()
+
+	quesIds = [q.id for q in questions]
+
+	for coursesanduser in classlist:
+		user = coursesanduser.user
+		temp = [user.lastname, user.firstname, user.student_no]
+
+		answers = PostsForAnswers.query.filter(PostsForAnswers.postsforquestions_id.in_(quesIds))\
+			.join(Posts).filter_by(users_id=user.id).all()
+		answers = {a.postsforquestions_id:{s.criteriaandcourses_id: s.score for s in a.scores} for a in answers}
+
+		judgements = Judgements.query.\
+			filter_by(users_id=user.id).join(AnswerPairings).\
+			with_entities(AnswerPairings.postsforquestions_id, func.count(Judgements.id)).\
+			filter(AnswerPairings.postsforquestions_id.in_(quesIds)).\
+			group_by(AnswerPairings.postsforquestions_id).all()
+		judgements = {qId: count for (qId, count) in judgements}
+
+		for ques in questions:
+			for criterion in criteriaandcourses:
+				if ques.id not in answers:
+					score = 0
+				elif criterion.id not in answers[ques.id]:
+					score = 'N/A'
+				else:
+					score = answers[ques.id][criterion.id]
+					score = round(score, 3)
+				temp.append(score)
+			if ques.id not in judgements:
+				judged = 0
+			else:
+				judged = judgements[ques.id] / len(criteriaandcourses)
+			temp.append(str(judged))
+		report.append(temp)
+
 	return report

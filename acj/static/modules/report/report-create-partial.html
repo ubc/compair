@@ -16,14 +16,13 @@
 			</div>
 			<div class="form-group">
 				<label for="reportType">Report Type</label>
-				<!-- currently only one type of report -->
-				<!--<select class="form-control" ng-model="report.type" name="reportType" required ng-options="id as name for (id, name) in types"></select>-->
-				<p><em>Participation Report</em></p>
+				<select class="form-control" ng-model="report.type" name="reportType" required
+						ng-options="t.id as t.name for t in types" ng-change="changeReport()"></select>
 			</div>
 			<div class="form-group">
 				<label for="reportAssignment" class="required-star">Question</label>
 				<select class="form-control" ng-disabled="assignments.length < 1" ng-model="report.assignment" name="reportAssignment"
-						ng-options="a.id as a.title for a in assignments" required>
+						ng-options="a.id as a.title for a in assignments" ng-change="changeReport()" required>
 					<option value="">- Select question -</option>
 				</select>
 			</div>
