@@ -197,8 +197,10 @@ module.controller(
 							var answered = ques.id in $scope.answered ? $scope.answered[ques.id] : 0;
 							var count = ques.id in $scope.count ? $scope.count[ques.id] : 0;
 							var diff = count - answered;
+							/// number of evaluations available
 							ques['eval_left'] = ((diff * (diff - 1)) / 2);
-							ques['warning'] = (required - judged[ques.id]) <= ques['eval_left'];
+							ques['warning'] = (required - judged[ques.id]) > ques['eval_left'];
+							// number of evaluations left to complete minus number of available
 							ques['leftover'] = ques['left'] - ques['eval_left'];
 						}
 					},
