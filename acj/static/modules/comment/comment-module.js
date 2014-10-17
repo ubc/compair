@@ -230,7 +230,7 @@ module.controller(
 module.controller(
 	"JudgementCommentController",
 	function ($scope, $log, $routeParams, breadcrumbs, EvalCommentResource, CoursesCriteriaResource, CourseResource, QuestionResource,
-			  AnswerResource, AttachmentResource, Toaster)
+			  AnswerResource, AttachmentResource, GroupResource, Toaster)
 	{
 		var courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
@@ -238,6 +238,9 @@ module.controller(
 		$scope.course = {};
 		$scope.courseId = courseId;
 		$scope.questionId = questionId;
+
+		var allStudents = {};
+		$scope.group = null;
 		
 		CourseResource.get({'id':courseId}).$promise.then(
 			function (ret) {
@@ -270,7 +273,8 @@ module.controller(
 
 		CourseResource.getStudents({'id': courseId}).$promise.then(
 			function (ret) {
-				$scope.students = ret.students;
+				allStudents = ret.students;
+				$scope.students = allStudents;
 			},
 			function (ret) {
 				Toaster.reqerror("Class list retrieval failed", ret);
@@ -285,6 +289,31 @@ module.controller(
 				Toaster.reqerror("Unable to retrieve the question "+questionId, ret);
 			}
 		);
+
+		GroupResource.get({'courseId': courseId}).$promise.then(
+			function (ret) {
+				$scope.groups = ret.groups;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve the groups in the course.", ret);
+			}
+		);
+
+		$scope.updateGroup = function() {
+			$scope.search.userId = null;
+			if ($scope.group == null) {
+				$scope.students = allStudents;
+			} else {
+				GroupResource.get({'courseId': courseId, 'groupId': $scope.group}).$promise.then(
+					function (ret) {
+						$scope.students = ret.students;
+					},
+					function (ret) {
+						Toaster.reqerror("Unable to retrieve the group members", ret);
+					}
+				);
+			}
+		};
 
 		$scope.commentFilter = function(user_id, criteria_id) {
 			return function(comment) {

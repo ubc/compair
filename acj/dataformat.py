@@ -64,7 +64,7 @@ def getCourses(include_details=True):
 		format.update(details)
 	return format
 
-def getCoursesAndUsers(restrict_user=True, include_user=True):
+def getCoursesAndUsers(restrict_user=True, include_user=True, include_groups=True):
 	format = {
 		'id': fields.Integer,
 		'course': fields.Nested(getCourses()),
@@ -74,14 +74,18 @@ def getCoursesAndUsers(restrict_user=True, include_user=True):
 	}
 	if include_user:
 		format['user'] = fields.Nested(getUsers(restrict_user))
+	if include_groups:
 		format['groups'] = fields.Nested(getGroupsAndUsers())
 	return format
 
-def getGroupsAndUsers():
+def getGroupsAndUsers(restrict_user=True):
 	format = {
 		'groups_id': fields.Integer,
 		'groups_name': fields.String
 	}
+
+	if not restrict_user:
+		format['user'] = fields.Nested(getUsers(restrict_user))
 	return format
 
 def getGroups():

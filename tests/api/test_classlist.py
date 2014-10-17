@@ -105,8 +105,12 @@ class ClassListAPITest(ACJTestCase):
 		rv = self.client.get(url)
 		self.assert200(rv)
 		students = rv.json['students']
-		expected = {str(self.data.get_authorized_student().id): self.data.get_authorized_student().fullname}
-		self.assertEqual(students, expected)
+		expected = {
+			'id': self.data.get_authorized_student().id,
+			'fullname': self.data.get_authorized_student().fullname
+		}
+		self.assertEqual(students[0]['user']['id'], expected['id'])
+		self.assertEqual(students[0]['user']['fullname'], expected['fullname'])
 		self.logout()
 
 	def test_enrol_instructor(self):

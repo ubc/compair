@@ -288,7 +288,10 @@ class StudentsAPI(Resource):
 		Courses.query.get_or_404(course_id)
 		coursesandusers = CoursesAndUsers(courses_id=course_id)
 		require(READ, coursesandusers)
+		restrict_users = not allow(EDIT, coursesandusers)
+		include_user = True
+		include_group = False
+
 		students = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_STUDENT).all()
-		student_ids = {u.users_id: u.user.fullname for u in students}
-		return {'students': student_ids}
+		return {'students': marshal(students, dataformat.getCoursesAndUsers(restrict_users, include_user, include_group))}
 api.add_resource(StudentsAPI, '/students')

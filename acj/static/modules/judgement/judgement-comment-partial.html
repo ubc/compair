@@ -3,13 +3,20 @@
 	<h1>Evaluations for "{{ parent.title }}"</h1>
 	
 	<p class="intro-text">Filter by a student evaluator's name and a criterion, or select "any" to see all available evaluations.</p>
-	
+
 	<hr />
 	
 	<div class="form-group row">
-		<div class="col-sm-6">
+		<div ng-show="groups.length" class="col-sm-2">
+			<label>Group</label>
+			<select class="form-control" ng-model="group" ng-change="updateGroup()" ng-options="g.id as g.name for g in groups">
+				<option value="">Any Group</option>
+			</select>
+			<br />
+		</div>
+		<div ng-class="{'col-sm-4': groups.length, 'col-sm-6': !groups.length}">
 			<label>Evaluator</label>
-			<select class="form-control" ng-model="search.userId" ng-options="id as name for (id, name) in students">
+			<select class="form-control" ng-model="search.userId" ng-options="s.user.id as s.user.fullname for s in students">
 				<option value="">Any Student</option>
 			</select>
 			<br />
@@ -21,7 +28,7 @@
 			</select>
 		</div>
 	</div>
-	
+
 	<h2>{{ results.length }} evaluations</h2>
 	
 	<div ng-show="results.length" class="evaluations">

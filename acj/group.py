@@ -6,7 +6,7 @@ from werkzeug.utils import secure_filename
 from flask.ext.restful.reqparse import RequestParser
 
 from . import dataformat
-from .authorization import require
+from .authorization import require, allow
 from .core import db, event
 from .models import Groups, GroupsAndUsers, CoursesAndUsers, Users, Courses, UserTypesForCourse
 from .util import new_restful_api
@@ -174,6 +174,21 @@ class GroupRootAPI(Resource):
 		else:
 			return {'error': 'Wrong file type'}, 400
 api.add_resource(GroupRootAPI, '')
+
+# /:group_id
+class GroupIdAPI(Resource):
+	@login_required
+	def get(self, course_id, group_id):
+		course = Courses.query.get_or_404(course_id)
+		group = Groups(courses_id=course.id)
+		member = GroupsAndUsers(group=group)
+		require(READ, member)
+		restrict_users = not allow(READ, member)
+
+		members = GroupsAndUsers.query.filter_by(groups_id=group_id, active=True).all()
+
+		return {'students': marshal(members, dataformat.getGroupsAndUsers(restrict_users))}
+api.add_resource(GroupIdAPI, '/<int:group_id>')
 
 # /users/:user_id/groups/:group_id
 class GroupUserIdAPI(Resource):
