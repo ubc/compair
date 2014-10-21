@@ -18,22 +18,14 @@
 			<label for="importFile">Attach PDF</label>
 			<input type="file" nv-file-select uploader="uploader" id="importFile" ng-disabled="uploader.queue.length || answer.uploadedFile" multiple/>
 			<div class="row" ng-repeat="item in uploader.queue">
-				<div class="col-md-4"><strong>{{item.file.name}}</strong></div>
+				<div class="col-md-7"><strong>{{item.file.name}}</strong></div>
 				<div class="col-md-1">{{item.file.size/1024/1024|number:2}} MB</div>
-				<div class="col-md-2">{{item.progress}}% completed</div>
-				<div class="col-md-3" ng-show="uploader.isHTML5">					
-					<div class="attach-progress">
-						<div class="attach-progressBar" ng-style="{'width': item.progress + '%' }"></div>
-					</div>
-				</div>
+				<strong class="col-md-2" ng-if="item.progress < 100">{{item.progress}}% uploaded</strong>
+				<strong class="col-md-2" ng-if="item.progress == 100 && !item.isSuccess">File saving ... </strong>
+				<strong class="col-md-2" ng-if="item.progress == 100 && item.isSuccess">File saved.</strong>
 				<div class="col-md-1">
-					<a class="btn btn-warning btn-xs" ng-click="item.cancel()" ng-disabled="!item.isUploading">
-						<i class="fa fa-ban"></i> Cancel
-					</a>
-				</div>
-				<div class="col-md-1">
-					<a class="btn btn-danger btn-xs" ng-click="item.remove();resetName();">
-						<i class="fa fa-trash-o"></i> Delete
+					<a class="btn btn-danger btn-xs" ng-click="item.cancel();item.remove();resetName();">
+						<i class="fa fa-trash-o"></i> Remove
 					</a>
 			</div>
 		</div>
@@ -58,5 +50,5 @@
 		</div>
 	</fieldset>
 	<input type="submit" class="btn btn-success btn-lg center-block" value="Save"
-		ng-disabled="answerForm.$invalid || sumbmitted || (uploader.queue.length && uploader.progress != 100)" />
+		ng-disabled="answerForm.$invalid || sumbmitted || (uploader.queue.length && !uploader.queue[0].isSuccess)" />
 </form>
