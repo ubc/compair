@@ -5,7 +5,6 @@
 			<h1><i class="fa fa-book"></i> {{course.name}}</h1>
 			<div class="intro-text"
 			     ng-bind-html="course.description">
-				
 			</div>
 		</header>
 		<div class="col-sm-6 sub-nav">
@@ -69,15 +68,18 @@
 				</a>
 				
 				<!-- Details -->
-				<div mathjax ng-bind-html="question.post.content" class="question-desc"></div>
-				
-				<!-- Attachment -->
-				<p class="question-desc" ng-if="question.post.files.length">
-					See question details:
-					<span ng-repeat="file in question.post.files">
-						<a target="_blank" ng-href="#/course/{{courseId}}/question/{{question.id}}/post/{{question.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
-					</span>
-				</p>
+				<div class="question-desc">
+					<div mathjax
+					     ng-bind-html="question.post.content">
+					</div>
+					<!-- Attachment -->
+					<p ng-if="question.post.files.length">
+						See question details:
+						<span ng-repeat="file in question.post.files">
+							<a target="_blank" ng-href="#/course/{{courseId}}/question/{{question.id}}/post/{{question.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
+						</span>
+					</p>
+				</div>
 				
 				<!-- Metadata -->
 				<ul class="list-inline">
@@ -123,16 +125,6 @@
 							<i class="fa fa-trash-o"></i>
 						</a>
 					</li>
-					<!-- Question Tags -->
-					<!-- <li class="label label-default">
-						tag 1
-					</li>
-					<li class="label label-default">
-						tag 2
-					</li>
-					<li class="label label-default">
-						tag 3
-					</li> -->
 				</ul>
 				
 			</div>
