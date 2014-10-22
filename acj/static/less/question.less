@@ -91,9 +91,14 @@
       .score-display {
         text-align: right;
       }
+      
+      /* limit how much of answer/comment content is shown */
+      > .content {
+        max-height: 200px;
+        overflow: hidden;
+      }
     
     }//closes each-answer, each-comment
-    
     
     /* alternating answer/comment color to match tab color */
     .all-answers > .each-answer:nth-child(odd),
@@ -101,12 +106,25 @@
         background: @bkgrd-gray;
     }
     
+    /* read-more is style for p tag shown when content is cut off */
+    .read-more {
+      
+      margin: 0 1em 1.5em 1em;
+      text-align: center;
+      border-top: 1px dashed @border-gray;
+      
+      /* actual "read more" button */
+      .btn {
+        margin-top: -.8em;
+      }
+      
+    }//closes read-more
+    
     /* h3 reply heading (conditionally displayed) */
     .reply-heading {
-      margin: 0;
-      padding: 2em 0 0 3.2em;
-      clear: both;
+      margin: 0 0 2em 0;
       font-size: 1.1em;
+      display: inline-block;
     }
     
     /* class for reply divs */
@@ -122,6 +140,7 @@
         border-bottom: 2px dotted @border-gray;
       }
       
+      /* smaller actions here */
       .manager-actions {
         font-size: 1.15em;
       }

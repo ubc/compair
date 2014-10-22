@@ -42,6 +42,26 @@ module.directive(
 	}
 );
 
+module.directive(
+	'getHeight',
+	function($timeout) {
+		return {
+			restrict: 'A',
+			link: function(scope, element) {
+				// timeout creates delay letting text, images load into the div (answer content)
+				$timeout(function(){
+					// find the element's scrollHeight (this tells us the full height regardless of max-height set)
+					scope.thisHeight = element.prop('scrollHeight');
+					// when this full height is outside the max-height, display the read more button to the user
+					if (scope.thisHeight > 200) {
+						scope.showReadMore = true;
+					}
+				}, 5000);  
+			}
+		};
+	}
+);
+
 /***** Providers *****/
 module.factory(
 	"QuestionResource",
@@ -292,7 +312,8 @@ module.controller("QuestionViewController",
 				Toaster.reqerror("Unable to retrieve instructors", ret);
 			}
 		);
-		// enable tabs
+		
+		// enable tabs for answers and comments
 		$('#answers a').click(function (e) {
 			e.preventDefault();
 			$(this).tab('show');
@@ -301,7 +322,15 @@ module.controller("QuestionViewController",
 			e.preventDefault();
 			$(this).tab('show');
 		});
-
+		
+		// revealAnswer function shows full answer content for abbreviated answers (determined by getHeight directive)
+		$scope.revealAnswer = function(answerId) {
+			var thisClass = '.content.'+answerId;      // class for the answer to show is "content" plus the answer's ID
+			$(thisClass).css({'max-height' : 'none'}); // now remove height restriction for this answer
+			this.showReadMore = false;                 // and hide the read more button for this answer
+		}
+		
+		
 		// question delete function
 		$scope.deleteQuestion = function(course_id, question_id) {
 			QuestionResource.delete({'courseId': course_id, 'questionId': question_id}).$promise.then(
