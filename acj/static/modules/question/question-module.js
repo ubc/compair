@@ -116,7 +116,7 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 				var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
 				var valid = '|pdf|'.indexOf(type) !== -1;
 				if (!valid) {
-					Toaster.error("Only pdf files are accepted.")
+					Toaster.error("File Type Error", "Only PDF files are accepted.")
 				}
 				return valid;
 			}
@@ -128,7 +128,7 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 				var valid = item.size <= 26214400; // 1024 * 1024 * 25 -> max 25MB
 				if (!valid) {
 					var size = item.size / 1048576; // convert to MB
-					Toaster.error("The file size is "+size.toFixed(2)+"MB. The maximum file size allowed is 25MB")
+					Toaster.error("File Size Error", "The file size is "+size.toFixed(2)+"MB. The maximum allowed is 25MB.")
 				}
 				return valid;
 			}
@@ -149,7 +149,7 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 	var onError = function() {
 		return function(fileItem, response, status, headers) {
 			if (response == '413') {
-				Toaster.error("The file is larger than 25 MB. Please upload a smaller file.");
+				Toaster.error("File Size Error", "The file is larger than 25MB. Please upload a smaller file.");
 			} else {
 				Toaster.reqerror("Attachment Fail", status);
 			}
@@ -256,7 +256,7 @@ module.controller("QuestionViewController",
 							}
 						},
 						function (ret) {
-							Toaster.reqerror("Unable to retrieve the evaluation count", ret);
+							Toaster.reqerror("Evaluation Count Not Found", ret);
 						}
 					);
 					AttachmentResource.get({'postId': ret.question.post.id}).$promise.then(
@@ -264,14 +264,13 @@ module.controller("QuestionViewController",
 							$scope.question.uploadedFile = ret.file;
 						},
 						function (ret) {
-							Toaster.reqerror("Unable to retrieve attachment", ret);
+							Toaster.reqerror("Attachment Not Found", ret);
 						}
 					);
 				},
 				function (ret)
 				{
-					Toaster.reqerror("Unable to retrieve question "
-						+ questionId, ret);
+					Toaster.reqerror("Question Not Found For ID " + questionId, ret);
 				}
 			);
 		QuestionCommentResource.get({'courseId': $scope.courseId,
@@ -282,7 +281,7 @@ module.controller("QuestionViewController",
 				},
 				function (ret)
 				{
-					Toaster.reqerror("Unable to retrieve comments.", ret);
+					Toaster.reqerror("Comments Not Found", ret);
 				}
 			);
 		CoursesCriteriaResource.get({'courseId': $scope.courseId}).$promise.then(
@@ -290,7 +289,7 @@ module.controller("QuestionViewController",
 				$scope.criteria = ret.objects;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve the criteria.", ret);
+				Toaster.reqerror("Criteria Not Found", ret);
 			}
 		);
 		QuestionResource.getAnswered({'id': $scope.courseId,
@@ -300,7 +299,7 @@ module.controller("QuestionViewController",
 					$scope.answered = ret.answered > 0;
 				},
 				function (ret) {
-					Toaster.reqerror("Unable to retrieve your answers", ret);
+					Toaster.reqerror("Answers Not Found", ret);
 				}
 		);
 
@@ -309,7 +308,7 @@ module.controller("QuestionViewController",
 				$scope.instructors = ret.instructors;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve instructors", ret);
+				Toaster.reqerror("Instructors Not Found", ret);
 			}
 		);
 		
@@ -335,11 +334,11 @@ module.controller("QuestionViewController",
 		$scope.deleteQuestion = function(course_id, question_id) {
 			QuestionResource.delete({'courseId': course_id, 'questionId': question_id}).$promise.then(
 				function (ret) {
-					Toaster.success("Successfully deleted question " + ret.id);
+					Toaster.success("Question Delete Successful", "Successfully deleted question " + ret.id);
 					$location.path('/course/'+course_id);
 				},
 				function (ret) {
-					Toaster.reqerror("Question deletion failed", ret);
+					Toaster.reqerror("Question Delete Failed", ret);
 					$location.path('/course/'+course_id);
 				}
 			);
@@ -348,7 +347,7 @@ module.controller("QuestionViewController",
 		$scope.deleteAnswer = function(key, course_id, question_id, answer_id) {
 			AnswerResource.delete({'courseId':course_id, 'questionId':question_id, 'answerId':answer_id}).$promise.then(
 				function (ret) {
-					Toaster.success("Successfully deleted answer "+ ret.id);
+					Toaster.success("Answer Delete Successful", "Successfully deleted answer "+ ret.id);
 					var authorId = $scope.answers[key]['post']['user']['id'];
 					$scope.answers.splice(key, 1);
 					$scope.question.answers_count -= 1;
@@ -358,7 +357,7 @@ module.controller("QuestionViewController",
 					}
 				},
 				function (ret) {
-					Toaster.reqerror("Answer deletion failed", ret);
+					Toaster.reqerror("Answer Delete Failed", ret);
 				}
 			);
 		};
@@ -366,12 +365,12 @@ module.controller("QuestionViewController",
 		$scope.deleteComment = function(key, course_id, question_id, comment_id) {
 			QuestionCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'commentId': comment_id}).$promise.then(
 				function (ret) {
-					Toaster.success("Successfully deleted comment " + ret.id);
+					Toaster.success("Comment Delete Successful", "Successfully deleted comment " + ret.id);
 					$scope.comments.splice(key, 1);
 					$scope.question.comments_count--;
 				},
 				function (ret) {
-					Toaster.reqerror("Comment deletion failed", ret);
+					Toaster.reqerror("Comment Delete Failed", ret);
 				}
 			);
 		}
@@ -379,11 +378,11 @@ module.controller("QuestionViewController",
 		$scope.deleteReply = function(answerKey, commentKey, course_id, question_id, answer_id, comment_id) {
 			AnswerCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'answerId': answer_id, 'commentId': comment_id}).$promise.then(
 				function (ret) {
-					Toaster.success("Successfully deleted comment " + ret.id);
+					Toaster.success("Reply Delete Successful", "Successfully deleted reply " + ret.id);
 					$scope.answers[answerKey]['comments'].splice(commentKey, 1);
 				},
 				function (ret) {
-					Toaster.reqerror("Comment deletion failed", ret);
+					Toaster.reqerror("Reply Delete Failed", ret);
 				}
 			);
 		}
@@ -404,11 +403,11 @@ module.controller("QuestionCreateController",
 			$scope.submitted = true;
 			// answer end datetime has to be after answer start datetime
 			if ($scope.question.answer_start >= $scope.question.answer_end) {
-				Toaster.error('The answer period is invalid');
+				Toaster.error('Answer Period Error', 'Answer end time must be after answer start time.');
 				$scope.submitted = false;
 				return;
 			} else if ($scope.question.availableCheck && !($scope.question.answer_end <= $scope.question.judge_start && $scope.question.judge_start <= $scope.question.judge_end)) {
-				Toaster.error('The answer and/or judging period is invalid.');
+				Toaster.error("Time Period Error", 'Please double-check the answer and/or evaluation period start and end times.');
 				$scope.submitted = false;
 				return;
 			}
@@ -424,14 +423,13 @@ module.controller("QuestionCreateController",
 					function (ret)
 					{
 						$scope.submitted = false;
-						Toaster.success("New Question Created!",
-							'"' + ret.title + '" should now be listed.');
+						Toaster.success("New Question Created",'"' + ret.title + '" should now be listed.');
 						$location.path('/course/' + courseId);
 					},
 					function (ret)
 					{
 						$scope.submitted = false;
-						Toaster.reqerror("Unable to create new question.", ret);
+						Toaster.reqerror("No New Question Created", ret);
 					}
 				);
 		};
@@ -451,11 +449,11 @@ module.controller("QuestionEditController",
 		$scope.deleteFile = function(post_id, file_id) {
 			AttachmentResource.delete({'postId': post_id, 'fileId': file_id}).$promise.then(
 				function (ret) {
-					Toaster.success('Attachment deleted successfully');
+					Toaster.success('Attachment Delete Successful', "This attachement was successfully deleted.");
 					$scope.question.uploadedFile = false;
 				},
 				function (ret) {
-					Toaster.reqerror('Attachment deletion failed', ret);
+					Toaster.reqerror('Attachment Delete Failed', ret);
 				}
 			);
 		}
@@ -476,24 +474,24 @@ module.controller("QuestionEditController",
 						
 					},
 					function (ret) {
-						Toaster.reqerror("Unable to retrieve attachment", ret);
+						Toaster.reqerror("Attachment Not Found", ret);
 					}
 				);
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve question "+$scope.questionId, ret);
+				Toaster.reqerror("Question Not Found", "No question found for id "+$scope.questionId);
 			}
 		);
 		$scope.questionSubmit = function () {
 			$scope.submitted = true;
 			// answer end datetime has to be after answer start datetime
 			if ($scope.question.answer_start > $scope.question.answer_end) {
-				Toaster.error('The answer period is invalid');
+				Toaster.error('Answer Period Error', 'Answer end time must be after answer start time.');
 				$scope.submitted = false;
 				return;
 			} else if ($scope.question.availableCheck && !($scope.question.answer_end <= $scope.question.judge_start
 				&& $scope.question.judge_start < $scope.question.judge_end)) {
-				Toaster.error('The answer and/or judging period is invalid.');
+				Toaster.error("Time Period Error", 'Please double-check the answer and/or evaluation period start and end times.');
 				$scope.submitted = false;
 				return;
 			}
@@ -507,12 +505,12 @@ module.controller("QuestionEditController",
 			QuestionResource.save({'courseId': courseId}, $scope.question).$promise.then(
 				function() {
 					$scope.submitted = false;
-					Toaster.success("Question Updated!");
+					Toaster.success("Question Updated");
 					$location.path('/course/' + courseId);
 				 },
 				function(ret) { 
 					$scope.submitted = false;
-					Toaster.reqerror("Question Save Failed.", ret);
+					Toaster.reqerror("Question Not Updated", ret);
 				}
 			);
 		};
