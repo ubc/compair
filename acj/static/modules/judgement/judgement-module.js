@@ -65,11 +65,13 @@ module.controller(
 		$scope.submitted = false;
 		
 		$scope.question = {};
+		$scope.questionCriteria = {};
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
 			function (ret)
 			{
 				$scope.question = ret.question;
 				$scope.total = ret.question.num_judgement_req;
+				$scope.questionCriteria = ret.question.criteria;
 			},
 			function (ret)
 			{
@@ -77,7 +79,7 @@ module.controller(
 			}
 		);
 		Session.getUser().then(function(user) {
-		    	var userId = user.id;
+			var userId = user.id;
 			var count = JudgementResource.count(
 				{'courseId': courseId, 'questionId': questionId, 'userId': userId}).
 				$promise.then(
@@ -90,18 +92,6 @@ module.controller(
 				);
 		});	
 
-		// get all the criterias we're using for this course
-		$scope.courseCriteria = {};
-		CoursesCriteriaResource.get({'courseId': courseId}).$promise.then(
-			function (ret)
-			{
-				$scope.courseCriteria = ret.objects
-			},
-			function (ret)
-			{
-				Toaster.reqerror("Criteria Not Found", ret);
-			}
-		);
 		// get an answerpair to be judged from the server
 		$scope.answerPair = {};
 		$scope.answerPairError = false;
@@ -148,14 +138,14 @@ module.controller(
 			judgement['answerpair_id'] = $scope.answerPair.id;
 			judgement['judgements'] = [];
 			var comments = {};
-			angular.forEach($scope.courseCriteria, 
-				function(courseCriterion, index) {
+			angular.forEach($scope.questionCriteria,
+				function(questionCriterion, index) {
 					var criterionWinner = {
-						'course_criterion_id': courseCriterion.id,
-						'answer_id_winner': courseCriterion.winner,
+						'question_criterion_id': questionCriterion.id,
+						'answer_id_winner': questionCriterion.winner
 					};
 					judgement['judgements'].push(criterionWinner);
-					comments[courseCriterion.id] = courseCriterion.comment;
+					comments[questionCriterion.id] = questionCriterion.comment;
 				}
 			);
 			JudgementResource.save(
@@ -167,7 +157,7 @@ module.controller(
 						angular.forEach(ret.objects,
 							function(judge, index) {
 								var temp = judge;								
-								temp['comment'] = comments[judge.course_criterion.id];
+								temp['comment'] = comments[judge.question_criterion.id];
 								evaluations['judgements'].push(temp);
 							}
 						);
@@ -176,7 +166,7 @@ module.controller(
 							$promise.then(
 								function() {
 									Session.getUser().then(function(user) {
-		    								var userId = user.id;
+										var userId = user.id;
 										var count = JudgementResource.count(
 											{'courseId': courseId, 'questionId': questionId, 'userId': userId}).
 											$promise.then(

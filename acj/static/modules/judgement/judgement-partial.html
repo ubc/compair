@@ -114,31 +114,31 @@
 			
 			<h2>2) Choose an answer</h2>
 			
-			<div class="form-group" ng-repeat="courseCriterion in courseCriteria">
+			<div class="form-group" ng-repeat="questionCriterion in questionCriteria">
 				
 				<!-- Show the judgement criteria (needs ng-repeat) -->
 				<div class="each-criterion text-center">
 					<fieldset>
-						<h3><i class="fa fa-gavel"></i> {{courseCriterion.criterion.name}}</h3>
+						<h3><i class="fa fa-gavel"></i> {{questionCriterion.criterion.name}}</h3>
 						
 						<div class="criteria"
-							ng-bind-html="courseCriterion.criterion.description">
+							ng-bind-html="questionCriterion.criterion.description">
 						</div>
 						
 						<div class="btn-group">
 							<label class="btn btn-primary" ng-class=
-								"{active:courseCriterion.winner==answerPair.answer1.id}">
+								"{active:questionCriterion.winner==answerPair.answer1.id}">
 								<input type="radio" class="hideRadio" 
 									name="answer{{answerPair.answer1.id}}" required
-									ng-model="courseCriterion.winner"
+									ng-model="questionCriterion.winner"
 									ng-value="answerPair.answer1.id">
 								Select Answer 1
 							</label>
 							<label class="btn btn-primary" ng-class=
-								"{active:courseCriterion.winner==answerPair.answer2.id}">
+								"{active:questionCriterion.winner==answerPair.answer2.id}">
 								<input type="radio" class="hideRadio" 
 									name="answer{{answerPair.answer1.id}}" required
-									ng-model="courseCriterion.winner"
+									ng-model="questionCriterion.winner"
 									ng-value="answerPair.answer2.id">
 								Select Answer 2
 							</label>
@@ -149,7 +149,7 @@
 							<i class="fa fa-arrow-down"></i>
 						</label>
 						<textarea
-							  ng-model="courseCriterion.comment" rows="8" ckeditor required>
+							  ng-model="questionCriterion.comment" rows="8" ckeditor required>
 						</textarea>
 					</fieldset>
 				</div>

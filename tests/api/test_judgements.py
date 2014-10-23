@@ -28,7 +28,7 @@ class JudgementAPITests(ACJTestCase):
 			'answerpair_id': answerpair_id,
 			'judgements': [
 				{
-				'course_criterion_id': self.course.criteriaandcourses[0].id,
+				'question_criterion_id': self.question.criteria[0].id,
 				'answer_id_winner': winner_id
 				}
 			]
@@ -168,7 +168,7 @@ class JudgementAPITests(ACJTestCase):
 		self.assert400(rv)
 		# test reject missing course criteria id
 		faulty_judgements = copy.deepcopy(judgement_submit)
-		del faulty_judgements['judgements'][0]['course_criterion_id']
+		del faulty_judgements['judgements'][0]['question_criterion_id']
 		rv = self.client.post(self.base_url, data=json.dumps(faulty_judgements),
 							  content_type='application/json')
 		self.assert400(rv)
@@ -180,7 +180,7 @@ class JudgementAPITests(ACJTestCase):
 		self.assert400(rv)
 		# test invalid criteria id
 		faulty_judgements = copy.deepcopy(judgement_submit)
-		faulty_judgements['judgements'][0]['course_criterion_id'] = 3930230
+		faulty_judgements['judgements'][0]['question_criterion_id'] = 3930230
 		rv = self.client.post(self.base_url, data=json.dumps(faulty_judgements),
 							  content_type='application/json')
 		self.assert400(rv)
@@ -240,8 +240,8 @@ class JudgementAPITests(ACJTestCase):
 							 "Expected and actual judgement answer2 id did not match")
 			found_judgement = False
 			for expected_judgement in judgement_submit['judgements']:
-				if expected_judgement['course_criterion_id'] != \
-						actual_judgement['course_criterion']['id']:
+				if expected_judgement['question_criterion_id'] != \
+						actual_judgement['question_criterion']['id']:
 					continue
 				self.assertEqual(expected_judgement['answer_id_winner'],
 								 actual_judgement['postsforanswers_id_winner'],

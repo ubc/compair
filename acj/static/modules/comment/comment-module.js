@@ -260,16 +260,6 @@ module.controller(
 				Toaster.reqerror("Comment retrieval failed", ret);
 			}
 		);
-		// currently we assume that the criteria in the question are all of the criteria in the course
-		CoursesCriteriaResource.get({'courseId': courseId}).$promise.then(
-			function (ret) {
-				$scope.criteria = ret.objects;
-				$scope.search.criteriaId = $scope.criteria[0].id;
-			},
-			function (ret) {
-				Toaster.reqerror("Criteria filter retrieval failed", ret);
-			}
-		);
 
 		CourseResource.getStudents({'id': courseId}).$promise.then(
 			function (ret) {
@@ -284,6 +274,8 @@ module.controller(
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
 			function(ret) {
 				$scope.parent = ret.question;
+				$scope.criteria = ret.question.criteria;
+				$scope.search.criteriaId = $scope.criteria[0].id;
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve the question "+questionId, ret);
@@ -322,7 +314,7 @@ module.controller(
 				if (user_id == null || comment.judgement.users_id == user_id) {
 					user = true;
 				}
-				if (criteria_id == null || comment.judgement.course_criterion.criterion.id == criteria_id) {
+				if (criteria_id == null || comment.judgement.question_criterion.id == criteria_id) {
 					criteria = true;
 				}
 

@@ -15,11 +15,8 @@ from .core import db
 from .authorization import require
 from .core import event
 from .models import PostsForAnswers, Posts, Judgements, AnswerPairings, Courses, CriteriaAndCourses, \
-	PostsForQuestions, Scores, CoursesAndUsers, UserTypesForCourse
+	PostsForQuestions, Scores, CoursesAndUsers, UserTypesForCourse, CriteriaAndPostsForQuestions
 from .util import new_restful_api
-
-
-
 
 # First declare a Flask Blueprint for this module
 judgements_api = Blueprint('judgements_api', __name__)
@@ -51,27 +48,28 @@ class JudgementRootAPI(Resource):
 		if not question.judging_period:
 			return {'error':'Evaluation period is not active.'}, 403
 		require(READ, question)
-		course_criteria = CriteriaAndCourses.query.filter_by(course=course, active=True).all()
+		question_criteria = CriteriaAndPostsForQuestions.query.\
+			filter_by(question=question, active=True).all()
 		params = new_judgement_parser.parse_args()
 		answer_pair = AnswerPairings.query.get(params['answerpair_id'])
 		if not answer_pair:
 			return {"error":"Invalid Answer Pair ID"}, 404
 		# check if number of judgements matches number of criteria
-		if len(course_criteria) != len(params['judgements']):
+		if len(question_criteria) != len(params['judgements']):
 			return {"error":"Not all criteria were evaluated."}, 400
-		# check if each judgement has an courseCriteria Id and a winner id
+		# check if each judgement has an questionCriteria Id and a winner id
 		for judgement in params['judgements']:
-			if not 'course_criterion_id' in judgement:
-				return {"error": "Missing course_criterion_id in evaluation."}, 400
+			if not 'question_criterion_id' in judgement:
+				return {"error": "Missing question_criterion_id in evaluation."}, 400
 			if not 'answer_id_winner' in judgement:
 				return {"error": "Missing selected answer for one of the criteria."}, 400
 			# check that we're using criteria that were assigned to the course and that we didn't
 			# get duplicate criteria in judgements
 			known_criterion = False
-			for course_criterion_entry in course_criteria[:]:
-				if judgement['course_criterion_id'] == course_criterion_entry.id:
+			for question_criterion_entry in question_criteria[:]:
+				if judgement['question_criterion_id'] == question_criterion_entry.id:
 					known_criterion = True
-					course_criteria.remove(course_criterion_entry)
+					question_criteria.remove(question_criterion_entry)
 			if not known_criterion:
 				return {"error": "Unknown criterion submitted in judgement!"}, 400
 			# check that the winner id matches one of the answer pairs
@@ -85,11 +83,12 @@ class JudgementRootAPI(Resource):
 		judgements = []
 		criteria = []
 		for judgement_params in params['judgements']:
-			criteria.append(judgement_params['course_criterion_id'])
+			criteria.append(judgement_params['question_criterion_id'])
 			# need this or hybrid property for courses_id won't work when it checks permissions
-			course_criterion = CriteriaAndCourses.query.get(judgement_params['course_criterion_id'])
+			question_criterion = CriteriaAndPostsForQuestions.query.\
+				get(judgement_params['question_criterion_id'])
 			judgement = Judgements(answerpairing=answer_pair, users_id=current_user.id,
-				course_criterion=course_criterion,
+				question_criterion=question_criterion,
 				postsforanswers_id_winner=judgement_params['answer_id_winner'])
 			db.session.add(judgement)
 			require(CREATE, judgement)
@@ -114,9 +113,10 @@ class JudgementRootAPI(Resource):
 		judgements = Judgements.query.join(AnswerPairings). \
 			filter(AnswerPairings.postsforquestions_id == question_id).all()
 		answers = set() # stores answers that've been judged
-		course_criteria = CriteriaAndCourses.query.filter_by(courses_id=course_id).all()
+		question_criteria = CriteriaAndPostsForQuestions.query.\
+			filter_by(postsforquestions_id=question_id).all()
 		# 2D array, keep tracks of wins, e.g.: wins[A][B] is the number of times A won vs B
-		wins = WinsTable(course_criteria)
+		wins = WinsTable(question_criteria)
 		# keeps track of number of times judged for each answer
 		rounds = {}
 		for judgement in judgements:
@@ -126,7 +126,7 @@ class JudgementRootAPI(Resource):
 			loser = answer1
 			if winner.id == answer1.id:
 				loser = answer2
-			wins.add(winner, loser, judgement.course_criterion)
+			wins.add(winner, loser, judgement.question_criterion)
 			# update number of times judged
 			rounds[answer1.id] = rounds.get(answer1.id, 0) + 1
 			rounds[answer2.id] = rounds.get(answer2.id, 0) + 1
@@ -135,13 +135,13 @@ class JudgementRootAPI(Resource):
 		current_app.logger.debug("Wins table: " + str(wins))
 		# create scores for each answer
 		for answer in answers:
-			for course_criterion in course_criteria:
-				score = Scores.query.filter_by(answer=answer, course_criterion=course_criterion).first()
+			for question_criterion in question_criteria:
+				score = Scores.query.filter_by(answer=answer, question_criterion=question_criterion).first()
 				if not score:
-					score = Scores(answer=answer, course_criterion=course_criterion)
+					score = Scores(answer=answer, question_criterion=question_criterion)
 				score.rounds = rounds.get(answer.id, 0)
-				score.score = wins.get_score(answer, course_criterion)
-				score.wins = wins.get_total_wins(answer, course_criterion)
+				score.score = wins.get_score(answer, question_criterion)
+				score.wins = wins.get_total_wins(answer, question_criterion)
 				db.session.add(score)
 		db.session.commit()
 api.add_resource(JudgementRootAPI, '')
@@ -158,7 +158,7 @@ class JudgementPairAPI(Resource):
 		require(READ, question)
 		if not question.judging_period:
 			return {'error':'Evaluation period is not active.'}, 403
-		pair_generator = AnswerPairGenerator(course_id, question_id)
+		pair_generator = AnswerPairGenerator(course.id, question.id)
 		try:
 			answerpairing = pair_generator.get_pair()
 
@@ -210,12 +210,13 @@ def judgement_count(course_id, question_id, user_id):
 	# try to get first criteria a user has evaluated in this question
 	judge = Judgements.query.join(AnswerPairings).filter(AnswerPairings.postsforquestions_id==question_id).first()
 	if not judge:
-		# if not judgements are found - grab the first criteria in the course
-		criteriaandcourses = CriteriaAndCourses.query.filter_by(courses_id=course_id).first_or_404()
-		criteriaandcourses_id = criteriaandcourses.id
+		# if no judgements are found - grab the first criteria in the question
+		criteriaandquestion = CriteriaAndPostsForQuestions.query.\
+			filter_by(postsforquestions_id=question_id).first_or_404()
+		criteriaandquestion_id = criteriaandquestion.id
 	else:
-		criteriaandcourses_id = judge.criteriaandcourses_id
-	count = Judgements.query.filter_by(users_id=user_id, criteriaandcourses_id=criteriaandcourses_id)\
+		criteriaandquestion_id = judge.criteriaandpostsforquestions_id
+	count = Judgements.query.filter_by(users_id=user_id, criteriaandpostsforquestions_id=criteriaandquestion_id)\
 		.join(AnswerPairings).filter_by(postsforquestions_id=question_id).count()
 
 	return count
@@ -254,8 +255,9 @@ class AnswerPairGenerator():
 			pair = self._get_unscored_pair(unscored_answers)
 		if not pair:
 			# match by closest score, when we have many criteria, match score on only one criterion
-			course_criteria = CriteriaAndCourses.query.filter_by(courses_id=self.course_id).all()
-			pair = self._get_scored_pair(random.choice(course_criteria))
+			question_criteria = CriteriaAndPostsForQuestions.query.\
+				filter_by(postsforquestions_id=self.question_id).all()
+			pair = self._get_scored_pair(random.choice(question_criteria))
 		return self._create_or_get_existing_pairing(pair)
 
 	def _create_or_get_existing_pairing(self, pair_array):
@@ -280,7 +282,7 @@ class AnswerPairGenerator():
 			db.session.commit()
 		return answerpairing
 
-	def _get_scored_pair(self, course_criterion):
+	def _get_scored_pair(self, question_criterion):
 		'''
 		Create an answer pair by matching them up by score.
 		- Sort answers by scores
@@ -288,14 +290,14 @@ class AnswerPairGenerator():
 		- Calculate difference between pairs, sort into lowest first
 		- Return the first pair that the user hasn't judged already, starting from the lowest
 			difference one.
-		:param course_criterion: The course criteria that we're checking the score on
+		:param question_criterion: The question criteria that we're checking the score on
 		:return: An array of 2 answers
 		'''
 		answer_scores = {}
 		for answer in self.answers:
 			score = None
 			for score_iter in answer.scores:
-				if score_iter.criteriaandcourses_id == course_criterion.id:
+				if score_iter.criteriaandpostsforquestions_id == question_criterion.id:
 					score = score_iter
 			if score == None:
 				raise MissingScoreFromAnswer
@@ -412,50 +414,50 @@ class AnswerPairGenerator():
 		return answers
 
 class WinsTable:
-	def __init__(self, course_criteria):
-		# 3D array, keep tracks of wins, wins[course_criteria][winner_id][opponent_id]
+	def __init__(self, question_criteria):
+		# 3D array, keep tracks of wins, wins[question_criteria][winner_id][opponent_id]
 		self.wins = {}
-		for course_criterion in course_criteria:
-			self.wins[course_criterion.id] = {}
+		for question_criterion in question_criteria:
+			self.wins[question_criterion.id] = {}
 
-	def add(self, winner, loser, course_criterion):
+	def add(self, winner, loser, question_criterion):
 		'''
 		Update number of wins for the winner
 		:param winner: Answer that won
 		:param loser: Answer that lost
-		:param course_criterion: Criterion that winner won on
+		:param question_criterion: Criterion that winner won on
 		:return: nothing
 		'''
-		winner_wins_row = self.wins[course_criterion.id].get(winner.id, {})
+		winner_wins_row = self.wins[question_criterion.id].get(winner.id, {})
 		winner_wins_row[loser.id] = winner_wins_row.get(loser.id, 0) + 1
-		self.wins[course_criterion.id][winner.id] = winner_wins_row
+		self.wins[question_criterion.id][winner.id] = winner_wins_row
 
-	def get_total_wins(self, winner, course_criterion):
+	def get_total_wins(self, winner, question_criterion):
 		'''
 		Get total number of wins in a criterion for an answer
 		:param winner: The answer to get the number of wins for
-		:param course_criterion: Criterion for the wins
+		:param question_criterion: Criterion for the wins
 		:return: Total number of wins that the winner has in the specified criterion
 		'''
-		winner_row = self.wins.get(course_criterion.id, {}).get(winner.id, {})
+		winner_row = self.wins.get(question_criterion.id, {}).get(winner.id, {})
 		return sum(winner_row.values())
 
-	def get_score(self, answer, course_criterion):
+	def get_score(self, answer, question_criterion):
 		'''
 		Calculate score for an answer
 		:param answer:
-		:param course_criterion:
+		:param question_criterion:
 		:return:
 		'''
 		current_app.logger.debug("Calculating score for answer id: " + str(answer.id))
-		answer_opponents = self.wins[course_criterion.id].get(answer.id, {})
+		answer_opponents = self.wins[question_criterion.id].get(answer.id, {})
 		current_app.logger.debug("\tThis answer's opponents:" + str(answer_opponents))
 		# see ACJ paper equation 3 for what we're doing here
 		expected_score = 0
 		for opponent_id, answer_wins in answer_opponents.items():
 			if opponent_id == answer.id: # skip comparing to self
 				continue
-			opponent_wins = self.wins[course_criterion.id].get(opponent_id, {}).get(answer.id, 0)
+			opponent_wins = self.wins[question_criterion.id].get(opponent_id, {}).get(answer.id, 0)
 			current_app.logger.debug("\tVa = " + str(answer_wins))
 			current_app.logger.debug("\tVi = " + str(opponent_wins))
 			prob_answer_wins = (math.exp(answer_wins - opponent_wins)) / \

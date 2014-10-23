@@ -6,7 +6,7 @@ from acj.core import db
 from acj.models import Courses, Users, UserTypesForCourse, UserTypesForSystem, Criteria, CoursesAndUsers, Posts, \
 	PostsForQuestions, PostsForAnswers, PostsForComments,\
 	PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, CriteriaAndCourses, AnswerPairings, \
-	Judgements, PostsForJudgements, Groups, GroupsAndUsers
+	Judgements, PostsForJudgements, Groups, GroupsAndUsers, CriteriaAndPostsForQuestions
 
 __author__ = 'compass'
 
@@ -65,6 +65,10 @@ class CriteriaFactory(SQLAlchemyModelFactory):
 
 class CriteriaAndCoursesFactory(SQLAlchemyModelFactory):
 	FACTORY_FOR = CriteriaAndCourses
+	FACTORY_SESSION = db.session
+
+class CriteriaAndPostsForQuestionsFactory(SQLAlchemyModelFactory):
+	FACTORY_FOR = CriteriaAndPostsForQuestions
 	FACTORY_SESSION = db.session
 
 class PostsFactory(SQLAlchemyModelFactory):

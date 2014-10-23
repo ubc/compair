@@ -116,6 +116,14 @@ def getCriteriaAndCourses():
 	}
 	return format
 
+def getCriteriaAndPostsForQuestions():
+	format = {
+		'id': fields.Integer,
+		'criterion': fields.Nested(getCriteria()),
+		'active': fields.Boolean
+	}
+	return format
+
 def getPosts(restrict_users=True):
 	return  {
 		'id': fields.Integer,
@@ -138,6 +146,7 @@ def getPostsForQuestions(restrict_users=True, include_answers=True):
 		'modified': fields.DateTime,
 		'comments_count': fields.Integer,
 		'available': fields.Boolean,
+		'criteria': fields.Nested(getCriteriaAndPostsForQuestions()),
 		'answer_period': fields.Boolean,
 		'judging_period': fields.Boolean,
 		'after_judging': fields.Boolean,
@@ -215,7 +224,7 @@ def getJudgements():
 		'answerpairing': fields.Nested(getAnswerPairings()),
 		'users_id': fields.Integer,
 		'postsforanswers_id_winner': fields.Integer,
-		'course_criterion': fields.Nested(getCriteriaAndCourses())
+		'question_criterion': fields.Nested(getCriteriaAndPostsForQuestions())
 	}
 
 def getPostsForJudgements(restrict_users=True):
@@ -236,7 +245,7 @@ def getImportUsersResults(restrict_users=True):
 def getScores():
 	return {
 		'id': fields.Integer,
-		'criteriaandcourses_id': fields.Integer,
+		'criteriaandpostsforquestions_id': fields.Integer,
 		'postsforanswers_id': fields.Integer,
 		'rounds': fields.Integer,
 		'wins': fields.Integer,

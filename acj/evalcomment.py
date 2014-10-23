@@ -7,7 +7,7 @@ from bouncer.constants import EDIT, CREATE, MANAGE
 from . import dataformat
 from .core import db, event
 from .models import Judgements, PostsForComments, PostsForJudgements, Courses, PostsForQuestions, Posts, \
-	AnswerPairings, CoursesAndUsers, CriteriaAndCourses
+	AnswerPairings, CoursesAndUsers, CriteriaAndCourses, CriteriaAndPostsForQuestions
 from .util import new_restful_api
 from .authorization import allow, require
 
@@ -38,13 +38,12 @@ class EvalCommentRootAPI(Resource):
 		return {'comments': marshal(comments, dataformat.getPostsForJudgements(restrict_users))}
 	@login_required
 	def post(self, course_id, question_id):
-		course = Courses.query.get_or_404(course_id)
-		PostsForQuestions.query.get_or_404(question_id)
-		criteriaAndCourses = CriteriaAndCourses(courses_id=course.id)
-		judgements = Judgements(course_criterion=criteriaAndCourses)
+		Courses.query.get_or_404(course_id)
+		question = PostsForQuestions.query.get_or_404(question_id)
+		criteriaAndQuestions = CriteriaAndPostsForQuestions(question=question)
+		judgements = Judgements(question_criterion=criteriaAndQuestions)
 		require(CREATE, judgements)
 		params = new_comment_parser.parse_args()
-		judgements = params['judgements']
 		results = []
 		for judgement in params['judgements']:
 			judge = Judgements.query.get_or_404(judgement['id'])

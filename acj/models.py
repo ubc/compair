@@ -388,6 +388,9 @@ class PostsForQuestions(db.Model):
 	title = db.Column(db.String(255))
 	_answers = db.relationship("PostsForAnswers", cascade="delete")
 	comments = db.relationship("PostsForQuestionsAndPostsForComments", cascade="delete")
+	criteria = db.relationship("CriteriaAndPostsForQuestions", cascade="delete",
+							   primaryjoin="and_(PostsForQuestions.id==CriteriaAndPostsForQuestions.postsforquestions_id, "+
+									"CriteriaAndPostsForQuestions.active)")
 	answer_start = db.Column(db.DateTime(timezone=True))
 	answer_end = db.Column(db.DateTime(timezone=True))
 	judge_start = db.Column(db.DateTime(timezone=True), nullable=True)
@@ -477,7 +480,7 @@ class PostsForAnswers(db.Model):
 		return len(self.comments)
 	@hybrid_property
 	def scores(self):
-		return sorted(self._scores, key=lambda score: score.criteriaandcourses_id)
+		return sorted(self._scores, key=lambda score: score.criteriaandpostsforquestions_id)
 
 class PostsForComments(db.Model):
 	__tablename__ = 'PostsForComments'
@@ -588,7 +591,7 @@ class Criteria(db.Model):
 					 nullable=False)
 
 
-# each course can have different criterias
+# each course can have different criteria
 class CriteriaAndCourses(db.Model):
 	__tablename__ = 'CriteriaAndCourses'
 	__table_args__ = default_table_args
@@ -606,6 +609,24 @@ class CriteriaAndCourses(db.Model):
 	course = db.relationship("Courses")
 	active = db.Column(db.Boolean, default=True, nullable=False)
 
+# each question can have different criteria
+class CriteriaAndPostsForQuestions(db.Model):
+	__tablename__ = 'CriteriaAndPostsForQuestions'
+	__table_args__ = default_table_args
+
+	id = db.Column(db.Integer, primary_key=True, nullable=False)
+	criteria_id = db.Column(
+		db.Integer,
+		db.ForeignKey('Criteria.id', ondelete="CASCADE"),
+		nullable=False)
+	criterion = db.relationship("Criteria")
+	postsforquestions_id = db.Column(
+		db.Integer,
+		db.ForeignKey('PostsForQuestions.id', ondelete="CASCADE"),
+		nullable=False)
+	question = db.relationship("PostsForQuestions")
+	active = db.Column(db.Boolean, default=True, nullable=False)
+
 #################################################
 # Scores - The calculated score of the answer
 #################################################
@@ -615,11 +636,11 @@ class Scores(db.Model):
 	__table_args__ = default_table_args
 
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	criteriaandcourses_id = db.Column(
+	criteriaandpostsforquestions_id = db.Column(
 		db.Integer,
-		db.ForeignKey('CriteriaAndCourses.id', ondelete="CASCADE"),
+		db.ForeignKey('CriteriaAndPostsForQuestions.id', ondelete="CASCADE"),
 		nullable=False)
-	course_criterion = db.relationship("CriteriaAndCourses")
+	question_criterion = db.relationship("CriteriaAndPostsForQuestions")
 	postsforanswers_id = db.Column(
 		db.Integer,
 		db.ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
@@ -690,11 +711,11 @@ class Judgements(db.Model):
 		db.ForeignKey('AnswerPairings.id', ondelete="CASCADE"),
 		nullable=False)
 	answerpairing = db.relationship("AnswerPairings")
-	criteriaandcourses_id = db.Column(
+	criteriaandpostsforquestions_id = db.Column(
 		db.Integer,
-		db.ForeignKey('CriteriaAndCourses.id', ondelete="CASCADE"),
+		db.ForeignKey('CriteriaAndPostsForQuestions.id', ondelete="CASCADE"),
 		nullable=False)
-	course_criterion = db.relationship("CriteriaAndCourses")
+	question_criterion = db.relationship("CriteriaAndPostsForQuestions")
 	postsforanswers_id_winner = db.Column(
 		db.Integer,
 		db.ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
@@ -710,7 +731,7 @@ class Judgements(db.Model):
 
 	@hybrid_property
 	def courses_id(self):
-		return self.course_criterion.courses_id
+		return self.question_criterion.question.post.courses_id
 
 class PostsForJudgements(db.Model):
 	__tablename__ = 'PostsForJudgements'
