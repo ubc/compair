@@ -103,7 +103,8 @@ def getCriteria():
 		'modified': fields.DateTime,
 		'created': fields.DateTime,
 		'users_id': fields.Integer,
-		'default': fields.Boolean
+		'default': fields.Boolean,
+		'judged': fields.Boolean
 	}
 	return format
 

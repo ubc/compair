@@ -586,6 +586,7 @@ class Criteria(db.Model):
 	user = db.relationship("Users")
 	public = db.Column(db.Boolean, default=False, nullable=False)
 	default = db.Column(db.Boolean, default=True, nullable=False)
+	question_criteria = db.relationship("CriteriaAndPostsForQuestions")
 	modified = db.Column(
 		db.DateTime,
 		default=datetime.datetime.utcnow,
@@ -594,6 +595,9 @@ class Criteria(db.Model):
 	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
 					 nullable=False)
 
+	@hybrid_property
+	def judged(self):
+		return sum(c.judgement_count for c in self.question_criteria) > 0
 
 # each course can have different criteria
 class CriteriaAndCourses(db.Model):
@@ -630,10 +634,15 @@ class CriteriaAndPostsForQuestions(db.Model):
 		nullable=False)
 	question = db.relationship("PostsForQuestions")
 	active = db.Column(db.Boolean, default=True, nullable=False)
+	judgements = db.relationship("Judgements")
 
 	@hybrid_property
 	def courses_id(self):
 		return self.question.courses_id
+
+	@hybrid_property
+	def judgement_count(self):
+		return len(self.judgements)
 
 #################################################
 # Scores - The calculated score of the answer
