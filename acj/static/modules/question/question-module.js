@@ -518,11 +518,7 @@ module.controller("QuestionEditController",
 						function (ret) {
 							// error therefore recheck the box
 							$scope.selectedCriteria[criteriaId] = true;
-							if (ret.status == '403') {
-								Toaster.error(ret.data.error);
-							} else {
-								Toaster.reqerror("Failed to remove the criterion from the question.", ret);
-							}
+							Toaster.reqerror("Failed to remove the criterion from the question.", ret);
 						}
 				);
 			}
@@ -547,6 +543,7 @@ module.controller("QuestionEditController",
 					ret.question.judge_end = new Date(ret.question.judge_end);
 				}
 				$scope.question = ret.question;
+				$scope.judged = ret.question.judged;
 				AttachmentResource.get({'postId': ret.question.post.id}).$promise.then(
 					function (ret) {
 						$scope.question.uploadedFile = ret.file;

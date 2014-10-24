@@ -155,7 +155,8 @@ def getPostsForQuestions(restrict_users=True, include_answers=True):
 		'judge_start': fields.DateTime,
 		'judge_end': fields.DateTime,
 		'can_reply': fields.Boolean,
-		'num_judgement_req': fields.Integer
+		'num_judgement_req': fields.Integer,
+		'judged': fields.Boolean
 	}
 	if include_answers:
 		answer = getPostsForAnswers(restrict_users)

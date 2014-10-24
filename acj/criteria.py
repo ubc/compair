@@ -8,7 +8,7 @@ from . import dataformat
 from .core import event, db
 from .authorization import require, allow
 from .models import CriteriaAndCourses, Courses, Criteria, PostsForQuestions, CriteriaAndPostsForQuestions, \
-				Judgements
+				Judgements, Posts
 from .util import new_restful_api
 
 
@@ -78,6 +78,15 @@ class CourseCriteriaIdAPI(Resource):
 	def delete(self, course_id, criteria_id):
 		course_criterion = CriteriaAndCourses.query.filter_by(criteria_id=criteria_id)\
 			.filter_by(courses_id=course_id).first_or_404()
+
+		question_criterion = CriteriaAndPostsForQuestions.query\
+			.filter_by(criteria_id=criteria_id, active=True)\
+			.join(PostsForQuestions, Posts).filter_by(courses_id=course_id).first()
+		if question_criterion:
+			msg = 'The criterion cannot be removed from the course, ' + \
+				  'because the criterion is currently used in a question.'
+			return {'error': msg}, 403
+
 		require(DELETE, course_criterion)
 		course_criterion.active = False
 		db.session.add(course_criterion)

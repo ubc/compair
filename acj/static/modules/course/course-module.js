@@ -142,7 +142,11 @@ module.controller(
 					$scope.criteria.splice(key, 1);
 				},
 				function (ret) {
-					Toaster.reqerror("Unable To Remove Criterion " + ret.criterionId, ret);
+					if (ret.status == '403') {
+						Toaster.error(ret.data.error);
+					} else {
+						Toaster.reqerror("Unable To Remove Criterion " + ret.criterionId, ret);
+					}
 				}
 			);
 		}

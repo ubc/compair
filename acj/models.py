@@ -391,6 +391,7 @@ class PostsForQuestions(db.Model):
 	criteria = db.relationship("CriteriaAndPostsForQuestions", cascade="delete",
 							   primaryjoin="and_(PostsForQuestions.id==CriteriaAndPostsForQuestions.postsforquestions_id, "+
 									"CriteriaAndPostsForQuestions.active)")
+	answerpairing = db.relationship("AnswerPairings")
 	answer_start = db.Column(db.DateTime(timezone=True))
 	answer_end = db.Column(db.DateTime(timezone=True))
 	judge_start = db.Column(db.DateTime(timezone=True), nullable=True)
@@ -444,6 +445,9 @@ class PostsForQuestions(db.Model):
 		# judgement period is set
 		else:
 			return now >= self.judge_end.replace(tzinfo=pytz.utc)
+	@hybrid_property
+	def judged(self):
+		return len(self.answerpairing) > 0
 
 class PostsForAnswers(db.Model):
 	__tablename__ = 'PostsForAnswers'
