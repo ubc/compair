@@ -17,6 +17,12 @@ module.factory('CoursesCriteriaResource', function($resource) {
 	return ret;
 });
 
+module.factory('QuestionsCriteriaResource', function($resource) {
+	ret = $resource('/api/courses/:courseId/questions/:questionId/criteria/:criteriaId', {criteriaId: '@id'});
+	ret.MODEL = "CriteriaAndPostsForQuestions";
+	return ret;
+});
+
 module.factory('CriteriaResource', function($resource) {
 	return $resource('/api/criteria/:criteriaId', {criteriaId: '@id'},
 		 {

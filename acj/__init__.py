@@ -117,9 +117,10 @@ def create_app(conf=config, settings_override={}):
 	app.register_blueprint(usercommentsforanswers_api, url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answers/<int:answer_id>/users/comments')
 	from .evalcomment import evalcomments_api
 	app.register_blueprint(evalcomments_api, url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/judgements/comments')
-	from .criteria import coursescriteria_api, criteria_api
+	from .criteria import coursescriteria_api, criteria_api, questionscriteria_api
 	app.register_blueprint(coursescriteria_api, url_prefix='/api/courses/<int:course_id>/criteria')
 	app.register_blueprint(criteria_api, url_prefix='/api/criteria')
+	app.register_blueprint(questionscriteria_api, url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/criteria')
 	from .judgement import judgements_api, all_judgements_api
 	app.register_blueprint(judgements_api,
 		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/judgements')

@@ -46,6 +46,19 @@
 			</textarea>
 		</div>
 	</fieldset>
+
+	<fieldset>
+		<legend>Criteria</legend>
+		<p class="instructional-text"><strong>Criteria are the questions and instructions that tell students what to look for when evaluating answers.</strong>
+		 Select one or more criteria to be used in this question.</p>
+
+		<div ng-repeat="courseCriterion in courseCriteria">
+			<input type="checkbox" name="criteria{{ courseCriterion.id }}" id="criteria{{ courseCriterion.id }}"
+				   ng-model="selectedCriteria[courseCriterion.criterion.id]"
+				   ng-change="selectCriteria(courseCriterion.criterion.id)"/>
+			<label for="criteria{{ courseCriterion.id }}">{{ courseCriterion.criterion.name }}</label>
+		</div>
+	</fieldset>
 	
 	<fieldset>
 		<legend>Answers</legend>
@@ -145,6 +158,6 @@
 	</fieldset>
 	
 	<input type="submit" class="btn btn-success btn-lg center-block" value="Save"
-		ng-disabled="questionForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess)" />
-	
+		ng-disabled="questionForm.$invalid || !oneSelected || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess)" />
+
 </form>

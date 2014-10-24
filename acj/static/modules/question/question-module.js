@@ -223,6 +223,7 @@ module.controller("QuestionViewController",
 					ret.question.judge_end = new Date(ret.question.judge_end);
 					$scope.question = ret.question;
 
+					$scope.criteria = ret.question.criteria;
 					$scope.sortby = '0';
 					$scope.order = 'answer.post.created';
 					$scope.answers = ret.question.answers;
@@ -283,14 +284,6 @@ module.controller("QuestionViewController",
 				{
 					Toaster.reqerror("Comments Not Found", ret);
 				}
-			);
-		CoursesCriteriaResource.get({'courseId': $scope.courseId}).$promise.then(
-			function (ret) {
-				$scope.criteria = ret.objects;
-			},
-			function (ret) {
-				Toaster.reqerror("Criteria Not Found", ret);
-			}
 		);
 		QuestionResource.getAnswered({'id': $scope.courseId,
 			'questionId': questionId}).$promise.then(
@@ -389,7 +382,8 @@ module.controller("QuestionViewController",
 	}
 );
 module.controller("QuestionCreateController",
-	function($scope, $log, $location, $routeParams, QuestionResource, required_rounds, Toaster, attachService)
+	function($scope, $log, $location, $routeParams, QuestionResource, CoursesCriteriaResource,
+			 QuestionsCriteriaResource, required_rounds, Toaster, attachService)
 	{
 		var courseId = $routeParams['courseId'];
 		$scope.question = {};
@@ -398,7 +392,30 @@ module.controller("QuestionCreateController",
 		$scope.resetName = attachService.resetName();
 		$scope.recommended_eval = Math.floor(required_rounds / 2);
 		// default the setting to the recommended # of evaluations
-		$scope.question.num_judgement_req = $scope.recommended_eval; 
+		$scope.question.num_judgement_req = $scope.recommended_eval;
+		$scope.oneSelected = false;		// logic to make sure at least one criterion is selected
+		$scope.selectedCriteria = {};
+
+		CoursesCriteriaResource.get({'courseId': courseId}).$promise.then(
+			function (ret) {
+				$scope.courseCriteria = ret.objects
+			},
+			function (ret) {
+				Toaster.reqerror("Criteria Not Found.");
+			}
+		);
+
+		$scope.selectCriteria = function(criteriaId) {
+			// check whether at least one criterion is selected
+			$scope.oneSelected = false;
+			for (var cId in $scope.selectedCriteria) {
+				if ($scope.selectedCriteria[cId]) {
+					$scope.oneSelected = true;
+					break;
+				}
+			}
+		};
+
 		$scope.questionSubmit = function () {
 			$scope.submitted = true;
 			// answer end datetime has to be after answer start datetime
@@ -422,6 +439,8 @@ module.controller("QuestionCreateController",
 				$promise.then(
 					function (ret)
 					{
+						// add criteria to the question
+						addMultipleCriteria(courseId, ret.id, $scope.selectedCriteria);
 						$scope.submitted = false;
 						Toaster.success("New Question Created",'"' + ret.title + '" should now be listed.');
 						$location.path('/course/' + courseId);
@@ -433,11 +452,26 @@ module.controller("QuestionCreateController",
 					}
 				);
 		};
+
+		var addMultipleCriteria = function(courseId, questionId, criteria) {
+			angular.forEach(criteria, function(selected, criterionId){
+				// add to question
+				QuestionsCriteriaResource.save({'courseId': courseId, 'questionId': questionId,
+						'criteriaId': criterionId}, {}).$promise.then(
+						function (ret) {},
+						function (ret) {
+							// error therefore uncheck the box
+							Toaster.reqerror("Failed to add the criterion " + criterionId + " to the question.", ret);
+						}
+				);
+			});
+		}
 	}
 );
 
 module.controller("QuestionEditController",
-	function($scope, $log, $location, $routeParams, QuestionResource, AttachmentResource, required_rounds, Toaster, attachService)
+	function($scope, $log, $location, $routeParams, $filter, QuestionResource, AttachmentResource,
+			 QuestionsCriteriaResource, CoursesCriteriaResource, required_rounds, Toaster, attachService)
 	{
 		var courseId = $routeParams['courseId'];
 		$scope.questionId = $routeParams['questionId'];
@@ -445,6 +479,8 @@ module.controller("QuestionEditController",
 		$scope.resetName = attachService.resetName();
 		$scope.recommended_eval = Math.floor(required_rounds / 2);
 		$scope.question = {};
+		$scope.oneSelected = false;		// logic to make sure at least one criterion is selected
+		$scope.selectedCriteria = {};
 
 		$scope.deleteFile = function(post_id, file_id) {
 			AttachmentResource.delete({'postId': post_id, 'fileId': file_id}).$promise.then(
@@ -456,7 +492,50 @@ module.controller("QuestionEditController",
 					Toaster.reqerror('Attachment Delete Failed', ret);
 				}
 			);
-		}
+		};
+
+		$scope.selectCriteria = function(criteriaId) {
+			if ($scope.selectedCriteria[criteriaId]) {
+				// add to question
+				QuestionsCriteriaResource.save({'courseId': courseId, 'questionId': $scope.questionId,
+						'criteriaId': criteriaId}, {}).$promise.then(
+						function (ret) {
+							Toaster.success("Successfully added the criterion to the question.");
+						},
+						function (ret) {
+							// error therefore uncheck the box
+							Toaster.reqerror("Failed to add the criterion to the question.", ret);
+							$scope.selectedCriteria[criteriaId] = false;
+						}
+				);
+			} else {
+				// remove from question
+				QuestionsCriteriaResource.delete({'courseId': courseId, 'questionId': $scope.questionId,
+						'criteriaId': criteriaId}).$promise.then(
+						function (ret) {
+							Toaster.success("Successfully removed the criterion from the question.");
+						},
+						function (ret) {
+							// error therefore recheck the box
+							$scope.selectedCriteria[criteriaId] = true;
+							if (ret.status == '403') {
+								Toaster.error(ret.data.error);
+							} else {
+								Toaster.reqerror("Failed to remove the criterion from the question.", ret);
+							}
+						}
+				);
+			}
+
+			// check whether at least one criterion is selected
+			$scope.oneSelected = false;
+			for (var cId in $scope.selectedCriteria) {
+				if ($scope.selectedCriteria[cId]) {
+					$scope.oneSelected = true;
+					break;
+				}
+			}
+		};
 
 		QuestionResource.get({'courseId': courseId, 'questionId': $scope.questionId}).$promise.then(
 			function (ret) {
@@ -477,11 +556,29 @@ module.controller("QuestionEditController",
 						Toaster.reqerror("Attachment Not Found", ret);
 					}
 				);
+				CoursesCriteriaResource.get({'courseId': courseId}).$promise.then(
+					function (ret) {
+						$scope.courseCriteria = ret.objects;
+						$scope.oneSelected = $scope.question.criteria.length > 0;
+						var inQuestion = {};
+						angular.forEach($scope.question.criteria, function(c, key) {
+							inQuestion[c.criterion.id] = 1;
+						});
+						for (key in ret.objects) {
+							c = ret.objects[key];
+							$scope.selectedCriteria[c.criterion.id] = c.criterion.id in inQuestion
+						}
+					},
+					function (ret) {
+						Toaster.reqerror("Criteria Not Found", ret);
+					}
+				);
 			},
 			function (ret) {
 				Toaster.reqerror("Question Not Found", "No question found for id "+$scope.questionId);
 			}
 		);
+
 		$scope.questionSubmit = function () {
 			$scope.submitted = true;
 			// answer end datetime has to be after answer start datetime

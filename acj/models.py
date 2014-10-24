@@ -627,6 +627,10 @@ class CriteriaAndPostsForQuestions(db.Model):
 	question = db.relationship("PostsForQuestions")
 	active = db.Column(db.Boolean, default=True, nullable=False)
 
+	@hybrid_property
+	def courses_id(self):
+		return self.question.courses_id
+
 #################################################
 # Scores - The calculated score of the answer
 #################################################

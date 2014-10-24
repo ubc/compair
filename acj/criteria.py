@@ -7,7 +7,8 @@ from sqlalchemy import or_, and_
 from . import dataformat
 from .core import event, db
 from .authorization import require, allow
-from .models import CriteriaAndCourses, Courses, Criteria
+from .models import CriteriaAndCourses, Courses, Criteria, PostsForQuestions, CriteriaAndPostsForQuestions, \
+				Judgements
 from .util import new_restful_api
 
 
@@ -16,6 +17,9 @@ api = new_restful_api(coursescriteria_api)
 
 criteria_api = Blueprint('criteria_api', __name__)
 apiC = new_restful_api(criteria_api)
+
+questionscriteria_api = Blueprint('questionscriteria_api', __name__)
+apiQ = new_restful_api(questionscriteria_api)
 
 new_criterion_parser = reqparse.RequestParser()
 new_criterion_parser.add_argument('name', type=str, required=True)
@@ -155,6 +159,54 @@ class CriteriaIdAPI(Resource):
 
 		return {'criterion': marshal(criterion, dataformat.getCriteria())}
 apiC.add_resource(CriteriaIdAPI, '/<int:criteria_id>')
+
+# /criteria_id
+class QuestionCriteriaAPI(Resource):
+	@login_required
+	def post(self, course_id, question_id, criteria_id):
+		Courses.query.get_or_404(course_id)
+		question = PostsForQuestions.query.get_or_404(question_id)
+		Criteria.query.get_or_404(criteria_id)
+
+		criteria_question = CriteriaAndPostsForQuestions(question=question)
+		require(CREATE, criteria_question)
+
+		criteria_question = CriteriaAndPostsForQuestions.query.filter_by(criteria_id=criteria_id).\
+			filter_by(postsforquestions_id=question_id).first()
+		if criteria_question:
+			criteria_question.active = True
+		else:
+			criteria_question = CriteriaAndPostsForQuestions()
+			criteria_question.criteria_id = criteria_id
+			criteria_question.postsforquestions_id = question_id
+
+		db.session.add(criteria_question)
+		db.session.commit()
+
+		return {'criterion': marshal(criteria_question, dataformat.getCriteriaAndPostsForQuestions())}
+
+	@login_required
+	def delete(self, course_id, question_id, criteria_id):
+		Courses.query.get_or_404(course_id)
+
+		criteria_question = CriteriaAndPostsForQuestions.query.filter_by(criteria_id=criteria_id).\
+			filter_by(postsforquestions_id=question_id).first_or_404()
+
+		require(DELETE, criteria_question)
+
+		judgement = Judgements.query.filter_by(criteriaandpostsforquestions_id=criteria_question.id).first()
+		# if a judgement has already been made - don't remove from question
+		if judgement:
+			msg = 'The criterion cannot be removed from the question, ' + \
+				  'because the criterion is already used in an evaluation.'
+			return {"error": msg}, 403
+
+		criteria_question.active = False
+		db.session.add(criteria_question)
+		db.session.commit()
+
+		return {'criterion': marshal(criteria_question, dataformat.getCriteriaAndPostsForQuestions())}
+apiQ.add_resource(QuestionCriteriaAPI, '/<int:criteria_id>')
 
 def addCriteria(params):
 	criterion = Criteria(
