@@ -60,7 +60,7 @@ myApp.config( function ($routeProvider) {
 		.when ('/course/:courseId/group/import',
 		   {
 				templateUrl: 'modules/group/group-import-partial.html',
-				label: "Import Groups"
+				label: "Assign Groups"
 		   })
 		.when ('/course/:courseId/group/import/results',
 			{

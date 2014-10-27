@@ -1,15 +1,17 @@
 <div ng-controller="GroupImportController">
 
-	<h1>Import Groups</h1>
+	<h1>Assign Groups</h1>
 	<br />
 	<ul class="li-spacing">
-		<li>Information</li>
-		<li>Information</li>
+		<li>Groups are assigned by importing a <strong>CSV (comma-separated values) file</strong>.</li>
+		<li>Data is expected in this order: <strong>User Identifier, Group Name</strong>. Both fields are required.</li>
+		<li>The user identifier can be the username in the application or the student number.</li>
+		<li>To export a list student numbers to use for a CSV file, UBC instructors can log in to the <a href="https://ssc.adm.ubc.ca/fsc/home">Faculty Service Centre</a>.</li>
 	</ul>
 	<div class="form-group">
 		<fieldset>
 			<legend>For {{ course.name }}</legend>
-			<label>User Identifier</label>
+			<label>User Identifier in CSV file</label>
 			<select class="form-control" ng-model="userIdentifier" id="userIdentifier"
 					ng-options="u.key as u.label for u in userIdentifiers" required></select>
 			<br />
