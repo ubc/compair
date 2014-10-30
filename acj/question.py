@@ -29,7 +29,8 @@ new_question_parser.add_argument('judge_end', type=str, default=None)
 new_question_parser.add_argument('name', type=str, default=None)
 new_question_parser.add_argument('alias', type=str, default=None)
 new_question_parser.add_argument('can_reply', type=bool, default=False)
-new_question_parser.add_argument('num_judgement_req', type=int, required=True) 
+new_question_parser.add_argument('num_judgement_req', type=int, required=True)
+new_question_parser.add_argument('selfevaltype_id', type=int, default=None)
 
 # existing_question_parser = new_question_parser.copy()
 existing_question_parser = RequestParser()
@@ -45,6 +46,7 @@ existing_question_parser.add_argument('alias', type=str, default=None)
 existing_question_parser.add_argument('uploadedFile', type=bool, default=False)
 existing_question_parser.add_argument('can_reply', type=bool, default=False)
 existing_question_parser.add_argument('num_judgement_req', type=int, required=True)
+existing_question_parser.add_argument('selfevaltype_id', type=int, default=None)
 
 # events
 on_question_modified = event.signal('QUESTION_MODIFIED')
@@ -105,6 +107,7 @@ class QuestionIdAPI(Resource):
 			question.judge_end = params.get('judge_end', None)
 		question.can_reply = params.get('can_reply', False)
 		question.num_judgement_req = params.get('num_judgement_req', question.num_judgement_req)
+		question.selfevaltype_id = params.get('selfevaltype_id', question.selfevaltype_id)
 		db.session.add(question.post)
 		db.session.add(question)
 
@@ -193,7 +196,8 @@ class QuestionRootAPI(Resource):
 		if question.judge_end is not None:
 			question.judge_end = dateutil.parser.parse(params.get('judge_end', None))
 		question.can_reply = params.get('can_reply', False)
-		question.num_judgement_req = params.get('num_judgement_req') 
+		question.num_judgement_req = params.get('num_judgement_req')
+		question.selfevaltype_id = params.get('selfevaltype_id', None)
 		db.session.add(post)
 		db.session.add(question)
 		db.session.commit()

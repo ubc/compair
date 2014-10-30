@@ -157,6 +157,8 @@ def getPostsForQuestions(restrict_users=True, include_answers=True):
 		'judge_end': fields.DateTime,
 		'can_reply': fields.Boolean,
 		'num_judgement_req': fields.Integer,
+		'selfevaltype_id': fields.Integer,
+		'selfevaltype': fields.Nested(getSelfEvalTypes()),
 		'judged': fields.Boolean
 	}
 	if include_answers:
@@ -206,6 +208,12 @@ def getFilesForPosts():
 		'posts_id': fields.Integer,
 		'name': fields.String,
 		'alias': fields.String
+	}
+
+def getSelfEvalTypes():
+	return {
+		'id': fields.Integer,
+		'name': fields.String
 	}
 
 def getAnswerPairings(include_answers=False):

@@ -398,6 +398,11 @@ class PostsForQuestions(db.Model):
 	judge_end = db.Column(db.DateTime(timezone=True), nullable=True)
 	num_judgement_req = db.Column(db.Integer, nullable=False)
 	can_reply = db.Column(db.Boolean, default=False, nullable=False)
+	selfevaltype_id = db.Column(
+		db.Integer,
+		db.ForeignKey('SelfEvaluationTypes.id', ondelete="CASCADE"),
+		nullable=True)
+	selfevaltype = db.relationship("SelfEvaluationTypes")
 	modified = db.Column(
 		db.DateTime,
 		default=datetime.datetime.utcnow,
@@ -566,6 +571,18 @@ class FilesForPosts(db.Model):
 	author = db.relationship("Users")
 	name = db.Column(db.String(255), nullable=False)
 	alias = db.Column(db.String(255), nullable=False)
+
+class SelfEvaluationTypes(db.Model):
+	__tablename__ = 'SelfEvaluationTypes'
+	__table_args__ = default_table_args
+
+	id = db.Column(db.Integer, primary_key=True, nullable=True)
+	name = db.Column(db.String(255), unique=True, nullable=False)
+
+	# constants for the self-evaluation types
+	TYPE_COMPARE_NO = "No Comparison with Another Answer"
+	# not yet implemented
+	#TYPE_COMPARE_SIMILAR = "Compare to Another Answer"
 
 #################################################
 # Criteria - What users should judge answers by

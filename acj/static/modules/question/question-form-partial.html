@@ -145,6 +145,22 @@
 			</div>
 			
 		</div>
+
+		<input id="selfEvalCheck" type="checkbox" ng-model="question.selfEvalCheck">
+		<label for="selfEvalCheck">Set self-evaluation</label>
+		<br /><br />
+
+		<div ng-if="question.selfEvalCheck">
+
+			<div class="form-group">
+				<label for="user">Self-Evaluation Type</label>
+				<select type="text" name="selfevaltype" ng-model="question.selfevaltype_id"
+						ng-options="t.id as t.name for t in selfevaltypes" class="form-control"
+						ng-required="question.selfEvalCheck">
+				</select>
+			</div>
+		</div>
+
 	</fieldset>
 	
 	<fieldset>

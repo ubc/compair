@@ -71,7 +71,8 @@ module.factory(
 			'/api/courses/:courseId/questions/:questionId',
 			{questionId: '@id'},
 			{
-				'getAnswered': {url: '/api/courses/:id/questions/:questionId/answers/count'}
+				'getAnswered': {url: '/api/courses/:id/questions/:questionId/answers/count'},
+				'getSelfEvalTypes': {url: '/api/selfevaltypes'}
 			}
 		);
 		ret.MODEL = "PostsForQuestions";
@@ -395,6 +396,7 @@ module.controller("QuestionCreateController",
 		$scope.question.num_judgement_req = $scope.recommended_eval;
 		$scope.oneSelected = false;		// logic to make sure at least one criterion is selected
 		$scope.selectedCriteria = {};
+		$scope.selfevaltypes = [];
 
 		CoursesCriteriaResource.get({'courseId': courseId}).$promise.then(
 			function (ret) {
@@ -415,6 +417,16 @@ module.controller("QuestionCreateController",
 				}
 			}
 		};
+
+		QuestionResource.getSelfEvalTypes().$promise.then(
+			function (ret) {
+				$scope.selfevaltypes = ret.types;
+				$scope.question.selfevaltype_id = $scope.selfevaltypes[0].id;
+			},
+			function (ret) {
+				Toaster.reqerror("Self Evaluation Types Not Found.");
+			}
+		);
 
 		$scope.questionSubmit = function () {
 			$scope.submitted = true;
@@ -533,6 +545,15 @@ module.controller("QuestionEditController",
 			}
 		};
 
+		QuestionResource.getSelfEvalTypes().$promise.then(
+			function (ret) {
+				$scope.selfevaltypes = ret.types;
+			},
+			function (ret) {
+				Toaster.reqerror("Self Evaluation Types Not Found.");
+			}
+		);
+
 		QuestionResource.get({'courseId': courseId, 'questionId': $scope.questionId}).$promise.then(
 			function (ret) {
 				ret.question.answer_start = new Date(ret.question.answer_start);
@@ -544,6 +565,13 @@ module.controller("QuestionEditController",
 				}
 				$scope.question = ret.question;
 				$scope.judged = ret.question.judged;
+
+				if ($scope.question.selfevaltype_id) {
+					$scope.question.selfEvalCheck = true;
+				} else {
+					$scope.question.selfevaltype_id = $scope.selfevaltypes[0].id;
+				}
+
 				AttachmentResource.get({'postId': ret.question.post.id}).$promise.then(
 					function (ret) {
 						$scope.question.uploadedFile = ret.file;
@@ -595,6 +623,9 @@ module.controller("QuestionEditController",
 			if (!$scope.question.availableCheck) {
 				$scope.question.judge_start = null;
 				$scope.question.judge_end = null;
+			}
+			if (!$scope.question.selfEvalCheck) {
+				delete $scope.question.selfevaltype_id;
 			}
 			QuestionResource.save({'courseId': courseId}, $scope.question).$promise.then(
 				function() {
