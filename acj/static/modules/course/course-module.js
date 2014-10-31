@@ -9,6 +9,7 @@ var module = angular.module('ubc.ctlt.acj.course',
 		'ngResource',
 		'ngRoute',
 		'ckeditor',
+		'ubc.ctlt.acj.comment',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.criteria',
 		'ubc.ctlt.acj.judgement',
@@ -160,7 +161,7 @@ module.controller(
 module.controller(
 	'CourseQuestionsController',
 	function($scope, $log, $routeParams, CourseResource, QuestionResource, Authorize,
-			 AuthenticationService, required_rounds, Toaster)
+			 AnswerCommentResource, AuthenticationService, required_rounds, Toaster)
 	{
 		// get course info
 		var courseId = $scope.courseId = $routeParams['courseId'];
@@ -210,6 +211,26 @@ module.controller(
 					},
 					function (ret) {
 						Toaster.reqerror("Evaluations Not Found", ret)
+					}
+				);
+				AnswerCommentResource.allSelfEval({'courseId': courseId}).$promise.then(
+					function (ret) {
+						var replies = ret.replies;
+						for (key in $scope.questions) {
+							ques = $scope.questions[key];
+							ques['selfeval_left'] = 0;
+							/*
+							Assumptions made:
+							- only one self-evaluation type per question
+							- if self-eval is required but not one is submitted --> 1 needs to be completed
+							 */
+							if (ques.selfevaltype_id && !replies[ques.id]) {
+								ques['selfeval_left'] = 1;
+							}
+						}
+					},
+					function (ret) {
+						Toaster.reqerror("Self-Evaluation records Not Found.", ret);
 					}
 				);
 			},

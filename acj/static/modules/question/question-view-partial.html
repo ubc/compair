@@ -65,8 +65,12 @@
 		   ng-show="!canManagePosts && question.judging_period && !judged_req_met">
 			Evaluate
 		</a>
+		<a class="btn btn-success" title="Self-Evaluation" ng-href="#/course/{{courseId}}/question/{{question.id}}/selfevaluation"
+		   ng-show="!canManagePosts && question.judging_period && judged_req_met && !selfEval_req_met">
+			Evaluate
+		</a>
 		<a class="btn btn-success" title="You have evaluated" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement"
-		   ng-show="!canManagePosts && question.judging_period && judged_req_met" disabled>
+		   ng-show="!canManagePosts && question.judging_period && judged_req_met && selfEval_req_met" disabled>
 			Evaluated
 		</a>
 		<a class="btn btn-success" title="Evaluations" ng-href="#/course/{{courseId}}/question/{{question.id}}/evaluations"

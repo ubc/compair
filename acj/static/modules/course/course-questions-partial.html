@@ -111,8 +111,8 @@
 						{{question.comments_count}} comment<span ng-if="question.comments_count != 1">s</span>
 					</li>
 					<!-- Evaluations Counter (for students) -->
-					<li ng-if="!canManagePosts && question.judging_period" ng-class="{'label label-warning': question.left > 0}">
-						{{question.left}} evaluation<span ng-if="question.left != 1">s</span> needed from you
+					<li ng-if="!canManagePosts && question.judging_period" ng-class="{'label label-warning': (question.left + question.selfeval_left) > 0}">
+						{{question.left + question.selfeval_left}} evaluation<span ng-if="(question.left + question.selfeval_left) != 1">s</span> needed from you
 						<span ng-if="question.warning"> ({{ question.eval_left }} evaluation<span ng-if="question.eval_left > 1">s</span> available)</span>
 					</li>
 					<!-- Answers Active (for instructors) -->
@@ -144,7 +144,11 @@
 				ng-href="#/course/{{course.id}}/question/{{question.id}}/judgement" ng-show="!canManagePosts && question.judging_period && question.left" ng-disabled="question.leftover > 0">
 				Evaluate
 			</a>
-			<a class="btn btn-success" title="You have evaluated" ng-show="!canManagePosts && question.judging_period && !question.left" disabled>
+			<a class="btn btn-success" title="Self-Evaluation"
+			   ng-href="#/course/{{ course.id }}/question/{{ question.id }}/selfevaluation" ng-show="!canManagePosts && question.judging_period && !question.left && question.selfeval_left">
+				Evaluate
+			</a>
+			<a class="btn btn-success" title="You have evaluated" ng-show="!canManagePosts && question.judging_period && !question.left && !question.selfeval_left" disabled>
 				Evaluated
 			</a>
 			<a class="btn btn-success" title="Evaluations" ng-href="#/course/{{course.id}}/question/{{question.id}}/evaluations" ng-show="canManagePosts && (question.judging_period || question.after_judging)">

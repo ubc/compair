@@ -543,6 +543,8 @@ class PostsForAnswersAndPostsForComments(db.Model):
 		db.ForeignKey('PostsForComments.id', ondelete="CASCADE"),
 		nullable=False)
 	postsforcomments = db.relationship("PostsForComments")
+	evaluation = db.Column(db.Boolean, default=False, nullable=False)
+	selfeval = db.Column(db.Boolean, default=False, nullable=False)
 
 	@hybrid_property
 	def courses_id(self):

@@ -269,6 +269,17 @@ module.controller("QuestionViewController",
 							Toaster.reqerror("Attachment Not Found", ret);
 						}
 					);
+					AnswerCommentResource.selfEval({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
+						function (ret) {
+							$scope.selfEval_req_met = true;
+							if ($scope.question.selfevaltype_id) {
+								$scope.selfEval_req_met = ret.count > 0;
+							}
+						},
+						function (ret) {
+							Toaster.reqerror("Self-Evaluation Records Not Found.", ret);
+						}
+					);
 				},
 				function (ret)
 				{

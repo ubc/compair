@@ -158,6 +158,17 @@ class AnswerIdAPI(Resource):
 		return {'id': answer.id}
 api.add_resource(AnswerIdAPI, '/<int:answer_id>')
 
+# /user/:id
+class AnswerUserIdAPI(Resource):
+	@login_required
+	def get(self, course_id, question_id):
+		Courses.query.get_or_404(course_id)
+		PostsForQuestions.query.get_or_404(question_id)
+		answer = PostsForAnswers.query.filter_by(postsforquestions_id=question_id).join(Posts).\
+			filter_by(courses_id=course_id, users_id=current_user.id).all()
+		return {'answer': marshal(answer, dataformat.getPostsForAnswers(True, False))}
+api.add_resource(AnswerUserIdAPI, '/user')
+
 # /flag, mark an answer as inappropriate or incomplete to instructors
 class AnswerFlagAPI(Resource):
 	@login_required

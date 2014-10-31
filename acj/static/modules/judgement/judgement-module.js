@@ -176,6 +176,10 @@ module.controller(
 														Toaster.success("Evaluation Submitted Successfully", "Please submit " + left + " more evaluation(s).");
 														$route.reload();
 														window.scrollTo(0, 0);
+													// self-evaluation
+													} else if ($scope.question.selfevaltype_id) {
+														Toaster.success("Evaluation Submitted Successfully. Please submit a self-evaluation.");
+														$location.path('/course/'+courseId+'/question/'+questionId+'/selfevaluation');
 													} else {
 														Toaster.success("Evaluation Submitted Successfully");
 														$location.path('/course/' + courseId);
@@ -245,6 +249,43 @@ module.controller(
 				}
 			);
 
+		};
+	}
+);
+
+module.controller(
+	'JudgementSelfEvalController',
+	function($log, $location, $scope, $routeParams, AnswerResource, JudgementResource,
+			 AnswerCommentResource, Session, Toaster)
+	{
+		var courseId = $scope.courseId = $routeParams['courseId'];
+		var questionId = $scope.questionId = $routeParams['questionId'];
+		$scope.comment = {};
+
+		AnswerResource.user({'courseId': courseId, 'questionId': questionId}).$promise.then(
+			function (ret) {
+				$scope.parent = ret.answer[0];
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve your answer", ret);
+			}
+		);
+
+		$scope.commentSubmit = function () {
+			$scope.submitted = true;
+			$scope.comment.selfeval = true;
+			AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': $scope.parent.id},
+				$scope.comment).$promise.then(
+					function (ret) {
+						$scope.submitted = false;
+						Toaster.success("Self-Evaluation Completed.");
+						$location.path('/course/' + courseId);
+					},
+					function (ret) {
+						$scope.submitted = false;
+						Toaster.reqerror("Unable to submit your self-evaluation.", ret);
+					}
+			)
 		};
 	}
 );

@@ -24,6 +24,7 @@ apiU = new_restful_api(usercommentsforanswers_api)
 
 new_comment_parser = RequestParser()
 new_comment_parser.add_argument('content', type=str, required=True)
+new_comment_parser.add_argument('selfeval', type=bool, required=False, default=False)
 
 existing_comment_parser = RequestParser()
 existing_comment_parser.add_argument('id', type=int, required=True, help="Comment id is required.")
@@ -192,6 +193,7 @@ class AnswerCommentRootAPI(Resource):
 		if not post.content:
 			return {"error":"The comment content is empty!"}, 400
 		post.users_id = current_user.id
+		commentForAnswer.selfeval = params.get("selfeval", False)
 		db.session.add(post)
 		db.session.add(comment)
 		db.session.add(commentForAnswer)

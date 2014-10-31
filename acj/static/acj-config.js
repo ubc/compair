@@ -122,6 +122,11 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/judgement/judgement-partial.html',
 				label: "Evaluate Answers"
 			})
+		.when('/course/:courseId/question/:questionId/selfevaluation',
+			{
+				templateUrl: 'modules/judgement/judgement-selfevaluation-partial.html',
+				label: "Self Evaluation"
+			})
 		.when ('/course/:courseId/question/:questionId/evaluations',
 			   {
 				   templateUrl: 'modules/judgement/judgement-comment-partial.html',

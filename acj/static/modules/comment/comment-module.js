@@ -38,7 +38,11 @@ module.factory(
 	{
 		var ret = $resource(
 			'/api/courses/:courseId/questions/:questionId/answers/:answerId/comments/:commentId',
-			{commentId: '@id'}
+			{commentId: '@id'},
+			{
+				selfEval: {url: '/api/selfeval/courses/:courseId/questions/:questionId'},
+				allSelfEval: {url: '/api/selfeval/courses/:courseId/questions'}
+			}
 		);
 		ret.MODEL = "PostsForAnswersAndPostsForComments";
 		return ret;
