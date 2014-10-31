@@ -37,15 +37,6 @@ def getUsers(restrict_users=True):
 	unrestricted.update(restricted)
 	return unrestricted
 
-def getCriteria():
-	return {
-		'id': fields.Integer,
-		'name': fields.String,
-		'description': fields.String,
-		'modified': fields.DateTime,
-		'created': fields.DateTime
-	}
-
 def getCourses(include_details=True):
 	format = {
 		'id': fields.Integer,
@@ -113,7 +104,8 @@ def getCriteriaAndCourses():
 		'id': fields.Integer,
 		'criterion': fields.Nested(getCriteria()),
 		'courses_id': fields.Integer,
-		'active': fields.Boolean
+		'active': fields.Boolean,
+		'inQuestion': fields.Boolean
 	}
 	return format
 

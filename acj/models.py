@@ -636,6 +636,11 @@ class CriteriaAndCourses(db.Model):
 	course = db.relationship("Courses")
 	active = db.Column(db.Boolean, default=True, nullable=False)
 
+	@hybrid_property
+	def inQuestion(self):
+		criteria = [c for c in self.criterion.question_criteria if c.courses_id==self.courses_id]
+		return len(criteria) > 0
+
 # each question can have different criteria
 class CriteriaAndPostsForQuestions(db.Model):
 	__tablename__ = 'CriteriaAndPostsForQuestions'
