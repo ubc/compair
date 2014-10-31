@@ -13,6 +13,7 @@ var module = angular.module('ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.mathjax',
 		'ubc.ctlt.acj.criteria',
+		'ubc.ctlt.acj.group',
 		'ubc.ctlt.acj.judgement',
 		'ubc.ctlt.acj.toaster',
 		'ubc.ctlt.acj.session'
@@ -201,11 +202,14 @@ module.filter("notScoredEnd", function () {
 module.controller("QuestionViewController",
 	function($scope, $log, $routeParams, $location, AnswerResource, Authorize, QuestionResource, QuestionCommentResource,
 			 AttachmentResource, CoursesCriteriaResource, JudgementResource, CourseResource, required_rounds, Session, Toaster,
-			AnswerCommentResource)
+			AnswerCommentResource, GroupResource)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
 		var myAnsCount = 0; // for the event of deleting own answer
+		var allStudents = {};
+		var students = {};
+		var userIds = {};
 		Session.getUser().then(function(user) {
 		    $scope.loggedInUserId = user.id;
 		});
@@ -225,17 +229,10 @@ module.controller("QuestionViewController",
 					$scope.question = ret.question;
 
 					$scope.criteria = ret.question.criteria;
-					$scope.sortby = '0';
-					$scope.order = 'answer.post.created';
+					$scope.grade = {'sortby': '0', 'group': 0};
+					$scope.criteriaChange();
 					$scope.answers = ret.question.answers;
 					$scope.reverse = true;
-					// only sort by scores if scores are available
-					if ($scope.answers.length > 0) {
-						var answer = $scope.answers[0];
-						if (answer['scores'].length > 0) {
-							$scope.order = 'scores['+$scope.sortby+'].score';
-						}
-					}
 
 					$scope.readDate = Date.parse(ret.question.post.created);
 
@@ -316,6 +313,58 @@ module.controller("QuestionViewController",
 				Toaster.reqerror("Instructors Not Found", ret);
 			}
 		);
+
+		GroupResource.get({'courseId': $scope.courseId}).$promise.then(
+			function (ret) {
+				$scope.groups = ret.groups;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve the groups in the course.", ret);
+			}
+		);
+
+		var getUserIds = function(students) {
+			var users = {};
+			angular.forEach(students, function(s, key){
+				users[s.user.id] = 1;
+			});
+			return users;
+		};
+
+		$scope.groupChange = function() {
+			if ($scope.grade.group == null) {
+				students = allStudents;
+				userIds = getUserIds(students);
+			} else {
+				GroupResource.get({'courseId': $scope.courseId, 'groupId': $scope.grade.group}).$promise.then(
+					function (ret) {
+						students = ret.students;
+						userIds = getUserIds(students);
+						console.log(userIds);
+					},
+					function (ret) {
+						Toaster.reqerror("Unable to retrieve the group members", ret);
+					}
+				);
+			}
+		};
+
+		CourseResource.getStudents({'id': $scope.courseId}).$promise.then(
+			function (ret) {
+				allStudents = ret.students;
+				students = allStudents;
+				userIds = getUserIds(students);
+			},
+			function (ret) {
+				Toaster.reqerror("Class list retrieval failed", ret);
+			}
+		);
+
+		$scope.groupFilter = function() {
+			return function (answer) {
+				return answer.post.user.id in userIds;
+			}
+		};
 		
 		// enable tabs for answers and comments
 		$('#answers a').click(function (e) {
@@ -333,6 +382,14 @@ module.controller("QuestionViewController",
 			$(thisClass).css({'max-height' : 'none'}); // now remove height restriction for this answer
 			this.showReadMore = false;                 // and hide the read more button for this answer
 		}
+
+		$scope.criteriaChange = function() {
+			if ($scope.grade.sortby == null) {
+				$scope.order = 'answer.post.created';
+			} else {
+				$scope.order = 'scores['+$scope.grade.sortby+'].score';;
+			}
+		};
 		
 		
 		// question delete function

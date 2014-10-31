@@ -244,6 +244,7 @@ module.controller(
 		$scope.questionId = questionId;
 
 		var allStudents = {};
+		var userIds = {};
 		$scope.group = null;
 		
 		CourseResource.get({'id':courseId}).$promise.then(
@@ -269,6 +270,7 @@ module.controller(
 			function (ret) {
 				allStudents = ret.students;
 				$scope.students = allStudents;
+				userIds = getUserIds($scope.students);
 			},
 			function (ret) {
 				Toaster.reqerror("Class list retrieval failed", ret);
@@ -295,14 +297,24 @@ module.controller(
 			}
 		);
 
+		var getUserIds = function(students) {
+			var users = {};
+			angular.forEach(students, function(s, key){
+				users[s.user.id] = 1;
+			});
+			return users;
+		};
+
 		$scope.updateGroup = function() {
 			$scope.search.userId = null;
 			if ($scope.group == null) {
 				$scope.students = allStudents;
+				userIds = getUserIds($scope.students);
 			} else {
 				GroupResource.get({'courseId': courseId, 'groupId': $scope.group}).$promise.then(
 					function (ret) {
 						$scope.students = ret.students;
+						userIds = getUserIds($scope.students);
 					},
 					function (ret) {
 						Toaster.reqerror("Unable to retrieve the group members", ret);
@@ -315,7 +327,8 @@ module.controller(
 			return function(comment) {
 				var criteria = false;
 				var user = false;
-				if (user_id == null || comment.judgement.users_id == user_id) {
+
+				if ((user_id == null && comment.judgement.users_id in userIds) || comment.judgement.users_id == user_id) {
 					user = true;
 				}
 				if (criteria_id == null || comment.judgement.question_criterion.id == criteria_id) {
