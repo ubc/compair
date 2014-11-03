@@ -215,6 +215,26 @@ module.controller("QuestionViewController",
 		});
 		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(result) {
 		    $scope.canManagePosts = result;
+			if ($scope.canManagePosts) {
+				GroupResource.get({'courseId': $scope.courseId}).$promise.then(
+					function (ret) {
+						$scope.groups = ret.groups;
+					},
+					function (ret) {
+						Toaster.reqerror("Unable to retrieve the groups in the course.", ret);
+					}
+				);
+				CourseResource.getStudents({'id': $scope.courseId}).$promise.then(
+					function (ret) {
+						allStudents = ret.students;
+						students = allStudents;
+						userIds = getUserIds(students);
+					},
+					function (ret) {
+						Toaster.reqerror("Class list retrieval failed", ret);
+					}
+				);
+			}
 		});
 		$scope.question = {};
 		QuestionResource.get({'courseId': $scope.courseId,
@@ -314,15 +334,6 @@ module.controller("QuestionViewController",
 			}
 		);
 
-		GroupResource.get({'courseId': $scope.courseId}).$promise.then(
-			function (ret) {
-				$scope.groups = ret.groups;
-			},
-			function (ret) {
-				Toaster.reqerror("Unable to retrieve the groups in the course.", ret);
-			}
-		);
-
 		var getUserIds = function(students) {
 			var users = {};
 			angular.forEach(students, function(s, key){
@@ -340,7 +351,6 @@ module.controller("QuestionViewController",
 					function (ret) {
 						students = ret.students;
 						userIds = getUserIds(students);
-						console.log(userIds);
 					},
 					function (ret) {
 						Toaster.reqerror("Unable to retrieve the group members", ret);
@@ -348,17 +358,6 @@ module.controller("QuestionViewController",
 				);
 			}
 		};
-
-		CourseResource.getStudents({'id': $scope.courseId}).$promise.then(
-			function (ret) {
-				allStudents = ret.students;
-				students = allStudents;
-				userIds = getUserIds(students);
-			},
-			function (ret) {
-				Toaster.reqerror("Class list retrieval failed", ret);
-			}
-		);
 
 		$scope.groupFilter = function() {
 			return function (answer) {
@@ -387,7 +386,7 @@ module.controller("QuestionViewController",
 			if ($scope.grade.sortby == null) {
 				$scope.order = 'answer.post.created';
 			} else {
-				$scope.order = 'scores['+$scope.grade.sortby+'].score';;
+				$scope.order = 'scores['+$scope.grade.sortby+'].score';
 			}
 		};
 		

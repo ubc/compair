@@ -4,11 +4,12 @@
 from datetime import datetime, timedelta
 import random
 
-from acj.models import UserTypesForCourse, UserTypesForSystem
+from acj.models import UserTypesForCourse, UserTypesForSystem, SelfEvaluationTypes
 from data.fixtures.factories import UsersFactory, UserTypesForCourseFactory, UserTypesForSystemFactory, CriteriaFactory, \
 	CoursesFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, PostsForAnswersFactory, \
 	CriteriaAndCoursesFactory, AnswerPairingsFactory, JudgementsFactory, PostsForJudgementsFactory, \
-	PostsForCommentsFactory, GroupsFactory, GroupsAndUsersFactory, CriteriaAndPostsForQuestionsFactory
+	PostsForCommentsFactory, GroupsFactory, GroupsAndUsersFactory, CriteriaAndPostsForQuestionsFactory, \
+	SelfEvaluationTypesFactory
 
 
 class DefaultFixture(object):
@@ -21,6 +22,9 @@ class DefaultFixture(object):
 	SYS_ROLE_INSTRUCTOR = None
 	SYS_ROLE_ADMIN = None
 	ROOT_USER = None
+
+	DEFAULT_CRITERIA = None
+	TYPE_COMPARE_NO = None
 
 	def __init__(self):
 		DefaultFixture.COURSE_ROLE_DROP = UserTypesForCourseFactory(name=UserTypesForCourse.TYPE_DROPPED)
@@ -40,6 +44,8 @@ class DefaultFixture(object):
 		public = True
 		DefaultFixture.DEFAULT_CRITERIA = CriteriaFactory(name=name, description=description, public=public, user=DefaultFixture.ROOT_USER)
 
+		DefaultFixture.TYPE_COMPARE_NO = SelfEvaluationTypesFactory(name=SelfEvaluationTypes.TYPE_COMPARE_NO)
+
 class SampleDataFixture(object):
 	COURSE_NAMES = ["CDEF102", "BCDE101","ABCD100", "DEFG103", "EFGH104"]
 	INSTRUCTOR_NAMES = ["instructor1"]
@@ -51,6 +57,9 @@ class SampleDataFixture(object):
 		for course_name in self.COURSE_NAMES:
 			course = CoursesFactory(name=course_name, description=course_name + " Course Description")
 			self.courses.append(course)
+		# insert default criteria into each course
+		for course in self.courses:
+			CriteriaAndCoursesFactory(criterion=DefaultFixture.DEFAULT_CRITERIA, course=course)
 		# create instructors
 		for instructor_name in self.INSTRUCTOR_NAMES:
 			self.instructor = UsersFactory(username=instructor_name,
@@ -83,6 +92,8 @@ class SampleDataFixture(object):
 				post = PostsFactory(course=course, user=self.instructor,
 									content=content, created=created)
 				postforquestion = PostsForQuestionsFactory(post=post, title=generator.get_question())
+				# insert default criteria into question
+				CriteriaAndPostsForQuestionsFactory(criterion=DefaultFixture.DEFAULT_CRITERIA, question=postforquestion)
 				# create answers by each student for this question
 				for student in self.students:
 					minutes=random.randint(0,59)
