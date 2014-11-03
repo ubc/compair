@@ -205,6 +205,7 @@ module.controller(
 			angular.forEach($scope.ansComments, function(value, key) {
 				if (value) {
 					// save new comment
+					$scope.answerPair[key]['comment']['post']['evaluation'] = true;
 					AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': $scope.answerPair[key]['id']},
 						$scope.answerPair[key]['comment']['post']).$promise.then(
 							function (ret)
