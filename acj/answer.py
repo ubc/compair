@@ -42,7 +42,11 @@ on_answer_modified = event.signal('ANSWER_MODIFIED')
 on_answer_get = event.signal('ANSWER_GET')
 on_answer_list_get = event.signal('ANSWER_LIST_GET')
 on_answer_create = event.signal('ANSWER_CREATE')
+on_answer_delete = event.signal('ANSWER_DELETE')
 on_answer_flag = event.signal('ANSWER_FLAG')
+on_user_question_answer_get = event.signal('USER_QUESTION_ANSWER_GET')
+on_user_question_answered_count = event.signal('USER_QUESTION_ANSWERED_COUNT')
+on_user_course_answered_count = event.signal('USER_COURSE_ANSWERED_COUNT')
 
 # /
 class AnswerRootAPI(Resource):
@@ -155,6 +159,14 @@ class AnswerIdAPI(Resource):
 		deleteFile(answer.post.id)
 		db.session.delete(answer)
 		db.session.commit()
+
+		on_answer_delete.send(
+			current_app._get_current_object(),
+			event_name=on_answer_delete.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id, 'answer_id': answer_id})
+
 		return {'id': answer.id}
 api.add_resource(AnswerIdAPI, '/<int:answer_id>')
 
@@ -166,6 +178,14 @@ class AnswerUserIdAPI(Resource):
 		PostsForQuestions.query.get_or_404(question_id)
 		answer = PostsForAnswers.query.filter_by(postsforquestions_id=question_id).join(Posts).\
 			filter_by(courses_id=course_id, users_id=current_user.id).all()
+
+		on_user_question_answer_get.send(
+			current_app._get_current_object(),
+			event_name=on_user_question_answer_get.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id':question_id})
+
 		return {'answer': marshal(answer, dataformat.getPostsForAnswers(True, False))}
 api.add_resource(AnswerUserIdAPI, '/user')
 
@@ -191,7 +211,7 @@ class AnswerFlagAPI(Resource):
 			event_name=on_answer_flag.name,
 			user=current_user,
 			course_id=course_id,
-			quesiton_id=question_id,
+			question_id=question_id,
 			data={'answer_id': answer_id, 'flag': answer.flagged})
 
 		db.session.commit()
@@ -210,6 +230,14 @@ class AnswerCountAPI(Resource):
 		require(READ, answer)
 		answered = PostsForAnswers.query.filter_by(postsforquestions_id=question_id).join(Posts)\
 			.filter(Posts.users_id==current_user.id).count()
+
+		on_user_question_answered_count.send(
+			current_app._get_current_object(),
+			event_name=on_user_question_answered_count.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id})
+
 		return {'answered': answered }
 api.add_resource(AnswerCountAPI, '/count')
 
@@ -223,17 +251,12 @@ class AnsweredAPI(Resource):
 		answered = PostsForAnswers.query.with_entities(PostsForAnswers.postsforquestions_id, func.count(PostsForAnswers.id)).join(Posts)\
 			.filter_by(courses_id=course_id).join(Users).filter_by(id=current_user.id).group_by(PostsForAnswers.postsforquestions_id).all()
 		answered = {qId: count for (qId, count) in answered}
+
+		on_user_course_answered_count.send(
+			current_app._get_current_object(),
+			event_name=on_user_course_answered_count.name,
+			user=current_user,
+			course_id=course_id)
+
 		return {'answered': answered}
 apiAll.add_resource(AnsweredAPI, '/answered')
-
-class AnswerCountAPI(Resource):
-	@login_required
-	def get(self, course_id):
-		Courses.query.get_or_404(course_id)
-		post = Posts(courses_id=course_id)
-		answer = PostsForAnswers(post=post)
-		require(READ, answer)
-		answers = PostsForAnswers.query.with_entities(PostsForAnswers.postsforquestions_id, func.count(PostsForAnswers.id)).join(Posts).filter_by(courses_id=course_id).group_by(PostsForAnswers.postsforquestions_id).all()
-		count = {qId: count for (qId, count) in answers}
-		return {'count': count}
-apiAll.add_resource(AnswerCountAPI, '/count')

@@ -4,13 +4,18 @@ from flask import Blueprint, Flask, request, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from . import dataformat
-from .core import db
+from .core import db, event
 from .models import FilesForPosts
 from .util import new_restful_api
 
 
 attachment_api = Blueprint('attachment_api', __name__)
 api = new_restful_api(attachment_api)
+
+# events
+on_save_tmp_file = event.signal('TMP_FILE_CREATE')
+on_attachment_get = event.signal('ATTACHMENT_GET')
+on_attachment_delete = event.signal('ATTACHMENT_DELETE')
 
 def allowed_file(filename, allowed):
 	return '.' in filename and \
@@ -24,6 +29,13 @@ class AttachmentAPI(Resource):
 	@login_required
 	def post(self):
 		file = request.files['file']
+
+		on_save_tmp_file.send(
+			current_app._get_current_object(),
+			event_name=on_save_tmp_file.name,
+			user=current_user,
+			data={'file': file.filename})
+
 		if file and allowed_file(file.filename, current_app.config['ATTACHMENT_ALLOWED_EXTENSIONS']):
 			name = str(uuid.uuid4()) + '.pdf'
 			tmpName = os.path.join(current_app.config['UPLOAD_FOLDER'], name)
@@ -39,6 +51,13 @@ class AttachmentPostIdAPI(Resource):
 	def get(self, post_id):
 		# TODO: change to return list of attachments
 		file = FilesForPosts.query.filter_by(posts_id = post_id).first()
+
+		on_attachment_get.send(
+			current_app._get_current_object(),
+			event_name=on_attachment_get.name,
+			user=current_user,
+			data={'post_id': post_id})
+
 		if file:
 			return {'file': marshal(file, dataformat.getFilesForPosts())}
 		return {'file': False}
@@ -49,6 +68,13 @@ class AttachmentPostIdFileIdAPI(Resource):
 	@login_required
 	def delete(self, post_id, file_id):
 		file = FilesForPosts.query.filter_by(posts_id=post_id).filter_by(id=file_id).first()
+
+		on_attachment_delete.send(
+			current_app._get_current_object(),
+			event_name=on_attachment_delete.name,
+			user=current_user,
+			data={'post_id':post_id, 'file_id':file_id})
+
 		if file:
 			tmpName = os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], file.name)
 			os.remove(tmpName)

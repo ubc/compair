@@ -1,20 +1,24 @@
 from __future__ import division
 
 from bouncer.constants import MANAGE
-from flask import Blueprint, jsonify
-from flask.ext.login import login_required
+from flask import Blueprint, jsonify, current_app
+from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource
 from .authorization import require
 from .models import Courses, PostsForQuestions, UserTypesForCourse, Users, CoursesAndUsers, Judgements, \
 	AnswerPairings, CriteriaAndCourses
 
 from .util import new_restful_api
+from .core import event
 
 
 # First declare a Flask Blueprint for this module
 gradebook_api = Blueprint('gradebook_api', __name__)
 # Then pack the blueprint into a Flask-Restful API
 api = new_restful_api(gradebook_api)
+
+# events
+on_gradebook_get = event.signal('GRADEBOOK_GET')
 
 # declare an API URL
 # /
@@ -81,6 +85,13 @@ class GradebookAPI(Resource):
 			gradebook.append(entry)
 
 		ret = {'gradebook': gradebook, 'num_judgements_required': question.num_judgement_req}
+
+		on_gradebook_get.send(
+			current_app._get_current_object(),
+			event_name=on_gradebook_get.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id})
 
 		return jsonify(ret)
 api.add_resource(GradebookAPI, '')

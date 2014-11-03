@@ -38,6 +38,16 @@ criteria_post = event.signal('CRITERIA_POST')
 criteria_get = event.signal('CRITERIA_GET')
 criteria_update = event.signal('CRITERIA_EDIT')
 
+accessible_criteria = event.signal('ACCESSIBLE_CRITERIA_GET')
+criteria_create = event.signal('CRITERIA_CREATE')
+default_criteria_get = event.signal('DEFAULT_CRITERIA_GET')
+
+on_course_criteria_delete = event.signal('COURSE_CRITERIA_DELETE')
+on_course_criteria_update = event.signal('COURSE_CRITERIA_UPDATE')
+
+on_question_criteria_create = event.signal('QUESTION_CRITERIA_CREATE')
+on_question_criteria_delete = event.signal('QUESTION_CRITERIA_DELETE')
+
 # /
 class CriteriaRootAPI(Resource):
 	@login_required
@@ -90,6 +100,15 @@ class CourseCriteriaIdAPI(Resource):
 		require(DELETE, course_criterion)
 		course_criterion.active = False
 		db.session.add(course_criterion)
+
+		on_course_criteria_delete.send(
+			current_app._get_current_object(),
+			event_name=on_course_criteria_delete.name,
+			user=current_user,
+			course_id=course_id,
+			data={'criteria_id': criteria_id}
+		)
+
 		db.session.commit()
 		return {'criterionId': criteria_id}
 	@login_required
@@ -104,6 +123,14 @@ class CourseCriteriaIdAPI(Resource):
 		else:
 			course_criterion = addCourseCriteria(criterion, course)
 		require(CREATE, course_criterion)
+
+		on_course_criteria_update.send(
+			current_app._get_current_object(),
+			event_name=on_course_criteria_update.name,
+			user=current_user,
+			course_id=course_id,
+			data={'criteria_id': criteria_id})
+
 		db.session.commit()
 		return {'criterion': marshal(course_criterion, dataformat.getCriteriaAndCourses())}
 api.add_resource(CourseCriteriaIdAPI, '/<int:criteria_id>')
@@ -117,12 +144,26 @@ class CriteriaAPI(Resource):
 			criteria = Criteria.query.all()
 		else:
 			criteria = Criteria.query.filter(or_(and_(Criteria.users_id==current_user.id, Criteria.default==True), Criteria.public==True)).all()
+
+		accessible_criteria.send(
+			current_app._get_current_object(),
+			event_name=accessible_criteria.name,
+			user=current_user)
+
 		return {'criteria': marshal(criteria, dataformat.getCriteria())}
 	@login_required
 	def post(self):
 		params = new_criterion_parser.parse_args()
 		criterion = addCriteria(params)
 		require(CREATE, criterion)
+
+		criteria_create.send(
+			current_app._get_current_object(),
+			event_name=criteria_create.name,
+			user=current_user,
+			data={'criterion': marshal(criterion, dataformat.getCriteria())}
+		)
+
 		db.session.commit()
 		return marshal(criterion, dataformat.getCriteria())
 apiC.add_resource(CriteriaAPI, '')
@@ -132,6 +173,13 @@ class DefaultCriteria(Resource):
 	@login_required
 	def get(self):
 		default = Criteria.query.first()
+
+		default_criteria_get.send(
+			current_app._get_current_object(),
+			event_name=default_criteria_get.name,
+			data={'criteria': marshal(default, dataformat.getCriteria())}
+		)
+
 		return marshal(default, dataformat.getCriteria())
 apiC.add_resource(DefaultCriteria, '/default')
 
@@ -190,6 +238,14 @@ class QuestionCriteriaAPI(Resource):
 			criteria_question.postsforquestions_id = question_id
 
 		db.session.add(criteria_question)
+
+		on_question_criteria_create.send(
+			current_app._get_current_object(),
+			event_name=on_question_criteria_create.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id, 'criteria_id': criteria_id})
+
 		db.session.commit()
 
 		return {'criterion': marshal(criteria_question, dataformat.getCriteriaAndPostsForQuestions())}
@@ -212,6 +268,15 @@ class QuestionCriteriaAPI(Resource):
 
 		criteria_question.active = False
 		db.session.add(criteria_question)
+
+		on_question_criteria_delete.send(
+			current_app._get_current_object(),
+			event_name=on_question_criteria_delete.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id':question_id, 'criteria_id':criteria_id}
+		)
+
 		db.session.commit()
 
 		return {'criterion': marshal(criteria_question, dataformat.getCriteriaAndPostsForQuestions())}

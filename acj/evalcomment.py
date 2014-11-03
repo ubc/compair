@@ -19,7 +19,7 @@ new_comment_parser.add_argument('judgements', type=list, required=True)
 
 # events
 on_evalcomment_create = event.signal('EVALCOMMENT_CREATE')
-
+on_evalcomment_get = event.signal('EVALCOMMENT_GET')
 
 # /
 class EvalCommentRootAPI(Resource):
@@ -34,6 +34,14 @@ class EvalCommentRootAPI(Resource):
 		comments = PostsForJudgements.query.join(PostsForComments, Posts).filter(Posts.courses_id==course.id)\
 			.join(Judgements, AnswerPairings).filter_by(postsforquestions_id=question.id).all()
 		restrict_users = not allow(EDIT, CoursesAndUsers(courses_id=course.id))
+
+		on_evalcomment_get.send(
+			current_app._get_current_object(),
+			event_name=on_evalcomment_get.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id}
+		)
 
 		return {'comments': marshal(comments, dataformat.getPostsForJudgements(restrict_users))}
 	@login_required

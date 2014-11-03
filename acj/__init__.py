@@ -1,18 +1,26 @@
 from flask import Flask, redirect, session
 from flask.ext.login import current_user
 
-from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, on_answer_flag
-from .classlist import on_classlist_get, on_classlist_upload
+from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, on_answer_flag,\
+	on_answer_delete, on_user_question_answer_get, on_user_question_answered_count, on_user_course_answered_count
+from .attachment import on_save_tmp_file, on_attachment_get, on_attachment_delete
+from .classlist import on_classlist_get, on_classlist_upload, on_classlist_enrol, on_classlist_unenrol, \
+	on_classlist_instructor_label, on_classlist_instructor, on_classlist_student
 from .comment import on_comment_modified, on_comment_get, on_comment_list_get, on_comment_create, on_comment_delete, \
 	on_answer_comment_modified, on_answer_comment_get, on_answer_comment_list_get, on_answer_comment_create, \
-	on_answer_comment_delete
+	on_answer_comment_delete, on_answer_comment_user_get
 from .course import on_course_modified, on_course_get, on_course_list_get, on_course_create
-from .criteria import on_criteria_list_get, criteria_get, criteria_post, criteria_update
-from .evalcomment import on_evalcomment_create
+from .criteria import on_criteria_list_get, criteria_get, criteria_post, criteria_update, \
+	accessible_criteria, criteria_create, default_criteria_get, on_course_criteria_delete, \
+	on_course_criteria_update, on_question_criteria_create, on_question_criteria_delete
+from .evalcomment import on_evalcomment_create, on_evalcomment_get
 from .judgement import on_answer_pair_get, on_judgement_create
 from .question import on_question_modified, on_question_get, on_question_list_get, on_question_create, \
 	on_question_delete
 from .report import on_export_report
+from .gradebook import on_gradebook_get
+from .group import on_group_create, on_group_delete, on_group_course_get, on_group_import, on_group_get, \
+	on_group_user_create, on_group_user_delete
 from acj.users import on_user_modified, on_user_get, on_user_list_get, on_user_create, on_user_course_get, \
 	on_user_password_update
 from .authorization import define_authorization
@@ -191,6 +199,7 @@ on_answer_comment_get.connect(log)
 on_answer_comment_list_get.connect(log)
 on_answer_comment_create.connect(log)
 on_answer_comment_delete.connect(log)
+on_answer_comment_user_get.connect(log)
 
 # criteria events
 on_criteria_list_get.connect(log)
@@ -198,12 +207,27 @@ criteria_get.connect(log)
 criteria_post.connect(log)
 criteria_update.connect(log)
 
+accessible_criteria.connect(log)
+criteria_create.connect(log)
+default_criteria_get.connect(log)
+
+on_course_criteria_delete.connect(log)
+on_course_criteria_update.connect(log)
+
+# question criteria events
+on_question_criteria_create.connect(log)
+on_question_criteria_delete.connect(log)
+
 # answer events
 on_answer_modified.connect(log)
 on_answer_get.connect(log)
 on_answer_list_get.connect(log)
 on_answer_create.connect(log)
 on_answer_flag.connect(log)
+on_answer_delete.connect(log)
+on_user_question_answer_get.connect(log)
+on_user_question_answered_count.connect(log)
+on_user_course_answered_count.connect(log)
 
 # judgement events
 on_answer_pair_get.connect(log)
@@ -212,9 +236,34 @@ on_judgement_create.connect(log)
 # classlist events
 on_classlist_get.connect(log)
 on_classlist_upload.connect(log)
+on_classlist_enrol.connect(log)
+on_classlist_unenrol.connect(log)
+on_classlist_instructor_label.connect(log)
+on_classlist_instructor.connect(log)
+on_classlist_student.connect(log)
+
+# group events
+on_group_create.connect(log)
+on_group_delete.connect(log)
+on_group_course_get.connect(log)
+on_group_import.connect(log)
+on_group_get.connect(log)
+
+# group users events
+on_group_user_create.connect(log)
+on_group_user_delete.connect(log)
 
 # evalcomment event
 on_evalcomment_create.connect(log)
+on_evalcomment_get.connect(log)
 
 # report event
 on_export_report.connect(log)
+
+# attachment event
+on_save_tmp_file.connect(log)
+on_attachment_get.connect(log)
+on_attachment_delete.connect(log)
+
+# gradebook event
+on_gradebook_get.connect(log)

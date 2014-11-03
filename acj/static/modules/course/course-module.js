@@ -30,8 +30,7 @@ module.factory('CourseResource', function($q, $routeParams, $log, $resource)
 			'getAnswered': {url: '/api/courses/:id/answers/answered'},
 			'getInstructorsLabels': {url: '/api/courses/:id/users/instructors/labels'},
 			'getInstructors': {url: '/api/courses/:id/users/instructors'},
-			'getStudents': {url: '/api/courses/:id/users/students'},
-			'getAnswerCount': {url: '/api/courses/:id/answers/count'}
+			'getStudents': {url: '/api/courses/:id/users/students'}
 		}
 	);
 	ret.MODEL = "Courses"; // add constant to identify the model
@@ -246,14 +245,6 @@ module.controller(
 			},
 			function (ret) {
 				Toaster.reqerror("Answers Not Found", ret);
-			}
-		);
-		CourseResource.getAnswerCount({'id': courseId}).$promise.then(
-			function (ret) {
-				$scope.count = ret.count;
-			},
-			function (ret) {
-				Toaster.reqerror("Answer Totals Not Found", ret);
 			}
 		);
 

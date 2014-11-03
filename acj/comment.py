@@ -43,6 +43,7 @@ on_answer_comment_get = event.signal('ANSWER_COMMENT_GET')
 on_answer_comment_list_get = event.signal('ANSWER_COMMENT_LIST_GET')
 on_answer_comment_create = event.signal('ANSWER_COMMENT_CREATE')
 on_answer_comment_delete = event.signal('ANSWER_COMMENT_DELETE')
+on_answer_comment_user_get = event.signal('ANSWER_COMMENT_USER_GET')
 
 # /
 class QuestionCommentRootAPI(Resource):
@@ -283,5 +284,13 @@ class UserAnswerCommentIdAPI(Resource):
 		answer = PostsForAnswers.query.get_or_404(answer_id)
 		comments = PostsForAnswersAndPostsForComments.query.filter_by(postsforanswers_id=answer_id)\
 			.join(PostsForComments, Posts).filter(Posts.users_id==current_user.id).all()
+
+		on_answer_comment_user_get.send(
+			current_app._get_current_object(),
+			event_name=on_answer_comment_user_get.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id, 'answer_id': answer_id})
+
 		return {'object':marshal(comments, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())}
 apiU.add_resource(UserAnswerCommentIdAPI, '')

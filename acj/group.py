@@ -4,6 +4,7 @@ from flask.ext.restful import Resource, marshal_with, marshal, reqparse
 from flask_login import login_required
 from werkzeug.utils import secure_filename
 from flask.ext.restful.reqparse import RequestParser
+from flask.ext.login import current_user
 
 from . import dataformat
 from .authorization import require, allow
@@ -27,8 +28,14 @@ import_parser = RequestParser()
 import_parser.add_argument('userIdentifier', type=str, required=True)
 
 # events
-#on_group_create = event.signal('GROUP_POST')
-#on_group_disable = event.signal('GROUP_DELETE')
+on_group_create = event.signal('GROUP_POST')
+on_group_delete = event.signal('GROUP_DELETE')
+on_group_course_get = event.signal('GROUP_COURSE_GET')
+on_group_import = event.signal('GROUP_IMPORT')
+on_group_get = event.signal('GROUP_GET')
+
+on_group_user_create = event.signal('GROUP_USER_CREATE')
+on_group_user_delete = event.signal('GROUP_USER_DELETE')
 
 def import_members(course_id, identifier, members):
 	# initialize list of users and their statuses
@@ -145,6 +152,14 @@ class GroupRootAPI(Resource):
 		group = Groups(courses_id=course_id)
 		require(READ, group)
 		groups = Groups.query.filter(Groups.courses_id==course.id, Groups.active).all()
+
+		on_group_course_get.send(
+			current_app._get_current_object(),
+			event_name=on_group_course_get.name,
+			user=current_user,
+			course_id=course_id
+		)
+
 		return {'groups': marshal(groups, dataformat.getGroups())}
 	@login_required
 	def post(self, course_id):
@@ -169,6 +184,15 @@ class GroupRootAPI(Resource):
 				results = import_members(course_id, identifier, members)
 				# TODO: event
 			os.remove(tmpName)
+
+			on_group_import.send(
+				current_app._get_current_object(),
+				event_name=on_group_import.name,
+				user=current_user,
+				course_id=course_id,
+				data={'filename': tmpName}
+			)
+
 			current_app.logger.debug("Group Import for course " + str(course_id) + " is successful. Removed file.")
 			return results
 		else:
@@ -186,6 +210,13 @@ class GroupIdAPI(Resource):
 		restrict_users = not allow(READ, member)
 
 		members = GroupsAndUsers.query.filter_by(groups_id=group_id, active=True).all()
+
+		on_group_get.send(
+			current_app._get_current_object(),
+			event_name=on_group_get.name,
+			user=current_user,
+			course_id=course_id,
+			data={'group_id': group_id})
 
 		return {'students': marshal(members, dataformat.getGroupsAndUsers(restrict_users))}
 api.add_resource(GroupIdAPI, '/<int:group_id>')
@@ -217,6 +248,14 @@ class GroupUserIdAPI(Resource):
 			group.groups_id = group_id
 			group.users_id = user_id
 		db.session.add(group)
+
+		on_group_user_create.send(
+			current_app._get_current_object(),
+			event_name=on_group_user_create.name,
+			user=current_user,
+			course_id=course_id,
+			data={'user_id': user_id})
+
 		db.session.commit()
 		return {'groups_name': group.groups_name}
 apiU.add_resource(GroupUserIdAPI, '/<int:group_id>')
@@ -229,5 +268,13 @@ class GroupUserAPI(Resource):
 		Users.query.get_or_404(user_id)
 		CoursesAndUsers.query.filter_by(courses_id=course_id, users_id=user_id).first_or_404()
 		unenrol_group(course_id, user_id)
+
+		on_group_user_delete.send(
+			current_app._get_current_object(),
+			event_name=on_group_user_delete,
+			user=current_user,
+			course_id=course_id,
+			data={'user_id': user_id})
+
 		return {'user_id': user_id, 'course_id': course_id}
 apiU.add_resource(GroupUserAPI, '')

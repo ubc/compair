@@ -37,6 +37,11 @@ PASSWORD = 6
 # events
 on_classlist_get = event.signal('CLASSLIST_GET')
 on_classlist_upload = event.signal('CLASSLIST_UPLOAD')
+on_classlist_enrol = event.signal('CLASSLIST_ENROL')
+on_classlist_unenrol = event.signal('CLASSLIST_UNENROL')
+on_classlist_instructor_label = event.signal('CLASSLIST_INSTRUCTOR_LABEL_GET')
+on_classlist_instructor = event.signal('CLASSLIST_INSTRUCTOR_GET')
+on_classlist_student = event.signal('CLASSLIST_STUDENT_GET')
 
 def display_name_generator(firstname=None, role="Student"):
 	name = firstname+"_" if firstname else ""
@@ -242,6 +247,14 @@ class EnrolAPI(Resource):
 		coursesandusers.usertypesforcourse_id = type.id
 		result = {'user': {'id': user.id, 'fullname': user.fullname}, 'usertypesforcourse': {'id': type.id, 'name': type.name}}
 		db.session.add(coursesandusers)
+
+		on_classlist_enrol.send(
+			current_app._get_current_object(),
+			event_name=on_classlist_enrol.name,
+			user=current_user,
+			course_id=course_id,
+			data={'user_id': user_id})
+
 		db.session.commit()
 		return result
 	@login_required
@@ -254,6 +267,14 @@ class EnrolAPI(Resource):
 		coursesandusers.usertypesforcourse_id = drop.id
 		result = {'user': {'id': user.id, 'fullname': user.fullname}, 'usertypesforcourse': {'id': drop.id, 'name': drop.name}}
 		db.session.add(coursesandusers)
+
+		on_classlist_unenrol.send(
+			current_app._get_current_object(),
+			event_name=on_classlist_unenrol.name,
+			user=current_user,
+			course_id=course_id,
+			data={'user_id': user_id})
+
 		db.session.commit()
 		return result
 api.add_resource(EnrolAPI, '/<int:user_id>/enrol')
@@ -266,6 +287,13 @@ class TeachersAPI(Resource):
 		require(READ, course)
 		instructors = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter(UserTypesForCourse.name.in_([UserTypesForCourse.TYPE_TA, UserTypesForCourse.TYPE_INSTRUCTOR])).all()
 		instructor_ids = {u.users_id: u.usertypeforcourse.name for u in instructors}
+
+		on_classlist_instructor_label.send(
+			current_app._get_current_object(),
+			event_name=on_classlist_instructor_label.name,
+			user=current_user,
+			course_id=course_id)
+
 		return {'instructors': instructor_ids}
 api.add_resource(TeachersAPI, '/instructors/labels')
 
@@ -278,6 +306,13 @@ class InstructorsAPI(Resource):
 		require(READ, coursesandusers)
 		instructors = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_INSTRUCTOR).all()
 		instructor_ids = {u.users_id: u.user.fullname for u in instructors}
+
+		on_classlist_instructor.send(
+			current_app._get_current_object(),
+			event_name=on_classlist_instructor.name,
+			user=current_user,
+			course_id=course_id)
+
 		return {'instructors': instructor_ids}
 api.add_resource(InstructorsAPI, '/instructors')
 
@@ -293,5 +328,13 @@ class StudentsAPI(Resource):
 		include_group = False
 
 		students = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_STUDENT).all()
+
+		on_classlist_student.send(
+			current_app._get_current_object(),
+			event_name=on_classlist_student.name,
+			user=current_user,
+			course_id=course_id
+		)
+
 		return {'students': marshal(students, dataformat.getCoursesAndUsers(restrict_users, include_user, include_group))}
 api.add_resource(StudentsAPI, '/students')
