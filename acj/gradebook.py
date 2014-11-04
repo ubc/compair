@@ -6,7 +6,7 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource
 from .authorization import require
 from .models import Courses, PostsForQuestions, UserTypesForCourse, Users, CoursesAndUsers, Judgements, \
-	AnswerPairings, CriteriaAndCourses
+	AnswerPairings, CriteriaAndPostsForQuestions
 
 from .util import new_restful_api
 from .core import event
@@ -51,7 +51,7 @@ class GradebookAPI(Resource):
 			num_judgements_per_student[student.id] = num_judgements_by_user_id.get(student.id, 0)
 
 		# number of criteria for this question
-		num_criteria = CriteriaAndCourses.query.filter_by(courses_id = course.id).count()
+		num_criteria = CriteriaAndPostsForQuestions.query.filter_by(postsforquestions_id=question.id, active=True).count()
 		# number of judgements submitted by users increases with the number of criteria in the course since 1 required
 		# judgement = 1 judgement in each criteria, so need to adjust the numbers
 		for student_id, num_judgements in num_judgements_per_student.items():

@@ -9,7 +9,7 @@ from . import dataformat
 from .core import event
 from .models import PostsForQuestions, CoursesAndUsers, Courses, Posts, PostsForAnswers, UserTypesForCourse,\
 				Judgements, AnswerPairings, PostsForAnswersAndPostsForComments, PostsForComments,\
-				CriteriaAndCourses
+				CriteriaAndPostsForQuestions
 from .util import new_restful_api
 
 import csv, os, time
@@ -64,25 +64,22 @@ class ReportRootAPI(Resource):
 			titles =[title]
 		elif type=="participation":
 			user_titles = ['Last Name', 'First Name', 'Student No']
-			criteria = CriteriaAndCourses.query.filter_by(courses_id=course_id, active=True).all()
 			if assignment:
 				question = PostsForQuestions.query.filter_by(id=assignment).join(Posts).filter_by(courses_id=course_id).first_or_404()
 				questions = [question]
 			else:
 				questions = PostsForQuestions.query.join(Posts).filter_by(courses_id=course_id)\
 					.order_by(PostsForQuestions.answer_start).all()
-			data = participation_report(course_id, questions, criteria)
+			data = participation_report(course_id, questions)
 
 			title_row1 = ["" for x in user_titles]
-			criteria_blank = ["" for x in criteria]
-			for ques in questions:
-				title_row1 += [ques.title] + criteria_blank
-
 			title_row2 = user_titles
 			for q in questions:
+				criteria = CriteriaAndPostsForQuestions.query.filter_by(postsforquestions_id=q.id, active=True).all()
+				title_row1 += [q.title] + ["" for x in criteria]
 				for c in criteria:
 					title_row2.append(c.criterion.name)
-				title_row2.append("Evaluations Submitted ("+str(ques.num_judgement_req)+' required)')
+				title_row2.append("Evaluations Submitted ("+str(q.num_judgement_req)+' required)')
 			titles = [title_row1, title_row2]
 
 		else:
@@ -175,7 +172,7 @@ def participation_stat_report(course_id, assignments, overall):
 			report.append(temp)
 	return report
 
-def participation_report(course_id, questions, criteriaandcourses):
+def participation_report(course_id, questions):
 	report = []
 	student = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first().id
 	classlist = CoursesAndUsers.query.filter_by(courses_id=course_id).\
@@ -189,7 +186,7 @@ def participation_report(course_id, questions, criteriaandcourses):
 
 		answers = PostsForAnswers.query.filter(PostsForAnswers.postsforquestions_id.in_(quesIds))\
 			.join(Posts).filter_by(users_id=user.id).all()
-		answers = {a.postsforquestions_id:{s.criteriaandcourses_id: s.score for s in a.scores} for a in answers}
+		answers = {a.postsforquestions_id:{s.criteriaandpostsforquestions_id: s.score for s in a.scores} for a in answers}
 
 		judgements = Judgements.query.\
 			filter_by(users_id=user.id).join(AnswerPairings).\
@@ -199,7 +196,9 @@ def participation_report(course_id, questions, criteriaandcourses):
 		judgements = {qId: count for (qId, count) in judgements}
 
 		for ques in questions:
-			for criterion in criteriaandcourses:
+			criteriaandquestion = CriteriaAndPostsForQuestions.query.\
+				filter_by(postsforquestions_id=ques.id, active=True).all()
+			for criterion in criteriaandquestion:
 				if ques.id not in answers:
 					score = 0
 				elif criterion.id not in answers[ques.id]:
@@ -211,7 +210,7 @@ def participation_report(course_id, questions, criteriaandcourses):
 			if ques.id not in judgements:
 				judged = 0
 			else:
-				judged = judgements[ques.id] / len(criteriaandcourses)
+				judged = judgements[ques.id] / len(criteriaandquestion)
 			temp.append(str(judged))
 		report.append(temp)
 
