@@ -361,6 +361,9 @@ module.controller("QuestionViewController",
 
 		$scope.groupFilter = function() {
 			return function (answer) {
+				if (!$scope.canManagePosts) {
+					return true;
+				}
 				return answer.post.user.id in userIds;
 			}
 		};
