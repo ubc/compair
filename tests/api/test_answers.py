@@ -85,29 +85,181 @@ class AnswersAPITests(ACJTestCase):
 		answers = PostsForAnswers.query.filter_by(postsforquestions_id=self.question.id).all()
 		actual_answer = answers[2]
 		self.assertEqual(expected_answer['post']['content'], actual_answer.post.content)
+		self.logout()
 
-	def test_delete_answer(self):
-		self.logout()
-		self.login(self.data.get_authorized_instructor().username)
-		expected_answer = {'post': {'content':'this is some answer content'}}
-		rv = self.client.post(self.base_url,
-							  data=json.dumps(expected_answer), content_type='application/json')
-		self.assert200(rv)
-		self.logout()
-		self.login(self.data.get_authorized_student().username)
-		answerId = PostsForAnswers.query.filter_by(postsforquestions_id=self.question.id).all()[2].id
-		# test delete unsuccessful
-		self.logout()
-		self.login(self.data.get_authorized_student().username)
-		rv = self.client.delete(self.base_url + '/' + str(answerId))
+	def test_get_answer(self):
+		question_id = self.data.get_questions()[0].id
+		answer = self.data.get_answers_by_question()[question_id][0]
+
+		# test login required
+		rv = self.client.get(self.base_url + '/' + str(answer.id))
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_instructor().username)
+		rv = self.client.get(self.base_url + '/' + str(answer.id))
 		self.assert403(rv)
 		self.logout()
-		# test delete successful
-		self.login(self.data.get_authorized_instructor().username)
-		rv = self.client.delete(self.base_url + '/' + str(answerId))
+
+		# test invalid course id
+		self.login(self.data.get_authorized_student().username)
+		rv = self.client.get(self._build_url(999, question_id, '/'+str(answer.id)))
+		self.assert404(rv)
+
+		# test invalid answer id
+		rv = self.client.get(self._build_url(self.data.get_course().id, question_id, '/'+str(999)))
+		self.assert404(rv)
+
+		# test authorized student
+		rv = self.client.get(self.base_url + '/' + str(answer.id))
 		self.assert200(rv)
-		self.assertEqual(answerId, rv.json['id'])
-		
+		self.assertEqual(question_id, rv.json['postsforquestions_id'])
+		self.assertEqual(answer.post.users_id, rv.json['post']['user']['id'])
+		self.assertEqual(answer.post.content, rv.json['post']['content'])
+		self.logout()
+
+		# test authorized teaching assistant
+		self.login(self.data.get_authorized_ta().username)
+		rv = self.client.get(self.base_url + '/' + str(answer.id))
+		self.assert200(rv)
+		self.assertEqual(question_id, rv.json['postsforquestions_id'])
+		self.assertEqual(answer.post.users_id, rv.json['post']['user']['id'])
+		self.assertEqual(answer.post.content, rv.json['post']['content'])
+		self.logout()
+
+		# test authorized instructor
+		self.login(self.data.get_authorized_instructor().username)
+		rv = self.client.get(self.base_url + '/' + str(answer.id))
+		self.assert200(rv)
+		self.assertEqual(question_id, rv.json['postsforquestions_id'])
+		self.assertEqual(answer.post.users_id, rv.json['post']['user']['id'])
+		self.assertEqual(answer.post.content, rv.json['post']['content'])
+		self.logout()
+
+	def test_edit_answer(self):
+		question_id = self.data.get_questions()[0].id
+		answer = self.data.get_answers_by_question()[question_id][0]
+		expected = {'id': str(answer.id), 'post': {'content':'This is an edit'}}
+
+		# test login required
+		rv = self.client.post(self.base_url + '/' + str(answer.id),
+				data=json.dumps(expected), content_type='application/json')
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_extra_student2().username)
+		rv = self.client.post(self.base_url + '/' + str(answer.id),
+				data=json.dumps(expected), content_type='application/json')
+		self.assert403(rv)
+		self.logout()
+
+		# test invalid course id
+		self.login(self.data.get_extra_student1().username)
+		rv = self.client.post(self._build_url(999, question_id, '/'+str(answer.id)),
+				data=json.dumps(expected), content_type='application/json')
+		self.assert404(rv)
+
+		# test invalid question id
+		rv = self.client.post(self._build_url(self.data.get_course().id, 999, '/'+str(answer.id)),
+				data=json.dumps(expected), content_type='application/json')
+		self.assert404(rv)
+
+		# test invalid answer id
+		rv = self.client.post(self.base_url + '/999',
+				data=json.dumps(expected), content_type='application/json')
+		self.assert404(rv)
+		self.logout()
+
+		# test unmatched answer id
+		self.login(self.data.get_extra_student2().username)
+		rv = self.client.post(self.base_url + '/' + str(self.data.get_answers_by_question()[question_id][1].id),
+				data=json.dumps(expected), content_type='application/json')
+		self.assert400(rv)
+		self.logout()
+
+		# test edit by author
+		self.login(self.data.get_extra_student1().username)
+		rv = self.client.post(self.base_url + '/' + str(answer.id),
+				data=json.dumps(expected), content_type='application/json')
+		self.assert200(rv)
+		self.assertEqual(answer.id, rv.json['id'])
+		self.assertEqual('This is an edit', rv.json['post']['content'])
+		self.logout()
+
+		# test edit by user that can manage posts
+		expected['post']['content'] = 'This is another edit'
+		self.login(self.data.get_authorized_instructor().username)
+		rv = self.client.post(self.base_url + '/' + str(answer.id),
+				data=json.dumps(expected), content_type='application/json')
+		self.assert200(rv)
+		self.assertEqual(answer.id, rv.json['id'])
+		self.assertEqual('This is another edit', rv.json['post']['content'])
+		self.logout()
+
+	def test_delete_answer(self):
+		question_id = self.data.get_questions()[0].id
+		answer_id = self.data.get_answers_by_question()[question_id][0].id
+
+		# test login required
+		rv = self.client.delete(self.base_url + '/' + str(answer_id))
+		self.assert401(rv)
+
+		# test unauthorized users
+		self.login(self.data.get_extra_student2().username)
+		rv = self.client.delete(self.base_url + '/' + str(answer_id))
+		self.assert403(rv)
+		self.logout()
+
+		# test invalid answer id
+		self.login(self.data.get_extra_student1().username)
+		rv = self.client.delete(self.base_url + '/999')
+		self.assert404(rv)
+
+		# test deletion by author
+		rv = self.client.delete(self.base_url + '/' + str(answer_id))
+		self.assert200(rv)
+		self.assertEqual(answer_id, rv.json['id'])
+		self.logout()
+
+		# test deletion by user that can manage posts
+		self.login(self.data.get_authorized_instructor().username)
+		answer_id2 = self.data.get_answers_by_question()[question_id][1].id
+		rv = self.client.delete(self.base_url + '/' + str(answer_id2))
+		self.assert200(rv)
+		self.assertEqual(answer_id2, rv.json['id'])
+		self.logout()
+
+	def test_get_user_answers(self):
+		question_id = self.data.get_questions()[0].id
+		answer = self.data.get_answers_by_question()[question_id][0]
+		url = self._build_url(self.data.get_course().id, question_id, '/user')
+
+		# test login required
+		rv = self.client.get(url)
+		self.assert401(rv)
+
+		# test invalid course
+		self.login(self.data.get_extra_student1().username)
+		rv = self.client.get(self._build_url(999, question_id, '/user'))
+		self.assert404(rv)
+
+		# test invalid question
+		rv = self.client.get(self._build_url(self.data.get_course().id, 999, '/user'))
+		self.assert404(rv)
+
+		# test successful queries
+		rv = self.client.get(url)
+		self.assert200(rv)
+		self.assertEqual(1, len(rv.json['answer']))
+		self.assertEqual(answer.id, rv.json['answer'][0]['id'])
+		self.assertEqual(answer.post.content, rv.json['answer'][0]['post']['content'])
+		self.logout()
+
+		self.login(self.data.get_authorized_instructor().username)
+		rv = self.client.get(url)
+		self.assert200(rv)
+		self.assertEqual(0, len(rv.json['answer']))
+		self.logout()
 
 	def test_flag_answer(self):
 		answer = self.question.answers[0]

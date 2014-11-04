@@ -170,7 +170,7 @@ class AnswerIdAPI(Resource):
 		return {'id': answer.id}
 api.add_resource(AnswerIdAPI, '/<int:answer_id>')
 
-# /user/:id
+# /user
 class AnswerUserIdAPI(Resource):
 	@login_required
 	def get(self, course_id, question_id):

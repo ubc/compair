@@ -27,8 +27,8 @@ existing_course_parser = reqparse.RequestParser()
 existing_course_parser.add_argument('id', type=int, required=True, help='Course id is required.')
 existing_course_parser.add_argument('name', type=str, required=True, help='Course name is required.')
 existing_course_parser.add_argument('description', type=str)
-existing_course_parser.add_argument('enable_student_create_questions', type=bool)
-existing_course_parser.add_argument('enable_student_create_tags', type=bool)
+existing_course_parser.add_argument('enable_student_create_questions', type=bool, default=False)
+existing_course_parser.add_argument('enable_student_create_tags', type=bool, default=False)
 
 # events
 on_course_modified = event.signal('COURSE_MODIFIED')
@@ -105,6 +105,7 @@ class CourseAPI(Resource):
 		return marshal(course, dataformat.getCourses())
 
 	# Save existing course
+	@login_required
 	def post(self, id):
 		course = Courses.query.get_or_404(id)
 		require(EDIT, course)

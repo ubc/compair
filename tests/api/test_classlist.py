@@ -10,6 +10,32 @@ class ClassListAPITest(ACJTestCase):
 		self.data = BasicTestData()
 		self.url = "/api/courses/"+str(self.data.get_course().id)+"/users"
 
+	def test_get_classlist(self):
+		# test login required
+		rv = self.client.get(self.url)
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_instructor().username)
+		rv = self.client.get(self.url)
+		self.assert403(rv)
+		self.logout()
+
+		# test invalid course id
+		self.login(self.data.get_authorized_instructor().username)
+		rv = self.client.get('/api/courses/999/users')
+		self.assert404(rv)
+
+		# test authorized user
+		expected = [self.data.get_authorized_instructor().id, self.data.get_authorized_ta().id,\
+					self.data.get_authorized_student().id]
+		rv = self.client.get(self.url)
+		self.assert200(rv)
+		self.assertEqual(len(expected), len(rv.json['objects']))
+		for key in range(0, len(expected)):
+			self.assertEqual(self.data.get_course().id, rv.json['objects'][key]['course']['id'])
+			self.assertEqual(expected[key], rv.json['objects'][key]['user']['id'])
+
 	def test_get_instructor_labels(self):
 		url = self.url + "/instructors/labels"
 

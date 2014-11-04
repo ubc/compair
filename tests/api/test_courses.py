@@ -126,4 +126,38 @@ class CoursesAPITests(ACJTestCase):
 							  data=json.dumps({'description':'d'}), content_type='application/json')
 		self.assert400(rv)
 
+	def test_edit_course(self):
+		expected = {
+			'id': self.data.get_course().id,
+			'name': 'ExpectedCourse',
+			'description': 'Test Description'
+		}
+		url = '/api/courses/' + str(self.data.get_course().id)
 
+		# test login required
+		rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_instructor().username)
+		rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+		self.assert403(rv)
+
+		# test unmatched course id
+		rv = self.client.post('/api/courses/' + str(self.data.get_secondary_course().id),
+					data=json.dumps(expected), content_type='application/json')
+		self.assert400(rv)
+		self.logout()
+
+		# test invalid course id
+		self.login(self.data.get_authorized_instructor().username)
+		rv = self.client.post('/api/courses/999', data=json.dumps(expected), content_type='application/json')
+		self.assert404(rv)
+
+		# test authorized user
+		rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+		self.assert200(rv)
+		self.assertEqual(expected['id'], rv.json['id'])
+		self.assertEqual(expected['name'], rv.json['name'])
+		self.assertEqual(expected['description'], rv.json['description'])
+		self.logout()
