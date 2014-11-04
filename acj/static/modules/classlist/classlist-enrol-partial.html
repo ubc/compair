@@ -9,7 +9,7 @@
 			<legend>Add Instructor</legend>
 			<div class="form-group">
 				<label for="user">Name</label>
-				<input type="text" ng-model="user" name="user" required typeahead="i as i.display for i in instructors | filter:{'name':$viewValue}" class="form-control" typeahead-input-formatter="user.display">
+				<input type="text" ng-model="user" name="user" required typeahead="i as i.display for i in instructors | filter:{'name':$viewValue}" class="form-control" typeahead-input-formatter="user.display" autocomplete="off">
 			</div>
 		</fieldset>
 		<input type="submit" class="btn btn-success btn-lg center-block" value="Add" ng-disabled="submitted || enrolForm.$invalid"/>
