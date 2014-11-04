@@ -271,7 +271,7 @@ class GroupUserAPI(Resource):
 
 		on_group_user_delete.send(
 			current_app._get_current_object(),
-			event_name=on_group_user_delete,
+			event_name=on_group_user_delete.name,
 			user=current_user,
 			course_id=course_id,
 			data={'user_id': user_id})

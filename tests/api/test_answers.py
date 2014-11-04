@@ -226,28 +226,3 @@ class AnswersAPITests(ACJTestCase):
 		expected = {str(question.id): 1 for question in self.data.get_questions()}
 		self.assertEqual(expected, rv.json['answered'])
 		self.logout()
-
-	def test_get_answer_count(self):
-		count_url = '/api/courses/' + str(self.data.get_course().id) + '/answers/count'
-
-		# test login required
-		rv = self.client.get(count_url)
-		self.assert401(rv)
-
-		# test unauthorized user
-		self.login(self.data.get_unauthorized_instructor().username)
-		rv = self.client.get(count_url)
-		self.assert403(rv)
-		self.logout()
-
-		# test invalid course id
-		self.login(self.data.get_authorized_instructor().username)
-		rv = self.client.get('/api/courses/999/answers/count')
-		self.assert404(rv)
-
-		# test successful query
-		rv = self.client.get(count_url)
-		self.assert200(rv)
-		expected = {str(question.id): 2 for question in self.data.get_questions()}
-		self.assertEqual(expected, rv.json['count'])
-		self.logout()
