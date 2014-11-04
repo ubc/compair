@@ -14,15 +14,17 @@ from .criteria import on_criteria_list_get, criteria_get, criteria_post, criteri
 	accessible_criteria, criteria_create, default_criteria_get, on_course_criteria_delete, \
 	on_course_criteria_update, on_question_criteria_create, on_question_criteria_delete
 from .evalcomment import on_evalcomment_create, on_evalcomment_get
-from .judgement import on_answer_pair_get, on_judgement_create
+from .judgement import on_answer_pair_get, on_judgement_create, on_judgement_question_count, \
+	on_judgement_course_count
 from .question import on_question_modified, on_question_get, on_question_list_get, on_question_create, \
 	on_question_delete
 from .report import on_export_report
 from .gradebook import on_gradebook_get
 from .group import on_group_create, on_group_delete, on_group_course_get, on_group_import, on_group_get, \
 	on_group_user_create, on_group_user_delete
+from .selfeval import selfevaltype_get, selfeval_question_acomment_count, selfeval_course_acomment_count
 from acj.users import on_user_modified, on_user_get, on_user_list_get, on_user_create, on_user_course_get, \
-	on_user_password_update
+	on_user_password_update, user_types_all_get, instructors_get
 from .authorization import define_authorization
 from .core import login_manager, bouncer, db, cas
 from .configuration import config
@@ -173,6 +175,9 @@ on_user_create.connect(log)
 on_user_course_get.connect(log)
 on_user_password_update.connect(log)
 
+user_types_all_get.connect(log)
+instructors_get.connect(log)
+
 # course events
 on_course_modified.connect(log)
 on_course_get.connect(log)
@@ -232,6 +237,8 @@ on_user_course_answered_count.connect(log)
 # judgement events
 on_answer_pair_get.connect(log)
 on_judgement_create.connect(log)
+on_judgement_question_count.connect(log)
+on_judgement_course_count.connect(log)
 
 # classlist events
 on_classlist_get.connect(log)
@@ -267,3 +274,8 @@ on_attachment_delete.connect(log)
 
 # gradebook event
 on_gradebook_get.connect(log)
+
+# selfeval event
+selfevaltype_get.connect(log)
+selfeval_question_acomment_count.connect(log)
+selfeval_course_acomment_count.connect(log)

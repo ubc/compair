@@ -16,6 +16,8 @@ apiA = new_restful_api(selfeval_acomments_api)
 
 # events
 selfevaltype_get = event.signal('SELFEVAL_TYPE_GET')
+selfeval_question_acomment_count = event.signal('SELFEVAL_QUESTION_ACOMMENT_COUNT')
+selfeval_course_acomment_count = event.signal('SELFEVAL_COURSE_ACOMMENT_COUNT')
 
 # /
 class SelfEvalTypeRootAPI(Resource):
@@ -23,6 +25,13 @@ class SelfEvalTypeRootAPI(Resource):
     def get(self):
         types = SelfEvaluationTypes.query.\
             order_by(SelfEvaluationTypes.id.desc()).all()
+
+        selfevaltype_get.send(
+            current_app._get_current_object(),
+            event_name=selfevaltype_get.name,
+            user=current_user
+        )
+
         return {"types": marshal(types, dataformat.getSelfEvalTypes())}
 api.add_resource(SelfEvalTypeRootAPI, '')
 
@@ -32,6 +41,14 @@ class SelfEvalACommentsQuestionIdAPI(Resource):
     def get(self, course_id, question_id):
         Courses.query.get_or_404(course_id)
         count = comment_count(question_id)
+
+        selfeval_question_acomment_count.send(
+            current_app._get_current_object(),
+            event_name=selfeval_question_acomment_count.name,
+            user=current_user,
+            course_id=course_id,
+            data={'question_id': question_id})
+
         return {"count": count}
 apiA.add_resource(SelfEvalACommentsQuestionIdAPI, '/<int:question_id>')
 
@@ -44,6 +61,14 @@ class SelfEvalACommentsAPI(Resource):
         comments = {}
         for ques in questions:
             comments[ques.id] = comment_count(ques.id)
+
+        selfeval_course_acomment_count.send(
+            current_app._get_current_object(),
+            event_name=selfeval_course_acomment_count.name,
+            user=current_user,
+            course_id=course_id
+        )
+
         return {'replies': comments}
 apiA.add_resource(SelfEvalACommentsAPI, '')
 

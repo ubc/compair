@@ -99,6 +99,13 @@ class ReportRootAPI(Resource):
 			out.writerow(s)
 		report.close()
 
+		on_export_report.send(
+			current_app._get_current_object(),
+			event_name=on_export_report.name,
+			user=current_user,
+			course_id=course_id,
+			data={'type': type, 'filename': name})
+
 		return {'file': 'report/'+name}
 api.add_resource(ReportRootAPI, '')
 

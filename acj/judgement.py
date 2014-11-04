@@ -36,6 +36,9 @@ new_judgement_parser.add_argument('judgements', type=list, required=True, help="
 on_answer_pair_get = event.signal('ANSWER_PAIR_GET')
 on_judgement_create = event.signal('JUDGEMENT_CREATE')
 
+on_judgement_question_count = event.signal('JUDGEMENT_QUESTION_COUNT')
+on_judgement_course_count = event.signal('JUDGEMENT_COURSE_COUNT')
+
 # /
 class JudgementRootAPI(Resource):
 	@login_required
@@ -183,12 +186,21 @@ class JudgementPairAPI(Resource):
 api.add_resource(JudgementPairAPI, '/pair')
 
 class UserJudgementCount(Resource):
+	@login_required
 	def get(self, course_id, question_id, user_id):
 		course = Courses.query.get_or_404(course_id)
 		require(READ, course)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
 		count = judgement_count(course_id, question_id, user_id)
+
+		on_judgement_question_count.send(
+			current_app._get_current_object(),
+			event_name=on_judgement_question_count.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id, 'user_id': user_id}
+		)
 
 		return {"count":count}
 api.add_resource(UserJudgementCount, '/count/users/<int:user_id>')
@@ -203,6 +215,15 @@ class UserAllJudgementCount(Resource):
 		judgements = {}
 		for ques in questions:
 			judgements[ques.id] = judgement_count(course_id, ques.id, current_user.id)
+
+		on_judgement_course_count.send(
+			current_app._get_current_object(),
+			event_name=on_judgement_course_count.name,
+			user=current_user,
+			course_id=course_id,
+			data={'user_id': current_user.id}
+		)
+
 		return {'judgements': judgements}
 apiAll.add_resource(UserAllJudgementCount, '/count')
 

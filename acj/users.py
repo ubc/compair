@@ -47,6 +47,9 @@ on_user_create = event.signal('USER_CREATE')
 on_user_course_get = event.signal('USER_COURSE_GET')
 on_user_password_update = event.signal('USER_PASSWORD_UPDATE')
 
+user_types_all_get = event.signal('USER_TYPES_ALL_GET')
+instructors_get = event.signal('INSTRUCTORS_GET')
+
 
 # /id
 class UserAPI(Resource):
@@ -201,6 +204,13 @@ class UserTypesAPI(Resource):
 	def get(self):
 		types = UserTypesForSystem.query.\
 			order_by("id").all()
+
+		user_types_all_get.send(
+			current_app._get_current_object(),
+			event_name=user_types_all_get.name,
+			user=current_user
+		)
+
 		return marshal(types, dataformat.getUserTypesForSystem())
 
 # /instructors
@@ -210,6 +220,13 @@ class UserTypesInstructorsAPI(Resource):
 		id = UserTypesForSystem.query.filter_by(name=UserTypesForSystem.TYPE_INSTRUCTOR).first().id
 		instructors = Users.query.filter_by(usertypesforsystem_id=id).order_by(Users.firstname).all()
 		instructors = [{'id': i.id, 'display': i.fullname+' ('+i.displayname+') - '+i.usertypeforsystem.name, 'name': i.fullname} for i in instructors]
+
+		instructors_get.send(
+			current_app._get_current_object(),
+			event_name=instructors_get.name,
+			user=current_user
+		)
+
 		return {'instructors': instructors}
 
 # /password
