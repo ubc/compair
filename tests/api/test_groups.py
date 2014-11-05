@@ -45,6 +45,45 @@ class GroupsAPITests(ACJTestCase):
 
 		self.logout()
 
+	def test_get_group_members(self):
+		course_id = self.data.get_course().id
+		group_id = self.data.get_active_group().id
+		url = '/api/courses/'+str(course_id)+'/groups/'+str(group_id)
+
+		# test login required
+		rv = self.client.get(url)
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_instructor().username)
+		rv = self.client.get(url)
+		self.assert403(rv)
+		self.logout()
+
+		# test invalid course id
+		self.login(self.data.get_authorized_instructor().username)
+		rv = self.client.get('/api/courses/999/groups/'+str(group_id))
+		self.assert404(rv)
+
+		# test invalid group id
+		rv = self.client.get('/api/courses/'+str(course_id)+'/groups/999')
+		self.assert404(rv)
+
+		# test authorized instructor
+		rv = self.client.get(url)
+		self.assert200(rv)
+		self.assertEqual(1, len(rv.json['students']))
+		self.assertEqual(self.data.get_active_member().users_id, rv.json['students'][0]['user']['id'])
+		self.logout()
+
+		# test authorized teaching assistant
+		self.login(self.data.get_authorized_ta().username)
+		rv = self.client.get(url)
+		self.assert200(rv)
+		self.assertEqual(1, len(rv.json['students']))
+		self.assertEqual(self.data.get_active_member().users_id, rv.json['students'][0]['user']['id'])
+		self.logout()
+
 	def test_group_enrolment(self):
 		# frequently used objects
 		course = self.data.get_course()

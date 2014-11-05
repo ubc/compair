@@ -106,6 +106,60 @@ class QuestionsAPITests(ACJTestCase):
 		self.assertEqual(question_expected['post']['content'], rv.json['question']['post']['content'],
 						 "Question create did not save content properly!")
 
+	def test_edit_question(self):
+		question = self.data.get_questions()[0]
+		url = self.url + '/' + str(question.id)
+		expected = {
+			'id': question.id,
+			'title': 'This is the new title.',
+			'post': {'content': 'new_content'},
+			'answer_start': question.answer_start.isoformat() + 'Z',
+			'answer_end': question.answer_end.isoformat() + 'Z',
+			'num_judgement_req': question.num_judgement_req
+		}
+
+		# test login required
+		rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_instructor().username)
+		rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+		self.assert403(rv)
+		self.logout()
+
+		# test invalid course id
+		self.login(self.data.get_authorized_instructor().username)
+		invalid_url = '/api/courses/999/questions/' + str(question.id)
+		rv = self.client.post(invalid_url, data=json.dumps(expected), content_type='application/json')
+		self.assert404(rv)
+
+		# test invalid question id
+		invalid_url = self.url + '/999'
+		rv = self.client.post(invalid_url, data=json.dumps(expected), content_type='application/json')
+		self.assert404(rv)
+
+		# test edit by author
+		rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+		self.assert200(rv)
+		self._verify_question(question, rv.json)
+		self.logout()
+
+		# test edit by user who can manage posts (TA)
+		self.login(self.data.get_authorized_ta().username)
+		ta_expected = {
+			'id': question.id,
+			'title': 'Another Title',
+			'post': {'content': 'new_content'},
+			'answer_start': question.answer_start.isoformat() + 'Z',
+			'answer_end': question.answer_end.isoformat() + 'Z',
+			'num_judgement_req': question.num_judgement_req
+		}
+		rv = self.client.post(url, data=json.dumps(ta_expected), content_type='application/json')
+		self.assert200(rv)
+		self.assertEqual(ta_expected['title'], rv.json['title'])
+		self.assertEqual(ta_expected['post']['content'], rv.json['post']['content'])
+
 	def test_delete_question(self):
 		# Test deleting the question
 		quesId = PostsForQuestions.query.first().id

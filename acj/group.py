@@ -203,8 +203,8 @@ api.add_resource(GroupRootAPI, '')
 class GroupIdAPI(Resource):
 	@login_required
 	def get(self, course_id, group_id):
-		course = Courses.query.get_or_404(course_id)
-		group = Groups(courses_id=course.id)
+		Courses.query.get_or_404(course_id)
+		group = Groups.query.get_or_404(group_id)
 		member = GroupsAndUsers(group=group)
 		require(READ, member)
 		restrict_users = not allow(READ, member)

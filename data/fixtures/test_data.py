@@ -200,12 +200,19 @@ class JudgmentsTestData(SimpleAnswersTestData):
 		db.session.commit()
 		return question_criteria
 
-class CriteriaTestData(BasicTestData):
+class CriteriaTestData(SimpleQuestionsTestData):
 	def __init__(self):
-		BasicTestData.__init__(self)
+		SimpleQuestionsTestData.__init__(self)
+		# inactive course criteria
 		self.criteria = self.create_criteria(self.get_authorized_instructor())
-		self.secondary_criteria = self.create_criteria(self.get_unauthorized_instructor())
 		self.inactive_criteria_course = self.add_inactive_criteria_course(self.criteria, self.get_course())
+		# criteria created by another instructor
+		self.secondary_criteria = self.create_criteria(self.get_unauthorized_instructor())
+		# second criteria
+		self.criteria2 = self.create_criteria(self.get_authorized_instructor())
+		# create question criteria
+		self.question_criterion = self.create_question_criteria(self.get_default_criteria(),
+				self.get_questions()[0], True)
 
 	def create_criteria(self, user):
 		name = factory.fuzzy.FuzzyText(length=4)
@@ -213,6 +220,12 @@ class CriteriaTestData(BasicTestData):
 		criteria = CriteriaFactory(name=name, description=description, user=user)
 		db.session.commit()
 		return criteria
+
+	def create_question_criteria(self, criteria, question, active):
+		question_criteria = CriteriaAndPostsForQuestionsFactory(criterion=criteria, question=question, active=active)
+		db.session.add(question_criteria)
+		db.session.commit()
+		return question_criteria
 
 	def add_inactive_criteria_course(self, criteria, course):
 		criteria_course = CriteriaAndCoursesFactory(courses_id=course.id, criteria_id=criteria.id, active=False)
@@ -222,6 +235,9 @@ class CriteriaTestData(BasicTestData):
 
 	def get_criteria(self):
 		return self.criteria
+
+	def get_criteria2(self):
+		return self.criteria2
 
 	def get_secondary_criteria(self):
 		return self.secondary_criteria
@@ -309,8 +325,8 @@ class GroupsTestData(BasicTestData):
 		self.active_group = self.create_group(self.get_course())
 		self.inactive_group = self.create_group(self.get_course(), False)
 		self.unauthorized_group = self.create_group(self.get_secondary_course())
-		self.active_member = (self.active_group, self.get_authorized_student())
-		self.inactive_member = (self.active_group, self.get_authorized_ta(), False)
+		self.active_member = self.enrol_group(self.active_group, self.get_authorized_student())
+		self.inactive_member = self.enrol_group(self.active_group, self.get_authorized_ta(), False)
 
 	def get_active_group(self):
 		return self.active_group
@@ -336,6 +352,3 @@ class GroupsTestData(BasicTestData):
 		member = GroupsAndUsersFactory(group=group, user=user, active=active)
 		db.session.commit()
 		return member
-
-
-
