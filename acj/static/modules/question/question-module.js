@@ -347,7 +347,7 @@ module.controller("QuestionViewController",
 				students = allStudents;
 				userIds = getUserIds(students);
 			} else {
-				GroupResource.get({'courseId': $scope.courseId, 'groupId': $scope.grade.group}).$promise.then(
+				GroupResource.get({'courseId': $scope.courseId, 'groupId': $scope.grade.group.id}).$promise.then(
 					function (ret) {
 						students = ret.students;
 						userIds = getUserIds(students);

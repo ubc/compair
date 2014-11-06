@@ -98,26 +98,26 @@
 			<!-- Answers Tab Header -->
 			<div class="tab-header">
 				
-				<!-- placeholder for filter **DOES NOT YET WORK** -->
 				<div ng-if="canManagePosts" class="pull-right">
-					<span ng-if="groups.length > 0">
-					<label>Filter by group: &nbsp</label>
+					<span class="filter" ng-if="groups.length > 0">
+						<label>Filter by group: &nbsp</label>
 						<select ng-model="grade.group" class="nullable"
-							ng-options="g.id as g.name for g in groups" ng-change="groupChange()">
-							<option value="">- select group -</option>
+							ng-options="g as g.name for g in groups | orderBy: 'name'" ng-change="groupChange()">
+							<option value="">All groups</option>
 						</select>
 					</span>
+					<span class="filter">
 					<label>Sort by ranking for: &nbsp;</label>
-					<select ng-model="grade.sortby" class="nullable"
-						ng-options="key as c.criterion.name for (key, c) in criteria" ng-change="criteriaChange()">
-						<option value="">- select criterion -</option>
-					</select>
-					<a class="print-btn" href="" onclick="window.print();">
-						<i class="fa fa-print"></i>
-					</a>
+						<select ng-model="grade.sortby"
+							ng-options="key as c.criterion.name for (key, c) in criteria" ng-change="criteriaChange()">
+						</select>
+						<a class="print-btn" href="" onclick="window.print();">
+							<i class="fa fa-print"></i>
+						</a>
+					</span>
 				</div>
 
-				<h2>Answers</h2>
+				<h2>Answers <span ng-show="canManagePosts && grade.group">for "{{grade.group.name}}"</span> </h2>
 				
 				<!-- Instructors see before the answer period -->
 				<p ng-if="canManagePosts && !question.answer_period && !question.answers_count">
