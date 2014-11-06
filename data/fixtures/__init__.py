@@ -9,7 +9,8 @@ from data.fixtures.factories import UsersFactory, UserTypesForCourseFactory, Use
 	CoursesFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, PostsForAnswersFactory, \
 	CriteriaAndCoursesFactory, AnswerPairingsFactory, JudgementsFactory, PostsForJudgementsFactory, \
 	PostsForCommentsFactory, GroupsFactory, GroupsAndUsersFactory, CriteriaAndPostsForQuestionsFactory, \
-	SelfEvaluationTypesFactory
+	SelfEvaluationTypesFactory, PostsForQuestionsAndPostsForCommentsFactory, \
+    PostsForAnswersAndPostsForCommentsFactory
 
 
 class DefaultFixture(object):

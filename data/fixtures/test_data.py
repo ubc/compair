@@ -7,7 +7,8 @@ from acj.models import UserTypesForSystem, UserTypesForCourse, Criteria, PostsFo
 from data.fixtures import CoursesFactory, UsersFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, \
     PostsForAnswersFactory, CriteriaFactory, CriteriaAndCoursesFactory, AnswerPairingsFactory, JudgementsFactory, \
     PostsForJudgementsFactory, PostsForCommentsFactory, GroupsFactory, GroupsAndUsersFactory, \
-    CriteriaAndPostsForQuestionsFactory
+    CriteriaAndPostsForQuestionsFactory, PostsForQuestionsAndPostsForCommentsFactory, \
+    PostsForAnswersAndPostsForCommentsFactory
 
 
 class BasicTestData():
@@ -111,6 +112,30 @@ class SimpleQuestionsTestData(BasicTestData):
     def get_questions(self):
         return self.questions
 
+class QuestionCommentsTestData(SimpleQuestionsTestData):
+    def __init__(self):
+        SimpleQuestionsTestData.__init__(self)
+        self.student_ques_comment = self.create_question_comment(
+            self.get_authorized_student(), self.get_course(), self.get_questions()[0])
+        self.instructor_ques_comment = self.create_question_comment(
+            self.get_authorized_instructor(), self.get_course(), self.get_questions()[1])
+
+    def get_instructor_ques_comment(self):
+        return self.instructor_ques_comment
+
+    def get_student_ques_comment(self):
+        return self.student_ques_comment
+
+    def create_question_comment(self, user, course, question):
+        post = PostsFactory(user=user,course=course)
+        db.session.commit()
+        comment = PostsForCommentsFactory(post=post)
+        db.session.commit()
+        question_comment = PostsForQuestionsAndPostsForCommentsFactory(
+            postsforquestions=question, postsforcomments=comment)
+        db.session.commit()
+        return question_comment
+
 class SimpleAnswersTestData(SimpleQuestionsTestData):
     def __init__(self):
         SimpleQuestionsTestData.__init__(self)
@@ -145,6 +170,30 @@ class SimpleAnswersTestData(SimpleQuestionsTestData):
 
     def get_extra_student2(self):
         return self.extra_student2
+
+class AnswerCommentsTestData(SimpleAnswersTestData):
+    def __init__(self):
+        SimpleAnswersTestData.__init__(self)
+        self.answer_comments_by_question = {}
+        for question in self.get_questions():
+            comment_extra_student1 = self.create_answer_comment(self.get_extra_student1(),
+                    self.get_course(), self.answersByQuestion[question.id][1])
+            comment_extra_student2 = self.create_answer_comment(self.get_extra_student2(),
+                    self.get_course(), self.answersByQuestion[question.id][0])
+            self.answer_comments_by_question[question.id] = [comment_extra_student1, comment_extra_student2]
+
+    def create_answer_comment(self, user, course, answer):
+        post = PostsFactory(user=user,course=course)
+        db.session.commit()
+        comment = PostsForCommentsFactory(post=post)
+        db.session.commit()
+        question_comment = PostsForAnswersAndPostsForCommentsFactory(
+            postsforanswers=answer, postsforcomments=comment)
+        db.session.commit()
+        return question_comment
+
+    def get_answer_comments_by_question(self, question):
+        return self.answer_comments_by_question[question.id]
 
 class CriteriaTestData(SimpleAnswersTestData):
     def __init__(self):
