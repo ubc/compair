@@ -154,7 +154,7 @@
 				See Evaluations
 			</a>
 			<p class="due-date">
-				<span ng-show="question.warning && !canManagePosts">
+				<span ng-show="question.warning && !canManagePosts && question.judging_period && question.left">
 					<!-- ({{ question.eval_left }} evaluation<span ng-if="question.eval_left != 1">s</span> available) -->
 					Not enough answers are available<br />(Refresh the page to check again)
 				</span>
