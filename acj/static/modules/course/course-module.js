@@ -199,7 +199,7 @@ module.controller(
 							ques['left'] = judged[ques.id] <= required ?
 								required - judged[ques.id] : 0;
 							var answered = ques.id in $scope.answered ? $scope.answered[ques.id] : 0;
-							var count = ques.id in $scope.count ? $scope.count[ques.id] : 0;
+							var count = ques.answers_count;
 							var diff = count - answered;
 							/// number of evaluations available
 							ques['eval_left'] = ((diff * (diff - 1)) / 2);
