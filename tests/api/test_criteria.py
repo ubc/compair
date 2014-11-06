@@ -406,7 +406,8 @@ class CriteriaAPITests(ACJTestCase):
 		self.assert404(rv)
 
 		# test invalid criteria and question pair
-		rv = self.client.delete(self._build_question_criteria_url(course_id, self.data.get_questions()[1].id, criteria_id))
+		rv = self.client.delete(self._build_question_criteria_url(course_id, question_id,
+                self.data.get_criteria().id))
 		self.assert404(rv)
 
 		# test authorized teaching assistant
