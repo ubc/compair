@@ -123,6 +123,7 @@ class UserListAPI(Resource):
 			user=current_user)
 		return objects
 
+	@login_required
 	def post(self):
 		user = Users()
 		require(CREATE, user)

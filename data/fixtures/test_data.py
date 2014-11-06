@@ -2,6 +2,7 @@ import datetime
 import copy
 from acj import db
 import factory.fuzzy
+import string
 from acj.models import UserTypesForSystem, UserTypesForCourse, Criteria, PostsForAnswers
 from data.fixtures import CoursesFactory, UsersFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, \
 	PostsForAnswersFactory, CriteriaFactory, CriteriaAndCoursesFactory, AnswerPairingsFactory, JudgementsFactory, \
@@ -42,7 +43,10 @@ class BasicTestData():
 		return self.create_user(UserTypesForSystem.TYPE_NORMAL)
 	def create_user(self, type):
 		sys_type = UserTypesForSystem.query.filter_by(name=type).first()
-		user = UsersFactory(usertypesforsystem_id=sys_type.id)
+		student_no = None
+		if type == UserTypesForSystem.TYPE_NORMAL:
+			student_no = factory.fuzzy.FuzzyText(length=4)
+		user = UsersFactory(usertypesforsystem_id=sys_type.id, student_no=student_no)
 		db.session.commit()
 		return user
 	def enrol_student(self, user, course):
