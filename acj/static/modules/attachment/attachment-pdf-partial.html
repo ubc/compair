@@ -1,14 +1,7 @@
 <div ng-controller="AttachmentPDFController">
 	<h1>View Attachment</h1>
-	<div class="page-control text-center">
-		<a class="btn btn-primary" ng-click="gotoPage(1)"><i class="fa fa-step-backward"></i> First Page</a>
-		<a class="btn btn-primary" ng-click="prevPage()"><i class="fa fa-backward"></i> Prev</a>
-		<span>{{currentPage}} / {{totalPages}}</span>
-		<a class="btn btn-primary" ng-click="nextPage()">Next <i class="fa fa-forward"></i></a>
-		<a class="btn btn-primary" ng-click="gotoPage(totalPages)">Last Page <i class="fa fa-step-forward"></i></a>
-		<a href="{{ pdfURL }}" class="pull-right btn btn-info"><i class="fa fa-download"></i> Download</a>
-	</div>
-	<div class="text-center pdf-viewer">
-		<pdfviewer src="{{pdfURL}}" id="viewer" on-page-load='pageLoaded(page, total)'></pdfviewer>
+	<div class="page-control text-center pdfviewer">
+		<iframe id="viewer" ng-src="{{pdfURL}}" allowfullscreen webkitallowfullscreen></iframe>
+
 	</div>
 </div>

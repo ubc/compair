@@ -3,7 +3,6 @@
 var module = angular.module('ubc.ctlt.acj.attachment',
 	[
 		'angularFileUpload',
-		'ngPDFViewer',
 		'ngResource',
 		'ubc.ctlt.acj.authorization',
 		'ubc.ctlt.acj.course',
@@ -95,7 +94,7 @@ module.service('importService', function(FileUploader, $location, CourseResource
 /***** Controllers *****/
 module.controller(
 	"AttachmentPDFController",
-	function($scope, $log, $routeParams, Authorize, CourseResource, QuestionResource, PDFViewerService, Toaster)
+	function($scope, $log, $routeParams, $sce, Authorize, CourseResource, QuestionResource)
 	{
 		var courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
@@ -107,24 +106,9 @@ module.controller(
 		Authorize.can(Authorize.READ, QuestionResource.MODEL).then(function(result) {
 		    	$scope.canReadQuestion = result;
 		});
-		$scope.pdfURL = 'pdf/'+ courseId + '_' + questionId + '_' + postId + '.pdf';
-		$scope.instance = PDFViewerService.Instance("viewer");
-		$scope.nextPage = function() {
-			$scope.instance.nextPage();
-		};
-
-		$scope.prevPage = function() {
-			$scope.instance.prevPage();
-		};
-
-		$scope.gotoPage = function(page) {
-			$scope.instance.gotoPage(page);
-		};
-
-		$scope.pageLoaded = function(curPage, totalPages) {
-			$scope.currentPage = curPage;
-			$scope.totalPages = totalPages;
-		};
+		$scope.pdfURL = $sce.trustAsResourceUrl(
+			'/static/lib/viewerjs/index.html#../../pdf/' + 
+			courseId + '_' + questionId + '_' + postId + '.pdf');
 	}
 );
 })();
