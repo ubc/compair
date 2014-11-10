@@ -46,6 +46,9 @@
 			<li ng-if="!canManagePosts && question.answer_period">
 				Answer due {{question.answer_end | amDateFormat: 'MMM D @ h:mm a'}}
 			</li>
+            <li ng-if="!canManagePosts && question.judging_period" ng-class="{'label label-warning': (evaluation + selfEval) > 0}">
+                {{ evaluation + selfEval }} evaluation<span ng-if="(evaluation + selfEval) != 1">s</span> needed from you
+            </li>
 			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
 				<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" title="Delete" confirmation-needed="deleteQuestion(courseId, question.id)" keyword="question">
 					<i class="fa fa-trash-o"></i>

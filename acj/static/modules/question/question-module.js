@@ -211,10 +211,10 @@ module.controller("QuestionViewController",
 		var students = {};
 		var userIds = {};
 		Session.getUser().then(function(user) {
-		    $scope.loggedInUserId = user.id;
+			$scope.loggedInUserId = user.id;
 		});
 		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(result) {
-		    $scope.canManagePosts = result;
+			$scope.canManagePosts = result;
 			if ($scope.canManagePosts) {
 				GroupResource.get({'courseId': $scope.courseId}).$promise.then(
 					function (ret) {
@@ -267,6 +267,10 @@ module.controller("QuestionViewController",
 						function (ret) {
 							// if an evaluation period is set - assume one criterion
 							$scope.judged_req_met = ret.count >= $scope.question.num_judgement_req;
+							$scope.evaluation = 0;
+							if (!$scope.judged_req_met) {
+								$scope.evaluation = $scope.question.num_judgement_req - ret.count;
+							}
 							if (judgeEnd) {
 								$scope.see_answers = $scope.question.after_judging;
 							// if an evaluation period is NOT set
@@ -289,8 +293,10 @@ module.controller("QuestionViewController",
 					AnswerCommentResource.selfEval({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
 						function (ret) {
 							$scope.selfEval_req_met = true;
+							$scope.selfEval = 0;
 							if ($scope.question.selfevaltype_id) {
 								$scope.selfEval_req_met = ret.count > 0;
+								$scope.selfEval = 1 - ret.count;
 							}
 						},
 						function (ret) {
