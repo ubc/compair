@@ -152,11 +152,11 @@ module.controller("UserUpdatePasswordController",
                     function (ret) {
                         $scope.submitted = false;
                         Toaster.success("Password Successfully Updated", "Your password has been changed.");
-			$location.path('/user/' + ret.id);
+                        $location.path('/user/' + ret.id);
                     },
                     function (ret) {
                         $scope.submitted = false;
-                        if (ret.status == '401') {
+                        if (ret.status == '403') {
                             Toaster.error(ret.data.error);
                         } else {
                             Toaster.reqerror("Password Update Failed", ret);

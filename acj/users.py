@@ -248,7 +248,7 @@ class UserUpdatePasswordAPI(Resource):
 				user=current_user)
 			return marshal(user, dataformat.getUsers(False))
 		else:
-			return {"error": "The old password is incorrect."}, 401
+			return {"error": "The old password is incorrect."}, 403
 
 api = new_restful_api(users_api)
 api.add_resource(UserAPI, '/<int:id>')
