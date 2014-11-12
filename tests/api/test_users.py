@@ -320,7 +320,7 @@ class UsersAPITests(ACJTestCase):
         invalid_input = input.copy()
         invalid_input['oldpassword'] = 'wrong'
         rv = self.client.post(url, data=json.dumps(invalid_input), content_type='application/json')
-        self.assert401(rv)
+        self.assert403(rv)
         self.assertEqual("The old password is incorrect.", rv.json['error'])
 
         # test unauthorized user
