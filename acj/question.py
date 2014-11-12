@@ -127,6 +127,7 @@ class QuestionIdAPI(Resource):
 	def delete(self, course_id, question_id):
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(DELETE, question)
+		formatted_question = marshal(question, dataformat.getPostsForQuestions(False, False))
 		# delete file when question is deleted
 		deleteFile(question.post.id)	
 		db.session.delete(question)
@@ -137,7 +138,7 @@ class QuestionIdAPI(Resource):
 			event_name=on_question_delete.name,
 			user=current_user,
 			course_id=course_id,
-			data=marshal(question, dataformat.getPostsForQuestions(False, False)))
+			data=formatted_question)
 
 		return {'id': question.id}
 

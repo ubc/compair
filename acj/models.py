@@ -391,7 +391,7 @@ class PostsForQuestions(db.Model):
 	criteria = db.relationship("CriteriaAndPostsForQuestions", cascade="delete",
 							   primaryjoin="and_(PostsForQuestions.id==CriteriaAndPostsForQuestions.postsforquestions_id, "+
 									"CriteriaAndPostsForQuestions.active)")
-	answerpairing = db.relationship("AnswerPairings")
+	answerpairing = db.relationship("AnswerPairings", cascade="delete")
 	answer_start = db.Column(db.DateTime(timezone=True))
 	answer_end = db.Column(db.DateTime(timezone=True))
 	judge_start = db.Column(db.DateTime(timezone=True), nullable=True)
@@ -470,7 +470,7 @@ class PostsForAnswers(db.Model):
 		nullable=False)
 	question = db.relationship("PostsForQuestions")
 	comments = db.relationship("PostsForAnswersAndPostsForComments", cascade="delete")
-	_scores = db.relationship("Scores")
+	_scores = db.relationship("Scores", cascade="delete")
 	# flagged for instructor review as inappropriate or incomplete
 	flagged = db.Column(db.Boolean, default=False, nullable=False)
 	users_id_flagger = db.Column(
@@ -578,7 +578,7 @@ class SelfEvaluationTypes(db.Model):
 	__tablename__ = 'SelfEvaluationTypes'
 	__table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=True)
+	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	name = db.Column(db.String(255), unique=True, nullable=False)
 
 	# constants for the self-evaluation types
@@ -719,7 +719,7 @@ class AnswerPairings(db.Model):
 		db.ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
 		nullable=False)
 	answer2 = db.relationship("PostsForAnswers", foreign_keys=[postsforanswers_id2])
-	judgements = db.relationship("Judgements")
+	judgements = db.relationship("Judgements", cascade="delete")
 	modified = db.Column(
 		db.DateTime,
 		default=datetime.datetime.utcnow,
