@@ -463,7 +463,20 @@ module.controller("QuestionCreateController",
 			 QuestionsCriteriaResource, required_rounds, Toaster, attachService)
 	{
 		var courseId = $routeParams['courseId'];
-		$scope.question = {};
+		var today = new Date();
+		var answer_start = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59);
+		var answer_end = new Date();
+		var judge_end = new Date();
+		answer_end.setHours(23,59,0,0);
+		answer_end.setDate(answer_start.getDate()+7);
+		judge_end.setHours(23,59,0,0);
+		judge_end.setDate(answer_end.getDate()+7);
+		$scope.question = {
+			'answer_start': answer_start,
+			'answer_end': answer_end.toISOString(),
+			'judge_start': answer_end.toISOString(),
+			'judge_end': judge_end.toISOString()
+		};
 		$scope.question.can_reply = true; //want default to encourage discussion
 		$scope.uploader = attachService.getUploader();
 		$scope.resetName = attachService.resetName();

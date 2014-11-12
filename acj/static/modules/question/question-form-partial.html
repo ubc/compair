@@ -73,7 +73,7 @@
 			<div class="col-md-6 form-group">
 				<acj-field-with-feedback form-control="questionForm.answerStartTime">	
 					<label class="required-star">Time Answering Begins</label>
-					<input type="text" id="answerStartTime" name="answerStartTime" class="form-control" ng-model="question.answer_start" data-autoclose="1" required timeType="iso" bs-timepicker>
+					<input type="text" id="answerStartTime" name="answerStartTime" class="form-control" ng-model="question.answer_start" data-autoclose="1" required timeType="iso" data-minute-step="1" bs-timepicker>
 				</acj-field-with-feedback>
 			</div>
 		</div>
@@ -87,7 +87,7 @@
 			<div class="col-md-6 form-group">
 				<acj-field-with-feedback form-control="questionForm.answerEndTime">
 					<label class="required-star">Time Answering Ends</label>
-					<input type="text" id="answerEndTime" name="answerEndTime" class="form-control" ng-model="question.answer_end" data-autoclose="1" required timeType="iso" bs-timepicker>
+					<input type="text" id="answerEndTime" name="answerEndTime" class="form-control" ng-model="question.answer_end" data-autoclose="1" required timeType="iso" data-minute-step="1" bs-timepicker>
 				</acj-field-with-feedback>
 			</div>
 		</div>
@@ -143,7 +143,7 @@
 				<div class="col-md-6 form-group">
 					<acj-field-with-feedback form-control="questionForm.judgeStartTime">	
 						<label class="required-star">Time Evaluations Begin</label>
-						<input type="text" id="judgeStartTime" name="judgeStartTime" class="form-control" ng-model="question.judge_start" data-autoclose="1" ng-required="question.availableCheck" timeType="iso" bs-timepicker>
+						<input type="text" id="judgeStartTime" name="judgeStartTime" class="form-control" ng-model="question.judge_start" data-autoclose="1" ng-required="question.availableCheck" timeType="iso" data-minute-step="1" bs-timepicker>
 					</acj-field-with-feedback>
 				</div>
 			</div>
@@ -157,7 +157,7 @@
 				<div class="col-md-6 form-group">
 					<acj-field-with-feedback form-control="questionForm.judgeEndTime">
 						<label class="required-star">Time Evaluations End</label>
-						<input type="text" id="judgeEndTime" name="judgeEndTime" class="form-control" ng-model="question.judge_end" data-autoclose="1" ng-required="question.availableCheck" timeType="iso" bs-timepicker>
+						<input type="text" id="judgeEndTime" name="judgeEndTime" class="form-control" ng-model="question.judge_end" data-autoclose="1" ng-required="question.availableCheck" timeType="iso" data-minute-step="1" bs-timepicker>
 					</acj-field-with-feedback>
 				</div>
 			</div>
