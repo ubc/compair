@@ -85,7 +85,7 @@
 		<a href="#answers-tab">Answers <span ng-show="canManagePosts || !question.answer_period">({{question.answers_count}})</span></a>
 	  </li>
 	  <li id="comments">
-		<a href="#comments-tab">Comments ({{question.comments_count}})</a>
+		<a href="#comments-tab">Help</a>
 	  </li>
 	</ul>
 	
@@ -119,27 +119,27 @@
 				<h2>Answers <span ng-show="canManagePosts && grade.group">for "{{grade.group.name}}"</span> </h2>
 				
 				<!-- Instructors see before the answer period -->
-				<p ng-if="canManagePosts && !question.answer_period && !question.answers_count">
+				<p class="intro-text" ng-if="canManagePosts && !question.answer_period && !question.answers_count">
 					Answering period begins {{question.answer_start | amDateFormat: 'MMM D @ h:mm a'}}. Would you like to <a ng-href="#/course/{{courseId}}/question/{{question.id}}/edit" title="Edit the question">change the answer dates</a> for this question?
 				</p>
 				<!-- Students see before answering during the answer period -->
-				<p ng-if="!canManagePosts && !answered && question.answer_period">
+				<p class="intro-text" ng-if="!canManagePosts && !answered && question.answer_period">
 					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" title="Answer the question">Answer</a> and evaluate the question first, then read answers written by your classmates and instructors here.
 				</p>
 				<!-- Students see before evaluating before the evaluation period -->
-				<p ng-if="!canManagePosts && answered && !judged_req_met && !question.judging_period">
+				<p class="intro-text" ng-if="!canManagePosts && answered && !judged_req_met && !question.judging_period">
 					Evaluation period begins <span ng-if="question.judge_start > 0">{{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}}</span><span ng-if="question.judge_start <= 0">after the answer period ends</span>. After evaluating, you will be able to read answers written by your classmates and instructors here.
 				</p>
 				<!-- Students see before evaluating during the evaluation period -->
-				<p ng-if="!canManagePosts && question.judging_period && !judged_req_met">
+				<p class="intro-text" ng-if="!canManagePosts && question.judging_period && !judged_req_met">
 					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" title="Answer the question">Evaluate</a> the question first, then read answers written by your classmates and instructors here.
 				</p>
 				<!-- Anyone sees during the answer period, if no answers provided yet -->
-				<p ng-if="question.answer_period && !question.answers_count">
+				<p class="intro-text" ng-if="question.answer_period && !question.answers_count">
 					No answers given for this question yet.
 				</p>
 				<!-- Students see after evaluating before the evaluation period is over -->
-				<p ng-if="!canManagePosts && !see_answers && judged_req_met">
+				<p class="intro-text" ng-if="!canManagePosts && !see_answers && judged_req_met">
 					You have successfully met the requirements for this question. Answers written by your classmates and instructors will be available here beginning <strong>{{ answerAvail | amDateFormat: 'MMM D @ h:mm a'}}</strong>.
 				</p>
 			</div>
@@ -280,7 +280,7 @@
 						</div>
 						<!-- Student Attachment -->
 						<acj-pdf-inline label="See question details:" 
-							pdfs="answer.post.files">
+							pdfs="answer.post.files" ng-click="revealAnswer(answer.post.id)">
 						</acj-pdf-inline>
 					</div>
 					<!-- Student Answer Read More Button (not used for instructor answers) -->
@@ -362,8 +362,11 @@
 				<a href="#/course/{{courseId}}/question/{{question.id}}/comment/create" class="btn btn-primary pull-right">
 					Comment
 				</a>
-				<h2>Question comments</h2>
-				<p>Ask your instructor about the question or leave a question-related comment for classmates.</p>
+				<h2>Help for this assignment</h2>
+				<p class="intro-text">Ask or answer a question about the assignment by adding a comment for your instructor or classmates here.</p>
+				<p ng-if="!question.comments_count">
+					No help comments have been left for this question yet. Would you like to <a href="#/course/{{courseId}}/question/{{question.id}}/comment/create">add a comment</a> for this assignment?
+				</p>
 			</div>
 			
 			<!-- Comments Section -->

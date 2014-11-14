@@ -69,8 +69,8 @@ myApp.config( function ($routeProvider) {
 			})
 		.when ('/course/:courseId/user/enrol',
 		   {
-			   templateUrl: 'modules/classlist/classlist-enrol-partial.html',
-			   label: "Set Instructors"
+				templateUrl: 'modules/classlist/classlist-enrol-partial.html',
+				label: "Set Instructors"
 		   })
 		.when ('/course/:courseId/question/create', 
 			{
@@ -100,12 +100,12 @@ myApp.config( function ($routeProvider) {
 		.when ('/course/:courseId/question/:questionId/comment/create',
 			{
 				templateUrl: 'modules/comment/comment-question-create-partial.html',
-				label: "Comment"
+				label: "Comment on Assignment"
 			})
 		.when ('/course/:courseId/question/:questionId/comment/:commentId/edit',
 			{
 				templateUrl: 'modules/comment/comment-question-edit-partial.html',
-				label: "Edit Comment"
+				label: "Edit Comment on Assignment"
 			})
 		.when('/course/:courseId/question/:questionId/answer/:answerId/comment/create',
 			{
