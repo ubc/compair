@@ -70,12 +70,9 @@
 						<div mathjax="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id1].post.content"
 							ng-bind-html="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id1]['post']['content']">
 						</div>
-						<p ng-if="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id1].post.files.length">
-							See details:
-							<span ng-repeat="file in comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id1].post.files">
-								<a target="_blank" ng-href="#/course/{{courseId}}/question/{{questionId}}/post/{{comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id1].post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
-							</span>
-						</p>
+						<!-- Attachments -->
+						<acj-pdf-inline label="See details:" pdfs="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id1].post.files">
+						</acj-pdf-inline>
 					</div>
 				</div>
 				<div class="col-md-6">
@@ -84,12 +81,9 @@
 						<div mathjax="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id2].post.content"
 							ng-bind-html="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id2]['post']['content']">
 						</div>
-						<p ng-if="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id2].post.files.length">
-							See details:
-							<span ng-repeat="file in comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id2].post.files">
-								<a target="_blank" ng-href="#/course/{{courseId}}/question/{{questionId}}/post/{{comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id2].post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
-							</span>
-						</p>
+						<!-- Attachments -->
+						<acj-pdf-inline label="See details:" pdfs="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id2].post.files">
+						</acj-pdf-inline>
 					</div>
 				</div>
 			</div>

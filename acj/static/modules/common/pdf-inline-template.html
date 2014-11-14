@@ -1,0 +1,17 @@
+<div class="pdfInline">
+	<!-- List of files, user clicks on one to view in iframe -->
+	<ul class="list-inline">
+		<li>{{label}}</li>
+		<li ng-repeat="pdf in pdfs">
+			<a href="" class="btn btn-default btn-xs" 
+				ng-click="updatePDF(pdf.name);">
+				<i class="fa fa-file-pdf-o"></i> {{pdf.alias}}
+			</a>
+		</li>
+	</ul>
+	<!-- Iframe for showing the PDF file here -->
+	<div class="pdfIframeWrapper" ng-if="pdfvisible">
+		<iframe ng-src="{{pdfurl}}" allowfullscreen webkitallowfullscreen>
+		</iframe>
+	</div>
+</div>

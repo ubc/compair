@@ -8,13 +8,8 @@
 			ng-bind-html="question.post.content">
 		</div>
 		<!-- Attachment -->
-		<div ng-if="question.post.files.length">
-			<p>See question details:
-				<span ng-repeat="file in question.post.files">
-					<a target="_blank" ng-href="#/course/{{courseId}}/question/{{questionId}}/post/{{question.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
-				</span>
-			</p>
-		</div>
+		<acj-pdf-inline label="See question details:" pdfs="question.post.files">
+		</acj-pdf-inline>
 	</div>
 	
 	<div ng-show="answerPairError" class="alert alert-warning" role="alert">
@@ -36,12 +31,10 @@
 							ng-bind-html="answerPair.answer1.post.content">
 						</div>
 						<!-- Attachment -->
-						<p ng-if="answerPair.answer1.post.files.length">
-							See details:
-							<span ng-repeat="file in answerPair.answer1.post.files">
-								<a target="_blank" ng-href="#/course/{{courseId}}/question/{{questionId}}/post/{{answerPair.answer1.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
-							</span>
-						</p>
+						<acj-pdf-inline label="See detail:" 
+							pdfs="answerPair.answer1.post.files">
+						</acj-pdf-inline>
+						<!-- Flagging -->
 						<a href="" class="btn btn-default btn-xs"
 							title="Flag as incomplete or inappropriate."
 							ng-class="{'btn-danger': answerPair.answer1.flagged}"
@@ -59,12 +52,10 @@
 							ng-bind-html="answerPair.answer2.post.content">
 						</div>
 						<!-- Attachment -->
-						<p ng-if="answerPair.answer2.post.files.length">
-							See details:	
-							<span ng-repeat="file in answerPair.answer2.post.files">
-								<a target="_blank" ng-href="#/course/{{courseId}}/question/{{questionId}}/post/{{answerPair.answer2.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
-							</span>
-						</p>
+						<acj-pdf-inline label="See detail:" 
+							pdfs="answerPair.answer2.post.files">
+						</acj-pdf-inline>
+						<!-- Flagging -->
 						<a href="" class="btn btn-default btn-xs pull-right"
 							title="Flag as incomplete or inappropriate."
 							ng-class="{'btn-danger': answerPair.answer2.flagged}"

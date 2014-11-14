@@ -4,9 +4,7 @@ var module = angular.module('ubc.ctlt.acj.attachment',
 	[
 		'angularFileUpload',
 		'ngResource',
-		'ubc.ctlt.acj.authorization',
 		'ubc.ctlt.acj.course',
-		'ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.toaster'
 	]
 );
@@ -92,23 +90,5 @@ module.service('importService', function(FileUploader, $location, CourseResource
 });
 
 /***** Controllers *****/
-module.controller(
-	"AttachmentPDFController",
-	function($scope, $log, $routeParams, $sce, Authorize, CourseResource, QuestionResource)
-	{
-		var courseId = $routeParams['courseId'];
-		var questionId = $routeParams['questionId'];
-		var postId = $routeParams['postId'];
 
-		Authorize.can(Authorize.READ, CourseResource.MODEL).then(function(result) {
-			$scope.canReadCourse = result;
-		});
-		Authorize.can(Authorize.READ, QuestionResource.MODEL).then(function(result) {
-		    	$scope.canReadQuestion = result;
-		});
-		$scope.pdfURL = $sce.trustAsResourceUrl(
-			'/static/lib/viewerjs/index.html#../../pdf/' + 
-			courseId + '_' + questionId + '_' + postId + '.pdf');
-	}
-);
 })();

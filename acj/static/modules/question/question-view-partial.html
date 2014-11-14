@@ -11,12 +11,8 @@
 		</div>
 		
 		<!-- Question Attachment -->
-		<p class="question-desc" ng-if="question.post.files.length">
-			See question details:
-			<span ng-repeat="file in question.post.files">
-				<a target="_blank" ng-href="#/course/{{courseId}}/question/{{question.id}}/post/{{question.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
-			</span>
-		</p>
+		<acj-pdf-inline label="See question details:" pdfs="question.post.files">
+		</acj-pdf-inline>
 		
 		<!-- Question Answer/Evaluation Periods -->
 		<div ng-show="canManagePosts">
@@ -25,7 +21,7 @@
 		</div>
 		
 		<!-- Question Metadata Footer -->
-		<ul class="list-inline">
+		<ul class="list-inline question-metadata-list">
 			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">	
 				<a ng-href="#/course/{{courseId}}/question/{{question.id}}/edit" ng-if="canManagePosts || question.post.user.id == loggedInUserId" title="Edit">
 					Edit
@@ -183,12 +179,9 @@
 							ng-bind-html="answer.post.content">
 						</div>
 						<!-- Instructor Attachment -->
-						<p ng-if="answer.post.files.length">
-							See answer details:
-							<span ng-repeat="file in answer.post.files">
-								<a target="_blank" ng-href="#/course/{{courseId}}/question/{{questionId}}/post/{{answer.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
-							</span>
-						</p>
+						<acj-pdf-inline label="See question details:" 
+							pdfs="answer.post.files">
+						</acj-pdf-inline>
 					</div>
 					
 					<!-- Instructor Answer Replies Section -->
@@ -286,12 +279,9 @@
 						     ng-bind-html="answer.post.content">
 						</div>
 						<!-- Student Attachment -->
-						<p ng-if="answer.post.files.length">
-							See answer details:
-							<span ng-repeat="file in answer.post.files">
-								<a target="_blank" ng-href="#/course/{{courseId}}/question/{{questionId}}/post/{{answer.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
-							</span>
-						</p>
+						<acj-pdf-inline label="See question details:" 
+							pdfs="answer.post.files">
+						</acj-pdf-inline>
 					</div>
 					<!-- Student Answer Read More Button (not used for instructor answers) -->
 					<p ng-show="showReadMore" class="read-more" ng-click="revealAnswer(answer.post.id)"><a href="" class="btn btn-sm btn-default">Read More...</a></p>

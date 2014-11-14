@@ -12,6 +12,7 @@ var module = angular.module('ubc.ctlt.acj.judgement',
 		'ubc.ctlt.acj.toaster',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.mathjax',
+		'ubc.ctlt.acj.common.pdf',
 		'ubc.ctlt.acj.session'
 	]
 );
