@@ -7,12 +7,9 @@
 			ng-bind-html="parent.post.content">
 		</div>
 		<!-- Attachment -->
-		<p class="question-desc" ng-if="parent.post.files.length">
-			See details:
-			<span ng-repeat="file in parent.post.files">
-				<a target="_blank" ng-href="#/course/{{courseId}}/question/{{questionId}}/post/{{parent.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
-			</span>
-		</p>
+		<acj-pdf-inline label="See question details:" pdfs="parent.post.files">
+		</acj-pdf-inline>
+
 		<hr />
 		<div class="form-group">
 			<textarea ng-model="comment.content" id="commentContent" class="form-control" rows="8" ckeditor required>

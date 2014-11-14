@@ -17,8 +17,6 @@ module.directive('acjPdfInline', function() {
 			label: '@'
 		},
 		controller: function ($scope, $log, $sce) {
-			$log.debug("Show PDFs: ");
-			$log.debug($scope.pdfs);
 			$scope.pdfname = "";
 			$scope.updatePDF = function (name) {
 				if (name != $scope.pdfname) {

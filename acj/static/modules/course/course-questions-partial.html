@@ -73,16 +73,13 @@
 					     ng-bind-html="question.post.content">
 					</div>
 					<!-- Attachment -->
-					<p ng-if="question.post.files.length">
-						See question details:
-						<span ng-repeat="file in question.post.files">
-							<a target="_blank" ng-href="#/course/{{courseId}}/question/{{question.id}}/post/{{question.post.id}}">{{file.alias}} <i class="fa fa-file-pdf-o"></i></a>
-						</span>
-					</p>
+					<acj-pdf-inline label="See question details:" 
+						pdfs="question.post.files">
+					</acj-pdf-inline>
 				</div>
 				
 				<!-- Metadata -->
-				<ul class="list-inline">
+				<ul class="list-inline question-metadata-list">
 					<!-- Edit Link -->
 					<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">	
 						<a ng-href="#/course/{{course.id}}/question/{{question.id}}/edit" title="Edit">
