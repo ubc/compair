@@ -398,11 +398,7 @@ class PostsForQuestions(db.Model):
 	judge_end = db.Column(db.DateTime(timezone=True), nullable=True)
 	num_judgement_req = db.Column(db.Integer, nullable=False)
 	can_reply = db.Column(db.Boolean, default=False, nullable=False)
-	selfevaltype_id = db.Column(
-		db.Integer,
-		db.ForeignKey('SelfEvaluationTypes.id', ondelete="CASCADE"),
-		nullable=True)
-	selfevaltype = db.relationship("SelfEvaluationTypes")
+	selfevaltype = db.relationship("PostsForQuestionsAndSelfEvaluationTypes", cascade="delete")
 	modified = db.Column(
 		db.DateTime,
 		default=datetime.datetime.utcnow,
@@ -453,6 +449,13 @@ class PostsForQuestions(db.Model):
 	@hybrid_property
 	def judged(self):
 		return len(self.answerpairing) > 0
+	@hybrid_property
+	def selfevaltype_id(self):
+		# assume max one selfeval type per question for now
+		type = None
+		if len(self.selfevaltype):
+			type = self.selfevaltype[0].selfevaluationtypes_id
+		return type
 
 class PostsForAnswers(db.Model):
 	__tablename__ = 'PostsForAnswers'
@@ -583,8 +586,23 @@ class SelfEvaluationTypes(db.Model):
 
 	# constants for the self-evaluation types
 	TYPE_COMPARE_NO = "No Comparison with Another Answer"
-	# not yet implemented
-	#TYPE_COMPARE_SIMILAR = "Compare to Another Answer"
+	#TYPE_COMPARE_SIMILAR_ANSWER = "Comparison to a Similarly Scored Answer"
+	#TYPE_COMPARE_HIGHER_ANSWER = "Comparison to a Higher Scored Answer"
+
+class PostsForQuestionsAndSelfEvaluationTypes(db.Model):
+	__tablename__ = 'PostsForQuestionsAndSelfEvaluationTypes'
+	__table_args__ = default_table_args
+
+	id = db.Column(db.Integer, primary_key=True, nullable=False)
+	postsforquestions_id = db.Column(
+		db.Integer,
+		db.ForeignKey('PostsForQuestions.id', ondelete="CASCADE"),
+		nullable=False)
+	selfevaluationtypes_id = db.Column(
+		db.Integer,
+		db.ForeignKey('SelfEvaluationTypes.id', ondelete="CASCADE"),
+		nullable=False)
+	type = db.relationship("SelfEvaluationTypes")
 
 #################################################
 # Criteria - What users should judge answers by
@@ -789,6 +807,7 @@ class PostsForJudgements(db.Model):
 		db.ForeignKey('Judgements.id', ondelete="CASCADE"),
 		nullable=False)
 	judgement = db.relationship("Judgements")
+	selfeval = db.Column(db.Boolean, default=False, nullable=False)
 
 	@hybrid_property
 	def courses_id(self):

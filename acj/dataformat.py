@@ -150,7 +150,6 @@ def getPostsForQuestions(restrict_users=True, include_answers=True):
 		'can_reply': fields.Boolean,
 		'num_judgement_req': fields.Integer,
 		'selfevaltype_id': fields.Integer,
-		'selfevaltype': fields.Nested(getSelfEvalTypes()),
 		'judged': fields.Boolean
 	}
 	if include_answers:

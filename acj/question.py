@@ -11,7 +11,8 @@ from sqlalchemy import desc, or_
 from . import dataformat
 from .core import db, event
 from .authorization import allow, require
-from .models import PostsForQuestions, Courses, Posts, CoursesAndUsers
+from .models import PostsForQuestions, Courses, Posts, CoursesAndUsers, \
+	PostsForQuestionsAndSelfEvaluationTypes
 from .util import new_restful_api, get_model_changes
 from .attachment import addNewFile, deleteFile
 
@@ -107,7 +108,7 @@ class QuestionIdAPI(Resource):
 			question.judge_end = params.get('judge_end', None)
 		question.can_reply = params.get('can_reply', False)
 		question.num_judgement_req = params.get('num_judgement_req', question.num_judgement_req)
-		question.selfevaltype_id = params.get('selfevaltype_id', question.selfevaltype_id)
+		selfevaltype_id = params.pop('selfevaltype_id', question.selfevaltype_id)
 		db.session.add(question.post)
 		db.session.add(question)
 
@@ -121,6 +122,19 @@ class QuestionIdAPI(Resource):
 		db.session.commit()
 		if name:
 			addNewFile(params.get('alias'), name, course_id, question.id, question.post.id)
+		# assume one selfevaluation type per question
+		type = PostsForQuestionsAndSelfEvaluationTypes.query.filter_by(postsforquestions_id=question.id).first()
+		if selfevaltype_id:
+			if not type:
+				type = PostsForQuestionsAndSelfEvaluationTypes(selfevaluationtypes_id=selfevaltype_id,
+					postsforquestions_id=question.id)
+			else:
+				type.selfevaluationtypes_id = selfevaltype_id
+			db.session.add(type)
+		elif not selfevaltype_id and type:
+			db.session.delete(type)
+		db.session.commit()
+
 		return marshal(question, dataformat.getPostsForQuestions())
 
 	@login_required
@@ -198,12 +212,17 @@ class QuestionRootAPI(Resource):
 			question.judge_end = dateutil.parser.parse(params.get('judge_end', None))
 		question.can_reply = params.get('can_reply', False)
 		question.num_judgement_req = params.get('num_judgement_req')
-		question.selfevaltype_id = params.get('selfevaltype_id', None)
+		selfevaltype_id = params.pop('selfevaltype_id', None)
 		db.session.add(post)
 		db.session.add(question)
 		db.session.commit()
 		if name:
-			addNewFile(params.get('alias'), name, course_id, question.id, post.id)	
+			addNewFile(params.get('alias'), name, course_id, question.id, post.id)
+		if selfevaltype_id:
+			type = PostsForQuestionsAndSelfEvaluationTypes(selfevaluationtypes_id=selfevaltype_id,
+					postsforquestions_id=question.id)
+			db.session.add(type)
+			db.session.commit()
 
 		on_question_create.send(
 			current_app._get_current_object(),

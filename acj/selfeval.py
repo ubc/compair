@@ -24,7 +24,7 @@ class SelfEvalTypeRootAPI(Resource):
     @login_required
     def get(self):
         types = SelfEvaluationTypes.query.\
-            order_by(SelfEvaluationTypes.id.desc()).all()
+            order_by(SelfEvaluationTypes.name.desc()).all()
 
         selfevaltype_get.send(
             current_app._get_current_object(),
