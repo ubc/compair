@@ -72,6 +72,9 @@ module.controller(
 			{
 				$scope.question = ret.question;
 				$scope.total = ret.question.num_judgement_req;
+				if (ret.question.selfevaltype_id) {
+					$scope.total += 1;
+				}
 				$scope.questionCriteria = ret.question.criteria;
 			},
 			function (ret)
@@ -88,7 +91,7 @@ module.controller(
 						$scope.current = ret.count + 1;
 					},
 					function(ret) {
-						Toaster.reqerror("Evaluations Total Not Found", ret);
+						Toaster.reqerror("Comparisons Total Not Found", ret);
 					}
 				);
 		});	
@@ -128,7 +131,7 @@ module.controller(
 			// ensure hidden step revealed first
 			$timeout(function(){
 				// jump to revealed step
-				window.scrollTo(0, $(selector)[0].offsetTop - 80);
+				window.scrollTo(0, $(selector)[0].offsetTop - 220);
 			}, 0);
 		};
 		
@@ -174,32 +177,32 @@ module.controller(
 												function(ret) {
 													if ($scope.question.num_judgement_req > ret.count) {
 														var left = $scope.question.num_judgement_req - ret.count;
-														Toaster.success("Evaluation Submitted Successfully", "Please submit " + left + " more evaluation(s).");
+														Toaster.success("Comparison Submitted Successfully", "Please continue to next comparison.");
 														$route.reload();
 														window.scrollTo(0, 0);
 													// self-evaluation
 													} else if ($scope.question.selfevaltype_id) {
-														Toaster.success("Evaluation Submitted Successfully. Please submit a self-evaluation.");
+														Toaster.success("Comparison Submitted Successfully", "Please now submit a self-evaluation.");
 														$location.path('/course/'+courseId+'/question/'+questionId+'/selfevaluation');
 													} else {
-														Toaster.success("Evaluation Submitted Successfully");
+														Toaster.success("Comparison Submitted Successfully");
 														$location.path('/course/' + courseId);
 													}
 												},
 												function(ret) {
-													Toaster.success("Evaluation Submitted Successfully");
+													Toaster.success("Comparison Submitted Successfully");
 													$location.path('/course/' + courseId);
 												}
 											);
 									});
 								},
 								function(ret) {
-									Toaster.reqerror("Evaluation Submit Failed", ret);
+									Toaster.reqerror("Comparison Submit Failed", ret);
 								}
 						);
 					},
 					function(ret) {
-						Toaster.reqerror("Evaluation Submit Failed", ret);
+						Toaster.reqerror("Comparison Submit Failed", ret);
 					}
 			);
 			// save comments for each individual answer
@@ -263,13 +266,27 @@ module.controller(
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
 		$scope.comment = {};
+		
+		Session.getUser().then(function(user) {
+			var userId = user.id;
+			var count = JudgementResource.count(
+				{'courseId': courseId, 'questionId': questionId, 'userId': userId}).
+				$promise.then(
+					function(ret) {
+						$scope.total = ret.count + 1;
+					},
+					function(ret) {
+						Toaster.reqerror("Comparisons Total Not Found", ret);
+					}
+				);
+		});
 
 		AnswerResource.user({'courseId': courseId, 'questionId': questionId}).$promise.then(
 			function (ret) {
 				$scope.parent = ret.answer[0];
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve your answer", ret);
+				Toaster.reqerror("Unable To Retrieve Answer", ret);
 			}
 		);
 
@@ -280,12 +297,12 @@ module.controller(
 				$scope.comment).$promise.then(
 					function (ret) {
 						$scope.submitted = false;
-						Toaster.success("Self-Evaluation Completed.");
+						Toaster.success("Self-Evaluation Saved Successfully", "Your comparisons are now complete.");
 						$location.path('/course/' + courseId);
 					},
 					function (ret) {
 						$scope.submitted = false;
-						Toaster.reqerror("Unable to submit your self-evaluation.", ret);
+						Toaster.reqerror("Unable To Save Self-Evaluation", ret);
 					}
 			)
 		};

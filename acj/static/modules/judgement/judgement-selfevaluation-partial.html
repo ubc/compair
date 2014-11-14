@@ -1,4 +1,5 @@
 <div ng-controller="JudgementSelfEvalController">
-	<h1>Self-Evaluation</h1>
+	<h1>Self-Evaluation <span class="label label-warning pull-right">Round {{total}} / {{total}}</h1>
+	<p class="intro-text">Now compare your own answer to the other answers you've seen.</p>
 	<ng-include src="'modules/comment/comment-form-partial.html'"></ng-include>
 </div>

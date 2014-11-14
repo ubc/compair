@@ -1,6 +1,6 @@
 <div ng-controller="JudgementController" class="evaluate-screen">
 	
-	<h1>Evaluate Answers (Round {{current}} / {{total}})</h1>
+	<h1>Compare Answers <span class="label label-warning pull-right">Round {{current}} / {{total}}</span></h1>
 	
 	<div class="standalone-question">
 		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
@@ -20,13 +20,13 @@
 
 		<div class="answer-pair">
 			
-			<h2>1) Evaluate each answer</h2>
+			<h2>1) Provide feedback for these student answers</h2>
 			
 			<!-- Show the answers side by side -->
-			<div class="row">			
+			<div class="row sub-step">			
 				<div class="col-md-6">
 					<div class="answer-choice clearfix">
-						<h3 class="text-center">Answer 1</h3>
+						<h3 class="text-center">Answer {{(current - 1) + current}}</h3>
 						<div mathjax="answerPair.answer1.post.content"
 							ng-bind-html="answerPair.answer1.post.content">
 						</div>
@@ -45,9 +45,9 @@
 						</a>
 					</div>
 				</div>
-				<div class="col-md-6">
+				<div class="col-md-6 ">
 					<div class="answer-choice clearfix">
-						<h3 class="text-center">Answer 2</h3>
+						<h3 class="text-center">Answer {{current * 2}}</h3>
 						<div mathjax="answerPair.answer2.post.content"
 							ng-bind-html="answerPair.answer2.post.content">
 						</div>
@@ -68,10 +68,10 @@
 				</div>
 			</div>
 			
-			<div class="row">
+			<div class="row sub-step">
 				<div class="col-md-6">
 					<label class="cke-label">
-						Reply to Answer 1 (will be visible to classmates)
+						Reply to Answer {{(current - 1) + current}} (will be visible to classmates)
 						<i class="fa fa-arrow-down"></i>
 					</label>
 					<textarea
@@ -80,7 +80,7 @@
 				</div>
 				<div class="col-md-6">
 					<label class="cke-label">
-						Reply to Answer 2 (will be visible to classmates)
+						Reply to Answer {{current * 2}} (will be visible to classmates)
 						<i class="fa fa-arrow-down"></i>
 					</label>
 					<textarea
@@ -103,12 +103,12 @@
 		
 			<hr />
 			
-			<h2>2) Choose an answer</h2>
+			<h2>2) Choose an answer based on the criteria below</h2>
 			
-			<div class="form-group" ng-repeat="questionCriterion in questionCriteria">
+			<div class="form-group sub-step" ng-repeat="questionCriterion in questionCriteria">
 				
 				<!-- Show the judgement criteria (needs ng-repeat) -->
-				<div class="each-criterion text-center">
+				<div class="each-criterion text-center sub-step">
 					<fieldset>
 						<h3><i class="fa fa-gavel"></i> {{questionCriterion.criterion.name}}</h3>
 						
@@ -116,6 +116,7 @@
 							ng-bind-html="questionCriterion.criterion.description">
 						</div>
 						
+						<p class="required-star"><strong>Select one from this pair</strong></p>
 						<div class="btn-group">
 							<label class="btn btn-primary" ng-class=
 								"{active:questionCriterion.winner==answerPair.answer1.id}">
@@ -123,7 +124,7 @@
 									name="answer{{answerPair.answer1.id}}" required
 									ng-model="questionCriterion.winner"
 									ng-value="answerPair.answer1.id">
-								Select Answer 1
+								Answer {{(current - 1) + current}}
 							</label>
 							<label class="btn btn-primary" ng-class=
 								"{active:questionCriterion.winner==answerPair.answer2.id}">
@@ -131,12 +132,12 @@
 									name="answer{{answerPair.answer1.id}}" required
 									ng-model="questionCriterion.winner"
 									ng-value="answerPair.answer2.id">
-								Select Answer 2
+								Answer {{current * 2}}
 							</label>
 						</div>
 						
 						<label class="text-left cke-label">
-							Explain this selection (shown only to instructor)
+							Explain your selection (shown only to instructor)
 							<i class="fa fa-arrow-down"></i>
 						</label>
 						<textarea
@@ -147,7 +148,7 @@
 				
 			</div>
 			
-			<div class="form-group">
+			<div class="form-group sub-step">
 				<!-- button to submit and refresh page IF evaluations remain for user -->
 				<input ng-disabled="judgementForm.$invalid || submitted" type="submit"
 					value="Submit" class="btn btn-success btn-lg center-block" />
