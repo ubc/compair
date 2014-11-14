@@ -182,8 +182,22 @@ module.controller(
 														window.scrollTo(0, 0);
 													// self-evaluation
 													} else if ($scope.question.selfevaltype_id) {
-														Toaster.success("Comparison Submitted Successfully", "Please now submit a self-evaluation.");
-														$location.path('/course/'+courseId+'/question/'+questionId+'/selfevaluation');
+														QuestionResource.getAnswered({'id': $scope.courseId,
+															'questionId': questionId}).$promise.then(
+																function (ret) {
+																	// if user has an answer submitted
+																	if(ret.answered > 0) {
+																		Toaster.success("Evaluation Submitted Successfully. Please submit a self-evaluation.");
+																		$location.path('/course/'+courseId+'/question/'+questionId+'/selfevaluation');
+																	} else {
+																		Toaster.success("Evaluation Submitted Successfully");
+																		$location.path('/course/' + courseId);
+																	}
+																},
+																function (ret) {
+																	Toaster.reqerror("Your Answer is Not Found", ret);
+																}
+														);
 													} else {
 														Toaster.success("Comparison Submitted Successfully");
 														$location.path('/course/' + courseId);
