@@ -1,5 +1,5 @@
 <div ng-controller="UserViewController">
-	<div class="pull-right" ng-if="ownProfile">
+	<div class="pull-right" ng-if="canCreateUser || ownProfile">
 		<a ng-href="#/user/{{user.id}}/edit" class="btn btn-primary">
 			<i class="fa fa-edit"></i> Edit
 		</a>

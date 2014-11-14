@@ -465,7 +465,7 @@ module.controller("QuestionCreateController",
 	{
 		var courseId = $routeParams['courseId'];
 		var today = new Date();
-		var answer_start = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59);
+		var answer_start = new Date(today.getFullYear(), today.getMonth(), today.getDate()+1, 0, 0);
 		var answer_end = new Date();
 		var judge_end = new Date();
 		answer_end.setHours(23,59,0,0);

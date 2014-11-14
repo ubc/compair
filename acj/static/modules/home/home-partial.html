@@ -1,8 +1,11 @@
 <div ng-controller="HomeController" class="home-screen">
 
-	<h1>Peer Evaluation Tool</h1>
+	<h1>Peer Answer Comparison Tool</h1>
 	
-	<p class="intro-text">Welcome to the Peer Evaluation Tool! With this tool, you will show your mastery of course content by answering course-related questions and evaluating the answers given by your classmates.</p>
+	<p class="intro-text">Welcome to the Peer Answer Comparison Tool! With this tool,
+		<span ng-show="!canAddCourse">you will show your understanding of course content by answering course-related questions and comparing and analyzing the answers given by your classmates.</span>
+		<span ng-show="canAddCourse">you can post course questions to students and see how they compare and analyze one another's answers.</span>
+	</p>
 	
 	<form class="form-inline" role="search" ng-show="canAddCourse && courses.length">
 		<div class="form-group pull-right">

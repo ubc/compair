@@ -1,32 +1,40 @@
 <div ng-controller="LoginController" class="login-screen">
-	<h1 class="text-center">Peer Evaluation Tool</h1>
+	<h2 class="text-center">Peer Answer Comparison Tool</h2>
 	<form name="loginForm" class="form" ng-submit="submit()" novalidate>
 		<fieldset>
-			<p class="text-center"><strong>UBC users, please log in with CWL first:</strong></p>
+			<p class="intro-text">Please log in with your CWL here:</p>
 			<a href="/login">
 			    <img class="center-block" src="https://www.auth.cwl.ubc.ca/CWL_login_button.gif" width="76" height="25" alt="CWL Login" border="0" valign="middle">
 			</a>
 			<hr />
-			<div class="form-group has-feedback"
-				ng-class="{'has-error': loginForm.username.$invalid, 'has-success': loginForm.username.$valid}">
-				<label for="inputUser" class="required-star">Username</label>
-				<input type="text" id="inputUser" name="username"
-					ng-model="username" required placeholder=""
-					class="form-control">
-				<!-- <span ng-show="!loginForm.username.$invalid" class="fa fa-check form-control-feedback"></span>
-				<span ng-show="loginForm.username.$invalid" class="fa fa-times form-control-feedback"></span> -->
-			</div>
-			<div class="form-group has-feedback"
-				ng-class="{'has-error': loginForm.password.$invalid, 'has-success': loginForm.password.$valid}">
-				<label for="inputPass" class="required-star">Password</label>
-				<input type="password" id="inputPass" name="password" ng-model="password" required
-					   placeholder="" class="form-control">
-				<!-- <span ng-show="loginForm.password.$valid" class="fa fa-check form-control-feedback"></span>
-				<span ng-show="loginForm.password.$invalid" class="fa fa-times form-control-feedback"></span> -->
+			<a href="" ng-click="showReplies = !showReplies">
+				<p>
+					<i class="fa fa-chevron-down" ng-show="showReplies"></i>
+					<i class="fa fa-chevron-right" ng-hide="showReplies"></i>
+					Use application's login instead?
+				</p>
+			</a>
+			<div ng-show="showReplies">
+				<div class="form-group has-feedback"
+					ng-class="{'has-error': loginForm.username.$invalid, 'has-success': loginForm.username.$valid}">
+					<label for="inputUser" class="required-star">Username</label>
+					<input type="text" id="inputUser" name="username"
+						ng-model="username" required placeholder=""
+						class="form-control">
+					<!-- <span ng-show="!loginForm.username.$invalid" class="fa fa-check form-control-feedback"></span>
+					<span ng-show="loginForm.username.$invalid" class="fa fa-times form-control-feedback"></span> -->
+				</div>
+				<div class="form-group has-feedback"
+					ng-class="{'has-error': loginForm.password.$invalid, 'has-success': loginForm.password.$valid}">
+					<label for="inputPass" class="required-star">Password</label>
+					<input type="password" id="inputPass" name="password" ng-model="password" required
+						   placeholder="" class="form-control">
+					<!-- <span ng-show="loginForm.password.$valid" class="fa fa-check form-control-feedback"></span>
+					<span ng-show="loginForm.password.$invalid" class="fa fa-times form-control-feedback"></span> -->
+				</div>
+				<input type="submit" ng-disabled="loginForm.$invalid || submitted" class="btn btn-primary center-block" value="Log In">
 			</div>
 		</fieldset>
-		<input type="submit" ng-disabled="loginForm.$invalid || submitted"
-			class="btn btn-primary center-block" value="Log In">
 	</form>
 	<div class="alert alert-danger text-center" ng-show="login_err">{{login_err}}</div>
 </div>
