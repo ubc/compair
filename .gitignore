@@ -54,3 +54,7 @@ node_modules
 .vagrant
 
 .env
+
+# uploaded files
+acj/static/pdf/*
+acj/static/report/*
