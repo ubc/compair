@@ -66,7 +66,7 @@ class QuestionCommentRootAPI(Resource):
 			course_id=course_id,
 			data={'question_id': question_id})
 
-		return {"objects":marshal(comments, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments(restrict_users))}
+		return {"objects":marshal(comments, dataformat.getPostsForQuestionsAndPostsForComments(restrict_users))}
 
 	@login_required
 	def post(self, course_id, question_id):
@@ -90,10 +90,10 @@ class QuestionCommentRootAPI(Resource):
 			event_name=on_comment_create.name,
 			user=current_user,
 			course_id=course_id,
-			data=marshal(commentForQuestion, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments(False)))
+			data=marshal(commentForQuestion, dataformat.getPostsForQuestionsAndPostsForComments(False)))
 
 		db.session.commit()
-		return marshal(commentForQuestion, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+		return marshal(commentForQuestion, dataformat.getPostsForQuestionsAndPostsForComments())
 
 apiQ.add_resource(QuestionCommentRootAPI, '')
 
@@ -113,7 +113,7 @@ class QuestionCommentIdAPI(Resource):
 			course_id=course_id,
 			data={'question_id': question_id, 'comment_id': comment_id})
 
-		return marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+		return marshal(comment, dataformat.getPostsForQuestionsAndPostsForComments())
 
 	@login_required
 	def post(self, course_id, question_id, comment_id):
@@ -139,7 +139,7 @@ class QuestionCommentIdAPI(Resource):
 			data=get_model_changes(comment.postsforcomments.post))
 
 		db.session.commit()
-		return marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+		return marshal(comment, dataformat.getPostsForQuestionsAndPostsForComments())
 
 	@login_required
 	def delete(self, course_id, question_id, comment_id):
@@ -153,7 +153,7 @@ class QuestionCommentIdAPI(Resource):
 			event_name=on_comment_delete.name,
 			user=current_user,
 			course_id=course_id,
-			data=marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments(False)))
+			data=marshal(comment, dataformat.getPostsForQuestionsAndPostsForComments(False)))
 
 		return {'id': comment.id}
 apiQ.add_resource(QuestionCommentIdAPI, '/<int:comment_id>')
@@ -179,7 +179,7 @@ class AnswerCommentRootAPI(Resource):
 			course_id=course_id,
 			data={'question_id': question_id, 'answer_id': answer_id})
 
-		return {"objects":marshal(comments, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())}
+		return {"objects":marshal(comments, dataformat.getPostsForAnswersAndPostsForComments())}
 
 	@login_required
 	def post(self, course_id, question_id, answer_id):
@@ -206,10 +206,10 @@ class AnswerCommentRootAPI(Resource):
 			event_name=on_answer_comment_create.name,
 			user=current_user,
 			course_id=course_id,
-			data=marshal(commentForAnswer, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments(False)))
+			data=marshal(commentForAnswer, dataformat.getPostsForAnswersAndPostsForComments(False)))
 
 		db.session.commit()
-		return marshal(commentForAnswer, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+		return marshal(commentForAnswer, dataformat.getPostsForAnswersAndPostsForComments())
 
 apiA.add_resource(AnswerCommentRootAPI, '')
 
@@ -229,7 +229,7 @@ class AnswerCommentIdAPI(Resource):
 			course_id=course_id,
 			data={'question_id': question_id, 'answer_id': answer_id, 'comment_id': comment_id})
 
-		return marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+		return marshal(comment, dataformat.getPostsForAnswersAndPostsForComments())
 
 	@login_required
 	def post(self, course_id, question_id, answer_id, comment_id):
@@ -255,7 +255,7 @@ class AnswerCommentIdAPI(Resource):
 			data=get_model_changes(comment.postsforcomments))
 
 		db.session.commit()
-		return marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())
+		return marshal(comment, dataformat.getPostsForAnswersAndPostsForComments())
 
 	@login_required
 	def delete(self, course_id, question_id, answer_id, comment_id):
@@ -269,7 +269,7 @@ class AnswerCommentIdAPI(Resource):
 			event_name=on_answer_comment_delete.name,
 			user=current_user,
 			course_id=course_id,
-			data=marshal(comment, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments(False)))
+			data=marshal(comment, dataformat.getPostsForAnswersAndPostsForComments(False)))
 
 		return {'id': comment.id}
 
@@ -292,5 +292,5 @@ class UserAnswerCommentIdAPI(Resource):
 			course_id=course_id,
 			data={'question_id': question_id, 'answer_id': answer_id})
 
-		return {'object':marshal(comments, dataformat.getPostsForQuestionsOrAnswersAndPostsForComments())}
+		return {'object':marshal(comments, dataformat.getPostsForAnswersAndPostsForComments())}
 apiU.add_resource(UserAnswerCommentIdAPI, '')

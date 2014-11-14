@@ -16,6 +16,7 @@ api = new_restful_api(evalcomments_api)
 
 new_comment_parser = RequestParser()
 new_comment_parser.add_argument('judgements', type=list, required=True)
+new_comment_parser.add_argument('selfeval', type=bool, required=False, default=False)
 
 # events
 on_evalcomment_create = event.signal('EVALCOMMENT_CREATE')
@@ -56,10 +57,11 @@ class EvalCommentRootAPI(Resource):
 		for judgement in params['judgements']:
 			judge = Judgements.query.get_or_404(judgement['id'])
 			post = Posts(courses_id=course_id)
-			post.content = judgement['comment'];
+			post.content = judgement['comment']
 			post.users_id = current_user.id
 			comment = PostsForComments(post=post)
-			evalcomment = PostsForJudgements(postsforcomments=comment, judgements_id=judge.id)
+			selfeval = params.get('selfeval', False)
+			evalcomment = PostsForJudgements(postsforcomments=comment, judgements_id=judge.id, selfeval=selfeval)
 			db.session.add(post)
 			db.session.add(comment)
 			db.session.add(evalcomment)

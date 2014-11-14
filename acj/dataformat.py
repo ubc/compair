@@ -150,7 +150,6 @@ def getPostsForQuestions(restrict_users=True, include_answers=True):
 		'can_reply': fields.Boolean,
 		'num_judgement_req': fields.Integer,
 		'selfevaltype_id': fields.Integer,
-		'selfevaltype': fields.Nested(getSelfEvalTypes()),
 		'judged': fields.Boolean
 	}
 	if include_answers:
@@ -160,7 +159,7 @@ def getPostsForQuestions(restrict_users=True, include_answers=True):
 
 def getPostsForAnswers(restrict_users=True, include_comments=True):
 	post = getPosts(restrict_users)
-	comments = getPostsForQuestionsOrAnswersAndPostsForComments(restrict_users)
+	comments = getPostsForAnswersAndPostsForComments(restrict_users)
 	score = getScores()
 	del post['course']
 	ret = {
@@ -186,13 +185,19 @@ def getPostsForComments(retrict_users=True):
 		'post': fields.Nested(post)
 	}
 
-def getPostsForQuestionsOrAnswersAndPostsForComments(restrict_users=True):
+def getPostsForQuestionsAndPostsForComments(restrict_users=True):
 	comment = getPostsForComments(restrict_users)
 	return {
 		'id': fields.Integer,
 		'postsforcomments': fields.Nested(comment),
 		'content': fields.String
 	}
+
+def getPostsForAnswersAndPostsForComments(restrict_users=True):
+	comment = getPostsForQuestionsAndPostsForComments(restrict_users)
+	comment['selfeval'] = fields.Boolean
+	comment['evaluation'] = fields.Boolean
+	return comment
 
 def getFilesForPosts():
 	return {

@@ -535,6 +535,9 @@ module.controller("QuestionCreateController",
 				$scope.question.judge_start = null;
 				$scope.question.judge_end = null;
 			}
+			if (!$scope.question.selfEvalCheck) {
+				delete $scope.question.selfevaltype_id;
+			}
 			$scope.question.name = attachService.getName();
 			$scope.question.alias = attachService.getAlias();
 			QuestionResource.save({'courseId': courseId}, $scope.question).
