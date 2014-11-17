@@ -218,12 +218,13 @@ class Courses(db.Model):
 		Adds the default criteria to newly created courses which doesn't have any criteria yet.
 		This is a complete hack. I'd implement this using sqlalchemy's event system instead but
 		it seems that events doesn't work right during test cases for some reason.
-		'''
+
 		if not self._criteriaandcourses:
 			default_criteria = Criteria.query.first()
 			criteria_and_course = CriteriaAndCourses(criterion=default_criteria, courses_id=self.id)
 			db.session.add(criteria_and_course)
 			db.session.commit()
+		'''
 		return self._criteriaandcourses
 
 # A "junction table" in sqlalchemy is called a many-to-many pattern. Such a
