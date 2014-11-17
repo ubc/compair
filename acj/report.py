@@ -200,9 +200,9 @@ def participation_report(course_id, questions):
 				filter_by(postsforquestions_id=ques.id, active=True).all()
 			for criterion in criteriaandquestion:
 				if ques.id not in answers:
-					score = 0
+					score = 'No Answer'
 				elif criterion.id not in answers[ques.id]:
-					score = 'N/A'
+					score = 'Not Evaluated'
 				else:
 					score = answers[ques.id][criterion.id]
 					score = round(score, 3)
