@@ -44,6 +44,7 @@
 			</li>
 			<li ng-if="!canManagePosts && question.judging_period">
 				{{ evaluation + selfEval }} comparison<span ng-if="(evaluation + selfEval) != 1">s</span> needed from you
+				<span ng-if="warning"> - Not enough answers available (Refresh the page to check again)</span>
 			</li>
 			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
 				<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" title="Delete" confirmation-needed="deleteQuestion(courseId, question.id)" keyword="question">
@@ -66,7 +67,7 @@
 		<!-- BUTTON when user is not an admin AND has comparisons remaining AND the comparison period is active
 		     enabled only when answer pairs are available for comparison ***HOW TO DO THIS HERE? NEED NUMBER LEFT VS. NUMBER NEEDED*** -->
 		<a class="btn btn-success" title="Evaluate Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement"
-		   ng-show="!canManagePosts && question.judging_period && !judged_req_met" ng-disabled="question.leftover > 0">
+		   ng-show="!canManagePosts && question.judging_period && !judged_req_met" ng-disabled="warning">
 			Compare Answers
 		</a>
 		<!-- BUTTON when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has a self-evaluation remaining

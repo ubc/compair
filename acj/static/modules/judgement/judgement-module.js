@@ -297,7 +297,12 @@ module.controller(
 
 		AnswerResource.user({'courseId': courseId, 'questionId': questionId}).$promise.then(
 			function (ret) {
-				$scope.parent = ret.answer[0];
+				if (!ret.answer.length) {
+					Toaster.error("You have not submitted an answer, therefore you cannot complete the self evaluation.");
+					$location.path('/course/' + courseId);
+				} else {
+					$scope.parent = ret.answer[0];
+				}
 			},
 			function (ret) {
 				Toaster.reqerror("Unable To Retrieve Answer", ret);

@@ -278,6 +278,9 @@ module.controller("QuestionViewController",
 							} else {
 								$scope.see_answers = $scope.question.after_judging && $scope.judged_req_met;
 							}
+							var diff = $scope.question.answers_count - myAnsCount;
+							var eval_left = ((diff * (diff - 1)) / 2);
+							$scope.warning = ($scope.question.num_judgement_req - ret.count) > eval_left;
 						},
 						function (ret) {
 							Toaster.reqerror("Evaluation Count Not Found", ret);
