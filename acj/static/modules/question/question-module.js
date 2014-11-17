@@ -658,6 +658,11 @@ module.controller("QuestionEditController",
 					ret.question.availableCheck = true;
 					ret.question.judge_start = new Date(ret.question.judge_start);
 					ret.question.judge_end = new Date(ret.question.judge_end);
+				} else {
+					ret.question.judge_start = new Date(ret.question.answer_end.getTime());
+					var judge_end = new Date(ret.question.answer_end.getTime());
+					judge_end.setDate(judge_end.getDate()+14);
+					ret.question.judge_end = judge_end.toISOString();
 				}
 				$scope.question = ret.question;
 				$scope.judged = ret.question.judged;
