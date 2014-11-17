@@ -53,7 +53,7 @@ module.controller(
 			$scope.canManageCriteriaCourses = result;
 		});
 		Session.getUser().then(function(user) {
-		    $scope.loggedInUserId = user.id;
+			$scope.loggedInUserId = user.id;
 		});
 		CourseResource.get({'id':$scope.courseId}).$promise.then(
 			function (ret) {
@@ -166,6 +166,7 @@ module.controller(
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		$scope.answered = {};
 		$scope.count = {};
+		$scope.filters = [];
 		Authorize.can(Authorize.CREATE, QuestionResource.MODEL).then(function(result) {
 				$scope.canCreateQuestions = result;
 		});
@@ -174,6 +175,13 @@ module.controller(
 		});
 		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(result) {
 				$scope.canManagePosts = result;
+				$scope.filters.push('All');
+				if ($scope.canManagePosts) {
+					$scope.filters.push('Answer Period', 'Comparison Period', 'Upcoming Assignments');
+				} else {
+					$scope.filters.push('Pending Assignments');
+				}
+				$scope.filter = $scope.filters[0];
 		});
 		CourseResource.get({'id': courseId}).$promise.then(
 			function (ret) {
@@ -259,6 +267,31 @@ module.controller(
 				}
 			);
 		};
+
+		$scope.questionFilter = function(filter) {
+			return function(question) {
+				switch(filter) {
+					// return all questions
+					case "All":
+						return true;
+					// INSTRUCTOR: return all questions in answer period
+					case "Answer Period":
+						return question.answer_period;
+					// INSTRUCTOR: return all questions in comparison period
+					case "Comparison Period":
+						return question.judging_period;
+					// INSTRUCTOR: return all questions that are unavailable to students at the moment
+					case "Upcoming Assignments":
+						return !question.available;
+					// STUDENTS: return all questions that need to be answered or compared
+					case "Pending Assignments":
+						return (question.answer_period && !$scope.answered[question.id]) ||
+							(question.judging_period && (question.left || question.selfeval_left));
+					default:
+						return false;
+				}
+			}
+		}
 	}
 );
 

@@ -4,7 +4,7 @@
 		<header class="col-sm-6">
 			<h1><i class="fa fa-book"></i> {{course.name}}</h1>
 			<div class="intro-text"
-			     ng-bind-html="course.description">
+				 ng-bind-html="course.description">
 			</div>
 		</header>
 		<div class="col-sm-6 sub-nav">
@@ -37,8 +37,9 @@
 	
 	<form class="form-inline searchCourse" role="search" ng-show="questions.length">
 		<div class="form-group pull-right">
-			<input class="form-control" type="text" ng-model="questionFilter.title"
-				placeholder="Search question titles">
+			<!--<input class="form-control" type="text" ng-model="questionFilter.title"
+				placeholder="Search question titles">-->
+			<select ng-model="filter" ng-options="f for f in filters"></select>
 		</div>
 	</form>
 	
@@ -52,7 +53,7 @@
 	
 	<!-- Questions List -->
 	<div class="row each-question"
-		ng-repeat="(key, question) in questions | filter:questionFilter">
+		ng-repeat="(key, question) in questions | filter:questionFilter(filter) as results">
 		
 		<!-- Question Display -->
 		<div class="col-sm-9 media">
@@ -70,7 +71,7 @@
 				<!-- Details -->
 				<div class="question-desc">
 					<div mathjax
-					     ng-bind-html="question.post.content">
+						 ng-bind-html="question.post.content">
 					</div>
 					<!-- Attachment -->
 					<acj-pdf-inline label="See question details:" 
@@ -145,7 +146,7 @@
 				Answered
 			</p>
 			<!-- BUTTON when user is not an admin AND has comparisons remaining AND the comparison period is active
-			     enabled only when answer pairs are available for comparison -->
+				 enabled only when answer pairs are available for comparison -->
 			<a class="btn btn-success" title="Compare Answers" ng-href="#/course/{{course.id}}/question/{{question.id}}/judgement"
 			   ng-show="!canManagePosts && question.judging_period && question.left" ng-disabled="question.leftover > 0">
 				Compare Answers
@@ -156,7 +157,7 @@
 						Not enough answers are available<br />(Refresh the page to check again)
 				</p>
 			<!-- BUTTON when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has a self-evaluation remaining
-			     enabled only when user has answered question -->
+				 enabled only when user has answered question -->
 			<a class="btn btn-success" title="Compare Answers" ng-href="#/course/{{ course.id }}/question/{{ question.id }}/selfevaluation"
 			   ng-show="!canManagePosts && question.judging_period && !question.left && question.selfeval_left" ng-disabled="!answered[question.id]">
 				Compare Answers
