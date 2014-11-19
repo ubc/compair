@@ -13,6 +13,8 @@
 		<link rel="stylesheet" href="lib/AngularJS-Toaster/toaster.css" />
 		<!-- endbower -->
 
+		<!-- Javascript Libraries -->
+		<!-- build:prod_minify_js_libs -->
 		<!-- bower:js -->
 		<script src="lib/es5-shim/es5-shim.js"></script>
 		<script src="lib/jquery/dist/jquery.js"></script>
@@ -37,8 +39,16 @@
 		<script src="lib/angular-bootstrap/ui-bootstrap-tpls.js"></script>
 		<script src="lib/viewerjs/viewer.js"></script>
 		<!-- endbower -->
+		<!-- endbuild -->
 
 		<!-- Non-Bower Managed Includes -->
+
+		<!-- ACJ Stylesheet -->
+		<!-- build:prod_compile_minify_css -->
+		<link rel="stylesheet/less" type="text/css" href="less/acj.less" />
+		<script src="//cdnjs.cloudflare.com/ajax/libs/less.js/1.7.3/less.min.js">
+		</script>
+		<!-- endbuild -->
 
 		<!-- CKEditor, not bower managed since need mathjax plugin -->
 		<script src="lib/ckeditor/ckeditor.js"></script>
@@ -80,12 +90,6 @@
 		<script src="modules/group/group-module.js"></script>
 		<script src="modules/report/report-module.js"></script>
 		
-		<!-- ACJ Stylesheet Prod-->
-		<link rel="stylesheet" type="text/css" href="acj.css" />
-		
-		<!-- ACJ Stylesheet Dev -->
-		<!-- <link rel="stylesheet/less" type="text/css" href="less/acj.less" />
-		<script src="//cdnjs.cloudflare.com/ajax/libs/less.js/1.7.3/less.min.js"></script> -->
 	</head>
 	<body>
 

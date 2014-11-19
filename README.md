@@ -46,6 +46,11 @@ If you already have a MySQL server running on your host, you may need to use the
 
 	mysql -u acj --protocol=TCP -P 3306 -p acj
 
+Generate Production Release
+---------------------------
+Run `gulp prod` to generate the production version. This currently just does two things: 
+1. Combine all Bower managed javascript libraries into a single minified file.
+2. Compile and minify the less files into a single css file.
 
 Database Upgrade
 ----------------

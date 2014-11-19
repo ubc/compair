@@ -13,7 +13,6 @@ var module = angular.module('ubc.ctlt.acj.comment',
 		'ubc.ctlt.acj.criteria',
 		'ubc.ctlt.acj.judgement',
 		'ubc.ctlt.acj.question',
-		'ubc.ctlt.acj.answer',
 		'ubc.ctlt.acj.toaster'
 	]
 );
