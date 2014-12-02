@@ -320,14 +320,15 @@ api.add_resource(InstructorsAPI, '/instructors')
 class StudentsAPI(Resource):
 	@login_required
 	def get(self, course_id):
-		Courses.query.get_or_404(course_id)
+		course = Courses.query.get_or_404(course_id)
 		coursesandusers = CoursesAndUsers(courses_id=course_id)
-		require(READ, coursesandusers)
-		restrict_users = not allow(EDIT, coursesandusers)
-		include_user = True
-		include_group = False
-
+		require(READ, course)
 		students = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_STUDENT).all()
+
+		if allow(READ, coursesandusers):
+			users = [{'user': {'id': u.user.id, 'name': u.user.fullname}} for u in students]
+		else:
+			users = [{'user': {'id': u.user.id, 'name': u.user.displayname}} for u in students]
 
 		on_classlist_student.send(
 			current_app._get_current_object(),
@@ -336,5 +337,5 @@ class StudentsAPI(Resource):
 			course_id=course_id
 		)
 
-		return {'students': marshal(students, dataformat.getCoursesAndUsers(restrict_users, include_user, include_group))}
+		return {'students': users}
 api.add_resource(StudentsAPI, '/students')

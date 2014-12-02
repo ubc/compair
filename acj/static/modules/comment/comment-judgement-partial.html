@@ -16,7 +16,7 @@
 		</div>
 		<div ng-class="{'col-sm-4': groups.length, 'col-sm-6': !groups.length}">
 			<label>Evaluator</label>
-			<select class="form-control" ng-model="search.userId" ng-options="s.user.id as s.user.fullname for s in students | orderBy: 'fullname'">
+			<select class="form-control" ng-model="search.userId" ng-options="s.user.id as s.user.name for s in students | orderBy: 'fullname'">
 				<option value="">Any Student</option>
 			</select>
 			<br />

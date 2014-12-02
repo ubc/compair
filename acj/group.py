@@ -207,7 +207,6 @@ class GroupIdAPI(Resource):
 		group = Groups.query.get_or_404(group_id)
 		member = GroupsAndUsers(group=group)
 		require(READ, member)
-		restrict_users = not allow(READ, member)
 
 		members = GroupsAndUsers.query.filter_by(groups_id=group_id, active=True).all()
 
@@ -218,7 +217,7 @@ class GroupIdAPI(Resource):
 			course_id=course_id,
 			data={'group_id': group_id})
 
-		return {'students': marshal(members, dataformat.getGroupsAndUsers(restrict_users))}
+		return {'students': [{'user': {'id': u.user.id, 'name': u.user.fullname}} for u in members]}
 api.add_resource(GroupIdAPI, '/<int:group_id>')
 
 # /users/:user_id/groups/:group_id

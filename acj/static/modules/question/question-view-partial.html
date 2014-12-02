@@ -65,13 +65,13 @@
 			Answered
 		</p>
 		<!-- BUTTON when user is not an admin AND has comparisons remaining AND the comparison period is active
-		     enabled only when answer pairs are available for comparison ***HOW TO DO THIS HERE? NEED NUMBER LEFT VS. NUMBER NEEDED*** -->
+			 enabled only when answer pairs are available for comparison ***HOW TO DO THIS HERE? NEED NUMBER LEFT VS. NUMBER NEEDED*** -->
 		<a class="btn btn-success" title="Evaluate Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement"
 		   ng-show="!canManagePosts && question.judging_period && !judged_req_met" ng-disabled="warning">
 			Compare Answers
 		</a>
 		<!-- BUTTON when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has a self-evaluation remaining
-		     enabled only when user has answered question -->
+			 enabled only when user has answered question -->
 		<a class="btn btn-success" title="Self-Evaluation" ng-href="#/course/{{courseId}}/question/{{question.id}}/selfevaluation"
 		   ng-show="!canManagePosts && question.judging_period && judged_req_met && !selfEval_req_met" ng-disabled="!answered">
 			Compare Answers
@@ -107,8 +107,8 @@
 			<!-- Answers Tab Header -->
 			<div class="tab-header">
 				
-				<div ng-if="canManagePosts" class="pull-right">
-					<span class="filter" ng-if="groups.length > 0">
+				<div class="pull-right">
+					<span class="filter" ng-if="groups.length > 0 && canManagePosts">
 						<label>Filter by group: &nbsp</label>
 						<select ng-model="grade.group" class="nullable"
 							ng-options="g as g.name for g in groups | orderBy: 'name'" ng-change="groupChange()">
@@ -116,6 +116,13 @@
 						</select>
 					</span>
 					<span class="filter">
+						<label>Filter by authors: &nbsp</label>
+						<select ng-model="grade.author" class="nullable"
+								ng-options="u as u.user.name for u in students | orderBy: 'user.name'" ng-change="userChange()">
+							<option value="">All students</option>
+						</select>
+					</span>
+					<span class="filter" ng-if="canManagePosts">
 					<label>Sort by ranking for: &nbsp;</label>
 						<select ng-model="grade.sortby"
 							ng-options="key as c.criterion.name for (key, c) in criteria" ng-change="criteriaChange()">
@@ -126,8 +133,11 @@
 					</span>
 				</div>
 
-				<h2>Answers <span ng-show="canManagePosts && grade.group">for "{{grade.group.name}}"</span> </h2>
-				
+				<h2>Answers
+					<span ng-show="canManagePosts && grade.group && !grade.author">for "{{grade.group.name}}"</span>
+					<span ng-show="grade.author">for "{{ grade.author.user.name }}"</span>
+				</h2>
+
 				<!-- Instructors see before the answer period -->
 				<p class="intro-text" ng-if="canManagePosts && !question.answer_period && !question.answers_count">
 					Answering period begins {{question.answer_start | amDateFormat: 'MMM D @ h:mm a'}}. Would you like to <a ng-href="#/course/{{courseId}}/question/{{question.id}}/edit" title="Edit the question">change the answer dates</a> for this question?
@@ -254,7 +264,7 @@
 				</div><!-- closes each-answer (instructor) -->
 				
 				<!-- Student Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers | filter:groupFilter() | orderBy:order:reverse | notScoredEnd:grade.sortby" ng-if="!instructors[answer.post.user.id] && (see_answers || answer.post.user.id == loggedInUserId || canManagePosts)">
+				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers | filter:groupFilter() | orderBy:order:reverse | notScoredEnd:grade.sortby as results" ng-if="!instructors[answer.post.user.id] && (see_answers || answer.post.user.id == loggedInUserId || canManagePosts)">
 				<!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.post.user.id] && (see_answers || (answer.post.user.id == loggedInUserId && question.answer_period) || canManagePosts)"> -->
 					<!-- Student Answer Metadata Header -->
 					<a ng-href="#/user/{{answer.post.user.id}}">
@@ -282,21 +292,21 @@
 							Edit
 						</a>
 					</div>
-					
+
 					<!-- Student Answer -->
 					<div class="content {{answer.post.id}}" get-height>
 						<div mathjax="answer.post.content"
 							 ng-bind-html="answer.post.content">
 						</div>
 						<!-- Student Attachment -->
-						<acj-pdf-inline label="See question details:" 
+						<acj-pdf-inline label="See question details:"
 							pdfs="answer.post.files" ng-click="revealAnswer(answer.post.id)">
 						</acj-pdf-inline>
 					</div>
 					<!-- Student Answer Read More Button (not used for instructor answers) -->
 					<p ng-show="showReadMore" class="read-more" ng-click="revealAnswer(answer.post.id)"><a href="" class="btn btn-sm btn-default">Read More...</a></p>
 					<!-- <p ng-show="!showReadMore">No More To Read!!! ({{thisHeight}})</p> -->
-					
+
 					<!-- Student Score (not used for instructor answers) -->
 					<p class="pull-right" ng-show="canManagePosts && key==grade.sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores" class="score-display">
 						<em>Score: {{score.score | number: 3}}</em>
@@ -313,13 +323,13 @@
 							to this answer
 						</h3>
 					</a>
-					
+
 					<div ng-show="showReplies">
-						
+
 						<div ng-repeat="comment in answer.comments" class="each-reply" ng-if="see_answers || canManagePosts">
-							
+
 							<hr ng-hide="$first" />
-							
+
 							<!-- Student Reply Metadata Header -->
 							<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
 								<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
@@ -334,7 +344,7 @@
 								</span>
 							</a>
 							<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">
-								{{instructors[comment.postsforcomments.post.user.id]}} 
+								{{instructors[comment.postsforcomments.post.user.id]}}
 							</span>
 							<span class="label label-info" ng-if="comment.selfeval">Self-Evaluation</span>
 							<span class="label label-info" ng-if="comment.evaluation">Evaluation</span>
@@ -347,21 +357,25 @@
 									Edit
 								</a>
 							</div>
-							
+
 							<!-- Student Reply -->
 							<div class="content" mathjax="comment.content"
 								 ng-bind-html="comment.content">
 							</div>
-							
+
 						</div><!-- closes each-reply (student) -->
-						
+
 					</div><!-- closes toggle div -->
-					
+
 					<p><a ng-if="question.can_reply || canManagePosts" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary">
 						Reply
 					</a></p>
-					
+
 				</div><!-- closes each-answer (student) -->
+
+				<div class="each-answer clearfix" ng-if="results.length < 1">
+					<p>No answers were found with these filter settings. Try another author above.</p>
+				</div>
 				
 			</div><!-- closes answered show-hide div -->
 		

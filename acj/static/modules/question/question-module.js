@@ -209,7 +209,6 @@ module.controller("QuestionViewController",
 		var questionId = $scope.questionId = $routeParams['questionId'];
 		var myAnsCount = 0; // for the event of deleting own answer
 		var allStudents = {};
-		var students = {};
 		var userIds = {};
 		Session.getUser().then(function(user) {
 			$scope.loggedInUserId = user.id;
@@ -225,18 +224,19 @@ module.controller("QuestionViewController",
 						Toaster.reqerror("Unable to retrieve the groups in the course.", ret);
 					}
 				);
-				CourseResource.getStudents({'id': $scope.courseId}).$promise.then(
-					function (ret) {
-						allStudents = ret.students;
-						students = allStudents;
-						userIds = getUserIds(students);
-					},
-					function (ret) {
-						Toaster.reqerror("Class list retrieval failed", ret);
-					}
-				);
 			}
 		});
+		$scope.students = {};
+		CourseResource.getStudents({'id': $scope.courseId}).$promise.then(
+			function (ret) {
+				allStudents = ret.students;
+				$scope.students = ret.students;
+				userIds = getUserIds(ret.students);
+			},
+			function (ret) {
+				Toaster.reqerror("Class list retrieval failed", ret);
+			}
+		);
 		$scope.question = {};
 		QuestionResource.get({'courseId': $scope.courseId,
 			'questionId': questionId}).$promise.then(
@@ -353,14 +353,15 @@ module.controller("QuestionViewController",
 		};
 
 		$scope.groupChange = function() {
+			$scope.grade.author = null;
 			if ($scope.grade.group == null) {
-				students = allStudents;
-				userIds = getUserIds(students);
+				userIds = getUserIds(allStudents);
+				$scope.students = allStudents;
 			} else {
 				GroupResource.get({'courseId': $scope.courseId, 'groupId': $scope.grade.group.id}).$promise.then(
 					function (ret) {
-						students = ret.students;
-						userIds = getUserIds(students);
+						$scope.students = ret.students;
+						userIds = getUserIds(ret.students);
 					},
 					function (ret) {
 						Toaster.reqerror("Unable to retrieve the group members", ret);
@@ -369,11 +370,17 @@ module.controller("QuestionViewController",
 			}
 		};
 
+		$scope.userChange = function() {
+			userIds = {};
+			if ($scope.grade.author == null) {
+				userIds = getUserIds($scope.students);
+			} else {
+				userIds[$scope.grade.author.user.id] = 1;
+			}
+		};
+
 		$scope.groupFilter = function() {
 			return function (answer) {
-				if (!$scope.canManagePosts) {
-					return true;
-				}
 				return answer.post.user.id in userIds;
 			}
 		};
