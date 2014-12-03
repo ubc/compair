@@ -1,7 +1,7 @@
 Flask==0.10.1
 Flask-Login==0.2.11
 Flask-Principal==0.4.0
-Flask-Restful
+Flask-Restful==0.2.12
 -e git+https://github.com/mitsuhiko/flask-sqlalchemy@d4560013c1c51ef035381e35dd42a1628bb212ee#egg=Flask_SQLAlchemy-origin
 Flask-Script==2.0.5
 Flask-Testing==0.4.2
