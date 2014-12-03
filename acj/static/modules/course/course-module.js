@@ -175,11 +175,11 @@ module.controller(
 		});
 		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(result) {
 				$scope.canManagePosts = result;
-				$scope.filters.push('All');
+				$scope.filters.push('All course questions');
 				if ($scope.canManagePosts) {
-					$scope.filters.push('Answer Period', 'Comparison Period', 'Upcoming Assignments');
+					$scope.filters.push('Questions being answered', 'Questions being compared', 'Upcoming questions');
 				} else {
-					$scope.filters.push('Pending Assignments');
+					$scope.filters.push('My pending assignments');
 				}
 				$scope.filter = $scope.filters[0];
 		});
@@ -272,19 +272,19 @@ module.controller(
 			return function(question) {
 				switch(filter) {
 					// return all questions
-					case "All":
+					case "All course questions":
 						return true;
 					// INSTRUCTOR: return all questions in answer period
-					case "Answer Period":
+					case "Questions being answered":
 						return question.answer_period;
 					// INSTRUCTOR: return all questions in comparison period
-					case "Comparison Period":
+					case "Questions being compared":
 						return question.judging_period;
 					// INSTRUCTOR: return all questions that are unavailable to students at the moment
-					case "Upcoming Assignments":
+					case "Upcoming questions":
 						return !question.available;
 					// STUDENTS: return all questions that need to be answered or compared
-					case "Pending Assignments":
+					case "My pending assignments":
 						return (question.answer_period && !$scope.answered[question.id]) ||
 							(question.judging_period && (question.left || question.selfeval_left));
 					default:
