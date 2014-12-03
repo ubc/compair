@@ -150,7 +150,8 @@ def getPostsForQuestions(restrict_users=True, include_answers=True):
 		'can_reply': fields.Boolean,
 		'num_judgement_req': fields.Integer,
 		'selfevaltype_id': fields.Integer,
-		'judged': fields.Boolean
+		'judged': fields.Boolean,
+		'evaluation_count': fields.Integer
 	}
 	if include_answers:
 		answer = getPostsForAnswers(restrict_users)

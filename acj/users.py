@@ -203,8 +203,13 @@ class UserCourseListAPI(Resource):
 class UserTypesAPI(Resource):
 	@login_required
 	def get(self):
-		types = UserTypesForSystem.query.\
-			order_by("id").all()
+		admin = UserTypesForSystem.TYPE_SYSADMIN
+		if current_user.usertypeforsystem.name == admin:
+			types = UserTypesForSystem.query.\
+				order_by("id").all()
+		else:
+			types = UserTypesForSystem.query.filter(UserTypesForSystem.name != admin).\
+				order_by("id").all()
 
 		user_types_all_get.send(
 			current_app._get_current_object(),

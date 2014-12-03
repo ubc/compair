@@ -457,6 +457,9 @@ class PostsForQuestions(db.Model):
 		if len(self.selfevaltype):
 			type = self.selfevaltype[0].selfevaluationtypes_id
 		return type
+	@hybrid_property
+	def evaluation_count(self):
+		return sum([x.judgement_count for x in self.criteria])
 
 class PostsForAnswers(db.Model):
 	__tablename__ = 'PostsForAnswers'
