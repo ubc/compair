@@ -113,6 +113,10 @@
 					<li title="{{question.answers_count}} answers">
 						{{question.answers_count}} answer<span ng-if="question.answers_count != 1">s</span>
 					</li>
+					<!-- Total Comparisons -->
+					<li ng-if="canManagePosts" title="{{question.evaluation_count}} comments"> 
+						{{question.evaluation_count}} comparison<span ng-if="question.evaluation_count != 1">s</span>
+					</li>
 					<!-- Total Comments -->
 					<li title="{{question.comments_count}} comments"> 
 						{{question.comments_count}} comment<span ng-if="question.comments_count != 1">s</span>
