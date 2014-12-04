@@ -40,14 +40,14 @@
 		</div>
 		<div class="col-sm-2">
 			<!-- used length because when list is empty the empty option gets a value of 0 which is valid -->
-			<p><a class="btn btn-small btn-default" ng-click="add(selected)" ng-disabled="!selected || !availableCriteria.length">Add Selection</a></p>
+			<p><a class="btn btn-small btn-primary" ng-click="add(selected)" ng-disabled="!selected || !availableCriteria.length">Add Selection</a></p>
 		</div>
         </div>
 	<p>OR</p>
 	<p><a ng-click="toggleForm()" href="">
 		<i ng-show="isCreateFormShown" class="fa fa-chevron-down"></i>
 		<i ng-hide="isCreateFormShown" class="fa fa-chevron-right"></i>
-		Create New Criteria
+		Create new criteria
 	</a></p>
 
 	<!-- want ng-if b/c otherwise the outer course form requires evaluation question to submit -->

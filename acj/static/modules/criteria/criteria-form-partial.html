@@ -1,19 +1,19 @@
 <ng-form name="criterionForm" class="form">
 	<acj-field-with-feedback form-control="criterionForm.criteriaName">
-		<label class="required-star" for="criterionName">Evaluation Question</label>
+		<label class="required-star" for="criterionName">Comparison Question</label>
 		<input type="text" maxlength="255" placeholder="e.g. Which answer is better?"
 			   ng-model="criterion.name" id="criterionName" name="criterionName" class="form-control" required/>
 	</acj-field-with-feedback>
 	<div class="form-group">
-		<label for="criterionDescription">How Students Should Evaluate Answers</label>
+		<label for="criterionDescription">Additional Instructions For Comparing Answers</label>
 		<textarea ckeditor="editorOptions" rows="4"
 			ng-model="criterion.description" id="criterionDescription" name="criterionDescription" class="form-control">
 		</textarea>
 	</div>
 	<div class="form-group">
 		<input type="checkbox" ng-model="criterion.default" name="criterionDefault" id="criterionDefault" />
-		<label for="criterionDefault">Add this to my list of default criteria</label>
+		<label for="criterionDefault">Include this criterion to my list of default criteria</label>
 	</div>
-	<input type="button" ng-click="criterionSubmit()" class="btn btn-default center-block" value="Add New"
+	<input type="button" ng-click="criterionSubmit()" class="btn btn-primary" value="Add New Criterion"
 		ng-disabled="criterionForm.$invalid || criterionSubmitted" />
 </ng-form>

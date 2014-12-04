@@ -3,59 +3,28 @@
 	<fieldset>
 		<legend>Course Details</legend>
 		<acj-field-with-feedback form-control="courseForm.courseName">
-			<label for="courseName" class="required-star">Course</label>
+			<label for="courseName" class="required-star">Course Name</label>
 			<input id="courseName" name="courseName" ng-model="course.name" 
 				type="text" class="form-control" required maxlength="255" placeholder="e.g. BIOL 112 - Biology of the Cell" auto-focus />
 		</acj-field-with-feedback>
-		<div class="form-group">
-			<label for="courseDescription">Description</label>
-			<textarea ng-model="course.description" id="courseDescription" class="form-control" ckeditor="editorOptions" rows="4"></textarea>
-		</div>
-		<!-- Before adding, labels and styling need updating
-		<div class="form-group">
-			<label>Options:</label>
-			<div class="btn-group">
-				<button type="button" class="btn btn-default" 
-					ng-model="course.enable_student_create_questions" bs-checkbox>
-					Allow Students to Post Questions
-				</button>
-				<button type="button" class="btn btn-default" 
-					ng-model="course.enable_student_create_tags" bs-checkbox>
-					Allow Students to Create Tags
-				</button>
+		
+		<input id="descriptionCheck" type="checkbox" ng-model="course.descriptionCheck">
+		<label for="descriptionCheck">Add a course description<span ng-if="course.descriptionCheck">:</span></label>
+		<br />
+		
+		<div ng-if="course.descriptionCheck">
+			<div class="form-group">
+				<!-- <label for="courseDescription">Course Description</label> -->
+				<textarea ng-model="course.description" id="courseDescription" class="form-control" ckeditor="editorOptions" rows="4"></textarea>
 			</div>
 		</div>
-		-->
 	</fieldset>
 		
 	<fieldset>
 		<legend>Course Criteria</legend>
-		<p class="instructional-text"><strong>Criteria are the questions and instructions that tell students what to look for when evaluating answers</strong> in this course. Set the criteria you want to use for the overall course here, then select one or more of these when you create a question. (Note that once a criterion has been used, you cannot edit or remove it.)</p>
+		<p class="instructional-text"><strong>Set the criteria you want to use in the course here</strong>, then select one or more of these when you create a question. Criteria are the questions and instructions that tell students what to look for when comparing answers. Note that once a criterion has been used in a course, you cannot edit or drop it.</p>
 		<ng-include src="'modules/criteria/criteria-course-partial.html'"></ng-include>
 	</fieldset>
-	
-	<!-- Tagging is enabled yet, so hide code for it
-	<fieldset>
-		<legend>Tags</legend>
-		<table ng-table class="table">
-			<tr>
-				<th data-title="Title">Test</th>
-				<th data-title="Title 2">Test2</th>
-			</tr>
-			<tr>
-				<td>Test</td>
-				<td>Test2</td>
-			</tr>
-			<tr>
-				<td>Test</td>
-				<td>Test2</td>
-			</tr>
-		</table>
-		<a class="btn btn-default btn-sm pull-right">
-			<i class="fa fa-plus"></i> Add Tag
-		</a>
-	</fieldset>
-	-->
 
 	<input type="submit" class="btn btn-success btn-lg center-block" value="Save" 
 		ng-disabled="courseForm.$invalid || submitted" />

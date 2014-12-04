@@ -40,28 +40,19 @@
 			<br>
 		</div>
 		<div class="form-group">
-			<label for="questionContent" class="required-star">Additional Information</label>
+			<label for="questionContent">Additional Information</label>
 			<textarea ckeditor rows="8"
-				ng-model="question.post.content" class="form-control" id="questionContent" ng-required="!(uploader.queue.length || uploadedFile)">
+				ng-model="question.post.content" class="form-control" id="questionContent">
 			</textarea>
-		</div>
-	</fieldset>
-
-	<fieldset>
-		<legend>Criteria</legend>
-		<p class="instructional-text"><strong>Criteria are the questions and instructions that tell students what to look for when evaluating answers.</strong> Criteria selected here appear when students evaluate answers for this question. (To add new or edit existing criteria, please go to the edit course page.)</p>
-
-		<div ng-repeat="courseCriterion in courseCriteria">
-			<input type="checkbox" name="criteria{{ courseCriterion.id }}" id="criteria{{ courseCriterion.id }}"
-				   ng-model="selectedCriteria[courseCriterion.criterion.id]"
-				   ng-change="selectCriteria(courseCriterion.criterion.id)" ng-disabled="judged"/>
-			<label for="criteria{{ courseCriterion.id }}">{{ courseCriterion.criterion.name }}</label>
 		</div>
 	</fieldset>
 	
 	<fieldset>
-		<legend>Answers</legend>
-		<p class="instructional-text"><strong>Students can answer and edit their answers only during the dates and times you set.</strong> Students do not see a question until the answering period begins. Students do not see other answers until they have evaluated the required number of answer pairs.</p>
+		<legend>Schedule</legend>
+		<div class="instructional-text">
+			<p><strong>Students can answer and edit their answers only during the dates and times you set below.</strong> Students do not see a question in the application until the answering period begins. Students can read all answers only <em>after</em> they have completed the required number of answer comparisons.</p>
+			<p><strong>By default, students can compare answers after the answer period ends.</strong> You may instead set specific dates and times for the comparison period. Note that if you manually set a comparison period, students can read all answers only <em>after</em> the comparison period ends.</p>
+		</div>
 		
 		<div class="row">
 			<div class="col-md-6 form-group">
@@ -91,18 +82,70 @@
 				</acj-field-with-feedback>
 			</div>
 		</div>
+		
+		<hr />
+		
+		<input id="availableCheck" type="checkbox" ng-model="question.availableCheck">
+		<label for="availableCheck">Manually set when students can compare answers for this question</label>
+		<br /><br />
+		
+		<div ng-if="question.availableCheck">
+			
+			<div class="row">
+				<div class="col-md-6 form-group">
+					<acj-field-with-feedback form-control="questionForm.judgeStartDate">
+						<label class="required-star">Date Comparisons Begin</label>
+						<input type="text" id="judgeStartDate" name="judgeStartDate" class="form-control" ng-model="question.judge_start" ng-required="question.availableCheck" bs-datepicker>
+					</acj-field-with-feedback>
+				</div>
+				<div class="col-md-6 form-group">
+					<acj-field-with-feedback form-control="questionForm.judgeStartTime">	
+						<label class="required-star">Time Comparisons Begin</label>
+						<input type="text" id="judgeStartTime" name="judgeStartTime" class="form-control" ng-model="question.judge_start" ng-required="question.availableCheck" timeType="iso" data-minute-step="1" bs-timepicker>
+					</acj-field-with-feedback>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6 form-group">
+					<acj-field-with-feedback form-control="questionForm.judgeEndDate">
+						<label class="required-star">Date Comparisons End</label>
+						<input type="text" id="judgeEndDate" name="judgeEndDate" class="form-control" ng-model="question.judge_end" ng-required="question.availableCheck" bs-datepicker>
+					</acj-field-with-feedback>
+				</div>
+				<div class="col-md-6 form-group">
+					<acj-field-with-feedback form-control="questionForm.judgeEndTime">
+						<label class="required-star">Time Comparisons End</label>
+						<input type="text" id="judgeEndTime" name="judgeEndTime" class="form-control" ng-model="question.judge_end" ng-required="question.availableCheck" timeType="iso" data-minute-step="1" bs-timepicker>
+					</acj-field-with-feedback>
+				</div>
+			</div>
+			
+		</div>
 	</fieldset>
 	
 	<fieldset>
-		<legend>Evaluations</legend>
+		<legend>Criteria</legend>
+		<p class="instructional-text"><strong>Selected criteria appear when students compare answers</strong> for this question to help guide them in their comparison. For each criterion you check off below, students will need to 1) choose a preferred answer and 2) write a comparison rationale. (To create new or edit existing criteria, please go to the edit course page for this course.)</p>
+
+		<p><strong>Your Course Criteria List:</strong></p>
+		<div ng-repeat="courseCriterion in courseCriteria">
+			<input type="checkbox" name="criteria{{ courseCriterion.id }}" id="criteria{{ courseCriterion.id }}"
+				   ng-model="selectedCriteria[courseCriterion.criterion.id]"
+				   ng-change="selectCriteria(courseCriterion.criterion.id)" ng-disabled="judged"/>
+			<label for="criteria{{ courseCriterion.id }}">{{ courseCriterion.criterion.name }}</label>
+		</div>
+	</fieldset>
+	
+	<fieldset>
+		<legend>Comparisons</legend>
 		<div class="instructional-text">
-			<p>The <strong>recommended minimum number of evaluations per student is {{recommended_eval}}</strong>. Using this number (or higher) creates a more accurate ranking of the answers. If you set a lower number, the answers will not be ranked as accurately.</p>
-			<p><strong>After the answering period has passed, students can evaluate answers.</strong> If you want to set specific dates and times for an evaluation period, click the checkbox below. If an evaluation period is set, answers can be seen by students only <em>after</em> the evaluation period ends.</p>
+			<p>The <strong>recommended minimum number of comparisons per student is {{recommended_eval}}</strong>. Using this number (or higher) creates a more accurate ranking of the answers. If you set a lower number, the answers will not be ranked as accurately.</p>
+			<p>For each comparison, students will need to 1) choose a preferred answer and write a comparison rationale for each criterion listed and 2) write feedback for each answer in the comparison.</p>
 		</div>
 				
 		<div class="form-group">
 			<acj-field-with-feedback form-control="questionForm.reqJudge">
-				<label class="required-star">Number of evaluations required from each student</label>
+				<label class="required-star">Number of answer comparisons required from each student</label>
 				<input type="text" id="reqJudge" name="reqJudge" class="form-control" ng-model="question.num_judgement_req" ng-pattern="/^[1-9]\d*$/" required>
 			</acj-field-with-feedback>
 		</div>
@@ -110,12 +153,11 @@
 		<hr />
 		
 		<input id="selfEvalCheck" type="checkbox" ng-model="question.selfEvalCheck">
-		<label for="selfEvalCheck">Also require a self-evaluation (student must evaluate own answer)</label>
-		<br />
-
+		<label for="selfEvalCheck">Also require students to reflect on their own answer (after completing comparisons)</label>
+		<br /><br />
+		
 		<div ng-if="question.selfEvalCheck">
-
-			<br />
+			
 			<div class="form-group">
 				<label for="user">Self-Evaluation Type</label>
 				<select type="text" name="selfevaltype" ng-model="question.selfevaltype_id"
@@ -124,53 +166,13 @@
 				</select>
 			</div>
 		</div>
-		
-		<hr />
-		
-		<input id="availableCheck" type="checkbox" ng-model="question.availableCheck">
-		<label for="availableCheck">Set when students can evaluate this question</label>
-		<br /><br />
-		
-		<div ng-if="question.availableCheck">
-			
-			<div class="row">
-				<div class="col-md-6 form-group">
-					<acj-field-with-feedback form-control="questionForm.judgeStartDate">
-						<label class="required-star">Date Evaluations Begin</label>
-						<input type="text" id="judgeStartDate" name="judgeStartDate" class="form-control" ng-model="question.judge_start" ng-required="question.availableCheck" bs-datepicker>
-					</acj-field-with-feedback>
-				</div>
-				<div class="col-md-6 form-group">
-					<acj-field-with-feedback form-control="questionForm.judgeStartTime">	
-						<label class="required-star">Time Evaluations Begin</label>
-						<input type="text" id="judgeStartTime" name="judgeStartTime" class="form-control" ng-model="question.judge_start" ng-required="question.availableCheck" timeType="iso" data-minute-step="1" bs-timepicker>
-					</acj-field-with-feedback>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-6 form-group">
-					<acj-field-with-feedback form-control="questionForm.judgeEndDate">
-						<label class="required-star">Date Evaluations End</label>
-						<input type="text" id="judgeEndDate" name="judgeEndDate" class="form-control" ng-model="question.judge_end" ng-required="question.availableCheck" bs-datepicker>
-					</acj-field-with-feedback>
-				</div>
-				<div class="col-md-6 form-group">
-					<acj-field-with-feedback form-control="questionForm.judgeEndTime">
-						<label class="required-star">Time Evaluations End</label>
-						<input type="text" id="judgeEndTime" name="judgeEndTime" class="form-control" ng-model="question.judge_end" ng-required="question.availableCheck" timeType="iso" data-minute-step="1" bs-timepicker>
-					</acj-field-with-feedback>
-				</div>
-			</div>
-			
-		</div>
-
 	</fieldset>
 	
 	<fieldset>
-		<legend>Replies</legend>
+		<legend>Discussion</legend>
 		<div class="form-group">
 			<input id="canReply" type="checkbox" ng-model="question.can_reply">
-			<label for="canReply">Allow students to reply to classmates' answers</label>
+			<label for="canReply">Allow students to reply to any answer</label>
 		</div>
 	</fieldset>
 	
