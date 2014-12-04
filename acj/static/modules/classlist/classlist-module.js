@@ -38,7 +38,8 @@ module.factory(
 /***** Controllers *****/
 module.controller(
 	'ClassViewController',
-	function($scope, $log, $routeParams, ClassListResource, CourseResource, GroupResource, Toaster)
+	function($scope, $log, $routeParams, ClassListResource, CourseResource,
+			 CourseRoleResource, GroupResource, Toaster)
 	{
 		$scope.course = {};
 		$scope.classlist = {};
@@ -65,6 +66,15 @@ module.controller(
 			},
 			function (ret) {
 				Toaster.reqerror("Groups Retrieval Failed", ret);
+			}
+		);
+
+		CourseRoleResource.query(
+			function (ret) {
+				$scope.roles = ret;
+			},
+			function (ret) {
+				Toaster.reqerror("No Course Roles Found", ret);
 			}
 		);
 
@@ -134,82 +144,41 @@ module.controller(
 );
 
 module.controller(
-	'EnrolInstructorController',
-	function($scope, $log, $routeParams, $route, $location, ClassListResource, Toaster, Session, CourseResource, UserTypeResource)
+	'EnrolController',
+	function($scope, $log, $routeParams, $route, $location, ClassListResource, Toaster, UserTypeResource)
 	{
 
-		$scope.course = {};
 		$scope.user = {};
-		Session.getUser().then(function(user) {
-		    $scope.loggedInUserId = user.id;
-		});
 		var courseId = $routeParams['courseId'];
-		// TODO: generate drop down menu to select role
-		CourseResource.get({'id':courseId}).$promise.then(
+
+		UserTypeResource.getUsers().$promise.then(
 			function (ret) {
-				$scope.course = ret;
+				$scope.users = ret.users;
 			},
 			function (ret) {
-				Toaster.reqerror("No Course Found For ID "+courseId, ret);
-			}
-		);
-		CourseResource.getInstructors({'id': courseId}).$promise.then(
-			function (ret) {
-				$scope.enroled = ret.instructors;
-			},
-			function (ret) {
-				Toaster.reqerror("No Instructors Found", ret);
-			}
-		);
-		UserTypeResource.getInstructors().$promise.then(
-			function (ret) {
-				$scope.instructors = ret.instructors;
-			},
-			function (ret) {
-				Toaster.reqerror("No Instructors Found", ret);
+				Toaster.reqerror("No Users Found", ret);
 			}
 		);
 		$scope.enrolSubmit = function() {
 			$scope.submitted = true;
-			if (!$scope.user.id) {
+			if (!$scope.user.user.id) {
 				Toaster.error("Invalid user selected. Please try again.");
 				$scope.user = {};
 				$scope.submitted = false;
 				return;
-			} else if ($scope.enroled[$scope.user.id]) {
-				Toaster.success("User is already enroled.");
-				$scope.user = {};
-				$scope.submitted = false;
-				return;
 			}
-			ClassListResource.enrol({'courseId': courseId, 'userId': $scope.user.id}, $scope.user).$promise.then(
+			ClassListResource.enrol({'courseId': courseId, 'userId': $scope.user.user.id}, $scope.user).$promise.then(
 				function (ret) {
 					$scope.submitted = false;
-					$scope.enroled[ret.user.id] = ret.user.fullname;
-					$scope.user = {}; // reset form
 					Toaster.success("User Added", 'Successfully added '+ ret.user.fullname +' as ' + ret.usertypesforcourse.name + ' to the course.');
+					$route.reload();
 				},
 				function (ret) {
 					$scope.submitted = false;
-					Toaster.reqerror("User Add Failed For ID " + $scope.user_id, ret);
+					Toaster.reqerror("User Add Failed For ID " + $scope.user.user.id, ret);
 				}
 			);
 		};
-
-		$scope.remove = function (user_id) {
-			Session.getUser().then(function(user) {
-				$scope.loggedInUserId = user.id;
-			});
-			ClassListResource.unenrol({'courseId': courseId, 'userId': user_id}).$promise.then(
-				function (ret) {
-					Toaster.success("User Dropped", 'Successfully dropped '+ ret.user.fullname +' from the course.');
-					delete $scope.enroled[ret.user.id];
-				},
-				function (ret) {
-					Toaster.reqerror('User Drop Failed', ret);
-				}
-			);
-		}
 	}
 );
 

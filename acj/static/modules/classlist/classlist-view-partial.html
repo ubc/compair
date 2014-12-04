@@ -4,10 +4,6 @@
 			<h1><i class="fa fa-users"></i> Manage Users</h1>
 		</header>
 		<div class="col-sm-6 sub-nav">
-			<a ng-href="#/course/{{course.id}}/user/enrol" class="btn btn-primary">
-				<i class="fa fa-cog"></i>
-				Set Instructors
-			</a>
 			<a ng-href="#/course/{{course.id}}/group/import" class="btn btn-primary">
 				<i class="fa fa-list-ul"></i>
 				Assign Groups
@@ -28,19 +24,39 @@
 			<h4>File Complete</h4>
 			<p>Your list of users is ready for <strong><a href="{{ reportFile }}">download <i class="fa fa-file-excel-o"></i></a></strong> now.</p>
 		</div>
-	<h2>Users in {{course.name}}</h2>
+	<h2>Users in {{course.name}} ({{ classlist.length }})</h2>
+	<ng-include src="'modules/classlist/classlist-enrol-partial.html'"></ng-include>
+	<br/>
 	<table class="table table-striped">
 		<tr class>
 			<th>Action</th>
-			<th>First Name</th>
-			<th>Last Name</th>
-			<th>Student Number</th>
-			<th>Display Name</th>
-			<th>Email</th>
-			<th>Application Role</th>
+			<th>
+				<a href="" ng-click="reverse = predicate == 'user.firstname' && !reverse; predicate = 'user.firstname'">
+					First Name</a>
+			</th>
+			<th>
+				<a href="" ng-click="reverse = predicate == 'user.lastname' && !reverse; predicate = 'user.lastname'">
+					Last Name</a>
+			</th>
+			<th>
+				<a href="" ng-click="reverse = predicate == 'user.student_no' && ! reverse; predicate = 'user.student_no'">
+					Student Number</a>
+			</th>
+			<th>
+				<a href="" ng-click="reverse = predicate == 'user.displayname' && !reverse; predicate = 'user.displayname'">
+					Display Name</a>
+			</th>
+			<th>
+				<a href="" ng-click="reverse = predicate == 'user.email' && !reverse; predicate = 'user.email'">
+					Email</a>
+			</th>
+			<th>
+				<a href="" ng-click="reverse = predicate == 'usertypeforcourse.name' && !reverse; predicate = 'usertypeforcourse.name'">
+					Course Role</a>
+			</th>
 			<th ng-if="groups.length > 0">Group</th>
 		</tr>
-		<tr ng-repeat="user in classlist | orderBy:'user.firstname'">
+		<tr ng-repeat="user in classlist | orderBy:predicate:reverse">
 			<td>
 				<a href="#/user/{{user.user.id}}/edit" target="_blank">
 					Edit
@@ -51,7 +67,7 @@
 			<td>{{user.user.student_no}}</td>
 			<td>{{user.user.displayname}}</td>
 			<td>{{user.user.email}}</td>
-			<td>{{user.user.usertypeforsystem.name}}</td>
+			<td>{{user.usertypeforcourse.name}}</td>
 			<td ng-if="groups.length > 0">
 				<select ng-model="user.groups[0].groups_id" ng-options="g.id as g.name for g in groups"
 						ng-change="update(user.user.id, user.groups[0].groups_id)">

@@ -67,11 +67,6 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/group/group-import-results-partial.html',
 				label: "Results"
 			})
-		.when ('/course/:courseId/user/enrol',
-		   {
-				templateUrl: 'modules/classlist/classlist-enrol-partial.html',
-				label: "Set Instructors"
-		   })
 		.when ('/course/:courseId/question/create', 
 			{
 				templateUrl: 'modules/question/question-create-partial.html',

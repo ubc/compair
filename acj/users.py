@@ -10,10 +10,11 @@ from .core import db, event
 from .util import pagination, new_restful_api, get_model_changes
 from sqlalchemy import exc
 
-from .models import Users, UserTypesForSystem, Courses, UserTypesForCourse
+from .models import Users, UserTypesForSystem, Courses, UserTypesForCourse, CoursesAndUsers
 
 users_api = Blueprint('users_api', __name__)
 user_types_api = Blueprint('user_types_api', __name__)
+user_course_types_api = Blueprint('user_course_types_api', __name__)
 
 new_user_parser = RequestParser()
 new_user_parser.add_argument('username', type=str, required=True)
@@ -47,9 +48,11 @@ on_user_create = event.signal('USER_CREATE')
 on_user_course_get = event.signal('USER_COURSE_GET')
 on_user_password_update = event.signal('USER_PASSWORD_UPDATE')
 
-user_types_all_get = event.signal('USER_TYPES_ALL_GET')
-instructors_get = event.signal('INSTRUCTORS_GET')
+on_user_types_all_get = event.signal('USER_TYPES_ALL_GET')
+on_instructors_get = event.signal('INSTRUCTORS_GET')
 
+on_course_roles_all_get = event.signal('COURSE_ROLES_ALL_GET')
+on_users_display_get = event.signal('USER_ALL_GET')
 
 # /id
 class UserAPI(Resource):
@@ -211,9 +214,9 @@ class UserTypesAPI(Resource):
 			types = UserTypesForSystem.query.filter(UserTypesForSystem.name != admin).\
 				order_by("id").all()
 
-		user_types_all_get.send(
+		on_user_types_all_get.send(
 			current_app._get_current_object(),
-			event_name=user_types_all_get.name,
+			event_name=on_user_types_all_get.name,
 			user=current_user
 		)
 
@@ -227,13 +230,43 @@ class UserTypesInstructorsAPI(Resource):
 		instructors = Users.query.filter_by(usertypesforsystem_id=id).order_by(Users.firstname).all()
 		instructors = [{'id': i.id, 'display': i.fullname+' ('+i.displayname+') - '+i.usertypeforsystem.name, 'name': i.fullname} for i in instructors]
 
-		instructors_get.send(
+		on_instructors_get.send(
 			current_app._get_current_object(),
-			event_name=instructors_get.name,
+			event_name=on_instructors_get.name,
 			user=current_user
 		)
 
 		return {'instructors': instructors}
+
+# /all
+class UserTypesAllAPI(Resource):
+	@login_required
+	def get(self):
+		users = Users.query.order_by(Users.firstname).all()
+		require(EDIT, CoursesAndUsers)
+		users = [{'id': i.id, 'display': i.fullname+' ('+i.displayname+') - '+i.usertypeforsystem.name, 'name': i.fullname} for i in users]
+
+		on_users_display_get.send(
+			current_app._get_current_object(),
+			event_name=on_users_display_get.name,
+			user=current_user
+		)
+
+		return {'users': users}
+
+class UserCourseRolesAPI(Resource):
+	@login_required
+	def get(self):
+		roles = UserTypesForCourse.query.order_by("id").\
+			filter(UserTypesForCourse.name != UserTypesForCourse.TYPE_DROPPED).all()
+
+		on_course_roles_all_get.send(
+			current_app._get_current_object(),
+			event_name=on_course_roles_all_get.name,
+			user=current_user
+		)
+
+		return marshal(roles, dataformat.getUserTypesForCourse())
 
 # /password
 class UserUpdatePasswordAPI(Resource):
@@ -263,6 +296,10 @@ api.add_resource(UserUpdatePasswordAPI, '/password/<int:id>')
 apiT = new_restful_api(user_types_api)
 apiT.add_resource(UserTypesAPI, '')
 apiT.add_resource(UserTypesInstructorsAPI, '/instructors')
+apiT.add_resource(UserTypesAllAPI, '/all')
+apiC = new_restful_api(user_course_types_api)
+apiC.add_resource(UserCourseRolesAPI, '')
+
 
 #def import_users(list, group=True):
 #	schema = {

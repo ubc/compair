@@ -21,22 +21,24 @@ module.factory('UserResource', function($resource) {
 	);
 	User.MODEL = "Users";
 
-    User.prototype.isLoggedIn = function() {
-        return this.hasOwnProperty('id');
-    };
+	User.prototype.isLoggedIn = function() {
+		return this.hasOwnProperty('id');
+	};
 
 	return User;
 });
 module.factory('UserTypeResource', function($resource) {
 	var ret = $resource('/api/usertypes/:id', {id: '@id'},
 		{
-			'getInstructors':
-			{
-				method: 'GET',
-				url: '/api/usertypes/instructors'
-			}
+			'getInstructors': {method: 'GET', url: '/api/usertypes/instructors'},
+			'getUsers': {method: 'GET', url: '/api/usertypes/all'}
 		});
 	ret.MODEL = "UserTypesForSystem";
+	return ret;
+});
+module.factory('CourseRoleResource', function($resource){
+	var ret = $resource('/api/courseroles');
+	ret.MODEL = "UserTypesForCourse";
 	return ret;
 });
 module.factory('UserPasswordResource', function($resource) {
@@ -94,11 +96,11 @@ module.controller("UserEditController",
 	{
 		var userId = $routeParams['userId'];
 		Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
-            $scope.canManageUsers = result;
-        });
-        Session.getUser().then(function(user) {
-            $scope.ownProfile = userId == user.id;
-        });
+			$scope.canManageUsers = result;
+		});
+		Session.getUser().then(function(user) {
+			$scope.ownProfile = userId == user.id;
+		});
 		$scope.user = {}
 		$scope.usertypes = {};
 		$scope.create = false;
@@ -143,28 +145,28 @@ module.controller("UserEditController",
 module.controller("UserUpdatePasswordController",
 	function($scope, $log, $routeParams, $location, Session, UserPasswordResource, Toaster)
 	{
-        $scope.password = {};
-        $scope.create = true;
+		$scope.password = {};
+		$scope.create = true;
 		Session.getUser().then(function(user) {
-            $scope.changePassword = function() {
-                $scope.submitted = true;
-                UserPasswordResource.save({'id': user.id}, $scope.password).$promise.then(
-                    function (ret) {
-                        $scope.submitted = false;
-                        Toaster.success("Password Successfully Updated", "Your password has been changed.");
-                        $location.path('/user/' + ret.id);
-                    },
-                    function (ret) {
-                        $scope.submitted = false;
-                        if (ret.status == '403') {
-                            Toaster.error(ret.data.error);
-                        } else {
-                            Toaster.reqerror("Password Update Failed", ret);
-                        }
-                    }
-                );
-            }
-        });
+			$scope.changePassword = function() {
+				$scope.submitted = true;
+				UserPasswordResource.save({'id': user.id}, $scope.password).$promise.then(
+					function (ret) {
+						$scope.submitted = false;
+						Toaster.success("Password Successfully Updated", "Your password has been changed.");
+						$location.path('/user/' + ret.id);
+					},
+					function (ret) {
+						$scope.submitted = false;
+						if (ret.status == '403') {
+							Toaster.error(ret.data.error);
+						} else {
+							Toaster.reqerror("Password Update Failed", ret);
+						}
+					}
+				);
+			}
+		});
 	}
 );
 
@@ -173,11 +175,11 @@ module.controller("UserViewController",
 	{
 		var userId = $routeParams['userId'];
 		Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function(result) {
-            $scope.canCreateUser = result;
-        });
-        Session.getUser().then(function(user) {
-            $scope.ownProfile = userId == user.id;
-        });
+			$scope.canCreateUser = result;
+		});
+		Session.getUser().then(function(user) {
+			$scope.ownProfile = userId == user.id;
+		});
 		$scope.user = {}
 		UserResource.get({"id":userId}).$promise.then(
 			function (ret) {

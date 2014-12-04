@@ -1,43 +1,21 @@
-<div ng-controller="EnrolInstructorController">
-
-	<h1>Set Instructors</h1>
-	
-	<p class="intro-text">Setting users as instructors means they can post and edit their own questions, answers, comments, and replies for this course. Instructors can also see all answers to a question regardless of answering period, but they cannot evaluate the answers.</p>
-	
-	<form name="enrolForm" class="form" ng-submit="enrolSubmit()" novalidate>
-		<fieldset>
-			<legend>Add Instructor</legend>
-			<div class="form-group">
-				<label for="user">Name</label>
-				<input type="text" ng-model="user" name="user" required typeahead="i as i.display for i in instructors | filter:{'name':$viewValue}" class="form-control" typeahead-input-formatter="user.display" autocomplete="off">
-			</div>
-		</fieldset>
-		<input type="submit" class="btn btn-success btn-lg center-block" value="Add" ng-disabled="submitted || enrolForm.$invalid"/>
-	</form>
-	
-	<hr />
-	
-	<h2>Instructors for {{course.name}}</h2>
-	
-	<table class="table table-striped">
-		<tr class>
-			<th>Action</th>
-			<th>Name</th>
-		</tr>
-		<tr ng-repeat="(id, name) in enroled">
-			<td>
-				<span ng-if="id == loggedInUserId">
-					-
-				</span>
-				<a href="" ng-click="remove(id)" ng-if="id != loggedInUserId">
-					Drop
-				</a>
-			</td>
-			<td>
-				{{ name }}
-				<span ng-if="id == loggedInUserId">&nbsp;[<em>You</em>]</span>
-			</td>
-		</tr>                                                                   
-	</table>
-	
+<div ng-controller="EnrolController">
+    <form name="enrolForm" class="form-inline" ng-submit="enrolSubmit()" novalidate role="form">
+        <div class="form-group">
+            <label>Enrol: &nbsp</label>
+            <div class="input-group">
+                <select class="form-control" name="role" ng-model="user.usertypesforcourse_id" required
+                        ng-options="role.id as role.name for role in roles">
+                    <option value="">-- Course Role --</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label class="sr-only" for="user">Name</label>
+                <input type="text" ng-model="user.user" name="user" required typeahead="u as u.display for u in users | filter:{'name':$viewValue}"
+                       placeholder="Name" class="form-control" typeahead-input-formatter="user.user.display" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <input type="submit" class="btn btn-success" ng-disabled="submitted || enrolForm.$invalid"/>
+            </div>
+        </div>
+    </form>
 </div>

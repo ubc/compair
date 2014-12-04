@@ -24,7 +24,7 @@ from .group import on_group_create, on_group_delete, on_group_course_get, on_gro
 	on_group_user_create, on_group_user_delete
 from .selfeval import selfevaltype_get, selfeval_question_acomment_count, selfeval_course_acomment_count
 from acj.users import on_user_modified, on_user_get, on_user_list_get, on_user_create, on_user_course_get, \
-	on_user_password_update, user_types_all_get, instructors_get
+	on_user_password_update, on_user_types_all_get, on_instructors_get, on_course_roles_all_get, on_users_display_get
 from .authorization import define_authorization
 from .core import login_manager, bouncer, db, cas
 from .configuration import config
@@ -108,9 +108,10 @@ def create_app(conf=config, settings_override={}):
 	app.register_blueprint(groups_users_api, url_prefix='/api/courses/<int:course_id>/users/<int:user_id>/groups')
 	from .login import login_api
 	app.register_blueprint(login_api)
-	from .users import users_api, user_types_api
+	from .users import users_api, user_types_api, user_course_types_api
 	app.register_blueprint(users_api, url_prefix='/api/users')
 	app.register_blueprint(user_types_api, url_prefix='/api/usertypes')
+	app.register_blueprint(user_course_types_api, url_prefix='/api/courseroles')
 	from .question import questions_api
 	app.register_blueprint(questions_api, url_prefix='/api/courses/<int:course_id>/questions')
 	from .answer import answers_api, all_answers_api
@@ -175,8 +176,11 @@ on_user_create.connect(log)
 on_user_course_get.connect(log)
 on_user_password_update.connect(log)
 
-user_types_all_get.connect(log)
-instructors_get.connect(log)
+on_user_types_all_get.connect(log)
+on_instructors_get.connect(log)
+
+on_course_roles_all_get.connect(log)
+on_users_display_get.connect(log)
 
 # course events
 on_course_modified.connect(log)
