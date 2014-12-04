@@ -167,7 +167,7 @@
 			<div class="all-answers">
 			
 				<!-- Instructor Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="instructors[answer.post.user.id] && (see_answers || canManagePosts)">
+				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers | filter:adminFilter()" ng-if="instructors[answer.post.user.id] && (see_answers || canManagePosts)">
 					
 					<!-- Instructor Answer Metadata Header -->
 					<a ng-href="#/user/{{answer.post.user.id}}">

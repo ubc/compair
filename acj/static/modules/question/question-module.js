@@ -266,15 +266,15 @@ module.controller("QuestionViewController",
 					JudgementResource.count({'courseId': $scope.courseId, 'questionId': questionId,
 								'userId': $scope.loggedInUserId}).$promise.then(
 						function (ret) {
-							// if an evaluation period is set - assume one criterion
 							$scope.judged_req_met = ret.count >= $scope.question.num_judgement_req;
 							$scope.evaluation = 0;
 							if (!$scope.judged_req_met) {
 								$scope.evaluation = $scope.question.num_judgement_req - ret.count;
 							}
+							// if evaluation period is set answers can be seen after it ends
 							if (judgeEnd) {
 								$scope.see_answers = $scope.question.after_judging;
-							// if an evaluation period is NOT set
+							// if an evaluation period is NOT set - answers can be seen after req met
 							} else {
 								$scope.see_answers = $scope.question.after_judging && $scope.judged_req_met;
 							}
@@ -378,6 +378,13 @@ module.controller("QuestionViewController",
 				userIds[$scope.grade.author.user.id] = 1;
 			}
 		};
+
+		$scope.adminFilter = function() {
+			return function (answer) {
+				// assume if any filter is applied - instructor/TAs answer will not meet requirement
+				return !$scope.grade.author && !$scope.grade.group
+			}
+		}
 
 		$scope.groupFilter = function() {
 			return function (answer) {
