@@ -13,20 +13,21 @@
 				Import Users
 			</a>
 			<!-- TO DO: button should compile the CSV file -->
-			<a href="" class="btn btn-primary">
+			<!-- <a href="" class="btn btn-primary">
 				<i class="fa fa-download"></i>
 				Export Users
-			</a>
+			</a> -->
 		</div>
 	</div>
 	<!-- TO DO: reportFile to be replaced by whatever will be used on this page to create the CSV file -->
 	<div class="alert alert-success text-center" ng-show="reportFile">
 			<h4>File Complete</h4>
 			<p>Your list of users is ready for <strong><a href="{{ reportFile }}">download <i class="fa fa-file-excel-o"></i></a></strong> now.</p>
-		</div>
-	<h2>Users in {{course.name}} ({{ classlist.length }})</h2>
-	<ng-include src="'modules/classlist/classlist-enrol-partial.html'"></ng-include>
-	<br/>
+	</div>
+	<h2>Enrolled in {{course.name}}</h2>
+	<hr />
+	<ng-include class="pull-right" src="'modules/classlist/classlist-enrol-partial.html'"></ng-include>
+	<h3>{{ classlist.length }} Users</h3>
 	<table class="table table-striped">
 		<tr class>
 			<th>Action</th>
