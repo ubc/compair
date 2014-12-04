@@ -1,41 +1,47 @@
 <div ng-controller="JudgementCommentController" class="evaluations-screen">
 	
-	<h1>Evaluations for "{{ parent.title }}"</h1>
+	<h1>Comparisons for "{{ parent.title }}"</h1>
 	
-	<p class="intro-text">Filter by a group (if available), student evaluator's name and criterion, or select "any" to see all available evaluations. Note that printing this page will automatically reveal all the evaluated answers on the page.</p>
+	<p class="intro-text">Filter by a group (if available), student evaluator's name and criterion, or select "any" for these options to see the full list of available comparisons. Note that printing this page will automatically reveal the compared answer pairs on the page.</p>
 
 	<hr />
 	
 	<div class="form-group row">
 		<div ng-show="groups.length" class="col-sm-2">
 			<label>Group</label>
-			<select class="form-control" ng-model="group" ng-change="updateGroup()" ng-options="g.id as g.name for g in groups | orderBy: 'name'">
+			<select class="form-control" ng-model="group" ng-change="updateGroup()" ng-options="g as g.name for g in groups | orderBy: 'name'">
 				<option value="">Any Group</option>
 			</select>
 			<br />
 		</div>
 		<div ng-class="{'col-sm-4': groups.length, 'col-sm-6': !groups.length}">
-			<label>Evaluator</label>
-			<select class="form-control" ng-model="search.userId" ng-options="s.user.id as s.user.name for s in students | orderBy: 'fullname'">
+			<label>Student Evaluator</label>
+			<select class="form-control" ng-model="search.userId" ng-options="s.user as s.user.name for s in students | orderBy: 'user.name'">
 				<option value="">Any Student</option>
 			</select>
 			<br />
 		</div>
 		<div class="col-sm-6">
 			<label>Criterion</label>
-			<select class="form-control nullable" ng-model="search.criteriaId" ng-options="c.id as c.criterion.name for (k, c) in criteria">
+			<select class="form-control nullable" ng-model="search.criteriaId" ng-options="c as c.criterion.name for (k, c) in criteria">
 				<option value="">Any Criteria</option>
 			</select>
 		</div>
 	</div>
 
-	<h2>{{ results.length }} evaluations found <a onclick="window.print();" href="" class="pull-right"><i class="fa fa-print"></i></a></h2>
+	<h2>
+		{{ results.length }} <span ng-if="!group.name && !search.userId.name">total</span> comparisons found
+		<span ng-if="group.name"> - </span> {{ group.name }}
+		<span ng-if="search.userId.name"> - </span> {{ search.userId.name }}
+		<a onclick="window.print();" href="" class="pull-right"><i class="fa fa-print"></i></a>
+	</h2>
+	<h3 ng-if="search.criteriaId">Responding to "{{ search.criteriaId.criterion.name }}"</h3>
 	
 	<div ng-show="results.length" class="evaluations">
 		
-		<div class="each-evaluation" ng-repeat="(key, comment) in comments | filter:commentFilter(search.userId, search.criteriaId) as results">
+		<div class="each-evaluation" ng-repeat="(key, comment) in comments | filter:commentFilter(search.userId.id, search.criteriaId.id) as results">
 		
-			<!-- Comment Header -->
+			<!-- Comparison Header -->
 			<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
 				<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
 			</a>
@@ -47,26 +53,34 @@
 					{{comment.postsforcomments.post.user.username}}
 				</span>
 			</a>
-			<strong>wrote</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
+			<strong>submitted</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 			
 			<!-- TODO: criteria -->
+			
+			<p class="content"><em>Comparison:</em></p>
 			
 			<!-- Comment -->
 			<div class="content" mathjax="comment.postsforcomments.post.content"
 				ng-bind-html="comment.postsforcomments.post.content">
 			</div>
 			
+			<p class="content"><em>Feedback:</em></p>
+			
+			<div class="content">
+				Need replies to both answers here.
+			</div>
+			
 			<!-- Answers -->
-			<a href="" ng-click="showAnswers = !showAnswers; answers(comment)" showAnswers-comments.key = !showAnswers-key">
+			<p><a href="" ng-click="showAnswers = !showAnswers; answers(comment)" showAnswers-comments.key = !showAnswers-key">
 				<i ng-show="showAnswers" class="fa fa-chevron-down"></i>
 				<i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
-				Show evaluated answers
-			</a>
+				Show compared answers
+			</a></p>
 			
 			<div class="row" ng-show="showAnswers">
 				<div class="col-md-6">
 					<div class="answer-choice clearfix">
-						<h4 class="text-center">Answer 1 <span ng-show="comment.judgement.postsforanswers_id_winner == comment.judgement.answerpairing.postsforanswers_id1">(Chosen)</span></h4>
+						<h4 class="text-center">Odd-Numbered Answer <span ng-show="comment.judgement.postsforanswers_id_winner == comment.judgement.answerpairing.postsforanswers_id1">(Chosen)</span> <span class="label label-warning pull-right">Rank: add here</span></h4>
 						<div mathjax="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id1].post.content"
 							ng-bind-html="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id1]['post']['content']">
 						</div>
@@ -77,7 +91,7 @@
 				</div>
 				<div class="col-md-6">
 					<div class="answer-choice clearfix">
-						<h4 class="text-center">Answer 2 <span ng-show="comment.judgement.postsforanswers_id_winner == comment.judgement.answerpairing.postsforanswers_id2">(Chosen)</span></h4>
+						<h4 class="text-center">Even-Numbered Answer <span ng-show="comment.judgement.postsforanswers_id_winner == comment.judgement.answerpairing.postsforanswers_id2">(Chosen)</span> <span class="label label-warning pull-right">Rank: add here</span></h4>
 						<div mathjax="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id2].post.content"
 							ng-bind-html="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id2]['post']['content']">
 						</div>
@@ -93,7 +107,7 @@
 		
 	<!-- if no comments are available - eg. none submitted or after filter -->
 	<div ng-if="results.length < 1">
-		<p>No evaluations were found with these filter settings. Try another evaluator or criterion above.</p>
+		<p>No comparisons were found with these filter settings. Try another group, student evaluator, or criterion above.</p>
 	</div>
 
 </div>

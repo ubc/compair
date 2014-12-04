@@ -280,7 +280,7 @@ module.controller(
 			function(ret) {
 				$scope.parent = ret.question;
 				$scope.criteria = ret.question.criteria;
-				$scope.search.criteriaId = $scope.criteria[0].id;
+				$scope.search.criteriaId = $scope.criteria[0];
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve the question "+questionId, ret);
@@ -310,7 +310,7 @@ module.controller(
 				$scope.students = allStudents;
 				userIds = getUserIds($scope.students);
 			} else {
-				GroupResource.get({'courseId': courseId, 'groupId': $scope.group}).$promise.then(
+				GroupResource.get({'courseId': courseId, 'groupId': $scope.group.id}).$promise.then(
 					function (ret) {
 						$scope.students = ret.students;
 						userIds = getUserIds($scope.students);

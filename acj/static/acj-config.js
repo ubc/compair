@@ -127,10 +127,10 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/judgement/judgement-selfevaluation-partial.html',
 				label: "Self-Evaluation"
 			})
-		.when ('/course/:courseId/question/:questionId/evaluations',
+		.when ('/course/:courseId/question/:questionId/comparisons',
 			   {
 				   templateUrl: 'modules/comment/comment-judgement-partial.html',
-				   label: "Evaluations"
+				   label: "Comparisons"
 			   })
 		.when('/course/:courseId/question/:questionId/post/:postId',
 			{
