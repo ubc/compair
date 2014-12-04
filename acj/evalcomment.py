@@ -7,7 +7,7 @@ from bouncer.constants import EDIT, CREATE, MANAGE
 from . import dataformat
 from .core import db, event
 from .models import Judgements, PostsForComments, PostsForJudgements, Courses, PostsForQuestions, Posts, \
-	AnswerPairings, CoursesAndUsers, CriteriaAndCourses, CriteriaAndPostsForQuestions
+	AnswerPairings, CoursesAndUsers, CriteriaAndCourses, CriteriaAndPostsForQuestions, Users
 from .util import new_restful_api
 from .authorization import allow, require
 
@@ -32,8 +32,9 @@ class EvalCommentRootAPI(Resource):
 		comment = PostsForComments(post=post)
 		judgementComment = PostsForJudgements(postsforcomments=comment)
 		require(MANAGE, judgementComment)
-		comments = PostsForJudgements.query.join(PostsForComments, Posts).filter(Posts.courses_id==course.id)\
-			.join(Judgements, AnswerPairings).filter_by(postsforquestions_id=question.id).all()
+		comments = PostsForJudgements.query\
+			.join(Judgements, AnswerPairings).filter_by(postsforquestions_id=question.id)\
+			.join(PostsForComments, Posts, Users).order_by(Users.firstname, Users.lastname, Users.id).all()
 		restrict_users = not allow(EDIT, CoursesAndUsers(courses_id=course.id))
 
 		on_evalcomment_get.send(
