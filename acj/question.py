@@ -95,8 +95,6 @@ class QuestionIdAPI(Resource):
 		question.post.content = params.get("post").get("content")
 		uploaded = params.get('uploadedFile')
 		name = params.get('name')
-		if not (question.post.content or uploaded or name):
-			return {"error":"The question content is empty!"}, 400
 		question.title = params.get("title", question.title)
 		question.answer_start = datetime.datetime.strptime(params.get('answer_start', question.answer_start), '%Y-%m-%dT%H:%M:%S.%fZ')
 		question.answer_end = datetime.datetime.strptime(params.get('answer_end', question.answer_end), '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -198,8 +196,6 @@ class QuestionRootAPI(Resource):
 		params = new_question_parser.parse_args()
 		post.content = params.get("post").get("content")
 		name = params.get('name')
-		if not (post.content or name):
-			return {"error":"The answer content is empty!"}, 400
 		post.users_id = current_user.id
 		question.title = params.get("title")
 		question.answer_start = dateutil.parser.parse(params.get('answer_start'))
