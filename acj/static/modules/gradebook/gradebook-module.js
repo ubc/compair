@@ -13,6 +13,7 @@ var module = angular.module('ubc.ctlt.acj.gradebook',
 		'ngResource',
 		'ngRoute',
 		'ubc.ctlt.acj.course',
+		'ubc.ctlt.acj.group',
 		'ubc.ctlt.acj.toaster'
 	]
 );
@@ -30,34 +31,55 @@ module.factory(
 /***** Controllers *****/
 module.controller("GradebookController",
 	function($scope, $log, $routeParams, CourseResource, GradebookResource, 
-		Toaster) 
+		GroupResource, Toaster)
 	{
-		var courseId = $scope.courseId = $routeParams['courseId'];
-		CourseResource.getQuestions({'id': courseId}).$promise.then(
-			function (ret)
+		$scope.users = $scope.allStudents;
+		var userIds = $scope.getUserIds($scope.allStudents);
+		$scope.gb = {};
+		GradebookResource.get(
+			{'courseId': $scope.courseId,'questionId': $scope.questionId}).$promise.then(
+			function(ret)
 			{
-				$scope.questions = ret.questions;
+				$scope.gradebook = ret['gradebook'];
+				$scope.numJudgementsRequired=ret['num_judgements_required'];
 			},
 			function (ret)
 			{
-				Toaster.reqerror("Unable to retrieve course questions: " +
-					courseId, ret);
+				$scope.gradebook = [];
 			}
 		);
 
-		$scope.changeQuestion = function(questionId) {
-			GradebookResource.get(
-				{'courseId': courseId,'questionId': questionId}).$promise.then(
-				function(ret) 
-				{
-					$scope.gradebook = ret['gradebook'];
-					$scope.numJudgementsRequired=ret['num_judgements_required'];
-				},
-				function (ret)
-				{
-					$scope.gradebook = [];
-				}
-			);
+		$scope.groupChange = function() {
+			$scope.gb.student = null;
+			if ($scope.gb.group == null) {
+				userIds = $scope.getUserIds($scope.allStudents);
+				$scope.users = $scope.allStudents;
+			} else {
+				GroupResource.get({'courseId': $scope.courseId, 'groupId': $scope.gb.group.id}).$promise.then(
+					function (ret) {
+						$scope.users = ret.students;
+						userIds = $scope.getUserIds(ret.students);
+					},
+					function (ret) {
+						Toaster.reqerror("Unable to retrieve the group members", ret);
+					}
+				);
+			}
+		};
+
+		$scope.userChange = function() {
+			userIds = {};
+			if ($scope.gb.student == null) {
+				userIds = $scope.getUserIds($scope.users);
+			} else {
+				userIds[$scope.gb.student.user.id] = 1;
+			}
+		};
+
+		$scope.groupFilter = function() {
+			return function (entry) {
+				return entry.userid in userIds;
+			}
 		};
 
 	}

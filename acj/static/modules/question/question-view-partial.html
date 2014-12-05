@@ -97,6 +97,9 @@
 	  <li id="comments">
 		<a href="#comments-tab">Help</a>
 	  </li>
+	  <li ng-show="canManagePosts" id="gradebook">
+		  <a href="#gradebook-tab">Gradebook</a>
+	  </li>
 	</ul>
 	
 	<!-- Tab Content -->
@@ -123,7 +126,7 @@
 						</select>
 					</span>
 					<span class="filter" ng-if="canManagePosts">
-					<label>Sort by ranking for: &nbsp;</label>
+						<label>Sort by ranking for: &nbsp;</label>
 						<select ng-model="grade.sortby"
 							ng-options="key as c.criterion.name for (key, c) in criteria" ng-change="criteriaChange()">
 						</select>
@@ -432,6 +435,10 @@
 			</div><!-- closes each-comment -->
 			
 		</div><!-- closes comments-tab -->
+
+		<div class="tab-pane" id="gradebook-tab" ng-if="canManagePosts">
+			<ng-include src="'modules/gradebook/gradebook-partial.html'"></ng-include>
+		</div><!-- closes gradebook-tab -->
 		
 	</div><!-- closes tab-content -->
 	

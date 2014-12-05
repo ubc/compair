@@ -208,7 +208,7 @@ module.controller("QuestionViewController",
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
 		var myAnsCount = 0; // for the event of deleting own answer
-		var allStudents = {};
+		$scope.allStudents = {};
 		var userIds = {};
 		Session.getUser().then(function(user) {
 			$scope.loggedInUserId = user.id;
@@ -229,9 +229,9 @@ module.controller("QuestionViewController",
 		$scope.students = {};
 		CourseResource.getStudents({'id': $scope.courseId}).$promise.then(
 			function (ret) {
-				allStudents = ret.students;
+				$scope.allStudents = ret.students;
 				$scope.students = ret.students;
-				userIds = getUserIds(ret.students);
+				userIds = $scope.getUserIds(ret.students);
 			},
 			function (ret) {
 				Toaster.reqerror("Class list retrieval failed", ret);
@@ -344,7 +344,7 @@ module.controller("QuestionViewController",
 			}
 		);
 
-		var getUserIds = function(students) {
+		$scope.getUserIds = function(students) {
 			var users = {};
 			angular.forEach(students, function(s, key){
 				users[s.user.id] = 1;
@@ -355,13 +355,13 @@ module.controller("QuestionViewController",
 		$scope.groupChange = function() {
 			$scope.grade.author = null;
 			if ($scope.grade.group == null) {
-				userIds = getUserIds(allStudents);
-				$scope.students = allStudents;
+				userIds = $scope.getUserIds($scope.allStudents);
+				$scope.students = $scope.allStudents;
 			} else {
 				GroupResource.get({'courseId': $scope.courseId, 'groupId': $scope.grade.group.id}).$promise.then(
 					function (ret) {
 						$scope.students = ret.students;
-						userIds = getUserIds(ret.students);
+						userIds = $scope.getUserIds(ret.students);
 					},
 					function (ret) {
 						Toaster.reqerror("Unable to retrieve the group members", ret);
@@ -373,7 +373,7 @@ module.controller("QuestionViewController",
 		$scope.userChange = function() {
 			userIds = {};
 			if ($scope.grade.author == null) {
-				userIds = getUserIds($scope.students);
+				userIds = $scope.getUserIds($scope.students);
 			} else {
 				userIds[$scope.grade.author.user.id] = 1;
 			}
@@ -398,6 +398,10 @@ module.controller("QuestionViewController",
 			$(this).tab('show');
 		});
 		$('#comments a').click(function (e) {
+			e.preventDefault();
+			$(this).tab('show');
+		});
+		$('#gradebook a').click(function (e) {
 			e.preventDefault();
 			$(this).tab('show');
 		});
