@@ -40,6 +40,16 @@
 	<div ng-show="results.length" class="evaluations">
 		
 		<div class="each-evaluation" ng-repeat="(key, comment) in comments | filter:commentFilter(search.userId.id, search.criteriaId.id) as results">
+			
+			<h4 class="text-center evaluator-heading" ng-if="comment.postsforcomments.post.user.id != comments[$index-1].postsforcomments.post.user.id && results[$index].postsforcomments.post.user.id != results[$index-1].postsforcomments.post.user.id">
+				<span ng-if="comment.postsforcomments.post.user.fullname">
+					{{comment.postsforcomments.post.user.fullname}}
+				</span>
+				<span ng-if="!comment.postsforcomments.post.user.fullname">
+					{{comment.postsforcomments.post.user.username}}
+				</span>
+				<i class="fa fa-arrow-down"></i>
+			</h4>
 		
 			<!-- Comparison Header -->
 			<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
@@ -64,7 +74,7 @@
 				ng-bind-html="comment.postsforcomments.post.content">
 			</div>
 			
-			<p class="content"><em>Feedback:</em></p>
+			<p class="content"><em>Feedback Given:</em></p>
 			
 			<div class="content">
 				Need replies to both answers here.
