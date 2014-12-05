@@ -488,16 +488,19 @@ module.controller("QuestionCreateController",
 		var today = new Date();
 		var answer_start = new Date(today.getFullYear(), today.getMonth(), today.getDate()+1, 0, 0);
 		var answer_end = new Date();
+		var judge_start = new Date();
 		var judge_end = new Date();
 		answer_end.setHours(23,59,0,0);
 		answer_end.setDate(answer_start.getDate()+7);
+		judge_start.setHours(23,59,0,0);
+		judge_start.setDate(answer_start.getDate()+7);
 		judge_end.setHours(23,59,0,0);
 		judge_end.setDate(answer_end.getDate()+7);
 		$scope.question = {
 			'answer_start': answer_start,
-			'answer_end': answer_end.toISOString(),
-			'judge_start': answer_end.toISOString(),
-			'judge_end': judge_end.toISOString()
+			'answer_end': answer_end,
+			'judge_start': judge_start,
+			'judge_end': judge_end
 		};
 		$scope.question.can_reply = true; //want default to encourage discussion
 		$scope.uploader = attachService.getUploader();
@@ -546,7 +549,7 @@ module.controller("QuestionCreateController",
 				Toaster.error('Answer Period Error', 'Answer end time must be after answer start time.');
 				$scope.submitted = false;
 				return;
-			} else if ($scope.question.availableCheck && !($scope.question.answer_end <= $scope.question.judge_start && $scope.question.judge_start <= $scope.question.judge_end)) {
+			} else if ($scope.question.availableCheck && !($scope.question.answer_start <= $scope.question.judge_start && $scope.question.judge_start <= $scope.question.judge_end)) {
 				Toaster.error("Time Period Error", 'Please double-check the answer and/or evaluation period start and end times.');
 				$scope.submitted = false;
 				return;
@@ -730,7 +733,7 @@ module.controller("QuestionEditController",
 				Toaster.error('Answer Period Error', 'Answer end time must be after answer start time.');
 				$scope.submitted = false;
 				return;
-			} else if ($scope.question.availableCheck && !($scope.question.answer_end <= $scope.question.judge_start
+			} else if ($scope.question.availableCheck && !($scope.question.answer_start <= $scope.question.judge_start
 				&& $scope.question.judge_start < $scope.question.judge_end)) {
 				Toaster.error("Time Period Error", 'Please double-check the answer and/or evaluation period start and end times.');
 				$scope.submitted = false;
