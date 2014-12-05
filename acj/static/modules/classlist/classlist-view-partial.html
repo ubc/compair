@@ -59,8 +59,11 @@
 		</tr>
 		<tr ng-repeat="user in classlist | orderBy:predicate:reverse">
 			<td>
-				<a href="#/user/{{user.user.id}}/edit" target="_blank">
+				<!--<a href="#/user/{{user.user.id}}/edit" target="_blank">
 					Edit
+				</a>-->
+				<a href="" ng-click="unenrol(user.user.id)">
+					Drop
 				</a>
 			</td>
 			<td>{{user.user.firstname}}</td>

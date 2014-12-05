@@ -38,7 +38,7 @@ module.factory(
 /***** Controllers *****/
 module.controller(
 	'ClassViewController',
-	function($scope, $log, $routeParams, ClassListResource, CourseResource,
+	function($scope, $log, $routeParams, $route, ClassListResource, CourseResource,
 			 CourseRoleResource, GroupResource, Toaster)
 	{
 		$scope.course = {};
@@ -85,7 +85,7 @@ module.controller(
 						Toaster.success("Successfully enroled the user into " + ret.groups_name);
 					},
 					function (ret) {
-						Toaster.reqerror("Failed to enrol the user into the group.");
+						Toaster.reqerror("Failed to enrol the user into the group.", ret);
 					}
 				);
 			} else {
@@ -94,11 +94,23 @@ module.controller(
 						Toaster.success("Successfully removed the user from the group.");
 					},
 					function (ret) {
-						Toaster.reqerror("Failed to remove the user from the group.");
+						Toaster.reqerror("Failed to remove the user from the group.", ret);
 					}
 				);
 			}
-		}
+		};
+
+		$scope.unenrol = function(userId) {
+			ClassListResource.unenrol({'courseId': courseId, 'userId': userId}).$promise.then(
+				function (ret) {
+					Toaster.success("Successfully unenroled " + ret.user.fullname + " from the course.");
+					$route.reload();
+				},
+				function (ret) {
+					Toaster.reqerror("Failed to unerol the user from the course.", ret);
+				}
+			)
+		};
 	}
 );
 
