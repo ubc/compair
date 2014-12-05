@@ -127,13 +127,13 @@ module.controller(
 		);
 		
 		// enable scrolling to evaluation step 2, when step 2 revealed
-		$scope.showNext = function(selector) {
+		//$scope.showNext = function(selector) {
 			// ensure hidden step revealed first
-			$timeout(function(){
+			//$timeout(function(){
 				// jump to revealed step
-				window.scrollTo(0, $(selector)[0].offsetTop - 220);
-			}, 0);
-		};
+				//window.scrollTo(0, $(selector)[0].offsetTop - 220);
+			//}, 0);
+		//};
 		
 		// save judgement to server
 		$scope.judgementSubmit = function() {

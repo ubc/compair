@@ -163,7 +163,7 @@
 			     basically we force users to answer first, if they can
 			     enabled only when answer pairs are available for comparison (a negative number = good)
 			     -->
-			<a class="btn btn-success" title="Compare Answers" ng-href="#/course/{{course.id}}/question/{{question.id}}/judgement"
+			<a class="btn btn-success" title="Compare Answers" ng-href="#/course/{{course.id}}/question/{{question.id}}/compare"
 			   ng-show="!canManagePosts && question.judging_period && question.left && ((question.answer_period && answered[question.id]) || (!question.answer_period))" ng-disabled="question.leftover > 0">
 				Compare Answers
 			</a>

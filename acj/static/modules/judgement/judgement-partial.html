@@ -2,6 +2,8 @@
 	
 	<h1>Compare Answers <span class="label label-warning pull-right">Round {{current}} / {{total}}</span></h1>
 	
+	<p class="question-identifier"><em>Original question:</em></p>
+	
 	<div class="standalone-question">
 		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
 		<div mathjax="question.post.content"
@@ -16,11 +18,13 @@
 		<p>Answer evaluation for this question is not available at this time.</p>
 	</div>
 	
+	<hr />
+	
 	<form name="judgementForm" ng-submit="judgementSubmit()" novalidate ng-hide="answerPairError">
 
 		<div class="answer-pair">
 			
-			<h2>1) Provide feedback for these student answers</h2>
+			<h2>1) Choose an answer based on the criteria below </h2>
 			
 			<!-- Show the answers side by side -->
 			<div class="row sub-step">			
@@ -35,7 +39,7 @@
 							pdfs="answerPair.answer1.post.files">
 						</acj-pdf-inline>
 						<!-- Flagging -->
-						<a href="" class="btn btn-default btn-xs"
+						<a href="" class="btn btn-default btn-xs pull-right"
 							title="Flag as incomplete or inappropriate."
 							ng-class="{'btn-danger': answerPair.answer1.flagged}"
 							ng-click="toggleAnswerFlag(answerPair.answer1)">
@@ -68,46 +72,8 @@
 				</div>
 			</div>
 			
-			<div class="row sub-step">
-				<div class="col-md-6">
-					<label class="cke-label">
-						Reply to Answer {{(current - 1) + current}} (will be visible to classmates)
-						<i class="fa fa-arrow-down"></i>
-					</label>
-					<textarea
-						ng-model="answerPair.answer1.comment.post.content" rows="8" ckeditor required>
-					</textarea>
-				</div>
-				<div class="col-md-6">
-					<label class="cke-label">
-						Reply to Answer {{current * 2}} (will be visible to classmates)
-						<i class="fa fa-arrow-down"></i>
-					</label>
-					<textarea
-						ng-model="answerPair.answer2.comment.post.content" rows="8" ckeditor required>
-					</textarea>
-				</div>
-			</div>
-			
-		</div>
-		
-		<div class="form-group">
-			<input
-				ng-disabled="!(!!answerPair.answer1.comment.post.content && !!answerPair.answer2.comment.post.content)"
-				ng-click="isStep2Shown = !isStep2Shown; showNext('#step-2');"
-				ng-show="!isStep2Shown"
-				value="Next" class="btn btn-success btn-lg center-block" />
-		</div>
-		
-		<div ng-show="isStep2Shown" id="step-2">
-		
-			<hr />
-			
-			<h2>2) Choose an answer based on the criteria below</h2>
-			
 			<div class="form-group sub-step" ng-repeat="questionCriterion in questionCriteria">
-				
-				<!-- Show the judgement criteria (needs ng-repeat) -->
+
 				<div class="each-criterion text-center sub-step">
 					<fieldset>
 						<h3><i class="fa fa-gavel"></i> {{questionCriterion.criterion.name}}</h3>
@@ -116,7 +82,7 @@
 							ng-bind-html="questionCriterion.criterion.description">
 						</div>
 						
-						<p class="required-star"><strong>Select one from this pair</strong></p>
+						<p><strong>Select one:</strong></p>
 						<div class="btn-group">
 							<label class="btn btn-primary" ng-class=
 								"{active:questionCriterion.winner==answerPair.answer1.id}">
@@ -138,14 +104,52 @@
 						
 						<label class="text-left cke-label">
 							Explain your selection (shown only to instructor)
-							<i class="fa fa-arrow-down"></i>
+							<!-- <i class="fa fa-arrow-down"></i> -->
 						</label>
 						<textarea
-							  ng-model="questionCriterion.comment" rows="8" ckeditor required>
+							  ng-model="questionCriterion.comment" rows="4" ckeditor required>
 						</textarea>
 					</fieldset>
 				</div>
 				
+			</div>
+			
+		</div>
+		
+		<!-- <div class="form-group">
+			<input
+				ng-disabled="!(!!answerPair.answer1.comment.post.content && !!answerPair.answer2.comment.post.content)"
+				ng-click="isStep2Shown = !isStep2Shown; showNext('#step-2');"
+				ng-show="!isStep2Shown"
+				value="Next" class="btn btn-success btn-lg center-block" />
+		</div> -->
+		
+		<!--<div ng-show="isStep2Shown" id="step-2">-->
+		<div>
+		
+			<hr />
+			
+			<h2>2) Give constructive feedback for each student</h2>
+			
+			<div class="row sub-step">
+				<div class="col-md-6">
+					<label class="cke-label">
+						Your feedback for Answer {{(current - 1) + current}} (will be visible to classmates)
+						<i class="fa fa-arrow-down"></i>
+					</label>
+					<textarea
+						ng-model="answerPair.answer1.comment.post.content" rows="8" ckeditor required>
+					</textarea>
+				</div>
+				<div class="col-md-6">
+					<label class="cke-label">
+						Your feedback for Answer {{current * 2}} (will be visible to classmates)
+						<i class="fa fa-arrow-down"></i>
+					</label>
+					<textarea
+						ng-model="answerPair.answer2.comment.post.content" rows="8" ckeditor required>
+					</textarea>
+				</div>
 			</div>
 			
 			<div class="form-group sub-step">

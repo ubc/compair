@@ -95,12 +95,12 @@ myApp.config( function ($routeProvider) {
 		.when ('/course/:courseId/question/:questionId/comment/create',
 			{
 				templateUrl: 'modules/comment/comment-question-create-partial.html',
-				label: "Comment on Assignment"
+				label: "Comment on Question"
 			})
 		.when ('/course/:courseId/question/:questionId/comment/:commentId/edit',
 			{
 				templateUrl: 'modules/comment/comment-question-edit-partial.html',
-				label: "Edit Comment on Assignment"
+				label: "Edit Comment on Question"
 			})
 		.when('/course/:courseId/question/:questionId/answer/:answerId/comment/create',
 			{
@@ -112,7 +112,7 @@ myApp.config( function ($routeProvider) {
 				templateUrl: 'modules/comment/comment-answer-edit-partial.html',
 				label: "Edit Reply"
 			})
-		.when ('/course/:courseId/question/:questionId/judgement', 
+		.when ('/course/:courseId/question/:questionId/compare', 
 			{
 				templateUrl: 'modules/judgement/judgement-partial.html',
 				label: "Compare Answers"
