@@ -69,7 +69,7 @@ class QuestionIdAPI(Resource):
 		now = datetime.datetime.utcnow()
 		if question.answer_start and not allow(MANAGE, question) and not (question.answer_start <= now):
 			return {"error":"The question is unavailable!"}, 403
-		restrict_users = not allow(EDIT, CoursesAndUsers(courses_id=course_id))
+		restrict_users = not allow(MANAGE, question)
 
 		on_question_get.send(
 			current_app._get_current_object(),
@@ -164,7 +164,6 @@ class QuestionRootAPI(Resource):
 		course = Courses.query.get_or_404(course_id)
 		require(READ, course)
 		# Get all questions for this course, default order is most recent first
-		restrict_users = not allow(EDIT, CoursesAndUsers(courses_id=course_id))
 		post = Posts(courses_id=course_id)
 		question = PostsForQuestions(post=post)
 		if allow(MANAGE, question):
@@ -175,6 +174,7 @@ class QuestionRootAPI(Resource):
 			questions = PostsForQuestions.query.join(Posts).filter(Posts.courses_id==course_id).\
 				filter(or_(PostsForQuestions.answer_start==None,now >= PostsForQuestions.answer_start)).\
 				order_by(desc(Posts.created)).all()
+		restrict_users = not allow(MANAGE, question)
 
 		on_question_list_get.send(
 			current_app._get_current_object(),
