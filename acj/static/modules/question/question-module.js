@@ -755,13 +755,15 @@ module.controller("QuestionEditController",
 					$scope.date.jstart.date = new Date(ret.question.judge_start).toISOString();
 					$scope.date.jstart.time = new Date(ret.question.judge_start);
 					$scope.date.jend.date = new Date(ret.question.judge_end).toISOString();
-					$scope.date.jend.time = new Date(ret.question.judge_end).toISOString();
+					$scope.date.jend.time = new Date(ret.question.judge_end)
 				} else {
-					$scope.date.jstart.date = new Date($scope.date.aend.date).toISOString();
+					$scope.date.jstart.date = new Date($scope.date.aend.date);
 					$scope.date.jstart.time = new Date($scope.date.aend.time);
 					$scope.date.jend.date = new Date();
-					$scope.date.jend.date.setDate($scope.date.aend.date.getDate()+14);
+					$scope.date.jend.date.setDate($scope.date.jstart.date.getDate()+7);
 					$scope.date.jend.time = new Date($scope.date.aend.time);
+					$scope.date.jstart.date = $scope.date.jstart.date.toISOString();
+					$scope.date.jend.date = $scope.date.jend.date.toISOString();
 				}
 				$scope.question = ret.question;
 				$scope.judged = ret.question.judged;
