@@ -43,9 +43,8 @@ on_classlist_instructor_label = event.signal('CLASSLIST_INSTRUCTOR_LABEL_GET')
 on_classlist_instructor = event.signal('CLASSLIST_INSTRUCTOR_GET')
 on_classlist_student = event.signal('CLASSLIST_STUDENT_GET')
 
-def display_name_generator(firstname=None, role="Student"):
-	name = firstname+"_" if firstname else ""
-	return role.lower()+"_"+name+random_generator(4, string.digits)
+def display_name_generator(role="Student"):
+	return role.lower()+"_"+random_generator(8, string.digits)
 
 def import_users(course_id, users):
 	invalids = [] # invalid entries - eg. invalid # of columns
@@ -125,10 +124,10 @@ def import_users(course_id, users):
 			u = temp
 			u.usertypesforsystem_id = normal_user
 			if not temp.displayname:	# if display name is None
-				tmp_displayname = display_name_generator(u.firstname)
+				tmp_displayname = display_name_generator()
 				exists = Users.query.filter_by(displayname=tmp_displayname).scalar()
 				while (exists is not None):
-					tmp_displayname = display_name_generator(u.firstname)
+					tmp_displayname = display_name_generator()
 					exists = Users.query.filter_by(displayname=tmp_displayname).scalar()
 				u.displayname = tmp_displayname
 

@@ -228,7 +228,7 @@ class UserTypesInstructorsAPI(Resource):
 	def get(self):
 		id = UserTypesForSystem.query.filter_by(name=UserTypesForSystem.TYPE_INSTRUCTOR).first().id
 		instructors = Users.query.filter_by(usertypesforsystem_id=id).order_by(Users.firstname).all()
-		instructors = [{'id': i.id, 'display': i.fullname+' ('+i.displayname+') - '+i.usertypeforsystem.name, 'name': i.fullname} for i in instructors]
+		instructors = [{'id': i.id, 'display': (i.fullname or '')+' ('+i.displayname+') - '+i.usertypeforsystem.name, 'name': i.fullname} for i in instructors]
 
 		on_instructors_get.send(
 			current_app._get_current_object(),
@@ -244,7 +244,7 @@ class UserTypesAllAPI(Resource):
 	def get(self):
 		users = Users.query.order_by(Users.firstname).all()
 		require(EDIT, CoursesAndUsers)
-		users = [{'id': i.id, 'display': i.fullname+' ('+i.displayname+') - '+i.usertypeforsystem.name, 'name': i.fullname} for i in users]
+		users = [{'id': i.id, 'display': (i.fullname or '')+' ('+i.displayname+') - '+i.usertypeforsystem.name, 'name': i.fullname} for i in users]
 
 		on_users_display_get.send(
 			current_app._get_current_object(),
