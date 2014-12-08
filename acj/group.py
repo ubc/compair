@@ -151,7 +151,8 @@ class GroupRootAPI(Resource):
 		course = Courses.query.get_or_404(course_id)
 		group = Groups(courses_id=course_id)
 		require(READ, group)
-		groups = Groups.query.filter(Groups.courses_id==course.id, Groups.active).all()
+		groups = Groups.query.filter(Groups.courses_id==course.id, Groups.active)\
+			.order_by(Groups.name).all()
 
 		on_group_course_get.send(
 			current_app._get_current_object(),

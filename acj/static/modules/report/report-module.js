@@ -25,32 +25,36 @@ module.factory('ReportResource', function($q, $routeParams, $log, $resource)
 /***** Controllers *****/
 module.controller(
 	'ReportCreateController',
-	function($scope, $log, CourseResource, ReportResource, UserResource, QuestionResource, Session, Toaster)
+	function($scope, $log, CourseResource, ReportResource, UserResource,
+			 GroupResource, QuestionResource, Session, Toaster)
 	{
 		$scope.report = {
-			'type': 'participation'
+			'type': 'participation',
+			'group_id': 'all'
 		};
 		$scope.courses = {};
 		$scope.assignments = [];
+		$scope.groups = [];
 
 		var all = [{'id': 'all', 'title': 'All'}];
+		var allGroups = [{'id': 'all', 'name': 'All'}]
 		$scope.types = [
 			{'id': 'participation', 'name': 'Participation Report'},
 			{'id': 'participation_stat', 'name': 'Participation Report - Statistics'}
 		];
 
-        Session.getUser().then(function(user) {
-            UserResource.getUserCourses(
-                {id: user.id}).$promise.then(
-                function(ret) {
-                    $scope.courses = ret.objects;
-                },
-                function (ret) {
-                    Toaster.reqerror("Unable to retrieve your courses.", ret);
-                    $log.error("Failed to retrieve the user's courses.");
-                }
-            );
-        });
+		Session.getUser().then(function(user) {
+			UserResource.getUserCourses(
+				{id: user.id}).$promise.then(
+				function(ret) {
+					$scope.courses = ret.objects;
+				},
+				function (ret) {
+					Toaster.reqerror("Unable to retrieve your courses.", ret);
+					$log.error("Failed to retrieve the user's courses.");
+				}
+			);
+		});
 
 		$scope.changeReport = function() {
 			$scope.reportFile = null;
@@ -62,6 +66,18 @@ module.controller(
 				$scope.assignments = [];
 				return;
 			}
+			GroupResource.get({'courseId': $scope.report.course_id}).$promise.then(
+				function (ret) {
+					$scope.report.group_id = 'all';
+					if (ret.groups.length > 0) {
+						ret.groups = ret.groups.concat(allGroups);
+					}
+					$scope.groups = ret.groups;
+				},
+				function(ret) {
+					Toaster.reqerror('Unable to retrieve groups', ret);
+				}
+			);
 			CourseResource.getQuestions({'id': $scope.report.course_id}).$promise.then(
 				function (ret) {
 					$scope.report.assignment = null;
@@ -82,6 +98,8 @@ module.controller(
 			var report = angular.copy($scope.report);
 			if (report.assignment == 'all')
 				delete report.assignment;
+			if (report.group_id == 'all')
+				delete report.group_id;
 			ReportResource.save({'id': report.course_id}, report).$promise.then(
 				function (ret) {
 					$scope.reportFile = ret.file;

@@ -9,7 +9,7 @@ from . import dataformat
 from .core import event
 from .models import PostsForQuestions, CoursesAndUsers, Courses, Posts, PostsForAnswers, UserTypesForCourse,\
 				Judgements, AnswerPairings, PostsForAnswersAndPostsForComments, PostsForComments,\
-				CriteriaAndPostsForQuestions
+				CriteriaAndPostsForQuestions, GroupsAndUsers, Groups
 from .util import new_restful_api
 
 import csv, os, time
@@ -24,6 +24,7 @@ app = Flask(__name__)
 app.config['PERMANENT_REPORT_UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 report_parser = reqparse.RequestParser()
+report_parser.add_argument('group_id', type=int)
 # may change 'type' to int
 report_parser.add_argument('type', type=str, required=True)
 report_parser.add_argument('assignment', type=int)
@@ -32,10 +33,14 @@ report_parser.add_argument('assignment', type=int)
 on_export_report = event.signal('EXPORT_REPORT')
 # should we have a different event for each type of report?
 
-def name_generator(course, report_name, file_type="csv"):
+def name_generator(course, report_name, group_id, file_type="csv"):
 	date = time.strftime("%Y-%m-%d--%H-%M-%S")
+	group_name = ""
+	if group_id:
+		group_name = Groups.query.get_or_404(group_id).name
+		group_name += '-'
 	#return report_name + "_" + course.name + "_" + random_generator(4) + "." + file_type
-	return course.name + "-" + report_name + "--" + date + "." + file_type
+	return course.name + "-" + group_name + report_name + "--" + date + "." + file_type
 
 class ReportRootAPI(Resource):
 	@login_required
@@ -46,17 +51,18 @@ class ReportRootAPI(Resource):
 		require(MANAGE, question)
 
 		params = report_parser.parse_args()
+		group_id = params.get('group_id', None)
 		type = params.get('type')
 		assignment = params.get('assignment', None)
 
 		if type=="participation_stat":
 			if assignment:
-				question = PostsForQuestions.query.filter_by(id=assignment).join(Posts).filter_by(courses_id=course_id).first_or_404()
+				question = PostsForQuestions.query.get_or_404(assignment)
 				questions = [question]
-				data = participation_stat_report(course_id, questions, False)
+				data = participation_stat_report(course_id, questions, group_id, False)
 			else:
 				questions = PostsForQuestions.query.join(Posts).filter_by(courses_id=course_id).all()
-				data = participation_stat_report(course_id, questions, True)
+				data = participation_stat_report(course_id, questions, None, True)
 
 			title = ['Question', 'Username', 'Last Name', 'First Name', 'Answer Submitted', 'Answer ID',
 					 'Evaluations Submitted', 'Evaluations Required', 'Evaluation Requirements Met',
@@ -70,7 +76,7 @@ class ReportRootAPI(Resource):
 			else:
 				questions = PostsForQuestions.query.join(Posts).filter_by(courses_id=course_id)\
 					.order_by(PostsForQuestions.answer_start).all()
-			data = participation_report(course_id, questions)
+			data = participation_report(course_id, questions, group_id)
 
 			title_row1 = ["" for x in user_titles]
 			title_row2 = user_titles
@@ -85,7 +91,7 @@ class ReportRootAPI(Resource):
 		else:
 			return {'error': 'The requested report type cannot be found'}, 400
 
-		name = name_generator(course, type)
+		name = name_generator(course, type, group_id)
 		tmpName = os.path.join(current_app.config['REPORT_FOLDER'], name)
 
 		report = open(tmpName, 'wb')
@@ -106,11 +112,15 @@ class ReportRootAPI(Resource):
 		return {'file': 'report/'+name}
 api.add_resource(ReportRootAPI, '')
 
-def participation_stat_report(course_id, assignments, overall):
+def participation_stat_report(course_id, assignments, group_id, overall):
 	report = []
 	student = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first().id
 	classlist = CoursesAndUsers.query.filter_by(courses_id=course_id).\
 		filter(CoursesAndUsers.usertypesforcourse_id==student).all()
+	if group_id:
+		userIds = [u.users_id for u in classlist]
+		classlist = GroupsAndUsers.query.filter_by(groups_id=group_id, active=True)\
+			.filter(GroupsAndUsers.users_id.in_(userIds)).all()
 
 	total_req = 0
 	total = {}
@@ -172,11 +182,15 @@ def participation_stat_report(course_id, assignments, overall):
 			report.append(temp)
 	return report
 
-def participation_report(course_id, questions):
+def participation_report(course_id, questions, group_id):
 	report = []
 	student = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first().id
 	classlist = CoursesAndUsers.query.filter_by(courses_id=course_id).\
 		filter(CoursesAndUsers.usertypesforcourse_id==student).all()
+	if group_id:
+		userIds = [u.users_id for u in classlist]
+		classlist = GroupsAndUsers.query.filter_by(groups_id=group_id, active=True)\
+			.filter(GroupsAndUsers.users_id.in_(userIds)).all()
 
 	quesIds = [q.id for q in questions]
 
