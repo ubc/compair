@@ -10,6 +10,7 @@ var module = angular.module('ubc.ctlt.acj.navbar',
 		'ubc.ctlt.acj.authentication',
 		'ubc.ctlt.acj.course',
 		'ubc.ctlt.acj.login', // for LogoutController
+		'ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.user'
 	]
 );
@@ -22,17 +23,23 @@ var module = angular.module('ubc.ctlt.acj.navbar',
 module.controller(
 	"NavbarController",
 	function NavbarController($scope, $log, $route, breadcrumbs,
-		Session, AuthenticationService, Authorize, CourseResource, UserResource)
+		Session, AuthenticationService, Authorize, CourseResource, UserResource, QuestionResource)
 	{
 		$scope.breadcrumbs = breadcrumbs;
-        $scope.isLoggedIn = false;
+		$scope.isLoggedIn = false;
 
 		// determine if we're in a course so we know whether to show
 		// the course settings
 		$scope.inCourse = false;
 		Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function(result) {
-            $scope.canCreateUsers = result;
-        });
+			$scope.canCreateUsers = result;
+		});
+		Authorize.can(Authorize.CREATE, CourseResource.MODEL).then(function(result) {
+		   $scope.canCreateCourses = result;
+		});
+		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(result) {
+		   $scope.canManageQuestions = result;
+		});
 		$scope.setInCourse = function() {
 			var courseId = $route.current.params['courseId'];
 			$scope.inCourse = false;
@@ -55,13 +62,13 @@ module.controller(
 		});
 		// show course configure options if user can edit courses
 		Authorize.can(Authorize.EDIT, CourseResource.MODEL).then(function(result) {
-            $scope.canEditCourse = result;
-        })
+			$scope.canEditCourse = result;
+		})
 
-        Session.getUser().then(function(user) {
-            $scope.loggedInUser = user;
-            $log.info("Logged in as " + $scope.loggedInUser.username);
-        });
+		Session.getUser().then(function(user) {
+			$scope.loggedInUser = user;
+			$log.info("Logged in as " + $scope.loggedInUser.username);
+		});
 
 		// listen for changes in authentication state
 //		$scope.$on(AuthenticationService.LOGIN_EVENT, updateAuthentication);
