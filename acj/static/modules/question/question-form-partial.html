@@ -53,33 +53,35 @@
 			<p><strong>Students can answer and edit their answers only during the dates and times you set below.</strong> Students do not see a question in the application until the answering period begins. Students can read all answers only <em>after</em> they have completed the required number of answer comparisons.</p>
 			<p><strong>By default, students can compare answers after the answer period ends.</strong> You may instead set specific dates and times for the comparison period. Note that if you manually set a comparison period, students can read all answers only <em>after</em> the comparison period ends.</p>
 		</div>
-		
+
 		<div class="row">
 			<div class="col-md-6 form-group">
-				<acj-field-with-feedback form-control="questionForm.answerStartDate">
-					<label class="required-star">Date Answering Begins</label>
-					<input type="text" id="answerStartDate" name="answerStartDate" class="form-control" ng-model="question.answer_start" required bs-datepicker>
-				</acj-field-with-feedback>
+				<label class="required-star">Date Answering Begins</label><br />
+				<div class="question-date">
+					<span class="input-group">
+						<input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.astart.date" is-open="date.astart.opened" required />
+						<span class="input-group-btn">
+							<button type="button" class="btn btn-default" ng-click="date.astart.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+						</span>
+					</span>
+				</div>
+				<div class="question-date">
+					<timepicker ng-model="date.astart.time" minute-step="1" mousewheel="false"></timepicker>
+				</div>
 			</div>
 			<div class="col-md-6 form-group">
-				<acj-field-with-feedback form-control="questionForm.answerStartTime">	
-					<label class="required-star">Time Answering Begins</label>
-					<input type="text" id="answerStartTime" name="answerStartTime" class="form-control" ng-model="question.answer_start" required timeType="iso" data-minute-step="1" bs-timepicker>
-				</acj-field-with-feedback>
-			</div>
-		</div>
-		<div class="row">
-			<div class="col-md-6 form-group">
-				<acj-field-with-feedback form-control="questionForm.answerEndDate">
-					<label class="required-star">Date Answering Ends</label>
-					<input type="text" id=answerEndDate" name="answerEndDate" class="form-control" ng-model="question.answer_end" required bs-datepicker>
-				</acj-field-with-feedback>
-			</div>
-			<div class="col-md-6 form-group">
-				<acj-field-with-feedback form-control="questionForm.answerEndTime">
-					<label class="required-star">Time Answering Ends</label>
-					<input type="text" id="answerEndTime" name="answerEndTime" class="form-control" ng-model="question.answer_end" required timeType="iso" data-minute-step="1" bs-timepicker>
-				</acj-field-with-feedback>
+				<label class="required-star">Date Answering Ends</label><br />
+				<div class="question-date">
+					<span class="input-group">
+						<input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.aend.date" is-open="date.aend.opened" required />
+						<span class="input-group-btn">
+							<button type="button" class="btn btn-default" ng-click="date.aend.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+						</span>
+					</span>
+				</div>
+				<div class="question-date">
+					<timepicker ng-model="date.aend.time" minute-step="1" mousewheel="false"></timepicker>
+				</div>
 			</div>
 		</div>
 		
@@ -90,36 +92,37 @@
 		<br /><br />
 		
 		<div ng-if="question.availableCheck">
-			
+
 			<div class="row">
 				<div class="col-md-6 form-group">
-					<acj-field-with-feedback form-control="questionForm.judgeStartDate">
-						<label class="required-star">Date Comparisons Begin</label>
-						<input type="text" id="judgeStartDate" name="judgeStartDate" class="form-control" ng-model="question.judge_start" ng-required="question.availableCheck" bs-datepicker>
-					</acj-field-with-feedback>
+					<label class="required-star">Date Comparisons Begin</label><br />
+					<div class="question-date">
+						<span class="input-group">
+							<input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.jstart.date" is-open="date.jstart.opened" required />
+							<span class="input-group-btn">
+								<button type="button" class="btn btn-default" ng-click="date.jstart.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+							</span>
+						</span>
+					</div>
+					<div class="question-date">
+						<timepicker ng-model="date.jstart.time" minute-step="1" mousewheel="false"></timepicker>
+					</div>
 				</div>
 				<div class="col-md-6 form-group">
-					<acj-field-with-feedback form-control="questionForm.judgeStartTime">	
-						<label class="required-star">Time Comparisons Begin</label>
-						<input type="text" id="judgeStartTime" name="judgeStartTime" class="form-control" ng-model="question.judge_start" ng-required="question.availableCheck" timeType="iso" data-minute-step="1" bs-timepicker>
-					</acj-field-with-feedback>
+					<label class="required-star">Date Comparisons End</label><br />
+					<div class="question-date">
+						<span class="input-group">
+							<input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.jend.date" is-open="date.jend.opened" required />
+							<span class="input-group-btn">
+								<button type="button" class="btn btn-default" ng-click="date.jend.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+							</span>
+						</span>
+					</div>
+					<div class="question-date">
+						<timepicker ng-model="date.jend.time" minute-step="1" mousewheel="false"></timepicker>
+					</div>
 				</div>
 			</div>
-			<div class="row">
-				<div class="col-md-6 form-group">
-					<acj-field-with-feedback form-control="questionForm.judgeEndDate">
-						<label class="required-star">Date Comparisons End</label>
-						<input type="text" id="judgeEndDate" name="judgeEndDate" class="form-control" ng-model="question.judge_end" ng-required="question.availableCheck" bs-datepicker>
-					</acj-field-with-feedback>
-				</div>
-				<div class="col-md-6 form-group">
-					<acj-field-with-feedback form-control="questionForm.judgeEndTime">
-						<label class="required-star">Time Comparisons End</label>
-						<input type="text" id="judgeEndTime" name="judgeEndTime" class="form-control" ng-model="question.judge_end" ng-required="question.availableCheck" timeType="iso" data-minute-step="1" bs-timepicker>
-					</acj-field-with-feedback>
-				</div>
-			</div>
-			
 		</div>
 	</fieldset>
 	

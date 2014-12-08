@@ -17,7 +17,8 @@ var module = angular.module('ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.group',
 		'ubc.ctlt.acj.judgement',
 		'ubc.ctlt.acj.toaster',
-		'ubc.ctlt.acj.session'
+		'ubc.ctlt.acj.session',
+		'ui.bootstrap'
 	]
 );
 
@@ -485,23 +486,7 @@ module.controller("QuestionCreateController",
 			 QuestionsCriteriaResource, required_rounds, Toaster, attachService)
 	{
 		var courseId = $routeParams['courseId'];
-		var today = new Date();
-		var answer_start = new Date(today.getFullYear(), today.getMonth(), today.getDate()+1, 0, 0);
-		var answer_end = new Date();
-		var judge_start = new Date();
-		var judge_end = new Date();
-		answer_end.setHours(23,59,0,0);
-		answer_end.setDate(answer_start.getDate()+7);
-		judge_start.setHours(23,59,0,0);
-		judge_start.setDate(answer_start.getDate()+7);
-		judge_end.setHours(23,59,0,0);
-		judge_end.setDate(answer_end.getDate()+7);
-		$scope.question = {
-			'answer_start': answer_start,
-			'answer_end': answer_end,
-			'judge_start': judge_start,
-			'judge_end': judge_end
-		};
+		$scope.question = {};
 		$scope.question.can_reply = true; //want default to encourage discussion
 		$scope.uploader = attachService.getUploader();
 		$scope.resetName = attachService.resetName();
@@ -512,38 +497,65 @@ module.controller("QuestionCreateController",
 		$scope.selectedCriteria = {};
 		$scope.selfevaltypes = [];
 
-		CoursesCriteriaResource.get({'courseId': courseId}).$promise.then(
-			function (ret) {
-				$scope.courseCriteria = ret.objects
-			},
-			function (ret) {
-				Toaster.reqerror("Criteria Not Found.");
-			}
-		);
+		// DATETIMES
+		// declaration
+		var today = new Date();
+		$scope.format = 'dd-MMMM-yyyy';
+		$scope.date = {
+			'astart': {'date': new Date(), 'time': new Date().setHours(0, 0, 0, 0)},
+			'aend': {'date': new Date(), 'time': new Date().setHours(23, 59, 0, 0)},
+			'jstart': {'date': new Date(), 'time': new Date().setHours(23, 59, 0, 0)},
+			'jend': {'date': new Date(), 'time': new Date().setHours(23, 59, 0, 0)}
+		};
+		// initialization
+		$scope.date.astart.date.setDate(today.getDate()+1);
+		$scope.date.aend.date.setDate($scope.date.astart.date.getDate()+7);
+		$scope.date.jstart.date.setDate($scope.date.astart.date.getDate()+7);
+		$scope.date.jend.date.setDate($scope.date.jstart.date.getDate()+7);
+		$scope.date.astart.date = $scope.date.astart.date.toISOString();
+		$scope.date.aend.date = $scope.date.aend.date.toISOString();
+		$scope.date.jstart.date = $scope.date.jstart.date.toISOString();
+		$scope.date.jend.date = $scope.date.jend.date.toISOString();
 
-		$scope.selectCriteria = function(criteriaId) {
-			// check whether at least one criterion is selected
-			$scope.oneSelected = false;
-			for (var cId in $scope.selectedCriteria) {
-				if ($scope.selectedCriteria[cId]) {
-					$scope.oneSelected = true;
-					break;
-				}
-			}
+		$scope.date.astart.open = function($event) {
+			$event.preventDefault();
+			$event.stopPropagation();
+
+			$scope.date.astart.opened = true;
+		};
+		$scope.date.aend.open = function($event) {
+			$event.preventDefault();
+			$event.stopPropagation();
+
+			$scope.date.aend.opened = true;
+		};
+		$scope.date.jstart.open = function($event) {
+			$event.preventDefault();
+			$event.stopPropagation();
+
+			$scope.date.jstart.opened = true;
+		};
+		$scope.date.jend.open = function($event) {
+			$event.preventDefault();
+			$event.stopPropagation();
+
+			$scope.date.jend.opened = true;
 		};
 
-		QuestionResource.getSelfEvalTypes().$promise.then(
-			function (ret) {
-				$scope.selfevaltypes = ret.types;
-				$scope.question.selfevaltype_id = $scope.selfevaltypes[0].id;
-			},
-			function (ret) {
-				Toaster.reqerror("Self Evaluation Types Not Found.");
-			}
-		);
+		var combineDateTime = function(datetime) {
+			date = new Date(datetime.date);
+			time = new Date(datetime.time);
+			date.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
+			return date;
+		};
 
 		$scope.questionSubmit = function () {
 			$scope.submitted = true;
+			$scope.question.answer_start = combineDateTime($scope.date.astart);
+			$scope.question.answer_end = combineDateTime($scope.date.aend);
+			$scope.question.judge_start = combineDateTime($scope.date.jstart);
+			$scope.question.judge_end = combineDateTime($scope.date.jend);
+
 			// answer end datetime has to be after answer start datetime
 			if ($scope.question.answer_start >= $scope.question.answer_end) {
 				Toaster.error('Answer Period Error', 'Answer end time must be after answer start time.');
@@ -582,6 +594,27 @@ module.controller("QuestionCreateController",
 				);
 		};
 
+		// Criteria
+		CoursesCriteriaResource.get({'courseId': courseId}).$promise.then(
+			function (ret) {
+				$scope.courseCriteria = ret.objects
+			},
+			function (ret) {
+				Toaster.reqerror("Criteria Not Found.");
+			}
+		);
+
+		$scope.selectCriteria = function(criteriaId) {
+			// check whether at least one criterion is selected
+			$scope.oneSelected = false;
+			for (var cId in $scope.selectedCriteria) {
+				if ($scope.selectedCriteria[cId]) {
+					$scope.oneSelected = true;
+					break;
+				}
+			}
+		};
+
 		var addMultipleCriteria = function(courseId, questionId, criteria) {
 			angular.forEach(criteria, function(selected, criterionId){
 				// add to question
@@ -594,7 +627,18 @@ module.controller("QuestionCreateController",
 						}
 				);
 			});
-		}
+		};
+
+		// Self-Evaluation
+		QuestionResource.getSelfEvalTypes().$promise.then(
+			function (ret) {
+				$scope.selfevaltypes = ret.types;
+				$scope.question.selfevaltype_id = $scope.selfevaltypes[0].id;
+			},
+			function (ret) {
+				Toaster.reqerror("Self Evaluation Types Not Found.");
+			}
+		);
 	}
 );
 
@@ -610,6 +654,34 @@ module.controller("QuestionEditController",
 		$scope.question = {};
 		$scope.oneSelected = false;		// logic to make sure at least one criterion is selected
 		$scope.selectedCriteria = {};
+		$scope.format = 'dd-MMMM-yyyy';
+		$scope.date = {'astart': {}, 'aend': {}, 'jstart': {}, 'jend': {}};
+
+		$scope.date.astart.open = function($event) {
+			$event.preventDefault();
+			$event.stopPropagation();
+
+			$scope.date.astart.opened = true;
+		};
+		$scope.date.aend.open = function($event) {
+			$event.preventDefault();
+			$event.stopPropagation();
+
+			$scope.date.aend.opened = true;
+		};
+		$scope.date.jstart.open = function($event) {
+			$event.preventDefault();
+			$event.stopPropagation();
+
+			$scope.date.jstart.opened = true;
+		};
+		$scope.date.jend.open = function($event) {
+			$event.preventDefault();
+			$event.stopPropagation();
+
+			$scope.date.jend.opened = true;
+		};
+
 
 		$scope.deleteFile = function(post_id, file_id) {
 			AttachmentResource.delete({'postId': post_id, 'fileId': file_id}).$promise.then(
@@ -673,17 +745,23 @@ module.controller("QuestionEditController",
 
 		QuestionResource.get({'courseId': courseId, 'questionId': $scope.questionId}).$promise.then(
 			function (ret) {
-				ret.question.answer_start = new Date(ret.question.answer_start);
-				ret.question.answer_end = new Date(ret.question.answer_end);	
+				$scope.date.astart.date = new Date(ret.question.answer_start).toISOString();
+				$scope.date.astart.time = new Date(ret.question.answer_start);
+				$scope.date.aend.date = new Date(ret.question.answer_end).toISOString();
+				$scope.date.aend.time = new Date(ret.question.answer_end);
+
 				if (ret.question.judge_start && ret.question.judge_end) {
 					ret.question.availableCheck = true;
-					ret.question.judge_start = new Date(ret.question.judge_start);
-					ret.question.judge_end = new Date(ret.question.judge_end);
+					$scope.date.jstart.date = new Date(ret.question.judge_start).toISOString();
+					$scope.date.jstart.time = new Date(ret.question.judge_start);
+					$scope.date.jend.date = new Date(ret.question.judge_end).toISOString();
+					$scope.date.jend.time = new Date(ret.question.judge_end).toISOString();
 				} else {
-					ret.question.judge_start = new Date(ret.question.answer_end.getTime());
-					var judge_end = new Date(ret.question.answer_end.getTime());
-					judge_end.setDate(judge_end.getDate()+14);
-					ret.question.judge_end = judge_end
+					$scope.date.jstart.date = new Date($scope.date.aend.date).toISOString();
+					$scope.date.jstart.time = new Date($scope.date.aend.time);
+					$scope.date.jend.date = new Date();
+					$scope.date.jend.date.setDate($scope.date.aend.date.getDate()+14);
+					$scope.date.jend.time = new Date($scope.date.aend.time);
 				}
 				$scope.question = ret.question;
 				$scope.judged = ret.question.judged;
@@ -726,8 +804,19 @@ module.controller("QuestionEditController",
 			}
 		);
 
+		var combineDateTime = function(datetime) {
+			date = new Date(datetime.date);
+			time = new Date(datetime.time);
+			date.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
+			return date;
+		};
+
 		$scope.questionSubmit = function () {
 			$scope.submitted = true;
+			$scope.question.answer_start = combineDateTime($scope.date.astart);
+			$scope.question.answer_end = combineDateTime($scope.date.aend);
+			$scope.question.judge_start = combineDateTime($scope.date.jstart);
+			$scope.question.judge_end = combineDateTime($scope.date.jend);
 			// answer end datetime has to be after answer start datetime
 			if ($scope.question.answer_start > $scope.question.answer_end) {
 				Toaster.error('Answer Period Error', 'Answer end time must be after answer start time.');
