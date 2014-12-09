@@ -59,7 +59,7 @@ module.directive(
 					if (scope.thisHeight > 200) {
 						scope.showReadMore = true;
 					}
-				}, 5000);  
+				}, 7000);  
 			}
 		};
 	}
@@ -393,7 +393,7 @@ module.controller("QuestionViewController",
 			}
 		};
 		
-		// enable tabs for answers and comments
+		// enable tabs for answers, comments, participation
 		$('#answers a').click(function (e) {
 			e.preventDefault();
 			$(this).tab('show');
@@ -402,7 +402,7 @@ module.controller("QuestionViewController",
 			e.preventDefault();
 			$(this).tab('show');
 		});
-		$('#gradebook a').click(function (e) {
+		$('#participation a').click(function (e) {
 			e.preventDefault();
 			$(this).tab('show');
 		});

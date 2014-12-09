@@ -16,8 +16,8 @@
 		
 		<!-- Question Answer/Evaluation Periods -->
 		<div ng-show="canManagePosts">
-			<p><strong>Answering Period:</strong> {{question.answer_start | amDateFormat: 'MMM D @ h:mm a'}} - {{question.answer_end | amDateFormat: 'MMM D @ h:mm a'}}
-			<span ng-if="question.judge_start > 0 && question.judge_end > 0"><br /><strong>Evaluation Period:</strong> {{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}} - {{question.judge_end | amDateFormat: 'MMM D @ h:mm a'}}</p>
+			<p><em>Answering Period: {{question.answer_start | amDateFormat: 'MMM D @ h:mm a'}} - {{question.answer_end | amDateFormat: 'MMM D @ h:mm a'}}
+			<span ng-if="question.judge_start > 0 && question.judge_end > 0"><br />Comparing Period: {{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}} - {{question.judge_end | amDateFormat: 'MMM D @ h:mm a'}}</em></p>
 		</div>
 		
 		<!-- Question Metadata Footer -->
@@ -39,12 +39,16 @@
 					</span>
 				</a>
 			</li>
-			<li ng-if="!canManagePosts && question.answer_period">
-				Answer due {{question.answer_end | amDateFormat: 'MMM D @ h:mm a'}}
+			<li ng-if="!canManagePosts && ((evaluation + selfEval == 0) || answered)">
+				You have
+				<span ng-if="answered">answered <span ng-if="evaluation + selfEval == 0">and </span></span>
+				<span ng-if="evaluation + selfEval == 0">compared</span>
 			</li>
-			<li ng-if="!canManagePosts && question.judging_period">
-				{{ evaluation + selfEval }} comparison<span ng-if="(evaluation + selfEval) != 1">s</span> needed from you
-				<span ng-if="warning"> - Not enough answers available (Refresh the page to check again)</span>
+			<li ng-if="!canManagePosts && question.answer_period && !answered">
+				<strong>Answer due {{question.answer_end | amDateFormat: 'MMM D @ h:mm a'}}</strong>
+			</li>
+			<li ng-if="!canManagePosts && question.judging_period && (evaluation + selfEval > 0)">
+				<strong>{{ evaluation + selfEval }} comparison<span ng-if="(evaluation + selfEval) != 1">s</span> needed from you</strong>
 			</li>
 			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
 				<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" title="Delete" confirmation-needed="deleteQuestion(courseId, question.id)" keyword="question">
@@ -54,38 +58,42 @@
 		</ul>
 		
 		<!-- Question Actions -->
+		
 		<!-- BUTTON when user has not answered AND (user is an admin OR the answer period is active) -->
 		<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" class="btn btn-success" title="Answer Question"
 		   ng-show="!answered && (canManagePosts || question.answer_period)">
 			Answer
 		</a>
-		<!-- TEXT when user has answered AND (user is an admin OR the answer period is active) -->
-		<p
-		   ng-show="answered && (canManagePosts || question.answer_period)">
-			Answered
-		</p>
-		<!-- BUTTON when user is not an admin AND has comparisons remaining AND the comparison period is active
-			 enabled only when answer pairs are available for comparison ***HOW TO DO THIS HERE? NEED NUMBER LEFT VS. NUMBER NEEDED*** -->
-		<a class="btn btn-success" title="Evaluate Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement"
-		   ng-show="!canManagePosts && question.judging_period && !judged_req_met" ng-disabled="warning">
+		
+		<!-- BUTTON when user is not an admin AND the comparison period is active AND the user has not finished pair comparisons AND either (the answer period is active AND the question has been answered) OR (the answer period is not active)
+		     basically we force users to answer first, if they can
+	   	     enabled only when answer pairs are available for comparison (so when no warning)
+		-->
+		<a class="btn" ng-class="{'btn-success': !warning, 'btn-default': warning}" title="Compare Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/compare"
+		   ng-show="!canManagePosts && question.judging_period && !judged_req_met && ((question.answer_period && answered) || !question.answer_period)" ng-disabled="warning">
 			Compare Answers
 		</a>
-		<!-- BUTTON when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has a self-evaluation remaining
-			 enabled only when user has answered question -->
-		<a class="btn btn-success" title="Self-Evaluation" ng-href="#/course/{{courseId}}/question/{{question.id}}/selfevaluation"
-		   ng-show="!canManagePosts && question.judging_period && judged_req_met && !selfEval_req_met" ng-disabled="!answered">
+		
+		<!-- BUTTON when user is not an admin AND the comparison period is active AND user has finished pair comparisons AND has a self-evaluation remaining AND either (the answer period is active AND the question has been answered) OR (the answer period is not active)
+		     basically we force users to answer first, if they can
+		     enabled only when user has answered question
+		-->
+		<a class="btn" ng-class="{'btn-success': answered, 'btn-default': !answered}" title="Self-Evaluation" ng-href="#/course/{{courseId}}/question/{{question.id}}/selfevaluation"
+		   ng-show="!canManagePosts && question.judging_period && judged_req_met && !selfEval_req_met && ((question.answer_period && answered) || !question.answer_period)" ng-disabled="!answered">
 			Compare Answers
 		</a>
-		<!-- TEXT when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has completed any self-evaluation -->
-		<p
-		   ng-show="!canManagePosts && question.judging_period && judged_req_met && selfEval_req_met">
-			Completed
-		</p>
+		
 		<!-- BUTTON when user is an admin AND (the comparison period is active OR is complete) -->
-		<a class="btn btn-success" title="Evaluations" ng-href="#/course/{{courseId}}/question/{{question.id}}/evaluations"
+		<a class="btn btn-success" title="Comparisons" ng-href="#/course/{{courseId}}/question/{{question.id}}/comparisons"
 		   ng-show="canManagePosts && (question.judging_period || question.after_judging)">
-			See Evaluations
+			See Comparisons
 		</a>
+		
+		<!-- ADDITIONAL TEXT when answer pairs are not available for comparison AND user is not admin AND the comparison period is active AND user has comparisons remaining-->
+		<p ng-if="warning && !canManagePosts && question.judging_period && (evaluation + selfEval > 0)"><em>Not enough answers to compare (Refresh the page to check again) </em></p>
+		
+		<!-- ADDITIONAL TEXT when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has a self-evaluation remaining AND has not answered question -->
+		<p ng-if="!canManagePosts && question.judging_period && judged_req_met && !selfEval_req_met && !answered"><em>Self-evaluation comparison unavailable (You have not answered the question) </em></p>
 		
 	</div><!-- closes question box -->
 	
@@ -97,8 +105,8 @@
 	  <li id="comments">
 		<a href="#comments-tab">Help</a>
 	  </li>
-	  <li ng-show="canManagePosts" id="gradebook">
-		  <a href="#gradebook-tab">Gradebook</a>
+	  <li ng-show="canManagePosts" id="participation">
+		  <a href="#participation-tab">Participation</a>
 	  </li>
 	</ul>
 	
@@ -110,61 +118,70 @@
 			<!-- Answers Tab Header -->
 			<div class="tab-header">
 				
-				<div class="pull-right">
-					<span class="filter" ng-if="groups.length > 0 && canManagePosts">
-						<label>Filter by group: &nbsp</label>
-						<select ng-model="grade.group" class="nullable"
+				<div ng-if="question.answers_count && (canManagePosts || see_answers)" class="pull-right text-right">
+					<span class="filter">
+						<label>Show: </label>
+						<select ng-if="groups.length > 0 && canManagePosts" ng-model="grade.group" class="nullable"
 							ng-options="g as g.name for g in groups | orderBy: 'name'" ng-change="groupChange()">
 							<option value="">All groups</option>
 						</select>
-					</span>
-					<span class="filter">
-						<label>Filter by authors: &nbsp</label>
 						<select ng-model="grade.author" class="nullable"
 								ng-options="u as u.user.name for u in students | orderBy: 'user.name'" ng-change="userChange()">
 							<option value="">All students</option>
 						</select>
-					</span>
+					</span><br />
 					<span class="filter" ng-if="canManagePosts">
-						<label>Sort by ranking for: &nbsp;</label>
+						<label>Order by scores for: &nbsp;</label>
 						<select ng-model="grade.sortby"
 							ng-options="key as c.criterion.name for (key, c) in criteria" ng-change="criteriaChange()">
 						</select>
-						<a class="print-btn" href="" onclick="window.print();">
-							<i class="fa fa-print"></i>
-						</a>
 					</span>
 				</div>
 
-				<h2>Answers
+				<h2>
+					Answers
 					<span ng-show="canManagePosts && grade.group && !grade.author">for "{{grade.group.name}}"</span>
 					<span ng-show="grade.author">for "{{ grade.author.user.name }}"</span>
 				</h2>
 
-				<!-- Instructors see before the answer period -->
-				<p class="intro-text" ng-if="canManagePosts && !question.answer_period && !question.answers_count">
-					Answering period begins {{question.answer_start | amDateFormat: 'MMM D @ h:mm a'}}. Would you like to <a ng-href="#/course/{{courseId}}/question/{{question.id}}/edit" title="Edit the question">change the answer dates</a> for this question?
+				<!-- Instructors should see before the answer period -->
+				<p class="intro-text"
+				   ng-if="canManagePosts && !question.answer_period && !question.available">
+					Answering period begins {{question.answer_start | amDateFormat: 'MMM D @ h:mm a'}}. Would you like to <a ng-href="#/course/{{courseId}}/question/{{question.id}}/edit" title="Edit the question">change the answer date</a> for this question?
 				</p>
-				<!-- Students see before answering during the answer period -->
-				<p class="intro-text" ng-if="!canManagePosts && !answered && question.answer_period">
-					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" title="Answer the question">Answer</a> and compare answers for the question first, then read all answers written by your classmates and instructor here.
+				
+				<!-- Students should see before answering during the answer period -->
+				<p class="intro-text"
+				   ng-if="!canManagePosts && !answered && question.answer_period">
+					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" title="Answer the question">Answer</a> and compare answer pairs for the question first, then read all answers written by your classmates and instructors here.
 				</p>
-				<!-- Students see before evaluating before the evaluation period -->
-				<p class="intro-text" ng-if="!canManagePosts && answered && !judged_req_met && !question.judging_period">
-					Comparison period begins <span ng-if="question.judge_start > 0">{{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}}</span> <span ng-if="question.judge_start <= 0">after the answer period ends</span>. After comparing anonymous answer pairs, you will be able to read all answers written by your classmates and instructor here.
+				
+				<!-- Students should see before evaluating before the evaluation period -->
+				<p class="intro-text"
+				   ng-if="!canManagePosts && ((answered && question.answer_period) || (!question.answer_period)) && !question.judging_period && !question.after_judging">
+					Comparison period begins <span ng-if="question.judge_start > 0">{{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}}</span> <span ng-if="question.judge_start <= 0">after the answer period ends</span>. After comparing  answer pairs, you will be able to read all answers written by your classmates and instructors here.
 				</p>
-				<!-- Students see before evaluating during the evaluation period -->
+				
+				<!-- Students should see before evaluating during the evaluation period (regular comparison) -->
 				<p class="intro-text" ng-if="!canManagePosts && question.judging_period && !judged_req_met">
+					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/compare" title="Compare answers">Compare answers</a> for the question first, then read answers written by your classmates and instructors here.
+				</p>
+				
+				<!-- Students should see before evaluating during the evaluation period (self-evaluation) -->
+				<p class="intro-text" ng-if="!canManagePosts && question.judging_period && judged_req_met && !selfEval_req_met">
 					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" title="Compare answers">Compare answers</a> for the question first, then read answers written by your classmates and instructors here.
 				</p>
+				
 				<!-- Anyone sees during the answer period, if no answers provided yet -->
 				<p class="intro-text" ng-if="question.answer_period && !question.answers_count">
 					No answers given for this question yet.
 				</p>
+				
 				<!-- Students see after evaluating before the evaluation period is over -->
-				<p class="intro-text" ng-if="!canManagePosts && !see_answers && judged_req_met">
-					You have successfully met the requirements for this question! Answers written by your classmates and instructors will be available here beginning <strong>{{ answerAvail | amDateFormat: 'MMM D @ h:mm a'}}</strong>.
+				<p class="intro-text" ng-if="!canManagePosts && judged_req_met && selfEval_req_met && !see_answers">
+					You have successfully finished comparisons for this question! Answers written by your classmates and instructors will be available here beginning <strong>{{ answerAvail | amDateFormat: 'MMM D @ h:mm a'}}</strong>.
 				</p>
+				
 			</div>
 			
 			<div class="all-answers">
@@ -186,7 +203,7 @@
 						</span>
 					</a>
 					<span class="label label-info" ng-if="instructors[answer.post.user.id]">{{instructors[answer.post.user.id]}}&nbsp;</span>
-					<strong>final answer</strong>:
+					<strong>said</strong>:
 					<div class="manager-actions pull-right" ng-if="canManagePosts">
 						<a href="" confirmation-needed="deleteAnswer(answerKey, courseId, question.id, answer.id)" keyword="instructor answer">
 							<i class="fa fa-trash-o"></i>
@@ -377,7 +394,7 @@
 				</div><!-- closes each-answer (student) -->
 
 				<div class="each-answer clearfix" ng-if="results.length < 1">
-					<p>No answers were found with these filter settings. Try another author above.</p>
+					<p>No answers were found with these filter settings. Try another choice above.</p>
 				</div>
 				
 			</div><!-- closes answered show-hide div -->
@@ -392,7 +409,7 @@
 					Comment
 				</a>
 				<h2>Help for this assignment</h2>
-				<p class="intro-text">Ask or answer a question about the assignment by adding a comment for your instructors and classmates here.</p>
+				<p class="intro-text">Ask or answer a question about the assignment by adding a comment here.</p>
 				<p ng-if="!question.comments_count">
 					No help comments have been left for this question yet. Would you like to <a href="#/course/{{courseId}}/question/{{question.id}}/comment/create">add a comment</a> for this assignment?
 				</p>
@@ -436,7 +453,7 @@
 			
 		</div><!-- closes comments-tab -->
 
-		<div class="tab-pane" id="gradebook-tab" ng-if="canManagePosts">
+		<div class="tab-pane" id="participation-tab" ng-if="canManagePosts">
 			<ng-include src="'modules/gradebook/gradebook-partial.html'"></ng-include>
 		</div><!-- closes gradebook-tab -->
 		
