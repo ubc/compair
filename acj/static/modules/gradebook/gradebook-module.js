@@ -33,8 +33,19 @@ module.controller("GradebookController",
 	function($scope, $log, $routeParams, CourseResource, GradebookResource, 
 		GroupResource, Toaster)
 	{
-		$scope.users = $scope.allStudents;
-		var userIds = $scope.getUserIds($scope.allStudents);
+		$scope.users = [];
+		var userIds = {};
+
+		CourseResource.getStudents({'id': $scope.courseId}).$promise.then(
+			function (ret) {
+				$scope.allStudents = ret.students;
+				$scope.users = ret.students;
+				userIds = $scope.getUserIds(ret.students);
+			},
+			function (ret) {
+				Toaster.reqerror("Class list retrieval failed", ret);
+			}
+		);
 		$scope.gb = {};
 		GradebookResource.get(
 			{'courseId': $scope.courseId,'questionId': $scope.questionId}).$promise.then(
@@ -42,6 +53,7 @@ module.controller("GradebookController",
 			{
 				$scope.gradebook = ret['gradebook'];
 				$scope.numJudgementsRequired=ret['num_judgements_required'];
+				$scope.includeSelfEval = ret['include_self_eval'];
 			},
 			function (ret)
 			{

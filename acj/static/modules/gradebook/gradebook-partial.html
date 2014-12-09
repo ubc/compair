@@ -1,41 +1,42 @@
 <div ng-controller="GradebookController">
 	<h2>Gradebook</h2>
 	<p class="intro-text" ng-if="canManagePosts">To export data reports for participation or other statistics, go to <a ng-href="#/report">Run Reports</a>.</p>
-    <div>
-        <span class="filter" ng-if="groups.length > 0 && canManagePosts">
-            <label>Filter by group: &nbsp</label>
-            <select ng-model="gb.group" class="nullable"
-                    ng-options="g as g.name for g in groups | orderBy: 'name'" ng-change="groupChange()">
-                <option value="">All groups</option>
-            </select>
-        </span>
-        <span class="filter">
-            <label>Filter by students: &nbsp</label>
-            <select ng-model="gb.student" class="nullable"
-                    ng-options="u as u.user.name for u in users | orderBy: 'user.name'" ng-change="userChange()">
-                <option value="">All students</option>
-            </select>
-        </span>
-    </div>
-    <br />
-    <table class="table table-striped">
+	<div>
+		<span class="filter" ng-if="groups.length > 0 && canManagePosts">
+			<label>Filter by group: &nbsp</label>
+			<select ng-model="gb.group" class="nullable"
+					ng-options="g as g.name for g in groups | orderBy: 'name'" ng-change="groupChange()">
+				<option value="">All groups</option>
+			</select>
+		</span>
+		<span class="filter">
+			<label>Filter by students: &nbsp</label>
+			<select ng-model="gb.student" class="nullable"
+					ng-options="u as u.user.name for u in users | orderBy: 'user.name'" ng-change="userChange()">
+				<option value="">All students</option>
+			</select>
+		</span>
+	</div>
+	<br />
+	<table class="table table-striped">
 		<tbody>
 			<tr>
 				<th>
-                    <a href="" ng-click="reverse = predicate == 'firstname' && !reverse; predicate='firstname'">
-                    First Name</a>
-                </th>
+					<a href="" ng-click="reverse = predicate == 'firstname' && !reverse; predicate='firstname'">
+					First Name</a>
+				</th>
 				<th><a href="" ng-click="reverse = predicate == 'lastname' && !reverse; predicate='lastname'">
-                    Last Name</a>
-                </th>
+					Last Name</a>
+				</th>
 				<th><a href="" ng-click="reverse = predicate == 'student_no' && !reverse; predicate='student_no'">
-                    Student Number</a>
-                </th>
+					Student Number</a>
+				</th>
 				<th><a href="" ng-click="reverse = predicate == 'displayname' && !reverse; predicate='displayname'">
-                    Display Name</a>
-                </th>
+					Display Name</a>
+				</th>
 				<th class="text-center">Answered</th>
 				<th class="text-center">Evaluations</th>
+				<th class="text-center" ng-if="includeSelfEval">Self-Evaluation</th>
 			</tr>
 			<tr ng-repeat="entry in gradebook | filter:groupFilter() | orderBy:predicate:reverse">
 				<td>{{entry.firstname}}</td>
@@ -56,9 +57,8 @@
 					}">
 					<strong>{{entry.num_judgements}} / {{ numJudgementsRequired }}</strong>
 				</td>
-			</tr>
-			<tr ng-show="!gradebook || gradebook.length < 1">
-				<td colspan="5"><p>Please select a question above to see student activity.</p></td>
+				<td class="text-center text-success" ng-if="includeSelfEval && entry.num_selfeval > 0"><strong>Yes</strong></td>
+				<td class="text-center text-danger" ng-if="includeSelfEval && entry.num_selfeval == 0"><strong>No</strong></td>
 			</tr>
 		</tbody>
 	</table>

@@ -6,7 +6,7 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource
 from .authorization import require
 from .models import Courses, PostsForQuestions, UserTypesForCourse, Users, CoursesAndUsers, Judgements, \
-	AnswerPairings, CriteriaAndPostsForQuestions
+	AnswerPairings, CriteriaAndPostsForQuestions, PostsForAnswersAndPostsForComments, PostsForAnswers
 
 from .util import new_restful_api
 from .core import event
@@ -69,6 +69,23 @@ class GradebookAPI(Resource):
 		for student in students:
 			num_answers_per_student[student.id] = num_answers_by_user_id.get(student.id, 0)
 
+		include_self_eval = False
+		if question.selfevaltype_id:
+			include_self_eval = True
+			# assuming self-evaluation with no comparison
+			comments = PostsForAnswersAndPostsForComments.query.filter_by(selfeval=True) \
+				.join(PostsForAnswers).filter_by(postsforquestions_id=question_id).all()
+
+			num_selfeval_by_user_id = {}
+			for comment in comments:
+				num_eval = num_selfeval_by_user_id.get(comment.users_id, 0)
+				num_eval += 1
+				num_selfeval_by_user_id[comment.users_id] = num_eval
+
+			num_selfeval_per_student = {}
+			for student in students:
+				num_selfeval_per_student[student.id] = num_selfeval_by_user_id.get(student.id, 0)
+
 		# {'gradebook':[{user1}. {user2}, ...]}
 		# user id, username, first name, last name, answer submitted, judgements submitted
 		gradebook = []
@@ -82,9 +99,15 @@ class GradebookAPI(Resource):
 				'num_answers': num_answers_per_student[student.id],
 				'num_judgements': num_judgements_per_student[student.id]
 			}
+			if include_self_eval:
+				entry['num_selfeval'] = num_selfeval_per_student[student.id]
 			gradebook.append(entry)
 
-		ret = {'gradebook': gradebook, 'num_judgements_required': question.num_judgement_req}
+		ret = {
+			'gradebook': gradebook,
+			'num_judgements_required': question.num_judgement_req,
+			'include_self_eval':include_self_eval
+		}
 
 		on_gradebook_get.send(
 			current_app._get_current_object(),
