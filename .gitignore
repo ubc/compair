@@ -58,3 +58,6 @@ node_modules
 # uploaded files
 acj/static/pdf/*
 acj/static/report/*
+
+# google analytics file
+acj/static/tracking.js

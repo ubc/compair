@@ -13,7 +13,8 @@
 	"gulp-uglify": "latest",
 	"main-bower-files": "latest",
 	"gulp-html-replace": "latest",
-	"gulp-minify-css": "latest"
+	"gulp-minify-css": "latest",
+	"gulp-inject": "latest"
   },
    "devDependencies": {
        "karma": "~0.12",

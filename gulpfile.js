@@ -5,6 +5,7 @@ var gulp = require('gulp'),
 	concat = require('gulp-concat'),
 	uglify = require('gulp-uglify'),
 	htmlReplace = require('gulp-html-replace'),
+	inject = require('gulp-inject'),
 	mainBowerFiles = require('main-bower-files'),
 	minifyCss = require('gulp-minify-css'),
 	_ = require('lodash'),
@@ -57,6 +58,12 @@ gulp.task('prod', ['prod_minify_js_libs', 'prod_compile_minify_css'], function()
 		.pipe(gulp.dest('./acj/static/'));
 });
 
+gulp.task('tracking', function() {
+   gulp.src('./acj/static/index.html')
+       .pipe(inject(gulp.src(['./acj/static/tracking.js']), {read: false, relative: true}))
+       .pipe(gulp.dest('./acj/static/'));
+});
+
 /**
 *  * Run test once and exit
 *   */
@@ -72,4 +79,3 @@ gulp.task('tdd', function (done) {
 });
 
 gulp.task("default", ['bowerInstall', 'bowerWiredep'], function(){});
-
