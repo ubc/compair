@@ -1,8 +1,9 @@
 <div ng-controller="ReportCreateController">
 	
-	<h1><i class="fa fa-bar-chart-o"></i> Run Reports</h1>
+	<h1><i class="fa fa-bar-chart-o"></i> Download Reports</h1>
 
-	<p class="intro-text">Run a report for your course, then download the data as a CSV (comma-separated values) file. You can create reports for the course as a whole or for individual questions. To run a course-level report, select "All" from the Question drop-down below. For a quick overview of class participation, go to a course page and click the "See Activity" button.</p>
+	<p class="intro-text">Run a report for your course, then download the data as a CSV (comma-separated values) file. You can create reports for the course as a whole or for individual questions. To run a full course report, select "All Questions" from the question drop-down below.</p>
+	<p class="intro-text"><strong>To see class participation without downloading a report:</strong> Go to the course page, click on any question, and select the "Participation" tab.</p>
 	
 	<form name="reportForm" class="form" ng-submit="reportSubmit()" novalidate>
 		<fieldset>
@@ -15,14 +16,13 @@
 				</select>
 			</div>
 			<div class="form-group" ng-if="groups.length > 0">
-				<label for="reportGroup" class="required-star">Groups</label>
+				<label for="reportGroup" class="required-star">Student Group</label>
 				<select class="form-control" ng-model="report.group_id" name="reportCourseId" ng-change="changeReport()"
 						ng-options="g.id as g.name for g in groups" required>
-					<option value="">- Select group -</option>
 				</select>
 			</div>
 			<div class="form-group">
-				<label for="reportType">Report Type</label>
+				<label for="reportType" class="required-star">Report Type</label>
 				<select class="form-control" ng-model="report.type" name="reportType" required
 						ng-options="t.id as t.name for t in types" ng-change="changeReport()"></select>
 			</div>
