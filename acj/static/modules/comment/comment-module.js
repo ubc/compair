@@ -158,7 +158,7 @@ module.controller(
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
 			function (ret)
 			{
-				var min_pairs = ret.question.answers.length/2;
+				var min_pairs = ret.question.answers_count/2;
 				var required = ret.students > 0 ? Math.ceil(min_pairs * required_rounds / ret.students): 0;
 				if (!$scope.canManagePosts && ret.judged < required) {
 					Toaster.error("The required number of judgements have to be made before any comments can be made.");

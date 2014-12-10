@@ -56,6 +56,7 @@ class AnswerRootAPI(Resource):
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
+		restrict_users = not allow(MANAGE, question)
 		answers = PostsForAnswers.query.join(Posts).\
 			filter(PostsForAnswers.postsforquestions_id==question.id).\
 			order_by(Posts.created.desc()).all()
@@ -67,7 +68,7 @@ class AnswerRootAPI(Resource):
 			course_id=course_id,
 			data={'question_id': question_id})
 
-		return {"objects":marshal(answers, dataformat.getPostsForAnswers())}
+		return {"objects":marshal(answers, dataformat.getPostsForAnswers(restrict_users))}
 
 	@login_required
 	def post(self, course_id, question_id):

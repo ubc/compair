@@ -253,7 +253,6 @@ module.controller("QuestionViewController",
 					$scope.criteria = ret.question.criteria;
 					$scope.grade = {'sortby': '0', 'group': 0};
 					$scope.criteriaChange();
-					$scope.answers = ret.question.answers;
 					$scope.reverse = true;
 
 					$scope.readDate = Date.parse(ret.question.post.created);
@@ -314,6 +313,14 @@ module.controller("QuestionViewController",
 					Toaster.reqerror("Question Not Found For ID " + questionId, ret);
 				}
 			);
+		AnswerResource.get({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
+			function (ret) {
+				$scope.answers = ret.objects;
+			},
+			function (ret) {
+				Toaster.reqerror("Answers for this questions not found.", ret);
+			}
+		);
 		QuestionCommentResource.get({'courseId': $scope.courseId,
 			'questionId': questionId}).$promise.then(
 				function (ret)

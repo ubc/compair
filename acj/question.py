@@ -79,7 +79,7 @@ class QuestionIdAPI(Resource):
 			data={'id': question_id})
 
 		return {
-			'question':marshal(question, dataformat.getPostsForQuestions(restrict_users))
+			'question':marshal(question, dataformat.getPostsForQuestions(restrict_users, include_answers=False))
 		}
 
 	@login_required
