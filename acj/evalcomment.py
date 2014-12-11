@@ -7,9 +7,12 @@ from bouncer.constants import EDIT, CREATE, MANAGE
 from . import dataformat
 from .core import db, event
 from .models import Judgements, PostsForComments, PostsForJudgements, Courses, PostsForQuestions, Posts, \
-	AnswerPairings, CoursesAndUsers, CriteriaAndCourses, CriteriaAndPostsForQuestions, Users
+	AnswerPairings, CoursesAndUsers, CriteriaAndCourses, CriteriaAndPostsForQuestions, Users, \
+	PostsForAnswersAndPostsForComments, PostsForAnswers
 from .util import new_restful_api
 from .authorization import allow, require
+
+from operator import itemgetter
 
 evalcomments_api = Blueprint('evalcomments_api', __name__)
 api = new_restful_api(evalcomments_api)
@@ -78,3 +81,78 @@ class EvalCommentRootAPI(Resource):
 
 		return {'objects': marshal(results, dataformat.getPostsForJudgements())}
 api.add_resource(EvalCommentRootAPI, '')
+
+# /view
+class EvalCommentViewAPI(Resource):
+	@login_required
+	def get(selfself, course_id, question_id):
+		course = Courses.query.get_or_404(course_id)
+		question = PostsForQuestions.query.get_or_404(question_id)
+		post = Posts(courses_id=course_id)
+		comment = PostsForComments(post=post)
+		judgementComment = PostsForJudgements(postsforcomments=comment)
+		require(MANAGE, judgementComment)
+
+		evalcomments = PostsForJudgements.query\
+			.join(Judgements, AnswerPairings).filter_by(postsforquestions_id=question.id)\
+			.join(PostsForComments, Posts, Users).order_by(Users.firstname, Users.lastname, Users.id).all()
+
+		feedback_count = PostsForAnswersAndPostsForComments.query.filter_by(evaluation=True)\
+			.join(PostsForAnswers).filter_by(postsforquestions_id=question.id).count()
+		if feedback_count > 0:
+			feedback = PostsForAnswersAndPostsForComments.query.filter_by(evaluation=True)\
+				.join(PostsForAnswers).filter_by(postsforquestions_id=question.id).all()
+		else:
+			# when no feedback marked with evaluation - assume they were not marked
+			# from earlier iterations of the application
+			feedback = PostsForAnswersAndPostsForComments.query\
+				.join(PostsForAnswers).filter_by(postsforquestions_id=question.id).all()
+
+		replies = {}
+		for f in feedback:
+			if f.users_id not in replies:
+				replies[f.users_id] = {}
+			replies[f.users_id][f.postsforanswers_id] = f.content
+
+		selfeval = {}
+		if question.selfevaltype_id:
+			# assume no comparison self evaluation
+			selfeval = PostsForAnswersAndPostsForComments.query.filter_by(selfeval=True)\
+				.join(PostsForAnswers).filter_by(postsforquestions_id=question.id).all()
+
+		results = []
+		for comment in evalcomments:
+			user_id = comment.postsforcomments.post.users_id
+			fullname = comment.postsforcomments.post.user.fullname
+			temp_comment = {'answer1': {}, 'answer2': {}, 'user_id': user_id}
+			temp_comment['name'] = fullname if fullname else comment.postsforcomments.post.user.displayname
+			temp_comment['avatar'] = comment.postsforcomments.post.user.avatar
+			temp_comment['criteriaandpostsforquestions_id'] = comment.judgement.criteriaandpostsforquestions_id
+			temp_comment['content'] = comment.postsforcomments.post.content
+			temp_comment['selfeval'] = False
+			temp_comment['created'] = str(comment.postsforcomments.post.created)
+			temp_comment['answer1']['id'] = comment.judgement.answerpairing.postsforanswers_id1
+			temp_comment['answer1']['feedback'] = replies[user_id][temp_comment['answer1']['id']]
+			temp_comment['answer2']['id'] = comment.judgement.answerpairing.postsforanswers_id2
+			temp_comment['answer2']['feedback'] = replies[user_id][temp_comment['answer2']['id']]
+			temp_comment['winner'] = comment.judgement.postsforanswers_id_winner
+			results.append(temp_comment)
+
+		for s in selfeval:
+			fullname = s.postsforcomments.post.user.fullname
+			name = fullname if fullname else comment.postsforcomments.post.user.displayname
+			comment = {
+				'user_id': s.users_id,
+				'name': name,
+				'avatar': s.postsforcomments.post.user.avatar,
+				'content': s.content,
+				'selfeval': True,
+				'created': str(s.postsforcomments.post.created)
+			}
+			results.append(comment)
+
+		results.sort(key = itemgetter('name', 'user_id'))
+
+		return {'comparisons': results}
+
+api.add_resource(EvalCommentViewAPI, '/view')

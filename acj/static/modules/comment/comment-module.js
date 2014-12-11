@@ -232,8 +232,8 @@ module.controller(
 
 module.controller(
 	"JudgementCommentController",
-	function ($scope, $log, $routeParams, breadcrumbs, EvalCommentResource, CoursesCriteriaResource, CourseResource, QuestionResource,
-			  AnswerResource, AttachmentResource, GroupResource, Toaster)
+	function ($scope, $log, $routeParams, breadcrumbs, EvalCommentResource, CoursesCriteriaResource,
+			  CourseResource, QuestionResource, AnswerResource, AttachmentResource, GroupResource, Toaster)
 	{
 		var courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
@@ -245,7 +245,10 @@ module.controller(
 		var allStudents = {};
 		var userIds = {};
 		$scope.group = null;
-		
+
+		var haveAnswers = false;
+		$scope.ans = {};
+
 		CourseResource.get({'id':courseId}).$promise.then(
 			function (ret) {
 				$scope.course = ret;
@@ -255,21 +258,22 @@ module.controller(
 				Toaster.reqerror("Course Not Found For ID "+ courseId, ret);
 			}
 		);
-		
-		EvalCommentResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
+
+		EvalCommentResource.view({'courseId': courseId, 'questionId': questionId}).$promise.then(
 			function (ret) {
-				$scope.comments = ret.comments;
+				$scope.comparisons = ret.comparisons;
+
 			},
 			function (ret) {
-				Toaster.reqerror("Comment retrieval failed", ret);
+				Toaster.reqerorr('Error', ret);
 			}
 		);
 
 		CourseResource.getStudents({'id': courseId}).$promise.then(
 			function (ret) {
 				allStudents = ret.students;
+				userIds = getUserIds(allStudents);
 				$scope.students = allStudents;
-				userIds = getUserIds($scope.students);
 			},
 			function (ret) {
 				Toaster.reqerror("Class list retrieval failed", ret);
@@ -327,10 +331,15 @@ module.controller(
 				var criteria = false;
 				var user = false;
 
-				if ((user_id == null && comment.judgement.users_id in userIds) || comment.judgement.users_id == user_id) {
+				// if self-evaluation -  always appear
+				if (comment.selfeval) {
+					return true;
+				}
+
+				if ((user_id == null && comment.user_id in userIds) || comment.user_id == user_id) {
 					user = true;
 				}
-				if (criteria_id == null || comment.judgement.question_criterion.id == criteria_id) {
+				if (criteria_id == null || comment.criteriaandpostsforquestions_id == criteria_id) {
 					criteria = true;
 				}
 
@@ -338,41 +347,19 @@ module.controller(
 			}
 		};
 
-		$scope.answers = function(comment) {
-			var answerpair = comment.judgement.answerpairing;
-			AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerpair.postsforanswers_id1}).$promise.then(
-				function (ret) {
-					answerpair[answerpair.postsforanswers_id1] = ret;
-					AttachmentResource.get({'postId': ret.post.id}).$promise.then(
-						function (ret) {
-							answerpair[answerpair.postsforanswers_id1]['file'] = ret.file;
-						},
-						function (ret) {
-							Toaster.reqerror("Unable to retrieve attachment", ret);
-						}
-					);
-				},
-				function (ret) {
-					Toaster.reqerror("Unable to retrieve answer 1", ret);
-				}
-			);
-			AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerpair.postsforanswers_id2}).$promise.then(
-				function (ret) {
-					answerpair[answerpair.postsforanswers_id2] = ret;
-					AttachmentResource.get({'postId': ret.post.id}).$promise.then(
-						function (ret) {
-							answerpair[answerpair.postsforanswers_id2]['file'] = ret.file;
-						},
-						function (ret) {
-							Toaster.reqerror("Unable to retrieve attachment", ret);
-						}
-					);
-				},
-				function (ret) {
-					Toaster.reqerror("Unable to retrieve answer 1", ret);
-				}
-			);
-		}
+		$scope.answers = function() {
+			if (!haveAnswers) {
+				AnswerResource.view({'courseId': courseId, 'questionId': questionId}).$promise.then(
+					function (ret) {
+						haveAnswers = true;
+						$scope.ans = ret.answers;
+					},
+					function (ret) {
+						Toaster.reqerror("Failed to retrieve the answers", ret);
+					}
+				);
+			}
+		};
 	}
 );
 

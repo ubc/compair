@@ -36,88 +36,82 @@
 		<a onclick="window.print();" href="" class="pull-right"><i class="fa fa-print"></i></a>
 	</h2>
 	<h3 ng-if="search.criteriaId">Responding to "{{ search.criteriaId.criterion.name }}"</h3>
-	
-	<div ng-show="results.length" class="evaluations">
-		
-		<div class="each-evaluation" ng-repeat="(key, comment) in comments | filter:commentFilter(search.userId.id, search.criteriaId.id) as results">
-			
-			<h4 class="text-center evaluator-heading" ng-if="comment.postsforcomments.post.user.id != comments[$index-1].postsforcomments.post.user.id && results[$index].postsforcomments.post.user.id != results[$index-1].postsforcomments.post.user.id">
-				<span ng-if="comment.postsforcomments.post.user.fullname">
-					{{comment.postsforcomments.post.user.fullname}}
-				</span>
-				<span ng-if="!comment.postsforcomments.post.user.fullname">
-					{{comment.postsforcomments.post.user.username}}
-				</span>
-				<i class="fa fa-arrow-down"></i>
-			</h4>
-		
-			<!-- Comparison Header -->
-			<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
-				<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
-			</a>
-			<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
-				<span ng-if="comment.postsforcomments.post.user.fullname">
-					{{comment.postsforcomments.post.user.fullname}}
-				</span>
-				<span ng-if="!comment.postsforcomments.post.user.fullname">
-					{{comment.postsforcomments.post.user.username}}
-				</span>
-			</a>
-			<strong>submitted</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
-			
-			<!-- TODO: criteria -->
-			
-			<p class="content"><em>Comparison:</em></p>
-			
-			<!-- Comment -->
-			<div class="content" mathjax="comment.postsforcomments.post.content"
-				ng-bind-html="comment.postsforcomments.post.content">
-			</div>
-			
-			<p class="content"><em>Feedback Given:</em></p>
-			
-			<div class="content">
-				Need replies to both answers here.
-			</div>
-			
-			<!-- Answers -->
-			<p><a href="" ng-click="showAnswers = !showAnswers; answers(comment)" showAnswers-comments.key = !showAnswers-key">
-				<i ng-show="showAnswers" class="fa fa-chevron-down"></i>
-				<i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
-				Show compared answers
-			</a></p>
-			
-			<div class="row" ng-show="showAnswers">
-				<div class="col-md-6">
-					<div class="answer-choice clearfix">
-						<h4 class="text-center">Odd-Numbered Answer <span ng-show="comment.judgement.postsforanswers_id_winner == comment.judgement.answerpairing.postsforanswers_id1">(Chosen)</span> <span class="label label-warning pull-right">Rank: add here</span></h4>
-						<div mathjax="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id1].post.content"
-							ng-bind-html="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id1]['post']['content']">
-						</div>
-						<!-- Attachments -->
-						<acj-pdf-inline label="See details:" pdfs="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id1].post.files">
-						</acj-pdf-inline>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="answer-choice clearfix">
-						<h4 class="text-center">Even-Numbered Answer <span ng-show="comment.judgement.postsforanswers_id_winner == comment.judgement.answerpairing.postsforanswers_id2">(Chosen)</span> <span class="label label-warning pull-right">Rank: add here</span></h4>
-						<div mathjax="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id2].post.content"
-							ng-bind-html="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id2]['post']['content']">
-						</div>
-						<!-- Attachments -->
-						<acj-pdf-inline label="See details:" pdfs="comment.judgement.answerpairing[comment.judgement.answerpairing.postsforanswers_id2].post.files">
-						</acj-pdf-inline>
-					</div>
-				</div>
-			</div>
-		</div>
-		
-	</div>
-		
-	<!-- if no comments are available - eg. none submitted or after filter -->
-	<div ng-if="results.length < 1">
-		<p>No comparisons were found with these filter settings. Try another group, student evaluator, or criterion above.</p>
-	</div>
 
-</div>
+	<div ng-show="results.length" class="evaluations">
+
+		<div class="each-evaluation" ng-repeat="comment in comparisons | filter:commentFilter(search.userId.id, search.criteriaId.id) as results">
+
+			<h4 class="text-center evaluator-heading" ng-if="results[$index].user_id != results[$index-1].user_id">
+				{{ comment.name }} <i class="fa fa-arrow-down"></i>
+			</h4>
+
+			<!-- Comparison Header -->
+			<a ng-href="#/user/{{ comment.user_id }}">
+				<img src="//www.gravatar.com/avatar/{{ comment.avatar }}?s=32&d=retro" />
+			</a>
+			<a ng-href="#/user/{{ comment.user_id }}">{{ comment.name }}</a>
+			<strong>submitted</strong> on {{ comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
+
+			<!-- TODO: criteria -->
+
+			<div ng-if="!comment.selfeval">
+				<p class="content"><em>Comparison</em></p>
+
+				<div class="content" mathjax="comment.content" ng-bind-html="comment.content"></div>
+
+				<div class="content"><em>Feedback Given:</em></div>
+
+				<!-- feedback for odd-numbered answer -->
+				<div class="content" mathjax="comment.answer1.feedback"
+					 ng-bind-html="comment.answer1.feedback"></div>
+				<br />
+				<!-- feedback for even-numbered answer -->
+				<div class="content" mathjax="comment.answer2.feedback"
+					 ng-bind-html="comment.answer2.feedback"></div>
+
+				<!-- Answers -->
+				<p><a href="" ng-click="showAnswers = !showAnswers; answers();">
+					<i ng-show="showAnswers" class="fa fa-chevron-down"></i>
+					<i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
+					Show compared answers
+				</a></p>
+
+				<div class="row" ng-show="showAnswers">
+					<div class="col-md-6">
+						<div class="answer-choice clearfix">
+							<h4 class="text-center">Odd-Numbered Answer
+								<span ng-show="comment.winner == comment.answer1.id">(Chosen)</span>
+								<span class="label label-warning pull-right">Rank: add here</span>
+							</h4>
+							<div mathjax="ans[comment.answer1.id].content"
+								 ng-bind-html="ans[comment.answer1.id].content"></div>
+							<!-- Attachments -->
+							<acj-pdf-inline label="See details:" pdfs="ans[comment.answer1.id].file"></acj-pdf-inline>
+						</div>
+					</div>
+					<div class="col-md-6">
+					<div class="answer-choice clearfix">
+							<h4 class="text-center">Even-Numbered Answer
+								<span ng-show="comment.winner == comment.answer2.id">(Chosen)</span>
+								<span class="label label-warning pull-right">Rank: add here</span>
+							</h4>
+							<div mathjax="ans[comment.answer2.id].content"
+								 ng-bind-html="ans[comment.answer2.id].content"></div>
+							<!-- Attachments -->
+							<acj-pdf-inline label="See details:" pdfs="ans[comment.answer2.id].file"></acj-pdf-inline>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div ng-if="comment.selfeval">
+				<p class="content"><em>Reflection</em></p>
+				<div class="content" mathjax="comment.content" ng-bind-html="comment.content"></div>
+			</div>
+
+		</div>
+
+		<div ng-if="results.length < 1">
+			<p>No comparisons were found with these filter settings. Try another group, student evaluator, or criterion above.</p>
+		</div>
+	</div>

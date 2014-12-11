@@ -242,6 +242,30 @@ class AnswerCountAPI(Resource):
 		return {'answered': answered }
 api.add_resource(AnswerCountAPI, '/count')
 
+# /view
+class AnswerViewAPI(Resource):
+	@login_required
+	def get(self, course_id, question_id):
+		Courses.query.get_or_404(course_id)
+		question = PostsForQuestions.query.get_or_404(question_id)
+		require(READ, question)
+
+		answers = PostsForAnswers.query.join(Posts).\
+			filter(PostsForAnswers.postsforquestions_id==question.id).\
+			order_by(Posts.created.desc()).all()
+		results = {}
+		for ans in answers:
+			tmp_answer = {}
+			tmp_answer['id'] = ans.id
+			tmp_answer['content'] = ans.post.content
+			tmp_answer['file'] = False
+			if len(ans.post.files):
+				tmp_answer['file'] = marshal(ans.post.files, dataformat.getFilesForPosts())
+			results[ans.id] = tmp_answer
+
+		return {'answers': results}
+api.add_resource(AnswerViewAPI, '/view')
+
 class AnsweredAPI(Resource):
 	@login_required
 	def get(self, course_id):

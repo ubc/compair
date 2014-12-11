@@ -26,7 +26,8 @@ module.factory(
 					method: 'POST', 
 					url: '/api/courses/:courseId/questions/:questionId/answers/:answerId/flagged'
 				},
-				user: {url: '/api/courses/:courseId/questions/:questionId/answers/user'}
+				user: {url: '/api/courses/:courseId/questions/:questionId/answers/user'},
+				view: {url: '/api/courses/:courseId/questions/:questionId/answers/view'}
 			}
 		);
 		ret.MODEL = "PostsForAnswers";

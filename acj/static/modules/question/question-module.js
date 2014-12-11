@@ -251,7 +251,7 @@ module.controller("QuestionViewController",
 					$scope.question = ret.question;
 
 					$scope.criteria = ret.question.criteria;
-					$scope.grade = {'sortby': '0', 'group': 0};
+					$scope.grade = {'sortby': '0', 'group': 0, 'author': 0};
 					$scope.criteriaChange();
 					$scope.reverse = true;
 
