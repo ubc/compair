@@ -378,3 +378,40 @@ class AnswersAPITests(ACJTestCase):
 		expected = {str(question.id): 1 for question in self.data.get_questions()}
 		self.assertEqual(expected, rv.json['answered'])
 		self.logout()
+
+	def test_get_answers_view(self):
+		view_url = '/api/courses/' + str(self.data.get_course().id) + '/questions/' + \
+				   str(self.data.get_questions()[0].id) + '/answers/view'
+
+		# test login required
+		rv = self.client.get(view_url)
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_instructor().username)
+		rv = self.client.get(view_url)
+		self.assert403(rv)
+		self.logout()
+
+		# test invalid course id
+		self.login(self.data.get_authorized_instructor().username)
+		rv = self.client.get('/api/courses/999/questions/'+ str(self.data.get_questions()[0].id) + '/answers/view')
+		self.assert404(rv)
+
+		# test invalid question id
+		rv = self.client.get('/api/courses/' + str(self.data.get_course().id) + '/questions/999/answers/view')
+		self.assert404(rv)
+
+		# test successful query
+		rv = self.client.get(view_url)
+		self.assert200(rv)
+		expected = self.data.get_answers_by_question()[self.data.get_questions()[0].id]
+
+		self.assertEqual(2, len(rv.json['answers']))
+		for i, exp in enumerate(expected):
+			actual = rv.json['answers'][str(exp.id)]
+			self.assertEqual(exp.id, actual['id'])
+			self.assertEqual(exp.post.content, actual['content'])
+			self.assertFalse(actual['file'])
+
+		self.logout()

@@ -24,6 +24,7 @@ new_comment_parser.add_argument('selfeval', type=bool, required=False, default=F
 # events
 on_evalcomment_create = event.signal('EVALCOMMENT_CREATE')
 on_evalcomment_get = event.signal('EVALCOMMENT_GET')
+on_evalcomment_view = event.signal('EVALCOMMENT_VIEW')
 
 # /
 class EvalCommentRootAPI(Resource):
@@ -114,7 +115,7 @@ class EvalCommentViewAPI(Resource):
 				replies[f.users_id] = {}
 			replies[f.users_id][f.postsforanswers_id] = f.content
 
-		selfeval = {}
+		selfeval = []
 		if question.selfevaltype_id:
 			# assume no comparison self evaluation
 			selfeval = PostsForAnswersAndPostsForComments.query.filter_by(selfeval=True)\
@@ -153,6 +154,13 @@ class EvalCommentViewAPI(Resource):
 
 		results.sort(key = itemgetter('name', 'user_id'))
 
+		on_evalcomment_view.send(
+			current_app._get_current_object(),
+			event_name=on_evalcomment_view.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id}
+		)
 		return {'comparisons': results}
 
 api.add_resource(EvalCommentViewAPI, '/view')

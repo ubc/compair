@@ -47,6 +47,7 @@ on_answer_flag = event.signal('ANSWER_FLAG')
 on_user_question_answer_get = event.signal('USER_QUESTION_ANSWER_GET')
 on_user_question_answered_count = event.signal('USER_QUESTION_ANSWERED_COUNT')
 on_user_course_answered_count = event.signal('USER_COURSE_ANSWERED_COUNT')
+on_answer_view_count = event.signal('ANSWER_VIEW_COUNT')
 
 # /
 class AnswerRootAPI(Resource):
@@ -262,6 +263,14 @@ class AnswerViewAPI(Resource):
 			if len(ans.post.files):
 				tmp_answer['file'] = marshal(ans.post.files, dataformat.getFilesForPosts())
 			results[ans.id] = tmp_answer
+
+		on_answer_view_count.send(
+			current_app._get_current_object(),
+			event_name=on_answer_view_count.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id}
+		)
 
 		return {'answers': results}
 api.add_resource(AnswerViewAPI, '/view')

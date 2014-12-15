@@ -317,6 +317,15 @@ class JudgementCommentsTestData(JudgmentsTestData):
 
         self.judge_comment = self.create_judge_comment(self.judge_1)
 
+        self.feedback = {}
+        self.feedback[self.judge_1.answerpairing.postsforanswers_id1] = \
+			self.create_judge_feedback(self.judge_1.answerpairing.postsforanswers_id1)
+        self.feedback[self.judge_1.answerpairing.postsforanswers_id2] = \
+			self.create_judge_feedback(self.judge_1.answerpairing.postsforanswers_id2)
+
+    def get_judge_feedback(self):
+        return self.feedback
+
     def get_judge_comment(self):
         return self.judge_comment
 
@@ -346,6 +355,14 @@ class JudgementCommentsTestData(JudgmentsTestData):
         judge_comment = PostsForJudgementsFactory(postsforcomments=comment, judgement=judgement)
         db.session.commit()
         return judge_comment
+
+    def create_judge_feedback(self, answer):
+        feedback_content = factory.fuzzy.FuzzyText(length=12)
+        comment = self.create_comment(self.judging_student, self.get_course(), feedback_content)
+        feedback = PostsForAnswersAndPostsForCommentsFactory(postsforcomments=comment,
+						postsforanswers_id=answer, evaluation=True)
+        db.session.commit()
+        return feedback
 
     def create_comment(self, user, course, content):
         post = PostsFactory(user=user,course=course,content=content)

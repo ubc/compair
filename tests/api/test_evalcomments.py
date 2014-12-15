@@ -93,5 +93,73 @@ class EvalCommentsAPITests(ACJTestCase):
 		rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
 		self.assert404(rv)
 
+	def test_eval_comment_view(self):
+		url = self._build_url(self.data.get_course().id, self.data.get_questions()[0].id, '/view')
+
+		# test login required
+		rv = self.client.get(url)
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_instructor().username)
+		rv = self.client.get(url)
+		self.assert403(rv)
+		self.logout()
+
+		self.login(self.data.get_authorized_instructor().username)
+		# test invalid course id
+		rv = self.client.get(self._build_url(999, self.data.get_questions()[0].id), '/view')
+		self.assert404(rv)
+
+		# test invalid question id
+		rv = self.client.get(self._build_url(self.data.get_course().id, 999, '/view'))
+		self.assert404(rv)
+
+		# test successful query - instructor
+		rv = self.client.get(url)
+		self.assert200(rv)
+		actual = rv.json['comparisons'][0]
+		expected = self.data.get_judge_comment()
+
+		self.assertEqual(len(rv.json['comparisons']), 1)
+		self.assertEqual(actual['name'],self.data.get_judging_student().fullname)
+		self.assertEqual(actual['avatar'], self.data.get_judging_student().avatar)
+		self.assertEqual(actual['criteriaandpostsforquestions_id'],
+			self.data.get_criteria_by_question(self.data.get_questions()[0]).id)
+		self.assertEqual(actual['content'], expected.postsforcomments.post.content)
+		self.assertFalse(actual['selfeval'])
+		self.assertEqual(actual['created'], str(expected.postsforcomments.post.created))
+		self.assertEqual(actual['answer1']['id'], expected.judgement.answerpairing.postsforanswers_id1)
+		self.assertEqual(actual['answer1']['feedback'],
+						 self.data.get_judge_feedback()[actual['answer1']['id']].content)
+		self.assertEqual(actual['answer2']['id'], expected.judgement.answerpairing.postsforanswers_id2)
+		self.assertEqual(actual['answer2']['feedback'],
+						 self.data.get_judge_feedback()[actual['answer2']['id']].content)
+		self.assertEqual(actual['winner'], expected.judgement.postsforanswers_id_winner)
+		self.logout()
+
+		# test successful query - TA
+		self.login(self.data.get_authorized_ta().username)
+		rv = self.client.get(url)
+		self.assert200(rv)
+		actual = rv.json['comparisons'][0]
+		expected = self.data.get_judge_comment()
+
+		self.assertEqual(len(rv.json['comparisons']), 1)
+		self.assertEqual(actual['name'],self.data.get_judging_student().fullname)
+		self.assertEqual(actual['avatar'], self.data.get_judging_student().avatar)
+		self.assertEqual(actual['criteriaandpostsforquestions_id'],
+			self.data.get_criteria_by_question(self.data.get_questions()[0]).id)
+		self.assertEqual(actual['content'], expected.postsforcomments.post.content)
+		self.assertFalse(actual['selfeval'])
+		self.assertEqual(actual['created'], str(expected.postsforcomments.post.created))
+		self.assertEqual(actual['answer1']['id'], expected.judgement.answerpairing.postsforanswers_id1)
+		self.assertEqual(actual['answer1']['feedback'],
+						 self.data.get_judge_feedback()[actual['answer1']['id']].content)
+		self.assertEqual(actual['answer2']['id'], expected.judgement.answerpairing.postsforanswers_id2)
+		self.assertEqual(actual['answer2']['feedback'],
+						 self.data.get_judge_feedback()[actual['answer2']['id']].content)
+		self.assertEqual(actual['winner'], expected.judgement.postsforanswers_id_winner)
+		self.logout()
 
 
