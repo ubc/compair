@@ -98,16 +98,9 @@ class EvalCommentViewAPI(Resource):
 			.join(Judgements, AnswerPairings).filter_by(postsforquestions_id=question.id)\
 			.join(PostsForComments, Posts, Users).order_by(Users.firstname, Users.lastname, Users.id).all()
 
-		feedback_count = PostsForAnswersAndPostsForComments.query.filter_by(evaluation=True)\
-			.join(PostsForAnswers).filter_by(postsforquestions_id=question.id).count()
-		if feedback_count > 0:
-			feedback = PostsForAnswersAndPostsForComments.query.filter_by(evaluation=True)\
-				.join(PostsForAnswers).filter_by(postsforquestions_id=question.id).all()
-		else:
-			# when no feedback marked with evaluation - assume they were not marked
-			# from earlier iterations of the application
-			feedback = PostsForAnswersAndPostsForComments.query\
-				.join(PostsForAnswers).filter_by(postsforquestions_id=question.id).all()
+		feedback = PostsForAnswersAndPostsForComments.query.join(PostsForAnswers) \
+			.filter_by(postsforquestions_id=question.id)\
+			.order_by(PostsForAnswersAndPostsForComments.evaluation).all()
 
 		replies = {}
 		for f in feedback:
