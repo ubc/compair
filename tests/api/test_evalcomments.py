@@ -108,7 +108,7 @@ class EvalCommentsAPITests(ACJTestCase):
 
 		self.login(self.data.get_authorized_instructor().username)
 		# test invalid course id
-		rv = self.client.get(self._build_url(999, self.data.get_questions()[0].id), '/view')
+		rv = self.client.get(self._build_url(999, self.data.get_questions()[0].id, '/view'))
 		self.assert404(rv)
 
 		# test invalid question id
