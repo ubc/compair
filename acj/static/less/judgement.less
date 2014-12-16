@@ -4,15 +4,19 @@
 
 .evaluate-screen {
   
-  /* class for p tag that precedes standalone-question div, i.e., "Original question:" */
-  .question-identifier {
+  /* class for p tag that precedes standalone-question div */
+  .question-toggle {
     margin-top: 2.5em;
   }
-    .question-identifier + .standalone-question {
+    .question-toggle + .standalone-question {
       margin-top: 0;
     }
+    
+  .standalone-question {
+    margin-bottom: 0;
+  }
   
-  /* class for divs underneath each step */
+  /* class for divs underneath each step (indented a bit more) */
   .sub-step {
     margin: 0 1.3em;
   }
@@ -24,7 +28,7 @@
     padding: 2em;
     .gray-box();
     
-    /* answer number titles */
+    /* answer choice number titles */
     h3 {
       margin-top: 0;
     }
@@ -52,13 +56,13 @@
   /* class for div containing each criterion */
   .each-criterion {
     
-    /* class for div containing the criteria (question and judging details) */
+    /* class for div containing the criteria (question and details) */
     .criteria {
       margin-bottom: 1.5em;
       font-size: 1.1em;
     }
     
-    /* answer buttons */
+    /* answer selection buttons */
     .btn {
       margin-bottom: 1em;
       padding: .6em 2em;
@@ -85,7 +89,7 @@
     border: 1px solid @border-gray;
   }
   
-  /* each evaluation matches look of each answer/comment/etc. */
+  /* each evaluation matches look of each answer/comment/etc. elsewhere */
   .each-evaluation {
     padding: 1em 1em 2em 1em;
     border-bottom: 1px solid @border-gray;
@@ -94,19 +98,33 @@
       background: @bkgrd-gray;
     }
     
+    /* class for h4 that = student name */
     .evaluator-heading {
       margin: -1em -.8em 1em -.8em;
       padding: .7em 0;
       background: @border-gray;
     }
     
-    /* main content also matches */
+    /* main content also matches look of each answer/comment/etc. elsewhere */
     .content {
       margin: 1em 0 1.5em 0;
       font-size: 1.15em;
     }
     
-    /* shrink answers, when shown */
+    /* headings for comparison/feedback/self-evaluation inside each evaluation */
+    h5 {
+      padding-bottom: .3em;
+      color: #888;
+      font-size: 1em;
+      border-bottom: 2px solid @border-gray;
+    }
+    
+    /* class for p tag answer toggle */
+    .show-answers {
+      margin-top: 3em;
+    }
+    
+    /* shrink answer text size */
     .answer-choice {
       font-size: .9em;
     }

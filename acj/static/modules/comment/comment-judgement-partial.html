@@ -55,22 +55,27 @@
 			<!-- TODO: criteria -->
 
 			<div ng-if="!comment.selfeval">
-				<p class="content"><em>Comparison</em></p>
+				<h5 class="content">Comparison</h5>
 
-				<div class="content" mathjax="comment.content" ng-bind-html="comment.content"></div>
+				<div class="content" mathjax="comment.content"
+				     ng-bind-html="comment.content">
+				</div>
 
-				<div class="content"><em>Feedback Given:</em></div>
+				<h5 class="content">Feedback for Odd-Numbered Answer</h5>
 
 				<!-- feedback for odd-numbered answer -->
 				<div class="content" mathjax="comment.answer1.feedback"
-					 ng-bind-html="comment.answer1.feedback"></div>
-				<br />
+					 ng-bind-html="comment.answer1.feedback">
+				</div>
+				
+				<h5 class="content">Feedback for Even-Numbered Answer</h5>
+				
 				<!-- feedback for even-numbered answer -->
 				<div class="content" mathjax="comment.answer2.feedback"
 					 ng-bind-html="comment.answer2.feedback"></div>
 
 				<!-- Answers -->
-				<p><a href="" ng-click="showAnswers = !showAnswers; answers();">
+				<p class="show-answers"><a href="" ng-click="showAnswers = !showAnswers; answers();">
 					<i ng-show="showAnswers" class="fa fa-chevron-down"></i>
 					<i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
 					Show compared answers
@@ -81,7 +86,7 @@
 						<div class="answer-choice clearfix">
 							<h4 class="text-center">Odd-Numbered Answer
 								<span ng-show="comment.winner == comment.answer1.id">(Chosen)</span>
-								<span class="label label-warning pull-right">Rank: add here</span>
+								<span class="label label-warning pull-right">Score: add here</span>
 							</h4>
 							<div mathjax="ans[comment.answer1.id].content"
 								 ng-bind-html="ans[comment.answer1.id].content"></div>
@@ -93,7 +98,7 @@
 					<div class="answer-choice clearfix">
 							<h4 class="text-center">Even-Numbered Answer
 								<span ng-show="comment.winner == comment.answer2.id">(Chosen)</span>
-								<span class="label label-warning pull-right">Rank: add here</span>
+								<span class="label label-warning pull-right">Score: add here</span>
 							</h4>
 							<div mathjax="ans[comment.answer2.id].content"
 								 ng-bind-html="ans[comment.answer2.id].content"></div>
@@ -105,8 +110,10 @@
 			</div>
 
 			<div ng-if="comment.selfeval">
-				<p class="content"><em>Reflection</em></p>
-				<div class="content" mathjax="comment.content" ng-bind-html="comment.content"></div>
+				<h5 class="content">Self-Evaluation</h5>
+				<div class="content" mathjax="comment.content"
+				     ng-bind-html="comment.content">
+				</div>
 			</div>
 
 		</div>
