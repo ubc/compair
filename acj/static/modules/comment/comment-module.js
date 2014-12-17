@@ -331,15 +331,16 @@ module.controller(
 				var criteria = false;
 				var user = false;
 
-				// if self-evaluation -  always appear
-				if (comment.selfeval) {
-					return true;
-				}
-
 				if ((user_id == null && comment.user_id in userIds) || comment.user_id == user_id) {
 					user = true;
 				}
-				if (criteria_id == null || comment.criteriaandpostsforquestions_id == criteria_id) {
+
+				// self-evaluation - no effect from criteria filter
+				if (comment.selfeval) {
+					criteria = true;
+				}
+				// regular evaluation
+				else if (criteria_id == null || comment.criteriaandpostsforquestions_id == criteria_id) {
 					criteria = true;
 				}
 
