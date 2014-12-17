@@ -130,7 +130,7 @@
 							<option value="">All students</option>
 						</select>
 					</span><br />
-					<span class="filter" ng-if="canManagePosts">
+					<span class="filter">
 						<label>Order by scores for: &nbsp;</label>
 						<select ng-model="grade.sortby"
 							ng-options="key as c.criterion.name for (key, c) in criteria" ng-change="criteriaChange()">
