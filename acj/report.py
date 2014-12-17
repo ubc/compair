@@ -200,7 +200,7 @@ def participation_report(course_id, questions, group_id):
 
 		answers = PostsForAnswers.query.filter(PostsForAnswers.postsforquestions_id.in_(quesIds))\
 			.join(Posts).filter_by(users_id=user.id).all()
-		answers = {a.postsforquestions_id:{s.criteriaandpostsforquestions_id: s.score for s in a.scores} for a in answers}
+		answers = {a.postsforquestions_id:{s.criteriaandpostsforquestions_id: s.normalized_score for s in a.scores} for a in answers}
 
 		judgements = Judgements.query.\
 			filter_by(users_id=user.id).join(AnswerPairings).\

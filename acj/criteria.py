@@ -47,6 +47,7 @@ on_course_criteria_update = event.signal('COURSE_CRITERIA_UPDATE')
 
 on_question_criteria_create = event.signal('QUESTION_CRITERIA_CREATE')
 on_question_criteria_delete = event.signal('QUESTION_CRITERIA_DELETE')
+on_question_criteria_get = event.signal('QUESTION_CRITERIA_GET')
 
 # /
 class CriteriaRootAPI(Resource):
@@ -216,6 +217,27 @@ class CriteriaIdAPI(Resource):
 
 		return {'criterion': marshal(criterion, dataformat.getCriteria())}
 apiC.add_resource(CriteriaIdAPI, '/<int:criteria_id>')
+
+# /
+class QuestionCriteriaRootAPI(Resource):
+	@login_required
+	def get(self, course_id, question_id):
+		course = Courses.query.get_or_404(course_id)
+		question = PostsForQuestions.query.get_or_404(question_id)
+		require(READ, course)
+
+		criteria_question = CriteriaAndPostsForQuestions.query\
+			.filter_by(postsforquestions_id = question.id, active = True) \
+			.order_by(CriteriaAndPostsForQuestions.id).all()
+
+		on_question_criteria_get.send(
+			current_app._get_current_object(),
+			event_name = on_question_criteria_get.name,
+			user = current_user
+		)
+
+		return {'criteria': marshal(criteria_question, dataformat.getCriteriaAndPostsForQuestions())}
+apiQ.add_resource(QuestionCriteriaRootAPI, '')
 
 # /criteria_id
 class QuestionCriteriaAPI(Resource):

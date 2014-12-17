@@ -257,5 +257,6 @@ def getScores():
 		'postsforanswers_id': fields.Integer,
 		'rounds': fields.Integer,
 		'wins': fields.Integer,
-		'score': fields.Float
+		'score': fields.Float,
+		'normalized_score': fields.Float
 	}

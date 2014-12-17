@@ -10,6 +10,7 @@ from .models import Courses, PostsForQuestions, UserTypesForCourse, Users, Cours
 
 from .util import new_restful_api
 from .core import event
+import copy
 
 
 # First declare a Flask Blueprint for this module
@@ -51,7 +52,8 @@ class GradebookAPI(Resource):
 			num_judgements_per_student[student.id] = num_judgements_by_user_id.get(student.id, 0)
 
 		# number of criteria for this question
-		num_criteria = CriteriaAndPostsForQuestions.query.filter_by(postsforquestions_id=question.id, active=True).count()
+		criteria = CriteriaAndPostsForQuestions.query.filter_by(postsforquestions_id=question.id, active=True).all()
+		num_criteria = len(criteria)
 		# number of judgements submitted by users increases with the number of criteria in the course since 1 required
 		# judgement = 1 judgement in each criteria, so need to adjust the numbers
 		for student_id, num_judgements in num_judgements_per_student.items():
@@ -59,10 +61,20 @@ class GradebookAPI(Resource):
 
 		# count number of answers each student has submitted
 		num_answers_by_user_id = {}
+		scores_by_user_id = {}
+		init_scores = {c.id: 'Not Evaluated' for c in criteria}
 		for answer in question._answers:
 			num_answers = num_answers_by_user_id.get(answer.post.users_id, 0)
 			num_answers += 1
 			num_answers_by_user_id[answer.post.users_id] = num_answers
+
+			# scores - assume one answer for each user for now
+			scores_by_user_id[answer.post.users_id] = copy.deepcopy(init_scores)
+			for score in answer._scores:
+				# skip scores for inactive criteria
+				if score.criteriaandpostsforquestions_id not in init_scores:
+					continue
+				scores_by_user_id[answer.post.users_id][score.criteriaandpostsforquestions_id] = round(score.normalized_score, 3)
 
 		# we want only answers submitted by students
 		num_answers_per_student = {}
@@ -89,7 +101,9 @@ class GradebookAPI(Resource):
 		# {'gradebook':[{user1}. {user2}, ...]}
 		# user id, username, first name, last name, answer submitted, judgements submitted
 		gradebook = []
+		no_answer = {c.id: 'No Answer' for c in criteria}
 		for student in students:
+			score = scores_by_user_id.get(student.id, no_answer)
 			entry = {
 				'userid':student.id,
 				'student_no': student.student_no,
@@ -97,7 +111,8 @@ class GradebookAPI(Resource):
 				'firstname': student.firstname,
 				'lastname': student.lastname,
 				'num_answers': num_answers_per_student[student.id],
-				'num_judgements': num_judgements_per_student[student.id]
+				'num_judgements': num_judgements_per_student[student.id],
+				'scores': score
 			}
 			if include_self_eval:
 				entry['num_selfeval'] = num_selfeval_per_student[student.id]

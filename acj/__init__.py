@@ -2,7 +2,8 @@ from flask import Flask, redirect, session
 from flask.ext.login import current_user
 
 from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, on_answer_flag,\
-	on_answer_delete, on_user_question_answer_get, on_user_question_answered_count, on_user_course_answered_count
+	on_answer_delete, on_user_question_answer_get, on_user_question_answered_count, on_user_course_answered_count,\
+	on_answer_view_count
 from .attachment import on_save_tmp_file, on_attachment_get, on_attachment_delete
 from .classlist import on_classlist_get, on_classlist_upload, on_classlist_enrol, on_classlist_unenrol, \
 	on_classlist_instructor_label, on_classlist_instructor, on_classlist_student
@@ -12,8 +13,9 @@ from .comment import on_comment_modified, on_comment_get, on_comment_list_get, o
 from .course import on_course_modified, on_course_get, on_course_list_get, on_course_create
 from .criteria import on_criteria_list_get, criteria_get, criteria_post, criteria_update, \
 	accessible_criteria, criteria_create, default_criteria_get, on_course_criteria_delete, \
-	on_course_criteria_update, on_question_criteria_create, on_question_criteria_delete
-from .evalcomment import on_evalcomment_create, on_evalcomment_get
+	on_course_criteria_update, on_question_criteria_create, on_question_criteria_delete, \
+	on_question_criteria_get
+from .evalcomment import on_evalcomment_create, on_evalcomment_get, on_evalcomment_view
 from .judgement import on_answer_pair_get, on_judgement_create, on_judgement_question_count, \
 	on_judgement_course_count
 from .question import on_question_modified, on_question_get, on_question_list_get, on_question_create, \
@@ -209,6 +211,7 @@ on_answer_comment_list_get.connect(log)
 on_answer_comment_create.connect(log)
 on_answer_comment_delete.connect(log)
 on_answer_comment_user_get.connect(log)
+on_answer_view_count.connect(log)
 
 # criteria events
 on_criteria_list_get.connect(log)
@@ -226,6 +229,7 @@ on_course_criteria_update.connect(log)
 # question criteria events
 on_question_criteria_create.connect(log)
 on_question_criteria_delete.connect(log)
+on_question_criteria_get.connect(log)
 
 # answer events
 on_answer_modified.connect(log)
@@ -267,6 +271,7 @@ on_group_user_delete.connect(log)
 # evalcomment event
 on_evalcomment_create.connect(log)
 on_evalcomment_get.connect(log)
+on_evalcomment_view.connect(log)
 
 # report event
 on_export_report.connect(log)

@@ -262,6 +262,12 @@ class AnswerViewAPI(Resource):
 			tmp_answer['file'] = False
 			if len(ans.post.files):
 				tmp_answer['file'] = marshal(ans.post.files, dataformat.getFilesForPosts())
+			tmp_answer['scores'] = {}
+			for s in ans._scores:
+				if not s.question_criterion.active:
+					continue
+				tmp_answer['scores'][s.criteriaandpostsforquestions_id] = round(s.normalized_score, 3)
+
 			results[ans.id] = tmp_answer
 
 		on_answer_view_count.send(

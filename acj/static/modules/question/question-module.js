@@ -211,6 +211,7 @@ module.controller("QuestionViewController",
 		var myAnsCount = 0; // for the event of deleting own answer
 		$scope.allStudents = {};
 		var userIds = {};
+		$scope.grade = {'sortby': '0', 'group': 0, 'author': 0};
 		Session.getUser().then(function(user) {
 			$scope.loggedInUserId = user.id;
 		});
@@ -251,7 +252,6 @@ module.controller("QuestionViewController",
 					$scope.question = ret.question;
 
 					$scope.criteria = ret.question.criteria;
-					$scope.grade = {'sortby': '0', 'group': 0, 'author': 0};
 					$scope.criteriaChange();
 					$scope.reverse = true;
 
@@ -425,7 +425,7 @@ module.controller("QuestionViewController",
 			if ($scope.grade.sortby == null) {
 				$scope.order = 'answer.post.created';
 			} else {
-				$scope.order = 'scores['+$scope.grade.sortby+'].score';
+				$scope.order = 'scores['+$scope.grade.sortby+'].normalized_score';
 			}
 		};
 		

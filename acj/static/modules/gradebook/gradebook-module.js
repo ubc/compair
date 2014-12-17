@@ -31,9 +31,10 @@ module.factory(
 /***** Controllers *****/
 module.controller("GradebookController",
 	function($scope, $log, $routeParams, CourseResource, GradebookResource, 
-		GroupResource, Toaster)
+		GroupResource, QuestionResource, Authorize, Toaster, QuestionsCriteriaResource)
 	{
 		$scope.users = [];
+		$scope.gb = {};
 		var userIds = {};
 
 		CourseResource.getStudents({'id': $scope.courseId}).$promise.then(
@@ -46,7 +47,6 @@ module.controller("GradebookController",
 				Toaster.reqerror("Class list retrieval failed", ret);
 			}
 		);
-		$scope.gb = {};
 		GradebookResource.get(
 			{'courseId': $scope.courseId,'questionId': $scope.questionId}).$promise.then(
 			function(ret)
@@ -58,6 +58,31 @@ module.controller("GradebookController",
 			function (ret)
 			{
 				$scope.gradebook = [];
+			}
+		);
+
+		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(result) {
+			$scope.canManagePosts = result;
+			if ($scope.canManagePosts) {
+				GroupResource.get({'courseId': $scope.courseId}).$promise.then(
+					function (ret) {
+						$scope.groups = ret.groups;
+					},
+					function (ret) {
+						Toaster.reqerror("Unable to retrieve the groups in the course.", ret);
+					}
+				);
+			}
+		});
+
+		QuestionsCriteriaResource.get(
+			{'courseId': $scope.courseId, 'questionId': $scope.questionId}).$promise.then(
+			function (ret) {
+				$scope.criteria = ret['criteria'];
+				$scope.gb['sortby'] = ret['criteria'][0]['id'];
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve the criteria.", ret);
 			}
 		);
 
@@ -93,6 +118,10 @@ module.controller("GradebookController",
 				return entry.userid in userIds;
 			}
 		};
+
+		$scope.sortScore = function() {
+			$scope.predicate = 'scores['+$scope.gb.sortby+']';
+		}
 
 	}
 );

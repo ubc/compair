@@ -681,6 +681,7 @@ class CriteriaAndPostsForQuestions(db.Model):
 	question = db.relationship("PostsForQuestions")
 	active = db.Column(db.Boolean, default=True, nullable=False)
 	judgements = db.relationship("Judgements")
+	scores = db.relationship("Scores")
 
 	@hybrid_property
 	def courses_id(self):
@@ -689,6 +690,11 @@ class CriteriaAndPostsForQuestions(db.Model):
 	@hybrid_property
 	def judgement_count(self):
 		return len(self.judgements)
+
+	@hybrid_property
+	def max_score(self):
+		scores = [s.score for s in self.scores]
+		return max(scores)
 
 #################################################
 # Scores - The calculated score of the answer
@@ -716,6 +722,12 @@ class Scores(db.Model):
 	# calculated score based on all previous judgements
 	score = db.Column(db.Float, default=0)
 
+	@hybrid_property
+	def normalized_score(self):
+		if self.question_criterion.max_score > 0:
+			return self.score / self.question_criterion.max_score
+		else:
+			return 0
 
 #################################################
 # Judgements - User's judgements on the answers

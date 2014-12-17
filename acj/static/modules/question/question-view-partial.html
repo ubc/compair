@@ -66,8 +66,8 @@
 		</a>
 		
 		<!-- BUTTON when user is not an admin AND the comparison period is active AND the user has not finished pair comparisons AND either (the answer period is active AND the question has been answered) OR (the answer period is not active)
-		     basically we force users to answer first, if they can
-	   	     enabled only when answer pairs are available for comparison (so when no warning)
+			 basically we force users to answer first, if they can
+			 enabled only when answer pairs are available for comparison (so when no warning)
 		-->
 		<a class="btn" ng-class="{'btn-success': !warning, 'btn-default': warning}" title="Compare Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/compare"
 		   ng-show="!canManagePosts && question.judging_period && !judged_req_met && ((question.answer_period && answered) || !question.answer_period)" ng-disabled="warning">
@@ -75,8 +75,8 @@
 		</a>
 		
 		<!-- BUTTON when user is not an admin AND the comparison period is active AND user has finished pair comparisons AND has a self-evaluation remaining AND either (the answer period is active AND the question has been answered) OR (the answer period is not active)
-		     basically we force users to answer first, if they can
-		     enabled only when user has answered question
+			 basically we force users to answer first, if they can
+			 enabled only when user has answered question
 		-->
 		<a class="btn" ng-class="{'btn-success': answered, 'btn-default': !answered}" title="Self-Evaluation" ng-href="#/course/{{courseId}}/question/{{question.id}}/selfevaluation"
 		   ng-show="!canManagePosts && question.judging_period && judged_req_met && !selfEval_req_met && ((question.answer_period && answered) || !question.answer_period)" ng-disabled="!answered">
@@ -329,7 +329,10 @@
 
 					<!-- Student Score (not used for instructor answers) -->
 					<p class="pull-right" ng-show="canManagePosts && key==grade.sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores" class="score-display">
-						<em>Score: {{score.score | number: 3}}</em>
+						<em>Score: {{score.normalized_score | number: 3}}</em>
+					</p>
+					<p class="pull-right" ng-show="canManagePosts && answer.scores.length == 0" class="score-display">
+						<em>Not Evaluated</em>
 					</p>
 
 					<!-- Student Answer Replies Section -->
