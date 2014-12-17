@@ -62,6 +62,7 @@ class GradebookAPI(Resource):
 		# count number of answers each student has submitted
 		num_answers_by_user_id = {}
 		scores_by_user_id = {}
+		flagged_by_user_id = {}
 		init_scores = {c.id: 'Not Evaluated' for c in criteria}
 		for answer in question._answers:
 			num_answers = num_answers_by_user_id.get(answer.post.users_id, 0)
@@ -75,6 +76,8 @@ class GradebookAPI(Resource):
 				if score.criteriaandpostsforquestions_id not in init_scores:
 					continue
 				scores_by_user_id[answer.post.users_id][score.criteriaandpostsforquestions_id] = round(score.normalized_score, 3)
+
+			flagged_by_user_id[answer.post.users_id] = 'Yes' if answer.flagged else 'No'
 
 		# we want only answers submitted by students
 		num_answers_per_student = {}
@@ -106,13 +109,13 @@ class GradebookAPI(Resource):
 			score = scores_by_user_id.get(student.id, no_answer)
 			entry = {
 				'userid':student.id,
-				'student_no': student.student_no,
 				'displayname': student.displayname,
 				'firstname': student.firstname,
 				'lastname': student.lastname,
 				'num_answers': num_answers_per_student[student.id],
 				'num_judgements': num_judgements_per_student[student.id],
-				'scores': score
+				'scores': score,
+				'flagged': flagged_by_user_id.get(student.id, 'No Answer')
 			}
 			if include_self_eval:
 				entry['num_selfeval'] = num_selfeval_per_student[student.id]

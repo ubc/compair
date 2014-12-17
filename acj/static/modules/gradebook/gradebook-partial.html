@@ -32,14 +32,14 @@
 				<th><a href="" ng-click="reverse = predicate == 'lastname' && !reverse; predicate='lastname'">
 					Last Name</a>
 				</th>
-				<th><a href="" ng-click="reverse = predicate == 'student_no' && !reverse; predicate='student_no'">
-					Student Number</a>
-				</th>
 				<th><a href="" ng-click="reverse = predicate == 'displayname' && !reverse; predicate='displayname'">
 					Display Name</a>
 				</th>
 				<th class="text-center"><a href="" ng-click="reverse = predicate == 'num_answers' && !reverse; predicate='num_answers'">
 					Answered</a>
+				</th>
+				<th class="text-center"><a href="" ng-click="reverse = predicate == 'flagged' && !reverse; predicate='flagged'">
+					Flagged</a>
 				</th>
 				<th class="text-center"><a href="" ng-click="reverse = predicate == 'num_judgements' && !reverse; predicate='num_judgements'">
 					Evaluations</a>
@@ -56,7 +56,6 @@
 			<tr ng-repeat="entry in gradebook | filter:groupFilter() | orderBy:predicate:reverse">
 				<td>{{entry.firstname}}</td>
 				<td>{{entry.lastname}}</td>
-				<td>{{entry.student_no}}</td>
 				<td>
 					<a ng-href="#/user/{{entry.userid}}">
 						{{entry.displayname}}
@@ -64,6 +63,12 @@
 				</td>
 				<td class="text-center text-success" ng-if="entry.num_answers > 0"><strong>Yes</strong></td>
 				<td class="text-center text-danger" ng-if="entry.num_answers == 0"><strong>No</strong></td>
+				<td class="text-center" ng-class="{
+					'text-success': entry.flagged == 'No' || entry.flagged == 'No Answer',
+					'text-danger': entry.flagged == 'Yes'
+					}">
+					<strong>{{ entry.flagged }}</strong>
+				</td>
 				<td class="text-center" ng-class="{
 					'text-danger': entry.num_judgements == 0, 
 					'text-warning': entry.num_judgements > 0 && 
