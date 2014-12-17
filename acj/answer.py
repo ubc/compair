@@ -54,13 +54,13 @@ class AnswerRootAPI(Resource):
 	#TODO pagination
 	@login_required
 	def get(self, course_id, question_id):
-		course = Courses.query.get_or_404(course_id)
+		Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
 		restrict_users = not allow(MANAGE, question)
-		answers = PostsForAnswers.query.join(Posts).\
-			filter(PostsForAnswers.postsforquestions_id==question.id).\
-			order_by(Posts.created.desc()).all()
+
+		answers = PostsForAnswers.query.filter_by(postsforquestions_id=question.id) \
+			.join(Posts).order_by(Posts.created.desc()).all()
 
 		on_answer_list_get.send(
 			current_app._get_current_object(),
@@ -69,7 +69,18 @@ class AnswerRootAPI(Resource):
 			course_id=course_id,
 			data={'question_id': question_id})
 
-		return {"objects":marshal(answers, dataformat.getPostsForAnswers(restrict_users))}
+		answers = marshal(answers, dataformat.getPostsForAnswers(restrict_users))
+
+		# when user is not allowed to see all the feedback
+		if restrict_users:
+			for answer in answers:
+				# when the current_user is the author - can see all feedback
+				if answer['post']['user']['id'] == current_user.id:
+					continue
+				answer['comments'] = [comment for comment in answer['comments'] if not comment['evaluation'] and not comment['selfeval']]
+
+
+		return {"objects": answers}
 
 	@login_required
 	def post(self, course_id, question_id):
