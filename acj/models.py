@@ -495,6 +495,13 @@ class PostsForAnswers(db.Model):
 	def comments_count(self):
 		return len(self.comments)
 	@hybrid_property
+	def private_comments_count(self):
+		private_comments = [c for c in self.comments if c.evaluation or c.selfeval]
+		return len(private_comments)
+	@hybrid_property
+	def public_comments_count(self):
+		return self.comments_count - self.private_comments_count
+	@hybrid_property
 	def scores(self):
 		return sorted(self._scores, key=lambda score: score.criteriaandpostsforquestions_id)
 
