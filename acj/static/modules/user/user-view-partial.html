@@ -5,6 +5,8 @@
 		</a>
 	</div>
 	<h1><i class="fa fa-user"></i> {{user.displayname}}'s Profile</h1>
+	<p ng-if="!canCreateUser && ownProfile" class="intro-text">Instructors can always see your profile information in the application. Fellow students can only see your display name and the last time you logged in. To make yourself anonymous to other students in the application, click the "Edit" button and change what appears in the "Display Name" field.</p>
+	<p ng-if="canCreateUser" class="intro-text">Instructors can always see student profile information in the application. Students can only see each other's display name and the last time a student logged in. To ensure student anonymity in the application, check what appears as the "Display Name" for your students.</p>
 	<hr>
 	<div class="col-md-4">
 		<a href="https://en.gravatar.com/" title="Add or edit your user image with Gravatar">
@@ -27,6 +29,10 @@
 		<div class="row" ng-if="canCreateUser || ownProfile">
 			<strong class="col-md-3">Name:</strong>
 			<div class="col-md-9">{{user.fullname}}</div>
+		</div>
+		<div class="row">
+			<strong class="col-md-3">Display Name:</strong>
+			<div class="col-md-9">{{user.displayname}}</div>
 		</div>
 		<div class="row" ng-if="canCreateUser || ownProfile">
 			<strong class="col-md-3">Email:</strong>
