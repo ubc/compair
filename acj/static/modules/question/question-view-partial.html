@@ -329,7 +329,7 @@
 
 					<!-- Student Score (not used for instructor answers) -->
 					<p class="pull-right" ng-show="canManagePosts && key==grade.sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores" class="score-display">
-						<em>Score: {{score.normalized_score | number: 3}}</em>
+						<em>Score: {{score.normalized_score}}%</em>
 					</p>
 					<p class="pull-right" ng-show="canManagePosts && answer.scores.length == 0" class="score-display">
 						<em>Not Evaluated</em>

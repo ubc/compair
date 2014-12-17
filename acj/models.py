@@ -725,7 +725,8 @@ class Scores(db.Model):
 	@hybrid_property
 	def normalized_score(self):
 		if self.question_criterion.max_score > 0:
-			return self.score / self.question_criterion.max_score
+			# round to whole number
+			return round(self.score / self.question_criterion.max_score * 100, 0)
 		else:
 			return 0
 

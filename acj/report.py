@@ -84,7 +84,7 @@ class ReportRootAPI(Resource):
 				criteria = CriteriaAndPostsForQuestions.query.filter_by(postsforquestions_id=q.id, active=True).all()
 				title_row1 += [q.title] + ["" for x in criteria]
 				for c in criteria:
-					title_row2.append(c.criterion.name)
+					title_row2.append('Percentage Score for "' + c.criterion.name + '"')
 				title_row2.append("Evaluations Submitted ("+str(q.num_judgement_req)+' required)')
 			titles = [title_row1, title_row2]
 
@@ -219,7 +219,7 @@ def participation_report(course_id, questions, group_id):
 					score = 'Not Evaluated'
 				else:
 					score = answers[ques.id][criterion.id]
-					score = round(score, 3)
+					score = score
 				temp.append(score)
 			if ques.id not in judgements:
 				judged = 0

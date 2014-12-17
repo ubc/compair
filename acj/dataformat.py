@@ -258,5 +258,5 @@ def getScores():
 		'rounds': fields.Integer,
 		'wins': fields.Integer,
 		'score': fields.Float,
-		'normalized_score': fields.Float
+		'normalized_score': fields.Integer
 	}
