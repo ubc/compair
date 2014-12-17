@@ -12,8 +12,9 @@
 					<option value="">All students</option>
 				</select>
 			</span>
+            <br />
 			<span class="filter" ng-if="canManagePosts">
-				<label>Order by scores for: &nbsp;</label>
+				<label>Show scores for: &nbsp;</label>
 				<select ng-model="gb.sortby"
 						ng-options="c.id as c.criterion.name for c in criteria" ng-change="criteriaChange()">
 				</select>
