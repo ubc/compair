@@ -232,7 +232,7 @@
 							{{answer.comments.length}}
 							<span ng-if="answer.comments.length == 1">reply</span>
 							<span ng-if="answer.comments.length > 1">replies</span>
-							to instructor's answer (x private, x public)
+							to instructor's answer
 						</h3>
 					</a>
 					
@@ -343,7 +343,8 @@
 							{{answer.comments.length}}
 							<span ng-if="answer.comments.length == 1">reply</span>
 							<span ng-if="answer.comments.length > 1">replies</span>
-							to this answer (x private, x public)
+							to this answer
+							<span ng-if="canManagePosts || answer.post.user.id == loggedInUserId">({{ answer.private_comments_count }} private, {{ answer.public_comments_count }} public)</span>
 						</h3>
 					</a>
 
@@ -370,9 +371,9 @@
 								{{instructors[comment.postsforcomments.post.user.id]}}
 							</span>
 							<strong ng-if="comment.evaluation">gave private feedback</strong>
-+							<strong ng-if="comment.selfeval">self-evaluated</strong>
-+							<strong ng-if="!comment.evaluation && !comment.selfeval">replied <span class="label label-warning">Public</span></strong>
-+							on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
+							<strong ng-if="comment.selfeval">self-evaluated</strong>
+							<strong ng-if="!comment.evaluation && !comment.selfeval">replied <span ng-if="canManagePosts || answer.post.user.id == loggedInUserId" class="label label-warning">Public</span></strong>
+							on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 							<div class="manager-actions pull-right" ng-if="canManagePosts || (comment.postsforcomments.post.user.id == loggedInUserId && !(comment.selfeval || comment.evaluation))">
 								<a href="" confirmation-needed="deleteReply(answerKey, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
 									<i class="fa fa-trash-o"></i>

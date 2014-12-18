@@ -2,24 +2,28 @@
 
 /***** OVERALL *****/
 
-@media screen {
+@media print {
     
+    /* set page margins */
     @page {
         margin: .5cm;
     }
     
+    /* use black font */
     * {
-                color: #000 !important;
+        color: #000 !important;
     }
     
+    /* for readability */
     body {
         font-family:  'Clarendon Std', 'Century Old Style Std', 'Century Schoolbook', Georgia, serif;
         line-height: 1.3;
         background: #fff;
     }
     
-    /*.navbar,*/
-    /*.breadcrumb-trail,*/
+    /* hide elements */
+    .navbar,
+    .breadcrumb-trail,
     .sub-nav,
     .manager-actions,
     .btn-success,
@@ -31,6 +35,7 @@
         display: none;
     }
     
+    /* change blue backgrounds to gray */
     .btn-primary,
     .btn-primary[disabled],
     legend {
@@ -38,44 +43,45 @@
         border: 1px solid @border-gray;
     }
     
+    /* restrain images */
     img {
         max-width: 100%;
     }
     
+    /* soften labels */
     .label {
         background: transparent !important;
         border: 1px solid @border-gray;
     }
     
+    /* more blue to gray */
     .standalone-question,
     fieldset {
         background: #fff;
         border: 2px solid @border-gray;
     }
-    
-    fieldset .instructional-text {
-        border-color: @border-gray;
-    }
-    
+        fieldset .instructional-text {
+            border-color: @border-gray;
+        }
     .question-screen .question-metadata-list,
     .question-screen .question-metadata-list > li {
         border-color: @border-gray;
     }
     
+    /* for PDF viewer buttons */
     .pdfInline a {
         background: transparent;
         border: none;
     }
-
-    .pdfInline a:after {
-        content: ' [Log in to the application to see and download this file]';
-    }
+        .pdfInline a:after {
+            content: ' [Log in to the application to see and download this file]';
+        }
     
-    
+    /* add space for writing next to answers */
     .question-screen .tab-content .each-answer > .content,
     .question-screen .tab-content .each-comment > .content {
         max-height: none;
         width: 80%;
     }
 
-}
+}//closes @media
