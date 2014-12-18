@@ -128,9 +128,9 @@
 	
 	<fieldset>
 		<legend>Criteria</legend>
-		<p class="instructional-text"><strong>Selected criteria appear when students compare answers</strong> for this question to help guide them in their comparison. For each criterion you check off below, students will need to 1) choose a preferred answer and 2) write a comparison rationale. (To create new or edit existing criteria, please go to the edit course page for this course.)</p>
+		<p class="instructional-text"><strong>Selected criteria appear when students compare answers</strong> for this question to help guide them in their comparison. For each criterion you check off below, students will need to 1) choose a preferred answer from a given pair and 2) write a comparison rationale. (To create new or edit existing criteria, please go to the edit course page for this course.)</p>
 
-		<p><strong>Your Course Criteria List:</strong></p>
+		<p class="required-star"><strong>Select one or more</strong></p>
 		<div ng-repeat="courseCriterion in courseCriteria">
 			<input type="checkbox" name="criteria{{ courseCriterion.id }}" id="criteria{{ courseCriterion.id }}"
 				   ng-model="selectedCriteria[courseCriterion.criterion.id]"
@@ -143,7 +143,7 @@
 		<legend>Comparisons</legend>
 		<div class="instructional-text">
 			<p>The <strong>recommended minimum number of comparisons per student is {{recommended_eval}}</strong>. Using this number (or higher) creates a more accurate ranking of the answers. If you set a lower number, the answers will not be ranked as accurately.</p>
-			<p>For each comparison, students will need to 1) choose a preferred answer, 2) write a comparison rationale for each criterion listed, and 3) write feedback for each answer in the comparison.</p>
+			<p>For each comparison, students will need to 1) choose a preferred answer from a given pair, 2) write a comparison rationale for each criterion listed, and 3) write separate feedback for each answer.</p>
 		</div>
 				
 		<div class="form-group">
