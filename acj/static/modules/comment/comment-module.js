@@ -249,10 +249,9 @@ module.controller(
 		var haveAnswers = false;
 		$scope.ans = {};
 
-		CourseResource.get({'id':courseId}).$promise.then(
+		CourseResource.getName({'id':courseId}).$promise.then(
 			function (ret) {
-				$scope.course = ret;
-				breadcrumbs.options = {'Course Questions': ret.name};
+				breadcrumbs.options = {'Course Questions': ret['course_name']};
 			},
 			function (ret) {
 				Toaster.reqerror("Course Not Found For ID "+ courseId, ret);

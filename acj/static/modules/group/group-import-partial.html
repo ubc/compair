@@ -10,7 +10,7 @@
 	</ul>
 	<div class="form-group">
 		<fieldset>
-			<legend>For {{ course.name }}</legend>
+			<legend>For {{ course_name }}</legend>
 			<label>User Identifier in CSV file</label>
 			<select class="form-control" ng-model="userIdentifier" id="userIdentifier"
 					ng-options="u.key as u.label for u in userIdentifiers" required></select>

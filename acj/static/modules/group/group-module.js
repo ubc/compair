@@ -38,9 +38,9 @@ module.controller(
 	{
 		$scope.course = {};
 		var courseId = $routeParams['courseId'];
-		CourseResource.get({'id': courseId}).$promise.then(
+		CourseResource.getName({'id': courseId}).$promise.then(
 			function (ret) {
-				$scope.course = ret;
+				$scope.course_name = ret['course_name'];
 			},
 			function (ret) {
 				Toaster.reqerror("No Course Found For ID "+courseId, ret);
@@ -70,16 +70,7 @@ module.controller(
 	{
 		$scope.invalids = importService.getResults().invalids;
 
-		$scope.course = {}
-		var courseId = $routeParams['courseId'];
-		CourseResource.get({'id':courseId}).$promise.then(
-			function (ret) {
-				$scope.course = ret;
-			},
-			function (ret) {
-				Toaster.reqerror("No Course Found For ID "+courseId, ret);
-			}
-		);
+		$scope.courseId = $routeParams['courseId'];
 
 		// TODO: change "Row" to something more meaningful
 		$scope.headers = ['Row', 'Message'];

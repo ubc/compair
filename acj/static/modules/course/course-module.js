@@ -30,7 +30,8 @@ module.factory('CourseResource', function($q, $routeParams, $log, $resource)
 			'getAnswered': {url: '/api/courses/:id/answers/answered'},
 			'getInstructorsLabels': {url: '/api/courses/:id/users/instructors/labels'},
 			'getInstructors': {url: '/api/courses/:id/users/instructors'},
-			'getStudents': {url: '/api/courses/:id/users/students'}
+			'getStudents': {url: '/api/courses/:id/users/students'},
+			'getName': {url: '/api/courses/:id/name'}
 		}
 	);
 	ret.MODEL = "Courses"; // add constant to identify the model

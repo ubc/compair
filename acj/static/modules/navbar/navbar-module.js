@@ -46,10 +46,10 @@ module.controller(
 			if (courseId) {
 				$scope.inCourse = true;
 				// update breadcrumb to show the course name
-				CourseResource.get({'id': courseId}).$promise.then(
+				CourseResource.getName({'id': courseId}).$promise.then(
 					function(ret)
 					{
-						breadcrumbs.options = {'Course Questions': ret.name};
+						breadcrumbs.options = {'Course Questions': ret['course_name']};
 					}
 				);
 			}
