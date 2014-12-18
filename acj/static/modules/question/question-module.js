@@ -286,14 +286,6 @@ module.controller("QuestionViewController",
 							Toaster.reqerror("Evaluation Count Not Found", ret);
 						}
 					);
-					AttachmentResource.get({'postId': ret.question.post.id}).$promise.then(
-						function (ret) {
-							$scope.question.uploadedFile = ret.file;
-						},
-						function (ret) {
-							Toaster.reqerror("Attachment Not Found", ret);
-						}
-					);
 					AnswerCommentResource.selfEval({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
 						function (ret) {
 							$scope.selfEval_req_met = true;

@@ -176,6 +176,8 @@ def getPostsForAnswers(restrict_users=True, include_comments=True):
 	if include_comments:
 		ret['comments'] = fields.List(fields.Nested(comments))
 		ret['comments_count'] = fields.Integer
+		ret['private_comments_count'] = fields.Integer
+		ret['public_comments_count'] = fields.Integer
 	return ret
 
 def getPostsForComments(retrict_users=True):
