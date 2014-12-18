@@ -2,9 +2,7 @@
 	
 	<h1>Comparisons for "{{ parent.title }}"</h1>
 	
-	<p class="intro-text">Filter by a group (if available), student evaluator's name and criterion, or select "any" for these options to see the full list of available comparisons. Note that printing this page will automatically reveal the compared answer pairs on the page.</p>
-
-	<hr />
+	<p class="intro-text">Filter by a group (if available), student evaluator's name and criterion, or select "any" for these options to see the full list of available comparisons.</p>
 	
 	<div class="form-group row">
 		<div ng-show="groups.length" class="col-sm-2">
@@ -28,12 +26,20 @@
 			</select>
 		</div>
 	</div>
+	<div class="form-group row">
+		<div class="col-sm-12">
+			<input type="checkbox" ng-click="answers(); showAnswers = !showAnswers;" id="toggleAll" />
+			<label for="toggleAll">Show compared answers for all comparisons below</label>
+			<br />
+		</div>
+	</div>
+	
+	<hr />
 
 	<h2>
 		{{ results.length }} <span ng-if="!group.name && !search.userId.name">total</span> comparisons found
-		<span ng-if="group.name"> - </span> {{ group.name }}
-		<span ng-if="search.userId.name"> - </span> {{ search.userId.name }}
-		<a onclick="window.print();" href="" class="pull-right"><i class="fa fa-print"></i></a>
+		<span ng-if="group.name && !search.userId.name"> for "{{ group.name }}"</span> 
+		<span ng-if="search.userId.name"> for "{{ search.userId.name }}"</span> 
 	</h2>
 	<h3 ng-if="search.criteriaId">Responding to "{{ search.criteriaId.criterion.name }}"</h3>
 
@@ -86,7 +92,7 @@
 						<div class="answer-choice clearfix">
 							<h4 class="text-center">Odd-Numbered Answer
 								<span ng-show="comment.winner == comment.answer1.id">(Chosen)</span>
-								<span class="label label-warning pull-right">Rank: {{ ans[comment.answer1.id].scores[comment.criteriaandpostsforquestions_id] }}%</span>
+								<span class="label label-warning pull-right">Score: {{ ans[comment.answer1.id].scores[comment.criteriaandpostsforquestions_id] }}%</span>
 							</h4>
 							<div mathjax="ans[comment.answer1.id].content"
 								 ng-bind-html="ans[comment.answer1.id].content"></div>
@@ -98,7 +104,7 @@
 					<div class="answer-choice clearfix">
 							<h4 class="text-center">Even-Numbered Answer
 								<span ng-show="comment.winner == comment.answer2.id">(Chosen)</span>
-								<span class="label label-warning pull-right">Rank: {{ ans[comment.answer2.id].scores[comment.criteriaandpostsforquestions_id] }}%</span>
+								<span class="label label-warning pull-right">Score: {{ ans[comment.answer2.id].scores[comment.criteriaandpostsforquestions_id] }}%</span>
 							</h4>
 							<div mathjax="ans[comment.answer2.id].content"
 								 ng-bind-html="ans[comment.answer2.id].content"></div>

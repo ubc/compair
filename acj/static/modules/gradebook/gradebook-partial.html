@@ -14,13 +14,17 @@
 			</span>
 			<br />
 			<span class="filter" ng-if="canManagePosts">
-				<label>Show scores for: &nbsp;</label>
+				<label>Display scores below for: &nbsp;</label>
 				<select ng-model="gb.sortby"
 						ng-options="c.id as c.criterion.name for c in criteria" ng-change="criteriaChange()">
 				</select>
 			</span>
 		</div>
-		<h2>Participation</h2>
+		<h2>
+			Participation
+			<span ng-show="gb.group && !gb.student">for "{{gb.group.name}}"</span>
+			<span ng-show="gb.student">for "{{ gb.student.user.name }}"</span>
+		</h2>
 		<p class="intro-text" ng-if="canManagePosts">To export data reports for participation and other application statistics for use in spreadsheets, go to <a ng-href="#/report">Download Reports</a>.</p>
 	</div>
 	<table class="table table-striped table-bordered">
