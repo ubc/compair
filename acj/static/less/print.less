@@ -6,7 +6,7 @@
     
     /* set page margins */
     @page {
-        margin: .5cm;
+        margin: .5in .5in .8in .5in;
     }
     
     /* use black font */
@@ -26,12 +26,14 @@
     .breadcrumb-trail,
     .sub-nav,
     .manager-actions,
+    .nav-tabs,
     .btn-success,
     .btn-reply,
     .btn-default,
     #comments-tab .btn-primary,
     .read-more,
-    .below-button-text {
+    .below-button-text,
+    .each-header img {
         display: none;
     }
     
@@ -46,6 +48,13 @@
     /* restrain images */
     img {
         max-width: 100%;
+    }
+    
+    /* metadata headers for answers and comparisons */
+    .each-header {
+        padding: .5em;
+        font-weight: bold;
+        border: 1px solid #000;
     }
     
     /* soften labels */
@@ -79,7 +88,8 @@
     
     /* add space for writing next to answers */
     .question-screen .tab-content .each-answer > .content,
-    .question-screen .tab-content .each-comment > .content {
+    .question-screen .tab-content .each-comment > .content,
+    .evaluations-screen .each-evaluation .content {
         max-height: none;
         width: 80%;
     }

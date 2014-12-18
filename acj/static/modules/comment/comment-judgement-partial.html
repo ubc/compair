@@ -52,11 +52,13 @@
 			</h4>
 
 			<!-- Comparison Header -->
-			<a ng-href="#/user/{{ comment.user_id }}">
-				<img src="//www.gravatar.com/avatar/{{ comment.avatar }}?s=32&d=retro" />
-			</a>
-			<a ng-href="#/user/{{ comment.user_id }}">{{ comment.name }}</a>
-			<strong>submitted</strong> on {{ comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
+			<div class="each-header">
+				<a ng-href="#/user/{{ comment.user_id }}">
+					<img src="//www.gravatar.com/avatar/{{ comment.avatar }}?s=32&d=retro" />
+				</a>
+				<a ng-href="#/user/{{ comment.user_id }}">{{ comment.name }}</a>
+				<strong>submitted</strong> on {{ comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
+			</div>
 
 			<!-- TODO: criteria -->
 
