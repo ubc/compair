@@ -94,7 +94,7 @@
 						<div class="answer-choice clearfix">
 							<h4 class="text-center">Odd-Numbered Answer
 								<span ng-show="comment.winner == comment.answer1.id">(Chosen)</span>
-								<span class="label label-warning pull-right">Score: {{ ans[comment.answer1.id].scores[comment.criteriaandpostsforquestions_id] }}%</span>
+								<span class="label label-warning pull-right score-display">Score: {{ ans[comment.answer1.id].scores[comment.criteriaandpostsforquestions_id] }}%</span>
 							</h4>
 							<div mathjax="ans[comment.answer1.id].content"
 								 ng-bind-html="ans[comment.answer1.id].content"></div>
@@ -106,7 +106,7 @@
 					<div class="answer-choice clearfix">
 							<h4 class="text-center">Even-Numbered Answer
 								<span ng-show="comment.winner == comment.answer2.id">(Chosen)</span>
-								<span class="label label-warning pull-right">Score: {{ ans[comment.answer2.id].scores[comment.criteriaandpostsforquestions_id] }}%</span>
+								<span class="label label-warning pull-right score-display">Score: {{ ans[comment.answer2.id].scores[comment.criteriaandpostsforquestions_id] }}%</span>
 							</h4>
 							<div mathjax="ans[comment.answer2.id].content"
 								 ng-bind-html="ans[comment.answer2.id].content"></div>

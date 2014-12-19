@@ -334,7 +334,7 @@
 					<!-- <p ng-show="!showReadMore">No More To Read!!! ({{thisHeight}})</p> -->
 
 					<!-- Student Score (not used for instructor answers) -->
-					<p class="pull-right" ng-show="canManagePosts && key==grade.sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores" class="score-display">
+					<p class="pull-right score-display" ng-show="canManagePosts && key==grade.sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores">
 						<em>Score: {{score.normalized_score}}%</em>
 						<a tool-tip href="" data-placement="left" data-toggle="tooltip" class="score-tooltip" title="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the question receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer.">
 							<i class="fa fa-question-circle"></i>
@@ -382,7 +382,7 @@
 								</span>
 								<strong ng-if="comment.evaluation">gave private feedback</strong>
 								<strong ng-if="comment.selfeval">self-evaluated</strong>
-								<strong ng-if="!comment.evaluation && !comment.selfeval">replied <span ng-if="canManagePosts || answer.post.user.id == loggedInUserId" class="label label-warning">Public</span></strong>
+								<strong ng-if="!comment.evaluation && !comment.selfeval">replied <span ng-if="canManagePosts || answer.post.user.id == loggedInUserId" class="label label-info">Public</span></strong>
 								on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 								<div class="manager-actions pull-right" ng-if="canManagePosts || (comment.postsforcomments.post.user.id == loggedInUserId && !(comment.selfeval || comment.evaluation))">
 									<a href="" confirmation-needed="deleteReply(answerKey, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
