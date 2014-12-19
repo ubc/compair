@@ -65,6 +65,25 @@ module.directive(
 	}
 );
 
+module.directive(
+	'toolTip',
+	function() {
+		return {
+		    restrict: 'A',
+			link: function(scope, element, attrs) {
+				$(element).hover(function(){
+					// on mouseenter
+					$(element).tooltip('show');
+				}, function(){
+					// on mouseleave
+					$(element).tooltip('hide');
+				});
+			}
+		};
+	}
+);
+
+
 /***** Providers *****/
 module.factory(
 	"QuestionResource",
@@ -412,7 +431,7 @@ module.controller("QuestionViewController",
 			$(thisClass).css({'max-height' : 'none'}); // now remove height restriction for this answer
 			this.showReadMore = false;                 // and hide the read more button for this answer
 		}
-
+		
 		$scope.criteriaChange = function() {
 			if ($scope.grade.sortby == null) {
 				$scope.order = 'answer.post.created';

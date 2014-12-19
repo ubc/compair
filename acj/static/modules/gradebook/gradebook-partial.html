@@ -25,7 +25,7 @@
 			<span ng-show="gb.group && !gb.student">for "{{gb.group.name}}"</span>
 			<span ng-show="gb.student">for "{{ gb.student.user.name }}"</span>
 		</h2>
-		<p class="intro-text" ng-if="canManagePosts">To export data reports for participation and other application statistics for use in spreadsheets, go to <a ng-href="#/report">Download Reports</a>.</p>
+		<p class="intro-text" ng-if="canManagePosts">To export data reports for participation and other application statistics, go to <a ng-href="#/report">Download Reports</a>.</p>
 	</div>
 	<table class="table table-striped table-bordered">
 		<thead>
@@ -51,6 +51,9 @@
 				</th>
 				<th class="text-center"><a href="" ng-click="reverse = !reverse; sortScore()">
 					Score</a>
+					<a tool-tip href="" data-placement="left" data-toggle="tooltip" class="score-tooltip" title="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the question receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer.">
+						<i class="fa fa-question-circle"></i>
+					</a>
 				</th>
 				<th class="text-center" ng-show="includeSelfEval"><a href="" ng-click="reverse = predicate == 'num_selfeval' && !reverse; predicate='num_selfeval'">
 					Self-Evaluation</a>
