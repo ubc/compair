@@ -484,6 +484,7 @@ class PostsForAnswers(db.Model):
 		db.Integer,
 		db.ForeignKey('Users.id', ondelete="CASCADE"))
 	flagger = db.relationship("Users")
+	round = db.Column(db.Integer, default=0, nullable=False)
 
 	@hybrid_property
 	def courses_id(self):
