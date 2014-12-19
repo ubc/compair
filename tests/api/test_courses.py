@@ -161,3 +161,26 @@ class CoursesAPITests(ACJTestCase):
 		self.assertEqual(expected['name'], rv.json['name'])
 		self.assertEqual(expected['description'], rv.json['description'])
 		self.logout()
+
+	def test_course_name(self):
+		url = '/api/courses/' + str(self.data.get_course().id) + '/name'
+
+		# test login required
+		rv = self.client.get(url)
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_instructor().username)
+		rv = self.client.get(url)
+		self.assert403(rv)
+
+		self.login(self.data.get_authorized_instructor().username)
+		# test invalid course id
+		invalid_url = '/api/courses/999/name'
+		rv = self.client.get(invalid_url)
+		self.assert404(rv)
+
+		# test successful query
+		rv = self.client.get(url)
+		self.assert200(rv)
+		self.assertEqual(self.data.get_course().name, rv.json['course_name'])

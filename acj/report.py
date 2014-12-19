@@ -86,6 +86,9 @@ class ReportRootAPI(Resource):
 				for c in criteria:
 					title_row2.append('Percentage Score for "' + c.criterion.name + '"')
 				title_row2.append("Evaluations Submitted ("+str(q.num_judgement_req)+' required)')
+				if q.selfevaltype_id:
+					title_row1 += [""]
+					title_row2.append("Self Evaluation Submitted")
 			titles = [title_row1, title_row2]
 
 		else:
@@ -193,39 +196,87 @@ def participation_report(course_id, questions, group_id):
 			.filter(GroupsAndUsers.users_id.in_(userIds)).all()
 
 	quesIds = [q.id for q in questions]
+	userIds = [u.user.id for u in classlist]
+
+	# ANSWERS - scores
+	answers = PostsForAnswers.query.filter(PostsForAnswers.postsforquestions_id.in_(quesIds)) \
+		.join(Posts).filter(Posts.users_id.in_(userIds)).all()
+
+	scores = {}		# structure - userId/quesId/criteriaandpostsforquestions_id/normalized_score
+	for ans in answers:
+		if ans.users_id not in scores:
+			scores[ans.users_id] = {}
+		if ans.postsforquestions_id not in scores[ans.users_id]:
+			scores[ans.users_id][ans.postsforquestions_id] = {}
+		for s in ans._scores:
+			scores[ans.users_id][ans.postsforquestions_id][s.criteriaandpostsforquestions_id] = s.normalized_score
+
+	# COMPARISONS
+	comparisons = Judgements.query.filter(Judgements.users_id.in_(userIds)) \
+		.join(AnswerPairings).filter(AnswerPairings.postsforquestions_id.in_(quesIds)) \
+		.with_entities(AnswerPairings.postsforquestions_id, Judgements.users_id,
+					   func.count(Judgements.id)) \
+		.group_by(AnswerPairings.postsforquestions_id, Judgements.users_id).all()
+
+	judgements = {}		# structure - userId/quesId/count
+	for (quesId, userId, count) in comparisons:
+		if userId not in judgements:
+			judgements[userId] = {}
+		if quesId not in judgements[userId]:
+			judgements[userId][quesId] = 0
+		judgements[userId][quesId] = count
+
+	# CRITERIA
+	criteriaandpostsforquestions = CriteriaAndPostsForQuestions.query \
+		.filter(CriteriaAndPostsForQuestions.postsforquestions_id.in_(quesIds)) \
+		.filter_by(active=True).all()
+
+	criteria = {}	# structure - quesId/criterionId
+	for criterion in criteriaandpostsforquestions:
+		if criterion.postsforquestions_id not in criteria:
+			criteria[criterion.postsforquestions_id] = []
+		criteria[criterion.postsforquestions_id].append(criterion.id)
+
+	# SELF-EVALUATION - assuming no comparions
+	selfeval = PostsForAnswersAndPostsForComments.query.filter_by(selfeval=True) \
+		.join(PostsForAnswers).filter(PostsForAnswers.postsforquestions_id.in_(quesIds)) \
+		.join(PostsForComments, Posts).filter(Posts.users_id.in_(userIds)) \
+		.with_entities(PostsForAnswers.postsforquestions_id, Posts.users_id,
+					   func.count(PostsForAnswersAndPostsForComments.id)) \
+		.group_by(PostsForAnswers.postsforquestions_id, Posts.users_id).all()
+
+	comments = {}	# structure - userId/quesId/count
+	for (quesId, userId, count) in selfeval:
+		if userId not in comments:
+			comments[userId] = {}
+		if quesId not in comments[userId]:
+			comments[userId][quesId] = 0
+		comments[userId][quesId] = count
 
 	for coursesanduser in classlist:
 		user = coursesanduser.user
 		temp = [user.lastname, user.firstname, user.student_no]
 
-		answers = PostsForAnswers.query.filter(PostsForAnswers.postsforquestions_id.in_(quesIds))\
-			.join(Posts).filter_by(users_id=user.id).all()
-		answers = {a.postsforquestions_id:{s.criteriaandpostsforquestions_id: s.normalized_score for s in a.scores} for a in answers}
-
-		judgements = Judgements.query.\
-			filter_by(users_id=user.id).join(AnswerPairings).\
-			with_entities(AnswerPairings.postsforquestions_id, func.count(Judgements.id)).\
-			filter(AnswerPairings.postsforquestions_id.in_(quesIds)).\
-			group_by(AnswerPairings.postsforquestions_id).all()
-		judgements = {qId: count for (qId, count) in judgements}
-
 		for ques in questions:
-			criteriaandquestion = CriteriaAndPostsForQuestions.query.\
-				filter_by(postsforquestions_id=ques.id, active=True).all()
-			for criterion in criteriaandquestion:
-				if ques.id not in answers:
+			for criterion in criteria[ques.id]:
+				if user.id not in scores or ques.id not in scores[user.id]:
 					score = 'No Answer'
-				elif criterion.id not in answers[ques.id]:
+				elif criterion not in scores[user.id][ques.id]:
 					score = 'Not Evaluated'
 				else:
-					score = answers[ques.id][criterion.id]
-					score = score
+					score = scores[user.id][ques.id][criterion]
 				temp.append(score)
-			if ques.id not in judgements:
+			if user.id not in judgements or ques.id not in judgements[user.id]:
 				judged = 0
 			else:
-				judged = judgements[ques.id] / len(criteriaandquestion)
+				judged = judgements[user.id][ques.id] / len(criteria[ques.id])
 			temp.append(str(judged))
+			# self-evaluation
+			if ques.selfevaltype_id:
+				if user.id not in comments or ques.id not in comments[user.id]:
+					temp.append(0)
+				else:
+					temp.append(comments[user.id][ques.id])
 		report.append(temp)
 
 	return report

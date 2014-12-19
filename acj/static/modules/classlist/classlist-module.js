@@ -44,9 +44,10 @@ module.controller(
 		$scope.course = {};
 		$scope.classlist = {};
 		var courseId = $routeParams['courseId'];
-		CourseResource.get({'id':courseId}).$promise.then(
+		$scope.courseId = courseId;
+		CourseResource.getName({'id':courseId}).$promise.then(
 			function (ret) {
-				$scope.course = ret;
+				$scope.course_name = ret['course_name'];
 			},
 			function (ret) {
 				Toaster.reqerror("No Course Found For ID "+courseId, ret);
@@ -120,9 +121,9 @@ module.controller(
 	{
 		$scope.course = {};
 		var courseId = $routeParams['courseId'];
-		CourseResource.get({'id':courseId}).$promise.then(
+		CourseResource.getName({'id':courseId}).$promise.then(
 			function (ret) {
-				$scope.course = ret;
+				$scope.course_name = ret['course_name'];
 			},
 			function (ret) {
 				Toaster.reqerror("No Course Found For ID "+courseId, ret);
@@ -141,16 +142,7 @@ module.controller(
 		$scope.results = importService.getResults();
 
 		$scope.course = {};
-		var courseId = $routeParams['courseId'];
-		CourseResource.get({'id':courseId}).$promise.then(
-			function (ret) {
-				$scope.course = ret;
-			},
-			function (ret) {
-				Toaster.reqerror("No Course Found For ID "+courseId, ret);
-			}
-		);
-
+		$scope.courseId = $routeParams['courseId'];
 		$scope.headers = ['Username', 'Student Number', 'First Name', 'Last Name', 'Email', 'Message'];
 	}
 );

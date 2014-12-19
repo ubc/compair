@@ -137,15 +137,16 @@ module.controller(
 
 module.controller(
 	"AnswerCommentCreateController",
-	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, QuestionResource, Authorize, required_rounds, Toaster)
+	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource,
+			  QuestionResource, Authorize, Toaster)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId']
 		var questionId = $scope.questionId = $routeParams['questionId'];
 		var answerId = $routeParams['answerId'];
-
 		$scope.canManagePosts = 
-			Authorize.can(Authorize.MANAGE, QuestionResource.MODEL)
+			Authorize.can(Authorize.MANAGE, QuestionResource.MODEL);
 		$scope.comment = {};
+
 		AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId}).$promise.then(
 			function (ret) {
 				$scope.parent = ret;
@@ -155,21 +156,18 @@ module.controller(
 				Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
 			}
 		);
+
+		// only need to do this query if the user cannot manage users
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
-			function (ret)
-			{
-				var min_pairs = ret.question.answers_count/2;
-				var required = ret.students > 0 ? Math.ceil(min_pairs * required_rounds / ret.students): 0;
-				if (!$scope.canManagePosts && ret.judged < required) {
-					Toaster.error("The required number of judgements have to be made before any comments can be made.");
+			function (ret) {
+				if (!$scope.canManagePosts && !ret.question.can_reply) {
+					Toaster.error("No replies can be made for answers in this question.");
 					$location.path('/course/' + courseId + '/question/' + questionId);
 				}
 			},
-			function (ret)
-			{
-				Toaster.reqerror("Unable to retrieve judgement records.", ret);
-			}
-		);
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve the question.", ret);
+			});
 		$scope.commentSubmit = function () {
 			$scope.submitted = true;
 			AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': answerId},
@@ -249,10 +247,9 @@ module.controller(
 		var haveAnswers = false;
 		$scope.ans = {};
 
-		CourseResource.get({'id':courseId}).$promise.then(
+		CourseResource.getName({'id':courseId}).$promise.then(
 			function (ret) {
-				$scope.course = ret;
-				breadcrumbs.options = {'Course Questions': ret.name};
+				breadcrumbs.options = {'Course Questions': ret['course_name']};
 			},
 			function (ret) {
 				Toaster.reqerror("Course Not Found For ID "+ courseId, ret);
