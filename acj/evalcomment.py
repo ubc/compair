@@ -122,6 +122,7 @@ class EvalCommentViewAPI(Resource):
 			temp_comment['name'] = fullname if fullname else comment.postsforcomments.post.user.displayname
 			temp_comment['avatar'] = comment.postsforcomments.post.user.avatar
 			temp_comment['criteriaandpostsforquestions_id'] = comment.judgement.criteriaandpostsforquestions_id
+			temp_comment['answerpairings_id'] = comment.judgement.answerpairings_id
 			temp_comment['content'] = comment.postsforcomments.post.content
 			temp_comment['selfeval'] = False
 			temp_comment['created'] = str(comment.postsforcomments.post.created)
@@ -139,12 +140,17 @@ class EvalCommentViewAPI(Resource):
 				'user_id': s.users_id,
 				'name': name,
 				'avatar': s.postsforcomments.post.user.avatar,
+				'answerpairings_id': 0,
 				'content': s.content,
 				'selfeval': True,
 				'created': str(s.postsforcomments.post.created)
 			}
 			results.append(comment)
 
+		# sort by answerpairings_id in descending order first
+		# group by answerpairing and keep the selfevaluation as the last comment
+		results.sort(key = itemgetter('answerpairings_id'), reverse=True)
+		# then sort by name and user_id to group the comments by author
 		results.sort(key = itemgetter('name', 'user_id'))
 
 		on_evalcomment_view.send(
