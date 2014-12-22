@@ -185,6 +185,7 @@ class JudgementPairAPI(Resource):
         return {"error":"Answer pair generation failed for an unknown reason."}, 500
 api.add_resource(JudgementPairAPI, '/pair')
 
+# /users/:userId/count
 class UserJudgementCount(Resource):
     @login_required
     def get(self, course_id, question_id, user_id):
@@ -192,7 +193,7 @@ class UserJudgementCount(Resource):
         require(READ, course)
         question = PostsForQuestions.query.get_or_404(question_id)
         require(READ, question)
-        count = judgement_count(question_id, user_id)
+        count = judgement_count(question, user_id)
 
         on_judgement_question_count.send(
             current_app._get_current_object(),
@@ -203,7 +204,7 @@ class UserJudgementCount(Resource):
         )
 
         return {"count":count}
-api.add_resource(UserJudgementCount, '/count/users/<int:user_id>')
+api.add_resource(UserJudgementCount, '/users/<int:user_id>/count')
 
 # /count
 class UserAllJudgementCount(Resource):
@@ -214,7 +215,7 @@ class UserAllJudgementCount(Resource):
         questions = PostsForQuestions.query.join(Posts).filter_by(courses_id=course.id).all()
         judgements = {}
         for ques in questions:
-            judgements[ques.id] = judgement_count(ques.id, current_user.id)
+            judgements[ques.id] = judgement_count(ques, current_user.id)
 
         on_judgement_course_count.send(
             current_app._get_current_object(),
@@ -227,13 +228,74 @@ class UserAllJudgementCount(Resource):
         return {'judgements': judgements}
 apiAll.add_resource(UserAllJudgementCount, '/count')
 
-def judgement_count(question_id, user_id):
-    judgement_count = Judgements.query.filter_by(users_id=user_id).join(AnswerPairings) \
-        .filter_by(postsforquestions_id=question_id).count()
-    criteria_count = CriteriaAndPostsForQuestions.query \
-        .filter_by(postsforquestions_id=question_id, active=True).count()
+# /availpair
+# returns True if there are enough eligible answers to generate at least one pair to evaluate
+# for each question in the course
+class AvailPairAll(Resource):
+    @login_required
+    def get(self, course_id):
+        course = Courses.query.get_or_404(course_id)
+        require(READ, course)
+        questions = PostsForQuestions.query.join(Posts).filter_by(courses_id=course.id).all()
 
-    return judgement_count / criteria_count
+        # ineligible authors - eg. instructors, TAs, dropped student, current user
+        student = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first_or_404()
+        ineligible_users = CoursesAndUsers.query.filter(CoursesAndUsers.usertypesforcourse_id!=student.id)\
+            .values(CoursesAndUsers.users_id)
+        ineligible_userIds_base = [u[0] for u in ineligible_users]
+        ineligible_userIds_base.append(current_user.id)
+
+        availPairs = {}
+        for ques in questions:
+            # ineligible authors (potentially) - eg. authors for answers that the user has seen
+            judged = Judgements.query.filter_by(users_id=current_user.id).join(AnswerPairings)\
+                .filter_by(postsforquestions_id=ques.id).all()
+            judged_authors1 = [j.answerpairing.answer1.post.users_id for j in judged]
+            judged_authors2 = [j.answerpairing.answer2.post.users_id for j in judged]
+            ineligible_userIds = ineligible_userIds_base + judged_authors1 + judged_authors2
+
+            eligible_answers = PostsForAnswers.query.filter_by(postsforquestions_id=ques.id)\
+                .join(Posts).filter(Posts.users_id.notin_(ineligible_userIds)).count()
+            availPairs[ques.id] = eligible_answers / 2 >= 1 # min 1 pair required
+
+        return {'availPairsLogic': availPairs}
+apiAll.add_resource(AvailPairAll, '/availpair')
+
+# /users/:userId/availpair
+# returns True if there are enough eligible answers to generate at least one pair to evaluate
+class AvailPair(Resource):
+    @login_required
+    def get(self, course_id, question_id, user_id):
+        course = Courses.query.get_or_404(course_id)
+        require(READ, course)
+
+        question = PostsForQuestions.query.get_or_404(question_id)
+        # ineligible authors - eg. instructors, TAs, dropped student, current user
+        student = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first_or_404()
+        ineligible_users = CoursesAndUsers.query.filter(CoursesAndUsers.usertypesforcourse_id!=student.id)\
+            .values(CoursesAndUsers.users_id)
+        ineligible_userIds_base = [u[0] for u in ineligible_users]
+        ineligible_userIds_base.append(user_id)
+
+        # ineligible authors (potentially) - eg. authors for answers that the user has seen
+        judged = Judgements.query.filter_by(users_id=current_user.id).join(AnswerPairings)\
+            .filter_by(postsforquestions_id=question.id).all()
+        judged_authors1 = [j.answerpairing.answer1.post.users_id for j in judged]
+        judged_authors2 = [j.answerpairing.answer2.post.users_id for j in judged]
+        ineligible_userIds = ineligible_userIds_base + judged_authors1 + judged_authors2
+
+        eligible_answers = PostsForAnswers.query.filter_by(postsforquestions_id=question.id)\
+            .join(Posts).filter(Posts.users_id.notin_(ineligible_userIds)).count()
+        availPairs = eligible_answers / 2 >= 1 # min 1 pair required
+
+        return {'availPairsLogic': availPairs}
+api.add_resource(AvailPair, '/users/<int:user_id>/availpair')
+
+def judgement_count(question, user_id):
+    judgement_count = Judgements.query.filter_by(users_id=user_id).join(AnswerPairings) \
+        .filter_by(postsforquestions_id=question.id).count()
+
+    return judgement_count / len(question.criteria)
 
 class InsufficientAnswersException(Exception):
     pass

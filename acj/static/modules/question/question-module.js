@@ -69,7 +69,7 @@ module.directive(
 	'toolTip',
 	function() {
 		return {
-		    restrict: 'A',
+			restrict: 'A',
 			link: function(scope, element, attrs) {
 				$(element).hover(function(){
 					// on mouseenter
@@ -233,6 +233,16 @@ module.controller("QuestionViewController",
 		$scope.grade = {'sortby': '0', 'group': 0, 'author': 0};
 		Session.getUser().then(function(user) {
 			$scope.loggedInUserId = user.id;
+			JudgementResource.getAvailPairLogic({'courseId': $scope.courseId, 'questionId': questionId,
+												'userId': $scope.loggedInUserId}).$promise.then(
+				function (ret) {
+					$scope.availPairsLogic = ret.availPairsLogic;
+					console.log($scope.availPairsLogic);
+				},
+				function (ret) {
+					Toaster.reqerror('Unable to retrieve the answer pairs availability.', ret);
+				}
+			);
 		});
 		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(result) {
 			$scope.canManagePosts = result;

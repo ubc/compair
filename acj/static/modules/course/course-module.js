@@ -27,6 +27,7 @@ module.factory('CourseResource', function($q, $routeParams, $log, $resource)
 			// invalidation, I don't want to deal with that manually
 			'getQuestions': {url: '/api/courses/:id/questions'},
 			'getJudgementCount': {url: '/api/courses/:id/judgements/count'},
+			'getAvailPairLogic': {url: '/api/courses/:id/judgements/availpair'},
 			'getAnswered': {url: '/api/courses/:id/answers/answered'},
 			'getInstructorsLabels': {url: '/api/courses/:id/users/instructors/labels'},
 			'getInstructors': {url: '/api/courses/:id/users/instructors'},
@@ -192,6 +193,17 @@ module.controller(
 				Toaster.reqerror("Course Not Found For ID "+ courseId, ret);
 			}
 		);
+
+		CourseResource.getAvailPairLogic({'id': courseId}).$promise.then(
+			function (ret) {
+				$scope.availPairsLogic = ret.availPairsLogic;
+				console.log($scope.availPairsLogic);
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve the answer pairs availablilty.", ret);
+			}
+		);
+
 		// get course questions
 		CourseResource.getQuestions({'id': courseId}).$promise.then(
 			function (ret)

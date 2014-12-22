@@ -27,7 +27,8 @@ module.factory('JudgementResource',
 			{},
 			{
 				'getAnswerPair': {url: resourceUrl + '/pair'},
-				'count': {url: resourceUrl + '/count/users/:userId'}
+				'count': {url: resourceUrl + '/users/:userId/count'},
+				'getAvailPairLogic': {url: resourceUrl + '/users/:userId/availpair'}
 			}
 		);
 		return ret;
