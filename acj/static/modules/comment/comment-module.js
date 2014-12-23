@@ -280,7 +280,10 @@ module.controller(
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
 			function(ret) {
 				$scope.parent = ret.question;
-				$scope.criteria = ret.question.criteria;
+				$scope.criteria = {};
+				angular.forEach(ret.question.criteria, function(criterion, key){
+					$scope.criteria[criterion['id']] = criterion['criterion']['name'];
+				});
 				$scope.search.criteriaId = $scope.criteria[0];
 			},
 			function (ret) {
@@ -328,16 +331,16 @@ module.controller(
 				var criteria = false;
 				var user = false;
 
-				if ((user_id == null && comment.user_id in userIds) || comment.user_id == user_id) {
+				if ((user_id == null && comment[0].user_id in userIds) || comment[0].user_id == user_id) {
 					user = true;
 				}
 
 				// self-evaluation - no effect from criteria filter
-				if (comment.selfeval) {
+				if (comment[0].selfeval) {
 					criteria = true;
 				}
 				// regular evaluation
-				else if (criteria_id == null || comment.criteriaandpostsforquestions_id == criteria_id) {
+				else if (criteria_id == null || comment[0].criteriaandpostsforquestions_id == criteria_id) {
 					criteria = true;
 				}
 

@@ -2,7 +2,7 @@
 	
 	<h1>Comparisons for "{{ parent.title }}"</h1>
 	
-	<p class="intro-text">Filter by a group (if available), student evaluator's name and criterion, or select "any" for these options to see the full list of available comparisons.</p>
+	<p class="intro-text">Filter by a group (if available) and student evaluator's name, or select "any" for these options to see the full list of available comparisons.</p>
 	
 	<div class="form-group row">
 		<div ng-show="groups.length" class="col-sm-2">
@@ -20,17 +20,8 @@
 			<br />
 		</div>
 		<div class="col-sm-6">
-			<label>Criterion</label>
-			<select class="form-control nullable" ng-model="search.criteriaId" ng-options="c as c.criterion.name for (k, c) in criteria">
-				<option value="">Any Criteria</option>
-			</select>
-		</div>
-	</div>
-	<div class="form-group row">
-		<div class="col-sm-12">
-			<input type="checkbox" ng-click="answers(); showAnswers = !showAnswers;" id="toggleAll" />
+			<input class="show-all" type="checkbox" ng-click="answers(); showAnswers = !showAnswers;" id="toggleAll" />
 			<label for="toggleAll">Show compared answers for all comparisons below</label>
-			<br />
 		</div>
 	</div>
 	
@@ -41,92 +32,96 @@
 		<span ng-if="group.name && !search.userId.name"> for "{{ group.name }}"</span> 
 		<span ng-if="search.userId.name"> for "{{ search.userId.name }}"</span> 
 	</h2>
-	<h3 ng-if="search.criteriaId">Responding to "{{ search.criteriaId.criterion.name }}"</h3>
 
 	<div ng-show="results.length" class="evaluations">
 
-		<div class="each-evaluation" ng-repeat="comment in comparisons | filter:commentFilter(search.userId.id, search.criteriaId.id) as results">
+		<div class="each-evaluation" ng-repeat="comment in comparisons | filter:commentFilter(search.userId.id) as results">
 
-			<h4 class="text-center evaluator-heading" ng-if="results[$index].user_id != results[$index-1].user_id">
-				{{ comment.name }} <i class="fa fa-arrow-down"></i>
+			<h4 class="text-center evaluator-heading" ng-if="results[$index][0].user_id != results[$index-1][0].user_id">
+				{{ comment[0].name }} <i class="fa fa-arrow-down"></i>
 			</h4>
 
 			<!-- Comparison Header -->
 			<div class="each-header">
-				<a ng-href="#/user/{{ comment.user_id }}">
-					<img src="//www.gravatar.com/avatar/{{ comment.avatar }}?s=32&d=retro" />
+				<a ng-href="#/user/{{ comment[0].user_id }}">
+					<img src="//www.gravatar.com/avatar/{{ comment[0].avatar }}?s=32&d=retro" />
 				</a>
-				<a ng-href="#/user/{{ comment.user_id }}">{{ comment.name }}</a>
-				<strong>submitted</strong> on {{ comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
+				<a ng-href="#/user/{{ comment[0].user_id }}">{{ comment[0].name }}</a>
+				<strong>submitted</strong> on {{ comment[0].created | amDateFormat: 'MMM D @ h:mm a'}}:
 			</div>
 
-			<!-- TODO: criteria -->
 
-			<div ng-if="!comment.selfeval">
-				<h5 class="content">Comparison</h5>
+			<div ng-if="!comment[0].selfeval">
 
-				<div class="content" mathjax="comment.content"
-				     ng-bind-html="comment.content">
+				<div ng-repeat="criterion in comment">
+
+					<h5 class="content">Comparison for "{{criteria[criterion.criteriaandpostsforquestions_id]}}"</h5>
+	
+					<div class="content" mathjax="criterion.content"
+					     ng-bind-html="criterion.content">
+					</div>
+					
+					<!-- Answers -->
+					<p class="show-answers"><a href="" ng-click="showAnswers = !showAnswers; answers();">
+						<i ng-show="showAnswers" class="fa fa-chevron-down"></i>
+						<i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
+						Show compared answers
+					</a></p>
+	
+					<div class="row" ng-show="showAnswers">
+						<div class="col-md-6">
+							<div class="answer-choice clearfix">
+								<h4 class="text-center">Odd-Numbered Answer
+									<span ng-show="criterion.winner == criterion.answer1.id">(Chosen)</span>
+									<span class="label label-warning pull-right score-display">Score: {{ ans[criterion.answer1.id].scores[criterion.criteriaandpostsforquestions_id] }}%</span>
+								</h4>
+								<div mathjax="ans[criterion.answer1.id].content"
+									 ng-bind-html="ans[criterion.answer1.id].content"></div>
+								<!-- Attachments -->
+								<acj-pdf-inline label="See details:" pdfs="ans[criterion.answer1.id].file"></acj-pdf-inline>
+							</div>
+						</div>
+						<div class="col-md-6">
+						<div class="answer-choice clearfix">
+								<h4 class="text-center">Even-Numbered Answer
+									<span ng-show="criterion.winner == criterion.answer2.id">(Chosen)</span>
+									<span class="label label-warning pull-right score-display">Score: {{ ans[criterion.answer2.id].scores[criterion.criteriaandpostsforquestions_id] }}%</span>
+								</h4>
+								<div mathjax="ans[criterion.answer2.id].content"
+									 ng-bind-html="ans[criterion.answer2.id].content"></div>
+								<!-- Attachments -->
+								<acj-pdf-inline label="See details:" pdfs="ans[criterion.answer2.id].file"></acj-pdf-inline>
+							</div>
+						</div>
+					</div>
+				
 				</div>
 
 				<h5 class="content">Feedback for Odd-Numbered Answer</h5>
 
 				<!-- feedback for odd-numbered answer -->
-				<div class="content" mathjax="comment.answer1.feedback"
-					 ng-bind-html="comment.answer1.feedback">
+				<div class="content" mathjax="comment[0].answer1.feedback"
+					 ng-bind-html="comment[0].answer1.feedback">
 				</div>
 				
 				<h5 class="content">Feedback for Even-Numbered Answer</h5>
 				
 				<!-- feedback for even-numbered answer -->
-				<div class="content" mathjax="comment.answer2.feedback"
-					 ng-bind-html="comment.answer2.feedback"></div>
+				<div class="content" mathjax="comment[0].answer2.feedback"
+					 ng-bind-html="comment[0].answer2.feedback"></div>
 
-				<!-- Answers -->
-				<p class="show-answers"><a href="" ng-click="showAnswers = !showAnswers; answers();">
-					<i ng-show="showAnswers" class="fa fa-chevron-down"></i>
-					<i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
-					Show compared answers
-				</a></p>
-
-				<div class="row" ng-show="showAnswers">
-					<div class="col-md-6">
-						<div class="answer-choice clearfix">
-							<h4 class="text-center">Odd-Numbered Answer
-								<span ng-show="comment.winner == comment.answer1.id">(Chosen)</span>
-								<span class="label label-warning pull-right score-display">Score: {{ ans[comment.answer1.id].scores[comment.criteriaandpostsforquestions_id] }}%</span>
-							</h4>
-							<div mathjax="ans[comment.answer1.id].content"
-								 ng-bind-html="ans[comment.answer1.id].content"></div>
-							<!-- Attachments -->
-							<acj-pdf-inline label="See details:" pdfs="ans[comment.answer1.id].file"></acj-pdf-inline>
-						</div>
-					</div>
-					<div class="col-md-6">
-					<div class="answer-choice clearfix">
-							<h4 class="text-center">Even-Numbered Answer
-								<span ng-show="comment.winner == comment.answer2.id">(Chosen)</span>
-								<span class="label label-warning pull-right score-display">Score: {{ ans[comment.answer2.id].scores[comment.criteriaandpostsforquestions_id] }}%</span>
-							</h4>
-							<div mathjax="ans[comment.answer2.id].content"
-								 ng-bind-html="ans[comment.answer2.id].content"></div>
-							<!-- Attachments -->
-							<acj-pdf-inline label="See details:" pdfs="ans[comment.answer2.id].file"></acj-pdf-inline>
-						</div>
-					</div>
-				</div>
 			</div>
 
-			<div ng-if="comment.selfeval">
+			<div ng-if="comment[0].selfeval">
 				<h5 class="content">Self-Evaluation</h5>
-				<div class="content" mathjax="comment.content"
-				     ng-bind-html="comment.content">
+				<div class="content" mathjax="comment[0].content"
+				     ng-bind-html="comment[0].content">
 				</div>
 			</div>
 
 		</div>
 
 		<div ng-if="results.length < 1">
-			<p>No comparisons were found with these filter settings. Try another group, student evaluator, or criterion above.</p>
+			<p>No comparisons were found with these filter settings. Try another group or student evaluator above.</p>
 		</div>
 	</div>
