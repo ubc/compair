@@ -1,4 +1,4 @@
-from bouncer.constants import CREATE, READ, EDIT, DELETE
+from bouncer.constants import CREATE, READ, EDIT, DELETE, MANAGE
 from flask import Blueprint, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
@@ -53,7 +53,7 @@ class QuestionCommentRootAPI(Resource):
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
-		restrict_users = not allow(EDIT, CoursesAndUsers(courses_id=course_id))
+		restrict_users = not allow(MANAGE, question)
 		comments = PostsForQuestionsAndPostsForComments.query.\
 			join(PostsForComments, Posts).\
 			filter(PostsForQuestionsAndPostsForComments.postsforquestions_id==question.id, Posts.courses_id==course_id).\
