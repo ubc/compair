@@ -1,5 +1,5 @@
 <form name="userForm" class="form" ng-submit="userSubmit()" novalidate>
-	<fieldset>
+	<fieldset ng-if="create || canManageUsers">
 		<legend>User Login</legend>
 		<p class="instructional-text">This application provides three user roles with increasing levels of permission. <strong>Students</strong> can post and edit their own answers, comments, and replies. <strong>Instructors</strong> can additionally add and edit their own courses and questions. <strong>System Administrators</strong> can additionally create users and manage which users can access a course.</p>
 		<div class="form-group">

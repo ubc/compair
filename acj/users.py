@@ -71,21 +71,23 @@ class UserAPI(Resource):
 		if params['id'] != id:
 			return {"error":"User id does not match URL."}, 400
 
-		username = params.get("username", user.username)
-		username_exists = Users.query.filter_by(username=username).first()
-		if username_exists and username_exists.id != user.id:
-			return {"error":"This username already exists. Please pick another."}, 409
-		else:
-			user.username = username
+		if allow(MANAGE, user):
+			username = params.get("username", user.username)
+			username_exists = Users.query.filter_by(username=username).first()
+			if username_exists and username_exists.id != user.id:
+				return {"error":"This username already exists. Please pick another."}, 409
+			else:
+				user.username = username
 
-		student_no = params.get("student_no", user.student_no)
-		student_no_exists = Users.query.filter_by(student_no=student_no).first()
-		if user.student_no is not None and student_no_exists and student_no_exists.id != user.id:
-			return {"error":"This student number already exists. Please pick another."}, 409
-		else:
-			user.student_no = student_no
+			student_no = params.get("student_no", user.student_no)
+			student_no_exists = Users.query.filter_by(student_no=student_no).first()
+			if user.student_no is not None and student_no_exists and student_no_exists.id != user.id:
+				return {"error":"This student number already exists. Please pick another."}, 409
+			else:
+				user.student_no = student_no
 
-		user.usertypesforsystem_id = params.get("usertypesforsystem_id", user.usertypesforsystem_id)
+			user.usertypesforsystem_id = params.get("usertypesforsystem_id", user.usertypesforsystem_id)
+
 		user.firstname = params.get("firstname", user.firstname)
 		user.lastname = params.get("lastname", user.lastname)
 
