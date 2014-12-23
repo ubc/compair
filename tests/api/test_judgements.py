@@ -299,19 +299,24 @@ class JudgementAPITests(ACJTestCase):
 		# n - 1 possible pairs before all answers have been judged
 		num_possible_judgements = num_eligible_answers - 1
 		winner_ids = []
+		loser_ids = []
 		for i in range(num_possible_judgements):
 			# establish expected data by first getting an answer pair
 			rv = self.client.get(self.answer_pair_url)
 			self.assert200(rv)
 			expected_answer_pair = rv.json
-			judgement_submit = self._build_judgement_submit(rv.json['id'], rv.json['answer1']['id'])
-			winner_ids.append(rv.json['answer1']['id'])
+			min_id = min([rv.json['answer1']['id'], rv.json['answer2']['id']])
+			max_id = max([rv.json['answer1']['id'], rv.json['answer2']['id']])
+			judgement_submit = self._build_judgement_submit(rv.json['id'], min_id)
+			winner_ids.append(min_id)
+			loser_ids.append(max_id)
 			# test normal post
 			rv = self.client.post(self.base_url, data=json.dumps(judgement_submit),
 								  content_type='application/json')
 			self.assert200(rv)
 		self.logout()
-		return winner_ids
+
+		return {'winners': winner_ids, 'losers': loser_ids}
 
 	def test_score_calculation(self):
 		'''
@@ -320,9 +325,9 @@ class JudgementAPITests(ACJTestCase):
 		'''
 		# Make sure all answers are judged first
 		winner_ids = self._submit_all_possible_judgements_for_user(
-			self.data.get_authorized_student().username)
+			self.data.get_authorized_student().username)['winners']
 		winner_ids.extend(self._submit_all_possible_judgements_for_user(
-			self.data.get_secondary_authorized_student().username))
+			self.data.get_secondary_authorized_student().username)['winners'])
 
 		# Count the number of wins each answer has had
 		num_wins_by_id = {}
@@ -345,25 +350,38 @@ class JudgementAPITests(ACJTestCase):
 			key=operator.itemgetter(1)) if score > 0]
 		self.assertSequenceEqual(actual_ranking_by_scores, expected_ranking_by_wins)
 
-	def test_score_matched_pairing(self):
+	def test_comparison_count_matched_pairing(self):
 		# Make sure all answers are judged first
-		winner_ids = self._submit_all_possible_judgements_for_user(
+		answer_ids = self._submit_all_possible_judgements_for_user(
 			self.data.get_authorized_student().username)
-		winner_ids.extend(self._submit_all_possible_judgements_for_user(
-			self.data.get_secondary_authorized_student().username))
-		# Just a simple test for now, make sure that answers with the same number of wins are
-		# matched up with each other
-		# Count the number of wins each answer has had
-		num_wins_by_id = {}
-		for winner_id in winner_ids:
-			num_wins = num_wins_by_id.setdefault(winner_id, 0)
-			num_wins_by_id[winner_id] = num_wins + 1
+		answer_ids2 = self._submit_all_possible_judgements_for_user(
+			self.data.get_secondary_authorized_student().username)
+		compared_ids = answer_ids['winners'] + answer_ids2['winners'] + \
+			answer_ids['losers'] + answer_ids2['losers']
 
-		# Get the 2 answers that has 1 win
-		one_win_answer_ids = [answer_id for (answer_id, wins) in num_wins_by_id.items() if wins == 1]
+		# Just a simple test for now, make sure that answers with the smaller number of
+		# comparisons are matched up with each other
+		# Count number of comparisons done for each answer
+		num_comp_by_id = {}
+		for answer_id in compared_ids:
+			num_comp = num_comp_by_id.setdefault(answer_id, 0)
+			num_comp_by_id[answer_id] = num_comp + 1
+
+		comp_groups = {}
+		for answerId in num_comp_by_id:
+			count = num_comp_by_id[answerId]
+			comp_groups.setdefault(count, [])
+			comp_groups[count].append(answerId)
+		counts = sorted(comp_groups)
+		# get the answerIds with the lowest count of comparisons
+		possible_answer_ids = comp_groups[counts[0]]
+		if len(possible_answer_ids) < 2:
+			# if the lowest count group does not have enough to create a pair - add the next group
+			possible_answer_ids += comp_groups[counts[1]]
+
 		# Check that the 2 answers with 1 win gets returned
 		self.login(self.data.get_authorized_student_with_no_answers().username)
 		rv = self.client.get(self.answer_pair_url)
 		self.assert200(rv)
-		self.assertIn(rv.json['answer1']['id'], one_win_answer_ids)
-		self.assertIn(rv.json['answer2']['id'], one_win_answer_ids)
+		self.assertIn(rv.json['answer1']['id'], possible_answer_ids)
+		self.assertIn(rv.json['answer2']['id'], possible_answer_ids)

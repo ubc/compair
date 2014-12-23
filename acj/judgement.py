@@ -388,58 +388,37 @@ class AnswerPairGenerator():
 		:return: An array of 2 answers
 		'''
 		round_count = len(self.rounds)
+		valid_pair = None
 		for key, r in enumerate(self.rounds):
-			ans = None
-			answers = self.answer_in_rounds[self.rounds[key]]
-			if len(answers) < 2:
-				ans = answers[0]
-				score = None
-				for score_iter in ans.scores:
-					if score_iter.criteriaandpostsforquestions_id == question_criterion.id:
-						score = score_iter
-					if score == None:
-						raise MissingScoreFromAnswer
-				ans = (ans, score)
+			answers = self.answer_in_rounds[r]
 
-				# no more answers to pair
-				if key+1 >= round_count:
-					raise UnknownAnswerPairError
-				answers = self.answer_in_rounds[self.rounds[key+1]]
-			answer_scores = {}
-			for answer in answers:
-				score = None
-				for score_iter in answer.scores:
-					if score_iter.criteriaandpostsforquestions_id == question_criterion.id:
-						score = score_iter
-				if score == None:
-					raise MissingScoreFromAnswer
-				answer_scores[answer] = score.score
-			sorted_answers = sorted(answer_scores.items(), key=operator.itemgetter(1))
-
-			# if all answers are in the same group
-			if not ans:
+			# try to pair up answers within the lowest round group if more than one answer exist
+			if len(answers) > 1:
+				sorted_answers = self._sort_answers_and_get_scores(answers, question_criterion.id)
 				pairs = self._pair_with_neighbours(sorted_answers)
-			else:
-				pairs = []
-				for a in sorted_answers:
-					pairs.append(ans, a)
+				valid_pair = self._get_valid_pair(pairs)
+				if valid_pair:
+					return valid_pair
 
-			pair_score_differences = {}
-			# group together pairs that have the same score differences
-			for pair in pairs:
-				answer1 = pair[0][0]
-				answer1_score = pair[0][1]
-				answer2 = pair[1][0]
-				answer2_score = pair[1][1]
-				difference = abs(answer1_score - answer2_score)
-				pair_score_differences.setdefault(difference, []).append([answer1, answer2])
-			# check the pairs with the smallest differences first
-			for score_difference in sorted(pair_score_differences):
-				pairs = pair_score_differences[score_difference]
-				random.shuffle(pairs)
-				for pair in pairs:
-					if not self._has_user_already_judged_pair(pair):
-						return pair
+			# if a valid pair is not found within the 'r' round and a next round exists
+			if not valid_pair and (key+1) < round_count:
+				# for round 'r'
+				ans_sorted = self._sort_answers_and_get_scores(answers, question_criterion.id)
+
+				for index, s in enumerate(self.rounds[key+1:]):
+					answers = self.answer_in_rounds[s]
+					sorted_answers = self._sort_answers_and_get_scores(answers, question_criterion.id)
+
+					#pairs = [(ans, a) for a in sorted_answers]
+					pairs = []
+					for ans in ans_sorted:
+						for a in sorted_answers:
+							pairs.append((ans, a))
+
+					valid_pair = self._get_valid_pair(pairs)
+					if valid_pair:
+						return valid_pair
+
 		raise UnknownAnswerPairError
 
 	def _get_unscored_pair(self):
@@ -464,6 +443,52 @@ class AnswerPairGenerator():
 			if not self._has_user_already_judged_pair(pair):
 				return pair
 		return None
+
+	def _sort_answers_and_get_scores(self, answers, quesCriterionId):
+		'''
+		:return: sorted list of answers by score (for quesCriterionId)
+		'''
+		answer_scores = {}
+		for answer in answers:
+			score = None
+			for score_iter in answer.scores:
+				if score_iter.criteriaandpostsforquestions_id == quesCriterionId:
+					score = score_iter
+			if score == None:
+				raise MissingScoreFromAnswer
+			answer_scores[answer] = score.score
+		sorted_answers = sorted(answer_scores.items(), key=operator.itemgetter(1))
+
+		return sorted_answers
+
+	def _get_valid_pair(self, pairs):
+		'''
+		find a valid pair with lowest score differ
+		:param pairs:
+		:return: valid pair OR None if one is not found
+		'''
+		valid = None
+		pair_score_differences = {}
+		# group together pairs that have the same score differences
+		for pair in pairs:
+			answer1 = pair[0][0]
+			answer1_score = pair[0][1]
+			answer2 = pair[1][0]
+			answer2_score = pair[1][1]
+			difference = abs(answer1_score - answer2_score)
+			pair_score_differences.setdefault(difference, []).append([answer1, answer2])
+		# check the pairs with the smallest differences first
+		for score_difference in sorted(pair_score_differences):
+			pairs = pair_score_differences[score_difference]
+			random.shuffle(pairs)
+			for pair in pairs:
+				if not self._has_user_already_judged_pair(pair):
+					valid = pair
+					break
+			if valid:	# if a valid pair
+				break
+
+		return valid
 
 	def _has_user_already_judged_pair(self, pair):
 		'''
