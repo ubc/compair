@@ -43,17 +43,17 @@
 				<th class="text-center"><a href="" ng-click="reverse = predicate == 'num_answers' && !reverse; predicate='num_answers'">
 					Answered</a>
 				</th>
+				<th class="text-center"><a href="" ng-click="reverse = !reverse; sortScore()">
+					Answer Score</a>
+					<a tool-tip href="" data-placement="left" data-toggle="tooltip" class="score-tooltip" title="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the question receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer.">
+						<i class="fa fa-question-circle"></i>
+					</a>
+				</th>
 				<th class="text-center"><a href="" ng-click="reverse = predicate == 'flagged' && !reverse; predicate='flagged'">
 					Flagged</a>
 				</th>
 				<th class="text-center"><a href="" ng-click="reverse = predicate == 'num_judgements' && !reverse; predicate='num_judgements'">
 					Evaluations</a>
-				</th>
-				<th class="text-center"><a href="" ng-click="reverse = !reverse; sortScore()">
-					Score</a>
-					<a tool-tip href="" data-placement="left" data-toggle="tooltip" class="score-tooltip" title="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the question receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer.">
-						<i class="fa fa-question-circle"></i>
-					</a>
 				</th>
 				<th class="text-center" ng-show="includeSelfEval"><a href="" ng-click="reverse = predicate == 'num_selfeval' && !reverse; predicate='num_selfeval'">
 					Self-Evaluation</a>
@@ -72,6 +72,14 @@
 				<td class="text-center text-success" ng-if="entry.num_answers > 0"><strong>Yes</strong></td>
 				<td class="text-center text-danger" ng-if="entry.num_answers == 0"><strong>No</strong></td>
 				<td class="text-center" ng-class="{
+					'text-danger': entry.num_answers == 0,
+					'text-warning': entry.num_answers > 0 && !(entry.scores[gb.sortby] >= 0),
+					'text-success': entry.scores[gb.sortby] >= 0
+					}">
+					<strong>{{ entry.scores[gb.sortby] }}
+						<span ng-if="entry.scores[gb.sortby] >= 0">%</span></strong>
+				</td>
+				<td class="text-center" ng-class="{
 					'text-success': entry.flagged == 'No' || entry.flagged == 'No Answer',
 					'text-danger': entry.flagged == 'Yes'
 					}">
@@ -84,14 +92,6 @@
 					'text-success': entry.num_judgements >= numJudgementsRequired
 					}">
 					<strong>{{entry.num_judgements}} / {{ numJudgementsRequired }}</strong>
-				</td>
-				<td class="text-center" ng-class="{
-					'text-danger': entry.num_answers == 0,
-					'text-warning': entry.num_answers > 0 && !(entry.scores[gb.sortby] >= 0),
-					'text-success': entry.scores[gb.sortby] >= 0
-					}">
-					<strong>{{ entry.scores[gb.sortby] }}
-						<span ng-if="entry.scores[gb.sortby] >= 0">%</span></strong>
 				</td>
 				<td class="text-center text-success" ng-show="includeSelfEval && entry.num_selfeval > 0"><strong>Yes</strong></td>
 				<td class="text-center text-danger" ng-show="includeSelfEval && entry.num_selfeval == 0"><strong>No</strong></td>

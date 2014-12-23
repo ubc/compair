@@ -20,17 +20,17 @@
 		</acj-pdf-inline>
 	</div>
 	
-	<div ng-show="answerPairError" class="alert alert-warning" role="alert">
-		<p>Answer comparisons for this question are not available at this time.</p>
-	</div>
-	
 	<div class="row answer-pair">
 		
 		<hr />
 		
-		<h2 class="text-center">Answer Pair <span class="label label-warning pull-right">Round {{current}} / {{total}}</span></h2>
+		<h2 class="text-center">Answer Pair <span ng-hide="answerPairError" class="label label-warning pull-right">Round {{current}} / {{total}}</span></h2>
 		
-		<div class="col-md-6">
+		<div ng-show="answerPairError" class="alert alert-danger" role="alert">
+			<p>Sorry, answer comparisons for the question are not available at this time. Please check again later.</p>
+		</div>
+		
+		<div class="col-md-6" ng-hide="answerPairError">
 			<div class="answer-choice clearfix">
 				<h3 class="text-center">Answer {{(current - 1) + current}}</h3>
 				<div mathjax="answerPair.answer1.post.content"
@@ -52,7 +52,7 @@
 			</div>
 		</div>
 		
-		<div class="col-md-6 ">
+		<div class="col-md-6" ng-hide="answerPairError">
 			<div class="answer-choice clearfix">
 				<h3 class="text-center">Answer {{current * 2}}</h3>
 				<div mathjax="answerPair.answer2.post.content"
@@ -127,9 +127,9 @@
 			
 			<h3>2) Choose the answer that best meets the criteria below</h3>
 			
-			<div class="form-group sub-step" ng-repeat="questionCriterion in questionCriteria">
+			<p class="intro-text">Your selection helps determine a criteria-based ranking of the answers.</p>
 			
-				<p class="intro-text">Your selection helps determine a criteria-based ranking of the answers.</p>
+			<div class="form-group sub-step" ng-repeat="questionCriterion in questionCriteria">
 				
 				<div class="each-criterion sub-step">
 					<fieldset>

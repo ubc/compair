@@ -47,17 +47,10 @@ class GradebookAPI(Resource):
 			num_judgements_by_user_id[judgement.users_id] = num_judgements
 
 		# we want only the count for judgements by current students in the course
+		criteria = CriteriaAndPostsForQuestions.query.filter_by(postsforquestions_id=question.id, active=True).all()
 		num_judgements_per_student = {}
 		for student in students:
-			num_judgements_per_student[student.id] = num_judgements_by_user_id.get(student.id, 0)
-
-		# number of criteria for this question
-		criteria = CriteriaAndPostsForQuestions.query.filter_by(postsforquestions_id=question.id, active=True).all()
-		num_criteria = len(criteria)
-		# number of judgements submitted by users increases with the number of criteria in the course since 1 required
-		# judgement = 1 judgement in each criteria, so need to adjust the numbers
-		for student_id, num_judgements in num_judgements_per_student.items():
-			num_judgements_per_student[student.id] = num_judgements / num_criteria
+			num_judgements_per_student[student.id] = num_judgements_by_user_id.get(student.id, 0) / len(criteria)
 
 		# count number of answers each student has submitted
 		num_answers_by_user_id = {}
