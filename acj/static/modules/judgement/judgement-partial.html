@@ -178,6 +178,10 @@
 				<!-- button to submit and refresh page IF evaluations remain for user -->
 				<input ng-disabled="judgementForm.$invalid || submitted" type="submit"
 					value="Submit" class="btn btn-success btn-lg center-block" />
+				<p ng-if="submitted" class="text-center" >
+					<i class="fa fa-spin fa-spinner"></i>
+					&nbsp; Saving comparison...  
+				</p>
 				
 			</div>
 			

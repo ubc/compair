@@ -57,7 +57,7 @@ class QuestionCommentRootAPI(Resource):
 		comments = PostsForQuestionsAndPostsForComments.query.\
 			join(PostsForComments, Posts).\
 			filter(PostsForQuestionsAndPostsForComments.postsforquestions_id==question.id, Posts.courses_id==course_id).\
-			order_by(Posts.created.desc()).all()
+			order_by(Posts.created.asc()).all()
 
 		on_comment_list_get.send(
 			current_app._get_current_object(),

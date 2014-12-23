@@ -181,7 +181,7 @@ module.controller(
 												function(ret) {
 													if ($scope.question.num_judgement_req > ret.count) {
 														var left = $scope.question.num_judgement_req - ret.count;
-														Toaster.success("Comparison Submitted Successfully", "Please continue to next comparison.");
+														Toaster.success("Your Comparison Saved Successfully", "The next answer pair is now being loaded. Compare away!");
 														$route.reload();
 														window.scrollTo(0, 0);
 													// self-evaluation
@@ -191,24 +191,24 @@ module.controller(
 																function (ret) {
 																	// if user has an answer submitted
 																	if(ret.answered > 0) {
-																		Toaster.success("Evaluation Submitted Successfully. Please submit a self-evaluation.");
+																		Toaster.success("Your Comparison Saved Successfully", "Write a self-evaluation, and your assignment will be complete!");
 																		$location.path('/course/'+courseId+'/question/'+questionId+'/selfevaluation');
 																	} else {
-																		Toaster.success("Evaluation Submitted Successfully");
+																		Toaster.success("Your Comparison Saved Successfully");
 																		$location.path('/course/' + courseId);
 																	}
 																},
 																function (ret) {
-																	Toaster.reqerror("Your Answer is Not Found", ret);
+																	Toaster.reqerror("Your Answer Not Found", ret);
 																}
 														);
 													} else {
-														Toaster.success("Comparison Submitted Successfully");
+														Toaster.success("Your Comparison Saved Successfully", "Your assignment is now complete. Good work!");
 														$location.path('/course/' + courseId);
 													}
 												},
 												function(ret) {
-													Toaster.success("Comparison Submitted Successfully");
+													Toaster.success("Your Comparison Saved Successfully");
 													$location.path('/course/' + courseId);
 												}
 											);
@@ -302,7 +302,7 @@ module.controller(
 		AnswerResource.user({'courseId': courseId, 'questionId': questionId}).$promise.then(
 			function (ret) {
 				if (!ret.answer.length) {
-					Toaster.error("You have not submitted an answer, therefore you cannot complete the self evaluation.");
+					Toaster.error("No Answer Found", "Your answer for this assignment was not found, so the self-evaluation is unavailable.");
 					$location.path('/course/' + courseId);
 				} else {
 					$scope.parent = ret.answer[0];
@@ -320,7 +320,7 @@ module.controller(
 				$scope.comment).$promise.then(
 					function (ret) {
 						$scope.submitted = false;
-						Toaster.success("Self-Evaluation Saved Successfully", "Your comparisons are now complete.");
+						Toaster.success("Your Self-Evaluation Saved Successfully", "Your assignment is now complete. Good work!");
 						$location.path('/course/' + courseId);
 					},
 					function (ret) {
