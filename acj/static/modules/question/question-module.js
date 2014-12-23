@@ -237,7 +237,6 @@ module.controller("QuestionViewController",
 												'userId': $scope.loggedInUserId}).$promise.then(
 				function (ret) {
 					$scope.availPairsLogic = ret.availPairsLogic;
-					console.log($scope.availPairsLogic);
 				},
 				function (ret) {
 					Toaster.reqerror('Unable to retrieve the answer pairs availability.', ret);
