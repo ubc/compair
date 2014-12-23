@@ -13,6 +13,7 @@ from .util import new_restful_api
 from .authorization import allow, require
 
 from operator import itemgetter
+from itertools import groupby
 
 evalcomments_api = Blueprint('evalcomments_api', __name__)
 api = new_restful_api(evalcomments_api)
@@ -153,6 +154,10 @@ class EvalCommentViewAPI(Resource):
 		# then sort by name and user_id to group the comments by author
 		results.sort(key = itemgetter('name', 'user_id'))
 
+		comparisons = []
+		for k, g in groupby(results, itemgetter('name', 'user_id', 'answerpairings_id')):
+			comparisons.append(list(g))
+
 		on_evalcomment_view.send(
 			current_app._get_current_object(),
 			event_name=on_evalcomment_view.name,
@@ -160,6 +165,6 @@ class EvalCommentViewAPI(Resource):
 			course_id=course_id,
 			data={'question_id': question_id}
 		)
-		return {'comparisons': results}
+		return {'comparisons': comparisons}
 
 api.add_resource(EvalCommentViewAPI, '/view')
