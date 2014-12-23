@@ -67,10 +67,10 @@
 		
 		<!-- BUTTON when user is not an admin AND the comparison period is active AND the user has not finished pair comparisons AND either (the answer period is active AND the question has been answered) OR (the answer period is not active)
 			 basically we force users to answer first, if they can
-			 enabled only when answer pairs are available for comparison (so when no warning)
+			 enabled only when answer pairs are available for comparison (so when no logic is false)
 		-->
-		<a class="btn" ng-class="{'btn-success': !warning, 'btn-default': warning}" title="Compare Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/compare"
-		   ng-show="!canManagePosts && question.judging_period && !judged_req_met && ((question.answer_period && answered) || !question.answer_period)" ng-disabled="warning">
+		<a class="btn" ng-class="{'btn-success': availPairsLogic, 'btn-default': !availPairsLogic}" title="Compare Answers" ng-href="#/course/{{courseId}}/question/{{question.id}}/compare"
+		   ng-show="!canManagePosts && question.judging_period && !judged_req_met && ((question.answer_period && answered) || !question.answer_period)" ng-disabled="!availPairsLogic">
 			Compare Answers
 		</a>
 		
@@ -90,7 +90,7 @@
 		</a>
 		
 		<!-- ADDITIONAL TEXT when answer pairs are not available for comparison AND user is not admin AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the question has been answered) OR (the answer period is not active)-->
-		<p ng-if="warning && !canManagePosts && question.judging_period && (evaluation + selfEval > 0) && ((question.answer_period && answered) || !question.answer_period)"><br /><em>Not enough answers to compare (Refresh the page to check again) </em></p>
+		<p ng-if="!availPairsLogic && !canManagePosts && question.judging_period && (evaluation + selfEval > 0) && ((question.answer_period && answered) || !question.answer_period)"><br /><em>Not enough answers to compare (Refresh the page to check again) </em></p>
 		
 		<!-- ADDITIONAL TEXT when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has a self-evaluation remaining AND has not answered question -->
 		<p ng-if="!canManagePosts && question.judging_period && judged_req_met && !selfEval_req_met && !answered"><em>Self-evaluation comparison unavailable (You have not answered the question) </em></p>

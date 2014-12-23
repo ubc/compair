@@ -163,8 +163,8 @@
 			     basically we force users to answer first, if they can
 			     enabled only when answer pairs are available for comparison (a negative number = good)
 			     -->
-			<a class="btn" ng-class="{'btn-success': question.leftover < 0, 'btn-default': question.leftover > 0}" title="Compare Answers" ng-href="#/course/{{course.id}}/question/{{question.id}}/compare"
-			   ng-show="!canManagePosts && question.judging_period && question.left && ((question.answer_period && answered[question.id]) || (!question.answer_period))" ng-disabled="question.leftover > 0">
+			<a class="btn" ng-class="{'btn-success': availPairsLogic[question.id], 'btn-default': !availPairsLogic[question.id]}" title="Compare Answers" ng-href="#/course/{{course.id}}/question/{{question.id}}/compare"
+			   ng-show="!canManagePosts && question.judging_period && question.left && ((question.answer_period && answered[question.id]) || (!question.answer_period))" ng-disabled="!availPairsLogic[question.id]">
 				Compare Answers
 			</a>
 
@@ -190,7 +190,7 @@
 			
 			<!-- ADDITIONAL TEXT when answer pairs are not available for comparison AND user is not admin AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the question has been answered) OR (the answer period is not active) -->
 			<p class="below-button-text"
-				ng-show="question.warning && !canManagePosts && question.judging_period && question.left && ((question.answer_period && answered[question.id]) || !question.answer_period)">
+				ng-show="!availPairsLogic[question.id] && !canManagePosts && question.judging_period && question.left && ((question.answer_period && answered[question.id]) || !question.answer_period)">
 				Not enough answers to compare<br />(Refresh the page to check again)
 			</p>
 			
