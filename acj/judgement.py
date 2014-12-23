@@ -85,7 +85,6 @@ class JudgementRootAPI(Resource):
 			return {"error": "You've already evaluated this pair of answers."}, 400
 		judgements = []
 		criteria = []
-		round_count = 0
 		for judgement_params in params['judgements']:
 			criteria.append(judgement_params['question_criterion_id'])
 			# need this or hybrid property for courses_id won't work when it checks permissions
@@ -97,14 +96,13 @@ class JudgementRootAPI(Resource):
 			db.session.add(judgement)
 			require(CREATE, judgement)
 			db.session.commit()
-			round_count += 1
 			judgements.append(judgement)
 
 		# increment evaluation count for the answers in the evaluated answer pair
 		answers = PostsForAnswers.query.\
 			filter(PostsForAnswers.id.in_([answer_pair.answer1.id, answer_pair.answer2.id])).all()
 		for ans in answers:
-			ans.round = ans.round + round_count
+			ans.round = ans.round + 1
 			db.session.add(ans)
 		db.session.commit()
 
