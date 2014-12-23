@@ -118,7 +118,7 @@ class EvalCommentsAPITests(ACJTestCase):
 		# test successful query - instructor
 		rv = self.client.get(url)
 		self.assert200(rv)
-		actual = rv.json['comparisons'][0]
+		actual = rv.json['comparisons'][0][0]
 		expected = self.data.get_judge_comment()
 
 		self.assertEqual(len(rv.json['comparisons']), 1)
@@ -142,7 +142,7 @@ class EvalCommentsAPITests(ACJTestCase):
 		self.login(self.data.get_authorized_ta().username)
 		rv = self.client.get(url)
 		self.assert200(rv)
-		actual = rv.json['comparisons'][0]
+		actual = rv.json['comparisons'][0][0]
 		expected = self.data.get_judge_comment()
 
 		self.assertEqual(len(rv.json['comparisons']), 1)
