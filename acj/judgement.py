@@ -80,8 +80,15 @@ class JudgementRootAPI(Resource):
 			if winner_id != answer_pair.answer1.id and winner_id != answer_pair.answer2.id:
 				return {"error": "Selected answer ID does not match the available pair of answers."}, 400
 		# check if pair has already been judged by this user
-		if Judgements.query.filter_by(users_id = current_user.id,
-			answerpairings_id = answer_pair.id).first():
+		if Judgements.query.filter_by(users_id = current_user.id).join(AnswerPairings) \
+			.filter(
+				or_(
+					and_(AnswerPairings.postsforanswers_id1 == answer_pair.postsforanswers_id1,
+						AnswerPairings.postsforanswers_id2 == answer_pair.postsforanswers_id2),
+					and_(AnswerPairings.postsforanswers_id1 == answer_pair.postsforanswers_id2,
+						 AnswerPairings.postsforanswers_id2 == answer_pair.postsforanswers_id1)
+				)
+			).first():
 			return {"error": "You've already evaluated this pair of answers."}, 400
 		judgements = []
 		criteria = []
@@ -341,6 +348,7 @@ class AnswerPairGenerator():
 			self.answer_in_rounds[answer.round].append(answer)
 		# if there are any answers that hasn't been scored, we need to judge those first
 		pair = None
+		criteriaId = None
 		# if the lowest round is 0, that means there are unscored answers
 		if self.rounds[0] == 0:
 			#pair = self._get_unscored_pair(unscored_answers)
@@ -349,10 +357,12 @@ class AnswerPairGenerator():
 			# match by closest score, when we have many criteria, match score on only one criterion
 			question_criteria = CriteriaAndPostsForQuestions.query.\
 				filter_by(postsforquestions_id=self.question_id).all()
-			pair = self._get_scored_pair(random.choice(question_criteria))
-		return self._create_or_get_existing_pairing(pair)
+			criteria = random.choice(question_criteria)
+			pair = self._get_scored_pair(criteria)
+			criteriaId = criteria.id
+		return self._create_or_get_existing_pairing(pair, criteriaId)
 
-	def _create_or_get_existing_pairing(self, pair_array):
+	def _create_or_get_existing_pairing(self, pair_array, criteriaId):
 		'''
 		If there is an exisiting AnswerPairing already in the database, we should return that
 		instead of making a new entry. If there's not existing one, then create one.
@@ -365,11 +375,14 @@ class AnswerPairGenerator():
 			or_(
 				and_(AnswerPairings.answer1 == answer1, AnswerPairings.answer2 == answer2),
 				and_(AnswerPairings.answer1 == answer2, AnswerPairings.answer2 == answer1)
-			)).first()
+			),
+			AnswerPairings.criteriaandpostsforquestions_id == criteriaId
+			).first()
 		if not answerpairing:
 			answerpairing = AnswerPairings(postsforquestions_id=self.question_id)
 			answerpairing.answer1 = answer1
 			answerpairing.answer2 = answer2
+			answerpairing.criteriaandpostsforquestions_id = criteriaId
 			db.session.add(answerpairing)
 			db.session.commit()
 		return answerpairing

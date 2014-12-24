@@ -763,6 +763,10 @@ class AnswerPairings(db.Model):
 		nullable=False)
 	answer2 = db.relationship("PostsForAnswers", foreign_keys=[postsforanswers_id2])
 	judgements = db.relationship("Judgements", cascade="delete")
+	criteriaandpostsforquestions_id = db.Column(
+		db.Integer,
+		db.ForeignKey('CriteriaAndPostsForQuestions.id', ondelete="CASCADE"),
+		nullable=True)
 	modified = db.Column(
 		db.DateTime,
 		default=datetime.datetime.utcnow,
