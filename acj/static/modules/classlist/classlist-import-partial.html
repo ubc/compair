@@ -1,13 +1,14 @@
 <div ng-controller="ClassImportController">
 	
 	<h1>Import Users</h1>
-	<br />
+	<p class="intro-text">Create, enrol, or drop multiple users in this course at the same time by importing a CSV file with a list of the course's students.</p>
+	<p>Note the following guidelines:</p>
 	<ul class="li-spacing">
-		<li>This application supports importing a file that uses the <strong>CSV (comma-separated values) format</strong>.</li>
+		<li>This application only supports importing a file that uses the <strong>CSV (comma-separated values) format</strong>.</li>
 		<li>Data is expected in this order: <strong>Username,Student Number,First Name,Last Name,Email,Display Name,Password</strong> (examples below).</li>
 		<li><strong>Only usernames are required</strong>. All the other fields are optional.</li>
 		<li><strong>Usernames, student numbers, and display names must be unique</strong> in the application. Duplicates will be altered by the application automatically.</li>
-		<li><strong>Each upload should include the full list of users</strong> you want in the course. To remove or add students, simply upload a CSV file with an updated list.</li>
+		<li><strong>Each new upload should include the full list of users</strong> you want in the course. Any new users in a newly uploaded file will be enrolled and any deleted users will be dropped.</li>
 	</ul>
 	<div class="form-group">
 		<fieldset>
@@ -22,7 +23,7 @@
 		ng-disabled="!uploader.queue[0]" />
 	<hr />
 	<h2>Formatting examples</h2>
-	<p>The data examples below show how to drop non-required fields.</p>
+	<p>The data examples below show how to exclude non-required fields.</p>
 	<dl>
 		<dt>No Display Name or Password:</dt>
 			<dd>studentuser1,num123,Jack,Smith,jack.smith@student.ca,,</dd>
