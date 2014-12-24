@@ -52,7 +52,7 @@ def define_authorization(user, they):
 		# instructors can modify the course and enrolment
 		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_INSTRUCTOR:
 			they.can(EDIT, Courses, id=course.id)
-			they.can((READ, EDIT), CoursesAndUsers, courses_id=course.id)
+			they.can(EDIT, CoursesAndUsers, courses_id=course.id)
 			they.can((CREATE, DELETE), CriteriaAndCourses, courses_id=course.id)
 			they.can((CREATE, DELETE), Groups, courses_id=course.id)
 			they.can((CREATE, DELETE), GroupsAndUsers, courses_id=course.id)
@@ -66,6 +66,7 @@ def define_authorization(user, they):
 			they.can(MANAGE, PostsForJudgements, courses_id=course.id)
 			they.can(READ, Groups, courses_id=course.id)
 			they.can(READ, GroupsAndUsers, courses_id=course.id)
+			they.can(READ, CoursesAndUsers, courses_id=course.id)
 			they.can((CREATE, DELETE), CriteriaAndPostsForQuestions, courses_id=course.id)
 		# only students can submit judgements for now
 		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_STUDENT:

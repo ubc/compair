@@ -184,7 +184,7 @@ class ClasslistRootAPI(Resource):
 		course = Courses.query.get_or_404(course_id)
 		#only users that can edit the course can view enrolment
 		require(EDIT, course)
-		restrict_users = not allow(EDIT, CoursesAndUsers(courses_id=course_id))
+		restrict_users = not allow(READ, CoursesAndUsers(courses_id=course_id))
 		include_user = True
 		dropped = UserTypesForCourse.query.filter_by(name="Dropped").first().id
 		classlist = CoursesAndUsers.query. \
