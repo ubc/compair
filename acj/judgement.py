@@ -132,7 +132,7 @@ class JudgementRootAPI(Resource):
 			filter(AnswerPairings.postsforquestions_id == question_id).all()
 		answers = set() # stores answers that've been judged
 		question_criteria = CriteriaAndPostsForQuestions.query.\
-			filter_by(postsforquestions_id=question_id).all()
+			filter_by(postsforquestions_id=question_id, active=True).all()
 		# 2D array, keep tracks of wins, e.g.: wins[A][B] is the number of times A won vs B
 		wins = WinsTable(question_criteria)
 		# keeps track of number of times judged for each answer
@@ -356,7 +356,7 @@ class AnswerPairGenerator():
 		if not pair:
 			# match by closest score, when we have many criteria, match score on only one criterion
 			question_criteria = CriteriaAndPostsForQuestions.query.\
-				filter_by(postsforquestions_id=self.question_id).all()
+				filter_by(postsforquestions_id=self.question_id, active=True).all()
 			criteria = random.choice(question_criteria)
 			pair = self._get_scored_pair(criteria)
 			criteriaId = criteria.id
