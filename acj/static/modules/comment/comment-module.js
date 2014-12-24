@@ -235,7 +235,7 @@ module.controller(
 	{
 		var courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
-		$scope.search = {'userId': null, 'criteriaId': null};
+		$scope.search = {'userId': null};
 		$scope.course = {};
 		$scope.courseId = courseId;
 		$scope.questionId = questionId;
@@ -328,23 +328,7 @@ module.controller(
 
 		$scope.commentFilter = function(user_id, criteria_id) {
 			return function(comment) {
-				var criteria = false;
-				var user = false;
-
-				if ((user_id == null && comment[0].user_id in userIds) || comment[0].user_id == user_id) {
-					user = true;
-				}
-
-				// self-evaluation - no effect from criteria filter
-				if (comment[0].selfeval) {
-					criteria = true;
-				}
-				// regular evaluation
-				else if (criteria_id == null || comment[0].criteriaandpostsforquestions_id == criteria_id) {
-					criteria = true;
-				}
-
-				return user && criteria;
+				return ((user_id == null && comment[0].user_id in userIds) || comment[0].user_id == user_id);
 			}
 		};
 
