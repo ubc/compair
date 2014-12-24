@@ -142,12 +142,15 @@ class EvalCommentViewAPI(Resource):
 				'name': name,
 				'avatar': s.postsforcomments.post.user.avatar,
 				'answerpairings_id': 0,
+				'criteriaandpostsforquestions_id': 0,
 				'content': s.content,
 				'selfeval': True,
 				'created': str(s.postsforcomments.post.created)
 			}
 			results.append(comment)
 
+		# sort by criteria id to keep the evaluation results in a constant order
+		results.sort(key = itemgetter('criteriaandpostsforquestions_id'))
 		# sort by answerpairings_id in descending order first
 		# group by answerpairing and keep the selfevaluation as the last comment
 		results.sort(key = itemgetter('answerpairings_id'), reverse=True)

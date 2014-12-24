@@ -222,21 +222,17 @@ def participation_report(course_id, questions, group_id):
 
 	judgements = {}		# structure - userId/quesId/count
 	for (quesId, userId, count) in comparisons:
-		if userId not in judgements:
-			judgements[userId] = {}
-		if quesId not in judgements[userId]:
-			judgements[userId][quesId] = 0
+		judgements.setdefault(userId, {}).setdefault(quesId, 0)
 		judgements[userId][quesId] = count
 
 	# CRITERIA
 	criteriaandpostsforquestions = CriteriaAndPostsForQuestions.query \
 		.filter(CriteriaAndPostsForQuestions.postsforquestions_id.in_(quesIds)) \
-		.filter_by(active=True).all()
+		.filter_by(active=True).order_by(CriteriaAndPostsForQuestions.id).all()
 
 	criteria = {}	# structure - quesId/criterionId
 	for criterion in criteriaandpostsforquestions:
-		if criterion.postsforquestions_id not in criteria:
-			criteria[criterion.postsforquestions_id] = []
+		criteria.setdefault(criterion.postsforquestions_id, [])
 		criteria[criterion.postsforquestions_id].append(criterion.id)
 
 	# SELF-EVALUATION - assuming no comparions
@@ -249,10 +245,7 @@ def participation_report(course_id, questions, group_id):
 
 	comments = {}	# structure - userId/quesId/count
 	for (quesId, userId, count) in selfeval:
-		if userId not in comments:
-			comments[userId] = {}
-		if quesId not in comments[userId]:
-			comments[userId][quesId] = 0
+		comments.setdefault(userId, {}).setdefault(quesId, 0)
 		comments[userId][quesId] = count
 
 	for coursesanduser in classlist:

@@ -389,7 +389,7 @@ class PostsForQuestions(db.Model):
 	title = db.Column(db.String(255))
 	_answers = db.relationship("PostsForAnswers", cascade="delete")
 	comments = db.relationship("PostsForQuestionsAndPostsForComments", cascade="delete")
-	criteria = db.relationship("CriteriaAndPostsForQuestions", cascade="delete",
+	_criteria = db.relationship("CriteriaAndPostsForQuestions", cascade="delete",
 							   primaryjoin="and_(PostsForQuestions.id==CriteriaAndPostsForQuestions.postsforquestions_id, "+
 									"CriteriaAndPostsForQuestions.active)")
 	answerpairing = db.relationship("AnswerPairings", cascade="delete")
@@ -418,6 +418,9 @@ class PostsForQuestions(db.Model):
 	@hybrid_property
 	def answers(self):
 		return sorted(self._answers, key=lambda answer: answer.post.created, reverse=True)
+	@hybrid_property
+	def criteria(self):
+		return sorted(self._criteria, key=lambda criterion: criterion.id)
 	@hybrid_property
 	def available(self):
 		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
