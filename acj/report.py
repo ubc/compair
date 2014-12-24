@@ -144,6 +144,7 @@ def participation_stat_report(course_id, assignments, group_id, overall):
 			group_by(Posts.users_id).all()
 		comments = {usersId: count for (usersId, count) in comments}
 		total_req += ques.num_judgement_req	# for overall required
+		criteria_count = len(ques.criteria)
 		for student in classlist:
 			user = student.user
 			temp = [ques.title, user.username, user.lastname, user.firstname]
@@ -162,6 +163,7 @@ def participation_stat_report(course_id, assignments, group_id, overall):
 			temp.extend([submitted, answerId])
 
 			evalSubmitted = evaluations[user.id] if user.id in evaluations else 0
+			evalSubmitted = evalSubmitted / criteria_count
 			evalReqMet = 'Yes' if evalSubmitted >= ques.num_judgement_req else 'No'
 			total[user.id]['total_evaluations'] += evalSubmitted
 			temp.extend([evalSubmitted, ques.num_judgement_req, evalReqMet])

@@ -459,7 +459,12 @@ class PostsForQuestions(db.Model):
 		return type
 	@hybrid_property
 	def evaluation_count(self):
-		return sum([x.judgement_count for x in self.criteria])
+		if len(self.criteria):
+			evaluation_count = sum([x.judgement_count for x in self.criteria]) / len(self.criteria)
+		else:
+			evaluation_count = 0
+		selfeval_count = sum([x.selfeval_count for x in self._answers])
+		return evaluation_count + selfeval_count
 
 class PostsForAnswers(db.Model):
 	__tablename__ = 'PostsForAnswers'
@@ -505,6 +510,9 @@ class PostsForAnswers(db.Model):
 	@hybrid_property
 	def scores(self):
 		return sorted(self._scores, key=lambda score: score.criteriaandpostsforquestions_id)
+	@hybrid_property
+	def selfeval_count(self):
+		return len([c for c in self.comments if c.selfeval])
 
 class PostsForComments(db.Model):
 	__tablename__ = 'PostsForComments'
