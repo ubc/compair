@@ -181,7 +181,7 @@ module.controller(
 												function(ret) {
 													if ($scope.question.num_judgement_req > ret.count) {
 														var left = $scope.question.num_judgement_req - ret.count;
-														Toaster.success("Your Comparison Saved Successfully", "The next answer pair is now being loaded. Compare away!");
+														Toaster.success("Your Comparison Saved Successfully", "The next answer pair is now being loaded. Good luck on the next round!");
 														$route.reload();
 														window.scrollTo(0, 0);
 													// self-evaluation

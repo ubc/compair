@@ -118,10 +118,11 @@
 				     ng-bind-html="comment[0].content">
 				</div>
 			</div>
-
+		
 		</div>
 
-		<div ng-if="results.length < 1">
-			<p>No comparisons were found with these filter settings. Try another group or student evaluator above.</p>
-		</div>
+	</div>
+	
+	<div ng-show="!results.length">
+		<p>No comparisons were found<span ng-if="group.name || search.userId.name"> with these filter settings. Try another group or student evaluator above</span>.</p>
 	</div>

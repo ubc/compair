@@ -70,7 +70,7 @@
 			<td>{{user.user.firstname}}</td>
 			<td>{{user.user.lastname}}</td>
 			<td>{{user.user.student_no}}</td>
-			<td>{{user.user.displayname}}</td>
+			<td><a ng-href="#/user/{{user.user.id}}">{{user.user.displayname}}<a/></td>
 			<td>{{user.user.email}}</td>
 			<td>{{user.usertypeforcourse.name}}</td>
 			<td ng-if="groups.length > 0">
