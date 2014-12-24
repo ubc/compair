@@ -15,10 +15,12 @@ import sqlalchemy as sa
 
 
 def upgrade():
-	op.drop_column('AnswerPairings', 'round')
+	with op.batch_alter_table('AnswerPairings') as batch_op:
+		batch_op.drop_column('round')
 
 
 def downgrade():
-	op.add_column('AnswerPairings',
-		sa.Column('round', sa.Integer, default=1)
-	)
+	with op.batch_alter_table('AnswerPairings') as batch_op:
+		batch_op.add_column(
+			sa.Column('round', sa.Integer, default=1)
+		)

@@ -14,19 +14,20 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.sql import text
 
+from acj.models import convention
+
 
 def upgrade():
-
 	op.create_table('PostsForQuestionsAndSelfEvaluationTypes',
-	sa.Column('id', sa.Integer(), nullable=False),
-	sa.Column('postsforquestions_id', sa.Integer(), nullable=False),
-	sa.Column('selfevaluationtypes_id', sa.Integer(), nullable=False),
-	sa.ForeignKeyConstraint(['postsforquestions_id'], ['PostsForQuestions.id'], ondelete='CASCADE'),
-	sa.ForeignKeyConstraint(['selfevaluationtypes_id'], ['SelfEvaluationTypes.id'], ondelete='CASCADE'),
-	sa.PrimaryKeyConstraint('id'),
-	mysql_charset='utf8',
-	mysql_collate='utf8_unicode_ci',
-	mysql_engine='InnoDB'
+					sa.Column('id', sa.Integer(), nullable=False),
+					sa.Column('postsforquestions_id', sa.Integer(), nullable=False),
+					sa.Column('selfevaluationtypes_id', sa.Integer(), nullable=False),
+					sa.ForeignKeyConstraint(['postsforquestions_id'], ['PostsForQuestions.id'], ondelete='CASCADE'),
+					sa.ForeignKeyConstraint(['selfevaluationtypes_id'], ['SelfEvaluationTypes.id'], ondelete='CASCADE'),
+					sa.PrimaryKeyConstraint('id'),
+					mysql_charset='utf8',
+					mysql_collate='utf8_unicode_ci',
+					mysql_engine='InnoDB'
 	)
 
 	# populate table above
@@ -39,29 +40,23 @@ def upgrade():
 	op.get_bind().execute(populate)
 
 	# drop selfevaltype_id foreign key
-	fq_name = text(
-		"SELECT constraint_name FROM information_schema.key_column_usage " + \
-		"WHERE table_name ='PostsForQuestions' and column_name = 'selfevaltype_id'"
-	)
-	conn = op.get_bind()
-	res = conn.execute(fq_name)
-	names = res.fetchall()
-	for name in names:
-		op.drop_constraint(name[0], 'PostsForQuestions', 'foreignkey')
-	# drop key/index + column
-	op.drop_index("selfevaltype_id", "PostsForQuestions")
-	op.drop_column("PostsForQuestions", "selfevaltype_id")
+	with op.batch_alter_table('PostsForQuestions', naming_convention=convention) as batch_op:
+		batch_op.drop_constraint('fk_PostsForQuestions_selfevaltype_id_SelfEvaluationTypes', 'foreignkey')
+		# drop key/index + column
+		#batch_op.drop_index("selfevaltype_id")
+		batch_op.drop_column("selfevaltype_id")
 
-	op.add_column('PostsForJudgements', sa.Column('selfeval', sa.Boolean(), nullable=False))
+	op.add_column('PostsForJudgements',
+				  sa.Column('selfeval', sa.Boolean(), nullable=False, server_default='0', default=False))
 
-	#insert = text(
-	#	"INSERT INTO SelfEvaluationTypes (name) " +
-	#	"VALUES ('Comparison to a Similarly Scored Answer'), ('Comparison to a Higher Scored Answer')"
-	#)
-	#op.get_bind().execute(insert)
+
+# insert = text(
+# "INSERT INTO SelfEvaluationTypes (name) " +
+# "VALUES ('Comparison to a Similarly Scored Answer'), ('Comparison to a Higher Scored Answer')"
+#)
+#op.get_bind().execute(insert)
 
 def downgrade():
-
 	# insert selfevaltype_id column into PostsForQuestions table
 	op.add_column(u'PostsForQuestions', sa.Column('selfevaltype_id', sa.Integer(), nullable=True))
 
@@ -75,22 +70,29 @@ def downgrade():
 	selfevaltype = res.fetchall()
 
 	populate = text(
-		"UPDATE PostsForQuestions q " +
-		"JOIN PostsForQuestionsAndSelfEvaluationTypes qs ON q.id = qs.postsforquestions_id " +
-		"SET q.selfevaltype_id = qs.selfevaluationtypes_id " +
-		"WHERE qs.selfevaluationtypes_id = " + str(selfevaltype[0][0])
+		"UPDATE PostsForQuestions " +
+		"SET selfevaltype_id = "
+		"(SELECT qs.selfevaluationtypes_id " +
+		"FROM PostsForQuestionsAndSelfEvaluationTypes qs "
+		"WHERE PostsForQuestions.id = qs.postsforquestions_id " +
+		"AND qs.selfevaluationtypes_id = " + str(selfevaltype[0][0]) + ')'
 	)
 	op.get_bind().execute(populate)
-	op.create_foreign_key(None, 'PostsForQuestions', 'SelfEvaluationTypes',
-		['selfevaltype_id'], ['id'], ondelete="CASCADE")
+
+	with op.batch_alter_table('PostsForQuestions', naming_convention=convention) as batch_op:
+		batch_op.create_foreign_key('fk_selfevaltype_id', 'SelfEvaluationTypes',
+									['selfevaltype_id'], ['id'], ondelete="CASCADE")
+
+
+	with op.batch_alter_table('PostsForJudgements') as batch_op:
+		batch_op.drop_column('selfeval')
 
 	op.drop_table('PostsForQuestionsAndSelfEvaluationTypes')
 
-	op.drop_column('PostsForJudgements', 'selfeval')
 
-	#drop = text(
-	#	"DELETE FROM SelfEvaluationTypes " +
-	#	"WHERE name='Comparison to a Similarly Scored Answer' or name='Comparison to a Higher Scored Answer'"
-	#)
-	#op.get_bind().execute(drop)
+#drop = text(
+#	"DELETE FROM SelfEvaluationTypes " +
+#	"WHERE name='Comparison to a Similarly Scored Answer' or name='Comparison to a Higher Scored Answer'"
+#)
+#op.get_bind().execute(drop)
 

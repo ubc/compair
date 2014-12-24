@@ -14,43 +14,40 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.sql import text
 
+from acj.models import convention
+
 
 def upgrade():
+	op.create_table('SelfEvaluationTypes',
+					sa.Column('id', sa.Integer(), nullable=True),
+					sa.Column('name', sa.String(length=255), nullable=False),
+					sa.PrimaryKeyConstraint('id'),
+					sa.UniqueConstraint('name'),
+					mysql_charset='utf8',
+					mysql_collate='utf8_unicode_ci',
+					mysql_engine='InnoDB'
+	)
 
-    op.create_table('SelfEvaluationTypes',
-    sa.Column('id', sa.Integer(), nullable=True),
-    sa.Column('name', sa.String(length=255), nullable=False),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('name'),
-    mysql_charset='utf8',
-    mysql_collate='utf8_unicode_ci',
-    mysql_engine='InnoDB'
-    )
+	# populate table with a self evaluation type
+	insert = text(
+		"INSERT INTO SelfEvaluationTypes (name) " +
+		"VALUES ('No Comparison with Another Answer')"
+	)
+	op.get_bind().execute(insert)
 
-    # populate table with a self evaluation type
-    insert = text(
-        "INSERT INTO SelfEvaluationTypes (name) " +
-        "VALUES ('No Comparison with Another Answer')"
-    )
-    op.get_bind().execute(insert)
+	op.add_column(u'PostsForQuestions', sa.Column('selfevaltype_id', sa.Integer(), nullable=True))
 
-    op.add_column(u'PostsForQuestions', sa.Column('selfevaltype_id', sa.Integer(), nullable=True))
-    op.create_foreign_key(None, 'PostsForQuestions', 'SelfEvaluationTypes',
-        ['selfevaltype_id'], ['id'], ondelete="CASCADE")
+	with op.batch_alter_table('PostsForQuestions') as batch_op:
+		batch_op.create_foreign_key('fk_selfevaltype_id', 'SelfEvaluationTypes',
+									['selfevaltype_id'], ['id'], ondelete="CASCADE")
+
 
 def downgrade():
+	with op.batch_alter_table('PostsForQuestions', naming_convention=convention) as batch_op:
+		batch_op.drop_constraint('fk_PostsForQuestions_selfevaltype_id_SelfEvaluationTypes', type_='foreignkey')
+		# drop key/index + column
+		batch_op.drop_column("selfevaltype_id")
+	# batch_op.drop_index("selfevaltype_id")
 
-    fq_name = text(
-        "SELECT constraint_name FROM information_schema.key_column_usage " + \
-        "WHERE table_name ='PostsForQuestions' and column_name = 'selfevaltype_id'"
-    )
-    conn = op.get_bind()
-    res = conn.execute(fq_name)
-    names = res.fetchall()
-    for name in names:
-        op.drop_constraint(name[0], 'PostsForQuestions', 'foreignkey')
-    # drop key/index + column
-    op.drop_index("selfevaltype_id", "PostsForQuestions")
-    op.drop_column("PostsForQuestions", "selfevaltype_id")
-    op.drop_table('SelfEvaluationTypes')
+	op.drop_table('SelfEvaluationTypes')
 

@@ -14,40 +14,35 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.sql import text
 
+from acj.models import convention
+
 
 def upgrade():
-
-	#op.add_column('AnswerPairings', sa.Column('criteriaandpostsforquestions_id', sa.Integer(), nullable=False))
 	op.add_column('AnswerPairings', sa.Column('criteriaandpostsforquestions_id', sa.Integer(), nullable=True))
 	update = text(
-		"UPDATE AnswerPairings ap " +
-		"JOIN " +
-		"(SELECT q.id as questionId, cq.id " +
-		"FROM PostsForQuestions q " +
-		"JOIN CriteriaAndPostsForQuestions cq " +
-		"ON cq.id = (SELECT id " +
-		"FROM CriteriaAndPostsForQuestions c " +
-		"WHERE c.postsforquestions_id = q.id AND cq.active = True " +
-		"LIMIT 1)) criteria " +
-		"ON ap.postsforquestions_id = criteria.questionId " +
-		"SET ap.criteriaandpostsforquestions_id = criteria.id"
+		"UPDATE AnswerPairings SET criteriaandpostsforquestions_id = "
+		"(SELECT criteria.id FROM "
+		"(SELECT q.id AS questionId, cq.id "
+		"FROM PostsForQuestions q "
+		"JOIN CriteriaAndPostsForQuestions cq "
+		"ON cq.id = (SELECT id "
+		"FROM CriteriaAndPostsForQuestions c "
+		"WHERE c.postsforquestions_id = q.id AND cq.active = 1  LIMIT 1)) criteria "
+		"WHERE AnswerPairings.postsforquestions_id = criteria.questionId)"
 	)
 	op.get_bind().execute(update)
-	op.create_foreign_key(None, 'AnswerPairings', 'CriteriaAndPostsForQuestions',
-		['criteriaandpostsforquestions_id'], ['id'], ondelete="CASCADE")
+
+	with op.batch_alter_table('AnswerPairings', naming_convention=convention) as batch_op:
+		batch_op.create_foreign_key('fk_AnswerPairings_criteriaandpostsforquestions_id_CriteriaAndPostsForQuestions',
+									'CriteriaAndPostsForQuestions',
+									['criteriaandpostsforquestions_id'], ['id'], ondelete="CASCADE")
+
 
 def downgrade():
-
-	fq_name = text(
-		"SELECT constraint_name FROM information_schema.key_column_usage " + \
-		"WHERE table_name ='AnswerPairings' and column_name = 'criteriaandpostsforquestions_id'"
-	)
-	conn = op.get_bind()
-	res = conn.execute(fq_name)
-	names = res.fetchall()
-	for name in names:
-		op.drop_constraint(name[0], 'AnswerPairings', 'foreignkey')
-	# drop key/index + column
-	op.drop_index("criteriaandpostsforquestions_id", "AnswerPairings")
-	op.drop_column('AnswerPairings', 'criteriaandpostsforquestions_id')
+	with op.batch_alter_table('AnswerPairings', naming_convention=convention) as batch_op:
+		batch_op.drop_constraint('fk_AnswerPairings_criteriaandpostsforquestions_id_CriteriaAndPostsForQuestions',
+								 'foreignkey')
+		# drop key/index + column
+		# batch_op.drop_index("criteriaandpostsforquestions_id")
+		batch_op.drop_column('criteriaandpostsforquestions_id')
 
