@@ -1,7 +1,9 @@
 import json
-from acj.models import PostsForJudgements
+
 from data.fixtures.test_data import JudgementCommentsTestData
-from tests.test_acj import ACJTestCase
+
+from acj.tests.test_acj import ACJTestCase
+
 
 class EvalCommentsAPITests(ACJTestCase):
 	def setUp(self):

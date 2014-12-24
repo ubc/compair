@@ -1,13 +1,17 @@
+import json
+import string
+import random
+
 from flask.ext.bouncer import ensure
 from flask.ext.login import login_user, logout_user
 from werkzeug.exceptions import Unauthorized
-from acj import db, Users
 from data.fixtures import DefaultFixture
 from data.fixtures import UsersFactory
-from tests.test_acj import ACJTestCase
-from acj.models import UserTypesForSystem, UserTypesForCourse
 from data.fixtures.test_data import BasicTestData
-import json, string, random
+
+from acj import db, Users
+from acj.tests.test_acj import ACJTestCase
+from acj.models import UserTypesForSystem, UserTypesForCourse
 
 
 class UsersAPITests(ACJTestCase):

@@ -1,5 +1,7 @@
 from data.fixtures.test_data import GroupsTestData
-from tests.test_acj import ACJTestCase
+
+from acj.tests.test_acj import ACJTestCase
+
 
 class GroupsAPITests(ACJTestCase):
 	def setUp(self):

@@ -1,11 +1,12 @@
 import json
 import copy
 import operator
-import time
-from acj import db
-from acj.models import UserTypesForSystem, UserTypesForCourse, PostsForAnswers, Posts, Judgements, AnswerPairings
+
 from data.fixtures.test_data import JudgmentsTestData
-from tests.test_acj import ACJTestCase
+
+from acj.models import PostsForAnswers, Posts
+from acj.tests.test_acj import ACJTestCase
+
 
 __author__ = 'john'
 

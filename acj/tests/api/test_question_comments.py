@@ -1,6 +1,9 @@
 import json
+
 from data.fixtures.test_data import QuestionCommentsTestData
-from tests.test_acj import ACJTestCase
+
+from acj.tests.test_acj import ACJTestCase
+
 
 class QuestionCommentsAPITests(ACJTestCase):
     def setUp(self):

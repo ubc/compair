@@ -34,7 +34,7 @@ testf:
 	node_modules/karma/bin/karma start acj/static/test/config/karma.conf.js --single-run
 
 testb:
-	python -m unittest discover -s tests/
+	python -m unittest discover -s acj/tests/
 
 tdd:
 	node_modules/karma/bin/karma start acj/static/test/config/karma.conf.js
@@ -43,7 +43,7 @@ test: testf testb
 
 testci:
 	node_modules/karma/bin/karma start acj/static/test/config/karma.conf.js --single-run --browsers PhantomJS
-	python -m unittest discover -s tests/
+	python -m unittest discover -s acj/tests/
 
 run:
 	python manage.py runserver -h 0.0.0.0

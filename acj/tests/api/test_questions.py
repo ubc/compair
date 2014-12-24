@@ -1,8 +1,10 @@
 import datetime
 import json
+
+from data.fixtures.test_data import SimpleQuestionsTestData
+
 from acj.models import PostsForQuestions
-from data.fixtures.test_data import BasicTestData, SimpleQuestionsTestData
-from tests.test_acj import ACJTestCase
+from acj.tests.test_acj import ACJTestCase
 
 
 class QuestionsAPITests(ACJTestCase):

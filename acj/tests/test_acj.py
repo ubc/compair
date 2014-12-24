@@ -6,7 +6,8 @@ from flask.ext.testing import TestCase
 from acj import create_app
 from acj.manage.database import populate
 from acj.core import db
-from tests import test_app_settings
+from acj.tests import test_app_settings
+
 
 # Tests Checklist
 # - Unauthenticated users refused access with 401

@@ -1,9 +1,8 @@
+import unittest
+
 from acj import create_app
 from acj.core import db
-from tests import test_app_settings
-
-
-import unittest
+from acj.tests import test_app_settings
 from acj.models import Users
 
 
