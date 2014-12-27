@@ -1,6 +1,8 @@
 """
 	Database Manager, manipulate the database from commandline
 """
+from alembic import command
+from alembic.config import Config
 
 from flask.ext.script import Manager, prompt_bool
 from acj.core import db
@@ -24,6 +26,11 @@ def create(default_data=True, sample_data=False):
 	"""Creates database tables from sqlalchemy models"""
 	db.create_all()
 	populate(default_data, sample_data)
+
+	# add database version table and add current head version
+	alembic_cfg = Config("alembic.ini")
+	command.stamp(alembic_cfg, 'head')
+
 	print ('All tables are created and data is loaded.')
 
 
