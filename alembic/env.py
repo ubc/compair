@@ -56,13 +56,18 @@ def run_migrations_online():
 	and associate a connection with the context.
 
 	"""
-	engine = engine_from_config(
-		config.get_section(config.config_ini_section),
-		prefix='sqlalchemy.',
-		poolclass=pool.NullPool
-	)
-
-	connection = engine.connect()
+	# the connection may come from the config object
+	if hasattr(config, 'connection'):
+		# load connection from config object
+		connection = config.connection
+	else:
+		# load connection from config file
+		engine = engine_from_config(
+			config.get_section(config.config_ini_section),
+			prefix='sqlalchemy.',
+			poolclass=pool.NullPool
+		)
+		connection = engine.connect()
 
 	context.configure(
 		connection=connection,
@@ -73,7 +78,9 @@ def run_migrations_online():
 		with context.begin_transaction():
 			context.run_migrations()
 	finally:
-		connection.close()
+		# don't close connection if it is from outside
+		if not hasattr(config, 'connection'):
+			connection.close()
 
 
 if context.is_offline_mode():
