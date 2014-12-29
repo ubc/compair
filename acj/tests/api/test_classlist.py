@@ -141,6 +141,18 @@ class ClassListAPITest(ACJTestCase):
 		self.assertEqual(students[0]['user']['name'], expected['name'])
 		self.logout()
 
+		self.login(self.data.get_authorized_ta().username)
+		rv = self.client.get(url)
+		self.assert200(rv)
+		students = rv.json['students']
+		expected = {
+			'id': self.data.get_authorized_student().id,
+			'name': self.data.get_authorized_student().fullname
+		}
+		self.assertEqual(students[0]['user']['id'], expected['id'])
+		self.assertEqual(students[0]['user']['name'], expected['name'])
+		self.logout()
+
 		# test success - student
 		self.login(self.data.get_authorized_student().username)
 		rv = self.client.get(url)
