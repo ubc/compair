@@ -281,6 +281,54 @@ class UsersAPITests(ACJTestCase):
 		self.assertEqual("thebest", rv.json['displayname'])
 		self.logout()
 
+		instructor = UserTypesForSystem.query.filter_by(name=UserTypesForSystem.TYPE_INSTRUCTOR).first()
+		# test updating username, student number, usertype for system - instructor
+		# will not change the values
+		self.login(self.data.get_authorized_instructor().username)
+
+		valid = expected.copy()
+		valid['username'] = "wrongUsername"
+		rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+		self.assert200(rv)
+		self.assertEqual(expected.username, rv.json['username'])
+
+		valid = expected.copy()
+		valid['student_no'] = "999999999999"
+		rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+		self.assert200(rv)
+		self.assertEqual(expected.student_no, rv.json['student_no'])
+
+		valid = expected.copy()
+		valid['usertypesforsystem_id'] = instructor.id
+		rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+		self.assert200(rv)
+		self.assertEqual(expected.usertypesforsystem_id, rv.json['usertypesforsystem_id'])
+
+		self.logout()
+
+		# test updating username, student number, usertype for system - admin
+		self.login('root')
+
+		valid = expected.copy()
+		valid['username'] = 'newUsername'
+		rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+		self.assert200(rv)
+		self.assertEqual('newUsername', rv.json['username'])
+
+		valid = expected.copy()
+		valid['student_no'] = '99999999'
+		rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+		self.assert200(rv)
+		self.assertEqual('99999999', rv.json['student_no'])
+
+		valid = expected.copy()
+		valid['usertypesforsystem_id'] = instructor.id
+		rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+		self.assert200(rv)
+		self.assertEqual(str(instructor.id), rv.json['usertypesforsystem_id'])
+
+		self.logout()
+
 	def get_course_list(self):
 		# test login required
 		url = '/api/users/'+str(self.data.get_authorized_instructor().id)+'/courses'
