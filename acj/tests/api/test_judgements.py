@@ -386,3 +386,177 @@ class JudgementAPITests(ACJTestCase):
 		self.assert200(rv)
 		self.assertIn(rv.json['answer1']['id'], possible_answer_ids)
 		self.assertIn(rv.json['answer2']['id'], possible_answer_ids)
+
+	def test_get_judgement_count(self):
+		url = self._build_url(self.data.get_course().id, self.question.id)
+
+		# test login required
+		tail = '/users/' + str(self.data.get_authorized_student().id) + '/count'
+		rv = self.client.get(url + tail)
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_student().username)
+		tail = '/users/' + str(self.data.get_unauthorized_student().id) + '/count'
+		rv = self.client.get(url + tail)
+		self.assert403(rv)
+
+		self.login(self.data.get_authorized_instructor().username)
+		tail = '/users/' + str(self.data.get_authorized_instructor().id) + '/count'
+		# test invalid course id
+		invalid_url = self._build_url(999, self.question.id)
+		rv = self.client.get(invalid_url + tail)
+		self.assert404(rv)
+
+		# test invalid question id
+		invalid_url = self._build_url(self.data.get_course().id, 999)
+		rv = self.client.get(invalid_url + tail)
+		self.assert404(rv)
+
+		# test authorized instructor
+		rv = self.client.get(url + tail)
+		self.assert200(rv)
+		self.assertEqual(rv.json['count'], 0)
+		self.logout()
+
+		# test authorized student
+		winners = self._submit_all_possible_judgements_for_user(
+			self.data.get_authorized_student().username)['winners']
+		tail = '/users/' + str(self.data.get_authorized_student().id) + '/count'
+		self.login(self.data.get_authorized_student().username)
+		rv = self.client.get(url + tail)
+		self.assert200(rv)
+		self.assertEqual(rv.json['count'], len(winners))
+		self.logout()
+
+	def test_get_all_judgement_count(self):
+		url = '/api/courses/' + str(self.data.get_course().id) + '/judgements/count'
+
+		# test login required
+		rv = self.client.get(url)
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_instructor().username)
+		rv = self.client.get(url)
+		self.assert403(rv)
+		self.logout()
+
+		self.login(self.data.get_authorized_instructor().username)
+		# test invalid course id
+		rv = self.client.get('/api/courses/999/judgements/count')
+		self.assert404(rv)
+
+		questions = self.data.get_questions()
+		# test authorized instructor
+		rv = self.client.get(url)
+		self.assert200(rv)
+		count = rv.json['judgements']
+
+		for ques in questions:
+			quesId = str(ques.id)
+			self.assertTrue(quesId in count)
+			self.assertEqual(count[quesId], 0)
+
+		self.logout()
+
+		# test authorized student
+		winners = self._submit_all_possible_judgements_for_user(
+			self.data.get_authorized_student().username)['winners']
+		judgement_count = len(winners)
+		self.login(self.data.get_authorized_student().username)
+		rv = self.client.get(url)
+		self.assert200(rv)
+		count = rv.json['judgements']
+
+		for ques in questions:
+			quesId = str(ques.id)
+			self.assertTrue(quesId in count)
+			jcount = judgement_count if ques.id == self.question.id else 0
+			self.assertEqual(count[quesId], jcount)
+
+		self.logout()
+
+	def test_get_all_availPair_logic(self):
+		url = '/api/courses/' + str(self.data.get_course().id) + '/judgements/availpair'
+
+		# test login required
+		rv = self.client.get(url)
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_student().username)
+		rv = self.client.get(url)
+		self.assert403(rv)
+		self.logout()
+
+		self.login(self.data.get_authorized_student().username)
+		# test invalid course id
+		invalid_url = '/api/courses/999/judgements/availpair'
+		rv = self.client.get(invalid_url)
+		self.assert404(rv)
+
+		first_ques = self.data.get_questions()[0]
+		last_ques = self.data.get_questions()[-1]
+		expected = {ques.id: True for ques in self.data.get_questions()}
+		expected[last_ques.id] = False
+		# test authorized student - when haven't judged
+		rv = self.client.get(url)
+		self.assert200(rv)
+		logic = rv.json['availPairsLogic']
+		for ques in self.data.get_questions():
+			self.assertEqual(logic[str(ques.id)], expected[ques.id])
+		self.logout()
+
+		self._submit_all_possible_judgements_for_user(self.data.get_authorized_student().username)
+		self.login(self.data.get_authorized_student().username)
+		# test authorized student - when have judged all
+		rv = self.client.get(url)
+		self.assert200(rv)
+		logic = rv.json['availPairsLogic']
+		expected[first_ques.id] = False
+		for ques in self.data.get_questions():
+			self.assertEqual(logic[str(ques.id)], expected[ques.id])
+		self.logout()
+
+	def test_get_availPair_logic(self):
+		url = self._build_url(self.data.get_course().id, self.question.id)
+
+		tail = '/users/' + str(self.data.get_unauthorized_student().id) + '/availpair'
+		# test login required
+		rv = self.client.get(url + tail)
+		self.assert401(rv)
+
+		# test unauthorized user
+		self.login(self.data.get_unauthorized_student().username)
+		rv = self.client.get(url + tail)
+		self.assert403(rv)
+		self.logout()
+
+		# test invalid course id
+		tail = '/users/' + str(self.data.get_authorized_student().id) + '/availpair'
+		self.login(self.data.get_authorized_student().username)
+		invalid_url = self._build_url(999, self.question.id)
+		rv = self.client.get(invalid_url + tail)
+		self.assert404(rv)
+
+		# test invalid question id
+		invalid_url = self._build_url(self.data.get_course().id, 999)
+		rv = self.client.get(invalid_url + tail)
+		self.assert404(rv)
+		self.logout()
+
+		self.login(self.data.get_authorized_student().username)
+		# test authorized student - when haven't judged
+		rv = self.client.get(url + tail)
+		self.assert200(rv)
+		self.assertTrue(rv.json['availPairsLogic'])
+		self.logout()
+
+		self._submit_all_possible_judgements_for_user(self.data.get_authorized_student().username)
+		# test authorized student - when have judged all
+		self.login(self.data.get_authorized_student().username)
+		rv = self.client.get(url + tail)
+		self.assert200(rv)
+		self.assertFalse(rv.json['availPairsLogic'])
+		self.logout()

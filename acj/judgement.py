@@ -256,7 +256,8 @@ class AvailPairAll(Resource):
 
 		# ineligible authors - eg. instructors, TAs, dropped student, current user
 		student = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first_or_404()
-		ineligible_users = CoursesAndUsers.query.filter(CoursesAndUsers.usertypesforcourse_id!=student.id)\
+		ineligible_users = CoursesAndUsers.query.filter_by(courses_id=course_id) \
+			.filter(CoursesAndUsers.usertypesforcourse_id!=student.id) \
 			.values(CoursesAndUsers.users_id)
 		ineligible_userIds_base = [u[0] for u in ineligible_users]
 		ineligible_userIds_base.append(current_user.id)
@@ -288,7 +289,8 @@ class AvailPair(Resource):
 		question = PostsForQuestions.query.get_or_404(question_id)
 		# ineligible authors - eg. instructors, TAs, dropped student, current user
 		student = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first_or_404()
-		ineligible_users = CoursesAndUsers.query.filter(CoursesAndUsers.usertypesforcourse_id!=student.id)\
+		ineligible_users = CoursesAndUsers.query.filter_by(courses_id=course_id) \
+			.filter(CoursesAndUsers.usertypesforcourse_id!=student.id) \
 			.values(CoursesAndUsers.users_id)
 		ineligible_userIds_base = [u[0] for u in ineligible_users]
 		ineligible_userIds_base.append(user_id)

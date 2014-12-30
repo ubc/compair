@@ -273,6 +273,10 @@ class JudgmentsTestData(CriteriaTestData):
         self.answer_period_question = self.create_question_in_answer_period(
             self.get_course(), self.get_authorized_ta())
         self.questions.append(self.answer_period_question)
+        # create question criteria
+        qcriteria = self.create_question_criteria(self.get_default_criteria(), self.answer_period_question, True)
+        self.criteria_by_questions[question.id] = qcriteria
+        self.questioncriteria.append(qcriteria)
 
     def get_student_answers(self):
         return self.student_answers
@@ -319,9 +323,9 @@ class JudgementCommentsTestData(JudgmentsTestData):
 
         self.feedback = {}
         self.feedback[self.judge_1.answerpairing.postsforanswers_id1] = \
-			self.create_judge_feedback(self.judge_1.answerpairing.postsforanswers_id1)
+            self.create_judge_feedback(self.judge_1.answerpairing.postsforanswers_id1)
         self.feedback[self.judge_1.answerpairing.postsforanswers_id2] = \
-			self.create_judge_feedback(self.judge_1.answerpairing.postsforanswers_id2)
+            self.create_judge_feedback(self.judge_1.answerpairing.postsforanswers_id2)
 
     def get_judge_feedback(self):
         return self.feedback
@@ -360,7 +364,7 @@ class JudgementCommentsTestData(JudgmentsTestData):
         feedback_content = factory.fuzzy.FuzzyText(length=12)
         comment = self.create_comment(self.judging_student, self.get_course(), feedback_content)
         feedback = PostsForAnswersAndPostsForCommentsFactory(postsforcomments=comment,
-						postsforanswers_id=answer, evaluation=True)
+                        postsforanswers_id=answer, evaluation=True)
         db.session.commit()
         return feedback
 
