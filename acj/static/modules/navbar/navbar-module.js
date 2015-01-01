@@ -30,16 +30,18 @@ module.controller(
 
 		// determine if we're in a course so we know whether to show
 		// the course settings
-		$scope.inCourse = false;
-		Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function(result) {
-			$scope.canCreateUsers = result;
-		});
-		Authorize.can(Authorize.CREATE, CourseResource.MODEL).then(function(result) {
-		   $scope.canCreateCourses = result;
-		});
-		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(result) {
-		   $scope.canManageQuestions = result;
-		});
+		//$scope.inCourse = false;
+		$scope.getPermissions = function() {
+			Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function (result) {
+				$scope.canCreateUsers = result;
+			});
+			Authorize.can(Authorize.CREATE, CourseResource.MODEL).then(function (result) {
+				$scope.canCreateCourses = result;
+			});
+			Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function (result) {
+				$scope.canManageQuestions = result;
+			});
+		};
 		$scope.setInCourse = function() {
 			var courseId = $route.current.params['courseId'];
 			$scope.inCourse = false;
@@ -61,13 +63,18 @@ module.controller(
 			$scope.setInCourse();
 		});
 		// show course configure options if user can edit courses
-		Authorize.can(Authorize.EDIT, CourseResource.MODEL).then(function(result) {
+		/*Authorize.can(Authorize.EDIT, CourseResource.MODEL).then(function(result) {
 			$scope.canEditCourse = result;
-		})
+		})*/
 
 		Session.getUser().then(function(user) {
 			$scope.loggedInUser = user;
 			$log.info("Logged in as " + $scope.loggedInUser.username);
+		});
+
+		$scope.getPermissions();
+		$scope.$on(AuthenticationService.LOGIN_EVENT, function() {
+		   $scope.getPermissions();
 		});
 
 		// listen for changes in authentication state

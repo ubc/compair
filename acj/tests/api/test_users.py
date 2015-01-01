@@ -282,9 +282,9 @@ class UsersAPITests(ACJTestCase):
 		self.logout()
 
 		instructor = UserTypesForSystem.query.filter_by(name=UserTypesForSystem.TYPE_INSTRUCTOR).first()
-		# test updating username, student number, usertype for system - instructor
+		# test updating username, student number, usertype for system - student
 		# will not change the values
-		self.login(self.data.get_authorized_instructor().username)
+		self.login(self.data.get_authorized_student.username)
 
 		valid = expected.copy()
 		valid['username'] = "wrongUsername"
