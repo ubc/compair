@@ -209,7 +209,7 @@ class UsersAPITests(ACJTestCase):
 			self.assertEqual(user['displayname'], rv.json['displayname'])
 
 	def test_edit_user(self):
-		user = self.data.get_authorized_student()
+		user = self.data.get_authorized_instructor()
 		url = 'api/users/' + str(user.id)
 		expected = {
 			'id': user.id,
@@ -227,8 +227,8 @@ class UsersAPITests(ACJTestCase):
 		self.assert401(rv)
 
 		# test unauthorized user
-		# currently, instructors cannot edit users
-		self.login(self.data.get_authorized_instructor().username)
+		# currently, instructors cannot edit users - except their own profile
+		self.login(self.data.get_unauthorized_instructor().username)
 		rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
 		self.assert403(rv)
 		self.logout()
@@ -239,7 +239,7 @@ class UsersAPITests(ACJTestCase):
 		self.assert404(rv)
 
 		# test unmatched user's id
-		invalid_url = '/api/users/' + str(self.data.get_authorized_instructor().id)
+		invalid_url = '/api/users/' + str(self.data.get_unauthorized_instructor().id)
 		rv = self.client.post(invalid_url, data=json.dumps(expected), content_type='application/json')
 		self.assert400(rv)
 
@@ -273,7 +273,7 @@ class UsersAPITests(ACJTestCase):
 		self.logout()
 
 		# test successful update by user
-		self.login(self.data.get_authorized_student().username)
+		self.login(self.data.get_authorized_instructor().username)
 		valid = expected.copy()
 		valid['displayname'] = "thebest"
 		rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
@@ -281,28 +281,28 @@ class UsersAPITests(ACJTestCase):
 		self.assertEqual("thebest", rv.json['displayname'])
 		self.logout()
 
-		instructor = UserTypesForSystem.query.filter_by(name=UserTypesForSystem.TYPE_INSTRUCTOR).first()
-		# test updating username, student number, usertype for system - student
-		# will not change the values
-		self.login(self.data.get_authorized_student().username)
+		# test unable to update username, student_no, usertypesforsystem_id - instructor
+		student = UserTypesForSystem.query.filter_by(name=UserTypesForSystem.TYPE_NORMAL).first()
+
+		self.login(user.username)
 
 		valid = expected.copy()
 		valid['username'] = "wrongUsername"
 		rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
 		self.assert200(rv)
-		self.assertEqual(expected.username, rv.json['username'])
+		self.assertEqual(user.username, rv.json['username'])
 
 		valid = expected.copy()
 		valid['student_no'] = "999999999999"
 		rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
 		self.assert200(rv)
-		self.assertEqual(expected.student_no, rv.json['student_no'])
+		self.assertEqual(user.student_no, rv.json['student_no'])
 
 		valid = expected.copy()
-		valid['usertypesforsystem_id'] = instructor.id
+		valid['usertypesforsystem_id'] = student.id
 		rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
 		self.assert200(rv)
-		self.assertEqual(expected.usertypesforsystem_id, rv.json['usertypesforsystem_id'])
+		self.assertEqual(user.usertypesforsystem_id, rv.json['usertypesforsystem_id'])
 
 		self.logout()
 
@@ -322,10 +322,10 @@ class UsersAPITests(ACJTestCase):
 		self.assertEqual('99999999', rv.json['student_no'])
 
 		valid = expected.copy()
-		valid['usertypesforsystem_id'] = instructor.id
+		valid['usertypesforsystem_id'] = student.id
 		rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
 		self.assert200(rv)
-		self.assertEqual(str(instructor.id), rv.json['usertypesforsystem_id'])
+		self.assertEqual(user.usertypesforsystem_id, rv.json['usertypesforsystem_id'])
 
 		self.logout()
 

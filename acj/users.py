@@ -81,7 +81,7 @@ class UserAPI(Resource):
 
 			student_no = params.get("student_no", user.student_no)
 			student_no_exists = Users.query.filter_by(student_no=student_no).first()
-			if user.student_no is not None and student_no_exists and student_no_exists.id != user.id:
+			if student_no is not None and student_no_exists and student_no_exists.id != user.id:
 				return {"error":"This student number already exists. Please pick another."}, 409
 			else:
 				user.student_no = student_no
@@ -101,6 +101,8 @@ class UserAPI(Resource):
 		user.email = params.get("email", user.email)
 		changes = get_model_changes(user)
 
+		restrict_user = not allow(EDIT, user)
+
 		try:
 			db.session.commit()
 			on_user_modified.send(
@@ -112,7 +114,7 @@ class UserAPI(Resource):
 			db.session.rollback()
 			current_app.logger.error("Failed to edit user. Duplicate.")
 			return {'error': 'A user with the same identifier already exists.'}, 409
-		return marshal(user, dataformat.getUsers())
+		return marshal(user, dataformat.getUsers(restrict_user))
 
 
 # /
