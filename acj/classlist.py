@@ -200,8 +200,11 @@ class ClasslistRootAPI(Resource):
 		return {'objects':marshal(classlist, dataformat.getCoursesAndUsers(restrict_users, include_user))}
 	@login_required
 	def post(self, course_id):
-		require(CREATE, Users())
+		Courses.query.get_or_404(course_id)
+		coursesandusers = CoursesAndUsers(courses_id=course_id)
+		require(EDIT, coursesandusers)
 		file = request.files['file']
+		results = {'success': 0, 'invalids': []}
 		if file and allowed_file(file.filename, current_app.config['UPLOAD_ALLOWED_EXTENSIONS']):
 			unique = str(uuid.uuid4())
 			filename = unique + secure_filename(file.filename)
@@ -214,7 +217,8 @@ class ClasslistRootAPI(Resource):
 				for row in spamreader:
 					if row:
 						users.append(row)
-				results = import_users(course_id, users)
+				if len(users) > 0:
+					results = import_users(course_id, users)
 				on_classlist_upload.send(
 					current_app._get_current_object(),
 					event_name=on_classlist_upload.name,
