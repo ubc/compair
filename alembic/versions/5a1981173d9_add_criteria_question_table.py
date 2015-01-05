@@ -61,7 +61,7 @@ def upgrade():
 	)
 	op.get_bind().execute(update)
 	with op.batch_alter_table('Scores', naming_convention=convention) as batch_op:
-		batch_op.create_foreign_key('fk_criteriaandpostsforquestions_id', 'CriteriaAndPostsForQuestions',
+		batch_op.create_foreign_key('fk_Scores_criteriaandpostsforquestions_id_CriteriaAndPostsForQuestions', 'CriteriaAndPostsForQuestions',
 									['criteriaandpostsforquestions_id'], ['id'], ondelete="CASCADE")
 		batch_op.alter_column('criteriaandpostsforquestions_id', nullable=False, existing_type=sa.Integer())
 		# batch_op.drop_constraint('criteriaandcourses_id', 'foreignkey')
@@ -85,7 +85,7 @@ def upgrade():
 	)
 	op.get_bind().execute(update)
 	with op.batch_alter_table('Judgements', naming_convention=convention) as batch_op:
-		batch_op.create_foreign_key('fk_criteriaandpostsforquestions_id', 'CriteriaAndPostsForQuestions',
+		batch_op.create_foreign_key('fk_Judgements_criteriaandpostsforquestions_id_CriteriaAndPostsForQuestions', 'CriteriaAndPostsForQuestions',
 									['criteriaandpostsforquestions_id'], ['id'], ondelete="CASCADE")
 		batch_op.alter_column('criteriaandpostsforquestions_id', nullable=False, existing_type=sa.Integer())
 		# batch_op.drop_index("criteriaandcourses_id")
@@ -113,7 +113,7 @@ def downgrade():
 	)
 	op.get_bind().execute(update)
 	with op.batch_alter_table('Judgements', naming_convention=convention) as batch_op:
-		batch_op.create_foreign_key('fk_criteriaandcourses_id', 'CriteriaAndCourses',
+		batch_op.create_foreign_key('fk_Judgements_criteriaandcourses_id_CriteriaAndCourses', 'CriteriaAndCourses',
 									['criteriaandcourses_id'], ['id'], ondelete="CASCADE")
 		batch_op.alter_column('criteriaandcourses_id', nullable=False, existing_type=sa.Integer())
 		batch_op.drop_constraint('fk_Judgements_criteriaandpostsforquestions_id_CriteriaAndPostsForQuestions',
@@ -140,7 +140,7 @@ def downgrade():
 	)
 	op.get_bind().execute(update)
 	with op.batch_alter_table('Scores', naming_convention=convention) as batch_op:
-		batch_op.create_foreign_key('fk_criteriaandcourses_id', 'CriteriaAndCourses',
+		batch_op.create_foreign_key('fk_Scores_criteriaandcourses_id_CriteriaAndCourses', 'CriteriaAndCourses',
 									['criteriaandcourses_id'], ['id'], ondelete="CASCADE")
 		batch_op.alter_column('criteriaandcourses_id', nullable=False, existing_type=sa.Integer())
 		batch_op.drop_constraint('fk_Scores_criteriaandpostsforquestions_id_CriteriaAndPostsForQuestions', 'foreignkey')

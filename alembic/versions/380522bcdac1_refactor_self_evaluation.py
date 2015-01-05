@@ -80,7 +80,7 @@ def downgrade():
 	op.get_bind().execute(populate)
 
 	with op.batch_alter_table('PostsForQuestions', naming_convention=convention) as batch_op:
-		batch_op.create_foreign_key('fk_selfevaltype_id', 'SelfEvaluationTypes',
+		batch_op.create_foreign_key('fk_PostsForQuestions_selfevaltype_id_SelfEvaluationTypes', 'SelfEvaluationTypes',
 									['selfevaltype_id'], ['id'], ondelete="CASCADE")
 
 
