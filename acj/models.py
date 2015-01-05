@@ -65,6 +65,7 @@ convention = {
 	"pk": "pk_%(table_name)s"
 }
 
+db.metadata.naming_convention = convention
 
 class UserTypesForCourse(db.Model):
 	__tablename__ = "UserTypesForCourse"
@@ -207,12 +208,12 @@ class Courses(db.Model):
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	name = db.Column(db.String(255), unique=True, nullable=False)
 	description = db.Column(db.Text)
-	available = db.Column(db.Boolean, default=True, nullable=False)
+	available = db.Column(db.Boolean(name='available'), default=True, nullable=False)
 	coursesandusers = db.relationship("CoursesAndUsers")
 	_criteriaandcourses = db.relationship("CriteriaAndCourses")
 	# allow students to make question posts
-	enable_student_create_questions = db.Column(db.Boolean, default=False, nullable=False)
-	enable_student_create_tags = db.Column(db.Boolean, default=False, nullable=False)
+	enable_student_create_questions = db.Column(db.Boolean(name='enable_student_create_questions'), default=False, nullable=False)
+	enable_student_create_tags = db.Column(db.Boolean(name='enable_student_create_tags'), default=False, nullable=False)
 	modified = db.Column(
 		db.DateTime,
 		default=datetime.datetime.utcnow,
@@ -283,7 +284,7 @@ class Groups(db.Model):
 
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
 	name = db.Column(db.String(255), nullable=False)
-	active = db.Column(db.Boolean, default=True, nullable=False)
+	active = db.Column(db.Boolean(name='active'), default=True, nullable=False)
 	courses_id = db.Column(
 		db.Integer,
 		db.ForeignKey("Courses.id", ondelete="CASCADE"),
@@ -313,7 +314,7 @@ class GroupsAndUsers(db.Model):
 		db.ForeignKey("Users.id", ondelete="CASCADE"),
 		nullable=False)
 	user = db.relationship("Users")
-	active = db.Column(db.Boolean, default=True, nullable=False)
+	active = db.Column(db.Boolean(name='active'), default=True, nullable=False)
 	modified = db.Column(
 		db.DateTime,
 		default=datetime.datetime.utcnow,
@@ -406,7 +407,7 @@ class PostsForQuestions(db.Model):
 	judge_start = db.Column(db.DateTime(timezone=True), nullable=True)
 	judge_end = db.Column(db.DateTime(timezone=True), nullable=True)
 	num_judgement_req = db.Column(db.Integer, nullable=False)
-	can_reply = db.Column(db.Boolean, default=False, nullable=False)
+	can_reply = db.Column(db.Boolean(name='can_reply'), default=False, nullable=False)
 	selfevaltype = db.relationship("PostsForQuestionsAndSelfEvaluationTypes", cascade="delete")
 	modified = db.Column(
 		db.DateTime,
@@ -495,7 +496,7 @@ class PostsForAnswers(db.Model):
 	comments = db.relationship("PostsForAnswersAndPostsForComments", cascade="delete")
 	_scores = db.relationship("Scores", cascade="delete")
 	# flagged for instructor review as inappropriate or incomplete
-	flagged = db.Column(db.Boolean, default=False, nullable=False)
+	flagged = db.Column(db.Boolean(name='flagged'), default=False, nullable=False)
 	users_id_flagger = db.Column(
 		db.Integer,
 		db.ForeignKey('Users.id', ondelete="CASCADE"))
@@ -577,8 +578,8 @@ class PostsForAnswersAndPostsForComments(db.Model):
 		db.ForeignKey('PostsForComments.id', ondelete="CASCADE"),
 		nullable=False)
 	postsforcomments = db.relationship("PostsForComments")
-	evaluation = db.Column(db.Boolean, default=False, nullable=False)
-	selfeval = db.Column(db.Boolean, default=False, nullable=False)
+	evaluation = db.Column(db.Boolean(name='evaluation'), default=False, nullable=False)
+	selfeval = db.Column(db.Boolean(name='selfeval'), default=False, nullable=False)
 
 	@hybrid_property
 	def courses_id(self):
@@ -652,8 +653,8 @@ class Criteria(db.Model):
 		db.ForeignKey('Users.id', ondelete="CASCADE"),
 		nullable=False)
 	user = db.relationship("Users")
-	public = db.Column(db.Boolean, default=False, nullable=False)
-	default = db.Column(db.Boolean, default=True, nullable=False)
+	public = db.Column(db.Boolean(name='public'), default=False, nullable=False)
+	default = db.Column(db.Boolean(name='default'), default=True, nullable=False)
 	question_criteria = db.relationship("CriteriaAndPostsForQuestions")
 	modified = db.Column(
 		db.DateTime,
@@ -683,7 +684,7 @@ class CriteriaAndCourses(db.Model):
 		db.ForeignKey('Courses.id', ondelete="CASCADE"),
 		nullable=False)
 	course = db.relationship("Courses")
-	active = db.Column(db.Boolean, default=True, nullable=False)
+	active = db.Column(db.Boolean(name='active'), default=True, nullable=False)
 
 	@hybrid_property
 	def inQuestion(self):
@@ -706,7 +707,7 @@ class CriteriaAndPostsForQuestions(db.Model):
 		db.ForeignKey('Questions.id', ondelete="CASCADE"),
 		nullable=False)
 	question = db.relationship("PostsForQuestions")
-	active = db.Column(db.Boolean, default=True, nullable=False)
+	active = db.Column(db.Boolean(name='active'), default=True, nullable=False)
 	judgements = db.relationship("Judgements")
 	scores = db.relationship("Scores")
 
@@ -855,7 +856,7 @@ class PostsForJudgements(db.Model):
 		db.ForeignKey('Judgements.id', ondelete="CASCADE"),
 		nullable=False)
 	judgement = db.relationship("Judgements")
-	selfeval = db.Column(db.Boolean, default=False, nullable=False)
+	selfeval = db.Column(db.Boolean(name='selfeval'), default=False, nullable=False)
 
 	@hybrid_property
 	def courses_id(self):

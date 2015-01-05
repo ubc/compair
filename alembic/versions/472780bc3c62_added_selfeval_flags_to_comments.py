@@ -17,9 +17,9 @@ from acj.models import convention
 
 def upgrade():
 	op.add_column('PostsForAnswersAndPostsForComments',
-				  sa.Column('evaluation', sa.Boolean(), nullable=False, server_default='0', default=False))
+				  sa.Column('evaluation', sa.Boolean(name='evaluation'), nullable=False, server_default='0', default=False))
 	op.add_column('PostsForAnswersAndPostsForComments',
-				  sa.Column('selfeval', sa.Boolean(), nullable=False, server_default='0', default=False))
+				  sa.Column('selfeval', sa.Boolean(name='selfeval'), nullable=False, server_default='0', default=False))
 
 
 def downgrade():

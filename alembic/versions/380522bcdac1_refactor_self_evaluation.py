@@ -47,7 +47,7 @@ def upgrade():
 		batch_op.drop_column("selfevaltype_id")
 
 	op.add_column('PostsForJudgements',
-				  sa.Column('selfeval', sa.Boolean(), nullable=False, server_default='0', default=False))
+				  sa.Column('selfeval', sa.Boolean(name='selfeval'), nullable=False, server_default='0', default=False))
 
 
 # insert = text(

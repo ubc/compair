@@ -29,8 +29,8 @@ def upgrade():
 
 	# set existing criteria's active attribute to True using server_default
 	op.add_column('CriteriaAndCourses',
-				  sa.Column('active', sa.Boolean(), default=True, server_default='1', nullable=False))
-	op.add_column('Criteria', sa.Column('public', sa.Boolean, default=False, server_default='0', nullable=False))
+				  sa.Column('active', sa.Boolean(name='active'), default=True, server_default='1', nullable=False))
+	op.add_column('Criteria', sa.Column('public', sa.Boolean(name='public'), default=False, server_default='0', nullable=False))
 
 	# set the first criteria as public
 	t = {"name": "Which is better?", "public": True}

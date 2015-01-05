@@ -23,7 +23,7 @@ def upgrade():
 					sa.Column('id', sa.Integer(), nullable=False),
 					sa.Column('criteria_id', sa.Integer(), nullable=False),
 					sa.Column('questions_id', sa.Integer(), nullable=False),
-					sa.Column('active', sa.Boolean(), nullable=False),
+					sa.Column('active', sa.Boolean(name='active'), nullable=False),
 					sa.ForeignKeyConstraint(['criteria_id'], ['Criteria.id'], ondelete='CASCADE'),
 					sa.ForeignKeyConstraint(['questions_id'], ['Questions.id'], ondelete='CASCADE'),
 					sa.PrimaryKeyConstraint('id'),
