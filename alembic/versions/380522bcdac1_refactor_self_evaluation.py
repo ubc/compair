@@ -84,7 +84,7 @@ def downgrade():
 									['selfevaltype_id'], ['id'], ondelete="CASCADE")
 
 
-	with op.batch_alter_table('PostsForJudgements') as batch_op:
+	with op.batch_alter_table('PostsForJudgements', naming_convention=convention) as batch_op:
 		batch_op.drop_column('selfeval')
 
 	op.drop_table('PostsForQuestionsAndSelfEvaluationTypes')

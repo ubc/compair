@@ -13,6 +13,7 @@ down_revision = '3b053548b60f'
 from alembic import op
 import sqlalchemy as sa
 
+from acj.models import convention
 
 def upgrade():
 	op.add_column('PostsForAnswersAndPostsForComments',
@@ -22,6 +23,6 @@ def upgrade():
 
 
 def downgrade():
-	with op.batch_alter_table('PostsForAnswersAndPostsForComments') as batch_op:
+	with op.batch_alter_table('PostsForAnswersAndPostsForComments', naming_convention=convention) as batch_op:
 		batch_op.drop_column('selfeval')
 		batch_op.drop_column('evaluation')

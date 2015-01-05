@@ -19,3 +19,5 @@ class TestMigration(ACJTestCase):
 		command.downgrade(alembic_cfg, "base")
 
 		command.upgrade(alembic_cfg, "head")
+
+		command.downgrade(alembic_cfg, "base")
