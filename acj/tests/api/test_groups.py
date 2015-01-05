@@ -2,6 +2,8 @@ from data.fixtures.test_data import GroupsTestData
 
 from acj.tests.test_acj import ACJTestCase
 
+import io
+
 
 class GroupsAPITests(ACJTestCase):
 	def setUp(self):
@@ -198,6 +200,70 @@ class GroupsAPITests(ACJTestCase):
 		self.assert404(rv)
 
 		self.logout()
+
+	def test_import_groups(self):
+		url = '/api/courses/' + str(self.data.get_course().id) + '/groups'
+
+		content = self.data.get_authorized_student().username + ",Alpha"
+		encoded_content = content.encode()
+		filename = "groups.csv"
+
+		# test login required
+		file = io.BytesIO(encoded_content)
+		rv = self.client.post(url, data=dict(userIdentifier="username", file=(file, filename)))
+		self.assert401(rv)
+		file.close()
+
+		# test unauthorized user
+		file = io.BytesIO(encoded_content)
+		self.login(self.data.get_authorized_student().username)
+		rv = self.client.post(url, data=dict(userIdentifier="username", file=(file, filename)))
+		self.assert403(rv)
+		file.close()
+		self.logout()
+
+		file = io.BytesIO(encoded_content)
+		self.login(self.data.get_authorized_ta().username)
+		rv = self.client.post(url, data=dict(userIdentifier="username", file=(file, filename)))
+		self.assert403(rv)
+		file.close()
+		self.logout()
+
+		file = io.BytesIO(encoded_content)
+		self.login(self.data.get_unauthorized_instructor().username)
+		rv = self.client.post(url, data=dict(userIdentifier="username", file=(file, filename)))
+		self.assert403(rv)
+		file.close()
+		self.logout()
+
+		self.login(self.data.get_authorized_instructor().username)
+		# test invalid course id
+		invalid_url = '/api/courses/999/groups'
+		file = io.BytesIO(encoded_content)
+		rv = self.client.post(invalid_url, data=dict(userIdentifier="username", file=(file, filename)))
+		self.assert404(rv)
+		file.close()
+
+		# test invalid file type
+		invalid_file = "groups.png"
+		file = io.BytesIO(encoded_content)
+		rv = self.client.post(url, data=dict(userIdentifier="username", file=(file, invalid_file)))
+		self.assert400(rv)
+		file.close()
+
+		# test invalid user identifier
+		file = io.BytesIO(encoded_content)
+		rv = self.client.post(url, data=dict(userIdentifier="lastname", file=(file, filename)))
+		self.assert200(rv)
+		self.assertEqual(0, rv.json['success'])
+		self.assertEqual({}, rv.json['invalids'][0]['member'])
+		self.assertEqual("A valid user identifier is not given.", rv.json['invalids'][0]['message'])
+		file.close()
+
+		# test missing user identifier
+		file = io.BytesIO(encoded_content)
+		rv = self.client.post(url, data=dict(file=(file, filename)))
+		self.assert400(rv)
 
 	def _create_group_user_url(self, course, user, group=None):
 		url = '/api/courses/'+str(course.id)+'/users/'+str(user.id)+'/groups'
