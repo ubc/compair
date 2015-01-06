@@ -124,10 +124,10 @@ class QuestionIdAPI(Resource):
 		type = PostsForQuestionsAndSelfEvaluationTypes.query.filter_by(questions_id=question.id).first()
 		if selfevaltype_id:
 			if not type:
-				type = PostsForQuestionsAndSelfEvaluationTypes(selfevaluationtypes_id=selfevaltype_id,
+				type = PostsForQuestionsAndSelfEvaluationTypes(selfevaltypes_id=selfevaltype_id,
 					questions_id=question.id)
 			else:
-				type.selfevaluationtypes_id = selfevaltype_id
+				type.selfevaltypes_id = selfevaltype_id
 			db.session.add(type)
 		elif not selfevaltype_id and type:
 			db.session.delete(type)
@@ -215,8 +215,8 @@ class QuestionRootAPI(Resource):
 		if name:
 			addNewFile(params.get('alias'), name, course_id, question.id, post.id)
 		if selfevaltype_id:
-			type = PostsForQuestionsAndSelfEvaluationTypes(selfevaluationtypes_id=selfevaltype_id,
-					postsforquestions_id=question.id)
+			type = PostsForQuestionsAndSelfEvaluationTypes(selfevaltypes_id=selfevaltype_id,
+					questions_id=question.id)
 			db.session.add(type)
 			db.session.commit()
 

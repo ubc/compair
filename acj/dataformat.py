@@ -220,8 +220,8 @@ def getAnswerPairings(include_answers=False):
 	ret = {
 		'id': fields.Integer,
 		'questions_id': fields.Integer,
-		'postsforanswers_id1': fields.Integer,
-		'postsforanswers_id2': fields.Integer
+		'answers_id1': fields.Integer,
+		'answers_id2': fields.Integer
 	}
 	if include_answers:
 		ret['answer1'] = fields.Nested(getPostsForAnswers(include_comments=False))
@@ -233,7 +233,7 @@ def getJudgements():
 		'id': fields.Integer,
 		'answerpairing': fields.Nested(getAnswerPairings()),
 		'users_id': fields.Integer,
-		'postsforanswers_id_winner': fields.Integer,
+		'answers_id_winner': fields.Integer,
 		'question_criterion': fields.Nested(getCriteriaAndPostsForQuestions())
 	}
 
@@ -256,7 +256,7 @@ def getScores():
 	return {
 		'id': fields.Integer,
 		'criteriaandquestions_id': fields.Integer,
-		'postsforanswers_id': fields.Integer,
+		'answers_id': fields.Integer,
 		'rounds': fields.Integer,
 		'wins': fields.Integer,
 		'score': fields.Float,

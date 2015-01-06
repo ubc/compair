@@ -322,10 +322,10 @@ class JudgementCommentsTestData(JudgmentsTestData):
         self.judge_comment = self.create_judge_comment(self.judge_1)
 
         self.feedback = {}
-        self.feedback[self.judge_1.answerpairing.postsforanswers_id1] = \
-            self.create_judge_feedback(self.judge_1.answerpairing.postsforanswers_id1)
-        self.feedback[self.judge_1.answerpairing.postsforanswers_id2] = \
-            self.create_judge_feedback(self.judge_1.answerpairing.postsforanswers_id2)
+        self.feedback[self.judge_1.answerpairing.answers_id1] = \
+            self.create_judge_feedback(self.judge_1.answerpairing.answers_id1)
+        self.feedback[self.judge_1.answerpairing.answers_id2] = \
+            self.create_judge_feedback(self.judge_1.answerpairing.answers_id2)
 
     def get_judge_feedback(self):
         return self.feedback
@@ -342,8 +342,8 @@ class JudgementCommentsTestData(JudgmentsTestData):
     def create_answer_pair(self, question):
         # creates an answer pair with the first two answers for the question
         answers = self.get_answers_by_question()[question.id]
-        answer_pair = AnswerPairingsFactory(questions_id=question.id, postsforanswers_id1=answers[0].id,
-                postsforanswers_id2=answers[1].id)
+        answer_pair = AnswerPairingsFactory(questions_id=question.id, answers_id1=answers[0].id,
+                answers_id2=answers[1].id)
         db.session.commit()
         return answer_pair
 
@@ -364,7 +364,7 @@ class JudgementCommentsTestData(JudgmentsTestData):
         feedback_content = factory.fuzzy.FuzzyText(length=12)
         comment = self.create_comment(self.judging_student, self.get_course(), feedback_content)
         feedback = PostsForAnswersAndPostsForCommentsFactory(postsforcomments=comment,
-                        postsforanswers_id=answer, evaluation=True)
+                        answers_id=answer, evaluation=True)
         db.session.commit()
         return feedback
 

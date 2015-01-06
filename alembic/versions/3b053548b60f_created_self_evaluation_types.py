@@ -18,7 +18,7 @@ from acj.models import convention
 
 
 def upgrade():
-	op.create_table('SelfEvaluationTypes',
+	op.create_table('SelfEvalTypes',
 					sa.Column('id', sa.Integer(), nullable=True),
 					sa.Column('name', sa.String(length=255), nullable=False),
 					sa.PrimaryKeyConstraint('id'),
@@ -30,7 +30,7 @@ def upgrade():
 
 	# populate table with a self evaluation type
 	insert = text(
-		"INSERT INTO SelfEvaluationTypes (name) " +
+		"INSERT INTO SelfEvalTypes (name) " +
 		"VALUES ('No Comparison with Another Answer')"
 	)
 	op.get_bind().execute(insert)
@@ -38,16 +38,16 @@ def upgrade():
 	op.add_column(u'Questions', sa.Column('selfevaltype_id', sa.Integer(), nullable=True))
 
 	with op.batch_alter_table('Questions', naming_convention=convention) as batch_op:
-		batch_op.create_foreign_key('fk_Questions_selfevaltype_id_SelfEvaluationTypes', 'SelfEvaluationTypes',
+		batch_op.create_foreign_key('fk_Questions_selfevaltype_id_SelfEvalTypes', 'SelfEvalTypes',
 									['selfevaltype_id'], ['id'], ondelete="CASCADE")
 
 
 def downgrade():
 	with op.batch_alter_table('Questions', naming_convention=convention) as batch_op:
-		batch_op.drop_constraint('fk_Questions_selfevaltype_id_SelfEvaluationTypes', type_='foreignkey')
+		batch_op.drop_constraint('fk_Questions_selfevaltype_id_SelfEvalTypes', type_='foreignkey')
 		# drop key/index + column
 		batch_op.drop_column("selfevaltype_id")
 	# batch_op.drop_index("selfevaltype_id")
 
-	op.drop_table('SelfEvaluationTypes')
+	op.drop_table('SelfEvalTypes')
 

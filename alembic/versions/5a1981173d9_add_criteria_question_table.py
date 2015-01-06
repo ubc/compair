@@ -50,7 +50,7 @@ def upgrade():
 					"UPDATE Scores "
 					"SET criteriaandquestions_id = "
 					"(SELECT cq.id FROM CriteriaAndQuestions cq "
-					"JOIN PostsForAnswers a ON Scores.postsforanswers_id = a.id "
+					"JOIN Answers a ON Scores.answers_id = a.id "
 					"JOIN CriteriaAndCourses c ON Scores.criteriaandcourses_id = c.id "
 					"WHERE a.questions_id = cq.questions_id AND c.criteria_id = cq.criteria_id)"
 					# "UPDATE Scores s " + \  # "JOIN PostsForAnswers a ON s.postsforanswers_id = a.id " + \
@@ -74,7 +74,7 @@ def upgrade():
 					"UPDATE Judgements "
 					"SET criteriaandquestions_id = "
 					"(SELECT cq.id FROM CriteriaAndQuestions cq "
-					"JOIN PostsForAnswers a ON Judgements.postsforanswers_id_winner = a.id  "
+					"JOIN Answers a ON Judgements.answers_id_winner = a.id  "
 					"JOIN CriteriaAndCourses c ON Judgements.criteriaandcourses_id = c.id  "
 					"WHERE a.questions_id = cq.questions_id AND c.criteria_id = cq.criteria_id)"
 					# "UPDATE Judgements j " +   # "JOIN PostsForAnswers a ON j.postsforanswers_id_winner = a.id " +

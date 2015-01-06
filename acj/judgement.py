@@ -83,10 +83,10 @@ class JudgementRootAPI(Resource):
 		if Judgements.query.filter_by(users_id = current_user.id).join(AnswerPairings) \
 			.filter(
 				or_(
-					and_(AnswerPairings.postsforanswers_id1 == answer_pair.postsforanswers_id1,
-						AnswerPairings.postsforanswers_id2 == answer_pair.postsforanswers_id2),
-					and_(AnswerPairings.postsforanswers_id1 == answer_pair.postsforanswers_id2,
-						 AnswerPairings.postsforanswers_id2 == answer_pair.postsforanswers_id1)
+					and_(AnswerPairings.answers_id1 == answer_pair.answers_id1,
+						AnswerPairings.answers_id2 == answer_pair.answers_id2),
+					and_(AnswerPairings.answers_id1 == answer_pair.answers_id2,
+						 AnswerPairings.answers_id2 == answer_pair.answers_id1)
 				)
 			).first():
 			return {"error": "You've already evaluated this pair of answers."}, 400
@@ -99,7 +99,7 @@ class JudgementRootAPI(Resource):
 				get(judgement_params['question_criterion_id'])
 			judgement = Judgements(answerpairing=answer_pair, users_id=current_user.id,
 				question_criterion=question_criterion,
-				postsforanswers_id_winner=judgement_params['answer_id_winner'])
+				answers_id_winner=judgement_params['answer_id_winner'])
 			db.session.add(judgement)
 			require(CREATE, judgement)
 			db.session.commit()

@@ -105,13 +105,13 @@ class PostsForQuestionsAndPostsForCommentsFactory(SQLAlchemyModelFactory):
 	FACTORY_FOR = PostsForQuestionsAndPostsForComments
 	FACTORY_SESSION = db.session
 	questions_id = 1
-	postsforcomments_id = 1
+	comments_id = 1
 
 class PostsForAnswersAndPostsForCommentsFactory(SQLAlchemyModelFactory):
 	FACTORY_FOR = PostsForAnswersAndPostsForComments
 	FACTORY_SESSION = db.session
-	postsforanswers_id = 1
-	postsforcomments_id = 1
+	answers_id = 1
+	comments_id = 1
 
 class AnswerPairingsFactory(SQLAlchemyModelFactory):
 	FACTORY_FOR = AnswerPairings

@@ -234,10 +234,10 @@ class JudgementAPITests(ACJTestCase):
 						 "The number of judgements saved does not match the number sent")
 		for actual_judgement in actual_judgements:
 			self.assertEqual(expected_answer_pair['answer1']['id'],
-							 actual_judgement['answerpairing']['postsforanswers_id1'],
+							 actual_judgement['answerpairing']['answers_id1'],
 							 "Expected and actual judgement answer1 id did not match")
 			self.assertEqual(expected_answer_pair['answer2']['id'],
-							 actual_judgement['answerpairing']['postsforanswers_id2'],
+							 actual_judgement['answerpairing']['answers_id2'],
 							 "Expected and actual judgement answer2 id did not match")
 			found_judgement = False
 			for expected_judgement in judgement_submit['judgements']:
@@ -245,7 +245,7 @@ class JudgementAPITests(ACJTestCase):
 						actual_judgement['question_criterion']['id']:
 					continue
 				self.assertEqual(expected_judgement['answer_id_winner'],
-								 actual_judgement['postsforanswers_id_winner'],
+								 actual_judgement['answers_id_winner'],
 								 "Expected and actual winner answer id did not match.")
 				found_judgement = True
 			self.assertTrue(found_judgement, "Actual judgement received contains a judgement that "

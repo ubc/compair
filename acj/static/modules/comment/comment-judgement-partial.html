@@ -55,7 +55,7 @@
 
 				<div ng-repeat="criterion in comment">
 
-					<h5 class="content">Comparison for "{{criteria[criterion.criteriaandpostsforquestions_id]}}"</h5>
+					<h5 class="content">Comparison for "{{criteria[criterion.criteriaandquestions_id]}}"</h5>
 	
 					<div class="content" mathjax="criterion.content"
 					     ng-bind-html="criterion.content">
@@ -73,7 +73,7 @@
 							<div class="answer-choice clearfix">
 								<h4 class="text-center">Odd-Numbered Answer
 									<span ng-show="criterion.winner == criterion.answer1.id">(Chosen)</span>
-									<span class="label label-warning pull-right score-display">Score: {{ ans[criterion.answer1.id].scores[criterion.criteriaandpostsforquestions_id] }}%</span>
+									<span class="label label-warning pull-right score-display">Score: {{ ans[criterion.answer1.id].scores[criterion.criteriaandquestions_id] }}%</span>
 								</h4>
 								<div mathjax="ans[criterion.answer1.id].content"
 									 ng-bind-html="ans[criterion.answer1.id].content"></div>
@@ -85,7 +85,7 @@
 						<div class="answer-choice clearfix">
 								<h4 class="text-center">Even-Numbered Answer
 									<span ng-show="criterion.winner == criterion.answer2.id">(Chosen)</span>
-									<span class="label label-warning pull-right score-display">Score: {{ ans[criterion.answer2.id].scores[criterion.criteriaandpostsforquestions_id] }}%</span>
+									<span class="label label-warning pull-right score-display">Score: {{ ans[criterion.answer2.id].scores[criterion.criteriaandquestions_id] }}%</span>
 								</h4>
 								<div mathjax="ans[criterion.answer2.id].content"
 									 ng-bind-html="ans[criterion.answer2.id].content"></div>

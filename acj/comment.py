@@ -169,7 +169,7 @@ class AnswerCommentRootAPI(Resource):
 		answer = PostsForAnswers.query.get_or_404(answer_id)
 		comments = PostsForAnswersAndPostsForComments.query.\
 			join(PostsForComments, Posts).\
-			filter(PostsForAnswersAndPostsForComments.postsforanswers_id==answer.id, Posts.courses_id==course_id).\
+			filter(PostsForAnswersAndPostsForComments.answers_id==answer.id, Posts.courses_id==course_id).\
 			order_by(Posts.created.desc()).all()
 
 		on_answer_comment_list_get.send(
@@ -188,7 +188,7 @@ class AnswerCommentRootAPI(Resource):
 		answer = PostsForAnswers.query.get_or_404(answer_id)
 		post = Posts(courses_id=course_id)
 		comment = PostsForComments(post=post)
-		commentForAnswer = PostsForAnswersAndPostsForComments(postsforcomments=comment, postsforanswers_id=answer.id)
+		commentForAnswer = PostsForAnswersAndPostsForComments(postsforcomments=comment, answers_id=answer.id)
 		require(CREATE, commentForAnswer)
 		params = new_comment_parser.parse_args()
 		post.content = params.get("content")
@@ -282,7 +282,7 @@ class UserAnswerCommentIdAPI(Resource):
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		answer = PostsForAnswers.query.get_or_404(answer_id)
-		comments = PostsForAnswersAndPostsForComments.query.filter_by(postsforanswers_id=answer_id)\
+		comments = PostsForAnswersAndPostsForComments.query.filter_by(answers_id=answer_id)\
 			.join(PostsForComments, Posts).filter(Posts.users_id==current_user.id).all()
 
 		on_answer_comment_user_get.send(

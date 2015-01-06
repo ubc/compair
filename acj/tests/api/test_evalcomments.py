@@ -50,7 +50,7 @@ class EvalCommentsAPITests(ACJTestCase):
 		expected = self.data.get_judge_comment()
 		actual = rv.json['comments'][0]
 		self.assertEqual(expected.judgements_id, actual['judgement']['id'])
-		self.assertEqual(expected.postsforcomments_id, actual['postsforcomments']['id'])
+		self.assertEqual(expected.comments_id, actual['postsforcomments']['id'])
 		self.assertEqual(expected.postsforcomments.post.content, actual['postsforcomments']['post']['content'])
 
 	def test_create_eval_comment(self):
@@ -131,13 +131,13 @@ class EvalCommentsAPITests(ACJTestCase):
 		self.assertEqual(actual['content'], expected.postsforcomments.post.content)
 		self.assertFalse(actual['selfeval'])
 		self.assertEqual(actual['created'], str(expected.postsforcomments.post.created))
-		self.assertEqual(actual['answer1']['id'], expected.judgement.answerpairing.postsforanswers_id1)
+		self.assertEqual(actual['answer1']['id'], expected.judgement.answerpairing.answers_id1)
 		self.assertEqual(actual['answer1']['feedback'],
 						 self.data.get_judge_feedback()[actual['answer1']['id']].content)
-		self.assertEqual(actual['answer2']['id'], expected.judgement.answerpairing.postsforanswers_id2)
+		self.assertEqual(actual['answer2']['id'], expected.judgement.answerpairing.answers_id2)
 		self.assertEqual(actual['answer2']['feedback'],
 						 self.data.get_judge_feedback()[actual['answer2']['id']].content)
-		self.assertEqual(actual['winner'], expected.judgement.postsforanswers_id_winner)
+		self.assertEqual(actual['winner'], expected.judgement.answers_id_winner)
 		self.logout()
 
 		# test successful query - TA
@@ -155,13 +155,13 @@ class EvalCommentsAPITests(ACJTestCase):
 		self.assertEqual(actual['content'], expected.postsforcomments.post.content)
 		self.assertFalse(actual['selfeval'])
 		self.assertEqual(actual['created'], str(expected.postsforcomments.post.created))
-		self.assertEqual(actual['answer1']['id'], expected.judgement.answerpairing.postsforanswers_id1)
+		self.assertEqual(actual['answer1']['id'], expected.judgement.answerpairing.answers_id1)
 		self.assertEqual(actual['answer1']['feedback'],
 						 self.data.get_judge_feedback()[actual['answer1']['id']].content)
-		self.assertEqual(actual['answer2']['id'], expected.judgement.answerpairing.postsforanswers_id2)
+		self.assertEqual(actual['answer2']['id'], expected.judgement.answerpairing.answers_id2)
 		self.assertEqual(actual['answer2']['feedback'],
 						 self.data.get_judge_feedback()[actual['answer2']['id']].content)
-		self.assertEqual(actual['winner'], expected.judgement.postsforanswers_id_winner)
+		self.assertEqual(actual['winner'], expected.judgement.answers_id_winner)
 		self.logout()
 
 

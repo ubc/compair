@@ -107,7 +107,7 @@ class EvalCommentViewAPI(Resource):
 		for f in feedback:
 			if f.users_id not in replies:
 				replies[f.users_id] = {}
-			replies[f.users_id][f.postsforanswers_id] = f.content
+			replies[f.users_id][f.answers_id] = f.content
 
 		selfeval = []
 		if question.selfevaltype_id:
@@ -127,11 +127,11 @@ class EvalCommentViewAPI(Resource):
 			temp_comment['content'] = comment.postsforcomments.post.content
 			temp_comment['selfeval'] = False
 			temp_comment['created'] = str(comment.postsforcomments.post.created)
-			temp_comment['answer1']['id'] = comment.judgement.answerpairing.postsforanswers_id1
+			temp_comment['answer1']['id'] = comment.judgement.answerpairing.answers_id1
 			temp_comment['answer1']['feedback'] = replies[user_id][temp_comment['answer1']['id']]
-			temp_comment['answer2']['id'] = comment.judgement.answerpairing.postsforanswers_id2
+			temp_comment['answer2']['id'] = comment.judgement.answerpairing.answers_id2
 			temp_comment['answer2']['feedback'] = replies[user_id][temp_comment['answer2']['id']]
-			temp_comment['winner'] = comment.judgement.postsforanswers_id_winner
+			temp_comment['winner'] = comment.judgement.answers_id_winner
 			results.append(temp_comment)
 
 		for s in selfeval:

@@ -467,7 +467,7 @@ class PostsForQuestions(db.Model):
 		# assume max one selfeval type per question for now
 		type = None
 		if len(self.selfevaltype):
-			type = self.selfevaltype[0].selfevaluationtypes_id
+			type = self.selfevaltype[0].selfevaltypes_id
 		return type
 	@hybrid_property
 	def evaluation_count(self):
@@ -479,7 +479,7 @@ class PostsForQuestions(db.Model):
 		return evaluation_count + selfeval_count
 
 class PostsForAnswers(db.Model):
-	__tablename__ = 'PostsForAnswers'
+	__tablename__ = 'Answers'
 	__table_args__ = default_table_args
 
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -527,7 +527,7 @@ class PostsForAnswers(db.Model):
 		return len([c for c in self.comments if c.selfeval])
 
 class PostsForComments(db.Model):
-	__tablename__ = 'PostsForComments'
+	__tablename__ = 'Comments'
 	__table_args__ = default_table_args
 
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -538,7 +538,7 @@ class PostsForComments(db.Model):
 	post = db.relationship("Posts")
 
 class PostsForQuestionsAndPostsForComments(db.Model):
-	__tablename__ = 'PostsForQuestionsAndPostsForComments'
+	__tablename__ = 'QuestionsAndComments'
 	__table_args__ = default_table_args
 
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -547,9 +547,9 @@ class PostsForQuestionsAndPostsForComments(db.Model):
 		db.ForeignKey('Questions.id', ondelete="CASCADE"),
 		nullable=False)
 	postsforquestions = db.relationship("PostsForQuestions")
-	postsforcomments_id = db.Column(
+	comments_id = db.Column(
 		db.Integer,
-		db.ForeignKey('PostsForComments.id', ondelete="CASCADE"),
+		db.ForeignKey('Comments.id', ondelete="CASCADE"),
 		nullable=False)
 	postsforcomments = db.relationship("PostsForComments")
 
@@ -564,18 +564,18 @@ class PostsForQuestionsAndPostsForComments(db.Model):
 		return self.postsforcomments.post.content
 
 class PostsForAnswersAndPostsForComments(db.Model):
-	__tablename__ = 'PostsForAnswersAndPostsForComments'
+	__tablename__ = 'AnswersAndComments'
 	__table_args__ = default_table_args
 
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	postsforanswers_id = db.Column(
+	answers_id = db.Column(
 		db.Integer,
-		db.ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
+		db.ForeignKey('Answers.id', ondelete="CASCADE"),
 		nullable=False)
 	postsforanswers = db.relationship("PostsForAnswers")
-	postsforcomments_id = db.Column(
+	comments_id = db.Column(
 		db.Integer,
-		db.ForeignKey('PostsForComments.id', ondelete="CASCADE"),
+		db.ForeignKey('Comments.id', ondelete="CASCADE"),
 		nullable=False)
 	postsforcomments = db.relationship("PostsForComments")
 	evaluation = db.Column(db.Boolean(name='evaluation'), default=False, nullable=False)
@@ -610,7 +610,7 @@ class FilesForPosts(db.Model):
 	alias = db.Column(db.String(255), nullable=False)
 
 class SelfEvaluationTypes(db.Model):
-	__tablename__ = 'SelfEvaluationTypes'
+	__tablename__ = 'SelfEvalTypes'
 	__table_args__ = default_table_args
 
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -622,7 +622,7 @@ class SelfEvaluationTypes(db.Model):
 	#TYPE_COMPARE_HIGHER_ANSWER = "Comparison to a Higher Scored Answer"
 
 class PostsForQuestionsAndSelfEvaluationTypes(db.Model):
-	__tablename__ = 'QuestionsAndSelfEvaluationTypes'
+	__tablename__ = 'QuestionsAndSelfEvalTypes'
 	__table_args__ = default_table_args
 
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -630,9 +630,9 @@ class PostsForQuestionsAndSelfEvaluationTypes(db.Model):
 		db.Integer,
 		db.ForeignKey('Questions.id', ondelete="CASCADE"),
 		nullable=False)
-	selfevaluationtypes_id = db.Column(
+	selfevaltypes_id = db.Column(
 		db.Integer,
-		db.ForeignKey('SelfEvaluationTypes.id', ondelete="CASCADE"),
+		db.ForeignKey('SelfEvalTypes.id', ondelete="CASCADE"),
 		nullable=False)
 	type = db.relationship("SelfEvaluationTypes")
 
@@ -738,9 +738,9 @@ class Scores(db.Model):
 		db.ForeignKey('CriteriaAndQuestions.id', ondelete="CASCADE"),
 		nullable=False)
 	question_criterion = db.relationship("CriteriaAndPostsForQuestions")
-	postsforanswers_id = db.Column(
+	answers_id = db.Column(
 		db.Integer,
-		db.ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
+		db.ForeignKey('Answers.id', ondelete="CASCADE"),
 		nullable=False)
 	answer = db.relationship("PostsForAnswers")
 	# number of times this answer has been judged
@@ -772,16 +772,16 @@ class AnswerPairings(db.Model):
 		db.ForeignKey('Questions.id', ondelete="CASCADE"),
 		nullable=False)
 	question = db.relationship("PostsForQuestions")
-	postsforanswers_id1 = db.Column(
+	answers_id1 = db.Column(
 		db.Integer,
-		db.ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
+		db.ForeignKey('Answers.id', ondelete="CASCADE"),
 		nullable=False)
-	answer1 = db.relationship("PostsForAnswers", foreign_keys=[postsforanswers_id1])
-	postsforanswers_id2 = db.Column(
+	answer1 = db.relationship("PostsForAnswers", foreign_keys=[answers_id1])
+	answers_id2 = db.Column(
 		db.Integer,
-		db.ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
+		db.ForeignKey('Answers.id', ondelete="CASCADE"),
 		nullable=False)
-	answer2 = db.relationship("PostsForAnswers", foreign_keys=[postsforanswers_id2])
+	answer2 = db.relationship("PostsForAnswers", foreign_keys=[answers_id2])
 	judgements = db.relationship("Judgements", cascade="delete")
 	criteriaandquestions_id = db.Column(
 		db.Integer,
@@ -797,11 +797,11 @@ class AnswerPairings(db.Model):
 
 	@hybrid_property
 	def answer1_win(self):
-		return len(list(filterfalse(lambda x: x.postsforanswers_id_winner==self.postsforanswers_id2, self.judgements)))
+		return len(list(filterfalse(lambda x: x.answers_id_winner==self.answers_id2, self.judgements)))
 
 	@hybrid_property
 	def answer2_win(self):
-		return len(list(filterfalse(lambda x: x.postsforanswers_id_winner==self.postsforanswers_id1, self.judgements)))	
+		return len(list(filterfalse(lambda x: x.answers_id_winner==self.answers_id1, self.judgements)))
 
 
 class Judgements(db.Model):
@@ -824,9 +824,9 @@ class Judgements(db.Model):
 		db.ForeignKey('CriteriaAndQuestions.id', ondelete="CASCADE"),
 		nullable=False)
 	question_criterion = db.relationship("CriteriaAndPostsForQuestions")
-	postsforanswers_id_winner = db.Column(
+	answers_id_winner = db.Column(
 		db.Integer,
-		db.ForeignKey('PostsForAnswers.id', ondelete="CASCADE"),
+		db.ForeignKey('Answers.id', ondelete="CASCADE"),
 		nullable=False)
 	answer_winner = db.relationship("PostsForAnswers")
 	modified = db.Column(
@@ -846,9 +846,9 @@ class PostsForJudgements(db.Model):
 	__table_args__ = default_table_args
 
 	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	postsforcomments_id = db.Column(
+	comments_id = db.Column(
 		db.Integer,
-		db.ForeignKey('PostsForComments.id', ondelete="CASCADE"),
+		db.ForeignKey('Comments.id', ondelete="CASCADE"),
 		nullable=False)
 	postsforcomments = db.relationship("PostsForComments")
 	judgements_id = db.Column(

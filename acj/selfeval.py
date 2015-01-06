@@ -74,5 +74,5 @@ apiA.add_resource(SelfEvalACommentsAPI, '')
 
 def comment_count(question_id):
      return PostsForAnswersAndPostsForComments.query.filter_by(selfeval=True) \
-        .join(PostsForAnswers).filter_by(postsforquestions_id=question_id)\
+        .join(PostsForAnswers).filter_by(questions_id=question_id)\
         .join(PostsForComments, Posts).filter_by(users_id=current_user.id).count()
