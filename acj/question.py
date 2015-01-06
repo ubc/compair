@@ -121,11 +121,11 @@ class QuestionIdAPI(Resource):
 		if name:
 			addNewFile(params.get('alias'), name, course_id, question.id, question.post.id)
 		# assume one selfevaluation type per question
-		type = PostsForQuestionsAndSelfEvaluationTypes.query.filter_by(postsforquestions_id=question.id).first()
+		type = PostsForQuestionsAndSelfEvaluationTypes.query.filter_by(questions_id=question.id).first()
 		if selfevaltype_id:
 			if not type:
 				type = PostsForQuestionsAndSelfEvaluationTypes(selfevaluationtypes_id=selfevaltype_id,
-					postsforquestions_id=question.id)
+					questions_id=question.id)
 			else:
 				type.selfevaluationtypes_id = selfevaltype_id
 			db.session.add(type)

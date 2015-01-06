@@ -94,7 +94,7 @@ class PostsForAnswersFactory(SQLAlchemyModelFactory):
 	FACTORY_FOR = PostsForAnswers
 	FACTORY_SESSION = db.session
 	posts_id = 1
-	postsforquestions_id = 1
+	questions_id = 1
 
 class PostsForCommentsFactory(SQLAlchemyModelFactory):
 	FACTORY_FOR = PostsForComments
@@ -104,7 +104,7 @@ class PostsForCommentsFactory(SQLAlchemyModelFactory):
 class PostsForQuestionsAndPostsForCommentsFactory(SQLAlchemyModelFactory):
 	FACTORY_FOR = PostsForQuestionsAndPostsForComments
 	FACTORY_SESSION = db.session
-	postsforquestions_id = 1
+	questions_id = 1
 	postsforcomments_id = 1
 
 class PostsForAnswersAndPostsForCommentsFactory(SQLAlchemyModelFactory):

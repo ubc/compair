@@ -81,7 +81,7 @@ class ReportRootAPI(Resource):
 			title_row1 = ["" for x in user_titles]
 			title_row2 = user_titles
 			for q in questions:
-				criteria = CriteriaAndPostsForQuestions.query.filter_by(postsforquestions_id=q.id, active=True).all()
+				criteria = CriteriaAndPostsForQuestions.query.filter_by(questions_id=q.id, active=True).all()
 				title_row1 += [q.title] + ["" for x in criteria]
 				for c in criteria:
 					title_row2.append('Percentage Score for "' + c.criterion.name + '"')
@@ -130,15 +130,15 @@ def participation_stat_report(course_id, assignments, group_id, overall):
 
 	for ques in assignments:
 		# ANSWERS: assume max one answer per user
-		answers = PostsForAnswers.query.filter_by(postsforquestions_id=ques.id).all()
+		answers = PostsForAnswers.query.filter_by(questions_id=ques.id).all()
 		answers = {a.users_id: a.id for a in answers}
 		# EVALUATIONS
 		evaluations = Judgements.query.with_entities(Judgements.users_id, func.count(Judgements.id)).\
-			join(AnswerPairings).filter_by(postsforquestions_id=ques.id).group_by(Judgements.users_id).all()
+			join(AnswerPairings).filter_by(questions_id=ques.id).group_by(Judgements.users_id).all()
 		evaluations = {usersId: count for (usersId, count) in evaluations}
 		# COMMENTS
 		comments = PostsForAnswersAndPostsForComments.query.\
-			join(PostsForAnswers).filter(PostsForAnswers.postsforquestions_id==ques.id).\
+			join(PostsForAnswers).filter(PostsForAnswers.questions_id==ques.id).\
 			join(PostsForComments, Posts).\
 			with_entities(Posts.users_id, func.count(PostsForAnswersAndPostsForComments.id)).\
 			group_by(Posts.users_id).all()
@@ -201,24 +201,24 @@ def participation_report(course_id, questions, group_id):
 	userIds = [u.user.id for u in classlist]
 
 	# ANSWERS - scores
-	answers = PostsForAnswers.query.filter(PostsForAnswers.postsforquestions_id.in_(quesIds)) \
+	answers = PostsForAnswers.query.filter(PostsForAnswers.questions_id.in_(quesIds)) \
 		.join(Posts).filter(Posts.users_id.in_(userIds)).all()
 
-	scores = {}		# structure - userId/quesId/criteriaandpostsforquestions_id/normalized_score
+	scores = {}		# structure - userId/quesId/criteriaandquestions_id/normalized_score
 	for ans in answers:
 		if ans.users_id not in scores:
 			scores[ans.users_id] = {}
-		if ans.postsforquestions_id not in scores[ans.users_id]:
-			scores[ans.users_id][ans.postsforquestions_id] = {}
+		if ans.questions_id not in scores[ans.users_id]:
+			scores[ans.users_id][ans.questions_id] = {}
 		for s in ans._scores:
-			scores[ans.users_id][ans.postsforquestions_id][s.criteriaandpostsforquestions_id] = s.normalized_score
+			scores[ans.users_id][ans.questions_id][s.criteriaandquestions_id] = s.normalized_score
 
 	# COMPARISONS
 	comparisons = Judgements.query.filter(Judgements.users_id.in_(userIds)) \
-		.join(AnswerPairings).filter(AnswerPairings.postsforquestions_id.in_(quesIds)) \
-		.with_entities(AnswerPairings.postsforquestions_id, Judgements.users_id,
+		.join(AnswerPairings).filter(AnswerPairings.questions_id.in_(quesIds)) \
+		.with_entities(AnswerPairings.questions_id, Judgements.users_id,
 					   func.count(Judgements.id)) \
-		.group_by(AnswerPairings.postsforquestions_id, Judgements.users_id).all()
+		.group_by(AnswerPairings.questions_id, Judgements.users_id).all()
 
 	judgements = {}		# structure - userId/quesId/count
 	for (quesId, userId, count) in comparisons:
@@ -227,21 +227,21 @@ def participation_report(course_id, questions, group_id):
 
 	# CRITERIA
 	criteriaandpostsforquestions = CriteriaAndPostsForQuestions.query \
-		.filter(CriteriaAndPostsForQuestions.postsforquestions_id.in_(quesIds)) \
+		.filter(CriteriaAndPostsForQuestions.questions_id.in_(quesIds)) \
 		.filter_by(active=True).order_by(CriteriaAndPostsForQuestions.id).all()
 
 	criteria = {}	# structure - quesId/criterionId
 	for criterion in criteriaandpostsforquestions:
-		criteria.setdefault(criterion.postsforquestions_id, [])
-		criteria[criterion.postsforquestions_id].append(criterion.id)
+		criteria.setdefault(criterion.questions_id, [])
+		criteria[criterion.questions_id].append(criterion.id)
 
 	# SELF-EVALUATION - assuming no comparions
 	selfeval = PostsForAnswersAndPostsForComments.query.filter_by(selfeval=True) \
-		.join(PostsForAnswers).filter(PostsForAnswers.postsforquestions_id.in_(quesIds)) \
+		.join(PostsForAnswers).filter(PostsForAnswers.questions_id.in_(quesIds)) \
 		.join(PostsForComments, Posts).filter(Posts.users_id.in_(userIds)) \
-		.with_entities(PostsForAnswers.postsforquestions_id, Posts.users_id,
+		.with_entities(PostsForAnswers.questions_id, Posts.users_id,
 					   func.count(PostsForAnswersAndPostsForComments.id)) \
-		.group_by(PostsForAnswers.postsforquestions_id, Posts.users_id).all()
+		.group_by(PostsForAnswers.questions_id, Posts.users_id).all()
 
 	comments = {}	# structure - userId/quesId/count
 	for (quesId, userId, count) in selfeval:

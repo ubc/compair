@@ -59,7 +59,7 @@ class AnswerRootAPI(Resource):
 		require(READ, question)
 		restrict_users = not allow(MANAGE, question)
 
-		answers = PostsForAnswers.query.filter_by(postsforquestions_id=question.id) \
+		answers = PostsForAnswers.query.filter_by(questions_id=question.id) \
 			.join(Posts).order_by(Posts.created.desc()).all()
 
 		on_answer_list_get.send(
@@ -89,14 +89,14 @@ class AnswerRootAPI(Resource):
 		if not question.answer_period and not allow(MANAGE, question):
 			return {'error':'Answer Period is not in session.'}, 403
 		post = Posts(courses_id=course_id)
-		answer = PostsForAnswers(post=post, postsforquestions_id=question_id)
+		answer = PostsForAnswers(post=post, questions_id=question_id)
 		require(CREATE, answer)
 		params = new_answer_parser.parse_args()
 		post.content = params.get("post").get("content")
 		name = params.get('name')
 		if not (post.content or name):
 			return {"error":"The answer content is empty!"}, 400
-		prev_answer = PostsForAnswers.query.filter_by(postsforquestions_id=question_id).join(Posts).filter(Posts.users_id==current_user.id).first()
+		prev_answer = PostsForAnswers.query.filter_by(questions_id=question_id).join(Posts).filter(Posts.users_id==current_user.id).first()
 		if prev_answer:
 			return {"error":"An answer has already been submitted"}, 400
 		post.users_id = current_user.id
@@ -189,7 +189,7 @@ class AnswerUserIdAPI(Resource):
 	def get(self, course_id, question_id):
 		Courses.query.get_or_404(course_id)
 		PostsForQuestions.query.get_or_404(question_id)
-		answer = PostsForAnswers.query.filter_by(postsforquestions_id=question_id).join(Posts).\
+		answer = PostsForAnswers.query.filter_by(questions_id=question_id).join(Posts).\
 			filter_by(courses_id=course_id, users_id=current_user.id).all()
 
 		on_user_question_answer_get.send(
@@ -241,7 +241,7 @@ class AnswerCountAPI(Resource):
 		post = Posts(courses_id=course_id)
 		answer = PostsForAnswers(post=post)
 		require(READ, answer)
-		answered = PostsForAnswers.query.filter_by(postsforquestions_id=question_id).join(Posts)\
+		answered = PostsForAnswers.query.filter_by(questions_id=question_id).join(Posts)\
 			.filter(Posts.users_id==current_user.id).count()
 
 		on_user_question_answered_count.send(
@@ -263,7 +263,7 @@ class AnswerViewAPI(Resource):
 		require(READ, question)
 
 		answers = PostsForAnswers.query.join(Posts).\
-			filter(PostsForAnswers.postsforquestions_id==question.id).\
+			filter(PostsForAnswers.questions_id==question.id).\
 			order_by(Posts.created.desc()).all()
 		results = {}
 		for ans in answers:
@@ -277,7 +277,7 @@ class AnswerViewAPI(Resource):
 			for s in ans._scores:
 				if not s.question_criterion.active:
 					continue
-				tmp_answer['scores'][s.criteriaandpostsforquestions_id] = round(s.normalized_score, 3)
+				tmp_answer['scores'][s.criteriaandquestions_id] = round(s.normalized_score, 3)
 
 			results[ans.id] = tmp_answer
 
@@ -299,8 +299,8 @@ class AnsweredAPI(Resource):
 		post = Posts(courses_id=course_id)
 		answer = PostsForAnswers(post=post)
 		require(READ, answer)
-		answered = PostsForAnswers.query.with_entities(PostsForAnswers.postsforquestions_id, func.count(PostsForAnswers.id)).join(Posts)\
-			.filter_by(courses_id=course_id).join(Users).filter_by(id=current_user.id).group_by(PostsForAnswers.postsforquestions_id).all()
+		answered = PostsForAnswers.query.with_entities(PostsForAnswers.questions_id, func.count(PostsForAnswers.id)).join(Posts)\
+			.filter_by(courses_id=course_id).join(Users).filter_by(id=current_user.id).group_by(PostsForAnswers.questions_id).all()
 		answered = {qId: count for (qId, count) in answered}
 
 		on_user_course_answered_count.send(

@@ -85,15 +85,15 @@ class JudgementAPITests(ACJTestCase):
 		self.login(self.data.get_authorized_student().username)
 		excluded_student_answer = PostsForAnswers.query.join(Posts).filter(
 			Posts.users_id == self.data.get_authorized_student().id, \
-			PostsForAnswers.postsforquestions_id == self.question.id).first()
+			PostsForAnswers.questions_id == self.question.id).first()
 		self.assertTrue(excluded_student_answer, "Missing authorized student's answer.")
 		excluded_instructor_answer = PostsForAnswers.query.join(Posts).filter(
 			Posts.users_id == self.data.get_authorized_instructor().id, \
-			PostsForAnswers.postsforquestions_id == self.question.id).first()
+			PostsForAnswers.questions_id == self.question.id).first()
 		self.assertTrue(excluded_instructor_answer, "Missing instructor answer")
 		excluded_ta_answer = PostsForAnswers.query.join(Posts).filter(
 			Posts.users_id == self.data.get_authorized_ta().id, \
-			PostsForAnswers.postsforquestions_id == self.question.id).first()
+			PostsForAnswers.questions_id == self.question.id).first()
 		self.assertTrue(excluded_ta_answer, "Missing TA answer")
 		# no judgements has been entered yet, this tests the randomized pairing when no answers has
 		# scores, since it's randomized though, we'll have to run it lots of times to be sure
@@ -267,11 +267,11 @@ class JudgementAPITests(ACJTestCase):
 		self.login(self.data.get_authorized_student_with_no_answers().username)
 		excluded_instructor_answer = PostsForAnswers.query.join(Posts).filter(
 			Posts.users_id == self.data.get_authorized_instructor().id, \
-			PostsForAnswers.postsforquestions_id == self.question.id).first()
+			PostsForAnswers.questions_id == self.question.id).first()
 		self.assertTrue(excluded_instructor_answer, "Missing instructor answer")
 		excluded_ta_answer = PostsForAnswers.query.join(Posts).filter(
 			Posts.users_id == self.data.get_authorized_ta().id, \
-			PostsForAnswers.postsforquestions_id == self.question.id).first()
+			PostsForAnswers.questions_id == self.question.id).first()
 		self.assertTrue(excluded_ta_answer, "Missing TA answer")
 		# no judgements has been entered yet, this tests the randomized pairing when no answers has
 		# scores, since it's randomized though, we'll have to run it lots of times to be sure

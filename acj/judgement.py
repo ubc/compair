@@ -129,10 +129,10 @@ class JudgementRootAPI(Resource):
 	def _calculate_scores(self, course_id, question_id):
 		# get all judgements for this question
 		judgements = Judgements.query.join(AnswerPairings). \
-			filter(AnswerPairings.postsforquestions_id == question_id).all()
+			filter(AnswerPairings.questions_id == question_id).all()
 		answers = set() # stores answers that've been judged
 		question_criteria = CriteriaAndPostsForQuestions.query.\
-			filter_by(postsforquestions_id=question_id, active=True).all()
+			filter_by(questions_id=question_id, active=True).all()
 		# 2D array, keep tracks of wins, e.g.: wins[A][B] is the number of times A won vs B
 		wins = WinsTable(question_criteria)
 		# keeps track of number of times judged for each answer
@@ -266,12 +266,12 @@ class AvailPairAll(Resource):
 		for ques in questions:
 			# ineligible authors (potentially) - eg. authors for answers that the user has seen
 			judged = Judgements.query.filter_by(users_id=current_user.id).join(AnswerPairings)\
-				.filter_by(postsforquestions_id=ques.id).all()
+				.filter_by(questions_id=ques.id).all()
 			judged_authors1 = [j.answerpairing.answer1.post.users_id for j in judged]
 			judged_authors2 = [j.answerpairing.answer2.post.users_id for j in judged]
 			ineligible_userIds = ineligible_userIds_base + judged_authors1 + judged_authors2
 
-			eligible_answers = PostsForAnswers.query.filter_by(postsforquestions_id=ques.id)\
+			eligible_answers = PostsForAnswers.query.filter_by(questions_id=ques.id)\
 				.join(Posts).filter(Posts.users_id.notin_(ineligible_userIds)).count()
 			availPairs[ques.id] = eligible_answers / 2 >= 1 # min 1 pair required
 
@@ -297,12 +297,12 @@ class AvailPair(Resource):
 
 		# ineligible authors (potentially) - eg. authors for answers that the user has seen
 		judged = Judgements.query.filter_by(users_id=current_user.id).join(AnswerPairings)\
-			.filter_by(postsforquestions_id=question.id).all()
+			.filter_by(questions_id=question.id).all()
 		judged_authors1 = [j.answerpairing.answer1.post.users_id for j in judged]
 		judged_authors2 = [j.answerpairing.answer2.post.users_id for j in judged]
 		ineligible_userIds = ineligible_userIds_base + judged_authors1 + judged_authors2
 
-		eligible_answers = PostsForAnswers.query.filter_by(postsforquestions_id=question.id)\
+		eligible_answers = PostsForAnswers.query.filter_by(questions_id=question.id)\
 			.join(Posts).filter(Posts.users_id.notin_(ineligible_userIds)).count()
 		availPairs = eligible_answers / 2 >= 1 # min 1 pair required
 
@@ -311,7 +311,7 @@ api.add_resource(AvailPair, '/users/<int:user_id>/availpair')
 
 def judgement_count(question, user_id):
 	judgement_count = Judgements.query.filter_by(users_id=user_id).join(AnswerPairings) \
-		.filter_by(postsforquestions_id=question.id).count()
+		.filter_by(questions_id=question.id).count()
 
 	return judgement_count / len(question.criteria)
 
@@ -358,7 +358,7 @@ class AnswerPairGenerator():
 		if not pair:
 			# match by closest score, when we have many criteria, match score on only one criterion
 			question_criteria = CriteriaAndPostsForQuestions.query.\
-				filter_by(postsforquestions_id=self.question_id, active=True).all()
+				filter_by(questions_id=self.question_id, active=True).all()
 			criteria = random.choice(question_criteria)
 			pair = self._get_scored_pair(criteria)
 			criteriaId = criteria.id
@@ -378,13 +378,13 @@ class AnswerPairGenerator():
 				and_(AnswerPairings.answer1 == answer1, AnswerPairings.answer2 == answer2),
 				and_(AnswerPairings.answer1 == answer2, AnswerPairings.answer2 == answer1)
 			),
-			AnswerPairings.criteriaandpostsforquestions_id == criteriaId
+			AnswerPairings.criteriaandquestions_id == criteriaId
 			).first()
 		if not answerpairing:
-			answerpairing = AnswerPairings(postsforquestions_id=self.question_id)
+			answerpairing = AnswerPairings(questions_id=self.question_id)
 			answerpairing.answer1 = answer1
 			answerpairing.answer2 = answer2
-			answerpairing.criteriaandpostsforquestions_id = criteriaId
+			answerpairing.criteriaandquestions_id = criteriaId
 			db.session.add(answerpairing)
 			db.session.commit()
 		return answerpairing
@@ -465,7 +465,7 @@ class AnswerPairGenerator():
 		for answer in answers:
 			score = None
 			for score_iter in answer.scores:
-				if score_iter.criteriaandpostsforquestions_id == quesCriterionId:
+				if score_iter.criteriaandquestions_id == quesCriterionId:
 					score = score_iter
 			if score == None:
 				raise MissingScoreFromAnswer
@@ -548,7 +548,7 @@ class AnswerPairGenerator():
 		answer_partners = {}
 		user_judgements = Judgements.query.join(AnswerPairings).filter(
 			Judgements.users_id == current_user.id,
-			AnswerPairings.postsforquestions_id == self.question_id).all()
+			AnswerPairings.questions_id == self.question_id).all()
 		for user_judgement in user_judgements:
 			answer1 = user_judgement.answerpairing.answer1
 			answer2 = user_judgement.answerpairing.answer2
@@ -572,7 +572,7 @@ class AnswerPairGenerator():
 		excluded_user_ids.append(current_user.id)
 		# Get only answers that are made by students
 		answers = PostsForAnswers.query.join(Posts).filter(
-			PostsForAnswers.postsforquestions_id==self.question_id,
+			PostsForAnswers.questions_id==self.question_id,
 			Posts.users_id.notin_(excluded_user_ids)).all()
 		return answers
 

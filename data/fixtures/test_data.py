@@ -155,7 +155,7 @@ class SimpleAnswersTestData(SimpleQuestionsTestData):
     def create_answer(self, question, author):
         post = PostsFactory(courses_id = question.post.courses_id, users_id = author.id)
         db.session.commit()
-        answer = PostsForAnswersFactory(postsforquestions_id=question.id, posts_id = post.id)
+        answer = PostsForAnswersFactory(questions_id=question.id, posts_id = post.id)
         db.session.commit()
         return answer
 
@@ -342,7 +342,7 @@ class JudgementCommentsTestData(JudgmentsTestData):
     def create_answer_pair(self, question):
         # creates an answer pair with the first two answers for the question
         answers = self.get_answers_by_question()[question.id]
-        answer_pair = AnswerPairingsFactory(postsforquestions_id=question.id, postsforanswers_id1=answers[0].id,
+        answer_pair = AnswerPairingsFactory(questions_id=question.id, postsforanswers_id1=answers[0].id,
                 postsforanswers_id2=answers[1].id)
         db.session.commit()
         return answer_pair

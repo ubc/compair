@@ -37,7 +37,7 @@ class GradebookAPI(Resource):
 
 		# get all judgements for this question
 		judgements = Judgements.query.join(AnswerPairings).filter(
-			AnswerPairings.postsforquestions_id == question.id).all()
+			AnswerPairings.questions_id == question.id).all()
 
 		# how many judgements has each user done
 		num_judgements_by_user_id = {}
@@ -47,7 +47,7 @@ class GradebookAPI(Resource):
 			num_judgements_by_user_id[judgement.users_id] = num_judgements
 
 		# we want only the count for judgements by current students in the course
-		criteria = CriteriaAndPostsForQuestions.query.filter_by(postsforquestions_id=question.id, active=True).all()
+		criteria = CriteriaAndPostsForQuestions.query.filter_by(questions_id=question.id, active=True).all()
 		num_judgements_per_student = {}
 		for student in students:
 			num_judgements_per_student[student.id] = num_judgements_by_user_id.get(student.id, 0) / len(criteria)
@@ -66,9 +66,9 @@ class GradebookAPI(Resource):
 			scores_by_user_id[answer.post.users_id] = copy.deepcopy(init_scores)
 			for score in answer._scores:
 				# skip scores for inactive criteria
-				if score.criteriaandpostsforquestions_id not in init_scores:
+				if score.criteriaandquestions_id not in init_scores:
 					continue
-				scores_by_user_id[answer.post.users_id][score.criteriaandpostsforquestions_id] = round(score.normalized_score, 3)
+				scores_by_user_id[answer.post.users_id][score.criteriaandquestions_id] = round(score.normalized_score, 3)
 
 			flagged_by_user_id[answer.post.users_id] = 'Yes' if answer.flagged else 'No'
 
@@ -82,7 +82,7 @@ class GradebookAPI(Resource):
 			include_self_eval = True
 			# assuming self-evaluation with no comparison
 			comments = PostsForAnswersAndPostsForComments.query.filter_by(selfeval=True) \
-				.join(PostsForAnswers).filter_by(postsforquestions_id=question_id).all()
+				.join(PostsForAnswers).filter_by(questions_id=question_id).all()
 
 			num_selfeval_by_user_id = {}
 			for comment in comments:

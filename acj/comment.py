@@ -56,7 +56,7 @@ class QuestionCommentRootAPI(Resource):
 		restrict_users = not allow(MANAGE, question)
 		comments = PostsForQuestionsAndPostsForComments.query.\
 			join(PostsForComments, Posts).\
-			filter(PostsForQuestionsAndPostsForComments.postsforquestions_id==question.id, Posts.courses_id==course_id).\
+			filter(PostsForQuestionsAndPostsForComments.questions_id==question.id, Posts.courses_id==course_id).\
 			order_by(Posts.created.asc()).all()
 
 		on_comment_list_get.send(
@@ -74,7 +74,7 @@ class QuestionCommentRootAPI(Resource):
 		question = PostsForQuestions.query.get_or_404(question_id)
 		post = Posts(courses_id=course_id)
 		comment = PostsForComments(post=post)
-		commentForQuestion = PostsForQuestionsAndPostsForComments(postsforcomments=comment, postsforquestions_id=question_id)
+		commentForQuestion = PostsForQuestionsAndPostsForComments(postsforcomments=comment, questions_id=question_id)
 		require(CREATE, commentForQuestion)
 		params = new_comment_parser.parse_args()
 		post.content = params.get("content")

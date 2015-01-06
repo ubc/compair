@@ -39,7 +39,7 @@ class AnswersAPITests(ACJTestCase):
 		rv = self.client.get(self.base_url)
 		self.assert200(rv)
 		actual_answers = rv.json['objects']
-		expected_answers = PostsForAnswers.query.filter_by(postsforquestions_id=self.question.id).all()
+		expected_answers = PostsForAnswers.query.filter_by(questions_id=self.question.id).all()
 		for i, expected in enumerate(expected_answers):
 			actual = actual_answers[i]
 			self.assertEqual(expected.post.content, actual['post']['content'])
@@ -84,7 +84,7 @@ class AnswersAPITests(ACJTestCase):
 							  data=json.dumps(expected_answer), content_type='application/json')
 		self.assert200(rv)
 		# retrieve again and verify
-		answers = PostsForAnswers.query.filter_by(postsforquestions_id=self.question.id).all()
+		answers = PostsForAnswers.query.filter_by(questions_id=self.question.id).all()
 		actual_answer = answers[2]
 		self.assertEqual(expected_answer['post']['content'], actual_answer.post.content)
 		self.logout()
@@ -115,7 +115,7 @@ class AnswersAPITests(ACJTestCase):
 		# test authorized student
 		rv = self.client.get(self.base_url + '/' + str(answer.id))
 		self.assert200(rv)
-		self.assertEqual(question_id, rv.json['postsforquestions_id'])
+		self.assertEqual(question_id, rv.json['questions_id'])
 		self.assertEqual(answer.post.users_id, rv.json['post']['user']['id'])
 		self.assertEqual(answer.post.content, rv.json['post']['content'])
 		self.logout()
@@ -124,7 +124,7 @@ class AnswersAPITests(ACJTestCase):
 		self.login(self.data.get_authorized_ta().username)
 		rv = self.client.get(self.base_url + '/' + str(answer.id))
 		self.assert200(rv)
-		self.assertEqual(question_id, rv.json['postsforquestions_id'])
+		self.assertEqual(question_id, rv.json['questions_id'])
 		self.assertEqual(answer.post.users_id, rv.json['post']['user']['id'])
 		self.assertEqual(answer.post.content, rv.json['post']['content'])
 		self.logout()
@@ -133,7 +133,7 @@ class AnswersAPITests(ACJTestCase):
 		self.login(self.data.get_authorized_instructor().username)
 		rv = self.client.get(self.base_url + '/' + str(answer.id))
 		self.assert200(rv)
-		self.assertEqual(question_id, rv.json['postsforquestions_id'])
+		self.assertEqual(question_id, rv.json['questions_id'])
 		self.assertEqual(answer.post.users_id, rv.json['post']['user']['id'])
 		self.assertEqual(answer.post.content, rv.json['post']['content'])
 		self.logout()

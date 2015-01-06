@@ -168,7 +168,7 @@ def getPostsForAnswers(restrict_users=True, include_comments=True):
 		'post': fields.Nested(post),
 		'scores': fields.Nested(score),
 		'flagged': fields.Boolean,
-		'postsforquestions_id': fields.Integer
+		'questions_id': fields.Integer
 	}
 	# can see who flagged this post if user can view unrestricted data
 	if not restrict_users:
@@ -219,7 +219,7 @@ def getSelfEvalTypes():
 def getAnswerPairings(include_answers=False):
 	ret = {
 		'id': fields.Integer,
-		'postsforquestions_id': fields.Integer,
+		'questions_id': fields.Integer,
 		'postsforanswers_id1': fields.Integer,
 		'postsforanswers_id2': fields.Integer
 	}
@@ -255,7 +255,7 @@ def getImportUsersResults(restrict_users=True):
 def getScores():
 	return {
 		'id': fields.Integer,
-		'criteriaandpostsforquestions_id': fields.Integer,
+		'criteriaandquestions_id': fields.Integer,
 		'postsforanswers_id': fields.Integer,
 		'rounds': fields.Integer,
 		'wins': fields.Integer,

@@ -227,7 +227,7 @@ class QuestionCriteriaRootAPI(Resource):
 		require(READ, course)
 
 		criteria_question = CriteriaAndPostsForQuestions.query\
-			.filter_by(postsforquestions_id = question.id, active = True) \
+			.filter_by(questions_id = question.id, active = True) \
 			.order_by(CriteriaAndPostsForQuestions.id).all()
 
 		on_question_criteria_get.send(
@@ -251,13 +251,13 @@ class QuestionCriteriaAPI(Resource):
 		require(CREATE, criteria_question)
 
 		criteria_question = CriteriaAndPostsForQuestions.query.filter_by(criteria_id=criteria_id).\
-			filter_by(postsforquestions_id=question_id).first()
+			filter_by(questions_id=question_id).first()
 		if criteria_question:
 			criteria_question.active = True
 		else:
 			criteria_question = CriteriaAndPostsForQuestions()
 			criteria_question.criteria_id = criteria_id
-			criteria_question.postsforquestions_id = question_id
+			criteria_question.questions_id = question_id
 
 		db.session.add(criteria_question)
 
@@ -277,11 +277,11 @@ class QuestionCriteriaAPI(Resource):
 		Courses.query.get_or_404(course_id)
 
 		criteria_question = CriteriaAndPostsForQuestions.query.filter_by(criteria_id=criteria_id).\
-			filter_by(postsforquestions_id=question_id).first_or_404()
+			filter_by(questions_id=question_id).first_or_404()
 
 		require(DELETE, criteria_question)
 
-		judgement = Judgements.query.filter_by(criteriaandpostsforquestions_id=criteria_question.id).first()
+		judgement = Judgements.query.filter_by(criteriaandquestions_id=criteria_question.id).first()
 		# if a judgement has already been made - don't remove from question
 		if judgement:
 			msg = 'The criterion cannot be removed from the question, ' + \

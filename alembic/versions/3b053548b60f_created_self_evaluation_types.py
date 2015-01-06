@@ -35,16 +35,16 @@ def upgrade():
 	)
 	op.get_bind().execute(insert)
 
-	op.add_column(u'PostsForQuestions', sa.Column('selfevaltype_id', sa.Integer(), nullable=True))
+	op.add_column(u'Questions', sa.Column('selfevaltype_id', sa.Integer(), nullable=True))
 
-	with op.batch_alter_table('PostsForQuestions', naming_convention=convention) as batch_op:
-		batch_op.create_foreign_key('fk_PostsForQuestions_selfevaltype_id_SelfEvaluationTypes', 'SelfEvaluationTypes',
+	with op.batch_alter_table('Questions', naming_convention=convention) as batch_op:
+		batch_op.create_foreign_key('fk_Questions_selfevaltype_id_SelfEvaluationTypes', 'SelfEvaluationTypes',
 									['selfevaltype_id'], ['id'], ondelete="CASCADE")
 
 
 def downgrade():
-	with op.batch_alter_table('PostsForQuestions', naming_convention=convention) as batch_op:
-		batch_op.drop_constraint('fk_PostsForQuestions_selfevaltype_id_SelfEvaluationTypes', type_='foreignkey')
+	with op.batch_alter_table('Questions', naming_convention=convention) as batch_op:
+		batch_op.drop_constraint('fk_Questions_selfevaltype_id_SelfEvaluationTypes', type_='foreignkey')
 		# drop key/index + column
 		batch_op.drop_column("selfevaltype_id")
 	# batch_op.drop_index("selfevaltype_id")

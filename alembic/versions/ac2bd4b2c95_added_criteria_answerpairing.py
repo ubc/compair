@@ -18,31 +18,31 @@ from acj.models import convention
 
 
 def upgrade():
-	op.add_column('AnswerPairings', sa.Column('criteriaandpostsforquestions_id', sa.Integer(), nullable=True))
+	op.add_column('AnswerPairings', sa.Column('criteriaandquestions_id', sa.Integer(), nullable=True))
 	update = text(
-		"UPDATE AnswerPairings SET criteriaandpostsforquestions_id = "
+		"UPDATE AnswerPairings SET criteriaandquestions_id = "
 		"(SELECT criteria.id FROM "
 		"(SELECT q.id AS questionId, cq.id "
-		"FROM PostsForQuestions q "
-		"JOIN CriteriaAndPostsForQuestions cq "
+		"FROM Questions q "
+		"JOIN CriteriaAndQuestions cq "
 		"ON cq.id = (SELECT id "
-		"FROM CriteriaAndPostsForQuestions c "
-		"WHERE c.postsforquestions_id = q.id AND cq.active = 1  LIMIT 1)) criteria "
-		"WHERE AnswerPairings.postsforquestions_id = criteria.questionId)"
+		"FROM CriteriaAndQuestions c "
+		"WHERE c.questions_id = q.id AND cq.active = 1  LIMIT 1)) criteria "
+		"WHERE AnswerPairings.questions_id = criteria.questionId)"
 	)
 	op.get_bind().execute(update)
 
 	with op.batch_alter_table('AnswerPairings', naming_convention=convention) as batch_op:
-		batch_op.create_foreign_key('fk_AnswerPairings_criteriaandpostsforquestions_id_CriteriaAndPostsForQuestions',
-									'CriteriaAndPostsForQuestions',
-									['criteriaandpostsforquestions_id'], ['id'], ondelete="CASCADE")
+		batch_op.create_foreign_key('fk_AnswerPairings_criteriaandquestions_id_CriteriaAndQuestions',
+									'CriteriaAndQuestions',
+									['criteriaandquestions_id'], ['id'], ondelete="CASCADE")
 
 
 def downgrade():
 	with op.batch_alter_table('AnswerPairings', naming_convention=convention) as batch_op:
-		batch_op.drop_constraint('fk_AnswerPairings_criteriaandpostsforquestions_id_CriteriaAndPostsForQuestions',
+		batch_op.drop_constraint('fk_AnswerPairings_criteriaandquestions_id_CriteriaAndQuestions',
 								 'foreignkey')
 		# drop key/index + column
 		# batch_op.drop_index("criteriaandpostsforquestions_id")
-		batch_op.drop_column('criteriaandpostsforquestions_id')
+		batch_op.drop_column('criteriaandquestions_id')
 

@@ -38,7 +38,7 @@ class EvalCommentRootAPI(Resource):
 		judgementComment = PostsForJudgements(postsforcomments=comment)
 		require(MANAGE, judgementComment)
 		comments = PostsForJudgements.query\
-			.join(Judgements, AnswerPairings).filter_by(postsforquestions_id=question.id)\
+			.join(Judgements, AnswerPairings).filter_by(questions_id=question.id)\
 			.join(PostsForComments, Posts, Users).order_by(Users.firstname, Users.lastname, Users.id).all()
 		restrict_users = not allow(EDIT, CoursesAndUsers(courses_id=course.id))
 
@@ -96,11 +96,11 @@ class EvalCommentViewAPI(Resource):
 		require(MANAGE, judgementComment)
 
 		evalcomments = PostsForJudgements.query\
-			.join(Judgements, AnswerPairings).filter_by(postsforquestions_id=question.id)\
+			.join(Judgements, AnswerPairings).filter_by(questions_id=question.id)\
 			.join(PostsForComments, Posts, Users).order_by(Users.firstname, Users.lastname, Users.id).all()
 
 		feedback = PostsForAnswersAndPostsForComments.query.join(PostsForAnswers) \
-			.filter_by(postsforquestions_id=question.id)\
+			.filter_by(questions_id=question.id)\
 			.order_by(PostsForAnswersAndPostsForComments.evaluation).all()
 
 		replies = {}
@@ -113,7 +113,7 @@ class EvalCommentViewAPI(Resource):
 		if question.selfevaltype_id:
 			# assume no comparison self evaluation
 			selfeval = PostsForAnswersAndPostsForComments.query.filter_by(selfeval=True)\
-				.join(PostsForAnswers).filter_by(postsforquestions_id=question.id).all()
+				.join(PostsForAnswers).filter_by(questions_id=question.id).all()
 
 		results = []
 		for comment in evalcomments:
@@ -122,7 +122,7 @@ class EvalCommentViewAPI(Resource):
 			temp_comment = {'answer1': {}, 'answer2': {}, 'user_id': user_id}
 			temp_comment['name'] = fullname if fullname else comment.postsforcomments.post.user.displayname
 			temp_comment['avatar'] = comment.postsforcomments.post.user.avatar
-			temp_comment['criteriaandpostsforquestions_id'] = comment.judgement.criteriaandpostsforquestions_id
+			temp_comment['criteriaandquestions_id'] = comment.judgement.criteriaandquestions_id
 			temp_comment['answerpairings_id'] = comment.judgement.answerpairings_id
 			temp_comment['content'] = comment.postsforcomments.post.content
 			temp_comment['selfeval'] = False
@@ -142,7 +142,7 @@ class EvalCommentViewAPI(Resource):
 				'name': name,
 				'avatar': s.postsforcomments.post.user.avatar,
 				'answerpairings_id': 0,
-				'criteriaandpostsforquestions_id': 0,
+				'criteriaandquestions_id': 0,
 				'content': s.content,
 				'selfeval': True,
 				'created': str(s.postsforcomments.post.created)
@@ -150,7 +150,7 @@ class EvalCommentViewAPI(Resource):
 			results.append(comment)
 
 		# sort by criteria id to keep the evaluation results in a constant order
-		results.sort(key = itemgetter('criteriaandpostsforquestions_id'))
+		results.sort(key = itemgetter('criteriaandquestions_id'))
 		# sort by answerpairings_id in descending order first
 		# group by answerpairing and keep the selfevaluation as the last comment
 		results.sort(key = itemgetter('answerpairings_id'), reverse=True)

@@ -126,7 +126,7 @@ class EvalCommentsAPITests(ACJTestCase):
 		self.assertEqual(len(rv.json['comparisons']), 1)
 		self.assertEqual(actual['name'],self.data.get_judging_student().fullname)
 		self.assertEqual(actual['avatar'], self.data.get_judging_student().avatar)
-		self.assertEqual(actual['criteriaandpostsforquestions_id'],
+		self.assertEqual(actual['criteriaandquestions_id'],
 			self.data.get_criteria_by_question(self.data.get_questions()[0]).id)
 		self.assertEqual(actual['content'], expected.postsforcomments.post.content)
 		self.assertFalse(actual['selfeval'])
@@ -150,7 +150,7 @@ class EvalCommentsAPITests(ACJTestCase):
 		self.assertEqual(len(rv.json['comparisons']), 1)
 		self.assertEqual(actual['name'],self.data.get_judging_student().fullname)
 		self.assertEqual(actual['avatar'], self.data.get_judging_student().avatar)
-		self.assertEqual(actual['criteriaandpostsforquestions_id'],
+		self.assertEqual(actual['criteriaandquestions_id'],
 			self.data.get_criteria_by_question(self.data.get_questions()[0]).id)
 		self.assertEqual(actual['content'], expected.postsforcomments.post.content)
 		self.assertFalse(actual['selfeval'])
