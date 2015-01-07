@@ -50,9 +50,9 @@ def upgrade():
 					"UPDATE Scores "
 					"SET criteriaandquestions_id = "
 					"(SELECT cq.id FROM CriteriaAndQuestions cq "
-					"JOIN Answers a ON Scores.answers_id = a.id "
-					"JOIN CriteriaAndCourses c ON Scores.criteriaandcourses_id = c.id "
-					"WHERE a.questions_id = cq.questions_id AND c.criteria_id = cq.criteria_id)"
+					"JOIN Answers a ON a.questions_id = cq.questions_id "
+					"JOIN CriteriaAndCourses c ON c.criteria_id = cq.criteria_id "
+					"WHERE Scores.criteriaandcourses_id = c.id AND Scores.answers_id = a.id)"
 					# "UPDATE Scores s " + \  # "JOIN PostsForAnswers a ON s.postsforanswers_id = a.id " + \
 					# "JOIN CriteriaAndCourses c ON s.criteriaandcourses_id = c.id " + \
 					# "JOIN CriteriaAndQuestions cq " + \
@@ -64,7 +64,7 @@ def upgrade():
 		batch_op.create_foreign_key('fk_Scores_criteriaandquestions_id_CriteriaAndQuestions', 'CriteriaAndQuestions',
 									['criteriaandquestions_id'], ['id'], ondelete="CASCADE")
 		batch_op.alter_column('criteriaandquestions_id', nullable=False, existing_type=sa.Integer())
-		# batch_op.drop_constraint('criteriaandcourses_id', 'foreignkey')
+		batch_op.drop_constraint('fk_Scores_criteriaandcourses_id_CriteriaAndCourses', 'foreignkey')
 		batch_op.drop_column("criteriaandcourses_id")
 
 	# Judgements model - create criteriaandquestions_id column
@@ -74,9 +74,9 @@ def upgrade():
 					"UPDATE Judgements "
 					"SET criteriaandquestions_id = "
 					"(SELECT cq.id FROM CriteriaAndQuestions cq "
-					"JOIN Answers a ON Judgements.answers_id_winner = a.id  "
-					"JOIN CriteriaAndCourses c ON Judgements.criteriaandcourses_id = c.id  "
-					"WHERE a.questions_id = cq.questions_id AND c.criteria_id = cq.criteria_id)"
+					"JOIN Answers a ON a.questions_id = cq.questions_id  "
+					"JOIN CriteriaAndCourses c ON c.criteria_id = cq.criteria_id "
+					"WHERE Judgements.answers_id_winner = a.id AND Judgements.criteriaandcourses_id = c.id)"
 					# "UPDATE Judgements j " +   # "JOIN PostsForAnswers a ON j.postsforanswers_id_winner = a.id " +
 					# "JOIN CriteriaAndCourses c ON j.criteriaandcourses_id = c.id " +
 					# "JOIN CriteriaAndQuestions cq " +
@@ -88,6 +88,7 @@ def upgrade():
 		batch_op.create_foreign_key('fk_Judgements_criteriaandquestions_id_CriteriaAndQuestions', 'CriteriaAndQuestions',
 									['criteriaandquestions_id'], ['id'], ondelete="CASCADE")
 		batch_op.alter_column('criteriaandquestions_id', nullable=False, existing_type=sa.Integer())
+		batch_op.drop_constraint('fk_Judgements_criteriaandcourses_id_CriteriaAndCourses', 'foreignkey')
 		# batch_op.drop_index("criteriaandcourses_id")
 		batch_op.drop_column("criteriaandcourses_id")
 
@@ -100,10 +101,10 @@ def downgrade():
 					"UPDATE Judgements "
 					"SET criteriaandcourses_id = "
 					"(SELECT cc.id FROM CriteriaAndCourses cc "
-					"JOIN CriteriaAndQuestions cq ON Judgements.criteriaandquestions_id = cq.id "
+					"JOIN CriteriaAndQuestions cq ON cq.criteria_id = cc.criteria_id  "
 					"JOIN Questions q ON cq.questions_id = q.id "
 					"JOIN Posts p ON q.posts_id = p.id "
-					"WHERE cq.criteria_id = cc.criteria_id AND p.courses_id = cc.courses_id)"
+					"WHERE Judgements.criteriaandquestions_id = cq.id AND p.courses_id = cc.courses_id)"
 					# "UPDATE Judgements j " + \
 					# "JOIN CriteriaAndQuestions cq ON j.criteriaandquestions_id = cq.id " + \
 					# "JOIN Questions q ON cq.questions_id = q.id " + \
@@ -128,10 +129,10 @@ def downgrade():
 					"UPDATE Scores "
 					"SET criteriaandcourses_id = "
 					"(SELECT cc.id FROM CriteriaAndCourses cc "
-					"JOIN CriteriaAndQuestions cq ON Scores.criteriaandquestions_id = cq.id "
+					"JOIN CriteriaAndQuestions cq ON cq.criteria_id = cc.criteria_id "
 					"JOIN Questions q ON cq.questions_id = q.id "
 					"JOIN Posts p ON q.posts_id = p.id "
-					"WHERE cq.criteria_id = cc.criteria_id AND p.courses_id = cc.courses_id)"  # "UPDATE Scores s " + \
+					"WHERE Scores.criteriaandquestions_id = cq.id AND p.courses_id = cc.courses_id)"  # "UPDATE Scores s " + \
 					# "JOIN CriteriaAndQuestions cq ON s.criteriaandquestions_id = cq.id " + \
 					# "JOIN Questions q ON cq.questions_id = q.id " + \
 					# "JOIN Posts p ON q.posts_id = p.id " + \
