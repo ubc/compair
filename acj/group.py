@@ -83,6 +83,9 @@ def import_members(course_id, identifier, members):
 	active_groups = Groups.query.filter_by(courses_id=course_id, active=True).all()
 	active_groups = {g.name:g.id for g in active_groups}
 
+	enroled = CoursesAndUsers.query.filter(CoursesAndUsers.courses_id==course_id,
+		CoursesAndUsers.usertypesforcourse_id!=dropped).all()
+	enroled = [e.users_id for e in enroled]
 	# enrol users to groups
 	for member in members:
 		if member[USER_IDENTIFIER] in user_infile:
@@ -105,9 +108,7 @@ def import_members(course_id, identifier, members):
 			invalids.append({'member': json.dumps(member), 'message': 'No user with this '+value+' exists.'})
 			continue
 
-		enroled = CoursesAndUsers.query.filter(CoursesAndUsers.courses_id==course_id,
-			CoursesAndUsers.usertypesforcourse_id!=dropped, CoursesAndUsers.users_id==user.id).first()
-		if enroled:
+		if user.id in enroled:
 			group_member = GroupsAndUsers.query.filter_by(groups_id=active_groups[member[GROUP_NAME]])\
 				.filter_by(users_id=user.id).first()
 			if group_member:

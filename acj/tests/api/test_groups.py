@@ -204,7 +204,7 @@ class GroupsAPITests(ACJTestCase):
 	def test_import_groups(self):
 		url = '/api/courses/' + str(self.data.get_course().id) + '/groups'
 
-		content = self.data.get_authorized_student().username + ",Alpha"
+		content = self.data.get_authorized_student().username + "," + self.data.get_active_group().name
 		encoded_content = content.encode()
 		filename = "groups.csv"
 
@@ -264,6 +264,129 @@ class GroupsAPITests(ACJTestCase):
 		file = io.BytesIO(encoded_content)
 		rv = self.client.post(url, data=dict(file=(file, filename)))
 		self.assert400(rv)
+		file.close()
+
+		# test duplicate users in file
+		duplicate = "".join([content, "\n", content])
+		file = io.BytesIO(duplicate.encode())
+		rv = self.client.post(url, data=dict(userIdentifier="username", file=(file, filename)))
+		self.assert200(rv)
+		self.assertEqual(1, rv.json['success'])
+		self.assertEqual(1, len(rv.json['invalids']))
+		invalid = rv.json['invalids'][0]
+		member = ['["', self.data.get_authorized_student().username,'", "',
+			self.data.get_active_group().name,'"]']
+		self.assertEqual("".join(member), invalid['member'])
+		self.assertEqual("This user already exists in the file.", invalid['message'])
+		file.close()
+
+		# test missing username
+		missing_username = "," + self.data.get_active_group().name
+		file = io.BytesIO(missing_username.encode())
+		rv = self.client.post(url, data=dict(userIdentifier="username", file=(file, filename)))
+		self.assert200(rv)
+		self.assertEqual(1, rv.json['success'])
+		self.assertEqual(1, len(rv.json['invalids']))
+		invalid = rv.json['invalids'][0]
+		member = ['["", "', self.data.get_active_group().name, '"]']
+		self.assertEqual("".join(member), invalid['member'])
+		self.assertEqual("No user with this username exists.", invalid['message'])
+		file.close()
+
+		# test missing group name
+		missing_group = self.data.get_authorized_student().username + ","
+		file = io.BytesIO(missing_group.encode())
+		rv = self.client.post(url, data=dict(userIdentifier="username", file=(file, filename)))
+		self.assert200(rv)
+		self.assertEqual(0, rv.json['success'])
+		self.assertEqual(1, len(rv.json['invalids']))
+		invalid = rv.json['invalids'][0]
+		member = ['["', self.data.get_authorized_student().username, '", ""]']
+		self.assertEqual("".join(member), invalid['member'])
+		self.assertEqual("The group name is invalid.", invalid['message'])
+		file.close()
+
+		# test invalid user
+		invalid_user = "username9999," + self.data.get_active_group().name
+		file = io.BytesIO(invalid_user.encode())
+		rv = self.client.post(url, data=dict(userIdentifier="username", file=(file, filename)))
+		self.assert200(rv)
+		self.assertEqual(1, rv.json['success'])
+		self.assertEqual(1, len(rv.json['invalids']))
+		invalid = rv.json['invalids'][0]
+		member = ['["username9999", "', self.data.get_active_group().name, '"]']
+		self.assertEqual("".join(member), invalid['member'])
+		self.assertEqual("No user with this username exists.", invalid['message'])
+		file.close()
+
+		# test successful import with username
+		with_username = self.data.get_authorized_student().username + "," + self.data.get_active_group().name
+		file = io.BytesIO(with_username.encode())
+		rv = self.client.post(url, data=dict(userIdentifier="username", file=(file, filename)))
+		self.assert200(rv)
+		self.assertEqual(1, rv.json['success'])
+		self.assertEqual(0, len(rv.json['invalids']))
+		file.close()
+
+		# test successful import with student number
+		with_studentno = self.data.get_authorized_student().student_no + "," + self.data.get_active_group().name
+		file = io.BytesIO(with_studentno.encode())
+		rv = self.client.post(url, data=dict(userIdentifier="student_no", file=(file, filename)))
+		self.assert200(rv)
+		self.assertEqual(1, rv.json['success'])
+		self.assertEqual(0, len(rv.json['invalids']))
+		file.close()
+
+		# test import user not in course
+		unauthorized_student = self.data.get_unauthorized_student().username + "," + self.data.get_active_group().name
+		file = io.BytesIO(unauthorized_student.encode())
+		rv = self.client.post(url, data=dict(userIdentifier="username", file=(file, filename)))
+		self.assert200(rv)
+		self.assertEqual(1, rv.json['success'])
+		self.assertEqual(1, len(rv.json['invalids']))
+		invalid = rv.json['invalids'][0]
+		member = ['["', self.data.get_unauthorized_student().username, '", "',
+				self.data.get_active_group().name, '"]']
+		self.assertEqual("".join(member), invalid['member'])
+		self.assertEqual("The user is not enroled in the course", invalid['message'])
+		file.close()
+
+		# test adding to inactive group
+		inactive_group = self.data.get_authorized_student().username + "," + self.data.get_inactive_group().name
+		file = io.BytesIO(inactive_group.encode())
+		rv = self.client.post(url, data=dict(userIdentifier="username", file=(file, filename)))
+		self.assert200(rv)
+		self.assertEqual(1, rv.json['success'])
+		self.assertEqual(0, len(rv.json['invalids']))
+		file.close()
+
+		# test adding inactive group member
+		inactive_member = self.data.get_inactive_member().user.username + "," + self.data.get_active_group().name
+		file = io.BytesIO(inactive_member.encode())
+		rv = self.client.post(url, data=dict(userIdentifier="username", file=(file, filename)))
+		self.assert200(rv)
+		self.assertEqual(1, rv.json['success'])
+		self.assertEqual(0, len(rv.json['invalids']))
+		file.close()
+
+		# test placing instructor in group
+		add_instructor = self.data.get_authorized_instructor().username + "," + self.data.get_active_group().name
+		file = io.BytesIO(add_instructor.encode())
+		rv = self.client.post(url, data=dict(userIdentifier="username", file=(file, filename)))
+		self.assert200(rv)
+		self.assertEqual(1, rv.json['success'])
+		self.assertEqual(0, len(rv.json['invalids']))
+		file.close()
+
+		# test placing TA in group
+		add_ta = self.data.get_authorized_ta().username + "," + self.data.get_active_group().name
+		file = io.BytesIO(add_ta.encode())
+		rv = self.client.post(url, data=dict(userIdentifier="username", file=(file, filename)))
+		self.assert200(rv)
+		self.assertEqual(1, rv.json['success'])
+		self.assertEqual(0, len(rv.json['invalids']))
+		file.close()
+
 
 	def _create_group_user_url(self, course, user, group=None):
 		url = '/api/courses/'+str(course.id)+'/users/'+str(user.id)+'/groups'
