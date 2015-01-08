@@ -1,9 +1,9 @@
 <div ng-controller="GradebookController">
 	<div class="tab-header">
 		<div class="pull-right text-right">
-			<span class="filter" ng-if="groups.length > 0 && canManagePosts">
+			<span class="filter" ng-if="canManagePosts">
 				<label>Show: </label>
-				<select ng-model="gb.group" class="nullable"
+				<select ng-if="groups.length > 0" ng-model="gb.group" class="nullable"
 						ng-options="g as g.name for g in groups | orderBy: 'name'" ng-change="groupChange()">
 					<option value="">All groups</option>
 				</select>
