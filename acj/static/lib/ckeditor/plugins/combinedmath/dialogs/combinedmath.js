@@ -102,6 +102,7 @@ CKEDITOR.dialog.add('combinedmath', function( editor ) {
 							if (widget.data.mathexp && widget.data.mode=='tex') {
 								this.setValue(widget.data.mathexp);
 								this.refreshPreview(widget.data.mathexp);
+								this.selectParentTab();
 							} else {
 								this.getInputElement().setValue('\\frac{d}{dx} \\int_{a}^{x}f(s) ds = f(x)');
 								this.refreshPreview(
