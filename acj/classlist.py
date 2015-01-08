@@ -53,7 +53,7 @@ def import_users(course_id, users):
 	exist_studentnos = []
 	exist_displaynames = []
 	count = 0 # store number of successful enrolments
-	letters_digits = string.letters + string.digits
+	letters_digits = string.ascii_letters + string.digits
 
 	# create / update users in file
 	normal_user = UserTypesForSystem.query.filter_by(name = UserTypesForSystem.TYPE_NORMAL).first().id

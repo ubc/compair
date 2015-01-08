@@ -416,8 +416,5 @@ class ClassListAPITest(ACJTestCase):
 		self.assertEqual(0, len(result['invalids']))
 		file.close()
 
-		# test authorized instructor - dropped user
-		file = io.BytesIO()
-
 	def _create_enrol_url(self, url, user_id):
 		return url + '/' + str(user_id) + '/enrol'
