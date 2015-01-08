@@ -165,12 +165,6 @@ module.controller(
 		);
 		$scope.enrolSubmit = function() {
 			$scope.submitted = true;
-			if (!$scope.user.user.id) {
-				Toaster.error("Invalid user selected. Please try again.");
-				$scope.user = {};
-				$scope.submitted = false;
-				return;
-			}
 			ClassListResource.enrol({'courseId': courseId, 'userId': $scope.user.user.id}, $scope.user).$promise.then(
 				function (ret) {
 					$scope.submitted = false;
