@@ -53,6 +53,7 @@ def import_users(course_id, users):
 	exist_studentnos = []
 	exist_displaynames = []
 	count = 0 # store number of successful enrolments
+	letters_digits = string.letters + string.digits
 
 	# create / update users in file
 	normal_user = UserTypesForSystem.query.filter_by(name = UserTypesForSystem.TYPE_NORMAL).first().id
@@ -85,7 +86,7 @@ def import_users(course_id, users):
 			u = Users(username=temp.username)
 			update = False
 
-		temp.password = user[PASSWORD] if length > PASSWORD and user[PASSWORD] else temp.username
+		temp.password = user[PASSWORD] if length > PASSWORD and user[PASSWORD] else random_generator(16, letters_digits)
 
 		# validate student number (if not None)
 		if temp.student_no:
