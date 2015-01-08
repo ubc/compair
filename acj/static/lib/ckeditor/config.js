@@ -37,4 +37,7 @@ CKEDITOR.editorConfig = function( config ) {
 	config.removeDialogTabs = 'image:advanced;link:advanced';
 
 	config.height="150px";
+
+	// enable custom plugin that combines ASCIIMath and LaTeX math input
+	config.extraPlugins = 'combinedmath';
 };
