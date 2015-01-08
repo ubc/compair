@@ -69,7 +69,7 @@ module.controller(
 
 		Session.getUser().then(function(user) {
 			$scope.loggedInUser = user;
-			$log.info("Logged in as " + $scope.loggedInUser.username);
+			$log.debug("Logged in as " + $scope.loggedInUser.username);
 		});
 
 		$scope.getPermissions();
