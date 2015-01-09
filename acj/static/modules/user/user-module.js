@@ -177,6 +177,9 @@ module.controller("UserViewController",
 		Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function(result) {
 			$scope.canCreateUser = result;
 		});
+		Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
+			$scope.canManageUser = result;
+		});
 		Session.getUser().then(function(user) {
 			$scope.ownProfile = userId == user.id;
 		});

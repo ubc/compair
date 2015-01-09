@@ -47,7 +47,10 @@
 			<li ng-if="!canManagePosts && question.answer_period && !answered">
 				<strong>Answer due {{question.answer_end | amDateFormat: 'MMM D @ h:mm a'}}</strong>
 			</li>
-			<li ng-if="!canManagePosts && question.judging_period && (evaluation + selfEval > 0)">
+			<li ng-if="availPairsLogic && !canManagePosts && question.judging_period && (evaluation + selfEval > 0) && ((question.answer_period && answered) || !question.answer_period) && question.judgeEnd">
+				Comparisons due {{question.judgeEnd | amDateFormat: 'MMM D @ h:mm a'}}
+			</li>
+			<li ng-if="!canManagePosts && question.judging_period && (evaluation + selfEval > 0) && ((question.answer_period && answered) || !question.answer_period)">
 				<strong>{{ evaluation + selfEval }} comparison<span ng-if="(evaluation + selfEval) != 1">s</span> needed from you</strong>
 			</li>
 			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
@@ -93,7 +96,7 @@
 		<p ng-if="!availPairsLogic && !canManagePosts && question.judging_period && (evaluation + selfEval > 0) && ((question.answer_period && answered) || !question.answer_period)"><br /><em>Not enough answers to compare (Refresh the page to check again) </em></p>
 		
 		<!-- ADDITIONAL TEXT when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has a self-evaluation remaining AND has not answered question -->
-		<p ng-if="!canManagePosts && question.judging_period && judged_req_met && !selfEval_req_met && !answered"><em>Self-evaluation comparison unavailable (You have not answered the question) </em></p>
+		<p ng-if="!canManagePosts && question.judging_period && judged_req_met && !selfEval_req_met && !answered"><br /><em>Self-evaluation comparison unavailable (You have not answered the question)</em></p>
 		
 	</div><!-- closes question box -->
 	

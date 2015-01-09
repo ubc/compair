@@ -35,16 +35,16 @@
 							</li>
 						</ul>
 					</li> -->
-					<li ng-if="canCreateCourses">
-						<a ng-href="#/course/new">
-							<i class="fa fa-book"></i>
-							Add Course
-						</a>
-					</li>
 					<li ng-if="canManageQuestions">
 						<a ng-href="#/report">
 							<i class="fa fa-bar-chart-o"></i>
 							Download Reports
+						</a>
+					</li>
+					<li ng-if="canCreateCourses">
+						<a ng-href="#/course/new">
+							<i class="fa fa-book"></i>
+							Add Course
 						</a>
 					</li>
 					<li ng-if="canCreateUsers">

@@ -273,6 +273,7 @@ module.controller("QuestionViewController",
 				function (ret)
 				{
 					var judgeEnd = ret.question.judge_end;
+					ret.question.judgeEnd = judgeEnd;
 					ret.question.answer_start = new Date(ret.question.answer_start);
 					ret.question.answer_end = new Date(ret.question.answer_end);
 					ret.question.judge_start = new Date(ret.question.judge_start);

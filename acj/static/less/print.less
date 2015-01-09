@@ -40,6 +40,19 @@
         display: none;
     }
     
+    /* shrink titles */
+    h1,
+    h2 {
+        font-size: 150%;
+    }
+    h3 {
+        font-size: 130%;
+    }
+    h4,
+    h5 {
+        font-size: 120%;
+    }
+    
     /* change blue backgrounds to gray */
     .btn-primary,
     .btn-primary[disabled],
@@ -66,18 +79,18 @@
         border: 1px solid @border-gray;
     }
     
-    /* more blue to gray */
+    /* more blue to black */
     .standalone-question,
     fieldset {
         background: #fff;
-        border: 2px solid @border-gray;
+        border: 2px solid #000;
     }
         fieldset .instructional-text {
-            border-color: @border-gray;
+            border-color: #000;
         }
     .question-screen .question-metadata-list,
     .question-screen .question-metadata-list > li {
-        border-color: @border-gray;
+        border-color: #000;
     }
     
     /* for PDF viewer buttons */
