@@ -232,6 +232,7 @@ class ClasslistRootAPI(Resource):
 			return {'error':'Wrong file type'}, 400
 api.add_resource(ClasslistRootAPI, '')
 
+# /:userId/enrol
 class EnrolAPI(Resource):
 	@login_required
 	def post(self, course_id, user_id):
@@ -300,25 +301,6 @@ class TeachersAPI(Resource):
 
 		return {'instructors': instructor_ids}
 api.add_resource(TeachersAPI, '/instructors/labels')
-
-# /instructors - return list of Instructors in the course
-class InstructorsAPI(Resource):
-	@login_required
-	def get(self, course_id):
-		Courses.query.get_or_404(course_id)
-		coursesandusers = CoursesAndUsers(courses_id=course_id)
-		require(READ, coursesandusers)
-		instructors = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_INSTRUCTOR).all()
-		instructor_ids = {u.users_id: u.user.fullname for u in instructors}
-
-		on_classlist_instructor.send(
-			current_app._get_current_object(),
-			event_name=on_classlist_instructor.name,
-			user=current_user,
-			course_id=course_id)
-
-		return {'instructors': instructor_ids}
-api.add_resource(InstructorsAPI, '/instructors')
 
 # /students - return list of Students in the course
 class StudentsAPI(Resource):
