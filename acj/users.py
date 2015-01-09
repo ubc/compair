@@ -23,7 +23,7 @@ new_user_parser.add_argument('usertypesforsystem_id', type=int, required=True)
 new_user_parser.add_argument('firstname', type=str, required=True)
 new_user_parser.add_argument('lastname', type=str, required=True)
 new_user_parser.add_argument('displayname', type=str, required=True)
-new_user_parser.add_argument('email', type=str, required=True)
+new_user_parser.add_argument('email', type=str)
 new_user_parser.add_argument('password', type=str, required=True)
 
 existing_user_parser = RequestParser()
@@ -34,7 +34,7 @@ existing_user_parser.add_argument('usertypesforsystem_id', type=int, required=Tr
 existing_user_parser.add_argument('firstname', type=str, required=True)
 existing_user_parser.add_argument('lastname', type=str, required=True)
 existing_user_parser.add_argument('displayname', type=str, required=True)
-existing_user_parser.add_argument('email', type=str, required=True)
+existing_user_parser.add_argument('email', type=str)
 
 update_password_parser = RequestParser()
 update_password_parser.add_argument('oldpassword', type=str, required=True)
