@@ -329,7 +329,7 @@ class UsersAPITests(ACJTestCase):
 
 		self.logout()
 
-	def get_course_list(self):
+	def test_get_course_list(self):
 		# test login required
 		url = '/api/users/'+str(self.data.get_authorized_instructor().id)+'/courses'
 		rv = self.client.get(url)
@@ -382,6 +382,41 @@ class UsersAPITests(ACJTestCase):
 		rv = self.client.get(url)
 		self.assert200(rv)
 		self.assertEqual(0, len(rv.json['objects']))
+
+	def test_get_teaching_course(self):
+		url = '/api/users/courses/teaching'
+
+		# test login required
+		rv = self.client.get(url)
+		self.assert401(rv)
+
+		# test student
+		self.login(self.data.get_authorized_student().username)
+		rv = self.client.get(url)
+		self.assert200(rv)
+		self.assertEqual(0, len(rv.json['courses']))
+		self.logout()
+
+		# test TA
+		self.login(self.data.get_authorized_ta().username)
+		rv = self.client.get(url)
+		self.assert200(rv)
+		self.assertEqual(1, len(rv.json['courses']))
+		self.logout()
+
+		# test instructor
+		self.login(self.data.get_authorized_instructor().username)
+		rv = self.client.get(url)
+		self.assert200(rv)
+		self.assertEqual(1, len(rv.json['courses']))
+		self.logout()
+
+		# test admin
+		self.login('root')
+		rv = self.client.get(url)
+		self.assert200(rv)
+		self.assertEqual(2, len(rv.json['courses']))
+		self.logout()
 
 	def test_update_password(self):
 		url = '/api/users/password/'+ str(self.data.get_authorized_instructor().id)

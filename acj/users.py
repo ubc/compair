@@ -10,7 +10,8 @@ from .core import db, event
 from .util import pagination, new_restful_api, get_model_changes
 from sqlalchemy import exc
 
-from .models import Users, UserTypesForSystem, Courses, UserTypesForCourse, CoursesAndUsers
+from .models import Users, UserTypesForSystem, Courses, UserTypesForCourse, CoursesAndUsers, \
+	PostsForQuestions, Posts
 
 users_api = Blueprint('users_api', __name__)
 user_types_api = Blueprint('user_types_api', __name__)
@@ -205,6 +206,18 @@ class UserCourseListAPI(Resource):
 
 		return {'objects': marshal(courses, dataformat.getCourses(include_details=False))}
 
+# courses/teaching
+class TeachingUserCourseListAPI(Resource):
+	@login_required
+	def get(self):
+		if allow(MANAGE, Courses()):
+			courses = Courses.query.all()
+			list = [{'id': c.id, 'name': c.name} for c in courses]
+		else:
+			list = [{'id': c.course.id, 'name': c.course.name} for c in current_user.coursesandusers
+					if allow(MANAGE, PostsForQuestions(post = Posts(courses_id=c.course.id)))]
+
+		return {'courses': list}
 
 # /
 class UserTypesAPI(Resource):
@@ -296,6 +309,7 @@ api = new_restful_api(users_api)
 api.add_resource(UserAPI, '/<int:id>')
 api.add_resource(UserListAPI, '')
 api.add_resource(UserCourseListAPI, '/<int:id>/courses')
+api.add_resource(TeachingUserCourseListAPI, '/courses/teaching')
 api.add_resource(UserUpdatePasswordAPI, '/password/<int:id>')
 apiT = new_restful_api(user_types_api)
 apiT.add_resource(UserTypesAPI, '')

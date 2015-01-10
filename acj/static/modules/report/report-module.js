@@ -43,18 +43,14 @@ module.controller(
 			{'id': 'participation_stat', 'name': 'Participation Report - Statistics'}
 		];
 
-		Session.getUser().then(function(user) {
-			UserResource.getUserCourses(
-				{id: user.id}).$promise.then(
-				function(ret) {
-					$scope.courses = ret.objects;
-				},
-				function (ret) {
-					Toaster.reqerror("Unable to retrieve your courses.", ret);
-					$log.error("Failed to retrieve the user's courses.");
-				}
-			);
-		});
+		UserResource.getTeachingUserCourses().$promise.then(
+			function(ret) {
+				$scope.courses = ret.courses;
+			},
+			function (ret) {
+				Toaster.reqerror("Unable to retrieve your courses.", ret);
+			}
+		);
 
 		$scope.changeReport = function() {
 			$scope.reportFile = null;

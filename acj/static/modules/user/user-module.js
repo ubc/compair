@@ -16,7 +16,8 @@ module.factory('UserResource', function($resource) {
 			{
 				method: 'GET',
 				url: '/api/users/:id/courses'
-			}
+			},
+			'getTeachingUserCourses': {url: '/api/users/courses/teaching'}
 		}
 	);
 	User.MODEL = "Users";
