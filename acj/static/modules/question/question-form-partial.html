@@ -91,14 +91,14 @@
 		<label for="availableCheck">Manually set when students can compare answers for this question</label>
 		<br /><br />
 		
-		<div ng-if="question.availableCheck">
+		<div ng-show="question.availableCheck">
 
 			<div class="row">
 				<div class="col-md-6 form-group">
 					<label class="required-star">Comparing Begins</label><br />
 					<div class="question-date">
 						<span class="input-group">
-							<input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.jstart.date" is-open="date.jstart.opened" required />
+							<input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.jstart.date" is-open="date.jstart.opened" ng-required="question.availableCheck" />
 							<span class="input-group-btn">
 								<button type="button" class="btn btn-default" ng-click="date.jstart.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
 							</span>
@@ -112,7 +112,7 @@
 					<label class="required-star">Comparing Ends</label><br />
 					<div class="question-date">
 						<span class="input-group">
-							<input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.jend.date" is-open="date.jend.opened" required />
+							<input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.jend.date" is-open="date.jend.opened" ng-required="question.availableCheck" />
 							<span class="input-group-btn">
 								<button type="button" class="btn btn-default" ng-click="date.jend.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
 							</span>
