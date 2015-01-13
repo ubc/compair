@@ -56,7 +56,7 @@ Database Upgrade
 ----------------
 
     vagrant ssh # only for developer installation
-    cd acj
+    cd /vagrant
     PYTHONPATH=. alembic upgrade head
 
 Google Analytics Web Tracking
