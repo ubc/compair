@@ -4,7 +4,7 @@
 from datetime import datetime, timedelta
 import random
 
-from acj.models import UserTypesForCourse, UserTypesForSystem, SelfEvaluationTypes
+from acj.models import UserTypesForCourse, UserTypesForSystem, SelfEvaluationTypes, Criteria
 from data.fixtures.factories import UsersFactory, UserTypesForCourseFactory, UserTypesForSystemFactory, CriteriaFactory, \
 	CoursesFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, PostsForAnswersFactory, \
 	CriteriaAndCoursesFactory, AnswerPairingsFactory, JudgementsFactory, PostsForJudgementsFactory, \
@@ -52,7 +52,22 @@ class SampleDataFixture(object):
 	INSTRUCTOR_NAMES = ["instructor1"]
 	STUDENT_NAMES = ["student1", "student2", "student3", "student4", "student5", "student6",
 					 "student7", "student8"]
+
 	def __init__(self):
+		# initialize with default values in cases of DefaultFixture being unavailable
+		DEFAULT_CRITERIA = DefaultFixture.DEFAULT_CRITERIA if DefaultFixture.DEFAULT_CRITERIA else \
+			Criteria.query.filter_by(name="Which is better?").first()
+
+		SYS_ROLE_INSTRUCTOR = DefaultFixture.SYS_ROLE_INSTRUCTOR if DefaultFixture.SYS_ROLE_INSTRUCTOR else \
+			UserTypesForSystem.query.filter_by(name=UserTypesForSystem.TYPE_INSTRUCTOR).first()
+		SYS_ROLE_NORMAL = DefaultFixture.SYS_ROLE_NORMAL if DefaultFixture.SYS_ROLE_NORMAL else \
+			UserTypesForSystem.query.filter_by(name=UserTypesForSystem.TYPE_NORMAL).first()
+
+		COURSE_ROLE_INSTRUCTOR = DefaultFixture.COURSE_ROLE_INSTRUCTOR if DefaultFixture.COURSE_ROLE_INSTRUCTOR else \
+			UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_INSTRUCTOR).first()
+		COURSE_ROLE_STUDENT = DefaultFixture.COURSE_ROLE_STUDENT if DefaultFixture.COURSE_ROLE_STUDENT else \
+			UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first()
+
 		# create courses
 		self.courses = []
 		for course_name in self.COURSE_NAMES:
@@ -60,16 +75,16 @@ class SampleDataFixture(object):
 			self.courses.append(course)
 		# insert default criteria into each course
 		for course in self.courses:
-			CriteriaAndCoursesFactory(criterion=DefaultFixture.DEFAULT_CRITERIA, course=course)
+			CriteriaAndCoursesFactory(criterion=DEFAULT_CRITERIA, course=course)
 		# create instructors
 		for instructor_name in self.INSTRUCTOR_NAMES:
 			self.instructor = UsersFactory(username=instructor_name,
-				usertypeforsystem=DefaultFixture.SYS_ROLE_INSTRUCTOR)
+				usertypeforsystem=SYS_ROLE_INSTRUCTOR)
 		# create students
 		self.students = []
 		for student_name in self.STUDENT_NAMES:
 			student = UsersFactory(username=student_name,
-				usertypeforsystem=DefaultFixture.SYS_ROLE_NORMAL)
+				usertypeforsystem=SYS_ROLE_NORMAL)
 			self.students.append(student)
 		# enrol students and instructor in half of the courses, also create questions and answers
 		skip = True
@@ -81,11 +96,11 @@ class SampleDataFixture(object):
 				continue
 			# enrol instructor
 			CoursesAndUsersFactory(user=self.instructor, course=course,
-				usertypeforcourse=DefaultFixture.COURSE_ROLE_INSTRUCTOR)
+				usertypeforcourse=COURSE_ROLE_INSTRUCTOR)
 			# enrol students
 			for student in self.students:
 				CoursesAndUsersFactory(user=student, course=course,
-					usertypeforcourse=DefaultFixture.COURSE_ROLE_STUDENT)
+					usertypeforcourse=COURSE_ROLE_STUDENT)
 			# create 5 questions by the instructor
 			for i in range(5):
 				minutes=random.randint(0,59)
@@ -94,7 +109,7 @@ class SampleDataFixture(object):
 									content=content, created=created)
 				postforquestion = PostsForQuestionsFactory(post=post, title=generator.get_question())
 				# insert default criteria into question
-				CriteriaAndPostsForQuestionsFactory(criterion=DefaultFixture.DEFAULT_CRITERIA, question=postforquestion)
+				CriteriaAndPostsForQuestionsFactory(criterion=DEFAULT_CRITERIA, question=postforquestion)
 				# create answers by each student for this question
 				for student in self.students:
 					minutes=random.randint(0,59)
