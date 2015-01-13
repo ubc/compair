@@ -14,15 +14,21 @@
 	"main-bower-files": "latest",
 	"gulp-html-replace": "latest",
 	"gulp-minify-css": "latest",
-	"gulp-inject": "latest"
+	"gulp-inject": "latest",
+	"gulp-connect": "latest",
+	"proxy-middleware": "latest"
   },
-   "devDependencies": {
-       "karma": "~0.12",
-       "karma-jasmine": "~0.2.2",
-       "karma-phantomjs-launcher": "~0.1",
-       "karma-chrome-launcher": "~0.1.4",
-       "protractor": "~0.20.1",
-       "karma-junit-reporter": "^0.2.2",
-       "lodash": "^2.4.1"
-   }
+  "devDependencies": {
+	"karma": "~0.12",
+	"karma-jasmine": "~0.3.4",
+	"karma-phantomjs-launcher": "~0.1",
+	"karma-chrome-launcher": "~0.1.4",
+	"protractor": "~1.5.0",
+	"cucumber": "latest",
+	"chai": "latest",
+	"chai-as-promised": "latest",
+	"karma-junit-reporter": "^0.2.2",
+	"gulp-protractor": "latest",
+	"lodash": "^2.4.1"
+  }
 }

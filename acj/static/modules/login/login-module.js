@@ -108,7 +108,7 @@ module.controller(
 				function(ret) {
 					// login successful
 					$log.debug("Login authentication successful!");
-					userid = ret.userid
+					userid = ret.userid;
 					$log.debug("Login User ID: " + userid);
 					// retrieve logged in user's information
                     AuthenticationService.login().then(function() {

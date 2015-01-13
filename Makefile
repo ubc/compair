@@ -8,6 +8,7 @@ help:
 	@echo "  test        run all tests"
 	@echo "  testf       run all front end tests"
 	@echo "  testb       run all backend tests"
+	@echo "  testa       run all acceptance tests"
 
 env:
 	sudo easy_install pip && \
@@ -30,8 +31,11 @@ clean:
 lint:
 	flake8 --exclude=env .
 
+testa:
+	node_modules/.bin/gulp test:acceptance
+
 testf:
-	node_modules/karma/bin/karma start acj/static/test/config/karma.conf.js --single-run
+	node_modules/.bin/gulp test:unit
 
 testb:
 	python -m unittest discover -s acj/tests/

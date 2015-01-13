@@ -8,9 +8,16 @@ var gulp = require('gulp'),
 	inject = require('gulp-inject'),
 	mainBowerFiles = require('main-bower-files'),
 	minifyCss = require('gulp-minify-css'),
-	_ = require('lodash'),
 	karma = require('karma').server,
-	karmaCommonConf = require('./acj/static/test/config/karma.conf.js');
+	protractor = require('gulp-protractor').protractor,
+	webdriver_standalone = require('gulp-protractor').webdriver_standalone,
+	webdriver_update = require('gulp-protractor').webdriver_update,
+	exec = require('child_process').exec,
+	connect = require('gulp-connect');
+
+var cssFilename = 'acj.css',
+	jsLibsFilename = 'bowerJsLibs.js',
+	karmaCommonConf = 'acj/static/test/config/karma.conf.js';
 
 // download Bower packages and copy them to the lib directory
 gulp.task('bowerInstall', function() {
@@ -33,8 +40,6 @@ gulp.task('less', function () {
     .pipe(gulp.dest('./acj/static'));
 });
 
-var cssFilename = 'acj.css';
-var jsLibsFilename = 'bowerJsLibs.js';
 gulp.task('prod_compile_minify_css', ['less'], function() {
 	gulp.src('./acj/static/' + cssFilename)
 		.pipe(minifyCss())
@@ -65,17 +70,110 @@ gulp.task('tracking', function() {
 });
 
 /**
-*  * Run test once and exit
-*   */
-gulp.task('test', function (done) {
-      karma.start(_.assign({}, karmaCommonConf, {singleRun: true}), done);
+ * Watch for file changes and re-run tests on each change
+ */
+gulp.task('tdd', function (done) {
+	karma.start({
+		configFile: __dirname + '/' + karmaCommonConf
+	}, done);
 });
 
 /**
-*  * Watch for file changes and re-run tests on each change
-*   */
-gulp.task('tdd', function (done) {
-      karma.start(karmaCommonConf, done);
+ * Behavior driven development. This task run acceptance tests
+ */
+gulp.task('bdd', function (done) {
+	gulp.src(["acj/static/test/features/*.feature"])
+		.pipe(protractor({
+			configFile: "acj/static/test/config/protractor_cucumber.js",
+			args: ['--baseUrl', 'http://127.0.0.1:8080']
+		}))
+		.on('error', function (e) {
+			throw e
+		})
+		.on('end', done);
 });
+
+/**
+ * Run test once and exit
+ */
+gulp.task('test:unit', function (done) {
+	karma.start({
+		configFile: __dirname + '/' + karmaCommonConf,
+		singleRun: true
+	}, done);
+});
+
+
+/**
+ * Run acceptance tests
+ */
+gulp.task('test:acceptance', ['webdriver_update', 'server:frontend', 'bdd'], function() {
+	connect.serverClose();
+});
+
+/**
+ * Run tests on ci
+ */
+gulp.task('test:ci', ['server:frontend'], function (done) {
+	gulp.src(["acj/static/test/features/*.feature"])
+		.pipe(protractor({
+			configFile: "acj/static/test/config/protractor_saucelab.js",
+			args: ['--baseUrl', 'http://127.0.0.1:8000']
+		}))
+		.on('error', function (e) {
+			throw e
+		})
+		.on('end', function() {
+			connect.serverClose();
+			done();
+		});
+});
+
+
+/**
+ * Run backend server
+ */
+gulp.task('server:backend', function() {
+	var proc = exec('PYTHONUNBUFFERED=1 python manage.py runserver -h 0.0.0.0');
+	proc.stderr.on('data', function (data) {
+		process.stderr.write(data);
+	});
+	proc.stdout.on('data', function (data) {
+		process.stdio.write(data);
+	});
+});
+
+/**
+ * Run frontend server
+ */
+gulp.task('server:frontend', function() {
+	connect.server({
+		root: 'acj/static',
+		livereload: false, // set to false, otherwise gulp will not exit
+		middleware: function(connect, o) {
+			return [ (function() {
+				var url = require('url');
+				var proxy = require('proxy-middleware');
+				var options = url.parse('http://localhost:8081/api');
+				options.route = '/api';
+				return proxy(options);
+			})()];
+		}
+	});
+});
+
+
+/**
+ * Downloads the selenium webdriver
+ */
+gulp.task('webdriver_update', webdriver_update);
+
+/**
+ * Start the standalone selenium server
+ * NOTE: This is not needed if you reference the
+ * seleniumServerJar in your protractor.conf.js
+ */
+gulp.task('webdriver_standalone', webdriver_standalone);
+
 
 gulp.task("default", ['bowerInstall', 'bowerWiredep'], function(){});

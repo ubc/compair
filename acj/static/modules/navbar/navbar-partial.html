@@ -36,19 +36,19 @@
 						</ul>
 					</li> -->
 					<li ng-if="canManageQuestions">
-						<a ng-href="#/report">
+						<a ng-href="#/report" id="download-report-btn">
 							<i class="fa fa-bar-chart-o"></i>
 							Download Reports
 						</a>
 					</li>
 					<li ng-if="canCreateCourses">
-						<a ng-href="#/course/new">
+						<a ng-href="#/course/new" id="create-course-btn">
 							<i class="fa fa-book"></i>
 							Add Course
 						</a>
 					</li>
 					<li ng-if="canCreateUsers">
-						<a ng-href="#/user/create">
+						<a ng-href="#/user/create" id="create-user-btn">
 							<i class="fa fa-user"></i>
 							Create User
 						</a>
@@ -85,12 +85,12 @@
 				</ul>
 				<!-- Not Logged In Options -->
 				<ul class="nav navbar-nav navbar-right" ng-hide="loggedInUser.isLoggedIn()">
-					<li>
+					<li id="login-btn">
 						<a href="" ng-click="showLogin();">Log In</a>
 					</li>
 				</ul>
 				<!-- Logged In Options -->
-				<ul class="nav navbar-nav navbar-right" ng-show="loggedInUser.isLoggedIn()">
+				<ul class="nav navbar-nav navbar-right" ng-if="loggedInUser.isLoggedIn()">
 					<!-- <li class="dropdown" id="notifications">
 						<a class="dropdown-toggle" data-toggle="dropdown" href="#notifications">
 							<i class="fa fa-envelope-o"></i>
