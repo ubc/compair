@@ -11,6 +11,12 @@
 
 		<hr />
 
+		<div class="h3 text-center danger" ng-show="!canManagePosts && showCountDown">
+			<timer end-time="question.answer_end">
+				{{minutes}} minutes, {{seconds}} seconds left
+			</timer>
+		</div>
+
 		<div>
 			<label for="importFile">Attach PDF</label>
 			<input type="file" nv-file-select uploader="uploader" id="importFile" ng-disabled="uploader.queue.length || answer.uploadedFile" multiple/>
@@ -24,6 +30,7 @@
 					<a class="btn btn-danger btn-xs" ng-click="item.cancel();item.remove();resetName();">
 						<i class="fa fa-trash-o"></i> Remove
 					</a>
+				</div>
 			</div>
 		</div>
 		<br>

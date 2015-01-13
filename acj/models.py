@@ -442,6 +442,12 @@ class PostsForQuestions(db.Model):
 		answer_end = self.answer_end.replace(tzinfo=pytz.utc)
 		return answer_start <= now and now < answer_end
 	@hybrid_property
+	def answer_grace(self):
+		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+		grace = self.answer_end.replace(tzinfo=pytz.utc) + datetime.timedelta(seconds=60)	# add 60 seconds
+		answer_start = self.answer_start.replace(tzinfo=pytz.utc)
+		return answer_start <= now and now < grace
+	@hybrid_property
 	def judging_period(self):
 		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
 		answer_end = self.answer_end.replace(tzinfo=pytz.utc)

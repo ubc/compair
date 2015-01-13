@@ -6,6 +6,7 @@
 var module = angular.module('ubc.ctlt.acj.answer', 
 	[
 		'ngResource',
+		'timer',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.mathjax',
 		'ubc.ctlt.acj.question',
@@ -39,21 +40,50 @@ module.factory(
 module.controller(
 	"AnswerCreateController",
 	function ($scope, $log, $location, $routeParams, AnswerResource, 
-		QuestionResource, Toaster, attachService)
+		QuestionResource, Toaster, Authorize, attachService, $interval)
 	{
-		var courseId = $routeParams['courseId'];
-		$scope.courseId = courseId;
+		$scope.courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
+
+		var due_date = null;
+		var timer = undefined;
+		var date = new Date();
 
 		$scope.uploader = attachService.getUploader();
 		$scope.resetName = attachService.resetName();
 
+		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(canManagePosts){
+			$scope.canManagePosts = canManagePosts;
+		});
+		// check how close we are to the deadline
+		var checkTime = function() {
+			date = new Date();
+			$scope.showCountDown = due_date.getTime() - date.getTime() <= 300000;    // 5 minutes
+			// stop checking time once the timer starts appearing
+			if ($scope.showCountDown) {
+				stopTimer();
+			}
+		};
+		// cancel the countdown timer
+		var stopTimer = function() {
+			if (angular.isDefined(timer)) {
+				$interval.cancel(timer);
+				timer = undefined;
+			}
+		};
+		// listen to the user leaving the page
+		$scope.$on('$destroy', stopTimer);
+
 		$scope.question = {};
-		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).
+		QuestionResource.get({'courseId': $scope.courseId, 'questionId': questionId}).
 			$promise.then(
 				function (ret)
 				{
 					$scope.question = ret.question;
+					due_date = new Date(ret.question.answer_end);
+					if (!$scope.canManagePosts) {
+						timer = $interval(checkTime, 1000);
+					}
 				},
 				function (ret)
 				{
@@ -66,21 +96,26 @@ module.controller(
 			$scope.submitted = true;
 			$scope.answer.name = attachService.getName();
 			$scope.answer.alias = attachService.getAlias();
-			AnswerResource.save({'courseId': courseId, 'questionId': questionId},
+			AnswerResource.save({'courseId': $scope.courseId, 'questionId': questionId},
 				$scope.answer).$promise.then(
 					function (ret)
 					{
 						$scope.submitted = false;
 						Toaster.success("New answer posted!");
-						$location.path('/course/' + courseId + '/question/' +
+						$location.path('/course/' + $scope.courseId + '/question/' +
 							questionId);
 					},
 					function (ret)
 					{
 						$scope.submitted = false;
-						Toaster.reqerror("Unable to post new answer.", ret);
-						$log.debug("Test");
-						$log.debug(ret);
+						// if answer period is not in session
+						if (ret.status == '403' && 'error' in ret.data) {
+							Toaster.error(ret.data.error);
+							$location.path('/course/' + $scope.courseId + '/question/' +
+								questionId);
+						} else {
+							Toaster.reqerror("Answer Save Failed.", ret);
+						}
 					}
 				);
 		};
@@ -89,11 +124,10 @@ module.controller(
 
 module.controller(
 	"AnswerEditController",
-	function ($scope, $log, $location, $routeParams, AnswerResource, 
-		QuestionResource, AttachmentResource, attachService, Toaster)
+	function ($scope, $log, $location, $routeParams, AnswerResource, $interval,
+		QuestionResource, AttachmentResource, attachService, Toaster, Authorize)
 	{
-		var courseId = $routeParams['courseId'];
-		$scope.courseId = courseId;
+		$scope.courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
 		$scope.answerId = $routeParams['answerId'];
 
@@ -102,6 +136,30 @@ module.controller(
 		
 		$scope.question = {};
 		$scope.answer = {};
+		var due_date = null;
+		var timer = null;
+		var date = new Date();
+
+		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(canManagePosts){
+			$scope.canManagePosts = canManagePosts;
+		});
+		// check how close we are to the deadline
+		var checkTime  = function() {
+			date = new Date();
+			$scope.showCountDown = due_date.getTime()- date.getTime() <= 300000;    // 5 minutes
+			if ($scope.showCountDown) {
+				stopTimer();
+			}
+		};
+		// cancel the countdown timer
+		var stopTimer = function() {
+			if (angular.isDefined(timer)) {
+				$interval.cancel(timer);
+				timer = null;
+			}
+		};
+		// listen to the user leaving the page
+		$scope.$on('$destroy', stopTimer);
 
 		$scope.deleteFile = function(post_id, file_id) {
 			AttachmentResource.delete({'postId': post_id, 'fileId': file_id}).$promise.then(
@@ -113,17 +171,21 @@ module.controller(
 					Toaster.reqerror('Attachment deletion failed', ret);
 				}
 			);
-		}
+		};
 
-		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
+		QuestionResource.get({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
 			function (ret) {
-				$scope.question = ret.question;	
+				$scope.question = ret.question;
+				due_date = new Date(ret.question.answer_end);
+				if (!$scope.canManagePosts) {
+					timer = $interval(checkTime, 1000);
+				}
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve question "+questionId, ret);
 			}
 		);
-		AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': $scope.answerId}).$promise.then(
+		AnswerResource.get({'courseId': $scope.courseId, 'questionId': questionId, 'answerId': $scope.answerId}).$promise.then(
 			function (ret) {
 				$scope.answer = ret;
 				AttachmentResource.get({'postId': ret.post.id}).$promise.then(
@@ -142,13 +204,25 @@ module.controller(
 		$scope.answerSubmit = function () {
 			$scope.answer.name = attachService.getName();
 			$scope.answer.alias = attachService.getAlias();
-			AnswerResource.save({'courseId': courseId, 'questionId': questionId}, $scope.answer).$promise.then(
-				function() { 
+			$scope.submitted = true;
+			AnswerResource.save({'courseId': $scope.courseId, 'questionId': questionId}, $scope.answer).$promise.then(
+				function() {
+					$scope.submitted = false;
 					Toaster.success("Answer Updated!");
-					$location.path('/course/' + courseId + '/question/' +questionId);
+					$location.path('/course/' + $scope.courseId + '/question/' +questionId);
 					
 				},
-				function(ret) { Toaster.reqerror("Answer Save Failed.", ret); }
+				function(ret) {
+					$scope.submitted = false;
+					// if answer period is not in session
+					if (ret.status == '403' && 'error' in ret.data) {
+						Toaster.error(ret.data.error);
+						$location.path('/course/' + $scope.courseId + '/question/' +
+							questionId);
+					} else {
+						Toaster.reqerror("Answer Save Failed.", ret);
+					}
+				}
 			);
 		};
 	}
