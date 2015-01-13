@@ -27,7 +27,8 @@ from .group import on_group_create, on_group_delete, on_group_course_get, on_gro
 	on_group_user_create, on_group_user_delete
 from .selfeval import selfevaltype_get, selfeval_question_acomment_count, selfeval_course_acomment_count
 from acj.users import on_user_modified, on_user_get, on_user_list_get, on_user_create, on_user_course_get, \
-	on_user_password_update, on_user_types_all_get, on_instructors_get, on_course_roles_all_get, on_users_display_get
+	on_user_password_update, on_user_types_all_get, on_instructors_get, on_course_roles_all_get, on_users_display_get, \
+	on_teaching_course_get
 from .authorization import define_authorization
 from .core import login_manager, bouncer, db, cas
 from .configuration import config
@@ -178,6 +179,7 @@ on_user_list_get.connect(log)
 on_user_create.connect(log)
 on_user_course_get.connect(log)
 on_user_password_update.connect(log)
+on_teaching_course_get.connect(log)
 
 on_user_types_all_get.connect(log)
 on_instructors_get.connect(log)

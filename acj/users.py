@@ -48,6 +48,7 @@ on_user_list_get = event.signal('USER_LIST_GET')
 on_user_create = event.signal('USER_CREATE')
 on_user_course_get = event.signal('USER_COURSE_GET')
 on_user_password_update = event.signal('USER_PASSWORD_UPDATE')
+on_teaching_course_get = event.signal('TEACHING_COURSE_GET')
 
 on_user_types_all_get = event.signal('USER_TYPES_ALL_GET')
 on_instructors_get = event.signal('INSTRUCTORS_GET')
@@ -216,6 +217,12 @@ class TeachingUserCourseListAPI(Resource):
 		else:
 			list = [{'id': c.course.id, 'name': c.course.name} for c in current_user.coursesandusers
 					if allow(MANAGE, PostsForQuestions(post = Posts(courses_id=c.course.id)))]
+
+		on_teaching_course_get.send(
+			current_app._get_current_object(),
+			event_name=on_teaching_course_get.name,
+			user=current_user
+		)
 
 		return {'courses': list}
 
