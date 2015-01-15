@@ -15,7 +15,7 @@
 			<legend>For {{course_name}}</legend>
 			<label for="importFile">Choose CSV File</label>
 			<input type="file" nv-file-select uploader="uploader" 
-				id="importFile"/>
+				id="importFile" ng-click="uploader.clearQueue()"/>
 		</fieldset>
 	</div>
 	<input type="submit" class="btn btn-success btn-lg center-block" value="Import"
