@@ -11,10 +11,12 @@
 
 		<hr />
 
-		<div class="h3 text-center danger" ng-show="!canManagePosts && showCountDown">
+		<div class="h3 text-center" ng-show="!canManagePosts && showCountDown">
 			<timer end-time="question.answer_end">
-				{{minutes}} minutes, {{seconds}} seconds left
+				<span class="bg-danger alert text-danger">{{minutes}} minutes {{seconds}} seconds left</span>
 			</timer>
+			<br /><br />
+			<span class="h4">(Answer must be saved by deadline to be accepted)</span>
 		</div>
 
 		<div>
