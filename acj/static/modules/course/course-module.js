@@ -347,10 +347,12 @@ module.controller(
 			CourseResource.save($scope.course).$promise.then(
 				function (ret)
 				{
-					addMultipleCriteria(ret.id, $scope.criteria);
-					$scope.submitted = false;
-					Toaster.success("Course Created", ret.name + " created successfully.");
-					$location.path('/course/' + ret.id);
+					Session.refresh().then(function(){
+						addMultipleCriteria(ret.id, $scope.criteria);
+						$scope.submitted = false;
+						Toaster.success("Course Created", ret.name + " created successfully.");
+						$location.path('/course/' + ret.id);
+					});
 				},
 				function (ret)
 				{

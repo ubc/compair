@@ -29,7 +29,8 @@ module.exports.build = function(browser, funcs) {
 	browser.addMockModule('httpBackEndMock', build(funcs));
 };
 
-module.exports.session = function ($httpBackend) {
+module.exports.session = function ($httpBackend, Session, $rootScope) {
+	console.log(Session.isLoggedIn());
     var authenticated = false;
     var current_user = 0;
     var permission_root = {
@@ -107,9 +108,14 @@ module.exports.session = function ($httpBackend) {
     });
 
     $httpBackend.whenGET('/session/permission').respond(function(method, url, data, headers) {
-        console.log(userid);
-        console.log(users[current_user]);
-        return [200, users[current_user].permissions, {}];
+		var username = undefined;
+		Session.getUser().then(function(user) {
+			username =user.username;
+		});
+		// Propagate getUser() promise resolution to 'then' functions using $apply().
+		$rootScope.$apply();
+
+		return [200, users[username].permissions, {}];
     });
 
     $httpBackend.whenPOST('/login/login').respond(function(method, url, data, headers) {
