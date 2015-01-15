@@ -92,13 +92,7 @@ class UserAPI(Resource):
 
 		user.firstname = params.get("firstname", user.firstname)
 		user.lastname = params.get("lastname", user.lastname)
-
-		displayname = params.get("displayname", user.displayname)
-		displayname_exists = Users.query.filter_by(displayname=displayname).first()
-		if displayname_exists and displayname_exists.id != user.id:
-			return {"error":"This display name already exists. Please pick another."}, 409
-		else:
-			user.displayname = displayname
+		user.displayname = params.get("displayname", user.displayname)
 
 		user.email = params.get("email", user.email)
 		changes = get_model_changes(user)
@@ -154,11 +148,7 @@ class UserListAPI(Resource):
 		user.email = params.get("email")
 		user.firstname = params.get("firstname")
 		user.lastname = params.get("lastname")
-
 		user.displayname = params.get("displayname")
-		display_name_exists = Users.query.filter_by(displayname=user.displayname).first()
-		if display_name_exists:
-			return {"error":"This display name already exists. Please pick another."}, 409
 
 		try:
 			db.session.add(user)

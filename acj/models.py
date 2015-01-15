@@ -124,7 +124,7 @@ class Users(db.Model, UserMixin):
 	# changes this.
 	firstname = db.Column(db.String(255))
 	lastname = db.Column(db.String(255))
-	displayname = db.Column(db.String(255), unique=True, nullable=True)
+	displayname = db.Column(db.String(255))
 	lastonline = db.Column(db.DateTime)
 	# Note that MySQL before 5.6.5 doesn't allow more than one auto init/update
 	# column for timestamps! Auto init/update after 5.6.5 allows multiple 

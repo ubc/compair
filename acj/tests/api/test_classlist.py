@@ -379,6 +379,7 @@ class ClassListAPITest(ACJTestCase):
 		# test authorized instructor - existing user
 		file = io.BytesIO(auth_student.username.encode())
 		rv = self.client.post(url, data=dict(file=(file, filename)))
+		self.assert200(rv)
 		result = rv.json
 		self.assertEqual(1, result['success'])
 		self.assertEqual(0, len(result['invalids']))

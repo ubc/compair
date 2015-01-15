@@ -185,13 +185,6 @@ class UsersAPITests(ACJTestCase):
 		self.assertStatus(rv, 409)
 		self.assertEqual("This student number already exists. Please pick another.", rv.json['error'])
 
-		# test duplicate display name
-		duplicate = expected.copy()
-		duplicate['displayname'] = self.data.get_authorized_student().displayname
-		rv = self.client.post(url, data=json.dumps(duplicate), content_type='application/json')
-		self.assertStatus(rv, 409)
-		self.assertEqual("This display name already exists. Please pick another.", rv.json['error'])
-
 		# test creating users of all user types for system
 		for type in types:
 			user = {
@@ -256,13 +249,6 @@ class UsersAPITests(ACJTestCase):
 		rv = self.client.post(url, data=json.dumps(duplicate), content_type='application/json')
 		self.assertStatus(rv, 409)
 		self.assertEqual("This student number already exists. Please pick another.", rv.json['error'])
-
-		# test duplicate display name
-		duplicate = expected.copy()
-		duplicate['displayname'] = self.data.get_unauthorized_student().displayname
-		rv = self.client.post(url, data=json.dumps(duplicate), content_type='application/json')
-		self.assertStatus(rv, 409)
-		self.assertEqual("This display name already exists. Please pick another.", rv.json['error'])
 
 		# test successful update by admin
 		valid = expected.copy()
