@@ -36,8 +36,6 @@ from .models import Users
 from .login import authenticate
 from .activity import log
 
-import os
-
 
 def create_app(conf=config, settings_override={}):
 	"""Return a :class:`Flask` application instance
@@ -59,16 +57,6 @@ def create_app(conf=config, settings_override={}):
 	def load_user(user_id):
 		app.logger.debug("User logging in, ID: " + user_id)
 		return Users.query.get(int(user_id))
-
-	app.config['CAS_SERVER'] = 'http://localhost:8088'
-	app.config['CAS_AFTER_LOGIN'] = 'route_root'
-	app.config['REPORT_FOLDER'] =  os.getcwd() + '/acj/static/report'
-
-	# for uploads
-	app.config['UPLOAD_FOLDER'] = os.getcwd() + '/tmpUpload'
-	app.config['ATTACHMENT_UPLOAD_FOLDER'] = os.getcwd() + '/acj/static/pdf'
-	app.config['ATTACHMENT_ALLOWED_EXTENSIONS'] = set(['pdf'])
-	app.config['UPLOAD_ALLOWED_EXTENSIONS'] = set(['csv'])
 
 	cas.init_app(app)
 

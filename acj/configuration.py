@@ -50,5 +50,11 @@ elif "DATABASE_URI" in config:
 if 'DATABASE' in config:
 	del config['DATABASE']
 
+env_overridables = ['CAS_SERVER', 'CAS_AFTER_LOGIN', 'REPORT_FOLDER',
+					'SECRET_KEY', 'UPLOAD_FOLDER', 'ATTACHMENT_UPLOAD_FOLDER']
 
-#print config
+for env in env_overridables:
+	if os.environ.get(env):
+		config[env] = os.environ.get(env)
+
+# print config
