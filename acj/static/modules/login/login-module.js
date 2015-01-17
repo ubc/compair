@@ -18,7 +18,7 @@ var module = angular.module('ubc.ctlt.acj.login',
 /***** Providers *****/
 module.factory('LoginResource', function($resource) {
 	return $resource(
-		'/login/:operation',
+		'/api/:operation',
 		{},
 		{
 			login: { method:'POST', params: {operation: "login"} },

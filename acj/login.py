@@ -6,10 +6,10 @@ from .authorization import get_logged_in_user_permissions
 from .models import Users
 
 
-login_api = Blueprint("login_api", __name__)
+login_api = Blueprint("login_api", __name__, url_prefix='/api')
 
 
-@login_api.route('/login/login', methods=['POST'])
+@login_api.route('/login', methods=['POST'])
 def login():
 	# expecting login params to be in json format
 	param = request.json
@@ -31,7 +31,7 @@ def login():
 	return jsonify({"error": 'Sorry, unrecognized username or password.'}), 400
 
 
-@login_api.route('/login/logout', methods=['DELETE'])
+@login_api.route('/logout', methods=['DELETE'])
 @login_required
 def logout():
 	current_user.update_lastonline()

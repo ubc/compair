@@ -151,11 +151,25 @@ gulp.task('server:frontend', function() {
 		root: 'acj/static',
 		livereload: false, // set to false, otherwise gulp will not exit
 		middleware: function(connect, o) {
-			return [ (function() {
+			return [ (function() {  // proxy api calls
 				var url = require('url');
 				var proxy = require('proxy-middleware');
 				var options = url.parse('http://localhost:8081/api');
 				options.route = '/api';
+				return proxy(options);
+			})(),
+			(function() { // proxy CAS login
+				var url = require('url');
+				var proxy = require('proxy-middleware');
+				var options = url.parse('http://localhost:8081/login');
+				options.route = '/login';
+				return proxy(options);
+			})(),
+			(function() { // proxy CAS logout
+				var url = require('url');
+				var proxy = require('proxy-middleware');
+				var options = url.parse('http://localhost:8081/logout');
+				options.route = '/logout';
 				return proxy(options);
 			})()];
 		}

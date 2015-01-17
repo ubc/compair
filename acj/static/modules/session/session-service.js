@@ -39,7 +39,7 @@
                 $log.debug('Getting user from server');
                 var scope = this;
                 var deferred = $q.defer();
-                return $http.get('/session')
+                return $http.get('/api/session')
                     .then(function (result) {
                         // retrieve logged in user's information
                         // return a promise for chaining
@@ -74,7 +74,7 @@
 
                 $log.debug('Getting permission from server');
                 var scope = this;
-                return $http.get('/session/permission')
+                return $http.get('/api/session/permission')
                     .then(function (result) {
                         scope._permissions = result.data;
                         $cookieStore.put('current.permissions', scope._permissions);
@@ -101,7 +101,7 @@
             },
 			refresh: function() {
 				var scope = this;
-				return $http.get('/session/permission')
+				return $http.get('/api/session/permission')
                     .then(function (result) {
 						scope._permissions = result.data;
 						$cookieStore.put('current.permissions', result.data);

@@ -103,11 +103,11 @@ module.exports.session = function ($httpBackend, Session, $rootScope) {
     };
 
 
-    $httpBackend.whenGET('/session').respond(function(method, url, data, headers) {
+    $httpBackend.whenGET('/api/session').respond(function(method, url, data, headers) {
         return authenticated ? [200, sessions[current_user], {}] : [401, {}, {}];
     });
 
-    $httpBackend.whenGET('/session/permission').respond(function(method, url, data, headers) {
+    $httpBackend.whenGET('/api/session/permission').respond(function(method, url, data, headers) {
 		var username = undefined;
 		Session.getUser().then(function(user) {
 			username =user.username;
@@ -118,7 +118,7 @@ module.exports.session = function ($httpBackend, Session, $rootScope) {
 		return [200, users[username].permissions, {}];
     });
 
-    $httpBackend.whenPOST('/login/login').respond(function(method, url, data, headers) {
+    $httpBackend.whenPOST('/api/login').respond(function(method, url, data, headers) {
         authenticated = true;
         current_user = angular.fromJson(data).username;
         return [200, users[current_user], {}];
