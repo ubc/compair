@@ -23,7 +23,7 @@ Developer Installation
 
 ### Vagrant up the VM
 
-	git clone --branch model_refactor git@github.com:ubc/acj-versus.git acj 
+	git clone git@github.com:ubc/acj-versus.git acj
 	cd acj && vagrant up
 	
 ### Start Up the ACJ server
