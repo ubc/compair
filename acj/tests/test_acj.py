@@ -33,24 +33,24 @@ class ACJTestCase(TestCase):
 			username=username,
 			password=password
 		))
-		rv = self.client.post('/login/login', data=payload, content_type='application/json', follow_redirects=True)
+		rv = self.client.post('/api/login', data=payload, content_type='application/json', follow_redirects=True)
 		self.assert200(rv)
 
 		return rv
 
 	def logout(self):
-		return self.client.delete('/login/logout', follow_redirects=True)
+		return self.client.delete('/api/logout', follow_redirects=True)
 
 class SessionTests(ACJTestCase):
 	def test_loggedin_user_session(self):
 		self.login('root', 'password')
-		rv = self.client.get('/session')
+		rv = self.client.get('/api/session')
 		self.assert200(rv)
 		root = rv.json
 		self.assertEqual(root['id'], 1)
 
 	def test_non_loggedin_user_session(self):
-		rv = self.client.get('/session')
+		rv = self.client.get('/api/session')
 		self.assert401(rv)
 
 if __name__ == '__main__':

@@ -68,7 +68,7 @@ describe('Service: Session', function() {
             var user = null;
 
             beforeEach(function() {
-                $httpBackend.expectGET('/session').respond(expectedSession);
+                $httpBackend.expectGET('/api/session').respond(expectedSession);
                 $httpBackend.expectGET('/api/users/' + id).respond(expectedUser);
 
                 mockSession.getUser().then(function(result) {
@@ -124,7 +124,7 @@ describe('Service: Session', function() {
             var permissions = null;
 
             beforeEach(function() {
-                $httpBackend.expectGET('/session/permission').respond(expectedSession.permissions);
+                $httpBackend.expectGET('/api/session/permission').respond(expectedSession.permissions);
 
                 mockSession.getPermissions().then(function(result) {
                     permissions = result;
