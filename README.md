@@ -64,9 +64,11 @@ Google Analytics Web Tracking
 1. Register for a Google Analytics web property ID at http://www.google.ca/analytics/.
 2. Create a configuration file under acj/static/tracking.js with the following content:
 
+    ```js
     window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
     ga('create', 'UA-XXXX-Y', 'auto');
     ga('send', 'pageview');
+    ```
 
 3. Replace 'UA-XXXX-Y', on the second line, with your web property id.
 4. Run `gulp tracking` to include the configuration file.
