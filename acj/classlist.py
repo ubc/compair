@@ -42,7 +42,6 @@ on_classlist_unenrol = event.signal('CLASSLIST_UNENROL')
 on_classlist_instructor_label = event.signal('CLASSLIST_INSTRUCTOR_LABEL_GET')
 on_classlist_instructor = event.signal('CLASSLIST_INSTRUCTOR_GET')
 on_classlist_student = event.signal('CLASSLIST_STUDENT_GET')
-import time
 
 def display_name_generator(role="student"):
 	return "".join([role, '_', random_generator(8, string.digits)])
@@ -61,12 +60,12 @@ def import_users(course_id, users):
 	dropped = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
 
 	usernames = [u[USERNAME] for u in users if len(u) > USERNAME]
-	usernames_system = Users.query.filter(Users.username.in_(usernames))
+	usernames_system = Users.query.filter(Users.username.in_(usernames)).all()
 	usernames_system = {u.username:u for u in usernames_system}
 
 	student_no = [u[STUDENTNO] for u in users if len(u) > STUDENTNO]
 	if len(student_no) > 0:
-		studentno_system = Users.query.filter(Users.student_no.in_(student_no))
+		studentno_system = Users.query.filter(Users.student_no.in_(student_no)).all()
 		studentno_system = {u.student_no: u.username for u in studentno_system}
 	else:
 		studentno_system = {}
@@ -80,11 +79,6 @@ def import_users(course_id, users):
 		# TEMP USER
 		temp = Users()
 		temp.username = user[USERNAME] if length > USERNAME and user[USERNAME] else None
-		temp.student_no = user[STUDENTNO] if length > STUDENTNO and user[STUDENTNO] else None
-		temp.firstname = user[FIRSTNAME] if length > FIRSTNAME and user[FIRSTNAME] else None
-		temp.lastname = user[LASTNAME] if length > LASTNAME and user[LASTNAME] else None
-		temp.email = user[EMAIL] if length > EMAIL and user[EMAIL] else None
-		temp.displayname = user[DISPLAYNAME] if length > DISPLAYNAME and user[DISPLAYNAME] else None
 
 		# VALIDATION
 		# validate username
@@ -96,40 +90,36 @@ def import_users(course_id, users):
 			continue
 
 		u = usernames_system.get(temp.username, None)
-		update = True
 		if not u:
-			u = Users(username=temp.username)
-			update = False
+			u = temp
+		else:
+			# user exists in the system, skip user creation
+			exist_usernames.append(u.username)
+			usernames_system.setdefault(u.username, u)
+			exist_studentnos.append(u.student_no)
+			studentno_system.setdefault(u.student_no, u.username)
+			continue
 
-		temp.password = user[PASSWORD] if length > PASSWORD and user[PASSWORD] else random_generator(16, letters_digits)
+		u.student_no = user[STUDENTNO] if length > STUDENTNO and user[STUDENTNO] else None
+		u.firstname = user[FIRSTNAME] if length > FIRSTNAME and user[FIRSTNAME] else None
+		u.lastname = user[LASTNAME] if length > LASTNAME and user[LASTNAME] else None
+		u.email = user[EMAIL] if length > EMAIL and user[EMAIL] else None
+		u.password = user[PASSWORD] if length > PASSWORD and user[PASSWORD] else random_generator(16, letters_digits)
 
 		# validate student number (if not None)
-		if temp.student_no:
-			# invalid if exists but not the same user
-			if update and temp.student_no in studentno_system and studentno_system[temp.student_no] != u.username:
-				invalids.append({'user': temp, 'message': 'This student number already exists in the system.'})
-				continue
+		if u.student_no:
 			# invalid if already showed up in file
-			elif not update and temp.student_no in exist_studentnos:
-				invalids.append({'user': temp, 'message': 'This student number already exists in the file.'})
+			if u.student_no in exist_studentnos:
+				invalids.append({'user': u, 'message': 'This student number already exists in the file.'})
 				continue
 			# invalid if student number already exists in the system
-			elif not update and temp.student_no in studentno_system:
-				invalids.append({'user': temp, 'message': 'This student number already exists in the system.'})
+			elif u.student_no in studentno_system:
+				invalids.append({'user': u, 'message': 'This student number already exists in the system.'})
 				continue
 
-		# update
-		if update:
-			u.student_no = temp.student_no if temp.student_no else u.student_no
-			u.firstname = temp.firstname if temp.firstname else u.firstname
-			u.lastname = temp.lastname if temp.lastname else u.lastname
-			u.email = temp.email if temp.email else u.email
-			u.displayname = temp.displayname if temp.displayname else u.displayname
-		# create
-		else:
-			u = temp
-			u.usertypesforsystem_id = normal_user
-			u.displayname = temp.displayname if temp.displayname else display_name_generator()
+		u.usertypesforsystem_id = normal_user
+		displayname = user[DISPLAYNAME] if length > DISPLAYNAME and user[DISPLAYNAME] else None
+		u.displayname = displayname if displayname else display_name_generator()
 
 		exist_usernames.append(u.username)
 		usernames_system.setdefault(u.username, u)
@@ -140,16 +130,12 @@ def import_users(course_id, users):
 
 	enroled = CoursesAndUsers.query.filter_by(courses_id=course_id).\
 		filter(CoursesAndUsers.usertypesforcourse_id.in_([student, dropped])).all()
-	# enroled = {e.users_id:e.users_id for e in enroled}
 	enroled = {e.users_id:e for e in enroled}
 
 	# enrol valid users in file
 	to_enrol = Users.query.filter(Users.username.in_(exist_usernames)).all()
 	for user in to_enrol:
-		#enrol = CoursesAndUsers.query.filter_by(courses_id=course_id).filter_by(users_id=user.id).first()
 		enrol = enroled.get(user.id, CoursesAndUsers(courses_id=course_id, users_id=user.id))
-		#if not enrol:
-		#	enrol = CoursesAndUsers(courses_id=course_id, users_id=user.id)
 		enrol.usertypesforcourse_id = student
 		db.session.add(enrol)
 		if user.id in enroled:
@@ -159,7 +145,6 @@ def import_users(course_id, users):
 
 	# unenrol users not in file anymore
 	for users_id in enroled:
-		#unenrol = CoursesAndUsers.query.filter_by(courses_id=course_id).filter_by(users_id=userId).first()
 		enrolment = enroled.get(users_id)
 		# skip users that are already dropped
 		if enrolment.usertypesforcourse_id == dropped:
