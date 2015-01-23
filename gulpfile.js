@@ -190,4 +190,4 @@ gulp.task('webdriver_update', webdriver_update);
 gulp.task('webdriver_standalone', webdriver_standalone);
 
 
-gulp.task("default", ['bowerInstall', 'bowerWiredep'], function(){});
+gulp.task("default", ['bowerInstall', 'bowerWiredep', 'tracking'], function(){});
