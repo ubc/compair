@@ -120,32 +120,36 @@
 			
 			<!-- Answers Tab Header -->
 			<div class="tab-header">
-				
-				<div ng-if="question.answers_count && (canManagePosts || see_answers)" class="pull-right text-right">
-					<span class="filter">
-						<label>Show: </label>
-						<select ng-if="groups.length > 0 && canManagePosts" ng-model="grade.group" class="nullable"
-							ng-options="g as g.name for g in groups | orderBy: 'name'" ng-change="groupChange()">
-							<option value="">All groups</option>
-						</select>
-						<select ng-model="grade.author" class="nullable"
-								ng-options="u as u.user.name for u in students | orderBy: 'user.name'" ng-change="userChange()">
-							<option value="">All students</option>
-						</select>
-					</span><br />
-					<span class="filter">
-						<label>Order by scores for: &nbsp;</label>
-						<select ng-model="grade.sortby"
-							ng-options="key as c.criterion.name for (key, c) in criteria" ng-change="criteriaChange()">
-						</select>
-					</span>
+			
+				<div class="row">
+					<h2 class="col-sm-3">
+						Answers
+						<span ng-show="canManagePosts && grade.group && !grade.author">for "{{grade.group.name}}"</span>
+						<span ng-show="grade.author">for "{{ grade.author.user.name }}"</span>
+					</h2>
+					
+					<div class="col-sm-9 text-right multi-filters">
+						<div ng-if="question.answers_count && (canManagePosts || see_answers)">
+							<span class="filter">
+								<label>Show: &nbsp;</label>
+								<select ng-if="groups.length > 0 && canManagePosts" ng-model="grade.group" class="nullable"
+									ng-options="g as g.name for g in groups | orderBy: 'name'" ng-change="groupChange()">
+									<option value="">All groups</option>
+								</select>
+								<select ng-model="grade.author" class="nullable"
+										ng-options="u as u.user.name for u in students | orderBy: 'user.name'" ng-change="userChange()">
+									<option value="">All students</option>
+								</select>
+							</span><br />
+							<span class="filter">
+								<label>Order by scores for: &nbsp;</label>
+								<select ng-model="grade.sortby"
+									ng-options="key as c.criterion.name for (key, c) in criteria" ng-change="criteriaChange()">
+								</select>
+							</span>
+						</div>
+					</div>
 				</div>
-
-				<h2>
-					Answers
-					<span ng-show="canManagePosts && grade.group && !grade.author">for "{{grade.group.name}}"</span>
-					<span ng-show="grade.author">for "{{ grade.author.user.name }}"</span>
-				</h2>
 
 				<!-- Instructors should see before the answer period -->
 				<p class="intro-text"
@@ -412,7 +416,7 @@
 
 				</div><!-- closes each-answer (student) -->
 
-				<div class="each-answer clearfix" ng-if="results.length < 1">
+				<div class="each-answer clearfix" ng-if="question.answers_count && results.length < 1">
 					<p>No answers were found with these filter settings. Try another choice above.</p>
 				</div>
 				
@@ -424,14 +428,20 @@
 		
 			<!-- Comments Tab Header -->
 			<div class="tab-header">
-				<a href="#/course/{{courseId}}/question/{{question.id}}/comment/create" class="btn btn-primary pull-right">
-					Comment
-				</a>
-				<h2>Help for this assignment</h2>
-				<p class="intro-text">Ask or answer a question about the assignment by adding a comment here.</p>
-				<p ng-if="!question.comments_count">
-					No help comments have been left for this question yet. Would you like to <a href="#/course/{{courseId}}/question/{{question.id}}/comment/create">add a comment</a> for this assignment?
-				</p>
+				<div class="row">
+					<div class="col-sm-9">
+						<h2>Help for this assignment</h2>
+						<p class="intro-text">Ask or answer a question about the assignment by adding a comment here.</p>
+						<p ng-if="!question.comments_count">
+							No help comments have been left for this question yet. <span class="hidden-xs">Would you like to <a href="#/course/{{courseId}}/question/{{question.id}}/comment/create">add a comment</a> for this assignment?</span>
+						</p>
+					</div>
+					<div class="col-sm-3 text-right comment-btn">
+						<a href="#/course/{{courseId}}/question/{{question.id}}/comment/create" class="btn btn-primary">
+							Comment
+						</a>
+					</div>
+				</div>
 			</div>
 			
 			<!-- Comments Section -->

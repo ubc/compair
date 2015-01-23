@@ -8,12 +8,12 @@
 	<p ng-if="!canCreateUser && ownProfile" class="intro-text">Instructors can always see your profile information in the application. Students can only see your display name, icon, and the last time you logged in. To make yourself anonymous to other students, click the "Edit" button and change what appears in the "Display Name" field. (If your icon below is personalized, you can remove your email address or log in to <a href="https://en.gravatar.com/">Gravatar</a> to change the icon.)</p>
 	<p ng-if="canCreateUser" class="intro-text">Instructors can always see student profile information in the application. Students can only see each other's display name, icon, and the last time a student logged in. To ensure student anonymity, have your students check what appears as their icon and display name. To edit student information, please contact a system administrator.</p>
 	<hr>
-	<div class="col-md-4">
+	<div class="col-md-4 gravatar-img">
 		<a href="https://en.gravatar.com/" title="Add or edit your user image with Gravatar">
 		   <img class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
 		</a>
 	</div>
-	<div class="col-md-8">
+	<div class="col-md-8 user-details">
 		<div class="row" ng-if="canCreateUser || ownProfile">
 			<strong class="col-md-3">Application Role:</strong>
 			<div class="col-md-9">{{user.usertypeforsystem.name}}</div>

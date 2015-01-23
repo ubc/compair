@@ -6,15 +6,19 @@
 		<span ng-show="!canAddCourse">you will show your understanding of course content by answering course-related questions and comparing and analyzing the answers given by your classmates.</span>
 		<span ng-show="canAddCourse">you can post course questions to students and see how they compare and analyze one another's answers.</span>
 	</p>
-	
-	<form class="form-inline" role="search" ng-show="canAddCourse && courses.length">
-		<div class="form-group pull-right">
-			<input class="form-control" type="text" 
-				placeholder="Search for courses" ng-model="courseFilter">
-		</div>
-	</form>
-	
-	<h2>Select a course</h2>
+
+	<div class="row">
+		
+		<h2 class="col-sm-8">Select a course</h2>
+			
+		<form class="col-sm-4 search-courses text-right" role="search" ng-show="canAddCourse && courses.length">
+			<div class="form-group">
+				<input class="form-control" type="text" 
+					placeholder="Filter courses by keyword" ng-model="courseFilter">
+			</div>
+		</form>
+		
+	</div>	
 	
 	<!-- Course listing -->
 	<div class="course-list" ng-if="courses.length">
@@ -23,7 +27,7 @@
 			<h3 class="clearfix">
 				<i class="fa fa-book"></i>
 				{{course.name}}
-				<i class="fa fa-arrow-right fa-2x pull-right"></i>
+				<i class="fa fa-arrow-right fa-2x pull-right hidden-xs"></i>
 			</h3>
 		</a>
 	</div>

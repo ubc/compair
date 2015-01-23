@@ -3,18 +3,18 @@
 	<label>Available Criteria</label>
         
 	<div ng-repeat="(key, criterion) in criteria" class="row">
-		<div class="col-sm-1" ng-if="courseId">
+		<div class="col-sm-2" ng-if="courseId">
 			<p><a href="#/course/{{ courseId }}/criterion/{{ criterion.criterion.id }}/edit"
 				  ng-if="(canManageCriteriaCourses || criterion.criterion.users_id==loggedInUserId) && !criterion.criterion.judged">
 				Edit
 			</a></p>
 		</div>
-		<div class="col-sm-1">
+		<div class="col-sm-2">
 			<p><a href="" confirmation-needed="remove(key)" keyword="criterion" ng-if="!criterion.inQuestion">
-				<i class="fa fa-minus-circle"></i> Drop
+				<i class="fa fa-minus-circle"></i> Drop <i class="visible-xs fa fa-arrow-down"></i>
 			</a></p><!-- disable from course / add to dropdown -->
 		</div>
-		<div class="col-sm-10">
+		<div class="col-sm-8">
 			<strong>{{ key + 1 }}. {{ criterion.criterion.name }}</strong>
 			<div
 			     ng-bind-html="criterion.criterion.description">

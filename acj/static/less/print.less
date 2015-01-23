@@ -1,6 +1,6 @@
 
 
-/***** OVERALL *****/
+/***** PRINT *****/
 
 @media print {
     
@@ -64,6 +64,11 @@
     /* restrain images */
     img {
         max-width: 100%;
+    }
+    
+    /* overwrite Bootstrap default for URLs */
+    a[href]:after {
+        content: none !important;
     }
     
     /* metadata headers for answers and comparisons */
