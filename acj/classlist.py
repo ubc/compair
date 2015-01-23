@@ -309,7 +309,12 @@ class StudentsAPI(Resource):
 				tmp_user['user']['name'] = fullname if fullname else u.user.displayname
 				users.append(tmp_user)
 		else:
-			users = [{'user': {'id': u.user.id, 'name': u.user.displayname}} for u in students]
+			users = []
+			for u in students:
+				name = u.user.displayname
+				if u.user.id == current_user.id:
+					name += ' (You)'
+				users.append({'user': {'id': u.user.id, 'name': name}})
 
 		on_classlist_student.send(
 			current_app._get_current_object(),

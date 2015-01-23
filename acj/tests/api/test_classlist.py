@@ -130,7 +130,7 @@ class ClassListAPITest(ACJTestCase):
 			'name': self.data.get_authorized_student().displayname
 		}
 		self.assertEqual(students[0]['user']['id'], expected['id'])
-		self.assertEqual(students[0]['user']['name'], expected['name'])
+		self.assertEqual(students[0]['user']['name'], expected['name'] + ' (You)')
 		self.logout()
 
 	def test_enrol_instructor(self):
