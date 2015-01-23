@@ -91,13 +91,17 @@ module.controller(
 			}
 		);
 		// save course info
-		$scope.courseSubmit = function() {
+		var submitC = function() {
 			CourseResource.save($scope.course).$promise.then(
 				function(ret) {
 					Toaster.success("Course Successfully Updated", "Your course changes have been saved.");
+					$scope.submitted = false;
 					$location.path('/course/' + ret.id);
 				},
-				function(ret) { Toaster.reqerror("Course Update Failed", ret); }
+				function(ret) {
+					Toaster.reqerror("Course Update Failed", ret);
+					$scope.submitted = false;
+				}
 			);
 		};
 		// save new criterion
@@ -119,6 +123,32 @@ module.controller(
 				}
 			);
 		};
+
+		$scope.courseSubmit = function() {
+			$scope.submitted = true;
+			if ($scope.criterion.name) {
+				$scope.criterionSubmitted = true;
+				CoursesCriteriaResource.save({'courseId': $scope.courseId}, $scope.criterion).$promise.then(
+					function (ret) {
+						$scope.criterion = {'name': '', 'description': '', 'default': true}; // reset form
+						$scope.criterionSubmitted = false;
+						$scope.criteria.push(ret.criterion);
+						$scope.toggleForm();
+						$(".fa-chevron-right").removeClass("ng-hide"); // reset classes so UI matches current state
+						$(".fa-chevron-down").addClass("ng-hide");
+						submitC();
+					},
+					function (ret) {
+						$scope.submitted = false;
+						$scope.criterionSubmitted = false;
+						Toaster.reqerror("No New Criterion Created", ret);
+					}
+				);
+			} else {
+				submitC();
+			}
+		};
+
 		$scope.add = function(key) {
 			// not proceed if empty option is being added
 			if (!key)
@@ -342,8 +372,8 @@ module.controller(
 				Toaster.reqerror("Default Criteria Not Found", ret);
 			}
 		);
-		$scope.courseSubmit = function() {
-			$scope.submitted = true;
+
+		var submitC = function() {
 			CourseResource.save($scope.course).$promise.then(
 				function (ret)
 				{
@@ -362,7 +392,31 @@ module.controller(
 			);
 		};
 
-		// add new criterion to tobeAdded
+		$scope.courseSubmit = function() {
+			$scope.submitted = true;
+			if ($scope.criterion.name) {
+				$scope.criterionSubmitted = true;
+				CriteriaResource.save({}, $scope.criterion).$promise.then(
+					function (ret) {
+						$scope.criterion = {'name': '', 'description': '', 'default': true}; // reset form
+						$scope.criterionSubmitted = false;
+						$scope.criteria.push({'criterion': ret});
+						$scope.toggleForm();
+						$(".fa-chevron-right").removeClass("ng-hide"); // reset classes so UI matches current state
+						$(".fa-chevron-down").addClass("ng-hide");
+						submitC();
+					},
+					function (ret) {
+						$scope.submitted = false;
+						$scope.criterionSubmitted = false;
+						Toaster.reqerror("No New Criterion Created", ret);
+					}
+				);
+			} else {
+				submitC();
+			}
+		};
+
 		$scope.criterionSubmit = function() {
 			$scope.criterionSubmitted = true;
 			CriteriaResource.save({}, $scope.criterion).$promise.then(
