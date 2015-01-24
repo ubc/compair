@@ -1,4 +1,5 @@
 import json
+from dateutil import parser
 
 from data.fixtures.test_data import JudgementCommentsTestData
 
@@ -130,7 +131,7 @@ class EvalCommentsAPITests(ACJTestCase):
 			self.data.get_criteria_by_question(self.data.get_questions()[0]).id)
 		self.assertEqual(actual['content'], expected.postsforcomments.post.content)
 		self.assertFalse(actual['selfeval'])
-		self.assertEqual(actual['created'], str(expected.postsforcomments.post.created))
+		self.assertEqual(parser.parse(actual['created']).replace(tzinfo=None), expected.postsforcomments.post.created)
 		self.assertEqual(actual['answer1']['id'], expected.judgement.answerpairing.answers_id1)
 		self.assertEqual(actual['answer1']['feedback'],
 						 self.data.get_judge_feedback()[actual['answer1']['id']].content)
@@ -154,7 +155,7 @@ class EvalCommentsAPITests(ACJTestCase):
 			self.data.get_criteria_by_question(self.data.get_questions()[0]).id)
 		self.assertEqual(actual['content'], expected.postsforcomments.post.content)
 		self.assertFalse(actual['selfeval'])
-		self.assertEqual(actual['created'], str(expected.postsforcomments.post.created))
+		self.assertEqual(parser.parse(actual['created']).replace(tzinfo=None), expected.postsforcomments.post.created)
 		self.assertEqual(actual['answer1']['id'], expected.judgement.answerpairing.answers_id1)
 		self.assertEqual(actual['answer1']['feedback'],
 						 self.data.get_judge_feedback()[actual['answer1']['id']].content)

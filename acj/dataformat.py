@@ -252,6 +252,22 @@ def getImportUsersResults(restrict_users=True):
 		'message': fields.String
 	}
 
+def getEvalComments():
+	answer = {'id': fields.Integer, 'feedback': fields.String}
+	return {
+		'user_id': fields.Integer,
+		'name': fields.String,
+		'avatar': fields.String,
+		'criteriaandquestions_id': fields.Integer,
+		'answerpairings_id': fields.Integer,
+		'content': fields.String,
+		'selfeval': fields.Boolean,
+		'created': fields.DateTime,
+		'answer1': fields.Nested(answer),
+		'answer2': fields.Nested(answer),
+		'winner': fields.Integer
+	}
+
 def getScores():
 	return {
 		'id': fields.Integer,

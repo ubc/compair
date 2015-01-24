@@ -126,7 +126,7 @@ class EvalCommentViewAPI(Resource):
 			temp_comment['answerpairings_id'] = comment.judgement.answerpairings_id
 			temp_comment['content'] = comment.postsforcomments.post.content
 			temp_comment['selfeval'] = False
-			temp_comment['created'] = str(comment.postsforcomments.post.created)
+			temp_comment['created'] = comment.postsforcomments.post.created
 			temp_comment['answer1']['id'] = comment.judgement.answerpairing.answers_id1
 			temp_comment['answer1']['feedback'] = replies[user_id][temp_comment['answer1']['id']]
 			temp_comment['answer2']['id'] = comment.judgement.answerpairing.answers_id2
@@ -145,7 +145,7 @@ class EvalCommentViewAPI(Resource):
 				'criteriaandquestions_id': 0,
 				'content': s.content,
 				'selfeval': True,
-				'created': str(s.postsforcomments.post.created)
+				'created': s.postsforcomments.post.created
 			}
 			results.append(comment)
 
@@ -168,6 +168,6 @@ class EvalCommentViewAPI(Resource):
 			course_id=course_id,
 			data={'question_id': question_id}
 		)
-		return {'comparisons': comparisons}
+		return {'comparisons': marshal(comparisons, dataformat.getEvalComments())}
 
 api.add_resource(EvalCommentViewAPI, '/view')
