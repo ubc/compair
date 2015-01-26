@@ -59,12 +59,12 @@ myApp.config( function ($routeProvider, $logProvider) {
 				templateUrl: 'modules/classlist/classlist-import-results-partial.html',
 				label: "Results"
 			})
-		.when ('/course/:courseId/group/import',
+		.when ('/course/:courseId/user/group/import',
 		   {
 				templateUrl: 'modules/group/group-import-partial.html',
 				label: "Assign Groups"
 		   })
-		.when ('/course/:courseId/group/import/results',
+		.when ('/course/:courseId/user/group/import/results',
 			{
 				templateUrl: 'modules/group/group-import-results-partial.html',
 				label: "Results"

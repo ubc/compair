@@ -2,6 +2,8 @@
 
 /***** MOBILE *****/
 
+/* use breakpoints set by Angular */
+
 @media (max-width: 768px) {
 
     /* each question's metadata */
@@ -86,7 +88,40 @@
         
     }//closese evaluations-screen
     
+    .manage-screen {
+        
+        /* manager action buttons */
+        .sub-nav {
+            margin-bottom: 1em;
+        }
+        
+        /* inline enrollment form */
+        .inline-enrol {
+            
+            text-align: left;
+           
+            /* "add" and "as" */
+            label {
+                padding-top: .5em;
+                vertical-align: top;
+            }
+            
+            /* keep form elements inline */
+            .input-group {
+                display: inline-block;
+            }
+            
+            /* enrol button */
+            .inline-submit[type="submit"] {
+                display: block;
+            }
+            
+        }//closes inline-enrol
+        
+    }//closes manage-screen
+    
 }//closes 768px
+
 
 @media (max-width: 992px) {
 
@@ -112,8 +147,7 @@
     
 }//closes 992px
 
-@media (max-width: 1200px) {
 
+@media (max-width: 1200px) {
     
-    
-}
+}//closes 1200px
