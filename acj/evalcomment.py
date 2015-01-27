@@ -26,6 +26,7 @@ new_comment_parser.add_argument('selfeval', type=bool, required=False, default=F
 on_evalcomment_create = event.signal('EVALCOMMENT_CREATE')
 on_evalcomment_get = event.signal('EVALCOMMENT_GET')
 on_evalcomment_view = event.signal('EVALCOMMENT_VIEW')
+on_evalcomment_view_my = event.signal('EVALCOMMENT_VIEW_MY')
 
 # /
 class EvalCommentRootAPI(Resource):
@@ -87,7 +88,7 @@ api.add_resource(EvalCommentRootAPI, '')
 # /view
 class EvalCommentViewAPI(Resource):
 	@login_required
-	def get(selfself, course_id, question_id):
+	def get(self, course_id, question_id):
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		post = Posts(courses_id=course_id)
@@ -104,16 +105,13 @@ class EvalCommentViewAPI(Resource):
 			.order_by(PostsForAnswersAndPostsForComments.evaluation).all()
 
 		replies = {}
-		for f in feedback:
-			if f.users_id not in replies:
-				replies[f.users_id] = {}
-			replies[f.users_id][f.answers_id] = f.content
-
 		selfeval = []
-		if question.selfevaltype_id:
-			# assume no comparison self evaluation
-			selfeval = PostsForAnswersAndPostsForComments.query.filter_by(selfeval=True)\
-				.join(PostsForAnswers).filter_by(questions_id=question.id).all()
+		for f in feedback:
+			if f.selfeval:
+				selfeval.append(f)
+				continue
+			replies.setdefault(f.users_id, {})
+			replies[f.users_id][f.answers_id] = f.content
 
 		results = []
 		for comment in evalcomments:
@@ -171,3 +169,59 @@ class EvalCommentViewAPI(Resource):
 		return {'comparisons': marshal(comparisons, dataformat.getEvalComments())}
 
 api.add_resource(EvalCommentViewAPI, '/view')
+
+# /view/my
+class EvalCommentViewMyAPI(Resource):
+	@login_required
+	def get(self, course_id, question_id):
+		Courses.query.get_or_404(course_id)
+		question = PostsForQuestions.query.get_or_404(question_id)
+
+		evalcomments = PostsForJudgements.query \
+			.join(Judgements, AnswerPairings).filter_by(questions_id=question.id) \
+			.join(PostsForComments, Posts).filter_by(users_id=current_user.id).all()
+
+		feedback = PostsForAnswersAndPostsForComments.query \
+			.join(PostsForAnswers).filter_by(questions_id=question.id) \
+			.join(PostsForComments, Posts).filter_by(users_id=current_user.id) \
+			.order_by(PostsForAnswersAndPostsForComments.evaluation).all()
+
+		selfeval = ''
+		replies = {}
+		for f in feedback:
+			if f.selfeval:
+				selfeval = f.content
+				continue
+			replies[f.answers_id] = f.content
+
+		results = []
+		for comment in evalcomments:
+			temp_comment = {'answer1': {}, 'answer2': {}}
+			temp_comment['criteriaandquestions_id'] = comment.judgement.criteriaandquestions_id
+			temp_comment['answerpairings_id'] = comment.judgement.answerpairings_id
+			temp_comment['content'] = comment.postsforcomments.post.content
+			temp_comment['created'] = comment.postsforcomments.post.created
+			temp_comment['answer1']['id'] = comment.judgement.answerpairing.answers_id1
+			temp_comment['answer1']['feedback'] = replies[temp_comment['answer1']['id']]
+			temp_comment['answer2']['id'] = comment.judgement.answerpairing.answers_id2
+			temp_comment['answer2']['feedback'] = replies[temp_comment['answer2']['id']]
+			temp_comment['winner'] = comment.judgement.answers_id_winner
+			results.append(temp_comment)
+
+		results.sort(key = itemgetter('criteriaandquestions_id'))
+		results.sort(key = itemgetter('answerpairings_id'), reverse=True)
+
+		on_evalcomment_view_my.send(
+			current_app._get_current_object(),
+			event_name=on_evalcomment_view_my.name,
+			user=current_user,
+			course_id=course_id,
+			data={'question_id': question_id, 'comparisons_count': len(results), 'selfeval': selfeval}
+		)
+
+		return {
+			'selfeval': selfeval,
+			'comparisons': marshal(results, dataformat.getEvalComments())
+		}
+
+api.add_resource(EvalCommentViewMyAPI, '/view/my')

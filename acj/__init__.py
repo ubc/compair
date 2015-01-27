@@ -16,7 +16,7 @@ from .criteria import on_criteria_list_get, criteria_get, criteria_post, criteri
 	accessible_criteria, criteria_create, default_criteria_get, on_course_criteria_delete, \
 	on_course_criteria_update, on_question_criteria_create, on_question_criteria_delete, \
 	on_question_criteria_get
-from .evalcomment import on_evalcomment_create, on_evalcomment_get, on_evalcomment_view
+from .evalcomment import on_evalcomment_create, on_evalcomment_get, on_evalcomment_view, on_evalcomment_view_my
 from .judgement import on_answer_pair_get, on_judgement_create, on_judgement_question_count, \
 	on_judgement_course_count
 from .question import on_question_modified, on_question_get, on_question_list_get, on_question_create, \
@@ -264,6 +264,7 @@ on_group_user_delete.connect(log)
 on_evalcomment_create.connect(log)
 on_evalcomment_get.connect(log)
 on_evalcomment_view.connect(log)
+on_evalcomment_view_my.connect(log)
 
 # report event
 on_export_report.connect(log)

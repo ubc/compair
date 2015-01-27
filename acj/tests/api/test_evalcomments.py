@@ -165,4 +165,59 @@ class EvalCommentsAPITests(ACJTestCase):
 		self.assertEqual(actual['winner'], expected.judgement.answers_id_winner)
 		self.logout()
 
+	def test_eval_comment_my_view(self):
+		url = self._build_url(self.data.get_course().id, self.data.get_questions()[0].id, '/view/my')
 
+		# test login required
+		rv = self.client.get(url)
+		self.assert401(rv)
+
+		self.login(self.data.get_judging_student().username)
+		# test invalid course id
+		invalid_url = self._build_url(999, self.data.get_questions()[0].id, '/view/my')
+		rv = self.client.get(invalid_url)
+		self.assert404(rv)
+
+		# test invalid question id
+		invalid_url = self._build_url(self.data.get_course().id, 999, '/view/my')
+		rv = self.client.get(invalid_url)
+		self.assert404(rv)
+
+		# test successful query - student
+		rv = self.client.get(url)
+		self.assert200(rv)
+		actual = rv.json['comparisons'][0]
+		expected = self.data.get_judge_comment()
+
+		self.assertEqual(len(rv.json['comparisons']), 1)
+		self.assertEqual(actual['criteriaandquestions_id'],
+			self.data.get_criteria_by_question(self.data.get_questions()[0]).id)
+		self.assertEqual(actual['answerpairings_id'], expected.judgement.answerpairings_id)
+		self.assertEqual(actual['content'], expected.postsforcomments.post.content)
+		self.assertEqual(parser.parse(actual['created']).replace(tzinfo=None), expected.postsforcomments.post.created)
+		self.assertEqual(actual['answer1']['id'], expected.judgement.answerpairing.answers_id1)
+		self.assertEqual(actual['answer1']['feedback'],
+						 self.data.get_judge_feedback()[actual['answer1']['id']].content)
+		self.assertEqual(actual['answer2']['id'], expected.judgement.answerpairing.answers_id2)
+		self.assertEqual(actual['answer2']['feedback'],
+						 self.data.get_judge_feedback()[actual['answer2']['id']].content)
+		self.assertEqual(actual['winner'], expected.judgement.answers_id_winner)
+
+		self.assertEqual(rv.json['selfeval'], '')
+		self.logout()
+
+		# test successful query - TA
+		self.login(self.data.get_authorized_ta().username)
+		rv = self.client.get(url)
+		self.assert200(rv)
+		self.assertEqual(len(rv.json['comparisons']), 0)
+		self.assertEqual(rv.json['selfeval'], '')
+		self.logout()
+
+		# test successful query - instructor
+		self.login(self.data.get_authorized_instructor().username)
+		rv = self.client.get(url)
+		self.assert200(rv)
+		self.assertEqual(len(rv.json['comparisons']), 0)
+		self.assertEqual(rv.json['selfeval'], '')
+		self.logout()
