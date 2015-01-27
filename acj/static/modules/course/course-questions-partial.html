@@ -129,7 +129,7 @@
 					</li>
 					<!-- Pending Assignment Feedback (for students) -->
 					<li ng-if="!canManagePosts && ((question.judging_period && question.left + question.selfeval_left > 0) || (question.answer_period && !answered[question.id]))" class="label label-warning">
-						<span ng-if="question.answer_period && !answered[question.id]">1 answer<span ng-if="(question.left + question.selfeval_left) > 0">, </span></span>
+						<span ng-if="question.answer_period && !answered[question.id]">1 answer<span ng-if="(question.judging_period && question.left + question.selfeval_left) > 0">, </span></span>
 						
 						<span ng-if="question.judging_period && question.left + question.selfeval_left > 0">{{question.left + question.selfeval_left}} comparison<span ng-if="(question.left + question.selfeval_left) != 1">s</span></span>
 						needed from you

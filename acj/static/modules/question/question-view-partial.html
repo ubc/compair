@@ -34,9 +34,6 @@
 					<span ng-if="canManagePosts && question.post.user.fullname">
 						({{question.post.user.fullname}})
 					</span>
-					<span ng-if="canManagePosts && !question.post.user.fullname">
-						({{question.post.user.username}})
-					</span>
 				</a>
 			</li>
 			<li ng-if="!canManagePosts && ((evaluation + selfEval == 0) || answered)">
@@ -122,13 +119,13 @@
 			<div class="tab-header">
 			
 				<div class="row">
-					<h2 class="col-sm-3">
+					<h2 class="col-sm-6">
 						Answers
 						<span ng-show="canManagePosts && grade.group && !grade.author">for "{{grade.group.name}}"</span>
 						<span ng-show="grade.author">for "{{ grade.author.user.name }}"</span>
 					</h2>
 					
-					<div class="col-sm-9 text-right multi-filters">
+					<div class="col-sm-6 text-right multi-filters">
 						<div ng-if="question.answers_count && (canManagePosts || see_answers)">
 							<span class="filter">
 								<label>Show: &nbsp;</label>
@@ -142,7 +139,7 @@
 								</select>
 							</span><br />
 							<span class="filter">
-								<label>Order by scores for: &nbsp;</label>
+								<label>Order by<span ng-if="canManagePosts"> scores for</span>: &nbsp;</label>
 								<select ng-model="grade.sortby"
 									ng-options="key as c.criterion.name for (key, c) in criteria" ng-change="criteriaChange()">
 								</select>
@@ -206,9 +203,6 @@
 							<span ng-if="canManagePosts && answer.post.user.fullname">
 								({{answer.post.user.fullname}})
 							</span>
-							<span ng-if="canManagePosts && !answer.post.user.fullname">
-								({{answer.post.user.username}})
-							</span>
 						</a>
 						<span class="label label-info" ng-if="instructors[answer.post.user.id]">{{instructors[answer.post.user.id]}}&nbsp;</span>
 						<strong>said</strong>:
@@ -261,9 +255,6 @@
 									<span ng-if="canManagePosts && comment.postsforcomments.post.user.fullname">
 										({{comment.postsforcomments.post.user.fullname}})
 									</span>
-									<span ng-if="canManagePosts && !comment.postsforcomments.post.user.fullname">
-										({{comment.postsforcomments.post.user.username}})
-									</span>
 								</a>
 								<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">
 									{{instructors[comment.postsforcomments.post.user.id]}} 
@@ -304,11 +295,11 @@
 						</a>
 						<a ng-href="#/user/{{answer.post.user.id}}">
 							{{answer.post.user.displayname}}
+							<span ng-if="!canManagePosts && answer.post.user.id == loggedInUserId">
+								(You)
+							</span>
 							<span ng-if="canManagePosts && answer.post.user.fullname">
 								({{answer.post.user.fullname}})
-							</span>
-							<span ng-if="canManagePosts && !answer.post.user.fullname">
-								({{answer.post.user.username}})
 							</span>
 						</a>
 						<strong>answered</strong> on {{answer.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
@@ -379,9 +370,6 @@
 									{{comment.postsforcomments.post.user.displayname}}
 									<span ng-if="canManagePosts && comment.postsforcomments.post.user.fullname">
 										({{comment.postsforcomments.post.user.fullname}})
-									</span>
-									<span ng-if="canManagePosts && !comment.postsforcomments.post.user.fullname">
-										({{comment.postsforcomments.post.user.username}})
 									</span>
 								</a>
 								<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">
@@ -454,11 +442,11 @@
 					</a>
 					<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
 						{{comment.postsforcomments.post.user.displayname}}
+						<span ng-if="!canManagePosts && comment.postsforcomments.post.user.id == loggedInUserId">
+							(You)
+						</span>
 						<span ng-if="canManagePosts && comment.postsforcomments.post.user.fullname">
 							({{comment.postsforcomments.post.user.fullname}})
-						</span>
-						<span ng-if="canManagePosts && !comment.postsforcomments.post.user.fullname">
-							({{comment.postsforcomments.post.user.username}})
 						</span>
 					</a>
 					<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">

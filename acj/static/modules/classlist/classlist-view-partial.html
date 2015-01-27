@@ -33,63 +33,69 @@
 	<hr />
 
 	<div class="row">
-		<h3 class="col-md-3">{{ classlist.length }} Users</h3>
-		<div class="col-md-9">
+		<h3 class="col-md-2">{{ classlist.length }} Users</h3>
+		<div class="col-md-10">
 			<ng-include src="'modules/classlist/classlist-enrol-partial.html'"></ng-include>
 		</div>
 	</div>
 	
-	<table class="table table-striped">
-		<tr class>
-			<th>Action</th>
-			<th>
-				<a href="" ng-click="reverse = predicate == 'user.firstname' && !reverse; predicate = 'user.firstname'">
-					First Name</a>
-			</th>
-			<th>
-				<a href="" ng-click="reverse = predicate == 'user.lastname' && !reverse; predicate = 'user.lastname'">
-					Last Name</a>
-			</th>
-			<th>
-				<a href="" ng-click="reverse = predicate == 'user.student_no' && ! reverse; predicate = 'user.student_no'">
-					Student Number</a>
-			</th>
-			<th>
-				<a href="" ng-click="reverse = predicate == 'user.displayname' && !reverse; predicate = 'user.displayname'">
-					Display Name</a>
-			</th>
-			<th>
-				<a href="" ng-click="reverse = predicate == 'user.email' && !reverse; predicate = 'user.email'">
-					Email</a>
-			</th>
-			<th>
-				<a href="" ng-click="reverse = predicate == 'usertypeforcourse.name' && !reverse; predicate = 'usertypeforcourse.name'">
-					Course Role</a>
-			</th>
-			<th ng-if="groups.length > 0">Group</th>
-		</tr>
-		<tr ng-repeat="user in classlist | orderBy:predicate:reverse">
-			<td>
-				<!--<a href="#/user/{{user.user.id}}/edit" target="_blank">
-					Edit
-				</a>-->
-				<a href="" confirmation-needed ng-click="unenrol(user.user.id)">
-					Drop
-				</a>
-			</td>
-			<td>{{user.user.firstname}}</td>
-			<td>{{user.user.lastname}}</td>
-			<td>{{user.user.student_no}}</td>
-			<td><a ng-href="#/user/{{user.user.id}}">{{user.user.displayname}}<a/></td>
-			<td>{{user.user.email}}</td>
-			<td>{{user.usertypeforcourse.name}}</td>
-			<td ng-if="groups.length > 0">
-				<select ng-model="user.groups[0].groups_id" ng-options="g.id as g.name for g in groups"
-						ng-change="update(user.user.id, user.groups[0].groups_id)">
-					<option value="">- None -</option>
-				</select>
-			</td>
-		</tr>
-	</table>
+	<div class="table-responsive">
+		<table class="table table-striped">
+			<thead>
+				<tr class>
+					<th>Action</th>
+					<th>
+						<a href="" ng-click="reverse = predicate == 'user.firstname' && !reverse; predicate = 'user.firstname'">
+							First Name</a>
+					</th>
+					<th>
+						<a href="" ng-click="reverse = predicate == 'user.lastname' && !reverse; predicate = 'user.lastname'">
+							Last Name</a>
+					</th>
+					<th>
+						<a href="" ng-click="reverse = predicate == 'user.student_no' && ! reverse; predicate = 'user.student_no'">
+							Student Number</a>
+					</th>
+					<th>
+						<a href="" ng-click="reverse = predicate == 'user.displayname' && !reverse; predicate = 'user.displayname'">
+							Display Name</a>
+					</th>
+					<th>
+						<a href="" ng-click="reverse = predicate == 'user.email' && !reverse; predicate = 'user.email'">
+							Email</a>
+					</th>
+					<th>
+						<a href="" ng-click="reverse = predicate == 'usertypeforcourse.name' && !reverse; predicate = 'usertypeforcourse.name'">
+							Course Role</a>
+					</th>
+					<th ng-if="groups.length > 0">Group</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="user in classlist | orderBy:predicate:reverse">
+					<td>
+						<!--<a href="#/user/{{user.user.id}}/edit" target="_blank">
+							Edit
+						</a>-->
+						<a href="" confirmation-needed ng-click="unenrol(user.user.id)">
+							Drop
+						</a>
+					</td>
+					<td>{{user.user.firstname}}</td>
+					<td>{{user.user.lastname}}</td>
+					<td>{{user.user.student_no}}</td>
+					<td><a ng-href="#/user/{{user.user.id}}">{{user.user.displayname}}<a/></td>
+					<td>{{user.user.email}}</td>
+					<td>{{user.usertypeforcourse.name}}</td>
+					<td ng-if="groups.length > 0">
+						<select ng-model="user.groups[0].groups_id" ng-options="g.id as g.name for g in groups"
+								ng-change="update(user.user.id, user.groups[0].groups_id)">
+							<option value="">- None -</option>
+						</select>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 	
 </div>
