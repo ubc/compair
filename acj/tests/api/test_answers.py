@@ -417,3 +417,22 @@ class AnswersAPITests(ACJTestCase):
 			self.assertFalse(actual['file'])
 
 		self.logout()
+
+		# test successful query - student
+		self.login(self.data.get_extra_student1().username)
+		rv = self.client.get(view_url)
+		self.assert200(rv)
+
+		actual = rv.json['answers']
+		question_id = self.data.get_questions()[0].id
+		expected = self.data.get_answers_by_question()[question_id][0]
+
+		self.assertEqual(1, len(actual))
+		self.assertTrue(str(expected.id) in actual)
+		answer = actual[str(expected.id)]
+		self.assertEqual(expected.id, answer['id'])
+		self.assertEqual(expected.post.content, answer['content'])
+		self.assertFalse(answer['file'])
+		self.assertFalse('scores' in answer)
+
+		self.logout()

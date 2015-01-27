@@ -8,7 +8,8 @@ from sqlalchemy import func
 from . import dataformat
 from .core import db
 from .authorization import require, allow, is_user_access_restricted
-from .models import Posts, PostsForAnswers, PostsForQuestions, Courses, Users
+from .models import Posts, PostsForAnswers, PostsForQuestions, Courses, Users, \
+	Judgements, AnswerPairings
 from .util import new_restful_api, get_model_changes
 from .attachment import addNewFile, deleteFile
 from .core import event
@@ -262,24 +263,33 @@ class AnswerViewAPI(Resource):
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
 
-		answers = PostsForAnswers.query.join(Posts).\
-			filter(PostsForAnswers.questions_id==question.id).\
-			order_by(Posts.created.desc()).all()
+		if allow(MANAGE, question):
+			answers = PostsForAnswers.query.join(Posts).\
+				filter(PostsForAnswers.questions_id==question.id).\
+				order_by(Posts.created.desc()).all()
+		else:
+			judgements = Judgements.query \
+				.filter_by(users_id=current_user.id) \
+				.join(AnswerPairings).filter_by(questions_id=question.id).all()
+			myanswers = PostsForAnswers.query.filter_by(questions_id=question.id) \
+				.join(Posts).filter_by(users_id=current_user.id).all()
+			answerIds = set(j.answerpairing.answers_id1 for j in judgements)
+			answerIds.update(set(j.answerpairing.answers_id2 for j in judgements))
+			answers = []
+			if len(answerIds) > 0:
+				answers = PostsForAnswers.query.filter(PostsForAnswers.id.in_(answerIds)).all()
+			answers.extend(myanswers)
+
 		results = {}
+		canManage = allow(MANAGE, question)
 		for ans in answers:
-			tmp_answer = {}
+			tmp_answer = results.setdefault(ans.id, {})
 			tmp_answer['id'] = ans.id
 			tmp_answer['content'] = ans.post.content
-			tmp_answer['file'] = False
-			if len(ans.post.files):
-				tmp_answer['file'] = marshal(ans.post.files, dataformat.getFilesForPosts())
-			tmp_answer['scores'] = {}
-			for s in ans._scores:
-				if not s.question_criterion.active:
-					continue
-				tmp_answer['scores'][s.criteriaandquestions_id] = round(s.normalized_score, 3)
-
-			results[ans.id] = tmp_answer
+			tmp_answer['file'] = marshal(ans.post.files, dataformat.getFilesForPosts())
+			if canManage:
+				tmp_answer['scores'] = {s.criteriaandquestions_id: round(s.normalized_score, 3)
+										for s in ans._scores if s.question_criterion.active}
 
 		on_answer_view_count.send(
 			current_app._get_current_object(),
