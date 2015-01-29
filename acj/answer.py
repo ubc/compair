@@ -70,18 +70,16 @@ class AnswerRootAPI(Resource):
 			course_id=course_id,
 			data={'question_id': question_id})
 
-		answers = marshal(answers, dataformat.getPostsForAnswers(restrict_users))
-
 		# when user is not allowed to see all the feedback
 		if restrict_users:
 			for answer in answers:
 				# when the current_user is the author - can see all feedback
-				if answer['post']['user']['id'] == current_user.id:
-					continue
-				answer['comments'] = [comment for comment in answer['comments'] if not comment['evaluation'] and not comment['selfeval']]
+				answer.comments = [comment for comment in answer.comments
+					if (not comment.evaluation and not comment.selfeval)
+					or answer.post.users_id == current_user.id]
 
 
-		return {"objects": answers}
+		return {"objects": marshal(answers, dataformat.getPostsForAnswers(restrict_users))}
 
 	@login_required
 	def post(self, course_id, question_id):

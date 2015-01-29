@@ -300,14 +300,9 @@ class StudentsAPI(Resource):
 		require(READ, course)
 		students = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_STUDENT).all()
 
-		users = []
 		if allow(READ, coursesandusers):
-			for u in students:
-				tmp_user = {'user': {}}
-				fullname = u.user.fullname
-				tmp_user['user']['id'] = u.user.id
-				tmp_user['user']['name'] = fullname if fullname else u.user.displayname
-				users.append(tmp_user)
+			users = [{'user': {'id': u.users_id, 'name': u.user.fullname if u.user.fullname else u.user.displayname}}
+					 for u in students]
 		else:
 			users = []
 			for u in students:

@@ -413,7 +413,7 @@ module.controller("QuestionViewController",
 				// assume if any filter is applied - instructor/TAs answer will not meet requirement
 				return !$scope.grade.author && !$scope.grade.group
 			}
-		}
+		};
 
 		$scope.groupFilter = function() {
 			return function (answer) {
@@ -432,6 +432,7 @@ module.controller("QuestionViewController",
 		});
 		$('#participation a').click(function (e) {
 			e.preventDefault();
+			$scope.participation_url = 'modules/gradebook/gradebook-partial.html';
 			$(this).tab('show');
 		});
 		
@@ -440,7 +441,7 @@ module.controller("QuestionViewController",
 			var thisClass = '.content.'+answerId;      // class for the answer to show is "content" plus the answer's ID
 			$(thisClass).css({'max-height' : 'none'}); // now remove height restriction for this answer
 			this.showReadMore = false;                 // and hide the read more button for this answer
-		}
+		};
 		
 		$scope.criteriaChange = function() {
 			if ($scope.grade.sortby == null) {
@@ -494,7 +495,7 @@ module.controller("QuestionViewController",
 					Toaster.reqerror("Comment Delete Failed", ret);
 				}
 			);
-		}
+		};
 
 		$scope.deleteReply = function(answerKey, commentKey, course_id, question_id, answer_id, comment_id) {
 			AnswerCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'answerId': answer_id, 'commentId': comment_id}).$promise.then(
