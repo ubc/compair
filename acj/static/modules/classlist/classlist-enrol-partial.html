@@ -1,24 +1,22 @@
 <div ng-controller="EnrolController" class="text-right inline-enrol">
 	<form name="enrolForm" class="form-inline row" ng-submit="enrolSubmit()" novalidate role="form">
-		<div class="col-md-9">
-			<div class="form-group">
-				<label>Add: </label>
-				<div class="input-group">
-				    <label class="sr-only" for="user">Name</label>
-				    <input type="text" ng-model="user.user" name="user" required typeahead="u as u.display for u in users | filter:{'name':$viewValue}"
-					   placeholder="type user's name" class="form-control" typeahead-input-formatter="user.user.display" autocomplete="off"
-					   typeahead-editable="false">
-				</div>
-				<label>as</label>
-				<div class="input-group">
-					<select class="form-control" name="role" ng-model="user.usertypesforcourse_id" required
-						ng-options="role.id as role.name for role in roles">
-						<option value="">- select course role -</option>
-					</select>
-				</div>
+		<div class="form-group">
+			<label>Add: </label>
+			<div class="input-group">
+			    <label class="sr-only" for="user">Name</label>
+			    <input type="text" ng-model="user.user" name="user" required typeahead="u as u.display for u in users | filter:{'name':$viewValue}"
+				   placeholder="type user's name" class="form-control" typeahead-input-formatter="user.user.display" autocomplete="off"
+				   typeahead-editable="false">
+			</div>
+			<label>as</label>
+			<div class="input-group">
+				<select class="form-control" name="role" ng-model="user.usertypesforcourse_id" required
+					ng-options="role.id as role.name for role in roles">
+					<option value="">- select course role -</option>
+				</select>
 			</div>
 		</div>
-		<div class="input-group col-md-3">
+		<div class="input-group">
 		    <input value="Enrol" type="submit" class="inline-submit btn btn-success" ng-disabled="submitted || enrolForm.$invalid"/>
 		</div>
 	</form>

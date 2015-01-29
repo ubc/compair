@@ -194,7 +194,7 @@
 				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers | filter:adminFilter()" ng-if="instructors[answer.post.user.id] && (see_answers || canManagePosts)">
 					
 					<!-- Instructor Answer Metadata Header -->
-					<div class="each-header">
+					<div class="each-header clearfix">
 						<a ng-href="#/user/{{answer.post.user.id}}">
 							<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
 						</a>
@@ -246,7 +246,7 @@
 							<hr ng-hide="$first" />
 							
 							<!-- Instructor Reply Metadata Header -->
-							<div class="each-header">
+							<div class="each-header clearfix">
 								<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
 									<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
 								</a>
@@ -289,7 +289,7 @@
 				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers | filter:groupFilter() | orderBy:order:reverse | notScoredEnd:grade.sortby as results" ng-if="!instructors[answer.post.user.id] && (see_answers || answer.post.user.id == loggedInUserId || canManagePosts)">
 				<!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.post.user.id] && (see_answers || (answer.post.user.id == loggedInUserId && question.answer_period) || canManagePosts)"> -->
 					<!-- Student Answer Metadata Header -->
-					<div class="each-header">
+					<div class="each-header clearfix">
 						<a ng-href="#/user/{{answer.post.user.id}}">
 							<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
 						</a>
@@ -362,7 +362,7 @@
 							<hr ng-hide="$first" />
 
 							<!-- Student Reply Metadata Header -->
-							<div class="each-header">
+							<div class="each-header clearfix">
 								<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
 									<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
 								</a>
@@ -436,7 +436,7 @@
 			<div ng-repeat="(commentKey, comment) in comments" class="each-comment">
 				
 				<!-- Comment Metadata Header -->
-				<div class="each-header">
+				<div class="each-header clearfix">
 					<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
 						<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
 					</a>

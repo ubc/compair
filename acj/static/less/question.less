@@ -22,7 +22,6 @@
       &:first-child {
         padding-left: 0;
       }
-      
       &:last-child {
         border-right: none;
       }
@@ -55,18 +54,27 @@
       background: @bkgrd-gray;
     }
     
+    /* class for divs that contain multiple filters */
     .multi-filters {
       
       margin-bottom: .5em;
       
+      /* each filter */
       .filter {
         margin: 0 0 .5em 0;
       }
       
+    }//closes multi-filters
+    
+    /* labels to be bigger than default */
+    .label {
+      font-size: 90%;
+      font-weight: normal;
     }
     
     /* add spacing to instructor labels */
     .label-info {
+      margin-top: .4em;
       display: inline-block;
     }
     
@@ -98,6 +106,7 @@
         max-height: 200px;
         overflow: hidden;
       }
+      /* but not for instructors! */
       > .content.instructor-answer {
         max-height: none;
       }
@@ -108,6 +117,11 @@
     .all-answers > .each-answer:nth-child(odd),
     .each-comment:nth-child(even){
         background: @bkgrd-gray;
+    }
+    
+    /* score help (?) icon */
+    .score-display i {
+      font-size: 1.2em;
     }
     
     /* read-more is style for p tag shown when content is cut off */
@@ -162,13 +176,18 @@
   
 }//closes question-screen
 
-// question form
+
+/***** ADD/EDIT QUESTION SCREEN *****/
+
+/* question form dates */
 .question-date {
-  vertical-align: middle;
   display: inline-block;
   width: 40%;
-}
+  vertical-align: middle;
 
-.question-date > span {
-  margin-right: 0em;
-}
+  > span {
+    margin-right: 0;
+  }
+  
+}//closes question-date
+
