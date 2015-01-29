@@ -140,7 +140,7 @@
 						<span ng-if="!question.answer_period">Students answer<span ng-if="question.available">ed</span> {{question.answer_start | amDateFormat: 'MMM D'}}-{{question.answer_end | amDateFormat: 'MMM D'}}</span>
 					</li>
 					<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
-						<a confirmation-needed="deleteQuestion(key, course.id, question.id)" keyword="question" title="Delete">
+						<a confirmation-needed="deleteQuestion(key, course.id, question.id)" keyword="question" title="Delete" href="">
 							<i class="fa fa-trash-o"></i>
 						</a>
 					</li>

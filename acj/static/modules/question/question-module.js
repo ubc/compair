@@ -37,6 +37,7 @@ module.directive(
 						scope.$eval(attrs.confirmationNeeded);
 						scope.$apply();
 					} else {
+						e.preventDefault();
 						e.stopImmediatePropagation();
 					}
 				});
