@@ -57,16 +57,14 @@ module.service('importService', function(FileUploader, $location, CourseResource
 		});
 
 		return uploader;
-	}
+	};
 
-	var onComplete = function(courseId) {
-		return function(fileItem, response, status, headers) {
-			results = response;
-			if (!('error' in results)) {
-				onSuccess(courseId);
-			}
-		};
-	}
+	var onComplete = function(courseId, response) {
+		results = response;
+		if (!('error' in results)) {
+			onSuccess(courseId);
+		}
+	};
 
 	var onError = function() {
 		return function(fileItem, response, status, headers) {
@@ -75,11 +73,11 @@ module.service('importService', function(FileUploader, $location, CourseResource
 				Toaster.error("File Type Error", "Only CSV files can be uploaded.");
 			}
 		};
-	}
+	};
 
 	var getResults = function() {
 		return results;
-	}
+	};
 
 	return {
 		getUploader: getUploader,

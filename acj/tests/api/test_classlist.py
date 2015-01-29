@@ -34,7 +34,7 @@ class ClassListAPITest(ACJTestCase):
 		self.assert200(rv)
 		self.assertEqual(len(expected), len(rv.json['objects']))
 		for key in range(0, len(expected)):
-			self.assertEqual(self.data.get_course().id, rv.json['objects'][key]['course']['id'])
+			self.assertEqual(self.data.get_course().id, rv.json['objects'][key]['courses_id'])
 			self.assertEqual(expected[key], rv.json['objects'][key]['user']['id'])
 
 	def test_get_instructor_labels(self):

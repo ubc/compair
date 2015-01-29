@@ -22,6 +22,10 @@
 		</fieldset>
 	</div>
 	<input type="submit" class="btn btn-success btn-lg center-block" value="Import"
-		   ng-click="uploader.queue[0].upload();"
-		   ng-disabled="!uploader.queue[0]" />
+		   ng-click="upload();"
+		   ng-disabled="!uploader.queue[0] || submitted" />
+	<p ng-if="submitted" class="text-center">
+		<i class="fa fa-spin fa-spinner"></i>
+		&nbsp; Importing
+	</p>
 </div>

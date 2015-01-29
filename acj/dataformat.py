@@ -58,7 +58,7 @@ def getCourses(include_details=True):
 def getCoursesAndUsers(restrict_user=True, include_user=True, include_groups=True):
 	format = {
 		'id': fields.Integer,
-		'course': fields.Nested(getCourses()),
+		'courses_id': fields.Integer,
 		'usertypeforcourse': fields.Nested(getUserTypesForCourse()),
 		'modified': fields.DateTime,
 		'created': fields.DateTime

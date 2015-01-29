@@ -130,8 +130,16 @@ module.controller(
 			}
 		);
 		$scope.uploader = importService.getUploader(courseId, 'users');
-		$scope.uploader.onCompleteItem = importService.onComplete(courseId);
+		$scope.uploader.onCompleteItem = function(fileItem, response, status, headers) {
+			$scope.submitted = false;
+			importService.onComplete(courseId, response);
+		};
 		$scope.uploader.onErrorItem = importService.onError();
+
+		$scope.upload = function() {
+			$scope.submitted = true;
+			$scope.uploader.uploadAll();
+		};
 	}
 );
 
