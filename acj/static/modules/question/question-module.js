@@ -421,21 +421,15 @@ module.controller("QuestionViewController",
 				return answer.post.user.id in userIds;
 			}
 		};
-		
-		// enable tabs for answers, comments, participation
-		$('#answers a').click(function (e) {
-			e.preventDefault();
-			$(this).tab('show');
-		});
-		$('#comments a').click(function (e) {
-			e.preventDefault();
-			$(this).tab('show');
-		});
-		$('#participation a').click(function (e) {
-			e.preventDefault();
-			$scope.participation_url = 'modules/gradebook/gradebook-partial.html';
-			$(this).tab('show');
-		});
+
+		var tab = 'answers';
+		// tabs: answers, help, participation
+		$scope.setTab = function(name) {
+			tab = name;
+		};
+		$scope.showTab = function(name) {
+			return tab == name;
+		};
 		
 		// revealAnswer function shows full answer content for abbreviated answers (determined by getHeight directive)
 		$scope.revealAnswer = function(answerId) {

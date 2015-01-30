@@ -36,7 +36,7 @@ from passlib.apps import custom_app_context as pwd_context
 from flask.ext.login import UserMixin
 
 
-# need to update to filterfalse whn upgrading python
+# need to update to filterfalse when upgrading python
 try:
 	from itertools import filterfalse
 except ImportError:
@@ -803,11 +803,11 @@ class AnswerPairings(db.Model):
 
 	@hybrid_property
 	def answer1_win(self):
-		return len(list(filterfalse(lambda x: x.answers_id_winner==self.answers_id2, self.judgements)))
+		return len([j for j in self.judgements if j.answers_id_winner==self.answers_id1])
 
 	@hybrid_property
 	def answer2_win(self):
-		return len(list(filterfalse(lambda x: x.answers_id_winner==self.answers_id1, self.judgements)))
+		return len([j for j in self.judgements if j.answers_id_winner==self.answers_id2])
 
 
 class Judgements(db.Model):

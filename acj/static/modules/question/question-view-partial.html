@@ -99,21 +99,21 @@
 	
 	<!-- Tabs -->
 	<ul class="nav nav-tabs" role="tablist">
-	  <li id="answers" class="active">
-		<a href="#answers-tab">Answers <span ng-show="canManagePosts || !question.answer_period">({{question.answers_count}})</span></a>
+	  <li id="answers" ng-class="{active:showTab('answers')}">
+		<a ng-click="setTab('answers')">Answers <span ng-show="canManagePosts || !question.answer_period">({{question.answers_count}})</span></a>
 	  </li>
-	  <li id="comments">
-		<a href="#comments-tab">Help</a>
+	  <li id="comments" ng-class="{active:showTab('help')}">
+		<a ng-click="setTab('help')">Help</a>
 	  </li>
-	  <li ng-show="canManagePosts" id="participation">
-		  <a href="#participation-tab">Participation</a>
+	  <li ng-show="canManagePosts" id="participation" ng-class="{active:showTab('participation')}">
+		  <a ng-click="setTab('participation')">Participation</a>
 	  </li>
 	</ul>
 	
 	<!-- Tab Content -->
 	<div class="tab-content">
 		
-		<div class="tab-pane active" id="answers-tab">
+		<div class="tab-pane" ng-class="{active: showTab('answers')}" id="answers-tab">
 			
 			<!-- Answers Tab Header -->
 			<div class="tab-header">
@@ -412,7 +412,7 @@
 		
 		</div><!-- closes answers-tab -->
 		
-		<div class="tab-pane" id="comments-tab">
+		<div class="tab-pane" ng-class="{active: showTab('help')}" id="comments-tab">
 		
 			<!-- Comments Tab Header -->
 			<div class="tab-header">
@@ -472,10 +472,9 @@
 			
 		</div><!-- closes comments-tab -->
 
-		<div class="tab-pane" id="participation-tab" ng-if="canManagePosts">
-			<ng-include src="participation_url"></ng-include>
+		<div class="tab-pane" ng-class="{active: showTab('participation')}" id="participation-tab" ng-if="canManagePosts && showTab('participation')">
+			<ng-include src="'modules/gradebook/gradebook-partial.html'"></ng-include>
 		</div><!-- closes gradebook-tab -->
-		
+
 	</div><!-- closes tab-content -->
-	
 </div>
