@@ -17,7 +17,7 @@ DATABASE = {
 SECRET_KEY = "zfjlkfaweerP* SDF()U@#$haDJ;JKLASDFHUIO"
 
 CAS_SERVER = 'http://localhost:8088'
-CAS_AFTER_LOGIN = 'route_root'
+CAS_AFTER_LOGIN = 'login_api.auth_cas'
 
 REPORT_FOLDER = os.getcwd() + '/acj/static/report'
 

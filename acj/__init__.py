@@ -1,4 +1,4 @@
-from flask import Flask, redirect, session
+from flask import Flask, redirect, session, abort
 from flask.ext.login import current_user
 
 from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, on_answer_flag,\
@@ -33,7 +33,6 @@ from .authorization import define_authorization
 from .core import login_manager, bouncer, db, cas
 from .configuration import config
 from .models import Users
-from .login import authenticate
 from .activity import log
 
 
@@ -57,6 +56,13 @@ def create_app(conf=config, settings_override={}):
 	def load_user(user_id):
 		app.logger.debug("User logging in, ID: " + user_id)
 		return Users.query.get(int(user_id))
+
+	@login_manager.unauthorized_handler
+	def unauthorized():
+		if 'CAS_AUTH_MSG' in session:
+			msg = session.pop('CAS_AUTH_MSG')
+			return msg, 403
+		return abort(401)
 
 	cas.init_app(app)
 
@@ -143,18 +149,6 @@ def create_app(conf=config, settings_override={}):
 
 	@app.route('/')
 	def route_root():
-		username = cas.username
-
-		if username is None:
-			return redirect('/static/index.html#/')
-
-		user = Users.query.filter_by(username=username).first()
-		if not user:
-			app.logger.debug("Login failed, invalid username for: " + username)
-		else:
-			authenticate(user)
-			session['CAS_LOGIN'] = True
-
 		return redirect('/static/index.html#/')
 
 	return app

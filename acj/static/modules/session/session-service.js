@@ -39,7 +39,7 @@
                 $log.debug('Getting user from server');
                 var scope = this;
                 var deferred = $q.defer();
-                return $http.get('/api/session')
+                return $http.get('/api/session', { cache:true })
                     .then(function (result) {
                         // retrieve logged in user's information
                         // return a promise for chaining

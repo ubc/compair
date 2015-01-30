@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect
 from flask_login import current_user, login_required, login_user, logout_user
-from flask_cas.routing import logout as cas_logout
+from acj import cas
 
 from .authorization import get_logged_in_user_permissions
 from .models import Users
@@ -51,6 +51,31 @@ def session():
 @login_required
 def get_permission():
 	return jsonify(get_logged_in_user_permissions())
+
+@login_api.route('/auth/cas', methods=['GET'])
+def auth_cas():
+	"""
+	CAS Authentication Endpoint. Authenticate user through CAS. If user doesn't exists,
+	set message in session so that frontend can get the message through /session call
+	"""
+	username = cas.username
+
+	if username is not None:
+		user = Users.query.filter_by(username=username).first()
+		msg = None
+		if not user:
+			current_app.logger.debug("Login failed, invalid username for: " + username)
+			msg = 'You don\'t have access to this application.'
+		else:
+			authenticate(user)
+			sess['CAS_LOGIN'] = True
+	else:
+		msg = 'Login Failed. Expecting CAS username to be set.'
+
+	if msg is not None:
+		sess['CAS_AUTH_MSG'] = msg
+
+	return redirect('/')
 
 
 def authenticate(user):

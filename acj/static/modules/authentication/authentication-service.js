@@ -17,6 +17,7 @@ module.factory('AuthenticationService',
 			LOGIN_EVENT: "event:Authentication-Login",
 			LOGOUT_EVENT: "event:Authentication-Logout",
 			LOGIN_REQUIRED_EVENT: "event:auth-loginRequired",
+			LOGIN_FORBIDDEN_EVENT: "event:auth-forbidden",
 			isAuthenticated: function() {
                 return Session.getUser().then(function(result) {
                     if (result) {
