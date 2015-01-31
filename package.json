@@ -23,7 +23,7 @@
 	"karma-jasmine": "~0.3.4",
 	"karma-phantomjs-launcher": "~0.1",
 	"karma-chrome-launcher": "~0.1.4",
-	"protractor": "~1.5.0",
+	"protractor": "~1.6.0",
 	"cucumber": "latest",
 	"chai": "latest",
 	"chai-as-promised": "latest",
