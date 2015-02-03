@@ -20,7 +20,8 @@
 				</span>
 				<br />
 				<span class="filter" ng-if="canManagePosts">
-					<label>Display scores below for: &nbsp;</label>
+					<label>Display scores <a tool-tip href="" data-placement="left" data-toggle="tooltip" class="score-tooltip" title="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the question receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer.">
+							<i class="fa fa-question-circle"></i></a> below for: &nbsp;</label>
 					<select ng-model="gb.sortby"
 							ng-options="c.id as c.criterion.name for c in criteria" ng-change="criteriaChange()">
 					</select>
@@ -48,9 +49,6 @@
 					</th>
 					<th class="text-center"><a href="" ng-click="reverse = !reverse; sortScore()">
 						Answer Score</a>
-						<a tool-tip href="" data-placement="left" data-toggle="tooltip" class="score-tooltip" title="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the question receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer.">
-							<i class="fa fa-question-circle"></i>
-						</a>
 					</th>
 					<th class="text-center"><a href="" ng-click="reverse = predicate == 'flagged' && !reverse; predicate='flagged'">
 						Flagged</a>
