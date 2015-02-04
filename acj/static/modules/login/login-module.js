@@ -82,6 +82,9 @@ module.run(function ($rootScope, $route, $location, $log, $modal, $cacheFactory,
 		// invalid session cache, looks like we don't need it. I'll just leave it here in case we need it in the future
 		//$cacheFactory.get('$http').removeAll();
 	});
+	$rootScope.$on(AuthenticationService.LOGOUT_EVENT, function () {
+		$cacheFactory.get('$http').removeAll();
+	});
 
 	// Requires the user to be logged in for every single route
 //	$rootScope.$on('$locationChangeStart', function(event, next) {

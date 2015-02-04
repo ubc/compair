@@ -3,7 +3,6 @@ var myApp = angular.module('myApp', [
 	'http-auth-interceptor', 
 	'ngCookies', 
 	'ng-breadcrumbs',
-	'ngCacheBuster',
 	'angular-loading-bar',
 	'ubc.ctlt.acj.answer',
 	'ubc.ctlt.acj.attachment',
@@ -21,8 +20,13 @@ var myApp = angular.module('myApp', [
 	'ubc.ctlt.acj.report'
 ]);
 
-myApp.config( function ($routeProvider, $logProvider, httpRequestInterceptorCacheBusterProvider) {
+myApp.config( function ($routeProvider, $logProvider, $httpProvider) {
 	var debugMode = false;
+
+	if (!$httpProvider.defaults.headers.get) {
+		$httpProvider.defaults.headers.get = {};
+	}
+	$httpProvider.defaults.headers.get['If-Modified-Since'] = '0';
 
 	$routeProvider
 		.when ('/', 
@@ -166,6 +170,5 @@ myApp.config( function ($routeProvider, $logProvider, httpRequestInterceptorCach
 			})
 		.otherwise({redirectTo: '/'});
 
-	httpRequestInterceptorCacheBusterProvider.setMatchlist([/.*modules.*/, /.*template.*/]);
 	$logProvider.debugEnabled(debugMode);
 });
