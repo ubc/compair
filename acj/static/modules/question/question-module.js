@@ -621,7 +621,7 @@ module.controller("QuestionCreateController",
 		// Criteria
 		CoursesCriteriaResource.get({'courseId': courseId}).$promise.then(
 			function (ret) {
-				$scope.courseCriteria = ret.objects
+				$scope.courseCriteria = ret.objects;
 			},
 			function (ret) {
 				Toaster.reqerror("Criteria Not Found.");
