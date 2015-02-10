@@ -77,8 +77,10 @@ module.run(function ($rootScope, $route, $location, $log, $modal, $cacheFactory,
 	$rootScope.$on(AuthenticationService.LOGIN_EVENT, $rootScope.hideLogin);
 	// listen to 403 response for CAS user that do not exist in the system
 	$rootScope.$on(AuthenticationService.LOGIN_FORBIDDEN_EVENT, function(event, rejection) {
-		Toaster.error('Login Failed!', rejection.data);
-		$rootScope.$broadcast(AuthenticationService.LOGIN_REQUIRED_EVENT);
+		if ('type' in rejection.data && rejection.data.type == 'CAS') {
+			Toaster.error('Login Failed!', rejection.data.message);
+			$rootScope.$broadcast(AuthenticationService.LOGIN_REQUIRED_EVENT);
+		}
 		// invalid session cache, looks like we don't need it. I'll just leave it here in case we need it in the future
 		//$cacheFactory.get('$http').removeAll();
 	});

@@ -61,7 +61,7 @@ def create_app(conf=config, settings_override={}):
 	def unauthorized():
 		if 'CAS_AUTH_MSG' in session:
 			msg = session.pop('CAS_AUTH_MSG')
-			return msg, 403
+			return {'message': msg, 'status': 403, 'type': 'CAS'}
 		return abort(401)
 
 	cas.init_app(app)
