@@ -24,5 +24,11 @@ var createQuestionStepDefinitionsWrapper = function () {
 			done()
 		});
 	});
+	this.Given(/^I select the first criteria$/, function(done) {
+		element.all(by.repeater("courseCriterion in courseCriteria")).get(0)
+			.element(by.css('input')).click().then(function(){
+				done();
+		});
+	});
 };
 module.exports = createQuestionStepDefinitionsWrapper;

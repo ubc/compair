@@ -11,7 +11,7 @@ var expect = chai.expect;
 
 var PageFactory  = require('../../factories/page_factory.js');
 
-var myStepDefinitionsWrapper = function () {
+var createCourseStepDefinitionsWrapper = function () {
 	var pageFactory = new PageFactory();
 	var page;
 
@@ -45,4 +45,4 @@ var myStepDefinitionsWrapper = function () {
 		expect(element(by.css(locator)).getText()).to.eventually.equal(text).and.notify(done);
 	});
 };
-module.exports = myStepDefinitionsWrapper;
+module.exports = createCourseStepDefinitionsWrapper;

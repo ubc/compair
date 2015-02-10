@@ -172,7 +172,7 @@ module.exports.user = function($httpBackend) {
 			"usertypesforsystem_id": 2
 		}];
 
-	$httpBackend.whenGET(/^\/api\/users\/\d+/).respond(function(method, url, data, headers) {
+	$httpBackend.whenGET(/^\/api\/users\/\d+$/).respond(function(method, url, data, headers) {
 		var id = url.split('/').pop();
 		return [200, users[id], {}];
 	});
@@ -209,6 +209,7 @@ module.exports.course = function($httpBackend) {
 		"id": 1,
 		"name": "Test Course"
 	};
+
 	var course2 = {
 		"available": true,
 		"created": "Sun, 11 Jan 2015 08:44:46 -0000",
@@ -229,44 +230,83 @@ module.exports.course = function($httpBackend) {
 		"name": "Test Course"
 	};
 
+	var post1 = {
+		"content": "",
+		"created": "Fri, 06 Feb 2015 22:12:59 -0000",
+		"files": [],
+		'id': 1,
+		'modified': "Fri, 06 Feb 2015 22:12:59 -0000",
+		'user': {
+			"avatar": "b47d5e296b954b96c12fe3b5ced166b4",
+			"created": "Sun, 11 Jan 2015 07:59:17 -0000",
+			"displayname": "First Instructor",
+			"id": 2,
+			"lastonline": "Sun, 11 Jan 2015 08:25:08 -0000",
+		}
+	};
+
+	var course1question = {
+		"after_judging": false,
+		"answer_end": "Sun, 15 Feb 2015 07:59:00 -0000",
+		"answer_period": false,
+		"answer_start": "Sat, 07 Feb 2015 08:00:00 -0000",
+		"answers": [],
+		"answers_count": 0,
+		"available": false,
+		"can_reply": true,
+		"comments_count": 0,
+		"criteria": [],
+		"evaluation_count": 0,
+		"id": 1,
+		"judge_end": null,
+		"judge_start": null,
+		"judged": false,
+		"judging_period": false,
+		"modified": "Fri, 06 Feb 2015 22:12:59 -0000",
+		"num_judgement_req": 3,
+		"post": post1,
+		"selfevaltype_id": 0,
+		"title": "Test Question"
+	};
+
+	var questions = [
+		[course1question],
+		[]
+	];
+
 	var courses = {
 		"objects": [course1, course2]
 	};
 
-	$httpBackend.whenGET(/\/api\/users\/\d+\/courses/).respond(courses);
-	$httpBackend.whenGET(/\/api\/courses\/\d+\/name/).respond(function(method, url, data, headers) {
+	$httpBackend.whenGET(/\/api\/users\/\d+\/courses$/).respond(courses);
+	$httpBackend.whenGET(/\/api\/courses\/\d+\/name$/).respond(function(method, url, data, headers) {
 		var id = url.replace('/name', '').split('/').pop();
-		return [200, courses.objects[id-1].name, {}];
+		return [200, {'course_name': courses.objects[id-1].name}, {}];
 	});
-	$httpBackend.whenGET('/api/criteria/default').respond(default_criteria);
-	$httpBackend.whenGET('/api/criteria').respond(criteria);
 	$httpBackend.whenPOST('/api/courses').respond(course2);
-	$httpBackend.whenGET(/\/api\/courses\/\d+/).respond(function(method, url, data, headers) {
+	$httpBackend.whenGET(/\/api\/courses\/\d+$/).respond(function(method, url, data, headers) {
 		var id = url.split('/').pop();
 		return [200, courses.objects[id-1], {}];
 	});
 
-	// Course 1
-	$httpBackend.whenGET('/api/courses/1/criteria').respond({
-		"objects": course1.criteriaandcourses
+	$httpBackend.whenGET(/\/api\/courses\/\d+\/criteria$/).respond(function(method, url, data, headers){
+		var id = url.replace('/criteria', '').split('/').pop();
+		return [200, {'objects': courses.objects[id-1].criteriaandcourses}, {}];
 	});
-	$httpBackend.whenGET('/api/courses/1/judgements/availpair').respond({
+	$httpBackend.whenGET(/\/api\/courses\/\d+\/judgements\/availpair$/).respond({
 		"availPairsLogic": {}
 	});
-	$httpBackend.whenGET('/api/courses/1/questions').respond({
-		"questions": []
+	$httpBackend.whenGET(/\/api\/courses\/\d+\/questions$/).respond(function(method, url, data, headers) {
+		var id = url.replace('/questions', '').split('/').pop();
+		return [200, {'questions': questions[id-1]}, {}]
 	});
-	$httpBackend.whenGET('/api/courses/1/judgements/count').respond({
-		"judgements": {}
+	$httpBackend.whenGET(/\/api\/courses\/\d+\/judgements\/count$/).respond({
+		"judgements": 0
 	});
-	$httpBackend.whenGET('/api/selfeval/courses/1/questions').respond({
-		"replies": {}
-	});
-	$httpBackend.whenGET('/api/courses/1/answers/answered').respond({
+	$httpBackend.whenGET(/\/api\/courses\/\d+\/answers\/answered$/).respond({
 		"answered": {}
 	});
 
-	// Course 2
 	$httpBackend.whenPOST('/api/courses/2/criteria/1').respond({
 		"criterion": {
 			"active": true,
@@ -276,20 +316,15 @@ module.exports.course = function($httpBackend) {
 			"inQuestion": false
 		}
 	});
-	$httpBackend.whenGET('/api/courses/2/judgements/availpair').respond({
-		"availPairsLogic": {}
+	$httpBackend.whenPOST(/\/api\/courses\/\d+\/questions\/\d+\/criteria\/\d+$/).respond({
+		'active': true,
+		'criterion': default_criteria
 	});
-	$httpBackend.whenGET('/api/courses/2/questions').respond({
-		"questions": []
-	});
-	$httpBackend.whenGET('/api/courses/2/answers/answered').respond({
-		"answered": {}
-	});
-	$httpBackend.whenGET('/api/selfeval/courses/2/questions').respond({
+	$httpBackend.whenGET('/api/criteria/default').respond(default_criteria);
+	$httpBackend.whenGET('/api/criteria').respond(criteria);
+
+	$httpBackend.whenGET(/\/api\/selfeval\/courses\/\d+\/questions$/).respond({
 		"replies": {}
-	});
-	$httpBackend.whenGET('/api/courses/2/judgements/count').respond({
-		"judgements": {}
 	});
 };
 
@@ -298,8 +333,46 @@ module.exports.question = function($httpBackend) {
 		'id': 1,
 		'name': "No Comparison with Another Answer"
 	};
+	var post1 = {
+		"content": "",
+		"created": "Fri, 06 Feb 2015 22:12:59 -0000",
+		"files": [],
+		'id': 1,
+		'modified': "Fri, 06 Feb 2015 22:12:59 -0000",
+		'user': {
+			"avatar": "b47d5e296b954b96c12fe3b5ced166b4",
+			"created": "Sun, 11 Jan 2015 07:59:17 -0000",
+			"displayname": "First Instructor",
+			"id": 2,
+			"lastonline": "Sun, 11 Jan 2015 08:25:08 -0000",
+		}
+	};
 
 	$httpBackend.whenGET('/api/selfevaltypes').respond({
 		'types': [selfeval1]
+	});
+
+	$httpBackend.whenPOST(/\/api\/courses\/\d+\/questions$/).respond({
+		"after_judging": false,
+		"answer_end": "Sun, 15 Feb 2015 07:59:00 -0000",
+		"answer_period": false,
+		"answer_start": "Sat, 07 Feb 2015 08:00:00 -0000",
+		"answers": [],
+		"answers_count": 0,
+		"available": false,
+		"can_reply": true,
+		"comments_count": 0,
+		"criteria": [],
+		"evaluation_count": 0,
+		"id": 1,
+		"judge_end": null,
+		"judge_start": null,
+		"judged": false,
+		"judging_period": false,
+		"modified": "Fri, 06 Feb 2015 22:12:59 -0000",
+		"num_judgement_req": 3,
+		"post": post1,
+		"selfevaltype_id": 0,
+		"title": "Test Question"
 	});
 };
