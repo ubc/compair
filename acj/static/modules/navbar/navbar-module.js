@@ -66,14 +66,13 @@ module.controller(
 		/*Authorize.can(Authorize.EDIT, CourseResource.MODEL).then(function(result) {
 			$scope.canEditCourse = result;
 		})*/
+		Session.getUser().then(function(user) {
+			$scope.loggedInUser = user;
+			$log.debug("Logged in as " + $scope.loggedInUser.username);
+		});
 
 		$scope.getPermissions();
 		$scope.$on(AuthenticationService.LOGIN_EVENT, function() {
-			Session.getUser().then(function(user) {
-				$scope.loggedInUser = user;
-				$log.debug("Logged in as " + $scope.loggedInUser.username);
-			});
-
 		   $scope.getPermissions();
 		});
 
