@@ -216,7 +216,7 @@ class UserJudgementCount(Resource):
 			event_name=on_judgement_question_count.name,
 			user=current_user,
 			course_id=course_id,
-			data={'question_id': question_id, 'user_id': user_id}
+			data={'question_id': question_id, 'user_id': user_id, 'count': count}
 		)
 
 		return {"count":count}
@@ -238,7 +238,7 @@ class UserAllJudgementCount(Resource):
 			event_name=on_judgement_course_count.name,
 			user=current_user,
 			course_id=course_id,
-			data={'user_id': current_user.id}
+			data={'user_id': current_user.id, 'counts': judgements}
 		)
 
 		return {'judgements': judgements}
