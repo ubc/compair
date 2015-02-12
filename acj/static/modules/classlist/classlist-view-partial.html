@@ -86,7 +86,10 @@
 					<td>{{user.user.student_no}}</td>
 					<td><a ng-href="#/user/{{user.user.id}}">{{user.user.displayname}}<a/></td>
 					<td>{{user.user.email}}</td>
-					<td>{{user.usertypeforcourse.name}}</td>
+					<td>
+						<select ng-model="user.usertypeforcourse.id" ng-options="r.id as r.name for r in roles"
+								ng-change="enrol(user.user.id, user.usertypeforcourse.id)"></select>
+					</td>
 					<td ng-if="groups.length > 0">
 						<select ng-model="user.groups[0].groups_id" ng-options="g.id as g.name for g in groups"
 								ng-change="update(user.user.id, user.groups[0].groups_id)">

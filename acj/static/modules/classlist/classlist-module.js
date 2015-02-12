@@ -101,6 +101,19 @@ module.controller(
 			}
 		};
 
+		$scope.enrol = function(userId, usertypeforcourseId) {
+			var role = {'usertypesforcourse_id': usertypeforcourseId};
+			ClassListResource.enrol({'courseId': courseId, 'userId': userId}, role).$promise.then(
+				function (ret) {
+					Toaster.success("User Added", 'Successfully changed '+ ret.user.fullname +'\'s course role to ' + ret.usertypesforcourse.name);
+					$route.reload();
+				},
+				function (ret) {
+					Toaster.reqerror("User Add Failed For ID " + userId, ret);
+				}
+			);
+		};
+
 		$scope.unenrol = function(userId) {
 			ClassListResource.unenrol({'courseId': courseId, 'userId': userId}).$promise.then(
 				function (ret) {
