@@ -6193,8 +6193,8 @@ function webViewerInitialized() {
   document.body.appendChild(fileInput);
 
   if (!window.File || !window.FileReader || !window.FileList || !window.Blob) {
-    document.getElementById('openFile').setAttribute('hidden', 'true');
-    document.getElementById('secondaryOpenFile').setAttribute('hidden', 'true');
+    //document.getElementById('openFile').setAttribute('hidden', 'true');
+    //document.getElementById('secondaryOpenFile').setAttribute('hidden', 'true');
   } else {
     document.getElementById('fileInput').value = null;
   }
@@ -6363,6 +6363,9 @@ function webViewerInitialized() {
   document.getElementById('presentationMode').addEventListener('click',
     SecondaryToolbar.presentationModeClick.bind(SecondaryToolbar));
 
+  //document.getElementById('openFile').addEventListener('click',
+  //  SecondaryToolbar.openFileClick.bind(SecondaryToolbar));
+
   document.getElementById('print').addEventListener('click',
     SecondaryToolbar.printClick.bind(SecondaryToolbar));
 
@@ -6453,6 +6456,8 @@ window.addEventListener('updateviewarea', function () {
     });
   });
   var href = PDFViewerApplication.getAnchorUrl(location.pdfOpenParams);
+  document.getElementById('viewBookmark').href = href;
+  document.getElementById('secondaryViewBookmark').href = href;
 
   // Update the current bookmark in the browsing history.
   PDFHistory.updateCurrentBookmark(location.pdfOpenParams, location.pageNumber);
