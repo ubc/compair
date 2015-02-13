@@ -38,7 +38,7 @@
 			<ng-include src="'modules/classlist/classlist-enrol-partial.html'"></ng-include>
 		</div>
 	</div>
-	
+
 	<div class="table-responsive">
 		<table class="table table-striped">
 			<thead>
@@ -87,8 +87,9 @@
 					<td><a ng-href="#/user/{{user.user.id}}">{{user.user.displayname}}<a/></td>
 					<td>{{user.user.email}}</td>
 					<td>
-						<select ng-model="user.usertypeforcourse.id" ng-options="r.id as r.name for r in roles"
-								ng-change="enrol(user.user.id, user.usertypeforcourse.id)"></select>
+						<select ng-if="loggedInUserId != user.user.id" ng-model="user.usertypeforcourse.id" ng-options="r.id as r.name for r in roles"
+								ng-change="enrol(user, user.usertypeforcourse.id)"></select>
+						<span ng-if="loggedInUserId == user.user.id">{{ user.usertypeforcourse.name }}</span>
 					</td>
 					<td ng-if="groups.length > 0">
 						<select ng-model="user.groups[0].groups_id" ng-options="g.id as g.name for g in groups"

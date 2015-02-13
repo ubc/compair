@@ -39,12 +39,15 @@ module.factory(
 module.controller(
 	'ClassViewController',
 	function($scope, $log, $routeParams, $route, ClassListResource, CourseResource,
-			 CourseRoleResource, GroupResource, Toaster)
+			 CourseRoleResource, GroupResource, Toaster, Session)
 	{
 		$scope.course = {};
 		$scope.classlist = {};
 		var courseId = $routeParams['courseId'];
 		$scope.courseId = courseId;
+		Session.getUser().then(function(user) {
+			$scope.loggedInUserId = user.id;
+		});
 		CourseResource.getName({'id':courseId}).$promise.then(
 			function (ret) {
 				$scope.course_name = ret['course_name'];
@@ -101,15 +104,15 @@ module.controller(
 			}
 		};
 
-		$scope.enrol = function(userId, usertypeforcourseId) {
+		$scope.enrol = function(user, usertypeforcourseId) {
 			var role = {'usertypesforcourse_id': usertypeforcourseId};
-			ClassListResource.enrol({'courseId': courseId, 'userId': userId}, role).$promise.then(
+			ClassListResource.enrol({'courseId': courseId, 'userId': user.user.id}, role).$promise.then(
 				function (ret) {
 					Toaster.success("User Added", 'Successfully changed '+ ret.user.fullname +'\'s course role to ' + ret.usertypesforcourse.name);
-					$route.reload();
+					user.usertypeforcourse = ret.usertypesforcourse;
 				},
 				function (ret) {
-					Toaster.reqerror("User Add Failed For ID " + userId, ret);
+					Toaster.reqerror("User Add Failed For ID " + user.user.id, ret);
 				}
 			);
 		};
