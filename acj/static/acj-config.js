@@ -23,10 +23,10 @@ var myApp = angular.module('myApp', [
 myApp.config( function ($routeProvider, $logProvider, $httpProvider) {
 	var debugMode = false;
 
-	if (!$httpProvider.defaults.headers.get) {
-		$httpProvider.defaults.headers.get = {};
+	if (!$httpProvider.defaults.headers.common) {
+		$httpProvider.defaults.headers.common = {};
 	}
-	$httpProvider.defaults.headers.get['If-Modified-Since'] = '0';
+	$httpProvider.defaults.headers.common['If-Modified-Since'] = '0';
 
 	$routeProvider
 		.when ('/', 
