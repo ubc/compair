@@ -478,6 +478,21 @@ module.controller("QuestionViewController",
 				}
 			);
 		};
+		
+		// unflag a flagged answer
+		$scope.unflagAnswer = function(answer, course_id, question_id, answer_id) {
+			var params = {'flagged': false};
+			var resultMsg = "Answer Successfully Unflagged";
+			AnswerResource.flagged({'courseId':course_id, 'questionId':question_id, 'answerId':answer_id}, params).$promise.then(
+				function () {
+					answer['flagged'] = false;
+					Toaster.success(resultMsg);
+				},
+				function (ret) {
+					Toaster.reqerror("Unable To Change Flag", ret);
+				}
+			);
+		};
 
 		$scope.deleteComment = function(key, course_id, question_id, comment_id) {
 			QuestionCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'commentId': comment_id}).$promise.then(

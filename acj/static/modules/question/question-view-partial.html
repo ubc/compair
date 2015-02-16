@@ -304,9 +304,12 @@
 						</a>
 						<strong>answered</strong> on {{answer.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 						<div class="manager-actions pull-right" ng-if="canManagePosts || (answer.post.user.id == loggedInUserId && question.answer_period && !question.judging_period)">
-							<span ng-if="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
+							<span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
 								<i class="fa fa-warning"></i>
 								Flagged
+								<a href="" title="Unflag this answer" ng-click="unflagAnswer(answer, courseId, question.id, answer.id)">
+									Unflag?
+								</a>
 							</span>
 							<a href="" confirmation-needed="deleteAnswer(answerKey, courseId, question.id, answer.id)" keyword="answer">
 								<i class="fa fa-trash-o"></i>
