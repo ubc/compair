@@ -35,48 +35,48 @@ module.exports.session = function ($httpBackend, Session, $rootScope) {
 	var current_user = 0;
 	var permission_root = {
 		"Courses": {
-			"create": true,
-			"delete": true,
-			"edit": true,
-			"manage": true,
-			"read": true
+			"create": {'global': true},
+			"delete": {'global': true},
+			"edit": {'global': true},
+			"manage": {'global': true},
+			"read": {'global': true}
 		},
 		"PostsForQuestions": {
-			"create": true,
-			"delete": true,
-			"edit": true,
-			"manage": true,
-			"read": true
+			"create": {'global': true},
+			"delete": {'global': true},
+			"edit": {'global': true},
+			"manage": {'global': true},
+			"read": {'global': true}
 		},
 		"Users": {
-			"create": true,
-			"delete": true,
-			"edit": true,
-			"manage": true,
-			"read": true
+			"create": {'global': true},
+			"delete": {'global': true},
+			"edit": {'global': true},
+			"manage": {'global': true},
+			"read": {'global': true}
 		}
 	};
 	var permission_instructor = {
 		"Courses": {
-			"create": true,
-			"delete": false,
-			"edit": false,
-			"manage": false,
-			"read": false
+			"create": {'global': true},
+			"delete": {'global': false, '1': false, '2': false},
+			"edit": {'global': true, '1': true, '2': true},
+			"manage": {'global': false, '1': false, '2': false},
+			"read": {'global': true, '1': true, '2': true}
 		},
 		"PostsForQuestions": {
-			"create": true,
-			"delete": true,
-			"edit": true,
-			"manage": true,
-			"read": true
+			"create": {'global': true, '1': true, '2': true},
+			"delete": {'global': true, '1': true, '2': true},
+			"edit": {'global': true, '1': true, '2': true},
+			"manage": {'global': true, '1': true, '2': true},
+			"read": {'global': true, '1': true, '2': true}
 		},
 		"Users": {
-			"create": true,
-			"delete": false,
-			"edit": true,
-			"manage": false,
-			"read": true
+			"create": {'global': true},
+			"delete": {'global': false},
+			"edit": {'global': true},
+			"manage": {'global': false},
+			"read": {'global': true}
 		}
 	};
 
