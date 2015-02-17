@@ -33,14 +33,14 @@
 	<label>Add To Available Criteria</label>
 	
 	<div class="row">
-		<div class="form-group col-sm-10">
+		<div class="form-group col-sm-9">
 			<select class="form-control" ng-model="selected" ng-options="key as c.name for (key, c) in availableCriteria">
 				<option value="">- select a default -</option>
 			</select>
 		</div>
 		<div class="col-sm-2">
 			<!-- used length because when list is empty the empty option gets a value of 0 which is valid -->
-			<p><a class="btn btn-small btn-primary" ng-click="add(selected)" ng-disabled="!selected || !availableCriteria.length">Add Selection</a></p>
+			<p><a class="btn btn-small btn-primary" ng-click="add(selected)" ng-disabled="!selected || !availableCriteria.length">Add Selected</a></p>
 		</div>
         </div>
 	<p>OR</p>
