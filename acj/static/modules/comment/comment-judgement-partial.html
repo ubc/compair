@@ -58,7 +58,7 @@
 					<h5 class="content">Comparison for "{{criteria[criterion.criteriaandquestions_id]}}"</h5>
 	
 					<div class="content" mathjax="criterion.content"
-					     ng-bind-html="criterion.content">
+						 ng-bind-html="criterion.content">
 					</div>
 					
 					<!-- Answers -->
@@ -73,10 +73,12 @@
 							<div class="answer-choice clearfix">
 								<h4 class="text-center">Odd-Numbered Answer
 									<span ng-show="criterion.winner == criterion.answer1.id">(Chosen)</span>
-									<span class="label label-warning pull-right score-display">Score: {{ ans[criterion.answer1.id].scores[criterion.criteriaandquestions_id] }}%</span>
+									<span class="label label-warning pull-right score-display" ng-if="ans[criterion.answer1.id]">
+										Score: {{ ans[criterion.answer1.id].scores[criterion.criteriaandquestions_id] }}%</span>
 								</h4>
-								<div mathjax="ans[criterion.answer1.id].content"
+								<div mathjax="ans[criterion.answer1.id].content" ng-if="ans[criterion.answer1.id]"
 									 ng-bind-html="ans[criterion.answer1.id].content"></div>
+								<div ng-if="!ans[criterion.answer1.id]" ng-bind-html="deletedAnsMsg"></div>
 								<!-- Attachments -->
 								<acj-pdf-inline label="See details:" pdfs="ans[criterion.answer1.id].file"></acj-pdf-inline>
 							</div>
@@ -85,10 +87,12 @@
 						<div class="answer-choice clearfix">
 								<h4 class="text-center">Even-Numbered Answer
 									<span ng-show="criterion.winner == criterion.answer2.id">(Chosen)</span>
-									<span class="label label-warning pull-right score-display">Score: {{ ans[criterion.answer2.id].scores[criterion.criteriaandquestions_id] }}%</span>
+									<span class="label label-warning pull-right score-display" ng-if="ans[criterion.answer2.id]">
+										Score: {{ ans[criterion.answer2.id].scores[criterion.criteriaandquestions_id] }}%</span>
 								</h4>
-								<div mathjax="ans[criterion.answer2.id].content"
+								<div mathjax="ans[criterion.answer2.id].content" ng-if="ans[criterion.answer2.id]"
 									 ng-bind-html="ans[criterion.answer2.id].content"></div>
+								<div ng-if="!ans[criterion.answer2.id]" ng-bind-html="deletedAnsMsg"></div>
 								<!-- Attachments -->
 								<acj-pdf-inline label="See details:" pdfs="ans[criterion.answer2.id].file"></acj-pdf-inline>
 							</div>
@@ -115,7 +119,7 @@
 			<div ng-if="comment[0].selfeval">
 				<h5 class="content">Self-Evaluation</h5>
 				<div class="content" mathjax="comment[0].content"
-				     ng-bind-html="comment[0].content">
+					 ng-bind-html="comment[0].content">
 				</div>
 			</div>
 		

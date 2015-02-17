@@ -14,7 +14,6 @@ from .authorization import allow, require
 
 from operator import itemgetter
 from itertools import groupby
-import time	#TODO REMOVE
 
 evalcomments_api = Blueprint('evalcomments_api', __name__)
 api = new_restful_api(evalcomments_api)
@@ -120,11 +119,20 @@ class EvalCommentViewAPI(Resource):
 			replies.setdefault(f.users_id, {}).setdefault(f.answers_id, f.content)
 
 		results = []
+		deleted = '<i>(The feedback has been deleted)</i>'
 		for comment in evalcomments:
 			com = comment.postsforcomments.post
 			judge = comment.judgement
 			user_id = com.users_id
 			fullname = com.user.fullname
+			if user_id in replies and judge.answerpairing.answers_id1 in replies[user_id]:
+				feedback1 = replies[user_id][judge.answerpairing.answers_id1]
+			else:
+				feedback1 = deleted
+			if user_id in replies and judge.answerpairing.answers_id2 in replies[user_id]:
+				feedback2 = replies[user_id][judge.answerpairing.answers_id2]
+			else:
+				feedback2 = deleted
 			temp_comment = {'answer1': {}, 'answer2': {}, 'user_id': user_id, 'selfeval': False}
 			temp_comment['name'] = fullname if fullname else com.user.displayname
 			temp_comment['avatar'] =com.user.avatar
@@ -133,9 +141,9 @@ class EvalCommentViewAPI(Resource):
 			temp_comment['content'] = com.content
 			temp_comment['created'] = com.created
 			temp_comment['answer1']['id'] = judge.answerpairing.answers_id1
-			temp_comment['answer1']['feedback'] = replies[user_id][temp_comment['answer1']['id']]
+			temp_comment['answer1']['feedback'] = feedback1
 			temp_comment['answer2']['id'] = judge.answerpairing.answers_id2
-			temp_comment['answer2']['feedback'] = replies[user_id][temp_comment['answer2']['id']]
+			temp_comment['answer2']['feedback'] = feedback2
 			temp_comment['winner'] = judge.answers_id_winner
 			results.append(temp_comment)
 

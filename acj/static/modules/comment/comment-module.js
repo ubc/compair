@@ -239,6 +239,7 @@ module.controller(
 		$scope.course = {};
 		$scope.courseId = courseId;
 		$scope.questionId = questionId;
+		$scope.deletedAnsMsg = '<i>(The answer has been deleted.)</i>'
 
 		var allStudents = {};
 		var userIds = {};
@@ -259,7 +260,6 @@ module.controller(
 		EvalCommentResource.view({'courseId': courseId, 'questionId': questionId}).$promise.then(
 			function (ret) {
 				$scope.comparisons = ret.comparisons;
-
 			},
 			function (ret) {
 				Toaster.reqerorr('Error', ret);
