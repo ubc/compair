@@ -123,12 +123,13 @@ def get_logged_in_user_permissions():
 		permissions['Courses'].setdefault(operation, {})
 		permissions['Courses'][operation]['global'] = admin
 		for course in courses:
+			courseId = str(course.courses_id)
 			try:
 				ensure(operation, Courses(id=course.courses_id))
-				permissions['Courses'][operation][course.courses_id] = True
+				permissions['Courses'][operation][courseId] = True
 				permissions['Courses'][operation]['global'] = True
-			except:
-				permissions['Courses'][operation][course.courses_id] = False
+			except Unauthorized:
+				permissions['Courses'][operation][courseId] = False
 
 	# post-based models
 	for model_name, model in post_based_models.items():
@@ -137,15 +138,16 @@ def get_logged_in_user_permissions():
 			permissions[model_name].setdefault(operation, {})
 			permissions[model_name][operation]['global'] = admin
 			for course in courses:
+				courseId = str(course.courses_id)
 				try:
 					m = model
 					p = Posts(courses_id = course.courses_id)
 					setattr(m, 'post', p)
 					ensure(operation, m)
-					permissions[model_name][operation][course.courses_id] = True
+					permissions[model_name][operation][courseId] = True
 					permissions[model_name][operation]['global'] = True
 				except Unauthorized:
-					permissions[model_name][operation][course.courses_id] = False
+					permissions[model_name][operation][courseId] = False
 
 	return permissions
 
