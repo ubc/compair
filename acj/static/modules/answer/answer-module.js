@@ -52,7 +52,7 @@ module.controller(
 		$scope.uploader = attachService.getUploader();
 		$scope.resetName = attachService.resetName();
 
-		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(canManagePosts){
+		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL, $scope.courseId).then(function(canManagePosts){
 			$scope.canManagePosts = canManagePosts;
 		});
 		// check how close we are to the deadline
@@ -140,7 +140,7 @@ module.controller(
 		var timer = null;
 		var date = new Date();
 
-		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(canManagePosts){
+		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL, $scope.courseId).then(function(canManagePosts){
 			$scope.canManagePosts = canManagePosts;
 		});
 		// check how close we are to the deadline

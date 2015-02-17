@@ -47,6 +47,7 @@ on_user_get = event.signal('USER_GET')
 on_user_list_get = event.signal('USER_LIST_GET')
 on_user_create = event.signal('USER_CREATE')
 on_user_course_get = event.signal('USER_COURSE_GET')
+on_user_edit_button_get = event.signal('USER_EDIT_BUTTON_GET')
 on_user_password_update = event.signal('USER_PASSWORD_UPDATE')
 on_teaching_course_get = event.signal('TEACHING_COURSE_GET')
 
@@ -67,7 +68,8 @@ class UserAPI(Resource):
 	@login_required
 	def post(self, id):
 		user = Users.query.get_or_404(id)
-		require(EDIT, user)
+		if is_user_access_restricted(user):
+			return {'error':"Sorry, you don't have permission for this action."}, 403
 		params = existing_user_parser.parse_args()
 		# make sure the user id in the url and the id matches
 		if params['id'] != id:
@@ -197,6 +199,29 @@ class UserCourseListAPI(Resource):
 
 		return {'objects': marshal(courses, dataformat.getCourses(include_details=False))}
 
+# /id/edit
+class UserEditButtonAPI(Resource):
+	@login_required
+	def get(self, id):
+		user = Users.query.get_or_404(id)
+		instructor = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_INSTRUCTOR).first().id
+		dropped = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
+		courses = CoursesAndUsers.query.filter_by(users_id=current_user.id, usertypesforcourse_id=instructor).all()
+		available = False
+		if len(courses) > 0:
+			courseIds = [c.courses_id for c in courses]
+			enroled = CoursesAndUsers.query.filter_by(users_id=user.id) \
+				.filter(CoursesAndUsers.courses_id.in_(courseIds), CoursesAndUsers.usertypesforcourse_id!=dropped).count()
+			available = enroled > 0
+
+		on_user_edit_button_get.send(
+			current_app._get_current_object(),
+			event_name=on_user_edit_button_get.name,
+			user=current_user,
+			data={'userId': user.id, 'available': available})
+
+		return {'available': available}
+
 # courses/teaching
 class TeachingUserCourseListAPI(Resource):
 	@login_required
@@ -306,6 +331,7 @@ api = new_restful_api(users_api)
 api.add_resource(UserAPI, '/<int:id>')
 api.add_resource(UserListAPI, '')
 api.add_resource(UserCourseListAPI, '/<int:id>/courses')
+api.add_resource(UserEditButtonAPI, '/<int:id>/edit')
 api.add_resource(TeachingUserCourseListAPI, '/courses/teaching')
 api.add_resource(UserUpdatePasswordAPI, '/password/<int:id>')
 apiT = new_restful_api(user_types_api)

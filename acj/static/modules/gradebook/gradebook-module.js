@@ -61,7 +61,7 @@ module.controller("GradebookController",
 			}
 		);
 
-		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(result) {
+		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL, $scope.courseId).then(function(result) {
 			$scope.canManagePosts = result;
 			if ($scope.canManagePosts) {
 				GroupResource.get({'courseId': $scope.courseId}).$promise.then(

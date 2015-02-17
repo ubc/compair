@@ -5,7 +5,7 @@ from werkzeug.exceptions import Unauthorized, Forbidden
 
 from .models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTypesForSystem, PostsForQuestions, PostsForAnswers, \
 	PostsForAnswersAndPostsForComments, PostsForQuestionsAndPostsForComments, Judgements, Criteria, CriteriaAndCourses, \
-	PostsForJudgements, Groups, GroupsAndUsers, CriteriaAndPostsForQuestions
+	PostsForJudgements, Groups, GroupsAndUsers, CriteriaAndPostsForQuestions, Posts
 
 
 def define_authorization(user, they):
@@ -84,11 +84,16 @@ def define_authorization(user, they):
 def get_logged_in_user_permissions():
 	user = Users.query.get(current_user.id)
 	require(READ, user)
+	droppedId = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
+	courses = CoursesAndUsers.query.filter_by(users_id=current_user.id) \
+		.filter(CoursesAndUsers.usertypesforcourse_id!=droppedId).all()
+	admin = user.usertypeforsystem.name == "System Administrator"
 	permissions = {}
 	models = {
-		Courses.__name__ : Courses,
 		Users.__name__ : Users,
-		PostsForQuestions.__name__: PostsForQuestions
+	}
+	post_based_models = {
+		PostsForQuestions.__name__ : PostsForQuestions()
 	}
 	operations = {
 		MANAGE,
@@ -97,17 +102,50 @@ def get_logged_in_user_permissions():
 		CREATE,
 		DELETE
 	}
+	# global models
 	for model_name, model in models.items():
 		# create entry if not already exists
-		if not model_name in permissions:
-			permissions[model_name] = {}
+		permissions.setdefault(model_name, {})
+		#if not model_name in permissions:
+		#	permissions[model_name] = {}
 		# obtain permission values for each operation
 		for operation in operations:
-			permissions[model_name][operation] = True
+			permissions[model_name][operation] = {'global': True}
 			try:
 				ensure(operation, model)
 			except Unauthorized:
-				permissions[model_name][operation] = False
+				permissions[model_name][operation]['global'] = False
+	# course model
+	# model_name / operation / courseId OR global
+	permissions['Courses'] = {CREATE: {'global': allow(CREATE, Courses)}}
+	mod_operations = {MANAGE, READ, EDIT, DELETE}
+	for operation in mod_operations:
+		permissions['Courses'].setdefault(operation, {})
+		permissions['Courses'][operation]['global'] = admin
+		for course in courses:
+			try:
+				ensure(operation, Courses(id=course.courses_id))
+				permissions['Courses'][operation][course.courses_id] = True
+				permissions['Courses'][operation]['global'] = True
+			except:
+				permissions['Courses'][operation][course.courses_id] = False
+
+	# post-based models
+	for model_name, model in post_based_models.items():
+		permissions.setdefault(model_name, {})
+		for operation in operations:
+			permissions[model_name].setdefault(operation, {})
+			permissions[model_name][operation]['global'] = admin
+			for course in courses:
+				try:
+					m = model
+					p = Posts(courses_id = course.courses_id)
+					setattr(m, 'post', p)
+					ensure(operation, m)
+					permissions[model_name][operation][course.courses_id] = True
+					permissions[model_name][operation]['global'] = True
+				except Unauthorized:
+					permissions[model_name][operation][course.courses_id] = False
 
 	return permissions
 

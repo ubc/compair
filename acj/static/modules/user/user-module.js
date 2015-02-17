@@ -17,7 +17,8 @@ module.factory('UserResource', function($resource) {
 				method: 'GET',
 				url: '/api/users/:id/courses'
 			},
-			'getTeachingUserCourses': {url: '/api/users/courses/teaching'}
+			'getTeachingUserCourses': {url: '/api/users/courses/teaching'},
+			'getEditButton': {url: '/api/users/:id/edit'}
 		}
 	);
 	User.MODEL = "Users";
@@ -102,7 +103,7 @@ module.controller("UserEditController",
 		Session.getUser().then(function(user) {
 			$scope.ownProfile = userId == user.id;
 		});
-		$scope.user = {}
+		$scope.user = {};
 		$scope.usertypes = {};
 		$scope.create = false;
 		UserTypeResource.query(
@@ -184,7 +185,15 @@ module.controller("UserViewController",
 		Session.getUser().then(function(user) {
 			$scope.ownProfile = userId == user.id;
 		});
-		$scope.user = {}
+		$scope.user = {};
+		UserResource.getEditButton({"id":userId}).$promise.then(
+			function (ret) {
+				$scope.showEditButton = ret.available;
+			},
+			function (ret) {
+				Toaster.reqerror("The Edit Button is Unavailable.", ret);
+			}
+		);
 		UserResource.get({"id":userId}).$promise.then(
 			function (ret) {
 				$scope.user = ret;

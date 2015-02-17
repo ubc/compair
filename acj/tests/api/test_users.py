@@ -457,11 +457,38 @@ class UsersAPITests(ACJTestCase):
 		self.assertEqual(types[2]['name'], UserTypesForCourse.TYPE_STUDENT)
 		self.logout()
 
+	def test_get_edit_button(self):
+		url = '/api/users/' + str(self.data.get_authorized_student().id) + '/edit'
+
+		# test login required
+		rv = self.client.get(url)
+		self.assert401(rv)
+
+		# test invalid user id
+		self.login(self.data.get_unauthorized_student().username)
+		invalid_url = '/api/users/999/edit'
+		rv = self.client.get(invalid_url)
+		self.assert404(rv)
+
+		# test unavailable button
+		rv = self.client.get(url)
+		self.assert200(rv)
+		self.assertFalse(rv.json['available'])
+		self.logout()
+
+		# test available button
+		self.login(self.data.get_authorized_instructor().username)
+		rv = self.client.get(url)
+		self.assert200(rv)
+		self.assertTrue(rv.json['available'])
+		self.logout()
+
 	def _verify_permissions(self, userid, permissions):
 		user = Users.query.get(userid)
 		with self.app.app_context():
 			# can't figure out how to get into logged in app context, so just force a login here
 			login_user(user, force=True)
+			admin = user.usertypeforsystem.name == 'System Administrator'
 			for model_name, operations in permissions.items():
 				for operation, permission in operations.items():
 					expected = True
@@ -469,7 +496,8 @@ class UsersAPITests(ACJTestCase):
 						ensure(operation, model_name)
 					except Unauthorized:
 						expected = False
-					self.assertEqual(permission, expected,
+					expected = expected or admin
+					self.assertEqual(permission['global'], expected,
 									 "Expected permission " + operation + " on " +  model_name + " to be " + str(expected))
 			# undo the forced login earlier
 			logout_user()

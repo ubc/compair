@@ -198,13 +198,13 @@ module.controller(
 		$scope.answered = {};
 		$scope.count = {};
 		$scope.filters = [];
-		Authorize.can(Authorize.CREATE, QuestionResource.MODEL).then(function(result) {
+		Authorize.can(Authorize.CREATE, QuestionResource.MODEL, courseId).then(function(result) {
 				$scope.canCreateQuestions = result;
 		});
-		Authorize.can(Authorize.EDIT, CourseResource.MODEL).then(function(result) {
+		Authorize.can(Authorize.EDIT, CourseResource.MODEL, courseId).then(function(result) {
 				$scope.canEditCourse = result;
 		});
-		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function(result) {
+		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL, courseId).then(function(result) {
 				$scope.canManagePosts = result;
 				$scope.filters.push('All course questions');
 				if ($scope.canManagePosts) {

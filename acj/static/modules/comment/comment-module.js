@@ -140,11 +140,11 @@ module.controller(
 	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource,
 			  QuestionResource, Authorize, Toaster)
 	{
-		var courseId = $scope.courseId = $routeParams['courseId']
+		var courseId = $scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
 		var answerId = $routeParams['answerId'];
 		$scope.canManagePosts = 
-			Authorize.can(Authorize.MANAGE, QuestionResource.MODEL);
+			Authorize.can(Authorize.MANAGE, QuestionResource.MODEL, courseId);
 		$scope.comment = {};
 
 		AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId}).$promise.then(

@@ -16,12 +16,14 @@ var module = angular.module('ubc.ctlt.acj.authorization',
 module.factory('Authorize',
 	function($log, $q, $cookieStore, Session)
 	{
-		var _allow_operation = function(operation, resource, permissions) {
+		var _allow_operation = function(operation, resource, courseId, permissions) {
 			if (resource in permissions)
 			{
 				if (operation in permissions[resource])
 				{
-					return permissions[resource][operation];
+					if (courseId in permissions[resource][operation]) {
+						return permissions[resource][operation][courseId];
+					}
 				}
 			}
 			return false;
@@ -33,7 +35,7 @@ module.factory('Authorize',
 			READ: "read",
 			EDIT: "edit",
 			DELETE: "delete",
-			can: function(operation, resource) {
+			can: function(operation, resource, courseId) {
 				return Session.getUser().then(function(user) {
                     if (user == null) {
                         return $q.when(false);
@@ -45,7 +47,8 @@ module.factory('Authorize',
                     }
 
                     return Session.getPermissions().then(function(permissions) {
-                        return $q.when(_allow_operation(operation, resource, permissions));
+						var course_id = courseId || 'global';
+                        return $q.when(_allow_operation(operation, resource, course_id, permissions));
                     });
                 });
 			}
