@@ -191,7 +191,7 @@
 			<div class="all-answers">
 			
 				<!-- Instructor Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers | filter:adminFilter()" ng-if="instructors[answer.post.user.id] && (see_answers || canManagePosts)">
+				<div class="each-answer clearfix" ng-repeat="answer in answers | filter:adminFilter()" ng-if="instructors[answer.post.user.id] && (see_answers || canManagePosts)">
 					
 					<!-- Instructor Answer Metadata Header -->
 					<div class="each-header clearfix">
@@ -207,7 +207,7 @@
 						<span class="label label-info" ng-if="instructors[answer.post.user.id]">{{instructors[answer.post.user.id]}}&nbsp;</span>
 						<strong>said</strong>:
 						<div class="manager-actions pull-right" ng-if="canManagePosts">
-							<a href="" confirmation-needed="deleteAnswer(answerKey, courseId, question.id, answer.id)" keyword="instructor answer">
+							<a href="" confirmation-needed="deleteAnswer(answer, courseId, question.id, answer.id)" keyword="instructor answer">
 								<i class="fa fa-trash-o"></i>
 							</a>
 							<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit">
@@ -261,7 +261,7 @@
 								</span>
 								<strong>replied</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 								<div class="manager-actions pull-right" ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId">
-									<a href="" confirmation-needed="deleteReply(answerKey, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
+									<a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
 										<i class="fa fa-trash-o"></i>
 									</a>
 									<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
@@ -286,7 +286,7 @@
 				</div><!-- closes each-answer (instructor) -->
 				
 				<!-- Student Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers | filter:groupFilter() | orderBy:order:reverse | notScoredEnd:grade.sortby as results" ng-if="!instructors[answer.post.user.id] && (see_answers || answer.post.user.id == loggedInUserId || canManagePosts)">
+				<div class="each-answer clearfix" ng-repeat="answer in answers | filter:groupFilter() | orderBy:order:reverse | notScoredEnd:grade.sortby as results" ng-if="!instructors[answer.post.user.id] && (see_answers || answer.post.user.id == loggedInUserId || canManagePosts)">
 				<!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.post.user.id] && (see_answers || (answer.post.user.id == loggedInUserId && question.answer_period) || canManagePosts)"> -->
 					<!-- Student Answer Metadata Header -->
 					<div class="each-header clearfix">
@@ -311,7 +311,7 @@
 									Unflag?
 								</a>
 							</span>
-							<a href="" confirmation-needed="deleteAnswer(answerKey, courseId, question.id, answer.id)" keyword="answer">
+							<a href="" confirmation-needed="deleteAnswer(answer, courseId, question.id, answer.id)" keyword="answer">
 								<i class="fa fa-trash-o"></i>
 							</a>
 							<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit">
@@ -360,7 +360,7 @@
 
 					<div ng-show="showReplies">
 
-						<div ng-repeat="comment in answer.comments" class="each-reply" ng-if="see_answers || canManagePosts">
+						<div ng-repeat="(commentKey, comment) in answer.comments" class="each-reply" ng-if="see_answers || canManagePosts">
 
 							<hr ng-hide="$first" />
 
@@ -383,7 +383,7 @@
 								<strong ng-if="!comment.evaluation && !comment.selfeval">replied <span ng-if="canManagePosts || answer.post.user.id == loggedInUserId" class="label label-info">Public</span></strong>
 								on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 								<div class="manager-actions pull-right" ng-if="canManagePosts || (comment.postsforcomments.post.user.id == loggedInUserId && !(comment.selfeval || comment.evaluation))">
-									<a href="" confirmation-needed="deleteReply(answerKey, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
+									<a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
 										<i class="fa fa-trash-o"></i>
 									</a>
 									<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">

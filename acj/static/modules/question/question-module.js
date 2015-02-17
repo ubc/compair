@@ -461,12 +461,12 @@ module.controller("QuestionViewController",
 			);
 		};
 
-		$scope.deleteAnswer = function(key, course_id, question_id, answer_id) {
+		$scope.deleteAnswer = function(answer, course_id, question_id, answer_id) {
 			AnswerResource.delete({'courseId':course_id, 'questionId':question_id, 'answerId':answer_id}).$promise.then(
 				function (ret) {
 					Toaster.success("Answer Delete Successful", "Successfully deleted answer "+ ret.id);
-					var authorId = $scope.answers[key]['post']['user']['id'];
-					$scope.answers.splice(key, 1);
+					var authorId = answer['post']['user']['id'];
+					$scope.answers.splice($scope.answers.indexOf(answer), 1);
 					$scope.question.answers_count -= 1;
 					if ($scope.loggedInUserId == authorId) {
 						myAnsCount--;
@@ -507,11 +507,11 @@ module.controller("QuestionViewController",
 			);
 		};
 
-		$scope.deleteReply = function(answerKey, commentKey, course_id, question_id, answer_id, comment_id) {
+		$scope.deleteReply = function(answer, commentKey, course_id, question_id, answer_id, comment_id) {
 			AnswerCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'answerId': answer_id, 'commentId': comment_id}).$promise.then(
 				function (ret) {
 					Toaster.success("Reply Delete Successful", "Successfully deleted reply " + ret.id);
-					$scope.answers[answerKey]['comments'].splice(commentKey, 1);
+					answer['comments'].splice(commentKey, 1);
 				},
 				function (ret) {
 					Toaster.reqerror("Reply Delete Failed", ret);

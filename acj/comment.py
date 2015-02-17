@@ -145,6 +145,7 @@ class QuestionCommentIdAPI(Resource):
 	def delete(self, course_id, question_id, comment_id):
 		comment = PostsForQuestionsAndPostsForComments.query.get_or_404(comment_id)
 		require(DELETE, comment)
+		data = marshal(comment, dataformat.getPostsForQuestionsAndPostsForComments(False))
 		db.session.delete(comment)
 		db.session.commit()
 
@@ -153,7 +154,7 @@ class QuestionCommentIdAPI(Resource):
 			event_name=on_comment_delete.name,
 			user=current_user,
 			course_id=course_id,
-			data=marshal(comment, dataformat.getPostsForQuestionsAndPostsForComments(False)))
+			data=data)
 
 		return {'id': comment.id}
 apiQ.add_resource(QuestionCommentIdAPI, '/<int:comment_id>')
@@ -261,6 +262,7 @@ class AnswerCommentIdAPI(Resource):
 	def delete(self, course_id, question_id, answer_id, comment_id):
 		comment = PostsForAnswersAndPostsForComments.query.get_or_404(comment_id)
 		require(DELETE, comment)
+		data = marshal(comment, dataformat.getPostsForAnswersAndPostsForComments(False))
 		db.session.delete(comment)
 		db.session.commit()
 
@@ -269,7 +271,7 @@ class AnswerCommentIdAPI(Resource):
 			event_name=on_answer_comment_delete.name,
 			user=current_user,
 			course_id=course_id,
-			data=marshal(comment, dataformat.getPostsForAnswersAndPostsForComments(False)))
+			data=data)
 
 		return {'id': comment.id}
 
