@@ -229,19 +229,19 @@
 					
 					<!-- Instructor Answer Replies Section -->
 					<a href="" ng-click="showReplies = !showReplies">			
-						<h3 class="reply-heading" ng-if="answer.comments.length">
+						<h3 class="reply-heading" ng-if="instResults.length">
 							<i class="fa fa-chevron-down" ng-show="showReplies"></i>
 							<i class="fa fa-chevron-right" ng-hide="showReplies"></i>
-							{{answer.comments.length}}
-							<span ng-if="answer.comments.length == 1">reply</span>
-							<span ng-if="answer.comments.length > 1">replies</span>
+							{{instResults.length}}
+							<span ng-if="instResults.length == 1">reply</span>
+							<span ng-if="instResults.length > 1">replies</span>
 							to instructor's answer
 						</h3>
 					</a>
 					
 					<div ng-show="showReplies">
 						
-						<div ng-repeat="(commentKey, comment) in answer.comments" class="each-reply" >
+						<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer) as instResults" class="each-reply" >
 							
 							<hr ng-hide="$first" />
 							
@@ -347,12 +347,12 @@
 
 					<!-- Student Answer Replies Section -->
 					<a href="" ng-click="showReplies = !showReplies">
-						<h3 class="reply-heading" ng-if="answer.comments.length && (see_answers || canManagePosts)">
+						<h3 class="reply-heading" ng-if="studentResults.length && (see_answers || canManagePosts)">
 							<i class="fa fa-chevron-down" ng-show="showReplies"></i>
 							<i class="fa fa-chevron-right" ng-hide="showReplies"></i>
-							{{answer.comments.length}}
-							<span ng-if="answer.comments.length == 1">reply</span>
-							<span ng-if="answer.comments.length > 1">replies</span>
+							{{studentResults.length}}
+							<span ng-if="studentResults.length == 1">reply</span>
+							<span ng-if="studentResults.length > 1">replies</span>
 							to this answer
 							<span ng-if="canManagePosts || answer.post.user.id == loggedInUserId">({{ answer.private_comments_count }} private, {{ answer.public_comments_count }} public)</span>
 						</h3>
@@ -360,7 +360,7 @@
 
 					<div ng-show="showReplies">
 
-						<div ng-repeat="(commentKey, comment) in answer.comments" class="each-reply" ng-if="see_answers || canManagePosts">
+						<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer) as studentResults" class="each-reply" ng-if="see_answers || canManagePosts">
 
 							<hr ng-hide="$first" />
 

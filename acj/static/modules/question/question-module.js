@@ -422,6 +422,14 @@ module.controller("QuestionViewController",
 			}
 		};
 
+		$scope.commentFilter = function(answer) {
+			return function (comment) {
+				// can see if canManagePosts OR their own answer OR not from evaluation and selfeval
+				return $scope.canManagePosts || answer.post.user.id == $scope.loggedInUserId ||
+					!(comment.evaluation || comment.selfeval);
+			}
+		};
+
 		var tab = 'answers';
 		// tabs: answers, help, participation
 		$scope.setTab = function(name) {
