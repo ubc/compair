@@ -111,8 +111,6 @@ module.controller(
 						// if answer period is not in session
 						if (ret.status == '403' && 'error' in ret.data) {
 							Toaster.error(ret.data.error);
-							$location.path('/course/' + $scope.courseId + '/question/' +
-								questionId);
 						} else {
 							Toaster.reqerror("Answer Save Failed.", ret);
 						}
@@ -217,8 +215,6 @@ module.controller(
 					// if answer period is not in session
 					if (ret.status == '403' && 'error' in ret.data) {
 						Toaster.error(ret.data.error);
-						$location.path('/course/' + $scope.courseId + '/question/' +
-							questionId);
 					} else {
 						Toaster.reqerror("Answer Save Failed.", ret);
 					}

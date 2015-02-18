@@ -50,6 +50,8 @@ on_user_question_answered_count = event.signal('USER_QUESTION_ANSWERED_COUNT')
 on_user_course_answered_count = event.signal('USER_COURSE_ANSWERED_COUNT')
 on_answer_view_count = event.signal('ANSWER_VIEW_COUNT')
 
+answer_deadline_message = 'Answer deadline has passed.'
+
 # /
 class AnswerRootAPI(Resource):
 	#TODO pagination
@@ -77,7 +79,7 @@ class AnswerRootAPI(Resource):
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		if not question.answer_grace and not allow(MANAGE, question):
-			return {'error':'Answer Period is not in session.'}, 403
+			return {'error':answer_deadline_message}, 403
 		post = Posts(courses_id=course_id)
 		answer = PostsForAnswers(post=post, questions_id=question_id)
 		require(CREATE, answer)
@@ -128,7 +130,7 @@ class AnswerIdAPI(Resource):
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		if not question.answer_grace and not allow(MANAGE, question):
-			return {'error':'Answer Period is not in session.'}, 403
+			return {'error':answer_deadline_message}, 403
 		answer = PostsForAnswers.query.get_or_404(answer_id)
 		require(EDIT, answer)
 		params = existing_answer_parser.parse_args()
