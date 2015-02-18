@@ -519,7 +519,12 @@ module.controller("QuestionViewController",
 			AnswerCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'answerId': answer_id, 'commentId': comment_id}).$promise.then(
 				function (ret) {
 					Toaster.success("Reply Delete Successful", "Successfully deleted reply " + ret.id);
-					answer['comments'].splice(commentKey, 1);
+					var comment = answer['comments'].splice(commentKey, 1);
+					if (comment['evaluation'] || comment['selfeval']) {
+						answer.private_comments_count--;
+					} else {
+						answer.public_comments_count--;
+					}
 				},
 				function (ret) {
 					Toaster.reqerror("Reply Delete Failed", ret);
