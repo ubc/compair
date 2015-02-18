@@ -166,12 +166,32 @@
     
     }//closes each-reply
     
-    /* class  used on ALL main content divs (answers, replies, comments) */
+    /* class  used on ALL main content divs (answers, replies, comments, comparisons) */
     .content {
       margin: 1em 0 1.5em 0;
       color: #333;
       font-size: 1.15em;
     }
+    
+    /* each evaluation matches look of each answer/comment/etc. elsewhere */
+    .each-evaluation {
+      
+      padding: 1em 1em 2em 1em;
+      border-bottom: 1px solid @border-gray;
+      
+      /* headings for comparison/feedback/self-evaluation inside each evaluation */
+      h5 {
+        padding-bottom: .3em;
+        color: #888;
+        font-size: 1em;
+        border-bottom: 2px solid @border-gray;
+      }
+      
+    }//closes each-evaluation
+    
+      .each-evaluation:nth-child(even){
+        background: @bkgrd-gray;
+      }
     
   }//closes tab-content
   

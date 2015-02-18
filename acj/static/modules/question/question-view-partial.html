@@ -106,7 +106,10 @@
 		<a ng-click="setTab('help')" href="">Help</a>
 	  </li>
 	  <li ng-show="canManagePosts" id="participation" ng-class="{active:showTab('participation')}">
-		  <a ng-click="setTab('participation')" href="">Participation</a>
+		<a ng-click="setTab('participation')" href="">Participation</a>
+	  </li>
+	  <li ng-show="!canManagePosts && (evaluation + selfEval > 0)" id="comparisons" ng-class="{active:showTab('comparisons')}">
+		<a ng-click="setTab('comparisons')" href="">Your Comparisons</a>
 	  </li>
 	</ul>
 	
@@ -475,9 +478,70 @@
 			
 		</div><!-- closes comments-tab -->
 
+		<div class="tab-pane" ng-class="{active: showTab('comparisons')}" id="comparisons-tab">
+		
+			<!-- Comparisons Tab Header -->
+			<div class="tab-header">
+				<div>
+					<h2>Your comparisons</h2>
+					<p class="intro-text">Comparisons you have submitted for this question appear below.</p>
+				</div>
+			</div>
+			
+			<!-- Comparisons Section -->
+			<div class="each-evaluation" ng-repeat="comment in comparisons">
+				
+				<!-- Comparison Header -->
+				<div class="each-header">
+					<a ng-href="#/user/{{ comment[0].user_id }}">
+						<img src="//www.gravatar.com/avatar/{{ comment[0].avatar }}?s=32&d=retro" />
+					</a>
+					You
+					<strong>submitted</strong> on {{ comment[0].created | amDateFormat: 'MMM D @ h:mm a'}}:
+				</div>
+				
+				<div ng-if="!comment[0].selfeval">
+					
+					<div ng-repeat="criterion in comment">
+						
+						<h5 class="content">Comparison for "{{evalcriteria[criterion.criteriaandquestions_id]}}"</h5>
+						
+						<div class="content" mathjax="criterion.content"
+							ng-bind-html="criterion.content">
+						</div>
+						
+					</div>
+					
+					<h5 class="content">Feedback for Odd-Numbered Answer</h5>
+					
+					<!-- feedback for odd-numbered answer -->
+					<div class="content" mathjax="comment[0].answer1.feedback"
+						ng-bind-html="comment[0].answer1.feedback">
+					</div>
+					
+					<h5 class="content">Feedback for Even-Numbered Answer</h5>
+					
+					<!-- feedback for even-numbered answer -->
+					<div class="content" mathjax="comment[0].answer2.feedback"
+						ng-bind-html="comment[0].answer2.feedback"></div>
+						
+				</div>
+				
+				<div ng-if="comment[0].selfeval">
+					<h5 class="content">Self-Evaluation</h5>
+					<div class="content" mathjax="comment[0].content"
+						ng-bind-html="comment[0].content">
+					</div>
+				</div>
+				
+			</div><!-- closes each-evaluation -->
+			
+		</div><!-- closes comparisons-tab -->
+		
 		<div class="tab-pane" ng-class="{active: showTab('participation')}" id="participation-tab" ng-if="canManagePosts && showTab('participation')">
 			<ng-include src="'modules/gradebook/gradebook-partial.html'"></ng-include>
 		</div><!-- closes gradebook-tab -->
 
 	</div><!-- closes tab-content -->
+	
 </div>

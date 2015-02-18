@@ -119,7 +119,7 @@ class EvalCommentViewAPI(Resource):
 			replies.setdefault(f.users_id, {}).setdefault(f.answers_id, f.content)
 
 		results = []
-		deleted = '<i>(The feedback has been deleted)</i>'
+		deleted = '<i>(This feedback has been deleted)</i>'
 		for comment in evalcomments:
 			com = comment.postsforcomments.post
 			judge = comment.judgement

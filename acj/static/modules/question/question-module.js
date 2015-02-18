@@ -223,7 +223,7 @@ module.filter("notScoredEnd", function () {
 /***** Controllers *****/
 module.controller("QuestionViewController",
 	function($scope, $log, $routeParams, $location, AnswerResource, Authorize, QuestionResource, QuestionCommentResource,
-			 AttachmentResource, CoursesCriteriaResource, JudgementResource, CourseResource, required_rounds, Session, Toaster,
+			 AttachmentResource, CoursesCriteriaResource, JudgementResource, EvalCommentResource, CourseResource, required_rounds, Session, Toaster,
 			AnswerCommentResource, GroupResource)
 	{
 		$scope.courseId = $routeParams['courseId'];
@@ -284,6 +284,11 @@ module.controller("QuestionViewController",
 					$scope.criteria = ret.question.criteria;
 					$scope.criteriaChange();
 					$scope.reverse = true;
+					
+					$scope.evalcriteria = {};
+					angular.forEach(ret.question.criteria, function(criterion, key){
+						$scope.evalcriteria[criterion['id']] = criterion['criterion']['name'];
+					});
 
 					$scope.readDate = Date.parse(ret.question.post.created);
 
@@ -364,7 +369,14 @@ module.controller("QuestionViewController",
 					Toaster.reqerror("Answers Not Found", ret);
 				}
 		);
-
+		EvalCommentResource.view({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
+			function (ret) {
+				$scope.comparisons = ret.comparisons;
+			},
+			function (ret) {
+				Toaster.reqerorr('Error', ret);
+			}
+		);
 		CourseResource.getInstructorsLabels({'id': $scope.courseId}).$promise.then(
 			function (ret) {
 				$scope.instructors = ret.instructors;
@@ -431,7 +443,7 @@ module.controller("QuestionViewController",
 		};
 
 		var tab = 'answers';
-		// tabs: answers, help, participation
+		// tabs: answers, help, participation, comparisons
 		$scope.setTab = function(name) {
 			tab = name;
 		};

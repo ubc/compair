@@ -239,7 +239,7 @@ module.controller(
 		$scope.course = {};
 		$scope.courseId = courseId;
 		$scope.questionId = questionId;
-		$scope.deletedAnsMsg = '<i>(The answer has been deleted.)</i>'
+		$scope.deletedAnsMsg = '<i>(This answer has been deleted.)</i>'
 
 		var allStudents = {};
 		var userIds = {};
