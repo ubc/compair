@@ -255,6 +255,13 @@ module.controller(
 							ques['warning'] = (required - judged[ques.id]) > ques['eval_left'];
 							// number of evaluations left to complete minus number of available
 							ques['leftover'] = ques['left'] - ques['eval_left'];
+							// if evaluation period is set answers can be seen after it ends
+							if (ques['judge_end']) {
+								ques['answers_available'] = ques['after_judging'];
+							// if an evaluation period is NOT set - answers can be seen after req met
+							} else {
+								ques['answers_available'] = ques['after_judging'] && ques['left'] < 1;
+							}
 						}
 					},
 					function (ret) {
