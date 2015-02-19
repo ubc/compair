@@ -13,7 +13,7 @@ down_revision = '2fe3d8183c34'
 import logging
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import UniqueConstraint, exc
 from sqlalchemy.sql import text
 
 from acj.models import convention
@@ -23,7 +23,11 @@ def upgrade():
 	try:
 		with op.batch_alter_table('Criteria', naming_convention=convention,
 								  table_args=(UniqueConstraint('name'))) as batch_op:
-			batch_op.drop_constraint('uq_Criteria_name', type_='unique')
+				batch_op.drop_constraint('uq_Criteria_name', type_='unique')
+	except exc.InternalError:
+		with op.batch_alter_table('Criteria', naming_convention=convention,
+								  table_args=(UniqueConstraint('name'))) as batch_op:
+				batch_op.drop_constraint('name', type_='unique')
 	except ValueError:
 		logging.warn('Drop unique constraint is not support for SQLite, dropping uq_Critiera_name ignored!')
 
