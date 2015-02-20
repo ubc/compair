@@ -31,17 +31,16 @@ CKEDITOR.dialog.add('combinedmath', function( editor ) {
 							MathJax.Hub.Queue(
 								["Typeset", MathJax.Hub, previewDiv]);
 						},
+						setMathexp: function(mathexp) {
+							this.setValue(mathexp);
+							this.refreshPreview(mathexp);
+						},
 						// called when loading an existing math element
 						// have to load the existing data into the textarea
 						setup: function( widget ) {
 							if (widget.data.mathexp && 
 								widget.data.mode=='ascii') {
-								this.setValue(widget.data.mathexp);
-								this.refreshPreview(widget.data.mathexp);
-							} else {
-								this.getInputElement().setValue('a^2+b^2=c^2');
-								this.refreshPreview(
-									this.getInputElement().getValue());
+								this.setMathexp(widget.data.mathexp);
 							}
 						},
 						// called when the user clicks "OK" on the element
@@ -52,6 +51,17 @@ CKEDITOR.dialog.add('combinedmath', function( editor ) {
 								widget.setData('mode', 'ascii');
 								widget.setData( 'mathexp', this.getValue());
 							}
+						}
+					},
+					{
+						type: 'button',
+						id: 'asciimathExampleBtn',
+						label: 'Load Example',
+						onClick: function() {
+							asciimathElem = this.getDialog().getContentElement(
+								'asciimath', 'equation-asciimath');
+							asciimathElem.setMathexp('a^2+b^2=c^2');
+							asciimathElem.focus();
 						}
 					},
 					{
@@ -96,18 +106,18 @@ CKEDITOR.dialog.add('combinedmath', function( editor ) {
 							MathJax.Hub.Queue(
 								["Typeset", MathJax.Hub, previewDiv]);
 						},
+						setMathexp: function(mathexp) {
+							this.setValue(mathexp);
+							this.refreshPreview(mathexp);
+						},
 						// called when loading an existing math element
 						// have to load the existing data into the textarea
 						setup: function( widget ) {
 							if (widget.data.mathexp && widget.data.mode=='tex') {
-								this.setValue(widget.data.mathexp);
-								this.refreshPreview(widget.data.mathexp);
+								this.setMathexp(widget.data.mathexp);
 								this.selectParentTab();
-							} else {
-								this.getInputElement().setValue('\\frac{d}{dx} \\int_{a}^{x}f(s) ds = f(x)');
-								this.refreshPreview(
-									this.getInputElement().getValue());
-							}
+								this.focus()
+							} 
 						},
 						// called when the user clicks "OK" on the element
 						// need to save the data user entered so that it is
@@ -117,6 +127,18 @@ CKEDITOR.dialog.add('combinedmath', function( editor ) {
 								widget.setData('mode', 'tex');
 								widget.setData( 'mathexp', this.getValue());
 							}
+						}
+					},
+					{
+						type: 'button',
+						id: 'texmathExampleBtn',
+						label: 'Load Example',
+						onClick: function() {
+							texmathElem = this.getDialog().getContentElement(
+								'texmath', 'equation-texmath');
+							texmathElem.setMathexp(
+								'\\frac{d}{dx} \\int_{a}^{x}f(s) ds = f(x)');
+							texmathElem.focus();
 						}
 					},
 					{
