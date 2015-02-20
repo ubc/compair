@@ -1,4 +1,28 @@
 CKEDITOR.dialog.add('combinedmath', function( editor ) {
+	// For the onLoad handler, sets up automatic preview when user stops typing
+	var automaticPreview = function(that) {
+		var stillTyping = false;
+		var hasTimeout = false;
+		var timeoutHandler = function() {
+			if (stillTyping) {
+				stillTyping = false;
+				setTimeout(timeoutHandler, 1000);
+			}
+			else {
+				hasTimeout = false;
+				that.refreshPreview(
+					that.getInputElement().getValue());
+			}
+		};
+		// only want 1 timeout in process at a time
+		that.getInputElement().on( 'keyup', function() {
+			if (hasTimeout) stillTyping = true;
+			else {
+				hasTimeout = true;
+				setTimeout(timeoutHandler, 1000);
+			}
+		});
+	};
     return {
         title: 'Edit Math Expression',
         minWidth: 200,
@@ -15,11 +39,7 @@ CKEDITOR.dialog.add('combinedmath', function( editor ) {
 						// called when this dialog is first created
 						// need to setup the automatic preview refresh
 						onLoad: function() {
-							var that = this;
-							this.getInputElement().on( 'keyup', function() {
-								that.refreshPreview(
-									that.getInputElement().getValue());
-							});
+							automaticPreview(this);
 						},
 						// helper method to refresh the preview math rendered
 						refreshPreview: function(mathexp) {
@@ -90,11 +110,7 @@ CKEDITOR.dialog.add('combinedmath', function( editor ) {
 						// called when this dialog is first created
 						// need to setup the automatic preview refresh
 						onLoad: function() {
-							var that = this;
-							this.getInputElement().on( 'keyup', function() {
-								that.refreshPreview(
-									that.getInputElement().getValue());
-							});
+							automaticPreview(this);
 						},
 						// helper method to refresh the preview math rendered
 						refreshPreview: function(mathexp) {
