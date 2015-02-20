@@ -1,12 +1,13 @@
 CKEDITOR.dialog.add('combinedmath', function( editor ) {
 	// For the onLoad handler, sets up automatic preview when user stops typing
 	var automaticPreview = function(that) {
+		var duration = 1000;
 		var stillTyping = false;
 		var hasTimeout = false;
 		var timeoutHandler = function() {
 			if (stillTyping) {
 				stillTyping = false;
-				setTimeout(timeoutHandler, 1000);
+				setTimeout(timeoutHandler, duration);
 			}
 			else {
 				hasTimeout = false;
@@ -19,10 +20,20 @@ CKEDITOR.dialog.add('combinedmath', function( editor ) {
 			if (hasTimeout) stillTyping = true;
 			else {
 				hasTimeout = true;
-				setTimeout(timeoutHandler, 1000);
+				setTimeout(timeoutHandler, duration);
 			}
 		});
 	};
+	// both asciimath and texmath needs a way to refresh the math preview render
+	var refreshPreview = function(that, mathtype, mathexp) {
+		var previewDiv = that.getDialog().
+			getContentElement(mathtype, mathtype+'preview').getInputElement();
+		previewDiv.setText('`' + mathexp + '`');
+		MathJax.Hub.Queue(
+			["Typeset", MathJax.Hub, previewDiv.$]);
+
+	};
+	// the actual dialog configurate for the combined math plugin
     return {
         title: 'Edit Math Expression',
         minWidth: 200,
@@ -43,14 +54,10 @@ CKEDITOR.dialog.add('combinedmath', function( editor ) {
 						},
 						// helper method to refresh the preview math rendered
 						refreshPreview: function(mathexp) {
-							var previewDiv = document.
-								getElementById("asciimathPreview");
-							var element = CKEDITOR.dom.element.
-								get(previewDiv);
-							element.setText('`' + mathexp + '`');
-							MathJax.Hub.Queue(
-								["Typeset", MathJax.Hub, previewDiv]);
+							refreshPreview(this, 'asciimath', mathexp);
 						},
+						// loads an existing math expression into the textarea
+						// and refreshes the preview
 						setMathexp: function(mathexp) {
 							this.setValue(mathexp);
 							this.refreshPreview(mathexp);
@@ -84,10 +91,23 @@ CKEDITOR.dialog.add('combinedmath', function( editor ) {
 							asciimathElem.focus();
 						}
 					},
+					// Preview labels and div are separated for convenience.
+					// Due to the fact there may be multiple CKEditor
+					// instances, we can't rely on static IDs to retrieve the
+					// preview window div to change values on it. So we have to
+					// use CKEditor's built in mechanism for giving each
+					// elements unique IDs. Since this only works on the first
+					// element given in html, we had to separate the label and
+					// div.
+					{
+						id: 'asciimathpreviewLabel',
+						type: 'html',
+						html: "<label>Preview:</label>"
+					},
 					{
 						id: 'asciimathpreview',
 						type: 'html',
-						html: "<label>Preview:</label><div style='text-align:center' id='asciimathPreview'></div>"
+						html: "<div style='text-align:center'></div>"
 					},
 					{
 						id: 'asciimathinstructions',
@@ -114,13 +134,7 @@ CKEDITOR.dialog.add('combinedmath', function( editor ) {
 						},
 						// helper method to refresh the preview math rendered
 						refreshPreview: function(mathexp) {
-							var previewDiv = document.
-								getElementById("texmathPreviewWindow");
-							var element = CKEDITOR.dom.element.
-								get(previewDiv);
-							element.setText('\\(' + mathexp + '\\)');
-							MathJax.Hub.Queue(
-								["Typeset", MathJax.Hub, previewDiv]);
+							refreshPreview(this, 'texmath', mathexp);
 						},
 						setMathexp: function(mathexp) {
 							this.setValue(mathexp);
@@ -158,9 +172,14 @@ CKEDITOR.dialog.add('combinedmath', function( editor ) {
 						}
 					},
 					{
+						id: 'texmathpreviewLabel',
+						type: 'html',
+						html: "<label>Preview:</label>"
+					},
+					{
 						id: 'texmathpreview',
 						type: 'html',
-						html: "<label>Preview:</label><div style='text-align:center' id='texmathPreviewWindow'></div>"
+						html: "<div style='text-align:center'></div>"
 					},
 					{
 						id: 'texmathinstructions',
