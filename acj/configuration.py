@@ -51,6 +51,9 @@ if 'DATABASE' in config:
 	del config['DATABASE']
 
 env_overridables = ['CAS_SERVER', 'CAS_AFTER_LOGIN', 'REPORT_FOLDER',
+					'CAS_LOGIN_ROUTE', 'CAS_LOGOUT_ROUTE',
+					'CAS_LOGOUT_RETURN_URL', 'CAS_VERSION',
+					'CAS_VALIDATE_ROUTE', 
 					'SECRET_KEY', 'UPLOAD_FOLDER', 'ATTACHMENT_UPLOAD_FOLDER']
 
 for env in env_overridables:
