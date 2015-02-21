@@ -1,4 +1,4 @@
-from flask import Flask, redirect, session, abort
+from flask import Flask, redirect, session, abort, jsonify
 from flask.ext.login import current_user
 
 from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, on_answer_flag,\
@@ -61,7 +61,9 @@ def create_app(conf=config, settings_override={}):
 	def unauthorized():
 		if 'CAS_AUTH_MSG' in session:
 			msg = session.pop('CAS_AUTH_MSG')
-			return {'message': msg, 'status': 403, 'type': 'CAS'}
+			response = jsonify({'message': msg, 'status': 403, 'type': 'CAS'})
+			response.status_code = 403
+			return response
 		return abort(401)
 
 	cas.init_app(app)
