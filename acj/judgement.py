@@ -229,9 +229,7 @@ class UserAllJudgementCount(Resource):
 		course = Courses.query.get_or_404(course_id)
 		require(READ, course)
 		questions = PostsForQuestions.query.join(Posts).filter_by(courses_id=course.id).all()
-		judgements = {}
-		for ques in questions:
-			judgements[ques.id] = judgement_count(ques, current_user.id)
+		judgements = {ques.id:judgement_count(ques, current_user.id) for ques in questions}
 
 		on_judgement_course_count.send(
 			current_app._get_current_object(),

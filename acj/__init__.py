@@ -10,8 +10,7 @@ from .classlist import on_classlist_get, on_classlist_upload, on_classlist_enrol
 from .comment import on_comment_modified, on_comment_get, on_comment_list_get, on_comment_create, on_comment_delete, \
 	on_answer_comment_modified, on_answer_comment_get, on_answer_comment_list_get, on_answer_comment_create, \
 	on_answer_comment_delete, on_answer_comment_user_get
-from .course import on_course_modified, on_course_get, on_course_list_get, on_course_create,\
-	on_course_name_get
+from .course import on_course_modified, on_course_get, on_course_list_get, on_course_create
 from .criteria import on_criteria_list_get, criteria_get, criteria_post, criteria_update, \
 	accessible_criteria, criteria_create, default_criteria_get, on_course_criteria_delete, \
 	on_course_criteria_update, on_question_criteria_create, on_question_criteria_delete, \
@@ -177,7 +176,6 @@ on_course_modified.connect(log)
 on_course_get.connect(log)
 on_course_list_get.connect(log)
 on_course_create.connect(log)
-on_course_name_get.connect(log)
 
 # question events
 on_question_modified.connect(log)

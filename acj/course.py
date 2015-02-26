@@ -35,7 +35,6 @@ on_course_modified = event.signal('COURSE_MODIFIED')
 on_course_get = event.signal('COURSE_GET')
 on_course_list_get = event.signal('COURSE_LIST_GET')
 on_course_create = event.signal('COURSE_CREATE')
-on_course_name_get = event.signal('COURSE_NAME_GET')
 
 # /
 class CourseListAPI(Resource):
@@ -129,20 +128,3 @@ class CourseAPI(Resource):
 		return marshal(course, dataformat.getCourses())
 
 api.add_resource(CourseAPI, '/<int:id>')
-
-# /id/name
-class CourseNameAPI(Resource):
-	@login_required
-	def get(self, id):
-		course = Courses.query.get_or_404(id)
-		require(READ, course)
-
-		on_course_name_get.send(
-			current_app._get_current_object(),
-			event_name=on_course_name_get.name,
-			user=current_user,
-			data={'course_id': id, 'name': course.name}
-		)
-
-		return {'course_name': course.name}
-api.add_resource(CourseNameAPI, '/<int:id>/name')

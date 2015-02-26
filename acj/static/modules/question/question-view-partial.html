@@ -100,7 +100,7 @@
 	<!-- Tabs -->
 	<ul class="nav nav-tabs" role="tablist">
 	  <li id="answers" ng-class="{active:showTab('answers')}">
-		<a ng-click="setTab('answers')" href="">Answers <span ng-show="canManagePosts || (!question.answer_period && see_answers)">({{question.answers_count}})</span></a>
+		<a ng-click="setTab('answers')" href="">Answers <span ng-show="canManagePosts || (!question.answer_period && see_answers)">({{answers.length}})</span></a>
 	  </li>
 	  <li id="comments" ng-class="{active:showTab('help')}">
 		<a ng-click="setTab('help')" href="">Help</a>

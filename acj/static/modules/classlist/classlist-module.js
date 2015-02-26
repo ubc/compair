@@ -21,13 +21,12 @@ module.factory(
 	"ClassListResource",
 	function ($resource)
 	{
-		var enrolUrl = '/api/courses/:courseId/users/:userId/enrol';
+		var url = '/api/courses/:courseId/users/:userId';
 		var ret = $resource(
-			'/api/courses/:courseId/users',
-			{},
+			url, {userId: '@userId'},
 			{
-				enrol: {method: 'POST', url: enrolUrl},
-				unenrol: {method: 'DELETE', url: enrolUrl}
+				enrol: {method: 'POST', url: url},
+				unenrol: {method: 'DELETE', url: url}
 			}
 		);
 		ret.MODEL = "CoursesAndUsers";
@@ -48,9 +47,9 @@ module.controller(
 		Session.getUser().then(function(user) {
 			$scope.loggedInUserId = user.id;
 		});
-		CourseResource.getName({'id':courseId}).$promise.then(
+		CourseResource.get({'id':courseId}).$promise.then(
 			function (ret) {
-				$scope.course_name = ret['course_name'];
+				$scope.course_name = ret['name'];
 			},
 			function (ret) {
 				Toaster.reqerror("No Course Found For ID "+courseId, ret);
@@ -137,9 +136,9 @@ module.controller(
 	{
 		$scope.course = {};
 		var courseId = $routeParams['courseId'];
-		CourseResource.getName({'id':courseId}).$promise.then(
+		CourseResource.get({'id':courseId}).$promise.then(
 			function (ret) {
-				$scope.course_name = ret['course_name'];
+				$scope.course_name = ret['name'];
 			},
 			function (ret) {
 				Toaster.reqerror("No Course Found For ID "+courseId, ret);

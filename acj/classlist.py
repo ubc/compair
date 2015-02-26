@@ -271,7 +271,7 @@ class EnrolAPI(Resource):
 
 		db.session.commit()
 		return result
-api.add_resource(EnrolAPI, '/<int:user_id>/enrol')
+api.add_resource(EnrolAPI, '/<int:user_id>')
 
 # /instructors/labels - return list of TAs and Instructors labels
 class TeachersAPI(Resource):

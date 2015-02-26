@@ -11,6 +11,7 @@ var module = angular.module('ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.authorization',
 		'ubc.ctlt.acj.comment',
 		'ubc.ctlt.acj.common.form',
+		'ubc.ctlt.acj.common.interceptor',
 		'ubc.ctlt.acj.common.mathjax',
 		'ubc.ctlt.acj.common.pdf',
 		'ubc.ctlt.acj.criteria',
@@ -88,14 +89,15 @@ module.directive(
 /***** Providers *****/
 module.factory(
 	"QuestionResource",
-	function ($resource)
+	function ($resource, Interceptors)
 	{
-		var ret = $resource(
-			'/api/courses/:courseId/questions/:questionId',
-			{questionId: '@id'},
+		var url = '/api/courses/:courseId/questions/:questionId';
+		var ret = $resource(url, {questionId: '@id'},
 			{
-				'getAnswered': {url: '/api/courses/:id/questions/:questionId/answers/count'},
-				'getSelfEvalTypes': {url: '/api/selfevaltypes'}
+				'get': {url: url, cache: true},
+				'save': {method: 'POST', url: url, interceptor: Interceptors.cache},
+				'delete': {method: 'DELETE', url: url, interceptor: Interceptors.cache},
+				'getAnswered': {url: '/api/courses/:id/questions/:questionId/answers/count'}
 			}
 		);
 		ret.MODEL = "PostsForQuestions";
@@ -112,6 +114,20 @@ module.factory(
 			{postId: '@post_id', fileId: '@file_id'}
 		);
 		ret.MODEL = "FilesForPosts";
+		return ret;
+	}
+);
+
+module.factory(
+	"SelfEvaluationTypeResource",
+	function($resource)
+	{
+		var url = '/api/selfevaltypes';
+		var ret = $resource(url, {},
+			{
+				'get': {url: url, cache: true}
+			});
+		ret.model = "SelfEvalTypes";
 		return ret;
 	}
 );
@@ -547,7 +563,7 @@ module.controller("QuestionViewController",
 );
 module.controller("QuestionCreateController",
 	function($scope, $log, $location, $routeParams, QuestionResource, CoursesCriteriaResource,
-			 QuestionsCriteriaResource, required_rounds, Toaster, attachService)
+			 QuestionsCriteriaResource, required_rounds, Toaster, attachService, SelfEvaluationTypeResource)
 	{
 		var courseId = $routeParams['courseId'];
 		$scope.question = {};
@@ -694,7 +710,7 @@ module.controller("QuestionCreateController",
 		};
 
 		// Self-Evaluation
-		QuestionResource.getSelfEvalTypes().$promise.then(
+		SelfEvaluationTypeResource.get().$promise.then(
 			function (ret) {
 				$scope.selfevaltypes = ret.types;
 				$scope.question.selfevaltype_id = $scope.selfevaltypes[0].id;
@@ -708,7 +724,8 @@ module.controller("QuestionCreateController",
 
 module.controller("QuestionEditController",
 	function($scope, $log, $location, $routeParams, $filter, QuestionResource, AttachmentResource,
-			 QuestionsCriteriaResource, CoursesCriteriaResource, required_rounds, Toaster, attachService)
+			 QuestionsCriteriaResource, CoursesCriteriaResource, required_rounds, Toaster,
+			 SelfEvaluationTypeResource, attachService)
 	{
 		var courseId = $routeParams['courseId'];
 		$scope.questionId = $routeParams['questionId'];
@@ -798,7 +815,7 @@ module.controller("QuestionEditController",
 			}
 		};
 
-		QuestionResource.getSelfEvalTypes().$promise.then(
+		SelfEvaluationTypeResource.get().$promise.then(
 			function (ret) {
 				$scope.selfevaltypes = ret.types;
 			},
@@ -835,7 +852,12 @@ module.controller("QuestionEditController",
 				if ($scope.question.selfevaltype_id) {
 					$scope.question.selfEvalCheck = true;
 				} else {
-					$scope.question.selfevaltype_id = $scope.selfevaltypes[0].id;
+					/*TODO: add empty option - when the question is cached, the API call
+					is a lot faster than the selfeval type API call, therefore we cannot
+					just select the first type in the list since it is undefined
+					*/
+					//$scope.question.selfevaltype_id = $scope.selfevaltypes[0].id;
+					$scope.question.selfevaltype_id = 1;
 				}
 
 				AttachmentResource.get({'postId': ret.question.post.id}).$promise.then(

@@ -11,6 +11,7 @@ var module = angular.module('ubc.ctlt.acj.course',
 		'ckeditor',
 		'ubc.ctlt.acj.comment',
 		'ubc.ctlt.acj.common.form',
+		'ubc.ctlt.acj.common.interceptor',
 		'ubc.ctlt.acj.criteria',
 		'ubc.ctlt.acj.judgement',
 		'ubc.ctlt.acj.question',
@@ -19,19 +20,21 @@ var module = angular.module('ubc.ctlt.acj.course',
 );
 
 /***** Providers *****/
-module.factory('CourseResource', function($q, $routeParams, $log, $resource)
+module.factory('CourseResource', function($q, $routeParams, $log, $resource, Interceptors)
 {
+	var url = '/api/courses/:id';
 	var ret = $resource('/api/courses/:id', {id: '@id'},
 		{
 			// would enable caching for GET but there's no automatic cache
 			// invalidation, I don't want to deal with that manually
-			'getQuestions': {url: '/api/courses/:id/questions'},
+			'get': {url: url, cache: true},
+			'save': {method: 'POST', url: url, interceptor: Interceptors.cache},
+			'delete': {method: 'DELETE', url: url, interceptor: Interceptors.cache},
 			'getJudgementCount': {url: '/api/courses/:id/judgements/count'},
 			'getAvailPairLogic': {url: '/api/courses/:id/judgements/availpair'},
 			'getAnswered': {url: '/api/courses/:id/answers/answered'},
 			'getInstructorsLabels': {url: '/api/courses/:id/users/instructors/labels'},
-			'getStudents': {url: '/api/courses/:id/users/students'},
-			'getName': {url: '/api/courses/:id/name'}
+			'getStudents': {url: '/api/courses/:id/users/students'}
 		}
 	);
 	ret.MODEL = "Courses"; // add constant to identify the model
@@ -233,7 +236,7 @@ module.controller(
 		);
 
 		// get course questions
-		CourseResource.getQuestions({'id': courseId}).$promise.then(
+		QuestionResource.get({'courseId': courseId}).$promise.then(
 			function (ret)
 			{
 				$scope.questions = ret.questions;

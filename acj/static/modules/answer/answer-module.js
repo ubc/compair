@@ -8,6 +8,7 @@ var module = angular.module('ubc.ctlt.acj.answer',
 		'ngResource',
 		'timer',
 		'ubc.ctlt.acj.common.form',
+		'ubc.ctlt.acj.common.interceptor',
 		'ubc.ctlt.acj.common.mathjax',
 		'ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.toaster'
@@ -17,18 +18,22 @@ var module = angular.module('ubc.ctlt.acj.answer',
 /***** Providers *****/
 module.factory(
 	"AnswerResource",
-	function ($resource)
+	function ($resource, Interceptors)
 	{
+		var url = '/api/courses/:courseId/questions/:questionId/answers/:answerId';
 		var ret = $resource(
-			'/api/courses/:courseId/questions/:questionId/answers/:answerId',
-			{answerId: '@id'},
+			url, {answerId: '@id'},
 			{
+				'get': {url: url, cache: true},
+				'save': {method: 'POST', url: url, interceptor: Interceptors.cache},
+				'delete': {method: 'DELETE', url: url, interceptor: Interceptors.cache},
 				flagged: {
 					method: 'POST', 
-					url: '/api/courses/:courseId/questions/:questionId/answers/:answerId/flagged'
+					url: '/api/courses/:courseId/questions/:questionId/answers/:answerId/flagged',
+					interceptor: Interceptors.cache
 				},
 				user: {url: '/api/courses/:courseId/questions/:questionId/answers/user'},
-				view: {url: '/api/courses/:courseId/questions/:questionId/answers/view'}
+				view: {url: '/api/courses/:courseId/questions/:questionId/answers/view', cache: true}
 			}
 		);
 		ret.MODEL = "PostsForAnswers";

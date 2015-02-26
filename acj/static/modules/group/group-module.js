@@ -18,7 +18,7 @@ module.factory(
 	function ($resource)
 	{
 		var url = '/api/courses/:courseId/groups/:groupId';
-		var unenrolUrl = '/api/courses/:courseId/users/:userId/groups'
+		var unenrolUrl = '/api/courses/:courseId/users/:userId/groups';
 		var ret = $resource(url, {groupId: '@groupId'},
 			{
 				enrol: {method: 'POST', url: unenrolUrl+'/:groupId'},
@@ -38,9 +38,9 @@ module.controller(
 	{
 		$scope.course = {};
 		var courseId = $routeParams['courseId'];
-		CourseResource.getName({'id': courseId}).$promise.then(
+		CourseResource.get({'id': courseId}).$promise.then(
 			function (ret) {
-				$scope.course_name = ret['course_name'];
+				$scope.course_name = ret['name'];
 			},
 			function (ret) {
 				Toaster.reqerror("No Course Found For ID "+courseId, ret);

@@ -39,7 +39,7 @@ module.factory('EvalCommentResource',
 		var url = '/api/courses/:courseId/questions/:questionId/judgements/comments';
 		var ret = $resource(url, {},
 			{
-				'view': {url: url + '/view'}
+				'view': {url: url + '/view', cache:true}
 			}
 		);
 		ret.MODEL = "PostsForJudgements";

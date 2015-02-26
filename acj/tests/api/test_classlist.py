@@ -386,4 +386,4 @@ class ClassListAPITest(ACJTestCase):
 		file.close()
 
 	def _create_enrol_url(self, url, user_id):
-		return url + '/' + str(user_id) + '/enrol'
+		return url + '/' + str(user_id)

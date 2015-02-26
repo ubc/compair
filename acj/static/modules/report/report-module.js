@@ -74,7 +74,7 @@ module.controller(
 					Toaster.reqerror('Unable to retrieve groups', ret);
 				}
 			);
-			CourseResource.getQuestions({'id': $scope.report.course_id}).$promise.then(
+			QuestionResource.get({'courseId': $scope.report.course_id}).$promise.then(
 				function (ret) {
 					$scope.report.assignment = null;
 					if (ret.questions.length > 0) {

@@ -245,12 +245,11 @@ module.controller(
 		var userIds = {};
 		$scope.group = null;
 
-		var haveAnswers = false;
 		$scope.ans = {};
 
-		CourseResource.getName({'id':courseId}).$promise.then(
+		CourseResource.get({'id':courseId}).$promise.then(
 			function (ret) {
-				breadcrumbs.options = {'Course Questions': ret['course_name']};
+				breadcrumbs.options = {'Course Questions': ret['name']};
 			},
 			function (ret) {
 				Toaster.reqerror("Course Not Found For ID "+ courseId, ret);
@@ -326,24 +325,21 @@ module.controller(
 			}
 		};
 
-		$scope.commentFilter = function(user_id, criteria_id) {
+		$scope.commentFilter = function(user_id) {
 			return function(comment) {
 				return ((user_id == null && comment[0].user_id in userIds) || comment[0].user_id == user_id);
 			}
 		};
 
 		$scope.answers = function() {
-			if (!haveAnswers) {
-				AnswerResource.view({'courseId': courseId, 'questionId': questionId}).$promise.then(
-					function (ret) {
-						haveAnswers = true;
-						$scope.ans = ret.answers;
-					},
-					function (ret) {
-						Toaster.reqerror("Failed to retrieve the answers", ret);
-					}
-				);
-			}
+			AnswerResource.view({'courseId': courseId, 'questionId': questionId}).$promise.then(
+				function (ret) {
+					$scope.ans = ret.answers;
+				},
+				function (ret) {
+					Toaster.reqerror("Failed to retrieve the answers", ret);
+				}
+			);
 		};
 	}
 );
