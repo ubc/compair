@@ -10,12 +10,16 @@ var module = angular.module('ubc.ctlt.acj.attachment',
 );
 
 /***** Services *****/
-module.service('importService', function(FileUploader, $location, CourseResource, Toaster) {
+module.service('importService', function(FileUploader, $location, $cacheFactory, CourseResource, Toaster) {
 	var results = {};
 	var uploader = null;
 	var model = '';
 
 	var onSuccess = function(courseId) {
+		var cache = $cacheFactory.get('classlist');
+		if (cache) {
+			cache.remove('/api/courses/' + courseId + '/users');
+		}
 		switch(model) {
 			case 'users':
 				var count = results.success;
@@ -29,7 +33,7 @@ module.service('importService', function(FileUploader, $location, CourseResource
 			case 'groups':
 				Toaster.success("Groups Added", "Successfully added "+ results.success +" groups.");
 				if (results.invalids.length > 0) {
-					$location.path('/course/'+courseId+'/group/import/results');
+					$location.path('/course/'+courseId+'/user/group/import/results');
 				} else {
 					$location.path('/course/'+courseId+'/user');
 				}

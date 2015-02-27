@@ -8,6 +8,7 @@ var module = angular.module('ubc.ctlt.acj.classlist',
 		'ngResource',
 		'ubc.ctlt.acj.attachment',
 		'ubc.ctlt.acj.common.form',
+		'ubc.ctlt.acj.common.interceptor',
 		'ubc.ctlt.acj.course',
 		'ubc.ctlt.acj.group',
 		'ubc.ctlt.acj.toaster',
@@ -19,14 +20,16 @@ var module = angular.module('ubc.ctlt.acj.classlist',
 /***** Providers *****/
 module.factory(
 	"ClassListResource",
-	function ($resource)
+	function ($resource, $cacheFactory, Interceptors)
 	{
 		var url = '/api/courses/:courseId/users/:userId';
+		var cache = $cacheFactory('classlist');
 		var ret = $resource(
 			url, {userId: '@userId'},
 			{
-				enrol: {method: 'POST', url: url},
-				unenrol: {method: 'DELETE', url: url}
+				'get': {url: '/api/courses/:courseId/users', cache: cache},
+				enrol: {method: 'POST', url: url, interceptor: Interceptors.enrolCache},
+				unenrol: {method: 'DELETE', url: url, interceptor: Interceptors.enrolCache}
 			}
 		);
 		ret.MODEL = "CoursesAndUsers";

@@ -128,9 +128,10 @@ def import_users(course_id, users):
 		db.session.add(u)
 	db.session.commit()
 
-	enroled = CoursesAndUsers.query.filter_by(courses_id=course_id).\
-		filter(CoursesAndUsers.usertypesforcourse_id.in_([student, dropped])).all()
+	enroled = CoursesAndUsers.query.filter_by(courses_id=course_id).all()
 	enroled = {e.users_id:e for e in enroled}
+	students = CoursesAndUsers.query.filter_by(courses_id=course_id, usertypesforcourse_id=student).all()
+	students = {s.users_id:s for s in students}
 
 	# enrol valid users in file
 	to_enrol = Users.query.filter(Users.username.in_(exist_usernames)).all()
@@ -138,14 +139,14 @@ def import_users(course_id, users):
 		enrol = enroled.get(user.id, CoursesAndUsers(courses_id=course_id, users_id=user.id))
 		enrol.usertypesforcourse_id = student
 		db.session.add(enrol)
-		if user.id in enroled:
-			del enroled[user.id]
+		if user.id in students:
+			del students[user.id]
 		count += 1
 	db.session.commit()
 
 	# unenrol users not in file anymore
-	for users_id in enroled:
-		enrolment = enroled.get(users_id)
+	for users_id in students:
+		enrolment = students.get(users_id)
 		# skip users that are already dropped
 		if enrolment.usertypesforcourse_id == dropped:
 			continue

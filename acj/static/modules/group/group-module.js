@@ -8,6 +8,7 @@ var module = angular.module('ubc.ctlt.acj.group',
 		'ngResource',
 		'ubc.ctlt.acj.attachment',
 		'ubc.ctlt.acj.common.form',
+		'ubc.ctlt.acj.common.interceptor',
 		'ubc.ctlt.acj.toaster'
 	]
 );
@@ -15,14 +16,14 @@ var module = angular.module('ubc.ctlt.acj.group',
 /***** Providers *****/
 module.factory(
 	"GroupResource",
-	function ($resource)
+	function ($resource, Interceptors)
 	{
 		var url = '/api/courses/:courseId/groups/:groupId';
 		var unenrolUrl = '/api/courses/:courseId/users/:userId/groups';
 		var ret = $resource(url, {groupId: '@groupId'},
 			{
-				enrol: {method: 'POST', url: unenrolUrl+'/:groupId'},
-				unenrol: {method: 'DELETE', url: unenrolUrl}
+				enrol: {method: 'POST', url: unenrolUrl+'/:groupId', interceptor: Interceptors.enrolCache},
+				unenrol: {method: 'DELETE', url: unenrolUrl, interceptor: Interceptors.enrolCache}
 			}
 		);
 
