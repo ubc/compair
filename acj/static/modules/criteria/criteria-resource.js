@@ -26,7 +26,7 @@ module.factory('QuestionsCriteriaResource', function($resource) {
 module.factory('CriteriaResource', function($resource) {
 	return $resource('/api/criteria/:criteriaId', {criteriaId: '@id'},
 		 {
-			 'getDefault': {'url': '/api/criteria/default'}
+			 'getDefault': {'url': '/api/criteria/default', cache: true}
 		 }
 	);
 });

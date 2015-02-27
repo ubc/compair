@@ -9,6 +9,7 @@ var module = angular.module('ubc.ctlt.acj.comment',
 		'ubc.ctlt.acj.classlist',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.mathjax',
+		'ubc.ctlt.acj.common.interceptor',
 		'ubc.ctlt.acj.course',
 		'ubc.ctlt.acj.criteria',
 		'ubc.ctlt.acj.judgement',
@@ -33,12 +34,14 @@ module.factory(
 
 module.factory(
 	"AnswerCommentResource",
-	function ($resource)
+	function ($resource, Interceptors)
 	{
+		var url = '/api/courses/:courseId/questions/:questionId/answers/:answerId/comments/:commentId';
 		var ret = $resource(
-			'/api/courses/:courseId/questions/:questionId/answers/:answerId/comments/:commentId',
-			{commentId: '@id'},
+			url, {commentId: '@id'},
 			{
+				'save': {method: 'POST', url: url, interceptor: Interceptors.answerCache},
+				'delete': {method: 'DELETE', url: url, interceptor: Interceptors.answerCache},
 				selfEval: {url: '/api/selfeval/courses/:courseId/questions/:questionId'},
 				allSelfEval: {url: '/api/selfeval/courses/:courseId/questions'}
 			}
