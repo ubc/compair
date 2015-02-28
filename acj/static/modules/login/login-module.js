@@ -86,6 +86,10 @@ module.run(function ($rootScope, $route, $location, $log, $modal, $cacheFactory,
 	});
 	$rootScope.$on(AuthenticationService.LOGOUT_EVENT, function () {
 		$cacheFactory.get('$http').removeAll();
+		var cache = $cacheFactory.get('classlist');
+		if (cache) {
+			cache.removeAll();
+		}
 	});
 
 	// Requires the user to be logged in for every single route

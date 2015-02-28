@@ -50,8 +50,8 @@ class DefaultFixture(object):
 class SampleDataFixture(object):
 	COURSE_NAMES = ["CDEF102", "BCDE101","ABCD100", "DEFG103", "EFGH104"]
 	INSTRUCTOR_NAMES = ["instructor1"]
-	STUDENT_NAMES = ["student1", "student2", "student3", "student4", "student5", "student6",
-					 "student7", "student8"]
+	class_size = range(8)
+	STUDENT_NAMES = ["student"+str(n) for n in class_size]
 
 	def __init__(self):
 		# initialize with default values in cases of DefaultFixture being unavailable
