@@ -1,11 +1,11 @@
 <form name="questionForm" class="form" ng-submit="questionSubmit()" novalidate>
 	
 	<fieldset>
-		<legend>Question</legend>
+		<legend>Assignment</legend>
 		<acj-field-with-feedback form-control="questionForm.questionTitle">
-			<label for="questionTitle" class="required-star">Question</label>
+			<label for="questionTitle" class="required-star">Short Title</label>
 			<input class="form-control" id="questionTitle" type="text"
-				name="questionTitle" ng-model="question.title" placeholder="short form of the question"
+				name="questionTitle" ng-model="question.title" placeholder="short question or description for the assignment"
 				required ng-maxlength="255" auto-focus />
 			<span ng-if="questionForm.questionTitle.$error.maxlength" class="help-block has-error">Maximum length is 255 characters</span>
 		</acj-field-with-feedback>
@@ -40,7 +40,7 @@
 			<br>
 		</div>
 		<div class="form-group">
-			<label for="questionContent">Additional Information</label>
+			<label for="questionContent">Additional Assignment Details</label>
 			<textarea ckeditor rows="8"
 				ng-model="question.post.content" class="form-control" id="questionContent">
 			</textarea>
@@ -50,7 +50,7 @@
 	<fieldset>
 		<legend>Schedule</legend>
 		<div class="instructional-text">
-			<p><strong>Students can answer and edit their answers only during the dates and times you set below.</strong> Students do not see a question in the application until the answering period begins. Students can read all answers only <em>after</em> they have completed the required number of answer comparisons.</p>
+			<p><strong>Students can answer and edit their answers only during the dates and times you set below.</strong> Students do not see an assignment in the application until the answering period begins. Students can read all answers only <em>after</em> they have completed the required number of answer comparisons.</p>
 			<p><strong>By default, students can compare answers after the answer period ends.</strong> You may instead set specific dates and times for the comparison period. Note that if you manually set a comparison period, students can read all answers only <em>after</em> the comparison period ends.</p>
 		</div>
 
@@ -88,7 +88,7 @@
 		<hr />
 		
 		<input id="availableCheck" type="checkbox" ng-model="question.availableCheck">
-		<label for="availableCheck">Manually set when students can compare answers for this question</label>
+		<label for="availableCheck">Manually set when students can compare answers for this assignment</label>
 		<br /><br />
 		
 		<div ng-show="question.availableCheck">
@@ -128,9 +128,9 @@
 	
 	<fieldset>
 		<legend>Criteria</legend>
-		<p class="instructional-text"><strong>Selected criteria appear when students compare answers</strong> for this question to help guide them in their comparison. For each criterion you check off below, students will need to 1) choose a preferred answer from a given pair and 2) write a comparison rationale. (To create new or edit existing criteria, please go to the edit course page for this course.)</p>
+		<p class="instructional-text"><strong>The selected criteria appear when students compare answers</strong> for this assignment to help guide them in their comparison. For each criterion you check off below, students will need to 1) choose a preferred answer from a given pair and 2) write a comparison rationale. (To create new or edit existing criteria, edit the course for this assignment.)</p>
 
-		<p class="required-star"><strong>Select one or more</strong></p>
+		<p class="required-star"><strong>Select one or more of these course criteria</strong></p>
 		<div ng-repeat="courseCriterion in courseCriteria">
 			<input type="checkbox" name="criteria{{ courseCriterion.id }}" id="criteria{{ courseCriterion.id }}"
 				   ng-model="selectedCriteria[courseCriterion.criterion.id]"
@@ -143,7 +143,7 @@
 		<legend>Comparisons</legend>
 		<div class="instructional-text">
 			<p>The <strong>recommended minimum number of comparisons per student is {{recommended_eval}}</strong>. Using this number (or higher) creates a more accurate ranking of the answers. If you set a lower number, the answers will not be ranked as accurately.</p>
-			<p>For each comparison, students will need to 1) choose a preferred answer from a given pair, 2) write a comparison rationale for each criterion listed, and 3) write separate feedback for each answer.</p>
+			<p>For each comparison, students will need to 1) write separate feedback for each answer in a given pair, 2) choose a preferred answer from the pair for each criterion listed, and 3) write a comparison rationale for each criterion listed.</p>
 		</div>
 				
 		<div class="form-group">

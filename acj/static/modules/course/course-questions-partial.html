@@ -12,7 +12,7 @@
 				<a ng-href="#/course/{{course.id}}/question/create" 
 					class="btn btn-primary" id="add-question-btn">
 					<i class="fa fa-plus"></i>
-					Add Question
+					Add Assignment
 				</a>
 			</span>
 			<span ng-if="canEditCourse">
@@ -56,12 +56,12 @@
 	
 	<div ng-if="!questions.length">
 		<hr />
-		<p>No questions currently posted.</p>
-		<p ng-if="canCreateQuestions">Would you like to <a ng-href="#/course/{{course.id}}/question/create">add a question</a>?</p>
+		<p>No assignments currently posted.</p>
+		<p ng-if="canCreateQuestions">Would you like to <a ng-href="#/course/{{course.id}}/question/create">add an assignment</a>?</p>
 	</div>
 	
 	<!-- Questions List -->
-	<div class="row each-question"
+	<div class="row each-question" ng-class="{'first-child': $first}"
 		ng-repeat="(key, question) in questions | filter:questionFilter(filter) as results">
 		
 		<!-- Question Display -->
@@ -73,7 +73,7 @@
 				<!-- Title -->
 				<a ng-href="#/course/{{course.id}}/question/{{question.id}}">
 					<h3 class="media-heading">
-						<i class="fa fa-comments"></i> {{question.title}} &raquo;
+						<i class="fa fa-comments"></i>{{question.title}} &raquo;
 					</h3>
 				</a>
 				
@@ -217,7 +217,7 @@
 	
 	<div ng-show="questions.length && !results.length">
 		<hr />
-		<p>No questions currently listed in this category. Try another filter choice above.</p>
+		<p>No assignments currently listed in this category. Try another filter choice above.</p>
 	</div>
 
 </div>

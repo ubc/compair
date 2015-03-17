@@ -36,11 +36,11 @@ module.controller(
 		$scope.assignments = [];
 		$scope.groups = [];
 
-		var all = [{'id': 'all', 'title': 'All Questions'}];
+		var all = [{'id': 'all', 'title': 'All Assignments'}];
 		var allGroups = [{'id': 'all', 'name': 'All Groups'}]
 		$scope.types = [
-			{'id': 'participation', 'name': 'Participation Report'},
-			{'id': 'participation_stat', 'name': 'Participation Report - Statistics'}
+			{'id': 'participation', 'name': 'Participation Report (Regular)'},
+			{'id': 'participation_stat', 'name': 'Participation Report (Research)'}
 		];
 
 		UserResource.getTeachingUserCourses().$promise.then(

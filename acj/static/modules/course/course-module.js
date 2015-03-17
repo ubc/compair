@@ -209,9 +209,9 @@ module.controller(
 		});
 		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL, courseId).then(function(result) {
 				$scope.canManagePosts = result;
-				$scope.filters.push('All course questions');
+				$scope.filters.push('All course assignments');
 				if ($scope.canManagePosts) {
-					$scope.filters.push('Questions being answered', 'Questions being compared', 'Upcoming questions');
+					$scope.filters.push('Assignments being answered', 'Assignments being compared', 'Upcoming assignments');
 				} else {
 					$scope.filters.push('My pending assignments');
 				}
@@ -323,16 +323,16 @@ module.controller(
 			return function(question) {
 				switch(filter) {
 					// return all questions
-					case "All course questions":
+					case "All course assignments":
 						return true;
 					// INSTRUCTOR: return all questions in answer period
-					case "Questions being answered":
+					case "Assignments being answered":
 						return question.answer_period;
 					// INSTRUCTOR: return all questions in comparison period
-					case "Questions being compared":
+					case "Assignments being compared":
 						return question.judging_period;
 					// INSTRUCTOR: return all questions that are unavailable to students at the moment
-					case "Upcoming questions":
+					case "Upcoming assignments":
 						return !question.available;
 					// STUDENTS: return all questions that need to be answered or compared
 					case "My pending assignments":

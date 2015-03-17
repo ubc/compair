@@ -42,7 +42,7 @@ myApp.config( function ($routeProvider, $logProvider, $httpProvider) {
 		.when ('/course/:courseId', 
 			{
 				templateUrl: 'modules/course/course-questions-partial.html',
-				label: "Course Questions"
+				label: "Course Assignments"
 			})
 		.when ('/course/:courseId/configure', 
 			{
@@ -77,17 +77,17 @@ myApp.config( function ($routeProvider, $logProvider, $httpProvider) {
 		.when ('/course/:courseId/question/create', 
 			{
 				templateUrl: 'modules/question/question-create-partial.html',
-				label: "Add Question"
+				label: "Add Assignment"
 			})
 		.when ('/course/:courseId/question/:questionId', 
 			{
 				templateUrl: 'modules/question/question-view-partial.html',
-				label: "View Question"
+				label: "View Assignment"
 			})
 		.when ('/course/:courseId/question/:questionId/edit',
 			{
 				templateUrl: 'modules/question/question-edit-partial.html',
-				label: "Edit Question"
+				label: "Edit Assignment"
 			})
 		.when ('/course/:courseId/question/:questionId/answer/create', 
 			{
@@ -102,12 +102,12 @@ myApp.config( function ($routeProvider, $logProvider, $httpProvider) {
 		.when ('/course/:courseId/question/:questionId/comment/create',
 			{
 				templateUrl: 'modules/comment/comment-question-create-partial.html',
-				label: "Comment on Question"
+				label: "Comment on Assignment"
 			})
 		.when ('/course/:courseId/question/:questionId/comment/:commentId/edit',
 			{
 				templateUrl: 'modules/comment/comment-question-edit-partial.html',
-				label: "Edit Comment on Question"
+				label: "Edit Comment on Assignment"
 			})
 		.when('/course/:courseId/question/:questionId/answer/:answerId/comment/create',
 			{

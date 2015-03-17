@@ -178,13 +178,13 @@ module.controller(
 					function (ret)
 					{
 						$scope.submitted = false;
-						Toaster.success("New comment posted!");
+						Toaster.success("New reply posted!");
 						$location.path('/course/'+courseId+'/question/'+questionId);
 					},
 					function (ret)
 					{
 						$scope.submitted = false;
-						Toaster.reqerror("Unable to post new comment.", ret);
+						Toaster.reqerror("Unable to post new reply.", ret);
 					}
 				);
 		};	
@@ -207,7 +207,7 @@ module.controller(
 				$scope.comment = ret;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve comment "+commentId, ret);
+				Toaster.reqerror("Unable to retrieve reply "+commentId, ret);
 			}
 		);
 		AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId}).$promise.then(
@@ -222,10 +222,10 @@ module.controller(
 		$scope.commentSubmit = function () {
 			AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': answerId}, $scope.comment).$promise.then(
 				function() {
-					Toaster.success("Comment Updated!");
+					Toaster.success("Reply Updated!");
 					$location.path('/course/' + courseId + '/question/' +questionId);
 				},
-				function(ret) { Toaster.reqerror("Comment Save Failed.", ret);}
+				function(ret) { Toaster.reqerror("Reply Not Updated", ret);}
 			);
 		};
 	}

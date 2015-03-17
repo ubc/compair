@@ -11,7 +11,7 @@
 		</div>
 		
 		<!-- Question Attachment -->
-		<acj-pdf-inline label="See question details:" pdfs="question.post.files">
+		<acj-pdf-inline label="See assignment details:" pdfs="question.post.files">
 		</acj-pdf-inline>
 		
 		<!-- Question Answer/Evaluation Periods -->
@@ -93,7 +93,7 @@
 		<p ng-if="!availPairsLogic && !canManagePosts && question.judging_period && (evaluation + selfEval > 0) && ((question.answer_period && answered) || !question.answer_period)"><br /><em>Not enough answers to compare (Refresh the page to check again) </em></p>
 		
 		<!-- ADDITIONAL TEXT when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has a self-evaluation remaining AND has not answered question -->
-		<p ng-if="!canManagePosts && question.judging_period && judged_req_met && !selfEval_req_met && !answered"><br /><em>Self-evaluation comparison unavailable (You have not answered the question)</em></p>
+		<p ng-if="!canManagePosts && question.judging_period && judged_req_met && !selfEval_req_met && !answered"><br /><em>Self-evaluation comparison unavailable (You have not answered the assignment)</em></p>
 		
 	</div><!-- closes question box -->
 	
@@ -108,7 +108,7 @@
 	  <li ng-show="canManagePosts" id="participation" ng-class="{active:showTab('participation')}">
 		<a ng-click="setTab('participation')" href="">Participation</a>
 	  </li>
-	  <li ng-show="!canManagePosts && (evaluation + selfEval > 0)" id="comparisons" ng-class="{active:showTab('comparisons')}">
+	  <li ng-show="!canManagePosts && comparisons.length > 0" id="comparisons" ng-class="{active:showTab('comparisons')}">
 		<a ng-click="setTab('comparisons')" href="">Your Comparisons</a>
 	  </li>
 	</ul>
@@ -138,11 +138,11 @@
 								</select>
 								<select ng-model="grade.author" class="nullable"
 										ng-options="u as u.user.name for u in students | orderBy: 'user.name'" ng-change="userChange()">
-									<option value="">All students</option>
+									<option value="">All answers</option>
 								</select>
 							</span><br />
 							<span class="filter">
-								<label>Order by<span ng-if="canManagePosts"> scores for</span>: &nbsp;</label>
+								<label>Order by ranking for: &nbsp;</label>
 								<select ng-model="grade.sortby"
 									ng-options="key as c.criterion.name for (key, c) in criteria" ng-change="criteriaChange()">
 								</select>
@@ -154,39 +154,39 @@
 				<!-- Instructors should see before the answer period -->
 				<p class="intro-text"
 				   ng-if="canManagePosts && !question.answer_period && !question.available">
-					Answering period begins {{question.answer_start | amDateFormat: 'MMM D @ h:mm a'}}. Would you like to <a ng-href="#/course/{{courseId}}/question/{{question.id}}/edit" title="Edit the question">change the answer date</a> for this question?
+					Answering period begins {{question.answer_start | amDateFormat: 'MMM D @ h:mm a'}}. Would you like to <a ng-href="#/course/{{courseId}}/question/{{question.id}}/edit" title="Edit the question">change the answer date</a> for this assignment?
 				</p>
 				
 				<!-- Students should see before answering during the answer period -->
 				<p class="intro-text"
 				   ng-if="!canManagePosts && !answered && question.answer_period">
-					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" title="Answer the question">Answer</a> and compare answer pairs for the question first, then read all answers written by your classmates and instructors here.
+					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" title="Answer the question">Answer</a> and compare answer pairs for the assignment first, then read all answers written by your classmates and instructors here.
 				</p>
 				
 				<!-- Students should see before evaluating before the evaluation period -->
 				<p class="intro-text"
 				   ng-if="!canManagePosts && ((answered && question.answer_period) || (!question.answer_period)) && !question.judging_period && !question.after_judging">
-					Comparison period begins <span ng-if="question.judge_start > 0">{{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}}</span> <span ng-if="question.judge_start <= 0">after the answer period ends</span>. After comparing  answer pairs, you will be able to read all answers written by your classmates and instructors here.
+					Comparison period begins <span ng-if="question.judge_start > 0">{{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}}</span> <span ng-if="question.judge_start <= 0">after the answer period ends</span>. After comparing answer pairs, you will be able to read all answers written by your classmates and instructors here.
 				</p>
 				
 				<!-- Students should see before evaluating during the evaluation period (regular comparison) -->
 				<p class="intro-text" ng-if="!canManagePosts && question.judging_period && !judged_req_met && ((answered && question.answer_period) || !question.answer_period)">
-					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/compare" title="Compare answers">Compare answers</a> for the question first, then read answers written by your classmates and instructors here.
+					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/compare" title="Compare answers">Compare answers</a> for the assignment first, then read answers written by your classmates and instructors here.
 				</p>
 				
 				<!-- Students should see before evaluating during the evaluation period (self-evaluation) -->
 				<p class="intro-text" ng-if="!canManagePosts && question.judging_period && judged_req_met && !selfEval_req_met">
-					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" title="Compare answers">Compare answers</a> for the question first, then read answers written by your classmates and instructors here.
+					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" title="Compare answers">Compare answers</a> for the assignment first, then read answers written by your classmates and instructors here.
 				</p>
 				
 				<!-- Anyone sees during the answer period, if no answers provided yet -->
 				<p class="intro-text" ng-if="question.answer_period && !question.answers_count">
-					No answers given for this question yet.
+					No answers given for this assignment yet.
 				</p>
 				
 				<!-- Students see after evaluating before the evaluation period is over -->
 				<p class="intro-text" ng-if="!canManagePosts && judged_req_met && selfEval_req_met && !see_answers">
-					You have successfully finished comparisons for this question! Answers written by your classmates and instructors will be available here beginning <strong>{{ answerAvail | amDateFormat: 'MMM D @ h:mm a'}}</strong>.
+					You have successfully finished comparisons for this assignment! Answers written by your classmates and instructors will be available here beginning <strong>{{ answerAvail | amDateFormat: 'MMM D @ h:mm a'}}</strong>.
 				</p>
 				
 			</div>
@@ -225,7 +225,7 @@
 							ng-bind-html="answer.post.content">
 						</div>
 						<!-- Instructor Attachment -->
-						<acj-pdf-inline label="See question details:" 
+						<acj-pdf-inline label="See assignment details:" 
 							pdfs="answer.post.files">
 						</acj-pdf-inline>
 					</div>
@@ -329,7 +329,7 @@
 							 ng-bind-html="answer.post.content">
 						</div>
 						<!-- Student Attachment -->
-						<acj-pdf-inline label="See question details:"
+						<acj-pdf-inline label="See answer details:"
 							pdfs="answer.post.files" ng-click="revealAnswer(answer.post.id)">
 						</acj-pdf-inline>
 					</div>
@@ -340,7 +340,7 @@
 					<!-- Student Score (not used for instructor answers) -->
 					<p class="pull-right score-display" ng-show="canManagePosts && key==grade.sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores">
 						<em>Score: {{score.normalized_score}}%</em>
-						<a tool-tip href="" data-placement="left" data-toggle="tooltip" class="score-tooltip" title="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the question receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer.">
+						<a tool-tip href="" data-placement="left" data-toggle="tooltip" class="score-tooltip" title="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer.">
 							<i class="fa fa-question-circle"></i>
 						</a>
 					</p>
@@ -427,7 +427,7 @@
 						<h2>Help for this assignment</h2>
 						<p class="intro-text">Ask or answer a question about the assignment by adding a comment here.</p>
 						<p ng-if="!question.comments_count">
-							No help comments have been left for this question yet. <span class="hidden-xs">Would you like to <a href="#/course/{{courseId}}/question/{{question.id}}/comment/create">add a comment</a> for this assignment?</span>
+							No help comments have been left for this assignment yet. <span class="hidden-xs">Would you like to <a href="#/course/{{courseId}}/question/{{question.id}}/comment/create">add a comment</a> for this assignment?</span>
 						</p>
 					</div>
 					<div class="col-sm-3 text-right comment-btn">
@@ -484,7 +484,7 @@
 			<div class="tab-header">
 				<div>
 					<h2>Your comparisons</h2>
-					<p class="intro-text">Comparisons you have submitted for this question appear below.</p>
+					<p class="intro-text">Comparisons you have submitted for this assignment appear below.</p>
 				</div>
 			</div>
 			

@@ -4,6 +4,8 @@
 
 .course-screen {
   
+  margin-bottom: 3em;
+  
   ::-webkit-scrollbar {
     -webkit-appearance: none;
     width: 7px;
@@ -25,15 +27,22 @@
     
     padding: 1.5em 0;
     .gray-box();
-    border-bottom: none;
+    border-top: none;
+    
+    /* h3 header (question title) to be underlined for improved clickability */
+    a {
+      
+      text-decoration: underline;
+      
+      i {
+        margin-right: .3em;
+      }
+      
+    }//closes a
     
     /* alternating rows */
     &:nth-child(odd) {
       background: #fff;
-    }
-    
-    &:last-child {
-      border-bottom: 1px solid @border-gray;
     }
     
     /* action buttons need to stack */
@@ -75,7 +84,7 @@
         }
           
       }//closes li
-
+      
      /* label is applied to li when evaluations are needed */
       .label {
         font-size: 100%;
@@ -84,6 +93,11 @@
     }//closes question-metadata-list
     
   }//closes each-question
+  
+  /* add border to first question */
+  .first-child {
+    border-top: 1px solid @border-gray;
+  }
   
 }//closes course-screen
 
