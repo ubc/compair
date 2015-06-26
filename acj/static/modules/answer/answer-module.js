@@ -119,8 +119,8 @@ module.controller(
 
 module.controller(
 	"AnswerEditController",
-	function ($scope, $log, $location, $routeParams, AnswerResource, $interval,
-		QuestionResource, AttachmentResource, attachService, Toaster, Authorize)
+	function ($scope, $log, $location, $routeParams, AnswerResource, $timeout,
+		QuestionResource, TimerResource, AttachmentResource, attachService, Toaster, Authorize)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
@@ -131,30 +131,13 @@ module.controller(
 		
 		$scope.question = {};
 		$scope.answer = {};
-		var due_date = null;
-		var timer = null;
-		var date = new Date();
+		var countDown = function() {
+			$scope.showCountDown = true;
+		};
 
 		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL, $scope.courseId).then(function(canManagePosts){
 			$scope.canManagePosts = canManagePosts;
 		});
-		// check how close we are to the deadline
-		var checkTime  = function() {
-			date = new Date();
-			$scope.showCountDown = due_date.getTime()- date.getTime() <= 300000;    // 5 minutes
-			if ($scope.showCountDown) {
-				stopTimer();
-			}
-		};
-		// cancel the countdown timer
-		var stopTimer = function() {
-			if (angular.isDefined(timer)) {
-				$interval.cancel(timer);
-				timer = null;
-			}
-		};
-		// listen to the user leaving the page
-		$scope.$on('$destroy', stopTimer);
 
 		$scope.deleteFile = function(post_id, file_id) {
 			AttachmentResource.delete({'postId': post_id, 'fileId': file_id}).$promise.then(
@@ -173,7 +156,16 @@ module.controller(
 				$scope.question = ret.question;
 				due_date = new Date(ret.question.answer_end);
 				if (!$scope.canManagePosts) {
-					timer = $interval(checkTime, 1000);
+					TimerResource.get(
+						function (ret) {
+							var current_time = ret.date;
+							var trigger_time = due_date.getTime() - current_time  - 600000; //(10 mins)
+							$timeout(countDown, trigger_time);
+						},
+						function (ret) {
+							Toaster.reqerror("Unable to get the current time", ret);
+						}
+					);
 				}
 			},
 			function (ret) {
