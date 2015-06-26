@@ -146,6 +146,8 @@ def create_app(conf=config, settings_override={}):
 	from .selfeval import selfeval_api, selfeval_acomments_api
 	app.register_blueprint(selfeval_api, url_prefix='/api/selfevaltypes')
 	app.register_blueprint(selfeval_acomments_api, url_prefix='/api/selfeval/courses/<int:course_id>/questions')
+	from .common import timer_api
+	app.register_blueprint(timer_api, url_prefix='/api/timer')
 
 
 	@app.route('/')

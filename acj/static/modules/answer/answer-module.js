@@ -10,6 +10,7 @@ var module = angular.module('ubc.ctlt.acj.answer',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.interceptor',
 		'ubc.ctlt.acj.common.mathjax',
+		'ubc.ctlt.acj.common.timer',
 		'ubc.ctlt.acj.question',
 		'ubc.ctlt.acj.toaster'
 	]
@@ -45,39 +46,21 @@ module.factory(
 module.controller(
 	"AnswerCreateController",
 	function ($scope, $log, $location, $routeParams, AnswerResource, 
-		QuestionResource, Toaster, Authorize, attachService, $interval)
+		QuestionResource, TimerResource, Toaster, Authorize, attachService, $timeout)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
 
-		var due_date = null;
-		var timer = undefined;
-		var date = new Date();
-
 		$scope.uploader = attachService.getUploader();
 		$scope.resetName = attachService.resetName();
+
+		var countDown = function() {
+			$scope.showCountDown = true;
+		};
 
 		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL, $scope.courseId).then(function(canManagePosts){
 			$scope.canManagePosts = canManagePosts;
 		});
-		// check how close we are to the deadline
-		var checkTime = function() {
-			date = new Date();
-			$scope.showCountDown = due_date.getTime() - date.getTime() <= 300000;    // 5 minutes
-			// stop checking time once the timer starts appearing
-			if ($scope.showCountDown) {
-				stopTimer();
-			}
-		};
-		// cancel the countdown timer
-		var stopTimer = function() {
-			if (angular.isDefined(timer)) {
-				$interval.cancel(timer);
-				timer = undefined;
-			}
-		};
-		// listen to the user leaving the page
-		$scope.$on('$destroy', stopTimer);
 
 		$scope.question = {};
 		QuestionResource.get({'courseId': $scope.courseId, 'questionId': questionId}).
@@ -85,9 +68,18 @@ module.controller(
 				function (ret)
 				{
 					$scope.question = ret.question;
-					due_date = new Date(ret.question.answer_end);
+					var due_date = new Date(ret.question.answer_end);
 					if (!$scope.canManagePosts) {
-						timer = $interval(checkTime, 1000);
+						TimerResource.get(
+							function (ret) {
+								var current_time = ret.date;
+								var trigger_time = due_date.getTime() - current_time  - 600000; //(10 mins)
+								$timeout(countDown, trigger_time);
+							},
+							function (ret) {
+								Toaster.reqerror("Unable to get the current time", ret);
+							}
+						);
 					}
 				},
 				function (ret)
