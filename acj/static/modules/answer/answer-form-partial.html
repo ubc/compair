@@ -13,7 +13,7 @@
 
 		<div class="h3 text-center" ng-show="!canManagePosts && showCountDown">
 			<timer end-time="question.answer_end">
-				<span class="bg-danger alert text-danger">{{minutes}} minutes {{seconds}} seconds left</span>
+				<span title="The application uses the server's time." class="bg-danger alert text-danger">{{minutes}} minutes {{seconds}} seconds left</span>
 			</timer>
 			<br /><br />
 			<span class="h4">(Answer must be saved by deadline to be accepted)</span>
