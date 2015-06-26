@@ -16,8 +16,16 @@ module.directive('acjPdfInline', function() {
 			pdfs: '=',
 			label: '@'
 		},
-		controller: function ($scope, $log, $sce) {
+		controller: function ($scope, $log, $sce, $modal) {
 			$scope.pdfname = "";
+			$scope.pdfFile = $modal(
+				{
+					contentTemplate: 'modules/common/pdf-overlay-template.html',
+					scope: $scope,
+					show: false,
+				}
+			);
+
 			$scope.updatePDF = function (name) {
 				if (name != $scope.pdfname) {
 					$scope.pdfvisible = true;
@@ -30,6 +38,11 @@ module.directive('acjPdfInline', function() {
 					$scope.pdfvisible = !$scope.pdfvisible;
 				}
 			};
+			$scope.openPDF = function (name) {
+				$scope.file = 'pdf/' + name;
+				$scope.title = name;
+				$scope.pdfFile.$promise.then($scope.pdfFile.show);
+			}
 		}
 	};
 });
