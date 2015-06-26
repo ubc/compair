@@ -1,6 +1,8 @@
 {
   "name": "ACJ",
   "version": "0.0.1",
+  "license": "MIT",
+  "repository" : { "type" : "git", "url" : "https://github.com/ubc/acj-versus.git" },
   "dependencies": {
     "gulp": "latest",
     "bower": "latest",
@@ -29,6 +31,7 @@
 	"chai-as-promised": "4.1.1",
 	"karma-junit-reporter": "^0.2.2",
 	"gulp-protractor": "latest",
-	"lodash": "^2.4.1"
+	"lodash": "^2.4.1",
+    "jasmine-core": "latest"
   }
 }

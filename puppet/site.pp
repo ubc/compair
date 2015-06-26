@@ -5,7 +5,7 @@ package {'libffi-dev':
 include git
 
 class {'nodejs':
-  manage_repo => true,
+  manage_package_repo => true,
 }
 
 class {'python':
