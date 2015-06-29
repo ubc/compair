@@ -28,14 +28,15 @@ class ClassListAPITest(ACJTestCase):
 		self.assert404(rv)
 
 		# test authorized user
-		expected = [self.data.get_authorized_instructor().id, self.data.get_authorized_ta().id,\
-					self.data.get_authorized_student().id]
+		expected = [self.data.get_authorized_instructor(), self.data.get_authorized_ta(),\
+					self.data.get_authorized_student()]
+		expected.sort(key=lambda x: x.firstname)
 		rv = self.client.get(self.url)
 		self.assert200(rv)
 		self.assertEqual(len(expected), len(rv.json['objects']))
-		for key in range(0, len(expected)):
+		for key, user in enumerate(expected):
 			self.assertEqual(self.data.get_course().id, rv.json['objects'][key]['courses_id'])
-			self.assertEqual(expected[key], rv.json['objects'][key]['user']['id'])
+			self.assertEqual(user.id, rv.json['objects'][key]['user']['id'])
 
 	def test_get_instructor_labels(self):
 		url = self.url + "/instructors/labels"

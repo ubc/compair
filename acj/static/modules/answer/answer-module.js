@@ -7,6 +7,7 @@ var module = angular.module('ubc.ctlt.acj.answer',
 	[
 		'ngResource',
 		'timer',
+		'ubc.ctlt.acj.classlist',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.interceptor',
 		'ubc.ctlt.acj.common.mathjax',
@@ -45,11 +46,12 @@ module.factory(
 /***** Controllers *****/
 module.controller(
 	"AnswerCreateController",
-	function ($scope, $log, $location, $routeParams, AnswerResource, 
-		QuestionResource, TimerResource, Toaster, Authorize, attachService, $timeout)
+	function ($scope, $log, $location, $routeParams, AnswerResource, ClassListResource,
+		QuestionResource, TimerResource, Toaster, Authorize, attachService, Session, $timeout)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
+		$scope.create = true;
 
 		$scope.uploader = attachService.getUploader();
 		$scope.resetName = attachService.resetName();
@@ -60,6 +62,17 @@ module.controller(
 
 		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL, $scope.courseId).then(function(canManagePosts){
 			$scope.canManagePosts = canManagePosts;
+			if ($scope.canManagePosts) {
+				// get list of users in the course
+				ClassListResource.get({'courseId': $scope.courseId}).$promise.then(
+					function (ret) {
+						$scope.classlist = ret.objects;
+					},
+					function (ret) {
+						Toaster.reqerror("No Users Found For Course ID "+$scope.courseId, ret);
+					}
+				);
+			}
 		});
 
 		$scope.question = {};
@@ -89,6 +102,9 @@ module.controller(
 			);
 
 		$scope.answer = {};
+		Session.getUser().then(function(user) {
+			$scope.answer.user = user.id
+		});
 		$scope.answerSubmit = function () {
 			$scope.submitted = true;
 			$scope.answer.name = attachService.getName();

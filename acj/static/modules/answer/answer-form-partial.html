@@ -19,6 +19,13 @@
 			<span class="h4">(Answer must be saved by deadline to be accepted)</span>
 		</div>
 
+		<div class="form-group" ng-if="canManagePosts && create">
+			<label for="user">Submitting As: </label>
+			<select id="user" name="user" ng-model="answer.user"  class="form-control" required
+					ng-options="u.user.id as u.user.fullname for u in classlist">
+			</select>
+		</div>
+
 		<div>
 			<label for="importFile">Attach PDF</label>
 			<input type="file" nv-file-select uploader="uploader" id="importFile" ng-disabled="uploader.queue.length || answer.uploadedFile" multiple/>

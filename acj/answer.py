@@ -22,6 +22,7 @@ all_answers_api = Blueprint('all_answers_api', __name__)
 apiAll = new_restful_api(all_answers_api)
 
 new_answer_parser = RequestParser()
+new_answer_parser.add_argument('user', type=int, default=None)
 new_answer_parser.add_argument('post', type=dict, default={})
 new_answer_parser.add_argument('name', type=str, default=None)
 new_answer_parser.add_argument('alias', type=str, default=None)
@@ -91,7 +92,8 @@ class AnswerRootAPI(Resource):
 		prev_answer = PostsForAnswers.query.filter_by(questions_id=question_id).join(Posts).filter(Posts.users_id==current_user.id).first()
 		if prev_answer:
 			return {"error":"An answer has already been submitted"}, 400
-		post.users_id = current_user.id
+		user = params.get("user")
+		post.users_id = user if user else current_user.id
 		db.session.add(post)
 		db.session.add(answer)
 

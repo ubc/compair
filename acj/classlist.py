@@ -180,7 +180,8 @@ class ClasslistRootAPI(Resource):
 		dropped = UserTypesForCourse.query.filter_by(name="Dropped").first().id
 		classlist = CoursesAndUsers.query. \
 			filter_by(courses_id=course_id).\
-			filter(CoursesAndUsers.usertypesforcourse_id!=dropped).all()
+			filter(CoursesAndUsers.usertypesforcourse_id!=dropped).join(Users).\
+			order_by(Users.firstname).all()
 
 		on_classlist_get.send(
 			current_app._get_current_object(),
