@@ -487,6 +487,40 @@
 					<p class="intro-text">Comparisons you have submitted for this assignment appear below.</p>
 				</div>
 			</div>
+
+			<div class="each-answer clearfix" ng-repeat="answer in answers | filter: myAnswer()">
+				<div class="each-header clearfix">
+					<a ng-href="#/user/{{answer.post.user.id}}">
+						<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
+					</a>
+					You
+					<strong>answered</strong> on {{answer.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
+					<div class="manager-actions pull-right" ng-if="canManagePosts || (answer.post.user.id == loggedInUserId && question.answer_period && !question.judging_period)">
+						<span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
+							<i class="fa fa-warning"></i>
+							Flagged
+							<a href="" title="Unflag this answer" ng-click="unflagAnswer(answer, courseId, question.id, answer.id)">
+								Unflag?
+							</a>
+						</span>
+						<a href="" confirmation-needed="deleteAnswer(answer, courseId, question.id, answer.id)" keyword="answer">
+							<i class="fa fa-trash-o"></i>
+						</a>
+						<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit">
+							Edit
+						</a>
+					</div>
+				</div>
+				<div class="content {{answer.post.id}}" get-height>
+					<div mathjax="answer.post.content"
+						 ng-bind-html="answer.post.content">
+					</div>
+					<!-- Student Attachment -->
+					<acj-pdf-inline label="See answer details:"
+						pdfs="answer.post.files" ng-click="revealAnswer(answer.post.id)">
+					</acj-pdf-inline>
+				</div>
+			</div>
 			
 			<!-- Comparisons Section -->
 			<div class="each-evaluation" ng-repeat="comment in comparisons">

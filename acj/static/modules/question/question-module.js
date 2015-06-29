@@ -466,6 +466,12 @@ module.controller("QuestionViewController",
 			}
 		};
 
+		$scope.myAnswer = function() {
+			return function (answer) {
+				return answer.post.user.id == $scope.loggedInUserId;
+			}
+		};
+
 		var tab = 'answers';
 		// tabs: answers, help, participation, comparisons
 		$scope.setTab = function(name) {
