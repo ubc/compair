@@ -520,7 +520,7 @@ class PostsForAnswers(db.Model):
 		return len(self.comments)
 	@hybrid_property
 	def private_comments_count(self):
-		private_comments = [c for c in self.comments if c.evaluation or c.selfeval]
+		private_comments = [c for c in self.comments if c.evaluation or c.selfeval or c.type == 0]
 		return len(private_comments)
 	@hybrid_property
 	def public_comments_count(self):
@@ -586,6 +586,7 @@ class PostsForAnswersAndPostsForComments(db.Model):
 	postsforcomments = db.relationship("PostsForComments")
 	evaluation = db.Column(db.Boolean(name='evaluation'), default=False, nullable=False)
 	selfeval = db.Column(db.Boolean(name='selfeval'), default=False, nullable=False)
+	type = db.Column(db.SmallInteger, default=0, nullable=False)
 
 	@hybrid_property
 	def courses_id(self):

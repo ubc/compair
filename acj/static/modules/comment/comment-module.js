@@ -146,6 +146,7 @@ module.controller(
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
 		var answerId = $routeParams['answerId'];
+		$scope.answerComment = true;
 		$scope.canManagePosts = 
 			Authorize.can(Authorize.MANAGE, QuestionResource.MODEL, courseId);
 		$scope.comment = {};
@@ -199,6 +200,7 @@ module.controller(
 		var questionId = $scope.questionId = $routeParams['questionId'];
 		var answerId = $routeParams['answerId'];
 		var commentId = $routeParams['commentId'];
+		$scope.answerComment = true;
 
 		$scope.comment = {};
 		$scope.parent = {}; // answer

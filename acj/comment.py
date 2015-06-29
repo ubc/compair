@@ -26,10 +26,12 @@ new_comment_parser = RequestParser()
 new_comment_parser.add_argument('content', type=str, required=True)
 new_comment_parser.add_argument('selfeval', type=bool, required=False, default=False)
 new_comment_parser.add_argument('evaluation', type=bool, required=False, default=False)
+new_comment_parser.add_argument('type', type=int, default=0)
 
 existing_comment_parser = RequestParser()
 existing_comment_parser.add_argument('id', type=int, required=True, help="Comment id is required.")
 existing_comment_parser.add_argument('content', type=str, required=True)
+existing_comment_parser.add_argument('type', type=int, default=0)
 
 # events
 on_comment_modified = event.signal('COMMENT_MODIFIED')
@@ -198,6 +200,7 @@ class AnswerCommentRootAPI(Resource):
 		post.users_id = current_user.id
 		commentForAnswer.selfeval = params.get("selfeval", False)
 		commentForAnswer.evaluation = params.get("evaluation", False)
+		commentForAnswer.type = params.get("type", 0)
 		db.session.add(post)
 		db.session.add(comment)
 		db.session.add(commentForAnswer)
@@ -246,6 +249,7 @@ class AnswerCommentIdAPI(Resource):
 		comment.postsforcomments.post.content = params.get("content")
 		if not comment.postsforcomments.post.content:
 			return {"error":"The comment content is empty!"}, 400
+		comment.type = params.get("type")
 		db.session.add(comment.postsforcomments.post)
 
 		on_answer_comment_modified.send(

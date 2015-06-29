@@ -200,6 +200,7 @@ def getPostsForAnswersAndPostsForComments(restrict_users=True):
 	comment = getPostsForQuestionsAndPostsForComments(restrict_users)
 	comment['selfeval'] = fields.Boolean
 	comment['evaluation'] = fields.Boolean
+	comment['type'] = fields.Integer
 	return comment
 
 def getFilesForPosts():

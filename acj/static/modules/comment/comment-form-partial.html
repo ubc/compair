@@ -15,6 +15,10 @@
 			<textarea ng-model="comment.content" id="commentContent" class="form-control" rows="8" ckeditor required>
 			</textarea>
 		</div>
+		<div class="form-group" ng-if="answerComment">
+			<input id="type" type="checkbox" ng-model="comment.type">
+			<label for="type">Public</label>
+		</div>
 	</fieldset>
 	<input type="submit" class="btn btn-success btn-lg center-block" value="Save"
 		ng-disabled="commentForm.$invalid || submitted" />
