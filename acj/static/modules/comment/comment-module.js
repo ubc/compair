@@ -242,13 +242,16 @@ module.controller(
 		$scope.course = {};
 		$scope.courseId = courseId;
 		$scope.questionId = questionId;
-		$scope.deletedAnsMsg = '<i>(This answer has been deleted.)</i>'
+		$scope.deletedAnsMsg = '<i>(This answer has been deleted.)</i>';
+		$scope.noAnsMsg = '<i>(No answer has been submitted.)</i>';
 
 		var allStudents = {};
 		var userIds = {};
 		$scope.group = null;
 
 		$scope.ans = {};
+		$scope.userToAns = {};
+		var gotAnswers = false;
 
 		CourseResource.get({'id':courseId}).$promise.then(
 			function (ret) {
@@ -335,14 +338,26 @@ module.controller(
 		};
 
 		$scope.answers = function() {
-			AnswerResource.view({'courseId': courseId, 'questionId': questionId}).$promise.then(
-				function (ret) {
-					$scope.ans = ret.answers;
-				},
-				function (ret) {
-					Toaster.reqerror("Failed to retrieve the answers", ret);
-				}
-			);
+			if (!gotAnswers) {
+				AnswerResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
+					function (ret) {
+						for (var key in ret.objects) {
+							var answer = ret.objects[key];
+							var scores = {};
+							for (var index in answer.scores) {
+								scores[answer.scores[index].criteriaandquestions_id] = answer.scores[index].normalized_score;
+							}
+							answer.scores = scores;
+							$scope.ans[answer.id] = answer;
+							$scope.userToAns[answer.post.user.id] = answer.id;
+						}
+						gotAnswers = true;
+					},
+					function (ret) {
+						Toaster.reqerror("Failed to retrieve the answers", ret);
+					}
+				);
+			}
 		};
 	}
 );
