@@ -176,7 +176,7 @@ class JudgementPairAPI(Resource):
 		require(READ, question)
 		if not question.judging_period:
 			return {'error':'Evaluation period is not active.'}, 403
-		pair_generator = AnswerPairGenerator(course.id, question.id)
+		pair_generator = AnswerPairGenerator(course.id, question)
 
 		try:
 			answerpairing = pair_generator.get_pair()
@@ -324,12 +324,13 @@ class AnswerMissingScoreCalculation(Exception):
 class UnknownAnswerPairError(Exception):
 	pass
 class AnswerPairGenerator():
-	def __init__(self, course_id, question_id):
+	def __init__(self, course_id, question):
 		self.course_id = course_id
-		self.question_id = question_id
+		self.question_id = question.id
 		self.judged_answer_partners = self._generate_judged_answer_partners()
 		self.answers = self._get_eligible_answers()
 		self.rounds = self._get_existing_rounds()
+		self.seed = current_user.id * (judgement_count(question, current_user.id) + 1)
 
 	def get_pair(self):
 		# Restrictions:
@@ -357,6 +358,7 @@ class AnswerPairGenerator():
 			# match by closest score, when we have many criteria, match score on only one criterion
 			question_criteria = CriteriaAndPostsForQuestions.query.\
 				filter_by(questions_id=self.question_id, active=True).all()
+			random.seed(self.seed)
 			criteria = random.choice(question_criteria)
 			pair = self._get_scored_pair(criteria)
 			criteriaId = criteria.id
@@ -443,11 +445,13 @@ class AnswerPairGenerator():
 			# assumng only one answer in the lowest group
 			answer = answers[0]
 			answers = self.answer_in_rounds[self.rounds[1]]
+			random.seed(self.seed)
 			random.shuffle(answers)
 			for ans in answers:
 				if not self._has_user_already_judged_pair([answer, ans]):
 					return [answer, ans]
 			return None
+		random.seed(self.seed)
 		random.shuffle(answers)
 		pairs = self._pair_with_neighbours(answers)
 		for pair in pairs:
@@ -491,6 +495,7 @@ class AnswerPairGenerator():
 		# check the pairs with the smallest differences first
 		for score_difference in sorted(pair_score_differences):
 			pairs = pair_score_differences[score_difference]
+			random.seed(self.seed)
 			random.shuffle(pairs)
 			for pair in pairs:
 				if not self._has_user_already_judged_pair(pair):
