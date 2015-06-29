@@ -509,8 +509,37 @@
 						<div class="content" mathjax="criterion.content"
 							ng-bind-html="criterion.content">
 						</div>
+
+						<div class="row">
+							<div class="col-md-6">
+								<div class="answer-choice clearfix">
+									<h4 class="text-center">Odd-Numbered Answer
+										<span ng-show="criterion.winner == criterion.answer1.id">(Chosen)</span>
+									</h4>
+									<div mathjax="ans[criterion.answer1.id].content" ng-if="ans[criterion.answer1.id]"
+										 ng-bind-html="ans[criterion.answer1.id].content"></div>
+									<div ng-if="!ans[criterion.answer1.id]" ng-bind-html="deletedAnsMsg"></div>
+									<!-- Attachments -->
+									<acj-pdf-inline label="See details:" pdfs="ans[criterion.answer1.id].file"></acj-pdf-inline>
+								</div>
+							</div>
+							<div class="col-md-6">
+							<div class="answer-choice clearfix">
+									<h4 class="text-center">Even-Numbered Answer
+										<span ng-show="criterion.winner == criterion.answer2.id">(Chosen)</span>
+									</h4>
+									<div mathjax="ans[criterion.answer2.id].content" ng-if="ans[criterion.answer2.id]"
+										 ng-bind-html="ans[criterion.answer2.id].content"></div>
+									<div ng-if="!ans[criterion.answer2.id]" ng-bind-html="deletedAnsMsg"></div>
+									<!-- Attachments -->
+									<acj-pdf-inline label="See details:" pdfs="ans[criterion.answer2.id].file"></acj-pdf-inline>
+								</div>
+							</div>
+						</div>
 						
 					</div>
+
+
 					
 					<h5 class="content">Feedback for Odd-Numbered Answer</h5>
 					

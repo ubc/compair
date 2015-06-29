@@ -393,6 +393,14 @@ module.controller("QuestionViewController",
 				Toaster.reqerorr('Error', ret);
 			}
 		);
+		AnswerResource.view({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
+			function (ret) {
+				$scope.ans = ret.answers;
+			},
+			function (ret) {
+				Toaster.reqerror("Failed to retrieve the answers", ret);
+			}
+		);
 		CourseResource.getInstructorsLabels({'id': $scope.courseId}).$promise.then(
 			function (ret) {
 				$scope.instructors = ret.instructors;
