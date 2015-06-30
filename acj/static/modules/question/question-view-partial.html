@@ -381,9 +381,9 @@
 								<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">
 									{{instructors[comment.postsforcomments.post.user.id]}}
 								</span>
-								<strong ng-if="comment.evaluation">gave private feedback</strong>
+								<strong ng-if="comment.evaluation || comment.type == 0">gave private feedback</strong>
 								<strong ng-if="comment.selfeval">self-evaluated</strong>
-								<strong ng-if="!comment.evaluation && !comment.selfeval">replied <span ng-if="canManagePosts || answer.post.user.id == loggedInUserId" class="label label-info">Public</span></strong>
+								<strong ng-if="!comment.evaluation && !comment.selfeval && comment.type != 0">replied <span ng-if="canManagePosts || answer.post.user.id == loggedInUserId" class="label label-info">Public</span></strong>
 								on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 								<div class="manager-actions pull-right" ng-if="canManagePosts || (comment.postsforcomments.post.user.id == loggedInUserId && !(comment.selfeval || comment.evaluation))">
 									<a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">

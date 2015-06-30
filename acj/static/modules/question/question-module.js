@@ -462,7 +462,7 @@ module.controller("QuestionViewController",
 			return function (comment) {
 				// can see if canManagePosts OR their own answer OR not from evaluation and selfeval
 				return $scope.canManagePosts || answer.post.user.id == $scope.loggedInUserId ||
-					!(comment.evaluation || comment.selfeval);
+					!(comment.evaluation || comment.selfeval || comment.type == 0);
 			}
 		};
 
