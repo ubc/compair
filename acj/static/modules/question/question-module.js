@@ -603,9 +603,9 @@ module.controller("QuestionCreateController",
 		};
 		// initialization
 		$scope.date.astart.date.setDate(today.getDate()+1);
-		$scope.date.aend.date.setDate($scope.date.astart.date.getDate()+7);
-		$scope.date.jstart.date.setDate($scope.date.astart.date.getDate()+7);
-		$scope.date.jend.date.setDate($scope.date.jstart.date.getDate()+7);
+		$scope.date.aend.date.setDate(today.getDate()+8);
+		$scope.date.jstart.date.setDate(today.getDate()+8);
+		$scope.date.jend.date.setDate(today.getDate()+15);
 		$scope.date.astart.date = $scope.date.astart.date.toISOString();
 		$scope.date.aend.date = $scope.date.aend.date.toISOString();
 		$scope.date.jstart.date = $scope.date.jstart.date.toISOString();
