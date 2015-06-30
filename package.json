@@ -30,7 +30,7 @@
 	"chai": "1.10.0",
 	"chai-as-promised": "4.1.1",
 	"karma-junit-reporter": "^0.2.2",
-	"gulp-protractor": "latest",
+	"gulp-protractor": "~0.0.12",
 	"lodash": "^2.4.1",
     "jasmine-core": "latest"
   }
