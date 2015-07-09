@@ -40,7 +40,7 @@ module.directive('acjPdfInline', function() {
 			};
 			$scope.openPDF = function (name) {
 				$scope.file = 'pdf/' + name;
-				$scope.title = name;
+				$scope.title = 'Attached PDF: Use + and - to zoom';
 				$scope.pdfFile.$promise.then($scope.pdfFile.show);
 			}
 		}

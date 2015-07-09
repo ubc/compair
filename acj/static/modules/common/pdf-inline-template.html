@@ -5,12 +5,13 @@
 		<li ng-repeat="pdf in pdfs">
 			<a href="" class="btn btn-primary btn-xs" 
 				ng-click="updatePDF(pdf.name);">
-				<i class="fa fa-file-pdf-o"></i> Show PDF
+				<i class="fa fa-file-pdf-o"></i> Show PDF Below
 			</a>
-			<a ng-href="" class="btn btn-default btn-xs"
+			&nbsp; <em>or</em> &nbsp;
+			<a href="" class="btn btn-primary btn-xs"
 			   ng-click="openPDF(pdf.name);">
-				<i class="fa fa-file-pdf-o"></i> Open PDF
-			</a>
+				Open PDF Pop-up <i class="fa fa-external-link"></i>
+			</a> 
 		</li>
 	</ul>
 	<!-- Iframe for showing the PDF file here -->
