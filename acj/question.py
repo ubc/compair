@@ -9,9 +9,10 @@ from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import desc, or_
 
 from . import dataformat
+from sqlalchemy.orm import joinedload
 from .core import db, event
 from .authorization import allow, require
-from .models import PostsForQuestions, Courses, Posts, CoursesAndUsers, \
+from .models import PostsForQuestions, Courses, Posts, \
 	PostsForQuestionsAndSelfEvaluationTypes
 from .util import new_restful_api, get_model_changes
 from .attachment import addNewFile, deleteFile
@@ -61,14 +62,14 @@ on_question_delete = event.signal('QUESTION_DELETE')
 class QuestionIdAPI(Resource):
 	@login_required
 	def get(self, course_id, question_id):
-		course = Courses.query.get_or_404(course_id)
+		Courses.query.get_or_404(course_id)
 		if not question_id:
 			question_id = 1
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
 		now = datetime.datetime.utcnow()
 		if question.answer_start and not allow(MANAGE, question) and not (question.answer_start <= now):
-			return {"error":"The question is unavailable!"}, 403
+			return {"error": "The question is unavailable!"}, 403
 		restrict_users = not allow(MANAGE, question)
 
 		on_question_get.send(
@@ -79,12 +80,12 @@ class QuestionIdAPI(Resource):
 			data={'id': question_id})
 
 		return {
-			'question':marshal(question, dataformat.getPostsForQuestions(restrict_users, include_answers=False))
+			'question': marshal(question, dataformat.getPostsForQuestions(restrict_users, include_answers=False))
 		}
 
 	@login_required
 	def post(self, course_id, question_id):
-		course = Courses.query.get_or_404(course_id)
+		Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(EDIT, question)
 		params = existing_question_parser.parse_args()
@@ -93,11 +94,15 @@ class QuestionIdAPI(Resource):
 			return {"error": "Question id does not match URL."}, 400
 		# modify question according to new values, preserve original values if values not passed
 		question.post.content = params.get("post").get("content")
-		uploaded = params.get('uploadedFile')
+		# uploaded = params.get('uploadedFile')
 		name = params.get('name')
 		question.title = params.get("title", question.title)
-		question.answer_start = datetime.datetime.strptime(params.get('answer_start', question.answer_start), '%Y-%m-%dT%H:%M:%S.%fZ')
-		question.answer_end = datetime.datetime.strptime(params.get('answer_end', question.answer_end), '%Y-%m-%dT%H:%M:%S.%fZ')
+		question.answer_start = datetime.datetime.strptime(
+			params.get('answer_start', question.answer_start),
+			'%Y-%m-%dT%H:%M:%S.%fZ')
+		question.answer_end = datetime.datetime.strptime(
+			params.get('answer_end', question.answer_end),
+			'%Y-%m-%dT%H:%M:%S.%fZ')
 		question.judge_start = params.get('judge_start', None)
 		if question.judge_start is not None:
 			question.judge_start = params.get('judge_start', None)
@@ -121,16 +126,17 @@ class QuestionIdAPI(Resource):
 		if name:
 			addNewFile(params.get('alias'), name, course_id, question.id, question.post.id)
 		# assume one selfevaluation type per question
-		type = PostsForQuestionsAndSelfEvaluationTypes.query.filter_by(questions_id=question.id).first()
+		eval_type = PostsForQuestionsAndSelfEvaluationTypes.query.filter_by(questions_id=question.id).first()
 		if selfevaltype_id:
-			if not type:
-				type = PostsForQuestionsAndSelfEvaluationTypes(selfevaltypes_id=selfevaltype_id,
+			if not eval_type:
+				eval_type = PostsForQuestionsAndSelfEvaluationTypes(
+					selfevaltypes_id=selfevaltype_id,
 					questions_id=question.id)
 			else:
-				type.selfevaltypes_id = selfevaltype_id
-			db.session.add(type)
-		elif not selfevaltype_id and type:
-			db.session.delete(type)
+				eval_type.selfevaltypes_id = selfevaltype_id
+			db.session.add(eval_type)
+		elif not selfevaltype_id and eval_type:
+			db.session.delete(eval_type)
 		db.session.commit()
 
 		return marshal(question, dataformat.getPostsForQuestions())
@@ -141,7 +147,7 @@ class QuestionIdAPI(Resource):
 		require(DELETE, question)
 		formatted_question = marshal(question, dataformat.getPostsForQuestions(False, False))
 		# delete file when question is deleted
-		deleteFile(question.post.id)	
+		deleteFile(question.post.id)
 		db.session.delete(question)
 		db.session.commit()
 
@@ -156,6 +162,7 @@ class QuestionIdAPI(Resource):
 
 api.add_resource(QuestionIdAPI, '/<int:question_id>')
 
+
 # /
 class QuestionRootAPI(Resource):
 	# TODO Pagination
@@ -166,14 +173,21 @@ class QuestionRootAPI(Resource):
 		# Get all questions for this course, default order is most recent first
 		post = Posts(courses_id=course_id)
 		question = PostsForQuestions(post=post)
+		base_query = PostsForQuestions.query. \
+			join(Posts).filter(Posts.courses_id == course_id). \
+			options(joinedload("_criteria").joinedload("criterion")). \
+			options(joinedload("post")). \
+			options(joinedload("post").joinedload("user")). \
+			options(joinedload("post").joinedload("files")). \
+			order_by(desc(Posts.created))
 		if allow(MANAGE, question):
-			questions = PostsForQuestions.query.join(Posts).filter(Posts.courses_id==course_id). \
-				order_by(desc(Posts.created)).all()
+			questions = base_query.all()
 		else:
 			now = datetime.datetime.utcnow()
-			questions = PostsForQuestions.query.join(Posts).filter(Posts.courses_id==course_id).\
-				filter(or_(PostsForQuestions.answer_start==None,now >= PostsForQuestions.answer_start)).\
-				order_by(desc(Posts.created)).all()
+			questions = base_query. \
+				filter(or_(PostsForQuestions.answer_start.is_(None), now >= PostsForQuestions.answer_start)).\
+				all()
+
 		restrict_users = not allow(MANAGE, question)
 
 		on_question_list_get.send(
@@ -183,12 +197,12 @@ class QuestionRootAPI(Resource):
 			course_id=course_id)
 
 		return {
-			"questions":marshal(questions, dataformat.getPostsForQuestions(restrict_users, include_answers=False))
+			"questions": marshal(questions, dataformat.getPostsForQuestions(restrict_users, include_answers=False))
 		}
 
 	@login_required
 	def post(self, course_id):
-		course = Courses.query.get_or_404(course_id)
+		Courses.query.get_or_404(course_id)
 		# check permission first before reading parser arguments
 		post = Posts(courses_id=course_id)
 		question = PostsForQuestions(post=post)
@@ -215,9 +229,10 @@ class QuestionRootAPI(Resource):
 		if name:
 			addNewFile(params.get('alias'), name, course_id, question.id, post.id)
 		if selfevaltype_id:
-			type = PostsForQuestionsAndSelfEvaluationTypes(selfevaltypes_id=selfevaltype_id,
-					questions_id=question.id)
-			db.session.add(type)
+			eval_type = PostsForQuestionsAndSelfEvaluationTypes(
+				selfevaltypes_id=selfevaltype_id,
+				questions_id=question.id)
+			db.session.add(eval_type)
 			db.session.commit()
 
 		on_question_create.send(

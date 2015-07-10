@@ -40,37 +40,36 @@ def define_authorization(user, they):
 	for entry in user.coursesandusers:
 		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_DROPPED:
 			continue
-		course = entry.course
-		they.can(READ, Courses, id=course.id)
-		they.can(READ, PostsForQuestions, courses_id=course.id)
-		they.can((READ, CREATE), PostsForAnswers, courses_id=course.id)
+		they.can(READ, Courses, id=entry.courses_id)
+		they.can(READ, PostsForQuestions, courses_id=entry.courses_id)
+		they.can((READ, CREATE), PostsForAnswers, courses_id=entry.courses_id)
 		they.can((EDIT, DELETE), PostsForAnswers, users_id=user.id)
-		they.can((READ, CREATE), PostsForQuestionsAndPostsForComments, courses_id=course.id)
+		they.can((READ, CREATE), PostsForQuestionsAndPostsForComments, courses_id=entry.courses_id)
 		they.can((EDIT, DELETE), PostsForQuestionsAndPostsForComments, users_id=user.id)
-		they.can((READ, CREATE), PostsForAnswersAndPostsForComments, courses_id=course.id)
+		they.can((READ, CREATE), PostsForAnswersAndPostsForComments, courses_id=entry.courses_id)
 		they.can((EDIT, DELETE), PostsForAnswersAndPostsForComments, users_id=user.id)
 		# instructors can modify the course and enrolment
 		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_INSTRUCTOR:
-			they.can(EDIT, Courses, id=course.id)
-			they.can(EDIT, CoursesAndUsers, courses_id=course.id)
-			they.can((CREATE, DELETE), CriteriaAndCourses, courses_id=course.id)
-			they.can((CREATE, DELETE), Groups, courses_id=course.id)
-			they.can((CREATE, DELETE), GroupsAndUsers, courses_id=course.id)
+			they.can(EDIT, Courses, id=entry.courses_id)
+			they.can(EDIT, CoursesAndUsers, courses_id=entry.courses_id)
+			they.can((CREATE, DELETE), CriteriaAndCourses, courses_id=entry.courses_id)
+			they.can((CREATE, DELETE), Groups, courses_id=entry.courses_id)
+			they.can((CREATE, DELETE), GroupsAndUsers, courses_id=entry.courses_id)
 		# instructors and ta can do anything they want to posts
 		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_INSTRUCTOR or \
 			entry.usertypeforcourse.name == UserTypesForCourse.TYPE_TA:
-			they.can(MANAGE, PostsForQuestions, courses_id=course.id)
-			they.can(MANAGE, PostsForAnswers, courses_id=course.id)
-			they.can(MANAGE, PostsForQuestionsAndPostsForComments, courses_id=course.id)
-			they.can(MANAGE, PostsForAnswersAndPostsForComments, courses_id=course.id)
-			they.can(MANAGE, PostsForJudgements, courses_id=course.id)
-			they.can(READ, Groups, courses_id=course.id)
-			they.can(READ, GroupsAndUsers, courses_id=course.id)
-			they.can(READ, CoursesAndUsers, courses_id=course.id)
-			they.can((CREATE, DELETE), CriteriaAndPostsForQuestions, courses_id=course.id)
+			they.can(MANAGE, PostsForQuestions, courses_id=entry.courses_id)
+			they.can(MANAGE, PostsForAnswers, courses_id=entry.courses_id)
+			they.can(MANAGE, PostsForQuestionsAndPostsForComments, courses_id=entry.courses_id)
+			they.can(MANAGE, PostsForAnswersAndPostsForComments, courses_id=entry.courses_id)
+			they.can(MANAGE, PostsForJudgements, courses_id=entry.courses_id)
+			they.can(READ, Groups, courses_id=entry.courses_id)
+			they.can(READ, GroupsAndUsers, courses_id=entry.courses_id)
+			they.can(READ, CoursesAndUsers, courses_id=entry.courses_id)
+			they.can((CREATE, DELETE), CriteriaAndPostsForQuestions, courses_id=entry.courses_id)
 		# only students can submit judgements for now
 		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_STUDENT:
-			they.can(CREATE, Judgements, courses_id=course.id)
+			they.can(CREATE, Judgements, courses_id=entry.courses_id)
 
 # Tell the client side about a user's permissions.
 # This is necessarily more simplified than Flask-Bouncer's implementation.

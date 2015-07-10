@@ -4,9 +4,9 @@ import operator
 
 from data.fixtures.test_data import JudgmentsTestData
 
-from acj.models import PostsForAnswers, Posts
+from acj.models import PostsForAnswers, Posts, AnswerPairings, Judgements
 from acj.tests.test_acj import ACJTestCase
-
+from acj.judgement import AnswerPairGenerator
 
 __author__ = 'john'
 
@@ -260,9 +260,9 @@ class JudgementAPITests(ACJTestCase):
 		'''
 		# Make sure all answers are judged first
 		self._submit_all_possible_judgements_for_user(
-			self.data.get_authorized_student().username)
+			self.data.get_authorized_student().id)
 		self._submit_all_possible_judgements_for_user(
-			self.data.get_secondary_authorized_student().username)
+			self.data.get_secondary_authorized_student().id)
 
 		self.login(self.data.get_authorized_student_with_no_answers().username)
 		excluded_instructor_answer = PostsForAnswers.query.join(Posts).filter(
@@ -290,8 +290,8 @@ class JudgementAPITests(ACJTestCase):
 			# answer cannot be paired with itself
 			self.assertNotEqual(actual_answer1['id'], actual_answer2['id'])
 
-	def _submit_all_possible_judgements_for_user(self, username):
-		self.login(username)
+	def _submit_all_possible_judgements_for_user(self, user_id):
+		# self.login(username)
 		# calculate number of judgements to do before user has judged all the pairs it can
 		num_eligible_answers = -1 # need to minus one to exclude the logged in user's own answer
 		for answer in self.data.get_student_answers():
@@ -302,20 +302,25 @@ class JudgementAPITests(ACJTestCase):
 		winner_ids = []
 		loser_ids = []
 		for i in range(num_possible_judgements):
+			pair_generator = AnswerPairGenerator(self.course.id, self.question, user_id)
+			answerpairing = pair_generator.get_pair()
+			# answer_pair = AnswerPairings.query.get(answerpairing.id)
 			# establish expected data by first getting an answer pair
-			rv = self.client.get(self.answer_pair_url)
-			self.assert200(rv)
-			expected_answer_pair = rv.json
-			min_id = min([rv.json['answer1']['id'], rv.json['answer2']['id']])
-			max_id = max([rv.json['answer1']['id'], rv.json['answer2']['id']])
-			judgement_submit = self._build_judgement_submit(rv.json['id'], min_id)
+			# rv = self.client.get(self.answer_pair_url)
+			# self.assert200(rv)
+			# expected_answer_pair = rv.json
+			min_id = min([answerpairing.answers_id1, answerpairing.answers_id2])
+			max_id = max([answerpairing.answers_id1, answerpairing.answers_id2])
+			judgement_submit = self._build_judgement_submit(answerpairing.id, min_id)
 			winner_ids.append(min_id)
 			loser_ids.append(max_id)
+			Judgements.create_judgement(judgement_submit, answerpairing, user_id)
+			Judgements._calculate_scores(self.question.id)
 			# test normal post
-			rv = self.client.post(self.base_url, data=json.dumps(judgement_submit),
-								  content_type='application/json')
-			self.assert200(rv)
-		self.logout()
+			# rv = self.client.post(self.base_url, data=json.dumps(judgement_submit),
+			# 					  content_type='application/json')
+			# self.assert200(rv)
+		# self.logout()
 
 		return {'winners': winner_ids, 'losers': loser_ids}
 
@@ -326,9 +331,9 @@ class JudgementAPITests(ACJTestCase):
 		'''
 		# Make sure all answers are judged first
 		winner_ids = self._submit_all_possible_judgements_for_user(
-			self.data.get_authorized_student().username)['winners']
+			self.data.get_authorized_student().id)['winners']
 		winner_ids.extend(self._submit_all_possible_judgements_for_user(
-			self.data.get_secondary_authorized_student().username)['winners'])
+			self.data.get_secondary_authorized_student().id)['winners'])
 
 		# Count the number of wins each answer has had
 		num_wins_by_id = {}
@@ -354,9 +359,9 @@ class JudgementAPITests(ACJTestCase):
 	def test_comparison_count_matched_pairing(self):
 		# Make sure all answers are judged first
 		answer_ids = self._submit_all_possible_judgements_for_user(
-			self.data.get_authorized_student().username)
+			self.data.get_authorized_student().id)
 		answer_ids2 = self._submit_all_possible_judgements_for_user(
-			self.data.get_secondary_authorized_student().username)
+			self.data.get_secondary_authorized_student().id)
 		compared_ids = answer_ids['winners'] + answer_ids2['winners'] + \
 			answer_ids['losers'] + answer_ids2['losers']
 
@@ -421,7 +426,7 @@ class JudgementAPITests(ACJTestCase):
 
 		# test authorized student
 		winners = self._submit_all_possible_judgements_for_user(
-			self.data.get_authorized_student().username)['winners']
+			self.data.get_authorized_student().id)['winners']
 		tail = '/users/' + str(self.data.get_authorized_student().id) + '/count'
 		self.login(self.data.get_authorized_student().username)
 		rv = self.client.get(url + tail)
@@ -462,7 +467,7 @@ class JudgementAPITests(ACJTestCase):
 
 		# test authorized student
 		winners = self._submit_all_possible_judgements_for_user(
-			self.data.get_authorized_student().username)['winners']
+			self.data.get_authorized_student().id)['winners']
 		judgement_count = len(winners)
 		self.login(self.data.get_authorized_student().username)
 		rv = self.client.get(url)
@@ -508,7 +513,7 @@ class JudgementAPITests(ACJTestCase):
 			self.assertEqual(logic[str(ques.id)], expected[ques.id])
 		self.logout()
 
-		self._submit_all_possible_judgements_for_user(self.data.get_authorized_student().username)
+		self._submit_all_possible_judgements_for_user(self.data.get_authorized_student().id)
 		self.login(self.data.get_authorized_student().username)
 		# test authorized student - when have judged all
 		rv = self.client.get(url)
@@ -553,7 +558,7 @@ class JudgementAPITests(ACJTestCase):
 		self.assertTrue(rv.json['availPairsLogic'])
 		self.logout()
 
-		self._submit_all_possible_judgements_for_user(self.data.get_authorized_student().username)
+		self._submit_all_possible_judgements_for_user(self.data.get_authorized_student().id)
 		# test authorized student - when have judged all
 		self.login(self.data.get_authorized_student().username)
 		rv = self.client.get(url + tail)

@@ -23,11 +23,13 @@ import hashlib
 import datetime
 
 import dateutil.parser
+from flask import current_app
+import math
 import pytz
 
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import synonym
-from sqlalchemy.sql import func
+from sqlalchemy.orm import synonym, load_only, column_property
+from sqlalchemy import func, select, and_
 
 
 #  import the context under an app-specific name (so it can easily be replaced later)
@@ -41,6 +43,7 @@ try:
 	from itertools import filterfalse
 except ImportError:
 	from itertools import ifilterfalse
+
 	def filterfalse(predicate, iterable):
 		return ifilterfalse(predicate, iterable)
 
@@ -209,7 +212,7 @@ class Courses(db.Model):
 	name = db.Column(db.String(255), unique=True, nullable=False)
 	description = db.Column(db.Text)
 	available = db.Column(db.Boolean(name='available'), default=True, nullable=False)
-	coursesandusers = db.relationship("CoursesAndUsers")
+	coursesandusers = db.relationship("CoursesAndUsers", lazy="dynamic")
 	_criteriaandcourses = db.relationship("CriteriaAndCourses")
 	# allow students to make question posts
 	enable_student_create_questions = db.Column(db.Boolean(name='enable_student_create_questions'), default=False, nullable=False)
@@ -221,6 +224,7 @@ class Courses(db.Model):
 		nullable=False)
 	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
 					 nullable=False)
+
 	@hybrid_property
 	def criteriaandcourses(self):
 		'''
@@ -235,6 +239,19 @@ class Courses(db.Model):
 			db.session.commit()
 		'''
 		return self._criteriaandcourses
+
+	@classmethod
+	def get_by_user(cls, user_id, inactive=False, fields=None):
+		query = cls.query.join(CoursesAndUsers).filter_by(users_id=user_id)
+
+		if not inactive:
+			query = query.join(UserTypesForCourse).filter(UserTypesForCourse.name.isnot(UserTypesForCourse.TYPE_DROPPED))
+
+		if fields:
+			query = query.options(load_only(*fields))
+
+		return query.order_by(cls.name).all()
+
 
 # A "junction table" in sqlalchemy is called a many-to-many pattern. Such a
 # table can be automatically created by sqlalchemy from db.relationship
@@ -385,104 +402,153 @@ class Posts(db.Model):
 	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
 					 nullable=False)
 
-class PostsForQuestions(db.Model):
-	__tablename__ = 'Questions'
+#################################################
+# Judgements - User's judgements on the answers
+#################################################
+
+class Judgements(db.Model):
+	__tablename__ = 'Judgements'
 	__table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	posts_id = db.Column(
+	id = db.Column(db.Integer, primary_key=True)
+	users_id = db.Column(
 		db.Integer,
-		db.ForeignKey('Posts.id', ondelete="CASCADE"),
+		db.ForeignKey('Users.id', ondelete="CASCADE"),
 		nullable=False)
-	post = db.relationship("Posts", cascade="delete")
-	title = db.Column(db.String(255))
-	_answers = db.relationship("PostsForAnswers", cascade="delete")
-	comments = db.relationship("PostsForQuestionsAndPostsForComments", cascade="delete")
-	_criteria = db.relationship("CriteriaAndPostsForQuestions", cascade="delete",
-							   primaryjoin="and_(PostsForQuestions.id==CriteriaAndPostsForQuestions.questions_id, "+
-									"CriteriaAndPostsForQuestions.active)")
-	answerpairing = db.relationship("AnswerPairings", cascade="delete")
-	answer_start = db.Column(db.DateTime(timezone=True))
-	answer_end = db.Column(db.DateTime(timezone=True))
-	judge_start = db.Column(db.DateTime(timezone=True), nullable=True)
-	judge_end = db.Column(db.DateTime(timezone=True), nullable=True)
-	num_judgement_req = db.Column(db.Integer, nullable=False)
-	can_reply = db.Column(db.Boolean(name='can_reply'), default=False, nullable=False)
-	selfevaltype = db.relationship("PostsForQuestionsAndSelfEvaluationTypes", cascade="delete")
+	user = db.relationship("Users")
+	answerpairings_id = db.Column(
+		db.Integer,
+		db.ForeignKey('AnswerPairings.id', ondelete="CASCADE"),
+		nullable=False)
+	answerpairing = db.relationship("AnswerPairings")
+	criteriaandquestions_id = db.Column(
+		db.Integer,
+		db.ForeignKey('CriteriaAndQuestions.id', ondelete="CASCADE"),
+		nullable=False)
+	question_criterion = db.relationship("CriteriaAndPostsForQuestions")
+	answers_id_winner = db.Column(
+		db.Integer,
+		db.ForeignKey('Answers.id', ondelete="CASCADE"),
+		nullable=False)
+	answer_winner = db.relationship("PostsForAnswers")
 	modified = db.Column(
 		db.DateTime,
 		default=datetime.datetime.utcnow,
 		onupdate=datetime.datetime.utcnow,
 		nullable=False)
+	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
+						nullable=False)
 
 	@hybrid_property
 	def courses_id(self):
-		return self.post.courses_id
+		return self.question_criterion.question.post.courses_id
+
+	@classmethod
+	def create_judgement(cls, params, answer_pair, user_id):
+		judgements = []
+		criteria = []
+		for judgement_params in params['judgements']:
+			criteria.append(judgement_params['question_criterion_id'])
+			# need this or hybrid property for courses_id won't work when it checks permissions
+			question_criterion = CriteriaAndPostsForQuestions.query.\
+				get(judgement_params['question_criterion_id'])
+			judgement = Judgements(answerpairing=answer_pair, users_id=user_id,
+				question_criterion=question_criterion,
+				answers_id_winner=judgement_params['answer_id_winner'])
+			db.session.add(judgement)
+			db.session.commit()
+			judgements.append(judgement)
+
+		# increment evaluation count for the answers in the evaluated answer pair
+		answers = PostsForAnswers.query.\
+			filter(PostsForAnswers.id.in_([answer_pair.answer1.id, answer_pair.answer2.id])).all()
+		for ans in answers:
+			ans.round = ans.round + 1
+			db.session.add(ans)
+		db.session.commit()
+
+		return judgements
+
+	@classmethod
+	def _calculate_scores(cls, question_id):
+		# get all judgements for this question
+		judgements = Judgements.query.join(AnswerPairings). \
+			filter(AnswerPairings.questions_id == question_id).all()
+		answers = set() # stores answers that've been judged
+		question_criteria = CriteriaAndPostsForQuestions.query. \
+			filter_by(questions_id=question_id, active=True).all()
+		# 2D array, keep tracks of wins, e.g.: wins[A][B] is the number of times A won vs B
+		wins = WinsTable(question_criteria)
+		# keeps track of number of times judged for each answer
+		rounds = {}
+		for judgement in judgements:
+			answer1 = judgement.answerpairing.answer1
+			answer2 = judgement.answerpairing.answer2
+			winner = judgement.answer_winner
+			loser = answer1
+			if winner.id == answer1.id:
+				loser = answer2
+			wins.add(winner, loser, judgement.question_criterion)
+			# update number of times judged
+			rounds[answer1.id] = rounds.get(answer1.id, 0) + 1
+			rounds[answer2.id] = rounds.get(answer2.id, 0) + 1
+			answers.add(answer1)
+			answers.add(answer2)
+		current_app.logger.debug("Wins table: " + str(wins))
+		# create scores for each answer
+		for answer in answers:
+			for question_criterion in question_criteria:
+				score = Scores.query.filter_by(answer=answer, question_criterion=question_criterion).first()
+				if not score:
+					score = Scores(answer=answer, question_criterion=question_criterion)
+				score.rounds = rounds.get(answer.id, 0)
+				score.score = wins.get_score(answer, question_criterion)
+				score.wins = wins.get_total_wins(answer, question_criterion)
+				db.session.add(score)
+		db.session.commit()
+
+
+class AnswerPairings(db.Model):
+	__tablename__ = 'AnswerPairings'
+	__table_args__ = default_table_args
+
+	id = db.Column(db.Integer, primary_key=True)
+	questions_id = db.Column(
+		db.Integer,
+		db.ForeignKey('Questions.id', ondelete="CASCADE"),
+		nullable=False)
+	question = db.relationship("PostsForQuestions")
+	answers_id1 = db.Column(
+		db.Integer,
+		db.ForeignKey('Answers.id', ondelete="CASCADE"),
+		nullable=False)
+	answer1 = db.relationship("PostsForAnswers", foreign_keys=[answers_id1])
+	answers_id2 = db.Column(
+		db.Integer,
+		db.ForeignKey('Answers.id', ondelete="CASCADE"),
+		nullable=False)
+	answer2 = db.relationship("PostsForAnswers", foreign_keys=[answers_id2])
+	judgements = db.relationship("Judgements", cascade="delete")
+	criteriaandquestions_id = db.Column(
+		db.Integer,
+		db.ForeignKey('CriteriaAndQuestions.id', ondelete="CASCADE"),
+		nullable=True)
+	modified = db.Column(
+		db.DateTime,
+		default=datetime.datetime.utcnow,
+		onupdate=datetime.datetime.utcnow,
+		nullable=False)
+	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
+						nullable=False)
+
 	@hybrid_property
-	def answers_count(self):
-		return len(self.answers)
+	def answer1_win(self):
+		return len([j for j in self.judgements if j.answers_id_winner==self.answers_id1])
+
 	@hybrid_property
-	def comments_count(self):
-		return len(self.comments)
-	@hybrid_property
-	def answers(self):
-		return sorted(self._answers, key=lambda answer: answer.post.created, reverse=True)
-	@hybrid_property
-	def criteria(self):
-		return sorted(self._criteria, key=lambda criterion: criterion.id)
-	@hybrid_property
-	def available(self):
-		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-		answer_start = self.answer_start.replace(tzinfo=pytz.utc)
-		return answer_start <= now
-	@hybrid_property
-	def answer_period(self):
-		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-		answer_start = self.answer_start.replace(tzinfo=pytz.utc)
-		answer_end = self.answer_end.replace(tzinfo=pytz.utc)
-		return answer_start <= now and now < answer_end
-	@hybrid_property
-	def answer_grace(self):
-		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-		grace = self.answer_end.replace(tzinfo=pytz.utc) + datetime.timedelta(seconds=60)	# add 60 seconds
-		answer_start = self.answer_start.replace(tzinfo=pytz.utc)
-		return answer_start <= now and now < grace
-	@hybrid_property
-	def judging_period(self):
-		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-		answer_end = self.answer_end.replace(tzinfo=pytz.utc)
-		if not self.judge_start:
-			return now >= answer_end
-		else:
-			return self.judge_start.replace(tzinfo=pytz.utc) <= now < self.judge_end.replace(tzinfo=pytz.utc)
-	@hybrid_property
-	def after_judging(self):
-		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-		answer_end = self.answer_end.replace(tzinfo=pytz.utc)
-		# judgement period not set
-		if not self.judge_start:
-			return now >= answer_end
-		# judgement period is set
-		else:
-			return now >= self.judge_end.replace(tzinfo=pytz.utc)
-	@hybrid_property
-	def judged(self):
-		return len(self.answerpairing) > 0
-	@hybrid_property
-	def selfevaltype_id(self):
-		# assume max one selfeval type per question for now
-		type = None
-		if len(self.selfevaltype):
-			type = self.selfevaltype[0].selfevaltypes_id
-		return type
-	@hybrid_property
-	def evaluation_count(self):
-		if len(self.criteria):
-			evaluation_count = sum([x.judgement_count for x in self.criteria]) / len(self.criteria)
-		else:
-			evaluation_count = 0
-		selfeval_count = sum([x.selfeval_count for x in self._answers])
-		return evaluation_count + selfeval_count
+	def answer2_win(self):
+		return len([j for j in self.judgements if j.answers_id_winner==self.answers_id2])
+
 
 class PostsForAnswers(db.Model):
 	__tablename__ = 'Answers'
@@ -531,6 +597,7 @@ class PostsForAnswers(db.Model):
 	@hybrid_property
 	def selfeval_count(self):
 		return len([c for c in self.comments if c.selfeval])
+
 
 class PostsForComments(db.Model):
 	__tablename__ = 'Comments'
@@ -718,13 +785,14 @@ class CriteriaAndPostsForQuestions(db.Model):
 	judgements = db.relationship("Judgements")
 	scores = db.relationship("Scores")
 
+	judgement_count = column_property(
+		select([func.count(Judgements.id)]).
+			where(Judgements.criteriaandquestions_id == id)
+	)
+
 	@hybrid_property
 	def courses_id(self):
 		return self.question.courses_id
-
-	@hybrid_property
-	def judgement_count(self):
-		return len(self.judgements)
 
 	@hybrid_property
 	def max_score(self):
@@ -765,88 +833,7 @@ class Scores(db.Model):
 		else:
 			return 0
 
-#################################################
-# Judgements - User's judgements on the answers
-#################################################
 
-class AnswerPairings(db.Model):
-	__tablename__ = 'AnswerPairings'
-	__table_args__ = default_table_args
-
-	id = db.Column(db.Integer, primary_key=True)
-	questions_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Questions.id', ondelete="CASCADE"),
-		nullable=False)
-	question = db.relationship("PostsForQuestions")
-	answers_id1 = db.Column(
-		db.Integer,
-		db.ForeignKey('Answers.id', ondelete="CASCADE"),
-		nullable=False)
-	answer1 = db.relationship("PostsForAnswers", foreign_keys=[answers_id1])
-	answers_id2 = db.Column(
-		db.Integer,
-		db.ForeignKey('Answers.id', ondelete="CASCADE"),
-		nullable=False)
-	answer2 = db.relationship("PostsForAnswers", foreign_keys=[answers_id2])
-	judgements = db.relationship("Judgements", cascade="delete")
-	criteriaandquestions_id = db.Column(
-		db.Integer,
-		db.ForeignKey('CriteriaAndQuestions.id', ondelete="CASCADE"),
-		nullable=True)
-	modified = db.Column(
-		db.DateTime,
-		default=datetime.datetime.utcnow,
-		onupdate=datetime.datetime.utcnow,
-		nullable=False)
-	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
-					 nullable=False)
-
-	@hybrid_property
-	def answer1_win(self):
-		return len([j for j in self.judgements if j.answers_id_winner==self.answers_id1])
-
-	@hybrid_property
-	def answer2_win(self):
-		return len([j for j in self.judgements if j.answers_id_winner==self.answers_id2])
-
-
-class Judgements(db.Model):
-	__tablename__ = 'Judgements'
-	__table_args__ = default_table_args
-
-	id = db.Column(db.Integer, primary_key=True)
-	users_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Users.id', ondelete="CASCADE"),
-		nullable=False)
-	user = db.relationship("Users")
-	answerpairings_id = db.Column(
-		db.Integer,
-		db.ForeignKey('AnswerPairings.id', ondelete="CASCADE"),
-		nullable=False)
-	answerpairing = db.relationship("AnswerPairings")
-	criteriaandquestions_id = db.Column(
-		db.Integer,
-		db.ForeignKey('CriteriaAndQuestions.id', ondelete="CASCADE"),
-		nullable=False)
-	question_criterion = db.relationship("CriteriaAndPostsForQuestions")
-	answers_id_winner = db.Column(
-		db.Integer,
-		db.ForeignKey('Answers.id', ondelete="CASCADE"),
-		nullable=False)
-	answer_winner = db.relationship("PostsForAnswers")
-	modified = db.Column(
-		db.DateTime,
-		default=datetime.datetime.utcnow,
-		onupdate=datetime.datetime.utcnow,
-		nullable=False)
-	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
-					 nullable=False)
-
-	@hybrid_property
-	def courses_id(self):
-		return self.question_criterion.question.post.courses_id
 
 class PostsForJudgements(db.Model):
 	__tablename__ = 'PostsForJudgements'
@@ -868,6 +855,135 @@ class PostsForJudgements(db.Model):
 	@hybrid_property
 	def courses_id(self):
 		return self.postsforcomments.post.courses_id
+
+
+class PostsForQuestions(db.Model):
+	__tablename__ = 'Questions'
+	__table_args__ = default_table_args
+
+	id = db.Column(db.Integer, primary_key=True, nullable=False)
+	posts_id = db.Column(
+		db.Integer,
+		db.ForeignKey('Posts.id', ondelete="CASCADE"),
+		nullable=False)
+	post = db.relationship("Posts", cascade="delete")
+	title = db.Column(db.String(255))
+	_answers = db.relationship("PostsForAnswers", cascade="delete")
+	comments = db.relationship("PostsForQuestionsAndPostsForComments", cascade="delete", lazy="dynamic")
+	_criteria = db.relationship("CriteriaAndPostsForQuestions", cascade="delete",
+								primaryjoin="and_(PostsForQuestions.id==CriteriaAndPostsForQuestions.questions_id, "+
+											"CriteriaAndPostsForQuestions.active)")
+	answerpairing = db.relationship("AnswerPairings", cascade="delete")
+	answer_start = db.Column(db.DateTime(timezone=True))
+	answer_end = db.Column(db.DateTime(timezone=True))
+	judge_start = db.Column(db.DateTime(timezone=True), nullable=True)
+	judge_end = db.Column(db.DateTime(timezone=True), nullable=True)
+	num_judgement_req = db.Column(db.Integer, nullable=False)
+	can_reply = db.Column(db.Boolean(name='can_reply'), default=False, nullable=False)
+	selfevaltype = db.relationship("PostsForQuestionsAndSelfEvaluationTypes", cascade="delete")
+	modified = db.Column(
+		db.DateTime,
+		default=datetime.datetime.utcnow,
+		onupdate=datetime.datetime.utcnow,
+		nullable=False)
+
+	answers_count = column_property(
+		select([func.count(PostsForAnswers.id)]).
+			where(PostsForAnswers.questions_id == id)
+	)
+
+	comments_count = column_property(
+		select([func.count(PostsForQuestionsAndPostsForComments.id)]).
+			where(PostsForQuestionsAndPostsForComments.questions_id == id)
+	)
+
+	criteria_count = column_property(
+		select([CriteriaAndPostsForQuestions.id]).
+			where(CriteriaAndPostsForQuestions.questions_id == id)
+	)
+
+	judged = column_property(
+		select([func.count(AnswerPairings.id) > 0]).
+			where(AnswerPairings.questions_id == id)
+	)
+
+	judgement_count = column_property(
+		select([func.count(Judgements.id)]).
+			where(and_(Judgements.criteriaandquestions_id == CriteriaAndPostsForQuestions.id,
+					   CriteriaAndPostsForQuestions.questions_id == id))
+	)
+
+	_selfeval_count = column_property(
+		select([func.count(PostsForAnswersAndPostsForComments.id)]).
+			where(and_(PostsForAnswersAndPostsForComments.selfeval == True,
+					   PostsForAnswersAndPostsForComments.answers_id == PostsForAnswers.id,
+					   PostsForAnswers.questions_id == id))
+	)
+
+	@hybrid_property
+	def courses_id(self):
+		return self.post.courses_id
+
+	@hybrid_property
+	def answers(self):
+		return sorted(self._answers, key=lambda answer: answer.post.created, reverse=True)
+
+	@hybrid_property
+	def criteria(self):
+		return sorted(self._criteria, key=lambda criterion: criterion.id)
+
+	@hybrid_property
+	def available(self):
+		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+		answer_start = self.answer_start.replace(tzinfo=pytz.utc)
+		return answer_start <= now
+
+	@hybrid_property
+	def answer_period(self):
+		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+		answer_start = self.answer_start.replace(tzinfo=pytz.utc)
+		answer_end = self.answer_end.replace(tzinfo=pytz.utc)
+		return answer_start <= now and now < answer_end
+
+	@hybrid_property
+	def answer_grace(self):
+		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+		grace = self.answer_end.replace(tzinfo=pytz.utc) + datetime.timedelta(seconds=60)	# add 60 seconds
+		answer_start = self.answer_start.replace(tzinfo=pytz.utc)
+		return answer_start <= now and now < grace
+
+	@hybrid_property
+	def judging_period(self):
+		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+		answer_end = self.answer_end.replace(tzinfo=pytz.utc)
+		if not self.judge_start:
+			return now >= answer_end
+		else:
+			return self.judge_start.replace(tzinfo=pytz.utc) <= now < self.judge_end.replace(tzinfo=pytz.utc)
+
+	@hybrid_property
+	def after_judging(self):
+		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+		answer_end = self.answer_end.replace(tzinfo=pytz.utc)
+		# judgement period not set
+		if not self.judge_start:
+			return now >= answer_end
+		# judgement period is set
+		else:
+			return now >= self.judge_end.replace(tzinfo=pytz.utc)
+
+	@hybrid_property
+	def selfevaltype_id(self):
+		# assume max one selfeval type per question for now
+		type = None
+		if len(self.selfevaltype):
+			type = self.selfevaltype[0].selfevaltypes_id
+		return type
+
+	@hybrid_property
+	def evaluation_count(self):
+		evaluation_count = self.judgement_count / self.criteria_count if self.criteria_count else 0
+		return evaluation_count + self._selfeval_count
 
 class LTIInfo(db.Model):
 	__tablename__ = 'LTIInfo'
@@ -903,3 +1019,56 @@ class Activities(db.Model):
 	message = db.Column(db.Text)
 	session_id = db.Column(db.String(100))
 
+
+class WinsTable:
+	def __init__(self, question_criteria):
+		# 3D array, keep tracks of wins, wins[question_criteria][winner_id][opponent_id]
+		self.wins = {}
+		for question_criterion in question_criteria:
+			self.wins[question_criterion.id] = {}
+
+	def add(self, winner, loser, question_criterion):
+		'''
+		Update number of wins for the winner
+		:param winner: Answer that won
+		:param loser: Answer that lost
+		:param question_criterion: Criterion that winner won on
+		:return: nothing
+		'''
+		winner_wins_row = self.wins[question_criterion.id].get(winner.id, {})
+		winner_wins_row[loser.id] = winner_wins_row.get(loser.id, 0) + 1
+		self.wins[question_criterion.id][winner.id] = winner_wins_row
+
+	def get_total_wins(self, winner, question_criterion):
+		'''
+		Get total number of wins in a criterion for an answer
+		:param winner: The answer to get the number of wins for
+		:param question_criterion: Criterion for the wins
+		:return: Total number of wins that the winner has in the specified criterion
+		'''
+		winner_row = self.wins.get(question_criterion.id, {}).get(winner.id, {})
+		return sum(winner_row.values())
+
+	def get_score(self, answer, question_criterion):
+		'''
+		Calculate score for an answer
+		:param answer:
+		:param question_criterion:
+		:return:
+		'''
+		current_app.logger.debug("Calculating score for answer id: " + str(answer.id))
+		answer_opponents = self.wins[question_criterion.id].get(answer.id, {})
+		current_app.logger.debug("\tThis answer's opponents:" + str(answer_opponents))
+		# see ACJ paper equation 3 for what we're doing here
+		expected_score = 0
+		for opponent_id, answer_wins in answer_opponents.items():
+			if opponent_id == answer.id: # skip comparing to self
+				continue
+			opponent_wins = self.wins[question_criterion.id].get(opponent_id, {}).get(answer.id, 0)
+			current_app.logger.debug("\tVa = " + str(answer_wins))
+			current_app.logger.debug("\tVi = " + str(opponent_wins))
+			prob_answer_wins = (math.exp(answer_wins - opponent_wins)) / \
+							   (1 + math.exp(answer_wins - opponent_wins))
+			expected_score += prob_answer_wins
+			current_app.logger.debug("\tE(S) = " + str(expected_score))
+		return expected_score

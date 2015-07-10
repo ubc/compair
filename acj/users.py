@@ -5,10 +5,11 @@ from flask.ext.restful.reqparse import RequestParser
 
 from flask_login import login_required, current_user
 from . import dataformat
+from sqlalchemy.orm import load_only
 from .authorization import is_user_access_restricted, require, allow
 from .core import db, event
 from .util import pagination, new_restful_api, get_model_changes
-from sqlalchemy import exc
+from sqlalchemy import exc, asc
 
 from .models import Users, UserTypesForSystem, Courses, UserTypesForCourse, CoursesAndUsers, \
 	PostsForQuestions, Posts
@@ -167,35 +168,25 @@ class UserListAPI(Resource):
 		return marshal(user, dataformat.getUsers())
 
 
-# /id/courses
+# /user_id/courses
 class UserCourseListAPI(Resource):
 	@login_required
-	def get(self, id):
-		user = Users.query.get_or_404(id)
-		dropped = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
-		course = Courses()
+	def get(self, user_id):
+		Users.query.get_or_404(user_id)
 		# we want to list courses only, so only check the association table
-		if allow(MANAGE, course):
-			courses = Courses.query.all()
+		keys = dataformat.getCourses(include_details=False).keys()
+		if allow(MANAGE, Courses):
+			courses = Courses.query.order_by(asc(Courses.name)).options(load_only(*keys)).all()
 		else:
-			courses = []
-			for courseanduser in user.coursesandusers:
-				if courseanduser.usertypesforcourse_id == dropped:
-					continue
-				require(READ, courseanduser)
-				courses.append(courseanduser.course)
+			courses = Courses.get_by_user(user_id, fields=keys)
 
-		# sort alphabetically by course name
-		courses.sort(key=lambda course: course.name)
-
-		# TODO REMOVE COURSES WHERE USER IS DROPPED?
 		# TODO REMOVE COURSES WHERE COURSE IS UNAVAILABLE?
 
 		on_user_course_get.send(
 			current_app._get_current_object(),
 			event_name=on_user_course_get.name,
 			user=current_user,
-			data={'userid': id})
+			data={'userid': user_id})
 
 		return {'objects': marshal(courses, dataformat.getCourses(include_details=False))}
 
@@ -330,7 +321,7 @@ class UserUpdatePasswordAPI(Resource):
 api = new_restful_api(users_api)
 api.add_resource(UserAPI, '/<int:id>')
 api.add_resource(UserListAPI, '')
-api.add_resource(UserCourseListAPI, '/<int:id>/courses')
+api.add_resource(UserCourseListAPI, '/<int:user_id>/courses')
 api.add_resource(UserEditButtonAPI, '/<int:id>/edit')
 api.add_resource(TeachingUserCourseListAPI, '/courses/teaching')
 api.add_resource(UserUpdatePasswordAPI, '/password/<int:id>')

@@ -10,7 +10,9 @@ from flask.ext.sqlalchemy import SQLAlchemy
 
 
 # initialize database
-db = SQLAlchemy()
+db = SQLAlchemy(session_options={
+	'expire_on_commit': False
+})
 
 # initialize Flask-Bouncer
 bouncer = Bouncer()

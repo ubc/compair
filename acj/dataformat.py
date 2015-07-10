@@ -118,7 +118,7 @@ def getCriteriaAndPostsForQuestions():
 	return format
 
 def getPosts(restrict_users=True):
-	return  {
+	return {
 		'id': fields.Integer,
 		'user': fields.Nested(getUsers(restrict_users)),
 		'course': fields.Nested(getCourses()),

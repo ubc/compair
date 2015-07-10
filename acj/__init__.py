@@ -1,5 +1,6 @@
 from flask import Flask, redirect, session, abort, jsonify
 from flask.ext.login import current_user
+from sqlalchemy.orm import joinedload
 
 from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, on_answer_flag,\
 	on_answer_delete, on_user_question_answer_get, on_user_question_answered_count, on_user_course_answered_count,\
@@ -50,11 +51,15 @@ def create_app(conf=config, settings_override={}):
 
 	# Flask-Login initialization
 	login_manager.init_app(app)
+
 	# This is how Flask-Login loads the newly logged in user's information
 	@login_manager.user_loader
 	def load_user(user_id):
 		app.logger.debug("User logging in, ID: " + user_id)
-		return Users.query.get(int(user_id))
+		return Users.query.\
+			options(joinedload("usertypeforsystem")). \
+			options(joinedload("coursesandusers").joinedload("usertypeforcourse")).\
+			get(int(user_id))
 
 	@login_manager.unauthorized_handler
 	def unauthorized():
