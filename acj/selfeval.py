@@ -3,6 +3,7 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 
 from . import dataformat
+from sqlalchemy import func, and_
 from .core import event
 from .models import SelfEvaluationTypes, PostsForAnswersAndPostsForComments, PostsForAnswers, Courses, \
 	PostsForComments, Posts, PostsForQuestions
@@ -44,7 +45,7 @@ class SelfEvalACommentsQuestionIdAPI(Resource):
 	@login_required
 	def get(self, course_id, question_id):
 		Courses.query.get_or_404(course_id)
-		count = comment_count(question_id)
+		count = comment_count([question_id], current_user.id)
 
 		selfeval_question_acomment_count.send(
 			current_app._get_current_object(),
@@ -65,7 +66,7 @@ class SelfEvalACommentsAPI(Resource):
 	def get(self, course_id):
 		Courses.query.get_or_404(course_id)
 		questions = PostsForQuestions.query.join(Posts).filter_by(courses_id=course_id).all()
-		comments = {ques.id: comment_count(ques.id) for ques in questions}
+		comments = comment_count({question.id for question in questions}, current_user.id)
 
 		selfeval_course_acomment_count.send(
 			current_app._get_current_object(),
@@ -80,7 +81,18 @@ class SelfEvalACommentsAPI(Resource):
 apiA.add_resource(SelfEvalACommentsAPI, '')
 
 
-def comment_count(question_id):
-	return PostsForAnswersAndPostsForComments.query.filter_by(selfeval=True) \
-		.join(PostsForAnswers).filter_by(questions_id=question_id) \
-		.join(PostsForComments, Posts).filter_by(users_id=current_user.id).count()
+def comment_count(questions, user_id):
+	res = PostsForQuestions.query. \
+		with_entities(PostsForQuestions.id, func.count(Posts.id)). \
+		filter(PostsForQuestions.id.in_(questions)). \
+		outerjoin(PostsForAnswers). \
+		outerjoin(PostsForAnswersAndPostsForComments, and_(
+			PostsForAnswersAndPostsForComments.answers_id == PostsForAnswers.id,
+			PostsForAnswersAndPostsForComments.selfeval)).\
+		outerjoin(PostsForComments).\
+		outerjoin(Posts, and_(
+			PostsForComments.posts_id == Posts.id,
+			Posts.users_id == user_id)). \
+		group_by(PostsForQuestions.id).all()
+
+	return {q[0]: q[1] for q in res}
