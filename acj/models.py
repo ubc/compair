@@ -517,7 +517,7 @@ class AnswerPairings(db.Model):
 		db.Integer,
 		db.ForeignKey('Questions.id', ondelete="CASCADE"),
 		nullable=False)
-	question = db.relationship("PostsForQuestions")
+	# question = db.relationship("PostsForQuestions")
 	answers_id1 = db.Column(
 		db.Integer,
 		db.ForeignKey('Answers.id', ondelete="CASCADE"),
@@ -710,6 +710,42 @@ class PostsForQuestionsAndSelfEvaluationTypes(db.Model):
 		nullable=False)
 	type = db.relationship("SelfEvaluationTypes")
 
+
+# each question can have different criteria
+class CriteriaAndPostsForQuestions(db.Model):
+	__tablename__ = 'CriteriaAndQuestions'
+	__table_args__ = default_table_args
+
+	id = db.Column(db.Integer, primary_key=True, nullable=False)
+	criteria_id = db.Column(
+		db.Integer,
+		db.ForeignKey('Criteria.id', ondelete="CASCADE"),
+		nullable=False)
+	criterion = db.relationship("Criteria")
+	questions_id = db.Column(
+		db.Integer,
+		db.ForeignKey('Questions.id', ondelete="CASCADE"),
+		nullable=False)
+	question = db.relationship("PostsForQuestions")
+	active = db.Column(db.Boolean(name='active'), default=True, nullable=False)
+	judgements = db.relationship("Judgements")
+	scores = db.relationship("Scores")
+
+	judgement_count = column_property(
+		select([func.count(Judgements.id)]).
+		where(Judgements.criteriaandquestions_id == id)
+	)
+
+	@hybrid_property
+	def courses_id(self):
+		return self.question.courses_id
+
+	@hybrid_property
+	def max_score(self):
+		scores = [s.score for s in self.scores]
+		return max(scores)
+
+
 #################################################
 # Criteria - What users should judge answers by
 #################################################
@@ -735,69 +771,23 @@ class Criteria(db.Model):
 		default=datetime.datetime.utcnow,
 		onupdate=datetime.datetime.utcnow,
 		nullable=False)
-	created = db.Column(db.DateTime, default=datetime.datetime.utcnow,
-					 nullable=False)
-
-	@hybrid_property
-	def judged(self):
-		return sum(c.judgement_count for c in self.question_criteria) > 0
-
-# each course can have different criteria
-class CriteriaAndCourses(db.Model):
-	__tablename__ = 'CriteriaAndCourses'
-	__table_args__ = default_table_args
-
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	criteria_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Criteria.id', ondelete="CASCADE"),
+	created = db.Column(
+		db.DateTime,
+		default=datetime.datetime.utcnow,
 		nullable=False)
-	criterion = db.relationship("Criteria")
-	courses_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Courses.id', ondelete="CASCADE"),
-		nullable=False)
-	course = db.relationship("Courses")
-	active = db.Column(db.Boolean(name='active'), default=True, nullable=False)
-
-	@hybrid_property
-	def inQuestion(self):
-		criteria = [c for c in self.criterion.question_criteria if c.courses_id==self.courses_id]
-		return len(criteria) > 0
-
-# each question can have different criteria
-class CriteriaAndPostsForQuestions(db.Model):
-	__tablename__ = 'CriteriaAndQuestions'
-	__table_args__ = default_table_args
-
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	criteria_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Criteria.id', ondelete="CASCADE"),
-		nullable=False)
-	criterion = db.relationship("Criteria")
-	questions_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Questions.id', ondelete="CASCADE"),
-		nullable=False)
-	question = db.relationship("PostsForQuestions")
-	active = db.Column(db.Boolean(name='active'), default=True, nullable=False)
-	judgements = db.relationship("Judgements")
-	scores = db.relationship("Scores")
 
 	judgement_count = column_property(
-		select([func.count(Judgements.id)]).
-			where(Judgements.criteriaandquestions_id == id)
+		select([func.count(CriteriaAndPostsForQuestions.id)]).
+			where(CriteriaAndPostsForQuestions.criteria_id == id)
 	)
 
 	@hybrid_property
-	def courses_id(self):
-		return self.question.courses_id
+	def judged(self):
+		# return sum(c.judgement_count for c in self.question_criteria) > 0
+		return self.judgement_count > 0
 
-	@hybrid_property
-	def max_score(self):
-		scores = [s.score for s in self.scores]
-		return max(scores)
+
+
 
 #################################################
 # Scores - The calculated score of the answer
@@ -873,7 +863,7 @@ class PostsForQuestions(db.Model):
 	_criteria = db.relationship("CriteriaAndPostsForQuestions", cascade="delete",
 								primaryjoin="and_(PostsForQuestions.id==CriteriaAndPostsForQuestions.questions_id, "+
 											"CriteriaAndPostsForQuestions.active)")
-	answerpairing = db.relationship("AnswerPairings", cascade="delete")
+	answerpairing = db.relationship("AnswerPairings", cascade="delete", backref="question")
 	answer_start = db.Column(db.DateTime(timezone=True))
 	answer_end = db.Column(db.DateTime(timezone=True))
 	judge_start = db.Column(db.DateTime(timezone=True), nullable=True)
@@ -984,6 +974,42 @@ class PostsForQuestions(db.Model):
 	def evaluation_count(self):
 		evaluation_count = self.judgement_count / self.criteria_count if self.criteria_count else 0
 		return evaluation_count + self._selfeval_count
+
+
+# each course can have different criteria
+class CriteriaAndCourses(db.Model):
+	__tablename__ = 'CriteriaAndCourses'
+	__table_args__ = default_table_args
+
+	id = db.Column(db.Integer, primary_key=True, nullable=False)
+	criteria_id = db.Column(
+		db.Integer,
+		db.ForeignKey('Criteria.id', ondelete="CASCADE"),
+		nullable=False)
+	criterion = db.relationship("Criteria")
+	courses_id = db.Column(
+		db.Integer,
+		db.ForeignKey('Courses.id', ondelete="CASCADE"),
+		nullable=False)
+	course = db.relationship("Courses")
+	active = db.Column(db.Boolean(name='active'), default=True, nullable=False)
+
+	in_question_count = column_property(
+		select([func.count(CriteriaAndPostsForQuestions.id)]).
+		where(and_(
+			criteria_id == CriteriaAndPostsForQuestions.criteria_id,
+			CriteriaAndPostsForQuestions.questions_id == PostsForQuestions.id,
+			PostsForQuestions.posts_id == Posts.id,
+			Posts.courses_id == courses_id
+		))
+	)
+
+	@hybrid_property
+	def inQuestion(self):
+		# criteria = [c for c in self.criterion.question_criteria if c.courses_id==self.courses_id]
+		# return len(criteria) > 0
+		return self.in_question_count > 0
+
 
 class LTIInfo(db.Model):
 	__tablename__ = 'LTIInfo'

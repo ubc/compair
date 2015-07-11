@@ -7,7 +7,7 @@ from flask import Blueprint, current_app
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, func
 
 from . import dataformat
 from .core import db
@@ -174,7 +174,7 @@ class UserAllJudgementCount(Resource):
 		course = Courses.query.get_or_404(course_id)
 		require(READ, course)
 		questions = PostsForQuestions.query.join(Posts).filter_by(courses_id=course.id).all()
-		judgements = {ques.id:judgement_count(ques, current_user.id) for ques in questions}
+		judgements = {ques.id: judgement_count(ques, current_user.id) for ques in questions}
 
 		on_judgement_course_count.send(
 			current_app._get_current_object(),
@@ -185,6 +185,7 @@ class UserAllJudgementCount(Resource):
 		)
 
 		return {'judgements': judgements}
+
 apiAll.add_resource(UserAllJudgementCount, '/count')
 
 # /availpair
@@ -195,28 +196,45 @@ class AvailPairAll(Resource):
 	def get(self, course_id):
 		course = Courses.query.get_or_404(course_id)
 		require(READ, course)
-		questions = PostsForQuestions.query.join(Posts).filter_by(courses_id=course.id).all()
+
+		questions = PostsForQuestions.query.\
+			with_entities(PostsForQuestions.id). \
+			join(Posts).filter_by(courses_id=course.id).\
+			all()
 
 		# ineligible authors - eg. instructors, TAs, dropped student, current user
-		student = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first_or_404()
-		ineligible_users = CoursesAndUsers.query.filter_by(courses_id=course_id) \
-			.filter(CoursesAndUsers.usertypesforcourse_id!=student.id) \
-			.values(CoursesAndUsers.users_id)
+		ineligible_users = CoursesAndUsers.query.\
+			filter_by(courses_id=course_id). \
+			join(UserTypesForCourse).filter(UserTypesForCourse.name.isnot(UserTypesForCourse.TYPE_STUDENT)).\
+			values(CoursesAndUsers.users_id)
 		ineligible_userIds_base = [u[0] for u in ineligible_users]
 		ineligible_userIds_base.append(current_user.id)
 
+		# It is a little bit hard to write query to include authors for each answers in the loop below
+		# stmt = PostsForAnswers.query.\
+		# 	with_entities(PostsForAnswers.questions_id, func.count(PostsForAnswers.id).label('answer_count')). \
+		# 	join(Posts).join(AnswerPairings).join(Judgements). \
+		# 	filter(Posts.users_id.notin_(ineligible_userIds_base)).subquery()
+		#
+		# questions = PostsForQuestions.query.\
+		# 	with_entities(PostsForQuestions.id, stmt.c.answer_count). \
+		# 	join(Posts).filter_by(courses_id=course.id). \
+		# 	outerjoin(stmt, PostsForQuestions.id == stmt.c.questions_id). \
+		# 	all()
+
 		availPairs = {}
 		for ques in questions:
+			question_id = ques[0]
 			# ineligible authors (potentially) - eg. authors for answers that the user has seen
 			judged = Judgements.query.filter_by(users_id=current_user.id).join(AnswerPairings)\
-				.filter_by(questions_id=ques.id).all()
+				.filter_by(questions_id=question_id).all()
 			judged_authors1 = [j.answerpairing.answer1.post.users_id for j in judged]
 			judged_authors2 = [j.answerpairing.answer2.post.users_id for j in judged]
 			ineligible_userIds = ineligible_userIds_base + judged_authors1 + judged_authors2
 
-			eligible_answers = PostsForAnswers.query.filter_by(questions_id=ques.id)\
+			eligible_answers = PostsForAnswers.query.filter_by(questions_id=question_id)\
 				.join(Posts).filter(Posts.users_id.notin_(ineligible_userIds)).count()
-			availPairs[ques.id] = eligible_answers / 2 >= 1 # min 1 pair required
+			availPairs[question_id] = eligible_answers / 2 >= 1 # min 1 pair required
 
 		return {'availPairsLogic': availPairs}
 apiAll.add_resource(AvailPairAll, '/availpair')

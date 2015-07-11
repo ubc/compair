@@ -5,6 +5,7 @@ from flask_login import login_required, current_user
 from sqlalchemy import exc
 
 from . import dataformat
+from sqlalchemy.orm import joinedload
 from .authorization import require
 from .core import db, event
 from .models import Courses, UserTypesForCourse, CoursesAndUsers
@@ -96,7 +97,9 @@ api.add_resource(CourseListAPI, '')
 class CourseAPI(Resource):
 	@login_required
 	def get(self, course_id):
-		course = Courses.query.get_or_404(course_id)
+		course = Courses.query.\
+			options(joinedload("_criteriaandcourses").joinedload("criterion")).\
+			get_or_404(course_id)
 		require(READ, course)
 		on_course_get.send(
 			current_app._get_current_object(),

@@ -302,8 +302,11 @@ class AnsweredAPI(Resource):
 		post = Posts(courses_id=course_id)
 		answer = PostsForAnswers(post=post)
 		require(READ, answer)
-		answered = PostsForAnswers.query.with_entities(PostsForAnswers.questions_id, func.count(PostsForAnswers.id)).join(Posts)\
-			.filter_by(courses_id=course_id).join(Users).filter_by(id=current_user.id).group_by(PostsForAnswers.questions_id).all()
+		answered = PostsForAnswers.query.\
+			with_entities(PostsForAnswers.questions_id, func.count(PostsForAnswers.id)).\
+			join(Posts).filter_by(courses_id=course_id).\
+			join(Users).filter_by(id=current_user.id).\
+			group_by(PostsForAnswers.questions_id).all()
 		answered = {qId: count for (qId, count) in answered}
 
 		on_user_course_answered_count.send(
