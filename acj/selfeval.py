@@ -4,7 +4,7 @@ from flask.ext.restful import Resource, marshal
 
 from . import dataformat
 from .core import event
-from .models import SelfEvaluationTypes, PostsForAnswersAndPostsForComments, PostsForAnswers, Courses,\
+from .models import SelfEvaluationTypes, PostsForAnswersAndPostsForComments, PostsForAnswers, Courses, \
 	PostsForComments, Posts, PostsForQuestions
 from .util import new_restful_api
 
@@ -19,11 +19,12 @@ selfevaltype_get = event.signal('SELFEVAL_TYPE_GET')
 selfeval_question_acomment_count = event.signal('SELFEVAL_QUESTION_ACOMMENT_COUNT')
 selfeval_course_acomment_count = event.signal('SELFEVAL_COURSE_ACOMMENT_COUNT')
 
+
 # /
 class SelfEvalTypeRootAPI(Resource):
 	@login_required
 	def get(self):
-		types = SelfEvaluationTypes.query.\
+		types = SelfEvaluationTypes.query. \
 			order_by(SelfEvaluationTypes.name.desc()).all()
 
 		selfevaltype_get.send(
@@ -33,7 +34,10 @@ class SelfEvalTypeRootAPI(Resource):
 		)
 
 		return {"types": marshal(types, dataformat.getSelfEvalTypes())}
+
+
 api.add_resource(SelfEvalTypeRootAPI, '')
+
 
 # /questionId
 class SelfEvalACommentsQuestionIdAPI(Resource):
@@ -50,7 +54,10 @@ class SelfEvalACommentsQuestionIdAPI(Resource):
 			data={'question_id': question_id})
 
 		return {"count": count}
+
+
 apiA.add_resource(SelfEvalACommentsQuestionIdAPI, '/<int:question_id>')
+
 
 # /
 class SelfEvalACommentsAPI(Resource):
@@ -68,9 +75,12 @@ class SelfEvalACommentsAPI(Resource):
 		)
 
 		return {'replies': comments}
+
+
 apiA.add_resource(SelfEvalACommentsAPI, '')
+
 
 def comment_count(question_id):
 	return PostsForAnswersAndPostsForComments.query.filter_by(selfeval=True) \
-		.join(PostsForAnswers).filter_by(questions_id=question_id)\
+		.join(PostsForAnswers).filter_by(questions_id=question_id) \
 		.join(PostsForComments, Posts).filter_by(users_id=current_user.id).count()
