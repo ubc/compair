@@ -1,5 +1,5 @@
 """
-	The app core, initialize necessary objects
+    The app core, initialize necessary objects
 """
 from blinker import Namespace
 from flask.ext.bouncer import Bouncer
@@ -11,7 +11,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 
 # initialize database
 db = SQLAlchemy(session_options={
-	'expire_on_commit': False
+    'expire_on_commit': False
 })
 
 # initialize Flask-Bouncer

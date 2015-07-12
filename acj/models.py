@@ -40,12 +40,12 @@ from flask.ext.login import UserMixin
 
 # need to update to filterfalse when upgrading python
 try:
-	from itertools import filterfalse
+    from itertools import filterfalse
 except ImportError:
-	from itertools import ifilterfalse
+    from itertools import ifilterfalse
 
-	def filterfalse(predicate, iterable):
-		return ifilterfalse(predicate, iterable)
+    def filterfalse(predicate, iterable):
+        return ifilterfalse(predicate, iterable)
 
 #################################################
 # Users
@@ -58,141 +58,141 @@ from .core import db
 # In case we have to move to MariaDB instead of MySQL, e.g.: InnoDB in MySQL
 # is replaced by XtraDB.
 default_table_args = {
-	'mysql_charset': 'utf8', 'mysql_engine': 'InnoDB',
-	'mysql_collate': 'utf8_unicode_ci'}
+    'mysql_charset': 'utf8', 'mysql_engine': 'InnoDB',
+    'mysql_collate': 'utf8_unicode_ci'}
 
 convention = {
-	"ix": 'ix_%(column_0_label)s',
-	"uq": "uq_%(table_name)s_%(column_0_name)s",
-	"ck": "ck_%(table_name)s_%(constraint_name)s",
-	"fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-	"pk": "pk_%(table_name)s"
+    "ix": 'ix_%(column_0_label)s',
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s"
 }
 
 db.metadata.naming_convention = convention
 
 
 class UserTypesForCourse(db.Model):
-	__tablename__ = "UserTypesForCourse"
-	__table_args__ = default_table_args
+    __tablename__ = "UserTypesForCourse"
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	name = db.Column(db.String(255), unique=True, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String(255), unique=True, nullable=False)
 
-	# constants for the user types
-	TYPE_DROPPED = "Dropped"
-	TYPE_STUDENT = "Student"
-	TYPE_TA = "Teaching Assistant"
-	TYPE_INSTRUCTOR = "Instructor"
+    # constants for the user types
+    TYPE_DROPPED = "Dropped"
+    TYPE_STUDENT = "Student"
+    TYPE_TA = "Teaching Assistant"
+    TYPE_INSTRUCTOR = "Instructor"
 
 
 # User types at the system level
 class UserTypesForSystem(db.Model):
-	__tablename__ = "UserTypesForSystem"
-	__table_args__ = default_table_args
+    __tablename__ = "UserTypesForSystem"
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	name = db.Column(db.String(255), unique=True, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String(255), unique=True, nullable=False)
 
-	TYPE_NORMAL = "Student"
-	TYPE_INSTRUCTOR = "Instructor"
-	TYPE_SYSADMIN = "System Administrator"
+    TYPE_NORMAL = "Student"
+    TYPE_INSTRUCTOR = "Instructor"
+    TYPE_SYSADMIN = "System Administrator"
 
 
 def hash_password(password, is_admin=False):
-	category = None
-	if is_admin:
-		# enables more rounds for admin passwords
-		category = "admin"
-	return pwd_context.encrypt(password, category=category)
+    category = None
+    if is_admin:
+        # enables more rounds for admin passwords
+        category = "admin"
+    return pwd_context.encrypt(password, category=category)
 
 
 # Flask-Login requires the user class to have some methods, the easiest way
 # to get those methods is to inherit from the UserMixin class.
 class Users(db.Model, UserMixin):
-	__tablename__ = 'Users'
-	__table_args__ = default_table_args
+    __tablename__ = 'Users'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	username = db.Column(db.String(255), unique=True, nullable=False)
-	student_no = db.Column(db.String(50), unique=True, nullable=True)
-	_password = db.Column(db.String(255), unique=False, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    username = db.Column(db.String(255), unique=True, nullable=False)
+    student_no = db.Column(db.String(50), unique=True, nullable=True)
+    _password = db.Column(db.String(255), unique=False, nullable=False)
 
-	# Apparently, enabling the equivalent of ON DELETE CASCADE requires
-	# the ondelete option in the foreign key and the cascade + passive_deletes
-	# option in db.relationship().
-	usertypesforsystem_id = db.Column(
-		db.Integer,
-		db.ForeignKey('UserTypesForSystem.id', ondelete="CASCADE"),
-		nullable=False)
-	usertypeforsystem = db.relationship("UserTypesForSystem")
+    # Apparently, enabling the equivalent of ON DELETE CASCADE requires
+    # the ondelete option in the foreign key and the cascade + passive_deletes
+    # option in db.relationship().
+    usertypesforsystem_id = db.Column(
+        db.Integer,
+        db.ForeignKey('UserTypesForSystem.id', ondelete="CASCADE"),
+        nullable=False)
+    usertypeforsystem = db.relationship("UserTypesForSystem")
 
-	email = db.Column(db.String(254))  # email addresses are max 254 characters, no
-	# idea if the unicode encoding of email addr
-	# changes this.
-	firstname = db.Column(db.String(255))
-	lastname = db.Column(db.String(255))
-	displayname = db.Column(db.String(255))
-	lastonline = db.Column(db.DateTime)
-	# Note that MySQL before 5.6.5 doesn't allow more than one auto init/update
-	# column for timestamps! Auto init/update after 5.6.5 allows multiple 
-	# columns and can be applied to the db.DateTime field as well. This means that
-	# 'modified' can be counted on to be auto init/updated for manual
-	# (non-SQLAlchemy) database operations while 'created' will not.
-	modified = db.Column(
-		db.DateTime,
-		default=datetime.datetime.utcnow,
-		onupdate=datetime.datetime.utcnow,
-		nullable=False)
-	created = db.Column(
-		db.DateTime, default=datetime.datetime.utcnow,
-		nullable=False)
-	coursesandusers = db.relationship("CoursesAndUsers")
-	groups = db.relationship(
-		"GroupsAndUsers",
-		primaryjoin="and_(Users.id==GroupsAndUsers.users_id, GroupsAndUsers.active)")
+    email = db.Column(db.String(254))  # email addresses are max 254 characters, no
+    # idea if the unicode encoding of email addr
+    # changes this.
+    firstname = db.Column(db.String(255))
+    lastname = db.Column(db.String(255))
+    displayname = db.Column(db.String(255))
+    lastonline = db.Column(db.DateTime)
+    # Note that MySQL before 5.6.5 doesn't allow more than one auto init/update
+    # column for timestamps! Auto init/update after 5.6.5 allows multiple
+    # columns and can be applied to the db.DateTime field as well. This means that
+    # 'modified' can be counted on to be auto init/updated for manual
+    # (non-SQLAlchemy) database operations while 'created' will not.
+    modified = db.Column(
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow,
+        nullable=False)
+    created = db.Column(
+        db.DateTime, default=datetime.datetime.utcnow,
+        nullable=False)
+    coursesandusers = db.relationship("CoursesAndUsers")
+    groups = db.relationship(
+        "GroupsAndUsers",
+        primaryjoin="and_(Users.id==GroupsAndUsers.users_id, GroupsAndUsers.active)")
 
-	def _get_password(self):
-		return self._password
+    def _get_password(self):
+        return self._password
 
-	def _set_password(self, password):
-		self._password = hash_password(password)
+    def _set_password(self, password):
+        self._password = hash_password(password)
 
-	password = property(_get_password, _set_password)
-	password = synonym('_password', descriptor=password)
+    password = property(_get_password, _set_password)
+    password = synonym('_password', descriptor=password)
 
-	@hybrid_property
-	def fullname(self):
-		if self.firstname and self.lastname:
-			return '%s %s' % (self.firstname, self.lastname)
-		elif self.firstname:  # only first name provided
-			return self.firstname
-		elif self.lastname:  # only last name provided
-			return self.lastname
-		else:
-			return None
+    @hybrid_property
+    def fullname(self):
+        if self.firstname and self.lastname:
+            return '%s %s' % (self.firstname, self.lastname)
+        elif self.firstname:  # only first name provided
+            return self.firstname
+        elif self.lastname:  # only last name provided
+            return self.lastname
+        else:
+            return None
 
-	# According to gravatar's hash specs
-	# 	1.Trim leading and trailing whitespace from an email address
-	# 	2.Force all characters to lower-case
-	# 	3.md5 hash the final string
-	# Defaults to a hash of the user's username if no email is available
-	@hybrid_property
-	def avatar(self):
-		hash_input = self.username
-		if self.email:
-			hash_input = self.email
-		m = hashlib.md5()
-		m.update(hash_input.strip().lower().encode('utf-8'))
-		return m.hexdigest()
+    # According to gravatar's hash specs
+    # 	1.Trim leading and trailing whitespace from an email address
+    # 	2.Force all characters to lower-case
+    # 	3.md5 hash the final string
+    # Defaults to a hash of the user's username if no email is available
+    @hybrid_property
+    def avatar(self):
+        hash_input = self.username
+        if self.email:
+            hash_input = self.email
+        m = hashlib.md5()
+        m.update(hash_input.strip().lower().encode('utf-8'))
+        return m.hexdigest()
 
-	def verify_password(self, password):
-		return pwd_context.verify(password, self.password)
+    def verify_password(self, password):
+        return pwd_context.verify(password, self.password)
 
-	def update_lastonline(self):
-		self.lastonline = datetime.datetime.utcnow()
-		db.session.add(self)
-		db.session.commit()
+    def update_lastonline(self):
+        self.lastonline = datetime.datetime.utcnow()
+        db.session.add(self)
+        db.session.commit()
 
 
 # # create a default root user with sysadmin role
@@ -212,57 +212,57 @@ class Users(db.Model, UserMixin):
 #################################################
 
 class Courses(db.Model):
-	__tablename__ = 'Courses'
-	__table_args__ = default_table_args
+    __tablename__ = 'Courses'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	name = db.Column(db.String(255), unique=True, nullable=False)
-	description = db.Column(db.Text)
-	available = db.Column(db.Boolean(name='available'), default=True, nullable=False)
-	coursesandusers = db.relationship("CoursesAndUsers", lazy="dynamic")
-	_criteriaandcourses = db.relationship("CriteriaAndCourses")
-	# allow students to make question posts
-	enable_student_create_questions = db.Column(
-		db.Boolean(name='enable_student_create_questions'), default=False,
-		nullable=False)
-	enable_student_create_tags = db.Column(
-		db.Boolean(name='enable_student_create_tags'), default=False, nullable=False)
-	modified = db.Column(
-		db.DateTime,
-		default=datetime.datetime.utcnow,
-		onupdate=datetime.datetime.utcnow,
-		nullable=False)
-	created = db.Column(
-		db.DateTime, default=datetime.datetime.utcnow,
-		nullable=False)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String(255), unique=True, nullable=False)
+    description = db.Column(db.Text)
+    available = db.Column(db.Boolean(name='available'), default=True, nullable=False)
+    coursesandusers = db.relationship("CoursesAndUsers", lazy="dynamic")
+    _criteriaandcourses = db.relationship("CriteriaAndCourses")
+    # allow students to make question posts
+    enable_student_create_questions = db.Column(
+        db.Boolean(name='enable_student_create_questions'), default=False,
+        nullable=False)
+    enable_student_create_tags = db.Column(
+        db.Boolean(name='enable_student_create_tags'), default=False, nullable=False)
+    modified = db.Column(
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow,
+        nullable=False)
+    created = db.Column(
+        db.DateTime, default=datetime.datetime.utcnow,
+        nullable=False)
 
-	@hybrid_property
-	def criteriaandcourses(self):
-		"""
-		Adds the default criteria to newly created courses which doesn't have any criteria yet.
-		This is a complete hack. I'd implement this using sqlalchemy's event system instead but
-		it seems that events doesn't work right during test cases for some reason.
+    @hybrid_property
+    def criteriaandcourses(self):
+        """
+        Adds the default criteria to newly created courses which doesn't have any criteria yet.
+        This is a complete hack. I'd implement this using sqlalchemy's event system instead but
+        it seems that events doesn't work right during test cases for some reason.
 
-		if not self._criteriaandcourses:
-			default_criteria = Criteria.query.first()
-			criteria_and_course = CriteriaAndCourses(criterion=default_criteria, courses_id=self.id)
-			db.session.add(criteria_and_course)
-			db.session.commit()
-		"""
-		return self._criteriaandcourses
+        if not self._criteriaandcourses:
+            default_criteria = Criteria.query.first()
+            criteria_and_course = CriteriaAndCourses(criterion=default_criteria, courses_id=self.id)
+            db.session.add(criteria_and_course)
+            db.session.commit()
+        """
+        return self._criteriaandcourses
 
-	@classmethod
-	def get_by_user(cls, user_id, inactive=False, fields=None):
-		query = cls.query.join(CoursesAndUsers).filter_by(users_id=user_id)
+    @classmethod
+    def get_by_user(cls, user_id, inactive=False, fields=None):
+        query = cls.query.join(CoursesAndUsers).filter_by(users_id=user_id)
 
-		if not inactive:
-			query = query.join(UserTypesForCourse).filter(
-				UserTypesForCourse.name.isnot(UserTypesForCourse.TYPE_DROPPED))
+        if not inactive:
+            query = query.join(UserTypesForCourse).filter(
+                UserTypesForCourse.name.isnot(UserTypesForCourse.TYPE_DROPPED))
 
-		if fields:
-			query = query.options(load_only(*fields))
+        if fields:
+            query = query.options(load_only(*fields))
 
-		return query.order_by(cls.name).all()
+        return query.order_by(cls.name).all()
 
 
 # A "junction table" in sqlalchemy is called a many-to-many pattern. Such a
@@ -272,37 +272,37 @@ class Courses(db.Model):
 # For determining a course's users, we're using the association object approach
 # since we need to declare the user's role in the course.
 class CoursesAndUsers(db.Model):
-	__tablename__ = 'CoursesAndUsers'
+    __tablename__ = 'CoursesAndUsers'
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	courses_id = db.Column(db.Integer, db.ForeignKey("Courses.id"), nullable=False)
-	course = db.relationship("Courses")
-	users_id = db.Column(db.Integer, db.ForeignKey("Users.id"), nullable=False)
-	user = db.relationship("Users")
-	usertypesforcourse_id = db.Column(
-		db.Integer,
-		db.ForeignKey('UserTypesForCourse.id', ondelete="CASCADE"),
-		nullable=False)
-	usertypeforcourse = db.relationship("UserTypesForCourse")
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    courses_id = db.Column(db.Integer, db.ForeignKey("Courses.id"), nullable=False)
+    course = db.relationship("Courses")
+    users_id = db.Column(db.Integer, db.ForeignKey("Users.id"), nullable=False)
+    user = db.relationship("Users")
+    usertypesforcourse_id = db.Column(
+        db.Integer,
+        db.ForeignKey('UserTypesForCourse.id', ondelete="CASCADE"),
+        nullable=False)
+    usertypeforcourse = db.relationship("UserTypesForCourse")
 
-	modified = db.Column(
-		db.DateTime,
-		default=datetime.datetime.utcnow,
-		onupdate=datetime.datetime.utcnow,
-		nullable=False)
-	created = db.Column(
-		db.DateTime, default=datetime.datetime.utcnow,
-		nullable=False)
-	__table_args__ = (
-		# prevent duplicate user in courses
-		db.UniqueConstraint('courses_id', 'users_id', name='_unique_user_and_course'),
-		default_table_args
-	)
+    modified = db.Column(
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow,
+        nullable=False)
+    created = db.Column(
+        db.DateTime, default=datetime.datetime.utcnow,
+        nullable=False)
+    __table_args__ = (
+        # prevent duplicate user in courses
+        db.UniqueConstraint('courses_id', 'users_id', name='_unique_user_and_course'),
+        default_table_args
+    )
 
-	@hybrid_property
-	def groups(self):
-		groups = self.user.groups
-		return [group for group in groups if group.courses_id == self.courses_id]
+    @hybrid_property
+    def groups(self):
+        groups = self.user.groups
+        return [group for group in groups if group.courses_id == self.courses_id]
 
 
 #################################################
@@ -310,65 +310,65 @@ class CoursesAndUsers(db.Model):
 #################################################
 
 class Groups(db.Model):
-	__tablename__ = 'Groups'
-	__table_args__ = default_table_args
+    __tablename__ = 'Groups'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	name = db.Column(db.String(255), nullable=False)
-	active = db.Column(db.Boolean(name='active'), default=True, nullable=False)
-	courses_id = db.Column(
-		db.Integer,
-		db.ForeignKey("Courses.id", ondelete="CASCADE"),
-		nullable=False)
-	course = db.relationship("Courses")
-	members = db.relationship("GroupsAndUsers")
-	modified = db.Column(
-		db.DateTime,
-		default=datetime.datetime.utcnow,
-		onupdate=datetime.datetime.utcnow,
-		nullable=False)
-	created = db.Column(
-		db.DateTime, default=datetime.datetime.utcnow,
-		nullable=False)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String(255), nullable=False)
+    active = db.Column(db.Boolean(name='active'), default=True, nullable=False)
+    courses_id = db.Column(
+        db.Integer,
+        db.ForeignKey("Courses.id", ondelete="CASCADE"),
+        nullable=False)
+    course = db.relationship("Courses")
+    members = db.relationship("GroupsAndUsers")
+    modified = db.Column(
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow,
+        nullable=False)
+    created = db.Column(
+        db.DateTime, default=datetime.datetime.utcnow,
+        nullable=False)
 
 
 class GroupsAndUsers(db.Model):
-	__tablename__ = 'GroupsAndUsers'
+    __tablename__ = 'GroupsAndUsers'
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	groups_id = db.Column(
-		db.Integer,
-		db.ForeignKey("Groups.id", ondelete="CASCADE"),
-		nullable=False)
-	group = db.relationship("Groups")
-	users_id = db.Column(
-		db.Integer,
-		db.ForeignKey("Users.id", ondelete="CASCADE"),
-		nullable=False)
-	user = db.relationship("Users")
-	active = db.Column(db.Boolean(name='active'), default=True, nullable=False)
-	modified = db.Column(
-		db.DateTime,
-		default=datetime.datetime.utcnow,
-		onupdate=datetime.datetime.utcnow,
-		nullable=False)
-	created = db.Column(
-		db.DateTime, default=datetime.datetime.utcnow,
-		nullable=False)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    groups_id = db.Column(
+        db.Integer,
+        db.ForeignKey("Groups.id", ondelete="CASCADE"),
+        nullable=False)
+    group = db.relationship("Groups")
+    users_id = db.Column(
+        db.Integer,
+        db.ForeignKey("Users.id", ondelete="CASCADE"),
+        nullable=False)
+    user = db.relationship("Users")
+    active = db.Column(db.Boolean(name='active'), default=True, nullable=False)
+    modified = db.Column(
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow,
+        nullable=False)
+    created = db.Column(
+        db.DateTime, default=datetime.datetime.utcnow,
+        nullable=False)
 
-	@hybrid_property
-	def courses_id(self):
-		return self.group.courses_id
+    @hybrid_property
+    def courses_id(self):
+        return self.group.courses_id
 
-	@hybrid_property
-	def groups_name(self):
-		return self.group.name
+    @hybrid_property
+    def groups_name(self):
+        return self.group.name
 
-	__table_args__ = (
-		# prevent duplicate user in groups
-		db.UniqueConstraint('groups_id', 'users_id', name='_unique_group_and_user'),
-		default_table_args
-	)
+    __table_args__ = (
+        # prevent duplicate user in groups
+        db.UniqueConstraint('groups_id', 'users_id', name='_unique_group_and_user'),
+        default_table_args
+    )
 
 
 #################################################
@@ -376,19 +376,19 @@ class GroupsAndUsers(db.Model):
 #################################################
 
 class Tags(db.Model):
-	__tablename__ = 'Tags'
-	__table_args__ = default_table_args
+    __tablename__ = 'Tags'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	name = db.Column(db.String(255), unique=True, nullable=False)
-	courses_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Courses.id', ondelete="CASCADE"),
-		nullable=False)
-	course = db.relationship("Courses")
-	created = db.Column(
-		db.DateTime, default=datetime.datetime.utcnow,
-		nullable=False)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String(255), unique=True, nullable=False)
+    courses_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Courses.id', ondelete="CASCADE"),
+        nullable=False)
+    course = db.relationship("Courses")
+    created = db.Column(
+        db.DateTime, default=datetime.datetime.utcnow,
+        nullable=False)
 
 
 #################################################
@@ -396,30 +396,30 @@ class Tags(db.Model):
 #################################################
 
 class Posts(db.Model):
-	__tablename__ = 'Posts'
-	__table_args__ = default_table_args
+    __tablename__ = 'Posts'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	users_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Users.id', ondelete="CASCADE"),
-		nullable=False)
-	user = db.relationship("Users")
-	courses_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Courses.id', ondelete="CASCADE"),
-		nullable=False)
-	course = db.relationship("Courses")
-	content = db.Column(db.Text)
-	files = db.relationship("FilesForPosts", cascade="delete")
-	modified = db.Column(
-		db.DateTime,
-		default=datetime.datetime.utcnow,
-		onupdate=datetime.datetime.utcnow,
-		nullable=False)
-	created = db.Column(
-		db.DateTime, default=datetime.datetime.utcnow,
-		nullable=False)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    users_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Users.id', ondelete="CASCADE"),
+        nullable=False)
+    user = db.relationship("Users")
+    courses_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Courses.id', ondelete="CASCADE"),
+        nullable=False)
+    course = db.relationship("Courses")
+    content = db.Column(db.Text)
+    files = db.relationship("FilesForPosts", cascade="delete")
+    modified = db.Column(
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow,
+        nullable=False)
+    created = db.Column(
+        db.DateTime, default=datetime.datetime.utcnow,
+        nullable=False)
 
 
 #################################################
@@ -427,361 +427,361 @@ class Posts(db.Model):
 #################################################
 
 class Judgements(db.Model):
-	__tablename__ = 'Judgements'
-	__table_args__ = default_table_args
+    __tablename__ = 'Judgements'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True)
-	users_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Users.id', ondelete="CASCADE"),
-		nullable=False)
-	user = db.relationship("Users")
-	answerpairings_id = db.Column(
-		db.Integer,
-		db.ForeignKey('AnswerPairings.id', ondelete="CASCADE"),
-		nullable=False)
-	answerpairing = db.relationship("AnswerPairings")
-	criteriaandquestions_id = db.Column(
-		db.Integer,
-		db.ForeignKey('CriteriaAndQuestions.id', ondelete="CASCADE"),
-		nullable=False)
-	question_criterion = db.relationship("CriteriaAndPostsForQuestions")
-	answers_id_winner = db.Column(
-		db.Integer,
-		db.ForeignKey('Answers.id', ondelete="CASCADE"),
-		nullable=False)
-	answer_winner = db.relationship("PostsForAnswers")
-	modified = db.Column(
-		db.DateTime,
-		default=datetime.datetime.utcnow,
-		onupdate=datetime.datetime.utcnow,
-		nullable=False)
-	created = db.Column(
-		db.DateTime, default=datetime.datetime.utcnow,
-		nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    users_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Users.id', ondelete="CASCADE"),
+        nullable=False)
+    user = db.relationship("Users")
+    answerpairings_id = db.Column(
+        db.Integer,
+        db.ForeignKey('AnswerPairings.id', ondelete="CASCADE"),
+        nullable=False)
+    answerpairing = db.relationship("AnswerPairings")
+    criteriaandquestions_id = db.Column(
+        db.Integer,
+        db.ForeignKey('CriteriaAndQuestions.id', ondelete="CASCADE"),
+        nullable=False)
+    question_criterion = db.relationship("CriteriaAndPostsForQuestions")
+    answers_id_winner = db.Column(
+        db.Integer,
+        db.ForeignKey('Answers.id', ondelete="CASCADE"),
+        nullable=False)
+    answer_winner = db.relationship("PostsForAnswers")
+    modified = db.Column(
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow,
+        nullable=False)
+    created = db.Column(
+        db.DateTime, default=datetime.datetime.utcnow,
+        nullable=False)
 
-	@hybrid_property
-	def courses_id(self):
-		return self.question_criterion.question.post.courses_id
+    @hybrid_property
+    def courses_id(self):
+        return self.question_criterion.question.post.courses_id
 
-	@classmethod
-	def create_judgement(cls, params, answer_pair, user_id):
-		judgements = []
-		criteria = []
-		for judgement_params in params['judgements']:
-			criteria.append(judgement_params['question_criterion_id'])
-			# need this or hybrid property for courses_id won't work when it checks permissions
-			question_criterion = CriteriaAndPostsForQuestions.query. \
-				get(judgement_params['question_criterion_id'])
-			judgement = Judgements(
-				answerpairing=answer_pair, users_id=user_id,
-				question_criterion=question_criterion,
-				answers_id_winner=judgement_params['answer_id_winner'])
-			db.session.add(judgement)
-			db.session.commit()
-			judgements.append(judgement)
+    @classmethod
+    def create_judgement(cls, params, answer_pair, user_id):
+        judgements = []
+        criteria = []
+        for judgement_params in params['judgements']:
+            criteria.append(judgement_params['question_criterion_id'])
+            # need this or hybrid property for courses_id won't work when it checks permissions
+            question_criterion = CriteriaAndPostsForQuestions.query. \
+                get(judgement_params['question_criterion_id'])
+            judgement = Judgements(
+                answerpairing=answer_pair, users_id=user_id,
+                question_criterion=question_criterion,
+                answers_id_winner=judgement_params['answer_id_winner'])
+            db.session.add(judgement)
+            db.session.commit()
+            judgements.append(judgement)
 
-		# increment evaluation count for the answers in the evaluated answer pair
-		answers = PostsForAnswers.query. \
-			filter(PostsForAnswers.id.in_([answer_pair.answer1.id, answer_pair.answer2.id])).all()
-		for ans in answers:
-			ans.round += 1
-			db.session.add(ans)
-		db.session.commit()
+        # increment evaluation count for the answers in the evaluated answer pair
+        answers = PostsForAnswers.query. \
+            filter(PostsForAnswers.id.in_([answer_pair.answer1.id, answer_pair.answer2.id])).all()
+        for ans in answers:
+            ans.round += 1
+            db.session.add(ans)
+        db.session.commit()
 
-		return judgements
+        return judgements
 
-	@classmethod
-	def calculate_scores(cls, question_id):
-		# get all judgements for this question
-		judgements = Judgements.query.join(AnswerPairings). \
-			filter(AnswerPairings.questions_id == question_id).all()
-		answers = set()  # stores answers that've been judged
-		question_criteria = CriteriaAndPostsForQuestions.query. \
-			filter_by(questions_id=question_id, active=True).all()
-		# 2D array, keep tracks of wins, e.g.: wins[A][B] is the number of times A won vs B
-		wins = WinsTable(question_criteria)
-		# keeps track of number of times judged for each answer
-		rounds = {}
-		for judgement in judgements:
-			answer1 = judgement.answerpairing.answer1
-			answer2 = judgement.answerpairing.answer2
-			winner = judgement.answer_winner
-			loser = answer1
-			if winner.id == answer1.id:
-				loser = answer2
-			wins.add(winner, loser, judgement.question_criterion)
-			# update number of times judged
-			rounds[answer1.id] = rounds.get(answer1.id, 0) + 1
-			rounds[answer2.id] = rounds.get(answer2.id, 0) + 1
-			answers.add(answer1)
-			answers.add(answer2)
-		current_app.logger.debug("Wins table: " + str(wins))
-		# create scores for each answer
-		for answer in answers:
-			for question_criterion in question_criteria:
-				score = Scores.query.filter_by(answer=answer, question_criterion=question_criterion).first()
-				if not score:
-					score = Scores(answer=answer, question_criterion=question_criterion)
-				score.rounds = rounds.get(answer.id, 0)
-				score.score = wins.get_score(answer, question_criterion)
-				score.wins = wins.get_total_wins(answer, question_criterion)
-				db.session.add(score)
-		db.session.commit()
+    @classmethod
+    def calculate_scores(cls, question_id):
+        # get all judgements for this question
+        judgements = Judgements.query.join(AnswerPairings). \
+            filter(AnswerPairings.questions_id == question_id).all()
+        answers = set()  # stores answers that've been judged
+        question_criteria = CriteriaAndPostsForQuestions.query. \
+            filter_by(questions_id=question_id, active=True).all()
+        # 2D array, keep tracks of wins, e.g.: wins[A][B] is the number of times A won vs B
+        wins = WinsTable(question_criteria)
+        # keeps track of number of times judged for each answer
+        rounds = {}
+        for judgement in judgements:
+            answer1 = judgement.answerpairing.answer1
+            answer2 = judgement.answerpairing.answer2
+            winner = judgement.answer_winner
+            loser = answer1
+            if winner.id == answer1.id:
+                loser = answer2
+            wins.add(winner, loser, judgement.question_criterion)
+            # update number of times judged
+            rounds[answer1.id] = rounds.get(answer1.id, 0) + 1
+            rounds[answer2.id] = rounds.get(answer2.id, 0) + 1
+            answers.add(answer1)
+            answers.add(answer2)
+        current_app.logger.debug("Wins table: " + str(wins))
+        # create scores for each answer
+        for answer in answers:
+            for question_criterion in question_criteria:
+                score = Scores.query.filter_by(answer=answer, question_criterion=question_criterion).first()
+                if not score:
+                    score = Scores(answer=answer, question_criterion=question_criterion)
+                score.rounds = rounds.get(answer.id, 0)
+                score.score = wins.get_score(answer, question_criterion)
+                score.wins = wins.get_total_wins(answer, question_criterion)
+                db.session.add(score)
+        db.session.commit()
 
 
 class AnswerPairings(db.Model):
-	__tablename__ = 'AnswerPairings'
-	__table_args__ = default_table_args
+    __tablename__ = 'AnswerPairings'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True)
-	questions_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Questions.id', ondelete="CASCADE"),
-		nullable=False)
-	# question = db.relationship("PostsForQuestions")
-	answers_id1 = db.Column(
-		db.Integer,
-		db.ForeignKey('Answers.id', ondelete="CASCADE"),
-		nullable=False)
-	answer1 = db.relationship("PostsForAnswers", foreign_keys=[answers_id1])
-	answers_id2 = db.Column(
-		db.Integer,
-		db.ForeignKey('Answers.id', ondelete="CASCADE"),
-		nullable=False)
-	answer2 = db.relationship("PostsForAnswers", foreign_keys=[answers_id2])
-	judgements = db.relationship("Judgements", cascade="delete")
-	criteriaandquestions_id = db.Column(
-		db.Integer,
-		db.ForeignKey('CriteriaAndQuestions.id', ondelete="CASCADE"),
-		nullable=True)
-	modified = db.Column(
-		db.DateTime,
-		default=datetime.datetime.utcnow,
-		onupdate=datetime.datetime.utcnow,
-		nullable=False)
-	created = db.Column(
-		db.DateTime, default=datetime.datetime.utcnow,
-		nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    questions_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Questions.id', ondelete="CASCADE"),
+        nullable=False)
+    # question = db.relationship("PostsForQuestions")
+    answers_id1 = db.Column(
+        db.Integer,
+        db.ForeignKey('Answers.id', ondelete="CASCADE"),
+        nullable=False)
+    answer1 = db.relationship("PostsForAnswers", foreign_keys=[answers_id1])
+    answers_id2 = db.Column(
+        db.Integer,
+        db.ForeignKey('Answers.id', ondelete="CASCADE"),
+        nullable=False)
+    answer2 = db.relationship("PostsForAnswers", foreign_keys=[answers_id2])
+    judgements = db.relationship("Judgements", cascade="delete")
+    criteriaandquestions_id = db.Column(
+        db.Integer,
+        db.ForeignKey('CriteriaAndQuestions.id', ondelete="CASCADE"),
+        nullable=True)
+    modified = db.Column(
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow,
+        nullable=False)
+    created = db.Column(
+        db.DateTime, default=datetime.datetime.utcnow,
+        nullable=False)
 
-	@hybrid_property
-	def answer1_win(self):
-		return len([j for j in self.judgements if j.answers_id_winner == self.answers_id1])
+    @hybrid_property
+    def answer1_win(self):
+        return len([j for j in self.judgements if j.answers_id_winner == self.answers_id1])
 
-	@hybrid_property
-	def answer2_win(self):
-		return len([j for j in self.judgements if j.answers_id_winner == self.answers_id2])
+    @hybrid_property
+    def answer2_win(self):
+        return len([j for j in self.judgements if j.answers_id_winner == self.answers_id2])
 
 
 class PostsForAnswers(db.Model):
-	__tablename__ = 'Answers'
-	__table_args__ = default_table_args
+    __tablename__ = 'Answers'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	posts_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Posts.id', ondelete="CASCADE"),
-		nullable=False)
-	post = db.relationship("Posts", cascade="delete")
-	questions_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Questions.id', ondelete="CASCADE"),
-		nullable=False)
-	question = db.relationship("PostsForQuestions")
-	comments = db.relationship("PostsForAnswersAndPostsForComments", cascade="delete")
-	_scores = db.relationship("Scores", cascade="delete")
-	# flagged for instructor review as inappropriate or incomplete
-	flagged = db.Column(db.Boolean(name='flagged'), default=False, nullable=False)
-	users_id_flagger = db.Column(
-		db.Integer,
-		db.ForeignKey('Users.id', ondelete="CASCADE"))
-	flagger = db.relationship("Users")
-	round = db.Column(db.Integer, default=0, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    posts_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Posts.id', ondelete="CASCADE"),
+        nullable=False)
+    post = db.relationship("Posts", cascade="delete")
+    questions_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Questions.id', ondelete="CASCADE"),
+        nullable=False)
+    question = db.relationship("PostsForQuestions")
+    comments = db.relationship("PostsForAnswersAndPostsForComments", cascade="delete")
+    _scores = db.relationship("Scores", cascade="delete")
+    # flagged for instructor review as inappropriate or incomplete
+    flagged = db.Column(db.Boolean(name='flagged'), default=False, nullable=False)
+    users_id_flagger = db.Column(
+        db.Integer,
+        db.ForeignKey('Users.id', ondelete="CASCADE"))
+    flagger = db.relationship("Users")
+    round = db.Column(db.Integer, default=0, nullable=False)
 
-	@hybrid_property
-	def courses_id(self):
-		return self.post.courses_id
+    @hybrid_property
+    def courses_id(self):
+        return self.post.courses_id
 
-	@hybrid_property
-	def users_id(self):
-		return self.post.user.id
+    @hybrid_property
+    def users_id(self):
+        return self.post.user.id
 
-	@hybrid_property
-	def comments_count(self):
-		return len(self.comments)
+    @hybrid_property
+    def comments_count(self):
+        return len(self.comments)
 
-	@hybrid_property
-	def private_comments_count(self):
-		private_comments = [c for c in self.comments if c.evaluation or c.selfeval or c.type == 0]
-		return len(private_comments)
+    @hybrid_property
+    def private_comments_count(self):
+        private_comments = [c for c in self.comments if c.evaluation or c.selfeval or c.type == 0]
+        return len(private_comments)
 
-	@hybrid_property
-	def public_comments_count(self):
-		return self.comments_count - self.private_comments_count
+    @hybrid_property
+    def public_comments_count(self):
+        return self.comments_count - self.private_comments_count
 
-	@hybrid_property
-	def scores(self):
-		return sorted(self._scores, key=lambda score: score.criteriaandquestions_id)
+    @hybrid_property
+    def scores(self):
+        return sorted(self._scores, key=lambda score: score.criteriaandquestions_id)
 
-	@hybrid_property
-	def selfeval_count(self):
-		return len([c for c in self.comments if c.selfeval])
+    @hybrid_property
+    def selfeval_count(self):
+        return len([c for c in self.comments if c.selfeval])
 
 
 class PostsForComments(db.Model):
-	__tablename__ = 'Comments'
-	__table_args__ = default_table_args
+    __tablename__ = 'Comments'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	posts_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Posts.id', ondelete="CASCADE"),
-		nullable=False)
-	post = db.relationship("Posts")
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    posts_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Posts.id', ondelete="CASCADE"),
+        nullable=False)
+    post = db.relationship("Posts")
 
 
 class PostsForQuestionsAndPostsForComments(db.Model):
-	__tablename__ = 'QuestionsAndComments'
-	__table_args__ = default_table_args
+    __tablename__ = 'QuestionsAndComments'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	questions_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Questions.id', ondelete="CASCADE"),
-		nullable=False)
-	postsforquestions = db.relationship("PostsForQuestions")
-	comments_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Comments.id', ondelete="CASCADE"),
-		nullable=False)
-	postsforcomments = db.relationship("PostsForComments")
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    questions_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Questions.id', ondelete="CASCADE"),
+        nullable=False)
+    postsforquestions = db.relationship("PostsForQuestions")
+    comments_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Comments.id', ondelete="CASCADE"),
+        nullable=False)
+    postsforcomments = db.relationship("PostsForComments")
 
-	@hybrid_property
-	def courses_id(self):
-		return self.postsforcomments.post.courses_id
+    @hybrid_property
+    def courses_id(self):
+        return self.postsforcomments.post.courses_id
 
-	@hybrid_property
-	def users_id(self):
-		return self.postsforcomments.post.user.id
+    @hybrid_property
+    def users_id(self):
+        return self.postsforcomments.post.user.id
 
-	@hybrid_property
-	def content(self):
-		return self.postsforcomments.post.content
+    @hybrid_property
+    def content(self):
+        return self.postsforcomments.post.content
 
 
 class PostsForAnswersAndPostsForComments(db.Model):
-	__tablename__ = 'AnswersAndComments'
-	__table_args__ = default_table_args
+    __tablename__ = 'AnswersAndComments'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	answers_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Answers.id', ondelete="CASCADE"),
-		nullable=False)
-	postsforanswers = db.relationship("PostsForAnswers")
-	comments_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Comments.id', ondelete="CASCADE"),
-		nullable=False)
-	postsforcomments = db.relationship("PostsForComments")
-	evaluation = db.Column(db.Boolean(name='evaluation'), default=False, nullable=False)
-	selfeval = db.Column(db.Boolean(name='selfeval'), default=False, nullable=False)
-	type = db.Column(db.SmallInteger, default=0, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    answers_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Answers.id', ondelete="CASCADE"),
+        nullable=False)
+    postsforanswers = db.relationship("PostsForAnswers")
+    comments_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Comments.id', ondelete="CASCADE"),
+        nullable=False)
+    postsforcomments = db.relationship("PostsForComments")
+    evaluation = db.Column(db.Boolean(name='evaluation'), default=False, nullable=False)
+    selfeval = db.Column(db.Boolean(name='selfeval'), default=False, nullable=False)
+    type = db.Column(db.SmallInteger, default=0, nullable=False)
 
-	@hybrid_property
-	def courses_id(self):
-		return self.postsforcomments.post.courses_id
+    @hybrid_property
+    def courses_id(self):
+        return self.postsforcomments.post.courses_id
 
-	@hybrid_property
-	def users_id(self):
-		return self.postsforcomments.post.user.id
+    @hybrid_property
+    def users_id(self):
+        return self.postsforcomments.post.user.id
 
-	@hybrid_property
-	def content(self):
-		return self.postsforcomments.post.content
+    @hybrid_property
+    def content(self):
+        return self.postsforcomments.post.content
 
 
 class FilesForPosts(db.Model):
-	__tablename__ = 'FilesForPosts'
-	__table_args__ = default_table_args
+    __tablename__ = 'FilesForPosts'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	posts_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Posts.id', ondelete="CASCADE"),
-		nullable=False)
-	post = db.relationship("Posts")
-	author_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Users.id', ondelete="CASCADE"),
-		nullable=False)
-	author = db.relationship("Users")
-	name = db.Column(db.String(255), nullable=False)
-	alias = db.Column(db.String(255), nullable=False)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    posts_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Posts.id', ondelete="CASCADE"),
+        nullable=False)
+    post = db.relationship("Posts")
+    author_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Users.id', ondelete="CASCADE"),
+        nullable=False)
+    author = db.relationship("Users")
+    name = db.Column(db.String(255), nullable=False)
+    alias = db.Column(db.String(255), nullable=False)
 
 
 class SelfEvaluationTypes(db.Model):
-	__tablename__ = 'SelfEvalTypes'
-	__table_args__ = default_table_args
+    __tablename__ = 'SelfEvalTypes'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	name = db.Column(db.String(255), unique=True, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String(255), unique=True, nullable=False)
 
-	# constants for the self-evaluation types
-	TYPE_COMPARE_NO = "No Comparison with Another Answer"
+    # constants for the self-evaluation types
+    TYPE_COMPARE_NO = "No Comparison with Another Answer"
 # TYPE_COMPARE_SIMILAR_ANSWER = "Comparison to a Similarly Scored Answer"
 # TYPE_COMPARE_HIGHER_ANSWER = "Comparison to a Higher Scored Answer"
 
 
 class PostsForQuestionsAndSelfEvaluationTypes(db.Model):
-	__tablename__ = 'QuestionsAndSelfEvalTypes'
-	__table_args__ = default_table_args
+    __tablename__ = 'QuestionsAndSelfEvalTypes'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	questions_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Questions.id', ondelete="CASCADE"),
-		nullable=False)
-	selfevaltypes_id = db.Column(
-		db.Integer,
-		db.ForeignKey('SelfEvalTypes.id', ondelete="CASCADE"),
-		nullable=False)
-	type = db.relationship("SelfEvaluationTypes")
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    questions_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Questions.id', ondelete="CASCADE"),
+        nullable=False)
+    selfevaltypes_id = db.Column(
+        db.Integer,
+        db.ForeignKey('SelfEvalTypes.id', ondelete="CASCADE"),
+        nullable=False)
+    type = db.relationship("SelfEvaluationTypes")
 
 
 # each question can have different criteria
 class CriteriaAndPostsForQuestions(db.Model):
-	__tablename__ = 'CriteriaAndQuestions'
-	__table_args__ = default_table_args
+    __tablename__ = 'CriteriaAndQuestions'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	criteria_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Criteria.id', ondelete="CASCADE"),
-		nullable=False)
-	criterion = db.relationship("Criteria")
-	questions_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Questions.id', ondelete="CASCADE"),
-		nullable=False)
-	question = db.relationship("PostsForQuestions")
-	active = db.Column(db.Boolean(name='active'), default=True, nullable=False)
-	judgements = db.relationship("Judgements")
-	scores = db.relationship("Scores")
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    criteria_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Criteria.id', ondelete="CASCADE"),
+        nullable=False)
+    criterion = db.relationship("Criteria")
+    questions_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Questions.id', ondelete="CASCADE"),
+        nullable=False)
+    question = db.relationship("PostsForQuestions")
+    active = db.Column(db.Boolean(name='active'), default=True, nullable=False)
+    judgements = db.relationship("Judgements")
+    scores = db.relationship("Scores")
 
-	judgement_count = column_property(
-		select([func.count(Judgements.id)]).
-		where(Judgements.criteriaandquestions_id == id)
-	)
+    judgement_count = column_property(
+        select([func.count(Judgements.id)]).
+        where(Judgements.criteriaandquestions_id == id)
+    )
 
-	@hybrid_property
-	def courses_id(self):
-		return self.question.courses_id
+    @hybrid_property
+    def courses_id(self):
+        return self.question.courses_id
 
-	@hybrid_property
-	def max_score(self):
-		scores = [s.score for s in self.scores]
-		return max(scores)
+    @hybrid_property
+    def max_score(self):
+        scores = [s.score for s in self.scores]
+        return max(scores)
 
 
 #################################################
@@ -789,40 +789,40 @@ class CriteriaAndPostsForQuestions(db.Model):
 #################################################
 
 class Criteria(db.Model):
-	__tablename__ = 'Criteria'
-	__table_args__ = default_table_args
+    __tablename__ = 'Criteria'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	name = db.Column(db.String(255), nullable=False)
-	description = db.Column(db.Text)
-	# user who made this criteria
-	users_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Users.id', ondelete="CASCADE"),
-		nullable=False)
-	user = db.relationship("Users")
-	public = db.Column(db.Boolean(name='public'), default=False, nullable=False)
-	default = db.Column(db.Boolean(name='default'), default=True, nullable=False)
-	question_criteria = db.relationship("CriteriaAndPostsForQuestions")
-	modified = db.Column(
-		db.DateTime,
-		default=datetime.datetime.utcnow,
-		onupdate=datetime.datetime.utcnow,
-		nullable=False)
-	created = db.Column(
-		db.DateTime,
-		default=datetime.datetime.utcnow,
-		nullable=False)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text)
+    # user who made this criteria
+    users_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Users.id', ondelete="CASCADE"),
+        nullable=False)
+    user = db.relationship("Users")
+    public = db.Column(db.Boolean(name='public'), default=False, nullable=False)
+    default = db.Column(db.Boolean(name='default'), default=True, nullable=False)
+    question_criteria = db.relationship("CriteriaAndPostsForQuestions")
+    modified = db.Column(
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow,
+        nullable=False)
+    created = db.Column(
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        nullable=False)
 
-	judgement_count = column_property(
-		select([func.count(CriteriaAndPostsForQuestions.id)]).
-		where(CriteriaAndPostsForQuestions.criteria_id == id)
-	)
+    judgement_count = column_property(
+        select([func.count(CriteriaAndPostsForQuestions.id)]).
+        where(CriteriaAndPostsForQuestions.criteria_id == id)
+    )
 
-	@hybrid_property
-	def judged(self):
-		# return sum(c.judgement_count for c in self.question_criteria) > 0
-		return self.judgement_count > 0
+    @hybrid_property
+    def judged(self):
+        # return sum(c.judgement_count for c in self.question_criteria) > 0
+        return self.judgement_count > 0
 
 
 #################################################
@@ -830,311 +830,311 @@ class Criteria(db.Model):
 #################################################
 
 class Scores(db.Model):
-	__tablename__ = 'Scores'
-	__table_args__ = default_table_args
+    __tablename__ = 'Scores'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	criteriaandquestions_id = db.Column(
-		db.Integer,
-		db.ForeignKey('CriteriaAndQuestions.id', ondelete="CASCADE"),
-		nullable=False)
-	question_criterion = db.relationship("CriteriaAndPostsForQuestions")
-	answers_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Answers.id', ondelete="CASCADE"),
-		nullable=False)
-	answer = db.relationship("PostsForAnswers")
-	# number of times this answer has been judged
-	rounds = db.Column(db.Integer, default=0)
-	# number of times this answer has been picked as the better one
-	wins = db.Column(db.Integer, default=0)
-	# calculated score based on all previous judgements
-	score = db.Column(db.Float, default=0)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    criteriaandquestions_id = db.Column(
+        db.Integer,
+        db.ForeignKey('CriteriaAndQuestions.id', ondelete="CASCADE"),
+        nullable=False)
+    question_criterion = db.relationship("CriteriaAndPostsForQuestions")
+    answers_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Answers.id', ondelete="CASCADE"),
+        nullable=False)
+    answer = db.relationship("PostsForAnswers")
+    # number of times this answer has been judged
+    rounds = db.Column(db.Integer, default=0)
+    # number of times this answer has been picked as the better one
+    wins = db.Column(db.Integer, default=0)
+    # calculated score based on all previous judgements
+    score = db.Column(db.Float, default=0)
 
-	@hybrid_property
-	def normalized_score(self):
-		if self.question_criterion.max_score > 0:
-			# round to whole number
-			return round(self.score / self.question_criterion.max_score * 100, 0)
-		else:
-			return 0
+    @hybrid_property
+    def normalized_score(self):
+        if self.question_criterion.max_score > 0:
+            # round to whole number
+            return round(self.score / self.question_criterion.max_score * 100, 0)
+        else:
+            return 0
 
 
 class PostsForJudgements(db.Model):
-	__tablename__ = 'PostsForJudgements'
-	__table_args__ = default_table_args
+    __tablename__ = 'PostsForJudgements'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	comments_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Comments.id', ondelete="CASCADE"),
-		nullable=False)
-	postsforcomments = db.relationship("PostsForComments")
-	judgements_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Judgements.id', ondelete="CASCADE"),
-		nullable=False)
-	judgement = db.relationship("Judgements")
-	selfeval = db.Column(db.Boolean(name='selfeval'), default=False, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    comments_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Comments.id', ondelete="CASCADE"),
+        nullable=False)
+    postsforcomments = db.relationship("PostsForComments")
+    judgements_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Judgements.id', ondelete="CASCADE"),
+        nullable=False)
+    judgement = db.relationship("Judgements")
+    selfeval = db.Column(db.Boolean(name='selfeval'), default=False, nullable=False)
 
-	@hybrid_property
-	def courses_id(self):
-		return self.postsforcomments.post.courses_id
+    @hybrid_property
+    def courses_id(self):
+        return self.postsforcomments.post.courses_id
 
 
 class PostsForQuestions(db.Model):
-	__tablename__ = 'Questions'
-	__table_args__ = default_table_args
+    __tablename__ = 'Questions'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	posts_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Posts.id', ondelete="CASCADE"),
-		nullable=False)
-	post = db.relationship("Posts", cascade="delete")
-	title = db.Column(db.String(255))
-	_answers = db.relationship("PostsForAnswers", cascade="delete")
-	comments = db.relationship("PostsForQuestionsAndPostsForComments", cascade="delete", lazy="dynamic")
-	_criteria = db.relationship(
-		"CriteriaAndPostsForQuestions", cascade="delete",
-		primaryjoin="and_(PostsForQuestions.id==CriteriaAndPostsForQuestions.questions_id, "
-					"CriteriaAndPostsForQuestions.active)")
-	answerpairing = db.relationship("AnswerPairings", cascade="delete", backref="question")
-	answer_start = db.Column(db.DateTime(timezone=True))
-	answer_end = db.Column(db.DateTime(timezone=True))
-	judge_start = db.Column(db.DateTime(timezone=True), nullable=True)
-	judge_end = db.Column(db.DateTime(timezone=True), nullable=True)
-	num_judgement_req = db.Column(db.Integer, nullable=False)
-	can_reply = db.Column(db.Boolean(name='can_reply'), default=False, nullable=False)
-	selfevaltype = db.relationship("PostsForQuestionsAndSelfEvaluationTypes", cascade="delete")
-	modified = db.Column(
-		db.DateTime,
-		default=datetime.datetime.utcnow,
-		onupdate=datetime.datetime.utcnow,
-		nullable=False)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    posts_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Posts.id', ondelete="CASCADE"),
+        nullable=False)
+    post = db.relationship("Posts", cascade="delete")
+    title = db.Column(db.String(255))
+    _answers = db.relationship("PostsForAnswers", cascade="delete")
+    comments = db.relationship("PostsForQuestionsAndPostsForComments", cascade="delete", lazy="dynamic")
+    _criteria = db.relationship(
+        "CriteriaAndPostsForQuestions", cascade="delete",
+        primaryjoin="and_(PostsForQuestions.id==CriteriaAndPostsForQuestions.questions_id, "
+                    "CriteriaAndPostsForQuestions.active)")
+    answerpairing = db.relationship("AnswerPairings", cascade="delete", backref="question")
+    answer_start = db.Column(db.DateTime(timezone=True))
+    answer_end = db.Column(db.DateTime(timezone=True))
+    judge_start = db.Column(db.DateTime(timezone=True), nullable=True)
+    judge_end = db.Column(db.DateTime(timezone=True), nullable=True)
+    num_judgement_req = db.Column(db.Integer, nullable=False)
+    can_reply = db.Column(db.Boolean(name='can_reply'), default=False, nullable=False)
+    selfevaltype = db.relationship("PostsForQuestionsAndSelfEvaluationTypes", cascade="delete")
+    modified = db.Column(
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow,
+        nullable=False)
 
-	answers_count = column_property(
-		select([func.count(PostsForAnswers.id)]).
-		where(PostsForAnswers.questions_id == id)
-	)
+    answers_count = column_property(
+        select([func.count(PostsForAnswers.id)]).
+        where(PostsForAnswers.questions_id == id)
+    )
 
-	comments_count = column_property(
-		select([func.count(PostsForQuestionsAndPostsForComments.id)]).
-		where(PostsForQuestionsAndPostsForComments.questions_id == id)
-	)
+    comments_count = column_property(
+        select([func.count(PostsForQuestionsAndPostsForComments.id)]).
+        where(PostsForQuestionsAndPostsForComments.questions_id == id)
+    )
 
-	criteria_count = column_property(
-		select([CriteriaAndPostsForQuestions.id]).
-		where(CriteriaAndPostsForQuestions.questions_id == id)
-	)
+    criteria_count = column_property(
+        select([CriteriaAndPostsForQuestions.id]).
+        where(CriteriaAndPostsForQuestions.questions_id == id)
+    )
 
-	judged = column_property(
-		select([func.count(AnswerPairings.id) > 0]).
-		where(AnswerPairings.questions_id == id)
-	)
+    judged = column_property(
+        select([func.count(AnswerPairings.id) > 0]).
+        where(AnswerPairings.questions_id == id)
+    )
 
-	judgement_count = column_property(
-		select([func.count(Judgements.id)]).
-		where(and_(
-			Judgements.criteriaandquestions_id == CriteriaAndPostsForQuestions.id,
-			CriteriaAndPostsForQuestions.questions_id == id))
-	)
+    judgement_count = column_property(
+        select([func.count(Judgements.id)]).
+        where(and_(
+            Judgements.criteriaandquestions_id == CriteriaAndPostsForQuestions.id,
+            CriteriaAndPostsForQuestions.questions_id == id))
+    )
 
-	_selfeval_count = column_property(
-		select([func.count(PostsForAnswersAndPostsForComments.id)]).
-		where(and_(
-			PostsForAnswersAndPostsForComments.selfeval,
-			PostsForAnswersAndPostsForComments.answers_id == PostsForAnswers.id,
-			PostsForAnswers.questions_id == id))
-	)
+    _selfeval_count = column_property(
+        select([func.count(PostsForAnswersAndPostsForComments.id)]).
+        where(and_(
+            PostsForAnswersAndPostsForComments.selfeval,
+            PostsForAnswersAndPostsForComments.answers_id == PostsForAnswers.id,
+            PostsForAnswers.questions_id == id))
+    )
 
-	@hybrid_property
-	def courses_id(self):
-		return self.post.courses_id
+    @hybrid_property
+    def courses_id(self):
+        return self.post.courses_id
 
-	@hybrid_property
-	def answers(self):
-		return sorted(self._answers, key=lambda answer: answer.post.created, reverse=True)
+    @hybrid_property
+    def answers(self):
+        return sorted(self._answers, key=lambda answer: answer.post.created, reverse=True)
 
-	@hybrid_property
-	def criteria(self):
-		return sorted(self._criteria, key=lambda criterion: criterion.id)
+    @hybrid_property
+    def criteria(self):
+        return sorted(self._criteria, key=lambda criterion: criterion.id)
 
-	@hybrid_property
-	def available(self):
-		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-		answer_start = self.answer_start.replace(tzinfo=pytz.utc)
-		return answer_start <= now
+    @hybrid_property
+    def available(self):
+        now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+        answer_start = self.answer_start.replace(tzinfo=pytz.utc)
+        return answer_start <= now
 
-	@hybrid_property
-	def answer_period(self):
-		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-		answer_start = self.answer_start.replace(tzinfo=pytz.utc)
-		answer_end = self.answer_end.replace(tzinfo=pytz.utc)
-		return answer_start <= now < answer_end
+    @hybrid_property
+    def answer_period(self):
+        now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+        answer_start = self.answer_start.replace(tzinfo=pytz.utc)
+        answer_end = self.answer_end.replace(tzinfo=pytz.utc)
+        return answer_start <= now < answer_end
 
-	@hybrid_property
-	def answer_grace(self):
-		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-		grace = self.answer_end.replace(tzinfo=pytz.utc) + datetime.timedelta(seconds=60)  # add 60 seconds
-		answer_start = self.answer_start.replace(tzinfo=pytz.utc)
-		return answer_start <= now < grace
+    @hybrid_property
+    def answer_grace(self):
+        now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+        grace = self.answer_end.replace(tzinfo=pytz.utc) + datetime.timedelta(seconds=60)  # add 60 seconds
+        answer_start = self.answer_start.replace(tzinfo=pytz.utc)
+        return answer_start <= now < grace
 
-	@hybrid_property
-	def judging_period(self):
-		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-		answer_end = self.answer_end.replace(tzinfo=pytz.utc)
-		if not self.judge_start:
-			return now >= answer_end
-		else:
-			return self.judge_start.replace(tzinfo=pytz.utc) <= now < self.judge_end.replace(tzinfo=pytz.utc)
+    @hybrid_property
+    def judging_period(self):
+        now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+        answer_end = self.answer_end.replace(tzinfo=pytz.utc)
+        if not self.judge_start:
+            return now >= answer_end
+        else:
+            return self.judge_start.replace(tzinfo=pytz.utc) <= now < self.judge_end.replace(tzinfo=pytz.utc)
 
-	@hybrid_property
-	def after_judging(self):
-		now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-		answer_end = self.answer_end.replace(tzinfo=pytz.utc)
-		# judgement period not set
-		if not self.judge_start:
-			return now >= answer_end
-		# judgement period is set
-		else:
-			return now >= self.judge_end.replace(tzinfo=pytz.utc)
+    @hybrid_property
+    def after_judging(self):
+        now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+        answer_end = self.answer_end.replace(tzinfo=pytz.utc)
+        # judgement period not set
+        if not self.judge_start:
+            return now >= answer_end
+        # judgement period is set
+        else:
+            return now >= self.judge_end.replace(tzinfo=pytz.utc)
 
-	@hybrid_property
-	def selfevaltype_id(self):
-		# assume max one selfeval type per question for now
-		eval_type = None
-		if len(self.selfevaltype):
-			eval_type = self.selfevaltype[0].selfevaltypes_id
-		return eval_type
+    @hybrid_property
+    def selfevaltype_id(self):
+        # assume max one selfeval type per question for now
+        eval_type = None
+        if len(self.selfevaltype):
+            eval_type = self.selfevaltype[0].selfevaltypes_id
+        return eval_type
 
-	@hybrid_property
-	def evaluation_count(self):
-		evaluation_count = self.judgement_count / self.criteria_count if self.criteria_count else 0
-		return evaluation_count + self._selfeval_count
+    @hybrid_property
+    def evaluation_count(self):
+        evaluation_count = self.judgement_count / self.criteria_count if self.criteria_count else 0
+        return evaluation_count + self._selfeval_count
 
 
 # each course can have different criteria
 class CriteriaAndCourses(db.Model):
-	__tablename__ = 'CriteriaAndCourses'
-	__table_args__ = default_table_args
+    __tablename__ = 'CriteriaAndCourses'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True, nullable=False)
-	criteria_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Criteria.id', ondelete="CASCADE"),
-		nullable=False)
-	criterion = db.relationship("Criteria")
-	courses_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Courses.id', ondelete="CASCADE"),
-		nullable=False)
-	course = db.relationship("Courses")
-	active = db.Column(db.Boolean(name='active'), default=True, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    criteria_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Criteria.id', ondelete="CASCADE"),
+        nullable=False)
+    criterion = db.relationship("Criteria")
+    courses_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Courses.id', ondelete="CASCADE"),
+        nullable=False)
+    course = db.relationship("Courses")
+    active = db.Column(db.Boolean(name='active'), default=True, nullable=False)
 
-	in_question_count = column_property(
-		select([func.count(CriteriaAndPostsForQuestions.id)]).
-		where(and_(
-			criteria_id == CriteriaAndPostsForQuestions.criteria_id,
-			CriteriaAndPostsForQuestions.questions_id == PostsForQuestions.id,
-			PostsForQuestions.posts_id == Posts.id,
-			Posts.courses_id == courses_id
-		))
-	)
+    in_question_count = column_property(
+        select([func.count(CriteriaAndPostsForQuestions.id)]).
+        where(and_(
+            criteria_id == CriteriaAndPostsForQuestions.criteria_id,
+            CriteriaAndPostsForQuestions.questions_id == PostsForQuestions.id,
+            PostsForQuestions.posts_id == Posts.id,
+            Posts.courses_id == courses_id
+        ))
+    )
 
-	@hybrid_property
-	def in_question(self):
-		# criteria = [c for c in self.criterion.question_criteria if c.courses_id==self.courses_id]
-		# return len(criteria) > 0
-		return self.in_question_count > 0
+    @hybrid_property
+    def in_question(self):
+        # criteria = [c for c in self.criterion.question_criteria if c.courses_id==self.courses_id]
+        # return len(criteria) > 0
+        return self.in_question_count > 0
 
 
 class LTIInfo(db.Model):
-	__tablename__ = 'LTIInfo'
-	__table_args__ = default_table_args
+    __tablename__ = 'LTIInfo'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True)
-	LTIid = db.Column(db.String(100))
-	LTIURL = db.Column(db.String(100))
-	courses_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Courses.id', ondelete="CASCADE"),
-		nullable=False)
-	course = db.relationship("Courses")
+    id = db.Column(db.Integer, primary_key=True)
+    LTIid = db.Column(db.String(100))
+    LTIURL = db.Column(db.String(100))
+    courses_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Courses.id', ondelete="CASCADE"),
+        nullable=False)
+    course = db.relationship("Courses")
 
 
 class Activities(db.Model):
-	__tablename__ = 'Activities'
-	__table_args__ = default_table_args
+    __tablename__ = 'Activities'
+    __table_args__ = default_table_args
 
-	id = db.Column(db.Integer, primary_key=True)
-	users_id = db.Column(db.Integer, db.ForeignKey("Users.id"), nullable=True)
-	user = db.relationship("Users")
-	courses_id = db.Column(
-		db.Integer,
-		db.ForeignKey('Courses.id', ondelete="CASCADE"),
-		nullable=True)
-	course = db.relationship("Courses")
-	timestamp = db.Column(
-		db.TIMESTAMP, default=func.current_timestamp(),
-		nullable=False)
-	event = db.Column(db.String(50))
-	data = db.Column(db.Text)
-	status = db.Column(db.String(20))
-	message = db.Column(db.Text)
-	session_id = db.Column(db.String(100))
+    id = db.Column(db.Integer, primary_key=True)
+    users_id = db.Column(db.Integer, db.ForeignKey("Users.id"), nullable=True)
+    user = db.relationship("Users")
+    courses_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Courses.id', ondelete="CASCADE"),
+        nullable=True)
+    course = db.relationship("Courses")
+    timestamp = db.Column(
+        db.TIMESTAMP, default=func.current_timestamp(),
+        nullable=False)
+    event = db.Column(db.String(50))
+    data = db.Column(db.Text)
+    status = db.Column(db.String(20))
+    message = db.Column(db.Text)
+    session_id = db.Column(db.String(100))
 
 
 class WinsTable:
-	def __init__(self, question_criteria):
-		# 3D array, keep tracks of wins, wins[question_criteria][winner_id][opponent_id]
-		self.wins = {}
-		for question_criterion in question_criteria:
-			self.wins[question_criterion.id] = {}
+    def __init__(self, question_criteria):
+        # 3D array, keep tracks of wins, wins[question_criteria][winner_id][opponent_id]
+        self.wins = {}
+        for question_criterion in question_criteria:
+            self.wins[question_criterion.id] = {}
 
-	def add(self, winner, loser, question_criterion):
-		"""
-		Update number of wins for the winner
-		:param winner: Answer that won
-		:param loser: Answer that lost
-		:param question_criterion: Criterion that winner won on
-		:return: nothing
-		"""
-		winner_wins_row = self.wins[question_criterion.id].get(winner.id, {})
-		winner_wins_row[loser.id] = winner_wins_row.get(loser.id, 0) + 1
-		self.wins[question_criterion.id][winner.id] = winner_wins_row
+    def add(self, winner, loser, question_criterion):
+        """
+        Update number of wins for the winner
+        :param winner: Answer that won
+        :param loser: Answer that lost
+        :param question_criterion: Criterion that winner won on
+        :return: nothing
+        """
+        winner_wins_row = self.wins[question_criterion.id].get(winner.id, {})
+        winner_wins_row[loser.id] = winner_wins_row.get(loser.id, 0) + 1
+        self.wins[question_criterion.id][winner.id] = winner_wins_row
 
-	def get_total_wins(self, winner, question_criterion):
-		"""
-		Get total number of wins in a criterion for an answer
-		:param winner: The answer to get the number of wins for
-		:param question_criterion: Criterion for the wins
-		:return: Total number of wins that the winner has in the specified criterion
-		"""
-		winner_row = self.wins.get(question_criterion.id, {}).get(winner.id, {})
-		return sum(winner_row.values())
+    def get_total_wins(self, winner, question_criterion):
+        """
+        Get total number of wins in a criterion for an answer
+        :param winner: The answer to get the number of wins for
+        :param question_criterion: Criterion for the wins
+        :return: Total number of wins that the winner has in the specified criterion
+        """
+        winner_row = self.wins.get(question_criterion.id, {}).get(winner.id, {})
+        return sum(winner_row.values())
 
-	def get_score(self, answer, question_criterion):
-		"""
-		Calculate score for an answer
-		:param answer:
-		:param question_criterion:
-		:return:
-		"""
-		current_app.logger.debug("Calculating score for answer id: " + str(answer.id))
-		answer_opponents = self.wins[question_criterion.id].get(answer.id, {})
-		current_app.logger.debug("\tThis answer's opponents:" + str(answer_opponents))
-		# see ACJ paper equation 3 for what we're doing here
-		expected_score = 0
-		for opponent_id, answer_wins in answer_opponents.items():
-			if opponent_id == answer.id:  # skip comparing to self
-				continue
-			opponent_wins = self.wins[question_criterion.id].get(opponent_id, {}).get(answer.id, 0)
-			current_app.logger.debug("\tVa = " + str(answer_wins))
-			current_app.logger.debug("\tVi = " + str(opponent_wins))
-			prob_answer_wins = \
-				(math.exp(answer_wins - opponent_wins)) / \
-				(1 + math.exp(answer_wins - opponent_wins))
-			expected_score += prob_answer_wins
-			current_app.logger.debug("\tE(S) = " + str(expected_score))
-		return expected_score
+    def get_score(self, answer, question_criterion):
+        """
+        Calculate score for an answer
+        :param answer:
+        :param question_criterion:
+        :return:
+        """
+        current_app.logger.debug("Calculating score for answer id: " + str(answer.id))
+        answer_opponents = self.wins[question_criterion.id].get(answer.id, {})
+        current_app.logger.debug("\tThis answer's opponents:" + str(answer_opponents))
+        # see ACJ paper equation 3 for what we're doing here
+        expected_score = 0
+        for opponent_id, answer_wins in answer_opponents.items():
+            if opponent_id == answer.id:  # skip comparing to self
+                continue
+            opponent_wins = self.wins[question_criterion.id].get(opponent_id, {}).get(answer.id, 0)
+            current_app.logger.debug("\tVa = " + str(answer_wins))
+            current_app.logger.debug("\tVi = " + str(opponent_wins))
+            prob_answer_wins = \
+                (math.exp(answer_wins - opponent_wins)) / \
+                (1 + math.exp(answer_wins - opponent_wins))
+            expected_score += prob_answer_wins
+            current_app.logger.debug("\tE(S) = " + str(expected_score))
+        return expected_score

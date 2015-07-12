@@ -12,8 +12,8 @@ api = new_restful_api(answerpairing_api)
 
 # /
 class AnswerPairingListAPI(Resource):
-	@login_required
-	def get(self, course_id, question_id):
-		return {"error": "The function is currently unavailable"}, 404
+    @login_required
+    def get(self, course_id, question_id):
+        return {"error": "The function is currently unavailable"}, 404
 
 api.add_resource(AnswerPairingListAPI, '')
