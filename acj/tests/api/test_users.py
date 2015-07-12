@@ -105,8 +105,10 @@ class UsersAPITests(ACJTestCase):
 		self.assert200(rv)
 		instructors = rv.json['instructors']
 		expected = {
-			self.data.get_authorized_instructor().id: self._generate_search_users(self.data.get_authorized_instructor()),
-			self.data.get_unauthorized_instructor().id: self._generate_search_users(self.data.get_unauthorized_instructor()),
+			self.data.get_authorized_instructor().id: self._generate_search_users(
+				self.data.get_authorized_instructor()),
+			self.data.get_unauthorized_instructor().id: self._generate_search_users(
+				self.data.get_unauthorized_instructor()),
 			self.data.get_dropped_instructor().id: self._generate_search_users(self.data.get_dropped_instructor())
 		}
 		for instructor in instructors:
@@ -134,10 +136,12 @@ class UsersAPITests(ACJTestCase):
 		admin = Users.query.filter_by(username='root').first()
 		expected = {
 			admin.id: self._generate_search_users(admin),
-			self.data.get_authorized_instructor().id: self._generate_search_users(self.data.get_authorized_instructor()),
+			self.data.get_authorized_instructor().id: self._generate_search_users(
+				self.data.get_authorized_instructor()),
 			self.data.get_authorized_ta().id: self._generate_search_users(self.data.get_authorized_ta()),
 			self.data.get_authorized_student().id: self._generate_search_users(self.data.get_authorized_student()),
-			self.data.get_unauthorized_instructor().id: self._generate_search_users(self.data.get_unauthorized_instructor()),
+			self.data.get_unauthorized_instructor().id: self._generate_search_users(
+				self.data.get_unauthorized_instructor()),
 			self.data.get_unauthorized_student().id: self._generate_search_users(self.data.get_unauthorized_student()),
 			self.data.get_dropped_instructor().id: self._generate_search_users(self.data.get_dropped_instructor())
 		}
@@ -186,10 +190,10 @@ class UsersAPITests(ACJTestCase):
 		self.assertEqual("This student number already exists. Please pick another.", rv.json['error'])
 
 		# test creating users of all user types for system
-		for type in types:
+		for user_type in types:
 			user = {
 				'username': ''.join(random.choice(string.ascii_letters) for _ in range(8)),
-				'usertypesforsystem_id': type.id,
+				'usertypesforsystem_id': user_type.id,
 				'student_no': ''.join(random.choice(string.digits) for _ in range(4)),
 				'firstname': "First" + ''.join(random.choice(string.digits) for _ in range(4)),
 				'lastname': "Last" + ''.join(random.choice(string.digits) for _ in range(4)),
@@ -317,7 +321,7 @@ class UsersAPITests(ACJTestCase):
 
 	def test_get_course_list(self):
 		# test login required
-		url = '/api/users/'+str(self.data.get_authorized_instructor().id)+'/courses'
+		url = '/api/users/' + str(self.data.get_authorized_instructor().id) + '/courses'
 		rv = self.client.get(url)
 		self.assert401(rv)
 
@@ -328,8 +332,8 @@ class UsersAPITests(ACJTestCase):
 		self.assert404(rv)
 
 		# test admin
-		adminId = Users.query.filter_by(username='root').first().id
-		url = '/api/users/'+str(adminId)+'/courses'
+		admin_id = Users.query.filter_by(username='root').first().id
+		url = '/api/users/' + str(admin_id) + '/courses'
 		rv = self.client.get(url)
 		self.assert200(rv)
 		self.assertEqual(2, len(rv.json['objects']))
@@ -337,7 +341,7 @@ class UsersAPITests(ACJTestCase):
 
 		# test authorized instructor
 		self.login(self.data.get_authorized_instructor().username)
-		url = '/api/users/'+str(self.data.get_authorized_instructor().id)+'/courses'
+		url = '/api/users/' + str(self.data.get_authorized_instructor().id) + '/courses'
 		rv = self.client.get(url)
 		self.assert200(rv)
 		self.assertEqual(1, len(rv.json['objects']))
@@ -346,7 +350,7 @@ class UsersAPITests(ACJTestCase):
 
 		# test authorized student
 		self.login(self.data.get_authorized_student().username)
-		url = '/api/users/'+str(self.data.get_authorized_student().id)+'/courses'
+		url = '/api/users/' + str(self.data.get_authorized_student().id) + '/courses'
 		rv = self.client.get(url)
 		self.assert200(rv)
 		self.assertEqual(1, len(rv.json['objects']))
@@ -355,7 +359,7 @@ class UsersAPITests(ACJTestCase):
 
 		# test authorized teaching assistant
 		self.login(self.data.get_authorized_ta().username)
-		url = '/api/users/'+str(self.data.get_authorized_ta().id)+'/courses'
+		url = '/api/users/' + str(self.data.get_authorized_ta().id) + '/courses'
 		rv = self.client.get(url)
 		self.assert200(rv)
 		self.assertEqual(1, len(rv.json['objects']))
@@ -364,7 +368,7 @@ class UsersAPITests(ACJTestCase):
 
 		# test dropped instructor
 		self.login(self.data.get_dropped_instructor().username)
-		url = '/api/users/'+str(self.data.get_dropped_instructor().id)+'/courses'
+		url = '/api/users/' + str(self.data.get_dropped_instructor().id) + '/courses'
 		rv = self.client.get(url)
 		self.assert200(rv)
 		self.assertEqual(0, len(rv.json['objects']))
@@ -405,36 +409,36 @@ class UsersAPITests(ACJTestCase):
 		self.logout()
 
 	def test_update_password(self):
-		url = '/api/users/password/'+ str(self.data.get_authorized_instructor().id)
-		input = {
+		url = '/api/users/password/' + str(self.data.get_authorized_instructor().id)
+		data = {
 			'oldpassword': 'password',
 			'newpassword': 'abcd1234'
 		}
 
 		# test login required
-		rv = self.client.post(url, data=json.dumps(input), content_type='application/json')
+		rv = self.client.post(url, data=json.dumps(data), content_type='application/json')
 		self.assert401(rv)
 
 		# test invalid user id
 		self.login(self.data.get_authorized_instructor().username)
 		invalid_url = '/api/users/password/999'
-		rv = self.client.post(invalid_url, data=json.dumps(input), content_type='application/json')
+		rv = self.client.post(invalid_url, data=json.dumps(data), content_type='application/json')
 		self.assert404(rv)
 
 		# test incorrect old password
-		invalid_input = input.copy()
+		invalid_input = data.copy()
 		invalid_input['oldpassword'] = 'wrong'
 		rv = self.client.post(url, data=json.dumps(invalid_input), content_type='application/json')
 		self.assert403(rv)
 		self.assertEqual("The old password is incorrect.", rv.json['error'])
 
 		# test unauthorized user
-		invalid_url = '/api/users/password/'+str(self.data.get_authorized_student().id)
-		rv = self.client.post(invalid_url, data=json.dumps(input), content_type='application/json')
+		invalid_url = '/api/users/password/' + str(self.data.get_authorized_student().id)
+		rv = self.client.post(invalid_url, data=json.dumps(data), content_type='application/json')
 		self.assert403(rv)
 
 		# test changing own password
-		rv = self.client.post(url, data=json.dumps(input), content_type='application/json')
+		rv = self.client.post(url, data=json.dumps(data), content_type='application/json')
 		self.assert200(rv)
 		self.assertEqual(self.data.get_authorized_instructor().id, rv.json['id'])
 		self.logout()
@@ -497,10 +501,14 @@ class UsersAPITests(ACJTestCase):
 					except Unauthorized:
 						expected = False
 					expected = expected or admin
-					self.assertEqual(permission['global'], expected,
-									 "Expected permission " + operation + " on " +  model_name + " to be " + str(expected))
+					self.assertEqual(
+						permission['global'], expected,
+						"Expected permission " + operation + " on " + model_name + " to be " + str(expected))
 			# undo the forced login earlier
 			logout_user()
 
 	def _generate_search_users(self, user):
-		return {'id': user.id, 'display': user.fullname+' ('+user.displayname+') - '+user.usertypeforsystem.name, 'name': user.fullname}
+		return {
+			'id': user.id,
+			'display': user.fullname + ' (' + user.displayname + ') - ' + user.usertypeforsystem.name,
+			'name': user.fullname}

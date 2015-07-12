@@ -1,4 +1,3 @@
-from flask import url_for
 from flask.ext.script import Manager, Server
 
 from acj.manage.database import manager as database_manager
@@ -9,6 +8,7 @@ manager = Manager(create_app)
 # register sub-managers
 manager.add_command("database", database_manager)
 manager.add_command("runserver", Server(port=8080))
+
 
 @manager.command
 def list_routes():

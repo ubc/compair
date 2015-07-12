@@ -3,24 +3,23 @@ import copy
 import operator
 
 from data.fixtures.test_data import JudgmentsTestData
-
-from acj.models import PostsForAnswers, Posts, AnswerPairings, Judgements
+from acj.models import PostsForAnswers, Posts, Judgements
 from acj.tests.test_acj import ACJTestCase
 from acj.judgement import AnswerPairGenerator
 
-__author__ = 'john'
 
 class JudgementAPITests(ACJTestCase):
 	def setUp(self):
 		super(JudgementAPITests, self).setUp()
 		self.data = JudgmentsTestData()
-		self.course= self.data.get_course()
+		self.course = self.data.get_course()
 		self.question = self.data.get_questions()[0]
 		self.base_url = self._build_url(self.course.id, self.question.id)
 		self.answer_pair_url = self.base_url + '/pair'
 
 	def _build_url(self, course_id, question_id, tail=""):
-		url = '/api/courses/' + str(course_id) + '/questions/' + str(question_id) + '/judgements' +\
+		url = \
+			'/api/courses/' + str(course_id) + '/questions/' + str(question_id) + '/judgements' + \
 			tail
 		return url
 
@@ -29,8 +28,8 @@ class JudgementAPITests(ACJTestCase):
 			'answerpair_id': answerpair_id,
 			'judgements': [
 				{
-				'question_criterion_id': self.question.criteria[0].id,
-				'answer_id_winner': winner_id
+					'question_criterion_id': self.question.criteria[0].id,
+					'answer_id_winner': winner_id
 				}
 			]
 		}
@@ -76,23 +75,23 @@ class JudgementAPITests(ACJTestCase):
 		self.assertIn(actual_answer2['id'], expected_answer_ids)
 
 	def test_get_answer_pair_answer_exclusions_for_answers_with_no_scores(self):
-		'''
+		"""
 		The user doing judgements should not see their own answer in a judgement.
 		Instructor and TA answers should not show up.
 		Answers cannot be paired with itself.
 		For answers that don't have a score yet, which means they're randomly matched up.
-		'''
+		"""
 		self.login(self.data.get_authorized_student().username)
 		excluded_student_answer = PostsForAnswers.query.join(Posts).filter(
-			Posts.users_id == self.data.get_authorized_student().id, \
+			Posts.users_id == self.data.get_authorized_student().id,
 			PostsForAnswers.questions_id == self.question.id).first()
 		self.assertTrue(excluded_student_answer, "Missing authorized student's answer.")
 		excluded_instructor_answer = PostsForAnswers.query.join(Posts).filter(
-			Posts.users_id == self.data.get_authorized_instructor().id, \
+			Posts.users_id == self.data.get_authorized_instructor().id,
 			PostsForAnswers.questions_id == self.question.id).first()
 		self.assertTrue(excluded_instructor_answer, "Missing instructor answer")
 		excluded_ta_answer = PostsForAnswers.query.join(Posts).filter(
-			Posts.users_id == self.data.get_authorized_ta().id, \
+			Posts.users_id == self.data.get_authorized_ta().id,
 			PostsForAnswers.questions_id == self.question.id).first()
 		self.assertTrue(excluded_ta_answer, "Missing TA answer")
 		# no judgements has been entered yet, this tests the randomized pairing when no answers has
@@ -127,81 +126,105 @@ class JudgementAPITests(ACJTestCase):
 		self.login(self.data.get_authorized_student().username)
 		rv = self.client.get(self.answer_pair_url)
 		self.assert200(rv)
-		expected_answer_pair = rv.json
+		# expected_answer_pair = rv.json
 		judgement_submit = self._build_judgement_submit(rv.json['id'], rv.json['answer1']['id'])
 		self.logout()
 		# test login required
-		rv = self.client.post(self.base_url, data=json.dumps(judgement_submit),
-							  content_type='application/json')
+		rv = self.client.post(
+			self.base_url,
+			data=json.dumps(judgement_submit),
+			content_type='application/json')
 		self.assert401(rv)
 		# test deny access to unenroled users
 		self.login(self.data.get_unauthorized_student().username)
-		rv = self.client.post(self.base_url, data=json.dumps(judgement_submit),
-							  content_type='application/json')
+		rv = self.client.post(
+			self.base_url,
+			data=json.dumps(judgement_submit),
+			content_type='application/json')
 		self.assert403(rv)
 		self.logout()
 		self.login(self.data.get_unauthorized_instructor().username)
-		rv = self.client.post(self.base_url, data=json.dumps(judgement_submit),
-							  content_type='application/json')
+		rv = self.client.post(
+			self.base_url,
+			data=json.dumps(judgement_submit),
+			content_type='application/json')
 		self.assert403(rv)
 		self.logout()
 		# test deny access to non-students
 		self.login(self.data.get_authorized_instructor().username)
-		rv = self.client.post(self.base_url, data=json.dumps(judgement_submit),
-							  content_type='application/json')
+		rv = self.client.post(
+			self.base_url,
+			data=json.dumps(judgement_submit),
+			content_type='application/json')
 		self.assert403(rv)
 		self.logout()
 		# authorized user from this point
 		self.login(self.data.get_authorized_student().username)
 		# test non-existent course
-		rv = self.client.post(self._build_url(9999999, self.question.id),
-			data=json.dumps(judgement_submit), content_type='application/json')
+		rv = self.client.post(
+			self._build_url(9999999, self.question.id),
+			data=json.dumps(judgement_submit),
+			content_type='application/json')
 		self.assert404(rv)
 		# test non-existent question
-		rv = self.client.post(self._build_url(self.course.id, 9999999),
-							  data=json.dumps(judgement_submit), content_type='application/json')
+		rv = self.client.post(
+			self._build_url(self.course.id, 9999999),
+			data=json.dumps(judgement_submit),
+			content_type='application/json')
 		self.assert404(rv)
 		# test reject missing criteria
 		faulty_judgements = copy.deepcopy(judgement_submit)
 		faulty_judgements['judgements'] = []
-		rv = self.client.post(self.base_url, data=json.dumps(faulty_judgements),
-							  content_type='application/json')
+		rv = self.client.post(
+			self.base_url,
+			data=json.dumps(faulty_judgements),
+			content_type='application/json')
 		self.assert400(rv)
 		# test reject missing course criteria id
 		faulty_judgements = copy.deepcopy(judgement_submit)
 		del faulty_judgements['judgements'][0]['question_criterion_id']
-		rv = self.client.post(self.base_url, data=json.dumps(faulty_judgements),
-							  content_type='application/json')
+		rv = self.client.post(
+			self.base_url,
+			data=json.dumps(faulty_judgements),
+			content_type='application/json')
 		self.assert400(rv)
 		# test reject missing winner
 		faulty_judgements = copy.deepcopy(judgement_submit)
 		del faulty_judgements['judgements'][0]['answer_id_winner']
-		rv = self.client.post(self.base_url, data=json.dumps(faulty_judgements),
-							  content_type='application/json')
+		rv = self.client.post(
+			self.base_url,
+			data=json.dumps(faulty_judgements),
+			content_type='application/json')
 		self.assert400(rv)
 		# test invalid criteria id
 		faulty_judgements = copy.deepcopy(judgement_submit)
 		faulty_judgements['judgements'][0]['question_criterion_id'] = 3930230
-		rv = self.client.post(self.base_url, data=json.dumps(faulty_judgements),
-							  content_type='application/json')
+		rv = self.client.post(
+			self.base_url,
+			data=json.dumps(faulty_judgements),
+			content_type='application/json')
 		self.assert400(rv)
 		# test invalid winner id
 		faulty_judgements = copy.deepcopy(judgement_submit)
 		faulty_judgements['judgements'][0]['answer_id_winner'] = 2382301
-		rv = self.client.post(self.base_url, data=json.dumps(faulty_judgements),
-							  content_type='application/json')
+		rv = self.client.post(
+			self.base_url,
+			data=json.dumps(faulty_judgements),
+			content_type='application/json')
 		self.assert400(rv)
 		# test invalid answer pair
 		faulty_judgements = copy.deepcopy(judgement_submit)
 		faulty_judgements['answerpair_id'] = 2382301
-		rv = self.client.post(self.base_url, data=json.dumps(faulty_judgements),
-							  content_type='application/json')
+		rv = self.client.post(
+			self.base_url,
+			data=json.dumps(faulty_judgements),
+			content_type='application/json')
 		self.assert404(rv)
 
 	def test_submit_judgement_basic(self):
 		self.login(self.data.get_authorized_student().username)
 		# calculate number of judgements to do before user has judged all the pairs it can
-		num_eligible_answers = -1 # need to minus one to exclude the logged in user's own answer
+		num_eligible_answers = -1  # need to minus one to exclude the logged in user's own answer
 		for answer in self.data.get_student_answers():
 			if answer.question.id == self.question.id:
 				num_eligible_answers += 1
@@ -216,48 +239,57 @@ class JudgementAPITests(ACJTestCase):
 			judgement_submit = self._build_judgement_submit(rv.json['id'], rv.json['answer1']['id'])
 			winner_ids.append(rv.json['answer1']['id'])
 			# test normal post
-			rv = self.client.post(self.base_url, data=json.dumps(judgement_submit),
-								  content_type='application/json')
+			rv = self.client.post(
+				self.base_url,
+				data=json.dumps(judgement_submit),
+				content_type='application/json')
 			self.assert200(rv)
 			actual_judgements = rv.json['objects']
 			self._validate_judgement_submit(judgement_submit, actual_judgements, expected_answer_pair)
 			# Resubmit of same judgement should fail
-			rv = self.client.post(self.base_url, data=json.dumps(judgement_submit),
-								  content_type='application/json')
+			rv = self.client.post(
+				self.base_url,
+				data=json.dumps(judgement_submit),
+				content_type='application/json')
 			self.assert400(rv)
 		# all answers has been judged by the user, errors out when trying to get another pair
 		rv = self.client.get(self.answer_pair_url)
 		self.assert400(rv)
 
 	def _validate_judgement_submit(self, judgement_submit, actual_judgements, expected_answer_pair):
-		self.assertEqual(len(actual_judgements), len(judgement_submit['judgements']),
-						 "The number of judgements saved does not match the number sent")
+		self.assertEqual(
+			len(actual_judgements), len(judgement_submit['judgements']),
+			"The number of judgements saved does not match the number sent")
 		for actual_judgement in actual_judgements:
-			self.assertEqual(expected_answer_pair['answer1']['id'],
-							 actual_judgement['answerpairing']['answers_id1'],
-							 "Expected and actual judgement answer1 id did not match")
-			self.assertEqual(expected_answer_pair['answer2']['id'],
-							 actual_judgement['answerpairing']['answers_id2'],
-							 "Expected and actual judgement answer2 id did not match")
+			self.assertEqual(
+				expected_answer_pair['answer1']['id'],
+				actual_judgement['answerpairing']['answers_id1'],
+				"Expected and actual judgement answer1 id did not match")
+			self.assertEqual(
+				expected_answer_pair['answer2']['id'],
+				actual_judgement['answerpairing']['answers_id2'],
+				"Expected and actual judgement answer2 id did not match")
 			found_judgement = False
 			for expected_judgement in judgement_submit['judgements']:
 				if expected_judgement['question_criterion_id'] != \
-						actual_judgement['question_criterion']['id']:
+					actual_judgement['question_criterion']['id']:
 					continue
-				self.assertEqual(expected_judgement['answer_id_winner'],
-								 actual_judgement['answers_id_winner'],
-								 "Expected and actual winner answer id did not match.")
+				self.assertEqual(
+					expected_judgement['answer_id_winner'],
+					actual_judgement['answers_id_winner'],
+					"Expected and actual winner answer id did not match.")
 				found_judgement = True
-			self.assertTrue(found_judgement, "Actual judgement received contains a judgement that "
-											 "was not sent.")
+			self.assertTrue(
+				found_judgement,
+				"Actual judgement received contains a judgement that was not sent.")
 
 	def test_get_answer_pair_answer_exclusion_with_scored_answers(self):
-		'''
+		"""
 		The user doing judgements should not see their own answer in a judgement.
 		Instructor and TA answers should not show up.
 		Answers cannot be paired with itself.
 		Scored answer pairing means answers should be matched up to similar scores.
-		'''
+		"""
 		# Make sure all answers are judged first
 		self._submit_all_possible_judgements_for_user(
 			self.data.get_authorized_student().id)
@@ -266,11 +298,11 @@ class JudgementAPITests(ACJTestCase):
 
 		self.login(self.data.get_authorized_student_with_no_answers().username)
 		excluded_instructor_answer = PostsForAnswers.query.join(Posts).filter(
-			Posts.users_id == self.data.get_authorized_instructor().id, \
+			Posts.users_id == self.data.get_authorized_instructor().id,
 			PostsForAnswers.questions_id == self.question.id).first()
 		self.assertTrue(excluded_instructor_answer, "Missing instructor answer")
 		excluded_ta_answer = PostsForAnswers.query.join(Posts).filter(
-			Posts.users_id == self.data.get_authorized_ta().id, \
+			Posts.users_id == self.data.get_authorized_ta().id,
 			PostsForAnswers.questions_id == self.question.id).first()
 		self.assertTrue(excluded_ta_answer, "Missing TA answer")
 		# no judgements has been entered yet, this tests the randomized pairing when no answers has
@@ -293,7 +325,7 @@ class JudgementAPITests(ACJTestCase):
 	def _submit_all_possible_judgements_for_user(self, user_id):
 		# self.login(username)
 		# calculate number of judgements to do before user has judged all the pairs it can
-		num_eligible_answers = -1 # need to minus one to exclude the logged in user's own answer
+		num_eligible_answers = -1  # need to minus one to exclude the logged in user's own answer
 		for answer in self.data.get_student_answers():
 			if answer.question.id == self.question.id:
 				num_eligible_answers += 1
@@ -315,20 +347,20 @@ class JudgementAPITests(ACJTestCase):
 			winner_ids.append(min_id)
 			loser_ids.append(max_id)
 			Judgements.create_judgement(judgement_submit, answerpairing, user_id)
-			Judgements._calculate_scores(self.question.id)
-			# test normal post
-			# rv = self.client.post(self.base_url, data=json.dumps(judgement_submit),
-			# 					  content_type='application/json')
-			# self.assert200(rv)
+			Judgements.calculate_scores(self.question.id)
+		# test normal post
+		# rv = self.client.post(self.base_url, data=json.dumps(judgement_submit),
+		# 					  content_type='application/json')
+		# self.assert200(rv)
 		# self.logout()
 
 		return {'winners': winner_ids, 'losers': loser_ids}
 
 	def test_score_calculation(self):
-		'''
+		"""
 		This is just a rough check on whether score calculations are correct. Answers
 		that has more wins should have the highest scores.
-		'''
+		"""
 		# Make sure all answers are judged first
 		winner_ids = self._submit_all_possible_judgements_for_user(
 			self.data.get_authorized_student().id)['winners']
@@ -350,9 +382,11 @@ class JudgementAPITests(ACJTestCase):
 
 		# Check that ranking by score and by wins match, this only works for low number of
 		# judgements
-		expected_ranking_by_wins = [answer_id for (answer_id, wins) in sorted(num_wins_by_id.items(),
+		expected_ranking_by_wins = [answer_id for (answer_id, wins) in sorted(
+			num_wins_by_id.items(),
 			key=operator.itemgetter(1))]
-		actual_ranking_by_scores = [answer_id for (answer_id, score) in sorted(answer_scores.items(),
+		actual_ranking_by_scores = [answer_id for (answer_id, score) in sorted(
+			answer_scores.items(),
 			key=operator.itemgetter(1)) if score > 0]
 		self.assertSequenceEqual(actual_ranking_by_scores, expected_ranking_by_wins)
 
@@ -362,7 +396,8 @@ class JudgementAPITests(ACJTestCase):
 			self.data.get_authorized_student().id)
 		answer_ids2 = self._submit_all_possible_judgements_for_user(
 			self.data.get_secondary_authorized_student().id)
-		compared_ids = answer_ids['winners'] + answer_ids2['winners'] + \
+		compared_ids = \
+			answer_ids['winners'] + answer_ids2['winners'] + \
 			answer_ids['losers'] + answer_ids2['losers']
 
 		# Just a simple test for now, make sure that answers with the smaller number of
@@ -459,9 +494,9 @@ class JudgementAPITests(ACJTestCase):
 		count = rv.json['judgements']
 
 		for ques in questions:
-			quesId = str(ques.id)
-			self.assertTrue(quesId in count)
-			self.assertEqual(count[quesId], 0)
+			question_id = str(ques.id)
+			self.assertTrue(question_id in count)
+			self.assertEqual(count[question_id], 0)
 
 		self.logout()
 
@@ -475,10 +510,10 @@ class JudgementAPITests(ACJTestCase):
 		count = rv.json['judgements']
 
 		for ques in questions:
-			quesId = str(ques.id)
-			self.assertTrue(quesId in count)
+			question_id = str(ques.id)
+			self.assertTrue(question_id in count)
 			jcount = judgement_count if ques.id == self.question.id else 0
-			self.assertEqual(count[quesId], jcount)
+			self.assertEqual(count[question_id], jcount)
 
 		self.logout()
 

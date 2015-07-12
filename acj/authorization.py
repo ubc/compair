@@ -13,7 +13,7 @@ def define_authorization(user, they):
 	Sets up user permissions for Flask-Bouncer
 	"""
 	if not user.is_authenticated():
-		return # user isn't logged in
+		return  # user isn't logged in
 
 	# Assign permissions based on system roles
 	user_system_role = user.usertypeforsystem.name
@@ -71,6 +71,7 @@ def define_authorization(user, they):
 		if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_STUDENT:
 			they.can(CREATE, Judgements, courses_id=entry.courses_id)
 
+
 # Tell the client side about a user's permissions.
 # This is necessarily more simplified than Flask-Bouncer's implementation.
 # I'm hoping that we don't need fine grained permission checking to the
@@ -83,16 +84,16 @@ def define_authorization(user, they):
 def get_logged_in_user_permissions():
 	user = Users.query.get(current_user.id)
 	require(READ, user)
-	droppedId = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
+	dropped_id = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
 	courses = CoursesAndUsers.query.filter_by(users_id=current_user.id) \
-		.filter(CoursesAndUsers.usertypesforcourse_id!=droppedId).all()
+		.filter(CoursesAndUsers.usertypesforcourse_id != dropped_id).all()
 	admin = user.usertypeforsystem.name == "System Administrator"
 	permissions = {}
 	models = {
-		Users.__name__ : Users,
+		Users.__name__: Users,
 	}
 	post_based_models = {
-		PostsForQuestions.__name__ : PostsForQuestions()
+		PostsForQuestions.__name__: PostsForQuestions()
 	}
 	operations = {
 		MANAGE,
@@ -105,8 +106,8 @@ def get_logged_in_user_permissions():
 	for model_name, model in models.items():
 		# create entry if not already exists
 		permissions.setdefault(model_name, {})
-		#if not model_name in permissions:
-		#	permissions[model_name] = {}
+		# if not model_name in permissions:
+		# permissions[model_name] = {}
 		# obtain permission values for each operation
 		for operation in operations:
 			permissions[model_name][operation] = {'global': True}
@@ -122,13 +123,13 @@ def get_logged_in_user_permissions():
 		permissions['Courses'].setdefault(operation, {})
 		permissions['Courses'][operation]['global'] = admin
 		for course in courses:
-			courseId = str(course.courses_id)
+			course_id = str(course.courses_id)
 			try:
 				ensure(operation, Courses(id=course.courses_id))
-				permissions['Courses'][operation][courseId] = True
+				permissions['Courses'][operation][course_id] = True
 				permissions['Courses'][operation]['global'] = True
 			except Unauthorized:
-				permissions['Courses'][operation][courseId] = False
+				permissions['Courses'][operation][course_id] = False
 
 	# post-based models
 	for model_name, model in post_based_models.items():
@@ -137,18 +138,19 @@ def get_logged_in_user_permissions():
 			permissions[model_name].setdefault(operation, {})
 			permissions[model_name][operation]['global'] = admin
 			for course in courses:
-				courseId = str(course.courses_id)
+				course_id = str(course.courses_id)
 				try:
 					m = model
-					p = Posts(courses_id = course.courses_id)
+					p = Posts(courses_id=course.courses_id)
 					setattr(m, 'post', p)
 					ensure(operation, m)
-					permissions[model_name][operation][courseId] = True
+					permissions[model_name][operation][course_id] = True
 					permissions[model_name][operation]['global'] = True
 				except Unauthorized:
-					permissions[model_name][operation][courseId] = False
+					permissions[model_name][operation][course_id] = False
 
 	return permissions
+
 
 def allow(operation, target):
 	"""
@@ -161,20 +163,22 @@ def allow(operation, target):
 	except Unauthorized:
 		return False
 
+
 def require(operation, target):
 	"""
 	This is basically Flask-Bouncer's ensure except it throws a 403 instead of a 401
 	if the permission check fails. A 403 is more accurate since authentication would
 	not help and it would prevent the login box from showing up. Named require() to avoid
 	confusion with Flask-Bouncer
-	:param action: same as Flask-Bouncer's ensure
-	:param subject: same as Flask-Bouncer's ensure
+	:param operation: same as Flask-Bouncer's ensure
+	:param target: same as Flask-Bouncer's ensure
 	:return:same as Flask-Bouncer's ensure
 	"""
 	try:
-		ensure(operation,target)
+		ensure(operation, target)
 	except Unauthorized as e:
 		raise Forbidden(e.get_description())
+
 
 def is_user_access_restricted(user):
 	"""
@@ -192,4 +196,3 @@ def is_user_access_restricted(user):
 				break
 
 	return access_restricted
-

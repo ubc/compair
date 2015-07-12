@@ -41,11 +41,11 @@ on_course_create = event.signal('COURSE_CREATE')
 class CourseListAPI(Resource):
 	@login_required
 	@pagination(Courses)
-	@marshal_with(dataformat.getCourses())
+	@marshal_with(dataformat.get_courses())
 	def get(self, objects):
 		require(MANAGE, Courses)
 		on_course_list_get.send(
-			current_app._get_current_object(),
+			self,
 			event_name=on_course_list_get.name,
 			user=current_user)
 		return objects
@@ -74,10 +74,10 @@ class CourseListAPI(Resource):
 			db.session.commit()
 
 			on_course_create.send(
-				current_app._get_current_object(),
+				self,
 				event_name=on_course_create.name,
 				user=current_user,
-				data=marshal(new_course, dataformat.getCourses()))
+				data=marshal(new_course, dataformat.get_courses()))
 
 		except exc.IntegrityError:
 			db.session.rollback()
@@ -87,7 +87,7 @@ class CourseListAPI(Resource):
 			db.session.rollback()
 			current_app.logger.error("Failed to add new course. " + str(e))
 			raise
-		return marshal(new_course, dataformat.getCourses())
+		return marshal(new_course, dataformat.get_courses())
 
 
 api.add_resource(CourseListAPI, '')
@@ -102,11 +102,11 @@ class CourseAPI(Resource):
 			get_or_404(course_id)
 		require(READ, course)
 		on_course_get.send(
-			current_app._get_current_object(),
+			self,
 			event_name=on_course_get.name,
 			user=current_user,
 			data={'id': course_id})
-		return marshal(course, dataformat.getCourses())
+		return marshal(course, dataformat.get_courses())
 
 	# Save existing course
 	@login_required
@@ -127,11 +127,11 @@ class CourseAPI(Resource):
 			"enable_student_create_tags",
 			course.enable_student_create_tags)
 		on_course_modified.send(
-			current_app._get_current_object(),
+			self,
 			event_name=on_course_modified.name,
 			user=current_user,
 			data=get_model_changes(course))
 		db.session.commit()
-		return marshal(course, dataformat.getCourses())
+		return marshal(course, dataformat.get_courses())
 
 api.add_resource(CourseAPI, '/<int:course_id>')

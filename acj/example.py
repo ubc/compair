@@ -12,6 +12,7 @@ example_api = Blueprint('example_api', __name__)
 # Then pack the blueprint into a Flask-Restful API
 api = new_restful_api(example_api)
 
+
 # declare an API URL
 # /
 class ExampleRootAPI(Resource):

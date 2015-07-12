@@ -1,9 +1,9 @@
-from flask import Blueprint, current_app
+from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
+from sqlalchemy import func, and_
 
 from . import dataformat
-from sqlalchemy import func, and_
 from .core import event
 from .models import SelfEvaluationTypes, PostsForAnswersAndPostsForComments, PostsForAnswers, Courses, \
 	PostsForComments, Posts, PostsForQuestions
@@ -29,12 +29,12 @@ class SelfEvalTypeRootAPI(Resource):
 			order_by(SelfEvaluationTypes.name.desc()).all()
 
 		selfevaltype_get.send(
-			current_app._get_current_object(),
+			self,
 			event_name=selfevaltype_get.name,
 			user=current_user
 		)
 
-		return {"types": marshal(types, dataformat.getSelfEvalTypes())}
+		return {"types": marshal(types, dataformat.get_selfeval_types())}
 
 
 api.add_resource(SelfEvalTypeRootAPI, '')
@@ -48,7 +48,7 @@ class SelfEvalACommentsQuestionIdAPI(Resource):
 		count = comment_count([question_id], current_user.id)
 
 		selfeval_question_acomment_count.send(
-			current_app._get_current_object(),
+			self,
 			event_name=selfeval_question_acomment_count.name,
 			user=current_user,
 			course_id=course_id,
@@ -69,7 +69,7 @@ class SelfEvalACommentsAPI(Resource):
 		comments = comment_count({question.id for question in questions}, current_user.id)
 
 		selfeval_course_acomment_count.send(
-			current_app._get_current_object(),
+			self,
 			event_name=selfeval_course_acomment_count.name,
 			user=current_user,
 			course_id=course_id

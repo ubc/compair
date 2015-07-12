@@ -15,7 +15,7 @@ from .authorization import allow, require
 from .models import PostsForQuestions, Courses, Posts, \
 	PostsForQuestionsAndSelfEvaluationTypes
 from .util import new_restful_api, get_model_changes
-from .attachment import addNewFile, deleteFile
+from .attachment import add_new_file, delete_file
 
 
 questions_api = Blueprint('questions_api', __name__)
@@ -73,14 +73,14 @@ class QuestionIdAPI(Resource):
 		restrict_users = not allow(MANAGE, question)
 
 		on_question_get.send(
-			current_app._get_current_object(),
+			self,
 			event_name=on_question_get.name,
 			user=current_user,
 			course_id=course_id,
 			data={'id': question_id})
 
 		return {
-			'question': marshal(question, dataformat.getPostsForQuestions(restrict_users, include_answers=False))
+			'question': marshal(question, dataformat.get_posts_for_questions(restrict_users, include_answers=False))
 		}
 
 	@login_required
@@ -116,7 +116,7 @@ class QuestionIdAPI(Resource):
 		db.session.add(question)
 
 		on_question_modified.send(
-			current_app._get_current_object(),
+			self,
 			event_name=on_question_modified.name,
 			user=current_user,
 			course_id=course_id,
@@ -124,7 +124,7 @@ class QuestionIdAPI(Resource):
 
 		db.session.commit()
 		if name:
-			addNewFile(params.get('alias'), name, course_id, question.id, question.post.id)
+			add_new_file(params.get('alias'), name, course_id, question.id, question.post.id)
 		# assume one selfevaluation type per question
 		eval_type = PostsForQuestionsAndSelfEvaluationTypes.query.filter_by(questions_id=question.id).first()
 		if selfevaltype_id:
@@ -139,20 +139,20 @@ class QuestionIdAPI(Resource):
 			db.session.delete(eval_type)
 		db.session.commit()
 
-		return marshal(question, dataformat.getPostsForQuestions())
+		return marshal(question, dataformat.get_posts_for_questions())
 
 	@login_required
 	def delete(self, course_id, question_id):
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(DELETE, question)
-		formatted_question = marshal(question, dataformat.getPostsForQuestions(False, False))
+		formatted_question = marshal(question, dataformat.get_posts_for_questions(False, False))
 		# delete file when question is deleted
-		deleteFile(question.post.id)
+		delete_file(question.post.id)
 		db.session.delete(question)
 		db.session.commit()
 
 		on_question_delete.send(
-			current_app._get_current_object(),
+			self,
 			event_name=on_question_delete.name,
 			user=current_user,
 			course_id=course_id,
@@ -191,13 +191,13 @@ class QuestionRootAPI(Resource):
 		restrict_users = not allow(MANAGE, question)
 
 		on_question_list_get.send(
-			current_app._get_current_object(),
+			self,
 			event_name=on_question_list_get.name,
 			user=current_user,
 			course_id=course_id)
 
 		return {
-			"questions": marshal(questions, dataformat.getPostsForQuestions(restrict_users, include_answers=False))
+			"questions": marshal(questions, dataformat.get_posts_for_questions(restrict_users, include_answers=False))
 		}
 
 	@login_required
@@ -227,7 +227,7 @@ class QuestionRootAPI(Resource):
 		db.session.add(question)
 		db.session.commit()
 		if name:
-			addNewFile(params.get('alias'), name, course_id, question.id, post.id)
+			add_new_file(params.get('alias'), name, course_id, question.id, post.id)
 		if selfevaltype_id:
 			eval_type = PostsForQuestionsAndSelfEvaluationTypes(
 				selfevaltypes_id=selfevaltype_id,
@@ -236,12 +236,12 @@ class QuestionRootAPI(Resource):
 			db.session.commit()
 
 		on_question_create.send(
-			current_app._get_current_object(),
+			self,
 			event_name=on_question_create.name,
 			user=current_user,
 			course_id=course_id,
-			data=marshal(question, dataformat.getPostsForQuestions(False)))
+			data=marshal(question, dataformat.get_posts_for_questions(False)))
 
-		return marshal(question, dataformat.getPostsForQuestions())
+		return marshal(question, dataformat.get_posts_for_questions())
 
 api.add_resource(QuestionRootAPI, '')

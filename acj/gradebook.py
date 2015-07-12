@@ -1,7 +1,7 @@
 from __future__ import division
 
 from bouncer.constants import MANAGE
-from flask import Blueprint, jsonify, current_app
+from flask import Blueprint, jsonify
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource
 from .authorization import require
@@ -21,6 +21,7 @@ api = new_restful_api(gradebook_api)
 # events
 on_gradebook_get = event.signal('GRADEBOOK_GET')
 
+
 # declare an API URL
 # /
 class GradebookAPI(Resource):
@@ -31,7 +32,7 @@ class GradebookAPI(Resource):
 		require(MANAGE, question)
 
 		# get all students in this course
-		student_type = UserTypesForCourse.query.filter_by(name = UserTypesForCourse.TYPE_STUDENT).first()
+		student_type = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first()
 		students = Users.query.join(CoursesAndUsers).filter(
 			CoursesAndUsers.courses_id == course.id, CoursesAndUsers.usertypesforcourse_id == student_type.id).all()
 
@@ -57,14 +58,14 @@ class GradebookAPI(Resource):
 		scores_by_user_id = {}
 		flagged_by_user_id = {}
 		init_scores = {c.id: 'Not Evaluated' for c in criteria}
-		for answer in question._answers:
+		for answer in question.answers:
 			num_answers = num_answers_by_user_id.get(answer.post.users_id, 0)
 			num_answers += 1
 			num_answers_by_user_id[answer.post.users_id] = num_answers
 
 			# scores - assume one answer for each user for now
 			scores_by_user_id[answer.post.users_id] = copy.deepcopy(init_scores)
-			for score in answer._scores:
+			for score in answer.scores:
 				# skip scores for inactive criteria
 				if score.criteriaandquestions_id not in init_scores:
 					continue
@@ -78,19 +79,19 @@ class GradebookAPI(Resource):
 			num_answers_per_student[student.id] = num_answers_by_user_id.get(student.id, 0)
 
 		include_self_eval = False
+		num_selfeval_per_student = {}
+		num_selfeval_by_user_id = {}
 		if question.selfevaltype_id:
 			include_self_eval = True
 			# assuming self-evaluation with no comparison
 			comments = PostsForAnswersAndPostsForComments.query.filter_by(selfeval=True) \
 				.join(PostsForAnswers).filter_by(questions_id=question_id).all()
 
-			num_selfeval_by_user_id = {}
 			for comment in comments:
 				num_eval = num_selfeval_by_user_id.get(comment.users_id, 0)
 				num_eval += 1
 				num_selfeval_by_user_id[comment.users_id] = num_eval
 
-			num_selfeval_per_student = {}
 			for student in students:
 				num_selfeval_per_student[student.id] = num_selfeval_by_user_id.get(student.id, 0)
 
@@ -101,7 +102,7 @@ class GradebookAPI(Resource):
 		for student in students:
 			score = scores_by_user_id.get(student.id, no_answer)
 			entry = {
-				'userid':student.id,
+				'userid': student.id,
 				'displayname': student.displayname,
 				'firstname': student.firstname,
 				'lastname': student.lastname,
@@ -117,11 +118,11 @@ class GradebookAPI(Resource):
 		ret = {
 			'gradebook': gradebook,
 			'num_judgements_required': question.num_judgement_req,
-			'include_self_eval':include_self_eval
+			'include_self_eval': include_self_eval
 		}
 
 		on_gradebook_get.send(
-			current_app._get_current_object(),
+			self,
 			event_name=on_gradebook_get.name,
 			user=current_user,
 			course_id=course_id,

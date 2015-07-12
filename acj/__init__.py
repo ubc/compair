@@ -2,8 +2,8 @@ from flask import Flask, redirect, session, abort, jsonify
 from flask.ext.login import current_user
 from sqlalchemy.orm import joinedload
 
-from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, on_answer_flag,\
-	on_answer_delete, on_user_question_answer_get, on_user_question_answered_count, on_user_course_answered_count,\
+from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, on_answer_flag, \
+	on_answer_delete, on_user_question_answer_get, on_user_question_answered_count, on_user_course_answered_count, \
 	on_answer_view_count
 from .attachment import on_save_tmp_file, on_attachment_get, on_attachment_delete
 from .classlist import on_classlist_get, on_classlist_upload, on_classlist_enrol, on_classlist_unenrol, \
@@ -36,11 +36,13 @@ from .models import Users
 from .activity import log
 
 
-def create_app(conf=config, settings_override={}):
+def create_app(conf=config, settings_override=None):
 	"""Return a :class:`Flask` application instance
 
 	:param settings_override: override the default settings or settings in the configuration file
 	"""
+	if settings_override is None:
+		settings_override = {}
 	app = Flask(__name__)
 	app.config.update(conf)
 	app.config.update(settings_override)
@@ -56,9 +58,9 @@ def create_app(conf=config, settings_override={}):
 	@login_manager.user_loader
 	def load_user(user_id):
 		app.logger.debug("User logging in, ID: " + user_id)
-		return Users.query.\
+		return Users.query. \
 			options(joinedload("usertypeforsystem")). \
-			options(joinedload("coursesandusers").joinedload("usertypeforcourse")).\
+			options(joinedload("coursesandusers").joinedload("usertypeforcourse")). \
 			get(int(user_id))
 
 	@login_manager.unauthorized_handler
@@ -74,10 +76,12 @@ def create_app(conf=config, settings_override={}):
 
 	# Flask-Bouncer initialization
 	bouncer.init_app(app)
+
 	# Assigns permissions to the current logged in user
 	@bouncer.authorization_method
 	def bouncer_define_authorization(user, they):
 		define_authorization(user, they)
+
 	# Loads the current logged in user. Note that although Flask-Bouncer advertises
 	# compatibility with Flask-Login, it looks like it's compatible with an older
 	# version than we're using, so we have to override their loader.
@@ -104,63 +108,96 @@ def create_app(conf=config, settings_override={}):
 
 	# Initialize rest of the api modules
 	from .course import courses_api
+
 	app.register_blueprint(courses_api, url_prefix='/api/courses')
 	from .classlist import classlist_api
+
 	app.register_blueprint(classlist_api, url_prefix='/api/courses/<int:course_id>/users')
 	from .group import groups_api, groups_users_api
+
 	app.register_blueprint(groups_api, url_prefix='/api/courses/<int:course_id>/groups')
 	app.register_blueprint(groups_users_api, url_prefix='/api/courses/<int:course_id>/users/<int:user_id>/groups')
 	from .login import login_api
+
 	app.register_blueprint(login_api)
 	from .users import users_api, user_types_api, user_course_types_api
+
 	app.register_blueprint(users_api, url_prefix='/api/users')
 	app.register_blueprint(user_types_api, url_prefix='/api/usertypes')
 	app.register_blueprint(user_course_types_api, url_prefix='/api/courseroles')
 	from .question import questions_api
+
 	app.register_blueprint(questions_api, url_prefix='/api/courses/<int:course_id>/questions')
 	from .answer import answers_api, all_answers_api
-	app.register_blueprint(answers_api,
+
+	app.register_blueprint(
+		answers_api,
 		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answers')
-	app.register_blueprint(all_answers_api,
+	app.register_blueprint(
+		all_answers_api,
 		url_prefix='/api/courses/<int:course_id>/answers')
 	from .attachment import attachment_api
-	app.register_blueprint(attachment_api,
+
+	app.register_blueprint(
+		attachment_api,
 		url_prefix='/api/attachment')
 	from .comment import commentsforquestions_api, commentsforanswers_api, usercommentsforanswers_api
-	app.register_blueprint(commentsforquestions_api, url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/comments')
-	app.register_blueprint(commentsforanswers_api, url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answers/<int:answer_id>/comments')
-	app.register_blueprint(usercommentsforanswers_api, url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answers/<int:answer_id>/users/comments')
+
+	app.register_blueprint(
+		commentsforquestions_api,
+		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/comments')
+	app.register_blueprint(
+		commentsforanswers_api,
+		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answers/<int:answer_id>/comments')
+	app.register_blueprint(
+		usercommentsforanswers_api,
+		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answers/<int:answer_id>/users/comments')
 	from .evalcomment import evalcomments_api
-	app.register_blueprint(evalcomments_api, url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/judgements/comments')
+
+	app.register_blueprint(
+		evalcomments_api,
+		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/judgements/comments')
 	from .criteria import coursescriteria_api, criteria_api, questionscriteria_api
+
 	app.register_blueprint(coursescriteria_api, url_prefix='/api/courses/<int:course_id>/criteria')
 	app.register_blueprint(criteria_api, url_prefix='/api/criteria')
-	app.register_blueprint(questionscriteria_api, url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/criteria')
+	app.register_blueprint(
+		questionscriteria_api,
+		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/criteria')
 	from .judgement import judgements_api, all_judgements_api
-	app.register_blueprint(judgements_api,
+
+	app.register_blueprint(
+		judgements_api,
 		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/judgements')
-	app.register_blueprint(all_judgements_api,
+	app.register_blueprint(
+		all_judgements_api,
 		url_prefix='/api/courses/<int:course_id>/judgements')
 	from .answerpairing import answerpairing_api
-	app.register_blueprint(answerpairing_api,
+
+	app.register_blueprint(
+		answerpairing_api,
 		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answerpairing')
 	from .report import report_api
+
 	app.register_blueprint(report_api, url_prefix='/api/courses/<int:course_id>/report')
 	from .gradebook import gradebook_api
-	app.register_blueprint(gradebook_api, url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/gradebook')
+
+	app.register_blueprint(
+		gradebook_api,
+		url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/gradebook')
 	from .selfeval import selfeval_api, selfeval_acomments_api
+
 	app.register_blueprint(selfeval_api, url_prefix='/api/selfevaltypes')
 	app.register_blueprint(selfeval_acomments_api, url_prefix='/api/selfeval/courses/<int:course_id>/questions')
 	from .common import timer_api
-	app.register_blueprint(timer_api, url_prefix='/api/timer')
 
+	app.register_blueprint(timer_api, url_prefix='/api/timer')
 
 	@app.route('/')
 	def route_root():
 		return redirect('/static/index.html#/')
 
 	return app
-
 
 # user events
 on_user_modified.connect(log)

@@ -47,7 +47,7 @@ def populate(default_data=False, sample_data=False):
 	"""Populate database with default data"""
 
 	if default_data:
-		#from fixtures.default_data import all
+		# from fixtures.default_data import all
 		from data.fixtures import DefaultFixture
 		DefaultFixture()
 		db.session.commit()
@@ -56,4 +56,3 @@ def populate(default_data=False, sample_data=False):
 		from data.fixtures import SampleDataFixture
 		SampleDataFixture()
 		db.session.commit()
-

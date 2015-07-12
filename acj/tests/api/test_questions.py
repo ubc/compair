@@ -62,51 +62,68 @@ class QuestionsAPITests(ACJTestCase):
 
 	def test_create_question(self):
 		now = datetime.datetime.utcnow()
-		question_expected = {'title':'this is a new question\'s title',
-				'post': {'content':'this is the new question\'s content.'},
-				'answer_start': now.isoformat() + 'Z',
-				'answer_end': (now + datetime.timedelta(days=7)).isoformat() + 'Z',
-				'num_judgement_req': 3}
+		question_expected = {
+			'title': 'this is a new question\'s title',
+			'post': {'content': 'this is the new question\'s content.'},
+			'answer_start': now.isoformat() + 'Z',
+			'answer_end': (now + datetime.timedelta(days=7)).isoformat() + 'Z',
+			'num_judgement_req': 3}
 		# Test login required
-		rv = self.client.post(self.url,
-							  data=json.dumps(question_expected), content_type='application/json')
+		rv = self.client.post(
+			self.url,
+			data=json.dumps(question_expected),
+			content_type='application/json')
 		self.assert401(rv)
 		# Test unauthorized user
 		self.login(self.data.get_unauthorized_instructor().username)
-		rv = self.client.post(self.url,
-							  data=json.dumps(question_expected), content_type='application/json')
+		rv = self.client.post(
+			self.url,
+			data=json.dumps(question_expected),
+			content_type='application/json')
 		self.assert403(rv)
 		self.logout()
 		self.login(self.data.get_unauthorized_student().username)
-		rv = self.client.post(self.url,
-							  data=json.dumps(question_expected), content_type='application/json')
+		rv = self.client.post(
+			self.url,
+			data=json.dumps(question_expected),
+			content_type='application/json')
 		self.assert403(rv)
 		self.logout()
-		self.login(self.data.get_authorized_student().username) # student post questions not implemented
-		rv = self.client.post(self.url,
-							  data=json.dumps(question_expected), content_type='application/json')
+		self.login(self.data.get_authorized_student().username)  # student post questions not implemented
+		rv = self.client.post(
+			self.url,
+			data=json.dumps(question_expected),
+			content_type='application/json')
 		self.assert403(rv)
 		self.logout()
 		# Test bad format
 		self.login(self.data.get_authorized_instructor().username)
-		rv = self.client.post(self.url,
-							  data=json.dumps({'title':'blah'}), content_type='application/json')
+		rv = self.client.post(
+			self.url,
+			data=json.dumps({'title': 'blah'}),
+			content_type='application/json')
 		self.assert400(rv)
 		# Test actual creation
-		rv = self.client.post(self.url,
-							  data=json.dumps(question_expected), content_type='application/json')
+		rv = self.client.post(
+			self.url,
+			data=json.dumps(question_expected),
+			content_type='application/json')
 		self.assert200(rv)
-		self.assertEqual(question_expected['title'], rv.json['title'],
-						 "Question create did not return the same title!")
-		self.assertEqual(question_expected['post']['content'], rv.json['post']['content'],
-						 "Question create did not return the same content!")
+		self.assertEqual(
+			question_expected['title'], rv.json['title'],
+			"Question create did not return the same title!")
+		self.assertEqual(
+			question_expected['post']['content'], rv.json['post']['content'],
+			"Question create did not return the same content!")
 		# Test getting the question again
 		rv = self.client.get(self.url + '/' + str(rv.json['id']))
 		self.assert200(rv)
-		self.assertEqual(question_expected['title'], rv.json['question']['title'],
-						 "Question create did not save title properly!")
-		self.assertEqual(question_expected['post']['content'], rv.json['question']['post']['content'],
-						 "Question create did not save content properly!")
+		self.assertEqual(
+			question_expected['title'], rv.json['question']['title'],
+			"Question create did not save title properly!")
+		self.assertEqual(
+			question_expected['post']['content'], rv.json['question']['post']['content'],
+			"Question create did not save content properly!")
 
 	def test_edit_question(self):
 		question = self.data.get_questions()[0]
@@ -164,19 +181,20 @@ class QuestionsAPITests(ACJTestCase):
 
 	def test_delete_question(self):
 		# Test deleting the question
-		quesId = PostsForQuestions.query.first().id
+		ques_id = PostsForQuestions.query.first().id
 		self.logout()
-		expected_ret = {'id': quesId}
+		expected_ret = {'id': ques_id}
 		self.login(self.data.get_authorized_student().username)
-		rv = self.client.delete(self.url + '/' + str(quesId))
+		rv = self.client.delete(self.url + '/' + str(ques_id))
 		self.assert403(rv)
-		self.assertEqual('Forbidden', rv.json['message'], "User does not have the authorization to delete the question.")
+		self.assertEqual(
+			'Forbidden', rv.json['message'],
+			"User does not have the authorization to delete the question.")
 		self.logout()
 		self.login(self.data.get_authorized_instructor().username)
-		rv = self.client.delete(self.url + '/' + str(quesId))
+		rv = self.client.delete(self.url + '/' + str(ques_id))
 		self.assert200(rv)
-		self.assertEqual(expected_ret['id'], rv.json['id'], "Question "+str(rv.json['id']) + " deleted successfully")
-
+		self.assertEqual(expected_ret['id'], rv.json['id'], "Question " + str(rv.json['id']) + " deleted successfully")
 
 	def _verify_question(self, expected, actual):
 		self.assertEqual(expected.title, actual['title'])

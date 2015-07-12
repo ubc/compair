@@ -23,10 +23,6 @@ login_manager = LoginManager()
 # initialize CAS
 cas = CAS()
 
-# initialize Flask-Restless
-#api_manager = APIManager()
-
-
 # check if the user is authenticated and used by api preprocessors
 # def auth_func(*args, **kw):
 # 	if not current_user.is_authenticated():

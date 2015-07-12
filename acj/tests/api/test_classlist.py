@@ -1,9 +1,10 @@
-import json, io
+import json
+import io
 
 from data.fixtures.test_data import BasicTestData
-
 from acj.tests.test_acj import ACJTestCase
 from acj.models import UserTypesForCourse
+
 
 class ClassListAPITest(ACJTestCase):
 	def setUp(self):
@@ -28,8 +29,10 @@ class ClassListAPITest(ACJTestCase):
 		self.assert404(rv)
 
 		# test authorized user
-		expected = [self.data.get_authorized_instructor(), self.data.get_authorized_ta(),\
-					self.data.get_authorized_student()]
+		expected = [
+			self.data.get_authorized_instructor(),
+			self.data.get_authorized_ta(),
+			self.data.get_authorized_student()]
 		expected.sort(key=lambda x: x.firstname)
 		rv = self.client.get(self.url)
 		self.assert200(rv)
@@ -137,31 +140,39 @@ class ClassListAPITest(ACJTestCase):
 	def test_enrol_instructor(self):
 		url = self._create_enrol_url(self.url, self.data.get_dropped_instructor().id)
 		instructor_role_id = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_INSTRUCTOR).first().id
-		role = {} # defaults to Instructor
+		role = {}  # defaults to Instructor
 
 		# test login required
-		rv = self.client.post(url,
-			data=json.dumps(role), content_type='application/json')
+		rv = self.client.post(
+			url,
+			data=json.dumps(role),
+			content_type='application/json')
 		self.assert401(rv)
 
 		# test unauthorized user
 		self.login(self.data.get_unauthorized_instructor().username)
-		rv = self.client.post(url,
-			data=json.dumps(role), content_type='application/json')
+		rv = self.client.post(
+			url,
+			data=json.dumps(role),
+			content_type='application/json')
 		self.assert403(rv)
 		self.logout()
 
 		# test invalid course id
 		self.login(self.data.get_authorized_instructor().username)
 		invalid_url = '/api/courses/999/users/instructors/' + str(self.data.get_dropped_instructor().id) + '/enrol'
-		rv = self.client.post(invalid_url,
-			data=json.dumps(role), content_type='application/json')
+		rv = self.client.post(
+			invalid_url,
+			data=json.dumps(role),
+			content_type='application/json')
 		self.assert404(rv)
 
 		# test invalid user id
 		invalid_url = self._create_enrol_url(self.url, 999)
-		rv = self.client.post(invalid_url,
-			data=json.dumps(role), content_type='application/json')
+		rv = self.client.post(
+			invalid_url,
+			data=json.dumps(role),
+			content_type='application/json')
 		self.assert404(rv)
 
 		# test enrolling dropped instructor
@@ -175,8 +186,10 @@ class ClassListAPITest(ACJTestCase):
 				'name': UserTypesForCourse.TYPE_INSTRUCTOR
 			}
 		}
-		rv = self.client.post(url,
-			data=json.dumps(role), content_type='application/json')
+		rv = self.client.post(
+			url,
+			data=json.dumps(role),
+			content_type='application/json')
 		self.assert200(rv)
 		self.assertEqual(expected, rv.json)
 
@@ -192,8 +205,10 @@ class ClassListAPITest(ACJTestCase):
 				'name': UserTypesForCourse.TYPE_INSTRUCTOR
 			}
 		}
-		rv = self.client.post(url,
-			data=json.dumps(role), content_type='application/json')
+		rv = self.client.post(
+			url,
+			data=json.dumps(role),
+			content_type='application/json')
 		self.assert200(rv)
 		self.assertEqual(expected, rv.json)
 
@@ -210,8 +225,10 @@ class ClassListAPITest(ACJTestCase):
 				'name': UserTypesForCourse.TYPE_TA
 			}
 		}
-		rv = self.client.post(url,
-			data=json.dumps(role), content_type='application/json')
+		rv = self.client.post(
+			url,
+			data=json.dumps(role),
+			content_type='application/json')
 		self.assert200(rv)
 		self.assertEqual(expected, rv.json)
 		self.logout()
@@ -261,130 +278,130 @@ class ClassListAPITest(ACJTestCase):
 		self.assert200(rv)
 		self.assertEqual(expected, rv.json)
 
-
 	def test_import_classlist(self):
 		url = '/api/courses/' + str(self.data.get_course().id) + '/users'
 		auth_student = self.data.get_authorized_student()
 
 		# test login required
-		file = io.BytesIO(auth_student.username.encode())
+		uploaded_file = io.BytesIO(auth_student.username.encode())
 		filename = "classlist.csv"
-		rv = self.client.post(url, data=dict(file=(file, filename)))
+		rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
 		self.assert401(rv)
 
 		# test unauthorized user
 		self.login(self.data.get_unauthorized_instructor().username)
-		file = io.BytesIO(auth_student.username.encode())
-		rv = self.client.post(url, data=dict(file=(file, filename)))
+		uploaded_file = io.BytesIO(auth_student.username.encode())
+		rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
 		self.assert403(rv)
-		file.close()
+		uploaded_file.close()
 		self.logout()
 
 		self.login(self.data.get_authorized_student().username)
-		file = io.BytesIO(auth_student.username.encode())
-		rv = self.client.post(url, data=dict(file=(file, filename)))
+		uploaded_file = io.BytesIO(auth_student.username.encode())
+		rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
 		self.assert403(rv)
-		file.close()
+		uploaded_file.close()
 		self.logout()
 
 		self.login(self.data.get_authorized_ta().username)
-		file = io.BytesIO(auth_student.username.encode())
-		rv = self.client.post(url, data=dict(file=(file, filename)))
+		uploaded_file = io.BytesIO(auth_student.username.encode())
+		rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
 		self.assert403(rv)
-		file.close()
+		uploaded_file.close()
 		self.logout()
 
 		self.login(self.data.get_authorized_instructor().username)
 		# test invalid course id
 		invalid_url = '/api/courses/999/users'
-		file = io.BytesIO(auth_student.username.encode())
-		rv = self.client.post(invalid_url, data=dict(file=(file, filename)))
-		file.close()
+		uploaded_file = io.BytesIO(auth_student.username.encode())
+		rv = self.client.post(invalid_url, data=dict(file=(uploaded_file, filename)))
+		uploaded_file.close()
 		self.assert404(rv)
 
 		# test invalid file type
 		invalid_filetype = "classlist.png"
-		file = io.BytesIO(auth_student.username.encode())
-		rv = self.client.post(url, data=dict(file=(file, invalid_filetype)))
-		file.close()
+		uploaded_file = io.BytesIO(auth_student.username.encode())
+		rv = self.client.post(url, data=dict(file=(uploaded_file, invalid_filetype)))
+		uploaded_file.close()
 		self.assert400(rv)
 
 		# test no username provided
 		content = "".join([",\n", auth_student.username, ",", auth_student.student_no])
-		file = io.BytesIO(content.encode())
-		rv = self.client.post(url, data=dict(file=(file, filename)))
+		uploaded_file = io.BytesIO(content.encode())
+		rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
 		self.assert200(rv)
 		result = rv.json
 		self.assertEqual(1, result['success'])
 		self.assertEqual(1, len(result['invalids']))
 		self.assertEqual(None, result['invalids'][0]['user']['username'])
 		self.assertEqual('The username is required.', result['invalids'][0]['message'])
-		file.close()
+		uploaded_file.close()
 
 		# test duplicate usernames in file
 		content = "".join([auth_student.username, "\n", auth_student.username])
-		file = io.BytesIO(content.encode())
-		rv = self.client.post(url, data=dict(file=(file, filename)))
+		uploaded_file = io.BytesIO(content.encode())
+		rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
 		self.assert200(rv)
 		result = rv.json
 		self.assertEqual(1, result['success'])
 		self.assertEqual(1, len(result['invalids']))
 		self.assertEqual(auth_student.username, result['invalids'][0]['user']['username'])
 		self.assertEqual('This username already exists in the file.', result['invalids'][0]['message'])
-		file.close()
+		uploaded_file.close()
 
 		# test duplicate student number in system
 		content = "".join(['username1,', auth_student.student_no, "\n", auth_student.username])
-		file = io.BytesIO(content.encode())
-		rv = self.client.post(url, data=dict(file=(file, filename)))
+		uploaded_file = io.BytesIO(content.encode())
+		rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
 		self.assert200(rv)
 		result = rv.json
 		self.assertEqual(1, result['success'])
 		self.assertEqual(1, len(result['invalids']))
 		self.assertEqual("username1", result['invalids'][0]['user']['username'])
 		self.assertEqual('This student number already exists in the system.', result['invalids'][0]['message'])
-		file.close()
+		uploaded_file.close()
 
 		# test duplicate student number in file
-		content = "".join([auth_student.username, ",", auth_student.student_no, "\n",
-						   "username1,", auth_student.student_no])
-		file = io.BytesIO(content.encode())
-		rv = self.client.post(url, data=dict(file=(file, filename)))
+		content = "".join([
+			auth_student.username, ",", auth_student.student_no, "\n",
+			"username1,", auth_student.student_no])
+		uploaded_file = io.BytesIO(content.encode())
+		rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
 		self.assert200(rv)
 		result = rv.json
 		self.assertEqual(1, result['success'])
 		self.assertEqual(1, len(result['invalids']))
 		self.assertEqual("username1", result['invalids'][0]['user']['username'])
 		self.assertEqual('This student number already exists in the file.', result['invalids'][0]['message'])
-		file.close()
+		uploaded_file.close()
 
 		# test existing display
 		content = "username1,,,,," + auth_student.displayname
-		file = io.BytesIO(content.encode())
-		rv = self.client.post(url, data=dict(file=(file, filename)))
+		uploaded_file = io.BytesIO(content.encode())
+		rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
 		self.assert200(rv)
 		result = rv.json
 		self.assertEqual(1, result['success'])
 		self.assertEqual(0, len(result['invalids']))
-		file.close()
+		uploaded_file.close()
 
 		# test authorized instructor - new user
-		file = io.BytesIO(b'username2')
-		rv = self.client.post(url, data=dict(file=(file, filename)))
+		uploaded_file = io.BytesIO(b'username2')
+		rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
 		self.assert200(rv)
 		result = rv.json
 		self.assertEqual(1, result['success'])
 		self.assertEqual(0, len(result['invalids']))
-		file.close()
+		uploaded_file.close()
 
 		# test authorized instructor - existing user
-		file = io.BytesIO(auth_student.username.encode())
-		rv = self.client.post(url, data=dict(file=(file, filename)))
+		uploaded_file = io.BytesIO(auth_student.username.encode())
+		rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
 		self.assert200(rv)
 		result = rv.json
 		self.assertEqual(1, result['success'])
 		self.assertEqual(0, len(result['invalids']))
-		file.close()
+		uploaded_file.close()
 
 	def _create_enrol_url(self, url, user_id):
 		return url + '/' + str(user_id)

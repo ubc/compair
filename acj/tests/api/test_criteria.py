@@ -11,15 +11,19 @@ class CriteriaAPITests(ACJTestCase):
 		self.data = CriteriaTestData()
 
 	def _verify_course_critera(self, criteria_expected, criteria_actual):
-		self.assertEqual(criteria_expected.name, criteria_actual['criterion']['name'], \
+		self.assertEqual(
+			criteria_expected.name, criteria_actual['criterion']['name'],
 			'Expected criterion name does not match actual.')
-		self.assertEqual(criteria_expected.description, criteria_actual['criterion']['description'], \
+		self.assertEqual(
+			criteria_expected.description, criteria_actual['criterion']['description'],
 			'Expected criterion description does not match actual')
 
 	def _verify_critera(self, criteria_expected, criteria_actual):
-		self.assertEqual(criteria_expected.name, criteria_actual['name'], \
+		self.assertEqual(
+			criteria_expected.name, criteria_actual['name'],
 			'Expected criterion name does not match actual.')
-		self.assertEqual(criteria_expected.description, criteria_actual['description'], \
+		self.assertEqual(
+			criteria_expected.description, criteria_actual['description'],
 			'Expected criterion description does not match actual')
 
 	def _build_question_criteria_url(self, course_id, question_id, criteria_id):
@@ -57,19 +61,25 @@ class CriteriaAPITests(ACJTestCase):
 		}
 
 		# Test login required
-		rv = self.client.post(course_criteria_api_url, \
-				data=json.dumps(criteria_expected), content_type='application/json')
+		rv = self.client.post(
+			course_criteria_api_url,
+			data=json.dumps(criteria_expected),
+			content_type='application/json')
 		self.assert401(rv)
 
-		#Test invalid course id
+		# Test invalid course id
 		self.login(self.data.get_authorized_instructor().username)
-		rv = self.client.post('/api/courses/999/criteria', \
-				data=json.dumps(criteria_expected), content_type='application/json')
+		rv = self.client.post(
+			'/api/courses/999/criteria',
+			data=json.dumps(criteria_expected),
+			content_type='application/json')
 		self.assert404(rv)
 
 		# Test successful criteria creation
-		rv = self.client.post(course_criteria_api_url, \
-			data=json.dumps(criteria_expected), content_type='application/json')
+		rv = self.client.post(
+			course_criteria_api_url,
+			data=json.dumps(criteria_expected),
+			content_type='application/json')
 		self.assert200(rv)
 		criteria_actual = rv.json['criterion']['criterion']
 		self.assertEqual(criteria_expected['name'], criteria_actual['name'])
@@ -78,8 +88,10 @@ class CriteriaAPITests(ACJTestCase):
 
 		# Test fail criteria creation - unauthorized
 		self.login(self.data.get_unauthorized_instructor().username)
-		rv = self.client.post(course_criteria_api_url, \
-				data=json.dumps(criteria_expected), content_type='application/json')
+		rv = self.client.post(
+			course_criteria_api_url,
+			data=json.dumps(criteria_expected),
+			content_type='application/json')
 		self.assert403(rv)
 		self.logout()
 
@@ -123,41 +135,51 @@ class CriteriaAPITests(ACJTestCase):
 		}
 
 		# Test login required
-		rv = self.client.post(criteria_api_url, \
-				data=json.dumps(criteria_expected), content_type='application/json')
+		rv = self.client.post(
+			criteria_api_url,
+			data=json.dumps(criteria_expected),
+			content_type='application/json')
 		self.assert401(rv)
 
 		# Test unauthorized user
 		self.login(self.data.get_unauthorized_instructor().username)
-		rv = self.client.post(criteria_api_url, \
-				data=json.dumps(criteria_expected), content_type='application/json')
+		rv = self.client.post(
+			criteria_api_url,
+			data=json.dumps(criteria_expected),
+			content_type='application/json')
 		self.assert403(rv)
 		self.logout()
 
 		# Test invalid criteria id
 		self.login(self.data.get_authorized_instructor().username)
-		rv = self.client.post('/api/criteria/999', \
-				data=json.dumps(criteria_expected), content_type='application/json')
+		rv = self.client.post(
+			'/api/criteria/999',
+			data=json.dumps(criteria_expected),
+			content_type='application/json')
 		self.assert404(rv)
 
 		# Test author access
-		rv = self.client.post(criteria_api_url, \
-				data=json.dumps(criteria_expected), content_type='application/json')
+		rv = self.client.post(
+			criteria_api_url,
+			data=json.dumps(criteria_expected),
+			content_type='application/json')
 		self.assert200(rv)
 		self.assertEqual(criteria_expected['name'], rv.json['criterion']['name'])
 		self.assertEqual(criteria_expected['description'], rv.json['criterion']['description'])
 		self.logout()
 
 		# Test admin access
-		admin_criteria_expected = self.data.get_criteria()
+		# admin_criteria_expected = self.data.get_criteria()
 		admin_criteria_expected = {
 			'id': self.data.get_criteria().id,
 			'name': 'Which one uses the correct formula?',
 			'description': 'Hint: Law of Physics.'
 		}
 		self.login('root')
-		rv = self.client.post(criteria_api_url, \
-				data=json.dumps(admin_criteria_expected), content_type='application/json')
+		rv = self.client.post(
+			criteria_api_url,
+			data=json.dumps(admin_criteria_expected),
+			content_type='application/json')
 		self.assert200(rv)
 		self.assertEqual(admin_criteria_expected['name'], rv.json['criterion']['name'])
 		self.assertEqual(admin_criteria_expected['description'], rv.json['criterion']['description'])
@@ -202,7 +224,8 @@ class CriteriaAPITests(ACJTestCase):
 		self.logout()
 
 	def test_deactivate_criteria(self):
-		course_criteria_api_url = '/api/courses/' + str(self.data.get_course().id) + '/criteria/' + str(self.data.get_default_criteria().id)
+		course_criteria_api_url = '/api/courses/' + str(self.data.get_course().id) + '/criteria/' + str(
+			self.data.get_default_criteria().id)
 
 		# Test login required
 		rv = self.client.delete(course_criteria_api_url)
@@ -220,7 +243,8 @@ class CriteriaAPITests(ACJTestCase):
 		self.logout()
 
 		# Test unauthorized user
-		url = '/api/courses/' + str(self.data.get_secondary_course().id) + '/criteria/' + str(self.data.get_default_criteria().id)
+		url = '/api/courses/' + str(self.data.get_secondary_course().id) + '/criteria/' + str(
+			self.data.get_default_criteria().id)
 		self.login(self.data.get_authorized_instructor().username)
 		rv = self.client.delete(url)
 		self.assert403(rv)
@@ -246,7 +270,8 @@ class CriteriaAPITests(ACJTestCase):
 		self.logout()
 
 	def test_create_criteria_course(self):
-		course_criteria_api_url = '/api/courses/' + str(self.data.get_course().id) + '/criteria/' + str(self.data.get_criteria().id)
+		course_criteria_api_url = '/api/courses/' + str(self.data.get_course().id) + '/criteria/' + str(
+			self.data.get_criteria().id)
 
 		# Test login required
 		rv = self.client.post(course_criteria_api_url)
@@ -293,21 +318,27 @@ class CriteriaAPITests(ACJTestCase):
 		}
 
 		# Test login required
-		rv = self.client.post(criteria_api_url, \
-				data=json.dumps(criteria_expected), content_type='application/json')
+		rv = self.client.post(
+			criteria_api_url,
+			data=json.dumps(criteria_expected),
+			content_type='application/json')
 		self.assert401(rv)
 
 		# Test unauthorized user - eg. student
 		self.login(self.data.get_authorized_student().username)
-		rv = self.client.post(criteria_api_url, \
-				data=json.dumps(criteria_expected), content_type='application/json')
+		rv = self.client.post(
+			criteria_api_url,
+			data=json.dumps(criteria_expected),
+			content_type='application/json')
 		self.assert403(rv)
 		self.logout()
 
 		# Test authorized user
 		self.login(self.data.get_authorized_instructor().username)
-		rv = self.client.post(criteria_api_url, \
-				data=json.dumps(criteria_expected), content_type='application/json')
+		rv = self.client.post(
+			criteria_api_url,
+			data=json.dumps(criteria_expected),
+			content_type='application/json')
 		self.assert200(rv)
 		self.assertEqual(criteria_expected['name'], rv.json['name'])
 		self.assertEqual(criteria_expected['description'], rv.json['description'])
@@ -409,8 +440,9 @@ class CriteriaAPITests(ACJTestCase):
 		self.assert404(rv)
 
 		# test invalid criteria and question pair
-		rv = self.client.delete(self._build_question_criteria_url(course_id, question_id,
-                self.data.get_criteria().id))
+		rv = self.client.delete(self._build_question_criteria_url(
+			course_id, question_id,
+			self.data.get_criteria().id))
 		self.assert404(rv)
 
 		# test authorized teaching assistant

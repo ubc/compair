@@ -10,11 +10,13 @@ class EvalCommentsAPITests(ACJTestCase):
 	def setUp(self):
 		super(EvalCommentsAPITests, self).setUp()
 		self.data = JudgementCommentsTestData()
-		# may need judgement comment data
+
+	# may need judgement comment data
 
 	def _build_url(self, course_id, question_id, tail=""):
-		url = '/api/courses/' + str(course_id) + '/questions/' + str(question_id) + '/judgements/' +\
-			  'comments' + tail
+		url = \
+			'/api/courses/' + str(course_id) + '/questions/' + str(question_id) + '/judgements/' + \
+			'comments' + tail
 		return url
 
 	def test_get_eval_comments(self):
@@ -74,7 +76,7 @@ class EvalCommentsAPITests(ACJTestCase):
 		self.logout()
 
 		self.login(self.data.get_judging_student().username)
-		#test invalid course id
+		# test invalid course id
 		invalid_url = self._build_url(999, self.data.get_questions()[1].id)
 		rv = self.client.post(invalid_url, data=json.dumps(content), content_type='application/json')
 		self.assert404(rv)
@@ -125,19 +127,22 @@ class EvalCommentsAPITests(ACJTestCase):
 		expected = self.data.get_judge_comment()
 
 		self.assertEqual(len(rv.json['comparisons']), 1)
-		self.assertEqual(actual['name'],self.data.get_judging_student().fullname)
+		self.assertEqual(actual['name'], self.data.get_judging_student().fullname)
 		self.assertEqual(actual['avatar'], self.data.get_judging_student().avatar)
-		self.assertEqual(actual['criteriaandquestions_id'],
+		self.assertEqual(
+			actual['criteriaandquestions_id'],
 			self.data.get_criteria_by_question(self.data.get_questions()[0]).id)
 		self.assertEqual(actual['content'], expected.postsforcomments.post.content)
 		self.assertFalse(actual['selfeval'])
 		self.assertEqual(parser.parse(actual['created']).replace(tzinfo=None), expected.postsforcomments.post.created)
 		self.assertEqual(actual['answer1']['id'], expected.judgement.answerpairing.answers_id1)
-		self.assertEqual(actual['answer1']['feedback'],
-						 self.data.get_judge_feedback()[actual['answer1']['id']].content)
+		self.assertEqual(
+			actual['answer1']['feedback'],
+			self.data.get_judge_feedback()[actual['answer1']['id']].content)
 		self.assertEqual(actual['answer2']['id'], expected.judgement.answerpairing.answers_id2)
-		self.assertEqual(actual['answer2']['feedback'],
-						 self.data.get_judge_feedback()[actual['answer2']['id']].content)
+		self.assertEqual(
+			actual['answer2']['feedback'],
+			self.data.get_judge_feedback()[actual['answer2']['id']].content)
 		self.assertEqual(actual['winner'], expected.judgement.answers_id_winner)
 		self.logout()
 
@@ -149,19 +154,22 @@ class EvalCommentsAPITests(ACJTestCase):
 		expected = self.data.get_judge_comment()
 
 		self.assertEqual(len(rv.json['comparisons']), 1)
-		self.assertEqual(actual['name'],self.data.get_judging_student().fullname)
+		self.assertEqual(actual['name'], self.data.get_judging_student().fullname)
 		self.assertEqual(actual['avatar'], self.data.get_judging_student().avatar)
-		self.assertEqual(actual['criteriaandquestions_id'],
+		self.assertEqual(
+			actual['criteriaandquestions_id'],
 			self.data.get_criteria_by_question(self.data.get_questions()[0]).id)
 		self.assertEqual(actual['content'], expected.postsforcomments.post.content)
 		self.assertFalse(actual['selfeval'])
 		self.assertEqual(parser.parse(actual['created']).replace(tzinfo=None), expected.postsforcomments.post.created)
 		self.assertEqual(actual['answer1']['id'], expected.judgement.answerpairing.answers_id1)
-		self.assertEqual(actual['answer1']['feedback'],
-						 self.data.get_judge_feedback()[actual['answer1']['id']].content)
+		self.assertEqual(
+			actual['answer1']['feedback'],
+			self.data.get_judge_feedback()[actual['answer1']['id']].content)
 		self.assertEqual(actual['answer2']['id'], expected.judgement.answerpairing.answers_id2)
-		self.assertEqual(actual['answer2']['feedback'],
-						 self.data.get_judge_feedback()[actual['answer2']['id']].content)
+		self.assertEqual(
+			actual['answer2']['feedback'],
+			self.data.get_judge_feedback()[actual['answer2']['id']].content)
 		self.assertEqual(actual['winner'], expected.judgement.answers_id_winner)
 		self.logout()
 
@@ -174,16 +182,19 @@ class EvalCommentsAPITests(ACJTestCase):
 		self.assertEqual(len(rv.json['comparisons']), 1)
 		self.assertEqual(actual['name'], self.data.get_judging_student().fullname)
 		self.assertEqual(actual['avatar'], self.data.get_judging_student().avatar)
-		self.assertEqual(actual['criteriaandquestions_id'],
+		self.assertEqual(
+			actual['criteriaandquestions_id'],
 			self.data.get_criteria_by_question(self.data.get_questions()[0]).id)
 		self.assertEqual(actual['content'], expected.postsforcomments.post.content)
 		self.assertFalse(actual['selfeval'])
 		self.assertEqual(parser.parse(actual['created']).replace(tzinfo=None), expected.postsforcomments.post.created)
 		self.assertEqual(actual['answer1']['id'], expected.judgement.answerpairing.answers_id1)
-		self.assertEqual(actual['answer1']['feedback'],
-						 self.data.get_judge_feedback()[actual['answer1']['id']].content)
+		self.assertEqual(
+			actual['answer1']['feedback'],
+			self.data.get_judge_feedback()[actual['answer1']['id']].content)
 		self.assertEqual(actual['answer2']['id'], expected.judgement.answerpairing.answers_id2)
-		self.assertEqual(actual['answer2']['feedback'],
-						 self.data.get_judge_feedback()[actual['answer2']['id']].content)
+		self.assertEqual(
+			actual['answer2']['feedback'],
+			self.data.get_judge_feedback()[actual['answer2']['id']].content)
 		self.assertEqual(actual['winner'], expected.judgement.answers_id_winner)
 		self.logout()

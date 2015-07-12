@@ -162,7 +162,7 @@ class GroupRootAPI(Resource):
 			course_id=course_id
 		)
 
-		return {'groups': marshal(groups, dataformat.getGroups())}
+		return {'groups': marshal(groups, dataformat.get_groups())}
 	@login_required
 	def post(self, course_id):
 		Courses.query.get_or_404(course_id)

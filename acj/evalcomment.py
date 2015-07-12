@@ -1,19 +1,20 @@
-from flask import Blueprint, current_app
+from operator import itemgetter
+from itertools import groupby
+
+from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
+
 from bouncer.constants import READ, EDIT, CREATE, MANAGE
 
 from . import dataformat
 from .core import db, event
 from .models import Judgements, PostsForComments, PostsForJudgements, Courses, PostsForQuestions, Posts, \
-	AnswerPairings, CoursesAndUsers, CriteriaAndCourses, CriteriaAndPostsForQuestions, Users, \
+	AnswerPairings, CoursesAndUsers, CriteriaAndPostsForQuestions, Users, \
 	PostsForAnswersAndPostsForComments, PostsForAnswers
 from .util import new_restful_api
 from .authorization import allow, require
-
-from operator import itemgetter
-from itertools import groupby
 
 evalcomments_api = Blueprint('evalcomments_api', __name__)
 api = new_restful_api(evalcomments_api)
@@ -28,6 +29,7 @@ on_evalcomment_get = event.signal('EVALCOMMENT_GET')
 on_evalcomment_view = event.signal('EVALCOMMENT_VIEW')
 on_evalcomment_view_my = event.signal('EVALCOMMENT_VIEW_MY')
 
+
 # /
 class EvalCommentRootAPI(Resource):
 	@login_required
@@ -36,28 +38,29 @@ class EvalCommentRootAPI(Resource):
 		question = PostsForQuestions.query.get_or_404(question_id)
 		post = Posts(courses_id=course_id)
 		comment = PostsForComments(post=post)
-		judgementComment = PostsForJudgements(postsforcomments=comment)
-		require(MANAGE, judgementComment)
-		comments = PostsForJudgements.query\
-			.join(Judgements, AnswerPairings).filter_by(questions_id=question.id)\
+		judgement_comment = PostsForJudgements(postsforcomments=comment)
+		require(MANAGE, judgement_comment)
+		comments = PostsForJudgements.query \
+			.join(Judgements, AnswerPairings).filter_by(questions_id=question.id) \
 			.join(PostsForComments, Posts, Users).order_by(Users.firstname, Users.lastname, Users.id).all()
 		restrict_users = not allow(EDIT, CoursesAndUsers(courses_id=course.id))
 
 		on_evalcomment_get.send(
-			current_app._get_current_object(),
+			self,
 			event_name=on_evalcomment_get.name,
 			user=current_user,
 			course_id=course_id,
 			data={'question_id': question_id}
 		)
 
-		return {'comments': marshal(comments, dataformat.getPostsForJudgements(restrict_users))}
+		return {'comments': marshal(comments, dataformat.get_posts_for_judgements(restrict_users))}
+
 	@login_required
 	def post(self, course_id, question_id):
 		Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
-		criteriaAndQuestions = CriteriaAndPostsForQuestions(question=question)
-		judgements = Judgements(question_criterion=criteriaAndQuestions)
+		criteria_and_questions = CriteriaAndPostsForQuestions(question=question)
+		judgements = Judgements(question_criterion=criteria_and_questions)
 		require(CREATE, judgements)
 		params = new_comment_parser.parse_args()
 		results = []
@@ -76,14 +79,17 @@ class EvalCommentRootAPI(Resource):
 			results.append(evalcomment)
 
 		on_evalcomment_create.send(
-			current_app._get_current_object(),
+			self,
 			event_name=on_evalcomment_create.name,
 			user=current_user,
 			course_id=course_id,
-			data=marshal(results, dataformat.getPostsForJudgements(False)))
+			data=marshal(results, dataformat.get_posts_for_judgements(False)))
 
-		return {'objects': marshal(results, dataformat.getPostsForJudgements())}
+		return {'objects': marshal(results, dataformat.get_posts_for_judgements())}
+
+
 api.add_resource(EvalCommentRootAPI, '')
+
 
 # /view
 class EvalCommentViewAPI(Resource):
@@ -93,15 +99,15 @@ class EvalCommentViewAPI(Resource):
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
 		comment = PostsForComments(post=Posts(courses_id=course_id))
-		canManage = allow(MANAGE, PostsForJudgements(postsforcomments=comment))
+		can_manage = allow(MANAGE, PostsForJudgements(postsforcomments=comment))
 
-		if canManage:
-			evalcomments = PostsForJudgements.query\
-				.join(Judgements, AnswerPairings).filter_by(questions_id=question.id)\
+		if can_manage:
+			evalcomments = PostsForJudgements.query \
+				.join(Judgements, AnswerPairings).filter_by(questions_id=question.id) \
 				.join(PostsForComments, Posts, Users).order_by(Users.firstname, Users.lastname, Users.id).all()
 
 			feedback = PostsForAnswersAndPostsForComments.query.join(PostsForAnswers) \
-				.filter_by(questions_id=question.id)\
+				.filter_by(questions_id=question.id) \
 				.order_by(PostsForAnswersAndPostsForComments.evaluation).all()
 		else:
 			evalcomments = PostsForJudgements.query \
@@ -133,18 +139,19 @@ class EvalCommentViewAPI(Resource):
 				feedback2 = replies[user_id][judge.answerpairing.answers_id2]
 			else:
 				feedback2 = deleted
-			temp_comment = {'answer1': {}, 'answer2': {}, 'user_id': user_id, 'selfeval': False}
-			temp_comment['name'] = fullname if fullname else com.user.displayname
-			temp_comment['avatar'] =com.user.avatar
-			temp_comment['criteriaandquestions_id'] = judge.criteriaandquestions_id
-			temp_comment['answerpairings_id'] = judge.answerpairings_id
-			temp_comment['content'] = com.content
-			temp_comment['created'] = com.created
-			temp_comment['answer1']['id'] = judge.answerpairing.answers_id1
-			temp_comment['answer1']['feedback'] = feedback1
-			temp_comment['answer2']['id'] = judge.answerpairing.answers_id2
-			temp_comment['answer2']['feedback'] = feedback2
-			temp_comment['winner'] = judge.answers_id_winner
+			temp_comment = {
+				'answer1': {'id': judge.answerpairing.answers_id1, 'feedback': feedback1},
+				'answer2': {'id': judge.answerpairing.answers_id2, 'feedback': feedback2},
+				'user_id': user_id,
+				'selfeval': False,
+				'name': fullname if fullname else com.user.displayname,
+				'avatar': com.user.avatar,
+				'criteriaandquestions_id': judge.criteriaandquestions_id,
+				'answerpairings_id': judge.answerpairings_id,
+				'content': com.content,
+				'created': com.created,
+				'winner': judge.answers_id_winner
+			}
 			results.append(temp_comment)
 
 		for s in selfeval:
@@ -163,26 +170,27 @@ class EvalCommentViewAPI(Resource):
 			results.append(comment)
 
 		# sort by criteria id to keep the evaluation results in a constant order
-		results.sort(key = itemgetter('criteriaandquestions_id'))
+		results.sort(key=itemgetter('criteriaandquestions_id'))
 		# sort by answerpairings_id in descending order first
 		# group by answerpairing and keep the selfevaluation as the last comment
-		results.sort(key = itemgetter('answerpairings_id'), reverse=True)
+		results.sort(key=itemgetter('answerpairings_id'), reverse=True)
 		# then sort by name and user_id to group the comments by author
-		if canManage:
-			results.sort(key = itemgetter('name', 'user_id'))
+		if can_manage:
+			results.sort(key=itemgetter('name', 'user_id'))
 
 		comparisons = []
 		for k, g in groupby(results, itemgetter('name', 'user_id', 'answerpairings_id')):
 			comparisons.append(list(g))
 
 		on_evalcomment_view.send(
-			current_app._get_current_object(),
+			self,
 			event_name=on_evalcomment_view.name,
 			user=current_user,
 			course_id=course_id,
 			data={'question_id': question_id}
 		)
 
-		return {'comparisons': marshal(comparisons, dataformat.getEvalComments())}
+		return {'comparisons': marshal(comparisons, dataformat.get_eval_comments())}
+
 
 api.add_resource(EvalCommentViewAPI, '/view')

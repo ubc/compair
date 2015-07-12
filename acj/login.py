@@ -5,7 +5,6 @@ from acj import cas
 from .authorization import get_logged_in_user_permissions
 from .models import Users
 
-
 login_api = Blueprint("login_api", __name__, url_prefix='/api')
 
 
@@ -13,7 +12,7 @@ login_api = Blueprint("login_api", __name__, url_prefix='/api')
 def login():
 	# expecting login params to be in json format
 	param = request.json
-	if param == None:
+	if param is None:
 		return jsonify({"error": 'Invalid login data format. Expecting json.'}), 400
 	username = param['username']
 	password = param['password']
@@ -42,15 +41,18 @@ def logout():
 	else:
 		return ""
 
+
 @login_api.route('/session', methods=['GET'])
 @login_required
 def session():
 	return jsonify({"id": current_user.id, "permissions": get_logged_in_user_permissions()})
 
+
 @login_api.route('/session/permission', methods=['GET'])
 @login_required
 def get_permission():
 	return jsonify(get_logged_in_user_permissions())
+
 
 @login_api.route('/auth/cas', methods=['GET'])
 def auth_cas():

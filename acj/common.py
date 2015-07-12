@@ -1,9 +1,10 @@
-from flask import Blueprint, current_app
-from flask.ext.restful import Resource
-
-from flask_login import login_required
-from .util import new_restful_api
 import time
+
+from flask import Blueprint
+from flask.ext.restful import Resource
+from flask_login import login_required
+
+from .util import new_restful_api
 
 timer_api = Blueprint('timer_api', __name__)
 

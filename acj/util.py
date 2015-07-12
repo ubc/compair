@@ -28,16 +28,16 @@ def pagination(model):
 		def paging(*args, **kwargs):
 			# pagination parameters from GET
 			page = request.args.get('page', 1)
-			page = int(page) # they need to be ints
+			page = int(page)  # they need to be ints
 			results_per_page = request.args.get('results_per_page', 30)
 			results_per_page = int(results_per_page)
 			# calculate offset
 			offset = (page - 1) * results_per_page
 			# get data
 			query_results = model.query.limit(results_per_page).offset(offset).all()
-			#query_results_dict = to_dict(query_results, relations_to_remove)
+			# query_results_dict = to_dict(query_results, relations_to_remove)
 			# need to bundle in the pagination information into the return
-			total_pages = model.query.count() / results_per_page # assumes integer div
+			total_pages = model.query.count() / results_per_page  # assumes integer div
 			if total_pages < 1:
 				total_pages = 1
 
@@ -53,8 +53,10 @@ def pagination(model):
 		return paging
 	return wrap
 
+
 def _unauthorized_override(response):
-	return jsonify({"error":"Authentication Required."}), 401
+	return jsonify({"error": "Authentication Required."}), 401
+
 
 def new_restful_api(blueprint):
 	"""
@@ -74,7 +76,7 @@ def get_model_changes(model):
 		changes = dict()
 		insp = inspect(model)
 
-		#skip no changed model
+		# skip no changed model
 		if not insp.modified:
 			return
 

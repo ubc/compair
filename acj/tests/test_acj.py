@@ -41,6 +41,7 @@ class ACJTestCase(TestCase):
 	def logout(self):
 		return self.client.delete('/api/logout', follow_redirects=True)
 
+
 class SessionTests(ACJTestCase):
 	def test_loggedin_user_session(self):
 		self.login('root', 'password')
