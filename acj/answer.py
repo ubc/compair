@@ -6,6 +6,7 @@ from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import func
 
 from . import dataformat
+from sqlalchemy.orm import load_only
 from .core import db
 from .authorization import require, allow, is_user_access_restricted
 from .models import Posts, PostsForAnswers, PostsForQuestions, Courses, Users, \
@@ -230,13 +231,13 @@ api.add_resource(AnswerFlagAPI, '/<int:answer_id>/flagged')
 class AnswerCountAPI(Resource):
 	@login_required
 	def get(self, course_id, question_id):
-		Courses.query.get_or_404(course_id)
-		PostsForQuestions.query.get_or_404(question_id)
+		Courses.query.options(load_only('id')).get_or_404(course_id)
+		PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
 		post = Posts(courses_id=course_id)
 		answer = PostsForAnswers(post=post)
 		require(READ, answer)
 		answered = PostsForAnswers.query.filter_by(questions_id=question_id).join(Posts)\
-			.filter(Posts.users_id==current_user.id).count()
+			.filter(Posts.users_id == current_user.id).count()
 
 		on_user_question_answered_count.send(
 			current_app._get_current_object(),
@@ -247,6 +248,7 @@ class AnswerCountAPI(Resource):
 
 		return {'answered': answered }
 api.add_resource(AnswerCountAPI, '/count')
+
 
 # /view
 class AnswerViewAPI(Resource):

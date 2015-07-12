@@ -10,6 +10,7 @@ from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import or_, and_, func
 
 from . import dataformat
+from sqlalchemy.orm import load_only
 from .core import db
 from acj.authorization import require
 from .core import event
@@ -109,18 +110,19 @@ class JudgementRootAPI(Resource):
 
 api.add_resource(JudgementRootAPI, '')
 
+
 # /pair
 class JudgementPairAPI(Resource):
 	@login_required
 	def get(self, course_id, question_id):
-		'''
+		"""
 		Get an answer pair for judgement.
-		'''
+		"""
 		course = Courses.query.get_or_404(course_id)
 		question = PostsForQuestions.query.get_or_404(question_id)
 		require(READ, question)
 		if not question.judging_period:
-			return {'error':'Evaluation period is not active.'}, 403
+			return {'error': 'Evaluation period is not active.'}, 403
 		pair_generator = AnswerPairGenerator(course.id, question, current_user.id)
 
 		try:
@@ -131,28 +133,36 @@ class JudgementPairAPI(Resource):
 				event_name=on_answer_pair_get.name,
 				user=current_user,
 				course_id=course_id,
-				data={'question_id': question_id, 'answer_pair': marshal(answerpairing, dataformat.getAnswerPairings(include_answers=True))})
+				data={
+					'question_id': question_id,
+					'answer_pair': marshal(answerpairing, dataformat.getAnswerPairings(include_answers=True))
+				})
 			return marshal(answerpairing, dataformat.getAnswerPairings(include_answers=True))
 		except InsufficientAnswersException:
-			return {"error":"Not enough answers are available for an evaluation."}, 400
+			return {"error": "Not enough answers are available for an evaluation."}, 400
 		except UserHasJudgedAllAnswers:
-			return {"error":"You have judged all the currently available answers."}, 400
+			return {"error": "You have judged all the currently available answers."}, 400
 		except AnswerMissingScoreCalculation:
-			return {"error":"An answer is missing a calculated score."}, 400
+			return {"error": "An answer is missing a calculated score."}, 400
 		except MissingScoreFromAnswer:
-			return {"error":"A score is missing from an answer."}, 400
+			return {"error": "A score is missing from an answer."}, 400
 		except UnknownAnswerPairError:
-			return {"error":"Generating scored pairs failed, this really shouldn't happen."}, 500
-		return {"error":"Answer pair generation failed for an unknown reason."}, 500
+			return {"error": "Generating scored pairs failed, this really shouldn't happen."}, 500
+		except:
+			return {"error": "Answer pair generation failed for an unknown reason."}, 500
+
 api.add_resource(JudgementPairAPI, '/pair')
 
-# /users/:userId/count
+
+# /users/:user_id/count
 class UserJudgementCount(Resource):
 	@login_required
 	def get(self, course_id, question_id, user_id):
 		course = Courses.query.get_or_404(course_id)
 		require(READ, course)
-		question = PostsForQuestions.query.get_or_404(question_id)
+		question = PostsForQuestions.query.\
+			options(load_only('id', 'criteria_count', 'posts_id')).\
+			get_or_404(question_id)
 		require(READ, question)
 		count = judgement_count(question, user_id)
 
@@ -164,8 +174,10 @@ class UserJudgementCount(Resource):
 			data={'question_id': question_id, 'user_id': user_id, 'count': count}
 		)
 
-		return {"count":count}
+		return {"count": count}
+
 api.add_resource(UserJudgementCount, '/users/<int:user_id>/count')
+
 
 # /count
 class UserAllJudgementCount(Resource):

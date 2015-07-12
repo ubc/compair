@@ -4,6 +4,7 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from . import dataformat
+from sqlalchemy.orm import load_only
 
 from .core import db
 from .authorization import require, allow
@@ -49,16 +50,18 @@ on_answer_comment_user_get = event.signal('ANSWER_COMMENT_USER_GET')
 
 # /
 class QuestionCommentRootAPI(Resource):
-	#TODO pagination
+	# TODO pagination
 	@login_required
 	def get(self, course_id, question_id):
-		course = Courses.query.get_or_404(course_id)
-		question = PostsForQuestions.query.get_or_404(question_id)
+		Courses.query.options(load_only('id')).get_or_404(course_id)
+		question = PostsForQuestions.query. \
+			options(load_only('id', 'criteria_count', 'posts_id')). \
+			get_or_404(question_id)
 		require(READ, question)
 		restrict_users = not allow(MANAGE, question)
 		comments = PostsForQuestionsAndPostsForComments.query.\
 			join(PostsForComments, Posts).\
-			filter(PostsForQuestionsAndPostsForComments.questions_id==question.id, Posts.courses_id==course_id).\
+			filter(PostsForQuestionsAndPostsForComments.questions_id == question.id, Posts.courses_id == course_id).\
 			order_by(Posts.created.asc()).all()
 
 		on_comment_list_get.send(
@@ -68,12 +71,12 @@ class QuestionCommentRootAPI(Resource):
 			course_id=course_id,
 			data={'question_id': question_id})
 
-		return {"objects":marshal(comments, dataformat.getPostsForQuestionsAndPostsForComments(restrict_users))}
+		return {"objects": marshal(comments, dataformat.getPostsForQuestionsAndPostsForComments(restrict_users))}
 
 	@login_required
 	def post(self, course_id, question_id):
-		course = Courses.query.get_or_404(course_id)
-		question = PostsForQuestions.query.get_or_404(question_id)
+		Courses.query.options(load_only('id')).get_or_404(course_id)
+		PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
 		post = Posts(courses_id=course_id)
 		comment = PostsForComments(post=post)
 		commentForQuestion = PostsForQuestionsAndPostsForComments(postsforcomments=comment, questions_id=question_id)

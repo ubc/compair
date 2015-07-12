@@ -293,25 +293,30 @@ class TeachersAPI(Resource):
 		return {'instructors': instructor_ids}
 api.add_resource(TeachersAPI, '/instructors/labels')
 
+
 # /students - return list of Students in the course
 class StudentsAPI(Resource):
 	@login_required
 	def get(self, course_id):
 		course = Courses.query.get_or_404(course_id)
-		coursesandusers = CoursesAndUsers(courses_id=course_id)
 		require(READ, course)
-		students = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_STUDENT).all()
+		students = Users.query.\
+			join(CoursesAndUsers).filter_by(courses_id=course_id).\
+			join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_STUDENT).\
+			all()
 
+		coursesandusers = CoursesAndUsers(courses_id=course_id)
 		if allow(READ, coursesandusers):
-			users = [{'user': {'id': u.users_id, 'name': u.user.fullname if u.user.fullname else u.user.displayname}}
-					 for u in students]
+			users = [
+				{'user': {'id': u.id, 'name': u.fullname if u.fullname else u.displayname}}
+				for u in students]
 		else:
 			users = []
 			for u in students:
-				name = u.user.displayname
-				if u.user.id == current_user.id:
+				name = u.displayname
+				if u.id == current_user.id:
 					name += ' (You)'
-				users.append({'user': {'id': u.user.id, 'name': name}})
+				users.append({'user': {'id': u.id, 'name': name}})
 
 		on_classlist_student.send(
 			current_app._get_current_object(),
@@ -321,4 +326,5 @@ class StudentsAPI(Resource):
 		)
 
 		return {'students': users}
+
 api.add_resource(StudentsAPI, '/students')
