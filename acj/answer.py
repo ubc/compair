@@ -4,9 +4,9 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import func
+from sqlalchemy.orm import load_only, joinedload
 
 from . import dataformat
-from sqlalchemy.orm import load_only
 from .core import db
 from .authorization import require, allow, is_user_access_restricted
 from .models import Posts, PostsForAnswers, PostsForQuestions, Courses, Users, \
@@ -14,7 +14,6 @@ from .models import Posts, PostsForAnswers, PostsForQuestions, Courses, Users, \
 from .util import new_restful_api, get_model_changes
 from .attachment import add_new_file, delete_file
 from .core import event
-
 
 answers_api = Blueprint('answers_api', __name__)
 api = new_restful_api(answers_api)
@@ -62,13 +61,20 @@ class AnswerRootAPI(Resource):
     # TODO pagination
     @login_required
     def get(self, course_id, question_id):
-        Courses.query.get_or_404(course_id)
+        Courses.exists_or_404(course_id)
         question = PostsForQuestions.query.get_or_404(question_id)
         require(READ, question)
         restrict_users = not allow(MANAGE, question)
 
-        answers = PostsForAnswers.query.filter_by(questions_id=question.id) \
-            .join(Posts).order_by(Posts.created.desc()).all()
+        answers = PostsForAnswers.query. \
+            options(joinedload('comments')). \
+            options(joinedload('flagger').joinedload('usertypeforsystem')). \
+            options(joinedload('post').joinedload('files')). \
+            options(joinedload('post').joinedload('user').joinedload('usertypeforsystem')). \
+            options(joinedload('_scores')). \
+            filter_by(questions_id=question.id). \
+            join(Posts). \
+            order_by(Posts.created.desc()).all()
 
         on_answer_list_get.send(
             self,
@@ -81,7 +87,7 @@ class AnswerRootAPI(Resource):
 
     @login_required
     def post(self, course_id, question_id):
-        Courses.query.get_or_404(course_id)
+        Courses.exists_or_404(course_id)
         question = PostsForQuestions.query.get_or_404(question_id)
         if not question.answer_grace and not allow(MANAGE, question):
             return {'error': answer_deadline_message}, 403
@@ -122,8 +128,13 @@ api.add_resource(AnswerRootAPI, '')
 class AnswerIdAPI(Resource):
     @login_required
     def get(self, course_id, question_id, answer_id):
-        Courses.query.get_or_404(course_id)
-        answer = PostsForAnswers.query.get_or_404(answer_id)
+        Courses.exists_or_404(course_id)
+        answer = PostsForAnswers.query. \
+            options(joinedload('comments')). \
+            options(joinedload('post').joinedload('files')). \
+            options(joinedload('post').joinedload('user').joinedload('usertypeforsystem')). \
+            options(joinedload('_scores')). \
+            get_or_404(answer_id)
         require(READ, answer)
 
         on_answer_get.send(
@@ -137,7 +148,7 @@ class AnswerIdAPI(Resource):
 
     @login_required
     def post(self, course_id, question_id, answer_id):
-        Courses.query.get_or_404(course_id)
+        Courses.exists_or_404(course_id)
         question = PostsForQuestions.query.get_or_404(question_id)
         if not question.answer_grace and not allow(MANAGE, question):
             return {'error': answer_deadline_message}, 403
@@ -155,6 +166,7 @@ class AnswerIdAPI(Resource):
             return {"error": "The answer content is empty!"}, 400
         db.session.add(answer.post)
         db.session.add(answer)
+        db.session.commit()
 
         on_answer_modified.send(
             self,
@@ -163,13 +175,13 @@ class AnswerIdAPI(Resource):
             course_id=course_id,
             data=get_model_changes(answer))
 
-        db.session.commit()
         if name:
             add_new_file(params.get('alias'), name, course_id, question_id, answer.post.id)
         return marshal(answer, dataformat.get_posts_for_answers())
 
     @login_required
     def delete(self, course_id, question_id, answer_id):
+        Courses.exists_or_404(course_id)
         answer = PostsForAnswers.query.get_or_404(answer_id)
         require(DELETE, answer)
         delete_file(answer.post.id)
@@ -191,9 +203,21 @@ api.add_resource(AnswerIdAPI, '/<int:answer_id>')
 class AnswerUserIdAPI(Resource):
     @login_required
     def get(self, course_id, question_id):
-        Courses.query.get_or_404(course_id)
+        """
+        Get answers submitted to the question submitted by current user
+
+        :param course_id:
+        :param question_id:
+        :return: answers
+        """
+        Courses.exists_or_404(course_id)
         PostsForQuestions.query.get_or_404(question_id)
-        answer = PostsForAnswers.query.filter_by(questions_id=question_id).join(Posts).\
+        answer = PostsForAnswers.query. \
+            options(joinedload('comments')). \
+            options(joinedload('post').joinedload('files')). \
+            options(joinedload('post').joinedload('user').joinedload('usertypeforsystem')). \
+            options(joinedload('_scores')). \
+            filter_by(questions_id=question_id).join(Posts).\
             filter_by(courses_id=course_id, users_id=current_user.id).all()
 
         on_user_question_answer_get.send(
@@ -208,17 +232,25 @@ class AnswerUserIdAPI(Resource):
 api.add_resource(AnswerUserIdAPI, '/user')
 
 
-# /flag, mark an answer as inappropriate or incomplete to instructors
+# /flag
 class AnswerFlagAPI(Resource):
     @login_required
     def post(self, course_id, question_id, answer_id):
+        """
+        Mark an answer as inappropriate or incomplete to instructors
+        :param course_id:
+        :param question_id:
+        :param answer_id:
+        :return: marked answer
+        """
+        Courses.exists_or_404(course_id)
         answer = PostsForAnswers.query.get_or_404(answer_id)
         require(READ, answer)
         # anyone can flag an answer, but only the original flagger or someone who can manage
         # the answer can unflag it
         if answer.flagged and \
             answer.flagger.id != current_user.id and \
-            not allow(MANAGE, answer):
+                not allow(MANAGE, answer):
             return {"error": "You do not have permission to unflag this answer."}, 400
         params = flag_parser.parse_args()
         answer.flagged = params['flagged']
@@ -241,11 +273,18 @@ class AnswerFlagAPI(Resource):
 api.add_resource(AnswerFlagAPI, '/<int:answer_id>/flagged')
 
 
-# /count, return number of answers submitted for the question
+# /count
 class AnswerCountAPI(Resource):
     @login_required
     def get(self, course_id, question_id):
-        Courses.query.options(load_only('id')).get_or_404(course_id)
+        """
+        Return number of answers submitted for the question by current user.
+
+        :param course_id:
+        :param question_id:
+        :return: answer count
+        """
+        Courses.exists_or_404(course_id)
         PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
         post = Posts(courses_id=course_id)
         answer = PostsForAnswers(post=post)
@@ -268,26 +307,34 @@ api.add_resource(AnswerCountAPI, '/count')
 class AnswerViewAPI(Resource):
     @login_required
     def get(self, course_id, question_id):
-        Courses.query.get_or_404(course_id)
+        Courses.exists_or_404(course_id)
         question = PostsForQuestions.query.get_or_404(question_id)
         require(READ, question)
 
         if allow(MANAGE, question):
-            answers = PostsForAnswers.query.join(Posts).\
+            answers = PostsForAnswers.query.join(Posts). \
+                options(joinedload('post').joinedload('files')). \
+                options(joinedload('_scores')). \
                 filter(PostsForAnswers.questions_id == question.id).\
                 order_by(Posts.created.desc()).all()
         else:
             judgements = Judgements.query \
                 .filter_by(users_id=current_user.id) \
                 .join(AnswerPairings).filter_by(questions_id=question.id).all()
-            myanswers = PostsForAnswers.query.filter_by(questions_id=question.id) \
-                .join(Posts).filter_by(users_id=current_user.id).all()
+            my_answers = PostsForAnswers.query. \
+                options(joinedload('post').joinedload('files')). \
+                options(joinedload('_scores')). \
+                filter_by(questions_id=question.id). \
+                join(Posts).filter_by(users_id=current_user.id).all()
             answer_ids = set(j.answerpairing.answers_id1 for j in judgements)
             answer_ids.update(set(j.answerpairing.answers_id2 for j in judgements))
             answers = []
             if len(answer_ids) > 0:
-                answers = PostsForAnswers.query.filter(PostsForAnswers.id.in_(answer_ids)).all()
-            answers.extend(myanswers)
+                answers = PostsForAnswers.query. \
+                    options(joinedload('post').joinedload('files')). \
+                    options(joinedload('_scores')). \
+                    filter(PostsForAnswers.id.in_(answer_ids)).all()
+            answers.extend(my_answers)
 
         results = {}
         can_manage = allow(MANAGE, question)
@@ -298,8 +345,7 @@ class AnswerViewAPI(Resource):
             tmp_answer['file'] = marshal(ans.post.files, dataformat.get_files_for_posts())
             if can_manage:
                 tmp_answer['scores'] = {
-                    s.criteriaandquestions_id: round(s.normalized_score, 3)
-                    for s in ans.scores if s.question_criterion.active}
+                    s.criteriaandquestions_id: round(s.normalized_score, 3) for s in ans.scores}
 
         on_answer_view_count.send(
             self,
@@ -316,7 +362,7 @@ api.add_resource(AnswerViewAPI, '/view')
 class AnsweredAPI(Resource):
     @login_required
     def get(self, course_id):
-        Courses.query.get_or_404(course_id)
+        Courses.exists_or_404(course_id)
         post = Posts(courses_id=course_id)
         answer = PostsForAnswers(post=post)
         require(READ, answer)
@@ -325,7 +371,7 @@ class AnsweredAPI(Resource):
             join(Posts).filter_by(courses_id=course_id).\
             join(Users).filter_by(id=current_user.id).\
             group_by(PostsForAnswers.questions_id).all()
-        answered = {qId: count for (qId, count) in answered}
+        answered = dict(answered)
 
         on_user_course_answered_count.send(
             self,

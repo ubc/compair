@@ -264,6 +264,10 @@ class Courses(db.Model):
 
         return query.order_by(cls.name).all()
 
+    @classmethod
+    def exists_or_404(cls, course_id):
+        cls.query.options(load_only('id')).get_or_404(course_id)
+
 
 # A "junction table" in sqlalchemy is called a many-to-many pattern. Such a
 # table can be automatically created by sqlalchemy from db.relationship
@@ -851,13 +855,20 @@ class Scores(db.Model):
     # calculated score based on all previous judgements
     score = db.Column(db.Float, default=0)
 
-    @hybrid_property
-    def normalized_score(self):
-        if self.question_criterion.max_score > 0:
-            # round to whole number
-            return round(self.score / self.question_criterion.max_score * 100, 0)
-        else:
-            return 0
+    @classmethod
+    def __declare_last__(cls):
+        s_alias = cls.__table__.alias()
+        cls.normalized_score = column_property(
+            select([cls.score/func.max(s_alias.c.score)*100]).
+            where(s_alias.c.criteriaandquestions_id == cls.criteriaandquestions_id)
+        )
+    # @hybrid_property
+    # def normalized_score(self):
+    #     if self.question_criterion.max_score > 0:
+    #         # round to whole number
+    #         return round(self.score / self.question_criterion.max_score * 100, 0)
+    #     else:
+    #         return 0
 
 
 class PostsForJudgements(db.Model):
