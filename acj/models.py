@@ -915,29 +915,34 @@ class PostsForQuestions(db.Model):
 
     answers_count = column_property(
         select([func.count(PostsForAnswers.id)]).
-        where(PostsForAnswers.questions_id == id)
+        where(PostsForAnswers.questions_id == id),
+        deferred=True
     )
 
     comments_count = column_property(
         select([func.count(PostsForQuestionsAndPostsForComments.id)]).
-        where(PostsForQuestionsAndPostsForComments.questions_id == id)
+        where(PostsForQuestionsAndPostsForComments.questions_id == id),
+        deferred=True
     )
 
     criteria_count = column_property(
-        select([CriteriaAndPostsForQuestions.id]).
-        where(CriteriaAndPostsForQuestions.questions_id == id)
+        select([func.count(CriteriaAndPostsForQuestions.id)]).
+        where(and_(CriteriaAndPostsForQuestions.questions_id == id, CriteriaAndPostsForQuestions.active)),
+        deferred=True
     )
 
     judged = column_property(
         select([func.count(AnswerPairings.id) > 0]).
-        where(AnswerPairings.questions_id == id)
+        where(AnswerPairings.questions_id == id),
+        deferred=True
     )
 
     judgement_count = column_property(
         select([func.count(Judgements.id)]).
         where(and_(
             Judgements.criteriaandquestions_id == CriteriaAndPostsForQuestions.id,
-            CriteriaAndPostsForQuestions.questions_id == id))
+            CriteriaAndPostsForQuestions.questions_id == id)),
+        deferred=True
     )
 
     _selfeval_count = column_property(
@@ -945,7 +950,8 @@ class PostsForQuestions(db.Model):
         where(and_(
             PostsForAnswersAndPostsForComments.selfeval,
             PostsForAnswersAndPostsForComments.answers_id == PostsForAnswers.id,
-            PostsForAnswers.questions_id == id))
+            PostsForAnswers.questions_id == id)),
+        deferred=True
     )
 
     @hybrid_property
