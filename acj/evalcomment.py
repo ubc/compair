@@ -9,6 +9,7 @@ from flask.ext.restful.reqparse import RequestParser
 from bouncer.constants import READ, EDIT, CREATE, MANAGE
 
 from . import dataformat
+from sqlalchemy.orm import load_only, joinedload, contains_eager
 from .core import db, event
 from .models import Judgements, PostsForComments, PostsForJudgements, Courses, PostsForQuestions, Posts, \
     AnswerPairings, CoursesAndUsers, CriteriaAndPostsForQuestions, Users, \
@@ -34,16 +35,16 @@ on_evalcomment_view_my = event.signal('EVALCOMMENT_VIEW_MY')
 class EvalCommentRootAPI(Resource):
     @login_required
     def get(self, course_id, question_id):
-        course = Courses.query.get_or_404(course_id)
-        question = PostsForQuestions.query.get_or_404(question_id)
+        Courses.exists_or_404(course_id)
+        PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
         post = Posts(courses_id=course_id)
         comment = PostsForComments(post=post)
         judgement_comment = PostsForJudgements(postsforcomments=comment)
         require(MANAGE, judgement_comment)
         comments = PostsForJudgements.query \
-            .join(Judgements, AnswerPairings).filter_by(questions_id=question.id) \
+            .join(Judgements, AnswerPairings).filter_by(questions_id=question_id) \
             .join(PostsForComments, Posts, Users).order_by(Users.firstname, Users.lastname, Users.id).all()
-        restrict_users = not allow(EDIT, CoursesAndUsers(courses_id=course.id))
+        restrict_users = not allow(EDIT, CoursesAndUsers(courses_id=course_id))
 
         on_evalcomment_get.send(
             self,
@@ -57,9 +58,9 @@ class EvalCommentRootAPI(Resource):
 
     @login_required
     def post(self, course_id, question_id):
-        Courses.query.get_or_404(course_id)
-        question = PostsForQuestions.query.get_or_404(question_id)
-        criteria_and_questions = CriteriaAndPostsForQuestions(question=question)
+        Courses.exists_or_404(course_id)
+        PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
+        criteria_and_questions = CriteriaAndPostsForQuestions(questions_id=question_id)
         judgements = Judgements(question_criterion=criteria_and_questions)
         require(CREATE, judgements)
         params = new_comment_parser.parse_args()
@@ -95,29 +96,39 @@ api.add_resource(EvalCommentRootAPI, '')
 class EvalCommentViewAPI(Resource):
     @login_required
     def get(self, course_id, question_id):
-        Courses.query.get_or_404(course_id)
-        question = PostsForQuestions.query.get_or_404(question_id)
+        Courses.exists_or_404(course_id)
+        PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
+        question = PostsForQuestions(post=Posts(courses_id=course_id))
         require(READ, question)
         comment = PostsForComments(post=Posts(courses_id=course_id))
         can_manage = allow(MANAGE, PostsForJudgements(postsforcomments=comment))
 
         if can_manage:
-            evalcomments = PostsForJudgements.query \
-                .join(Judgements, AnswerPairings).filter_by(questions_id=question.id) \
-                .join(PostsForComments, Posts, Users).order_by(Users.firstname, Users.lastname, Users.id).all()
+            evalcomments = PostsForJudgements.query. \
+                options(contains_eager('postsforcomments').contains_eager('post').subqueryload('user')). \
+                options(contains_eager('postsforcomments').contains_eager('post').subqueryload('files')). \
+                options(contains_eager('judgement').contains_eager('answerpairing')). \
+                join(Judgements, AnswerPairings).filter_by(questions_id=question_id). \
+                join(PostsForComments, Posts, Users).order_by(Users.firstname, Users.lastname, Users.id).all()
 
-            feedback = PostsForAnswersAndPostsForComments.query.join(PostsForAnswers) \
-                .filter_by(questions_id=question.id) \
+            feedback = PostsForAnswersAndPostsForComments.query. \
+                join(PostsForAnswers). \
+                options(joinedload('postsforcomments').joinedload('post').joinedload('user')). \
+                filter_by(questions_id=question_id) \
                 .order_by(PostsForAnswersAndPostsForComments.evaluation).all()
         else:
-            evalcomments = PostsForJudgements.query \
-                .join(Judgements, AnswerPairings).filter_by(questions_id=question.id) \
-                .join(PostsForComments, Posts).filter_by(users_id=current_user.id).all()
+            evalcomments = PostsForJudgements.query. \
+                options(contains_eager('postsforcomments').contains_eager('post').subqueryload('user')). \
+                options(contains_eager('postsforcomments').contains_eager('post').subqueryload('files')). \
+                options(contains_eager('judgement').contains_eager('answerpairing')). \
+                join(Judgements, AnswerPairings).filter_by(questions_id=question_id). \
+                join(PostsForComments, Posts).filter_by(users_id=current_user.id).all()
 
-            feedback = PostsForAnswersAndPostsForComments.query \
-                .join(PostsForAnswers).filter_by(questions_id=question.id) \
-                .join(PostsForComments, Posts).filter_by(users_id=current_user.id) \
-                .order_by(PostsForAnswersAndPostsForComments.evaluation).all()
+            feedback = PostsForAnswersAndPostsForComments.query. \
+                options(joinedload('postsforcomments').joinedload('post').joinedload('user')). \
+                join(PostsForAnswers).filter_by(questions_id=question_id). \
+                join(PostsForComments, Posts).filter_by(users_id=current_user.id). \
+                order_by(PostsForAnswersAndPostsForComments.evaluation).all()
 
         replies = {}
         selfeval = [f for f in feedback if f.selfeval]

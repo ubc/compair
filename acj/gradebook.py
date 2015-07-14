@@ -1,18 +1,21 @@
 from __future__ import division
 
+import copy
+
 from bouncer.constants import MANAGE
 from flask import Blueprint, jsonify
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource
 from sqlalchemy import func, and_
 from sqlalchemy.orm import load_only, undefer, joinedload
+
 from .authorization import require
 from .models import Courses, PostsForQuestions, UserTypesForCourse, Users, CoursesAndUsers, Judgements, \
-    AnswerPairings, CriteriaAndPostsForQuestions, PostsForAnswersAndPostsForComments, PostsForAnswers, Posts, Scores
-
+    AnswerPairings, PostsForAnswersAndPostsForComments, PostsForAnswers, Posts, Scores, \
+    PostsForComments
 from .util import new_restful_api
 from .core import event
-import copy
+
 
 
 # First declare a Flask Blueprint for this module
@@ -26,6 +29,7 @@ on_gradebook_get = event.signal('GRADEBOOK_GET')
 
 def normalize_score(score, max_score, ndigits=0):
     return round(score / max_score, ndigits) if max_score is not 0 else 0
+
 
 # declare an API URL
 # /
@@ -54,7 +58,7 @@ class GradebookAPI(Resource):
         student_ids = [student.id for student in students]
         # get students judgements counts for this question
         judgements = Users.query. \
-            with_entities(Users.id, func.count(Judgements.id).label('judgement_count')/question.criteria_count). \
+            with_entities(Users.id, func.count(Judgements.id).label('judgement_count')). \
             outerjoin(Judgements). \
             outerjoin(AnswerPairings, and_(
                 AnswerPairings.id == Judgements.answerpairings_id,
@@ -63,7 +67,8 @@ class GradebookAPI(Resource):
             group_by(Users.id).all()
 
         # we want only the count for judgements by current students in the course
-        num_judgements_per_student = dict(judgements)
+        num_judgements_per_student = {user_id: int(judgement_count/question.criteria_count)
+                                      for (user_id, judgement_count) in judgements}
 
         # count number of answers each student has submitted
         answers = Users.query. \
@@ -79,8 +84,8 @@ class GradebookAPI(Resource):
 
         # find out the scores that students get
         criteria_ids = [c.id for c in question.criteria]
-        scores = Users.query. \
-            with_entities(Users.id, PostsForAnswers.flagged, Scores.criteriaandquestions_id, Scores.score). \
+        scores_by_user = Users.query. \
+            with_entities(Users.id, PostsForAnswers.flagged, Scores.criteriaandquestions_id, Scores.normalized_score). \
             outerjoin(Posts). \
             join(PostsForAnswers, and_(
                 PostsForAnswers.posts_id == Posts.id,
@@ -91,41 +96,42 @@ class GradebookAPI(Resource):
             filter(Users.id.in_(student_ids)). \
             all()
 
-        # get the max scores for each criteria to for score normalization
-        max_scores = Scores.query. \
-            with_entities(Scores.criteriaandquestions_id, func.max(Scores.score)). \
-            join(CriteriaAndPostsForQuestions). \
-            filter_by(questions_id=question_id). \
-            group_by(Scores.criteriaandquestions_id). \
-            all()
-        max_scores = dict(max_scores)
-
         # process the results into dicts
         scores_by_user_id = {}
         flagged_by_user_id = {}
         init_scores = {c.id: 'Not Evaluated' for c in question.criteria}
-        for score in scores:
+        for score in scores_by_user:
             scores_by_user_id[score[0]] = copy.deepcopy(init_scores)
             if score[2] is not None:
-                scores_by_user_id[score[0]][score[2]] = normalize_score(score[3], max_scores.get(score[2], 0), 3)
+                # scores_by_user_id[score[0]][score[2]] = normalize_score(score[3], max_scores.get(score[2], 0), 3)
+                scores_by_user_id[score[0]][score[2]] = score[3]
             flagged_by_user_id[score[0]] = 'Yes' if score[1] else 'No'
 
         include_self_eval = False
         num_selfeval_per_student = {}
-        num_selfeval_by_user_id = {}
         if question.selfevaltype_id:
             include_self_eval = True
             # assuming self-evaluation with no comparison
-            comments = PostsForAnswersAndPostsForComments.query.filter_by(selfeval=True) \
-                .join(PostsForAnswers).filter_by(questions_id=question_id).all()
+            stmt = Posts.query. \
+                with_entities(Posts.users_id, func.count('*').label('comment_count')). \
+                join(PostsForComments). \
+                join(PostsForAnswersAndPostsForComments, and_(
+                    PostsForAnswersAndPostsForComments.comments_id == PostsForComments.id,
+                    PostsForAnswersAndPostsForComments.selfeval)). \
+                join(PostsForAnswers, and_(
+                    PostsForAnswers.id == PostsForAnswersAndPostsForComments.answers_id,
+                    PostsForAnswers.questions_id == question_id)) .\
+                group_by(Posts.users_id).subquery()
 
-            for comment in comments:
-                num_eval = num_selfeval_by_user_id.get(comment.users_id, 0)
-                num_eval += 1
-                num_selfeval_by_user_id[comment.users_id] = num_eval
+            comments_by_user_id = Users.query. \
+                with_entities(Users.id, stmt.c.comment_count). \
+                outerjoin(stmt, Users.id == stmt.c.users_id). \
+                filter(Users.id.in_(student_ids)). \
+                order_by(Users.id). \
+                all()
 
-            for student in students:
-                num_selfeval_per_student[student.id] = num_selfeval_by_user_id.get(student.id, 0)
+            num_selfeval_per_student = dict(comments_by_user_id)
+            num_selfeval_per_student.update((k, 0) for k, v in num_selfeval_per_student.items() if v is None)
 
         # {'gradebook':[{user1}. {user2}, ...]}
         # user id, username, first name, last name, answer submitted, judgements submitted

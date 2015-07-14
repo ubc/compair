@@ -225,7 +225,7 @@ class AvailPairAll(Resource):
         # ineligible authors - eg. instructors, TAs, dropped student, current user
         ineligible_users = CoursesAndUsers.query. \
             filter_by(courses_id=course_id). \
-            join(UserTypesForCourse).filter(UserTypesForCourse.name.isnot(UserTypesForCourse.TYPE_STUDENT)). \
+            join(UserTypesForCourse).filter(UserTypesForCourse.name.notlike(UserTypesForCourse.TYPE_STUDENT)). \
             values(CoursesAndUsers.users_id)
         ineligible_user_ids_base = [u[0] for u in ineligible_users]
         ineligible_user_ids_base.append(current_user.id)
