@@ -2,7 +2,7 @@
 	
 	<h1>Compare Answers</h1>
 	
-	<p class="intro-text">For each round, give individual feedback for the answers in the pair, choose the one that better matches the given criteria, and submit your comparison. You do not need to complete all required rounds at once and may <a href="#/course/{{courseId}}">exit this screen</a> in between rounds.</p>
+	<p class="intro-text">For each round, give individual feedback for the answers in the pair, choose the one that better matches the  criteria  below, and submit your comparison. Please note <strong>answers are not automatically saved</strong> as you type.</p>
 	
 	<p class="question-toggle"><a href="" ng-click="showQuestion = !showQuestion">
 		<i class="fa fa-chevron-down" ng-show="showQuestion"></i>
@@ -77,7 +77,7 @@
 		
 	</div>
 	
-	<form name="judgementForm" ng-submit="judgementSubmit()" novalidate ng-hide="answerPairError">
+	<form name="judgementForm" ng-submit="judgementSubmit()" novalidate ng-hide="answerPairError" confirm-form-exit form-type="compare">
 		
 		<div>
 			
@@ -87,13 +87,13 @@
 			
 			<div class="row sub-step">
 				
-				<p class="intro-text">Use instructor-provided guidelines, or consider how and why you would evaluate these answers based on the criteria:
+				<p class="intro-text">Use instructor-provided guidelines, or explain what each author did well or could improve on based on the comparison criteria:
 					<span ng-repeat="questionCriterion in questionCriteria">{{questionCriterion.criterion.name}} </span>
 				</p>
 				
 				<div class="col-md-6">
 					<label class="cke-label">
-						Your feedback for Answer {{(current - 1) + current}} (shown to instructor and author)
+						Your feedback for Answer {{(current - 1) + current}} (shown to instructors and author)
 						<i class="fa fa-arrow-down"></i>
 					</label>
 					<textarea
@@ -102,7 +102,7 @@
 				</div>
 				<div class="col-md-6">
 					<label class="cke-label">
-						Your feedback for Answer {{current * 2}} (shown to instructor and author)
+						Your feedback for Answer {{current * 2}} (shown to instructors and author)
 						<i class="fa fa-arrow-down"></i>
 					</label>
 					<textarea
@@ -162,7 +162,7 @@
 							</div>
 							<div class="col-sm-6">
 								<label class="text-left cke-label">
-									Explain your selection (shown only to instructor)
+									Explain your selection (shown only to instructors)
 									<i class="fa fa-arrow-down"></i>
 								</label>
 								<textarea

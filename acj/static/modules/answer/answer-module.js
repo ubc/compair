@@ -102,6 +102,7 @@ module.controller(
 			);
 
 		$scope.answer = {};
+		$scope.preventExit = true; //user should be warned before leaving page by default
 		Session.getUser().then(function(user) {
 			$scope.answer.user = user.id
 		});
@@ -115,6 +116,7 @@ module.controller(
 					{
 						$scope.submitted = false;
 						Toaster.success("New answer posted!");
+						$scope.preventExit = false; //user has saved answer, does not need warning when leaving page
 						$location.path('/course/' + $scope.courseId + '/question/' +
 							questionId);
 					},

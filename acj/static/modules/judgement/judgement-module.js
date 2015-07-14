@@ -139,6 +139,8 @@ module.controller(
 			//}, 0);
 		//};
 		
+		$scope.preventExit = true; //user should be warned before leaving page by default
+		
 		// save judgement to server
 		$scope.judgementSubmit = function() {
 			var judgement = {};
@@ -182,6 +184,7 @@ module.controller(
 													if ($scope.question.num_judgement_req > ret.count) {
 														var left = $scope.question.num_judgement_req - ret.count;
 														Toaster.success("Your Comparison Saved Successfully", "The next answer pair is now being loaded. Good luck on the next round!");
+														$scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
 														$route.reload();
 														window.scrollTo(0, 0);
 													// self-evaluation
@@ -192,9 +195,11 @@ module.controller(
 																	// if user has an answer submitted
 																	if(ret.answered > 0) {
 																		Toaster.success("Your Comparison Saved Successfully", "Write a self-evaluation, and your assignment will be complete!");
+																		$scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
 																		$location.path('/course/'+courseId+'/question/'+questionId+'/selfevaluation');
 																	} else {
 																		Toaster.success("Your Comparison Saved Successfully");
+																		$scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
 																		$location.path('/course/' + courseId);
 																	}
 																},
@@ -204,11 +209,13 @@ module.controller(
 														);
 													} else {
 														Toaster.success("Your Comparison Saved Successfully", "Your assignment is now complete. Good work!");
+														$scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
 														$location.path('/course/' + courseId);
 													}
 												},
 												function(ret) {
 													Toaster.success("Your Comparison Saved Successfully");
+													$scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
 													$location.path('/course/' + courseId);
 												}
 											);
