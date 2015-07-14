@@ -3,7 +3,7 @@ from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
-from sqlalchemy.orm import load_only
+from sqlalchemy.orm import load_only, joinedload
 
 from . import dataformat
 from .core import db
@@ -54,14 +54,15 @@ class QuestionCommentRootAPI(Resource):
     # TODO pagination
     @login_required
     def get(self, course_id, question_id):
-        Courses.query.options(load_only('id')).get_or_404(course_id)
+        Courses.exists_or_404(course_id)
         question = PostsForQuestions.query. \
             options(load_only('id', 'criteria_count', 'posts_id')). \
             get_or_404(question_id)
         require(READ, question)
         restrict_users = not allow(MANAGE, question)
-        comments = PostsForQuestionsAndPostsForComments.query.\
-            join(PostsForComments, Posts).\
+        comments = PostsForQuestionsAndPostsForComments.query. \
+            options(joinedload('postsforcomments').joinedload('post').joinedload('files')) . \
+            options(joinedload('postsforcomments').joinedload('post').joinedload('user')). \
             filter(PostsForQuestionsAndPostsForComments.questions_id == question.id, Posts.courses_id == course_id).\
             order_by(Posts.created.asc()).all()
 
@@ -76,7 +77,7 @@ class QuestionCommentRootAPI(Resource):
 
     @login_required
     def post(self, course_id, question_id):
-        Courses.query.options(load_only('id')).get_or_404(course_id)
+        Courses.exists_or_404(course_id)
         PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
         post = Posts(courses_id=course_id)
         comment = PostsForComments(post=post)
@@ -109,8 +110,11 @@ class QuestionCommentIdAPI(Resource):
     @login_required
     def get(self, course_id, question_id, comment_id):
         Courses.query.get_or_404(course_id)
-        PostsForQuestions.query.get_or_404(question_id)
-        comment = PostsForQuestionsAndPostsForComments.query.get_or_404(comment_id)
+        PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
+        comment = PostsForQuestionsAndPostsForComments.query. \
+            options(joinedload('postsforcomments').joinedload('post').joinedload('files')) . \
+            options(joinedload('postsforcomments').joinedload('post').joinedload('user')) .\
+            get_or_404(comment_id)
         require(READ, comment)
 
         on_comment_get.send(
@@ -124,9 +128,12 @@ class QuestionCommentIdAPI(Resource):
 
     @login_required
     def post(self, course_id, question_id, comment_id):
-        Courses.query.get_or_404(course_id)
-        PostsForQuestions.query.get_or_404(question_id)
-        comment = PostsForQuestionsAndPostsForComments.query.get_or_404(comment_id)
+        Courses.exists_or_404(course_id)
+        PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
+        comment = PostsForQuestionsAndPostsForComments.query. \
+            options(joinedload('postsforcomments').joinedload('post').joinedload('files')) . \
+            options(joinedload('postsforcomments').joinedload('post').joinedload('user')) . \
+            get_or_404(comment_id)
         require(EDIT, comment)
         params = existing_comment_parser.parse_args()
         # make sure the comment id in the rul and the id matches
@@ -150,7 +157,12 @@ class QuestionCommentIdAPI(Resource):
 
     @login_required
     def delete(self, course_id, question_id, comment_id):
-        comment = PostsForQuestionsAndPostsForComments.query.get_or_404(comment_id)
+        Courses.exists_or_404(course_id)
+        PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
+        comment = PostsForQuestionsAndPostsForComments.query. \
+            options(joinedload('postsforcomments').joinedload('post').joinedload('files')) . \
+            options(joinedload('postsforcomments').joinedload('post').joinedload('user')) . \
+            get_or_404(comment_id)
         require(DELETE, comment)
         data = marshal(comment, dataformat.get_posts_for_questions_and_posts_for_comments(False))
         db.session.delete(comment)
@@ -172,12 +184,13 @@ class AnswerCommentRootAPI(Resource):
     # TODO pagination
     @login_required
     def get(self, course_id, question_id, answer_id):
-        Courses.query.get_or_404(course_id)
-        question = PostsForQuestions.query.get_or_404(question_id)
+        Courses.exists_or_404(course_id)
+        question = PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
         require(READ, question)
         answer = PostsForAnswers.query.get_or_404(answer_id)
-        comments = PostsForAnswersAndPostsForComments.query.\
-            join(PostsForComments, Posts).\
+        comments = PostsForAnswersAndPostsForComments.query. \
+            options(joinedload('postsforcomments').joinedload('post').joinedload('files')) . \
+            options(joinedload('postsforcomments').joinedload('post').joinedload('user')) . \
             filter(PostsForAnswersAndPostsForComments.answers_id == answer.id, Posts.courses_id == course_id).\
             order_by(Posts.created.desc()).all()
 
@@ -192,8 +205,8 @@ class AnswerCommentRootAPI(Resource):
 
     @login_required
     def post(self, course_id, question_id, answer_id):
-        Courses.query.get_or_404(course_id)
-        PostsForQuestions.query.get_or_404(question_id)
+        Courses.exists_or_404(course_id)
+        PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
         answer = PostsForAnswers.query.get_or_404(answer_id)
         post = Posts(courses_id=course_id)
         comment = PostsForComments(post=post)
@@ -228,8 +241,9 @@ apiA.add_resource(AnswerCommentRootAPI, '')
 class AnswerCommentIdAPI(Resource):
     @login_required
     def get(self, course_id, question_id, answer_id, comment_id):
-        Courses.query.get_or_404(course_id)
-        PostsForAnswers.query.get_or_404(answer_id)
+        Courses.exists_or_404(course_id)
+        PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
+        PostsForAnswers.query.options(load_only('id')).get_or_404(answer_id)
         comment = PostsForAnswersAndPostsForComments.query.get_or_404(comment_id)
         require(READ, comment)
 
@@ -244,8 +258,9 @@ class AnswerCommentIdAPI(Resource):
 
     @login_required
     def post(self, course_id, question_id, answer_id, comment_id):
-        Courses.query.get_or_404(course_id)
-        PostsForAnswers.query.get_or_404(answer_id)
+        Courses.exists_or_404(course_id)
+        PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
+        PostsForAnswers.query.options(load_only('id')).get_or_404(answer_id)
         comment = PostsForAnswersAndPostsForComments.query.get_or_404(comment_id)
         require(EDIT, comment)
         params = existing_comment_parser.parse_args()
@@ -293,9 +308,9 @@ apiA.add_resource(AnswerCommentIdAPI, '/<int:comment_id>')
 class UserAnswerCommentIdAPI(Resource):
     @login_required
     def get(self, course_id, question_id, answer_id):
-        Courses.query.get_or_404(course_id)
-        PostsForQuestions.query.get_or_404(question_id)
-        PostsForAnswers.query.get_or_404(answer_id)
+        Courses.exists_or_404(course_id)
+        PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
+        PostsForAnswers.query.options(load_only('id')).get_or_404(answer_id)
         comments = PostsForAnswersAndPostsForComments.query.filter_by(answers_id=answer_id)\
             .join(PostsForComments, Posts).filter(Posts.users_id == current_user.id).all()
 
