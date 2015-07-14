@@ -26,6 +26,8 @@ import dateutil.parser
 from flask import current_app
 import math
 import pytz
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.associationproxy import association_proxy
 
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import synonym, load_only, column_property
@@ -152,6 +154,8 @@ class Users(db.Model, UserMixin):
         "GroupsAndUsers",
         primaryjoin="and_(Users.id==GroupsAndUsers.users_id, GroupsAndUsers.active)")
 
+    system_role = association_proxy('usertypeforsystem', 'name')
+
     def _get_password(self):
         return self._password
 
@@ -194,6 +198,20 @@ class Users(db.Model, UserMixin):
         db.session.add(self)
         db.session.commit()
 
+    @hybrid_property
+    def course_role(self):
+        if len(self.coursesandusers) > 1:
+            raise InvalidAttributeException(
+                'Invalid course_role attribute status. '
+                'CoursesAndUsers are not populated within a course')
+        elif len(self.coursesandusers) == 0:
+            return 'Not Enrolled'
+        else:
+            return self.coursesandusers[0].usertypeforcourse.name
+
+
+class InvalidAttributeException(Exception):
+    pass
 
 # # create a default root user with sysadmin role
 # @event.listens_for(Users.__table__, "after_create", propagate=True)
@@ -266,7 +284,7 @@ class Courses(db.Model):
 
     @classmethod
     def exists_or_404(cls, course_id):
-        cls.query.options(load_only('id')).get_or_404(course_id)
+        return cls.query.options(load_only('id')).get_or_404(course_id)
 
 
 # A "junction table" in sqlalchemy is called a many-to-many pattern. Such a

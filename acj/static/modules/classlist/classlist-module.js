@@ -106,12 +106,11 @@ module.controller(
 			}
 		};
 
-		$scope.enrol = function(user, usertypeforcourseId) {
-			var role = {'usertypesforcourse_id': usertypeforcourseId};
-			ClassListResource.enrol({'courseId': courseId, 'userId': user.user.id}, role).$promise.then(
+		$scope.enrol = function(user, course_role) {
+			var role = {'course_role_id': course_role.id};
+			ClassListResource.enrol({'courseId': courseId, 'userId': user.id}, role).$promise.then(
 				function (ret) {
-					Toaster.success("User Added", 'Successfully changed '+ ret.user.fullname +'\'s course role to ' + ret.usertypesforcourse.name);
-					user.usertypeforcourse = ret.usertypesforcourse;
+					Toaster.success("User Added", 'Successfully changed '+ ret.fullname +'\'s course role to ' + ret.course_role);
 				},
 				function (ret) {
 					Toaster.reqerror("User Add Failed For ID " + user.user.id, ret);
@@ -191,15 +190,15 @@ module.controller(
 		);
 		$scope.enrolSubmit = function() {
 			$scope.submitted = true;
-			ClassListResource.enrol({'courseId': courseId, 'userId': $scope.user.user.id}, $scope.user).$promise.then(
+			ClassListResource.enrol({'courseId': courseId, 'userId': $scope.user.id}, $scope.user).$promise.then(
 				function (ret) {
 					$scope.submitted = false;
-					Toaster.success("User Added", 'Successfully added '+ ret.user.fullname +' as ' + ret.usertypesforcourse.name + ' to the course.');
+					Toaster.success("User Added", 'Successfully added '+ ret.fullname +' as ' + ret.course_role + ' to the course.');
 					$route.reload();
 				},
 				function (ret) {
 					$scope.submitted = false;
-					Toaster.reqerror("User Add Failed For ID " + $scope.user.user.id, ret);
+					Toaster.reqerror("User Add Failed For ID " + $scope.user.id, ret);
 				}
 			);
 		};

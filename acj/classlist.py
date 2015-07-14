@@ -6,7 +6,9 @@ import string
 from bouncer.constants import EDIT, READ
 from flask import Blueprint, request, current_app
 from flask.ext.login import login_required, current_user
-from flask.ext.restful import Resource, marshal
+from flask.ext.restful import Resource, marshal, abort
+from sqlalchemy import and_
+from sqlalchemy.orm import joinedload, contains_eager
 from werkzeug.utils import secure_filename
 
 from flask.ext.restful.reqparse import RequestParser
@@ -23,7 +25,8 @@ classlist_api = Blueprint('classlist_api', __name__)
 api = new_restful_api(classlist_api)
 
 new_course_user_parser = RequestParser()
-new_course_user_parser.add_argument('usertypesforcourse_id', type=int)
+new_course_user_parser.add_argument('course_role_id', type=int)
+new_course_user_parser.add_argument('course_role', type=str)
 
 # upload file column name to index number
 USERNAME = 0
@@ -174,15 +177,18 @@ class ClasslistRootAPI(Resource):
     # TODO Pagination
     @login_required
     def get(self, course_id):
-        course = Courses.query.get_or_404(course_id)
+        course = Courses.exists_or_404(course_id)
         # only users that can edit the course can view enrolment
         require(EDIT, course)
         restrict_users = not allow(READ, CoursesAndUsers(courses_id=course_id))
-        include_user = True
-        dropped = UserTypesForCourse.query.filter_by(name="Dropped").first().id
-        classlist = CoursesAndUsers.query. \
-            filter_by(courses_id=course_id). \
-            filter(CoursesAndUsers.usertypesforcourse_id != dropped).join(Users). \
+        class_list = Users.query. \
+            join(CoursesAndUsers). \
+            join(UserTypesForCourse, and_(
+                CoursesAndUsers.usertypesforcourse_id == UserTypesForCourse.id,
+                UserTypesForCourse.name.isnot(UserTypesForCourse.TYPE_DROPPED))). \
+            options(joinedload('usertypeforsystem')). \
+            options(contains_eager('coursesandusers').contains_eager('usertypeforcourse')). \
+            filter(CoursesAndUsers.courses_id == course_id). \
             order_by(Users.firstname).all()
 
         on_classlist_get.send(
@@ -191,7 +197,7 @@ class ClasslistRootAPI(Resource):
             user=current_user,
             course_id=course_id)
 
-        return {'objects': marshal(classlist, dataformat.get_courses_and_users(restrict_users, include_user))}
+        return {'objects': marshal(class_list, dataformat.get_users_in_course(restrict_users=restrict_users))}
 
     @login_required
     def post(self, course_id):
@@ -233,24 +239,46 @@ api.add_resource(ClasslistRootAPI, '')
 class EnrolAPI(Resource):
     @login_required
     def post(self, course_id, user_id):
+        """
+        Enrol or update a user enrolment in the course
+
+        The payload for the request has to contain either course_role_id or course_role. e.g.
+        {"course_role_id":3} or {"couse_role":"Student"}
+
+        :param course_id:
+        :param user_id:
+        :return:
+        """
         course = Courses.query.get_or_404(course_id)
         user = Users.query.get_or_404(user_id)
         coursesandusers = CoursesAndUsers.query.filter_by(users_id=user.id, courses_id=course.id).first()
         if not coursesandusers:
             coursesandusers = CoursesAndUsers(courses_id=course.id)
         require(EDIT, coursesandusers)
+
         params = new_course_user_parser.parse_args()
-        # defaults to instructor if no usertypesforcourse_id is given
-        role_id = params.get('usertypesforcourse_id')
-        if not role_id:
-            role_id = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_INSTRUCTOR).first().id
-        user_type = UserTypesForCourse.query.get_or_404(role_id)
-        coursesandusers.users_id = user.id
-        coursesandusers.usertypesforcourse_id = user_type.id
+        role_id = params.get('course_role_id')
+        role_name = params.get('course_role')
+
+        if role_id:
+            user_type = UserTypesForCourse.query.get_or_404(role_id)
+        else:
+            user_type = UserTypesForCourse.query.filter_by(name=role_name).one()
+
+        if not user_type:
+            abort(404)
+
+        if coursesandusers.usertypesforcourse_id != user_type.id:
+            coursesandusers.users_id = user.id
+            coursesandusers.usertypesforcourse_id = user_type.id
+            db.session.add(coursesandusers)
+            db.session.commit()
+
         result = {
-            'user': {'id': user.id, 'fullname': user.fullname},
-            'usertypesforcourse': {'id': user_type.id, 'name': user_type.name}}
-        db.session.add(coursesandusers)
+            'user_id': user.id,
+            'fullname': user.fullname,
+            'course_role': user_type.name
+        }
 
         on_classlist_enrol.send(
             self,
@@ -259,7 +287,6 @@ class EnrolAPI(Resource):
             course_id=course_id,
             data={'user_id': user_id})
 
-        db.session.commit()
         return result
 
     @login_required

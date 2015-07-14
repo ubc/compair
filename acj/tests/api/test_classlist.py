@@ -38,8 +38,7 @@ class ClassListAPITest(ACJTestCase):
         self.assert200(rv)
         self.assertEqual(len(expected), len(rv.json['objects']))
         for key, user in enumerate(expected):
-            self.assertEqual(self.data.get_course().id, rv.json['objects'][key]['courses_id'])
-            self.assertEqual(user.id, rv.json['objects'][key]['user']['id'])
+            self.assertEqual(user.id, rv.json['objects'][key]['id'])
 
     def test_get_instructor_labels(self):
         url = self.url + "/instructors/labels"
@@ -140,7 +139,7 @@ class ClassListAPITest(ACJTestCase):
     def test_enrol_instructor(self):
         url = self._create_enrol_url(self.url, self.data.get_dropped_instructor().id)
         instructor_role_id = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_INSTRUCTOR).first().id
-        role = {}  # defaults to Instructor
+        role = {'course_role': 'Instructor'}  # defaults to Instructor
 
         # test login required
         rv = self.client.post(
@@ -177,14 +176,9 @@ class ClassListAPITest(ACJTestCase):
 
         # test enrolling dropped instructor
         expected = {
-            'user': {
-                'id': self.data.get_dropped_instructor().id,
-                'fullname': self.data.get_dropped_instructor().fullname
-            },
-            'usertypesforcourse': {
-                'id': instructor_role_id,
-                'name': UserTypesForCourse.TYPE_INSTRUCTOR
-            }
+            'user_id': self.data.get_dropped_instructor().id,
+            'fullname': self.data.get_dropped_instructor().fullname,
+            'course_role': UserTypesForCourse.TYPE_INSTRUCTOR
         }
         rv = self.client.post(
             url,
@@ -196,14 +190,9 @@ class ClassListAPITest(ACJTestCase):
         # test enrolling new instructor
         url = self._create_enrol_url(self.url, self.data.get_unauthorized_instructor().id)
         expected = {
-            'user': {
-                'id': self.data.get_unauthorized_instructor().id,
-                'fullname': self.data.get_unauthorized_instructor().fullname
-            },
-            'usertypesforcourse': {
-                'id': instructor_role_id,
-                'name': UserTypesForCourse.TYPE_INSTRUCTOR
-            }
+            'user_id': self.data.get_unauthorized_instructor().id,
+            'fullname': self.data.get_unauthorized_instructor().fullname,
+            'course_role': UserTypesForCourse.TYPE_INSTRUCTOR
         }
         rv = self.client.post(
             url,
@@ -214,16 +203,11 @@ class ClassListAPITest(ACJTestCase):
 
         # test enrolling a different role - eg. Student
         ta_role_id = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_TA).first().id
-        role = {'usertypesforcourse_id': str(ta_role_id)}
+        role = {'course_role_id': str(ta_role_id)}
         expected = {
-            'user': {
-                'id': self.data.get_unauthorized_instructor().id,
-                'fullname': self.data.get_unauthorized_instructor().fullname
-            },
-            'usertypesforcourse': {
-                'id': ta_role_id,
-                'name': UserTypesForCourse.TYPE_TA
-            }
+            'user_id': self.data.get_unauthorized_instructor().id,
+            'fullname': self.data.get_unauthorized_instructor().fullname,
+            'course_role': UserTypesForCourse.TYPE_TA
         }
         rv = self.client.post(
             url,

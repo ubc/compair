@@ -35,11 +35,17 @@ def get_users(restrict_users=True):
         'fullname': fields.String,
         'modified': fields.DateTime,
         'usertypesforsystem_id': fields.Integer,
-        'usertypeforsystem': fields.Nested(get_user_types_for_system())
+        'usertypeforsystem': fields.Nested(get_user_types_for_system()),
+        'system_role': fields.String
     }
     unrestricted.update(restricted)
     return unrestricted
 
+def get_users_in_course(restrict_users=True):
+    users = get_users(restrict_users)
+    if not restrict_users:
+        users['course_role'] = fields.String
+    return users
 
 def get_courses(include_details=True):
     data_format = {

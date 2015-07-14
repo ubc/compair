@@ -65,7 +65,7 @@
 							Email</a>
 					</th>
 					<th>
-						<a href="" ng-click="reverse = predicate == 'usertypeforcourse.name' && !reverse; predicate = 'usertypeforcourse.name'">
+						<a href="" ng-click="reverse = predicate == 'course_role' && !reverse; predicate = 'course_role'">
 							Course Role</a>
 					</th>
 					<th ng-if="groups.length > 0">Group</th>
@@ -74,27 +74,27 @@
 			<tbody>
 				<tr ng-repeat="user in classlist | orderBy:predicate:reverse">
 					<td>
-						<a href="#/user/{{user.user.id}}/edit" target="_blank">
+						<a href="#/user/{{user.id}}/edit" target="_blank">
 							Edit
 						</a>
 						&nbsp;|&nbsp;
-						<a href="" confirmation-needed ng-click="unenrol(user.user.id)" keyword="user">
+						<a href="" confirmation-needed ng-click="unenrol(user.id)" keyword="user">
 							Drop
 						</a>
 					</td>
-					<td>{{user.user.firstname}}</td>
-					<td>{{user.user.lastname}}</td>
-					<td>{{user.user.student_no}}</td>
-					<td><a ng-href="#/user/{{user.user.id}}">{{user.user.displayname}}<a/></td>
-					<td>{{user.user.email}}</td>
+					<td>{{user.firstname}}</td>
+					<td>{{user.lastname}}</td>
+					<td>{{user.student_no}}</td>
+					<td><a ng-href="#/user/{{user.id}}">{{user.displayname}}</a></td>
+					<td>{{user.email}}</td>
 					<td>
-						<select ng-if="loggedInUserId != user.user.id" ng-model="user.usertypeforcourse.id" ng-options="r.id as r.name for r in roles"
-								ng-change="enrol(user, user.usertypeforcourse.id)"></select>
-						<span ng-if="loggedInUserId == user.user.id">{{ user.usertypeforcourse.name }}</span>
+						<select ng-if="loggedInUserId != user.id" ng-model="user.course_role" ng-options="r.name for r in roles track by r.name"
+								ng-change="enrol(user, user.course_role)"></select>
+						<span ng-if="loggedInUserId == user.id">{{ user.course_role }}</span>
 					</td>
 					<td ng-if="groups.length > 0">
 						<select ng-model="user.groups[0].groups_id" ng-options="g.id as g.name for g in groups"
-								ng-change="update(user.user.id, user.groups[0].groups_id)">
+								ng-change="update(user.id, user.groups[0].groups_id)">
 							<option value="">- None -</option>
 						</select>
 					</td>

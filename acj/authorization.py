@@ -57,7 +57,7 @@ def define_authorization(user, they):
             they.can((CREATE, DELETE), GroupsAndUsers, courses_id=entry.courses_id)
         # instructors and ta can do anything they want to posts
         if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_INSTRUCTOR or \
-            entry.usertypeforcourse.name == UserTypesForCourse.TYPE_TA:
+                entry.usertypeforcourse.name == UserTypesForCourse.TYPE_TA:
             they.can(MANAGE, PostsForQuestions, courses_id=entry.courses_id)
             they.can(MANAGE, PostsForAnswers, courses_id=entry.courses_id)
             they.can(MANAGE, PostsForQuestionsAndPostsForComments, courses_id=entry.courses_id)
