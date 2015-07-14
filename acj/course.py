@@ -51,8 +51,11 @@ class CourseListAPI(Resource):
         return objects
 
     @login_required
-    # Create new course
     def post(self):
+        """
+        Create new course
+        :return:
+        """
         require(CREATE, Courses)
         params = new_course_parser.parse_args()
         new_course = Courses(
@@ -64,7 +67,6 @@ class CourseListAPI(Resource):
         try:
             # create the course
             db.session.add(new_course)
-            db.session.commit()
             # also need to enrol the user as an instructor
             instructor_role = UserTypesForCourse.query \
                 .filter_by(name=UserTypesForCourse.TYPE_INSTRUCTOR).first()
@@ -108,9 +110,14 @@ class CourseAPI(Resource):
             data={'id': course_id})
         return marshal(course, dataformat.get_courses())
 
-    # Save existing course
     @login_required
     def post(self, course_id):
+        """
+        Update a course
+
+        :param course_id:
+        :return:
+        """
         course = Courses.query.get_or_404(course_id)
         require(EDIT, course)
         params = existing_course_parser.parse_args()
