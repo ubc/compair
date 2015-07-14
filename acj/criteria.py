@@ -5,6 +5,7 @@ from flask.ext.restful import Resource, marshal, reqparse
 from sqlalchemy import or_, and_
 
 from . import dataformat
+from sqlalchemy.orm import joinedload, load_only
 from .core import event, db
 from .authorization import require, allow
 from .models import CriteriaAndCourses, Courses, Criteria, PostsForQuestions, CriteriaAndPostsForQuestions, \
@@ -53,7 +54,7 @@ on_question_criteria_get = event.signal('QUESTION_CRITERIA_GET')
 class CriteriaRootAPI(Resource):
     @login_required
     def get(self, course_id):
-        Courses.query.get_or_404(course_id)
+        Courses.exists_or_404(course_id)
         course_criteria = criteria_in_course(course_id)
 
         on_criteria_list_get.send(
@@ -268,10 +269,11 @@ apiQ.add_resource(QuestionCriteriaRootAPI, '')
 class QuestionCriteriaAPI(Resource):
     @login_required
     def post(self, course_id, question_id, criteria_id):
-        Courses.query.get_or_404(course_id)
-        question = PostsForQuestions.query.get_or_404(question_id)
-        Criteria.query.get_or_404(criteria_id)
+        Courses.exists_or_404(course_id)
+        PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
+        Criteria.query.options(load_only('id')).get_or_404(criteria_id)
 
+        question = PostsForQuestions(post=Posts(courses_id=course_id))
         criteria_question = CriteriaAndPostsForQuestions(question=question)
         require(CREATE, criteria_question)
 
@@ -299,7 +301,7 @@ class QuestionCriteriaAPI(Resource):
 
     @login_required
     def delete(self, course_id, question_id, criteria_id):
-        Courses.query.get_or_404(course_id)
+        Courses.exists_or_404(course_id)
 
         criteria_question = CriteriaAndPostsForQuestions.query.filter_by(criteria_id=criteria_id). \
             filter_by(questions_id=question_id).first_or_404()
@@ -354,6 +356,8 @@ def add_course_criteria(criterion, course):
 
 
 def criteria_in_course(course_id):
-    course_criteria = CriteriaAndCourses.query.filter_by(courses_id=course_id) \
-        .filter_by(active=True).order_by(CriteriaAndCourses.id).all()
+    course_criteria = CriteriaAndCourses.query.\
+        options(joinedload('criterion')). \
+        filter_by(courses_id=course_id). \
+        filter_by(active=True).order_by(CriteriaAndCourses.id).all()
     return course_criteria
