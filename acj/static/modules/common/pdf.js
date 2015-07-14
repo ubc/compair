@@ -1,7 +1,11 @@
 // Directives for viewing PDF directly on a page, requires viewerjs:
 // http://viewerjs.org/
 (function() {
-var module = angular.module('ubc.ctlt.acj.common.pdf', []);
+var module = angular.module('ubc.ctlt.acj.common.pdf', [])
+	.run(function ($http, $templateCache){
+		// load the template into cache
+		$http.get('modules/common/pdf-overlay-template.html', {cache:$templateCache});
+	});
 
 // Display a PDF in a viewerjs iframe.
 // Assumes that all PDF files are in the static/pdf directory in ACJ
@@ -22,7 +26,7 @@ module.directive('acjPdfInline', function() {
 				{
 					contentTemplate: 'modules/common/pdf-overlay-template.html',
 					scope: $scope,
-					show: false,
+					show: false
 				}
 			);
 
