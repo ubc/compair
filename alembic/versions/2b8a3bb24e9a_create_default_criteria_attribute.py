@@ -18,9 +18,13 @@ from acj.models import convention
 
 
 def upgrade():
-	op.add_column('Criteria', sa.Column('default', sa.Boolean(name='default'), default=True, server_default='1', nullable=False))
+    op.add_column(
+        'Criteria',
+        sa.Column('default', sa.Boolean(name='default'), default=True, server_default='1', nullable=False))
 
 
 def downgrade():
-	with op.batch_alter_table('Criteria', naming_convention=convention, table_args=(UniqueConstraint('name'))) as batch_op:
-		batch_op.drop_column('default')
+    with op.batch_alter_table(
+            'Criteria', naming_convention=convention,
+            table_args=(UniqueConstraint('name'))) as batch_op:
+        batch_op.drop_column('default')

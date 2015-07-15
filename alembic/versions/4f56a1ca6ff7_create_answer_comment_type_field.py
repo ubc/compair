@@ -17,10 +17,11 @@ from acj.models import convention
 
 
 def upgrade():
-	op.add_column('AnswersAndComments',
-				sa.Column('type', sa.SmallInteger(), nullable=False, server_default='0', default=0))
+    op.add_column(
+        'AnswersAndComments',
+        sa.Column('type', sa.SmallInteger(), nullable=False, server_default='0', default=0))
 
 
 def downgrade():
-	with op.batch_alter_table('AnswersAndComments', naming_convention=convention) as batch_op:
-		batch_op.drop_column('type')
+    with op.batch_alter_table('AnswersAndComments', naming_convention=convention) as batch_op:
+        batch_op.drop_column('type')

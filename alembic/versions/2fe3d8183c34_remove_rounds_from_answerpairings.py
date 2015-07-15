@@ -15,13 +15,14 @@ import sqlalchemy as sa
 
 from acj.models import convention
 
+
 def upgrade():
-	with op.batch_alter_table('AnswerPairings', naming_convention=convention) as batch_op:
-		batch_op.drop_column('round')
+    with op.batch_alter_table('AnswerPairings', naming_convention=convention) as batch_op:
+        batch_op.drop_column('round')
 
 
 def downgrade():
-	with op.batch_alter_table('AnswerPairings', naming_convention=convention) as batch_op:
-		batch_op.add_column(
-			sa.Column('round', sa.Integer, default=1)
-		)
+    with op.batch_alter_table('AnswerPairings', naming_convention=convention) as batch_op:
+        batch_op.add_column(
+            sa.Column('round', sa.Integer, default=1)
+        )
