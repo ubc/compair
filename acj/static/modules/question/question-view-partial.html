@@ -102,14 +102,14 @@
 	  <li id="answers" ng-class="{active:showTab('answers')}">
 		<a ng-click="setTab('answers')" href="">Answers <span ng-show="canManagePosts || (!question.answer_period && see_answers)">({{answers.length}})</span></a>
 	  </li>
+	  <li ng-show="!canManagePosts" id="comparisons" ng-class="{active:showTab('comparisons')}">
+		<a ng-click="setTab('comparisons')" href="">Your Work</a>
+	  </li>
 	  <li id="comments" ng-class="{active:showTab('help')}">
 		<a ng-click="setTab('help')" href="">Help</a>
 	  </li>
 	  <li ng-show="canManagePosts" id="participation" ng-class="{active:showTab('participation')}">
 		<a ng-click="setTab('participation')" href="">Participation</a>
-	  </li>
-	  <li ng-show="!canManagePosts && comparisons.length > 0" id="comparisons" ng-class="{active:showTab('comparisons')}">
-		<a ng-click="setTab('comparisons')" href="">Your Comparisons</a>
 	  </li>
 	</ul>
 	
@@ -291,6 +291,7 @@
 				<!-- Student Answers Section -->
 				<div class="each-answer clearfix" ng-repeat="answer in answers | filter:groupFilter() | orderBy:order:reverse | notScoredEnd:grade.sortby as results" ng-if="!instructors[answer.post.user.id] && (see_answers || answer.post.user.id == loggedInUserId || canManagePosts)">
 				<!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.post.user.id] && (see_answers || (answer.post.user.id == loggedInUserId && question.answer_period) || canManagePosts)"> -->
+					
 					<!-- Student Answer Metadata Header -->
 					<div class="each-header clearfix">
 						<a ng-href="#/user/{{answer.post.user.id}}">
@@ -417,6 +418,192 @@
 			</div><!-- closes answered show-hide div -->
 		
 		</div><!-- closes answers-tab -->
+
+		<div class="tab-pane" ng-class="{active: showTab('comparisons')}" id="comparisons-tab">
+		
+			<!-- Comparisons Tab Header -->
+			<div class="tab-header">
+				<div>
+					<h2>Your work</h2>
+					<p class="intro-text">Work you have submitted for this assignment appears below.</p>
+				</div>
+			</div>
+			
+			<!-- Student Answer Metadata Header -->
+			<div class="each-evaluation clearfix" ng-repeat="answer in answers | filter: myAnswer()">
+				<div class="each-header clearfix">
+					<a ng-href="#/user/{{answer.post.user.id}}">
+						<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
+					</a>
+					You
+					<strong>answered</strong> on {{answer.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
+					<div class="manager-actions pull-right" ng-if="canManagePosts || (answer.post.user.id == loggedInUserId && question.answer_period && !question.judging_period)">
+						<span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
+							<i class="fa fa-warning"></i>
+							Flagged
+							<a href="" title="Unflag this answer" ng-click="unflagAnswer(answer, courseId, question.id, answer.id)">
+								Unflag?
+							</a>
+						</span>
+						<a href="" confirmation-needed="deleteAnswer(answer, courseId, question.id, answer.id)" keyword="answer">
+							<i class="fa fa-trash-o"></i>
+						</a>
+						<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit">
+							Edit
+						</a>
+					</div>
+				</div>
+				
+				<!-- Student Answer -->
+				<div class="content {{answer.post.id}}">
+					<div mathjax="answer.post.content"
+						 ng-bind-html="answer.post.content">
+					</div>
+					
+					<!-- Student Attachment -->
+					<acj-pdf-inline label="See answer details:"
+						pdfs="answer.post.files" ng-click="revealAnswer(answer.post.id)">
+					</acj-pdf-inline>
+				</div>
+				
+				<!-- Student Answer Replies Section -->
+				<a href="" ng-click="showReplies = !showReplies">
+					<h3 class="reply-heading" ng-if="studentResults.length && (see_answers || canManagePosts)">
+						<i class="fa fa-chevron-down" ng-show="showReplies"></i>
+						<i class="fa fa-chevron-right" ng-hide="showReplies"></i>
+						{{studentResults.length}}
+						<span ng-if="studentResults.length == 1">reply</span>
+						<span ng-if="studentResults.length > 1">replies</span>
+						to this answer
+						<span ng-if="canManagePosts || answer.post.user.id == loggedInUserId">({{ answer.private_comments_count }} private, {{ answer.public_comments_count }} public)</span>
+					</h3>
+				</a>
+
+				<div ng-show="showReplies">
+
+					<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer) as studentResults" class="each-reply" ng-if="see_answers || canManagePosts">
+
+						<hr ng-hide="$first" />
+
+						<!-- Student Reply Metadata Header -->
+						<div class="each-header clearfix">
+							<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
+								<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
+							</a>
+							<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
+								{{comment.postsforcomments.post.user.displayname}}
+								<span ng-if="canManagePosts && comment.postsforcomments.post.user.fullname">
+									({{comment.postsforcomments.post.user.fullname}})
+								</span>
+							</a>
+							<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">
+								{{instructors[comment.postsforcomments.post.user.id]}}
+							</span>
+							<strong ng-if="comment.evaluation || comment.type == 0">gave private feedback</strong>
+							<strong ng-if="comment.selfeval">self-evaluated</strong>
+							<strong ng-if="!comment.evaluation && !comment.selfeval && comment.type != 0">replied <span ng-if="canManagePosts || answer.post.user.id == loggedInUserId" class="label label-info">Public</span></strong>
+							on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
+							<div class="manager-actions pull-right" ng-if="canManagePosts || (comment.postsforcomments.post.user.id == loggedInUserId && !(comment.selfeval || comment.evaluation))">
+								<a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
+									<i class="fa fa-trash-o"></i>
+								</a>
+								<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
+									Edit
+								</a>
+							</div>
+						</div>
+
+						<!-- Student Reply -->
+						<div class="content" mathjax="comment.content"
+							 ng-bind-html="comment.content">
+						</div>
+
+					</div><!-- closes each-reply (student) -->
+
+				</div><!-- closes toggle div -->
+				
+			</div>
+			
+			<!-- Comparisons Section -->
+			<div class="each-evaluation" ng-repeat="comment in comparisons">
+				
+				<!-- Comparison Header -->
+				<div class="each-header">
+					<a ng-href="#/user/{{ comment[0].user_id }}">
+						<img src="//www.gravatar.com/avatar/{{ comment[0].avatar }}?s=32&d=retro" />
+					</a>
+					You
+					<strong>submitted</strong> on {{ comment[0].created | amDateFormat: 'MMM D @ h:mm a'}}:
+				</div>
+				
+				<div ng-if="!comment[0].selfeval">
+					
+					<div ng-repeat="criterion in comment">
+						
+						<h5 class="content">Comparison for "{{evalcriteria[criterion.criteriaandquestions_id]}}"</h5>
+						
+						<div class="content" mathjax="criterion.content"
+							ng-bind-html="criterion.content">
+						</div>
+
+						<div class="row">
+							<div class="col-md-6">
+								<div class="answer-choice clearfix">
+									<h4 class="text-center">Odd-Numbered Answer
+										<span ng-show="criterion.winner == criterion.answer1.id">(Chosen)</span>
+									</h4>
+									<div mathjax="ans[criterion.answer1.id].content" ng-if="ans[criterion.answer1.id]"
+										 ng-bind-html="ans[criterion.answer1.id].content"></div>
+									<div ng-if="!ans[criterion.answer1.id]" ng-bind-html="deletedAnsMsg"></div>
+									<!-- Attachments -->
+									<acj-pdf-inline label="See details:" pdfs="ans[criterion.answer1.id].file"></acj-pdf-inline>
+								</div>
+							</div>
+							<div class="col-md-6">
+							<div class="answer-choice clearfix">
+									<h4 class="text-center">Even-Numbered Answer
+										<span ng-show="criterion.winner == criterion.answer2.id">(Chosen)</span>
+									</h4>
+									<div mathjax="ans[criterion.answer2.id].content" ng-if="ans[criterion.answer2.id]"
+										 ng-bind-html="ans[criterion.answer2.id].content"></div>
+									<div ng-if="!ans[criterion.answer2.id]" ng-bind-html="deletedAnsMsg"></div>
+									<!-- Attachments -->
+									<acj-pdf-inline label="See details:" pdfs="ans[criterion.answer2.id].file"></acj-pdf-inline>
+								</div>
+							</div>
+						</div>
+						
+					</div>
+					
+					<h5 class="content">Feedback for Odd-Numbered Answer</h5>
+					
+					<!-- feedback for odd-numbered answer -->
+					<div class="content" mathjax="comment[0].answer1.feedback"
+						ng-bind-html="comment[0].answer1.feedback">
+					</div>
+					
+					<h5 class="content">Feedback for Even-Numbered Answer</h5>
+					
+					<!-- feedback for even-numbered answer -->
+					<div class="content" mathjax="comment[0].answer2.feedback"
+						ng-bind-html="comment[0].answer2.feedback"></div>
+						
+				</div>
+				
+				<div ng-if="comment[0].selfeval">
+					<h5 class="content">Self-Evaluation</h5>
+					<div class="content" mathjax="comment[0].content"
+						ng-bind-html="comment[0].content">
+					</div>
+				</div>
+				
+			</div><!-- closes each-evaluation -->
+			
+			<div class="each-evaluation" ng-show="!answered && comparisons.length < 1">
+				<p>(Nothing saved under your name yet.)</p>
+			</div>
+			
+		</div><!-- closes comparisons-tab -->
 		
 		<div class="tab-pane" ng-class="{active: showTab('help')}" id="comments-tab">
 		
@@ -487,129 +674,6 @@
 			</div><!-- closes each-comment -->
 			
 		</div><!-- closes comments-tab -->
-
-		<div class="tab-pane" ng-class="{active: showTab('comparisons')}" id="comparisons-tab">
-		
-			<!-- Comparisons Tab Header -->
-			<div class="tab-header">
-				<div>
-					<h2>Your comparisons</h2>
-					<p class="intro-text">Comparisons you have submitted for this assignment appear below.</p>
-				</div>
-			</div>
-
-			<div class="each-answer clearfix" ng-repeat="answer in answers | filter: myAnswer()">
-				<div class="each-header clearfix">
-					<a ng-href="#/user/{{answer.post.user.id}}">
-						<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
-					</a>
-					You
-					<strong>answered</strong> on {{answer.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
-					<div class="manager-actions pull-right" ng-if="canManagePosts || (answer.post.user.id == loggedInUserId && question.answer_period && !question.judging_period)">
-						<span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
-							<i class="fa fa-warning"></i>
-							Flagged
-							<a href="" title="Unflag this answer" ng-click="unflagAnswer(answer, courseId, question.id, answer.id)">
-								Unflag?
-							</a>
-						</span>
-						<a href="" confirmation-needed="deleteAnswer(answer, courseId, question.id, answer.id)" keyword="answer">
-							<i class="fa fa-trash-o"></i>
-						</a>
-						<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/edit">
-							Edit
-						</a>
-					</div>
-				</div>
-				<div class="content {{answer.post.id}}" get-height>
-					<div mathjax="answer.post.content"
-						 ng-bind-html="answer.post.content">
-					</div>
-					<!-- Student Attachment -->
-					<acj-pdf-inline label="See answer details:"
-						pdfs="answer.post.files" ng-click="revealAnswer(answer.post.id)">
-					</acj-pdf-inline>
-				</div>
-			</div>
-			
-			<!-- Comparisons Section -->
-			<div class="each-evaluation" ng-repeat="comment in comparisons">
-				
-				<!-- Comparison Header -->
-				<div class="each-header">
-					<a ng-href="#/user/{{ comment[0].user_id }}">
-						<img src="//www.gravatar.com/avatar/{{ comment[0].avatar }}?s=32&d=retro" />
-					</a>
-					You
-					<strong>submitted</strong> on {{ comment[0].created | amDateFormat: 'MMM D @ h:mm a'}}:
-				</div>
-				
-				<div ng-if="!comment[0].selfeval">
-					
-					<div ng-repeat="criterion in comment">
-						
-						<h5 class="content">Comparison for "{{evalcriteria[criterion.criteriaandquestions_id]}}"</h5>
-						
-						<div class="content" mathjax="criterion.content"
-							ng-bind-html="criterion.content">
-						</div>
-
-						<div class="row">
-							<div class="col-md-6">
-								<div class="answer-choice clearfix">
-									<h4 class="text-center">Odd-Numbered Answer
-										<span ng-show="criterion.winner == criterion.answer1.id">(Chosen)</span>
-									</h4>
-									<div mathjax="ans[criterion.answer1.id].content" ng-if="ans[criterion.answer1.id]"
-										 ng-bind-html="ans[criterion.answer1.id].content"></div>
-									<div ng-if="!ans[criterion.answer1.id]" ng-bind-html="deletedAnsMsg"></div>
-									<!-- Attachments -->
-									<acj-pdf-inline label="See details:" pdfs="ans[criterion.answer1.id].file"></acj-pdf-inline>
-								</div>
-							</div>
-							<div class="col-md-6">
-							<div class="answer-choice clearfix">
-									<h4 class="text-center">Even-Numbered Answer
-										<span ng-show="criterion.winner == criterion.answer2.id">(Chosen)</span>
-									</h4>
-									<div mathjax="ans[criterion.answer2.id].content" ng-if="ans[criterion.answer2.id]"
-										 ng-bind-html="ans[criterion.answer2.id].content"></div>
-									<div ng-if="!ans[criterion.answer2.id]" ng-bind-html="deletedAnsMsg"></div>
-									<!-- Attachments -->
-									<acj-pdf-inline label="See details:" pdfs="ans[criterion.answer2.id].file"></acj-pdf-inline>
-								</div>
-							</div>
-						</div>
-						
-					</div>
-
-
-					
-					<h5 class="content">Feedback for Odd-Numbered Answer</h5>
-					
-					<!-- feedback for odd-numbered answer -->
-					<div class="content" mathjax="comment[0].answer1.feedback"
-						ng-bind-html="comment[0].answer1.feedback">
-					</div>
-					
-					<h5 class="content">Feedback for Even-Numbered Answer</h5>
-					
-					<!-- feedback for even-numbered answer -->
-					<div class="content" mathjax="comment[0].answer2.feedback"
-						ng-bind-html="comment[0].answer2.feedback"></div>
-						
-				</div>
-				
-				<div ng-if="comment[0].selfeval">
-					<h5 class="content">Self-Evaluation</h5>
-					<div class="content" mathjax="comment[0].content"
-						ng-bind-html="comment[0].content">
-					</div>
-				</div>
-				
-			</div><!-- closes each-evaluation -->
-			
-		</div><!-- closes comparisons-tab -->
 		
 		<div class="tab-pane" ng-class="{active: showTab('participation')}" id="participation-tab" ng-if="canManagePosts && showTab('participation')">
 			<ng-include src="'modules/gradebook/gradebook-partial.html'"></ng-include>
