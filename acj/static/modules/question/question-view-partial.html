@@ -425,10 +425,7 @@
 				<div class="row">
 					<div class="col-sm-9">
 						<h2>Help for this assignment</h2>
-						<p class="intro-text">Ask or answer a question about the assignment by adding a comment here.</p>
-						<p ng-if="!question.comments_count">
-							No help comments have been left for this assignment yet. <span class="hidden-xs">Would you like to <a href="#/course/{{courseId}}/question/{{question.id}}/comment/create">add a comment</a> for this assignment?</span>
-						</p>
+						<p class="intro-text less-margin">Ask or answer a question about the assignment by adding a comment here.</p>
 					</div>
 					<div class="col-sm-3 text-right comment-btn">
 						<a href="#/course/{{courseId}}/question/{{question.id}}/comment/create" class="btn btn-primary">
@@ -436,6 +433,19 @@
 						</a>
 					</div>
 				</div>
+			</div>
+			
+			<div class="each-comment">
+				<blockquote>
+					<p>For general technical issues, please try:</p>
+					<ul>
+						<li>Enabling Java and cookies in your browser settings</li>
+						<li>Disabling extra plugins and add-ons for your browser</li>
+						<li>Clearing your browser cache</li>
+						<li>Using a different browser (supported browsers include Firefox, Chrome, Safari, and IE9+)</li>
+						<li>Logging out and logging back in</li>
+					</ul>
+				</blockquote>
 			</div>
 			
 			<!-- Comments Section -->
