@@ -41,19 +41,21 @@
 				{{ comment[0].name }} <i class="fa fa-arrow-down"></i>
 			</h4>
 
-			<div ng-if="results[$index][0].user_id != results[$index-1][0].user_id">
-				<p class="show-answers"><a href="" ng-click="showMyAnswer = !showMyAnswer; answers();">
-					<i ng-show="showMyAnswer" class="fa fa-chevron-down"></i>
-					<i ng-hide="showMyAnswer" class="fa fa-chevron-right"></i>
-					Show {{ comment[0].name }}'s answers
+			<div class="evaluator-answer" ng-if="results[$index][0].user_id != results[$index-1][0].user_id">
+				<p><a class="btn btn-default" href="" ng-click="showMyAnswer = !showMyAnswer; answers();">
+					<span ng-show="showMyAnswer">Remove</span>
+					<span ng-hide="showMyAnswer">Add</span>
+					Student's Answer
 				</a></p>
 				<div ng-show="showMyAnswer">
-					<a ng-href="#/user/{{ comment[0].user_id }}">
-						<img src="//www.gravatar.com/avatar/{{ comment[0].avatar }}?s=32&d=retro" />
-					</a>
-					<a ng-href="#/user/{{ comment[0].user_id }}">{{ comment[0].name }}</a>
-					<strong>answered</strong> on {{ ans[userToAns[comment[0].user_id]].post.created | amDateFormat: 'MMM D @ h:mm a'}}:
-					<div mathjax="ans[userToAns[comment[0].user_id]].post.content" ng-if="userToAns[comment[0].user_id]"
+					<div ng-if="userToAns[comment[0].user_id]">
+						<a ng-href="#/user/{{ comment[0].user_id }}">
+							<img src="//www.gravatar.com/avatar/{{ comment[0].avatar }}?s=32&d=retro" />
+						</a>
+						<a ng-href="#/user/{{ comment[0].user_id }}">{{ comment[0].name }}</a>
+						<strong>answered</strong> on {{ ans[userToAns[comment[0].user_id]].post.created | amDateFormat: 'MMM D @ h:mm a'}}:
+					</div>
+					<div class="content" mathjax="ans[userToAns[comment[0].user_id]].post.content" ng-if="userToAns[comment[0].user_id]"
 						 ng-bind-html="ans[userToAns[comment[0].user_id]].post.content"></div>
 					<div ng-if="!userToAns[comment[0].user_id]" ng-bind-html="noAnsMsg"></div>
 					<acj-pdf-inline ng-if="userToAns[comment[0].user_id]" label="See details:" pdfs="ans[userToAns[comment[0].user_id]].post.files"></acj-pdf-inline>

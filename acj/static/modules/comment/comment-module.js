@@ -245,7 +245,7 @@ module.controller(
 		$scope.courseId = courseId;
 		$scope.questionId = questionId;
 		$scope.deletedAnsMsg = '<i>(This answer has been deleted.)</i>';
-		$scope.noAnsMsg = '<i>(No answer has been submitted.)</i>';
+		$scope.noAnsMsg = '<p><i>(No answer has been submitted by this student.)</i></p>';
 
 		var allStudents = {};
 		var userIds = {};
