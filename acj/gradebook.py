@@ -59,8 +59,8 @@ class GradebookAPI(Resource):
         # get students judgements counts for this question
         judgements = Users.query. \
             with_entities(Users.id, func.count(Judgements.id).label('judgement_count')). \
-            outerjoin(Judgements). \
-            outerjoin(AnswerPairings, and_(
+            join(Judgements). \
+            join(AnswerPairings, and_(
                 AnswerPairings.id == Judgements.answerpairings_id,
                 AnswerPairings.questions_id == question_id)). \
             filter(Users.id.in_(student_ids)).\
@@ -71,41 +71,49 @@ class GradebookAPI(Resource):
                                       for (user_id, judgement_count) in judgements}
 
         # count number of answers each student has submitted
-        answers = Users.query. \
-            with_entities(Users.id, func.count(PostsForAnswers.id).label('answer_count')). \
-            outerjoin(Posts). \
-            outerjoin(PostsForAnswers, and_(
-                PostsForAnswers.posts_id == Posts.id,
-                PostsForAnswers.questions_id == question_id)). \
-            filter(Users.id.in_(student_ids)). \
-            group_by(Users.id).all()
-
-        num_answers_per_student = dict(answers)
+        # answers = Users.query. \
+        #     with_entities(Users.id, func.count(PostsForAnswers.id).label('answer_count')). \
+        #     outerjoin(Posts). \
+        #     outerjoin(PostsForAnswers, and_(
+        #         PostsForAnswers.posts_id == Posts.id,
+        #         PostsForAnswers.questions_id == question_id)). \
+        #     filter(Users.id.in_(student_ids)). \
+        #     group_by(Users.id).all()
+        #
+        # num_answers_per_student = dict(answers)
 
         # find out the scores that students get
         criteria_ids = [c.id for c in question.criteria]
-        scores_by_user = Users.query. \
-            with_entities(Users.id, PostsForAnswers.flagged, Scores.criteriaandquestions_id, Scores.normalized_score). \
-            outerjoin(Posts). \
-            join(PostsForAnswers, and_(
-                PostsForAnswers.posts_id == Posts.id,
-                PostsForAnswers.questions_id == question_id)). \
+        stmt = PostsForAnswers.query. \
+            join(Posts). \
+            with_entities(Posts.users_id, PostsForAnswers.flagged, Scores.criteriaandquestions_id, Scores.normalized_score.label('ns')). \
             outerjoin(Scores, and_(
                 PostsForAnswers.id == Scores.answers_id,
                 Scores.criteriaandquestions_id.in_(criteria_ids))). \
+            filter(PostsForAnswers.questions_id == question_id). \
+            subquery()
+
+        scores_by_user = Users.query. \
+            with_entities(Users.id, stmt.c.flagged, stmt.c.criteriaandquestions_id, stmt.c.ns). \
+            outerjoin(stmt, Users.id == stmt.c.users_id). \
             filter(Users.id.in_(student_ids)). \
             all()
 
         # process the results into dicts
-        scores_by_user_id = {}
-        flagged_by_user_id = {}
         init_scores = {c.id: 'Not Evaluated' for c in question.criteria}
+        scores_by_user_id = {student_id: copy.deepcopy(init_scores) for student_id in student_ids}
+        flagged_by_user_id = {}
+        num_answers_per_student = {}
         for score in scores_by_user:
-            scores_by_user_id[score[0]] = copy.deepcopy(init_scores)
-            if score[2] is not None:
-                # scores_by_user_id[score[0]][score[2]] = normalize_score(score[3], max_scores.get(score[2], 0), 3)
-                scores_by_user_id[score[0]][score[2]] = score[3]
-            flagged_by_user_id[score[0]] = 'Yes' if score[1] else 'No'
+            # answer flag exists means there is an answer from a student
+            if score[1] is not None:
+                flagged_by_user_id[score[0]] = 'Yes' if score[1] else 'No'
+                num_answers_per_student[score[0]] = 1
+                if score[2] is not None:
+                    scores_by_user_id[score[0]][score[2]] = round(score[3], 3)
+            else:
+                # no answer from the student
+                scores_by_user_id[score[0]] = {c.id: 'No Answer' for c in question.criteria}
 
         include_self_eval = False
         num_selfeval_per_student = {}
@@ -143,8 +151,8 @@ class GradebookAPI(Resource):
                 'displayname': student.displayname,
                 'firstname': student.firstname,
                 'lastname': student.lastname,
-                'num_answers': num_answers_per_student[student.id],
-                'num_judgements': num_judgements_per_student[student.id],
+                'num_answers': num_answers_per_student.get(student.id, 0),
+                'num_judgements': num_judgements_per_student.get(student.id, 0),
                 'scores': scores_by_user_id.get(student.id, no_answer),
                 'flagged': flagged_by_user_id.get(student.id, 'No Answer')
             }
