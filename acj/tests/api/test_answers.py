@@ -43,7 +43,7 @@ class AnswersAPITests(ACJTestCase):
         expected_answers = PostsForAnswers.query.filter_by(questions_id=self.question.id).all()
         for i, expected in enumerate(expected_answers):
             actual = actual_answers[i]
-            self.assertEqual(expected.post.content, actual['post']['content'])
+            self.assertEqual(expected.post.content, actual['content'])
 
     def test_create_answer(self):
         # test login required
@@ -126,8 +126,8 @@ class AnswersAPITests(ACJTestCase):
         rv = self.client.get(self.base_url + '/' + str(answer.id))
         self.assert200(rv)
         self.assertEqual(question_id, rv.json['questions_id'])
-        self.assertEqual(answer.post.users_id, rv.json['post']['user']['id'])
-        self.assertEqual(answer.post.content, rv.json['post']['content'])
+        self.assertEqual(answer.post.users_id, rv.json['user_id'])
+        self.assertEqual(answer.post.content, rv.json['content'])
         self.logout()
 
         # test authorized teaching assistant
@@ -135,8 +135,8 @@ class AnswersAPITests(ACJTestCase):
         rv = self.client.get(self.base_url + '/' + str(answer.id))
         self.assert200(rv)
         self.assertEqual(question_id, rv.json['questions_id'])
-        self.assertEqual(answer.post.users_id, rv.json['post']['user']['id'])
-        self.assertEqual(answer.post.content, rv.json['post']['content'])
+        self.assertEqual(answer.post.users_id, rv.json['user_id'])
+        self.assertEqual(answer.post.content, rv.json['content'])
         self.logout()
 
         # test authorized instructor
@@ -144,8 +144,8 @@ class AnswersAPITests(ACJTestCase):
         rv = self.client.get(self.base_url + '/' + str(answer.id))
         self.assert200(rv)
         self.assertEqual(question_id, rv.json['questions_id'])
-        self.assertEqual(answer.post.users_id, rv.json['post']['user']['id'])
-        self.assertEqual(answer.post.content, rv.json['post']['content'])
+        self.assertEqual(answer.post.users_id, rv.json['user_id'])
+        self.assertEqual(answer.post.content, rv.json['content'])
         self.logout()
 
     def test_edit_answer(self):
@@ -209,7 +209,7 @@ class AnswersAPITests(ACJTestCase):
             content_type='application/json')
         self.assert200(rv)
         self.assertEqual(answer.id, rv.json['id'])
-        self.assertEqual('This is an edit', rv.json['post']['content'])
+        self.assertEqual('This is an edit', rv.json['content'])
         self.logout()
 
         # test edit by user that can manage posts
@@ -221,7 +221,7 @@ class AnswersAPITests(ACJTestCase):
             content_type='application/json')
         self.assert200(rv)
         self.assertEqual(answer.id, rv.json['id'])
-        self.assertEqual('This is another edit', rv.json['post']['content'])
+        self.assertEqual('This is another edit', rv.json['content'])
         self.logout()
 
     def test_delete_answer(self):
@@ -280,7 +280,7 @@ class AnswersAPITests(ACJTestCase):
         self.assert200(rv)
         self.assertEqual(1, len(rv.json['answer']))
         self.assertEqual(answer.id, rv.json['answer'][0]['id'])
-        self.assertEqual(answer.post.content, rv.json['answer'][0]['post']['content'])
+        self.assertEqual(answer.post.content, rv.json['answer'][0]['content'])
         self.logout()
 
         self.login(self.data.get_authorized_instructor().username)

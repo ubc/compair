@@ -194,20 +194,20 @@
 			<div class="all-answers">
 			
 				<!-- Instructor Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="answer in answers | filter:adminFilter()" ng-if="instructors[answer.post.user.id] && (see_answers || canManagePosts)">
+				<div class="each-answer clearfix" ng-repeat="answer in answers | filter:adminFilter()" ng-if="instructors[answer.user_id] && (see_answers || canManagePosts)">
 					
 					<!-- Instructor Answer Metadata Header -->
 					<div class="each-header clearfix">
-						<a ng-href="#/user/{{answer.post.user.id}}">
-							<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
+						<a ng-href="#/user/{{answer.user_id}}">
+							<img src="//www.gravatar.com/avatar/{{answer.user_avatar}}?s=32&d=retro" />
 						</a>
-						<a ng-href="#/user/{{answer.post.user.id}}">
-							{{answer.post.user.displayname}}
-							<span ng-if="canManagePosts && answer.post.user.fullname">
-								({{answer.post.user.fullname}})
+						<a ng-href="#/user/{{answer.user_id}}">
+							{{answer.user_displayname}}
+							<span ng-if="canManagePosts && answer.user_fullname">
+								({{answer.user_fullname}})
 							</span>
 						</a>
-						<span class="label label-info" ng-if="instructors[answer.post.user.id]">{{instructors[answer.post.user.id]}}&nbsp;</span>
+						<span class="label label-info" ng-if="instructors[answer.user_id]">{{instructors[answer.user_id]}}&nbsp;</span>
 						<strong>said</strong>:
 						<div class="manager-actions pull-right" ng-if="canManagePosts">
 							<a href="" confirmation-needed="deleteAnswer(answer, courseId, question.id, answer.id)" keyword="instructor answer">
@@ -221,12 +221,12 @@
 					
 					<!-- Instructor Answer -->
 					<div class="content instructor-answer">
-						<div mathjax="answer.post.content"
-							ng-bind-html="answer.post.content">
+						<div mathjax="answer.content"
+							ng-bind-html="answer.content">
 						</div>
 						<!-- Instructor Attachment -->
 						<acj-pdf-inline label="See assignment details:" 
-							pdfs="answer.post.files">
+							pdfs="answer.files">
 						</acj-pdf-inline>
 					</div>
 					
@@ -250,20 +250,20 @@
 							
 							<!-- Instructor Reply Metadata Header -->
 							<div class="each-header clearfix">
-								<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
-									<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
+								<a ng-href="#/user/{{comment.user_id}}">
+									<img src="//www.gravatar.com/avatar/{{comment.user_avatar}}?s=32&d=retro" />
 								</a>
-								<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
-									{{comment.postsforcomments.post.user.displayname}}
-									<span ng-if="canManagePosts && comment.postsforcomments.post.user.fullname">
-										({{comment.postsforcomments.post.user.fullname}})
+								<a ng-href="#/user/{{comment.user_id}}">
+									{{comment.user_displayname}}
+									<span ng-if="canManagePosts && comment.user_fullname">
+										({{comment.user_fullname}})
 									</span>
 								</a>
-								<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">
-									{{instructors[comment.postsforcomments.post.user.id]}} 
+								<span class="label label-info" ng-if="instructors[comment.user_id]">
+									{{instructors[comment.user_id]}}
 								</span>
-								<strong>replied</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
-								<div class="manager-actions pull-right" ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId">
+								<strong>replied</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
+								<div class="manager-actions pull-right" ng-if="canManagePosts || comment.user_id == loggedInUserId">
 									<a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
 										<i class="fa fa-trash-o"></i>
 									</a>
@@ -289,25 +289,24 @@
 				</div><!-- closes each-answer (instructor) -->
 				
 				<!-- Student Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="answer in answers | filter:groupFilter() | orderBy:order:reverse | notScoredEnd:grade.sortby as results" ng-if="!instructors[answer.post.user.id] && (see_answers || answer.post.user.id == loggedInUserId || canManagePosts)">
-				<!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.post.user.id] && (see_answers || (answer.post.user.id == loggedInUserId && question.answer_period) || canManagePosts)"> -->
-					
+				<div class="each-answer clearfix" ng-repeat="answer in answers | filter:groupFilter() | orderBy:order:reverse | notScoredEnd:grade.sortby as results" ng-if="!instructors[answer.user_id] && (see_answers || answer.user_id == loggedInUserId || canManagePosts)">
+				<!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.user_id] && (see_answers || (answer.user_id == loggedInUserId && question.answer_period) || canManagePosts)"> -->
 					<!-- Student Answer Metadata Header -->
 					<div class="each-header clearfix">
-						<a ng-href="#/user/{{answer.post.user.id}}">
-							<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
+						<a ng-href="#/user/{{answer.user_id}}">
+							<img src="//www.gravatar.com/avatar/{{answer.user_avatar}}?s=32&d=retro" />
 						</a>
-						<a ng-href="#/user/{{answer.post.user.id}}">
-							{{answer.post.user.displayname}}
-							<span ng-if="!canManagePosts && answer.post.user.id == loggedInUserId">
+						<a ng-href="#/user/{{answer.user_id}}">
+							{{answer.user_displayname}}
+							<span ng-if="!canManagePosts && answer.user_id == loggedInUserId">
 								(You)
 							</span>
-							<span ng-if="canManagePosts && answer.post.user.fullname">
-								({{answer.post.user.fullname}})
+							<span ng-if="canManagePosts && answer.user_fullname">
+								({{answer.user_fullname}})
 							</span>
 						</a>
-						<strong>answered</strong> on {{answer.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
-						<div class="manager-actions pull-right" ng-if="canManagePosts || (answer.post.user.id == loggedInUserId && question.answer_period && !question.judging_period)">
+						<strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
+						<div class="manager-actions pull-right" ng-if="canManagePosts || (answer.user_id == loggedInUserId && question.answer_period && !question.judging_period)">
 							<span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
 								<i class="fa fa-warning"></i>
 								Flagged
@@ -325,17 +324,17 @@
 					</div>
 
 					<!-- Student Answer -->
-					<div class="content {{answer.post.id}}" get-height>
-						<div mathjax="answer.post.content"
-							 ng-bind-html="answer.post.content">
+					<div class="content {{answer.posts_id}}" get-height>
+						<div mathjax="answer.content"
+							 ng-bind-html="answer.content">
 						</div>
 						<!-- Student Attachment -->
 						<acj-pdf-inline label="See answer details:"
-							pdfs="answer.post.files" ng-click="revealAnswer(answer.post.id)">
+							pdfs="answer.files" ng-click="revealAnswer(answer.posts_id)">
 						</acj-pdf-inline>
 					</div>
 					<!-- Student Answer Read More Button (not used for instructor answers) -->
-					<p ng-show="showReadMore" class="read-more" ng-click="revealAnswer(answer.post.id)"><a href="" class="btn btn-sm btn-default">Read More...</a></p>
+					<p ng-show="showReadMore" class="read-more" ng-click="revealAnswer(answer.posts_id)"><a href="" class="btn btn-sm btn-default">Read More...</a></p>
 					<!-- <p ng-show="!showReadMore">No More To Read!!! ({{thisHeight}})</p> -->
 
 					<!-- Student Score (not used for instructor answers) -->
@@ -358,7 +357,7 @@
 							<span ng-if="studentResults.length == 1">reply</span>
 							<span ng-if="studentResults.length > 1">replies</span>
 							to this answer
-							<span ng-if="canManagePosts || answer.post.user.id == loggedInUserId">({{ answer.private_comments_count }} private, {{ answer.public_comments_count }} public)</span>
+							<span ng-if="canManagePosts || answer.user_id == loggedInUserId">({{ answer.private_comments_count }} private, {{ answer.public_comments_count }} public)</span>
 						</h3>
 					</a>
 
@@ -370,23 +369,23 @@
 
 							<!-- Student Reply Metadata Header -->
 							<div class="each-header clearfix">
-								<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
-									<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
+								<a ng-href="#/user/{{comment.user_id}}">
+									<img src="//www.gravatar.com/avatar/{{comment.user_avatar}}?s=32&d=retro" />
 								</a>
-								<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
-									{{comment.postsforcomments.post.user.displayname}}
-									<span ng-if="canManagePosts && comment.postsforcomments.post.user.fullname">
-										({{comment.postsforcomments.post.user.fullname}})
+								<a ng-href="#/user/{{comment.user_id}}">
+									{{comment.user_displayname}}
+									<span ng-if="canManagePosts && comment.user_fullname">
+										({{comment.user_fullname}})
 									</span>
 								</a>
-								<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">
-									{{instructors[comment.postsforcomments.post.user.id]}}
+								<span class="label label-info" ng-if="instructors[comment.user_id]">
+									{{instructors[comment.user_id]}}
 								</span>
 								<strong ng-if="comment.evaluation || comment.type == 0">gave private feedback</strong>
 								<strong ng-if="comment.selfeval">self-evaluated</strong>
-								<strong ng-if="!comment.evaluation && !comment.selfeval && comment.type != 0">replied <span ng-if="canManagePosts || answer.post.user.id == loggedInUserId" class="label label-info">Public</span></strong>
-								on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
-								<div class="manager-actions pull-right" ng-if="canManagePosts || (comment.postsforcomments.post.user.id == loggedInUserId && !(comment.selfeval || comment.evaluation))">
+								<strong ng-if="!comment.evaluation && !comment.selfeval && comment.type != 0">replied <span ng-if="canManagePosts || answer.user_id == loggedInUserId" class="label label-info">Public</span></strong>
+								on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
+								<div class="manager-actions pull-right" ng-if="canManagePosts || (comment.user_id == loggedInUserId && !(comment.selfeval || comment.evaluation))">
 									<a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
 										<i class="fa fa-trash-o"></i>
 									</a>
@@ -432,12 +431,12 @@
 			<!-- Student Answer Metadata Header -->
 			<div class="each-evaluation clearfix" ng-repeat="answer in answers | filter: myAnswer()">
 				<div class="each-header clearfix">
-					<a ng-href="#/user/{{answer.post.user.id}}">
-						<img src="//www.gravatar.com/avatar/{{answer.post.user.avatar}}?s=32&d=retro" />
+					<a ng-href="#/user/{{answer.user_id}}">
+						<img src="//www.gravatar.com/avatar/{{answer.user_avatar}}?s=32&d=retro" />
 					</a>
 					You
-					<strong>answered</strong> on {{answer.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
-					<div class="manager-actions pull-right" ng-if="canManagePosts || (answer.post.user.id == loggedInUserId && question.answer_period && !question.judging_period)">
+					<strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
+					<div class="manager-actions pull-right" ng-if="canManagePosts || (answer.user_id == loggedInUserId && question.answer_period && !question.judging_period)">
 						<span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
 							<i class="fa fa-warning"></i>
 							Flagged
@@ -455,14 +454,14 @@
 				</div>
 				
 				<!-- Student Answer -->
-				<div class="content {{answer.post.id}}">
-					<div mathjax="answer.post.content"
-						 ng-bind-html="answer.post.content">
+				<div class="content {{answer.post_id}}">
+					<div mathjax="answer.content"
+						 ng-bind-html="answer.content">
 					</div>
 					
 					<!-- Student Attachment -->
 					<acj-pdf-inline label="See answer details:"
-						pdfs="answer.post.files" ng-click="revealAnswer(answer.post.id)">
+						pdfs="answer.files" ng-click="revealAnswer(answer.posts_id)">
 					</acj-pdf-inline>
 				</div>
 				
@@ -475,7 +474,7 @@
 						<span ng-if="studentResults.length == 1">reply</span>
 						<span ng-if="studentResults.length > 1">replies</span>
 						to this answer
-						<span ng-if="canManagePosts || answer.post.user.id == loggedInUserId">({{ answer.private_comments_count }} private, {{ answer.public_comments_count }} public)</span>
+						<span ng-if="canManagePosts || answer.user_id == loggedInUserId">({{ answer.private_comments_count }} private, {{ answer.public_comments_count }} public)</span>
 					</h3>
 				</a>
 
@@ -487,23 +486,23 @@
 
 						<!-- Student Reply Metadata Header -->
 						<div class="each-header clearfix">
-							<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
-								<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
+							<a ng-href="#/user/{{comment.user_id}}">
+								<img src="//www.gravatar.com/avatar/{{comment.user_avatar}}?s=32&d=retro" />
 							</a>
-							<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
-								{{comment.postsforcomments.post.user.displayname}}
-								<span ng-if="canManagePosts && comment.postsforcomments.post.user.fullname">
-									({{comment.postsforcomments.post.user.fullname}})
+							<a ng-href="#/user/{{comment.user_id}}">
+								{{comment.user_displayname}}
+								<span ng-if="canManagePosts && comment.user_fullname">
+									({{comment.user_fullname}})
 								</span>
 							</a>
-							<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">
-								{{instructors[comment.postsforcomments.post.user.id]}}
+							<span class="label label-info" ng-if="instructors[comment.user_id]">
+								{{instructors[comment.user_id]}}
 							</span>
 							<strong ng-if="comment.evaluation || comment.type == 0">gave private feedback</strong>
 							<strong ng-if="comment.selfeval">self-evaluated</strong>
-							<strong ng-if="!comment.evaluation && !comment.selfeval && comment.type != 0">replied <span ng-if="canManagePosts || answer.post.user.id == loggedInUserId" class="label label-info">Public</span></strong>
-							on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
-							<div class="manager-actions pull-right" ng-if="canManagePosts || (comment.postsforcomments.post.user.id == loggedInUserId && !(comment.selfeval || comment.evaluation))">
+							<strong ng-if="!comment.evaluation && !comment.selfeval && comment.type != 0">replied <span ng-if="canManagePosts || answer.user_id == loggedInUserId" class="label label-info">Public</span></strong>
+							on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
+							<div class="manager-actions pull-right" ng-if="canManagePosts || (comment.user_id == loggedInUserId && !(comment.selfeval || comment.evaluation))">
 								<a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
 									<i class="fa fa-trash-o"></i>
 								</a>
@@ -640,23 +639,23 @@
 				
 				<!-- Comment Metadata Header -->
 				<div class="each-header clearfix">
-					<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
-						<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
+					<a ng-href="#/user/{{comment.user_id}}">
+						<img src="//www.gravatar.com/avatar/{{comment.user_avatar}}?s=32&d=retro" />
 					</a>
-					<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
-						{{comment.postsforcomments.post.user.displayname}}
-						<span ng-if="!canManagePosts && comment.postsforcomments.post.user.id == loggedInUserId">
+					<a ng-href="#/user/{{comment.user_id}}">
+						{{comment.user_displayname}}
+						<span ng-if="!canManagePosts && comment.user_id == loggedInUserId">
 							(You)
 						</span>
-						<span ng-if="canManagePosts && comment.postsforcomments.post.user.fullname">
-							({{comment.postsforcomments.post.user.fullname}})
+						<span ng-if="canManagePosts && comment.user_fullname">
+							({{comment.user_fullname}})
 						</span>
 					</a>
-					<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">
-						{{instructors[comment.postsforcomments.post.user.id]}} 
+					<span class="label label-info" ng-if="instructors[comment.user_id]">
+						{{instructors[comment.user_id]}} 
 					</span>
-					<strong>commented</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
-					<div class="manager-actions pull-right" ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId">
+					<strong>commented</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
+					<div class="manager-actions pull-right" ng-if="canManagePosts || comment.user_id == loggedInUserId">
 						<a confirmation-needed="deleteComment(commentKey, courseId, question.id, comment.id)" keyword="comment" href="">
 							<i class="fa fa-trash-o"></i>
 						</a>

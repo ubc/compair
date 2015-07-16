@@ -21,20 +21,18 @@
 
 import hashlib
 import datetime
+import math
+import warnings
 
 import dateutil.parser
 from flask import current_app
-import math
 import pytz
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.associationproxy import association_proxy
-
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import synonym, load_only, column_property
 from sqlalchemy import func, select, and_
 
-
-#  import the context under an app-specific name (so it can easily be replaced later)
+# import the context under an app-specific name (so it can easily be replaced later)
 from passlib.apps import custom_app_context as pwd_context
 
 from flask.ext.login import UserMixin
@@ -275,7 +273,7 @@ class Courses(db.Model):
 
         if not inactive:
             query = query.join(UserTypesForCourse).filter(
-                UserTypesForCourse.name.isnot(UserTypesForCourse.TYPE_DROPPED))
+                UserTypesForCourse.name.notlike(UserTypesForCourse.TYPE_DROPPED))
 
         if fields:
             query = query.options(load_only(*fields))
@@ -442,6 +440,9 @@ class Posts(db.Model):
     created = db.Column(
         db.DateTime, default=datetime.datetime.utcnow,
         nullable=False)
+    user_avatar = association_proxy('user', 'avatar')
+    user_displayname = association_proxy('user', 'displayname')
+    user_fullname = association_proxy('user', 'fullname')
 
 
 #################################################
@@ -620,6 +621,15 @@ class PostsForAnswers(db.Model):
     flagger = db.relationship("Users")
     round = db.Column(db.Integer, default=0, nullable=False)
 
+    course_id = association_proxy('post', 'courses_id')
+    content = association_proxy('post', 'content')
+    files = association_proxy('post', 'files')
+    created = association_proxy('post', 'created')
+    user_id = association_proxy('post', 'users_id')
+    user_avatar = association_proxy('post', 'user_avatar')
+    user_displayname = association_proxy('post', 'user_displayname')
+    user_fullname = association_proxy('post', 'user_fullname')
+
     @hybrid_property
     def courses_id(self):
         return self.post.courses_id
@@ -660,6 +670,15 @@ class PostsForComments(db.Model):
         db.ForeignKey('Posts.id', ondelete="CASCADE"),
         nullable=False)
     post = db.relationship("Posts")
+
+    course_id = association_proxy('post', 'courses_id')
+    content = association_proxy('post', 'content')
+    files = association_proxy('post', 'files')
+    created = association_proxy('post', 'created')
+    user_id = association_proxy('post', 'users_id')
+    user_avatar = association_proxy('post', 'user_avatar')
+    user_displayname = association_proxy('post', 'user_displayname')
+    user_fullname = association_proxy('post', 'user_fullname')
 
 
 class PostsForQuestionsAndPostsForComments(db.Model):
@@ -712,15 +731,25 @@ class PostsForAnswersAndPostsForComments(db.Model):
 
     @hybrid_property
     def courses_id(self):
+        """ for backward compat """
+        warnings.warn("Deprecated. Use course_id instead!", DeprecationWarning)
         return self.postsforcomments.post.courses_id
 
     @hybrid_property
     def users_id(self):
-        return self.postsforcomments.post.user.id
+        """ for backward compat """
+        warnings.warn("Deprecated. Use user_id instead!", DeprecationWarning)
+        return self.user_id
 
-    @hybrid_property
-    def content(self):
-        return self.postsforcomments.post.content
+    # those association proxies should be removed after a refactor to hide those association tables
+    course_id = association_proxy('postsforcomments', 'course_id')
+    content = association_proxy('postsforcomments', 'content')
+    files = association_proxy('postsforcomments', 'files')
+    created = association_proxy('postsforcomments', 'created')
+    user_id = association_proxy('postsforcomments', 'user_id')
+    user_avatar = association_proxy('postsforcomments', 'user_avatar')
+    user_displayname = association_proxy('postsforcomments', 'user_displayname')
+    user_fullname = association_proxy('postsforcomments', 'user_fullname')
 
 
 class FilesForPosts(db.Model):

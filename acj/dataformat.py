@@ -41,11 +41,13 @@ def get_users(restrict_users=True):
     unrestricted.update(restricted)
     return unrestricted
 
+
 def get_users_in_course(restrict_users=True):
     users = get_users(restrict_users)
     if not restrict_users:
         users['course_role'] = fields.String
     return users
+
 
 def get_courses(include_details=True):
     data_format = {
@@ -184,14 +186,23 @@ def get_posts_for_answers(restrict_users=True, include_comments=True):
     del post['course']
     ret = {
         'id': fields.Integer,
-        'post': fields.Nested(post),
+        'content': fields.String,
+        'files': fields.Nested(get_files_for_posts()),
+        'created': fields.DateTime,
+        'user_id': fields.Integer,
+        'user_displayname': fields.String,
+        'user_fullname': fields.String,
+        'user_avatar': fields.String,
+        'posts_id': fields.Integer,
+        # 'post': fields.Nested(post),
         'scores': fields.Nested(score),
         'flagged': fields.Boolean,
         'questions_id': fields.Integer
     }
     # can see who flagged this post if user can view unrestricted data
-    if not restrict_users:
-        ret['flagger'] = fields.Nested(get_users(restrict_users))
+    # it seems it is not being used for now
+    # if not restrict_users:
+    #     ret['flagger'] = fields.Nested(get_users(restrict_users))
     if include_comments:
         ret['comments'] = fields.List(fields.Nested(comments))
         ret['comments_count'] = fields.Integer
@@ -219,11 +230,23 @@ def get_posts_for_questions_and_posts_for_comments(restrict_users=True):
 
 
 def get_posts_for_answers_and_posts_for_comments(restrict_users=True):
-    comment = get_posts_for_questions_and_posts_for_comments(restrict_users)
-    comment['selfeval'] = fields.Boolean
-    comment['evaluation'] = fields.Boolean
-    comment['type'] = fields.Integer
-    return comment
+    comment = get_posts_for_comments(restrict_users)
+    return {
+        'id': fields.Integer,
+        # 'postsforcomments': fields.Nested(comment),
+        'selfeval': fields.Boolean,
+        'evaluation': fields.Boolean,
+        'type': fields.Integer,
+        'course_id': fields.Integer,
+        'content': fields.String,
+        'files': fields.Nested(get_files_for_posts()),
+        'created': fields.DateTime,
+        'user_id': fields.Integer,
+        'user_displayname': fields.String,
+        'user_fullname': fields.String,
+        'user_avatar': fields.String,
+        'posts_id': fields.Integer
+    }
 
 
 def get_files_for_posts():

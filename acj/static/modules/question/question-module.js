@@ -454,21 +454,21 @@ module.controller("QuestionViewController",
 
 		$scope.groupFilter = function() {
 			return function (answer) {
-				return answer.post.user.id in userIds;
+				return answer.user_id in userIds;
 			}
 		};
 
 		$scope.commentFilter = function(answer) {
 			return function (comment) {
 				// can see if canManagePosts OR their own answer OR not from evaluation and selfeval
-				return $scope.canManagePosts || answer.post.user.id == $scope.loggedInUserId ||
+				return $scope.canManagePosts || answer.user_id == $scope.loggedInUserId ||
 					!(comment.evaluation || comment.selfeval || comment.type == 0);
 			}
 		};
 
 		$scope.myAnswer = function() {
 			return function (answer) {
-				return answer.post.user.id == $scope.loggedInUserId;
+				return answer.user_id == $scope.loggedInUserId;
 			}
 		};
 
@@ -490,7 +490,7 @@ module.controller("QuestionViewController",
 		
 		$scope.criteriaChange = function() {
 			if ($scope.grade.sortby == null) {
-				$scope.order = 'answer.post.created';
+				$scope.order = 'answer.created';
 			} else {
 				$scope.order = 'scores['+$scope.grade.sortby+'].normalized_score';
 			}
@@ -515,7 +515,7 @@ module.controller("QuestionViewController",
 			AnswerResource.delete({'courseId':course_id, 'questionId':question_id, 'answerId':answer_id}).$promise.then(
 				function (ret) {
 					Toaster.success("Answer Delete Successful", "Successfully deleted answer "+ ret.id);
-					var authorId = answer['post']['user']['id'];
+					var authorId = answer['user_id'];
 					$scope.answers.splice($scope.answers.indexOf(answer), 1);
 					$scope.question.answers_count -= 1;
 					if ($scope.loggedInUserId == authorId) {

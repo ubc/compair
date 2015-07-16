@@ -4,7 +4,7 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import func
-from sqlalchemy.orm import load_only, joinedload
+from sqlalchemy.orm import load_only, joinedload, contains_eager, subqueryload
 
 from . import dataformat
 from .core import db
@@ -66,14 +66,16 @@ class AnswerRootAPI(Resource):
         require(READ, question)
         restrict_users = not allow(MANAGE, question)
 
+        # this query could be further optimized by reduction the selected columns
         answers = PostsForAnswers.query. \
-            options(joinedload('comments')). \
-            options(joinedload('flagger').joinedload('usertypeforsystem')). \
-            options(joinedload('post').joinedload('files')). \
-            options(joinedload('post').joinedload('user').joinedload('usertypeforsystem')). \
+            with_entities(PostsForAnswers). \
+            options(contains_eager('post').joinedload('files')). \
+            options(contains_eager('post').joinedload('user')). \
+            options(subqueryload('comments').joinedload('postsforcomments').joinedload('post').joinedload('files')). \
+            options(subqueryload('comments').joinedload('postsforcomments').joinedload('post').joinedload('user')). \
             options(joinedload('_scores')). \
-            filter_by(questions_id=question.id). \
             join(Posts). \
+            filter(PostsForAnswers.questions_id == question.id). \
             order_by(Posts.created.desc()).all()
 
         on_answer_list_get.send(
@@ -99,9 +101,9 @@ class AnswerRootAPI(Resource):
         name = params.get('name')
         if not (post.content or name):
             return {"error": "The answer content is empty!"}, 400
-        prev_answer = PostsForAnswers.query.\
-            filter_by(questions_id=question_id).\
-            join(Posts).filter(Posts.users_id == current_user.id).\
+        prev_answer = PostsForAnswers.query. \
+            filter_by(questions_id=question_id). \
+            join(Posts).filter(Posts.users_id == current_user.id). \
             first()
         if prev_answer:
             return {"error": "An answer has already been submitted"}, 400
@@ -121,6 +123,8 @@ class AnswerRootAPI(Resource):
         if name:
             add_new_file(params.get('alias'), name, course_id, question_id, post.id)
         return marshal(answer, dataformat.get_posts_for_answers())
+
+
 api.add_resource(AnswerRootAPI, '')
 
 
@@ -196,6 +200,8 @@ class AnswerIdAPI(Resource):
             data={'question_id': question_id, 'answer_id': answer_id})
 
         return {'id': answer.id}
+
+
 api.add_resource(AnswerIdAPI, '/<int:answer_id>')
 
 
@@ -217,7 +223,7 @@ class AnswerUserIdAPI(Resource):
             options(joinedload('post').joinedload('files')). \
             options(joinedload('post').joinedload('user').joinedload('usertypeforsystem')). \
             options(joinedload('_scores')). \
-            filter_by(questions_id=question_id).join(Posts).\
+            filter_by(questions_id=question_id).join(Posts). \
             filter_by(courses_id=course_id, users_id=current_user.id).all()
 
         on_user_question_answer_get.send(
@@ -228,6 +234,7 @@ class AnswerUserIdAPI(Resource):
             data={'question_id': question_id})
 
         return {'answer': marshal(answer, dataformat.get_posts_for_answers(True, False))}
+
 
 api.add_resource(AnswerUserIdAPI, '/user')
 
@@ -248,8 +255,7 @@ class AnswerFlagAPI(Resource):
         require(READ, answer)
         # anyone can flag an answer, but only the original flagger or someone who can manage
         # the answer can unflag it
-        if answer.flagged and \
-            answer.flagger.id != current_user.id and \
+        if answer.flagged and answer.flagger.id != current_user.id and \
                 not allow(MANAGE, answer):
             return {"error": "You do not have permission to unflag this answer."}, 400
         params = flag_parser.parse_args()
@@ -270,6 +276,8 @@ class AnswerFlagAPI(Resource):
             answer,
             dataformat.get_posts_for_answers(restrict_users=is_user_access_restricted(current_user))
         )
+
+
 api.add_resource(AnswerFlagAPI, '/<int:answer_id>/flagged')
 
 
@@ -289,7 +297,7 @@ class AnswerCountAPI(Resource):
         post = Posts(courses_id=course_id)
         answer = PostsForAnswers(post=post)
         require(READ, answer)
-        answered = PostsForAnswers.query.filter_by(questions_id=question_id).join(Posts)\
+        answered = PostsForAnswers.query.filter_by(questions_id=question_id).join(Posts) \
             .filter(Posts.users_id == current_user.id).count()
 
         on_user_question_answered_count.send(
@@ -300,6 +308,8 @@ class AnswerCountAPI(Resource):
             data={'question_id': question_id})
 
         return {'answered': answered}
+
+
 api.add_resource(AnswerCountAPI, '/count')
 
 
@@ -315,7 +325,7 @@ class AnswerViewAPI(Resource):
             answers = PostsForAnswers.query.join(Posts). \
                 options(joinedload('post').joinedload('files')). \
                 options(joinedload('_scores')). \
-                filter(PostsForAnswers.questions_id == question.id).\
+                filter(PostsForAnswers.questions_id == question.id). \
                 order_by(Posts.created.desc()).all()
         else:
             judgements = Judgements.query \
@@ -356,6 +366,8 @@ class AnswerViewAPI(Resource):
         )
 
         return {'answers': results}
+
+
 api.add_resource(AnswerViewAPI, '/view')
 
 
@@ -366,10 +378,10 @@ class AnsweredAPI(Resource):
         post = Posts(courses_id=course_id)
         answer = PostsForAnswers(post=post)
         require(READ, answer)
-        answered = PostsForAnswers.query.\
-            with_entities(PostsForAnswers.questions_id, func.count(PostsForAnswers.id)).\
-            join(Posts).filter_by(courses_id=course_id).\
-            join(Users).filter_by(id=current_user.id).\
+        answered = PostsForAnswers.query. \
+            with_entities(PostsForAnswers.questions_id, func.count(PostsForAnswers.id)). \
+            join(Posts).filter_by(courses_id=course_id). \
+            join(Users).filter_by(id=current_user.id). \
             group_by(PostsForAnswers.questions_id).all()
         answered = dict(answered)
 
@@ -380,5 +392,6 @@ class AnsweredAPI(Resource):
             course_id=course_id)
 
         return {'answered': answered}
+
 
 apiAll.add_resource(AnsweredAPI, '/answered')

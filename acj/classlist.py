@@ -185,7 +185,7 @@ class ClasslistRootAPI(Resource):
             join(CoursesAndUsers). \
             join(UserTypesForCourse, and_(
                 CoursesAndUsers.usertypesforcourse_id == UserTypesForCourse.id,
-                UserTypesForCourse.name.isnot(UserTypesForCourse.TYPE_DROPPED))). \
+                UserTypesForCourse.name.notlike(UserTypesForCourse.TYPE_DROPPED))). \
             options(joinedload('usertypeforsystem')). \
             options(contains_eager('coursesandusers').contains_eager('usertypeforcourse')). \
             filter(CoursesAndUsers.courses_id == course_id). \

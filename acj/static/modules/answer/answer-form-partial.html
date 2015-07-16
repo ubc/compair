@@ -24,7 +24,7 @@
 		<div class="form-group" ng-if="canManagePosts && create">
 			<label for="user">Submit As</label>
 			<select id="user" name="user" ng-model="answer.user"  class="form-control" required
-					ng-options="u.user.id as u.user.fullname for u in classlist">
+					ng-options="u.id as u.fullname for u in classlist">
 			</select>
 		</div>
 

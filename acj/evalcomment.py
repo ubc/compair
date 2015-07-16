@@ -60,7 +60,8 @@ class EvalCommentRootAPI(Resource):
     def post(self, course_id, question_id):
         Courses.exists_or_404(course_id)
         PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
-        criteria_and_questions = CriteriaAndPostsForQuestions(questions_id=question_id)
+        question = PostsForQuestions(post=Posts(courses_id=course_id))
+        criteria_and_questions = CriteriaAndPostsForQuestions(question=question)
         judgements = Judgements(question_criterion=criteria_and_questions)
         require(CREATE, judgements)
         params = new_comment_parser.parse_args()
