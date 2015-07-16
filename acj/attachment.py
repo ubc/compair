@@ -3,6 +3,7 @@ import uuid
 import shutil
 import random
 import string
+import errno
 
 from flask import Blueprint, request, current_app
 from flask.ext.login import login_required, current_user
@@ -117,5 +118,9 @@ def delete_file(post_id):
     # TODO: delete ALL files under post with post_id
     uploaded_file = FilesForPosts.query.filter_by(posts_id=post_id).first()
     if uploaded_file:
-        os.remove(os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], uploaded_file.name))
-        current_app.logger.debug("Successfully deleted file " + uploaded_file.name + " for post " + str(post_id))
+        try:
+            os.remove(os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], uploaded_file.name))
+            current_app.logger.debug("Successfully deleted file " + uploaded_file.name + " for post " + str(post_id))
+        except OSError as e:
+            if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
+                raise  # re-raise exception if a different error occured
