@@ -103,12 +103,17 @@ class QuestionIdAPI(Resource):
         question.answer_end = datetime.datetime.strptime(
             params.get('answer_end', question.answer_end),
             '%Y-%m-%dT%H:%M:%S.%fZ')
+        # if nothing in request, assume user don't want judgement date
         question.judge_start = params.get('judge_start', None)
         if question.judge_start is not None:
-            question.judge_start = params.get('judge_start', None)
+            question.judge_start = datetime.datetime.strptime(
+                question.judge_start,
+                '%Y-%m-%dT%H:%M:%S.%fZ')
         question.judge_end = params.get('judge_end', None)
         if question.judge_end is not None:
-            question.judge_end = params.get('judge_end', None)
+            question.judge_end = datetime.datetime.strptime(
+                params.get('judge_end', question.judge_end),
+                '%Y-%m-%dT%H:%M:%S.%fZ')
         question.can_reply = params.get('can_reply', False)
         question.num_judgement_req = params.get('num_judgement_req', question.num_judgement_req)
         selfevaltype_id = params.pop('selfevaltype_id', question.selfevaltype_id)
