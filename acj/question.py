@@ -144,7 +144,7 @@ class QuestionIdAPI(Resource):
             db.session.delete(eval_type)
         db.session.commit()
 
-        return marshal(question, dataformat.get_posts_for_questions())
+        return marshal(question, dataformat.get_posts_for_questions(include_answers=False))
 
     @login_required
     def delete(self, course_id, question_id):
@@ -247,6 +247,6 @@ class QuestionRootAPI(Resource):
             course_id=course_id,
             data=marshal(question, dataformat.get_posts_for_questions(False)))
 
-        return marshal(question, dataformat.get_posts_for_questions())
+        return marshal(question, dataformat.get_posts_for_questions(include_answers=False))
 
 api.add_resource(QuestionRootAPI, '')
