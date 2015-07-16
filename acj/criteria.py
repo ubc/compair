@@ -170,6 +170,7 @@ class CriteriaAPI(Resource):
         params = new_criterion_parser.parse_args()
         criterion = add_criteria(params)
         require(CREATE, criterion)
+        db.session.commit()
 
         criteria_create.send(
             self,
@@ -178,7 +179,6 @@ class CriteriaAPI(Resource):
             data={'criterion': marshal(criterion, dataformat.get_criteria())}
         )
 
-        db.session.commit()
         return marshal(criterion, dataformat.get_criteria())
 
 

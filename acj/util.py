@@ -1,4 +1,7 @@
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import cProfile
 import contextlib
 from functools import wraps
@@ -117,4 +120,4 @@ def profiled():
     ps.print_stats()
     # uncomment this to see who's calling what
     # ps.print_callers()
-    print s.getvalue()
+    print(s.getvalue())
