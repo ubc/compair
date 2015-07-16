@@ -1,4 +1,8 @@
+import StringIO
+import cProfile
+import contextlib
 from functools import wraps
+import pstats
 
 from flask import request, jsonify
 from flask.ext.restful import Api
@@ -23,6 +27,7 @@ def pagination(model):
 
     It can work with marshal_with, but has to be called before it.
     """
+
     def wrap(func):
         @wraps(func)
         def paging(*args, **kwargs):
@@ -50,7 +55,9 @@ def pagination(model):
                 "page": page,
                 "total_pages": total_pages
             }
+
         return paging
+
     return wrap
 
 
@@ -97,3 +104,17 @@ def get_model_changes(model):
                     changes[attr.key] = {'before': history.deleted[0], 'after': history.added[0]}
 
     return changes
+
+
+@contextlib.contextmanager
+def profiled():
+    pr = cProfile.Profile()
+    pr.enable()
+    yield
+    pr.disable()
+    s = StringIO.StringIO()
+    ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
+    ps.print_stats()
+    # uncomment this to see who's calling what
+    # ps.print_callers()
+    print s.getvalue()
