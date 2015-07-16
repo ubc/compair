@@ -1,4 +1,7 @@
 language: python
+
+cache: pip
+
 python:
   - "2.7"
   - "3.3"
@@ -28,3 +31,5 @@ script:
 
 notifications:
   slack: ubcctlt:cyfS7OeXqRjqhyrpIMHJ0SRd
+
+sudo: false
