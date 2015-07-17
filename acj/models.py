@@ -732,13 +732,13 @@ class PostsForAnswersAndPostsForComments(db.Model):
     @hybrid_property
     def courses_id(self):
         """ for backward compat """
-        warnings.warn("Deprecated. Use course_id instead!", DeprecationWarning)
+        warnings.warn("Deprecated. Use course_id instead!", DeprecationWarning, stacklevel=2)
         return self.postsforcomments.post.courses_id
 
     @hybrid_property
     def users_id(self):
         """ for backward compat """
-        warnings.warn("Deprecated. Use user_id instead!", DeprecationWarning)
+        warnings.warn("Deprecated. Use user_id instead!", DeprecationWarning, stacklevel=2)
         return self.user_id
 
     # those association proxies should be removed after a refactor to hide those association tables
