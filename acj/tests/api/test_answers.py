@@ -48,55 +48,87 @@ class AnswersAPITests(ACJTestCase):
     def test_create_answer(self):
         # test login required
         expected_answer = {'post': {'content': 'this is some answer content'}}
-        rv = self.client.post(
+        response = self.client.post(
             self.base_url,
             data=json.dumps(expected_answer),
             content_type='application/json')
-        self.assert401(rv)
+        self.assert401(response)
         # test unauthorized users
         self.login(self.data.get_unauthorized_student().username)
-        rv = self.client.post(self.base_url, data=json.dumps(expected_answer), content_type='application/json')
-        self.assert403(rv)
+        response = self.client.post(self.base_url, data=json.dumps(expected_answer), content_type='application/json')
+        self.assert403(response)
         self.logout()
         self.login(self.data.get_unauthorized_instructor().username)
-        rv = self.client.post(
+        response = self.client.post(
             self.base_url,
             data=json.dumps(expected_answer),
             content_type='application/json')
-        self.assert403(rv)
+        self.assert403(response)
         self.logout()
         # test invalid format
         self.login(self.data.get_authorized_student().username)
         invalid_answer = {'post': {'blah': 'blah'}}
-        rv = self.client.post(
+        response = self.client.post(
             self.base_url,
             data=json.dumps(invalid_answer),
             content_type='application/json')
-        self.assert400(rv)
+        self.assert400(response)
         # test invalid question
-        rv = self.client.post(
+        response = self.client.post(
             self._build_url(self.data.get_course().id, 9392402),
             data=json.dumps(expected_answer),
             content_type='application/json')
-        self.assert404(rv)
+        self.assert404(response)
         # test invalid course
-        rv = self.client.post(
+        response = self.client.post(
             self._build_url(9392402, self.question.id),
             data=json.dumps(expected_answer), content_type='application/json')
-        self.assert404(rv)
+        self.assert404(response)
         # test create successful
         self.logout()
         self.login(self.data.get_authorized_instructor().username)
 
-        rv = self.client.post(
+        response = self.client.post(
             self.base_url,
             data=json.dumps(expected_answer),
             content_type='application/json')
-        self.assert200(rv)
+        self.assert200(response)
         # retrieve again and verify
-        answers = PostsForAnswers.query.filter_by(questions_id=self.question.id).all()
-        actual_answer = answers[2]
+        rv = json.loads(response.data.decode('utf-8'))
+        actual_answer = PostsForAnswers.query.get(rv['id'])
         self.assertEqual(expected_answer['post']['content'], actual_answer.post.content)
+
+        # test instructor could submit multiple answers for his/her own
+        response = self.client.post(
+            self.base_url,
+            data=json.dumps(expected_answer),
+            content_type='application/json')
+        self.assert200(response)
+        rv = json.loads(response.data.decode('utf-8'))
+        actual_answer = PostsForAnswers.query.get(rv['id'])
+        self.assertEqual(expected_answer['post']['content'], actual_answer.post.content)
+
+        # test instructor could submit on behave of a student
+        expected_answer.update({'user': self.data.get_authorized_student().id})
+        response = self.client.post(
+            self.base_url,
+            data=json.dumps(expected_answer),
+            content_type='application/json')
+        self.assert200(response)
+        rv = json.loads(response.data.decode('utf-8'))
+        actual_answer = PostsForAnswers.query.get(rv['id'])
+        self.assertEqual(expected_answer['post']['content'], actual_answer.post.content)
+
+        # test instructor can not submit additional answers for a student
+        expected_answer.update({'user': self.data.get_authorized_student().id})
+        response = self.client.post(
+            self.base_url,
+            data=json.dumps(expected_answer),
+            content_type='application/json')
+        self.assert400(response)
+        rv = json.loads(response.data.decode('utf-8'))
+        self.assertEqual({"error": "An answer has already been submitted."}, rv)
+
         self.logout()
 
     def test_get_answer(self):

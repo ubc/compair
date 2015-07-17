@@ -101,16 +101,23 @@ class AnswerRootAPI(Resource):
         name = params.get('name')
         if not (post.content or name):
             return {"error": "The answer content is empty!"}, 400
-        prev_answer = PostsForAnswers.query. \
-            filter_by(questions_id=question_id). \
-            join(Posts).filter(Posts.users_id == current_user.id). \
-            first()
-        if prev_answer:
-            return {"error": "An answer has already been submitted"}, 400
         user = params.get("user")
         post.users_id = user if user else current_user.id
+
+        # we allow instructor and TA to submit multiple answers for their own,
+        # but not for student. Each student can only have one answer.
+        if not allow(MANAGE, answer) or user is not None:
+            # check if there is a previous answer submitted
+            prev_answer = PostsForAnswers.query. \
+                filter_by(questions_id=question_id). \
+                join(Posts).filter(Posts.users_id == post.users_id). \
+                first()
+            if prev_answer:
+                return {"error": "An answer has already been submitted."}, 400
+
         db.session.add(post)
         db.session.add(answer)
+        db.session.commit()
 
         on_answer_create.send(
             self,
@@ -119,7 +126,6 @@ class AnswerRootAPI(Resource):
             course_id=course_id,
             data=marshal(answer, dataformat.get_posts_for_answers(False)))
 
-        db.session.commit()
         if name:
             add_new_file(params.get('alias'), name, course_id, question_id, post.id)
         return marshal(answer, dataformat.get_posts_for_answers())
