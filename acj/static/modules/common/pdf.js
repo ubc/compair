@@ -24,7 +24,7 @@ module.directive('acjPdfInline', function() {
 			$scope.pdfname = "";
 			$scope.pdfFile = $modal(
 				{
-					contentTemplate: 'modules/common/pdf-overlay-template.html',
+					contentTemplate: 'modules/common/pdf-overlaid-template.html',
 					scope: $scope,
 					show: false
 				}
