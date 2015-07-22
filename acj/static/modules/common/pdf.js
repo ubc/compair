@@ -4,7 +4,7 @@
 var module = angular.module('ubc.ctlt.acj.common.pdf', [])
 	.run(function ($http, $templateCache){
 		// load the template into cache
-		$http.get('modules/common/pdf-overlay-template.html', {cache:$templateCache});
+		$http.get('modules/common/pdf-overlaid-template.html', {cache:$templateCache});
 	});
 
 // Display a PDF in a viewerjs iframe.

@@ -29,7 +29,7 @@ new_answer_parser.add_argument('alias', type=str, default=None)
 
 existing_answer_parser = RequestParser()
 existing_answer_parser.add_argument('id', type=int, required=True, help="Answer id is required.")
-existing_answer_parser.add_argument('post', type=dict, default={})
+existing_answer_parser.add_argument('content', type=str, default=None)
 existing_answer_parser.add_argument('name', type=str, default=None)
 existing_answer_parser.add_argument('alias', type=str, default=None)
 existing_answer_parser.add_argument('uploadedFile', type=bool, default=False)
@@ -169,7 +169,7 @@ class AnswerIdAPI(Resource):
         if params['id'] != answer_id:
             return {"error": "Answer id does not match the URL."}, 400
         # modify answer according to new values, preserve original values if values not passed
-        answer.post.content = params.get("post").get("content")
+        answer.post.content = params.get("content")
         uploaded = params.get('uploadFile')
         name = params.get('name')
         if not (answer.post.content or uploaded or name):

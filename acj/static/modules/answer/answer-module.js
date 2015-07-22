@@ -193,7 +193,7 @@ module.controller(
 		AnswerResource.get({'courseId': $scope.courseId, 'questionId': questionId, 'answerId': $scope.answerId}).$promise.then(
 			function (ret) {
 				$scope.answer = ret;
-				AttachmentResource.get({'postId': ret.post.id}).$promise.then(
+				AttachmentResource.get({'postId': ret.posts_id}).$promise.then(
 					function (ret) {
 						$scope.answer.uploadedFile = ret.file;
 					},

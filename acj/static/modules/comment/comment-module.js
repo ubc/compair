@@ -215,7 +215,7 @@ module.controller(
 		AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId}).$promise.then(
 			function (ret) {
 				$scope.parent = ret;
-				$scope.replyToUser = ret.post.user.displayname;
+				$scope.replyToUser = ret.user_displayname;
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
@@ -351,7 +351,7 @@ module.controller(
 							}
 							answer.scores = scores;
 							$scope.ans[answer.id] = answer;
-							$scope.userToAns[answer.post.user.id] = answer.id;
+							$scope.userToAns[answer.user_id] = answer.id;
 						}
 						gotAnswers = true;
 					},
