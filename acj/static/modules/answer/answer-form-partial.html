@@ -29,11 +29,12 @@
 		</div>
 
 		<div>
-			<label for="importFile">Attach A PDF</label>
+			<label for="importFile">Attach PDF (maximum size 25MB)</label>
+			<p ng-hide="uploader.queue.length || answer.uploadedFile"><span class="required-star"></span><em>Tip: Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> if you have problems uploading.</em></p>
 			<input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="uploader.queue.length || answer.uploadedFile" multiple/>
 			<p class="instructional-text" ng-show="uploader.queue.length || answer.uploadedFile"><strong>Save this answer</strong> to submit the file below. You may also remove the file and upload another instead.</p>
 			<div class="row" ng-repeat="item in uploader.queue">
-				<div class="col-md-7"><strong>{{item.file.name}}</strong></div>
+				<div class="col-md-7">File: <strong>{{item.file.name}}</strong></div>
 				<div class="col-md-1">{{item.file.size/1024/1024|number:2}} MB</div>
 				<div class="col-md-2" ng-if="item.progress < 100"><strong>{{item.progress}}% uploaded</strong></div>
 				<div class="col-md-2" ng-if="item.progress == 100 && !item.isSuccess"><strong>Storing file...</strong></div>
