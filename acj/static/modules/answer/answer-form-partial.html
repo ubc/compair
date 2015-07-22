@@ -30,7 +30,7 @@
 
 		<div>
 			<label for="importFile">Attach PDF (maximum size 25MB)</label>
-			<p ng-hide="uploader.queue.length || answer.uploadedFile"><span class="required-star"></span><em>Tip: Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> if you have problems uploading.</em></p>
+			<p ng-hide="uploader.queue.length || answer.uploadedFile"><span class="required-star"></span><em>Tip: Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> or using <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a>, <a href="http://www.google.com/chrome/">Chrome</a>, or <a href="https://www.apple.com/ca/safari/">Safari</a> if you have problems uploading.</em></p>
 			<input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="uploader.queue.length || answer.uploadedFile" multiple/>
 			<p class="instructional-text" ng-show="uploader.queue.length || answer.uploadedFile"><strong>Save this answer</strong> to submit the file below. You may also remove the file and upload another instead.</p>
 			<div class="row" ng-repeat="item in uploader.queue">

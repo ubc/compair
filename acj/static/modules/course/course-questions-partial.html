@@ -158,9 +158,9 @@
 		<!-- Question Actions -->
 		<div class="col-sm-3 text-right action-btns">
 			
-			<!-- BUTTON when user has not answered AND (user is an admin OR the answer period is active) -->
+			<!-- BUTTON when user is admin OR (user has not answered AND the answer period is active) -->
 			<a class="btn btn-success" title="Answer Question" ng-href="#/course/{{course.id}}/question/{{question.id}}/answer/create"
-			   ng-show="!answered[question.id] && (canManagePosts || question.answer_period)">
+			   ng-show="canManagePosts || (!answered[question.id] && question.answer_period)">
 				Answer
 			</a>
 			

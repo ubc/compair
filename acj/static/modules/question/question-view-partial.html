@@ -59,9 +59,9 @@
 		
 		<!-- Question Actions -->
 		
-		<!-- BUTTON when user has not answered AND (user is an admin OR the answer period is active) -->
+		<!-- BUTTON when user is admin OR (user has not answered AND the answer period is active) -->
 		<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" class="btn btn-success" title="Answer Question"
-		   ng-show="!answered && (canManagePosts || question.answer_period)">
+		   ng-show="canManagePosts || (!answered && question.answer_period)">
 			Answer
 		</a>
 		
@@ -628,7 +628,7 @@
 						<li>Enabling Java and cookies in your browser settings</li>
 						<li>Disabling extra plugins and add-ons for your browser</li>
 						<li>Clearing your browser cache</li>
-						<li>Using a different browser (supported browsers include Firefox, Chrome, Safari, and IE9+)</li>
+						<li>Using a different browser (supported browsers include <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a>, <a href="http://www.google.com/chrome/">Chrome</a>, <a href="https://www.apple.com/ca/safari/">Safari</a>, and <a href="http://windows.microsoft.com/en-ca/internet-explorer/download-ie">IE9+</a>)</li>
 						<li>Logging out and logging back in</li>
 					</ul>
 				</blockquote>
@@ -639,23 +639,23 @@
 				
 				<!-- Comment Metadata Header -->
 				<div class="each-header clearfix">
-					<a ng-href="#/user/{{comment.user_id}}">
-						<img src="//www.gravatar.com/avatar/{{comment.user_avatar}}?s=32&d=retro" />
+					<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
+						<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
 					</a>
-					<a ng-href="#/user/{{comment.user_id}}">
-						{{comment.user_displayname}}
-						<span ng-if="!canManagePosts && comment.user_id == loggedInUserId">
+					<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
+						{{comment.postsforcomments.post.user.displayname}}
+						<span ng-if="!canManagePosts && comment.postsforcomments.post.user.id == loggedInUserId">
 							(You)
 						</span>
-						<span ng-if="canManagePosts && comment.user_fullname">
-							({{comment.user_fullname}})
+						<span ng-if="canManagePosts && comment.postsforcomments.post.user.fullname">
+							({{comment.postsforcomments.post.user.fullname}})
 						</span>
 					</a>
-					<span class="label label-info" ng-if="instructors[comment.user_id]">
-						{{instructors[comment.user_id]}} 
+					<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">
+						{{instructors[comment.postsforcomments.post.user.id]}} 
 					</span>
-					<strong>commented</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
-					<div class="manager-actions pull-right" ng-if="canManagePosts || comment.user_id == loggedInUserId">
+					<strong>commented</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
+					<div class="manager-actions pull-right" ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId">
 						<a confirmation-needed="deleteComment(commentKey, courseId, question.id, comment.id)" keyword="comment" href="">
 							<i class="fa fa-trash-o"></i>
 						</a>
