@@ -181,6 +181,14 @@ class ClasslistRootAPI(Resource):
         # only users that can edit the course can view enrolment
         require(EDIT, course)
         restrict_users = not allow(READ, CoursesAndUsers(courses_id=course_id))
+
+        # expire current_user from the session. When loading classlist from database, if the
+        # user is already in the session, e.g. instructor for the course, the User.coursesandusers
+        # is not loaded from the query below, but from session. In this case, if user has more
+        # than one course, User.coursesandusers will return multiple row. Thus violating the
+        # course_role constrain.
+        db.session.expire(current_user)
+
         class_list = Users.query. \
             join(CoursesAndUsers). \
             join(UserTypesForCourse, and_(

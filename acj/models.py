@@ -200,8 +200,8 @@ class Users(db.Model, UserMixin):
     def course_role(self):
         if len(self.coursesandusers) > 1:
             raise InvalidAttributeException(
-                'Invalid course_role attribute status. '
-                'CoursesAndUsers are not populated within a course')
+                'Invalid course_role attribute status for user %s. '
+                'CoursesAndUsers are not populated within a course' % self.username)
         elif len(self.coursesandusers) == 0:
             return 'Not Enrolled'
         else:
