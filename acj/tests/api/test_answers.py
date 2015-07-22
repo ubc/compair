@@ -183,7 +183,7 @@ class AnswersAPITests(ACJTestCase):
     def test_edit_answer(self):
         question_id = self.data.get_questions()[0].id
         answer = self.data.get_answers_by_question()[question_id][0]
-        expected = {'id': str(answer.id), 'post': {'content': 'This is an edit'}}
+        expected = {'id': str(answer.id), 'content': 'This is an edit'}
 
         # test login required
         rv = self.client.post(
@@ -245,7 +245,7 @@ class AnswersAPITests(ACJTestCase):
         self.logout()
 
         # test edit by user that can manage posts
-        expected['post']['content'] = 'This is another edit'
+        expected['content'] = 'This is another edit'
         self.login(self.data.get_authorized_instructor().username)
         rv = self.client.post(
             self.base_url + '/' + str(answer.id),
