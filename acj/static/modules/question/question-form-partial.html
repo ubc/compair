@@ -9,16 +9,19 @@
 				required ng-maxlength="255" auto-focus />
 			<span ng-if="questionForm.questionTitle.$error.maxlength" class="help-block has-error">Maximum length is 255 characters</span>
 		</acj-field-with-feedback>
+		
 		<div>
-			<label for="importFile">Attach PDF</label>
-			<input type="file" nv-file-select uploader="uploader" id="importFile" ng-disabled="uploader.queue.length || question.uploadedFile" multiple/>
+			<label for="importFile">Attach PDF (maximum size 25MB)</label>
+			<p ng-hide="(uploader.queue.length) || (question.post.files.length && question.uploadedFile)"><span class="required-star"></span><em>Tip: Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> or using <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a> or <a href="http://www.google.com/chrome/">Chrome</a> if you have problems uploading.</em></p>
+			<input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (question.post.files.length && question.uploadedFile)" multiple/>
+			<p class="instructional-text" ng-show="uploader.queue.length">The file below will be attached when you <strong>save this assignment</strong>. You may also remove the file and upload another instead.</p>
 			<div class="row" ng-repeat="item in uploader.queue">
-				<div class="col-md-7"><strong>{{item.file.name}}</strong></div>
+				<div class="col-md-7"><i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong></div>
 				<div class="col-md-1">{{item.file.size/1024/1024|number:2}} MB</div>
-				<strong class="col-md-2" ng-if="item.progress < 100">{{item.progress}}% uploaded</strong>
-				<strong class="col-md-2" ng-if="item.progress == 100 && !item.isSuccess">File saving ... </strong>
-				<strong class="col-md-2" ng-if="item.progress == 100 && item.isSuccess">File saved.</strong>
-				<div class="col-md-1">
+				<div class="col-md-2" ng-if="item.progress < 100"><strong>{{item.progress}}% uploaded</strong></div>
+				<div class="col-md-2" ng-if="item.progress == 100 && !item.isSuccess"><strong>Storing file...</strong></div>
+				<div class="col-md-2" ng-if="item.progress == 100 && item.isSuccess"><strong>Attached</strong></div>
+				<div class="col-md-2">
 					<a class="btn btn-danger btn-xs" ng-click="item.cancel();item.remove();resetName();">
 						<i class="fa fa-trash-o"></i> Remove
 					</a>
@@ -26,14 +29,14 @@
 			</div>
 		</div>
 		<br>
-		<div ng-if="question.uploadedFile">
-			<div class="row">
+		<div ng-show="question.post.files.length && question.uploadedFile">
+			<div class="row" ng-repeat="file in question.post.files">
 				<div class="col-md-4">
-					<strong>{{question.uploadedFile.alias}}</strong>
+					<i class="fa fa-paperclip"></i> Attached File: <strong>{{file.alias}}</strong>
 				</div>
 				<div class="col-md-1">
-					<a ng-click="deleteFile(question.uploadedFile.posts_id, question.uploadedFile.id)" class="btn btn-danger btn-xs">
-						<i class="fa fa-trash-o"></i> Delete
+					<a ng-click="deleteFile(file.posts_id, file.id)" class="btn btn-danger btn-xs">
+						<i class="fa fa-trash-o"></i> Remove
 					</a>
 				</div>
 			</div>
