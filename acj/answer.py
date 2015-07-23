@@ -23,7 +23,7 @@ apiAll = new_restful_api(all_answers_api)
 
 new_answer_parser = RequestParser()
 new_answer_parser.add_argument('user', type=int, default=None)
-new_answer_parser.add_argument('post', type=dict, default={})
+new_answer_parser.add_argument('content', type=str, default=None)
 new_answer_parser.add_argument('name', type=str, default=None)
 new_answer_parser.add_argument('alias', type=str, default=None)
 
@@ -97,7 +97,7 @@ class AnswerRootAPI(Resource):
         answer = PostsForAnswers(post=post, questions_id=question_id)
         require(CREATE, answer)
         params = new_answer_parser.parse_args()
-        post.content = params.get("post").get("content")
+        post.content = params.get("content")
         name = params.get('name')
         if not (post.content or name):
             return {"error": "The answer content is empty!"}, 400

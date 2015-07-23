@@ -3,8 +3,8 @@
 (function() {
 var module = angular.module('ubc.ctlt.acj.common.pdf', [])
 	.run(function ($http, $templateCache){
-		// load the template into cache
-		$http.get('modules/common/pdf-overlaid-template.html', {cache:$templateCache});
+		// load the template into cache - but this breaks the overlay, as the file will not load, so commenting it out
+		// $http.get('modules/common/pdf-overlaid-template.html', {cache:$templateCache});
 	});
 
 // Display a PDF in a viewerjs iframe.
