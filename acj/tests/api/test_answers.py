@@ -47,7 +47,7 @@ class AnswersAPITests(ACJTestCase):
 
     def test_create_answer(self):
         # test login required
-        expected_answer = {'post': {'content': 'this is some answer content'}}
+        expected_answer = {'content': 'this is some answer content'}
         response = self.client.post(
             self.base_url,
             data=json.dumps(expected_answer),
@@ -96,7 +96,7 @@ class AnswersAPITests(ACJTestCase):
         # retrieve again and verify
         rv = json.loads(response.data.decode('utf-8'))
         actual_answer = PostsForAnswers.query.get(rv['id'])
-        self.assertEqual(expected_answer['post']['content'], actual_answer.post.content)
+        self.assertEqual(expected_answer['content'], actual_answer.post.content)
 
         # test instructor could submit multiple answers for his/her own
         response = self.client.post(
@@ -106,7 +106,7 @@ class AnswersAPITests(ACJTestCase):
         self.assert200(response)
         rv = json.loads(response.data.decode('utf-8'))
         actual_answer = PostsForAnswers.query.get(rv['id'])
-        self.assertEqual(expected_answer['post']['content'], actual_answer.post.content)
+        self.assertEqual(expected_answer['content'], actual_answer.post.content)
 
         # test instructor could submit on behave of a student
         expected_answer.update({'user': self.data.get_authorized_student().id})
@@ -117,7 +117,7 @@ class AnswersAPITests(ACJTestCase):
         self.assert200(response)
         rv = json.loads(response.data.decode('utf-8'))
         actual_answer = PostsForAnswers.query.get(rv['id'])
-        self.assertEqual(expected_answer['post']['content'], actual_answer.post.content)
+        self.assertEqual(expected_answer['content'], actual_answer.post.content)
 
         # test instructor can not submit additional answers for a student
         expected_answer.update({'user': self.data.get_authorized_student().id})
