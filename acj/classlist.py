@@ -82,7 +82,7 @@ def import_users(course_id, users):
 
         # TEMP USER
         temp = Users()
-        temp.username = user[USERNAME] if length > USERNAME and user[USERNAME] else None
+        temp.username = user[USERNAME].lower() if length > USERNAME and user[USERNAME] else None
 
         # VALIDATION
         # validate username
