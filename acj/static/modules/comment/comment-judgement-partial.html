@@ -55,8 +55,8 @@
 						<a ng-href="#/user/{{ comment[0].user_id }}">{{ comment[0].name }}</a>
 						<strong>answered</strong> on {{ ans[userToAns[comment[0].user_id]].post.created | amDateFormat: 'MMM D @ h:mm a'}}:
 					</div>
-					<div class="content" mathjax="ans[userToAns[comment[0].user_id]].post.content" ng-if="userToAns[comment[0].user_id]"
-						 ng-bind-html="ans[userToAns[comment[0].user_id]].post.content"></div>
+					<div class="content" mathjax="ans[userToAns[comment[0].user_id]].content" ng-if="userToAns[comment[0].user_id]"
+						 ng-bind-html="ans[userToAns[comment[0].user_id]].content"></div>
 					<div ng-if="!userToAns[comment[0].user_id]" ng-bind-html="noAnsMsg"></div>
 					<acj-pdf-inline ng-if="userToAns[comment[0].user_id]" label="See details:" pdfs="ans[userToAns[comment[0].user_id]].post.files"></acj-pdf-inline>
 				</div>
@@ -97,8 +97,8 @@
 									<span class="label label-warning pull-right score-display" ng-if="ans[criterion.answer1.id]">
 										Score: {{ ans[criterion.answer1.id].scores[criterion.criteriaandquestions_id] }}%</span>
 								</h4>
-								<div mathjax="ans[criterion.answer1.id].post.content" ng-if="ans[criterion.answer1.id]"
-									 ng-bind-html="ans[criterion.answer1.id].post.content"></div>
+								<div mathjax="ans[criterion.answer1.id].content" ng-if="ans[criterion.answer1.id]"
+									 ng-bind-html="ans[criterion.answer1.id].content"></div>
 								<div ng-if="!ans[criterion.answer1.id]" ng-bind-html="deletedAnsMsg"></div>
 								<!-- Attachments -->
 								<acj-pdf-inline label="See details:" pdfs="ans[criterion.answer1.id].post.files"></acj-pdf-inline>
@@ -111,8 +111,8 @@
 									<span class="label label-warning pull-right score-display" ng-if="ans[criterion.answer2.id]">
 										Score: {{ ans[criterion.answer2.id].scores[criterion.criteriaandquestions_id] }}%</span>
 								</h4>
-								<div mathjax="ans[criterion.answer2.id].post.content" ng-if="ans[criterion.answer2.id]"
-									 ng-bind-html="ans[criterion.answer2.id].post.content"></div>
+								<div mathjax="ans[criterion.answer2.id].content" ng-if="ans[criterion.answer2.id]"
+									 ng-bind-html="ans[criterion.answer2.id].content"></div>
 								<div ng-if="!ans[criterion.answer2.id]" ng-bind-html="deletedAnsMsg"></div>
 								<!-- Attachments -->
 								<acj-pdf-inline label="See details:" pdfs="ans[criterion.answer2.id].post.files"></acj-pdf-inline>

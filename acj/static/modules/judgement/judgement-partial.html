@@ -34,8 +34,8 @@
 		<div class="col-md-6" ng-hide="answerPairError">
 			<div class="answer-choice clearfix">
 				<h3 class="text-center">Answer {{(current - 1) + current}}</h3>
-				<div mathjax="answerPair.answer1.post.content"
-					ng-bind-html="answerPair.answer1.post.content">
+				<div mathjax="answerPair.answer1.content"
+					ng-bind-html="answerPair.answer1.content">
 				</div>
 				<!-- Attachment -->
 				<acj-pdf-inline label="See detail:" 
@@ -56,8 +56,8 @@
 		<div class="col-md-6" ng-hide="answerPairError">
 			<div class="answer-choice clearfix">
 				<h3 class="text-center">Answer {{current * 2}}</h3>
-				<div mathjax="answerPair.answer2.post.content"
-					ng-bind-html="answerPair.answer2.post.content">
+				<div mathjax="answerPair.answer2.content"
+					ng-bind-html="answerPair.answer2.content">
 				</div>
 				<!-- Attachment -->
 				<acj-pdf-inline label="See detail:" 
