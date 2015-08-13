@@ -1,7 +1,6 @@
 import json
 
 from data.fixtures.test_data import BasicTestData
-
 from acj.tests.test_acj import ACJTestCase
 from acj.models import Courses
 

@@ -2,8 +2,10 @@
     Report Generator
 """
 import csv
-from flask.ext.script import Manager, prompt_bool
+
+from flask.ext.script import Manager
 from sqlalchemy.orm import aliased
+
 from acj.models import Scores, PostsForAnswers, CriteriaAndPostsForQuestions, Criteria, Posts, Judgements, \
     AnswerPairings, Courses
 
@@ -32,18 +34,22 @@ def create(course_id):
 
     scores = query.all()
 
-    write_csv(course_name + 'scores.csv', ['User Id', 'Question Id', 'Answer Id', 'Criterion Id', 'Criterion', 'Score'], scores)
+    write_csv(
+        course_name + 'scores.csv',
+        ['User Id', 'Question Id', 'Answer Id', 'Criterion Id', 'Criterion', 'Score'],
+        scores
+    )
 
-    Scores2 = aliased(Scores)
+    scores2 = aliased(Scores)
     query = Judgements.query. \
         with_entities(Judgements.users_id, CriteriaAndPostsForQuestions.questions_id,
                       CriteriaAndPostsForQuestions.id, Criteria.name,
                       AnswerPairings.answers_id1, Scores.score, AnswerPairings.answers_id2,
-                      Scores2.score, Judgements.answers_id_winner). \
+                      scores2.score, Judgements.answers_id_winner). \
         join(Judgements.question_criterion).join(CriteriaAndPostsForQuestions.criterion). \
         join(Judgements.answerpairing). \
         join(Scores, Scores.answers_id == AnswerPairings.answers_id1). \
-        join(Scores2, Scores2.answers_id == AnswerPairings.answers_id2). \
+        join(scores2, scores2.answers_id == AnswerPairings.answers_id2). \
         order_by(CriteriaAndPostsForQuestions.questions_id, CriteriaAndPostsForQuestions.id, Judgements.users_id)
 
     if course_id:

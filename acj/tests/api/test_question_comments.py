@@ -1,7 +1,6 @@
 import json
 
 from data.fixtures.test_data import QuestionCommentsTestData
-
 from acj.tests.test_acj import ACJTestCase
 
 

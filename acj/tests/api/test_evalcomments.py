@@ -1,8 +1,8 @@
 import json
+
 from dateutil import parser
 
 from data.fixtures.test_data import JudgementCommentsTestData
-
 from acj.tests.test_acj import ACJTestCase
 
 

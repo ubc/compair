@@ -3,9 +3,9 @@ from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal, reqparse
 from sqlalchemy import or_, and_
+from sqlalchemy.orm import joinedload, load_only
 
 from . import dataformat
-from sqlalchemy.orm import joinedload, load_only
 from .core import event, db
 from .authorization import require, allow
 from .models import CriteriaAndCourses, Courses, Criteria, PostsForQuestions, CriteriaAndPostsForQuestions, \

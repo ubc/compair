@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect
 from flask_login import current_user, login_required, login_user, logout_user
-from acj import cas
 
+from acj import cas
 from .authorization import get_logged_in_user_permissions
 from .models import Users
 

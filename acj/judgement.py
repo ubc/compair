@@ -8,7 +8,6 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import or_, and_
-
 from sqlalchemy.orm import load_only
 
 from . import dataformat
@@ -18,6 +17,7 @@ from .core import event
 from .models import PostsForAnswers, Posts, Judgements, AnswerPairings, Courses, \
     PostsForQuestions, CoursesAndUsers, UserTypesForCourse, CriteriaAndPostsForQuestions
 from .util import new_restful_api
+
 
 
 # First declare a Flask Blueprint for this module

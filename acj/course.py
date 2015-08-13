@@ -3,9 +3,9 @@ from flask import Blueprint, current_app
 from flask.ext.restful import Resource, marshal_with, marshal, reqparse
 from flask_login import login_required, current_user
 from sqlalchemy import exc
+from sqlalchemy.orm import joinedload
 
 from . import dataformat
-from sqlalchemy.orm import joinedload
 from .authorization import require
 from .core import db, event
 from .models import Courses, UserTypesForCourse, CoursesAndUsers

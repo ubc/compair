@@ -5,6 +5,7 @@ import time
 from bouncer.constants import MANAGE
 from flask import Blueprint, Flask, current_app
 from flask.ext.login import login_required, current_user
+
 from flask.ext.restful import Resource, reqparse
 
 from sqlalchemy import func
@@ -84,11 +85,11 @@ class ReportRootAPI(Resource):
                     .order_by(PostsForQuestions.answer_start).all()
             data = participation_report(course_id, questions, group_id)
 
-            title_row1 = ["" for x in user_titles]
+            title_row1 = [""] * len(user_titles)
             title_row2 = user_titles
             for q in questions:
                 criteria = CriteriaAndPostsForQuestions.query.filter_by(questions_id=q.id, active=True).all()
-                title_row1 += [q.title] + ["" for x in criteria]
+                title_row1 += [q.title] + [""] * len(criteria)
                 for c in criteria:
                     title_row2.append('Percentage Score for "' + c.criterion.name + '"')
                 title_row2.append("Evaluations Submitted (" + str(q.num_judgement_req) + ' required)')

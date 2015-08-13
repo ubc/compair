@@ -1,19 +1,23 @@
+import uuid
+import os
+import csv
+import json
+
 from bouncer.constants import READ, CREATE, DELETE
 from flask import Blueprint, current_app, request
-from flask.ext.restful import Resource, marshal_with, marshal, reqparse
+from flask.ext.restful import Resource, marshal
 from flask_login import login_required
 from werkzeug.utils import secure_filename
 from flask.ext.restful.reqparse import RequestParser
+
 from flask.ext.login import current_user
 
 from . import dataformat
-from .authorization import require, allow
+from .authorization import require
 from .core import db, event
 from .models import Groups, GroupsAndUsers, CoursesAndUsers, Users, Courses, UserTypesForCourse
 from .util import new_restful_api
 from .attachment import allowed_file
-
-import uuid, os, csv, json
 
 groups_api = Blueprint('groups_api', __name__)
 api = new_restful_api(groups_api)

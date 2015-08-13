@@ -32,6 +32,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import synonym, load_only, column_property
 from sqlalchemy import func, select, and_
 
+
 # import the context under an app-specific name (so it can easily be replaced later)
 from passlib.apps import custom_app_context as pwd_context
 

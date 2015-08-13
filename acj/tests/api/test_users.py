@@ -5,10 +5,10 @@ import random
 from flask.ext.bouncer import ensure
 from flask.ext.login import login_user, logout_user
 from werkzeug.exceptions import Unauthorized
+
 from data.fixtures import DefaultFixture
 from data.fixtures import UsersFactory
 from data.fixtures.test_data import BasicTestData
-
 from acj import db, Users
 from acj.tests.test_acj import ACJTestCase
 from acj.models import UserTypesForSystem, UserTypesForCourse

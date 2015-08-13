@@ -1,8 +1,7 @@
-from alembic import command
-
 from alembic.config import Config
-from acj import db
 
+from alembic import command
+from acj import db
 from acj.tests.test_acj import ACJTestCase
 
 

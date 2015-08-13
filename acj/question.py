@@ -2,14 +2,14 @@ import datetime
 
 import dateutil.parser
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
-from flask import Blueprint, current_app
+from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import desc, or_
+from sqlalchemy.orm import joinedload
 
 from . import dataformat
-from sqlalchemy.orm import joinedload
 from .core import db, event
 from .authorization import allow, require
 from .models import PostsForQuestions, Courses, Posts, \

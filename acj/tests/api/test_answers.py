@@ -1,7 +1,6 @@
 import json
 
 from data.fixtures.test_data import SimpleAnswersTestData
-
 from acj.models import UserTypesForSystem, UserTypesForCourse, PostsForAnswers
 from acj.tests.test_acj import ACJTestCase
 

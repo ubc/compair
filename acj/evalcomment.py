@@ -5,11 +5,10 @@ from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
-
 from bouncer.constants import READ, EDIT, CREATE, MANAGE
+from sqlalchemy.orm import load_only, joinedload, contains_eager
 
 from . import dataformat
-from sqlalchemy.orm import load_only, joinedload, contains_eager
 from .core import db, event
 from .models import Judgements, PostsForComments, PostsForJudgements, Courses, PostsForQuestions, Posts, \
     AnswerPairings, CoursesAndUsers, CriteriaAndPostsForQuestions, Users, \

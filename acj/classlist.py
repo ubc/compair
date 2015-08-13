@@ -10,7 +10,6 @@ from flask.ext.restful import Resource, marshal, abort
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload, contains_eager
 from werkzeug.utils import secure_filename
-
 from flask.ext.restful.reqparse import RequestParser
 
 from . import dataformat

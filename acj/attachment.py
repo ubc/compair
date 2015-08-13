@@ -14,7 +14,6 @@ from .core import db, event
 from .models import FilesForPosts
 from .util import new_restful_api
 
-
 attachment_api = Blueprint('attachment_api', __name__)
 api = new_restful_api(attachment_api)
 

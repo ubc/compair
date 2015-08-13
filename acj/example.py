@@ -7,6 +7,7 @@ from flask.ext.restful import Resource
 from .util import new_restful_api
 
 
+
 # First declare a Flask Blueprint for this module
 example_api = Blueprint('example_api', __name__)
 # Then pack the blueprint into a Flask-Restful API

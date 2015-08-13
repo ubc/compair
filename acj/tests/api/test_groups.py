@@ -1,8 +1,7 @@
-from data.fixtures.test_data import GroupsTestData
-
-from acj.tests.test_acj import ACJTestCase
-
 import io
+
+from data.fixtures.test_data import GroupsTestData
+from acj.tests.test_acj import ACJTestCase
 
 
 class GroupsAPITests(ACJTestCase):
