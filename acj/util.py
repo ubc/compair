@@ -1,12 +1,9 @@
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
 import cProfile
 import contextlib
 from functools import wraps
 import pstats
 
+from six import StringIO
 from flask import request, jsonify
 from flask.ext.restful import Api
 from flask.ext.sqlalchemy import Model
