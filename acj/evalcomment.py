@@ -19,8 +19,12 @@ from .authorization import allow, require
 evalcomments_api = Blueprint('evalcomments_api', __name__)
 api = new_restful_api(evalcomments_api)
 
+
+def judgement_type(value):
+    return dict(value)
+
 new_comment_parser = RequestParser()
-new_comment_parser.add_argument('judgements', type=list, required=True)
+new_comment_parser.add_argument('judgements', type=judgement_type, required=True, action='append')
 new_comment_parser.add_argument('selfeval', type=bool, required=False, default=False)
 
 # events

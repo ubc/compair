@@ -187,8 +187,8 @@ class QuestionsAPITests(ACJTestCase):
         rv = self.client.delete(self.url + '/' + str(ques_id))
         self.assert403(rv)
         self.assertEqual(
-            'Forbidden', rv.json['message'],
-            "User does not have the authorization to delete the question.")
+            '<p>' + self.data.get_authorized_student().username + ' does not have delete access to Question 1</p>',
+            rv.json['message'])
         self.logout()
         self.login(self.data.get_authorized_instructor().username)
         rv = self.client.delete(self.url + '/' + str(ques_id))

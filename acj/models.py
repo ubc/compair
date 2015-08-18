@@ -208,6 +208,12 @@ class Users(db.Model, UserMixin):
         else:
             return self.coursesandusers[0].usertypeforcourse.name
 
+    def __repr__(self):
+        if self.username:
+            return self.username
+        else:
+            return "User"
+
 
 class InvalidAttributeException(Exception):
     pass
@@ -1078,6 +1084,11 @@ class PostsForQuestions(db.Model):
         evaluation_count = self.judgement_count / self.criteria_count if self.criteria_count else 0
         return evaluation_count + self._selfeval_count
 
+    def __repr__(self):
+        if self.id:
+            return "Question " + str(self.id)
+        else:
+            return "Question"
 
 # each course can have different criteria
 class CriteriaAndCourses(db.Model):
