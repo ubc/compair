@@ -136,21 +136,24 @@ class QuestionCommentsTestData(SimpleQuestionsTestData):
         db.session.commit()
         return question_comment
 
+
 class SimpleAnswersTestData(SimpleQuestionsTestData):
-    def __init__(self):
+    def __init__(self, num_answer=2):
         SimpleQuestionsTestData.__init__(self)
-        self.extra_student1 = self.create_normal_user()
-        self.extra_student2 = self.create_normal_user()
-        self.enrol_student(self.extra_student1, self.get_course())
-        self.enrol_student(self.extra_student2, self.get_course())
+        self.extra_student = []
+        for _ in xrange(num_answer):
+            student = self.create_normal_user()
+            self.extra_student.append(student)
+            self.enrol_student(student, self.get_course())
         self.answers = []
         self.answersByQuestion = {}
         for question in self.get_questions():
-            answer1 = self.create_answer(question, self.extra_student1)
-            answer2 = self.create_answer(question, self.extra_student2)
-            self.answers.append(answer1)
-            self.answers.append(answer2)
-            self.answersByQuestion[question.id] = [answer1, answer2]
+            answers_for_question = []
+            for i in xrange(num_answer):
+                answer = self.create_answer(question, self.extra_student[i])
+                answers_for_question.append(answer)
+                self.answersByQuestion[question.id] = answers_for_question
+            self.answers += answers_for_question
 
     def create_answer(self, question, author):
         post = PostsFactory(courses_id = question.post.courses_id, users_id = author.id)
@@ -165,20 +168,18 @@ class SimpleAnswersTestData(SimpleQuestionsTestData):
     def get_answers_by_question(self):
         return self.answersByQuestion
 
-    def get_extra_student1(self):
-        return self.extra_student1
+    def get_extra_student(self, index):
+        return self.extra_student[index]
 
-    def get_extra_student2(self):
-        return self.extra_student2
 
 class AnswerCommentsTestData(SimpleAnswersTestData):
     def __init__(self):
         SimpleAnswersTestData.__init__(self)
         self.answer_comments_by_question = {}
         for question in self.get_questions():
-            comment_extra_student1 = self.create_answer_comment(self.get_extra_student1(),
+            comment_extra_student1 = self.create_answer_comment(self.get_extra_student(0),
                     self.get_course(), self.answersByQuestion[question.id][1])
-            comment_extra_student2 = self.create_answer_comment(self.get_extra_student2(),
+            comment_extra_student2 = self.create_answer_comment(self.get_extra_student(1),
                     self.get_course(), self.answersByQuestion[question.id][0])
             self.answer_comments_by_question[question.id] = [comment_extra_student1, comment_extra_student2]
 

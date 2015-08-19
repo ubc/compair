@@ -8,7 +8,7 @@ from acj.tests.test_acj import ACJTestCase
 class AnswersAPITests(ACJTestCase):
     def setUp(self):
         super(AnswersAPITests, self).setUp()
-        self.data = SimpleAnswersTestData()
+        self.data = SimpleAnswersTestData(30)
         self.question = self.data.get_questions()[1]
         self.base_url = self._build_url(self.data.get_course().id, self.question.id)
 
@@ -39,10 +39,14 @@ class AnswersAPITests(ACJTestCase):
         rv = self.client.get(self.base_url)
         self.assert200(rv)
         actual_answers = rv.json['objects']
-        expected_answers = PostsForAnswers.query.filter_by(questions_id=self.question.id).all()
-        for i, expected in enumerate(expected_answers):
+        expected_answers = PostsForAnswers.query.filter_by(questions_id=self.question.id).paginate(1, 20)
+        for i, expected in enumerate(expected_answers.items):
             actual = actual_answers[i]
             self.assertEqual(expected.post.content, actual['content'])
+        self.assertEqual(1, rv.json['page'])
+        self.assertEqual(2, rv.json['pages'])
+        self.assertEqual(20, rv.json['per_page'])
+        self.assertEqual(expected_answers.total, rv.json['total'])
 
     def test_create_answer(self):
         # test login required
@@ -192,7 +196,7 @@ class AnswersAPITests(ACJTestCase):
         self.assert401(rv)
 
         # test unauthorized user
-        self.login(self.data.get_extra_student2().username)
+        self.login(self.data.get_extra_student(1).username)
         rv = self.client.post(
             self.base_url + '/' + str(answer.id),
             data=json.dumps(expected),
@@ -201,7 +205,7 @@ class AnswersAPITests(ACJTestCase):
         self.logout()
 
         # test invalid course id
-        self.login(self.data.get_extra_student1().username)
+        self.login(self.data.get_extra_student(0).username)
         rv = self.client.post(
             self._build_url(999, question_id, '/' + str(answer.id)),
             data=json.dumps(expected),
@@ -224,7 +228,7 @@ class AnswersAPITests(ACJTestCase):
         self.logout()
 
         # test unmatched answer id
-        self.login(self.data.get_extra_student2().username)
+        self.login(self.data.get_extra_student(1).username)
         rv = self.client.post(
             self.base_url + '/' + str(self.data.get_answers_by_question()[question_id][1].id),
             data=json.dumps(expected),
@@ -233,7 +237,7 @@ class AnswersAPITests(ACJTestCase):
         self.logout()
 
         # test edit by author
-        self.login(self.data.get_extra_student1().username)
+        self.login(self.data.get_extra_student(0).username)
         rv = self.client.post(
             self.base_url + '/' + str(answer.id),
             data=json.dumps(expected),
@@ -264,13 +268,13 @@ class AnswersAPITests(ACJTestCase):
         self.assert401(rv)
 
         # test unauthorized users
-        self.login(self.data.get_extra_student2().username)
+        self.login(self.data.get_extra_student(1).username)
         rv = self.client.delete(self.base_url + '/' + str(answer_id))
         self.assert403(rv)
         self.logout()
 
         # test invalid answer id
-        self.login(self.data.get_extra_student1().username)
+        self.login(self.data.get_extra_student(0).username)
         rv = self.client.delete(self.base_url + '/999')
         self.assert404(rv)
 
@@ -298,7 +302,7 @@ class AnswersAPITests(ACJTestCase):
         self.assert401(rv)
 
         # test invalid course
-        self.login(self.data.get_extra_student1().username)
+        self.login(self.data.get_extra_student(0).username)
         rv = self.client.get(self._build_url(999, question_id, '/user'))
         self.assert404(rv)
 
@@ -420,7 +424,7 @@ class AnswersAPITests(ACJTestCase):
         self.logout()
 
         # test successful query - answered
-        self.login(self.data.get_extra_student1().username)
+        self.login(self.data.get_extra_student(0).username)
         rv = self.client.get(count_url)
         self.assert200(rv)
         self.assertEqual(1, rv.json['answered'])
@@ -451,7 +455,7 @@ class AnswersAPITests(ACJTestCase):
         self.logout()
 
         # test successful query - have submitted one answer per question
-        self.login(self.data.get_extra_student1().username)
+        self.login(self.data.get_extra_student(0).username)
         rv = self.client.get(answered_url)
         self.assert200(rv)
         expected = {str(question.id): 1 for question in self.data.get_questions()}
@@ -487,7 +491,7 @@ class AnswersAPITests(ACJTestCase):
         self.assert200(rv)
         expected = self.data.get_answers_by_question()[self.data.get_questions()[0].id]
 
-        self.assertEqual(2, len(rv.json['answers']))
+        self.assertEqual(30, len(rv.json['answers']))
         for i, exp in enumerate(expected):
             actual = rv.json['answers'][str(exp.id)]
             self.assertEqual(exp.id, actual['id'])
@@ -497,7 +501,7 @@ class AnswersAPITests(ACJTestCase):
         self.logout()
 
         # test successful query - student
-        self.login(self.data.get_extra_student1().username)
+        self.login(self.data.get_extra_student(0).username)
         rv = self.client.get(view_url)
         self.assert200(rv)
 

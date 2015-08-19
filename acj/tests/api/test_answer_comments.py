@@ -141,7 +141,7 @@ class AnswerCommentsAPITests(ACJTestCase):
         self.logout()
 
         # test author
-        self.login(self.data.get_extra_student1().username)
+        self.login(self.data.get_extra_student(0).username)
         rv = self.client.get(url)
         self.assert200(rv)
         self.assertEqual(comment.content, rv.json['content'])
@@ -207,7 +207,7 @@ class AnswerCommentsAPITests(ACJTestCase):
         self.logout()
 
         # test author
-        self.login(self.data.get_extra_student1().username)
+        self.login(self.data.get_extra_student(0).username)
         content['content'] = 'I am the author'
         rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
         self.assert200(rv)
@@ -245,7 +245,7 @@ class AnswerCommentsAPITests(ACJTestCase):
         self.logout()
 
         # test author
-        self.login(self.data.get_extra_student2().username)
+        self.login(self.data.get_extra_student(1).username)
         comment = self.data.get_answer_comments_by_question(self.questions[0])[1]
         url = self._build_url(
             self.course.id, self.questions[0].id,
@@ -265,7 +265,7 @@ class AnswerCommentsAPITests(ACJTestCase):
         self.assert401(rv)
 
         # test invalid course id
-        self.login(self.data.get_extra_student1().username)
+        self.login(self.data.get_extra_student(0).username)
         invalid_url = \
             '/api/courses/999/questions/' + str(self.questions[0].id) + \
             '/answers/' + str(self.answers[self.questions[0].id][0].id) + '/users/comments'

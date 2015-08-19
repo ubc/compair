@@ -2,6 +2,7 @@ import cProfile
 import contextlib
 from functools import wraps
 import pstats
+from flask.ext.restful.reqparse import RequestParser
 
 from six import StringIO
 from flask import request, jsonify
@@ -78,7 +79,7 @@ def new_restful_api(blueprint):
 
 
 def get_model_changes(model):
-    # disble db session autoflush, otherwise changes will be flushed and lost
+    # disable db session autoflush, otherwise changes will be flushed and lost
     with db.session.no_autoflush:
         changes = dict()
         insp = inspect(model)
@@ -105,6 +106,9 @@ def get_model_changes(model):
 
     return changes
 
+pagination_parser = RequestParser()
+pagination_parser.add_argument('page', type=int, required=False, default=1)
+pagination_parser.add_argument('per_page', type=int, required=False, default=20)
 
 @contextlib.contextmanager
 def profiled():

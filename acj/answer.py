@@ -11,7 +11,7 @@ from .core import db
 from .authorization import require, allow, is_user_access_restricted
 from .models import Posts, PostsForAnswers, PostsForQuestions, Courses, Users, \
     Judgements, AnswerPairings
-from .util import new_restful_api, get_model_changes
+from .util import new_restful_api, get_model_changes, pagination_parser
 from .attachment import add_new_file, delete_file
 from .core import event
 
@@ -58,7 +58,6 @@ answer_deadline_message = 'Answer deadline has passed.'
 
 # /
 class AnswerRootAPI(Resource):
-    # TODO pagination
     @login_required
     def get(self, course_id, question_id):
         Courses.exists_or_404(course_id)
@@ -66,8 +65,10 @@ class AnswerRootAPI(Resource):
         require(READ, question)
         restrict_users = not allow(MANAGE, question)
 
+        params = pagination_parser.parse_args()
+
         # this query could be further optimized by reduction the selected columns
-        answers = PostsForAnswers.query. \
+        page = PostsForAnswers.query. \
             with_entities(PostsForAnswers). \
             options(contains_eager('post').joinedload('files')). \
             options(contains_eager('post').joinedload('user')). \
@@ -76,7 +77,7 @@ class AnswerRootAPI(Resource):
             options(joinedload('_scores')). \
             join(Posts). \
             filter(PostsForAnswers.questions_id == question.id). \
-            order_by(Posts.created.desc()).all()
+            order_by(Posts.created.desc()).paginate(params['page'], params['per_page'])
 
         on_answer_list_get.send(
             self,
@@ -85,7 +86,8 @@ class AnswerRootAPI(Resource):
             course_id=course_id,
             data={'question_id': question_id})
 
-        return {"objects": marshal(answers, dataformat.get_posts_for_answers(restrict_users))}
+        return {"objects": marshal(page.items, dataformat.get_posts_for_answers(restrict_users)), "page": page.page,
+                "pages": page.pages, "total": page.total, "per_page": page.per_page}
 
     @login_required
     def post(self, course_id, question_id):
