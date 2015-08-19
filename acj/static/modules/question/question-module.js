@@ -454,14 +454,6 @@ module.controller("QuestionViewController",
 				Toaster.reqerror("Answers Not Found", ret);
 			}
 		);
-		EvalCommentResource.view({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
-			function (ret) {
-				$scope.comparisons = ret.comparisons;
-			},
-			function (ret) {
-				Toaster.reqerror('Error', ret);
-			}
-		);
 		//AnswerResource.view({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
 		//	function (ret) {
 		//		$scope.ans = ret.answers;
@@ -545,6 +537,16 @@ module.controller("QuestionViewController",
 		// tabs: answers, help, participation, comparisons
 		$scope.setTab = function(name) {
 			tab = name;
+			if (name == "comparisons") {
+				EvalCommentResource.view({'courseId': $scope.courseId, 'questionId': questionId},
+					function (ret) {
+						$scope.comparisons = ret.comparisons;
+					},
+					function (ret) {
+						Toaster.reqerror('Error', ret);
+					}
+				)
+			}
 		};
 		$scope.showTab = function(name) {
 			return tab == name;
