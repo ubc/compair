@@ -1,6 +1,12 @@
 // Provides the services and controllers for questions.
 //
 (function() {
+function combineDateTime(datetime) {
+	var date = new Date(datetime.date);
+	var time = new Date(datetime.time);
+	date.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
+	return date;
+}
 
 var module = angular.module('ubc.ctlt.acj.question',
 	[
@@ -72,7 +78,7 @@ module.directive(
 	function() {
 		return {
 			restrict: 'A',
-			link: function(scope, element, attrs) {
+			link: function(scope, element) {
 				$(element).hover(function(){
 					// on mouseenter
 					$(element).tooltip('show');
@@ -219,7 +225,7 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 
 		uploader.filters.push({
 			name: 'pdfFilter',
-			fn: function(item, options) {
+			fn: function(item) {
 				var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
 				var valid = '|pdf|'.indexOf(type) !== -1;
 				if (!valid) {
@@ -242,41 +248,41 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 		});
 
 		return uploader;
-	}
+	};
 
 	var onComplete = function() {
-		return function(fileItem, response, status, headers) {
+		return function(fileItem, response) {
 			if (response) {
 				filename = response['name'];
 				alias = fileItem.file.name;	
 			}	
 		};
-	}
+	};
 
 	var onError = function() {
-		return function(fileItem, response, status, headers) {
+		return function(fileItem, response, status) {
 			if (response == '413') {
 				Toaster.error("File Size Error", "The file is larger than 25MB. Please upload a smaller file.");
 			} else {
 				Toaster.reqerror("Attachment Fail", status);
 			}
 		};
-	}
+	};
 
 	var resetName = function() {
 		return function() {
 			filename = '';
 			alias = '';
 		}
-	}
+	};
 
 	var getName = function() {
 		return filename;
-	}
+	};
 
 	var getAlias = function() {
 		return alias;
-	}	
+	};
 
 	return {
 		getUploader: getUploader,
@@ -292,7 +298,7 @@ module.filter("notScoredEnd", function () {
 		if (!angular.isArray(array)) return;
 		var scored = [];
 		var not_scored = [];
-		angular.forEach(array, function(item, index) {
+		angular.forEach(array, function(item) {
 			if (key in item.scores) {
 				scored.push(item);
 			} else {
@@ -352,78 +358,76 @@ module.controller("QuestionViewController",
 			}
 		);
 		$scope.question = {};
-		QuestionResource.get({'courseId': $scope.courseId,
-			'questionId': questionId}).$promise.then(
-				function (ret)
-				{
-					var judgeEnd = ret.question.judge_end;
-					ret.question.judgeEnd = judgeEnd;
-					ret.question.answer_start = new Date(ret.question.answer_start);
-					ret.question.answer_end = new Date(ret.question.answer_end);
-					ret.question.judge_start = new Date(ret.question.judge_start);
-					ret.question.judge_end = new Date(ret.question.judge_end);
-					$scope.question = ret.question;
+		QuestionResource.get({'courseId': $scope.courseId, 'questionId': questionId},
+			function (ret) {
+				var judgeEnd = ret.question.judge_end;
+				ret.question.judgeEnd = judgeEnd;
+				ret.question.answer_start = new Date(ret.question.answer_start);
+				ret.question.answer_end = new Date(ret.question.answer_end);
+				ret.question.judge_start = new Date(ret.question.judge_start);
+				ret.question.judge_end = new Date(ret.question.judge_end);
+				$scope.question = ret.question;
 
-					$scope.criteria = ret.question.criteria;
-					$scope.criteriaChange();
-					$scope.reverse = true;
-					
-					$scope.evalcriteria = {};
-					angular.forEach(ret.question.criteria, function(criterion, key){
-						$scope.evalcriteria[criterion['id']] = criterion['criterion']['name'];
-					});
+				$scope.criteria = ret.question.criteria;
+				$scope.criteriaChange();
+				$scope.reverse = true;
 
-					$scope.readDate = Date.parse(ret.question.post.created);
+				$scope.evalcriteria = {};
+				angular.forEach(ret.question.criteria, function(criterion){
+					$scope.evalcriteria[criterion['id']] = criterion['criterion']['name'];
+				});
 
-					if (judgeEnd) {
-						$scope.answerAvail = $scope.question.judge_end;
-					} else {
-						$scope.answerAvail = $scope.question.answer_end;
-					}
+				$scope.readDate = Date.parse(ret.question.post.created);
 
-					JudgementResource.count({'courseId': $scope.courseId, 'questionId': questionId,
-								'userId': $scope.loggedInUserId}).$promise.then(
-						function (ret) {
-							$scope.judged_req_met = ret.count >= $scope.question.num_judgement_req;
-							$scope.evaluation = 0;
-							if (!$scope.judged_req_met) {
-								$scope.evaluation = $scope.question.num_judgement_req - ret.count;
-							}
-							// if evaluation period is set answers can be seen after it ends
-							if (judgeEnd) {
-								$scope.see_answers = $scope.question.after_judging;
-							// if an evaluation period is NOT set - answers can be seen after req met
-							} else {
-								$scope.see_answers = $scope.question.after_judging && $scope.judged_req_met;
-							}
-							var diff = $scope.question.answers_count - myAnsCount;
-							var eval_left = ((diff * (diff - 1)) / 2);
-							$scope.warning = ($scope.question.num_judgement_req - ret.count) > eval_left;
-						},
-						function (ret) {
-							Toaster.reqerror("Evaluation Count Not Found", ret);
-						}
-					);
-					AnswerCommentResource.selfEval({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
-						function (ret) {
-							$scope.selfEval_req_met = true;
-							$scope.selfEval = 0;
-							if ($scope.question.selfevaltype_id) {
-								$scope.selfEval_req_met = ret.count > 0;
-								$scope.selfEval = 1 - ret.count;
-							}
-						},
-						function (ret) {
-							Toaster.reqerror("Self-Evaluation Records Not Found.", ret);
-						}
-					);
-				},
-				function (ret)
-				{
-					Toaster.reqerror("Question Not Found For ID " + questionId, ret);
+				if (judgeEnd) {
+					$scope.answerAvail = $scope.question.judge_end;
+				} else {
+					$scope.answerAvail = $scope.question.answer_end;
 				}
-			);
-		AnswerResource.get({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
+
+				JudgementResource.count({'courseId': $scope.courseId, 'questionId': questionId,
+					'userId': $scope.loggedInUserId},
+					function (ret) {
+						$scope.judged_req_met = ret.count >= $scope.question.num_judgement_req;
+						$scope.evaluation = 0;
+						if (!$scope.judged_req_met) {
+							$scope.evaluation = $scope.question.num_judgement_req - ret.count;
+						}
+						// if evaluation period is set answers can be seen after it ends
+						if (judgeEnd) {
+							$scope.see_answers = $scope.question.after_judging;
+							// if an evaluation period is NOT set - answers can be seen after req met
+						} else {
+							$scope.see_answers = $scope.question.after_judging && $scope.judged_req_met;
+						}
+						var diff = $scope.question.answers_count - myAnsCount;
+						var eval_left = ((diff * (diff - 1)) / 2);
+						$scope.warning = ($scope.question.num_judgement_req - ret.count) > eval_left;
+					},
+					function (ret) {
+						Toaster.reqerror("Evaluation Count Not Found", ret);
+					}
+				);
+				AnswerCommentResource.selfEval({'courseId': $scope.courseId, 'questionId': questionId},
+					function (ret) {
+						$scope.selfEval_req_met = true;
+						$scope.selfEval = 0;
+						if ($scope.question.selfevaltype_id) {
+							$scope.selfEval_req_met = ret.count > 0;
+							$scope.selfEval = 1 - ret.count;
+						}
+					},
+					function (ret) {
+						Toaster.reqerror("Self-Evaluation Records Not Found.", ret);
+					}
+				);
+			},
+			function (ret)
+			{
+				Toaster.reqerror("Question Not Found For ID " + questionId, ret);
+			}
+		);
+		AnswerResource.get({'courseId': $scope.courseId, 'questionId': questionId},
 			function (ret) {
 				$scope.answers = ret.objects;
 			},
@@ -431,44 +435,42 @@ module.controller("QuestionViewController",
 				Toaster.reqerror("Answers for this questions not found.", ret);
 			}
 		);
-		QuestionCommentResource.get({'courseId': $scope.courseId,
-			'questionId': questionId}).$promise.then(
-				function (ret)
-				{
-					$scope.comments = ret.objects;
-				},
-				function (ret)
-				{
-					Toaster.reqerror("Comments Not Found", ret);
-				}
+		QuestionCommentResource.get({'courseId': $scope.courseId, 'questionId': questionId},
+			function (ret)
+			{
+				$scope.comments = ret.objects;
+			},
+			function (ret)
+			{
+				Toaster.reqerror("Comments Not Found", ret);
+			}
 		);
-		QuestionResource.getAnswered({'id': $scope.courseId,
-			'questionId': questionId}).$promise.then(
-				function (ret) {
-					myAnsCount = ret.answered;
-					$scope.answered = ret.answered > 0;
-				},
-				function (ret) {
-					Toaster.reqerror("Answers Not Found", ret);
-				}
+		QuestionResource.getAnswered({'id': $scope.courseId, 'questionId': questionId},
+			function (ret) {
+				myAnsCount = ret.answered;
+				$scope.answered = ret.answered > 0;
+			},
+			function (ret) {
+				Toaster.reqerror("Answers Not Found", ret);
+			}
 		);
 		EvalCommentResource.view({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
 			function (ret) {
 				$scope.comparisons = ret.comparisons;
 			},
 			function (ret) {
-				Toaster.reqerorr('Error', ret);
+				Toaster.reqerror('Error', ret);
 			}
 		);
-		AnswerResource.view({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
-			function (ret) {
-				$scope.ans = ret.answers;
-			},
-			function (ret) {
-				Toaster.reqerror("Failed to retrieve the answers", ret);
-			}
-		);
-		CourseResource.getInstructorsLabels({'id': $scope.courseId}).$promise.then(
+		//AnswerResource.view({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
+		//	function (ret) {
+		//		$scope.ans = ret.answers;
+		//	},
+		//	function (ret) {
+		//		Toaster.reqerror("Failed to retrieve the answers", ret);
+		//	}
+		//);
+		CourseResource.getInstructorsLabels({'id': $scope.courseId},
 			function (ret) {
 				$scope.instructors = ret.instructors;
 			},
@@ -479,7 +481,7 @@ module.controller("QuestionViewController",
 
 		$scope.getUserIds = function(students) {
 			var users = {};
-			angular.forEach(students, function(s, key){
+			angular.forEach(students, function(s){
 				users[s.user.id] = 1;
 			});
 			return users;
@@ -566,7 +568,7 @@ module.controller("QuestionViewController",
 		
 		// question delete function
 		$scope.deleteQuestion = function(course_id, question_id) {
-			QuestionResource.delete({'courseId': course_id, 'questionId': question_id}).$promise.then(
+			QuestionResource.delete({'courseId': course_id, 'questionId': question_id},
 				function (ret) {
 					Toaster.success("Question Delete Successful", "Successfully deleted question " + ret.id);
 					$location.path('/course/'+course_id);
@@ -579,7 +581,7 @@ module.controller("QuestionViewController",
 		};
 
 		$scope.deleteAnswer = function(answer, course_id, question_id, answer_id) {
-			AnswerResource.delete({'courseId':course_id, 'questionId':question_id, 'answerId':answer_id}).$promise.then(
+			AnswerResource.delete({'courseId':course_id, 'questionId':question_id, 'answerId':answer_id},
 				function (ret) {
 					Toaster.success("Answer Delete Successful", "Successfully deleted answer "+ ret.id);
 					var authorId = answer['user_id'];
@@ -612,7 +614,7 @@ module.controller("QuestionViewController",
 		};
 
 		$scope.deleteComment = function(key, course_id, question_id, comment_id) {
-			QuestionCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'commentId': comment_id}).$promise.then(
+			QuestionCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'commentId': comment_id},
 				function (ret) {
 					Toaster.success("Comment Delete Successful", "Successfully deleted comment " + ret.id);
 					$scope.comments.splice(key, 1);
@@ -625,7 +627,7 @@ module.controller("QuestionViewController",
 		};
 
 		$scope.deleteReply = function(answer, commentKey, course_id, question_id, answer_id, comment_id) {
-			AnswerCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'answerId': answer_id, 'commentId': comment_id}).$promise.then(
+			AnswerCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'answerId': answer_id, 'commentId': comment_id},
 				function (ret) {
 					Toaster.success("Reply Delete Successful", "Successfully deleted reply " + ret.id);
 					var comment = answer['comments'].splice(commentKey, 1);
@@ -703,13 +705,6 @@ module.controller("QuestionCreateController",
 			$scope.date.jend.opened = true;
 		};
 
-		var combineDateTime = function(datetime) {
-			date = new Date(datetime.date);
-			time = new Date(datetime.time);
-			date.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
-			return date;
-		};
-		
 		$scope.questionSubmit = function () {
 			$scope.submitted = true;
 			$scope.question.answer_start = combineDateTime($scope.date.astart);
@@ -756,12 +751,12 @@ module.controller("QuestionCreateController",
 		};
 
 		// Criteria
-		CoursesCriteriaResource.get({'courseId': courseId}).$promise.then(
+		CoursesCriteriaResource.get({'courseId': courseId},
 			function (ret) {
 				$scope.courseCriteria = ret.objects;
 			},
 			function (ret) {
-				Toaster.reqerror("Criteria Not Found.");
+				Toaster.reqerror("Criteria Not Found.", ret);
 			}
 		);
 
@@ -798,7 +793,7 @@ module.controller("QuestionCreateController",
 				$scope.question.selfevaltype_id = $scope.selfevaltypes[0].id;
 			},
 			function (ret) {
-				Toaster.reqerror("Self Evaluation Types Not Found.");
+				Toaster.reqerror("Self Evaluation Types Not Found.", ret);
 			}
 		);
 	}
@@ -848,8 +843,8 @@ module.controller("QuestionEditController",
 
 		$scope.deleteFile = function(post_id, file_id) {
 			AttachmentResource.delete({'postId': post_id, 'fileId': file_id}).$promise.then(
-				function (ret) {
-					Toaster.success('Attachment Delete Successful', "This attachement was successfully deleted.");
+				function () {
+					Toaster.success('Attachment Delete Successful', "This attachment was successfully deleted.");
 					$scope.question.uploadedFile = false;
 				},
 				function (ret) {
@@ -863,7 +858,7 @@ module.controller("QuestionEditController",
 				// add to question
 				QuestionsCriteriaResource.save({'courseId': courseId, 'questionId': $scope.questionId,
 						'criteriaId': criteriaId}, {}).$promise.then(
-						function (ret) {
+						function () {
 							Toaster.success("Successfully added the criterion to the question.");
 						},
 						function (ret) {
@@ -876,7 +871,7 @@ module.controller("QuestionEditController",
 				// remove from question
 				QuestionsCriteriaResource.delete({'courseId': courseId, 'questionId': $scope.questionId,
 						'criteriaId': criteriaId}).$promise.then(
-						function (ret) {
+						function () {
 							Toaster.success("Successfully removed the criterion from the question.");
 						},
 						function (ret) {
@@ -897,12 +892,12 @@ module.controller("QuestionEditController",
 			}
 		};
 
-		SelfEvaluationTypeResource.get().$promise.then(
+		SelfEvaluationTypeResource.get(
 			function (ret) {
 				$scope.selfevaltypes = ret.types;
 			},
 			function (ret) {
-				Toaster.reqerror("Self Evaluation Types Not Found.");
+				Toaster.reqerror("Self Evaluation Types Not Found.", ret);
 			}
 		);
 
@@ -956,11 +951,11 @@ module.controller("QuestionEditController",
 						$scope.courseCriteria = ret.objects;
 						$scope.oneSelected = $scope.question.criteria.length > 0;
 						var inQuestion = {};
-						angular.forEach($scope.question.criteria, function(c, key) {
+						angular.forEach($scope.question.criteria, function(c) {
 							inQuestion[c.criterion.id] = 1;
 						});
-						for (key in ret.objects) {
-							c = ret.objects[key];
+						for (var key in ret.objects) {
+							var c = ret.objects[key];
 							$scope.selectedCriteria[c.criterion.id] = c.criterion.id in inQuestion
 						}
 					},
@@ -969,17 +964,10 @@ module.controller("QuestionEditController",
 					}
 				);
 			},
-			function (ret) {
+			function () {
 				Toaster.reqerror("Question Not Found", "No question found for id "+$scope.questionId);
 			}
 		);
-
-		var combineDateTime = function(datetime) {
-			date = new Date(datetime.date);
-			time = new Date(datetime.time);
-			date.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
-			return date;
-		};
 
 		$scope.questionSubmit = function () {
 			$scope.submitted = true;
