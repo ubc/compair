@@ -85,6 +85,73 @@ module.directive(
 	}
 );
 
+module.directive('comparisonPreview', function() {
+	return {
+		/* this template is our simple text with button to launch the preview */
+		templateUrl: 'modules/question/preview-inline-template.html',
+		controller: function ($scope, $modal) {
+			/* student view preview is comparison template */
+			$scope.thePreview = $modal(
+				{
+					contentTemplate: 'modules/judgement/judgement-core.html',
+					scope: $scope,
+					show: false
+				}
+			);
+			/* need to pass to comparison template all expected properties to complete the preview */
+			$scope.previewPopup = function() {
+				/* question has title that is entered, content that is entered, number of comparisons that is entered (or else 3), no files */
+				$scope.question = {
+					title: $scope.question.title,
+					post: {
+						content: $scope.question.post.content,
+						files: []
+					},
+					num_judgement_req: $scope.question.num_judgement_req ? $scope.question.num_judgement_req : 3,
+				};
+				/* previewed criteria initially empty */
+				$scope.previewCriteria = [];
+				/* we need to determine what has been picked to fill out the previewed criteria */
+				var pickCriteria = function(chosen, all) {
+					/* first we will loop through the selected criteria */
+					angular.forEach(chosen, function(selected, criterionId) {
+						/* then we will loop through the course criteria to find what matches */
+						angular.forEach(all, function(courseCrit) {
+							if (criterionId == courseCrit.criterion.id && selected == true) {
+								// alert('match' + criterionId + ' ' + courseCrit.criterion.id);
+								/* matching criteria are added to the preview */
+								$scope.previewCriteria.push(courseCrit);
+							} else {
+								//alert('MISmatch ' + criterionId + ' ' + courseCrit.criterion.id);
+							}
+						});
+					});
+				};
+				/* call the function before setting the criteria, passing in selected criteria and all course criteria arrays */
+				pickCriteria($scope.selectedCriteria, $scope.courseCriteria);
+				/* then set question criteria as the ones we've determined should be previewed */
+				$scope.questionCriteria = $scope.previewCriteria;
+				/* set current round # and total round # for preview */
+				$scope.current = 1;
+				$scope.total = $scope.question.num_judgement_req;
+				/* answer pair shown is dummy content, no files */
+				$scope.answerPair = 
+					{
+					    answer1: {
+						content: "<p>The first student answer in the pair will appear here.</p>", 
+						files: []
+					    }, 
+					    answer2: {
+						content: "<p>The second student answer in the pair will appear here.</p>",
+						files: []
+					    }
+					};
+				/* now open the pop-up window */
+				$scope.thePreview.$promise.then($scope.thePreview.show);
+			}
+		}
+	};
+});
 
 /***** Providers *****/
 module.factory(
@@ -642,7 +709,7 @@ module.controller("QuestionCreateController",
 			date.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
 			return date;
 		};
-
+		
 		$scope.questionSubmit = function () {
 			$scope.submitted = true;
 			$scope.question.answer_start = combineDateTime($scope.date.astart);
@@ -711,15 +778,16 @@ module.controller("QuestionCreateController",
 
 		var addMultipleCriteria = function(courseId, questionId, criteria) {
 			angular.forEach(criteria, function(selected, criterionId){
-				// add to question
-				QuestionsCriteriaResource.save({'courseId': courseId, 'questionId': questionId,
-						'criteriaId': criterionId}, {}).$promise.then(
-						function (ret) {},
-						function (ret) {
-							// error therefore uncheck the box
-							Toaster.reqerror("Failed to add the criterion " + criterionId + " to the question.", ret);
-						}
-				);
+				if (selected == true) {
+					QuestionsCriteriaResource.save({'courseId': courseId, 'questionId': questionId,
+							'criteriaId': criterionId}, {}).$promise.then(
+							function (ret) {},
+							function (ret) {
+								// error therefore uncheck the box
+								Toaster.reqerror("Failed to add the criterion " + criterionId + " to the question.", ret);
+							}
+					);
+				}
 			});
 		};
 
