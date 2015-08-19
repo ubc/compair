@@ -8,7 +8,7 @@ var module = angular.module('ubc.ctlt.acj.login',
 		'ngAnimate',
 		'ngResource',
 		'ngRoute',
-		'mgcrea.ngStrap',
+		'ui.bootstrap',
 		'ubc.ctlt.acj.authentication',
 		'ubc.ctlt.acj.authorization',
 		'ubc.ctlt.acj.user'
@@ -48,28 +48,17 @@ module.directive('autoFocus', function($timeout, $log) {
 // display the login page if user is not logged in
 module.run(function ($rootScope, $route, $location, $log, $modal, $cacheFactory, AuthenticationService, Toaster) {
 	// Create a modal dialog box for containing the login form
-	var loginBox = $modal(
-		{
-			rootScope: $rootScope,
-			contentTemplate: 'modules/login/login-partial.html',
-			backdrop: 'static', // can't close login on backdrop click
-			keyboard: false, // can't close login on pressing Esc key
-			show: false // don't show login on initialization
-		});
-	// Track whether loginBox is visible to prevent .show() creating duplicates
-    loginBox.visible = false;
+	var loginBox;
 	// Functions to display/hide the login form
 	$rootScope.showLogin = function() {
-		if (loginBox.visible) return;
-		loginBox.$promise.then(loginBox.show);
-        loginBox.visible = true;
+		loginBox = $modal.open({
+			templateUrl: 'modules/login/login-partial.html',
+			backdrop: 'static', // can't close login on backdrop click
+			keyboard: false // can't close login on pressing Esc key
+		});
 	};
 	$rootScope.hideLogin = function() {
-        if (loginBox.visible) {
-            loginBox.hide();
-	    $("body").removeClass('modal-open modal-with-am-fade'); //classes not properly being removed on logout
-            loginBox.visible = false;
-        }
+		loginBox.close();
 	};
 	// Show the login form when we have a login required event
 	$rootScope.$on(AuthenticationService.LOGIN_REQUIRED_EVENT, $rootScope.showLogin);
