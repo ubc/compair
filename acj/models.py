@@ -21,6 +21,7 @@
 
 import hashlib
 import datetime
+import importlib
 import math
 import warnings
 
@@ -31,29 +32,13 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import synonym, load_only, column_property
 from sqlalchemy import func, select, and_
-
-
-# import the context under an app-specific name (so it can easily be replaced later)
-from passlib.apps import custom_app_context as pwd_context
-
 from flask.ext.login import UserMixin
 
 
-# need to update to filterfalse when upgrading python
-try:
-    from itertools import filterfalse
-except ImportError:
-    from itertools import ifilterfalse
-
-    def filterfalse(predicate, iterable):
-        return ifilterfalse(predicate, iterable)
-
-#################################################
-# Users
-#################################################
-
 # User types at the course level
+from acj.configuration import config
 from .core import db
+from acj import security
 
 # All tables should have this set of options enabled to make porting easier.
 # In case we have to move to MariaDB instead of MySQL, e.g.: InnoDB in MySQL
@@ -72,6 +57,9 @@ convention = {
 
 db.metadata.naming_convention = convention
 
+#################################################
+# Users
+#################################################
 
 class UserTypesForCourse(db.Model):
     __tablename__ = "UserTypesForCourse"
@@ -105,6 +93,7 @@ def hash_password(password, is_admin=False):
     if is_admin:
         # enables more rounds for admin passwords
         category = "admin"
+    pwd_context = getattr(security, current_app.config['PASSLIB_CONTEXT'])
     return pwd_context.encrypt(password, category=category)
 
 
@@ -190,6 +179,7 @@ class Users(db.Model, UserMixin):
         return m.hexdigest()
 
     def verify_password(self, password):
+        pwd_context = getattr(security, current_app.config['PASSLIB_CONTEXT'])
         return pwd_context.verify(password, self.password)
 
     def update_lastonline(self):
@@ -1089,6 +1079,7 @@ class PostsForQuestions(db.Model):
             return "Question " + str(self.id)
         else:
             return "Question"
+
 
 # each course can have different criteria
 class CriteriaAndCourses(db.Model):
