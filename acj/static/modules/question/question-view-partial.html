@@ -100,7 +100,7 @@
 	<!-- Tabs -->
 	<ul class="nav nav-tabs" role="tablist">
 	  <li id="answers" ng-class="{active:showTab('answers')}">
-		<a ng-click="setTab('answers')" href="">Answers <span ng-show="canManagePosts || (!question.answer_period && see_answers)">({{answers.length}})</span></a>
+		<a ng-click="setTab('answers')" href="">Answers <span ng-show="canManagePosts || (!question.answer_period && see_answers)">({{answers.total}})</span></a>
 	  </li>
 	  <li ng-show="!canManagePosts" id="comparisons" ng-class="{active:showTab('comparisons')}">
 		<a ng-click="setTab('comparisons')" href="">Your Work</a>
@@ -192,9 +192,10 @@
 			</div>
 			
 			<div class="all-answers">
-			
+                <pagination total-items="answerFilters.total" ng-model="answerFilters.currentPage" ng-change="answerPageChanged()" max-size="10" class="pagination-sm" boundary-links="true" items-per-page="answerFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></pagination>
+
 				<!-- Instructor Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="answer in answers | filter:adminFilter()" ng-if="instructors[answer.user_id] && (see_answers || canManagePosts)">
+				<div class="each-answer clearfix" ng-repeat="answer in answers.objects | filter:adminFilter()" ng-if="instructors[answer.user_id] && (see_answers || canManagePosts)">
 					
 					<!-- Instructor Answer Metadata Header -->
 					<div class="each-header clearfix">
@@ -289,7 +290,7 @@
 				</div><!-- closes each-answer (instructor) -->
 				
 				<!-- Student Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="answer in answers | filter:groupFilter() | orderBy:order:reverse | notScoredEnd:grade.sortby as results" ng-if="!instructors[answer.user_id] && (see_answers || answer.user_id == loggedInUserId || canManagePosts)">
+				<div class="each-answer clearfix" ng-repeat="answer in answers.objects | filter:groupFilter() | orderBy:order:reverse | notScoredEnd:grade.sortby as results" ng-if="!instructors[answer.user_id] && (see_answers || answer.user_id == loggedInUserId || canManagePosts)">
 				<!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.user_id] && (see_answers || (answer.user_id == loggedInUserId && question.answer_period) || canManagePosts)"> -->
 					<!-- Student Answer Metadata Header -->
 					<div class="each-header clearfix">
@@ -429,7 +430,7 @@
 			</div>
 			
 			<!-- Student Answer Metadata Header -->
-			<div class="each-evaluation clearfix" ng-repeat="answer in answers | filter: myAnswer()">
+			<div class="each-evaluation clearfix" ng-repeat="answer in answers.objects | filter: myAnswer()">
 				<div class="each-header clearfix">
 					<a ng-href="#/user/{{answer.user_id}}">
 						<img src="//www.gravatar.com/avatar/{{answer.user_avatar}}?s=32&d=retro" />

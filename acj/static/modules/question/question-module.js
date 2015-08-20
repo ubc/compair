@@ -321,6 +321,11 @@ module.controller("QuestionViewController",
 		$scope.allStudents = {};
 		var userIds = {};
 		$scope.grade = {'sortby': '0', 'group': 0, 'author': 0};
+		$scope.answerFilters = {
+			currentPage: 1,
+			total: 0,
+			perPage: 10
+		};
 		Session.getUser().then(function(user) {
 			$scope.loggedInUserId = user.id;
 			JudgementResource.getAvailPairLogic({'courseId': $scope.courseId, 'questionId': questionId,
@@ -427,9 +432,10 @@ module.controller("QuestionViewController",
 				Toaster.reqerror("Question Not Found For ID " + questionId, ret);
 			}
 		);
-		AnswerResource.get({'courseId': $scope.courseId, 'questionId': questionId},
-			function (ret) {
-				$scope.answers = ret.objects;
+		$scope.answers = AnswerResource.get({'courseId': $scope.courseId, 'questionId': questionId},
+			function (response) {
+				$scope.answerFilters.total = response.total;
+				$scope.answerFilters.perPage = response.per_page;
 			},
 			function (ret) {
 				Toaster.reqerror("Answers for this questions not found.", ret);
@@ -587,7 +593,7 @@ module.controller("QuestionViewController",
 				function (ret) {
 					Toaster.success("Answer Delete Successful", "Successfully deleted answer "+ ret.id);
 					var authorId = answer['user_id'];
-					$scope.answers.splice($scope.answers.indexOf(answer), 1);
+					$scope.answers.objects.splice($scope.answers.objects.indexOf(answer), 1);
 					$scope.question.answers_count -= 1;
 					if ($scope.loggedInUserId == authorId) {
 						myAnsCount--;
@@ -643,7 +649,18 @@ module.controller("QuestionViewController",
 					Toaster.reqerror("Reply Delete Failed", ret);
 				}
 			);
-		}
+		};
+
+		$scope.answerPageChanged = function() {
+			$scope.answers = AnswerResource.get({
+				'courseId': $scope.courseId,
+				'questionId': questionId,
+				'page': $scope.answerFilters.currentPage
+			}, function(response) {
+				$scope.answerFilters.total = response.total;
+				$scope.answerFilters.perPage = response.per_page;
+			});
+		};
 	}
 );
 module.controller("QuestionCreateController",
