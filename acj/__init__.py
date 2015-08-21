@@ -89,23 +89,6 @@ def create_app(conf=config, settings_override=None):
     def bouncer_user_loader():
         return current_user
 
-    # Flask-Restless definitions
-    # api_manager.init_app(
-    # 	app,
-    # 	flask_sqlalchemy_db=db,
-    # 	preprocessors=dict(
-    # 		GET_SINGLE=[auth_func],
-    # 		GET_MANY=[auth_func],
-    # 		POST=[auth_func],
-    # 		DELETE=[auth_func],
-    # 		PUT=[auth_func],
-    # 		)
-    # )
-
-    # api_manager.create_api(
-    # 	CoursesAndUsers
-    # )
-
     # Initialize rest of the api modules
     from .course import courses_api
 

@@ -4,7 +4,7 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import func
-from sqlalchemy.orm import load_only, joinedload, contains_eager, subqueryload
+from sqlalchemy.orm import load_only, joinedload, contains_eager
 
 from . import dataformat
 from .core import db
