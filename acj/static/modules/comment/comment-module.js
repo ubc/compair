@@ -40,6 +40,7 @@ module.factory(
 		var ret = $resource(
 			url, {commentId: '@id'},
 			{
+				'get': {cache: true},
 				'save': {method: 'POST', url: url, interceptor: Interceptors.answerCache},
 				'delete': {method: 'DELETE', url: url, interceptor: Interceptors.answerCache},
 				selfEval: {url: '/api/selfeval/courses/:courseId/questions/:questionId'},

@@ -350,21 +350,18 @@
 					</p>
 
 					<!-- Student Answer Replies Section -->
-					<a href="" ng-click="showReplies = !showReplies">
-						<h3 class="reply-heading" ng-if="studentResults.length && (see_answers || canManagePosts)">
+					<a href="" ng-click="showReplies = !showReplies; showReplies && loadComments(answer)">
+						<h3 class="reply-heading" ng-if="answer.comments_count && (see_answers || canManagePosts)">
 							<i class="fa fa-chevron-down" ng-show="showReplies"></i>
 							<i class="fa fa-chevron-right" ng-hide="showReplies"></i>
-							{{studentResults.length}}
-							<span ng-if="studentResults.length == 1">reply</span>
-							<span ng-if="studentResults.length > 1">replies</span>
-							to this answer
+                            <ng-pluralize count="answer.comments_count" when="{'1': '{} reply', 'other': '{} replies'}"></ng-pluralize> to this answer
 							<span ng-if="canManagePosts || answer.user_id == loggedInUserId">({{ answer.private_comments_count }} private, {{ answer.public_comments_count }} public)</span>
 						</h3>
 					</a>
 
 					<div ng-show="showReplies">
 
-						<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer) as studentResults" class="each-reply" ng-if="see_answers || canManagePosts">
+						<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer)" class="each-reply" ng-if="see_answers || canManagePosts">
 
 							<hr ng-hide="$first" />
 
@@ -469,21 +466,18 @@
 				</div>
 				
 				<!-- Student Answer Replies Section -->
-				<a href="" ng-click="showReplies = !showReplies">
-					<h3 class="reply-heading" ng-if="studentResults.length && (see_answers || canManagePosts)">
-						<i class="fa fa-chevron-down" ng-show="showReplies"></i>
-						<i class="fa fa-chevron-right" ng-hide="showReplies"></i>
-						{{studentResults.length}}
-						<span ng-if="studentResults.length == 1">reply</span>
-						<span ng-if="studentResults.length > 1">replies</span>
-						to this answer
-						<span ng-if="canManagePosts || answer.user_id == loggedInUserId">({{ answer.private_comments_count }} private, {{ answer.public_comments_count }} public)</span>
+                <a href="" ng-click="showReplies = !showReplies; showReplies && loadComments(answer)">
+					<h3 class="reply-heading" ng-if="answer.comments_count && (see_answers || canManagePosts)">
+                        <i class="fa fa-chevron-down" ng-show="showReplies"></i>
+                        <i class="fa fa-chevron-right" ng-hide="showReplies"></i>
+                        <ng-pluralize count="answer.comments_count" when="{'1': '{} reply', 'other': '{} replies'}"></ng-pluralize> to this answer
+                        <span ng-if="canManagePosts || answer.user_id == loggedInUserId">({{ answer.private_comments_count }} private, {{ answer.public_comments_count }} public)</span>
 					</h3>
 				</a>
 
 				<div ng-show="showReplies">
 
-					<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer) as studentResults" class="each-reply" ng-if="see_answers || canManagePosts">
+					<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer)" class="each-reply" ng-if="see_answers || canManagePosts">
 
 						<hr ng-hide="$first" />
 

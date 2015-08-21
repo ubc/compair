@@ -522,6 +522,7 @@ module.controller("QuestionViewController",
 			}
 		};
 
+		//TODO: this filter should be implemented in backend
 		$scope.commentFilter = function(answer) {
 			return function (comment) {
 				// can see if canManagePosts OR their own answer OR not from evaluation and selfeval
@@ -607,6 +608,12 @@ module.controller("QuestionViewController",
 					Toaster.reqerror("Unable To Change Flag", ret);
 				}
 			);
+		};
+
+		$scope.loadComments = function(answer) {
+			AnswerCommentResource.get({courseId: $scope.courseId, questionId: questionId, answerId: answer.id}, function(response) {
+				answer.comments = response['objects'];
+			})
 		};
 
 		$scope.deleteComment = function(key, course_id, question_id, comment_id) {

@@ -77,8 +77,6 @@ class AnswerRootAPI(Resource):
             with_entities(PostsForAnswers). \
             options(contains_eager('post').joinedload('files')). \
             options(contains_eager('post').joinedload('user')). \
-            options(subqueryload('comments').joinedload('postsforcomments').joinedload('post').joinedload('files')). \
-            options(subqueryload('comments').joinedload('postsforcomments').joinedload('post').joinedload('user')). \
             options(joinedload('_scores')). \
             join(Posts). \
             filter(PostsForAnswers.questions_id == question.id)

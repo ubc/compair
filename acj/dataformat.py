@@ -181,7 +181,7 @@ def get_posts_for_questions(restrict_users=True, include_answers=True):
 
 def get_posts_for_answers(restrict_users=True, include_comments=True):
     post = get_posts(restrict_users)
-    comments = get_posts_for_answers_and_posts_for_comments(restrict_users)
+    # comments = get_posts_for_answers_and_posts_for_comments(restrict_users)
     score = get_scores()
     del post['course']
     ret = {
@@ -194,7 +194,6 @@ def get_posts_for_answers(restrict_users=True, include_comments=True):
         'user_fullname': fields.String,
         'user_avatar': fields.String,
         'posts_id': fields.Integer,
-        # 'post': fields.Nested(post),
         'scores': fields.Nested(score),
         'flagged': fields.Boolean,
         'questions_id': fields.Integer
@@ -204,7 +203,7 @@ def get_posts_for_answers(restrict_users=True, include_comments=True):
     # if not restrict_users:
     #     ret['flagger'] = fields.Nested(get_users(restrict_users))
     if include_comments:
-        ret['comments'] = fields.List(fields.Nested(comments))
+        # ret['comments'] = fields.List(fields.Nested(comments))
         ret['comments_count'] = fields.Integer
         ret['private_comments_count'] = fields.Integer
         ret['public_comments_count'] = fields.Integer
