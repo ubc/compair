@@ -10,7 +10,7 @@ from . import dataformat
 from .core import db
 from .authorization import require, allow, is_user_access_restricted
 from .models import Posts, PostsForAnswers, PostsForQuestions, Courses, Users, \
-    Judgements, AnswerPairings
+    Judgements, AnswerPairings, Scores, GroupsAndUsers
 from .util import new_restful_api, get_model_changes, pagination_parser
 from .attachment import add_new_file, delete_file
 from .core import event
@@ -33,6 +33,11 @@ existing_answer_parser.add_argument('content', type=str, default=None)
 existing_answer_parser.add_argument('name', type=str, default=None)
 existing_answer_parser.add_argument('alias', type=str, default=None)
 existing_answer_parser.add_argument('uploadedFile', type=bool, default=False)
+
+answer_list_parser = pagination_parser.copy()
+answer_list_parser.add_argument('group', type=int, required=False, default=None)
+answer_list_parser.add_argument('author', type=int, required=False, default=None)
+answer_list_parser.add_argument('orderBy', type=str, required=False, default=None)
 
 flag_parser = RequestParser()
 flag_parser.add_argument(
@@ -65,10 +70,10 @@ class AnswerRootAPI(Resource):
         require(READ, question)
         restrict_users = not allow(MANAGE, question)
 
-        params = pagination_parser.parse_args()
+        params = answer_list_parser.parse_args()
 
         # this query could be further optimized by reduction the selected columns
-        page = PostsForAnswers.query. \
+        query = PostsForAnswers.query. \
             with_entities(PostsForAnswers). \
             options(contains_eager('post').joinedload('files')). \
             options(contains_eager('post').joinedload('user')). \
@@ -76,8 +81,42 @@ class AnswerRootAPI(Resource):
             options(subqueryload('comments').joinedload('postsforcomments').joinedload('post').joinedload('user')). \
             options(joinedload('_scores')). \
             join(Posts). \
-            filter(PostsForAnswers.questions_id == question.id). \
-            order_by(Posts.created.desc()).paginate(params['page'], params['per_page'])
+            filter(PostsForAnswers.questions_id == question.id)
+
+        user_ids = []
+        if params['author']:
+            query = query.filter(Posts.users_id == params['author'])
+            user_ids.append(params['author'])
+        elif params['group']:
+            # get all user ids in the group
+            users = Users.query. \
+                with_entities(Users.id). \
+                join(GroupsAndUsers). \
+                filter(GroupsAndUsers.groups_id == params['group']). \
+                all()
+            user_ids = [x[0] for x in users]
+            query = query.filter(Posts.users_id.in_(user_ids))
+
+        if params['orderBy'] and len(user_ids) != 1:
+            # order answer ids by one criterion and pagination, in case there are multiple criteria in question
+            id_query = PostsForAnswers.query. \
+                with_entities(PostsForAnswers.id). \
+                join(Scores). \
+                filter(Scores.criteriaandquestions_id == params['orderBy'])
+            if user_ids:
+                id_query = id_query.join(Posts).filter(Posts.users_id.in_(user_ids))
+            page = id_query. \
+                order_by(Scores.score.desc()). \
+                paginate(params['page'], params['perPage'])
+            # extract ids from tuples
+            answer_ids = [x[0] for x in page.items]
+            # query answers with additional data
+            query = query.filter(PostsForAnswers.id.in_(answer_ids))
+            answers = query.all()
+            # sort based on the order of answer_ids
+            page.items = sorted(answers, key=lambda a: answer_ids.index(a.id))
+        else:
+            page = query.order_by(Posts.created.desc()).paginate(params['page'], params['perPage'])
 
         on_answer_list_get.send(
             self,

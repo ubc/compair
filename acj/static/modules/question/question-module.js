@@ -320,11 +320,13 @@ module.controller("QuestionViewController",
 		var myAnsCount = 0; // for the event of deleting own answer
 		$scope.allStudents = {};
 		var userIds = {};
-		$scope.grade = {'sortby': '0', 'group': 0, 'author': 0};
+		$scope.totalNumAnswers = 0;
 		$scope.answerFilters = {
-			currentPage: 1,
-			total: 0,
-			perPage: 10
+			page: 1,
+			perPage: 20,
+			group: null,
+			author: null,
+			orderBy: null
 		};
 		Session.getUser().then(function(user) {
 			$scope.loggedInUserId = user.id;
@@ -374,7 +376,9 @@ module.controller("QuestionViewController",
 				$scope.question = ret.question;
 
 				$scope.criteria = ret.question.criteria;
-				$scope.criteriaChange();
+				if ($scope.criteria.length > 1) {
+					$scope.answerFilters.orderBy = $scope.criteria[0].id;
+				}
 				$scope.reverse = true;
 
 				$scope.evalcriteria = {};
@@ -432,15 +436,8 @@ module.controller("QuestionViewController",
 				Toaster.reqerror("Question Not Found For ID " + questionId, ret);
 			}
 		);
-		$scope.answers = AnswerResource.get({'courseId': $scope.courseId, 'questionId': questionId},
-			function (response) {
-				$scope.answerFilters.total = response.total;
-				$scope.answerFilters.perPage = response.per_page;
-			},
-			function (ret) {
-				Toaster.reqerror("Answers for this questions not found.", ret);
-			}
-		);
+
+
 		QuestionCommentResource.get({'courseId': $scope.courseId, 'questionId': questionId},
 			function (ret)
 			{
@@ -485,43 +482,43 @@ module.controller("QuestionViewController",
 			return users;
 		};
 
-		$scope.groupChange = function() {
-			$scope.grade.author = null;
-			if ($scope.grade.group == null) {
-				userIds = $scope.getUserIds($scope.allStudents);
-				$scope.students = $scope.allStudents;
-			} else {
-				GroupResource.get({'courseId': $scope.courseId, 'groupId': $scope.grade.group.id}).$promise.then(
-					function (ret) {
-						$scope.students = ret.students;
-						userIds = $scope.getUserIds(ret.students);
-					},
-					function (ret) {
-						Toaster.reqerror("Unable to retrieve the group members", ret);
-					}
-				);
+		$scope.$watchCollection('answerFilters', function(newValue, oldValue) {
+			if (angular.equals(newValue, oldValue)) return;
+			if (oldValue.group != newValue.group) {
+				$scope.answerFilters.author = null;
+				if ($scope.answerFilters.group == null) {
+					userIds = $scope.getUserIds($scope.allStudents);
+					$scope.students = $scope.allStudents;
+				} else {
+					GroupResource.get({'courseId': $scope.courseId, 'groupId': $scope.answerFilters.group.id},
+						function (ret) {
+							$scope.students = ret.students;
+							userIds = $scope.getUserIds(ret.students);
+						},
+						function (ret) {
+							Toaster.reqerror("Unable to retrieve the group members", ret);
+						}
+					);
+				}
+				$scope.answerFilters.page = 1;
 			}
-		};
-
-		$scope.userChange = function() {
-			userIds = {};
-			if ($scope.grade.author == null) {
-				userIds = $scope.getUserIds($scope.students);
-			} else {
-				userIds[$scope.grade.author.user.id] = 1;
+			if (oldValue.author != newValue.author) {
+				userIds = {};
+				$scope.answerFilters.page = 1;
+				if ($scope.answerFilters.author == null) {
+					userIds = $scope.getUserIds($scope.students);
+				} else {
+					userIds[$scope.answerFilters.author.user.id] = 1;
+				}
+				$scope.answerFilters.page = 1;
 			}
-		};
+			$scope.updateAnswerList();
+		});
 
 		$scope.adminFilter = function() {
 			return function (answer) {
 				// assume if any filter is applied - instructor/TAs answer will not meet requirement
-				return !$scope.grade.author && !$scope.grade.group
-			}
-		};
-
-		$scope.groupFilter = function() {
-			return function (answer) {
-				return answer.user_id in userIds;
+				return !$scope.answerFilters.author && !$scope.answerFilters.group
 			}
 		};
 
@@ -564,15 +561,6 @@ module.controller("QuestionViewController",
 			$(thisClass).css({'max-height' : 'none'}); // now remove height restriction for this answer
 			this.showReadMore = false;                 // and hide the read more button for this answer
 		};
-		
-		$scope.criteriaChange = function() {
-			if ($scope.grade.sortby == null) {
-				$scope.order = 'answer.created';
-			} else {
-				$scope.order = 'scores['+$scope.grade.sortby+'].normalized_score';
-			}
-		};
-		
 		
 		// question delete function
 		$scope.deleteQuestion = function(course_id, question_id) {
@@ -651,16 +639,20 @@ module.controller("QuestionViewController",
 			);
 		};
 
-		$scope.answerPageChanged = function() {
-			$scope.answers = AnswerResource.get({
-				'courseId': $scope.courseId,
-				'questionId': questionId,
-				'page': $scope.answerFilters.currentPage
-			}, function(response) {
-				$scope.answerFilters.total = response.total;
-				$scope.answerFilters.perPage = response.per_page;
+		$scope.updateAnswerList = function() {
+			var params = angular.merge({'courseId': $scope.courseId, 'questionId': questionId}, $scope.answerFilters);
+			if (params.group != null) {
+				params.group = params.group.id;
+			}
+			if (params.author != null) {
+				params.author = params.author.user.id;
+			}
+			$scope.answers = AnswerResource.get(params, function(response) {
+				$scope.totalNumAnswers = response.total;
 			});
 		};
+
+		$scope.updateAnswerList();
 	}
 );
 module.controller("QuestionCreateController",

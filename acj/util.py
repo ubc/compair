@@ -108,7 +108,8 @@ def get_model_changes(model):
 
 pagination_parser = RequestParser()
 pagination_parser.add_argument('page', type=int, required=False, default=1)
-pagination_parser.add_argument('per_page', type=int, required=False, default=20)
+pagination_parser.add_argument('perPage', type=int, required=False, default=20)
+
 
 @contextlib.contextmanager
 def profiled():

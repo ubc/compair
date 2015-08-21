@@ -1,17 +1,18 @@
 import datetime
 import copy
+import random
 from acj import db
 import factory.fuzzy
-import string
 from acj.models import UserTypesForSystem, UserTypesForCourse, Criteria, PostsForAnswers
 from data.fixtures import CoursesFactory, UsersFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, \
     PostsForAnswersFactory, CriteriaFactory, CriteriaAndCoursesFactory, AnswerPairingsFactory, JudgementsFactory, \
     PostsForJudgementsFactory, PostsForCommentsFactory, GroupsFactory, GroupsAndUsersFactory, \
     CriteriaAndPostsForQuestionsFactory, PostsForQuestionsAndPostsForCommentsFactory, \
-    PostsForAnswersAndPostsForCommentsFactory
+    PostsForAnswersAndPostsForCommentsFactory, DefaultFixture
+from data.fixtures.factories import ScoreFactory
 
 
-class BasicTestData():
+class BasicTestData:
     def __init__(self):
         self.default_criteria = Criteria.query.first()
         self.main_course = self.create_course()
@@ -107,6 +108,7 @@ class SimpleQuestionsTestData(BasicTestData):
     def __init__(self):
         BasicTestData.__init__(self)
         self.questions = []
+        self.criteria_by_questions = {}
         self.questions.append(self.create_question_in_answer_period(self.get_course(), \
                                                                     self.get_authorized_instructor()))
         self.questions.append(self.create_question_in_answer_period(self.get_course(), \
@@ -124,9 +126,10 @@ class SimpleQuestionsTestData(BasicTestData):
 
     def create_question(self, course, author, answer_start, answer_end):
         post = PostsFactory(courses_id=course.id, users_id=author.id)
+        question = PostsForQuestionsFactory(post=post, answer_start=answer_start, answer_end=answer_end)
+        CriteriaAndPostsForQuestionsFactory(criterion=DefaultFixture.DEFAULT_CRITERIA, question=question)
         db.session.commit()
-        question = PostsForQuestionsFactory(posts_id=post.id, answer_start=answer_start, answer_end=answer_end)
-        db.session.commit()
+        self.criteria_by_questions[question.id] = question.criteria[0]
         return question
 
     def get_questions(self):
@@ -178,8 +181,8 @@ class SimpleAnswersTestData(SimpleQuestionsTestData):
 
     def create_answer(self, question, author):
         post = PostsFactory(courses_id=question.post.courses_id, users_id=author.id)
-        db.session.commit()
-        answer = PostsForAnswersFactory(questions_id=question.id, posts_id=post.id)
+        answer = PostsForAnswersFactory(questions_id=question.id, post=post)
+        ScoreFactory(answer=answer, criteriaandquestions_id=question.criteria[0].id)
         db.session.commit()
         return answer
 
@@ -224,36 +227,16 @@ class CriteriaTestData(SimpleAnswersTestData):
     def __init__(self):
         SimpleAnswersTestData.__init__(self)
         # inactive course criteria
-        self.criteria = self.create_criteria(self.get_authorized_instructor())
-        self.inactive_criteria_course = self.add_inactive_criteria_course(self.criteria, self.get_course())
+        self.criteria = CriteriaFactory(user=self.get_authorized_instructor())
         # criteria created by another instructor
-        self.secondary_criteria = self.create_criteria(self.get_unauthorized_instructor())
+        self.secondary_criteria = CriteriaFactory(user=self.get_unauthorized_instructor())
         # second criteria
-        self.criteria2 = self.create_criteria(self.get_authorized_instructor())
-        # create question criteria
-        self.criteria_by_questions = {}
-        self.questioncriteria = []
-        for question in self.get_questions():
-            qcriteria = self.create_question_criteria(self.get_default_criteria(), question, True)
-            self.criteria_by_questions[question.id] = qcriteria
-            self.questioncriteria.append(qcriteria)
-
-    def create_criteria(self, user):
-        name = factory.fuzzy.FuzzyText(length=4)
-        description = factory.fuzzy.FuzzyText(length=8)
-        criteria = CriteriaFactory(name=name, description=description, user=user)
+        self.criteria2 = CriteriaFactory(user=self.get_authorized_instructor())
         db.session.commit()
-        return criteria
-
-    def create_question_criteria(self, criteria, question, active):
-        question_criteria = CriteriaAndPostsForQuestionsFactory(criterion=criteria, question=question, active=active)
-        db.session.add(question_criteria)
-        db.session.commit()
-        return question_criteria
+        self.inactive_criteria_course = self.add_inactive_criteria_course(self.criteria, self.get_course())
 
     def add_inactive_criteria_course(self, criteria, course):
         criteria_course = CriteriaAndCoursesFactory(courses_id=course.id, criteria_id=criteria.id, active=False)
-        db.session.add(criteria_course)
         db.session.commit()
         return criteria_course
 
@@ -299,10 +282,6 @@ class JudgmentsTestData(CriteriaTestData):
         self.answer_period_question = self.create_question_in_answer_period(
             self.get_course(), self.get_authorized_ta())
         self.questions.append(self.answer_period_question)
-        # create question criteria
-        qcriteria = self.create_question_criteria(self.get_default_criteria(), self.answer_period_question, True)
-        self.criteria_by_questions[question.id] = qcriteria
-        self.questioncriteria.append(qcriteria)
 
     def get_student_answers(self):
         return self.student_answers
@@ -436,3 +415,82 @@ class GroupsTestData(BasicTestData):
         member = GroupsAndUsersFactory(group=group, user=user, active=active)
         db.session.commit()
         return member
+
+
+class TestFixture:
+    def __init__(self):
+        self.course = self.question = None
+        self.instructor = self.ta = None
+        self.students = []
+        self.questions = []
+        self.answers = []
+        self.groups = []
+        self.unauthorized_instructor = UsersFactory(usertypeforsystem=DefaultFixture.SYS_ROLE_INSTRUCTOR)
+        self.unauthorized_student = UsersFactory(usertypeforsystem=DefaultFixture.SYS_ROLE_NORMAL)
+
+    def add_course(self, num_students=5, num_questions=1, num_groups=0, num_answers='#'):
+        self.course = CoursesFactory()
+        self.instructor = UsersFactory(usertypeforsystem=DefaultFixture.SYS_ROLE_INSTRUCTOR)
+        self.course.enroll(self.instructor, UserTypesForCourse.TYPE_INSTRUCTOR)
+        self.ta = UsersFactory(usertypeforsystem=DefaultFixture.SYS_ROLE_NORMAL)
+        self.course.enroll(self.ta, UserTypesForCourse.TYPE_TA)
+
+        self.add_students(num_students)
+
+        self.add_questions(num_questions)
+        # create a shortcut for first question as it is frequently used
+        self.question = self.questions[0]
+
+        self.add_groups(num_groups)
+
+        self.add_answers(num_answers)
+
+        return self
+
+    def add_answers(self, num_answers):
+        if num_answers == '#':
+            num_answers = len(self.students) * len(self.questions)
+        if len(self.students) * len(self.questions) < num_answers:
+            raise ValueError(
+                "Number of answers({}) must be equal or smaller than number of students({}) "
+                "multiple by number of questions({})".format(num_answers, len(self.students), len(self.questions))
+            )
+        for i in xrange(num_answers):
+            for question in self.questions:
+                post = PostsFactory(course=self.course, user=self.students[i % len(self.students)])
+                answer = PostsForAnswersFactory(question=question, post=post)
+                ScoreFactory(answer=answer, criteriaandquestions_id=question.criteria[0].id, score=random.random()*5)
+                self.answers.append(answer)
+
+        return self
+
+    def add_groups(self, num_groups):
+        student_per_group = int(len(self.students) / num_groups) if num_groups is not 0 else 0
+        for idx in xrange(num_groups):
+            group = GroupsFactory(course=self.course)
+            self.groups.append(group)
+            db.session.commit()
+            # slice student list and enroll them into groups
+            group.enroll(self.students[idx * student_per_group:min((idx + 1) * student_per_group, len(self.students))])
+
+        return self
+
+    def add_questions(self, num_questions):
+        for _ in xrange(num_questions):
+            post = PostsFactory(course=self.course)
+            question = PostsForQuestionsFactory(post=post)
+            CriteriaAndPostsForQuestionsFactory(criterion=DefaultFixture.DEFAULT_CRITERIA, question=question)
+            self.questions.append(question)
+        db.session.commit()
+
+        return self
+
+    def add_students(self, num_students):
+        students = []
+        for _ in xrange(num_students):
+            student = UsersFactory(usertypeforsystem=DefaultFixture.SYS_ROLE_NORMAL)
+            students.append(student)
+        self.students += students
+        self.course.enroll(students)
+
+        return self

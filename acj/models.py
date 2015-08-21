@@ -21,7 +21,6 @@
 
 import hashlib
 import datetime
-import importlib
 import math
 import warnings
 
@@ -35,14 +34,15 @@ from sqlalchemy import func, select, and_
 from flask.ext.login import UserMixin
 
 
+
 # User types at the course level
-from acj.configuration import config
 from .core import db
 from acj import security
 
 # All tables should have this set of options enabled to make porting easier.
 # In case we have to move to MariaDB instead of MySQL, e.g.: InnoDB in MySQL
 # is replaced by XtraDB.
+
 default_table_args = {
     'mysql_charset': 'utf8', 'mysql_engine': 'InnoDB',
     'mysql_collate': 'utf8_unicode_ci'}
@@ -281,6 +281,22 @@ class Courses(db.Model):
     def exists_or_404(cls, course_id):
         return cls.query.options(load_only('id')).get_or_404(course_id)
 
+    def enroll(self, users, role=UserTypesForCourse.TYPE_STUDENT):
+        if not isinstance(users, list):
+            users = [users]
+
+        user_role = UserTypesForCourse.query.filter_by(name=role).one()
+        if not user_role:
+            raise InvalidAttributeException('Invalid user role %s'.format(role))
+
+        associations = []
+        for user in users:
+            associations.append(
+                CoursesAndUsers(users_id=user.id, courses_id=self.id, usertypesforcourse_id=user_role.id)
+            )
+
+        db.session.bulk_save_objects(associations)
+
 
 # A "junction table" in sqlalchemy is called a many-to-many pattern. Such a
 # table can be automatically created by sqlalchemy from db.relationship
@@ -347,6 +363,18 @@ class Groups(db.Model):
     created = db.Column(
         db.DateTime, default=datetime.datetime.utcnow,
         nullable=False)
+
+    def enroll(self, users):
+        if not isinstance(users, list):
+            users = [users]
+
+        associations = []
+        for user in users:
+            associations.append(
+                GroupsAndUsers(users_id=user.id, groups_id=self.id)
+            )
+
+        db.session.bulk_save_objects(associations)
 
 
 class GroupsAndUsers(db.Model):
