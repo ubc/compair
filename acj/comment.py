@@ -3,7 +3,7 @@ from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
-from sqlalchemy.orm import load_only, joinedload
+from sqlalchemy.orm import load_only, joinedload, contains_eager
 
 from . import dataformat
 from .core import db
@@ -188,10 +188,12 @@ class AnswerCommentRootAPI(Resource):
         question = PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
         require(READ, question)
         answer = PostsForAnswers.query.get_or_404(answer_id)
-        comments = PostsForAnswersAndPostsForComments.query. \
-            options(joinedload('postsforcomments').joinedload('post').joinedload('files')) . \
-            options(joinedload('postsforcomments').joinedload('post').joinedload('user')) . \
-            filter(PostsForAnswersAndPostsForComments.answers_id == answer.id, Posts.courses_id == course_id).\
+        comments = PostsForComments.query. \
+            options(contains_eager(PostsForComments.post).joinedload(Posts.user)) . \
+            options(contains_eager(PostsForComments.post).joinedload(Posts.files)) . \
+            join(PostsForAnswersAndPostsForComments). \
+            filter(PostsForAnswersAndPostsForComments.answers_id == answer.id) . \
+            join(Posts). \
             order_by(Posts.created.desc()).all()
 
         on_answer_comment_list_get.send(

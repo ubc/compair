@@ -229,10 +229,8 @@ def get_posts_for_questions_and_posts_for_comments(restrict_users=True):
 
 
 def get_posts_for_answers_and_posts_for_comments(restrict_users=True):
-    comment = get_posts_for_comments(restrict_users)
     return {
         'id': fields.Integer,
-        # 'postsforcomments': fields.Nested(comment),
         'selfeval': fields.Boolean,
         'evaluation': fields.Boolean,
         'type': fields.Integer,
