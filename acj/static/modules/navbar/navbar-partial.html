@@ -97,12 +97,12 @@
 						</a>
 						<div notification></div> -->
 					</li>
-					<li class="dropdown">
-						<a class="dropdown-toggle" href="" data-toggle="dropdown">
+					<li dropdown>
+						<a href="" id="menu-dropdown" dropdown-toggle>
 							{{loggedInUser.displayname}} <i class='fa fa-angle-down'></i>
 						</a>
 						<!-- User drop down menu -->
-						<ul class="dropdown-menu">
+						<ul class="dropdown-menu" aria-labelledby="menu-dropdown">
 							<li>
 								<a href="#/user/{{loggedInUser.id}}">
 									<i class="fa fa-user fa-fw"></i> Profile
