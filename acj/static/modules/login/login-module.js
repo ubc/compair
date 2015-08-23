@@ -49,16 +49,23 @@ module.directive('autoFocus', function($timeout, $log) {
 module.run(function ($rootScope, $route, $location, $log, $modal, $cacheFactory, AuthenticationService, Toaster) {
 	// Create a modal dialog box for containing the login form
 	var loginBox;
+	var isOpen = false;
+	debugger;
 	// Functions to display/hide the login form
 	$rootScope.showLogin = function() {
+		if (isOpen) return;
 		loginBox = $modal.open({
 			templateUrl: 'modules/login/login-partial.html',
 			backdrop: 'static', // can't close login on backdrop click
 			keyboard: false // can't close login on pressing Esc key
 		});
+		isOpen = true;
 	};
 	$rootScope.hideLogin = function() {
-		loginBox.close();
+		if (loginBox) {
+			loginBox.close();
+		}
+		isOpen = false;
 	};
 	// Show the login form when we have a login required event
 	$rootScope.$on(AuthenticationService.LOGIN_REQUIRED_EVENT, $rootScope.showLogin);
