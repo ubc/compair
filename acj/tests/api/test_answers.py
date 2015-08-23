@@ -68,6 +68,13 @@ class AnswersAPITests(ACJTestCase):
         result = rv.json['objects']
         self.assertEqual(len(result), len(self.fixtures.answers) / len(self.fixtures.groups))
 
+        # test ids filter
+        ids = {str(a.id) for a in self.fixtures.answers[:3]}
+        rv = self.client.get(self.base_url + '?ids={}'.format(','.join(ids)))
+        self.assert200(rv)
+        result = rv.json['objects']
+        self.assertEqual(ids, {str(a['id']) for a in result})
+
         # test combined filter
         rv = self.client.get(
             self.base_url + '?orderBy={}&group={}'.format(

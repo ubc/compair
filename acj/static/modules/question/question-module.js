@@ -504,7 +504,6 @@ module.controller("QuestionViewController",
 			}
 			if (oldValue.author != newValue.author) {
 				userIds = {};
-				$scope.answerFilters.page = 1;
 				if ($scope.answerFilters.author == null) {
 					userIds = $scope.getUserIds($scope.students);
 				} else {

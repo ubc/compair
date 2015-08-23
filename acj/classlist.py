@@ -16,7 +16,7 @@ from . import dataformat
 from .core import db
 from .authorization import allow, require
 from .core import event
-from .models import CoursesAndUsers, Courses, Users, UserTypesForSystem, UserTypesForCourse
+from .models import CoursesAndUsers, Courses, Users, UserTypesForSystem, UserTypesForCourse, GroupsAndUsers
 from .util import new_restful_api
 from .attachment import random_generator, allowed_file
 
@@ -352,6 +352,7 @@ class StudentsAPI(Resource):
         course = Courses.query.get_or_404(course_id)
         require(READ, course)
         students = Users.query. \
+            options(joinedload(Users.groups).joinedload(GroupsAndUsers.group)). \
             join(CoursesAndUsers).filter_by(courses_id=course_id). \
             join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_STUDENT). \
             all()
@@ -359,7 +360,11 @@ class StudentsAPI(Resource):
         coursesandusers = CoursesAndUsers(courses_id=course_id)
         if allow(READ, coursesandusers):
             users = [
-                {'user': {'id': u.id, 'name': u.fullname if u.fullname else u.displayname}}
+                {'user': {
+                    'id': u.id,
+                    'name': u.fullname if u.fullname else u.displayname,
+                    'groups': [g.group.name for g in u.groups]
+                }}
                 for u in students]
         else:
             users = []

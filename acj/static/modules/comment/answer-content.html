@@ -1,0 +1,14 @@
+<div class="col-md-6">
+    <div class="answer-choice clearfix">
+        <h4 class="text-center">{{ title }}
+            <span ng-show="isChosen">(Chosen)</span>
+            <span class="label label-warning pull-right score-display" ng-if="answer">
+                Score: {{ answer.scores[criteriaAndQuestions] }}%</span>
+        </h4>
+        <div mathjax="answer.content" ng-if="answer"
+             ng-bind-html="answer.content"></div>
+        <div ng-if="!answer"><i>(This answer has been deleted.)</i></div>
+        <!-- Attachments -->
+        <acj-pdf-inline label="See details:" pdfs="answer.post.files"></acj-pdf-inline>
+    </div>
+</div>

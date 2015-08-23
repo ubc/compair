@@ -38,6 +38,7 @@ answer_list_parser = pagination_parser.copy()
 answer_list_parser.add_argument('group', type=int, required=False, default=None)
 answer_list_parser.add_argument('author', type=int, required=False, default=None)
 answer_list_parser.add_argument('orderBy', type=str, required=False, default=None)
+answer_list_parser.add_argument('ids', type=str, required=False, default=None)
 
 flag_parser = RequestParser()
 flag_parser.add_argument(
@@ -94,6 +95,9 @@ class AnswerRootAPI(Resource):
                 all()
             user_ids = [x[0] for x in users]
             query = query.filter(Posts.users_id.in_(user_ids))
+
+        if params['ids']:
+            query = query.filter(PostsForAnswers.id.in_(params['ids'].split(',')))
 
         if params['orderBy'] and len(user_ids) != 1:
             # order answer ids by one criterion and pagination, in case there are multiple criteria in question

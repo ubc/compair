@@ -29,7 +29,7 @@ from flask import current_app
 import pytz
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import synonym, load_only, column_property
+from sqlalchemy.orm import synonym, load_only, column_property, backref
 from sqlalchemy import func, select, and_
 from flask.ext.login import UserMixin
 
@@ -141,6 +141,7 @@ class Users(db.Model, UserMixin):
     groups = db.relationship(
         "GroupsAndUsers",
         primaryjoin="and_(Users.id==GroupsAndUsers.users_id, GroupsAndUsers.active)")
+    # groups = association_proxy('user_groups', 'name')
 
     system_role = association_proxy('usertypeforsystem', 'name')
 
@@ -499,6 +500,7 @@ class Judgements(db.Model):
         db.ForeignKey('Answers.id', ondelete="CASCADE"),
         nullable=False)
     answer_winner = db.relationship("PostsForAnswers")
+    comment = db.relationship("PostsForJudgements", uselist=False, backref="judgement")
     modified = db.Column(
         db.DateTime,
         default=datetime.datetime.utcnow,
@@ -943,6 +945,7 @@ class Scores(db.Model):
     #         return 0
 
 
+# TODO: this model could be merged into Judgements (one to one relationship)
 class PostsForJudgements(db.Model):
     __tablename__ = 'PostsForJudgements'
     __table_args__ = default_table_args
@@ -957,8 +960,17 @@ class PostsForJudgements(db.Model):
         db.Integer,
         db.ForeignKey('Judgements.id', ondelete="CASCADE"),
         nullable=False)
-    judgement = db.relationship("Judgements")
+    # judgement = db.relationship("Judgements")
     selfeval = db.Column(db.Boolean(name='selfeval'), default=False, nullable=False)
+
+    course_id = association_proxy('postsforcomments', 'course_id')
+    content = association_proxy('postsforcomments', 'content')
+    files = association_proxy('postsforcomments', 'files')
+    created = association_proxy('postsforcomments', 'created')
+    user_id = association_proxy('postsforcomments', 'user_id')
+    user_avatar = association_proxy('postsforcomments', 'user_avatar')
+    user_displayname = association_proxy('postsforcomments', 'user_displayname')
+    user_fullname = association_proxy('postsforcomments', 'user_fullname')
 
     @hybrid_property
     def courses_id(self):

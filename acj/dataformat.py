@@ -304,18 +304,17 @@ def get_import_users_results(restrict_users=True):
 
 def get_eval_comments():
     answer = {'id': fields.Integer, 'feedback': fields.String}
+    criteria_judgement = {'content': fields.String, 'criteriaandquestions_id': fields.Integer, 'winner': fields.Integer}
+    selfeval = {'content': fields.String}
     return {
         'user_id': fields.Integer,
         'name': fields.String,
         'avatar': fields.String,
-        'criteriaandquestions_id': fields.Integer,
-        'answerpairings_id': fields.Integer,
-        'content': fields.String,
-        'selfeval': fields.Boolean,
+        'criteria_judgements': fields.Nested(criteria_judgement),
+        'selfeval': fields.Nested(selfeval),
         'created': fields.DateTime,
         'answer1': fields.Nested(answer),
         'answer2': fields.Nested(answer),
-        'winner': fields.Integer
     }
 
 
