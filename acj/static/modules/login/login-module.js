@@ -158,7 +158,7 @@ module.controller(
 	"LogoutController",
 	function LogoutController($scope, $location, $log, $route, LoginResource, AuthenticationService, Toaster) {
 		$scope.logout = function() {
-			LoginResource.logout().$promise.then(
+			return LoginResource.logout().$promise.then(
 				function(data) {
 					$log.debug("Logging out user successful.");
 					AuthenticationService.logout();

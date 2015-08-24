@@ -123,11 +123,10 @@ module.exports.session = function ($httpBackend, Session, $rootScope) {
 		current_user = angular.fromJson(data).username;
 		return [200, users[current_user], {}];
 	});
-	// logout
-	//$httpBackend.whenDELETE('/api/auth').respond(function(method, url, data, headers) {
-	//    authenticated = false;
-	//    return [204, {}, {}];
-	//});
+	$httpBackend.whenDELETE('/api/logout').respond(function(method, url, data, headers) {
+	    authenticated = false;
+	    return [202, {}, {}];
+	});
 };
 
 module.exports.user = function($httpBackend) {
