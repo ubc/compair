@@ -632,27 +632,27 @@
 			</div>
 			
 			<!-- Comments Section -->
-			<div ng-repeat="(commentKey, comment) in comments" class="each-comment">
+			<div ng-repeat="(commentKey, comment) in comments.objects" class="each-comment">
 				
 				<!-- Comment Metadata Header -->
 				<div class="each-header clearfix">
-					<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
-						<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
+					<a ng-href="#/user/{{comment.user_id}}">
+						<img src="//www.gravatar.com/avatar/{{comment.user_avatar}}?s=32&d=retro" />
 					</a>
-					<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
-						{{comment.postsforcomments.post.user.displayname}}
-						<span ng-if="!canManagePosts && comment.postsforcomments.post.user.id == loggedInUserId">
+					<a ng-href="#/user/{{comment.user_id}}">
+						{{comment.user_displayname}}
+						<span ng-if="!canManagePosts && comment.user_id == loggedInUserId">
 							(You)
 						</span>
-						<span ng-if="canManagePosts && comment.postsforcomments.post.user.fullname">
-							({{comment.postsforcomments.post.user.fullname}})
+						<span ng-if="canManagePosts && comment.user_fullname">
+							({{comment.user_fullname}})
 						</span>
 					</a>
-					<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">
-						{{instructors[comment.postsforcomments.post.user.id]}} 
+					<span class="label label-info" ng-if="instructors[comment.user_id]">
+						{{instructors[comment.user_id]}}
 					</span>
-					<strong>commented</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
-					<div class="manager-actions pull-right" ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId">
+					<strong>commented</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
+					<div class="manager-actions pull-right" ng-if="canManagePosts || comment.user_id == loggedInUserId">
 						<a confirmation-needed="deleteComment(commentKey, courseId, question.id, comment.id)" keyword="comment" href="">
 							<i class="fa fa-trash-o"></i>
 						</a>

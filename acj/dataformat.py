@@ -220,12 +220,18 @@ def get_posts_for_comments(retrict_users=True):
     }
 
 
-def get_posts_for_questions_and_posts_for_comments(restrict_users=True):
-    comment = get_posts_for_comments(restrict_users)
+def get_posts_for_comments_new(restrict_users=True):
+    """
+    new data format for comments. Should deprecate the old one.
+    """
     return {
         'id': fields.Integer,
-        'postsforcomments': fields.Nested(comment),
-        'content': fields.String
+        'content': fields.String,
+        'created': fields.DateTime,
+        'user_id': fields.Integer,
+        'user_displayname': fields.String,
+        'user_fullname': fields.String,
+        'user_avatar': fields.String,
     }
 
 

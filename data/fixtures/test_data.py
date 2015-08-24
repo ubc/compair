@@ -152,13 +152,11 @@ class QuestionCommentsTestData(SimpleQuestionsTestData):
 
     def create_question_comment(self, user, course, question):
         post = PostsFactory(user=user, course=course)
-        db.session.commit()
         comment = PostsForCommentsFactory(post=post)
-        db.session.commit()
-        question_comment = PostsForQuestionsAndPostsForCommentsFactory(
+        PostsForQuestionsAndPostsForCommentsFactory(
             postsforquestions=question, postsforcomments=comment)
         db.session.commit()
-        return question_comment
+        return comment
 
 
 class SimpleAnswersTestData(SimpleQuestionsTestData):

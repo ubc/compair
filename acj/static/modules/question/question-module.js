@@ -424,6 +424,11 @@ module.controller("QuestionViewController",
 						Toaster.reqerror("Self-Evaluation Records Not Found.", ret);
 					}
 				);
+
+				// update the answer list
+				$scope.updateAnswerList();
+				// register watcher here so that we start watching when all filter values are set
+				$scope.$watchCollection('answerFilters', filterWatcher);
 			},
 			function (ret)
 			{
@@ -432,16 +437,14 @@ module.controller("QuestionViewController",
 		);
 
 
-		QuestionCommentResource.get({'courseId': $scope.courseId, 'questionId': questionId},
-			function (ret)
-			{
-				$scope.comments = ret.objects;
-			},
+		$scope.comments = QuestionCommentResource.get({'courseId': $scope.courseId, 'questionId': questionId},
+			function (ret) {},
 			function (ret)
 			{
 				Toaster.reqerror("Comments Not Found", ret);
 			}
 		);
+
 		QuestionResource.getAnswered({'id': $scope.courseId, 'questionId': questionId},
 			function (ret) {
 				myAnsCount = ret.answered;
@@ -451,14 +454,7 @@ module.controller("QuestionViewController",
 				Toaster.reqerror("Answers Not Found", ret);
 			}
 		);
-		//AnswerResource.view({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
-		//	function (ret) {
-		//		$scope.ans = ret.answers;
-		//	},
-		//	function (ret) {
-		//		Toaster.reqerror("Failed to retrieve the answers", ret);
-		//	}
-		//);
+
 		CourseResource.getInstructorsLabels({'id': $scope.courseId},
 			function (ret) {
 				$scope.instructors = ret.instructors;
@@ -475,38 +471,6 @@ module.controller("QuestionViewController",
 			});
 			return users;
 		};
-
-		$scope.$watchCollection('answerFilters', function(newValue, oldValue) {
-			if (angular.equals(newValue, oldValue)) return;
-			if (oldValue.group != newValue.group) {
-				$scope.answerFilters.author = null;
-				if ($scope.answerFilters.group == null) {
-					userIds = $scope.getUserIds($scope.allStudents);
-					$scope.students = $scope.allStudents;
-				} else {
-					GroupResource.get({'courseId': $scope.courseId, 'groupId': $scope.answerFilters.group.id},
-						function (ret) {
-							$scope.students = ret.students;
-							userIds = $scope.getUserIds(ret.students);
-						},
-						function (ret) {
-							Toaster.reqerror("Unable to retrieve the group members", ret);
-						}
-					);
-				}
-				$scope.answerFilters.page = 1;
-			}
-			if (oldValue.author != newValue.author) {
-				userIds = {};
-				if ($scope.answerFilters.author == null) {
-					userIds = $scope.getUserIds($scope.students);
-				} else {
-					userIds[$scope.answerFilters.author.user.id] = 1;
-				}
-				$scope.answerFilters.page = 1;
-			}
-			$scope.updateAnswerList();
-		});
 
 		$scope.adminFilter = function() {
 			return function (answer) {
@@ -613,7 +577,7 @@ module.controller("QuestionViewController",
 			QuestionCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'commentId': comment_id},
 				function (ret) {
 					Toaster.success("Comment Delete Successful", "Successfully deleted comment " + ret.id);
-					$scope.comments.splice(key, 1);
+					$scope.comments.objects.splice(key, 1);
 					$scope.question.comments_count--;
 				},
 				function (ret) {
@@ -652,7 +616,37 @@ module.controller("QuestionViewController",
 			});
 		};
 
-		$scope.updateAnswerList();
+		var filterWatcher = function(newValue, oldValue) {
+			if (angular.equals(newValue, oldValue)) return;
+			if (oldValue.group != newValue.group) {
+				$scope.answerFilters.author = null;
+				if ($scope.answerFilters.group == null) {
+					userIds = $scope.getUserIds($scope.allStudents);
+					$scope.students = $scope.allStudents;
+				} else {
+					GroupResource.get({'courseId': $scope.courseId, 'groupId': $scope.answerFilters.group.id},
+						function (ret) {
+							$scope.students = ret.students;
+							userIds = $scope.getUserIds(ret.students);
+						},
+						function (ret) {
+							Toaster.reqerror("Unable to retrieve the group members", ret);
+						}
+					);
+				}
+				$scope.answerFilters.page = 1;
+			}
+			if (oldValue.author != newValue.author) {
+				userIds = {};
+				if ($scope.answerFilters.author == null) {
+					userIds = $scope.getUserIds($scope.students);
+				} else {
+					userIds[$scope.answerFilters.author.user.id] = 1;
+				}
+				$scope.answerFilters.page = 1;
+			}
+			$scope.updateAnswerList();
+		};
 	}
 );
 module.controller("QuestionCreateController",

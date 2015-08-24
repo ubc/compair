@@ -45,8 +45,8 @@ class QuestionCommentsAPITests(ACJTestCase):
         self.assert200(rv)
         self.assertEqual(1, len(rv.json['objects']))
         comment = self.data.get_instructor_ques_comment()
-        self.assertEqual(comment.comments_id, rv.json['objects'][0]['postsforcomments']['id'])
-        self.assertEqual(comment.postsforcomments.post.content, rv.json['objects'][0]['content'])
+        self.assertEqual(comment.id, rv.json['objects'][0]['id'])
+        self.assertEqual(comment.content, rv.json['objects'][0]['content'])
 
     def test_create_question_comment(self):
         url = self._build_url(self.course.id, self.question1.id)

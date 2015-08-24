@@ -79,6 +79,7 @@ class AnswerRootAPI(Resource):
             options(contains_eager('post').joinedload('files')). \
             options(contains_eager('post').joinedload('user')). \
             options(joinedload('_scores')). \
+            options(joinedload('comments')). \
             join(Posts). \
             filter(PostsForAnswers.questions_id == question.id)
 
