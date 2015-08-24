@@ -1,3 +1,4 @@
+import csv
 import json
 import io
 
@@ -39,6 +40,19 @@ class ClassListAPITest(ACJTestCase):
         self.assertEqual(len(expected), len(rv.json['objects']))
         for key, user in enumerate(expected):
             self.assertEqual(user.id, rv.json['objects'][key]['id'])
+
+        # test export csv
+        rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
+        self.assert200(rv)
+        self.assertEqual('text/csv', rv.content_type)
+        reader = csv.reader(rv.data.splitlines(), delimiter=',')
+        self.assertEqual(['username', 'student_no', 'firstname', 'lastname', 'email', 'displayname'], reader.next())
+
+        for key, user in enumerate(expected):
+            self.assertEqual(
+                [user.username, user.student_no or '', user.firstname, user.lastname, user.email, user.displayname],
+                reader.next()
+            )
 
     def test_get_instructor_labels(self):
         url = self.url + "/instructors/labels"

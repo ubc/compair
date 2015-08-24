@@ -46,11 +46,12 @@ module.directive('autoFocus', function($timeout, $log) {
 
 /***** Listeners *****/
 // display the login page if user is not logged in
-module.run(function ($rootScope, $route, $location, $log, $modal, $cacheFactory, AuthenticationService, Toaster) {
+module.run(function ($rootScope, $route, $location, $log, $modal, $cacheFactory, AuthenticationService, Toaster, $http) {
+	$http.defaults.headers.common.Accept = 'application/json';
+
 	// Create a modal dialog box for containing the login form
 	var loginBox;
 	var isOpen = false;
-	debugger;
 	// Functions to display/hide the login form
 	$rootScope.showLogin = function() {
 		if (isOpen) return;

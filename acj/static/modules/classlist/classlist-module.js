@@ -13,7 +13,8 @@ var module = angular.module('ubc.ctlt.acj.classlist',
 		'ubc.ctlt.acj.group',
 		'ubc.ctlt.acj.toaster',
 		'ubc.ctlt.acj.user',
-		'ui.bootstrap'
+		'ui.bootstrap',
+		'fileSaver'
 	]
 );
 
@@ -29,7 +30,15 @@ module.factory(
 			{
 				'get': {url: '/api/courses/:courseId/users', cache: cache},
 				enrol: {method: 'POST', url: url, interceptor: Interceptors.enrolCache},
-				unenrol: {method: 'DELETE', url: url, interceptor: Interceptors.enrolCache}
+				unenrol: {method: 'DELETE', url: url, interceptor: Interceptors.enrolCache},
+				export: {
+					method: 'GET',
+					url: url,
+					headers: {Accept: 'text/csv'},
+					transformResponse: function (data, headers) {
+						return {content: data};
+					}
+				}
 			}
 		);
 		ret.MODEL = "CoursesAndUsers";
@@ -41,7 +50,7 @@ module.factory(
 module.controller(
 	'ClassViewController',
 	function($scope, $log, $routeParams, $route, ClassListResource, CourseResource,
-			 CourseRoleResource, GroupResource, Toaster, Session)
+			 CourseRoleResource, GroupResource, Toaster, Session, SaveAs)
 	{
 		$scope.course = {};
 		$scope.classlist = {};
@@ -129,6 +138,12 @@ module.controller(
 				}
 			)
 		};
+
+		$scope.export = function() {
+			ClassListResource.export({'courseId': courseId}, function(ret) {
+				SaveAs.download(ret.content, 'classlist_'+$scope.course_name+'.csv', {type: "text/csv;charset=utf-8"});
+			});
+		};
 	}
 );
 
@@ -162,7 +177,7 @@ module.controller(
 
 module.controller(
 	'ClassImportResultsController',
-	function($scope, $log, $routeParams, ClassListResource, Toaster, importService, CourseResource)
+	function($scope, $log, $routeParams, ClassListResource, Toaster, importService)
 	{
 		$scope.results = importService.getResults();
 

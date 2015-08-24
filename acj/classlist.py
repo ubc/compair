@@ -4,12 +4,14 @@ import csv
 import string
 
 from bouncer.constants import EDIT, READ
-from flask import Blueprint, request, current_app
+from flask import Blueprint, request, current_app, make_response
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal, abort
+from six import StringIO
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload, contains_eager
 from werkzeug.utils import secure_filename
+
 from flask.ext.restful.reqparse import RequestParser
 
 from . import dataformat
@@ -169,6 +171,19 @@ def import_users(course_id, users):
         'success': count,
         'invalids': marshal(invalids, dataformat.get_import_users_results(False))
     }
+
+
+@api.representation('text/csv')
+def output_csv(data, code, headers=None):
+    fieldnames = ['username', 'student_no', 'firstname', 'lastname', 'email', 'displayname']
+    csv_buffer = StringIO()
+    writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames, extrasaction='ignore')
+    writer.writeheader()
+    writer.writerows(data['objects'])
+    response = make_response(csv_buffer.getvalue(), code)
+    response.headers.extend(headers or {})
+    response.headers['Content-Disposition'] = 'attachment;filename=classlist.csv'
+    return response
 
 
 # /

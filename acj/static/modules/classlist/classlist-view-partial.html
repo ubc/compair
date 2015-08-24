@@ -9,6 +9,10 @@
 				<i class="fa fa-upload"></i>
 				Import Users
 			</a>
+            <a href="" class="btn btn-primary" ng-click="export()">
+                <i class="fa fa-download"></i>
+                Export Users
+            </a>
 			<a ng-href="#/course/{{courseId}}/user/group/import" class="btn btn-primary">
 				<i class="fa fa-list-ul"></i>
 				Assign Groups
@@ -23,12 +27,6 @@
 	
 	<p class="intro-text">Drop or enrol individual users&mdash;who are already in the application&mdash;below. To create, drop, or enrol multiple users in a course at the same time, click Import Users above.</p>
 	
-	<!-- TO DO: reportFile to be replaced by whatever will be used on this page to create the CSV file -->
-	<div class="alert alert-success text-center" ng-show="reportFile">
-		<h4>File Complete</h4>
-		<p>Your list of users is ready for <strong><a href="{{ reportFile }}">download <i class="fa fa-file-excel-o"></i></a></strong> now.</p>
-	</div>
-
 	<h2 >Enrolled in {{course_name}}</h2>
 	<hr />
 

@@ -21,6 +21,7 @@ class UsersFactory(SQLAlchemyModelFactory):
     firstname = factory.fuzzy.FuzzyText(length=4)
     lastname = factory.fuzzy.FuzzyText(length=4)
     displayname = factory.fuzzy.FuzzyText(length=8)
+    email = factory.fuzzy.FuzzyText(length=8)
     student_no = factory.fuzzy.FuzzyText(length=8)
     password = 'password'
     usertypesforsystem_id = 2
