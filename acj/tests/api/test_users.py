@@ -75,8 +75,15 @@ class UsersAPITests(ACJTestCase):
         rv = self.client.get('/api/users')
         self.assert200(rv)
         users = rv.json
-        self.assertEqual(users['num_results'], 7)
+        self.assertEqual(users['total'], 7)
         self.assertEqual(users['objects'][0]['username'], 'root')
+
+        rv = self.client.get('/api/users?search={}'.format(self.data.get_unauthorized_instructor().firstname))
+        self.assert200(rv)
+        users = rv.json
+        self.assertEqual(users['total'], 1)
+        self.assertEqual(users['objects'][0]['username'], self.data.get_unauthorized_instructor().username)
+
 
     def test_usertypes(self):
         # test login required
@@ -113,41 +120,6 @@ class UsersAPITests(ACJTestCase):
         }
         for instructor in instructors:
             self.assertEqual(expected[instructor['id']], instructor)
-        self.logout()
-
-    def test_get_all_user_list(self):
-        url = '/api/usertypes/all'
-
-        # test login required
-        rv = self.client.get(url)
-        self.assert401(rv)
-
-        # test unauthorized user
-        self.login(self.data.get_authorized_student().username)
-        rv = self.client.get(url)
-        self.assert403(rv)
-        self.logout()
-
-        # test successful query
-        self.login(self.data.get_authorized_instructor().username)
-        rv = self.client.get(url)
-        self.assert200(rv)
-        users = rv.json['users']
-        admin = Users.query.filter_by(username='root').first()
-        expected = {
-            admin.id: self._generate_search_users(admin),
-            self.data.get_authorized_instructor().id: self._generate_search_users(
-                self.data.get_authorized_instructor()),
-            self.data.get_authorized_ta().id: self._generate_search_users(self.data.get_authorized_ta()),
-            self.data.get_authorized_student().id: self._generate_search_users(self.data.get_authorized_student()),
-            self.data.get_unauthorized_instructor().id: self._generate_search_users(
-                self.data.get_unauthorized_instructor()),
-            self.data.get_unauthorized_student().id: self._generate_search_users(self.data.get_unauthorized_student()),
-            self.data.get_dropped_instructor().id: self._generate_search_users(self.data.get_dropped_instructor())
-        }
-        self.assertEqual(len(expected), 7)
-        for user in users:
-            self.assertEqual(expected[user['id']], user)
         self.logout()
 
     def test_create_user(self):

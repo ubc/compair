@@ -4,12 +4,12 @@ from flask.ext.restful import Resource, marshal_with, marshal
 from flask.ext.restful.reqparse import RequestParser
 from flask_login import login_required, current_user
 from sqlalchemy.orm import load_only
-from sqlalchemy import exc, asc
+from sqlalchemy import exc, asc, or_
 
 from . import dataformat
 from .authorization import is_user_access_restricted, require, allow
 from .core import db, event
-from .util import pagination, new_restful_api, get_model_changes
+from .util import pagination, new_restful_api, get_model_changes, pagination_parser
 from .models import Users, UserTypesForSystem, Courses, UserTypesForCourse, CoursesAndUsers, \
     PostsForQuestions, Posts
 
@@ -40,6 +40,10 @@ existing_user_parser.add_argument('email', type=str)
 update_password_parser = RequestParser()
 update_password_parser.add_argument('oldpassword', type=str, required=True)
 update_password_parser.add_argument('newpassword', type=str, required=True)
+
+user_list_parser = pagination_parser.copy()
+user_list_parser.add_argument('search', type=str, required=False, default=None)
+user_list_parser.add_argument('ids', type=str, required=False, default=None)
 
 # events
 on_user_modified = event.signal('USER_MODIFIED')
@@ -124,15 +128,26 @@ class UserAPI(Resource):
 # /
 class UserListAPI(Resource):
     @login_required
-    @pagination(Users)
-    @marshal_with(dataformat.get_users(False))
-    def get(self, objects):
-        require(MANAGE, Users)
+    # @pagination(Users)
+    # @marshal_with(dataformat.get_users(False))
+    def get(self):
+        restrict_users = not allow(MANAGE, Users)
+
+        params = user_list_parser.parse_args()
+
+        query = Users.query
+        if params['search']:
+            search = '%{}%'.format(params['search'])
+            query = query.filter(or_(Users.firstname.like(search), Users.lastname.like(search)))
+        page = query.paginate(params['page'], params['perPage'])
+
         on_user_list_get.send(
             self,
             event_name=on_user_list_get.name,
             user=current_user)
-        return objects
+
+        return {"objects": marshal(page.items, dataformat.get_users(restrict_users)), "page": page.page,
+                "pages": page.pages, "total": page.total, "per_page": page.per_page}
 
     @login_required
     def post(self):
@@ -285,26 +300,6 @@ class UserTypesInstructorsAPI(Resource):
         return {'instructors': instructors}
 
 
-# /all
-class UserTypesAllAPI(Resource):
-    @login_required
-    def get(self):
-        users = Users.query.order_by(Users.firstname).all()
-        require(EDIT, CoursesAndUsers)
-        users = [{
-            'id': i.id,
-            'display': (i.fullname or '') + ' (' + i.displayname + ') - ' + i.usertypeforsystem.name,
-            'name': i.fullname} for i in users]
-
-        on_users_display_get.send(
-            self,
-            event_name=on_users_display_get.name,
-            user=current_user
-        )
-
-        return {'users': users}
-
-
 class UserCourseRolesAPI(Resource):
     @login_required
     def get(self):
@@ -351,6 +346,5 @@ api.add_resource(UserUpdatePasswordAPI, '/password/<int:user_id>')
 apiT = new_restful_api(user_types_api)
 apiT.add_resource(UserTypesAPI, '')
 apiT.add_resource(UserTypesInstructorsAPI, '/instructors')
-apiT.add_resource(UserTypesAllAPI, '/all')
 apiC = new_restful_api(user_course_types_api)
 apiC.add_resource(UserCourseRolesAPI, '')

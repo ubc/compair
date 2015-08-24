@@ -30,11 +30,9 @@ module.factory('UserResource', function($resource) {
 	return User;
 });
 module.factory('UserTypeResource', function($resource) {
-	var ret = $resource('/api/usertypes/:id', {id: '@id'},
-		{
-			'getInstructors': {method: 'GET', url: '/api/usertypes/instructors'},
-			'getUsers': {method: 'GET', url: '/api/usertypes/all'}
-		});
+	var ret = $resource('/api/usertypes/:id', {id: '@id'}, {
+		'getInstructors': {method: 'GET', url: '/api/usertypes/instructors'}
+	});
 	ret.MODEL = "UserTypesForSystem";
 	return ret;
 });

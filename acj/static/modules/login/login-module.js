@@ -108,7 +108,6 @@ module.controller(
 	"LoginController",
 	function LoginController($rootScope, $scope, $location, $log, $route,
 							 LoginResource,
-							 UserResource,
 							 AuthenticationService)
 	{
 		$scope.submitted = false;

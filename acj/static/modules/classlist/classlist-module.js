@@ -191,20 +191,10 @@ module.controller(
 
 module.controller(
 	'EnrolController',
-	function($scope, $log, $routeParams, $route, $location, ClassListResource, Toaster, UserTypeResource)
+	function($scope, $log, $routeParams, $route, $location, ClassListResource, Toaster, UserResource)
 	{
-
-		$scope.user = {};
 		var courseId = $routeParams['courseId'];
 
-		UserTypeResource.getUsers().$promise.then(
-			function (ret) {
-				$scope.users = ret.users;
-			},
-			function (ret) {
-				Toaster.reqerror("No Users Found", ret);
-			}
-		);
 		$scope.enrolSubmit = function() {
 			$scope.submitted = true;
 			ClassListResource.enrol({'courseId': courseId, 'userId': $scope.user.id}, $scope.user,
@@ -219,6 +209,13 @@ module.controller(
 				}
 			);
 		};
+
+		$scope.getUsersAhead = function(search) {
+			// need return a real promise so can't use short form (without $promise.then)
+			return UserResource.get({search: search}).$promise.then(function(response) {
+				return response.objects;
+			});
+		}
 	}
 );
 
