@@ -85,7 +85,8 @@ class AnswersAPITests(ACJTestCase):
         self.assert200(rv)
         result = rv.json['objects']
         # test the result is paged and sorted
-        answers = self.fixtures.answers[:len(self.fixtures.answers) / len(self.fixtures.groups)]
+        answers_per_group = int(len(self.fixtures.answers) / len(self.fixtures.groups)) if len(self.fixtures.groups) else 0
+        answers = self.fixtures.answers[:answers_per_group]
         expected = sorted(answers, key=lambda ans: ans.scores[0].score, reverse=True)
         self.assertEqual([a.id for a in expected], [a['id'] for a in result])
 

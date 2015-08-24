@@ -1,9 +1,12 @@
 import datetime
 import copy
 import random
-from acj import db
+
 import factory.fuzzy
-from acj.models import UserTypesForSystem, UserTypesForCourse, Criteria, PostsForAnswers
+
+from acj import db
+from six.moves import range
+from acj.models import UserTypesForSystem, UserTypesForCourse, Criteria
 from data.fixtures import CoursesFactory, UsersFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, \
     PostsForAnswersFactory, CriteriaFactory, CriteriaAndCoursesFactory, AnswerPairingsFactory, JudgementsFactory, \
     PostsForJudgementsFactory, PostsForCommentsFactory, GroupsFactory, GroupsAndUsersFactory, \
@@ -163,7 +166,7 @@ class SimpleAnswersTestData(SimpleQuestionsTestData):
     def __init__(self, num_answer=2):
         SimpleQuestionsTestData.__init__(self)
         self.extra_student = []
-        for _ in xrange(num_answer):
+        for _ in range(num_answer):
             student = self.create_normal_user()
             self.extra_student.append(student)
             self.enrol_student(student, self.get_course())
@@ -171,7 +174,7 @@ class SimpleAnswersTestData(SimpleQuestionsTestData):
         self.answersByQuestion = {}
         for question in self.get_questions():
             answers_for_question = []
-            for i in xrange(num_answer):
+            for i in range(num_answer):
                 answer = self.create_answer(question, self.extra_student[i])
                 answers_for_question.append(answer)
                 self.answersByQuestion[question.id] = answers_for_question
@@ -453,7 +456,7 @@ class TestFixture:
                 "Number of answers({}) must be equal or smaller than number of students({}) "
                 "multiple by number of questions({})".format(num_answers, len(self.students), len(self.questions))
             )
-        for i in xrange(num_answers):
+        for i in range(num_answers):
             for question in self.questions:
                 post = PostsFactory(course=self.course, user=self.students[i % len(self.students)])
                 answer = PostsForAnswersFactory(question=question, post=post)
@@ -464,7 +467,7 @@ class TestFixture:
 
     def add_groups(self, num_groups):
         student_per_group = int(len(self.students) / num_groups) if num_groups is not 0 else 0
-        for idx in xrange(num_groups):
+        for idx in range(num_groups):
             group = GroupsFactory(course=self.course)
             self.groups.append(group)
             db.session.commit()
@@ -474,7 +477,7 @@ class TestFixture:
         return self
 
     def add_questions(self, num_questions):
-        for _ in xrange(num_questions):
+        for _ in range(num_questions):
             post = PostsFactory(course=self.course)
             question = PostsForQuestionsFactory(post=post)
             CriteriaAndPostsForQuestionsFactory(criterion=DefaultFixture.DEFAULT_CRITERIA, question=question)
@@ -485,7 +488,7 @@ class TestFixture:
 
     def add_students(self, num_students):
         students = []
-        for _ in xrange(num_students):
+        for _ in range(num_students):
             student = UsersFactory(usertypeforsystem=DefaultFixture.SYS_ROLE_NORMAL)
             students.append(student)
         self.students += students

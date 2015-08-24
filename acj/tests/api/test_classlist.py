@@ -45,13 +45,13 @@ class ClassListAPITest(ACJTestCase):
         rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
         self.assert200(rv)
         self.assertEqual('text/csv', rv.content_type)
-        reader = csv.reader(rv.data.splitlines(), delimiter=',')
-        self.assertEqual(['username', 'student_no', 'firstname', 'lastname', 'email', 'displayname'], reader.next())
+        reader = csv.reader(rv.data.decode(encoding='UTF-8').splitlines(), delimiter=',')
+        self.assertEqual(['username', 'student_no', 'firstname', 'lastname', 'email', 'displayname'], next(reader))
 
         for key, user in enumerate(expected):
             self.assertEqual(
                 [user.username, user.student_no or '', user.firstname, user.lastname, user.email, user.displayname],
-                reader.next()
+                next(reader)
             )
 
     def test_get_instructor_labels(self):
