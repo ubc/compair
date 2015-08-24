@@ -15,23 +15,17 @@ var createCourseStepDefinitionsWrapper = function () {
 	var pageFactory = new PageFactory();
 	var page;
 
-	this.Given(/^I'm on "([^"]*)" page$/, function (pageName, done) {
+	this.Given(/^I'm on "([^"]*)" page$/, function (pageName) {
 		page = pageFactory.createPage(pageName);
-		page.get().then(function() {
-			done();
-		});
+		return page.get();
 	});
 
-	this.When(/^I select 'Add Course' button$/, function (done) {
-		page.addCourse().then(function() {
-			done();
-		});
+	this.When(/^I select 'Add Course' button$/, function () {
+		return page.addCourse();
 	});
 
-	this.When(/^I click on "([^"]*)" button$/, function (button, done) {
-		element(by.css('input[value='+button+']')).click().then(function() {
-			done();
-		})
+	this.When(/^I click on "([^"]*)" button$/, function (button) {
+		return element(by.css('input[value='+button+']')).click();
 	});
 
 	this.When(/^I should be on "([^"]*)" page$/, function (page, done) {

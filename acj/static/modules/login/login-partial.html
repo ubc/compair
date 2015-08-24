@@ -8,11 +8,11 @@
 				    <img class="center-block" src="https://www.auth.cwl.ubc.ca/CWL_login_button.gif" width="76" height="25" alt="CWL Login" border="0" valign="middle">
 				</a>
 				<hr />
-				<a href="" ng-click="showReplies = !showReplies" id="app-login-toggle">
+				<a href="" ng-click="showReplies = !showReplies">
 					<p>
 						<i class="fa fa-chevron-down" ng-show="showReplies"></i>
 						<i class="fa fa-chevron-right" ng-hide="showReplies"></i>
-						Use application's login instead?
+						<span id="app-login-toggle">Use application's login instead?</span>
 					</p>
 				</a>
 				<div ng-show="showReplies">

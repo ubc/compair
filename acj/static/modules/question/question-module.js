@@ -96,14 +96,6 @@ module.directive('comparisonPreview', function() {
 		/* this template is our simple text with button to launch the preview */
 		templateUrl: 'modules/question/preview-inline-template.html',
 		controller: function ($scope, $modal) {
-			/* student view preview is comparison template */
-			$scope.thePreview = $modal(
-				{
-					contentTemplate: 'modules/judgement/judgement-core.html',
-					scope: $scope,
-					show: false
-				}
-			);
 			/* need to pass to comparison template all expected properties to complete the preview */
 			$scope.previewPopup = function() {
 				/* question has title that is entered, content that is entered, number of comparisons that is entered (or else 3), no files */
@@ -113,7 +105,7 @@ module.directive('comparisonPreview', function() {
 						content: $scope.question.post.content,
 						files: []
 					},
-					num_judgement_req: $scope.question.num_judgement_req ? $scope.question.num_judgement_req : 3,
+					num_judgement_req: $scope.question.num_judgement_req ? $scope.question.num_judgement_req : 3
 				};
 				/* previewed criteria initially empty */
 				$scope.previewCriteria = [];
@@ -141,19 +133,21 @@ module.directive('comparisonPreview', function() {
 				$scope.current = 1;
 				$scope.total = $scope.question.num_judgement_req;
 				/* answer pair shown is dummy content, no files */
-				$scope.answerPair = 
-					{
-					    answer1: {
-						content: "<p>The first student answer in the pair will appear here.</p>", 
+				$scope.answerPair = {
+					answer1: {
+						content: "<p>The first student answer in the pair will appear here.</p>",
 						files: []
-					    }, 
-					    answer2: {
+					},
+					answer2: {
 						content: "<p>The second student answer in the pair will appear here.</p>",
 						files: []
-					    }
-					};
-				/* now open the pop-up window */
-				$scope.thePreview.$promise.then($scope.thePreview.show);
+					}
+				};
+				/* student view preview is comparison template */
+				$scope.thePreview = $modal.open({
+					templateUrl: 'modules/judgement/judgement-core.html',
+					scope: $scope
+				});
 			}
 		}
 	};
@@ -692,10 +686,6 @@ module.controller("QuestionCreateController",
 		$scope.date.aend.date.setDate(today.getDate()+8);
 		$scope.date.jstart.date.setDate(today.getDate()+8);
 		$scope.date.jend.date.setDate(today.getDate()+15);
-		$scope.date.astart.date = $scope.date.astart.date.toISOString();
-		$scope.date.aend.date = $scope.date.aend.date.toISOString();
-		$scope.date.jstart.date = $scope.date.jstart.date.toISOString();
-		$scope.date.jend.date = $scope.date.jend.date.toISOString();
 
 		$scope.date.astart.open = function($event) {
 			$event.preventDefault();
@@ -920,16 +910,16 @@ module.controller("QuestionEditController",
 
 		QuestionResource.get({'courseId': courseId, 'questionId': $scope.questionId}).$promise.then(
 			function (ret) {
-				$scope.date.astart.date = new Date(ret.question.answer_start).toISOString();
+				$scope.date.astart.date = new Date(ret.question.answer_start);
 				$scope.date.astart.time = new Date(ret.question.answer_start);
-				$scope.date.aend.date = new Date(ret.question.answer_end).toISOString();
+				$scope.date.aend.date = new Date(ret.question.answer_end);
 				$scope.date.aend.time = new Date(ret.question.answer_end);
 
 				if (ret.question.judge_start && ret.question.judge_end) {
 					ret.question.availableCheck = true;
-					$scope.date.jstart.date = new Date(ret.question.judge_start).toISOString();
+					$scope.date.jstart.date = new Date(ret.question.judge_start);
 					$scope.date.jstart.time = new Date(ret.question.judge_start);
-					$scope.date.jend.date = new Date(ret.question.judge_end).toISOString();
+					$scope.date.jend.date = new Date(ret.question.judge_end);
 					$scope.date.jend.time = new Date(ret.question.judge_end)
 				} else {
 					$scope.date.jstart.date = new Date($scope.date.aend.date);
@@ -937,8 +927,8 @@ module.controller("QuestionEditController",
 					$scope.date.jend.date = new Date();
 					$scope.date.jend.date.setDate($scope.date.jstart.date.getDate()+7);
 					$scope.date.jend.time = new Date($scope.date.aend.time);
-					$scope.date.jstart.date = $scope.date.jstart.date.toISOString();
-					$scope.date.jend.date = $scope.date.jend.date.toISOString();
+					$scope.date.jstart.date = $scope.date.jstart.date;
+					$scope.date.jend.date = $scope.date.jend.date;
 				}
 				$scope.question = ret.question;
 				$scope.judged = ret.question.judged;
