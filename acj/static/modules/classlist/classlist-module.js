@@ -28,7 +28,7 @@ module.factory(
 		var ret = $resource(
 			url, {userId: '@userId'},
 			{
-				'get': {url: '/api/courses/:courseId/users', cache: cache},
+				get: {cache: cache},
 				enrol: {method: 'POST', url: url, interceptor: Interceptors.enrolCache},
 				unenrol: {method: 'DELETE', url: url, interceptor: Interceptors.enrolCache},
 				export: {
@@ -36,6 +36,8 @@ module.factory(
 					url: url,
 					headers: {Accept: 'text/csv'},
 					transformResponse: function (data, headers) {
+						// need to wrap response with object, otherwise $resource
+						// will try to decode response as json
 						return {content: data};
 					}
 				}
@@ -59,7 +61,7 @@ module.controller(
 		Session.getUser().then(function(user) {
 			$scope.loggedInUserId = user.id;
 		});
-		CourseResource.get({'id':courseId}).$promise.then(
+		CourseResource.get({'id':courseId},
 			function (ret) {
 				$scope.course_name = ret['name'];
 			},
@@ -67,7 +69,7 @@ module.controller(
 				Toaster.reqerror("No Course Found For ID "+courseId, ret);
 			}
 		);
-		ClassListResource.get({'courseId':courseId}).$promise.then(
+		ClassListResource.get({'courseId':courseId},
 			function (ret) {
 				$scope.classlist = ret.objects;
 			},
@@ -75,7 +77,7 @@ module.controller(
 				Toaster.reqerror("No Users Found For Course ID "+courseId, ret);
 			}
 		);
-		GroupResource.get({'courseId':courseId}).$promise.then(
+		GroupResource.get({'courseId':courseId},
 			function (ret) {
 				$scope.groups = ret.groups;
 			},
@@ -95,7 +97,7 @@ module.controller(
 
 		$scope.update = function(userId, groupId) {
 			if (groupId) {
-				GroupResource.enrol({'courseId': courseId, 'userId': userId, 'groupId': groupId}, {}).$promise.then(
+				GroupResource.enrol({'courseId': courseId, 'userId': userId, 'groupId': groupId}, {},
 					function (ret) {
 						Toaster.success("Successfully enroled the user into " + ret.groups_name);
 					},
@@ -104,7 +106,7 @@ module.controller(
 					}
 				);
 			} else {
-				GroupResource.unenrol({'courseId': courseId, 'userId': userId}).$promise.then(
+				GroupResource.unenrol({'courseId': courseId, 'userId': userId},
 					function (ret) {
 						Toaster.success("Successfully removed the user from the group.");
 					},
@@ -117,7 +119,7 @@ module.controller(
 
 		$scope.enrol = function(user, course_role) {
 			var role = {'course_role_id': course_role.id};
-			ClassListResource.enrol({'courseId': courseId, 'userId': user.id}, role).$promise.then(
+			ClassListResource.enrol({'courseId': courseId, 'userId': user.id}, role,
 				function (ret) {
 					Toaster.success("User Added", 'Successfully changed '+ ret.fullname +'\'s course role to ' + ret.course_role);
 				},
@@ -128,7 +130,7 @@ module.controller(
 		};
 
 		$scope.unenrol = function(userId) {
-			ClassListResource.unenrol({'courseId': courseId, 'userId': userId}).$promise.then(
+			ClassListResource.unenrol({'courseId': courseId, 'userId': userId},
 				function (ret) {
 					Toaster.success("Successfully unenroled " + ret.user.fullname + " from the course.");
 					$route.reload();
@@ -153,7 +155,7 @@ module.controller(
 	{
 		$scope.course = {};
 		var courseId = $routeParams['courseId'];
-		CourseResource.get({'id':courseId}).$promise.then(
+		CourseResource.get({'id':courseId},
 			function (ret) {
 				$scope.course_name = ret['name'];
 			},
@@ -205,7 +207,7 @@ module.controller(
 		);
 		$scope.enrolSubmit = function() {
 			$scope.submitted = true;
-			ClassListResource.enrol({'courseId': courseId, 'userId': $scope.user.id}, $scope.user).$promise.then(
+			ClassListResource.enrol({'courseId': courseId, 'userId': $scope.user.id}, $scope.user,
 				function (ret) {
 					$scope.submitted = false;
 					Toaster.success("User Added", 'Successfully added '+ ret.fullname +' as ' + ret.course_role + ' to the course.');

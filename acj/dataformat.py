@@ -44,6 +44,7 @@ def get_users(restrict_users=True):
 
 def get_users_in_course(restrict_users=True):
     users = get_users(restrict_users)
+    users['group_id'] = fields.Integer
     if not restrict_users:
         users['course_role'] = fields.String
     return users

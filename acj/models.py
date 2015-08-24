@@ -199,6 +199,22 @@ class Users(db.Model, UserMixin):
         else:
             return self.coursesandusers[0].usertypeforcourse.name
 
+    @hybrid_property
+    def group_id(self):
+        """
+        we only have one group per user-course. So we return single group_id
+        :return: group id or 0 if there is no group
+        """
+        return self.groups[0].groups_id if len(self.groups) else 0
+
+    @hybrid_property
+    def group_name(self):
+        """
+        we only have one group per user-course. So we return single group name
+        :return: group name or None if there is no group
+        """
+        return self.groups[0].group.name if len(self.groups) else None
+
     def __repr__(self):
         if self.username:
             return self.username

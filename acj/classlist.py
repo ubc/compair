@@ -210,6 +210,7 @@ class ClasslistRootAPI(Resource):
                 UserTypesForCourse.name.notlike(UserTypesForCourse.TYPE_DROPPED))). \
             options(joinedload('usertypeforsystem')). \
             options(contains_eager('coursesandusers').contains_eager('usertypeforcourse')). \
+            options(joinedload(Users.groups)). \
             filter(CoursesAndUsers.courses_id == course_id). \
             order_by(Users.firstname).all()
 
