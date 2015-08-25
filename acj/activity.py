@@ -1,5 +1,6 @@
 import json
 import datetime
+from hashlib import md5
 
 from flask import session
 from flask.ext.login import user_logged_in, user_logged_out
@@ -27,8 +28,8 @@ def log(sender, event_name='UNKNOWN', **extra):
         params['status'] = extra['status']
     if 'message' in extra:
         params['message'] = extra['message']
-    if '_id' in session:
-        params['session_id'] = session['_id']
+    if 'session_token' in session:
+        params['session_id'] = md5(session['session_token']).hexdigest()
 
     activity = Activities(**params)
     db.session.add(activity)

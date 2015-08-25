@@ -21,6 +21,7 @@
 
 import hashlib
 import datetime
+import time
 import math
 import warnings
 
@@ -29,10 +30,9 @@ from flask import current_app
 import pytz
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import synonym, load_only, column_property, backref
+from sqlalchemy.orm import synonym, load_only, column_property
 from sqlalchemy import func, select, and_
 from flask.ext.login import UserMixin
-
 
 
 # User types at the course level
@@ -60,6 +60,7 @@ db.metadata.naming_convention = convention
 #################################################
 # Users
 #################################################
+
 
 class UserTypesForCourse(db.Model):
     __tablename__ = "UserTypesForCourse"
@@ -95,6 +96,22 @@ def hash_password(password, is_admin=False):
         category = "admin"
     pwd_context = getattr(security, current_app.config['PASSLIB_CONTEXT'])
     return pwd_context.encrypt(password, category=category)
+
+
+# This could be used for token based authentication
+# def verify_auth_token(token):
+#     s = Serializer(current_app.config['SECRET_KEY'])
+#     try:
+#         data = s.loads(token)
+#     except SignatureExpired:
+#         return None  # valid token, but expired
+#     except BadSignature:
+#         return None  # invalid token
+#
+#     if 'id' not in data:
+#         return None
+#
+#     return data['id']
 
 
 # Flask-Login requires the user class to have some methods, the easiest way
@@ -187,6 +204,19 @@ class Users(db.Model, UserMixin):
         self.lastonline = datetime.datetime.utcnow()
         db.session.add(self)
         db.session.commit()
+
+    def generate_session_token(self):
+        """
+        Generate a session token that identifies the user login session. Since the flask
+        wll generate the same session _id for the same IP and browser agent combination,
+        it is hard to distinguish the users by session from the activity log
+        """
+        return hashlib.md5(str(self.id) + str(time.time())).hexdigest()
+
+    # This could be used for token based authentication
+    # def generate_auth_token(self, expiration=60):
+    #     s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
+    #     return s.dumps({'id': self.id})
 
     @hybrid_property
     def course_role(self):

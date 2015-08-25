@@ -28,3 +28,6 @@ ATTACHMENT_ALLOWED_EXTENSIONS = {'pdf'}
 UPLOAD_ALLOWED_EXTENSIONS = {'csv'}
 
 PASSLIB_CONTEXT = 'default'
+
+# make the session valid for a day
+PERMANENT_SESSION_LIFETIME = 3600 * 24

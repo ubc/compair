@@ -21,14 +21,6 @@ var myAfterHooks = function () {
 		//		callback();
 		//	});
 		//});
-		//browser.executeScript("return window.angular.element('#logout-link').scope().logout();").then(function () {
-		//	browser.wait(element(by.id('app-login-toggle')).isPresent(), 10000);
-		//	// We can then do some cleansing:
-		//	browser.manage().deleteAllCookies().then(function () {
-		//		// Release control:
-		//		callback();
-		//	});
-		//});
 	});
 };
 
