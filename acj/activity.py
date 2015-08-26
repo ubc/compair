@@ -29,7 +29,7 @@ def log(sender, event_name='UNKNOWN', **extra):
     if 'message' in extra:
         params['message'] = extra['message']
     if 'session_token' in session:
-        params['session_id'] = md5(session['session_token']).hexdigest()
+        params['session_id'] = md5(session['session_token'].encode('UTF-8')).hexdigest()
 
     activity = Activities(**params)
     db.session.add(activity)

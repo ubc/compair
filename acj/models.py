@@ -211,7 +211,8 @@ class Users(db.Model, UserMixin):
         wll generate the same session _id for the same IP and browser agent combination,
         it is hard to distinguish the users by session from the activity log
         """
-        return hashlib.md5(str(self.id) + str(time.time())).hexdigest()
+        key = str(self.id) + str(time.time())
+        return hashlib.md5(key.encode('UTF-8')).hexdigest()
 
     # This could be used for token based authentication
     # def generate_auth_token(self, expiration=60):
