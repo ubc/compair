@@ -744,6 +744,7 @@ class PostsForComments(db.Model):
         db.ForeignKey('Posts.id', ondelete="CASCADE"),
         nullable=False)
     post = db.relationship("Posts")
+    answer_assoc = db.relationship("PostsForAnswersAndPostsForComments", uselist=False)
 
     course_id = association_proxy('post', 'courses_id')
     content = association_proxy('post', 'content')
@@ -753,6 +754,11 @@ class PostsForComments(db.Model):
     user_avatar = association_proxy('post', 'user_avatar')
     user_displayname = association_proxy('post', 'user_displayname')
     user_fullname = association_proxy('post', 'user_fullname')
+
+    # used by answer comments only
+    evaluation = association_proxy('answer_assoc', 'evaluation')
+    selfeval = association_proxy('answer_assoc', 'selfeval')
+    type = association_proxy('answer_assoc', 'type')
 
 
 class PostsForQuestionsAndPostsForComments(db.Model):

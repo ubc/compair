@@ -212,9 +212,7 @@ class AnswerCommentsTestData(SimpleAnswersTestData):
 
     def create_answer_comment(self, user, course, answer):
         post = PostsFactory(user=user, course=course)
-        db.session.commit()
         comment = PostsForCommentsFactory(post=post)
-        db.session.commit()
         question_comment = PostsForAnswersAndPostsForCommentsFactory(
             postsforanswers=answer, postsforcomments=comment)
         db.session.commit()

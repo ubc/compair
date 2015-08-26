@@ -56,6 +56,21 @@ class AnswerCommentsAPITests(ACJTestCase):
         self.assertEqual(
             self.data.get_answer_comments_by_question(self.questions[0])[1].content,
             rv.json['objects'][0]['content'])
+        self.logout()
+
+        # test non-owner student of answer access comments
+        self.login(self.data.get_authorized_student().username)
+        rv = self.client.get(url)
+        self.assert200(rv)
+        self.assertEqual(0, len(rv.json['objects']))
+        self.logout()
+
+        # test owner student of answer access comments
+        self.login(self.data.get_extra_student(0).username)
+        rv = self.client.get(url)
+        self.assert200(rv)
+        self.assertEqual(1, len(rv.json['objects']))
+        self.logout()
 
     def test_create_answer_comment(self):
         url = self._build_url(self.course.id, self.questions[0].id, self.answers[self.questions[0].id][0].id)

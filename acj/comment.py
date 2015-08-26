@@ -3,7 +3,9 @@ from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
-from sqlalchemy.orm import load_only, joinedload, contains_eager
+from sqlalchemy import or_
+from sqlalchemy import and_
+from sqlalchemy.orm import load_only, joinedload, contains_eager, aliased
 
 from . import dataformat
 from .core import db
@@ -186,14 +188,27 @@ class AnswerCommentRootAPI(Resource):
         Courses.exists_or_404(course_id)
         question = PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
         require(READ, question)
+        restrict_users = not allow(MANAGE, question)
+
         answer = PostsForAnswers.query.get_or_404(answer_id)
-        comments = PostsForComments.query. \
+        query = PostsForComments.query. \
             options(contains_eager(PostsForComments.post).joinedload(Posts.user)) . \
             options(contains_eager(PostsForComments.post).joinedload(Posts.files)) . \
             join(PostsForAnswersAndPostsForComments). \
             filter(PostsForAnswersAndPostsForComments.answers_id == answer.id) . \
-            join(Posts). \
-            order_by(Posts.created.desc()).all()
+            join(Posts)
+
+        # student can only see the comments for themselves or public ones.
+        # since the owner of the answer can access all comments. We only filter
+        # on non-owners
+        if restrict_users and answer.user_id != current_user.id:
+            public_comment_condition = and_(
+                PostsForAnswersAndPostsForComments.evaluation.isnot(True),
+                PostsForAnswersAndPostsForComments.selfeval.isnot(True),
+                PostsForAnswersAndPostsForComments.type != 0
+            )
+            query = query.filter(public_comment_condition)
+        comments = query.order_by(Posts.created.desc()).all()
 
         on_answer_comment_list_get.send(
             self,
