@@ -1,7 +1,9 @@
 import json
+import datetime
 
+from acj import db
 from data.fixtures.test_data import TestFixture
-from acj.models import UserTypesForSystem, UserTypesForCourse, PostsForAnswers
+from acj.models import PostsForAnswers
 from acj.tests.test_acj import ACJTestCase
 
 
@@ -33,6 +35,9 @@ class AnswersAPITests(ACJTestCase):
         rv = self.client.get(self._build_url(self.fixtures.course.id, 4903409))
         self.assert404(rv)
         # test data retrieve is correct
+        self.fixtures.question.answer_end = datetime.datetime.now() - datetime.timedelta(days=1)
+        db.session.add(self.fixtures.question)
+        db.session.commit()
         rv = self.client.get(self.base_url)
         self.assert200(rv)
         actual_answers = rv.json['objects']
@@ -102,6 +107,32 @@ class AnswersAPITests(ACJTestCase):
         result = rv.json['objects']
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]['user_id'], self.fixtures.students[0].id)
+
+        # test data retrieve before answer period ended with non-privileged user
+        self.fixtures.question.answer_end = datetime.datetime.now() + datetime.timedelta(days=2)
+        db.session.add(self.fixtures.question)
+        db.session.commit()
+        rv = self.client.get(self.base_url)
+        self.assert200(rv)
+        actual_answers = rv.json['objects']
+        self.assertEqual(1, len(actual_answers))
+        self.assertEqual(1, rv.json['page'])
+        self.assertEqual(1, rv.json['pages'])
+        self.assertEqual(20, rv.json['per_page'])
+        self.assertEqual(1, rv.json['total'])
+        self.logout()
+
+        # test data retrieve before answer period ended with privileged user
+        self.login(self.fixtures.instructor.username)
+        rv = self.client.get(self.base_url)
+        self.assert200(rv)
+        actual_answers = rv.json['objects']
+        self.assertEqual(20, len(actual_answers))
+        self.assertEqual(1, rv.json['page'])
+        self.assertEqual(2, rv.json['pages'])
+        self.assertEqual(20, rv.json['per_page'])
+        self.assertEqual(30, rv.json['total'])
+        self.logout()
 
     def test_create_answer(self):
         # test login required

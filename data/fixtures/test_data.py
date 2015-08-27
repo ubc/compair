@@ -458,7 +458,7 @@ class TestFixture:
             for question in self.questions:
                 post = PostsFactory(course=self.course, user=self.students[i % len(self.students)])
                 answer = PostsForAnswersFactory(question=question, post=post)
-                ScoreFactory(answer=answer, criteriaandquestions_id=question.criteria[0].id, score=random.random()*5)
+                ScoreFactory(answer=answer, criteriaandquestions_id=question.criteria[0].id, score=random.random() * 5)
                 self.answers.append(answer)
 
         return self
@@ -474,10 +474,12 @@ class TestFixture:
 
         return self
 
-    def add_questions(self, num_questions):
+    def add_questions(self, num_questions=1, is_answer_period_end=False):
         for _ in range(num_questions):
             post = PostsFactory(course=self.course)
-            question = PostsForQuestionsFactory(post=post)
+            answer_end = datetime.datetime.now() - datetime.timedelta(
+                days=2) if is_answer_period_end else datetime.datetime.now() + datetime.timedelta(days=7)
+            question = PostsForQuestionsFactory(post=post, answer_end=answer_end)
             CriteriaAndPostsForQuestionsFactory(criterion=DefaultFixture.DEFAULT_CRITERIA, question=question)
             self.questions.append(question)
         db.session.commit()

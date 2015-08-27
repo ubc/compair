@@ -11,7 +11,7 @@ from .core import db
 from .authorization import require, allow, is_user_access_restricted
 from .models import Posts, PostsForAnswers, PostsForQuestions, Courses, Users, \
     Judgements, AnswerPairings, Scores, GroupsAndUsers
-from .util import new_restful_api, get_model_changes, pagination_parser
+from .util import new_restful_api, get_model_changes, pagination_parser, empty_list
 from .attachment import add_new_file, delete_file
 from .core import event
 
@@ -72,6 +72,10 @@ class AnswerRootAPI(Resource):
         restrict_users = not allow(MANAGE, question)
 
         params = answer_list_parser.parse_args()
+
+        if restrict_users and not question.after_judging:
+            # only the answer from student himself/herself should be returned
+            params['author'] = current_user.id
 
         # this query could be further optimized by reduction the selected columns
         query = PostsForAnswers.query. \

@@ -110,6 +110,9 @@ pagination_parser = RequestParser()
 pagination_parser.add_argument('page', type=int, required=False, default=1)
 pagination_parser.add_argument('perPage', type=int, required=False, default=20)
 
+# the empty list used when return result is empty
+empty_list = {"objects": {},  "page": 1, "pages": 0, "total": 0, "per_page": 20}
+
 
 @contextlib.contextmanager
 def profiled():

@@ -252,6 +252,23 @@ class Users(db.Model, UserMixin):
         else:
             return "User"
 
+    def has_complete_judgment_for_question(self, question_id):
+        """
+        check if user has completed the required judgements
+        :param question_id: the id of the question to check aginst
+        :return: boolean
+        """
+        question = PostsForQuestions.query. \
+            with_entities(PostsForQuestions.num_judgement_req, PostsForQuestions.criteria_count). \
+            get(question_id)
+
+        judgement_count = PostsForJudgements.query. \
+            join(PostsForJudgements.postsforcomments). \
+            join(PostsForComments.post). \
+            filter_by(users_id=self.id).count()
+
+        return judgement_count >= question.num_judgement_req * question.criteria_count
+
 
 class InvalidAttributeException(Exception):
     pass

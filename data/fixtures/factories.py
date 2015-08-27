@@ -1,5 +1,4 @@
 import datetime
-import random
 
 import factory
 import factory.fuzzy
@@ -102,7 +101,7 @@ class PostsForQuestionsFactory(SQLAlchemyModelFactory):
     FACTORY_SESSION = db.session
     posts_id = 1
     title = factory.Sequence(lambda n: u'this is a title for question %d' % n)
-    answer_start = datetime.datetime.now()
+    answer_start = datetime.datetime.now() - datetime.timedelta(days=7)
     answer_end = datetime.datetime.now() + datetime.timedelta(days=7)
     num_judgement_req = 3
 
