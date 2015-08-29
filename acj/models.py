@@ -31,7 +31,7 @@ import pytz
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import synonym, load_only, column_property
-from sqlalchemy import func, select, and_
+from sqlalchemy import func, select, and_, or_
 from flask.ext.login import UserMixin
 
 
@@ -687,6 +687,48 @@ class AnswerPairings(db.Model):
         return len([j for j in self.judgements if j.answers_id_winner == self.answers_id2])
 
 
+class PostsForAnswersAndPostsForComments(db.Model):
+    __tablename__ = 'AnswersAndComments'
+    __table_args__ = default_table_args
+
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    answers_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Answers.id', ondelete="CASCADE"),
+        nullable=False)
+    postsforanswers = db.relationship("PostsForAnswers")
+    comments_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Comments.id', ondelete="CASCADE"),
+        nullable=False)
+    postsforcomments = db.relationship("PostsForComments")
+    evaluation = db.Column(db.Boolean(name='evaluation'), default=False, nullable=False)
+    selfeval = db.Column(db.Boolean(name='selfeval'), default=False, nullable=False)
+    type = db.Column(db.SmallInteger, default=0, nullable=False)
+
+    @hybrid_property
+    def courses_id(self):
+        """ for backward compat """
+        warnings.warn("Deprecated. Use course_id instead!", DeprecationWarning, stacklevel=2)
+        return self.postsforcomments.post.courses_id
+
+    @hybrid_property
+    def users_id(self):
+        """ for backward compat """
+        warnings.warn("Deprecated. Use user_id instead!", DeprecationWarning, stacklevel=2)
+        return self.user_id
+
+    # those association proxies should be removed after a refactor to hide those association tables
+    course_id = association_proxy('postsforcomments', 'course_id')
+    content = association_proxy('postsforcomments', 'content')
+    files = association_proxy('postsforcomments', 'files')
+    created = association_proxy('postsforcomments', 'created')
+    user_id = association_proxy('postsforcomments', 'user_id')
+    user_avatar = association_proxy('postsforcomments', 'user_avatar')
+    user_displayname = association_proxy('postsforcomments', 'user_displayname')
+    user_fullname = association_proxy('postsforcomments', 'user_fullname')
+
+
 class PostsForAnswers(db.Model):
     __tablename__ = 'Answers'
     __table_args__ = default_table_args
@@ -703,7 +745,7 @@ class PostsForAnswers(db.Model):
         nullable=False)
     question = db.relationship("PostsForQuestions")
     comments = db.relationship("PostsForAnswersAndPostsForComments", cascade="delete")
-    _scores = db.relationship("Scores", cascade="delete")
+    scores = db.relationship("Scores", cascade="delete", order_by='Scores.criteriaandquestions_id')
     # flagged for instructor review as inappropriate or incomplete
     flagged = db.Column(db.Boolean(name='flagged'), default=False, nullable=False)
     users_id_flagger = db.Column(
@@ -721,34 +763,43 @@ class PostsForAnswers(db.Model):
     user_displayname = association_proxy('post', 'user_displayname')
     user_fullname = association_proxy('post', 'user_fullname')
 
+    comments_count = column_property(
+        select([func.count(PostsForAnswersAndPostsForComments.id)]).
+        where(PostsForAnswersAndPostsForComments.answers_id == id),
+        deferred=True,
+        group='counts'
+    )
+
+    private_comments_count = column_property(
+        select([func.count(PostsForAnswersAndPostsForComments.id)]).
+        where(and_(
+            PostsForAnswersAndPostsForComments.answers_id == id,
+            or_(PostsForAnswersAndPostsForComments.evaluation != 0,
+                PostsForAnswersAndPostsForComments.selfeval != 0,
+                PostsForAnswersAndPostsForComments.type == 0)
+        )),
+        deferred=True,
+        group='counts'
+    )
+
+    selfeval_count = column_property(
+        select([func.count(PostsForAnswersAndPostsForComments.id)]).
+        where(PostsForAnswersAndPostsForComments.selfeval != 0),
+        deferred=True,
+        group='counts'
+    )
+
     @hybrid_property
     def courses_id(self):
-        return self.post.courses_id
+        return self.course_id
 
     @hybrid_property
     def users_id(self):
-        return self.post.user.id
-
-    @hybrid_property
-    def comments_count(self):
-        return len(self.comments)
-
-    @hybrid_property
-    def private_comments_count(self):
-        private_comments = [c for c in self.comments if c.evaluation or c.selfeval or c.type == 0]
-        return len(private_comments)
+        return self.user_id
 
     @hybrid_property
     def public_comments_count(self):
         return self.comments_count - self.private_comments_count
-
-    @hybrid_property
-    def scores(self):
-        return sorted(self._scores, key=lambda score: score.criteriaandquestions_id)
-
-    @hybrid_property
-    def selfeval_count(self):
-        return len([c for c in self.comments if c.selfeval])
 
 
 class PostsForComments(db.Model):
@@ -805,48 +856,6 @@ class PostsForQuestionsAndPostsForComments(db.Model):
     @hybrid_property
     def content(self):
         return self.postsforcomments.post.content
-
-
-class PostsForAnswersAndPostsForComments(db.Model):
-    __tablename__ = 'AnswersAndComments'
-    __table_args__ = default_table_args
-
-    id = db.Column(db.Integer, primary_key=True, nullable=False)
-    answers_id = db.Column(
-        db.Integer,
-        db.ForeignKey('Answers.id', ondelete="CASCADE"),
-        nullable=False)
-    postsforanswers = db.relationship("PostsForAnswers")
-    comments_id = db.Column(
-        db.Integer,
-        db.ForeignKey('Comments.id', ondelete="CASCADE"),
-        nullable=False)
-    postsforcomments = db.relationship("PostsForComments")
-    evaluation = db.Column(db.Boolean(name='evaluation'), default=False, nullable=False)
-    selfeval = db.Column(db.Boolean(name='selfeval'), default=False, nullable=False)
-    type = db.Column(db.SmallInteger, default=0, nullable=False)
-
-    @hybrid_property
-    def courses_id(self):
-        """ for backward compat """
-        warnings.warn("Deprecated. Use course_id instead!", DeprecationWarning, stacklevel=2)
-        return self.postsforcomments.post.courses_id
-
-    @hybrid_property
-    def users_id(self):
-        """ for backward compat """
-        warnings.warn("Deprecated. Use user_id instead!", DeprecationWarning, stacklevel=2)
-        return self.user_id
-
-    # those association proxies should be removed after a refactor to hide those association tables
-    course_id = association_proxy('postsforcomments', 'course_id')
-    content = association_proxy('postsforcomments', 'content')
-    files = association_proxy('postsforcomments', 'files')
-    created = association_proxy('postsforcomments', 'created')
-    user_id = association_proxy('postsforcomments', 'user_id')
-    user_avatar = association_proxy('postsforcomments', 'user_avatar')
-    user_displayname = association_proxy('postsforcomments', 'user_displayname')
-    user_fullname = association_proxy('postsforcomments', 'user_fullname')
 
 
 class FilesForPosts(db.Model):

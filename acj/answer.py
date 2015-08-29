@@ -3,15 +3,15 @@ from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
-from sqlalchemy import func
-from sqlalchemy.orm import load_only, joinedload, contains_eager
+from sqlalchemy import func, or_
+from sqlalchemy.orm import load_only, joinedload, contains_eager, undefer_group
 
 from . import dataformat
 from .core import db
 from .authorization import require, allow, is_user_access_restricted
 from .models import Posts, PostsForAnswers, PostsForQuestions, Courses, Users, \
     Judgements, AnswerPairings, Scores, GroupsAndUsers
-from .util import new_restful_api, get_model_changes, pagination_parser, empty_list
+from .util import new_restful_api, get_model_changes, pagination_parser
 from .attachment import add_new_file, delete_file
 from .core import event
 
@@ -82,8 +82,8 @@ class AnswerRootAPI(Resource):
             with_entities(PostsForAnswers). \
             options(contains_eager('post').joinedload('files')). \
             options(contains_eager('post').joinedload('user')). \
-            options(joinedload('_scores')). \
-            options(joinedload('comments')). \
+            options(joinedload('scores')). \
+            options(undefer_group('counts')). \
             join(Posts). \
             filter(PostsForAnswers.questions_id == question.id)
 
@@ -99,31 +99,24 @@ class AnswerRootAPI(Resource):
                 filter(GroupsAndUsers.groups_id == params['group']). \
                 all()
             user_ids = [x[0] for x in users]
-            query = query.filter(Posts.users_id.in_(user_ids))
 
         if params['ids']:
             query = query.filter(PostsForAnswers.id.in_(params['ids'].split(',')))
 
         if params['orderBy'] and len(user_ids) != 1:
             # order answer ids by one criterion and pagination, in case there are multiple criteria in question
-            id_query = PostsForAnswers.query. \
-                with_entities(PostsForAnswers.id). \
-                join(Scores). \
-                filter(Scores.criteriaandquestions_id == params['orderBy'])
-            if user_ids:
-                id_query = id_query.join(Posts).filter(Posts.users_id.in_(user_ids))
-            page = id_query. \
-                order_by(Scores.score.desc()). \
-                paginate(params['page'], params['perPage'])
-            # extract ids from tuples
-            answer_ids = [x[0] for x in page.items]
-            # query answers with additional data
-            query = query.filter(PostsForAnswers.id.in_(answer_ids))
-            answers = query.all()
-            # sort based on the order of answer_ids
-            page.items = sorted(answers, key=lambda a: answer_ids.index(a.id))
+            # left join on Scores and add or condition for criteriaandquestions_id is None to include all answers
+            # that don't have scores yet
+            query = query.outerjoin(Scores).filter(
+                or_(Scores.criteriaandquestions_id == params['orderBy'], Scores.criteriaandquestions_id.is_(None)))
+            query = query.order_by(Scores.score.desc(), Posts.created.desc())
         else:
-            page = query.order_by(Posts.created.desc()).paginate(params['page'], params['perPage'])
+            query = query.order_by(Posts.created.desc())
+
+        if user_ids:
+            query = query.filter(Posts.users_id.in_(user_ids))
+
+        page = query.paginate(params['page'], params['perPage'])
 
         on_answer_list_get.send(
             self,
@@ -191,7 +184,7 @@ class AnswerIdAPI(Resource):
             options(joinedload('comments')). \
             options(joinedload('post').joinedload('files')). \
             options(joinedload('post').joinedload('user').joinedload('usertypeforsystem')). \
-            options(joinedload('_scores')). \
+            options(joinedload('scores')). \
             get_or_404(answer_id)
         require(READ, answer)
 
@@ -202,7 +195,7 @@ class AnswerIdAPI(Resource):
             course_id=course_id,
             data={'question_id': question_id, 'answer_id': answer_id})
 
-        return marshal(answer, dataformat.get_posts_for_answers(True, False))
+        return marshal(answer, dataformat.get_posts_for_answers(True))
 
     @login_required
     def post(self, course_id, question_id, answer_id):
@@ -276,7 +269,7 @@ class AnswerUserIdAPI(Resource):
             options(joinedload('comments')). \
             options(joinedload('post').joinedload('files')). \
             options(joinedload('post').joinedload('user').joinedload('usertypeforsystem')). \
-            options(joinedload('_scores')). \
+            options(joinedload('scores')). \
             filter_by(questions_id=question_id).join(Posts). \
             filter_by(courses_id=course_id, users_id=current_user.id).all()
 
@@ -287,7 +280,7 @@ class AnswerUserIdAPI(Resource):
             course_id=course_id,
             data={'question_id': question_id})
 
-        return {'answer': marshal(answer, dataformat.get_posts_for_answers(True, False))}
+        return {'answer': marshal(answer, dataformat.get_posts_for_answers(True))}
 
 
 api.add_resource(AnswerUserIdAPI, '/user')
@@ -378,7 +371,7 @@ class AnswerViewAPI(Resource):
         if allow(MANAGE, question):
             answers = PostsForAnswers.query.join(Posts). \
                 options(joinedload('post').joinedload('files')). \
-                options(joinedload('_scores')). \
+                options(joinedload('scores')). \
                 filter(PostsForAnswers.questions_id == question.id). \
                 order_by(Posts.created.desc()).all()
         else:
@@ -387,7 +380,7 @@ class AnswerViewAPI(Resource):
                 .join(AnswerPairings).filter_by(questions_id=question.id).all()
             my_answers = PostsForAnswers.query. \
                 options(joinedload('post').joinedload('files')). \
-                options(joinedload('_scores')). \
+                options(joinedload('scores')). \
                 filter_by(questions_id=question.id). \
                 join(Posts).filter_by(users_id=current_user.id).all()
             answer_ids = set(j.answerpairing.answers_id1 for j in judgements)
@@ -396,7 +389,7 @@ class AnswerViewAPI(Resource):
             if len(answer_ids) > 0:
                 answers = PostsForAnswers.query. \
                     options(joinedload('post').joinedload('files')). \
-                    options(joinedload('_scores')). \
+                    options(joinedload('scores')). \
                     filter(PostsForAnswers.id.in_(answer_ids)).all()
             answers.extend(my_answers)
 

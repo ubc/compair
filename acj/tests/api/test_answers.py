@@ -30,8 +30,8 @@ class AnswersAPITests(ACJTestCase):
             rv = self.client.get(self.base_url)
             self.assert403(rv)
 
-        # test non-existent entry
         with self.login(self.fixtures.students[0].username):
+            # test non-existent entry
             rv = self.client.get(self._build_url(self.fixtures.course.id, 4903409))
             self.assert404(rv)
             # test data retrieve is correct
@@ -44,8 +44,21 @@ class AnswersAPITests(ACJTestCase):
             expected_answers = PostsForAnswers.query.filter_by(questions_id=self.fixtures.question.id).paginate(1, 20)
             for i, expected in enumerate(expected_answers.items):
                 actual = actual_answers[i]
-                self.assertEqual(expected.post.content, actual['content'])
+                self.assertEqual(expected.content, actual['content'])
             self.assertEqual(1, rv.json['page'])
+            self.assertEqual(2, rv.json['pages'])
+            self.assertEqual(20, rv.json['per_page'])
+            self.assertEqual(expected_answers.total, rv.json['total'])
+
+            # test the second page
+            rv = self.client.get(self.base_url + '?page=2')
+            self.assert200(rv)
+            actual_answers = rv.json['objects']
+            expected_answers = PostsForAnswers.query.filter_by(questions_id=self.fixtures.question.id).paginate(2, 20)
+            for i, expected in enumerate(expected_answers.items):
+                actual = actual_answers[i]
+                self.assertEqual(expected.content, actual['content'])
+            self.assertEqual(2, rv.json['page'])
             self.assertEqual(2, rv.json['pages'])
             self.assertEqual(20, rv.json['per_page'])
             self.assertEqual(expected_answers.total, rv.json['total'])
@@ -57,8 +70,15 @@ class AnswersAPITests(ACJTestCase):
             self.assert200(rv)
             result = rv.json['objects']
             # test the result is paged and sorted
-            expected = sorted(self.fixtures.answers, key=lambda ans: ans.scores[0].score, reverse=True)[:20]
+            expected = sorted(
+                self.fixtures.answers,
+                key=lambda ans: ans.scores[0].score if len(ans.scores) else 0,
+                reverse=True)[:20]
             self.assertEqual([a.id for a in expected], [a['id'] for a in result])
+            self.assertEqual(1, rv.json['page'])
+            self.assertEqual(2, rv.json['pages'])
+            self.assertEqual(20, rv.json['per_page'])
+            self.assertEqual(expected_answers.total, rv.json['total'])
 
             # test author filter
             rv = self.client.get(self.base_url + '?author={}'.format(self.fixtures.students[0].id))

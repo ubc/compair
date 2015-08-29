@@ -180,11 +180,8 @@ def get_posts_for_questions(restrict_users=True, include_answers=True):
     return ret
 
 
-def get_posts_for_answers(restrict_users=True, include_comments=True):
-    post = get_posts(restrict_users)
-    # comments = get_posts_for_answers_and_posts_for_comments(restrict_users)
+def get_posts_for_answers(restrict_users=True):
     score = get_scores()
-    del post['course']
     ret = {
         'id': fields.Integer,
         'content': fields.String,
@@ -192,27 +189,23 @@ def get_posts_for_answers(restrict_users=True, include_comments=True):
         'created': fields.DateTime,
         'user_id': fields.Integer,
         'user_displayname': fields.String,
-        'user_fullname': fields.String,
         'user_avatar': fields.String,
         'posts_id': fields.Integer,
         'scores': fields.Nested(score),
         'flagged': fields.Boolean,
-        'questions_id': fields.Integer
+        'questions_id': fields.Integer,
+        'comments_count': fields.Integer,
+        'private_comments_count': fields.Integer,
+        'public_comments_count': fields.Integer
     }
-    # can see who flagged this post if user can view unrestricted data
-    # it seems it is not being used for now
-    # if not restrict_users:
-    #     ret['flagger'] = fields.Nested(get_users(restrict_users))
-    if include_comments:
-        # ret['comments'] = fields.List(fields.Nested(comments))
-        ret['comments_count'] = fields.Integer
-        ret['private_comments_count'] = fields.Integer
-        ret['public_comments_count'] = fields.Integer
+    if not restrict_users:
+        ret.update({'user_fullname': fields.String})
+
     return ret
 
 
-def get_posts_for_comments(retrict_users=True):
-    post = get_posts(retrict_users)
+def get_posts_for_comments(restrict_users=True):
+    post = get_posts(restrict_users)
     del post['course']
     return {
         'id': fields.Integer,
@@ -224,19 +217,21 @@ def get_posts_for_comments_new(restrict_users=True):
     """
     new data format for comments. Should deprecate the old one.
     """
-    return {
+    ret = {
         'id': fields.Integer,
         'content': fields.String,
         'created': fields.DateTime,
         'user_id': fields.Integer,
         'user_displayname': fields.String,
-        'user_fullname': fields.String,
         'user_avatar': fields.String,
     }
+    if not restrict_users:
+        ret.update({'user_fullname': fields.String})
+    return ret
 
 
 def get_posts_for_answers_and_posts_for_comments(restrict_users=True):
-    return {
+    ret = {
         'id': fields.Integer,
         'selfeval': fields.Boolean,
         'evaluation': fields.Boolean,
@@ -247,10 +242,12 @@ def get_posts_for_answers_and_posts_for_comments(restrict_users=True):
         'created': fields.DateTime,
         'user_id': fields.Integer,
         'user_displayname': fields.String,
-        'user_fullname': fields.String,
         'user_avatar': fields.String,
         'posts_id': fields.Integer
     }
+    if not restrict_users:
+        ret.update({'user_fullname': fields.String})
+    return ret
 
 
 def get_files_for_posts():
@@ -277,8 +274,8 @@ def get_answer_pairings(include_answers=False):
         'answers_id2': fields.Integer
     }
     if include_answers:
-        ret['answer1'] = fields.Nested(get_posts_for_answers(include_comments=False))
-        ret['answer2'] = fields.Nested(get_posts_for_answers(include_comments=False))
+        ret['answer1'] = fields.Nested(get_posts_for_answers())
+        ret['answer2'] = fields.Nested(get_posts_for_answers())
     return ret
 
 

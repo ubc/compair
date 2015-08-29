@@ -458,7 +458,9 @@ class TestFixture:
             for question in self.questions:
                 post = PostsFactory(course=self.course, user=self.students[i % len(self.students)])
                 answer = PostsForAnswersFactory(question=question, post=post)
-                ScoreFactory(answer=answer, criteriaandquestions_id=question.criteria[0].id, score=random.random() * 5)
+                # half of the answers have scores
+                if i < num_answers/2:
+                    ScoreFactory(answer=answer, criteriaandquestions_id=question.criteria[0].id, score=random.random() * 5)
                 self.answers.append(answer)
 
         return self
