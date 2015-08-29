@@ -79,7 +79,7 @@ gulp.task('tdd', function (done) {
 });
 
 /**
- * Behavior driven development. This task run acceptance tests
+ * Behavior driven development. This task runs acceptance tests
  */
 gulp.task('bdd', function (done) {
 	gulp.src(["acj/static/test/features/*.feature"])

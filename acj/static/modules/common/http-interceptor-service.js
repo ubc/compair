@@ -4,7 +4,7 @@
 
 var module = angular.module('ubc.ctlt.acj.common.interceptor', []);
 
-module.service('Interceptors', function($q, $cacheFactory) {
+module.service('Interceptors', ['$q', '$cacheFactory', function($q, $cacheFactory) {
 	this.cache = {
 		response: function(response) {
 			var cache = $cacheFactory.get('$http');
@@ -39,6 +39,6 @@ module.service('Interceptors', function($q, $cacheFactory) {
 			return response.data;
 		}
 	};
-});
+}]);
 
 })();

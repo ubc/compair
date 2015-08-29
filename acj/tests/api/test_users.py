@@ -90,7 +90,7 @@ class UsersAPITests(ACJTestCase):
         self.assert401(rv)
 
         # test results
-        with self.login('root', 'password'):
+        with self.login('root'):
             rv = self.client.get('/api/usertypes')
             self.assert200(rv)
             types = rv.json
@@ -99,25 +99,13 @@ class UsersAPITests(ACJTestCase):
             self.assertEqual(types[1]['name'], UserTypesForSystem.TYPE_INSTRUCTOR)
             self.assertEqual(types[2]['name'], UserTypesForSystem.TYPE_SYSADMIN)
 
-    def test_get_instructors(self):
-        # test login required
-        rv = self.client.get('/api/usertypes/instructors')
-        self.assert401(rv)
-
-        # test results
-        with self.login('root', 'password'):
-            rv = self.client.get('/api/usertypes/instructors')
+        with self.login(self.data.get_authorized_instructor().username):
+            rv = self.client.get('/api/usertypes')
             self.assert200(rv)
-            instructors = rv.json['instructors']
-            expected = {
-                self.data.get_authorized_instructor().id: self._generate_search_users(
-                    self.data.get_authorized_instructor()),
-                self.data.get_unauthorized_instructor().id: self._generate_search_users(
-                    self.data.get_unauthorized_instructor()),
-                self.data.get_dropped_instructor().id: self._generate_search_users(self.data.get_dropped_instructor())
-            }
-            for instructor in instructors:
-                self.assertEqual(expected[instructor['id']], instructor)
+            types = rv.json
+            self.assertEqual(len(types), 2)
+            self.assertEqual(types[0]['name'], UserTypesForSystem.TYPE_NORMAL)
+            self.assertEqual(types[1]['name'], UserTypesForSystem.TYPE_INSTRUCTOR)
 
     def test_create_user(self):
         url = '/api/users'
@@ -359,38 +347,87 @@ class UsersAPITests(ACJTestCase):
             self.assertEqual(2, len(rv.json['courses']))
 
     def test_update_password(self):
-        url = '/api/users/password/' + str(self.data.get_authorized_instructor().id)
+        url = '/api/users/{}/password'
         data = {
             'oldpassword': 'password',
             'newpassword': 'abcd1234'
         }
 
         # test login required
-        rv = self.client.post(url, data=json.dumps(data), content_type='application/json')
+        rv = self.client.post(
+            url.format(str(self.data.authorized_instructor.id)),
+            data=json.dumps(data), content_type='application/json')
         self.assert401(rv)
 
-        # test invalid user id
-        with self.login(self.data.get_authorized_instructor().username):
-            invalid_url = '/api/users/password/999'
-            rv = self.client.post(invalid_url, data=json.dumps(data), content_type='application/json')
-            self.assert404(rv)
+        # test student update password
+        with self.login(self.data.authorized_student.username):
+            # test without old password
+            rv = self.client.post(
+                url.format(str(self.data.authorized_student.id)),
+                data=json.dumps({'newpassword': '123456'}),
+                content_type='application/json')
+            self.assert403(rv)
+            self.assertEqual(
+                'The old password is incorrect or you do not have permission to change password.',
+                rv.json['error'])
 
             # test incorrect old password
             invalid_input = data.copy()
             invalid_input['oldpassword'] = 'wrong'
-            rv = self.client.post(url, data=json.dumps(invalid_input), content_type='application/json')
+            rv = self.client.post(
+                url.format(str(self.data.authorized_student.id)),
+                data=json.dumps(invalid_input), content_type='application/json')
             self.assert403(rv)
-            self.assertEqual("The old password is incorrect.", rv.json['error'])
+            self.assertEqual(
+                'The old password is incorrect or you do not have permission to change password.',
+                rv.json['error'])
 
-            # test unauthorized user
-            invalid_url = '/api/users/password/' + str(self.data.get_authorized_student().id)
-            rv = self.client.post(invalid_url, data=json.dumps(data), content_type='application/json')
-            self.assert403(rv)
+            # test with old password
+            rv = self.client.post(
+                url.format(str(self.data.authorized_student.id)),
+                data=json.dumps(data),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(self.data.get_authorized_student().id, rv.json['id'])
+
+        # test instructor update password
+        with self.login(self.data.get_authorized_instructor().username):
+            rv = self.client.post(url.format(str(999)), data=json.dumps(data), content_type='application/json')
+            self.assert404(rv)
+
+            # test instructor changes the password of a student in the course
+            rv = self.client.post(
+                url.format(str(self.data.get_authorized_student().id)), data=json.dumps(data),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(self.data.get_authorized_student().id, rv.json['id'])
 
             # test changing own password
-            rv = self.client.post(url, data=json.dumps(data), content_type='application/json')
+            rv = self.client.post(
+                url.format(str(self.data.get_authorized_instructor().id)),
+                data=json.dumps(data), content_type='application/json')
             self.assert200(rv)
             self.assertEqual(self.data.get_authorized_instructor().id, rv.json['id'])
+
+        # test instructor changes the password of a student not in the course
+        with self.login(self.data.get_unauthorized_instructor().username):
+            rv = self.client.post(
+                url.format(str(self.data.get_authorized_student().id)), data=json.dumps(data),
+                content_type='application/json')
+            self.assert403(rv)
+            self.assertEqual(
+                '<p>{} does not have edit access to {}</p>'.format(self.data.get_unauthorized_instructor().username,
+                                                                   self.data.get_authorized_student().username),
+                rv.json['message'])
+
+        # test admin update password
+        with self.login('root'):
+            # test admin changes student password without old password
+            rv = self.client.post(
+                url.format(str(self.data.get_authorized_student().id)), data=json.dumps({'newpassword': '123456'}),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(self.data.get_authorized_student().id, rv.json['id'])
 
     def test_get_course_roles(self):
         url = '/api/courseroles'

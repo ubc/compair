@@ -1,6 +1,6 @@
 from flask import Blueprint, current_app
 from bouncer.constants import MANAGE, EDIT, CREATE
-from flask.ext.restful import Resource, marshal_with, marshal
+from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from flask_login import login_required, current_user
 from sqlalchemy.orm import load_only
@@ -9,9 +9,8 @@ from sqlalchemy import exc, asc, or_
 from . import dataformat
 from .authorization import is_user_access_restricted, require, allow
 from .core import db, event
-from .util import pagination, new_restful_api, get_model_changes, pagination_parser
-from .models import Users, UserTypesForSystem, Courses, UserTypesForCourse, CoursesAndUsers, \
-    PostsForQuestions, Posts
+from .util import new_restful_api, get_model_changes, pagination_parser
+from .models import Users, UserTypesForSystem, Courses, UserTypesForCourse, PostsForQuestions, Posts
 
 users_api = Blueprint('users_api', __name__)
 user_types_api = Blueprint('user_types_api', __name__)
@@ -38,7 +37,7 @@ existing_user_parser.add_argument('displayname', type=str, required=True)
 existing_user_parser.add_argument('email', type=str)
 
 update_password_parser = RequestParser()
-update_password_parser.add_argument('oldpassword', type=str, required=True)
+update_password_parser.add_argument('oldpassword', type=str, required=False)
 update_password_parser.add_argument('newpassword', type=str, required=True)
 
 user_list_parser = pagination_parser.copy()
@@ -216,19 +215,7 @@ class UserEditButtonAPI(Resource):
     @login_required
     def get(self, user_id):
         user = Users.query.get_or_404(user_id)
-        instructor = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_INSTRUCTOR).first().id
-        dropped = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
-        courses = CoursesAndUsers.query.filter_by(users_id=current_user.id, usertypesforcourse_id=instructor).all()
-        available = False
-        if len(courses) > 0:
-            course_ids = [c.courses_id for c in courses]
-            enrolled = CoursesAndUsers.query.filter_by(users_id=user.id) \
-                .filter(
-                    CoursesAndUsers.courses_id.in_(course_ids),
-                    CoursesAndUsers.usertypesforcourse_id != dropped).\
-                count()
-            available = enrolled > 0
-
+        available = allow(EDIT, user)
         on_user_edit_button_get.send(
             self,
             event_name=on_user_edit_button_get.name,
@@ -264,12 +251,12 @@ class UserTypesAPI(Resource):
     @login_required
     def get(self):
         admin = UserTypesForSystem.TYPE_SYSADMIN
-        if current_user.usertypeforsystem.name == admin:
-            types = UserTypesForSystem.query. \
-                order_by("id").all()
-        else:
-            types = UserTypesForSystem.query.filter(UserTypesForSystem.name != admin). \
-                order_by("id").all()
+        query = UserTypesForSystem.query
+
+        if current_user.usertypeforsystem.name != admin:
+            query = query.filter(UserTypesForSystem.name != admin)
+
+        types = query.order_by("id").all()
 
         on_user_types_all_get.send(
             self,
@@ -278,26 +265,6 @@ class UserTypesAPI(Resource):
         )
 
         return marshal(types, dataformat.get_user_types_for_system())
-
-
-# /instructors
-class UserTypesInstructorsAPI(Resource):
-    @login_required
-    def get(self):
-        user_type_id = UserTypesForSystem.query.filter_by(name=UserTypesForSystem.TYPE_INSTRUCTOR).first().id
-        instructors = Users.query.filter_by(usertypesforsystem_id=user_type_id).order_by(Users.firstname).all()
-        instructors = [{
-            'id': i.id,
-            'display': (i.fullname or '') + ' (' + i.displayname + ') - ' + i.usertypeforsystem.name,
-            'name': i.fullname} for i in instructors]
-
-        on_instructors_get.send(
-            self,
-            event_name=on_instructors_get.name,
-            user=current_user
-        )
-
-        return {'instructors': instructors}
 
 
 class UserCourseRolesAPI(Resource):
@@ -320,10 +287,13 @@ class UserUpdatePasswordAPI(Resource):
     @login_required
     def post(self, user_id):
         user = Users.query.get_or_404(user_id)
+        # anyone who passes checking below should be an instructor or admin
         require(EDIT, user)
         params = update_password_parser.parse_args()
         oldpassword = params.get('oldpassword')
-        if user.verify_password(oldpassword):
+        # if it is not current user changing own password, it must be an instructor or admin
+        # because of above check
+        if current_user.id != user_id or (oldpassword and user.verify_password(oldpassword)):
             user.password = params.get('newpassword')
             db.session.add(user)
             db.session.commit()
@@ -333,7 +303,7 @@ class UserUpdatePasswordAPI(Resource):
                 user=current_user)
             return marshal(user, dataformat.get_users(False))
         else:
-            return {"error": "The old password is incorrect."}, 403
+            return {"error": "The old password is incorrect or you do not have permission to change password."}, 403
 
 
 api = new_restful_api(users_api)
@@ -342,9 +312,8 @@ api.add_resource(UserListAPI, '')
 api.add_resource(UserCourseListAPI, '/<int:user_id>/courses')
 api.add_resource(UserEditButtonAPI, '/<int:user_id>/edit')
 api.add_resource(TeachingUserCourseListAPI, '/courses/teaching')
-api.add_resource(UserUpdatePasswordAPI, '/password/<int:user_id>')
+api.add_resource(UserUpdatePasswordAPI, '/<int:user_id>/password')
 apiT = new_restful_api(user_types_api)
 apiT.add_resource(UserTypesAPI, '')
-apiT.add_resource(UserTypesInstructorsAPI, '/instructors')
 apiC = new_restful_api(user_course_types_api)
 apiC.add_resource(UserCourseRolesAPI, '')

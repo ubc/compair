@@ -4,7 +4,7 @@ from flask_login import current_user
 from werkzeug.exceptions import Unauthorized, Forbidden
 
 from .models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTypesForSystem, PostsForQuestions, PostsForAnswers, \
-    PostsForAnswersAndPostsForComments, PostsForQuestionsAndPostsForComments, Judgements, Criteria, CriteriaAndCourses, \
+    PostsForAnswersAndPostsForComments, Judgements, Criteria, CriteriaAndCourses, \
     PostsForJudgements, Groups, GroupsAndUsers, CriteriaAndPostsForQuestions, Posts, PostsForComments
 
 
@@ -14,6 +14,18 @@ def define_authorization(user, they):
     """
     if not user.is_authenticated():
         return  # user isn't logged in
+
+    def if_my_student(student):
+        course_subquery = Courses.query.with_entities(Courses.id). \
+            join(CoursesAndUsers).filter_by(users_id=user.id). \
+            join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_INSTRUCTOR). \
+            subquery()
+        exists = Courses.query. \
+            join(CoursesAndUsers).filter_by(users_id=student.id). \
+            join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_STUDENT). \
+            filter(Courses.id.in_(course_subquery)). \
+            count()
+        return bool(exists)
 
     # Assign permissions based on system roles
     user_system_role = user.usertypeforsystem.name
@@ -25,6 +37,7 @@ def define_authorization(user, they):
         they.can(CREATE, Courses)
         they.can(CREATE, Users)
         they.can(CREATE, Criteria)
+        they.can(EDIT, Users, if_my_student)
 
     # users can edit and read their own user account
     they.can(READ, Users, id=user.id)
