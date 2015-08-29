@@ -988,7 +988,6 @@ class Criteria(db.Model):
 
 class Scores(db.Model):
     __tablename__ = 'Scores'
-    __table_args__ = default_table_args
 
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     criteriaandquestions_id = db.Column(
@@ -1015,14 +1014,11 @@ class Scores(db.Model):
             select([cls.score/func.max(s_alias.c.score)*100]).
             where(s_alias.c.criteriaandquestions_id == cls.criteriaandquestions_id)
         )
-    # @hybrid_property
-    # def normalized_score(self):
-    #     if self.question_criterion.max_score > 0:
-    #         # round to whole number
-    #         return round(self.score / self.question_criterion.max_score * 100, 0)
-    #     else:
-    #         return 0
 
+    __table_args__ = (
+        db.UniqueConstraint('answers_id', 'criteriaandquestions_id', name='_unique_user_and_course'),
+        default_table_args
+    )
 
 # TODO: this model could be merged into Judgements (one to one relationship)
 class PostsForJudgements(db.Model):
