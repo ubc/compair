@@ -201,7 +201,6 @@ class AnswerIdAPI(Resource):
     def get(self, course_id, question_id, answer_id):
         Courses.exists_or_404(course_id)
         answer = PostsForAnswers.query. \
-            options(joinedload('comments')). \
             options(joinedload('post').joinedload('files')). \
             options(joinedload('post').joinedload('user').joinedload('usertypeforsystem')). \
             options(joinedload('scores')). \

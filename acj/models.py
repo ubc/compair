@@ -132,7 +132,7 @@ class Users(db.Model, UserMixin):
         db.Integer,
         db.ForeignKey('UserTypesForSystem.id', ondelete="CASCADE"),
         nullable=False)
-    usertypeforsystem = db.relationship("UserTypesForSystem")
+    usertypeforsystem = db.relationship("UserTypesForSystem", innerjoin=True)
 
     email = db.Column(db.String(254))  # email addresses are max 254 characters, no
     # idea if the unicode encoding of email addr
@@ -514,7 +514,7 @@ class Posts(db.Model):
         db.Integer,
         db.ForeignKey('Users.id', ondelete="CASCADE"),
         nullable=False)
-    user = db.relationship("Users")
+    user = db.relationship("Users", innerjoin=True)
     courses_id = db.Column(
         db.Integer,
         db.ForeignKey('Courses.id', ondelete="CASCADE"),
@@ -1020,6 +1020,7 @@ class Scores(db.Model):
         default_table_args
     )
 
+
 # TODO: this model could be merged into Judgements (one to one relationship)
 class PostsForJudgements(db.Model):
     __tablename__ = 'PostsForJudgements'
@@ -1065,10 +1066,11 @@ class PostsForQuestions(db.Model):
     title = db.Column(db.String(255))
     _answers = db.relationship("PostsForAnswers", cascade="delete")
     comments = db.relationship("PostsForQuestionsAndPostsForComments", cascade="delete", lazy="dynamic")
-    _criteria = db.relationship(
+    criteria = db.relationship(
         "CriteriaAndPostsForQuestions", cascade="delete",
         primaryjoin="and_(PostsForQuestions.id==CriteriaAndPostsForQuestions.questions_id, "
-                    "CriteriaAndPostsForQuestions.active)")
+                    "CriteriaAndPostsForQuestions.active)",
+        order_by="CriteriaAndPostsForQuestions.id")
     answerpairing = db.relationship("AnswerPairings", cascade="delete", backref="question")
     answer_start = db.Column(db.DateTime(timezone=True))
     answer_end = db.Column(db.DateTime(timezone=True))
@@ -1086,25 +1088,29 @@ class PostsForQuestions(db.Model):
     answers_count = column_property(
         select([func.count(PostsForAnswers.id)]).
         where(PostsForAnswers.questions_id == id),
-        deferred=True
+        deferred=True,
+        group="counts"
     )
 
     comments_count = column_property(
         select([func.count(PostsForQuestionsAndPostsForComments.id)]).
         where(PostsForQuestionsAndPostsForComments.questions_id == id),
-        deferred=True
+        deferred=True,
+        group="counts"
     )
 
     criteria_count = column_property(
         select([func.count(CriteriaAndPostsForQuestions.id)]).
         where(and_(CriteriaAndPostsForQuestions.questions_id == id, CriteriaAndPostsForQuestions.active)),
-        deferred=True
+        deferred=True,
+        group="counts"
     )
 
     judged = column_property(
         select([func.count(AnswerPairings.id) > 0]).
         where(AnswerPairings.questions_id == id),
-        deferred=True
+        deferred=True,
+        group="counts"
     )
 
     judgement_count = column_property(
@@ -1112,7 +1118,8 @@ class PostsForQuestions(db.Model):
         where(and_(
             Judgements.criteriaandquestions_id == CriteriaAndPostsForQuestions.id,
             CriteriaAndPostsForQuestions.questions_id == id)),
-        deferred=True
+        deferred=True,
+        group="counts"
     )
 
     _selfeval_count = column_property(
@@ -1121,7 +1128,8 @@ class PostsForQuestions(db.Model):
             PostsForAnswersAndPostsForComments.selfeval,
             PostsForAnswersAndPostsForComments.answers_id == PostsForAnswers.id,
             PostsForAnswers.questions_id == id)),
-        deferred=True
+        deferred=True,
+        group="counts"
     )
 
     @hybrid_property
@@ -1131,10 +1139,6 @@ class PostsForQuestions(db.Model):
     @hybrid_property
     def answers(self):
         return sorted(self._answers, key=lambda answer: answer.post.created, reverse=True)
-
-    @hybrid_property
-    def criteria(self):
-        return sorted(self._criteria, key=lambda criterion: criterion.id)
 
     @hybrid_property
     def available(self):
