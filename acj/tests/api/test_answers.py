@@ -2,6 +2,7 @@ import json
 import datetime
 
 from acj import db
+from data.fixtures import PostsFactory, PostsForAnswersFactory
 from data.fixtures.test_data import TestFixture
 from acj.models import PostsForAnswers
 from acj.tests.test_acj import ACJTestCase
@@ -129,6 +130,18 @@ class AnswersAPITests(ACJTestCase):
             self.assertEqual(len(result), 1)
             self.assertEqual(result[0]['user_id'], self.fixtures.students[0].id)
 
+            # add instructor answer
+            post = PostsFactory(course=self.fixtures.course, user=self.fixtures.instructor)
+            answer = PostsForAnswersFactory(question=self.fixtures.question, post=post)
+            self.fixtures.answers.append(answer)
+            db.session.commit()
+            rv = self.client.get(self.base_url + '?orderBy={}'.format(self.fixtures.question.criteria[0].id))
+            self.assert200(rv)
+            result = rv.json['objects']
+            self.assertEqual(len(self.fixtures.answers), rv.json['total'])
+            # first answer should be instructor answer
+            self.assertEqual(self.fixtures.instructor.id, result[0]['user_id'])
+
             # test data retrieve before answer period ended with non-privileged user
             self.fixtures.question.answer_end = datetime.datetime.now() + datetime.timedelta(days=2)
             db.session.add(self.fixtures.question)
@@ -151,7 +164,7 @@ class AnswersAPITests(ACJTestCase):
             self.assertEqual(1, rv.json['page'])
             self.assertEqual(2, rv.json['pages'])
             self.assertEqual(20, rv.json['per_page'])
-            self.assertEqual(30, rv.json['total'])
+            self.assertEqual(len(self.fixtures.answers), rv.json['total'])
 
     def test_create_answer(self):
         # test login required

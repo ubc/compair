@@ -10,7 +10,7 @@ from . import dataformat
 from .core import db
 from .authorization import require, allow, is_user_access_restricted
 from .models import Posts, PostsForAnswers, PostsForQuestions, Courses, Users, \
-    Judgements, AnswerPairings, Scores, GroupsAndUsers
+    Judgements, AnswerPairings, Scores, GroupsAndUsers, CoursesAndUsers, UserTypesForCourse
 from .util import new_restful_api, get_model_changes, pagination_parser
 from .attachment import add_new_file, delete_file
 from .core import event
@@ -66,6 +66,15 @@ answer_deadline_message = 'Answer deadline has passed.'
 class AnswerRootAPI(Resource):
     @login_required
     def get(self, course_id, question_id):
+        """
+        Return a list of answers for a question based on search criteria. The
+        list of the answers are paginated. If there is any answers from instructor
+        or TA, their answers will be on top of the list.
+
+        :param course_id: course id
+        :param question_id: question id
+        :return: list of answers
+        """
         Courses.exists_or_404(course_id)
         question = PostsForQuestions.query.get_or_404(question_id)
         require(READ, question)
@@ -102,6 +111,17 @@ class AnswerRootAPI(Resource):
 
         if params['ids']:
             query = query.filter(PostsForAnswers.id.in_(params['ids'].split(',')))
+
+        # place instructor and TA's answer at the top of the list
+        inst_subquery = PostsForAnswers.query.with_entities(PostsForAnswers.id.label('inst_answer')). \
+            join(Posts). \
+            join(CoursesAndUsers, Posts.users_id == CoursesAndUsers.users_id).filter_by(courses_id=course_id). \
+            join(CoursesAndUsers.usertypeforcourse).filter_by(name=UserTypesForCourse.TYPE_INSTRUCTOR)
+        ta_subquery = PostsForAnswers.query.with_entities(PostsForAnswers.id.label('ta_answer')). \
+            join(Posts). \
+            join(CoursesAndUsers, Posts.users_id == CoursesAndUsers.users_id).filter_by(courses_id=course_id). \
+            join(CoursesAndUsers.usertypeforcourse).filter_by(name=UserTypesForCourse.TYPE_TA)
+        query = query.order_by(PostsForAnswers.id.in_(inst_subquery).desc(), PostsForAnswers.id.in_(ta_subquery).desc())
 
         if params['orderBy'] and len(user_ids) != 1:
             # order answer ids by one criterion and pagination, in case there are multiple criteria in question
