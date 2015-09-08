@@ -69,8 +69,11 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
 			})
 		.when ('/course/new', 
 			{
-				templateUrl: 'modules/course/course-create-partial.html',
-				label: "Add Course"
+				templateUrl: 'modules/course/course-partial.html',
+				label: "Add Course",
+				controller: 'CourseController',
+				controllerAs: 'rc',
+				method: 'new'
 			})
 		.when ('/course/:courseId', 
 			{
@@ -79,8 +82,11 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
 			})
 		.when ('/course/:courseId/configure', 
 			{
-				templateUrl: 'modules/course/course-configure-partial.html',
-				label: "Edit Course"
+				templateUrl: 'modules/course/course-partial.html',
+				label: "Edit Course",
+				controller: 'CourseController',
+				controllerAs: 'rc',
+				method: 'edit'
 			})
 		.when ('/course/:courseId/user',
 			{

@@ -42,6 +42,7 @@ module.factory('CourseRoleResource', ['$resource', function($resource){
 module.controller("UserController", ['$scope', '$log', '$route', '$routeParams', '$location', 'breadcrumbs', 'Session', 'UserResource', 'Authorize', 'UserTypeResource', 'Toaster',
 	function($scope, $log, $route, $routeParams, $location, breadcrumbs, Session, UserResource, Authorize, UserTypeResource, Toaster) {
 		var userId;
+		var self = this;
 		var messages = {
 			new: {title: 'New User Created', msg: 'User should now have access.'},
 			edit: {title: 'User Successfully Updated', msg: 'Your changes were saved.'}
@@ -71,15 +72,15 @@ module.controller("UserController", ['$scope', '$log', '$route', '$routeParams',
 			});
 		};
 
-		$scope.edit = function() {
+		self.edit = function() {
 			userId = $routeParams.userId;
 			$scope.user = UserResource.get({'id':userId}, function (ret) {
 				breadcrumbs.options = {'User Profile': "{0}'s Profile".format(ret.displayname)};
 			});
 		};
 
-		$scope.view = function() {
-			$scope.edit();
+		self.view = function() {
+			self.edit();
 			Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function(result) {
 				$scope.canCreateUser = result;
 			});
@@ -97,12 +98,11 @@ module.controller("UserController", ['$scope', '$log', '$route', '$routeParams',
 		};
 
 		//  Calling routeParam method
-		if ($route.current !== undefined &&
-			$route.current.method !== undefined &&
-			$scope.hasOwnProperty($route.current.method)) {
-
+		if ($route.current !== undefined && $route.current.method !== undefined) {
 			$scope.method = $route.current.method;
-			$scope[$scope.method]();
+			if (self.hasOwnProperty($route.current.method)) {
+				self[$scope.method]();
+			}
 		}
 	}]
 );

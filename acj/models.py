@@ -30,7 +30,7 @@ from flask import current_app
 import pytz
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import synonym, load_only, column_property
+from sqlalchemy.orm import synonym, load_only, column_property, backref
 from sqlalchemy import func, select, and_, or_
 from flask.ext.login import UserMixin
 
@@ -298,7 +298,9 @@ class Courses(db.Model):
     description = db.Column(db.Text)
     available = db.Column(db.Boolean(name='available'), default=True, nullable=False)
     coursesandusers = db.relationship("CoursesAndUsers", lazy="dynamic")
-    _criteriaandcourses = db.relationship("CriteriaAndCourses")
+    criteriaandcourses = db.relationship(
+        "CriteriaAndCourses",
+        primaryjoin="and_(Courses.id==CriteriaAndCourses.courses_id, CriteriaAndCourses.active)")
     # allow students to make question posts
     enable_student_create_questions = db.Column(
         db.Boolean(name='enable_student_create_questions'), default=False,
@@ -313,21 +315,6 @@ class Courses(db.Model):
     created = db.Column(
         db.DateTime, default=datetime.datetime.utcnow,
         nullable=False)
-
-    @hybrid_property
-    def criteriaandcourses(self):
-        """
-        Adds the default criteria to newly created courses which doesn't have any criteria yet.
-        This is a complete hack. I'd implement this using sqlalchemy's event system instead but
-        it seems that events doesn't work right during test cases for some reason.
-
-        if not self._criteriaandcourses:
-            default_criteria = Criteria.query.first()
-            criteria_and_course = CriteriaAndCourses(criterion=default_criteria, courses_id=self.id)
-            db.session.add(criteria_and_course)
-            db.session.commit()
-        """
-        return self._criteriaandcourses
 
     @classmethod
     def get_by_user(cls, user_id, inactive=False, fields=None):
@@ -1210,7 +1197,7 @@ class CriteriaAndCourses(db.Model):
         db.Integer,
         db.ForeignKey('Criteria.id', ondelete="CASCADE"),
         nullable=False)
-    criterion = db.relationship("Criteria")
+    criterion = db.relationship("Criteria", backref=backref('course_assoc', uselist=False))
     courses_id = db.Column(
         db.Integer,
         db.ForeignKey('Courses.id', ondelete="CASCADE"),

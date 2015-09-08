@@ -1,4 +1,5 @@
 import json
+from acj import db
 
 from data.fixtures.test_data import BasicTestData
 from acj.tests.test_acj import ACJTestCase
@@ -107,9 +108,24 @@ class CoursesAPITests(ACJTestCase):
             self.assertEqual(course_expected['description'], course_actual['description'])
 
             # Verify the course is created in db
-            course_expected = Courses.query.get(course_actual['id'])
-            self.assertEqual(course_expected.name, course_actual['name'])
-            self.assertEqual(course_expected.description, course_actual['description'])
+            course_in_db = Courses.query.get(course_actual['id'])
+            self.assertEqual(course_in_db.name, course_actual['name'])
+            self.assertEqual(course_in_db.description, course_actual['description'])
+
+            # create course with criteria
+            course = course_expected.copy()
+            course['name'] = 'ExpectedCourse2'
+            course['criteria'] = [{'id': 1}]
+            rv = self.client.post(
+                '/api/courses',
+                data=json.dumps(course), content_type='application/json')
+            self.assert200(rv)
+            course_actual = rv.json
+
+            # Verify the course is created in db
+            course_in_db = Courses.query.get(course_actual['id'])
+            self.assertEqual(len(course_in_db.criteriaandcourses), 1)
+            self.assertEqual(course_in_db.criteriaandcourses[0].criteria_id, course['criteria'][0]['id'])
 
     def test_create_duplicate_course(self):
         with self.login(self.data.get_authorized_instructor().username):
@@ -153,14 +169,35 @@ class CoursesAPITests(ACJTestCase):
                 data=json.dumps(expected), content_type='application/json')
             self.assert400(rv)
 
-        # test invalid course id
         with self.login(self.data.get_authorized_instructor().username):
+            # test invalid course id
             rv = self.client.post('/api/courses/999', data=json.dumps(expected), content_type='application/json')
             self.assert404(rv)
 
             # test authorized user
             rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
             self.assert200(rv)
+            db.session.expire_all()
             self.assertEqual(expected['id'], rv.json['id'])
             self.assertEqual(expected['name'], rv.json['name'])
             self.assertEqual(expected['description'], rv.json['description'])
+
+            # test add criteria
+            course = expected.copy()
+            course['criteria'] = [{'id': 1}]
+            rv = self.client.post(url, data=json.dumps(course), content_type='application/json')
+            self.assert200(rv)
+
+            db.session.expire_all()
+            course_in_db = Courses.query.get(course['id'])
+            self.assertEqual(len(course_in_db.criteriaandcourses), 1)
+            self.assertEqual(course_in_db.criteriaandcourses[0].criteria_id, course['criteria'][0]['id'])
+
+            # test remove criteria
+            rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+            self.assert200(rv)
+
+            # expire all instances in session and force session to query from db
+            db.session.expire_all()
+            course_in_db = Courses.query.get(course['id'])
+            self.assertEqual(len(course_in_db.criteriaandcourses), 0)

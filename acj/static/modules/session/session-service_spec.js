@@ -66,6 +66,7 @@ describe('Service: Session', function() {
             var user = null;
 
             beforeEach(function() {
+                sessionService.destroy();
                 $httpBackend.expectGET('/api/session').respond(expectedSession);
                 $httpBackend.expectGET('/api/users/' + id).respond(expectedUser);
 

@@ -59,7 +59,7 @@ def get_courses(include_details=True):
     if include_details:
         details = {
             'available': fields.Boolean,
-            'criteriaandcourses': fields.Nested(get_criteria_and_courses()),
+            # 'criteriaandcourses': fields.Nested(get_criteria_in_course()),
             'enable_student_create_questions': fields.Boolean,
             'enable_student_create_tags': fields.Boolean,
             'modified': fields.DateTime,
@@ -117,14 +117,13 @@ def get_criteria():
     return data_format
 
 
-def get_criteria_and_courses():
-    data_format = {
-        'id': fields.Integer,
-        'criterion': fields.Nested(get_criteria()),
-        'courses_id': fields.Integer,
-        'active': fields.Boolean,
-        'in_question': fields.Boolean
-    }
+def get_criteria_in_course():
+    data_format = get_criteria()
+    data_format.update({
+        'course_id': fields.Integer(attribute=lambda x: x.course_assoc.courses_id),
+        'active': fields.Boolean(attribute=lambda x: x.course_assoc.active),
+        'in_question': fields.Boolean(attribute=lambda x: x.course_assoc.in_question)
+    })
     return data_format
 
 

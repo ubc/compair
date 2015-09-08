@@ -1,11 +1,11 @@
 <div>
 
 	<label>Available Criteria</label>
-        
-	<div ng-repeat="(key, criterion) in criteria" class="row">
+
+	<div ng-repeat="(key, criterion) in course.criteria" class="row">
 		<div class="col-sm-2" ng-if="courseId">
 			<p><a href="#/course/{{ courseId }}/criterion/{{ criterion.criterion.id }}/edit"
-				  ng-if="(canManageCriteriaCourses || criterion.criterion.users_id==loggedInUserId) && !criterion.criterion.judged">
+				  ng-if="(canManageCriteriaCourses || criterion.users_id==loggedInUserId) && !criterion.judged">
 				Edit
 			</a></p>
 		</div>
@@ -15,9 +15,9 @@
 			</a></p><!-- disable from course / add to dropdown -->
 		</div>
 		<div class="col-sm-8">
-			<strong>{{ key + 1 }}. {{ criterion.criterion.name }}</strong>
+			<strong>{{ key + 1 }}. {{ criterion.name }}</strong>
 			<div
-			     ng-bind-html="criterion.criterion.description">
+			     ng-bind-html="criterion.description">
 				
 			</div>
 		</div>
@@ -44,15 +44,15 @@
 		</div>
         </div>
 	<p>OR</p>
-	<p><a ng-click="toggleForm()" href="">
-		<i ng-show="isCreateFormShown" class="fa fa-chevron-down"></i>
-		<i ng-hide="isCreateFormShown" class="fa fa-chevron-right"></i>
+	<p><a ng-click="rc.showForm = !rc.showForm" href="">
+		<i ng-show="rc.showForm" class="fa fa-chevron-down"></i>
+		<i ng-hide="rc.showForm" class="fa fa-chevron-right"></i>
 		Create new criteria
 	</a></p>
 
 	<!-- want ng-if b/c otherwise the outer course form requires evaluation question to submit -->
-	<div class="create-form" ng-if="isCreateFormShown">
-		<ng-include src="'modules/criteria/criteria-form-partial.html'"></ng-include>
+	<div class="create-form" ng-if="rc.showForm">
+        <criteria-form></criteria-form>
 	</div>
 	
 </div>

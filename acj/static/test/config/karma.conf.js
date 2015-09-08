@@ -4,9 +4,16 @@ module.exports = function (config) {
 	config.set({
 		basePath: '../../',
 
+		preprocessors: {
+			'modules/**/*.html': ['ng-html2js']
+		},
+
 		files: bowerFiles.concat([
+			'modules/**/*-module.js',
 			'modules/**/*.js',
-			'acj-config.js'
+			'modules/**/*.html',
+			'acj-config.js',
+			'test/lib/*.js'
 		]),
 
 		frameworks: ['jasmine'],

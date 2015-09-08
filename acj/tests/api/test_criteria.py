@@ -11,10 +11,10 @@ class CriteriaAPITests(ACJTestCase):
 
     def _verify_course_critera(self, criteria_expected, criteria_actual):
         self.assertEqual(
-            criteria_expected.name, criteria_actual['criterion']['name'],
+            criteria_expected.name, criteria_actual['name'],
             'Expected criterion name does not match actual.')
         self.assertEqual(
-            criteria_expected.description, criteria_actual['criterion']['description'],
+            criteria_expected.description, criteria_actual['description'],
             'Expected criterion description does not match actual')
 
     def _verify_critera(self, criteria_expected, criteria_actual):
@@ -78,7 +78,7 @@ class CriteriaAPITests(ACJTestCase):
                 data=json.dumps(criteria_expected),
                 content_type='application/json')
             self.assert200(rv)
-            criteria_actual = rv.json['criterion']['criterion']
+            criteria_actual = rv.json['criterion']
             self.assertEqual(criteria_expected['name'], criteria_actual['name'])
             self.assertEqual(criteria_expected['description'], criteria_actual['description'])
 
@@ -319,20 +319,6 @@ class CriteriaAPITests(ACJTestCase):
             self.assert200(rv)
             self.assertEqual(criteria_expected['name'], rv.json['name'])
             self.assertEqual(criteria_expected['description'], rv.json['description'])
-
-    def test_get_default_criteria(self):
-        default_api_url = '/api/criteria/default'
-
-        # Test login required
-        rv = self.client.get(default_api_url)
-        self.assert401(rv)
-
-        # Test successful query
-        with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.get(default_api_url)
-            self.assert200(rv)
-            self.assertEqual(self.data.get_default_criteria().name, rv.json['name'])
-            self.assertEqual(self.data.get_default_criteria().description, rv.json['description'])
 
     def test_create_question_criteria(self):
         course_id = self.data.get_course().id

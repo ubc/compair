@@ -1,12 +1,3 @@
-var customMatchers = {
-	toEqualData: function (util, customEqualityTesters) {
-		return {
-			compare: function (actual, expected) {
-				return {pass: angular.equals(actual, expected)};
-			}
-		}
-	}
-};
 describe('user-module', function () {
 	var $httpBackend, sessionRequestHandler;
 	var id = 1;
@@ -55,9 +46,6 @@ describe('user-module', function () {
 		usertypesforsystem_id: 3
 	};
 	beforeEach(module('ubc.ctlt.acj.user'));
-	beforeEach(function () {
-		jasmine.addMatchers(customMatchers);
-	});
 	beforeEach(inject(function ($injector) {
 		$httpBackend = $injector.get('$httpBackend');
 		sessionRequestHandler = $httpBackend.when('GET', '/api/session').respond(mockSession);

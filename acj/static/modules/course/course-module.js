@@ -45,153 +45,6 @@ module.factory('CourseResource', function($q, $routeParams, $log, $resource, Int
 
 /***** Controllers *****/
 module.controller(
-	'CourseConfigureController',
-	function($scope, $log, $routeParams, $location, CourseResource, CriteriaResource, CoursesCriteriaResource, EditorOptions, Authorize, Session, Toaster)
-	{
-		$scope.editorOptions = EditorOptions.basic;
-		// get course info
-		$scope.course = {};
-		$scope.criterion = {'default': true};	// initialize default attribute to true
-		$scope.courseId = $routeParams['courseId'];
-		Authorize.can(Authorize.MANAGE, CoursesCriteriaResource.MODEL).then(function(result) {
-			$scope.canManageCriteriaCourses = result;
-		});
-		Session.getUser().then(function(user) {
-			$scope.loggedInUserId = user.id;
-		});
-		CourseResource.get({'id':$scope.courseId}).$promise.then(
-			function (ret) {
-				$scope.course = ret;
-			},
-			function (ret) {
-				Toaster.reqerror("Course Not Found For ID "+ $scope.courseId, ret);
-			}
-		);
-		CoursesCriteriaResource.get({'courseId': $scope.courseId}).$promise.then(
-			function (ret) {
-				$scope.criteria = ret.objects;
-				var inCourse = {};
-				$scope.availableCriteria = [];
-				angular.forEach($scope.criteria, function(c, key) {
-					inCourse[c.criterion.id] = 1;
-				});
-				CriteriaResource.get().$promise.then(
-					function (ret) {
-						for (key in ret.criteria) {
-							c = ret.criteria[key];
-							if (!(c.id in inCourse)) {
-								$scope.availableCriteria.push(c);
-							}
-						}
-					},
-					function (ret) {
-						Toaster.reqerror("Default Criteria Not Found", ret);
-					}
-				);
-			},
-			function (ret) {
-				Toaster.reqerror("Criteria Not Found", ret);
-			}
-		);
-		// save course info
-		var submitC = function() {
-			CourseResource.save($scope.course).$promise.then(
-				function(ret) {
-					Toaster.success("Course Successfully Updated", "Your course changes have been saved.");
-					$scope.submitted = false;
-					$location.path('/course/' + ret.id);
-				},
-				function(ret) {
-					Toaster.reqerror("Course Update Failed", ret);
-					$scope.submitted = false;
-				}
-			);
-		};
-		// save new criterion
-		$scope.criterionSubmit = function() {
-			$scope.criterionSubmitted = true;
-			CoursesCriteriaResource.save({'courseId': $scope.courseId}, $scope.criterion).$promise.then(
-				function (ret) {
-					$scope.criterion = {'name': '', 'description': '', 'default': true}; // reset form
-					$scope.criterionSubmitted = false;
-					$scope.criteria.push(ret.criterion);
-					Toaster.success("New Criterion Created", "Successfully added a new criterion.");
-					$scope.toggleForm();
-					$(".fa-chevron-right").removeClass("ng-hide"); // reset classes so UI matches current state
-					$(".fa-chevron-down").addClass("ng-hide");
-				},
-				function (ret) {
-					$scope.criterionSubmitted = false;
-					Toaster.reqerror("No New Criterion Created", ret);
-				}
-			);
-		};
-
-		$scope.courseSubmit = function() {
-			$scope.submitted = true;
-			if ($scope.criterion.name) {
-				$scope.criterionSubmitted = true;
-				CoursesCriteriaResource.save({'courseId': $scope.courseId}, $scope.criterion).$promise.then(
-					function (ret) {
-						$scope.criterion = {'name': '', 'description': '', 'default': true}; // reset form
-						$scope.criterionSubmitted = false;
-						$scope.criteria.push(ret.criterion);
-						$scope.toggleForm();
-						$(".fa-chevron-right").removeClass("ng-hide"); // reset classes so UI matches current state
-						$(".fa-chevron-down").addClass("ng-hide");
-						submitC();
-					},
-					function (ret) {
-						$scope.submitted = false;
-						$scope.criterionSubmitted = false;
-						Toaster.reqerror("No New Criterion Created", ret);
-					}
-				);
-			} else {
-				submitC();
-			}
-		};
-
-		$scope.add = function(key) {
-			// not proceed if empty option is being added
-			if (!key)
-				return;
-			var criterionId = $scope.availableCriteria[key].id;
-			CoursesCriteriaResource.save({'courseId': $scope.courseId, 'criteriaId': criterionId}, {}).$promise.then(
-				function (ret) {
-					$scope.availableCriteria.splice(key, 1);
-					$scope.criteria.push(ret.criterion);
-				},
-				function (ret) {
-					Toaster.reqerror("Unable To Add Criterion", ret);
-				}
-			);
-		}
-		// remove criterion from course - eg. make it inactive
-		$scope.remove = function(key) {
-			var criterionId = $scope.criteria[key].criterion.id;
-			CoursesCriteriaResource.delete({'courseId': $scope.courseId, 'criteriaId': criterionId}).$promise.then(
-				function (ret) {
-					$scope.availableCriteria.push($scope.criteria[key].criterion);
-					$scope.criteria.splice(key, 1);
-				},
-				function (ret) {
-					if (ret.status == '403') {
-						Toaster.error(ret.data.error);
-					} else {
-						Toaster.reqerror("Unable To Remove Criterion " + ret.criterionId, ret);
-					}
-				}
-			);
-		}
-
-		$scope.toggleForm = function() {
-			$scope.isCreateFormShown = !$scope.isCreateFormShown;
-		}
-	}
-);
-
-module.controller(
 	'CourseQuestionsController',
 	function($scope, $log, $routeParams, CourseResource, QuestionResource, Authorize,
 			 AnswerCommentResource, AuthenticationService, required_rounds, Toaster)
@@ -243,7 +96,7 @@ module.controller(
 				CourseResource.getJudgementCount({'id': courseId}).$promise.then(
 					function (ret) {
 						var judged = ret.judgements;
-						for (key in $scope.questions) {
+						for (var key in $scope.questions) {
 							ques = $scope.questions[key];
 							var required = ques.num_judgement_req;
 							if (!(ques.id in judged))
@@ -274,7 +127,7 @@ module.controller(
 				AnswerCommentResource.allSelfEval({'courseId': courseId}).$promise.then(
 					function (ret) {
 						var replies = ret.replies;
-						for (key in $scope.questions) {
+						for (var key in $scope.questions) {
 							ques = $scope.questions[key];
 							ques['selfeval_left'] = 0;
 							/*
@@ -347,133 +200,96 @@ module.controller(
 );
 
 module.controller(
-	'CourseCreateController',
-	function($scope, $log, $location, Session, CourseResource, CriteriaResource, CoursesCriteriaResource,
-			 EditorOptions, Toaster)
-	{
-		$scope.editorOptions = EditorOptions.basic;
+	'CourseController', ['$scope', '$log', '$route', '$routeParams', '$location', 'Session', 'Authorize',
+		'CourseResource', 'CriteriaResource', 'CoursesCriteriaResource', 'Toaster',
+	function($scope, $log, $route, $routeParams, $location, Session, Authorize, CourseResource, CriteriaResource,
+			 CoursesCriteriaResource, Toaster) {
+		var self = this;
+		var messages = {
+			new: {title: 'Course Created', msg: 'The course created successfully'},
+			edit: {title: 'Course Successfully Updated', msg: 'Your course changes have been saved.'}
+		};
 		//initialize course so this scope can access data from included form
-		$scope.course = {};
-		$scope.criteria = [];
-		$scope.criterion = {'default': true};	// initialize default attribute to true
-		var def = {};
+		$scope.course = {criteria: []};
+		$scope.availableCriteria = [];
 
-		// initialize default criterion
-		CriteriaResource.getDefault().$promise.then(
-			function (ret) {
-				def = ret;
-				$scope.criteria.push({'criterion': def});
-			},
-			function (ret) {}
-		);
-		CriteriaResource.get().$promise.then(
-			function (ret) {
-				// remove default criterion
-				for (key in ret.criteria) {
-					c = ret.criteria[key];
-					if (c.id == def.id) {
-						ret.criteria.splice(key, 1);
-						break;
+		self.removeCourseCriteria = function() {
+			$scope.availableCriteria = _.filter($scope.availableCriteria, function(c) {
+				return !_($scope.course.criteria).pluck('id').includes(c.id);
+			});
+		};
+		self.edit = function() {
+			$scope.courseId = $routeParams['courseId'];
+			$scope.course = CourseResource.get({'id':$scope.courseId}, function() {
+				CoursesCriteriaResource.get({courseId: $scope.course.id}, function(ret) {
+					$scope.course.criteria	= ret.objects;
+					if ($scope.availableCriteria.length) {
+						self.removeCourseCriteria();
 					}
-				}
-				$scope.availableCriteria = ret.criteria;
-			},
-			function (ret) {
-				Toaster.reqerror("Default Criteria Not Found", ret);
-			}
-		);
-
-		var submitC = function() {
-			CourseResource.save($scope.course).$promise.then(
-				function (ret)
-				{
-					Session.refresh().then(function(){
-						addMultipleCriteria(ret.id, $scope.criteria);
-						$scope.submitted = false;
-						Toaster.success("Course Created", ret.name + " created successfully.");
-						$location.path('/course/' + ret.id);
-					});
-				},
-				function (ret)
-				{
-					$scope.submitted = false;
-					Toaster.reqerror("No Course Created", ret);
-				}
-			);
+				});
+			});
 		};
 
-		$scope.courseSubmit = function() {
+		Authorize.can(Authorize.MANAGE, CoursesCriteriaResource.MODEL).then(function(result) {
+			$scope.canManageCriteriaCourses = result;
+		});
+
+		Session.getUser().then(function(user) {
+			$scope.loggedInUserId = user.id;
+		});
+
+		CriteriaResource.get().$promise.then(function (ret) {
+			$scope.availableCriteria = ret.criteria;
+			if ($scope.course.criteria && !$scope.course.criteria.length) {
+				// if we don't have any criterion, e.g. new course, add a default one automatically
+				$scope.course.criteria.push(_.find($scope.availableCriteria, {id: 1}));
+			}
+
+			// we need to remove the existing course criteria from available list
+			self.removeCourseCriteria();
+		});
+
+		$scope.$on('CRITERIA_ADDED', function(event, criteria) {
+			$scope.course.criteria.push(criteria);
+			self.showForm = false;
+			$(".fa-chevron-right").removeClass("ng-hide"); // reset classes so UI matches current state
+			$(".fa-chevron-down").addClass("ng-hide");
+		});
+
+		$scope.save = function() {
 			$scope.submitted = true;
-			if ($scope.criterion.name) {
-				$scope.criterionSubmitted = true;
-				CriteriaResource.save({}, $scope.criterion).$promise.then(
-					function (ret) {
-						$scope.criterion = {'name': '', 'description': '', 'default': true}; // reset form
-						$scope.criterionSubmitted = false;
-						$scope.criteria.push({'criterion': ret});
-						$scope.toggleForm();
-						$(".fa-chevron-right").removeClass("ng-hide"); // reset classes so UI matches current state
-						$(".fa-chevron-down").addClass("ng-hide");
-						submitC();
-					},
-					function (ret) {
-						$scope.submitted = false;
-						$scope.criterionSubmitted = false;
-						Toaster.reqerror("No New Criterion Created", ret);
-					}
-				);
-			} else {
-				submitC();
-			}
-		};
-
-		$scope.criterionSubmit = function() {
-			$scope.criterionSubmitted = true;
-			CriteriaResource.save({}, $scope.criterion).$promise.then(
-				function (ret) {
-					$scope.criterion = {'name': '', 'description': '', 'default': true}; // reset form
-					$scope.criterionSubmitted = false;
-					$scope.criteria.push({'criterion': ret});
-					$scope.toggleForm();
-					$(".fa-chevron-right").removeClass("ng-hide"); // reset classes so UI matches current state
-					$(".fa-chevron-down").addClass("ng-hide");
-				},
-				function (ret) {
-					$scope.criterionSubmitted = false;
-					Toaster.reqerror("No New Criterion Created", ret);
-				}
-			);
+			CourseResource.save({id: $scope.course.id}, $scope.course, function (ret) {
+				Toaster.success(messages[$scope.method].title, messages[$scope.method].msg);
+				// refresh permissions
+				Session.refresh();
+				$location.path('/course/' + ret.id);
+			}).$promise.finally(function() {
+				$scope.submitted = false;
+			});
 		};
 
 		$scope.add = function(key) {
 			// not proceed if empty option is being added
-			if (!key)
+			if (key === undefined || key === null || key < 0 || key >= $scope.availableCriteria.length)
 				return;
-			$scope.criteria.push({'criterion': $scope.availableCriteria[key]});
+			$scope.course.criteria.push($scope.availableCriteria[key]);
 			$scope.availableCriteria.splice(key, 1);
 		};
 		// remove criterion from course - eg. make it inactive
 		$scope.remove = function(key) {
-			var criterion = $scope.criteria[key].criterion;
-			$scope.criteria.splice(key, 1);
+			var criterion = $scope.course.criteria[key];
+			$scope.course.criteria.splice(key, 1);
 			$scope.availableCriteria.push(criterion);
 		};
 
-		$scope.toggleForm = function() {
-			$scope.isCreateFormShown = !$scope.isCreateFormShown;
-		};
-
-		var addMultipleCriteria = function(courseId, criteria) {
-			angular.forEach(criteria, function(c, key) {
-				CoursesCriteriaResource.save({'courseId': courseId, 'criteriaId': c.criterion.id}, {}).$promise.then(
-					function (ret) {},
-					function (ret) {
-						Toaster.reqerror("Failed to put criterion "+ c.id+" into the course.", ret);
-					}
-				);
-			});
+		//  Calling routeParam method
+		if ($route.current !== undefined && $route.current.method !== undefined) {
+			$scope.method = $route.current.method;
+			if (self.hasOwnProperty($route.current.method)) {
+				self[$scope.method]();
+			}
 		}
-	}
+	}]
 );
 
 // End anonymous function
