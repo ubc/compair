@@ -13,7 +13,7 @@ module.exports = function (config) {
 			'modules/**/*.js',
 			'modules/**/*.html',
 			'acj-config.js',
-			'test/lib/*.js'
+			'test/helpers/*.js'
 		]),
 
 		frameworks: ['jasmine'],
