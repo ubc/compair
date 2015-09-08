@@ -12,23 +12,18 @@ var createQuestionStepDefinitionsWrapper = function () {
 	var pageFactory = new PageFactory();
 	var page;
 
-	this.Given(/^I'm on "([^"]*)" page for course with id "([^"]*)"$/, function (pageName, courseId, done) {
+	this.Given(/^I'm on "([^"]*)" page for course with id "([^"]*)"$/, function (pageName, courseId) {
 		page = pageFactory.createPage(pageName);
-		page.get(courseId).then(function() {
-			done();
-		});
+		return page.get(courseId);
 	});
 
-	this.When(/^I select 'Add Question' button$/, function (done) {
-		page.addQuestion().then(function() {
-			done()
-		});
+	this.When(/^I select "([^"]*)" button$/, function (linkText) {
+		return element(by.linkText(linkText)).click();
 	});
-	this.Given(/^I select the first criteria$/, function(done) {
-		element.all(by.repeater("courseCriterion in courseCriteria")).get(0)
-			.element(by.css('input')).click().then(function(){
-				done();
-		});
+
+	this.Given(/^I select the first criteria$/, function() {
+		return element.all(by.repeater("courseCriterion in courseCriteria")).get(0)
+			.element(by.css('input')).click();
 	});
 };
 module.exports = createQuestionStepDefinitionsWrapper;

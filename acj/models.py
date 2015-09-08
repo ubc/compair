@@ -21,6 +21,7 @@
 
 import hashlib
 import datetime
+import time
 import math
 import warnings
 
@@ -29,35 +30,19 @@ from flask import current_app
 import pytz
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import synonym, load_only, column_property
-from sqlalchemy import func, select, and_
-
-
-# import the context under an app-specific name (so it can easily be replaced later)
-from passlib.apps import custom_app_context as pwd_context
-
+from sqlalchemy.orm import synonym, load_only, column_property, backref
+from sqlalchemy import func, select, and_, or_
 from flask.ext.login import UserMixin
 
 
-# need to update to filterfalse when upgrading python
-try:
-    from itertools import filterfalse
-except ImportError:
-    from itertools import ifilterfalse
-
-    def filterfalse(predicate, iterable):
-        return ifilterfalse(predicate, iterable)
-
-#################################################
-# Users
-#################################################
-
 # User types at the course level
 from .core import db
+from acj import security
 
 # All tables should have this set of options enabled to make porting easier.
 # In case we have to move to MariaDB instead of MySQL, e.g.: InnoDB in MySQL
 # is replaced by XtraDB.
+
 default_table_args = {
     'mysql_charset': 'utf8', 'mysql_engine': 'InnoDB',
     'mysql_collate': 'utf8_unicode_ci'}
@@ -71,6 +56,10 @@ convention = {
 }
 
 db.metadata.naming_convention = convention
+
+#################################################
+# Users
+#################################################
 
 
 class UserTypesForCourse(db.Model):
@@ -105,7 +94,24 @@ def hash_password(password, is_admin=False):
     if is_admin:
         # enables more rounds for admin passwords
         category = "admin"
+    pwd_context = getattr(security, current_app.config['PASSLIB_CONTEXT'])
     return pwd_context.encrypt(password, category=category)
+
+
+# This could be used for token based authentication
+# def verify_auth_token(token):
+#     s = Serializer(current_app.config['SECRET_KEY'])
+#     try:
+#         data = s.loads(token)
+#     except SignatureExpired:
+#         return None  # valid token, but expired
+#     except BadSignature:
+#         return None  # invalid token
+#
+#     if 'id' not in data:
+#         return None
+#
+#     return data['id']
 
 
 # Flask-Login requires the user class to have some methods, the easiest way
@@ -126,7 +132,7 @@ class Users(db.Model, UserMixin):
         db.Integer,
         db.ForeignKey('UserTypesForSystem.id', ondelete="CASCADE"),
         nullable=False)
-    usertypeforsystem = db.relationship("UserTypesForSystem")
+    usertypeforsystem = db.relationship("UserTypesForSystem", innerjoin=True)
 
     email = db.Column(db.String(254))  # email addresses are max 254 characters, no
     # idea if the unicode encoding of email addr
@@ -152,6 +158,7 @@ class Users(db.Model, UserMixin):
     groups = db.relationship(
         "GroupsAndUsers",
         primaryjoin="and_(Users.id==GroupsAndUsers.users_id, GroupsAndUsers.active)")
+    # groups = association_proxy('user_groups', 'name')
 
     system_role = association_proxy('usertypeforsystem', 'name')
 
@@ -190,12 +197,27 @@ class Users(db.Model, UserMixin):
         return m.hexdigest()
 
     def verify_password(self, password):
+        pwd_context = getattr(security, current_app.config['PASSLIB_CONTEXT'])
         return pwd_context.verify(password, self.password)
 
     def update_lastonline(self):
         self.lastonline = datetime.datetime.utcnow()
         db.session.add(self)
         db.session.commit()
+
+    def generate_session_token(self):
+        """
+        Generate a session token that identifies the user login session. Since the flask
+        wll generate the same session _id for the same IP and browser agent combination,
+        it is hard to distinguish the users by session from the activity log
+        """
+        key = str(self.id) + str(time.time())
+        return hashlib.md5(key.encode('UTF-8')).hexdigest()
+
+    # This could be used for token based authentication
+    # def generate_auth_token(self, expiration=60):
+    #     s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
+    #     return s.dumps({'id': self.id})
 
     @hybrid_property
     def course_role(self):
@@ -207,6 +229,45 @@ class Users(db.Model, UserMixin):
             return 'Not Enrolled'
         else:
             return self.coursesandusers[0].usertypeforcourse.name
+
+    @hybrid_property
+    def group_id(self):
+        """
+        we only have one group per user-course. So we return single group_id
+        :return: group id or 0 if there is no group
+        """
+        return self.groups[0].groups_id if len(self.groups) else 0
+
+    @hybrid_property
+    def group_name(self):
+        """
+        we only have one group per user-course. So we return single group name
+        :return: group name or None if there is no group
+        """
+        return self.groups[0].group.name if len(self.groups) else None
+
+    def __repr__(self):
+        if self.username:
+            return self.username
+        else:
+            return "User"
+
+    def has_complete_judgment_for_question(self, question_id):
+        """
+        check if user has completed the required judgements
+        :param question_id: the id of the question to check aginst
+        :return: boolean
+        """
+        question = PostsForQuestions.query. \
+            with_entities(PostsForQuestions.num_judgement_req, PostsForQuestions.criteria_count). \
+            get(question_id)
+
+        judgement_count = PostsForJudgements.query. \
+            join(PostsForJudgements.postsforcomments). \
+            join(PostsForComments.post). \
+            filter_by(users_id=self.id).count()
+
+        return judgement_count >= question.num_judgement_req * question.criteria_count
 
 
 class InvalidAttributeException(Exception):
@@ -237,7 +298,9 @@ class Courses(db.Model):
     description = db.Column(db.Text)
     available = db.Column(db.Boolean(name='available'), default=True, nullable=False)
     coursesandusers = db.relationship("CoursesAndUsers", lazy="dynamic")
-    _criteriaandcourses = db.relationship("CriteriaAndCourses")
+    criteriaandcourses = db.relationship(
+        "CriteriaAndCourses",
+        primaryjoin="and_(Courses.id==CriteriaAndCourses.courses_id, CriteriaAndCourses.active)")
     # allow students to make question posts
     enable_student_create_questions = db.Column(
         db.Boolean(name='enable_student_create_questions'), default=False,
@@ -252,21 +315,6 @@ class Courses(db.Model):
     created = db.Column(
         db.DateTime, default=datetime.datetime.utcnow,
         nullable=False)
-
-    @hybrid_property
-    def criteriaandcourses(self):
-        """
-        Adds the default criteria to newly created courses which doesn't have any criteria yet.
-        This is a complete hack. I'd implement this using sqlalchemy's event system instead but
-        it seems that events doesn't work right during test cases for some reason.
-
-        if not self._criteriaandcourses:
-            default_criteria = Criteria.query.first()
-            criteria_and_course = CriteriaAndCourses(criterion=default_criteria, courses_id=self.id)
-            db.session.add(criteria_and_course)
-            db.session.commit()
-        """
-        return self._criteriaandcourses
 
     @classmethod
     def get_by_user(cls, user_id, inactive=False, fields=None):
@@ -284,6 +332,22 @@ class Courses(db.Model):
     @classmethod
     def exists_or_404(cls, course_id):
         return cls.query.options(load_only('id')).get_or_404(course_id)
+
+    def enroll(self, users, role=UserTypesForCourse.TYPE_STUDENT):
+        if not isinstance(users, list):
+            users = [users]
+
+        user_role = UserTypesForCourse.query.filter_by(name=role).one()
+        if not user_role:
+            raise InvalidAttributeException('Invalid user role %s'.format(role))
+
+        associations = []
+        for user in users:
+            associations.append(
+                CoursesAndUsers(users_id=user.id, courses_id=self.id, usertypesforcourse_id=user_role.id)
+            )
+
+        db.session.bulk_save_objects(associations)
 
 
 # A "junction table" in sqlalchemy is called a many-to-many pattern. Such a
@@ -351,6 +415,18 @@ class Groups(db.Model):
     created = db.Column(
         db.DateTime, default=datetime.datetime.utcnow,
         nullable=False)
+
+    def enroll(self, users):
+        if not isinstance(users, list):
+            users = [users]
+
+        associations = []
+        for user in users:
+            associations.append(
+                GroupsAndUsers(users_id=user.id, groups_id=self.id)
+            )
+
+        db.session.bulk_save_objects(associations)
 
 
 class GroupsAndUsers(db.Model):
@@ -425,7 +501,7 @@ class Posts(db.Model):
         db.Integer,
         db.ForeignKey('Users.id', ondelete="CASCADE"),
         nullable=False)
-    user = db.relationship("Users")
+    user = db.relationship("Users", innerjoin=True)
     courses_id = db.Column(
         db.Integer,
         db.ForeignKey('Courses.id', ondelete="CASCADE"),
@@ -475,6 +551,7 @@ class Judgements(db.Model):
         db.ForeignKey('Answers.id', ondelete="CASCADE"),
         nullable=False)
     answer_winner = db.relationship("PostsForAnswers")
+    comment = db.relationship("PostsForJudgements", uselist=False, backref="judgement")
     modified = db.Column(
         db.DateTime,
         default=datetime.datetime.utcnow,
@@ -597,120 +674,6 @@ class AnswerPairings(db.Model):
         return len([j for j in self.judgements if j.answers_id_winner == self.answers_id2])
 
 
-class PostsForAnswers(db.Model):
-    __tablename__ = 'Answers'
-    __table_args__ = default_table_args
-
-    id = db.Column(db.Integer, primary_key=True, nullable=False)
-    posts_id = db.Column(
-        db.Integer,
-        db.ForeignKey('Posts.id', ondelete="CASCADE"),
-        nullable=False)
-    post = db.relationship("Posts", cascade="delete")
-    questions_id = db.Column(
-        db.Integer,
-        db.ForeignKey('Questions.id', ondelete="CASCADE"),
-        nullable=False)
-    question = db.relationship("PostsForQuestions")
-    comments = db.relationship("PostsForAnswersAndPostsForComments", cascade="delete")
-    _scores = db.relationship("Scores", cascade="delete")
-    # flagged for instructor review as inappropriate or incomplete
-    flagged = db.Column(db.Boolean(name='flagged'), default=False, nullable=False)
-    users_id_flagger = db.Column(
-        db.Integer,
-        db.ForeignKey('Users.id', ondelete="CASCADE"))
-    flagger = db.relationship("Users")
-    round = db.Column(db.Integer, default=0, nullable=False)
-
-    course_id = association_proxy('post', 'courses_id')
-    content = association_proxy('post', 'content')
-    files = association_proxy('post', 'files')
-    created = association_proxy('post', 'created')
-    user_id = association_proxy('post', 'users_id')
-    user_avatar = association_proxy('post', 'user_avatar')
-    user_displayname = association_proxy('post', 'user_displayname')
-    user_fullname = association_proxy('post', 'user_fullname')
-
-    @hybrid_property
-    def courses_id(self):
-        return self.post.courses_id
-
-    @hybrid_property
-    def users_id(self):
-        return self.post.user.id
-
-    @hybrid_property
-    def comments_count(self):
-        return len(self.comments)
-
-    @hybrid_property
-    def private_comments_count(self):
-        private_comments = [c for c in self.comments if c.evaluation or c.selfeval or c.type == 0]
-        return len(private_comments)
-
-    @hybrid_property
-    def public_comments_count(self):
-        return self.comments_count - self.private_comments_count
-
-    @hybrid_property
-    def scores(self):
-        return sorted(self._scores, key=lambda score: score.criteriaandquestions_id)
-
-    @hybrid_property
-    def selfeval_count(self):
-        return len([c for c in self.comments if c.selfeval])
-
-
-class PostsForComments(db.Model):
-    __tablename__ = 'Comments'
-    __table_args__ = default_table_args
-
-    id = db.Column(db.Integer, primary_key=True, nullable=False)
-    posts_id = db.Column(
-        db.Integer,
-        db.ForeignKey('Posts.id', ondelete="CASCADE"),
-        nullable=False)
-    post = db.relationship("Posts")
-
-    course_id = association_proxy('post', 'courses_id')
-    content = association_proxy('post', 'content')
-    files = association_proxy('post', 'files')
-    created = association_proxy('post', 'created')
-    user_id = association_proxy('post', 'users_id')
-    user_avatar = association_proxy('post', 'user_avatar')
-    user_displayname = association_proxy('post', 'user_displayname')
-    user_fullname = association_proxy('post', 'user_fullname')
-
-
-class PostsForQuestionsAndPostsForComments(db.Model):
-    __tablename__ = 'QuestionsAndComments'
-    __table_args__ = default_table_args
-
-    id = db.Column(db.Integer, primary_key=True, nullable=False)
-    questions_id = db.Column(
-        db.Integer,
-        db.ForeignKey('Questions.id', ondelete="CASCADE"),
-        nullable=False)
-    postsforquestions = db.relationship("PostsForQuestions")
-    comments_id = db.Column(
-        db.Integer,
-        db.ForeignKey('Comments.id', ondelete="CASCADE"),
-        nullable=False)
-    postsforcomments = db.relationship("PostsForComments")
-
-    @hybrid_property
-    def courses_id(self):
-        return self.postsforcomments.post.courses_id
-
-    @hybrid_property
-    def users_id(self):
-        return self.postsforcomments.post.user.id
-
-    @hybrid_property
-    def content(self):
-        return self.postsforcomments.post.content
-
-
 class PostsForAnswersAndPostsForComments(db.Model):
     __tablename__ = 'AnswersAndComments'
     __table_args__ = default_table_args
@@ -751,6 +714,135 @@ class PostsForAnswersAndPostsForComments(db.Model):
     user_avatar = association_proxy('postsforcomments', 'user_avatar')
     user_displayname = association_proxy('postsforcomments', 'user_displayname')
     user_fullname = association_proxy('postsforcomments', 'user_fullname')
+
+
+class PostsForAnswers(db.Model):
+    __tablename__ = 'Answers'
+    __table_args__ = default_table_args
+
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    posts_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Posts.id', ondelete="CASCADE"),
+        nullable=False)
+    post = db.relationship("Posts", cascade="delete")
+    questions_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Questions.id', ondelete="CASCADE"),
+        nullable=False)
+    question = db.relationship("PostsForQuestions")
+    comments = db.relationship("PostsForAnswersAndPostsForComments", cascade="delete")
+    scores = db.relationship("Scores", cascade="delete", order_by='Scores.criteriaandquestions_id')
+    # flagged for instructor review as inappropriate or incomplete
+    flagged = db.Column(db.Boolean(name='flagged'), default=False, nullable=False)
+    users_id_flagger = db.Column(
+        db.Integer,
+        db.ForeignKey('Users.id', ondelete="CASCADE"))
+    flagger = db.relationship("Users")
+    round = db.Column(db.Integer, default=0, nullable=False)
+
+    course_id = association_proxy('post', 'courses_id')
+    content = association_proxy('post', 'content')
+    files = association_proxy('post', 'files')
+    created = association_proxy('post', 'created')
+    user_id = association_proxy('post', 'users_id')
+    user_avatar = association_proxy('post', 'user_avatar')
+    user_displayname = association_proxy('post', 'user_displayname')
+    user_fullname = association_proxy('post', 'user_fullname')
+
+    comments_count = column_property(
+        select([func.count(PostsForAnswersAndPostsForComments.id)]).
+        where(PostsForAnswersAndPostsForComments.answers_id == id),
+        deferred=True,
+        group='counts'
+    )
+
+    private_comments_count = column_property(
+        select([func.count(PostsForAnswersAndPostsForComments.id)]).
+        where(and_(
+            PostsForAnswersAndPostsForComments.answers_id == id,
+            or_(PostsForAnswersAndPostsForComments.evaluation != 0,
+                PostsForAnswersAndPostsForComments.selfeval != 0,
+                PostsForAnswersAndPostsForComments.type == 0)
+        )),
+        deferred=True,
+        group='counts'
+    )
+
+    selfeval_count = column_property(
+        select([func.count(PostsForAnswersAndPostsForComments.id)]).
+        where(PostsForAnswersAndPostsForComments.selfeval != 0),
+        deferred=True,
+        group='counts'
+    )
+
+    @hybrid_property
+    def courses_id(self):
+        return self.course_id
+
+    @hybrid_property
+    def users_id(self):
+        return self.user_id
+
+    @hybrid_property
+    def public_comments_count(self):
+        return self.comments_count - self.private_comments_count
+
+
+class PostsForComments(db.Model):
+    __tablename__ = 'Comments'
+    __table_args__ = default_table_args
+
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    posts_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Posts.id', ondelete="CASCADE"),
+        nullable=False)
+    post = db.relationship("Posts")
+    answer_assoc = db.relationship("PostsForAnswersAndPostsForComments", uselist=False)
+
+    course_id = association_proxy('post', 'courses_id')
+    content = association_proxy('post', 'content')
+    files = association_proxy('post', 'files')
+    created = association_proxy('post', 'created')
+    user_id = association_proxy('post', 'users_id')
+    user_avatar = association_proxy('post', 'user_avatar')
+    user_displayname = association_proxy('post', 'user_displayname')
+    user_fullname = association_proxy('post', 'user_fullname')
+
+    # used by answer comments only
+    evaluation = association_proxy('answer_assoc', 'evaluation')
+    selfeval = association_proxy('answer_assoc', 'selfeval')
+    type = association_proxy('answer_assoc', 'type')
+
+
+class PostsForQuestionsAndPostsForComments(db.Model):
+    __tablename__ = 'QuestionsAndComments'
+    __table_args__ = default_table_args
+
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    questions_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Questions.id', ondelete="CASCADE"),
+        nullable=False)
+    postsforquestions = db.relationship("PostsForQuestions")
+    comments_id = db.Column(
+        db.Integer,
+        db.ForeignKey('Comments.id', ondelete="CASCADE"),
+        nullable=False)
+    postsforcomments = db.relationship("PostsForComments")
+
+    @hybrid_property
+    def courses_id(self):
+        return self.postsforcomments.post.courses_id
+
+    @hybrid_property
+    def users_id(self):
+        return self.postsforcomments.post.user.id
+
+    @hybrid_property
+    def content(self):
+        return self.postsforcomments.post.content
 
 
 class FilesForPosts(db.Model):
@@ -883,7 +975,6 @@ class Criteria(db.Model):
 
 class Scores(db.Model):
     __tablename__ = 'Scores'
-    __table_args__ = default_table_args
 
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     criteriaandquestions_id = db.Column(
@@ -910,15 +1001,14 @@ class Scores(db.Model):
             select([cls.score/func.max(s_alias.c.score)*100]).
             where(s_alias.c.criteriaandquestions_id == cls.criteriaandquestions_id)
         )
-    # @hybrid_property
-    # def normalized_score(self):
-    #     if self.question_criterion.max_score > 0:
-    #         # round to whole number
-    #         return round(self.score / self.question_criterion.max_score * 100, 0)
-    #     else:
-    #         return 0
+
+    __table_args__ = (
+        db.UniqueConstraint('answers_id', 'criteriaandquestions_id', name='_unique_user_and_course'),
+        default_table_args
+    )
 
 
+# TODO: this model could be merged into Judgements (one to one relationship)
 class PostsForJudgements(db.Model):
     __tablename__ = 'PostsForJudgements'
     __table_args__ = default_table_args
@@ -933,8 +1023,17 @@ class PostsForJudgements(db.Model):
         db.Integer,
         db.ForeignKey('Judgements.id', ondelete="CASCADE"),
         nullable=False)
-    judgement = db.relationship("Judgements")
+    # judgement = db.relationship("Judgements")
     selfeval = db.Column(db.Boolean(name='selfeval'), default=False, nullable=False)
+
+    course_id = association_proxy('postsforcomments', 'course_id')
+    content = association_proxy('postsforcomments', 'content')
+    files = association_proxy('postsforcomments', 'files')
+    created = association_proxy('postsforcomments', 'created')
+    user_id = association_proxy('postsforcomments', 'user_id')
+    user_avatar = association_proxy('postsforcomments', 'user_avatar')
+    user_displayname = association_proxy('postsforcomments', 'user_displayname')
+    user_fullname = association_proxy('postsforcomments', 'user_fullname')
 
     @hybrid_property
     def courses_id(self):
@@ -954,10 +1053,11 @@ class PostsForQuestions(db.Model):
     title = db.Column(db.String(255))
     _answers = db.relationship("PostsForAnswers", cascade="delete")
     comments = db.relationship("PostsForQuestionsAndPostsForComments", cascade="delete", lazy="dynamic")
-    _criteria = db.relationship(
+    criteria = db.relationship(
         "CriteriaAndPostsForQuestions", cascade="delete",
         primaryjoin="and_(PostsForQuestions.id==CriteriaAndPostsForQuestions.questions_id, "
-                    "CriteriaAndPostsForQuestions.active)")
+                    "CriteriaAndPostsForQuestions.active)",
+        order_by="CriteriaAndPostsForQuestions.id")
     answerpairing = db.relationship("AnswerPairings", cascade="delete", backref="question")
     answer_start = db.Column(db.DateTime(timezone=True))
     answer_end = db.Column(db.DateTime(timezone=True))
@@ -975,25 +1075,29 @@ class PostsForQuestions(db.Model):
     answers_count = column_property(
         select([func.count(PostsForAnswers.id)]).
         where(PostsForAnswers.questions_id == id),
-        deferred=True
+        deferred=True,
+        group="counts"
     )
 
     comments_count = column_property(
         select([func.count(PostsForQuestionsAndPostsForComments.id)]).
         where(PostsForQuestionsAndPostsForComments.questions_id == id),
-        deferred=True
+        deferred=True,
+        group="counts"
     )
 
     criteria_count = column_property(
         select([func.count(CriteriaAndPostsForQuestions.id)]).
         where(and_(CriteriaAndPostsForQuestions.questions_id == id, CriteriaAndPostsForQuestions.active)),
-        deferred=True
+        deferred=True,
+        group="counts"
     )
 
     judged = column_property(
         select([func.count(AnswerPairings.id) > 0]).
         where(AnswerPairings.questions_id == id),
-        deferred=True
+        deferred=True,
+        group="counts"
     )
 
     judgement_count = column_property(
@@ -1001,7 +1105,8 @@ class PostsForQuestions(db.Model):
         where(and_(
             Judgements.criteriaandquestions_id == CriteriaAndPostsForQuestions.id,
             CriteriaAndPostsForQuestions.questions_id == id)),
-        deferred=True
+        deferred=True,
+        group="counts"
     )
 
     _selfeval_count = column_property(
@@ -1010,7 +1115,8 @@ class PostsForQuestions(db.Model):
             PostsForAnswersAndPostsForComments.selfeval,
             PostsForAnswersAndPostsForComments.answers_id == PostsForAnswers.id,
             PostsForAnswers.questions_id == id)),
-        deferred=True
+        deferred=True,
+        group="counts"
     )
 
     @hybrid_property
@@ -1020,10 +1126,6 @@ class PostsForQuestions(db.Model):
     @hybrid_property
     def answers(self):
         return sorted(self._answers, key=lambda answer: answer.post.created, reverse=True)
-
-    @hybrid_property
-    def criteria(self):
-        return sorted(self._criteria, key=lambda criterion: criterion.id)
 
     @hybrid_property
     def available(self):
@@ -1078,6 +1180,12 @@ class PostsForQuestions(db.Model):
         evaluation_count = self.judgement_count / self.criteria_count if self.criteria_count else 0
         return evaluation_count + self._selfeval_count
 
+    def __repr__(self):
+        if self.id:
+            return "Question " + str(self.id)
+        else:
+            return "Question"
+
 
 # each course can have different criteria
 class CriteriaAndCourses(db.Model):
@@ -1089,7 +1197,7 @@ class CriteriaAndCourses(db.Model):
         db.Integer,
         db.ForeignKey('Criteria.id', ondelete="CASCADE"),
         nullable=False)
-    criterion = db.relationship("Criteria")
+    criterion = db.relationship("Criteria", backref=backref('course_assoc', uselist=False))
     courses_id = db.Column(
         db.Integer,
         db.ForeignKey('Courses.id', ondelete="CASCADE"),

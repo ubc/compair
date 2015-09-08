@@ -1,6 +1,12 @@
 // Provides the services and controllers for questions.
 //
 (function() {
+function combineDateTime(datetime) {
+	var date = new Date(datetime.date);
+	var time = new Date(datetime.time);
+	date.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
+	return date;
+}
 
 var module = angular.module('ubc.ctlt.acj.question',
 	[
@@ -72,7 +78,7 @@ module.directive(
 	function() {
 		return {
 			restrict: 'A',
-			link: function(scope, element, attrs) {
+			link: function(scope, element) {
 				$(element).hover(function(){
 					// on mouseenter
 					$(element).tooltip('show');
@@ -85,6 +91,67 @@ module.directive(
 	}
 );
 
+module.directive('comparisonPreview', function() {
+	return {
+		/* this template is our simple text with button to launch the preview */
+		templateUrl: 'modules/question/preview-inline-template.html',
+		controller: function ($scope, $modal) {
+			/* need to pass to comparison template all expected properties to complete the preview */
+			$scope.previewPopup = function() {
+				/* question has title that is entered, content that is entered, number of comparisons that is entered (or else 3), no files */
+				$scope.question = {
+					title: $scope.question.title,
+					post: {
+						content: $scope.question.post.content,
+						files: []
+					},
+					num_judgement_req: $scope.question.num_judgement_req ? $scope.question.num_judgement_req : 3
+				};
+				/* previewed criteria initially empty */
+				$scope.previewCriteria = [];
+				/* we need to determine what has been picked to fill out the previewed criteria */
+				var pickCriteria = function(chosen, all) {
+					/* first we will loop through the selected criteria */
+					angular.forEach(chosen, function(selected, criterionId) {
+						/* then we will loop through the course criteria to find what matches */
+						angular.forEach(all, function(courseCrit) {
+							if (criterionId == courseCrit.criterion.id && selected == true) {
+								// alert('match' + criterionId + ' ' + courseCrit.criterion.id);
+								/* matching criteria are added to the preview */
+								$scope.previewCriteria.push(courseCrit);
+							} else {
+								//alert('MISmatch ' + criterionId + ' ' + courseCrit.criterion.id);
+							}
+						});
+					});
+				};
+				/* call the function before setting the criteria, passing in selected criteria and all course criteria arrays */
+				pickCriteria($scope.selectedCriteria, $scope.courseCriteria);
+				/* then set question criteria as the ones we've determined should be previewed */
+				$scope.questionCriteria = $scope.previewCriteria;
+				/* set current round # and total round # for preview */
+				$scope.current = 1;
+				$scope.total = $scope.question.num_judgement_req;
+				/* answer pair shown is dummy content, no files */
+				$scope.answerPair = {
+					answer1: {
+						content: "<p>The first student answer in the pair will appear here.</p>",
+						files: []
+					},
+					answer2: {
+						content: "<p>The second student answer in the pair will appear here.</p>",
+						files: []
+					}
+				};
+				/* student view preview is comparison template */
+				$scope.thePreview = $modal.open({
+					templateUrl: 'modules/judgement/judgement-core.html',
+					scope: $scope
+				});
+			}
+		}
+	};
+});
 
 /***** Providers *****/
 module.factory(
@@ -152,7 +219,7 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 
 		uploader.filters.push({
 			name: 'pdfFilter',
-			fn: function(item, options) {
+			fn: function(item) {
 				var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
 				var valid = '|pdf|'.indexOf(type) !== -1;
 				if (!valid) {
@@ -175,41 +242,41 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 		});
 
 		return uploader;
-	}
+	};
 
 	var onComplete = function() {
-		return function(fileItem, response, status, headers) {
+		return function(fileItem, response) {
 			if (response) {
 				filename = response['name'];
 				alias = fileItem.file.name;	
 			}	
 		};
-	}
+	};
 
 	var onError = function() {
-		return function(fileItem, response, status, headers) {
+		return function(fileItem, response, status) {
 			if (response == '413') {
 				Toaster.error("File Size Error", "The file is larger than 25MB. Please upload a smaller file.");
 			} else {
 				Toaster.reqerror("Attachment Fail", status);
 			}
 		};
-	}
+	};
 
 	var resetName = function() {
 		return function() {
 			filename = '';
 			alias = '';
 		}
-	}
+	};
 
 	var getName = function() {
 		return filename;
-	}
+	};
 
 	var getAlias = function() {
 		return alias;
-	}	
+	};
 
 	return {
 		getUploader: getUploader,
@@ -225,7 +292,7 @@ module.filter("notScoredEnd", function () {
 		if (!angular.isArray(array)) return;
 		var scored = [];
 		var not_scored = [];
-		angular.forEach(array, function(item, index) {
+		angular.forEach(array, function(item) {
 			if (key in item.scores) {
 				scored.push(item);
 			} else {
@@ -247,7 +314,14 @@ module.controller("QuestionViewController",
 		var myAnsCount = 0; // for the event of deleting own answer
 		$scope.allStudents = {};
 		var userIds = {};
-		$scope.grade = {'sortby': '0', 'group': 0, 'author': 0};
+		$scope.totalNumAnswers = 0;
+		$scope.answerFilters = {
+			page: 1,
+			perPage: 20,
+			group: null,
+			author: null,
+			orderBy: null
+		};
 		Session.getUser().then(function(user) {
 			$scope.loggedInUserId = user.id;
 			JudgementResource.getAvailPairLogic({'courseId': $scope.courseId, 'questionId': questionId,
@@ -285,123 +359,103 @@ module.controller("QuestionViewController",
 			}
 		);
 		$scope.question = {};
-		QuestionResource.get({'courseId': $scope.courseId,
-			'questionId': questionId}).$promise.then(
-				function (ret)
-				{
-					var judgeEnd = ret.question.judge_end;
-					ret.question.judgeEnd = judgeEnd;
-					ret.question.answer_start = new Date(ret.question.answer_start);
-					ret.question.answer_end = new Date(ret.question.answer_end);
-					ret.question.judge_start = new Date(ret.question.judge_start);
-					ret.question.judge_end = new Date(ret.question.judge_end);
-					$scope.question = ret.question;
+		QuestionResource.get({'courseId': $scope.courseId, 'questionId': questionId},
+			function (ret) {
+				var judgeEnd = ret.question.judge_end;
+				ret.question.judgeEnd = judgeEnd;
+				ret.question.answer_start = new Date(ret.question.answer_start);
+				ret.question.answer_end = new Date(ret.question.answer_end);
+				ret.question.judge_start = new Date(ret.question.judge_start);
+				ret.question.judge_end = new Date(ret.question.judge_end);
+				$scope.question = ret.question;
 
-					$scope.criteria = ret.question.criteria;
-					$scope.criteriaChange();
-					$scope.reverse = true;
-					
-					$scope.evalcriteria = {};
-					angular.forEach(ret.question.criteria, function(criterion, key){
-						$scope.evalcriteria[criterion['id']] = criterion['criterion']['name'];
-					});
+				$scope.criteria = ret.question.criteria;
+				if ($scope.criteria.length > 1) {
+					$scope.answerFilters.orderBy = $scope.criteria[0].id;
+				}
+				$scope.reverse = true;
 
-					$scope.readDate = Date.parse(ret.question.post.created);
+				$scope.evalcriteria = {};
+				angular.forEach(ret.question.criteria, function(criterion){
+					$scope.evalcriteria[criterion['id']] = criterion['criterion']['name'];
+				});
 
-					if (judgeEnd) {
-						$scope.answerAvail = $scope.question.judge_end;
-					} else {
-						$scope.answerAvail = $scope.question.answer_end;
-					}
+				$scope.readDate = Date.parse(ret.question.post.created);
 
-					JudgementResource.count({'courseId': $scope.courseId, 'questionId': questionId,
-								'userId': $scope.loggedInUserId}).$promise.then(
-						function (ret) {
-							$scope.judged_req_met = ret.count >= $scope.question.num_judgement_req;
-							$scope.evaluation = 0;
-							if (!$scope.judged_req_met) {
-								$scope.evaluation = $scope.question.num_judgement_req - ret.count;
-							}
-							// if evaluation period is set answers can be seen after it ends
-							if (judgeEnd) {
-								$scope.see_answers = $scope.question.after_judging;
+				if (judgeEnd) {
+					$scope.answerAvail = $scope.question.judge_end;
+				} else {
+					$scope.answerAvail = $scope.question.answer_end;
+				}
+
+				JudgementResource.count({'courseId': $scope.courseId, 'questionId': questionId,
+					'userId': $scope.loggedInUserId},
+					function (ret) {
+						$scope.judged_req_met = ret.count >= $scope.question.num_judgement_req;
+						$scope.evaluation = 0;
+						if (!$scope.judged_req_met) {
+							$scope.evaluation = $scope.question.num_judgement_req - ret.count;
+						}
+						// if evaluation period is set answers can be seen after it ends
+						if (judgeEnd) {
+							$scope.see_answers = $scope.question.after_judging;
 							// if an evaluation period is NOT set - answers can be seen after req met
-							} else {
-								$scope.see_answers = $scope.question.after_judging && $scope.judged_req_met;
-							}
-							var diff = $scope.question.answers_count - myAnsCount;
-							var eval_left = ((diff * (diff - 1)) / 2);
-							$scope.warning = ($scope.question.num_judgement_req - ret.count) > eval_left;
-						},
-						function (ret) {
-							Toaster.reqerror("Evaluation Count Not Found", ret);
+						} else {
+							$scope.see_answers = $scope.question.after_judging && $scope.judged_req_met;
 						}
-					);
-					AnswerCommentResource.selfEval({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
-						function (ret) {
-							$scope.selfEval_req_met = true;
-							$scope.selfEval = 0;
-							if ($scope.question.selfevaltype_id) {
-								$scope.selfEval_req_met = ret.count > 0;
-								$scope.selfEval = 1 - ret.count;
-							}
-						},
-						function (ret) {
-							Toaster.reqerror("Self-Evaluation Records Not Found.", ret);
+						var diff = $scope.question.answers_count - myAnsCount;
+						var eval_left = ((diff * (diff - 1)) / 2);
+						$scope.warning = ($scope.question.num_judgement_req - ret.count) > eval_left;
+					},
+					function (ret) {
+						Toaster.reqerror("Evaluation Count Not Found", ret);
+					}
+				);
+				AnswerCommentResource.selfEval({'courseId': $scope.courseId, 'questionId': questionId},
+					function (ret) {
+						$scope.selfEval_req_met = true;
+						$scope.selfEval = 0;
+						if ($scope.question.selfevaltype_id) {
+							$scope.selfEval_req_met = ret.count > 0;
+							$scope.selfEval = 1 - ret.count;
 						}
-					);
-				},
-				function (ret)
-				{
-					Toaster.reqerror("Question Not Found For ID " + questionId, ret);
-				}
-			);
-		AnswerResource.get({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
-			function (ret) {
-				$scope.answers = ret.objects;
+					},
+					function (ret) {
+						Toaster.reqerror("Self-Evaluation Records Not Found.", ret);
+					}
+				);
+
+				// update the answer list
+				$scope.updateAnswerList();
+				// register watcher here so that we start watching when all filter values are set
+				$scope.$watchCollection('answerFilters', filterWatcher);
 			},
-			function (ret) {
-				Toaster.reqerror("Answers for this questions not found.", ret);
+			function (ret)
+			{
+				Toaster.reqerror("Question Not Found For ID " + questionId, ret);
 			}
 		);
-		QuestionCommentResource.get({'courseId': $scope.courseId,
-			'questionId': questionId}).$promise.then(
-				function (ret)
-				{
-					$scope.comments = ret.objects;
-				},
-				function (ret)
-				{
-					Toaster.reqerror("Comments Not Found", ret);
-				}
-		);
-		QuestionResource.getAnswered({'id': $scope.courseId,
-			'questionId': questionId}).$promise.then(
-				function (ret) {
-					myAnsCount = ret.answered;
-					$scope.answered = ret.answered > 0;
-				},
-				function (ret) {
-					Toaster.reqerror("Answers Not Found", ret);
-				}
-		);
-		EvalCommentResource.view({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
-			function (ret) {
-				$scope.comparisons = ret.comparisons;
-			},
-			function (ret) {
-				Toaster.reqerorr('Error', ret);
+
+
+		$scope.comments = QuestionCommentResource.get({'courseId': $scope.courseId, 'questionId': questionId},
+			function (ret) {},
+			function (ret)
+			{
+				Toaster.reqerror("Comments Not Found", ret);
 			}
 		);
-		AnswerResource.view({'courseId': $scope.courseId, 'questionId': questionId}).$promise.then(
+
+		QuestionResource.getAnswered({'id': $scope.courseId, 'questionId': questionId},
 			function (ret) {
-				$scope.ans = ret.answers;
+				myAnsCount = ret.answered;
+				$scope.answered = ret.answered > 0;
 			},
 			function (ret) {
-				Toaster.reqerror("Failed to retrieve the answers", ret);
+				Toaster.reqerror("Answers Not Found", ret);
 			}
 		);
-		CourseResource.getInstructorsLabels({'id': $scope.courseId}).$promise.then(
+
+		CourseResource.getInstructorsLabels({'id': $scope.courseId},
 			function (ret) {
 				$scope.instructors = ret.instructors;
 			},
@@ -412,52 +466,20 @@ module.controller("QuestionViewController",
 
 		$scope.getUserIds = function(students) {
 			var users = {};
-			angular.forEach(students, function(s, key){
+			angular.forEach(students, function(s){
 				users[s.user.id] = 1;
 			});
 			return users;
 		};
 
-		$scope.groupChange = function() {
-			$scope.grade.author = null;
-			if ($scope.grade.group == null) {
-				userIds = $scope.getUserIds($scope.allStudents);
-				$scope.students = $scope.allStudents;
-			} else {
-				GroupResource.get({'courseId': $scope.courseId, 'groupId': $scope.grade.group.id}).$promise.then(
-					function (ret) {
-						$scope.students = ret.students;
-						userIds = $scope.getUserIds(ret.students);
-					},
-					function (ret) {
-						Toaster.reqerror("Unable to retrieve the group members", ret);
-					}
-				);
-			}
-		};
-
-		$scope.userChange = function() {
-			userIds = {};
-			if ($scope.grade.author == null) {
-				userIds = $scope.getUserIds($scope.students);
-			} else {
-				userIds[$scope.grade.author.user.id] = 1;
-			}
-		};
-
 		$scope.adminFilter = function() {
 			return function (answer) {
 				// assume if any filter is applied - instructor/TAs answer will not meet requirement
-				return !$scope.grade.author && !$scope.grade.group
+				return !$scope.answerFilters.author && !$scope.answerFilters.group
 			}
 		};
 
-		$scope.groupFilter = function() {
-			return function (answer) {
-				return answer.user_id in userIds;
-			}
-		};
-
+		//TODO: this filter should be implemented in backend
 		$scope.commentFilter = function(answer) {
 			return function (comment) {
 				// can see if canManagePosts OR their own answer OR not from evaluation and selfeval
@@ -476,6 +498,16 @@ module.controller("QuestionViewController",
 		// tabs: answers, help, participation, comparisons
 		$scope.setTab = function(name) {
 			tab = name;
+			if (name == "comparisons") {
+				EvalCommentResource.view({'courseId': $scope.courseId, 'questionId': questionId},
+					function (ret) {
+						$scope.comparisons = ret.comparisons;
+					},
+					function (ret) {
+						Toaster.reqerror('Error', ret);
+					}
+				)
+			}
 		};
 		$scope.showTab = function(name) {
 			return tab == name;
@@ -488,18 +520,9 @@ module.controller("QuestionViewController",
 			this.showReadMore = false;                 // and hide the read more button for this answer
 		};
 		
-		$scope.criteriaChange = function() {
-			if ($scope.grade.sortby == null) {
-				$scope.order = 'answer.created';
-			} else {
-				$scope.order = 'scores['+$scope.grade.sortby+'].normalized_score';
-			}
-		};
-		
-		
 		// question delete function
 		$scope.deleteQuestion = function(course_id, question_id) {
-			QuestionResource.delete({'courseId': course_id, 'questionId': question_id}).$promise.then(
+			QuestionResource.delete({'courseId': course_id, 'questionId': question_id},
 				function (ret) {
 					Toaster.success("Question Delete Successful", "Successfully deleted question " + ret.id);
 					$location.path('/course/'+course_id);
@@ -512,11 +535,11 @@ module.controller("QuestionViewController",
 		};
 
 		$scope.deleteAnswer = function(answer, course_id, question_id, answer_id) {
-			AnswerResource.delete({'courseId':course_id, 'questionId':question_id, 'answerId':answer_id}).$promise.then(
+			AnswerResource.delete({'courseId':course_id, 'questionId':question_id, 'answerId':answer_id},
 				function (ret) {
 					Toaster.success("Answer Delete Successful", "Successfully deleted answer "+ ret.id);
 					var authorId = answer['user_id'];
-					$scope.answers.splice($scope.answers.indexOf(answer), 1);
+					$scope.answers.objects.splice($scope.answers.objects.indexOf(answer), 1);
 					$scope.question.answers_count -= 1;
 					if ($scope.loggedInUserId == authorId) {
 						myAnsCount--;
@@ -544,11 +567,17 @@ module.controller("QuestionViewController",
 			);
 		};
 
+		$scope.loadComments = function(answer) {
+			AnswerCommentResource.get({courseId: $scope.courseId, questionId: questionId, answerId: answer.id}, function(response) {
+				answer.comments = response['objects'];
+			})
+		};
+
 		$scope.deleteComment = function(key, course_id, question_id, comment_id) {
-			QuestionCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'commentId': comment_id}).$promise.then(
+			QuestionCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'commentId': comment_id},
 				function (ret) {
 					Toaster.success("Comment Delete Successful", "Successfully deleted comment " + ret.id);
-					$scope.comments.splice(key, 1);
+					$scope.comments.objects.splice(key, 1);
 					$scope.question.comments_count--;
 				},
 				function (ret) {
@@ -558,7 +587,7 @@ module.controller("QuestionViewController",
 		};
 
 		$scope.deleteReply = function(answer, commentKey, course_id, question_id, answer_id, comment_id) {
-			AnswerCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'answerId': answer_id, 'commentId': comment_id}).$promise.then(
+			AnswerCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'answerId': answer_id, 'commentId': comment_id},
 				function (ret) {
 					Toaster.success("Reply Delete Successful", "Successfully deleted reply " + ret.id);
 					var comment = answer['comments'].splice(commentKey, 1);
@@ -572,7 +601,52 @@ module.controller("QuestionViewController",
 					Toaster.reqerror("Reply Delete Failed", ret);
 				}
 			);
-		}
+		};
+
+		$scope.updateAnswerList = function() {
+			var params = angular.merge({'courseId': $scope.courseId, 'questionId': questionId}, $scope.answerFilters);
+			if (params.group != null) {
+				params.group = params.group.id;
+			}
+			if (params.author != null) {
+				params.author = params.author.user.id;
+			}
+			$scope.answers = AnswerResource.get(params, function(response) {
+				$scope.totalNumAnswers = response.total;
+			});
+		};
+
+		var filterWatcher = function(newValue, oldValue) {
+			if (angular.equals(newValue, oldValue)) return;
+			if (oldValue.group != newValue.group) {
+				$scope.answerFilters.author = null;
+				if ($scope.answerFilters.group == null) {
+					userIds = $scope.getUserIds($scope.allStudents);
+					$scope.students = $scope.allStudents;
+				} else {
+					GroupResource.get({'courseId': $scope.courseId, 'groupId': $scope.answerFilters.group.id},
+						function (ret) {
+							$scope.students = ret.students;
+							userIds = $scope.getUserIds(ret.students);
+						},
+						function (ret) {
+							Toaster.reqerror("Unable to retrieve the group members", ret);
+						}
+					);
+				}
+				$scope.answerFilters.page = 1;
+			}
+			if (oldValue.author != newValue.author) {
+				userIds = {};
+				if ($scope.answerFilters.author == null) {
+					userIds = $scope.getUserIds($scope.students);
+				} else {
+					userIds[$scope.answerFilters.author.user.id] = 1;
+				}
+				$scope.answerFilters.page = 1;
+			}
+			$scope.updateAnswerList();
+		};
 	}
 );
 module.controller("QuestionCreateController",
@@ -606,10 +680,6 @@ module.controller("QuestionCreateController",
 		$scope.date.aend.date.setDate(today.getDate()+8);
 		$scope.date.jstart.date.setDate(today.getDate()+8);
 		$scope.date.jend.date.setDate(today.getDate()+15);
-		$scope.date.astart.date = $scope.date.astart.date.toISOString();
-		$scope.date.aend.date = $scope.date.aend.date.toISOString();
-		$scope.date.jstart.date = $scope.date.jstart.date.toISOString();
-		$scope.date.jend.date = $scope.date.jend.date.toISOString();
 
 		$scope.date.astart.open = function($event) {
 			$event.preventDefault();
@@ -634,13 +704,6 @@ module.controller("QuestionCreateController",
 			$event.stopPropagation();
 
 			$scope.date.jend.opened = true;
-		};
-
-		var combineDateTime = function(datetime) {
-			date = new Date(datetime.date);
-			time = new Date(datetime.time);
-			date.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
-			return date;
 		};
 
 		$scope.questionSubmit = function () {
@@ -689,12 +752,12 @@ module.controller("QuestionCreateController",
 		};
 
 		// Criteria
-		CoursesCriteriaResource.get({'courseId': courseId}).$promise.then(
+		CoursesCriteriaResource.get({'courseId': courseId},
 			function (ret) {
 				$scope.courseCriteria = ret.objects;
 			},
 			function (ret) {
-				Toaster.reqerror("Criteria Not Found.");
+				Toaster.reqerror("Criteria Not Found.", ret);
 			}
 		);
 
@@ -711,15 +774,16 @@ module.controller("QuestionCreateController",
 
 		var addMultipleCriteria = function(courseId, questionId, criteria) {
 			angular.forEach(criteria, function(selected, criterionId){
-				// add to question
-				QuestionsCriteriaResource.save({'courseId': courseId, 'questionId': questionId,
-						'criteriaId': criterionId}, {}).$promise.then(
-						function (ret) {},
-						function (ret) {
-							// error therefore uncheck the box
-							Toaster.reqerror("Failed to add the criterion " + criterionId + " to the question.", ret);
-						}
-				);
+				if (selected == true) {
+					QuestionsCriteriaResource.save({'courseId': courseId, 'questionId': questionId,
+							'criteriaId': criterionId}, {}).$promise.then(
+							function (ret) {},
+							function (ret) {
+								// error therefore uncheck the box
+								Toaster.reqerror("Failed to add the criterion " + criterionId + " to the question.", ret);
+							}
+					);
+				}
 			});
 		};
 
@@ -730,7 +794,7 @@ module.controller("QuestionCreateController",
 				$scope.question.selfevaltype_id = $scope.selfevaltypes[0].id;
 			},
 			function (ret) {
-				Toaster.reqerror("Self Evaluation Types Not Found.");
+				Toaster.reqerror("Self Evaluation Types Not Found.", ret);
 			}
 		);
 	}
@@ -780,8 +844,8 @@ module.controller("QuestionEditController",
 
 		$scope.deleteFile = function(post_id, file_id) {
 			AttachmentResource.delete({'postId': post_id, 'fileId': file_id}).$promise.then(
-				function (ret) {
-					Toaster.success('Attachment Delete Successful', "This attachement was successfully deleted.");
+				function () {
+					Toaster.success('Attachment Delete Successful', "This attachment was successfully deleted.");
 					$scope.question.uploadedFile = false;
 				},
 				function (ret) {
@@ -795,7 +859,7 @@ module.controller("QuestionEditController",
 				// add to question
 				QuestionsCriteriaResource.save({'courseId': courseId, 'questionId': $scope.questionId,
 						'criteriaId': criteriaId}, {}).$promise.then(
-						function (ret) {
+						function () {
 							Toaster.success("Successfully added the criterion to the question.");
 						},
 						function (ret) {
@@ -808,7 +872,7 @@ module.controller("QuestionEditController",
 				// remove from question
 				QuestionsCriteriaResource.delete({'courseId': courseId, 'questionId': $scope.questionId,
 						'criteriaId': criteriaId}).$promise.then(
-						function (ret) {
+						function () {
 							Toaster.success("Successfully removed the criterion from the question.");
 						},
 						function (ret) {
@@ -829,27 +893,27 @@ module.controller("QuestionEditController",
 			}
 		};
 
-		SelfEvaluationTypeResource.get().$promise.then(
+		SelfEvaluationTypeResource.get(
 			function (ret) {
 				$scope.selfevaltypes = ret.types;
 			},
 			function (ret) {
-				Toaster.reqerror("Self Evaluation Types Not Found.");
+				Toaster.reqerror("Self Evaluation Types Not Found.", ret);
 			}
 		);
 
 		QuestionResource.get({'courseId': courseId, 'questionId': $scope.questionId}).$promise.then(
 			function (ret) {
-				$scope.date.astart.date = new Date(ret.question.answer_start).toISOString();
+				$scope.date.astart.date = new Date(ret.question.answer_start);
 				$scope.date.astart.time = new Date(ret.question.answer_start);
-				$scope.date.aend.date = new Date(ret.question.answer_end).toISOString();
+				$scope.date.aend.date = new Date(ret.question.answer_end);
 				$scope.date.aend.time = new Date(ret.question.answer_end);
 
 				if (ret.question.judge_start && ret.question.judge_end) {
 					ret.question.availableCheck = true;
-					$scope.date.jstart.date = new Date(ret.question.judge_start).toISOString();
+					$scope.date.jstart.date = new Date(ret.question.judge_start);
 					$scope.date.jstart.time = new Date(ret.question.judge_start);
-					$scope.date.jend.date = new Date(ret.question.judge_end).toISOString();
+					$scope.date.jend.date = new Date(ret.question.judge_end);
 					$scope.date.jend.time = new Date(ret.question.judge_end)
 				} else {
 					$scope.date.jstart.date = new Date($scope.date.aend.date);
@@ -857,8 +921,8 @@ module.controller("QuestionEditController",
 					$scope.date.jend.date = new Date();
 					$scope.date.jend.date.setDate($scope.date.jstart.date.getDate()+7);
 					$scope.date.jend.time = new Date($scope.date.aend.time);
-					$scope.date.jstart.date = $scope.date.jstart.date.toISOString();
-					$scope.date.jend.date = $scope.date.jend.date.toISOString();
+					$scope.date.jstart.date = $scope.date.jstart.date;
+					$scope.date.jend.date = $scope.date.jend.date;
 				}
 				$scope.question = ret.question;
 				$scope.judged = ret.question.judged;
@@ -888,11 +952,11 @@ module.controller("QuestionEditController",
 						$scope.courseCriteria = ret.objects;
 						$scope.oneSelected = $scope.question.criteria.length > 0;
 						var inQuestion = {};
-						angular.forEach($scope.question.criteria, function(c, key) {
+						angular.forEach($scope.question.criteria, function(c) {
 							inQuestion[c.criterion.id] = 1;
 						});
-						for (key in ret.objects) {
-							c = ret.objects[key];
+						for (var key in ret.objects) {
+							var c = ret.objects[key];
 							$scope.selectedCriteria[c.criterion.id] = c.criterion.id in inQuestion
 						}
 					},
@@ -901,17 +965,10 @@ module.controller("QuestionEditController",
 					}
 				);
 			},
-			function (ret) {
+			function () {
 				Toaster.reqerror("Question Not Found", "No question found for id "+$scope.questionId);
 			}
 		);
-
-		var combineDateTime = function(datetime) {
-			date = new Date(datetime.date);
-			time = new Date(datetime.time);
-			date.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
-			return date;
-		};
 
 		$scope.questionSubmit = function () {
 			$scope.submitted = true;

@@ -1,12 +1,10 @@
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
 import cProfile
 import contextlib
 from functools import wraps
 import pstats
+from flask.ext.restful.reqparse import RequestParser
 
+from six import StringIO
 from flask import request, jsonify
 from flask.ext.restful import Api
 from flask.ext.sqlalchemy import Model
@@ -81,7 +79,7 @@ def new_restful_api(blueprint):
 
 
 def get_model_changes(model):
-    # disble db session autoflush, otherwise changes will be flushed and lost
+    # disable db session autoflush, otherwise changes will be flushed and lost
     with db.session.no_autoflush:
         changes = dict()
         insp = inspect(model)
@@ -107,6 +105,13 @@ def get_model_changes(model):
                     changes[attr.key] = {'before': history.deleted[0], 'after': history.added[0]}
 
     return changes
+
+pagination_parser = RequestParser()
+pagination_parser.add_argument('page', type=int, required=False, default=1)
+pagination_parser.add_argument('perPage', type=int, required=False, default=20)
+
+# the empty list used when return result is empty
+empty_list = {"objects": {},  "page": 1, "pages": 0, "total": 0, "per_page": 20}
 
 
 @contextlib.contextmanager

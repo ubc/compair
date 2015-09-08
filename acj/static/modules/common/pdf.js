@@ -1,7 +1,7 @@
 // Directives for viewing PDF directly on a page, requires viewerjs:
 // http://viewerjs.org/
 (function() {
-var module = angular.module('ubc.ctlt.acj.common.pdf', [])
+var module = angular.module('ubc.ctlt.acj.common.pdf', ['ui.bootstrap'])
 	.run(function ($http, $templateCache){
 		// load the template into cache - but this breaks the overlay, as the file will not load, so commenting it out
 		// $http.get('modules/common/pdf-overlaid-template.html', {cache:$templateCache});
@@ -22,14 +22,6 @@ module.directive('acjPdfInline', function() {
 		},
 		controller: function ($scope, $log, $sce, $modal) {
 			$scope.pdfname = "";
-			$scope.pdfFile = $modal(
-				{
-					contentTemplate: 'modules/common/pdf-overlaid-template.html',
-					scope: $scope,
-					show: false
-				}
-			);
-
 			$scope.updatePDF = function (name) {
 				if (name != $scope.pdfname) {
 					$scope.pdfvisible = true;
@@ -45,7 +37,10 @@ module.directive('acjPdfInline', function() {
 			$scope.openPDF = function (name) {
 				$scope.file = 'pdf/' + name;
 				$scope.title = 'Attached PDF: Use + and - to zoom';
-				$scope.pdfFile.$promise.then($scope.pdfFile.show);
+				$modal.open({
+					templateUrl: 'modules/common/pdf-overlaid-template.html',
+					scope: $scope
+				});
 			}
 		}
 	};

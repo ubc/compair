@@ -1,4 +1,4 @@
-from operator import itemgetter
+from operator import attrgetter
 from itertools import groupby
 
 from flask import Blueprint
@@ -7,21 +7,31 @@ from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from bouncer.constants import READ, EDIT, CREATE, MANAGE
 from sqlalchemy.orm import load_only, joinedload, contains_eager
+from sqlalchemy.sql.expression import and_, or_
 
 from . import dataformat
 from .core import db, event
 from .models import Judgements, PostsForComments, PostsForJudgements, Courses, PostsForQuestions, Posts, \
     AnswerPairings, CoursesAndUsers, CriteriaAndPostsForQuestions, Users, \
-    PostsForAnswersAndPostsForComments, PostsForAnswers
-from .util import new_restful_api
+    PostsForAnswersAndPostsForComments
+from .util import new_restful_api, pagination_parser
 from .authorization import allow, require
 
 evalcomments_api = Blueprint('evalcomments_api', __name__)
 api = new_restful_api(evalcomments_api)
 
+
+def judgement_type(value):
+    return dict(value)
+
+
 new_comment_parser = RequestParser()
-new_comment_parser.add_argument('judgements', type=list, required=True)
+new_comment_parser.add_argument('judgements', type=judgement_type, required=True, action='append')
 new_comment_parser.add_argument('selfeval', type=bool, required=False, default=False)
+
+comment_list_parser = pagination_parser.copy()
+comment_list_parser.add_argument('group', type=int, required=False, default=None)
+comment_list_parser.add_argument('author', type=int, required=False, default=None)
 
 # events
 on_evalcomment_create = event.signal('EVALCOMMENT_CREATE')
@@ -103,95 +113,104 @@ class EvalCommentViewAPI(Resource):
         comment = PostsForComments(post=Posts(courses_id=course_id))
         can_manage = allow(MANAGE, PostsForJudgements(postsforcomments=comment))
 
-        if can_manage:
-            evalcomments = PostsForJudgements.query. \
-                options(contains_eager('postsforcomments').contains_eager('post').subqueryload('user')). \
-                options(contains_eager('postsforcomments').contains_eager('post').subqueryload('files')). \
-                options(contains_eager('judgement').contains_eager('answerpairing')). \
-                join(Judgements, AnswerPairings).filter_by(questions_id=question_id). \
-                join(PostsForComments, Posts, Users).order_by(Users.firstname, Users.lastname, Users.id).all()
+        params = comment_list_parser.parse_args()
 
+        # find out the user_id and pairing_id combination on current page
+        # aggregate on those id pairs so that we have accurate per page judgement number
+        pair_query = Judgements.query. \
+            with_entities(Judgements.users_id, Judgements.answerpairings_id). \
+            join(AnswerPairings).filter_by(questions_id=question_id). \
+            group_by(Judgements.users_id, Judgements.answerpairings_id)
+
+        # this if block also acts as access control because a non-privileged user will be caught in the first if.
+        if not can_manage:
+            pair_query = pair_query.filter(Judgements.users_id == current_user.id)
+        elif params['author']:
+            pair_query = pair_query.filter(Judgements.users_id == params['author'])
+        elif params['group']:
+            subquery = Users.query.with_entities(Users.id).join(Users.groups).filter_by(
+                groups_id=params['group']).subquery()
+            pair_query = pair_query.filter(Judgements.users_id.in_(subquery))
+
+        page = pair_query.paginate(params['page'], params['perPage'])
+
+        judgements = []
+
+        if page.total:
+            # build condition based on ids
+            conditions = []
+            for user_id, pairing_id in page.items:
+                conditions.append(and_(Judgements.users_id == user_id, Judgements.answerpairings_id == pairing_id))
+
+            # retrieve judgements for each criterion, if there is multiple criteria,
+            # len(criteria_judgements) > params['perPage'], we will consolidate them into judgement list with feedback
+            criteria_judgements = Judgements.query. \
+                options(joinedload('comment').joinedload('postsforcomments').joinedload('post').joinedload('files')). \
+                options(joinedload('user')). \
+                options(joinedload('answerpairing')). \
+                filter(or_(*conditions)). \
+                order_by(Judgements.users_id, Judgements.answerpairings_id). \
+                all()
+
+            # compile the conditions for feedback
+            feedback_conditions = []
+            for criteria_judgement in criteria_judgements:
+                feedback_conditions.append(
+                    and_(Posts.users_id == criteria_judgement.users_id,
+                         or_(PostsForAnswersAndPostsForComments.answers_id == criteria_judgement.answerpairing.answers_id1,
+                             PostsForAnswersAndPostsForComments.answers_id == criteria_judgement.answerpairing.answers_id2,
+                             )
+                         )
+                )
+            # retrieve feedback for answers, it will be one feedback for an answer per user
             feedback = PostsForAnswersAndPostsForComments.query. \
-                join(PostsForAnswers). \
-                options(joinedload('postsforcomments').joinedload('post').joinedload('user')). \
-                filter_by(questions_id=question_id) \
-                .order_by(PostsForAnswersAndPostsForComments.evaluation).all()
-        else:
-            evalcomments = PostsForJudgements.query. \
-                options(contains_eager('postsforcomments').contains_eager('post').subqueryload('user')). \
-                options(contains_eager('postsforcomments').contains_eager('post').subqueryload('files')). \
-                options(contains_eager('judgement').contains_eager('answerpairing')). \
-                join(Judgements, AnswerPairings).filter_by(questions_id=question_id). \
-                join(PostsForComments, Posts).filter_by(users_id=current_user.id).all()
+                options(contains_eager('postsforcomments').contains_eager('post')). \
+                join(PostsForComments). \
+                join(PostsForComments.post). \
+                filter(or_(*feedback_conditions)). \
+                all()
 
-            feedback = PostsForAnswersAndPostsForComments.query. \
-                options(joinedload('postsforcomments').joinedload('post').joinedload('user')). \
-                join(PostsForAnswers).filter_by(questions_id=question_id). \
-                join(PostsForComments, Posts).filter_by(users_id=current_user.id). \
-                order_by(PostsForAnswersAndPostsForComments.evaluation).all()
+            # now let's build judgements list, which has the following structure
+            # judgements = [
+            #   criteria_judgements = [
+            #       judgement1 (for criterion 1),
+            #       judgement2 (for criterion 2),
+            #       judgement3 (for criterion 3),
+            #   ],
+            #   user_id,
+            #   name,
+            #   avatar,
+            #   answer1 = {id: id, feedback: feedback}
+            #   answer2 = {id: id, feedback: feedback}
+            #   created,
+            #   selfeval = [
+            #       selfeval1,
+            #       selfeval2,
+            #   ],
+            # ]
+            def get_feedback(u_id, answer_id, feedback_list):
+                return next(
+                    iter([l.postsforcomments.content for l in feedback_list if
+                          l.users_id == u_id and l.answers_id == answer_id]),
+                    None)
 
-        replies = {}
-        selfeval = [f for f in feedback if f.selfeval]
-        for f in feedback:
-            replies.setdefault(f.users_id, {}).setdefault(f.answers_id, f.content)
-
-        results = []
-        deleted = '<i>(This feedback has been deleted)</i>'
-        for comment in evalcomments:
-            com = comment.postsforcomments.post
-            judge = comment.judgement
-            user_id = com.users_id
-            fullname = com.user.fullname
-            if user_id in replies and judge.answerpairing.answers_id1 in replies[user_id]:
-                feedback1 = replies[user_id][judge.answerpairing.answers_id1]
-            else:
-                feedback1 = deleted
-            if user_id in replies and judge.answerpairing.answers_id2 in replies[user_id]:
-                feedback2 = replies[user_id][judge.answerpairing.answers_id2]
-            else:
-                feedback2 = deleted
-            temp_comment = {
-                'answer1': {'id': judge.answerpairing.answers_id1, 'feedback': feedback1},
-                'answer2': {'id': judge.answerpairing.answers_id2, 'feedback': feedback2},
-                'user_id': user_id,
-                'selfeval': False,
-                'name': fullname if fullname else com.user.displayname,
-                'avatar': com.user.avatar,
-                'criteriaandquestions_id': judge.criteriaandquestions_id,
-                'answerpairings_id': judge.answerpairings_id,
-                'content': com.content,
-                'created': com.created,
-                'winner': judge.answers_id_winner
-            }
-            results.append(temp_comment)
-
-        for s in selfeval:
-            fullname = s.postsforcomments.post.user.fullname
-            name = fullname if fullname else comment.postsforcomments.post.user.displayname
-            comment = {
-                'user_id': s.users_id,
-                'name': name,
-                'avatar': s.postsforcomments.post.user.avatar,
-                'answerpairings_id': 0,
-                'criteriaandquestions_id': 0,
-                'content': s.content,
-                'selfeval': True,
-                'created': s.postsforcomments.post.created
-            }
-            results.append(comment)
-
-        # sort by criteria id to keep the evaluation results in a constant order
-        results.sort(key=itemgetter('criteriaandquestions_id'))
-        # sort by answerpairings_id in descending order first
-        # group by answerpairing and keep the selfevaluation as the last comment
-        results.sort(key=itemgetter('answerpairings_id'), reverse=True)
-        # then sort by name and user_id to group the comments by author
-        if can_manage:
-            results.sort(key=itemgetter('name', 'user_id'))
-
-        comparisons = []
-        for k, g in groupby(results, itemgetter('name', 'user_id', 'answerpairings_id')):
-            comparisons.append(list(g))
+            for (user_id, pairing_id), g in groupby(criteria_judgements, attrgetter('users_id', 'answerpairings_id')):
+                group = list(g)
+                j = group[0]
+                judgement = {
+                    'criteria_judgements': [convert_judgement(j) for j in group],
+                    'user_id': user_id,
+                    'name': j.user.fullname if j.user.fullname else j.user.displayname,
+                    'avatar': j.user.avatar,
+                    'answer1': {'id': j.answerpairing.answers_id1,
+                                'feedback': get_feedback(user_id, j.answerpairing.answers_id1, feedback)},
+                    'answer2': {'id': j.answerpairing.answers_id2,
+                                'feedback': get_feedback(user_id, j.answerpairing.answers_id2, feedback)},
+                    'created': j.created,
+                    'selfeval': [{'content': f.postsforcomments.content} for f in feedback if
+                                 f.users_id == user_id and f.selfeval]
+                }
+                judgements.append(judgement)
 
         on_evalcomment_view.send(
             self,
@@ -201,7 +220,23 @@ class EvalCommentViewAPI(Resource):
             data={'question_id': question_id}
         )
 
-        return {'comparisons': marshal(comparisons, dataformat.get_eval_comments())}
+        return {'objects': marshal(judgements, dataformat.get_eval_comments()), "page": page.page,
+                "pages": page.pages, "total": page.total, "per_page": page.per_page}
+
+
+def convert_judgement(judgement):
+    """
+    Convert judgement object into a dict with reduced attributes. The dict is intented to be used in
+    aggregate criteria judgement dictionary
+
+    :param judgement: judgement DB object
+    :return: dict
+    """
+    return {
+        'content': judgement.comment.content,
+        'criteriaandquestions_id': judgement.criteriaandquestions_id,
+        'winner': judgement.answers_id_winner,
+    }
 
 
 api.add_resource(EvalCommentViewAPI, '/view')

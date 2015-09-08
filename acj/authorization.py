@@ -4,8 +4,8 @@ from flask_login import current_user
 from werkzeug.exceptions import Unauthorized, Forbidden
 
 from .models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTypesForSystem, PostsForQuestions, PostsForAnswers, \
-    PostsForAnswersAndPostsForComments, PostsForQuestionsAndPostsForComments, Judgements, Criteria, CriteriaAndCourses, \
-    PostsForJudgements, Groups, GroupsAndUsers, CriteriaAndPostsForQuestions, Posts
+    PostsForAnswersAndPostsForComments, Judgements, Criteria, CriteriaAndCourses, \
+    PostsForJudgements, Groups, GroupsAndUsers, CriteriaAndPostsForQuestions, Posts, PostsForComments
 
 
 def define_authorization(user, they):
@@ -14,6 +14,18 @@ def define_authorization(user, they):
     """
     if not user.is_authenticated():
         return  # user isn't logged in
+
+    def if_my_student(student):
+        course_subquery = Courses.query.with_entities(Courses.id). \
+            join(CoursesAndUsers).filter_by(users_id=user.id). \
+            join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_INSTRUCTOR). \
+            subquery()
+        exists = Courses.query. \
+            join(CoursesAndUsers).filter_by(users_id=student.id). \
+            join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_STUDENT). \
+            filter(Courses.id.in_(course_subquery)). \
+            count()
+        return bool(exists)
 
     # Assign permissions based on system roles
     user_system_role = user.usertypeforsystem.name
@@ -25,6 +37,7 @@ def define_authorization(user, they):
         they.can(CREATE, Courses)
         they.can(CREATE, Users)
         they.can(CREATE, Criteria)
+        they.can(EDIT, Users, if_my_student)
 
     # users can edit and read their own user account
     they.can(READ, Users, id=user.id)
@@ -44,8 +57,8 @@ def define_authorization(user, they):
         they.can(READ, PostsForQuestions, courses_id=entry.courses_id)
         they.can((READ, CREATE), PostsForAnswers, courses_id=entry.courses_id)
         they.can((EDIT, DELETE), PostsForAnswers, users_id=user.id)
-        they.can((READ, CREATE), PostsForQuestionsAndPostsForComments, courses_id=entry.courses_id)
-        they.can((EDIT, DELETE), PostsForQuestionsAndPostsForComments, users_id=user.id)
+        they.can((READ, CREATE), PostsForComments, course_id=entry.courses_id)
+        they.can((EDIT, DELETE), PostsForComments, user_id=user.id)
         they.can((READ, CREATE), PostsForAnswersAndPostsForComments, courses_id=entry.courses_id)
         they.can((EDIT, DELETE), PostsForAnswersAndPostsForComments, users_id=user.id)
         # instructors can modify the course and enrolment
@@ -60,7 +73,7 @@ def define_authorization(user, they):
                 entry.usertypeforcourse.name == UserTypesForCourse.TYPE_TA:
             they.can(MANAGE, PostsForQuestions, courses_id=entry.courses_id)
             they.can(MANAGE, PostsForAnswers, courses_id=entry.courses_id)
-            they.can(MANAGE, PostsForQuestionsAndPostsForComments, courses_id=entry.courses_id)
+            they.can(MANAGE, PostsForComments, course_id=entry.courses_id)
             they.can(MANAGE, PostsForAnswersAndPostsForComments, courses_id=entry.courses_id)
             they.can(MANAGE, PostsForJudgements, courses_id=entry.courses_id)
             they.can(READ, Groups, courses_id=entry.courses_id)

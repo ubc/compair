@@ -1,9 +1,9 @@
 from flask import Blueprint
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask.ext.login import login_required, current_user
-from flask.ext.restful import Resource, marshal, reqparse
+from flask.ext.restful import Resource, marshal, reqparse, marshal_with
 from sqlalchemy import or_, and_
-from sqlalchemy.orm import joinedload, load_only
+from sqlalchemy.orm import load_only, contains_eager
 
 from . import dataformat
 from .core import event, db
@@ -55,7 +55,12 @@ class CriteriaRootAPI(Resource):
     @login_required
     def get(self, course_id):
         Courses.exists_or_404(course_id)
-        course_criteria = criteria_in_course(course_id)
+        criteria = Criteria.query. \
+            options(contains_eager('course_assoc')). \
+            join(CriteriaAndCourses). \
+            filter_by(courses_id=course_id).filter_by(active=True). \
+            order_by(CriteriaAndCourses.id). \
+            all()
 
         on_criteria_list_get.send(
             self,
@@ -63,7 +68,7 @@ class CriteriaRootAPI(Resource):
             user=current_user,
             course_id=course_id)
 
-        return {"objects": marshal(course_criteria, dataformat.get_criteria_and_courses())}
+        return {"objects": marshal(criteria, dataformat.get_criteria_in_course())}
 
     @login_required
     def post(self, course_id):
@@ -82,7 +87,7 @@ class CriteriaRootAPI(Resource):
             course_id=course_id
         )
 
-        return {'criterion': marshal(course_criterion, dataformat.get_criteria_and_courses())}
+        return {'criterion': marshal(criterion, dataformat.get_criteria_in_course())}
 
 
 api.add_resource(CriteriaRootAPI, '')
@@ -140,7 +145,7 @@ class CourseCriteriaIdAPI(Resource):
             data={'criteria_id': criteria_id})
 
         db.session.commit()
-        return {'criterion': marshal(course_criterion, dataformat.get_criteria_and_courses())}
+        return {'criterion': marshal(criterion, dataformat.get_criteria_in_course())}
 
 
 api.add_resource(CourseCriteriaIdAPI, '/<int:criteria_id>')
@@ -186,26 +191,28 @@ apiC.add_resource(CriteriaAPI, '')
 
 
 # /default - get default criteria - eg. first criterion
-class DefaultCriteria(Resource):
-    @login_required
-    def get(self):
-        default = Criteria.query.first()
-
-        default_criteria_get.send(
-            self,
-            event_name=default_criteria_get.name,
-            data={'criteria': marshal(default, dataformat.get_criteria())}
-        )
-
-        return marshal(default, dataformat.get_criteria())
-
-
-apiC.add_resource(DefaultCriteria, '/default')
+# deprecated, to be removed
+# class DefaultCriteria(Resource):
+#     @login_required
+#     def get(self):
+#         default = Criteria.query.first()
+#
+#         default_criteria_get.send(
+#             self,
+#             event_name=default_criteria_get.name,
+#             data={'criteria': marshal(default, dataformat.get_criteria())}
+#         )
+#
+#         return marshal(default, dataformat.get_criteria())
+#
+#
+# apiC.add_resource(DefaultCriteria, '/default')
 
 
 # /criteria/:id
 class CriteriaIdAPI(Resource):
     @login_required
+    @marshal_with(dataformat.get_criteria())
     def get(self, criteria_id):
         criterion = Criteria.query.get_or_404(criteria_id)
         require(READ, criterion)
@@ -216,7 +223,7 @@ class CriteriaIdAPI(Resource):
             user=current_user
         )
 
-        return {'criterion': marshal(criterion, dataformat.get_criteria())}
+        return criterion
 
     @login_required
     def post(self, criteria_id):
@@ -353,11 +360,3 @@ def add_course_criteria(criterion, course):
     )
     db.session.add(course_criterion)
     return course_criterion
-
-
-def criteria_in_course(course_id):
-    course_criteria = CriteriaAndCourses.query.\
-        options(joinedload('criterion')). \
-        filter_by(courses_id=course_id). \
-        filter_by(active=True).order_by(CriteriaAndCourses.id).all()
-    return course_criteria

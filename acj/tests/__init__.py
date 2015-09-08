@@ -10,5 +10,6 @@ test_app_settings = {
     # 'TESTING': True,
     'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
     'SQLALCHEMY_ECHO': False,
-    'CSRF_ENABLED': False
+    'CSRF_ENABLED': False,
+    'PASSLIB_CONTEXT': 'plaintext'
 }

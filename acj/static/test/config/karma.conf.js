@@ -1,29 +1,30 @@
 module.exports = function (config) {
-  config.set({
-    basePath: '../../',
+	var wiredep = require('wiredep');
+	var bowerFiles = wiredep({devDependencies: true, cwd: __dirname + '/../../../..'})['js'];
+	config.set({
+		basePath: '../../',
 
-    files: [
-        'lib/angular/angular.js',
-        'lib/jquery/dist/jquery.min.js',
-        'lib/bootstrap/dist/js/bootstrap.min.js',
-        'lib/angular-strap/dist/angular-strap.min.js',
-		'lib/angular-route/angular-route.min.js',
-		'lib/angular-resource/angular-resource.min.js',
-		'lib/angular-cookies/angular-cookies.min.js',
-        'lib/angular-mocks/angular-mocks.js',
-		'lib/*.js',
-		'modules/**/*.js',
-    ],
+		preprocessors: {
+			'modules/**/*.html': ['ng-html2js']
+		},
 
-    frameworks: ['jasmine'],
+		files: bowerFiles.concat([
+			'modules/**/*-module.js',
+			'modules/**/*.js',
+			'modules/**/*.html',
+			'acj-config.js',
+			'test/lib/*.js'
+		]),
 
-    autoWatch: true,
+		frameworks: ['jasmine'],
 
-    browsers: ['Chrome'],
+		autoWatch: true,
 
-    junitReporter: {
-      outputFile: 'test_out/unit.xml',
-      suite: 'unit'
-    }
-  });
+		browsers: ['Chrome'],
+
+		junitReporter: {
+			outputFile: 'test_out/unit.xml',
+			suite: 'unit'
+		}
+	});
 };

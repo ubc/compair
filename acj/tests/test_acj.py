@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 import json
 import unittest
 
@@ -28,6 +29,7 @@ class ACJTestCase(TestCase):
         db.session.remove()
         db.drop_all()
 
+    @contextmanager
     def login(self, username, password="password"):
         payload = json.dumps(dict(
             username=username,
@@ -35,20 +37,17 @@ class ACJTestCase(TestCase):
         ))
         rv = self.client.post('/api/login', data=payload, content_type='application/json', follow_redirects=True)
         self.assert200(rv)
-
-        return rv
-
-    def logout(self):
-        return self.client.delete('/api/logout', follow_redirects=True)
+        yield rv
+        self.client.delete('/api/logout', follow_redirects=True)
 
 
 class SessionTests(ACJTestCase):
     def test_loggedin_user_session(self):
-        self.login('root', 'password')
-        rv = self.client.get('/api/session')
-        self.assert200(rv)
-        root = rv.json
-        self.assertEqual(root['id'], 1)
+        with self.login('root', 'password'):
+            rv = self.client.get('/api/session')
+            self.assert200(rv)
+            root = rv.json
+            self.assertEqual(root['id'], 1)
 
     def test_non_loggedin_user_session(self):
         rv = self.client.get('/api/session')

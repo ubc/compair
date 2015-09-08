@@ -37,7 +37,7 @@ module.controller(
 		$scope.groups = [];
 
 		var all = [{'id': 'all', 'title': 'All Assignments'}];
-		var allGroups = [{'id': 'all', 'name': 'All Groups'}]
+		var allGroups = [{'id': 'all', 'name': 'All Groups'}];
 		$scope.types = [
 			{'id': 'participation', 'name': 'Participation Report (Regular)'},
 			{'id': 'participation_stat', 'name': 'Participation Report (Research)'}

@@ -100,7 +100,7 @@
 	<!-- Tabs -->
 	<ul class="nav nav-tabs" role="tablist">
 	  <li id="answers" ng-class="{active:showTab('answers')}">
-		<a ng-click="setTab('answers')" href="">Answers <span ng-show="canManagePosts || (!question.answer_period && see_answers)">({{answers.length}})</span></a>
+		<a ng-click="setTab('answers')" href="">Answers <span ng-show="canManagePosts || (!question.answer_period && see_answers)">({{answers.total}})</span></a>
 	  </li>
 	  <li ng-show="!canManagePosts" id="comparisons" ng-class="{active:showTab('comparisons')}">
 		<a ng-click="setTab('comparisons')" href="">Your Work</a>
@@ -124,27 +124,27 @@
 				<div class="row">
 					<h2 class="col-sm-6">
 						Answers
-						<span ng-show="canManagePosts && grade.group && !grade.author">for "{{grade.group.name}}"</span>
-						<span ng-show="grade.author">for "{{ grade.author.user.name }}"</span>
+						<span ng-show="canManagePosts && answerFilters.group && !answerFilters.author">for "{{answerFilters.group.name}}"</span>
+						<span ng-show="answerFilters.author">for "{{ answerFilters.author.user.name }}"</span>
 					</h2>
 					
 					<div class="col-sm-6 text-right multi-filters">
 						<div ng-if="question.answers_count && (canManagePosts || see_answers)">
 							<span class="filter">
 								<label>Show: &nbsp;</label>
-								<select ng-if="groups.length > 0 && canManagePosts" ng-model="grade.group" class="nullable"
-									ng-options="g as g.name for g in groups | orderBy: 'name'" ng-change="groupChange()">
+								<select ng-if="groups.length > 0 && canManagePosts" ng-model="answerFilters.group" class="nullable"
+                                        ng-options="g as g.name for g in groups | orderBy: 'name'">
 									<option value="">All groups</option>
 								</select>
-								<select ng-model="grade.author" class="nullable"
-										ng-options="u as u.user.name for u in students | orderBy: 'user.name'" ng-change="userChange()">
+								<select ng-model="answerFilters.author" class="nullable"
+										ng-options="u as u.user.name for u in students | orderBy: 'user.name'">
 									<option value="">All answers</option>
 								</select>
 							</span><br />
 							<span class="filter">
 								<label>Order by ranking for: &nbsp;</label>
-								<select ng-model="grade.sortby"
-									ng-options="key as c.criterion.name for (key, c) in criteria" ng-change="criteriaChange()">
+								<select ng-model="answerFilters.orderBy"
+                                        ng-options="c.id as c.criterion.name for c in criteria">
 								</select>
 							</span>
 						</div>
@@ -192,9 +192,10 @@
 			</div>
 			
 			<div class="all-answers">
-			
+                <pagination total-items="totalNumAnswers" ng-model="answerFilters.page" max-size="10" class="pagination-sm" boundary-links="true" items-per-page="answerFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></pagination>
+
 				<!-- Instructor Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="answer in answers | filter:adminFilter()" ng-if="instructors[answer.user_id] && (see_answers || canManagePosts)">
+				<div class="each-answer clearfix" ng-repeat="answer in answers.objects | filter:adminFilter()" ng-if="instructors[answer.user_id] && (see_answers || canManagePosts)">
 					
 					<!-- Instructor Answer Metadata Header -->
 					<div class="each-header clearfix">
@@ -289,7 +290,7 @@
 				</div><!-- closes each-answer (instructor) -->
 				
 				<!-- Student Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="answer in answers | filter:groupFilter() | orderBy:order:reverse | notScoredEnd:grade.sortby as results" ng-if="!instructors[answer.user_id] && (see_answers || answer.user_id == loggedInUserId || canManagePosts)">
+				<div class="each-answer clearfix" ng-repeat="answer in answers.objects | notScoredEnd:answerFilters.orderBy as results" ng-if="!instructors[answer.user_id] && (see_answers || answer.user_id == loggedInUserId || canManagePosts)">
 				<!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.user_id] && (see_answers || (answer.user_id == loggedInUserId && question.answer_period) || canManagePosts)"> -->
 					<!-- Student Answer Metadata Header -->
 					<div class="each-header clearfix">
@@ -338,32 +339,29 @@
 					<!-- <p ng-show="!showReadMore">No More To Read!!! ({{thisHeight}})</p> -->
 
 					<!-- Student Score (not used for instructor answers) -->
-					<p class="pull-right score-display" ng-show="canManagePosts && key==grade.sortby && answer.scores.length > 0" ng-repeat="(key, score) in answer.scores">
+					<p class="pull-right score-display" ng-if="canManagePosts && score.criteriaandquestions_id==answerFilters.orderBy && answer.scores.length > 0" ng-repeat="score in answer.scores">
 						<em>Score: {{score.normalized_score}}%</em>
 						<a tool-tip href="" data-placement="left" data-toggle="tooltip" class="score-tooltip" title="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer.">
 							<i class="fa fa-question-circle"></i>
 						</a>
 					</p>
-					<p class="pull-right" ng-show="canManagePosts && answer.scores.length == 0" class="score-display">
+					<p class="pull-right" ng-if="canManagePosts && answer.scores.length == 0" class="score-display">
 						<em>Not Evaluated</em>
 					</p>
 
 					<!-- Student Answer Replies Section -->
-					<a href="" ng-click="showReplies = !showReplies">
-						<h3 class="reply-heading" ng-if="studentResults.length && (see_answers || canManagePosts)">
+					<a href="" ng-click="showReplies = !showReplies; showReplies && loadComments(answer)">
+						<h3 class="reply-heading" ng-if="answer.comments_count && (see_answers || canManagePosts)">
 							<i class="fa fa-chevron-down" ng-show="showReplies"></i>
 							<i class="fa fa-chevron-right" ng-hide="showReplies"></i>
-							{{studentResults.length}}
-							<span ng-if="studentResults.length == 1">reply</span>
-							<span ng-if="studentResults.length > 1">replies</span>
-							to this answer
+                            <ng-pluralize count="answer.comments_count" when="{'1': '{} reply', 'other': '{} replies'}"></ng-pluralize> to this answer
 							<span ng-if="canManagePosts || answer.user_id == loggedInUserId">({{ answer.private_comments_count }} private, {{ answer.public_comments_count }} public)</span>
 						</h3>
 					</a>
 
 					<div ng-show="showReplies">
 
-						<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer) as studentResults" class="each-reply" ng-if="see_answers || canManagePosts">
+						<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer)" class="each-reply" ng-if="see_answers || canManagePosts">
 
 							<hr ng-hide="$first" />
 
@@ -415,7 +413,9 @@
 				</div>
 				
 			</div><!-- closes answered show-hide div -->
-		
+
+            <pagination total-items="totalNumAnswers" ng-model="answerFilters.page" max-size="10" class="pagination-sm" boundary-links="true" items-per-page="answerFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></pagination>
+
 		</div><!-- closes answers-tab -->
 
 		<div class="tab-pane" ng-class="{active: showTab('comparisons')}" id="comparisons-tab">
@@ -429,7 +429,7 @@
 			</div>
 			
 			<!-- Student Answer Metadata Header -->
-			<div class="each-evaluation clearfix" ng-repeat="answer in answers | filter: myAnswer()">
+			<div class="each-evaluation clearfix" ng-repeat="answer in answers.objects | filter: myAnswer()">
 				<div class="each-header clearfix">
 					<a ng-href="#/user/{{answer.user_id}}">
 						<img src="//www.gravatar.com/avatar/{{answer.user_avatar}}?s=32&d=retro" />
@@ -466,21 +466,18 @@
 				</div>
 				
 				<!-- Student Answer Replies Section -->
-				<a href="" ng-click="showReplies = !showReplies">
-					<h3 class="reply-heading" ng-if="studentResults.length && (see_answers || canManagePosts)">
-						<i class="fa fa-chevron-down" ng-show="showReplies"></i>
-						<i class="fa fa-chevron-right" ng-hide="showReplies"></i>
-						{{studentResults.length}}
-						<span ng-if="studentResults.length == 1">reply</span>
-						<span ng-if="studentResults.length > 1">replies</span>
-						to this answer
-						<span ng-if="canManagePosts || answer.user_id == loggedInUserId">({{ answer.private_comments_count }} private, {{ answer.public_comments_count }} public)</span>
+                <a href="" ng-click="showReplies = !showReplies; showReplies && loadComments(answer)">
+					<h3 class="reply-heading" ng-if="answer.comments_count && (see_answers || canManagePosts)">
+                        <i class="fa fa-chevron-down" ng-show="showReplies"></i>
+                        <i class="fa fa-chevron-right" ng-hide="showReplies"></i>
+                        <ng-pluralize count="answer.comments_count" when="{'1': '{} reply', 'other': '{} replies'}"></ng-pluralize> to this answer
+                        <span ng-if="canManagePosts || answer.user_id == loggedInUserId">({{ answer.private_comments_count }} private, {{ answer.public_comments_count }} public)</span>
 					</h3>
 				</a>
 
 				<div ng-show="showReplies">
 
-					<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer) as studentResults" class="each-reply" ng-if="see_answers || canManagePosts">
+					<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer)" class="each-reply" ng-if="see_answers || canManagePosts">
 
 						<hr ng-hide="$first" />
 
@@ -635,27 +632,27 @@
 			</div>
 			
 			<!-- Comments Section -->
-			<div ng-repeat="(commentKey, comment) in comments" class="each-comment">
+			<div ng-repeat="(commentKey, comment) in comments.objects" class="each-comment">
 				
 				<!-- Comment Metadata Header -->
 				<div class="each-header clearfix">
-					<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
-						<img src="//www.gravatar.com/avatar/{{comment.postsforcomments.post.user.avatar}}?s=32&d=retro" />
+					<a ng-href="#/user/{{comment.user_id}}">
+						<img src="//www.gravatar.com/avatar/{{comment.user_avatar}}?s=32&d=retro" />
 					</a>
-					<a ng-href="#/user/{{comment.postsforcomments.post.user.id}}">
-						{{comment.postsforcomments.post.user.displayname}}
-						<span ng-if="!canManagePosts && comment.postsforcomments.post.user.id == loggedInUserId">
+					<a ng-href="#/user/{{comment.user_id}}">
+						{{comment.user_displayname}}
+						<span ng-if="!canManagePosts && comment.user_id == loggedInUserId">
 							(You)
 						</span>
-						<span ng-if="canManagePosts && comment.postsforcomments.post.user.fullname">
-							({{comment.postsforcomments.post.user.fullname}})
+						<span ng-if="canManagePosts && comment.user_fullname">
+							({{comment.user_fullname}})
 						</span>
 					</a>
-					<span class="label label-info" ng-if="instructors[comment.postsforcomments.post.user.id]">
-						{{instructors[comment.postsforcomments.post.user.id]}} 
+					<span class="label label-info" ng-if="instructors[comment.user_id]">
+						{{instructors[comment.user_id]}}
 					</span>
-					<strong>commented</strong> on {{comment.postsforcomments.post.created | amDateFormat: 'MMM D @ h:mm a'}}:
-					<div class="manager-actions pull-right" ng-if="canManagePosts || comment.postsforcomments.post.user.id == loggedInUserId">
+					<strong>commented</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
+					<div class="manager-actions pull-right" ng-if="canManagePosts || comment.user_id == loggedInUserId">
 						<a confirmation-needed="deleteComment(commentKey, courseId, question.id, comment.id)" keyword="comment" href="">
 							<i class="fa fa-trash-o"></i>
 						</a>

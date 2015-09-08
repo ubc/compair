@@ -28,12 +28,16 @@ api = new_restful_api(judgements_api)
 all_judgements_api = Blueprint('all_judgements_api', __name__)
 apiAll = new_restful_api(all_judgements_api)
 
+
+def judgement_type(value):
+    return dict(value)
+
 new_judgement_parser = RequestParser()
 new_judgement_parser.add_argument(
     'answerpair_id', type=int, required=True,
     help="Missing answer pair id.")
 new_judgement_parser.add_argument(
-    'judgements', type=list, required=True, help="Missing judgements.")
+    'judgements', type=judgement_type, required=True, action="append", help="Missing judgements.")
 
 
 # events

@@ -44,6 +44,7 @@ def get_users(restrict_users=True):
 
 def get_users_in_course(restrict_users=True):
     users = get_users(restrict_users)
+    users['group_id'] = fields.Integer
     if not restrict_users:
         users['course_role'] = fields.String
     return users
@@ -58,7 +59,7 @@ def get_courses(include_details=True):
     if include_details:
         details = {
             'available': fields.Boolean,
-            'criteriaandcourses': fields.Nested(get_criteria_and_courses()),
+            # 'criteriaandcourses': fields.Nested(get_criteria_in_course()),
             'enable_student_create_questions': fields.Boolean,
             'enable_student_create_tags': fields.Boolean,
             'modified': fields.DateTime,
@@ -116,14 +117,13 @@ def get_criteria():
     return data_format
 
 
-def get_criteria_and_courses():
-    data_format = {
-        'id': fields.Integer,
-        'criterion': fields.Nested(get_criteria()),
-        'courses_id': fields.Integer,
-        'active': fields.Boolean,
-        'in_question': fields.Boolean
-    }
+def get_criteria_in_course():
+    data_format = get_criteria()
+    data_format.update({
+        'course_id': fields.Integer(attribute=lambda x: x.course_assoc.courses_id),
+        'active': fields.Boolean(attribute=lambda x: x.course_assoc.active),
+        'in_question': fields.Boolean(attribute=lambda x: x.course_assoc.in_question)
+    })
     return data_format
 
 
@@ -179,11 +179,8 @@ def get_posts_for_questions(restrict_users=True, include_answers=True):
     return ret
 
 
-def get_posts_for_answers(restrict_users=True, include_comments=True):
-    post = get_posts(restrict_users)
-    comments = get_posts_for_answers_and_posts_for_comments(restrict_users)
+def get_posts_for_answers(restrict_users=True):
     score = get_scores()
-    del post['course']
     ret = {
         'id': fields.Integer,
         'content': fields.String,
@@ -191,28 +188,23 @@ def get_posts_for_answers(restrict_users=True, include_comments=True):
         'created': fields.DateTime,
         'user_id': fields.Integer,
         'user_displayname': fields.String,
-        'user_fullname': fields.String,
         'user_avatar': fields.String,
         'posts_id': fields.Integer,
-        # 'post': fields.Nested(post),
         'scores': fields.Nested(score),
         'flagged': fields.Boolean,
-        'questions_id': fields.Integer
+        'questions_id': fields.Integer,
+        'comments_count': fields.Integer,
+        'private_comments_count': fields.Integer,
+        'public_comments_count': fields.Integer
     }
-    # can see who flagged this post if user can view unrestricted data
-    # it seems it is not being used for now
-    # if not restrict_users:
-    #     ret['flagger'] = fields.Nested(get_users(restrict_users))
-    if include_comments:
-        ret['comments'] = fields.List(fields.Nested(comments))
-        ret['comments_count'] = fields.Integer
-        ret['private_comments_count'] = fields.Integer
-        ret['public_comments_count'] = fields.Integer
+    if not restrict_users:
+        ret.update({'user_fullname': fields.String})
+
     return ret
 
 
-def get_posts_for_comments(retrict_users=True):
-    post = get_posts(retrict_users)
+def get_posts_for_comments(restrict_users=True):
+    post = get_posts(restrict_users)
     del post['course']
     return {
         'id': fields.Integer,
@@ -220,20 +212,26 @@ def get_posts_for_comments(retrict_users=True):
     }
 
 
-def get_posts_for_questions_and_posts_for_comments(restrict_users=True):
-    comment = get_posts_for_comments(restrict_users)
-    return {
+def get_posts_for_comments_new(restrict_users=True):
+    """
+    new data format for comments. Should deprecate the old one.
+    """
+    ret = {
         'id': fields.Integer,
-        'postsforcomments': fields.Nested(comment),
-        'content': fields.String
+        'content': fields.String,
+        'created': fields.DateTime,
+        'user_id': fields.Integer,
+        'user_displayname': fields.String,
+        'user_avatar': fields.String,
     }
+    if not restrict_users:
+        ret.update({'user_fullname': fields.String})
+    return ret
 
 
 def get_posts_for_answers_and_posts_for_comments(restrict_users=True):
-    comment = get_posts_for_comments(restrict_users)
-    return {
+    ret = {
         'id': fields.Integer,
-        # 'postsforcomments': fields.Nested(comment),
         'selfeval': fields.Boolean,
         'evaluation': fields.Boolean,
         'type': fields.Integer,
@@ -243,10 +241,12 @@ def get_posts_for_answers_and_posts_for_comments(restrict_users=True):
         'created': fields.DateTime,
         'user_id': fields.Integer,
         'user_displayname': fields.String,
-        'user_fullname': fields.String,
         'user_avatar': fields.String,
         'posts_id': fields.Integer
     }
+    if not restrict_users:
+        ret.update({'user_fullname': fields.String})
+    return ret
 
 
 def get_files_for_posts():
@@ -273,8 +273,8 @@ def get_answer_pairings(include_answers=False):
         'answers_id2': fields.Integer
     }
     if include_answers:
-        ret['answer1'] = fields.Nested(get_posts_for_answers(include_comments=False))
-        ret['answer2'] = fields.Nested(get_posts_for_answers(include_comments=False))
+        ret['answer1'] = fields.Nested(get_posts_for_answers())
+        ret['answer2'] = fields.Nested(get_posts_for_answers())
     return ret
 
 
@@ -307,18 +307,17 @@ def get_import_users_results(restrict_users=True):
 
 def get_eval_comments():
     answer = {'id': fields.Integer, 'feedback': fields.String}
+    criteria_judgement = {'content': fields.String, 'criteriaandquestions_id': fields.Integer, 'winner': fields.Integer}
+    selfeval = {'content': fields.String}
     return {
         'user_id': fields.Integer,
         'name': fields.String,
         'avatar': fields.String,
-        'criteriaandquestions_id': fields.Integer,
-        'answerpairings_id': fields.Integer,
-        'content': fields.String,
-        'selfeval': fields.Boolean,
+        'criteria_judgements': fields.Nested(criteria_judgement),
+        'selfeval': fields.Nested(selfeval),
         'created': fields.DateTime,
         'answer1': fields.Nested(answer),
         'answer2': fields.Nested(answer),
-        'winner': fields.Integer
     }
 
 

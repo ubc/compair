@@ -4,19 +4,21 @@ import csv
 import string
 
 from bouncer.constants import EDIT, READ
-from flask import Blueprint, request, current_app
+from flask import Blueprint, request, current_app, make_response
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal, abort
+from six import StringIO
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload, contains_eager
 from werkzeug.utils import secure_filename
+
 from flask.ext.restful.reqparse import RequestParser
 
 from . import dataformat
 from .core import db
 from .authorization import allow, require
 from .core import event
-from .models import CoursesAndUsers, Courses, Users, UserTypesForSystem, UserTypesForCourse
+from .models import CoursesAndUsers, Courses, Users, UserTypesForSystem, UserTypesForCourse, GroupsAndUsers
 from .util import new_restful_api
 from .attachment import random_generator, allowed_file
 
@@ -171,6 +173,19 @@ def import_users(course_id, users):
     }
 
 
+@api.representation('text/csv')
+def output_csv(data, code, headers=None):
+    fieldnames = ['username', 'student_no', 'firstname', 'lastname', 'email', 'displayname']
+    csv_buffer = StringIO()
+    writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames, extrasaction='ignore')
+    writer.writeheader()
+    writer.writerows(data['objects'])
+    response = make_response(csv_buffer.getvalue(), code)
+    response.headers.extend(headers or {})
+    response.headers['Content-Disposition'] = 'attachment;filename=classlist.csv'
+    return response
+
+
 # /
 class ClasslistRootAPI(Resource):
     # TODO Pagination
@@ -195,6 +210,7 @@ class ClasslistRootAPI(Resource):
                 UserTypesForCourse.name.notlike(UserTypesForCourse.TYPE_DROPPED))). \
             options(joinedload('usertypeforsystem')). \
             options(contains_eager('coursesandusers').contains_eager('usertypeforcourse')). \
+            options(joinedload(Users.groups)). \
             filter(CoursesAndUsers.courses_id == course_id). \
             order_by(Users.firstname).all()
 
@@ -352,6 +368,7 @@ class StudentsAPI(Resource):
         course = Courses.query.get_or_404(course_id)
         require(READ, course)
         students = Users.query. \
+            options(joinedload(Users.groups).joinedload(GroupsAndUsers.group)). \
             join(CoursesAndUsers).filter_by(courses_id=course_id). \
             join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_STUDENT). \
             all()
@@ -359,7 +376,11 @@ class StudentsAPI(Resource):
         coursesandusers = CoursesAndUsers(courses_id=course_id)
         if allow(READ, coursesandusers):
             users = [
-                {'user': {'id': u.id, 'name': u.fullname if u.fullname else u.displayname}}
+                {'user': {
+                    'id': u.id,
+                    'name': u.fullname if u.fullname else u.displayname,
+                    'groups': [g.group.name for g in u.groups]
+                }}
                 for u in students]
         else:
             users = []

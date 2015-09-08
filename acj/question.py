@@ -7,7 +7,7 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import desc, or_
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, undefer_group, contains_eager
 
 from . import dataformat
 from .core import db, event
@@ -179,11 +179,13 @@ class QuestionRootAPI(Resource):
         post = Posts(courses_id=course_id)
         question = PostsForQuestions(post=post)
         base_query = PostsForQuestions.query. \
-            join(Posts).filter(Posts.courses_id == course_id). \
-            options(joinedload("_criteria").joinedload("criterion")). \
-            options(joinedload("post")). \
-            options(joinedload("post").joinedload("user")). \
-            options(joinedload("post").joinedload("files")). \
+            options(joinedload("criteria").joinedload("criterion")). \
+            options(joinedload("selfevaltype")). \
+            options(undefer_group('counts')). \
+            join(Posts). \
+            options(contains_eager('post').joinedload("user").joinedload('usertypeforsystem')). \
+            options(contains_eager('post').joinedload("files")). \
+            filter(Posts.courses_id == course_id). \
             order_by(desc(Posts.created))
         if allow(MANAGE, question):
             questions = base_query.all()

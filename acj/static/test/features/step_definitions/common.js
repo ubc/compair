@@ -27,9 +27,8 @@ var commonStepDefinitionsWrapper = function() {
 		loginDialog.get('/');
 		loginDialog.login(userFactory.getUser(username)).then(function() {
 			// wait for displayname is populated before we reload the page
-			element(by.binding('loggedInUser.displayname')).then(function() {
-				done();
-			})
+			browser.wait(browser.isElementPresent(element(by.binding('loggedInUser.displayname'))), 5000);
+			done();
 		});
 	});
 

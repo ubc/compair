@@ -32,6 +32,7 @@ module.factory('Toaster', function($log, toaster) {
 	// preset error messages for certain errors. This is for any ajax requests
 	// that fails.
 	toaster.reqerror = function(title, response) {
+		$log.warn("This method is deprecated. Default error handling should handle this.");
 		$log.error(title);
 		switch (response.status) {
 			case 400:

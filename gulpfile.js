@@ -8,7 +8,7 @@ var gulp = require('gulp'),
 	inject = require('gulp-inject'),
 	mainBowerFiles = require('main-bower-files'),
 	minifyCss = require('gulp-minify-css'),
-	karma = require('karma').server,
+	Server = require('karma').Server,
 	protractor = require('gulp-protractor').protractor,
 	webdriver_standalone = require('gulp-protractor').webdriver_standalone,
 	webdriver_update = require('gulp-protractor').webdriver_update,
@@ -79,7 +79,7 @@ gulp.task('tdd', function (done) {
 });
 
 /**
- * Behavior driven development. This task run acceptance tests
+ * Behavior driven development. This task runs acceptance tests
  */
 gulp.task('bdd', function (done) {
 	gulp.src(["acj/static/test/features/*.feature"])
@@ -97,10 +97,10 @@ gulp.task('bdd', function (done) {
  * Run test once and exit
  */
 gulp.task('test:unit', function (done) {
-	karma.start({
+	new Server({
 		configFile: __dirname + '/' + karmaCommonConf,
 		singleRun: true
-	}, done);
+	}, done).start();
 });
 
 

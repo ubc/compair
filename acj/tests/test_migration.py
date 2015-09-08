@@ -8,7 +8,7 @@ from acj.tests.test_acj import ACJTestCase
 class TestMigration(ACJTestCase):
     def test_migration(self):
         # create config object
-        alembic_cfg = Config("alembic.ini")
+        alembic_cfg = Config("acj/tests/alembic.ini")
         # get connection from db object
         connection = db.engine.connect()
         alembic_cfg.connection = connection

@@ -13,6 +13,7 @@ LoginDialog.prototype.login = function(user) {
     var passwordElm =  element(by.model('password'));
     var loginButtonElm = element(by.css('input[value="Log In"]'));
 
+    browser.wait(internalLoginTextElm.isPresent(), 1000);
     internalLoginTextElm.click();
     usernameElm.sendKeys(user.username);
     passwordElm.sendKeys(user.password);

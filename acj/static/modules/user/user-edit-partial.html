@@ -1,13 +1,13 @@
-<div ng-controller="UserEditController">
+<div>
 	<h1>Edit User</h1>
 	<ng-include src="'modules/user/user-form-partial.html'"></ng-include>
-	<hr ng-if="ownProfile" />
-	<h1 ng-if="ownProfile">Update Password</h1>
-	<div ng-controller="UserUpdatePasswordController" ng-if="ownProfile || canManageUsers">
+	<hr ng-if="ownProfile || canManageUsers" />
+	<h1 ng-if="ownProfile || canManageUsers">Update Password</h1>
+	<div ng-if="ownProfile || canManageUsers">
 		<form name="changePasswordForm" class="form" ng-submit="changePassword()" novalidate>
 			<fieldset>
 				<legend>Password</legend>
-				<acj-field-with-feedback form-control="changePasswordForm.oldpassword">
+				<acj-field-with-feedback form-control="changePasswordForm.oldpassword" ng-if="!canManageUsers">
 					<label for="oldpassword" class="required-star">Old Password</label>
 					<input class="form-control" id="oldpassword" type="password"
 						name="oldpassword" ng-model="password.oldpassword"

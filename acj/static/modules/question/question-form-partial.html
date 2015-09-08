@@ -131,7 +131,10 @@
 	
 	<fieldset>
 		<legend>Criteria</legend>
-		<p class="instructional-text"><strong>The selected criteria appear when students compare answers</strong> for this assignment to help guide them in their comparison. For each criterion you check off below, students will need to 1) choose a preferred answer from a given pair and 2) write a comparison rationale. (To create new or edit existing criteria, edit the course for this assignment.)</p>
+		<div class="instructional-text">
+			<p><strong>The selected criteria appear when students compare answers</strong> for this assignment to help guide them in their comparison. For each criterion you check off below, students will need to 1) choose a preferred answer from a given pair and 2) write a comparison rationale. (To create new or edit existing criteria, edit the course for this assignment.)</p>
+			<comparison-preview></comparison-preview>
+		</div>
 
 		<p class="required-star"><strong>Select one or more of these course criteria</strong></p>
 		<div ng-repeat="courseCriterion in courseCriteria">

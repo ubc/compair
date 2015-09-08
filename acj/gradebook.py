@@ -39,7 +39,7 @@ class GradebookAPI(Resource):
         Courses.query.options(load_only('id')).get_or_404(course_id)
         question = PostsForQuestions.query.\
             options(undefer('criteria_count')).\
-            options(joinedload('_criteria')).\
+            options(joinedload('criteria')).\
             get_or_404(question_id)
         require(MANAGE, question)
 

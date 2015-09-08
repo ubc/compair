@@ -5,13 +5,12 @@ var module = angular.module(
 	'ubc.ctlt.acj.authentication',
 	[
 		'ngResource',
-		'ngCookies',
 		'http-auth-interceptor'
 	]
 );
 
 module.factory('AuthenticationService',
-	function ($rootScope, $resource, $cookieStore, $log, $http, $q, authService, Session) {
+	function ($rootScope, $resource, $log, $http, $q, authService, Session) {
 		return {
 			// Use these constants to listen to login or logout events.
 			LOGIN_EVENT: "event:Authentication-Login",

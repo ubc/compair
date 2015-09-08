@@ -4,13 +4,13 @@ Feature: Create Question
   Scenario: Loading add question page by Add Assignment button as admin
     Given I'm "admin"
     And I'm on "course" page for course with id "1"
-    When I select 'Add Assignment' button
+    When I select "Add Assignment" button
     Then "Add Assignment" page should load
 
   Scenario: Loading add question page by Add Assignment button as admin
     Given I'm "instructor1"
     And I'm on "course" page for course with id "1"
-    When I select 'Add Assignment' button
+    When I select "Add Assignment" button
     Then "Add Assignment" page should load
 
 

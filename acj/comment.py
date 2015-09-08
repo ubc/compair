@@ -3,7 +3,8 @@ from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
-from sqlalchemy.orm import load_only, joinedload
+from sqlalchemy import and_
+from sqlalchemy.orm import load_only, joinedload, contains_eager
 
 from . import dataformat
 from .core import db
@@ -60,10 +61,11 @@ class QuestionCommentRootAPI(Resource):
             get_or_404(question_id)
         require(READ, question)
         restrict_users = not allow(MANAGE, question)
-        comments = PostsForQuestionsAndPostsForComments.query. \
-            options(joinedload('postsforcomments').joinedload('post').joinedload('files')) . \
-            options(joinedload('postsforcomments').joinedload('post').joinedload('user')). \
-            filter(PostsForQuestionsAndPostsForComments.questions_id == question.id, Posts.courses_id == course_id).\
+
+        comments = PostsForComments.query. \
+            options(joinedload('post').joinedload('user')). \
+            join(Posts).filter_by(courses_id=course_id). \
+            join(PostsForQuestionsAndPostsForComments).filter_by(questions_id=question_id). \
             order_by(Posts.created.asc()).all()
 
         on_comment_list_get.send(
@@ -73,7 +75,7 @@ class QuestionCommentRootAPI(Resource):
             course_id=course_id,
             data={'question_id': question_id})
 
-        return {"objects": marshal(comments, dataformat.get_posts_for_questions_and_posts_for_comments(restrict_users))}
+        return {"objects": marshal(comments, dataformat.get_posts_for_comments_new(restrict_users))}
 
     @login_required
     def post(self, course_id, question_id):
@@ -82,7 +84,7 @@ class QuestionCommentRootAPI(Resource):
         post = Posts(courses_id=course_id)
         comment = PostsForComments(post=post)
         comment_for_question = PostsForQuestionsAndPostsForComments(postsforcomments=comment, questions_id=question_id)
-        require(CREATE, comment_for_question)
+        require(CREATE, comment)
         params = new_comment_parser.parse_args()
         post.content = params.get("content")
         if not post.content:
@@ -97,10 +99,10 @@ class QuestionCommentRootAPI(Resource):
             event_name=on_comment_create.name,
             user=current_user,
             course_id=course_id,
-            data=marshal(comment_for_question, dataformat.get_posts_for_questions_and_posts_for_comments(False)))
+            data=marshal(comment, dataformat.get_posts_for_comments_new(False)))
 
         db.session.commit()
-        return marshal(comment_for_question, dataformat.get_posts_for_questions_and_posts_for_comments())
+        return marshal(comment, dataformat.get_posts_for_comments_new())
 
 apiQ.add_resource(QuestionCommentRootAPI, '')
 
@@ -111,9 +113,8 @@ class QuestionCommentIdAPI(Resource):
     def get(self, course_id, question_id, comment_id):
         Courses.query.get_or_404(course_id)
         PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
-        comment = PostsForQuestionsAndPostsForComments.query. \
-            options(joinedload('postsforcomments').joinedload('post').joinedload('files')) . \
-            options(joinedload('postsforcomments').joinedload('post').joinedload('user')) .\
+        comment = PostsForComments.query. \
+            options(joinedload('post').joinedload('user')). \
             get_or_404(comment_id)
         require(READ, comment)
 
@@ -124,47 +125,46 @@ class QuestionCommentIdAPI(Resource):
             course_id=course_id,
             data={'question_id': question_id, 'comment_id': comment_id})
 
-        return marshal(comment, dataformat.get_posts_for_questions_and_posts_for_comments())
+        return marshal(comment, dataformat.get_posts_for_comments_new())
 
     @login_required
     def post(self, course_id, question_id, comment_id):
         Courses.exists_or_404(course_id)
         PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
-        comment = PostsForQuestionsAndPostsForComments.query. \
-            options(joinedload('postsforcomments').joinedload('post').joinedload('files')) . \
-            options(joinedload('postsforcomments').joinedload('post').joinedload('user')) . \
+        comment = PostsForComments.query. \
+            options(joinedload('post').joinedload('user')). \
             get_or_404(comment_id)
         require(EDIT, comment)
+
         params = existing_comment_parser.parse_args()
         # make sure the comment id in the rul and the id matches
         if params['id'] != comment.id:
             return {"error": "Comment id does not match URL."}, 400
         # modify comment according to new values, preserve original values if values not passed
-        comment.postsforcomments.post.content = params.get("content")
-        if not comment.postsforcomments.post.content:
+        if not params.get("content"):
             return {"error": "The comment content is empty!"}, 400
-        db.session.add(comment.postsforcomments.post)
+        comment.content = params.get("content")
+        db.session.add(comment.post)
 
         on_comment_modified.send(
             self,
             event_name=on_comment_modified.name,
             user=current_user,
             course_id=course_id,
-            data=get_model_changes(comment.postsforcomments.post))
+            data=get_model_changes(comment.post))
 
         db.session.commit()
-        return marshal(comment, dataformat.get_posts_for_questions_and_posts_for_comments())
+        return marshal(comment, dataformat.get_posts_for_comments_new())
 
     @login_required
     def delete(self, course_id, question_id, comment_id):
         Courses.exists_or_404(course_id)
         PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
-        comment = PostsForQuestionsAndPostsForComments.query. \
-            options(joinedload('postsforcomments').joinedload('post').joinedload('files')) . \
-            options(joinedload('postsforcomments').joinedload('post').joinedload('user')) . \
+        comment = PostsForComments.query. \
+            options(joinedload('post').joinedload('user')). \
             get_or_404(comment_id)
         require(DELETE, comment)
-        data = marshal(comment, dataformat.get_posts_for_questions_and_posts_for_comments(False))
+        data = marshal(comment, dataformat.get_posts_for_comments_new(False))
         db.session.delete(comment)
         db.session.commit()
 
@@ -187,12 +187,27 @@ class AnswerCommentRootAPI(Resource):
         Courses.exists_or_404(course_id)
         question = PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
         require(READ, question)
+        restrict_users = not allow(MANAGE, question)
+
         answer = PostsForAnswers.query.get_or_404(answer_id)
-        comments = PostsForAnswersAndPostsForComments.query. \
-            options(joinedload('postsforcomments').joinedload('post').joinedload('files')) . \
-            options(joinedload('postsforcomments').joinedload('post').joinedload('user')) . \
-            filter(PostsForAnswersAndPostsForComments.answers_id == answer.id, Posts.courses_id == course_id).\
-            order_by(Posts.created.desc()).all()
+        query = PostsForComments.query. \
+            options(contains_eager(PostsForComments.post).joinedload(Posts.user)) . \
+            options(contains_eager(PostsForComments.post).joinedload(Posts.files)) . \
+            join(PostsForAnswersAndPostsForComments). \
+            filter(PostsForAnswersAndPostsForComments.answers_id == answer.id) . \
+            join(Posts)
+
+        # student can only see the comments for themselves or public ones.
+        # since the owner of the answer can access all comments. We only filter
+        # on non-owners
+        if restrict_users and answer.user_id != current_user.id:
+            public_comment_condition = and_(
+                PostsForAnswersAndPostsForComments.evaluation.isnot(True),
+                PostsForAnswersAndPostsForComments.selfeval.isnot(True),
+                PostsForAnswersAndPostsForComments.type != 0
+            )
+            query = query.filter(public_comment_condition)
+        comments = query.order_by(Posts.created.desc()).all()
 
         on_answer_comment_list_get.send(
             self,

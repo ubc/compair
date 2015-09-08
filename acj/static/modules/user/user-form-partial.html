@@ -1,11 +1,11 @@
-<form name="userForm" class="form" ng-submit="userSubmit()" novalidate>
-	<fieldset ng-if="create || canManageUsers">
+<form name="userForm" class="form" ng-submit="save()" novalidate>
+	<fieldset ng-if="method == 'new'|| canManageUsers">
 		<legend>User Login</legend>
 		<p class="instructional-text">This application provides three user roles with increasing levels of permission. <strong>Students</strong> can post and edit their own answers, comments, and replies. <strong>Instructors</strong> can additionally add and edit their own courses and assignments. <strong>System Administrators</strong> can additionally create users and manage which users can access a course.</p>
 		<div class="form-group">
 			<label for="userType" class="required-star">Application Role </label>
 			<select class="form-control" id="userType" name="userType"
-				ng-model="user.usertypesforsystem_id" required 
+				ng-model="user.usertypesforsystem_id" required
 				ng-options="usertype.id as usertype.name for usertype in usertypes"></select>
 		</div>
 		<acj-field-with-feedback form-control="userForm.username">
@@ -19,7 +19,7 @@
 			<input class="form-control" id="student_no" type="text"
 				name="student_no" ng-model="user.student_no"/>
 		</acj-field-with-feedback>
-		<div ng-if="create">
+		<div ng-if="method == 'new'">
 			<acj-field-with-feedback form-control="userForm.password">
 				<label for=password" class="required-star">Password </label>
 				<input class="form-control" id="password" type="password"

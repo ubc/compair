@@ -40,6 +40,7 @@ module.factory(
 		var ret = $resource(
 			url, {commentId: '@id'},
 			{
+				'get': {cache: true},
 				'save': {method: 'POST', url: url, interceptor: Interceptors.answerCache},
 				'delete': {method: 'DELETE', url: url, interceptor: Interceptors.answerCache},
 				selfEval: {url: '/api/selfeval/courses/:courseId/questions/:questionId'},
@@ -63,6 +64,36 @@ module.factory(
 	}
 );
 
+module.filter('author', function() {
+	return function(input, authorId) {
+		if (angular.isObject(input)) {
+			input = _.values(input);
+		}
+		return _.find(input, {'user_id': authorId});
+	};
+});
+
+module.directive('acjStudentAnswer', function() {
+	return {
+		scope: {
+			answer: '='
+		},
+		templateUrl: 'modules/comment/answer.html'
+	}
+});
+
+module.directive('acjAnswerContent', function() {
+	return {
+		scope: {
+			answer: '=',
+			title: '@',
+			isChosen: '=',
+			criteriaAndQuestions: '='
+		},
+		templateUrl: 'modules/comment/answer-content.html'
+	}
+});
+
 /***** Controllers *****/
 module.controller(
 	"QuestionCommentCreateController",
@@ -70,7 +101,7 @@ module.controller(
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
-	
+
 		$scope.comment = {};
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
 			function(ret) {
@@ -128,7 +159,7 @@ module.controller(
 		);
 		$scope.commentSubmit = function () {
 			QuestionCommentResource.save({'courseId': courseId, 'questionId': questionId}, $scope.comment).$promise.then(
-				function() { 
+				function() {
 					Toaster.success("Comment Updated!");
 					$location.path('/course/' + courseId + '/question/' +questionId);
 				},
@@ -147,7 +178,7 @@ module.controller(
 		var questionId = $scope.questionId = $routeParams['questionId'];
 		var answerId = $routeParams['answerId'];
 		$scope.answerComment = true;
-		$scope.canManagePosts = 
+		$scope.canManagePosts =
 			Authorize.can(Authorize.MANAGE, QuestionResource.MODEL, courseId);
 		$scope.comment = {};
 
@@ -188,7 +219,7 @@ module.controller(
 						Toaster.reqerror("Unable to post new reply.", ret);
 					}
 				);
-		};	
+		};
 	}
 );
 
@@ -240,22 +271,17 @@ module.controller(
 	{
 		var courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
-		$scope.search = {'userId': null};
-		$scope.course = {};
 		$scope.courseId = courseId;
 		$scope.questionId = questionId;
-		$scope.deletedAnsMsg = '<i>(This answer has been deleted.)</i>';
-		$scope.noAnsMsg = '<p><i>(No answer has been submitted by this student.)</i></p>';
+		$scope.listFilters = {
+			page: 1,
+			perPage: 20,
+			group: null,
+			author: null
+		};
+		$scope.answers = [];
 
-		var allStudents = {};
-		var userIds = {};
-		$scope.group = null;
-
-		$scope.ans = {};
-		$scope.userToAns = {};
-		var gotAnswers = false;
-
-		CourseResource.get({'id':courseId}).$promise.then(
+		CourseResource.get({'id':courseId},
 			function (ret) {
 				breadcrumbs.options = {'Course Questions': ret['name']};
 			},
@@ -264,105 +290,95 @@ module.controller(
 			}
 		);
 
-		EvalCommentResource.view({'courseId': courseId, 'questionId': questionId}).$promise.then(
-			function (ret) {
-				$scope.comparisons = ret.comparisons;
-			},
-			function (ret) {
-				Toaster.reqerorr('Error', ret);
-			}
-		);
-
-		CourseResource.getStudents({'id': courseId}).$promise.then(
-			function (ret) {
-				allStudents = ret.students;
-				userIds = getUserIds(allStudents);
-				$scope.students = allStudents;
-			},
+		$scope.students = CourseResource.getStudents({'id': courseId},
+			function (ret) {},
 			function (ret) {
 				Toaster.reqerror("Class list retrieval failed", ret);
 			}
 		);
-		
-		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
+
+		QuestionResource.get({'courseId': courseId, 'questionId': questionId},
 			function(ret) {
 				$scope.parent = ret.question;
 				$scope.criteria = {};
 				angular.forEach(ret.question.criteria, function(criterion, key){
 					$scope.criteria[criterion['id']] = criterion['criterion']['name'];
 				});
-				$scope.search.criteriaId = $scope.criteria[0];
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve the question "+questionId, ret);
 			}
 		);
 
-		GroupResource.get({'courseId': courseId}).$promise.then(
-			function (ret) {
-				$scope.groups = ret.groups;
-			},
+		$scope.groups = GroupResource.get({'courseId': courseId},
+			function (ret) {},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve the groups in the course.", ret);
 			}
 		);
 
-		var getUserIds = function(students) {
-			var users = {};
-			angular.forEach(students, function(s, key){
-				users[s.user.id] = 1;
+		$scope.loadAnswer = function(id) {
+			if (_.find($scope.answers, {id: id})) return;
+			AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': id}, function(response) {
+				$scope.answers.push(convertScore(response));
 			});
-			return users;
 		};
 
-		$scope.updateGroup = function() {
-			$scope.search.userId = null;
-			if ($scope.group == null) {
-				$scope.students = allStudents;
-				userIds = getUserIds($scope.students);
-			} else {
-				GroupResource.get({'courseId': courseId, 'groupId': $scope.group.id}).$promise.then(
-					function (ret) {
-						$scope.students = ret.students;
-						userIds = getUserIds($scope.students);
-					},
-					function (ret) {
-						Toaster.reqerror("Unable to retrieve the group members", ret);
-					}
-				);
-			}
+		$scope.loadAnswerByAuthor = function(author_id) {
+			if (_.find($scope.answers, {user_id: author_id})) return;
+			AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'author': author_id}, function(response) {
+				var answer = response.objects[0];
+				$scope.answers.push(convertScore(answer));
+			});
 		};
 
-		$scope.commentFilter = function(user_id) {
-			return function(comment) {
-				return ((user_id == null && comment[0].user_id in userIds) || comment[0].user_id == user_id);
-			}
+		$scope.loadAllAnswers = function() {
+			var missingIds = _($scope.comparisons.objects).pluck('answer1.id')
+				.concat(_.pluck($scope.comparisons.objects, 'answer2.id'))
+				.uniq().difference(_.pluck($scope.answers, 'id')).value();
+			AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'ids': missingIds.join(','), 'perPage': missingIds.length}, function(response) {
+				_.forEach(response.objects, function(answer) {
+					$scope.answers.push(convertScore(answer));
+				});
+			});
 		};
 
-		$scope.answers = function() {
-			if (!gotAnswers) {
-				AnswerResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
-					function (ret) {
-						for (var key in ret.objects) {
-							var answer = ret.objects[key];
-							var scores = {};
-							for (var index in answer.scores) {
-								scores[answer.scores[index].criteriaandquestions_id] = answer.scores[index].normalized_score;
-							}
-							answer.scores = scores;
-							$scope.ans[answer.id] = answer;
-							$scope.userToAns[answer.user_id] = answer.id;
-						}
-						gotAnswers = true;
-					},
-					function (ret) {
-						Toaster.reqerror("Failed to retrieve the answers", ret);
-					}
-				);
+		$scope.$watchCollection('listFilters', function(newValue, oldValue) {
+			if (angular.equals(newValue, oldValue)) return;
+			if (oldValue.group != newValue.group) {
+				$scope.listFilters.author = null;
+				$scope.listFilters.page = 1;
 			}
+			if (oldValue.author != newValue.author) {
+				$scope.listFilters.page = 1;
+			}
+			$scope.updateList();
+		});
+
+		$scope.updateList = function() {
+			var params = angular.merge({'courseId': $scope.courseId, 'questionId': questionId}, $scope.listFilters);
+			EvalCommentResource.view(params,
+				function (ret) {
+					$scope.comparisons = ret;
+				},
+				function (ret) {
+					Toaster.reqerror('Error', ret);
+				}
+			);
 		};
+
+		$scope.updateList();
 	}
 );
 
+function convertScore(answer) {
+	var scores = answer.scores;
+	answer.scores = _.reduce(scores, function(results, score) {
+		results[score.criteriaandquestions_id] = score.normalized_score;
+		return results;
+	}, {});
+
+	return answer;
+}
 // End anonymouse function
 }) ();

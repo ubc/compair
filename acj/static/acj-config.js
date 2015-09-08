@@ -1,3 +1,10 @@
+String.prototype.format = function() {
+	var args = arguments;
+	return this.replace(/{(\d)}/g, function(match, number) {
+		return typeof args[number] != 'undefined' ? args[number] : match;
+	});
+};
+
 var myApp = angular.module('myApp', [
 	'ngRoute', 
 	'http-auth-interceptor', 
@@ -20,13 +27,39 @@ var myApp = angular.module('myApp', [
 	'ubc.ctlt.acj.report'
 ]);
 
-myApp.config( function ($routeProvider, $logProvider, $httpProvider) {
+myApp.factory('defaultErrorHandlerInterceptor', ['$q', '$log', 'Toaster', function($q, $log, Toaster) {
+	return {
+		'responseError': function(rejection) {
+			$log.error(rejection.statusText);
+			switch (rejection.status) {
+				case 400:
+				case 409:
+					Toaster.warning(rejection.statusText, rejection.data.error);
+					break;
+				case 401:
+					// session interceptor will handle this
+					break;
+				case 403:
+					Toaster.error(rejection.statusText, "Sorry, you don't have permission for this action.");
+					break;
+				default:
+					// TODO Tell them what support to contact
+					Toaster.error(rejection.statusText, "Unable to connect. This might be a server issue or your connection might be down. Please contact support if the problem continues.");
+
+			}
+			return $q.reject(rejection);
+		}
+	}
+}]);
+
+myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($routeProvider, $logProvider, $httpProvider) {
 	var debugMode = false;
 
 	if (!$httpProvider.defaults.headers.common) {
 		$httpProvider.defaults.headers.common = {};
 	}
 	$httpProvider.defaults.headers.common['If-Modified-Since'] = '0';
+	$httpProvider.interceptors.push('defaultErrorHandlerInterceptor');
 
 	$routeProvider
 		.when ('/', 
@@ -36,8 +69,11 @@ myApp.config( function ($routeProvider, $logProvider, $httpProvider) {
 			})
 		.when ('/course/new', 
 			{
-				templateUrl: 'modules/course/course-create-partial.html',
-				label: "Add Course"
+				templateUrl: 'modules/course/course-partial.html',
+				label: "Add Course",
+				controller: 'CourseController',
+				controllerAs: 'rc',
+				method: 'new'
 			})
 		.when ('/course/:courseId', 
 			{
@@ -46,8 +82,11 @@ myApp.config( function ($routeProvider, $logProvider, $httpProvider) {
 			})
 		.when ('/course/:courseId/configure', 
 			{
-				templateUrl: 'modules/course/course-configure-partial.html',
-				label: "Edit Course"
+				templateUrl: 'modules/course/course-partial.html',
+				label: "Edit Course",
+				controller: 'CourseController',
+				controllerAs: 'rc',
+				method: 'edit'
 			})
 		.when ('/course/:courseId/user',
 			{
@@ -156,19 +195,25 @@ myApp.config( function ($routeProvider, $logProvider, $httpProvider) {
 		.when('/user/create',
 			{
 				templateUrl: 'modules/user/user-create-partial.html',
-				label: "Create User"
+				label: "Create User",
+				controller: 'UserController',
+				method: 'new'
 			})
 		.when('/user/:userId/edit',
 			{
 				templateUrl: 'modules/user/user-edit-partial.html',
-				label: "Edit User"
+				label: "User Profile",
+				controller: 'UserController',
+				method: 'edit'
 			})
 		.when('/user/:userId',
 			{
 				templateUrl: 'modules/user/user-view-partial.html',
-				label: "View User"
+				label: "User Profile",
+				controller: 'UserController',
+				method: 'view'
 			})
 		.otherwise({redirectTo: '/'});
 
 	$logProvider.debugEnabled(debugMode);
-});
+}]);

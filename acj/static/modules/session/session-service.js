@@ -7,7 +7,7 @@
      * It retrieves the user information and permissions from backend if they are not
      * available. Otherwise, provides the information from local cached values.
      */
-    module.factory('Session', function ($http, $q, $cookieStore, $log, UserResource) {
+    module.factory('Session', function ($http, $q, $cookies, $log, UserResource) {
         return {
             _user: new UserResource,
             _permissions: null,
@@ -29,7 +29,7 @@
                     return $q.when(this._user);
                 }
 
-                var cookie_user = $cookieStore.get('current.user');
+                var cookie_user = $cookies.getObject('current.user');
                 if (cookie_user)
                 {
                     angular.extend(this._user, cookie_user);
@@ -44,13 +44,13 @@
                         // retrieve logged in user's information
                         // return a promise for chaining
                         var u = UserResource.get({"id": result.data.id}, function(user) {
-                            $cookieStore.put('current.user', user);
+                            $cookies.putObject('current.user', user);
                             angular.extend(scope._user, user);
                             deferred.resolve(scope._user);
                         });
                         angular.extend(scope._user, u);
                         scope._permissions = result.data.permissions;
-                        $cookieStore.put('current.permissions', scope._permissions);
+                        $cookies.putObject('current.permissions', scope._permissions);
                         return deferred.promise;
                     });
             },
@@ -65,7 +65,7 @@
                     return $q.when(this._permissions);
                 }
 
-                var cookie_permissions = $cookieStore.get('current.permissions');
+                var cookie_permissions = $cookies.getObject('current.permissions');
                 if (cookie_permissions)
                 {
                     this._permissions = cookie_permissions;
@@ -77,7 +77,7 @@
                 return $http.get('/api/session/permission')
                     .then(function (result) {
                         scope._permissions = result.data;
-                        $cookieStore.put('current.permissions', scope._permissions);
+                        $cookies.putObject('current.permissions', scope._permissions);
                         return scope._permissions;
                     });
             },
@@ -96,15 +96,15 @@
                     delete this._user[prop];
                 }
                 this._permissions = null;
-                $cookieStore.remove('current.user');
-                $cookieStore.remove('current.permissions');
+                $cookies.remove('current.user');
+                $cookies.remove('current.permissions');
             },
 			refresh: function() {
 				var scope = this;
 				return $http.get('/api/session/permission')
                     .then(function (result) {
 						scope._permissions = result.data;
-						$cookieStore.put('current.permissions', result.data);
+						$cookies.putObject('current.permissions', result.data);
 						return true;
                     });
 			}

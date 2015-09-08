@@ -1,18 +1,13 @@
 import unittest
 
-from acj import create_app
-from acj.core import db
-from acj.tests import test_app_settings
 from acj.models import Users
+from test_acj import ACJTestCase
 
 
-class TestUsersModel(unittest.TestCase):
+class TestUsersModel(ACJTestCase):
     user = Users()
 
     def setUp(self):
-        app = create_app(settings_override=test_app_settings)
-        self.app = app.test_client()
-        db.create_all(app=app)
         self.user.firstname = "John"
         self.user.lastname = "Smith"
 
@@ -33,8 +28,6 @@ class TestUsersModel(unittest.TestCase):
 
     def test_set_password(self):
         self.user.password = '123456'
-        self.assertNotEqual(self.user.password, '123456')
-
         self.assertTrue(self.user.verify_password('123456'))
 
 
