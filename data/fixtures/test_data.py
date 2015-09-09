@@ -7,12 +7,12 @@ import factory.fuzzy
 from acj import db
 from six.moves import range
 from acj.models import UserTypesForSystem, UserTypesForCourse, Criteria
-from data.fixtures import CoursesFactory, UsersFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, \
+from data.factories import CoursesFactory, UsersFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, \
     PostsForAnswersFactory, CriteriaFactory, CriteriaAndCoursesFactory, AnswerPairingsFactory, JudgementsFactory, \
     PostsForJudgementsFactory, PostsForCommentsFactory, GroupsFactory, GroupsAndUsersFactory, \
     CriteriaAndPostsForQuestionsFactory, PostsForQuestionsAndPostsForCommentsFactory, \
-    PostsForAnswersAndPostsForCommentsFactory, DefaultFixture
-from data.fixtures.factories import ScoreFactory
+    PostsForAnswersAndPostsForCommentsFactory, ScoreFactory
+from data.fixtures import DefaultFixture
 
 
 class BasicTestData:

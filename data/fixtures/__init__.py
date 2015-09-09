@@ -5,12 +5,10 @@ from datetime import datetime, timedelta
 import random
 
 from acj.models import UserTypesForCourse, UserTypesForSystem, SelfEvaluationTypes, Criteria
-from data.fixtures.factories import UsersFactory, UserTypesForCourseFactory, UserTypesForSystemFactory, CriteriaFactory, \
+from data.factories import UsersFactory, UserTypesForCourseFactory, UserTypesForSystemFactory, CriteriaFactory, \
     CoursesFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, PostsForAnswersFactory, \
-    CriteriaAndCoursesFactory, AnswerPairingsFactory, JudgementsFactory, PostsForJudgementsFactory, \
-    PostsForCommentsFactory, GroupsFactory, GroupsAndUsersFactory, CriteriaAndPostsForQuestionsFactory, \
-    SelfEvaluationTypesFactory, PostsForQuestionsAndPostsForCommentsFactory, \
-    PostsForAnswersAndPostsForCommentsFactory
+    CriteriaAndCoursesFactory, CriteriaAndPostsForQuestionsFactory, \
+    SelfEvaluationTypesFactory
 
 
 class DefaultFixture(object):
