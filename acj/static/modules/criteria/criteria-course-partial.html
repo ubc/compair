@@ -4,7 +4,7 @@
 
 	<div ng-repeat="(key, criterion) in course.criteria" class="row">
 		<div class="col-sm-2" ng-if="courseId">
-			<p><a href="#/course/{{ courseId }}/criterion/{{ criterion.criterion.id }}/edit"
+			<p><a href="#/course/{{ courseId }}/criterion/{{ criterion.id }}/edit"
 				  ng-if="(canManageCriteriaCourses || criterion.users_id==loggedInUserId) && !criterion.judged">
 				Edit
 			</a></p>
