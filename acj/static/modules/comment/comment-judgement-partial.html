@@ -32,8 +32,7 @@
 		<span ng-if="listFilters.group && !listFilters.author"> for Group "{{ (groups.groups | filter:{id:listFilters.group}:true)[0].name }}"</span>
 		<span ng-if="listFilters.author"> for "{{ (students.students | filter:{user: {id:listFilters.author} }:true)[0].user.name }}"</span>
 	</h2>
-
-    <pagination total-items="comparisons.total" ng-model="listFilters.page" max-size="10" class="pagination-sm" boundary-links="true" items-per-page="listFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></pagination>
+	<p ng-if="numPages > 1">(Page {{listFilters.page}} of {{numPages}})</p>
 
 	<div ng-show="comparisons.objects.length" class="evaluations">
 
@@ -107,6 +106,10 @@
 		
 		</div>
 
+	</div>
+	
+	<div class="text-center">
+		<pagination total-items="comparisons.total" ng-model="listFilters.page" max-size="10" class="pagination-sm" boundary-links="true" direction-links="false" items-per-page="listFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></pagination>
 	</div>
 	
 	<div ng-show="!comparisons.objects.length">

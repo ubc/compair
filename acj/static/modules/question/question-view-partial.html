@@ -122,11 +122,13 @@
 			<div class="tab-header">
 			
 				<div class="row">
-					<h2 class="col-sm-6">
-						Answers
-						<span ng-show="canManagePosts && answerFilters.group && !answerFilters.author">for "{{answerFilters.group.name}}"</span>
-						<span ng-show="answerFilters.author">for "{{ answerFilters.author.user.name }}"</span>
-					</h2>
+					<div class="col-sm-6">
+						<h2>Answers
+							<span ng-show="canManagePosts && answerFilters.group && !answerFilters.author">for "{{answerFilters.group.name}}"</span>
+							<span ng-show="answerFilters.author">for "{{ answerFilters.author.user.name }}"</span>
+						</h2>
+						<p ng-if="numPages > 1">(Page {{answerFilters.page}} of {{numPages}})</p>
+					</div>
 					
 					<div class="col-sm-6 text-right multi-filters">
 						<div ng-if="question.answers_count && (canManagePosts || see_answers)">
@@ -192,7 +194,6 @@
 			</div>
 			
 			<div class="all-answers">
-                <pagination total-items="totalNumAnswers" ng-model="answerFilters.page" max-size="10" class="pagination-sm" boundary-links="true" items-per-page="answerFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></pagination>
 
 				<!-- Instructor Answers Section -->
 				<div class="each-answer clearfix" ng-repeat="answer in answers.objects | filter:adminFilter()" ng-if="instructors[answer.user_id] && (see_answers || canManagePosts)">
@@ -341,7 +342,7 @@
 					<!-- Student Score (not used for instructor answers) -->
 					<p class="pull-right score-display" ng-if="canManagePosts && score.criteriaandquestions_id==answerFilters.orderBy && answer.scores.length > 0" ng-repeat="score in answer.scores">
 						<em>Score: {{score.normalized_score}}%</em>
-						<a tool-tip href="" data-placement="left" data-toggle="tooltip" class="score-tooltip" title="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer.">
+						<a href="" tooltip="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
 							<i class="fa fa-question-circle"></i>
 						</a>
 					</p>
@@ -351,10 +352,12 @@
 
 					<!-- Student Answer Replies Section -->
 					<a href="" ng-click="showReplies = !showReplies; showReplies && loadComments(answer)">
-						<h3 class="reply-heading" ng-if="answer.comments_count && (see_answers || canManagePosts)">
+						<h3 class="reply-heading" ng-if="(answer.comments_count && (answer.user_id == loggedInUserId || canManagePosts)) || (answer.public_comments_count && see_answers)">
 							<i class="fa fa-chevron-down" ng-show="showReplies"></i>
 							<i class="fa fa-chevron-right" ng-hide="showReplies"></i>
-                            <ng-pluralize count="answer.comments_count" when="{'1': '{} reply', 'other': '{} replies'}"></ng-pluralize> to this answer
+							<ng-pluralize ng-if="answer.public_comments_count && !canManagePosts && (see_answers && answer.user_id != loggedInUserId)" count="answer.public_comments_count" when="{'1': '{} public reply', 'other': '{} public replies'}"></ng-pluralize>
+							<ng-pluralize ng-if="answer.comments_count && (answer.user_id == loggedInUserId || canManagePosts)" count="answer.comments_count" when="{'1': '{} reply', 'other': '{} replies'}"></ng-pluralize>
+							to this answer
 							<span ng-if="canManagePosts || answer.user_id == loggedInUserId">({{ answer.private_comments_count }} private, {{ answer.public_comments_count }} public)</span>
 						</h3>
 					</a>
@@ -362,7 +365,7 @@
 					<div ng-show="showReplies">
 
 						<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer)" class="each-reply" ng-if="see_answers || canManagePosts">
-
+					
 							<hr ng-hide="$first" />
 
 							<!-- Student Reply Metadata Header -->
@@ -413,8 +416,10 @@
 				</div>
 				
 			</div><!-- closes answered show-hide div -->
-
-            <pagination total-items="totalNumAnswers" ng-model="answerFilters.page" max-size="10" class="pagination-sm" boundary-links="true" items-per-page="answerFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></pagination>
+			
+			<div class="text-center">
+				<pagination total-items="totalNumAnswers" ng-model="answerFilters.page" max-size="10" class="pagination-sm" boundary-links="true" direction-links="false" items-per-page="answerFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></pagination>
+			</div>
 
 		</div><!-- closes answers-tab -->
 
@@ -466,12 +471,13 @@
 				</div>
 				
 				<!-- Student Answer Replies Section -->
-                <a href="" ng-click="showReplies = !showReplies; showReplies && loadComments(answer)">
+				<a href="" ng-click="showReplies = !showReplies; showReplies && loadComments(answer)">
 					<h3 class="reply-heading" ng-if="answer.comments_count && (see_answers || canManagePosts)">
-                        <i class="fa fa-chevron-down" ng-show="showReplies"></i>
-                        <i class="fa fa-chevron-right" ng-hide="showReplies"></i>
-                        <ng-pluralize count="answer.comments_count" when="{'1': '{} reply', 'other': '{} replies'}"></ng-pluralize> to this answer
-                        <span ng-if="canManagePosts || answer.user_id == loggedInUserId">({{ answer.private_comments_count }} private, {{ answer.public_comments_count }} public)</span>
+						<i class="fa fa-chevron-down" ng-show="showReplies"></i>
+						<i class="fa fa-chevron-right" ng-hide="showReplies"></i>
+						<ng-pluralize count="answer.comments_count" when="{'1': '{} reply', 'other': '{} replies'}"></ng-pluralize>
+						to this answer
+						<span ng-if="canManagePosts || answer.user_id == loggedInUserId">({{ answer.private_comments_count }} private, {{ answer.public_comments_count }} public)</span>
 					</h3>
 				</a>
 
