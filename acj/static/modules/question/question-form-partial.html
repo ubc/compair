@@ -139,9 +139,9 @@
 		<p class="required-star"><strong>Select one or more of these course criteria</strong></p>
 		<div ng-repeat="courseCriterion in courseCriteria">
 			<input type="checkbox" name="criteria{{ courseCriterion.id }}" id="criteria{{ courseCriterion.id }}"
-				   ng-model="selectedCriteria[courseCriterion.criterion.id]"
-				   ng-change="selectCriteria(courseCriterion.criterion.id)" ng-disabled="judged"/>
-			<label for="criteria{{ courseCriterion.id }}">{{ courseCriterion.criterion.name }}</label>
+				   ng-model="selectedCriteria[courseCriterion.id]"
+				   ng-change="selectCriteria(courseCriterion.id)" ng-disabled="judged"/>
+			<label for="criteria{{ courseCriterion.id }}">{{ courseCriterion.name }}</label>
 		</div>
 	</fieldset>
 	

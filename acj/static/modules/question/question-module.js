@@ -115,12 +115,12 @@ module.directive('comparisonPreview', function() {
 					angular.forEach(chosen, function(selected, criterionId) {
 						/* then we will loop through the course criteria to find what matches */
 						angular.forEach(all, function(courseCrit) {
-							if (criterionId == courseCrit.criterion.id && selected == true) {
-								// alert('match' + criterionId + ' ' + courseCrit.criterion.id);
+							if (criterionId == courseCrit.id && selected == true) {
+								// alert('match' + criterionId + ' ' + courseCrit.id);
 								/* matching criteria are added to the preview */
 								$scope.previewCriteria.push(courseCrit);
 							} else {
-								//alert('MISmatch ' + criterionId + ' ' + courseCrit.criterion.id);
+								//alert('MISmatch ' + criterionId + ' ' + courseCrit.id);
 							}
 						});
 					});
@@ -370,7 +370,7 @@ module.controller("QuestionViewController",
 				$scope.question = ret.question;
 
 				$scope.criteria = ret.question.criteria;
-				if ($scope.criteria.length > 1) {
+				if ($scope.criteria.length >= 1) {
 					$scope.answerFilters.orderBy = $scope.criteria[0].id;
 				}
 				$scope.reverse = true;
@@ -957,7 +957,7 @@ module.controller("QuestionEditController",
 						});
 						for (var key in ret.objects) {
 							var c = ret.objects[key];
-							$scope.selectedCriteria[c.criterion.id] = c.criterion.id in inQuestion
+							$scope.selectedCriteria[c.id] = c.id in inQuestion;
 						}
 					},
 					function (ret) {
