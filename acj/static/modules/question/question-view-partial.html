@@ -434,7 +434,7 @@
 			</div>
 			
 			<!-- Student Answer Metadata Header -->
-			<div class="each-evaluation clearfix" ng-repeat="answer in answers.objects | filter: myAnswer()">
+			<div class="each-evaluation clearfix" ng-repeat="answer in user_answers.objects">
 				<div class="each-header clearfix">
 					<a ng-href="#/user/{{answer.user_id}}">
 						<img src="//www.gravatar.com/avatar/{{answer.user_avatar}}?s=32&d=retro" />

@@ -67,7 +67,7 @@ module.directive(
 					if (scope.thisHeight > 200) {
 						scope.showReadMore = true;
 					}
-				}, 7000);  
+				}, 7000);
 			}
 		};
 	}
@@ -203,7 +203,7 @@ module.factory(
 module.service('attachService', function(FileUploader, $location, Toaster) {
 	var filename = '';
 	var alias = '';
-	
+
 	var getUploader = function() {
 		var uploader = new FileUploader({
 			url: '/api/attachment',
@@ -251,8 +251,8 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 		return function(fileItem, response) {
 			if (response) {
 				filename = response['name'];
-				alias = fileItem.file.name;	
-			}	
+				alias = fileItem.file.name;
+			}
 		};
 	};
 
@@ -491,38 +491,27 @@ module.controller("QuestionViewController",
 			}
 		};
 
-		$scope.myAnswer = function() {
-			return function (answer) {
-				return answer.user_id == $scope.loggedInUserId;
-			}
-		};
-
 		var tab = 'answers';
 		// tabs: answers, help, participation, comparisons
 		$scope.setTab = function(name) {
 			tab = name;
 			if (name == "comparisons") {
-				EvalCommentResource.view({'courseId': $scope.courseId, 'questionId': questionId},
-					function (ret) {
-						$scope.comparisons = ret.comparisons;
-					},
-					function (ret) {
-						Toaster.reqerror('Error', ret);
-					}
-				)
+				$scope.user_answers = AnswerResource.get({
+					courseId: $scope.courseId, questionId: questionId, author: $scope.loggedInUserId
+				});
 			}
 		};
 		$scope.showTab = function(name) {
 			return tab == name;
 		};
-		
+
 		// revealAnswer function shows full answer content for abbreviated answers (determined by getHeight directive)
 		$scope.revealAnswer = function(answerId) {
 			var thisClass = '.content.'+answerId;      // class for the answer to show is "content" plus the answer's ID
 			$(thisClass).css({'max-height' : 'none'}); // now remove height restriction for this answer
 			this.showReadMore = false;                 // and hide the read more button for this answer
 		};
-		
+
 		// question delete function
 		$scope.deleteQuestion = function(course_id, question_id) {
 			QuestionResource.delete({'courseId': course_id, 'questionId': question_id},
@@ -554,7 +543,7 @@ module.controller("QuestionViewController",
 				}
 			);
 		};
-		
+
 		// unflag a flagged answer
 		$scope.unflagAnswer = function(answer, course_id, question_id, answer_id) {
 			var params = {'flagged': false};
@@ -944,7 +933,7 @@ module.controller("QuestionEditController",
 				AttachmentResource.get({'postId': ret.question.post.id}).$promise.then(
 					function (ret) {
 						$scope.question.uploadedFile = ret.file;
-						
+
 					},
 					function (ret) {
 						Toaster.reqerror("Attachment Not Found", ret);
@@ -1006,7 +995,7 @@ module.controller("QuestionEditController",
 					Toaster.success("Question Updated");
 					$location.path('/course/' + courseId);
 				 },
-				function(ret) { 
+				function(ret) {
 					$scope.submitted = false;
 					Toaster.reqerror("Question Not Updated", ret);
 				}
