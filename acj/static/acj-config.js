@@ -59,6 +59,7 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
 		$httpProvider.defaults.headers.common = {};
 	}
 	$httpProvider.defaults.headers.common['If-Modified-Since'] = '0';
+	$httpProvider.defaults.headers.common.Accept = 'application/json';
 	$httpProvider.interceptors.push('defaultErrorHandlerInterceptor');
 
 	$routeProvider

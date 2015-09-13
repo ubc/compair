@@ -208,7 +208,10 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 		var uploader = new FileUploader({
 			url: '/api/attachment',
 			queueLimit: 1,
-			autoUpload: true
+			autoUpload: true,
+			headers: {
+				Accept: 'application/json'
+			}
 		});
 
 		filename = '';

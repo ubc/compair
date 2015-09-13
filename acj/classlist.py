@@ -179,7 +179,12 @@ def output_csv(data, code, headers=None):
     csv_buffer = StringIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames, extrasaction='ignore')
     writer.writeheader()
-    writer.writerows(data['objects'])
+
+    if 'objects' in data:
+        writer.writerows(data['objects'])
+    elif 'invalids' in data:
+        writer.writerows(data['invalids'])
+
     response = make_response(csv_buffer.getvalue(), code)
     response.headers.extend(headers or {})
     response.headers['Content-Disposition'] = 'attachment;filename=classlist.csv'

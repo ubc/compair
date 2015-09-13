@@ -48,7 +48,10 @@ module.service('importService', function(FileUploader, $location, $cacheFactory,
 		uploader = new FileUploader({
 			url: '/api/courses/'+courseId+'/'+type,
 			queueLimit: 1,
-			removeAfterUpload: true
+			removeAfterUpload: true,
+			headers: {
+				Accept: 'application/json'
+			}
 		});
 		model = type;
 
