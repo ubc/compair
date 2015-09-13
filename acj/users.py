@@ -1,5 +1,5 @@
 from flask import Blueprint, current_app
-from bouncer.constants import MANAGE, EDIT, CREATE
+from bouncer.constants import MANAGE, EDIT, CREATE, READ
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from flask_login import login_required, current_user
@@ -127,10 +127,8 @@ class UserAPI(Resource):
 # /
 class UserListAPI(Resource):
     @login_required
-    # @pagination(Users)
-    # @marshal_with(dataformat.get_users(False))
     def get(self):
-        restrict_users = not allow(MANAGE, Users)
+        restrict_users = not allow(READ, Users)
 
         params = user_list_parser.parse_args()
 
