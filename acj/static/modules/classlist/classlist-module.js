@@ -118,7 +118,7 @@ module.controller(
 		};
 
 		$scope.enrol = function(user, course_role) {
-			var role = {'course_role_id': course_role.id};
+			var role = {'course_role': course_role};
 			ClassListResource.enrol({'courseId': courseId, 'userId': user.id}, role,
 				function (ret) {
 					Toaster.success("User Added", 'Successfully changed '+ ret.fullname +'\'s course role to ' + ret.course_role);
