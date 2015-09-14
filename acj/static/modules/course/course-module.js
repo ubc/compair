@@ -279,7 +279,9 @@ module.controller(
 		$scope.remove = function(key) {
 			var criterion = $scope.course.criteria[key];
 			$scope.course.criteria.splice(key, 1);
-			$scope.availableCriteria.push(criterion);
+			if (criterion.default == true) {
+				$scope.availableCriteria.push(criterion);
+			}
 		};
 
 		//  Calling routeParam method

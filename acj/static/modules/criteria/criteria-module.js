@@ -33,14 +33,13 @@ module.controller('CriterionConfigureController',
 		$scope.criterion = {};
 		var courseId = $routeParams['courseId'];
 		var criterionId = $routeParams['criterionId'];
-		CriteriaResource.get({'criteriaId': criterionId}, function (ret) {
-			$scope.criterion = ret.criterion;
-		});
+		$scope.criterion = CriteriaResource.get({'criteriaId': criterionId});
 		// update criterion
-		$scope.$on('CRITIERA_ADDED', function() {
-			Toaster.success("Criterion Updated", "Successfully saved your criterion changes.");
-			$location.path('/course/' + courseId + '/configure');
+		$scope.$on('CRITERIA_ADDED', function() {
+			//Toaster.success("Criterion Updated", "Successfully saved your criterion changes.");
+			//$location.path('/course/' + courseId + '/configure');
 		});
+		
 	}]
 );
 
