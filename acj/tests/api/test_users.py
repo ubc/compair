@@ -1,6 +1,4 @@
 import json
-import string
-import random
 
 from flask.ext.bouncer import ensure
 from flask.ext.login import login_user, logout_user
@@ -9,7 +7,7 @@ from werkzeug.exceptions import Unauthorized
 from data.fixtures import DefaultFixture
 from data.fixtures import UsersFactory
 from data.fixtures.test_data import BasicTestData
-from acj import db, Users
+from acj import Users
 from acj.tests.test_acj import ACJTestCase
 from acj.models import UserTypesForSystem, UserTypesForCourse
 
@@ -56,10 +54,9 @@ class UsersAPITests(ACJTestCase):
             self.assertIn('email', root)
 
     def test_users_info_restricted(self):
-        user = UsersFactory(password='password', usertypeforsystem=DefaultFixture.SYS_ROLE_NORMAL)
-        db.session.commit()
+        user = UsersFactory(usertypeforsystem=DefaultFixture.SYS_ROLE_NORMAL)
 
-        with self.login(user.username, 'password'):
+        with self.login(user.username, user.password):
             rv = self.client.get('/api/users/' + str(DefaultFixture.ROOT_USER.id))
             self.assert200(rv)
             root = rv.json
@@ -109,57 +106,55 @@ class UsersAPITests(ACJTestCase):
 
     def test_create_user(self):
         url = '/api/users'
-        types = UserTypesForSystem.query.filter_by(name=UserTypesForSystem.TYPE_NORMAL).all()
-        expected = {
-            'username': ''.join(random.choice(string.ascii_letters) for _ in range(8)),
-            'usertypesforsystem_id': types[0].id,
-            'student_no': ''.join(random.choice(string.digits) for _ in range(4)),
-            'firstname': "First" + ''.join(random.choice(string.digits) for _ in range(4)),
-            'lastname': "Last" + ''.join(random.choice(string.digits) for _ in range(4)),
-            'displayname': "display" + ''.join(random.choice(string.digits) for _ in range(4)),
-            'email': 'test' + ''.join(random.choice(string.digits) for _ in range(4)) + "@testserver.ca",
-            'password': 'password'
-        }
+        self.client.file_name = 'user_create.json'
 
         # test login required
-        rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+        expected = UsersFactory.stub(usertypesforsystem_id=DefaultFixture.SYS_ROLE_NORMAL.id)
+        rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
         self.assert401(rv)
 
         # test unauthorized user
         with self.login(self.data.get_authorized_student().username):
-            rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+            expected = UsersFactory.stub(usertypesforsystem_id=DefaultFixture.SYS_ROLE_NORMAL.id)
+            rv = self.client.post(
+                url, data=json.dumps(expected.__dict__), content_type='application/json', record='unauthorized')
             self.assert403(rv)
 
-        # test duplicate username
         with self.login(self.data.get_authorized_instructor().username):
-            duplicate = expected.copy()
-            duplicate['username'] = self.data.get_authorized_student().username
-            rv = self.client.post(url, data=json.dumps(duplicate), content_type='application/json')
+            # test duplicate username
+            expected = UsersFactory.stub(
+                usertypesforsystem_id=DefaultFixture.SYS_ROLE_NORMAL.id,
+                username=self.data.get_authorized_student().username)
+            rv = self.client.post(
+                url, data=json.dumps(expected.__dict__), content_type='application/json', record='duplicate_username')
             self.assertStatus(rv, 409)
             self.assertEqual("This username already exists. Please pick another.", rv.json['error'])
 
             # test duplicate student number
-            duplicate = expected.copy()
-            duplicate['student_no'] = self.data.get_authorized_student().student_no
-            rv = self.client.post(url, data=json.dumps(duplicate), content_type='application/json')
+            expected = UsersFactory.stub(
+                usertypesforsystem_id=DefaultFixture.SYS_ROLE_NORMAL.id,
+                student_no=self.data.get_authorized_student().student_no)
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assertStatus(rv, 409)
             self.assertEqual("This student number already exists. Please pick another.", rv.json['error'])
 
-            # test creating users of all user types for system
-            for user_type in types:
-                user = {
-                    'username': ''.join(random.choice(string.ascii_letters) for _ in range(8)),
-                    'usertypesforsystem_id': user_type.id,
-                    'student_no': ''.join(random.choice(string.digits) for _ in range(4)),
-                    'firstname': "First" + ''.join(random.choice(string.digits) for _ in range(4)),
-                    'lastname': "Last" + ''.join(random.choice(string.digits) for _ in range(4)),
-                    'displayname': "display" + ''.join(random.choice(string.digits) for _ in range(4)),
-                    'email': 'test' + ''.join(random.choice(string.digits) for _ in range(4)) + "@testserver.ca",
-                    'password': 'password'
-                }
-                rv = self.client.post(url, data=json.dumps(user), content_type="application/json")
-                self.assert200(rv)
-                self.assertEqual(user['displayname'], rv.json['displayname'])
+            # test creating student
+            expected = UsersFactory.stub(usertypesforsystem_id=DefaultFixture.SYS_ROLE_NORMAL.id)
+            rv = self.client.post(
+                url, data=json.dumps(expected.__dict__), content_type="application/json", record='create_student')
+            self.assert200(rv)
+            self.assertEqual(expected.displayname, rv.json['displayname'])
+
+            # test creating instructor
+            expected = UsersFactory.stub(usertypesforsystem_id=DefaultFixture.SYS_ROLE_INSTRUCTOR.id)
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
+            self.assert200(rv)
+            self.assertEqual(expected.displayname, rv.json['displayname'])
+
+            # test creating admin
+            expected = UsersFactory.stub(usertypesforsystem_id=DefaultFixture.SYS_ROLE_ADMIN.id)
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
+            self.assert403(rv)
 
     def test_edit_user(self):
         user = self.data.get_authorized_instructor()
