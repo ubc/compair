@@ -149,26 +149,25 @@ class UserListAPI(Resource):
     @login_required
     def post(self):
         user = Users()
-        require(CREATE, user)
         params = new_user_parser.parse_args()
-
         user.username = params.get("username")
-        username_exists = Users.query.filter_by(username=user.username).first()
-        if username_exists:
-            return {"error": "This username already exists. Please pick another."}, 409
-
-        user.student_no = params.get("student_no", None)
-        student_no_exists = Users.query.filter_by(student_no=user.student_no).first()
-        # if student_no is not left blank and it exists -> 409 error
-        if user.student_no is not None and student_no_exists:
-            return {"error": "This student number already exists. Please pick another."}, 409
-
         user.password = params.get("password")
+        user.student_no = params.get("student_no", None)
         user.usertypesforsystem_id = params.get("usertypesforsystem_id")
         user.email = params.get("email")
         user.firstname = params.get("firstname")
         user.lastname = params.get("lastname")
         user.displayname = params.get("displayname")
+        require(CREATE, user)
+
+        username_exists = Users.query.filter_by(username=user.username).first()
+        if username_exists:
+            return {"error": "This username already exists. Please pick another."}, 409
+
+        student_no_exists = Users.query.filter_by(student_no=user.student_no).first()
+        # if student_no is not left blank and it exists -> 409 error
+        if user.student_no is not None and student_no_exists:
+            return {"error": "This student number already exists. Please pick another."}, 409
 
         try:
             db.session.add(user)

@@ -27,6 +27,14 @@ def define_authorization(user, they):
             count()
         return bool(exists)
 
+    def if_equal_or_lower_than_me(target):
+        if user.usertypeforsystem.name == UserTypesForSystem.TYPE_INSTRUCTOR:
+            system_role = UserTypesForSystem.query.get(target.usertypesforsystem_id)
+            return system_role.name != UserTypesForSystem.TYPE_SYSADMIN
+
+        # student can't create user
+        return False
+
     # Assign permissions based on system roles
     user_system_role = user.usertypeforsystem.name
     if user_system_role == UserTypesForSystem.TYPE_SYSADMIN:
@@ -35,10 +43,10 @@ def define_authorization(user, they):
     elif user_system_role == UserTypesForSystem.TYPE_INSTRUCTOR:
         # instructors can create courses
         they.can(CREATE, Courses)
-        they.can(CREATE, Users)
         they.can(CREATE, Criteria)
         they.can(EDIT, Users, if_my_student)
 
+    they.can(CREATE, Users, if_equal_or_lower_than_me)
     # users can edit and read their own user account
     they.can(READ, Users, id=user.id)
     they.can(EDIT, Users, id=user.id)
