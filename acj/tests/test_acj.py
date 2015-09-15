@@ -115,7 +115,8 @@ class RecordableClient(FlaskClient):
 
         if record and self.file_name:
             file_path_name = '{}/../../data/fixtures/{}'.format(dirname(__file__), self.file_name)
-            with open(file_path_name, 'r') as f:
+            with open(file_path_name, 'a+') as f:
+                f.seek(0)
                 try:
                     data = json.load(f)
                 except ValueError:
