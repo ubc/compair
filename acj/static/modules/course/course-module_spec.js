@@ -68,7 +68,7 @@ describe('course-module', function () {
 	});
 
 	describe('CourseController', function () {
-		var $rootScope, createController, $location;
+		var $rootScope, createController, $location, $modal, $q;
 		var mockCritiera = {
 			"criteria": [{
 				"created": "Sat, 06 Sep 2014 02:13:07 -0000",
@@ -91,9 +91,11 @@ describe('course-module', function () {
 			}]
 		};
 
-		beforeEach(inject(function ($controller, _$rootScope_, _$location_) {
+		beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_) {
 			$rootScope = _$rootScope_;
 			$location = _$location_;
+			$modal = _$modal_;
+			$q = _$q_;
 			createController = function (route, params) {
 				return $controller('CourseController', {
 					$scope: $rootScope,
@@ -114,7 +116,7 @@ describe('course-module', function () {
 			expect($rootScope.canManageCriteriaCourses).toBe(true);
 		});
 
-		describe('view: ', function () {
+		describe('view:', function () {
 			var controller;
 			beforeEach(function () {
 				$httpBackend.whenGET('/api/criteria').respond(mockCritiera);
@@ -236,6 +238,41 @@ describe('course-module', function () {
 					expect($rootScope.submitted).toBe(true);
 					$httpBackend.flush();
 					expect($rootScope.submitted).toBe(false);
+				});
+
+				describe('when editCriterion is called', function() {
+					var deferred;
+					var criterion;
+					var closeFunc;
+					beforeEach(function() {
+						criterion = {id: 1, name: 'test'};
+						deferred = $q.defer();
+						closeFunc = jasmine.createSpy('close');
+						spyOn($modal, 'open').and.returnValue({result: deferred.promise, close: closeFunc});
+						$rootScope.editCriterion(criterion);
+					});
+
+					it('should open a modal dialog', function() {
+						expect($modal.open).toHaveBeenCalledWith({
+							animation: true,
+							template: '<criteria-form criterion=criterion></criteria-form>',
+							scope: jasmine.any(Object)
+						})
+					});
+
+					it('should listen on CRITERIA_UPDATED event and close dialog', function() {
+						var updated = {id: 1, name: 'test1'};
+						$rootScope.$broadcast("CRITERIA_UPDATED", {criterion: updated});
+						expect(criterion).toEqual(updated);
+						expect(closeFunc).toHaveBeenCalled();
+					});
+
+					it('should un-register listener when dialog is closed', function() {
+						deferred.resolve();
+						$rootScope.$digest();
+						$rootScope.$broadcast('CRITERIA_UPDATED');
+						expect(closeFunc).not.toHaveBeenCalled();
+					});
 				});
 			});
 		});

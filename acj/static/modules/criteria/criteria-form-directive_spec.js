@@ -40,6 +40,24 @@ describe('criteria-module', function () {
                 expect(directiveScope.criterion.name).toEqual('Test');
                 expect(directiveScope.criterion.description).toEqual('description');
             });
+
+            it('should emit CRITERIA_UPDATED event when click on submit', function() {
+                spyOn(directiveScope, '$emit');
+                var response = {
+                    id: 1,
+                    name: 'Test',
+                    description: 'description'
+                };
+                scope.$apply(function() {
+                    angular.copy(response, scope.criterion)
+                });
+                $httpBackend.expectPOST('/api/criteria/1', directiveScope.criterion).respond(response);
+
+                directiveScope.criterionSubmit();
+                $httpBackend.flush();
+
+                expect(directiveScope.$emit).toHaveBeenCalledWith('CRITERIA_UPDATED', jasmine.objectContaining(response));
+            })
         });
 
         describe('without criterion binding', function() {
@@ -79,8 +97,7 @@ describe('criteria-module', function () {
                     expect(element.find('input[type=button]').eq(0)).not.toHaveAttr('disabled', 'disabled');
 
                     var response = angular.merge({}, directiveScope.criterion, {id: 2});
-                    $httpBackend.expectPOST('/api/criteria', directiveScope.criterion)
-                        .respond(response);
+                    $httpBackend.expectPOST('/api/criteria', directiveScope.criterion).respond(response);
 
                     directiveScope.criterionSubmit();
                     expect(directiveScope.criterionSubmitted).toBe(true);

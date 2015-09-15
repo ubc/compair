@@ -18,7 +18,11 @@
 					scope.criterionSubmit = function () {
 						scope.criterionSubmitted = true;
 						CriteriaResource.save({}, scope.criterion, function (ret) {
-							scope.$emit('CRITERIA_ADDED', ret);
+							if (scope.criterion.id) {
+								scope.$emit('CRITERIA_UPDATED', ret);
+							} else {
+								scope.$emit('CRITERIA_ADDED', ret);
+							}
 							resetForm();
 						}).$promise.finally(function () {
 							scope.criterionSubmitted = false;

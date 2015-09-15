@@ -9,6 +9,7 @@ var module = angular.module('ubc.ctlt.acj.course',
 		'ngResource',
 		'ngRoute',
 		'ckeditor',
+		'ui.bootstrap',
 		'ubc.ctlt.acj.comment',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.interceptor',
@@ -201,9 +202,9 @@ module.controller(
 
 module.controller(
 	'CourseController', ['$scope', '$log', '$route', '$routeParams', '$location', 'Session', 'Authorize',
-		'CourseResource', 'CriteriaResource', 'CoursesCriteriaResource', 'Toaster',
+		'CourseResource', 'CriteriaResource', 'CoursesCriteriaResource', '$modal', 'Toaster',
 	function($scope, $log, $route, $routeParams, $location, Session, Authorize, CourseResource, CriteriaResource,
-			 CoursesCriteriaResource, Toaster) {
+			 CoursesCriteriaResource, $modal, Toaster) {
 		var self = this;
 		var messages = {
 			new: {title: 'Course Created', msg: 'The course created successfully'},
@@ -282,6 +283,25 @@ module.controller(
 			if (criterion.default == true) {
 				$scope.availableCriteria.push(criterion);
 			}
+		};
+
+		$scope.editCriterion = function(criterion) {
+			var modalScope = $scope.$new();
+			modalScope.criterion = angular.copy(criterion);
+			var modalInstance;
+			var criteriaUpdateListener = $scope.$on('CRITERIA_UPDATED', function(event, c) {
+				angular.copy(c.criterion, criterion);
+				modalInstance.close();
+			});
+			modalInstance = $modal.open({
+				animation: true,
+				template: '<criteria-form criterion=criterion></criteria-form>',
+				scope: modalScope
+			});
+			// we need to remove the listener, otherwise on multiple click, multiple listeners will be registered
+			modalInstance.result.finally(function(){
+				criteriaUpdateListener();
+			});
 		};
 
 		//  Calling routeParam method
