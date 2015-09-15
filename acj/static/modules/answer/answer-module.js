@@ -18,29 +18,68 @@ var module = angular.module('ubc.ctlt.acj.answer',
 );
 
 /***** Providers *****/
-module.factory(
-	"AnswerResource",
-	function ($resource, Interceptors)
-	{
+module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resource, $cacheFactory) {
 		var url = '/api/courses/:courseId/questions/:questionId/answers/:answerId';
+		// keep a list of answer list query URLs so that we can invalidate caches for those later
+		var listCacheKeys = [];
+
+		var cacheInterceptor = {
+			response: function(response) {
+				var cache = $cacheFactory.get('$http');
+				cache.remove(response.config.url);	// remove cached GET response
+				// removing the suffix of some of the actions - eg. flagged
+				var url = response.config.url.replace(/\/(flagged)/g, "");
+				cache.remove(url);
+				url = url.replace(/\/\d+$/g, "");
+				// remove list caches. As list query may contain pagination and query parameters
+				// we have to invalidate all.
+				_.forEach(listCacheKeys, function(key, index, keys) {
+					if (_.startsWith(key, url)) {
+						cache.remove(key);
+						keys.splice(index, 1);
+					}
+				});
+
+				return response.data;
+			}
+		};
+		// this function is copied from angular $http to build request URL
+		function buildUrl(url, serializedParams) {
+			if (serializedParams.length > 0) {
+				url += ((url.indexOf('?') == -1) ? '?' : '&') + serializedParams;
+			}
+			return url;
+		}
+
+		// store answer list query URLs
+		var cacheKeyInterceptor = {
+			response: function(response) {
+				var url = buildUrl(response.config.url, response.config.paramSerializer(response.config.params));
+				if (url.match(/\/api\/courses\/\d+\/questions\/\d+\/answers\?.*/)) {
+					listCacheKeys.push(url);
+				}
+
+				return response.data;
+			}
+		};
+
 		var ret = $resource(
 			url, {answerId: '@id'},
 			{
-				'get': {url: url, cache: true},
-				'save': {method: 'POST', url: url, interceptor: Interceptors.cache},
-				'delete': {method: 'DELETE', url: url, interceptor: Interceptors.cache},
+				get: {url: url, cache: true, interceptor: cacheKeyInterceptor},
+				save: {method: 'POST', url: url, interceptor: cacheInterceptor},
+				delete: {method: 'DELETE', url: url, interceptor: cacheInterceptor},
 				flagged: {
 					method: 'POST', 
 					url: '/api/courses/:courseId/questions/:questionId/answers/:answerId/flagged',
-					interceptor: Interceptors.cache
+					interceptor: cacheInterceptor
 				},
-				user: {url: '/api/courses/:courseId/questions/:questionId/answers/user'},
-				view: {url: '/api/courses/:courseId/questions/:questionId/answers/view', cache: true}
+				user: {url: '/api/courses/:courseId/questions/:questionId/answers/user'}
 			}
 		);
 		ret.MODEL = "PostsForAnswers";
 		return ret;
-	}
+	}]
 );
 
 /***** Controllers *****/
