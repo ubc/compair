@@ -88,7 +88,7 @@ describe('criteria-module', function () {
                     $httpBackend.flush();
 
                     expect(directiveScope.criterionSubmitted).toBe(false);
-                    expect(directiveScope.criterion).toEqual({name:'', description:'', default: true});
+                    expect(directiveScope.criterion).toEqual({name:'', description:'', default: false});
                     expect(directiveScope.$emit).toHaveBeenCalledWith('CRITERIA_ADDED', jasmine.objectContaining(response));
                 });
 

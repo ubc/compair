@@ -216,11 +216,17 @@ describe('course-module', function () {
 				});
 
 				it('should remove criteria from course criteria when remove is called', function() {
-					$rootScope.course.criteria = [{id: 1}];
-					$rootScope.availableCriteria = [{id: 2}];
+					$rootScope.course.criteria = [{id: 1, default: true}, {id: 2, default: false}];
+					$rootScope.availableCriteria = [];
 					$rootScope.remove(0);
+					// add to available list when default == true
+					expect($rootScope.course.criteria).toEqual([{id: 2, default: false}]);
+					expect($rootScope.availableCriteria).toEqual([{id: 1, default: true}]);
+
+					$rootScope.remove(0);
+					// don't add to available list when default == false
 					expect($rootScope.course.criteria).toEqual([]);
-					expect($rootScope.availableCriteria).toEqual([{id: 2}, {id: 1}]);
+					expect($rootScope.availableCriteria).toEqual([{id: 1, default: true}]);
 				});
 
 				it('should enable save button even if save failed', function() {
