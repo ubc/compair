@@ -1,3 +1,6 @@
+<p class="pull-right"><a href="" ng-click="cancel()">Cancel</a></p>
+<h1><span ng-hide="{{ criterion && criterion.id }}">Add</span><span ng-show="{{ criterion && criterion.id }}">Edit</span> Criterion</h1>
+<br />
 <ng-form name="criterionForm" class="form">
 	<acj-field-with-feedback form-control="criterionForm.criteriaName">
 		<label class="required-star" for="criterionName">Comparison Question</label>
@@ -15,7 +18,8 @@
 		<label for="criterionDefault">Include this criterion in my list of default criteria (to use it in any course)</label>
 	</div>
 	<div class="text-center">
-		<input type="button" ng-click="criterionSubmit()" class="btn btn-primary" value="{{ (criterion && criterion.id) ? 'Update' : 'Add New Criterion' }}"
+		<input type="button" ng-click="criterionSubmit()" class="btn btn-success btn-lg" value="{{ (criterion && criterion.id) ? 'Update' : 'Add New' }}"
 		ng-disabled="criterionForm.$invalid || criterionSubmitted" />
 	</div>
+	<br />
 </ng-form>

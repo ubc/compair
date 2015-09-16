@@ -4,7 +4,7 @@
 
 	<div ng-repeat="(key, criterion) in course.criteria" class="row">
 		<div class="col-sm-2" ng-if="courseId">
-			<p><a  ng-click="editCriterion(criterion)"
+			<p><a href="" ng-click="changeCriterion(criterion)"
 				  ng-if="(canManageCriteriaCourses || criterion.users_id==loggedInUserId) && !criterion.judged">
 				Edit
 			</a></p>
@@ -29,27 +29,25 @@
 	<!-- dropdown with leftover criteria / Add button-->
 	<label>Add To Course Criteria</label>
 	
+	<br /><br />
+	
 	<div class="row">
-		<div class="form-group col-sm-9">
+		<div class="col-sm-2">
+			<p><a href="" class="btn btn-small btn-primary" ng-click="changeCriterion()">Add New</a></p>
+		</div>
+		<div class="col-sm-1">
+			<p>OR</p>
+		</div>
+		<div class="form-group col-sm-6">
 			<select class="form-control" ng-model="selected" ng-options="key as c.name for (key, c) in availableCriteria">
 				<option value="">- select a default -</option>
 			</select>
 		</div>
-		<div class="col-sm-2">
+		<div class="col-sm-3">
 			<!-- used length because when list is empty the empty option gets a value of 0 which is valid -->
 			<p><a class="btn btn-small btn-primary" ng-click="add(selected)" ng-disabled="!selected || !availableCriteria.length">Add Selected</a></p>
 		</div>
         </div>
-	<p>OR</p>
-	<p><a ng-click="rc.showForm = !rc.showForm" href="">
-		<i ng-show="rc.showForm" class="fa fa-chevron-down"></i>
-		<i ng-hide="rc.showForm" class="fa fa-chevron-right"></i>
-		Create new criteria
-	</a></p>
-
-	<!-- want ng-if b/c otherwise the outer course form requires evaluation question to submit -->
-	<div class="create-form" ng-if="rc.showForm">
-        <criteria-form></criteria-form>
-	</div>
+	
 	
 </div>

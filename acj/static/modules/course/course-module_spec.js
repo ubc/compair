@@ -201,14 +201,6 @@ describe('course-module', function () {
 					expect($rootScope.availableCriteria).toEqual([{id: 2}]);
 				});
 
-				it('should listen to CRITERIA_ADDED event', function() {
-					$rootScope.course.criteria = [];
-					var criteria = {id: 1};
-					$rootScope.$broadcast("CRITERIA_ADDED", criteria);
-					expect($rootScope.course.criteria).toEqual([criteria]);
-					expect(controller.showForm).toBe(false);
-				});
-
 				it('should add criteria to course from available criteria when add is called', function() {
 					$rootScope.course.criteria = [];
 					$rootScope.availableCriteria = [{id: 1}, {id: 2}];
@@ -240,7 +232,7 @@ describe('course-module', function () {
 					expect($rootScope.submitted).toBe(false);
 				});
 
-				describe('when editCriterion is called', function() {
+				describe('when changeCriterion is called', function() {
 					var deferred;
 					var criterion;
 					var closeFunc;
@@ -249,7 +241,7 @@ describe('course-module', function () {
 						deferred = $q.defer();
 						closeFunc = jasmine.createSpy('close');
 						spyOn($modal, 'open').and.returnValue({result: deferred.promise, close: closeFunc});
-						$rootScope.editCriterion(criterion);
+						$rootScope.changeCriterion(criterion);
 					});
 
 					it('should open a modal dialog', function() {
@@ -264,6 +256,14 @@ describe('course-module', function () {
 						var updated = {id: 1, name: 'test1'};
 						$rootScope.$broadcast("CRITERIA_UPDATED", {criterion: updated});
 						expect(criterion).toEqual(updated);
+						expect(closeFunc).toHaveBeenCalled();
+					});
+					
+					it('should listen to CRITERIA_ADDED event and close dialog', function() {
+						$rootScope.course.criteria = [];
+						var criteria = {id: 1};
+						$rootScope.$broadcast("CRITERIA_ADDED", criteria);
+						expect($rootScope.course.criteria).toEqual([criteria]);
 						expect(closeFunc).toHaveBeenCalled();
 					});
 

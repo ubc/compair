@@ -250,13 +250,6 @@ module.controller(
 			self.removeCourseCriteria();
 		});
 
-		$scope.$on('CRITERIA_ADDED', function(event, criteria) {
-			$scope.course.criteria.push(criteria);
-			self.showForm = false;
-			$(".fa-chevron-right").removeClass("ng-hide"); // reset classes so UI matches current state
-			$(".fa-chevron-down").addClass("ng-hide");
-		});
-
 		$scope.save = function() {
 			$scope.submitted = true;
 			CourseResource.save({id: $scope.course.id}, $scope.course, function (ret) {
@@ -285,13 +278,20 @@ module.controller(
 			}
 		};
 
-		$scope.editCriterion = function(criterion) {
+		$scope.changeCriterion = function(criterion) {
 			var modalScope = $scope.$new();
 			modalScope.criterion = angular.copy(criterion);
 			var modalInstance;
 			var criteriaUpdateListener = $scope.$on('CRITERIA_UPDATED', function(event, c) {
 				angular.copy(c.criterion, criterion);
 				modalInstance.close();
+			});
+			var criteriaAddListener = $scope.$on('CRITERIA_ADDED', function(event, criteria) {
+				$scope.course.criteria.push(criteria);
+				modalInstance.close();
+			});
+			var criteriaCancelListener = $scope.$on('CRITERIA_CANCEL', function() {
+				modalInstance.dismiss('cancel');
 			});
 			modalInstance = $modal.open({
 				animation: true,
@@ -301,6 +301,8 @@ module.controller(
 			// we need to remove the listener, otherwise on multiple click, multiple listeners will be registered
 			modalInstance.result.finally(function(){
 				criteriaUpdateListener();
+				criteriaAddListener();
+				criteriaCancelListener();
 			});
 		};
 

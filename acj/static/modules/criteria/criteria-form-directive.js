@@ -14,6 +14,9 @@
 				link: function (scope, element, attrs) {
 					scope.editorOptions = EditorOptions.basic;
 					scope.criterionSubmitted = false;
+					scope.cancel = function (ret) {
+						scope.$emit('CRITERIA_CANCEL', ret);
+					}
 
 					scope.criterionSubmit = function () {
 						scope.criterionSubmitted = true;
