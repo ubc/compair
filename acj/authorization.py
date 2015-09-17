@@ -45,8 +45,8 @@ def define_authorization(user, they):
         they.can(CREATE, Courses)
         they.can(CREATE, Criteria)
         they.can(EDIT, Users, if_my_student)
+        they.can(CREATE, Users, if_equal_or_lower_than_me)
 
-    they.can(CREATE, Users, if_equal_or_lower_than_me)
     # users can edit and read their own user account
     they.can(READ, Users, id=user.id)
     they.can(EDIT, Users, id=user.id)
