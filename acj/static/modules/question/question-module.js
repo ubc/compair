@@ -117,8 +117,8 @@ module.directive('comparisonPreview', function() {
 						angular.forEach(all, function(courseCrit) {
 							if (criterionId == courseCrit.id && selected == true) {
 								// alert('match' + criterionId + ' ' + courseCrit.id);
-								/* matching criteria are added to the preview */
-								$scope.previewCriteria.push(courseCrit);
+								/* matching criteria are added to the preview as criterion */
+								$scope.previewCriteria.push({criterion: courseCrit});
 							} else {
 								//alert('MISmatch ' + criterionId + ' ' + courseCrit.id);
 							}
@@ -496,6 +496,9 @@ module.controller("QuestionViewController",
 		$scope.setTab = function(name) {
 			tab = name;
 			if (name == "comparisons") {
+				//need some way to get answers here ???
+				//originally had a $scope.ans to reference...
+				$scope.comparisons = EvalCommentResource.view({'courseId': $scope.courseId, 'questionId': questionId});
 				$scope.user_answers = AnswerResource.get({
 					courseId: $scope.courseId, questionId: questionId, author: $scope.loggedInUserId
 				});

@@ -128,9 +128,9 @@
 					</li>
 					<!-- Completed Assignment Feedback (for students) -->
 					<li ng-if="!canManagePosts && ((question.left + question.selfeval_left == 0) || (answered[question.id]))">
-						You have
-						<span ng-if="answered[question.id]">answered <span ng-if="question.left + question.selfeval_left == 0">and </span></span>
-						<span ng-if="question.left + question.selfeval_left == 0">compared</span>
+						You
+						<span ng-if="answered[question.id]"><strong>answered</strong> <span ng-if="question.left + question.selfeval_left == 0">and </span></span>
+						<span ng-if="question.left + question.selfeval_left == 0"><strong>compared</strong></span>
 					</li>
 					<!-- Pending Assignment Feedback (for students) -->
 					<li ng-if="!canManagePosts && ((question.judging_period && question.left + question.selfeval_left > 0) || (question.answer_period && !answered[question.id]))" class="label label-warning">

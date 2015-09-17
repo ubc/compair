@@ -37,9 +37,9 @@
 				</a>
 			</li>
 			<li ng-if="!canManagePosts && ((evaluation + selfEval == 0) || answered)">
-				You have
-				<span ng-if="answered">answered <span ng-if="evaluation + selfEval == 0">and </span></span>
-				<span ng-if="evaluation + selfEval == 0">compared</span>
+				You
+				<span ng-if="answered"><strong>answered</strong> <span ng-if="evaluation + selfEval == 0">and </span></span>
+				<span ng-if="evaluation + selfEval == 0"><strong>compared</strong></span>
 			</li>
 			<li ng-if="!canManagePosts && question.answer_period && !answered">
 				<strong>Answer due {{question.answer_end | amDateFormat: 'MMM D @ h:mm a'}}</strong>
@@ -48,7 +48,7 @@
 				Comparisons due {{question.judgeEnd | amDateFormat: 'MMM D @ h:mm a'}}
 			</li>
 			<li ng-if="!canManagePosts && question.judging_period && (evaluation + selfEval > 0) && ((question.answer_period && answered) || !question.answer_period)">
-				<strong>{{ evaluation + selfEval }} comparison<span ng-if="(evaluation + selfEval) != 1">s</span> needed from you</strong>
+				<strong>{{ evaluation + selfEval }} comparison<span ng-if="(evaluation + selfEval) != 1">s</span></strong> needed from you
 			</li>
 			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
 				<a ng-if="canManagePosts || question.post.user.id == loggedInUserId" title="Delete" confirmation-needed="deleteQuestion(courseId, question.id)" keyword="question" href="">
@@ -527,81 +527,74 @@
 			</div>
 			
 			<!-- Comparisons Section -->
-			<div class="each-evaluation" ng-repeat="comment in comparisons">
+			<div class="each-evaluation" ng-repeat="comment in comparisons.objects">
+				
+				<!-- NEED to add and/or differentiate self-evaluations here, should present as standalone evaluation -->
 				
 				<!-- Comparison Header -->
 				<div class="each-header">
-					<a ng-href="#/user/{{ comment[0].user_id }}">
-						<img src="//www.gravatar.com/avatar/{{ comment[0].avatar }}?s=32&d=retro" />
+					<a ng-href="#/user/{{ comment.user_id }}">
+						<img src="//www.gravatar.com/avatar/{{ comment.avatar }}?s=32&d=retro" />
 					</a>
 					You
-					<strong>submitted</strong> on {{ comment[0].created | amDateFormat: 'MMM D @ h:mm a'}}:
+					<strong>submitted</strong> on {{ comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
 				</div>
-				
-				<div ng-if="!comment[0].selfeval">
 					
-					<div ng-repeat="criterion in comment">
-						
-						<h5 class="content">Comparison for "{{evalcriteria[criterion.criteriaandquestions_id]}}"</h5>
-						
-						<div class="content" mathjax="criterion.content"
-							ng-bind-html="criterion.content">
-						</div>
+				<div ng-repeat="criterion in comment.criteria_judgements">
+					
+					<div ng-if=""></div>
+					
+					<h5 class="content">Comparison for "{{ evalcriteria[criterion.criteriaandquestions_id] }}"</h5>
+					
+					<div class="content" mathjax="criterion.content"
+						ng-bind-html="criterion.content">
+					</div>
 
-						<div class="row">
-							<div class="col-md-6">
-								<div class="answer-choice clearfix">
-									<h4 class="text-center">Odd-Numbered Answer
-										<span ng-show="criterion.winner == criterion.answer1.id">(Chosen)</span>
-									</h4>
-									<div mathjax="ans[criterion.answer1.id].content" ng-if="ans[criterion.answer1.id]"
-										 ng-bind-html="ans[criterion.answer1.id].content"></div>
-									<div ng-if="!ans[criterion.answer1.id]" ng-bind-html="deletedAnsMsg"></div>
-									<!-- Attachments -->
-									<acj-pdf-inline label="See details:" pdfs="ans[criterion.answer1.id].file"></acj-pdf-inline>
-								</div>
-							</div>
-							<div class="col-md-6">
+					<div class="row">
+						<div class="col-md-6">
 							<div class="answer-choice clearfix">
-									<h4 class="text-center">Even-Numbered Answer
-										<span ng-show="criterion.winner == criterion.answer2.id">(Chosen)</span>
-									</h4>
-									<div mathjax="ans[criterion.answer2.id].content" ng-if="ans[criterion.answer2.id]"
-										 ng-bind-html="ans[criterion.answer2.id].content"></div>
-									<div ng-if="!ans[criterion.answer2.id]" ng-bind-html="deletedAnsMsg"></div>
-									<!-- Attachments -->
-									<acj-pdf-inline label="See details:" pdfs="ans[criterion.answer2.id].file"></acj-pdf-inline>
-								</div>
+								<h4 class="text-center">Odd-Numbered Answer
+									<span ng-show="criterion.winner == comment.answer1.id">(Chosen)</span>
+								</h4>
+								<div mathjax="ans[comment.answer1.id].content" ng-if="ans[comment.answer1.id]"
+									 ng-bind-html="ans[comment.answer1.id].content"></div>
+								<div ng-if="!ans[comment.answer1.id]" ng-bind-html="deletedAnsMsg"></div>
+								<!-- Attachments -->
+								<acj-pdf-inline label="See details:" pdfs="ans[comment.answer1.id].file"></acj-pdf-inline>
 							</div>
 						</div>
-						
+						<div class="col-md-6">
+						<div class="answer-choice clearfix">
+								<h4 class="text-center">Even-Numbered Answer
+									<span ng-show="criterion.winner == comment.answer2.id">(Chosen)</span>
+								</h4>
+								<div mathjax="ans[comment.answer2.id].content" ng-if="ans[comment.answer2.id]"
+									 ng-bind-html="ans[comment.answer2.id].content"></div>
+								<div ng-if="!ans[comment.answer2.id]" ng-bind-html="deletedAnsMsg"></div>
+								<!-- Attachments -->
+								<acj-pdf-inline label="See details:" pdfs="ans[comment.answer2.id].file"></acj-pdf-inline>
+							</div>
+						</div>
 					</div>
 					
-					<h5 class="content">Feedback for Odd-Numbered Answer</h5>
-					
-					<!-- feedback for odd-numbered answer -->
-					<div class="content" mathjax="comment[0].answer1.feedback"
-						ng-bind-html="comment[0].answer1.feedback">
-					</div>
-					
-					<h5 class="content">Feedback for Even-Numbered Answer</h5>
-					
-					<!-- feedback for even-numbered answer -->
-					<div class="content" mathjax="comment[0].answer2.feedback"
-						ng-bind-html="comment[0].answer2.feedback"></div>
-						
 				</div>
 				
-				<div ng-if="comment[0].selfeval">
-					<h5 class="content">Self-Evaluation</h5>
-					<div class="content" mathjax="comment[0].content"
-						ng-bind-html="comment[0].content">
-					</div>
+				<h5 class="content">Feedback for Odd-Numbered Answer</h5>
+				
+				<!-- feedback for odd-numbered answer -->
+				<div class="content" mathjax="comment.answer1.feedback"
+					ng-bind-html="comment.answer1.feedback">
 				</div>
+				
+				<h5 class="content">Feedback for Even-Numbered Answer</h5>
+				
+				<!-- feedback for even-numbered answer -->
+				<div class="content" mathjax="comment.answer2.feedback"
+					ng-bind-html="comment.answer2.feedback"></div>
 				
 			</div><!-- closes each-evaluation -->
 			
-			<div class="each-evaluation" ng-show="!answered && comparisons.length < 1">
+			<div class="each-evaluation" ng-show="!user_answers.objects && comparisons.objects.length < 1">
 				<p>(Nothing saved under your name yet.)</p>
 			</div>
 			
