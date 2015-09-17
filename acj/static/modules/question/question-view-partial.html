@@ -382,7 +382,7 @@
 								<span class="label label-info" ng-if="instructors[comment.user_id]">
 									{{instructors[comment.user_id]}}
 								</span>
-								<strong ng-if="comment.evaluation || comment.type == 0">gave private feedback</strong>
+								<strong ng-if="(comment.evaluation || comment.type == 0) && !comment.selfeval">gave private feedback</strong>
 								<strong ng-if="comment.selfeval">self-evaluated</strong>
 								<strong ng-if="!comment.evaluation && !comment.selfeval && comment.type != 0">replied <span ng-if="canManagePosts || answer.user_id == loggedInUserId" class="label label-info">Public</span></strong>
 								on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
@@ -501,7 +501,7 @@
 							<span class="label label-info" ng-if="instructors[comment.user_id]">
 								{{instructors[comment.user_id]}}
 							</span>
-							<strong ng-if="comment.evaluation || comment.type == 0">gave private feedback</strong>
+							<strong ng-if="(comment.evaluation || comment.type == 0) && !comment.selfeval">gave private feedback</strong>
 							<strong ng-if="comment.selfeval">self-evaluated</strong>
 							<strong ng-if="!comment.evaluation && !comment.selfeval && comment.type != 0">replied <span ng-if="canManagePosts || answer.user_id == loggedInUserId" class="label label-info">Public</span></strong>
 							on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
