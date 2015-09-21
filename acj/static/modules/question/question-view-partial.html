@@ -542,41 +542,24 @@
 					
 				<div ng-repeat="criterion in comment.criteria_judgements">
 					
-					<div ng-if=""></div>
-					
 					<h5 class="content">Comparison for "{{ evalcriteria[criterion.criteriaandquestions_id] }}"</h5>
 					
 					<div class="content" mathjax="criterion.content"
 						ng-bind-html="criterion.content">
 					</div>
 
-					<div class="row">
-						<div class="col-md-6">
-							<div class="answer-choice clearfix">
-								<h4 class="text-center">Odd-Numbered Answer
-									<span ng-show="criterion.winner == comment.answer1.id">(Chosen)</span>
-								</h4>
-								<div mathjax="ans[comment.answer1.id].content" ng-if="ans[comment.answer1.id]"
-									 ng-bind-html="ans[comment.answer1.id].content"></div>
-								<div ng-if="!ans[comment.answer1.id]" ng-bind-html="deletedAnsMsg"></div>
-								<!-- Attachments -->
-								<acj-pdf-inline label="See details:" pdfs="ans[comment.answer1.id].file"></acj-pdf-inline>
-							</div>
-						</div>
-						<div class="col-md-6">
-						<div class="answer-choice clearfix">
-								<h4 class="text-center">Even-Numbered Answer
-									<span ng-show="criterion.winner == comment.answer2.id">(Chosen)</span>
-								</h4>
-								<div mathjax="ans[comment.answer2.id].content" ng-if="ans[comment.answer2.id]"
-									 ng-bind-html="ans[comment.answer2.id].content"></div>
-								<div ng-if="!ans[comment.answer2.id]" ng-bind-html="deletedAnsMsg"></div>
-								<!-- Attachments -->
-								<acj-pdf-inline label="See details:" pdfs="ans[comment.answer2.id].file"></acj-pdf-inline>
-							</div>
-						</div>
-					</div>
-					
+                    <!-- Answers -->
+                    <p class="show-answers"><a href="" ng-click="loadAnswer(comment.answer1.id);loadAnswer(comment.answer2.id);showAnswers = !showAnswers;">
+                        <i ng-show="showAnswers" class="fa fa-chevron-down"></i>
+                        <i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
+                        Show compared answers
+                    </a></p>
+
+                    <div class="row" ng-show="showAnswers">
+                        <acj-answer-content answer="(answers.objects | filter:{id:comment.answer1.id}:true)[0]" is-chosen="criterion.winner == comment.answer1.id" title="Odd-Numbered Answer" criteria-and-questions="criterion.criteriaandquestions_id" show-score="false"></acj-answer-content>
+                        <acj-answer-content answer="(answers.objects | filter:{id:comment.answer2.id}:true)[0]" is-chosen="criterion.winner == comment.answer2.id" title="Even-Numbered Answer" criteria-and-questions="criterion.criteriaandquestions_id" show-score="false"></acj-answer-content>
+                    </div>
+
 				</div>
 				
 				<h5 class="content">Feedback for Odd-Numbered Answer</h5>

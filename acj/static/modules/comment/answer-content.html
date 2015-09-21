@@ -2,7 +2,7 @@
     <div class="answer-choice clearfix">
         <h4 class="text-center">{{ title }}
             <span ng-show="isChosen">(Chosen)</span>
-            <span class="label label-warning pull-right score-display" ng-if="answer">
+            <span class="label label-warning pull-right score-display" ng-if="answer && showScore">
                 Score: {{ answer.scores[criteriaAndQuestions] }}%</span>
         </h4>
         <div mathjax="answer.content" ng-if="answer"

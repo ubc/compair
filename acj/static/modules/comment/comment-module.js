@@ -88,7 +88,8 @@ module.directive('acjAnswerContent', function() {
 			answer: '=',
 			title: '@',
 			isChosen: '=',
-			criteriaAndQuestions: '='
+			criteriaAndQuestions: '=',
+			showScore: '='
 		},
 		templateUrl: 'modules/comment/answer-content.html'
 	}

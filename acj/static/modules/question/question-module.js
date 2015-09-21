@@ -508,6 +508,13 @@ module.controller("QuestionViewController",
 			return tab == name;
 		};
 
+		$scope.loadAnswer = function(id) {
+			if (_.find($scope.answers, {id: id})) return;
+			AnswerResource.get({'courseId': $scope.courseId, 'questionId': questionId, 'answerId': id}, function(response) {
+				$scope.answers.objects.push(response);
+			});
+		};
+
 		// revealAnswer function shows full answer content for abbreviated answers (determined by getHeight directive)
 		$scope.revealAnswer = function(answerId) {
 			var thisClass = '.content.'+answerId;      // class for the answer to show is "content" plus the answer's ID
