@@ -591,13 +591,14 @@ module.controller("QuestionViewController",
 		$scope.deleteReply = function(answer, commentKey, course_id, question_id, answer_id, comment_id) {
 			AnswerCommentResource.delete({'courseId': course_id, 'questionId': question_id, 'answerId': answer_id, 'commentId': comment_id},
 				function (ret) {
-					Toaster.success("Reply Delete Successful", "Successfully deleted reply " + ret.id);
-					var comment = answer['comments'].splice(commentKey, 1);
-					if (comment['evaluation'] || comment['selfeval']) {
+					Toaster.success("Reply Delete Successful", "Successfully deleted reply.");
+					var comment = answer['comments'].splice(commentKey, 1)[0];
+					if (comment['evaluation'] || comment['selfeval'] || comment['type'] == 0) {
 						answer.private_comments_count--;
 					} else {
 						answer.public_comments_count--;
 					}
+					answer.comments_count--;
 				},
 				function (ret) {
 					Toaster.reqerror("Reply Delete Failed", ret);

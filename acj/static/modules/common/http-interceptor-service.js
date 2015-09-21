@@ -4,7 +4,7 @@
 
 var module = angular.module('ubc.ctlt.acj.common.interceptor', []);
 
-module.service('Interceptors', ['$q', '$cacheFactory', function($q, $cacheFactory) {
+module.service('Interceptors', ['$q', '$cacheFactory', 'AnswerResource', function($q, $cacheFactory, AnswerResource) {
 	this.cache = {
 		response: function(response) {
 			var cache = $cacheFactory.get('$http');
@@ -29,13 +29,18 @@ module.service('Interceptors', ['$q', '$cacheFactory', function($q, $cacheFactor
 		}
 	};
 
-	this.answerCache = {
+	this.answerCommentCache = {
 		response: function(response) {
 			var cache = $cacheFactory.get('$http');
-			var url = response.config.url.match(/\/api\/courses\/\d+\/questions\/\d+\/answers\/\d+/g);
+			// match both object endpoint and list endpoint
+			var url = response.config.url.match(/\/api\/courses\/\d+\/questions\/\d+\/answers\/\d+\/comments(\/\d+)?/g);
 			cache.remove(url[0]);
-			url = url[0].replace(/\/\d+$/g, "");
-			cache.remove(url);
+			var listUrl = url[0].replace(/\/\d+$/g, "");
+			if (listUrl != url[0]) {
+				cache.remove(listUrl);
+			}
+			AnswerResource.invalidListCache();
+
 			return response.data;
 		}
 	};

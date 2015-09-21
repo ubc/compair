@@ -41,8 +41,8 @@ module.factory(
 			url, {commentId: '@id'},
 			{
 				'get': {cache: true},
-				'save': {method: 'POST', url: url, interceptor: Interceptors.answerCache},
-				'delete': {method: 'DELETE', url: url, interceptor: Interceptors.answerCache},
+				'save': {method: 'POST', url: url, interceptor: Interceptors.answerCommentCache},
+				'delete': {method: 'DELETE', url: url, interceptor: Interceptors.answerCommentCache},
 				selfEval: {url: '/api/selfeval/courses/:courseId/questions/:questionId'},
 				allSelfEval: {url: '/api/selfeval/courses/:courseId/questions'}
 			}
@@ -183,15 +183,7 @@ module.controller(
 			Authorize.can(Authorize.MANAGE, QuestionResource.MODEL, courseId);
 		$scope.comment = {};
 
-		AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId}).$promise.then(
-			function (ret) {
-				$scope.parent = ret;
-				$scope.replyToUser = ret.user_displayname;
-			},
-			function (ret) {
-				Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
-			}
-		);
+		$scope.parent = AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId});
 
 		// only need to do this query if the user cannot manage users
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
@@ -234,27 +226,10 @@ module.controller(
 		var commentId = $routeParams['commentId'];
 		$scope.answerComment = true;
 
-		$scope.comment = {};
-		$scope.parent = {}; // answer
-		AnswerCommentResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId, 'commentId': commentId}).$promise.then(
-			function(ret) {
-				$scope.comment = ret;
-			},
-			function (ret) {
-				Toaster.reqerror("Unable to retrieve reply "+commentId, ret);
-			}
-		);
-		AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId}).$promise.then(
-			function (ret) {
-				$scope.parent = ret;
-				$scope.replyToUser = ret.user_displayname;
-			},
-			function (ret) {
-				Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
-			}
-		);
+		$scope.comment = AnswerCommentResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId, 'commentId': commentId});
+		$scope.parent = AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId});
 		$scope.commentSubmit = function () {
-			AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': answerId}, $scope.comment).$promise.then(
+			AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': answerId, 'commentId': $scope.comment.comments_id}, $scope.comment).$promise.then(
 				function() {
 					Toaster.success("Reply Updated!");
 					$location.path('/course/' + courseId + '/question/' +questionId);

@@ -799,7 +799,7 @@ class PostsForComments(db.Model):
         db.ForeignKey('Posts.id', ondelete="CASCADE"),
         nullable=False)
     post = db.relationship("Posts")
-    answer_assoc = db.relationship("PostsForAnswersAndPostsForComments", uselist=False)
+    answer_assoc = db.relationship("PostsForAnswersAndPostsForComments", uselist=False, cascade='all')
 
     course_id = association_proxy('post', 'courses_id')
     content = association_proxy('post', 'content')

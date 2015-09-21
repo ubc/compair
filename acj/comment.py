@@ -259,7 +259,7 @@ class AnswerCommentIdAPI(Resource):
         Courses.exists_or_404(course_id)
         PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
         PostsForAnswers.query.options(load_only('id')).get_or_404(answer_id)
-        comment = PostsForAnswersAndPostsForComments.query.get_or_404(comment_id)
+        comment = PostsForComments.query.get_or_404(comment_id)
         require(READ, comment)
 
         on_answer_comment_get.send(
@@ -269,39 +269,39 @@ class AnswerCommentIdAPI(Resource):
             course_id=course_id,
             data={'question_id': question_id, 'answer_id': answer_id, 'comment_id': comment_id})
 
-        return marshal(comment, dataformat.get_posts_for_answers_and_posts_for_comments())
+        return marshal(comment.answer_assoc, dataformat.get_posts_for_answers_and_posts_for_comments())
 
     @login_required
     def post(self, course_id, question_id, answer_id, comment_id):
         Courses.exists_or_404(course_id)
         PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
         PostsForAnswers.query.options(load_only('id')).get_or_404(answer_id)
-        comment = PostsForAnswersAndPostsForComments.query.get_or_404(comment_id)
+        comment = PostsForComments.query.get_or_404(comment_id)
         require(EDIT, comment)
         params = existing_comment_parser.parse_args()
         # make sure the comment id in the rul and the id matches
-        if params['id'] != comment.id:
+        if params['id'] != comment.answer_assoc.id:
             return {"error": "Comment id does not match URL."}, 400
         # modify comment according to new values, preserve original values if values not passed
-        comment.postsforcomments.post.content = params.get("content")
-        if not comment.postsforcomments.post.content:
+        comment.content = params.get("content")
+        if not comment.content:
             return {"error": "The comment content is empty!"}, 400
-        comment.type = params.get("type")
-        db.session.add(comment.postsforcomments.post)
+        comment.answer_assoc.type = params.get("type")
+        db.session.add(comment)
 
         on_answer_comment_modified.send(
             self,
             event_name=on_answer_comment_modified.name,
             user=current_user,
             course_id=course_id,
-            data=get_model_changes(comment.postsforcomments))
+            data=get_model_changes(comment))
 
         db.session.commit()
-        return marshal(comment, dataformat.get_posts_for_answers_and_posts_for_comments())
+        return marshal(comment.answer_assoc, dataformat.get_posts_for_answers_and_posts_for_comments())
 
     @login_required
     def delete(self, course_id, question_id, answer_id, comment_id):
-        comment = PostsForAnswersAndPostsForComments.query.get_or_404(comment_id)
+        comment = PostsForComments.query.get_or_404(comment_id)
         require(DELETE, comment)
         data = marshal(comment, dataformat.get_posts_for_answers_and_posts_for_comments(False))
         db.session.delete(comment)

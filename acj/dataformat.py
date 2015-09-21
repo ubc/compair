@@ -236,6 +236,7 @@ def get_posts_for_answers_and_posts_for_comments(restrict_users=True):
         'evaluation': fields.Boolean,
         'type': fields.Integer,
         'course_id': fields.Integer,
+        'comments_id': fields.Integer,
         'content': fields.String,
         'files': fields.Nested(get_files_for_posts()),
         'created': fields.DateTime,

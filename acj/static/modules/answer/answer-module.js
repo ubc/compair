@@ -22,23 +22,28 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
 		var url = '/api/courses/:courseId/questions/:questionId/answers/:answerId';
 		// keep a list of answer list query URLs so that we can invalidate caches for those later
 		var listCacheKeys = [];
+		var cache = $cacheFactory.get('$http');
+
+		function invalidListCache(url) {
+			// remove list caches. As list query may contain pagination and query parameters
+			// we have to invalidate all.
+			_.forEach(listCacheKeys, function(key, index, keys) {
+				if (url == undefined || _.startsWith(key, url)) {
+					cache.remove(key);
+					keys.splice(index, 1);
+				}
+			});
+		}
 
 		var cacheInterceptor = {
 			response: function(response) {
-				var cache = $cacheFactory.get('$http');
 				cache.remove(response.config.url);	// remove cached GET response
 				// removing the suffix of some of the actions - eg. flagged
 				var url = response.config.url.replace(/\/(flagged)/g, "");
 				cache.remove(url);
 				url = url.replace(/\/\d+$/g, "");
-				// remove list caches. As list query may contain pagination and query parameters
-				// we have to invalidate all.
-				_.forEach(listCacheKeys, function(key, index, keys) {
-					if (_.startsWith(key, url)) {
-						cache.remove(key);
-						keys.splice(index, 1);
-					}
-				});
+
+				invalidListCache(url);
 
 				return response.data;
 			}
@@ -78,6 +83,7 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
 			}
 		);
 		ret.MODEL = "PostsForAnswers";
+		ret.invalidListCache = invalidListCache;
 		return ret;
 	}]
 );
