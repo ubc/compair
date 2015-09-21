@@ -216,7 +216,7 @@ class AnswerCommentRootAPI(Resource):
             course_id=course_id,
             data={'question_id': question_id, 'answer_id': answer_id})
 
-        return {"objects": marshal(comments, dataformat.get_posts_for_answers_and_posts_for_comments())}
+        return {"objects": marshal(comments, dataformat.get_answer_comment())}
 
     @login_required
     def post(self, course_id, question_id, answer_id):
@@ -244,10 +244,10 @@ class AnswerCommentRootAPI(Resource):
             event_name=on_answer_comment_create.name,
             user=current_user,
             course_id=course_id,
-            data=marshal(comment_for_answer, dataformat.get_posts_for_answers_and_posts_for_comments(False)))
+            data=marshal(comment, dataformat.get_answer_comment(False)))
 
         db.session.commit()
-        return marshal(comment_for_answer, dataformat.get_posts_for_answers_and_posts_for_comments())
+        return marshal(comment, dataformat.get_answer_comment())
 
 apiA.add_resource(AnswerCommentRootAPI, '')
 
@@ -269,7 +269,7 @@ class AnswerCommentIdAPI(Resource):
             course_id=course_id,
             data={'question_id': question_id, 'answer_id': answer_id, 'comment_id': comment_id})
 
-        return marshal(comment.answer_assoc, dataformat.get_posts_for_answers_and_posts_for_comments())
+        return marshal(comment, dataformat.get_answer_comment())
 
     @login_required
     def post(self, course_id, question_id, answer_id, comment_id):
@@ -297,13 +297,13 @@ class AnswerCommentIdAPI(Resource):
             data=get_model_changes(comment))
 
         db.session.commit()
-        return marshal(comment.answer_assoc, dataformat.get_posts_for_answers_and_posts_for_comments())
+        return marshal(comment, dataformat.get_answer_comment())
 
     @login_required
     def delete(self, course_id, question_id, answer_id, comment_id):
         comment = PostsForComments.query.get_or_404(comment_id)
         require(DELETE, comment)
-        data = marshal(comment, dataformat.get_posts_for_answers_and_posts_for_comments(False))
+        data = marshal(comment, dataformat.get_answer_comment(False))
         db.session.delete(comment)
         db.session.commit()
 

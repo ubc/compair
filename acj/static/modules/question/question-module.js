@@ -501,6 +501,11 @@ module.controller("QuestionViewController",
 				$scope.comparisons = EvalCommentResource.view({'courseId': $scope.courseId, 'questionId': questionId});
 				$scope.user_answers = AnswerResource.get({
 					courseId: $scope.courseId, questionId: questionId, author: $scope.loggedInUserId
+				}, function(ret) {
+					// pre-load the comments to display if there is any self-eval
+					_.forEach($scope.user_answers.objects, function(answer) {
+						$scope.loadComments(answer);
+					});
 				});
 			}
 		};

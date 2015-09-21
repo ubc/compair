@@ -229,6 +229,18 @@ def get_posts_for_comments_new(restrict_users=True):
     return ret
 
 
+def get_answer_comment(restrict_users=True):
+    ret = get_posts_for_comments_new(restrict_users)
+    ret.update({
+        'selfeval': fields.Boolean,
+        'evaluation': fields.Boolean,
+        'type': fields.Integer,
+        'course_id': fields.Integer,
+    })
+
+    return ret
+
+
 def get_posts_for_answers_and_posts_for_comments(restrict_users=True):
     ret = {
         'id': fields.Integer,

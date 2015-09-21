@@ -529,8 +529,6 @@
 			<!-- Comparisons Section -->
 			<div class="each-evaluation" ng-repeat="comment in comparisons.objects">
 				
-				<!-- NEED to add and/or differentiate self-evaluations here, should present as standalone evaluation -->
-				
 				<!-- Comparison Header -->
 				<div class="each-header">
 					<a ng-href="#/user/{{ comment.user_id }}">
@@ -577,10 +575,33 @@
 				
 			</div><!-- closes each-evaluation -->
 			
-			<div class="each-evaluation" ng-show="!user_answers.objects && comparisons.objects.length < 1">
+			<div class="each-evaluation" ng-if="!user_answers.objects && comparisons.objects.length < 1">
 				<p>(Nothing saved under your name yet.)</p>
 			</div>
-			
+
+            <!-- self eval section -->
+            <div class="each-evaluation clearfix" ng-repeat="answer in user_answers.objects">
+                <div class="each-header clearfix" ng-repeat="comment in answer.comments | filter:{selfeval: true}">
+                    <a ng-href="#/user/{{comment.user_id}}">
+                        <img src="//www.gravatar.com/avatar/{{comment.user_avatar}}?s=32&d=retro" />
+                    </a>
+                    You
+                    <strong>self-evaluated</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
+                    <div class="manager-actions pull-right" ng-if="canManagePosts || (comment.user_id == loggedInUserId && !(comment.selfeval || comment.evaluation))">
+                        <a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
+                            <i class="fa fa-trash-o"></i>
+                        </a>
+                        <a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
+                            Edit
+                        </a>
+                    </div>
+
+                    <div class="content" mathjax="comment.content"
+                         ng-bind-html="comment.content">
+                    </div>
+                </div>
+            </div>
+
 		</div><!-- closes comparisons-tab -->
 		
 		<div class="tab-pane" ng-class="{active: showTab('help')}" id="comments-tab">
