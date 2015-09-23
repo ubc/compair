@@ -37,20 +37,21 @@
 	<div ng-show="comparisons.objects.length" class="evaluations">
 
 		<div class="each-evaluation" ng-repeat="judgement in comparisons.objects">
-
-            <h4 class="text-center evaluator-heading" ng-if="$index == 0 || judgement.user_id != comparisons.objects[$index-1].user_id">
+		
+			<h4 class="text-center evaluator-heading" ng-if="$index == 0 || judgement.user_id != comparisons.objects[$index-1].user_id">
 				{{ judgement.name }} <i class="fa fa-arrow-down"></i>
 			</h4>
-
+			
 			<div class="evaluator-answer" ng-if="$index == 0 || judgement.user_id != comparisons.objects[$index-1].user_id">
 				<p><a class="btn btn-default" href="" ng-click="loadAnswerByAuthor(judgement.user_id);showMyAnswer = !showMyAnswer;">
 					<span ng-show="showMyAnswer">Hide</span>
 					<span ng-hide="showMyAnswer">Show</span>
 					Student's Answer
 				</a></p>
-                <acj-student-answer class="answer" answer="(answers | filter:{user_id:judgement.user_id}:true)[0]" ng-show="showMyAnswer"></acj-student-answer>
+			
+			<acj-student-answer class="answer" answer="(answers | filter:{user_id:judgement.user_id}:true)[0]" ng-show="showMyAnswer"></acj-student-answer>
 			</div>
-
+			
 			<!-- Comparison Header -->
 			<div class="each-header">
 				<a ng-href="#/user/{{ judgement.user_id }}">
@@ -59,51 +60,51 @@
 				<a ng-href="#/user/{{ judgement.user_id }}">{{ judgement.name }}</a>
 				<strong>submitted</strong> on {{ judgement.created | amDateFormat: 'MMM D @ h:mm a'}}:
 			</div>
-
-
-            <div ng-repeat="criterion in judgement.criteria_judgements">
-
-                <h5 class="content">Comparison for "{{criteria[criterion.criteriaandquestions_id]}}"</h5>
-
-                <div class="content" mathjax="criterion.content"
-                     ng-bind-html="criterion.content">
-                </div>
-
-                <!-- Answers -->
-                <p class="show-answers"><a href="" ng-click="loadAnswer(judgement.answer1.id);loadAnswer(judgement.answer2.id);showAnswers = !showAnswers;">
-                    <i ng-show="showAnswers" class="fa fa-chevron-down"></i>
-                    <i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
-                    Show compared answers
-                </a></p>
-
-                <div class="row" ng-show="showAnswers">
-                    <acj-answer-content answer="(answers | filter:{id:judgement.answer1.id}:true)[0]" is-chosen="criterion.winner == judgement.answer1.id" title="Odd-Numbered Answer" criteria-and-questions="criterion.criteriaandquestions_id"></acj-answer-content>
-                    <acj-answer-content answer="(answers | filter:{id:judgement.answer2.id}:true)[0]" is-chosen="criterion.winner == judgement.answer2.id" title="Even-Numbered Answer" criteria-and-questions="criterion.criteriaandquestions_id"></acj-answer-content>
-                </div>
-
-            </div>
-
-            <h5 class="content">Feedback for Odd-Numbered Answer</h5>
-
-            <!-- feedback for odd-numbered answer -->
-            <div class="content" mathjax="judgement.answer1.feedback"
-                 ng-bind-html="judgement.answer1.feedback">
-            </div>
-
-            <h5 class="content">Feedback for Even-Numbered Answer</h5>
-
-            <!-- feedback for even-numbered answer -->
-            <div class="content" mathjax="judgement.answer2.feedback"
-                 ng-bind-html="judgement.answer2.feedback"></div>
-
-
-			<div ng-if="judgement.selfeval.length">
-				<h5 class="content">Self-Evaluation</h5>
-				<div class="content" mathjax="judgement.selfeval[0].content"
-					 ng-bind-html="judgement.selfeval[0].content">
-				</div>
+			
+			<div ng-repeat="criterion in judgement.criteria_judgements">
+			    
+			    <h5 class="content">Comparison for "{{criteria[criterion.criteriaandquestions_id]}}"</h5>
+				    
+			    <div class="content" mathjax="criterion.content"
+				 ng-bind-html="criterion.content">
+			    </div>
+			
+			    <!-- Answers -->
+			    <p class="show-answers"><a href="" ng-click="loadAnswer(judgement.answer1.id);loadAnswer(judgement.answer2.id);showAnswers = !showAnswers;">
+				<i ng-show="showAnswers" class="fa fa-chevron-down"></i>
+				<i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
+				Show compared answers
+			    </a></p>
+				
+			    <div class="row" ng-show="showAnswers">
+				<acj-answer-content answer="(answers | filter:{id:judgement.answer1.id}:true)[0]" is-chosen="criterion.winner == judgement.answer1.id" title="Odd-Numbered Answer" criteria-and-questions="criterion.criteriaandquestions_id"></acj-answer-content>
+				<acj-answer-content answer="(answers | filter:{id:judgement.answer2.id}:true)[0]" is-chosen="criterion.winner == judgement.answer2.id" title="Even-Numbered Answer" criteria-and-questions="criterion.criteriaandquestions_id"></acj-answer-content>
+			    </div>
+			
 			</div>
+			
+			<h5 class="content">Feedback for Odd-Numbered Answer</h5>
+			
+			<!-- feedback for odd-numbered answer -->
+			<div class="content" mathjax="judgement.answer1.feedback"
+			     ng-bind-html="judgement.answer1.feedback">
+			</div>
+			
+			<h5 class="content">Feedback for Even-Numbered Answer</h5>
+			
+			<!-- feedback for even-numbered answer -->
+			<div class="content" mathjax="judgement.answer2.feedback"
+			     ng-bind-html="judgement.answer2.feedback"></div>
+			
 		
+		</div>
+		
+		<!-- NEED to add self-evaluation here when ready (code here is leftover from before refactor) -->
+		<div ng-if="judgement.selfeval.length">
+			<h5 class="content">Self-Evaluation</h5>
+			<div class="content" mathjax="judgement.selfeval[0].content"
+				 ng-bind-html="judgement.selfeval[0].content">
+			</div>
 		</div>
 
 	</div>

@@ -364,7 +364,7 @@
 
 					<div ng-show="showReplies">
 
-						<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer)" class="each-reply" ng-if="see_answers || canManagePosts">
+						<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer)" class="each-reply">
 					
 							<hr ng-hide="$first" />
 
@@ -472,7 +472,7 @@
 				
 				<!-- Student Answer Replies Section -->
 				<a href="" ng-click="showReplies = !showReplies; showReplies && loadComments(answer)">
-					<h3 class="reply-heading" ng-if="answer.comments_count && (see_answers || canManagePosts)">
+					<h3 class="reply-heading" ng-if="answer.comments_count">
 						<i class="fa fa-chevron-down" ng-show="showReplies"></i>
 						<i class="fa fa-chevron-right" ng-hide="showReplies"></i>
 						<ng-pluralize count="answer.comments_count" when="{'1': '{} reply', 'other': '{} replies'}"></ng-pluralize>
@@ -483,7 +483,7 @@
 
 				<div ng-show="showReplies">
 
-					<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer)" class="each-reply" ng-if="see_answers || canManagePosts">
+					<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer)" class="each-reply">
 
 						<hr ng-hide="$first" />
 
@@ -579,28 +579,29 @@
 				<p>(Nothing saved under your name yet.)</p>
 			</div>
 
-            <!-- self eval section -->
-            <div class="each-evaluation clearfix" ng-repeat="answer in user_answers.objects">
-                <div class="each-header clearfix" ng-repeat="comment in answer.comments | filter:{selfeval: true}">
-                    <a ng-href="#/user/{{comment.user_id}}">
-                        <img src="//www.gravatar.com/avatar/{{comment.user_avatar}}?s=32&d=retro" />
-                    </a>
-                    You
-                    <strong>self-evaluated</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
-                    <div class="manager-actions pull-right" ng-if="canManagePosts || (comment.user_id == loggedInUserId && !(comment.selfeval || comment.evaluation))">
-                        <a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
-                            <i class="fa fa-trash-o"></i>
-                        </a>
-                        <a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
-                            Edit
-                        </a>
-                    </div>
-
-                    <div class="content" mathjax="comment.content"
-                         ng-bind-html="comment.content">
-                    </div>
-                </div>
-            </div>
+			<!-- self eval section -->
+			<div ng-class="{'each-evaluation': filteredAnswers.length > 0}" ng-repeat="answer in user_answers.objects">
+			    <div ng-repeat="comment in filteredAnswers = (answer.comments | filter:{selfeval: true})">
+				<div class="each-header">
+				    <a ng-href="#/user/{{comment.user_id}}">
+					<img src="//www.gravatar.com/avatar/{{comment.user_avatar}}?s=32&d=retro" />
+				    </a>
+				    You
+				    <strong>self-evaluated</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
+				    <div class="manager-actions pull-right" ng-if="canManagePosts || (comment.user_id == loggedInUserId && !(comment.selfeval || comment.evaluation))">
+					<a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
+					    <i class="fa fa-trash-o"></i>
+					</a>
+					<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
+					    Edit
+					</a>
+				    </div>
+				</div>
+				<div class="content" mathjax="comment.content"
+				    ng-bind-html="comment.content">
+				</div>
+			</div>
+			</div>
 
 		</div><!-- closes comparisons-tab -->
 		
