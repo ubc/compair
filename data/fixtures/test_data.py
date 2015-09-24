@@ -11,7 +11,7 @@ from data.factories import CoursesFactory, UsersFactory, CoursesAndUsersFactory,
     PostsForAnswersFactory, CriteriaFactory, CriteriaAndCoursesFactory, AnswerPairingsFactory, JudgementsFactory, \
     PostsForJudgementsFactory, PostsForCommentsFactory, GroupsFactory, GroupsAndUsersFactory, \
     CriteriaAndPostsForQuestionsFactory, PostsForQuestionsAndPostsForCommentsFactory, \
-    PostsForAnswersAndPostsForCommentsFactory, ScoreFactory
+    PostsForAnswersAndPostsForCommentsFactory, ScoreFactory, AnswerCommentFactory
 from data.fixtures import DefaultFixture
 
 
@@ -210,13 +210,11 @@ class AnswerCommentsTestData(SimpleAnswersTestData):
                                                                 self.answersByQuestion[question.id][0])
             self.answer_comments_by_question[question.id] = [comment_extra_student1, comment_extra_student2]
 
-    def create_answer_comment(self, user, course, answer):
-        post = PostsFactory(user=user, course=course)
-        comment = PostsForCommentsFactory(post=post)
-        question_comment = PostsForAnswersAndPostsForCommentsFactory(
-            postsforanswers=answer, postsforcomments=comment)
+    @staticmethod
+    def create_answer_comment(user, course, answer, **kwargs):
+        answer_comment_factory = AnswerCommentFactory(user=user, course=course, answer=answer, **kwargs)
         db.session.commit()
-        return question_comment
+        return answer_comment_factory.answer_comment
 
     def get_answer_comments_by_question(self, question):
         return self.answer_comments_by_question[question.id]

@@ -62,6 +62,8 @@ def json_recorder(filename, key=None):
 
 
 class ACJTestCase(TestCase):
+    api = None
+    resource = None
 
     def create_app(self):
         app = create_app(settings_override=test_app_settings)
@@ -86,6 +88,9 @@ class ACJTestCase(TestCase):
         self.assert200(rv)
         yield rv
         self.client.delete('/api/logout', follow_redirects=True)
+
+    def get_url(self, **values):
+        return self.api.url_for(self.resource, **values)
 
 
 class SessionTests(ACJTestCase):

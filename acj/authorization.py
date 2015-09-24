@@ -7,6 +7,8 @@ from .models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTyp
     PostsForAnswersAndPostsForComments, Judgements, Criteria, CriteriaAndCourses, \
     PostsForJudgements, Groups, GroupsAndUsers, CriteriaAndPostsForQuestions, Posts, PostsForComments
 
+USER_IDENTITY = 'permission_user_identity'
+
 
 def define_authorization(user, they):
     """
@@ -46,6 +48,7 @@ def define_authorization(user, they):
         they.can(CREATE, Criteria)
         they.can(EDIT, Users, if_my_student)
         they.can(CREATE, Users, if_equal_or_lower_than_me)
+        they.can(READ, USER_IDENTITY)
 
     # users can edit and read their own user account
     they.can(READ, Users, id=user.id)
@@ -68,6 +71,7 @@ def define_authorization(user, they):
         they.can((READ, CREATE), PostsForComments, course_id=entry.courses_id)
         they.can((EDIT, DELETE), PostsForComments, user_id=user.id)
         they.can((READ, CREATE), PostsForAnswersAndPostsForComments, courses_id=entry.courses_id)
+        # owner of the answer comment
         they.can((EDIT, DELETE), PostsForAnswersAndPostsForComments, users_id=user.id)
         # instructors can modify the course and enrolment
         if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_INSTRUCTOR:
@@ -88,6 +92,7 @@ def define_authorization(user, they):
             they.can(READ, GroupsAndUsers, courses_id=entry.courses_id)
             they.can(READ, CoursesAndUsers, courses_id=entry.courses_id)
             they.can((CREATE, DELETE), CriteriaAndPostsForQuestions, courses_id=entry.courses_id)
+            they.can(READ, USER_IDENTITY)
         # only students can submit judgements for now
         if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_STUDENT:
             they.can(CREATE, Judgements, courses_id=entry.courses_id)

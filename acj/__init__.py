@@ -92,7 +92,7 @@ def create_app(conf=config, settings_override=None):
     # Initialize rest of the api modules
     from .course import courses_api
 
-    app.register_blueprint(courses_api, url_prefix='/api/courses')
+    app.register_blueprint(courses_api, url_prefix='/api')
     from .classlist import classlist_api
 
     app.register_blueprint(classlist_api, url_prefix='/api/courses/<int:course_id>/users')
@@ -131,10 +131,10 @@ def create_app(conf=config, settings_override=None):
         url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/comments')
     app.register_blueprint(
         commentsforanswers_api,
-        url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answers/<int:answer_id>/comments')
+        url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>')
     app.register_blueprint(
         usercommentsforanswers_api,
-        url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/answers/<int:answer_id>/users/comments')
+        url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>')
     from .evalcomment import evalcomments_api
 
     app.register_blueprint(

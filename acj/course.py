@@ -32,12 +32,14 @@ on_course_list_get = event.signal('COURSE_LIST_GET')
 on_course_create = event.signal('COURSE_CREATE')
 
 
-# /
 class CourseListAPI(Resource):
     @login_required
     @pagination(Courses)
     @marshal_with(dataformat.get_courses())
     def get(self, objects):
+        """
+        Get a list of courses
+        """
         require(MANAGE, Courses)
         on_course_list_get.send(
             self,
@@ -49,7 +51,6 @@ class CourseListAPI(Resource):
     def post(self):
         """
         Create new course
-        :return:
         """
         require(CREATE, Courses)
         params = new_course_parser.parse_args()
@@ -94,13 +95,15 @@ class CourseListAPI(Resource):
         return marshal(new_course, dataformat.get_courses())
 
 
-api.add_resource(CourseListAPI, '')
+api.add_resource(CourseListAPI, '/courses')
 
 
-# /id
 class CourseAPI(Resource):
     @login_required
     def get(self, course_id):
+        """
+        Get a course by course id
+        """
         course = Courses.query.\
             options(joinedload("criteriaandcourses").joinedload("criterion")).\
             get_or_404(course_id)
@@ -166,4 +169,4 @@ class CourseAPI(Resource):
 
         return marshal(course, dataformat.get_courses())
 
-api.add_resource(CourseAPI, '/<int:course_id>')
+api.add_resource(CourseAPI, '/courses/<int:course_id>')

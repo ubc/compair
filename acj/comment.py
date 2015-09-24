@@ -1,19 +1,19 @@
 from bouncer.constants import CREATE, READ, EDIT, DELETE, MANAGE
 from flask import Blueprint
 from flask.ext.login import login_required, current_user
-from flask.ext.restful import Resource, marshal
+from flask.ext.restful import Resource, marshal, abort
 from flask.ext.restful.reqparse import RequestParser
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import load_only, joinedload, contains_eager
 
 from . import dataformat
 from .core import db
-from .authorization import require, allow
+from .authorization import require, allow, USER_IDENTITY
 from .core import event
 from .models import Posts, PostsForComments, PostsForAnswers, \
     PostsForQuestions, Courses, PostsForQuestionsAndPostsForComments, \
-    PostsForAnswersAndPostsForComments
-from .util import new_restful_api, get_model_changes
+    PostsForAnswersAndPostsForComments, UserTypesForCourse, UserTypesForSystem
+from .util import new_restful_api, get_model_changes, pagination_parser
 
 commentsforquestions_api = Blueprint('commentsforquestions_api', __name__)
 apiQ = new_restful_api(commentsforquestions_api)
@@ -29,11 +29,19 @@ new_comment_parser.add_argument('content', type=str, required=True)
 new_comment_parser.add_argument('selfeval', type=bool, required=False, default=False)
 new_comment_parser.add_argument('evaluation', type=bool, required=False, default=False)
 new_comment_parser.add_argument('type', type=int, default=0)
+new_comment_parser.add_argument('user_id', type=int, default=None)
 
 existing_comment_parser = RequestParser()
 existing_comment_parser.add_argument('id', type=int, required=True, help="Comment id is required.")
 existing_comment_parser.add_argument('content', type=str, required=True)
 existing_comment_parser.add_argument('type', type=int, default=0)
+
+answer_comment_list_parser = pagination_parser.copy()
+answer_comment_list_parser.add_argument('selfeval', type=str, required=False, default='true')
+answer_comment_list_parser.add_argument('ids', type=str, required=False, default=None)
+answer_comment_list_parser.add_argument('answer_ids', type=str, required=False, default=None)
+answer_comment_list_parser.add_argument('question_id', type=int, required=False, default=None)
+answer_comment_list_parser.add_argument('user_ids', type=str, required=False, default=None)
 
 # events
 on_comment_modified = event.signal('COMMENT_MODIFIED')
@@ -179,47 +187,139 @@ class QuestionCommentIdAPI(Resource):
 apiQ.add_resource(QuestionCommentIdAPI, '/<int:comment_id>')
 
 
-# /
-class AnswerCommentRootAPI(Resource):
-    # TODO pagination
+class AnswerCommentListAPI(Resource):
     @login_required
-    def get(self, course_id, question_id, answer_id):
-        Courses.exists_or_404(course_id)
-        question = PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
-        require(READ, question)
-        restrict_users = not allow(MANAGE, question)
+    def get(self, **kwargs):
+        """
+        **Example request**:
 
-        answer = PostsForAnswers.query.get_or_404(answer_id)
+        .. sourcecode:: http
+
+            GET /api/answer/123/comments HTTP/1.1
+            Host: example.com
+            Accept: application/json
+
+        .. sourcecode:: http
+
+            GET /api/answer_comments?ids=1,2,3&selfeval=only HTTP/1.1
+            Host: example.com
+            Accept: application/json
+
+        **Example response**:
+
+        .. sourcecode:: http
+
+            HTTP/1.1 200 OK
+            Vary: Accept
+            Content-Type: application/json
+            [{
+                'id': 1
+                'content': 'comment text',
+                'created': '',
+                'user_id': 1,
+                'user_displayname': 'John',
+                'user_fullname': 'John Smith',
+                'user_avatar': '12k3jjh24k32jhjksaf',
+                'selfeval': true,
+                'evaluation': true,
+                'type': 0,
+                'course_id': 1,
+            }]
+
+        :query string ids: a comma separated comment IDs to query
+        :query string answer_ids: a comma separated answer IDs for answer filter
+        :query int question_id: filter the answer comments with a question
+        :query string user_ids: a comma separated user IDs that own the comments
+        :query string selfeval: indicate whether the result should include self-evaluation comments or self-eval only.
+                Possible values: true, false or only. Default true.
+        :reqheader Accept: the response content type depends on :mailheader:`Accept` header
+        :resheader Content-Type: this depends on :mailheader:`Accept` header of request
+        :statuscode 200: no error
+        :statuscode 404: answers don't exist
+
+        """
+        params = answer_comment_list_parser.parse_args()
+        answer_ids = []
+        if 'answer_id' in kwargs:
+            answer_ids.append(kwargs['answer_id'])
+        elif 'answer_ids' in params and params['answer_ids']:
+            answer_ids.extend(params['answer_ids'].split(','))
+
+        if not answer_ids and not params['ids'] and not params['question_id'] and not params['user_ids']:
+            abort(404)
+
+        conditions = []
+
+        answers = PostsForAnswers.query. \
+            options(joinedload(PostsForAnswers.post)). \
+            filter(PostsForAnswers.id.in_(answer_ids)).all() if answer_ids else []
+        if answer_ids and not answers:
+            # non-existing answer ids. we return empty result
+            abort(404)
+
+        # build query condition for each answer
+        for answer in answers:
+            clauses = [PostsForAnswersAndPostsForComments.answers_id == answer.id]
+
+            # student can only see the comments for themselves or public ones.
+            # since the owner of the answer can access all comments. We only filter
+            # on non-owners
+            if current_user.get_course_role(answer.course_id) == UserTypesForCourse.TYPE_STUDENT \
+                    and answer.user_id != current_user.id:
+                public_comment_condition = and_(
+                    PostsForAnswersAndPostsForComments.evaluation.isnot(True),
+                    PostsForAnswersAndPostsForComments.selfeval.isnot(True),
+                    PostsForAnswersAndPostsForComments.type != 0
+                )
+                clauses.append(public_comment_condition)
+
+            conditions.append(and_(*clauses))
+
         query = PostsForComments.query. \
             options(contains_eager(PostsForComments.post).joinedload(Posts.user)) . \
             options(contains_eager(PostsForComments.post).joinedload(Posts.files)) . \
             join(PostsForAnswersAndPostsForComments). \
-            filter(PostsForAnswersAndPostsForComments.answers_id == answer.id) . \
+            options(contains_eager(PostsForComments.answer_assoc)). \
+            filter(or_(*conditions)) . \
             join(Posts)
 
-        # student can only see the comments for themselves or public ones.
-        # since the owner of the answer can access all comments. We only filter
-        # on non-owners
-        if restrict_users and answer.user_id != current_user.id:
-            public_comment_condition = and_(
-                PostsForAnswersAndPostsForComments.evaluation.isnot(True),
-                PostsForAnswersAndPostsForComments.selfeval.isnot(True),
-                PostsForAnswersAndPostsForComments.type != 0
-            )
-            query = query.filter(public_comment_condition)
+        if params['ids']:
+            query = query.filter(PostsForComments.id.in_(params['ids'].split(',')))
+
+        if params['selfeval'] == 'false':
+            # do not include self-eval
+            query = query.filter(PostsForAnswersAndPostsForComments.selfeval.is_(False))
+        elif params['selfeval'] == 'only':
+            # only selfeval
+            query = query.filter(PostsForAnswersAndPostsForComments.selfeval.is_(True))
+
+        if params['question_id']:
+            query = query.join(PostsForAnswersAndPostsForComments.postsforanswers). \
+                filter_by(questions_id=params['question_id'])
+
+        if params['user_ids']:
+            user_ids = params['user_ids'].split(',')
+            query = query.filter(Posts.users_id.in_(user_ids))
+
         comments = query.order_by(Posts.created.desc()).all()
+
+        # checking the permission
+        for comment in comments:
+            require(READ, comment.answer_assoc)
 
         on_answer_comment_list_get.send(
             self,
             event_name=on_answer_comment_list_get.name,
             user=current_user,
-            course_id=course_id,
-            data={'question_id': question_id, 'answer_id': answer_id})
+            data={'answer_ids': ','.join([str(answer_id) for answer_id in answer_ids])})
 
-        return {"objects": marshal(comments, dataformat.get_answer_comment())}
+        return marshal(comments, dataformat.get_answer_comment(not allow(READ, USER_IDENTITY)))
 
     @login_required
     def post(self, course_id, question_id, answer_id):
+        """
+        Create comment for a answer
+        """
         Courses.exists_or_404(course_id)
         PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
         answer = PostsForAnswers.query.get_or_404(answer_id)
@@ -231,7 +331,11 @@ class AnswerCommentRootAPI(Resource):
         post.content = params.get("content")
         if not post.content:
             return {"error": "The comment content is empty!"}, 400
-        post.users_id = current_user.id
+
+        if params.get('user_id') and current_user.system_role == UserTypesForSystem.TYPE_SYSADMIN:
+            post.users_id = params.get('user_id')
+        else:
+            post.users_id = current_user.id
         comment_for_answer.selfeval = params.get("selfeval", False)
         comment_for_answer.evaluation = params.get("evaluation", False)
         comment_for_answer.type = params.get("type", 0)
@@ -249,13 +353,18 @@ class AnswerCommentRootAPI(Resource):
         db.session.commit()
         return marshal(comment, dataformat.get_answer_comment())
 
-apiA.add_resource(AnswerCommentRootAPI, '')
+apiA.add_resource(
+    AnswerCommentListAPI,
+    '/answers/<int:answer_id>/comments', '/answer_comments',
+    endpoint='answer_comments')
 
 
-# / id
-class AnswerCommentIdAPI(Resource):
+class AnswerCommentAPI(Resource):
     @login_required
     def get(self, course_id, question_id, answer_id, comment_id):
+        """
+        Get an answer comment
+        """
         Courses.exists_or_404(course_id)
         PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
         PostsForAnswers.query.options(load_only('id')).get_or_404(answer_id)
@@ -273,6 +382,9 @@ class AnswerCommentIdAPI(Resource):
 
     @login_required
     def post(self, course_id, question_id, answer_id, comment_id):
+        """
+        Create an answer comment
+        """
         Courses.exists_or_404(course_id)
         PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
         PostsForAnswers.query.options(load_only('id')).get_or_404(answer_id)
@@ -301,6 +413,9 @@ class AnswerCommentIdAPI(Resource):
 
     @login_required
     def delete(self, course_id, question_id, answer_id, comment_id):
+        """
+        Delete an answer comment
+        """
         comment = PostsForComments.query.get_or_404(comment_id)
         require(DELETE, comment)
         data = marshal(comment, dataformat.get_answer_comment(False))
@@ -316,13 +431,15 @@ class AnswerCommentIdAPI(Resource):
 
         return {'id': comment.id}
 
-apiA.add_resource(AnswerCommentIdAPI, '/<int:comment_id>')
+apiA.add_resource(AnswerCommentAPI, '/answers/<int:answer_id>/comments/<int:comment_id>', endpoint='answer_comment')
 
 
-# /
 class UserAnswerCommentIdAPI(Resource):
     @login_required
     def get(self, course_id, question_id, answer_id):
+        """
+        Get answer comments for current user
+        """
         Courses.exists_or_404(course_id)
         PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
         PostsForAnswers.query.options(load_only('id')).get_or_404(answer_id)
@@ -338,4 +455,4 @@ class UserAnswerCommentIdAPI(Resource):
 
         return {'object': marshal(comments, dataformat.get_posts_for_answers_and_posts_for_comments())}
 
-apiU.add_resource(UserAnswerCommentIdAPI, '')
+apiU.add_resource(UserAnswerCommentIdAPI, '/answers/<int:answer_id>/users/comments', endpoint='user_answer_comment')

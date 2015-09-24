@@ -168,3 +168,13 @@ class GroupsAndUsersFactory(SQLAlchemyModelFactory):
 class SelfEvaluationTypesFactory(SQLAlchemyModelFactory):
     FACTORY_FOR = SelfEvaluationTypes
     FACTORY_SESSION = db.session
+
+
+class AnswerCommentFactory(object):
+    def __init__(self, **kwargs):
+        user, course, answer = (kwargs.pop(key) for key in ['user', 'course', 'answer'])
+        post = PostsFactory(user=user, course=course)
+        comment = PostsForCommentsFactory(post=post)
+        self.answer_comment = PostsForAnswersAndPostsForCommentsFactory(
+            postsforanswers=answer, postsforcomments=comment, **kwargs
+        )

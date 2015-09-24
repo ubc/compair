@@ -269,6 +269,14 @@ class Users(db.Model, UserMixin):
 
         return judgement_count >= question.num_judgement_req * question.criteria_count
 
+    def get_course_role(self, course_id):
+        """ Return user's course role by course id """
+        for course in self.coursesandusers:
+            if course.courses_id == course_id:
+                return course.usertypeforcourse.name
+
+        return None
+
 
 class InvalidAttributeException(Exception):
     pass
