@@ -280,7 +280,7 @@ class AnswerCommentIdAPI(Resource):
         require(EDIT, comment)
         params = existing_comment_parser.parse_args()
         # make sure the comment id in the rul and the id matches
-        if params['id'] != comment.answer_assoc.id:
+        if params['id'] != comment.id:
             return {"error": "Comment id does not match URL."}, 400
         # modify comment according to new values, preserve original values if values not passed
         comment.content = params.get("content")

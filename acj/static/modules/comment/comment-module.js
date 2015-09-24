@@ -229,7 +229,7 @@ module.controller(
 		$scope.comment = AnswerCommentResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId, 'commentId': commentId});
 		$scope.parent = AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId});
 		$scope.commentSubmit = function () {
-			AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': answerId, 'commentId': $scope.comment.comments_id}, $scope.comment).$promise.then(
+			AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': answerId, 'commentId': commentId}, $scope.comment).$promise.then(
 				function() {
 					Toaster.success("Reply Updated!");
 					$location.path('/course/' + courseId + '/question/' +questionId);
