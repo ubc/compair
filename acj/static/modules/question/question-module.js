@@ -575,9 +575,8 @@ module.controller("QuestionViewController",
 		};
 
 		$scope.loadComments = function(answer) {
-			AnswerCommentResource.get({courseId: $scope.courseId, questionId: questionId, answerId: answer.id}, function(response) {
-				answer.comments = response['objects'];
-			})
+			answer.comments = AnswerCommentResource.query(
+				{courseId: $scope.courseId, questionId: questionId, answer_ids: answer.id})
 		};
 
 		$scope.deleteComment = function(key, course_id, question_id, comment_id) {

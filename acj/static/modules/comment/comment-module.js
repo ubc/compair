@@ -53,18 +53,6 @@ module.factory(
 	}
 );
 
-module.factory(
-	"UserAnswerCommentResource",
-	function ($resource)
-	{
-		var ret = $resource(
-			'/api/courses/:courseId/questions/:questionId/answers/:answerId/users/comments'
-		);
-		ret.MODEL = "PostsForAnswersAndPostsForComments";
-		return ret;
-	}
-);
-
 module.filter('author', function() {
 	return function(input, authorId) {
 		if (angular.isObject(input)) {

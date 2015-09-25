@@ -63,14 +63,14 @@ module.constant('required_rounds', 6);
 module.controller(
 	'JudgementController', 
 	function($log, $location, $route, $scope, $timeout, $routeParams, $anchorScroll, QuestionResource, AnswerResource,
-		CoursesCriteriaResource, JudgementResource, AnswerCommentResource, EvalCommentResource, UserAnswerCommentResource, Session, Toaster)
+		CoursesCriteriaResource, JudgementResource, AnswerCommentResource, EvalCommentResource, Session, Toaster)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
+		var userId;
 		$scope.submitted = false;
 		
 		$scope.question = {};
-		$scope.questionCriteria = {};
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
 			function (ret)
 			{
@@ -79,7 +79,6 @@ module.controller(
 				if (ret.question.selfevaltype_id) {
 					$scope.total += 1;
 				}
-				$scope.questionCriteria = ret.question.criteria;
 			},
 			function (ret)
 			{
@@ -87,8 +86,8 @@ module.controller(
 			}
 		);
 		Session.getUser().then(function(user) {
-			var userId = user.id;
-			var count = JudgementResource.count(
+			userId = user.id;
+			JudgementResource.count(
 				{'courseId': courseId, 'questionId': questionId, 'userId': userId}).
 				$promise.then(
 					function(ret) {
@@ -101,33 +100,28 @@ module.controller(
 		});	
 
 		// get an answerpair to be judged from the server
-		$scope.answerPair = {};
 		$scope.answerPairError = false;
-		$scope.ansComments = {answer1: true, answer2: true};
-		JudgementResource.getAnswerPair(
-			{'courseId': courseId, 'questionId': questionId}).$promise.then(
-				function (ret)
-				{
-					$scope.answerPair = ret;
-					angular.forEach($scope.ansComments, function(value, key) {
-						UserAnswerCommentResource.get({'courseId':courseId, 'questionId':questionId,
-							'answerId': ret[key]['id']}).$promise.then(
-								function (ret) {
-									if (ret.object.length) {
-										$scope.answerPair[key]['comment'] = ret.object['0'].postsforcomments;
-										$scope.answerPair[key]['comment']['post']['id'] = ret.object['0'].id;
-										$scope.ansComments[key] = false;
-									}
-								},
-								function (ret) {}
-						);
+		$scope.answerPair = JudgementResource.getAnswerPair(
+			{'courseId': courseId, 'questionId': questionId}, function (ret) {
+				// check if there is any existing comments from current user
+				var answer_ids = _.pluck(ret.answers, 'id').sort().join(',');
+				AnswerCommentResource.query(
+					{'courseId':courseId, 'questionId':questionId, 'answer_ids': answer_ids, 'user_id': userId},
+					function(ret) {
+						_.forEach(ret, function(comment) {
+							_.forEach($scope.answerPair.answers, function(answer) {
+								if (answer.id == comment.answer_id) {
+									answer.comment = comment;
+								} else {
+									answer.comment = {}
+								}
+							})
+						});
 					});
-				},
-				function (ret)
-				{
-					$scope.answerPairError = true;
-					Toaster.reqerror("Answer Pair Not Found", ret);
-				}
+			}, function (ret) {
+				$scope.answerPairError = true;
+				Toaster.reqerror("Answer Pair Not Found", ret);
+			}
 		);
 		
 		// enable scrolling to evaluation step 2, when step 2 revealed
@@ -148,16 +142,14 @@ module.controller(
 			judgement['answerpair_id'] = $scope.answerPair.id;
 			judgement['judgements'] = [];
 			var comments = {};
-			angular.forEach($scope.questionCriteria,
-				function(questionCriterion, index) {
-					var criterionWinner = {
-						'question_criterion_id': questionCriterion.id,
-						'answer_id_winner': questionCriterion.winner
-					};
-					judgement['judgements'].push(criterionWinner);
-					comments[questionCriterion.id] = questionCriterion.comment;
-				}
-			);
+			angular.forEach($scope.question.criteria, function(questionCriterion) {
+				var criterionWinner = {
+					'question_criterion_id': questionCriterion.id,
+					'answer_id_winner': questionCriterion.winner
+				};
+				judgement['judgements'].push(criterionWinner);
+				comments[questionCriterion.id] = questionCriterion.comment;
+			});
 			JudgementResource.save(
 				{'courseId': courseId, 'questionId': questionId}, judgement).
 				$promise.then(
@@ -165,7 +157,7 @@ module.controller(
 						var evaluations = {};
 						evaluations['judgements'] = [];
 						angular.forEach(ret.objects,
-							function(judge, index) {
+							function(judge) {
 								var temp = judge;								
 								temp['comment'] = comments[judge.question_criterion.id];
 								evaluations['judgements'].push(temp);
@@ -231,32 +223,15 @@ module.controller(
 					}
 			);
 			// save comments for each individual answer
-			angular.forEach($scope.ansComments, function(value, key) {
-				if (value) {
-					// save new comment
-					$scope.answerPair[key]['comment']['post']['evaluation'] = true;
-					AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': $scope.answerPair[key]['id']},
-						$scope.answerPair[key]['comment']['post']).$promise.then(
-							function (ret)
-							{},
-							function (ret)
-							{
-								Toaster.reqerror("Unable To Save Reply", ret);
-							}
-					);
-				} else {
-					// update previous comment
-					AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': $scope.answerPair[key]['id'],
-						'commentId': $scope.answerPair[key]['comment']['post']['id']},
-						$scope.answerPair[key]['comment']['post']).$promise.then(
-							function (ret)
-							{},
-							function (ret)
-							{
-								Toaster.reqerror("Unable To Save Reply", ret);
-							}
-					);
-				}
+			angular.forEach($scope.answerPair.answers, function(answer) {
+				var params = {
+					courseId: courseId,
+					questionId: questionId,
+					answerId: answer.id,
+					commentId: _.get(answer, 'comment.id')
+				};
+				answer.comment.evaluation = true;
+				AnswerCommentResource.save(params, answer.comment);
 			});
 		};
 

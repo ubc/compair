@@ -34,21 +34,21 @@
 		<div class="col-md-6" ng-hide="answerPairError">
 			<div class="answer-choice clearfix">
 				<h3 class="text-center">Answer {{(current - 1) + current}}</h3>
-				<div mathjax="answerPair.answer1.content"
-					ng-bind-html="answerPair.answer1.content">
+				<div mathjax="answerPair.answers[0].content"
+					ng-bind-html="answerPair.answers[0].content">
 				</div>
 				<!-- Attachment -->
 				<acj-pdf-inline label="See detail:" 
-					pdfs="answerPair.answer1.files">
+					pdfs="answerPair.answers[0].files">
 				</acj-pdf-inline>
 				<!-- Flagging -->
 				<a href="" class="btn btn-default btn-xs pull-right"
 					title="Flag as incomplete or inappropriate."
-					ng-class="{'btn-danger': answerPair.answer1.flagged}"
-					ng-click="toggleAnswerFlag(answerPair.answer1)">
+					ng-class="{'btn-danger': answerPair.answers[0].flagged}"
+					ng-click="toggleAnswerFlag(answerPair.answers[0])">
 					<i class="fa fa-warning"></i>
-					<span ng-if="answerPair.answer1.flagged">Flagged</span>
-					<span ng-if="!answerPair.answer1.flagged">Flag</span>
+					<span ng-if="answerPair.answers[0].flagged">Flagged</span>
+					<span ng-if="!answerPair.answers[0].flagged">Flag</span>
 				</a>
 			</div>
 		</div>
@@ -56,21 +56,21 @@
 		<div class="col-md-6" ng-hide="answerPairError">
 			<div class="answer-choice clearfix">
 				<h3 class="text-center">Answer {{current * 2}}</h3>
-				<div mathjax="answerPair.answer2.content"
-					ng-bind-html="answerPair.answer2.content">
+				<div mathjax="answerPair.answers[1].content"
+					ng-bind-html="answerPair.answers[1].content">
 				</div>
 				<!-- Attachment -->
 				<acj-pdf-inline label="See detail:" 
-					pdfs="answerPair.answer2.files">
+					pdfs="answerPair.answers[1].files">
 				</acj-pdf-inline>
 				<!-- Flagging -->
 				<a href="" class="btn btn-default btn-xs pull-right"
 					title="Flag as incomplete or inappropriate."
-					ng-class="{'btn-danger': answerPair.answer2.flagged}"
-					ng-click="toggleAnswerFlag(answerPair.answer2)">
+					ng-class="{'btn-danger': answerPair.answers[1].flagged}"
+					ng-click="toggleAnswerFlag(answerPair.answers[1])">
 					<i class="fa fa-warning"></i>
-					<span ng-if="answerPair.answer2.flagged">Flagged</span>
-					<span ng-if="!answerPair.answer2.flagged">Flag</span>
+					<span ng-if="answerPair.answers[1].flagged">Flagged</span>
+					<span ng-if="!answerPair.answers[1].flagged">Flag</span>
 				</a>
 			</div>
 		</div>
@@ -88,7 +88,7 @@
 			<div class="row sub-step">
 				
 				<p class="intro-text">Use instructor-provided guidelines, or explain what each author did well or could improve on based on the comparison criteria:
-					<span ng-repeat="questionCriterion in questionCriteria">{{questionCriterion.criterion.name}} </span>
+					<span ng-repeat="questionCriterion in question.criteria">{{questionCriterion.criterion.name}} </span>
 				</p>
 				
 				<div class="col-md-6">
@@ -97,7 +97,7 @@
 						<i class="fa fa-arrow-down"></i>
 					</label>
 					<textarea
-						ng-model="answerPair.answer1.comment.post.content" rows="8" ckeditor required>
+						ng-model="answerPair.answers[0].comment.content" rows="8" ckeditor required>
 					</textarea>
 				</div>
 				<div class="col-md-6">
@@ -106,14 +106,14 @@
 						<i class="fa fa-arrow-down"></i>
 					</label>
 					<textarea
-						ng-model="answerPair.answer2.comment.post.content" rows="8" ckeditor required>
+						ng-model="answerPair.answers[1].comment.content" rows="8" ckeditor required>
 					</textarea>
 				</div>
 			</div>
 			
 			<!-- <div class="form-group">
 				<input
-					ng-disabled="!(!!answerPair.answer1.comment.post.content && !!answerPair.answer2.comment.post.content)"
+					ng-disabled="!(!!answerPair.answers[0].comment.content && !!answerPair.answers[1].comment.content)"
 					ng-click="isStep2Shown = !isStep2Shown; showNext('#step-2');"
 					ng-show="!isStep2Shown"
 					value="Next" class="btn btn-success btn-lg center-block" />
@@ -130,12 +130,12 @@
 			
 			<p class="intro-text">Your selection helps determine a criteria-based ranking of the answers.</p>
 			
-			<div ng-if="questionCriteria.length == 0" class="text-center">
+			<div ng-if="question.criteria.length == 0" class="text-center">
 				<p>No criteria have been set for this question yet. Please select one or more of the course criteria.</p>
 				<br />
 			</div>
 			
-			<div class="form-group sub-step" ng-repeat="questionCriterion in questionCriteria">
+			<div class="form-group sub-step" ng-repeat="questionCriterion in question.criteria">
 				
 				<div class="each-criterion sub-step">
 					<fieldset>
@@ -148,19 +148,19 @@
 								<p><strong>Select one:</strong></p>
 								<div class="btn-group">
 									<label class="btn btn-primary" ng-class=
-										"{active:questionCriterion.winner==answerPair.answer1.id}">
+										"{active:questionCriterion.winner==answerPair.answers[0].id}">
 										<input type="radio" class="hideRadio" 
-											name="answer{{answerPair.answer1.id}}" required
+											name="answer{{answerPair.answers[0].id}}" required
 											ng-model="questionCriterion.winner"
-											ng-value="answerPair.answer1.id">
+											ng-value="answerPair.answers[0].id">
 										Answer {{(current - 1) + current}}
 									</label>
 									<label class="btn btn-primary" ng-class=
-										"{active:questionCriterion.winner==answerPair.answer2.id}">
+										"{active:questionCriterion.winner==answerPair.answers[1].id}">
 										<input type="radio" class="hideRadio" 
-											name="answer{{answerPair.answer1.id}}" required
+											name="answer{{answerPair.answers[0].id}}" required
 											ng-model="questionCriterion.winner"
-											ng-value="answerPair.answer2.id">
+											ng-value="answerPair.answers[1].id">
 										Answer {{current * 2}}
 									</label>
 								</div>

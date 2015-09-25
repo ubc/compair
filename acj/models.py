@@ -819,6 +819,7 @@ class PostsForComments(db.Model):
     user_fullname = association_proxy('post', 'user_fullname')
 
     # used by answer comments only
+    answer_id = association_proxy('answer_assoc', 'answers_id')
     evaluation = association_proxy('answer_assoc', 'evaluation')
     selfeval = association_proxy('answer_assoc', 'selfeval')
     type = association_proxy('answer_assoc', 'type')
