@@ -134,6 +134,7 @@ class JudgementPairAPI(Resource):
         require(READ, question)
         if not question.judging_period:
             return {'error': 'Evaluation period is not active.'}, 403
+
         pair_generator = AnswerPairGenerator(course.id, question, current_user.id)
 
         try:
@@ -145,10 +146,13 @@ class JudgementPairAPI(Resource):
                 user=current_user,
                 course_id=course_id,
                 data={
-                    'question_id': question_id,
-                    'answer_pair': marshal(answerpairing, dataformat.get_answer_pairings(include_answers=True))
+                    'id': answerpairing.id,
+                    'answer_pair': ','.join([str(answerpairing.answers_id1), str(answerpairing.answers_id2)]),
                 })
-            return marshal(answerpairing, dataformat.get_answer_pairings(include_answers=True))
+
+            return marshal(
+                {'id': answerpairing.id, 'answers': [answerpairing.answer1, answerpairing.answer2]},
+                dataformat.get_answer_pairings_new())
         except InsufficientAnswersException:
             return {"error": "Not enough answers are available for an evaluation."}, 400
         except UserHasJudgedAllAnswers:

@@ -232,6 +232,7 @@ def get_posts_for_comments_new(restrict_users=True):
 def get_answer_comment(restrict_users=True):
     ret = get_posts_for_comments_new(restrict_users)
     ret.update({
+        'answer_id': fields.Integer,
         'selfeval': fields.Boolean,
         'evaluation': fields.Boolean,
         'type': fields.Integer,
@@ -288,6 +289,14 @@ def get_answer_pairings(include_answers=False):
     if include_answers:
         ret['answer1'] = fields.Nested(get_posts_for_answers())
         ret['answer2'] = fields.Nested(get_posts_for_answers())
+    return ret
+
+
+def get_answer_pairings_new():
+    ret = {
+        'id': fields.Integer,
+        'answers': fields.List(fields.Nested(get_posts_for_answers())),
+    }
     return ret
 
 

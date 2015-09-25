@@ -67,8 +67,8 @@ class JudgementAPITests(ACJTestCase):
             rv = self.client.get(self.answer_pair_url)
             self.assert200(rv)
             actual_answer_pair = rv.json
-            actual_answer1 = actual_answer_pair['answer1']
-            actual_answer2 = actual_answer_pair['answer2']
+            actual_answer1 = actual_answer_pair['answers'][0]
+            actual_answer2 = actual_answer_pair['answers'][1]
             expected_answer_ids = [answer.id for answer in self.data.get_student_answers()]
             # make sure that we actually got answers for the question we're targetting
             self.assertIn(actual_answer1['id'], expected_answer_ids)
@@ -100,8 +100,8 @@ class JudgementAPITests(ACJTestCase):
                 rv = self.client.get(self.answer_pair_url)
                 self.assert200(rv)
                 actual_answer_pair = rv.json
-                actual_answer1 = actual_answer_pair['answer1']
-                actual_answer2 = actual_answer_pair['answer2']
+                actual_answer1 = actual_answer_pair['answers'][0]
+                actual_answer2 = actual_answer_pair['answers'][1]
                 # exclude student's own answer
                 self.assertNotEqual(actual_answer1['id'], excluded_student_answer.id)
                 self.assertNotEqual(actual_answer2['id'], excluded_student_answer.id)
@@ -119,7 +119,7 @@ class JudgementAPITests(ACJTestCase):
                 rv = self.client.get(self.answer_pair_url)
                 self.assert200(rv)
                 # answer cannot be paired with itself
-                self.assertNotEqual(rv.json['answer1']['id'], rv.json['answer2']['id'])
+                self.assertNotEqual(rv.json['answers'][0]['id'], rv.json['answers'][1]['id'])
 
     def test_submit_judgement_access_control(self):
         # test login required
@@ -134,7 +134,7 @@ class JudgementAPITests(ACJTestCase):
             rv = self.client.get(self.answer_pair_url)
             self.assert200(rv)
             # expected_answer_pair = rv.json
-            judgement_submit = self._build_judgement_submit(rv.json['id'], rv.json['answer1']['id'])
+            judgement_submit = self._build_judgement_submit(rv.json['id'], rv.json['answers'][0]['id'])
 
         # test deny access to unenroled users
         with self.login(self.data.get_unauthorized_student().username):
@@ -237,8 +237,8 @@ class JudgementAPITests(ACJTestCase):
                 rv = self.client.get(self.answer_pair_url)
                 self.assert200(rv)
                 expected_answer_pair = rv.json
-                judgement_submit = self._build_judgement_submit(rv.json['id'], rv.json['answer1']['id'])
-                winner_ids.append(rv.json['answer1']['id'])
+                judgement_submit = self._build_judgement_submit(rv.json['id'], rv.json['answers'][0]['id'])
+                winner_ids.append(rv.json['answers'][0]['id'])
                 # test normal post
                 rv = self.client.post(
                     self.base_url,
@@ -263,11 +263,11 @@ class JudgementAPITests(ACJTestCase):
             "The number of judgements saved does not match the number sent")
         for actual_judgement in actual_judgements:
             self.assertEqual(
-                expected_answer_pair['answer1']['id'],
+                expected_answer_pair['answers'][0]['id'],
                 actual_judgement['answerpairing']['answers_id1'],
                 "Expected and actual judgement answer1 id did not match")
             self.assertEqual(
-                expected_answer_pair['answer2']['id'],
+                expected_answer_pair['answers'][1]['id'],
                 actual_judgement['answerpairing']['answers_id2'],
                 "Expected and actual judgement answer2 id did not match")
             found_judgement = False
@@ -312,8 +312,8 @@ class JudgementAPITests(ACJTestCase):
                 rv = self.client.get(self.answer_pair_url)
                 self.assert200(rv)
                 actual_answer_pair = rv.json
-                actual_answer1 = actual_answer_pair['answer1']
-                actual_answer2 = actual_answer_pair['answer2']
+                actual_answer1 = actual_answer_pair['answers'][0]
+                actual_answer2 = actual_answer_pair['answers'][1]
                 # exclude instructor answer
                 self.assertNotEqual(actual_answer1['id'], excluded_instructor_answer.id)
                 self.assertNotEqual(actual_answer2['id'], excluded_instructor_answer.id)
@@ -425,8 +425,8 @@ class JudgementAPITests(ACJTestCase):
         with self.login(self.data.get_authorized_student_with_no_answers().username):
             rv = self.client.get(self.answer_pair_url)
             self.assert200(rv)
-            self.assertIn(rv.json['answer1']['id'], possible_answer_ids)
-            self.assertIn(rv.json['answer2']['id'], possible_answer_ids)
+            self.assertIn(rv.json['answers'][0]['id'], possible_answer_ids)
+            self.assertIn(rv.json['answers'][1]['id'], possible_answer_ids)
 
     def test_get_judgement_count(self):
         url = self._build_url(self.data.get_course().id, self.question.id)
