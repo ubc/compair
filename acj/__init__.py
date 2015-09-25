@@ -124,16 +124,13 @@ def create_app(conf=config, settings_override=None):
     app.register_blueprint(
         attachment_api,
         url_prefix='/api/attachment')
-    from .comment import commentsforquestions_api, commentsforanswers_api, usercommentsforanswers_api
+    from .comment import commentsforquestions_api, commentsforanswers_api
 
     app.register_blueprint(
         commentsforquestions_api,
         url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>/comments')
     app.register_blueprint(
         commentsforanswers_api,
-        url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>')
-    app.register_blueprint(
-        usercommentsforanswers_api,
         url_prefix='/api/courses/<int:course_id>/questions/<int:question_id>')
     from .evalcomment import evalcomments_api
 

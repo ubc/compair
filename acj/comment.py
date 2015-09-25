@@ -21,9 +21,6 @@ apiQ = new_restful_api(commentsforquestions_api)
 commentsforanswers_api = Blueprint('commentsforanswers_api', __name__)
 apiA = new_restful_api(commentsforanswers_api)
 
-usercommentsforanswers_api = Blueprint('usercommentsforanswers_api', __name__)
-apiU = new_restful_api(usercommentsforanswers_api)
-
 new_comment_parser = RequestParser()
 new_comment_parser.add_argument('content', type=str, required=True)
 new_comment_parser.add_argument('selfeval', type=bool, required=False, default=False)
@@ -432,27 +429,3 @@ class AnswerCommentAPI(Resource):
         return {'id': comment.id}
 
 apiA.add_resource(AnswerCommentAPI, '/answers/<int:answer_id>/comments/<int:comment_id>', endpoint='answer_comment')
-
-
-class UserAnswerCommentIdAPI(Resource):
-    @login_required
-    def get(self, course_id, question_id, answer_id):
-        """
-        Get answer comments for current user
-        """
-        Courses.exists_or_404(course_id)
-        PostsForQuestions.query.options(load_only('id')).get_or_404(question_id)
-        PostsForAnswers.query.options(load_only('id')).get_or_404(answer_id)
-        comments = PostsForAnswersAndPostsForComments.query.filter_by(answers_id=answer_id)\
-            .join(PostsForComments, Posts).filter(Posts.users_id == current_user.id).all()
-
-        on_answer_comment_user_get.send(
-            self,
-            event_name=on_answer_comment_user_get.name,
-            user=current_user,
-            course_id=course_id,
-            data={'question_id': question_id, 'answer_id': answer_id})
-
-        return {'object': marshal(comments, dataformat.get_posts_for_answers_and_posts_for_comments())}
-
-apiU.add_resource(UserAnswerCommentIdAPI, '/answers/<int:answer_id>/users/comments', endpoint='user_answer_comment')

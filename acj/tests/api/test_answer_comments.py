@@ -2,7 +2,7 @@ import json
 
 from data.fixtures.test_data import AnswerCommentsTestData
 from acj.tests.test_acj import ACJTestCase
-from acj.comment import apiA, apiU, AnswerCommentListAPI, AnswerCommentAPI, UserAnswerCommentIdAPI
+from acj.comment import apiA, AnswerCommentListAPI, AnswerCommentAPI
 
 
 class AnswerCommentListAPITests(ACJTestCase):
@@ -346,54 +346,3 @@ class AnswerCommentAPITests(ACJTestCase):
             rv = self.client.delete(url)
             self.assert200(rv)
             self.assertEqual(comment.id, rv.json['id'])
-
-
-class UserAnswerCommentAPITests(ACJTestCase):
-    """ Tests for user answer comment API """
-    api = apiU
-    resource = UserAnswerCommentIdAPI
-
-    def setUp(self):
-        super(UserAnswerCommentAPITests, self).setUp()
-        self.data = AnswerCommentsTestData()
-        self.course = self.data.get_course()
-        self.questions = self.data.get_questions()
-        self.answers = self.data.get_answers_by_question()
-
-    def test_get_user_answer_comments(self):
-        url = self.get_url(
-            course_id=self.course.id, question_id=self.questions[0].id,
-            answer_id=self.answers[self.questions[0].id][1].id)
-
-        # test login required
-        rv = self.client.get(url)
-        self.assert401(rv)
-
-        # test invalid course id
-        with self.login(self.data.get_extra_student(0).username):
-            invalid_url = self.get_url(
-                course_id=999, question_id=self.questions[0].id,
-                answer_id=self.answers[self.questions[0].id][0].id)
-            rv = self.client.get(invalid_url)
-            self.assert404(rv)
-
-            # test invalid question id
-            invalid_url = self.get_url(
-                course_id=self.course.id, question_id=999,
-                answer_id=self.answers[self.questions[0].id][0].id)
-            rv = self.client.get(invalid_url)
-            self.assert404(rv)
-
-            # test invalid answer id
-            invalid_url = self.get_url(
-                course_id=self.course.id, question_id=self.questions[0].id,
-                answer_id=999)
-            rv = self.client.get(invalid_url)
-            self.assert404(rv)
-
-            # test user
-            rv = self.client.get(url)
-            comment1 = self.data.get_answer_comments_by_question(self.questions[0])[0]
-            self.assert200(rv)
-            self.assertEqual(1, len(rv.json['object']))
-            self.assertEqual(comment1.content, rv.json['object'][0]['content'])
