@@ -45,7 +45,7 @@ module.factory(
 				'delete': {method: 'DELETE', url: url, interceptor: Interceptors.answerCommentCache},
 				selfEval: {url: '/api/selfeval/courses/:courseId/questions/:questionId'},
 				allSelfEval: {url: '/api/selfeval/courses/:courseId/questions'},
-				'query': {url: '/api/courses/:courseId/questions/:questionId/answer_comments', isArray: false}
+				query: {url: '/api/courses/:courseId/questions/:questionId/answer_comments', isArray: true}
 			}
 		);
 		ret.MODEL = "PostsForAnswersAndPostsForComments";
@@ -244,7 +244,8 @@ module.controller(
 module.controller(
 	"JudgementCommentController",
 	function ($scope, $log, $routeParams, breadcrumbs, EvalCommentResource, CoursesCriteriaResource,
-			  CourseResource, QuestionResource, AnswerResource, AttachmentResource, GroupResource, Toaster)
+			  CourseResource, QuestionResource, AnswerResource, AnswerCommentResource, AttachmentResource,
+			  GroupResource, Toaster)
 	{
 		var courseId = $routeParams['courseId'];
 		var questionId = $routeParams['questionId'];
@@ -257,6 +258,7 @@ module.controller(
 			author: null
 		};
 		$scope.answers = [];
+		$scope.selfevals = [];
 
 		CourseResource.get({'id':courseId},
 			function (ret) {
@@ -334,14 +336,13 @@ module.controller(
 
 		$scope.updateList = function() {
 			var params = angular.merge({'courseId': $scope.courseId, 'questionId': questionId}, $scope.listFilters);
-			EvalCommentResource.view(params,
-				function (ret) {
-					$scope.comparisons = ret;
-				},
-				function (ret) {
-					Toaster.reqerror('Error', ret);
-				}
-			);
+			$scope.comparisons = EvalCommentResource.view(params, function (ret) {
+				$scope.comparisons.grouped = _.groupBy($scope.comparisons.objects, 'user_id');
+				var user_ids = _($scope.comparisons.objects).pluck('user_id').uniq().join(',');
+				AnswerCommentResource.query({'courseId': $scope.courseId, 'questionId': questionId, user_ids: user_ids, selfeval: 'only'}, function(ret) {
+					$scope.selfevals = ret;
+				})
+			});
 		};
 
 		$scope.updateList();
