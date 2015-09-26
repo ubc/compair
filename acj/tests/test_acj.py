@@ -62,9 +62,6 @@ def json_recorder(filename, key=None):
 
 
 class ACJTestCase(TestCase):
-    api = None
-    resource = None
-
     def create_app(self):
         app = create_app(settings_override=test_app_settings)
         app.test_client_class = RecordableClient
@@ -77,6 +74,11 @@ class ACJTestCase(TestCase):
     def tearDown(self):
         db.session.remove()
         db.drop_all()
+
+
+class ACJAPITestCase(ACJTestCase):
+    api = None
+    resource = None
 
     @contextmanager
     def login(self, username, password="password"):
@@ -93,7 +95,7 @@ class ACJTestCase(TestCase):
         return self.api.url_for(self.resource, **values)
 
 
-class SessionTests(ACJTestCase):
+class SessionTests(ACJAPITestCase):
     def test_loggedin_user_session(self):
         with self.login('root', 'password'):
             rv = self.client.get('/api/session')

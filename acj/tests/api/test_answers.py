@@ -5,10 +5,10 @@ from acj import db
 from data.fixtures import PostsFactory, PostsForAnswersFactory
 from data.fixtures.test_data import TestFixture
 from acj.models import PostsForAnswers
-from acj.tests.test_acj import ACJTestCase
+from acj.tests.test_acj import ACJAPITestCase
 
 
-class AnswersAPITests(ACJTestCase):
+class AnswersAPITests(ACJAPITestCase):
     def setUp(self):
         super(AnswersAPITests, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=30, num_groups=2)

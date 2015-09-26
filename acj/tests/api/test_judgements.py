@@ -4,11 +4,11 @@ import operator
 
 from data.fixtures.test_data import JudgmentsTestData
 from acj.models import PostsForAnswers, Posts, Judgements
-from acj.tests.test_acj import ACJTestCase
+from acj.tests.test_acj import ACJAPITestCase
 from acj.judgement import AnswerPairGenerator
 
 
-class JudgementAPITests(ACJTestCase):
+class JudgementAPITests(ACJAPITestCase):
     def setUp(self):
         super(JudgementAPITests, self).setUp()
         self.data = JudgmentsTestData()

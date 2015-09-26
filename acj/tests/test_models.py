@@ -1,6 +1,6 @@
 import unittest
 
-from acj.models import Users
+from acj.models import Users, Judgements
 from test_acj import ACJTestCase
 
 
@@ -29,6 +29,14 @@ class TestUsersModel(ACJTestCase):
     def test_set_password(self):
         self.user.password = '123456'
         self.assertTrue(self.user.verify_password('123456'))
+
+
+class TestJudgementModel(ACJTestCase):
+    judgement = Judgements()
+
+    def setUp(self):
+        pass
+
 
 
 if __name__ == '__main__':

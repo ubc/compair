@@ -8,11 +8,11 @@ from data.fixtures import DefaultFixture
 from data.fixtures import UsersFactory
 from data.fixtures.test_data import BasicTestData
 from acj import Users
-from acj.tests.test_acj import ACJTestCase
+from acj.tests.test_acj import ACJAPITestCase
 from acj.models import UserTypesForSystem, UserTypesForCourse
 
 
-class UsersAPITests(ACJTestCase):
+class UsersAPITests(ACJAPITestCase):
     def setUp(self):
         super(UsersAPITests, self).setUp()
         self.data = BasicTestData()

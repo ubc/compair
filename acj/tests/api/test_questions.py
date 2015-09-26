@@ -3,10 +3,10 @@ import json
 
 from data.fixtures.test_data import SimpleQuestionsTestData
 from acj.models import PostsForQuestions
-from acj.tests.test_acj import ACJTestCase
+from acj.tests.test_acj import ACJAPITestCase
 
 
-class QuestionsAPITests(ACJTestCase):
+class QuestionsAPITests(ACJAPITestCase):
     def setUp(self):
         super(QuestionsAPITests, self).setUp()
         self.data = SimpleQuestionsTestData()

@@ -30,7 +30,7 @@ from flask import current_app
 import pytz
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import synonym, load_only, column_property, backref
+from sqlalchemy.orm import synonym, load_only, column_property, backref, contains_eager
 from sqlalchemy import func, select, and_, or_
 from flask.ext.login import UserMixin
 
@@ -594,7 +594,8 @@ class Judgements(db.Model):
         answers = PostsForAnswers.query. \
             filter(PostsForAnswers.id.in_([answer_pair.answer1.id, answer_pair.answer2.id])).all()
         for ans in answers:
-            ans.round += 1
+            # use sqlalchemy(sql) increase counter
+            ans.round = PostsForAnswers.round + 1
             db.session.add(ans)
         db.session.commit()
 

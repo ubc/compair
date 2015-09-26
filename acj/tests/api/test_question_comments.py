@@ -1,10 +1,10 @@
 import json
 
 from data.fixtures.test_data import QuestionCommentsTestData
-from acj.tests.test_acj import ACJTestCase
+from acj.tests.test_acj import ACJAPITestCase
 
 
-class QuestionCommentsAPITests(ACJTestCase):
+class QuestionCommentsAPITests(ACJAPITestCase):
     def setUp(self):
         super(QuestionCommentsAPITests, self).setUp()
         self.data = QuestionCommentsTestData()

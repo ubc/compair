@@ -2,11 +2,11 @@ import json
 from acj import db
 
 from data.fixtures.test_data import BasicTestData
-from acj.tests.test_acj import ACJTestCase
+from acj.tests.test_acj import ACJAPITestCase
 from acj.models import Courses
 
 
-class CoursesAPITests(ACJTestCase):
+class CoursesAPITests(ACJAPITestCase):
     def setUp(self):
         super(CoursesAPITests, self).setUp()
         self.data = BasicTestData()

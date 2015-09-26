@@ -1,10 +1,10 @@
 import io
 
 from data.fixtures.test_data import GroupsTestData
-from acj.tests.test_acj import ACJTestCase
+from acj.tests.test_acj import ACJAPITestCase
 
 
-class GroupsAPITests(ACJTestCase):
+class GroupsAPITests(ACJAPITestCase):
     def setUp(self):
         super(GroupsAPITests, self).setUp()
         self.data = GroupsTestData()

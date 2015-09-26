@@ -1,11 +1,12 @@
 import json
+import six
 
 from data.fixtures.test_data import AnswerCommentsTestData
-from acj.tests.test_acj import ACJTestCase
+from acj.tests.test_acj import ACJAPITestCase
 from acj.comment import apiA, AnswerCommentListAPI, AnswerCommentAPI
 
 
-class AnswerCommentListAPITests(ACJTestCase):
+class AnswerCommentListAPITests(ACJAPITestCase):
     """ Tests for answer comment list API """
     api = apiA
     resource = AnswerCommentListAPI
@@ -97,7 +98,7 @@ class AnswerCommentListAPITests(ACJTestCase):
             self.assert200(rv)
             # self.assertEqual(2, rv.json['total'])
             self.assertEqual(2, len(rv.json))
-            self.assertItemsEqual(ids, [c['id'] for c in rv.json])
+            six.assertCountEqual(self, ids, [c['id'] for c in rv.json])
 
             answer_ids = [str(answer.id) for answer in self.answers[self.questions[0].id]]
             params = dict(base_params, answer_ids=','.join(answer_ids))
@@ -119,14 +120,16 @@ class AnswerCommentListAPITests(ACJTestCase):
             rv = self.client.get(self.get_url(**base_params) + '?question_id=' + str(self.questions[0].id))
             self.assert200(rv)
             self.assertEqual(3, len(rv.json))
-            self.assertItemsEqual(
+            six.assertCountEqual(
+                self,
                 [comment.id] + [c.id for c in self.data.answer_comments_by_question[self.questions[0].id]],
                 [c['id'] for c in rv.json])
 
             rv = self.client.get(self.get_url(**base_params) + '?question_id=' + str(self.questions[1].id))
             self.assert200(rv)
             self.assertEqual(2, len(rv.json))
-            self.assertItemsEqual(
+            six.assertCountEqual(
+                self,
                 [c.id for c in self.data.answer_comments_by_question[self.questions[1].id]],
                 [c['id'] for c in rv.json])
 
@@ -136,7 +139,8 @@ class AnswerCommentListAPITests(ACJTestCase):
                 self.get_url(user_ids=user_ids, **base_params) + '&question_id=' + str(self.questions[0].id))
             self.assert200(rv)
             self.assertEqual(2, len(rv.json))
-            self.assertItemsEqual(
+            six.assertCountEqual(
+                self,
                 [comment.id, self.data.answer_comments_by_question[self.questions[0].id][0].id],
                 [c['id'] for c in rv.json])
 
@@ -186,7 +190,7 @@ class AnswerCommentListAPITests(ACJTestCase):
             self.assertEqual(content['content'], rv.json['content'])
 
 
-class AnswerCommentAPITests(ACJTestCase):
+class AnswerCommentAPITests(ACJAPITestCase):
     """ Tests for answer comment API """
     api = apiA
     resource = AnswerCommentAPI
