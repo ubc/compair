@@ -11,6 +11,7 @@ var myApp = angular.module('myApp', [
 	'ngCookies', 
 	'ng-breadcrumbs',
 	'angular-loading-bar',
+	'ubc.ctlt.acj.common',
 	'ubc.ctlt.acj.answer',
 	'ubc.ctlt.acj.attachment',
 	'ubc.ctlt.acj.classlist',

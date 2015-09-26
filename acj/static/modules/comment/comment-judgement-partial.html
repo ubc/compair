@@ -55,10 +55,7 @@
 
                 <!-- Comparison Header -->
                 <div class="each-header">
-                    <a ng-href="#/user/{{ judgement.user_id }}">
-                        <img src="//www.gravatar.com/avatar/{{ judgement.avatar }}?s=32&d=retro" />
-                    </a>
-                    <a ng-href="#/user/{{ judgement.user_id }}">{{ judgement.name }}</a>
+                    <acj-avatar user-id="judgement.user_id" avatar="judgement.avatar" display-name="judgement.name"></acj-avatar>
                     <strong>submitted</strong> on {{ judgement.created | amDateFormat: 'MMM D @ h:mm a'}}:
                 </div>
 
@@ -101,10 +98,7 @@
 
             <div class="each-evaluation" ng-if="(selfevals | filter: {user_id: user_id}).length" ng-init="selfeval=(selfevals | filter: {user_id: user_id})[0]">
                 <div class="each-header">
-                    <a ng-href="#/user/{{ selfeval.user_id }}">
-                        <img src="//www.gravatar.com/avatar/{{ selfeval.user_avatar }}?s=32&d=retro" />
-                    </a>
-                    <a ng-href="#/user/{{ selfeval.user_id }}">{{ selfeval.user_fullname }}</a>
+                    <acj-avatar user-id="selfeval.user_id" avatar="selfeval.user_avatar" display-name="selfeval.user_fullname"></acj-avatar>
                     <strong>self-evaluated</strong> on {{ selfeval.created | amDateFormat: 'MMM D @ h:mm a'}}:
                 </div>
 

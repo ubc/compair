@@ -200,15 +200,7 @@
 					
 					<!-- Instructor Answer Metadata Header -->
 					<div class="each-header clearfix">
-						<a ng-href="#/user/{{answer.user_id}}">
-							<img src="//www.gravatar.com/avatar/{{answer.user_avatar}}?s=32&d=retro" />
-						</a>
-						<a ng-href="#/user/{{answer.user_id}}">
-							{{answer.user_displayname}}
-							<span ng-if="canManagePosts && answer.user_fullname">
-								({{answer.user_fullname}})
-							</span>
-						</a>
+                        <acj-avatar user-id="answer.user_id" avatar="answer.user_avatar" display-name="answer.user_displayname" full-name="answer.user_fullname"></acj-avatar>
 						<span class="label label-info" ng-if="instructors[answer.user_id]">{{instructors[answer.user_id]}}&nbsp;</span>
 						<strong>said</strong>:
 						<div class="manager-actions pull-right" ng-if="canManagePosts">
@@ -252,15 +244,7 @@
 							
 							<!-- Instructor Reply Metadata Header -->
 							<div class="each-header clearfix">
-								<a ng-href="#/user/{{comment.user_id}}">
-									<img src="//www.gravatar.com/avatar/{{comment.user_avatar}}?s=32&d=retro" />
-								</a>
-								<a ng-href="#/user/{{comment.user_id}}">
-									{{comment.user_displayname}}
-									<span ng-if="canManagePosts && comment.user_fullname">
-										({{comment.user_fullname}})
-									</span>
-								</a>
+                                <acj-avatar user-id="comment.user_id" avatar="comment.user_avatar" display-name="comment.user_displayname" full-name="comment.user_fullname"></acj-avatar>
 								<span class="label label-info" ng-if="instructors[comment.user_id]">
 									{{instructors[comment.user_id]}}
 								</span>
@@ -295,18 +279,7 @@
 				<!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.user_id] && (see_answers || (answer.user_id == loggedInUserId && question.answer_period) || canManagePosts)"> -->
 					<!-- Student Answer Metadata Header -->
 					<div class="each-header clearfix">
-						<a ng-href="#/user/{{answer.user_id}}">
-							<img src="//www.gravatar.com/avatar/{{answer.user_avatar}}?s=32&d=retro" />
-						</a>
-						<a ng-href="#/user/{{answer.user_id}}">
-							{{answer.user_displayname}}
-							<span ng-if="!canManagePosts && answer.user_id == loggedInUserId">
-								(You)
-							</span>
-							<span ng-if="canManagePosts && answer.user_fullname">
-								({{answer.user_fullname}})
-							</span>
-						</a>
+                        <acj-avatar user-id="answer.user_id" avatar="answer.user_avatar" display-name="answer.user_displayname" full-name="answer.user_fullname" me="!canManagePosts && answer.user_id == loggedInUserId"></acj-avatar>
 						<strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
 						<div class="manager-actions pull-right" ng-if="canManagePosts || (answer.user_id == loggedInUserId && question.answer_period && !question.judging_period)">
 							<span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
@@ -370,15 +343,7 @@
 
 							<!-- Student Reply Metadata Header -->
 							<div class="each-header clearfix">
-								<a ng-href="#/user/{{comment.user_id}}">
-									<img src="//www.gravatar.com/avatar/{{comment.user_avatar}}?s=32&d=retro" />
-								</a>
-								<a ng-href="#/user/{{comment.user_id}}">
-									{{comment.user_displayname}}
-									<span ng-if="canManagePosts && comment.user_fullname">
-										({{comment.user_fullname}})
-									</span>
-								</a>
+                                <acj-avatar user-id="comment.user_id" avatar="comment.user_avatar" display-name="comment.user_displayname" full-name="comment.user_fullname"></acj-avatar>
 								<span class="label label-info" ng-if="instructors[comment.user_id]">
 									{{instructors[comment.user_id]}}
 								</span>
@@ -436,10 +401,7 @@
 			<!-- Student Answer Metadata Header -->
 			<div class="each-evaluation clearfix" ng-repeat="answer in user_answers.objects">
 				<div class="each-header clearfix">
-					<a ng-href="#/user/{{answer.user_id}}">
-						<img src="//www.gravatar.com/avatar/{{answer.user_avatar}}?s=32&d=retro" />
-					</a>
-					You
+                    <acj-avatar user-id="answer.user_id" avatar="answer.user_avatar" me="true"></acj-avatar>
 					<strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
 					<div class="manager-actions pull-right" ng-if="canManagePosts || (answer.user_id == loggedInUserId && question.answer_period && !question.judging_period)">
 						<span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
@@ -489,15 +451,7 @@
 
 						<!-- Student Reply Metadata Header -->
 						<div class="each-header clearfix">
-							<a ng-href="#/user/{{comment.user_id}}">
-								<img src="//www.gravatar.com/avatar/{{comment.user_avatar}}?s=32&d=retro" />
-							</a>
-							<a ng-href="#/user/{{comment.user_id}}">
-								{{comment.user_displayname}}
-								<span ng-if="canManagePosts && comment.user_fullname">
-									({{comment.user_fullname}})
-								</span>
-							</a>
+                            <acj-avatar user-id="comment.user_id" avatar="comment.user_avatar" display-name="comment.user_displayname" full-name="comment.user_fullname"></acj-avatar>
 							<span class="label label-info" ng-if="instructors[comment.user_id]">
 								{{instructors[comment.user_id]}}
 							</span>
@@ -531,10 +485,7 @@
 				
 				<!-- Comparison Header -->
 				<div class="each-header">
-					<a ng-href="#/user/{{ comment.user_id }}">
-						<img src="//www.gravatar.com/avatar/{{ comment.avatar }}?s=32&d=retro" />
-					</a>
-					You
+                    <acj-avatar user-id="comment.user_id" avatar="comment.avatar" me="true"></acj-avatar>
 					<strong>submitted</strong> on {{ comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
 				</div>
 					
@@ -583,10 +534,7 @@
 			<div ng-class="{'each-evaluation': filteredAnswers.length > 0}" ng-repeat="answer in user_answers.objects">
 			    <div ng-repeat="comment in filteredAnswers = (answer.comments | filter:{selfeval: true})">
 				<div class="each-header">
-				    <a ng-href="#/user/{{comment.user_id}}">
-					<img src="//www.gravatar.com/avatar/{{comment.user_avatar}}?s=32&d=retro" />
-				    </a>
-				    You
+                    <acj-avatar user-id="comment.user_id" avatar="comment.user_avatar" me="true"></acj-avatar>
 				    <strong>self-evaluated</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
 				    <div class="manager-actions pull-right" ng-if="canManagePosts || (comment.user_id == loggedInUserId && !(comment.selfeval || comment.evaluation))">
 					<a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
@@ -640,18 +588,7 @@
 				
 				<!-- Comment Metadata Header -->
 				<div class="each-header clearfix">
-					<a ng-href="#/user/{{comment.user_id}}">
-						<img src="//www.gravatar.com/avatar/{{comment.user_avatar}}?s=32&d=retro" />
-					</a>
-					<a ng-href="#/user/{{comment.user_id}}">
-						{{comment.user_displayname}}
-						<span ng-if="!canManagePosts && comment.user_id == loggedInUserId">
-							(You)
-						</span>
-						<span ng-if="canManagePosts && comment.user_fullname">
-							({{comment.user_fullname}})
-						</span>
-					</a>
+                    <acj-avatar user-id="comment.user_id" avatar="comment.user_avatar" display-name="comment.user_displayname" full-name="comment.user_fullname" me="comment.user_id == loggedInUserId"></acj-avatar>
 					<span class="label label-info" ng-if="instructors[comment.user_id]">
 						{{instructors[comment.user_id]}}
 					</span>

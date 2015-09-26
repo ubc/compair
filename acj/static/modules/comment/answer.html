@@ -1,8 +1,5 @@
 <div ng-if="answer">
-    <a ng-href="#/user/{{ answer.user_id }}">
-        <img src="//www.gravatar.com/avatar/{{ answer.user_avatar }}?s=32&d=retro" />
-    </a>
-    <a ng-href="#/user/{{ answer.user_id }}">{{ answer.user_displayname }}</a>
+    <acj-avatar user-id="answer.user_id" avatar="answer.user_avatar" display-name="answer.user_displayname"></acj-avatar>
     <strong>answered</strong> on {{ answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
     <div class="content" mathjax="answer.content" ng-bind-html="answer.content"></div>
     <acj-pdf-inline ng-if="answer" label="See details:" pdfs="answer.files"></acj-pdf-inline>
