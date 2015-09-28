@@ -25,7 +25,7 @@ from .report import on_export_report
 from .gradebook import on_gradebook_get
 from .group import on_group_create, on_group_delete, on_group_course_get, on_group_import, on_group_get, \
     on_group_user_create, on_group_user_delete
-from .selfeval import selfevaltype_get, selfeval_question_acomment_count, selfeval_course_acomment_count
+from .selfeval import selfevaltype_get, selfeval_course_acomment_count
 from acj.users import on_user_modified, on_user_get, on_user_list_get, on_user_create, on_user_course_get, \
     on_user_password_update, on_user_types_all_get, on_instructors_get, on_course_roles_all_get, on_users_display_get, \
     on_teaching_course_get, on_user_edit_button_get
@@ -299,5 +299,4 @@ on_gradebook_get.connect(log)
 
 # selfeval event
 selfevaltype_get.connect(log)
-selfeval_question_acomment_count.connect(log)
 selfeval_course_acomment_count.connect(log)

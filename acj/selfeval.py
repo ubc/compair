@@ -17,7 +17,6 @@ apiA = new_restful_api(selfeval_acomments_api)
 
 # events
 selfevaltype_get = event.signal('SELFEVAL_TYPE_GET')
-selfeval_question_acomment_count = event.signal('SELFEVAL_QUESTION_ACOMMENT_COUNT')
 selfeval_course_acomment_count = event.signal('SELFEVAL_COURSE_ACOMMENT_COUNT')
 
 
@@ -38,26 +37,6 @@ class SelfEvalTypeRootAPI(Resource):
 
 
 api.add_resource(SelfEvalTypeRootAPI, '')
-
-
-# /questionId
-class SelfEvalACommentsQuestionIdAPI(Resource):
-    @login_required
-    def get(self, course_id, question_id):
-        Courses.query.get_or_404(course_id)
-        count = comment_count([question_id], current_user.id)
-
-        selfeval_question_acomment_count.send(
-            self,
-            event_name=selfeval_question_acomment_count.name,
-            user=current_user,
-            course_id=course_id,
-            data={'question_id': question_id})
-
-        return {"count": count}
-
-
-apiA.add_resource(SelfEvalACommentsQuestionIdAPI, '/<int:question_id>')
 
 
 # /

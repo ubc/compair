@@ -43,7 +43,6 @@ module.factory(
 				'get': {cache: true},
 				'save': {method: 'POST', url: url, interceptor: Interceptors.answerCommentCache},
 				'delete': {method: 'DELETE', url: url, interceptor: Interceptors.answerCommentCache},
-				selfEval: {url: '/api/selfeval/courses/:courseId/questions/:questionId'},
 				allSelfEval: {url: '/api/selfeval/courses/:courseId/questions'},
 				query: {url: '/api/courses/:courseId/questions/:questionId/answer_comments', isArray: true}
 			}

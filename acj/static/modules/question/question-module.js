@@ -314,6 +314,10 @@ module.controller("QuestionViewController",
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
+		var params = {
+			courseId: $scope.courseId,
+			questionId: questionId
+		};
 		var myAnsCount = 0; // for the event of deleting own answer
 		$scope.allStudents = {};
 		var userIds = {};
@@ -325,45 +329,31 @@ module.controller("QuestionViewController",
 			author: null,
 			orderBy: null
 		};
+		$scope.selfEval_req_met = true;
+		$scope.selfEval = 0;
+
 		Session.getUser().then(function(user) {
 			$scope.loggedInUserId = user.id;
-			JudgementResource.getAvailPairLogic({'courseId': $scope.courseId, 'questionId': questionId,
-												'userId': $scope.loggedInUserId}).$promise.then(
-				function (ret) {
-					$scope.availPairsLogic = ret.availPairsLogic;
-				},
-				function (ret) {
-					Toaster.reqerror('Unable to retrieve the answer pairs availability.', ret);
-				}
-			);
+			JudgementResource.getAvailPairLogic(angular.extend({'userId': $scope.loggedInUserId}, params), function (ret) {
+				$scope.availPairsLogic = ret.availPairsLogic;
+			});
 		});
 		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL, $scope.courseId).then(function(result) {
 			$scope.canManagePosts = result;
 			if ($scope.canManagePosts) {
-				GroupResource.get({'courseId': $scope.courseId}).$promise.then(
-					function (ret) {
-						$scope.groups = ret.groups;
-					},
-					function (ret) {
-						Toaster.reqerror("Unable to retrieve the groups in the course.", ret);
-					}
-				);
+				GroupResource.get({'courseId': $scope.courseId}, function (ret) {
+					$scope.groups = ret.groups;
+				});
 			}
 		});
 		$scope.students = {};
-		CourseResource.getStudents({'id': $scope.courseId}).$promise.then(
-			function (ret) {
-				$scope.allStudents = ret.students;
-				$scope.students = ret.students;
-				userIds = $scope.getUserIds(ret.students);
-			},
-			function (ret) {
-				Toaster.reqerror("Class list retrieval failed", ret);
-			}
-		);
+		CourseResource.getStudents({'id': $scope.courseId}, function (ret) {
+			$scope.allStudents = ret.students;
+			$scope.students = ret.students;
+			userIds = $scope.getUserIds(ret.students);
+		});
 		$scope.question = {};
-		QuestionResource.get({'courseId': $scope.courseId, 'questionId': questionId},
-			function (ret) {
+		QuestionResource.get(params, function (ret) {
 				var judgeEnd = ret.question.judge_end;
 				ret.question.judgeEnd = judgeEnd;
 				ret.question.answer_start = new Date(ret.question.answer_start);
@@ -391,9 +381,7 @@ module.controller("QuestionViewController",
 					$scope.answerAvail = $scope.question.answer_end;
 				}
 
-				JudgementResource.count({'courseId': $scope.courseId, 'questionId': questionId,
-					'userId': $scope.loggedInUserId},
-					function (ret) {
+				JudgementResource.count(angular.extend({'userId': $scope.loggedInUserId}, params), function (ret) {
 						$scope.judged_req_met = ret.count >= $scope.question.num_judgement_req;
 						$scope.evaluation = 0;
 						if (!$scope.judged_req_met) {
@@ -409,25 +397,17 @@ module.controller("QuestionViewController",
 						var diff = $scope.question.answers_count - myAnsCount;
 						var eval_left = ((diff * (diff - 1)) / 2);
 						$scope.warning = ($scope.question.num_judgement_req - ret.count) > eval_left;
-					},
-					function (ret) {
-						Toaster.reqerror("Evaluation Count Not Found", ret);
-					}
-				);
-				AnswerCommentResource.selfEval({'courseId': $scope.courseId, 'questionId': questionId},
-					function (ret) {
-						$scope.selfEval_req_met = true;
-						$scope.selfEval = 0;
-						if ($scope.question.selfevaltype_id) {
-							$scope.selfEval_req_met = ret.count > 0;
-							$scope.selfEval = 1 - ret.count;
-						}
-					},
-					function (ret) {
-						Toaster.reqerror("Self-Evaluation Records Not Found.", ret);
-					}
-				);
+				});
 
+				// get the self eval if enabled in question
+				if ($scope.question.selfevaltype_id) {
+					AnswerCommentResource.query(angular.extend({}, params, {user_ids: $scope.loggedInUserId, selfeval: 'only'}),
+						function (ret) {
+							$scope.selfEval_req_met = ret.length > 0;
+							$scope.selfEval = 1 - ret.length;
+						}
+					);
+				}
 				// update the answer list
 				$scope.updateAnswerList();
 				// register watcher here so that we start watching when all filter values are set
@@ -440,13 +420,7 @@ module.controller("QuestionViewController",
 		);
 
 
-		$scope.comments = QuestionCommentResource.get({'courseId': $scope.courseId, 'questionId': questionId},
-			function (ret) {},
-			function (ret)
-			{
-				Toaster.reqerror("Comments Not Found", ret);
-			}
-		);
+		$scope.comments = QuestionCommentResource.get(params);
 
 		QuestionResource.getAnswered({'id': $scope.courseId, 'questionId': questionId},
 			function (ret) {
@@ -498,10 +472,9 @@ module.controller("QuestionViewController",
 			if (name == "comparisons") {
 				//need some way to get answers here ???
 				//originally had a $scope.ans to reference...
-				$scope.comparisons = EvalCommentResource.view({'courseId': $scope.courseId, 'questionId': questionId});
-				$scope.user_answers = AnswerResource.get({
-					courseId: $scope.courseId, questionId: questionId, author: $scope.loggedInUserId
-				}, function(ret) {
+				$scope.comparisons = EvalCommentResource.view(params);
+				var answer_params = angular.extend({}, params, {author: $scope.loggedInUserId});
+				$scope.user_answers = AnswerResource.get(answer_params, function(ret) {
 					// pre-load the comments to display if there is any self-eval
 					_.forEach($scope.user_answers.objects, function(answer) {
 						$scope.loadComments(answer);
