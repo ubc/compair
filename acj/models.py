@@ -30,7 +30,7 @@ from flask import current_app
 import pytz
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import synonym, load_only, column_property, backref, contains_eager
+from sqlalchemy.orm import synonym, load_only, column_property, backref, contains_eager, joinedload, Load
 from sqlalchemy import func, select, and_, or_
 from flask.ext.login import UserMixin
 
@@ -603,41 +603,58 @@ class Judgements(db.Model):
 
     @classmethod
     def calculate_scores(cls, question_id):
-        # get all judgements for this question
-        judgements = Judgements.query.join(AnswerPairings). \
+        # get all judgements for this question and only load the data we need
+        judgements = Judgements.query . \
+            options(load_only('answers_id_winner', 'criteriaandquestions_id')) . \
+            options(contains_eager(Judgements.answerpairing).load_only('answers_id1', 'answers_id2')) . \
+            join(AnswerPairings). \
             filter(AnswerPairings.questions_id == question_id).all()
-        answers = set()  # stores answers that've been judged
+        answer_ids = set()  # stores answers that've been judged
         question_criteria = CriteriaAndPostsForQuestions.query. \
+            with_entities(CriteriaAndPostsForQuestions.id) . \
             filter_by(questions_id=question_id, active=True).all()
         # 2D array, keep tracks of wins, e.g.: wins[A][B] is the number of times A won vs B
-        wins = WinsTable(question_criteria)
+        wins = WinsTable([criterion.id for criterion in question_criteria])
         # keeps track of number of times judged for each answer
         rounds = {}
         for judgement in judgements:
-            answer1 = judgement.answerpairing.answer1
-            answer2 = judgement.answerpairing.answer2
-            winner = judgement.answer_winner
-            loser = answer1
-            if winner.id == answer1.id:
-                loser = answer2
-            wins.add(winner, loser, judgement.question_criterion)
+            answers_id1 = judgement.answerpairing.answers_id1
+            answers_id2 = judgement.answerpairing.answers_id2
+            winner = judgement.answers_id_winner
+            loser = answers_id2 if winner == answers_id1 else answers_id1
+            wins.add(winner, loser, judgement.criteriaandquestions_id)
             # update number of times judged
-            rounds[answer1.id] = rounds.get(answer1.id, 0) + 1
-            rounds[answer2.id] = rounds.get(answer2.id, 0) + 1
-            answers.add(answer1)
-            answers.add(answer2)
+            rounds[answers_id1] = rounds.get(answers_id1, 0) + 1
+            rounds[answers_id2] = rounds.get(answers_id2, 0) + 1
+            answer_ids.add(answers_id1)
+            answer_ids.add(answers_id2)
         current_app.logger.debug("Wins table: " + str(wins))
-        # create scores for each answer
-        for answer in answers:
+        answer_ids = sorted(answer_ids)
+
+        # load existing scores
+        scores = Scores.query.filter(Scores.answers_id.in_(answer_ids)). \
+            order_by(Scores.answers_id, Scores.criteriaandquestions_id).all()
+
+        score_index = 0
+        for answer_id in answer_ids:
             for question_criterion in question_criteria:
-                score = Scores.query.filter_by(answer=answer, question_criterion=question_criterion).first()
-                if not score:
-                    score = Scores(answer=answer, question_criterion=question_criterion)
-                score.rounds = rounds.get(answer.id, 0)
-                score.score = wins.get_score(answer, question_criterion)
-                score.wins = wins.get_total_wins(answer, question_criterion)
+                if (scores[score_index].answers_id == answer_id and
+                        scores[score_index].criteriaandquestions_id == question_criterion.id):
+                    # existing score
+                    score = scores[score_index]
+                    score_index += 1
+                else:
+                    # create a new one
+                    score = Scores(answers_id=answer_id, question_criterion=question_criterion)
+                score.rounds = rounds.get(answer_id, 0)
+                score.score = wins.get_score(answer_id, question_criterion.id)
+                score.wins = wins.get_total_wins(answer_id, question_criterion.id)
                 db.session.add(score)
         db.session.commit()
+
+        if score_index != len(scores):
+            current_app.logger.error(
+                'Inconsistent scores. Got {} scores in database but updated {}!'.format(len(scores), score_index))
 
 
 class AnswerPairings(db.Model):
@@ -1269,50 +1286,49 @@ class Activities(db.Model):
 
 
 class WinsTable:
-    def __init__(self, question_criteria):
+    def __init__(self, question_criteria_ids):
         # 3D array, keep tracks of wins, wins[question_criteria][winner_id][opponent_id]
         self.wins = {}
-        for question_criterion in question_criteria:
-            self.wins[question_criterion.id] = {}
+        for question_criterion_id in question_criteria_ids:
+            self.wins[question_criterion_id] = {}
 
-    def add(self, winner, loser, question_criterion):
+    def add(self, winner, loser, question_criterion_id):
         """
         Update number of wins for the winner
-        :param winner: Answer that won
-        :param loser: Answer that lost
-        :param question_criterion: Criterion that winner won on
-        :return: nothing
+        :param winner: Answer ID that won
+        :param loser: Answer ID that lost
+        :param question_criterion_id: Criterion and Question ID that winner won on
         """
-        winner_wins_row = self.wins[question_criterion.id].get(winner.id, {})
-        winner_wins_row[loser.id] = winner_wins_row.get(loser.id, 0) + 1
-        self.wins[question_criterion.id][winner.id] = winner_wins_row
+        winner_wins_row = self.wins[question_criterion_id].get(winner, {})
+        winner_wins_row[loser] = winner_wins_row.get(loser, 0) + 1
+        self.wins[question_criterion_id][winner] = winner_wins_row
 
-    def get_total_wins(self, winner, question_criterion):
+    def get_total_wins(self, winner, question_criterion_id):
         """
         Get total number of wins in a criterion for an answer
         :param winner: The answer to get the number of wins for
-        :param question_criterion: Criterion for the wins
+        :param question_criterion_id: Criterion and Question ID for the wins
         :return: Total number of wins that the winner has in the specified criterion
         """
-        winner_row = self.wins.get(question_criterion.id, {}).get(winner.id, {})
+        winner_row = self.wins.get(question_criterion_id, {}).get(winner, {})
         return sum(winner_row.values())
 
-    def get_score(self, answer, question_criterion):
+    def get_score(self, answer_id, question_criterion_id):
         """
         Calculate score for an answer
-        :param answer:
-        :param question_criterion:
-        :return:
+        :param answer_id: the answer Id to search for
+        :param question_criterion_id: Criterion and Question ID for the wins
+        :return: score
         """
-        current_app.logger.debug("Calculating score for answer id: " + str(answer.id))
-        answer_opponents = self.wins[question_criterion.id].get(answer.id, {})
+        current_app.logger.debug("Calculating score for answer id: " + str(answer_id))
+        answer_opponents = self.wins[question_criterion_id].get(answer_id, {})
         current_app.logger.debug("\tThis answer's opponents:" + str(answer_opponents))
         # see ACJ paper equation 3 for what we're doing here
         expected_score = 0
         for opponent_id, answer_wins in answer_opponents.items():
-            if opponent_id == answer.id:  # skip comparing to self
+            if opponent_id == answer_id:  # skip comparing to self
                 continue
-            opponent_wins = self.wins[question_criterion.id].get(opponent_id, {}).get(answer.id, 0)
+            opponent_wins = self.wins[question_criterion_id].get(opponent_id, {}).get(answer_id, 0)
             current_app.logger.debug("\tVa = " + str(answer_wins))
             current_app.logger.debug("\tVi = " + str(opponent_wins))
             prob_answer_wins = \

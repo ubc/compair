@@ -37,7 +37,9 @@ class TestJudgementModel(ACJTestCase):
     def setUp(self):
         pass
 
-
+    def test_caculate_scores(self):
+        pass
+        # Judgements.calculate_scores(1)
 
 if __name__ == '__main__':
     unittest.main()
