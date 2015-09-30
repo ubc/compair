@@ -268,7 +268,8 @@ class AnswerCommentListAPI(Resource):
                     PostsForAnswersAndPostsForComments.selfeval.isnot(True),
                     PostsForAnswersAndPostsForComments.type != 0
                 )
-                clauses.append(public_comment_condition)
+                # public comments or comments owned by current user
+                clauses.append(or_(public_comment_condition, PostsForComments.user_id == current_user.id))
 
             conditions.append(and_(*clauses))
 

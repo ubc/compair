@@ -106,7 +106,7 @@ module.controller(
 				// check if there is any existing comments from current user
 				var answer_ids = _.pluck(ret.answers, 'id').sort().join(',');
 				AnswerCommentResource.query(
-					{'courseId':courseId, 'questionId':questionId, 'answer_ids': answer_ids, 'user_id': userId},
+					{'courseId':courseId, 'questionId':questionId, 'answer_ids': answer_ids, 'user_ids': userId},
 					function(ret) {
 						_.forEach(ret, function(comment) {
 							_.forEach($scope.answerPair.answers, function(answer) {

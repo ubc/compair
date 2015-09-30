@@ -76,7 +76,7 @@ class AnswerCommentListAPITests(ACJAPITestCase):
             rv = self.client.get(self.get_url(**base_params))
             self.assert404(rv)
 
-            params = dict(base_params, answer_id=self.answers[self.questions[0].id][0].id)
+            params = dict(base_params, answer_ids=self.answers[self.questions[0].id][0].id)
             extra_student2_comment_id = self.data.get_answer_comments_by_question(self.questions[0])[1].id
             rv = self.client.get(self.get_url(**params))
             self.assert200(rv)
@@ -116,6 +116,12 @@ class AnswerCommentListAPITests(ACJAPITestCase):
             self.assertEqual(1, len(rv.json))
             self.assertEqual(comment.id, rv.json[0]['id'])
 
+            answer_ids = [str(answer.id) for answer in self.answers[self.questions[0].id]]
+            params = dict(base_params, answer_ids=','.join(answer_ids), user_ids=self.data.get_extra_student(1).id)
+            rv = self.client.get(self.get_url(**params))
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json))
+
             # test question_id filter
             rv = self.client.get(self.get_url(**base_params) + '?question_id=' + str(self.questions[0].id))
             self.assert200(rv)
@@ -143,6 +149,21 @@ class AnswerCommentListAPITests(ACJAPITestCase):
                 self,
                 [comment.id, self.data.answer_comments_by_question[self.questions[0].id][0].id],
                 [c['id'] for c in rv.json])
+
+        with self.login(self.data.get_extra_student(1).username):
+            answer_ids = [str(answer.id) for answer in self.answers[self.questions[0].id]]
+            params = dict(base_params, answer_ids=','.join(answer_ids), user_ids=self.data.get_extra_student(1).id)
+            rv = self.client.get(self.get_url(**params))
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json))
+
+            # answer is not from the student but comment is
+            answer_ids = [str(self.answers[self.questions[0].id][1].id)]
+            params = dict(base_params, answer_ids=','.join(answer_ids), user_ids=self.data.get_extra_student(0).id)
+            rv = self.client.get(self.get_url(**params))
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json))
+            self.assertEqual(self.data.get_extra_student(0).id, rv.json[0]['user_id'])
 
     def test_create_answer_comment(self):
         url = self.get_url(

@@ -259,7 +259,7 @@ describe('judgement-module', function () {
 			$httpBackend.expectGET('/api/courses/3/questions/9').respond(mockQuestion);
 			$httpBackend.expectGET('/api/courses/3/questions/9/judgements/pair').respond(mockPair);
 			$httpBackend.expectGET('/api/courses/3/questions/9/judgements/users/1/count').respond({"count": 0.0});
-			$httpBackend.expectGET('/api/courses/3/questions/9/answer_comments?answer_ids=279,407&user_id=1').respond(mockComments);
+			$httpBackend.expectGET('/api/courses/3/questions/9/answer_comments?answer_ids=279,407&user_ids=1').respond(mockComments);
 			createController({}, {courseId:3, questionId:9});
 			expect($rootScope.question).toEqual({});
 			expect($rootScope.current).toBe(undefined);
@@ -334,7 +334,7 @@ describe('judgement-module', function () {
 				$httpBackend.whenGET('/api/courses/3/questions/9').respond(mockQuestion);
 				$httpBackend.whenGET('/api/courses/3/questions/9/judgements/pair').respond(mockPair);
 				$httpBackend.whenGET('/api/courses/3/questions/9/judgements/users/1/count').respond({"count": 0.0});
-				$httpBackend.whenGET('/api/courses/3/questions/9/answer_comments?answer_ids=279,407&user_id=1').respond(mockComments);
+				$httpBackend.whenGET('/api/courses/3/questions/9/answer_comments?answer_ids=279,407&user_ids=1').respond(mockComments);
 				$mockRoute = jasmine.createSpyObj('route', ['reload']);
 				controller = createController($mockRoute, {courseId:3, questionId:9});
 				$httpBackend.flush();
