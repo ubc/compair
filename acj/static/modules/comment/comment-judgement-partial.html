@@ -28,7 +28,7 @@
 	<hr />
 
 	<h2>
-		{{ comparisons.total }} <span ng-if="!listFilters.group && !listFilters.author">total</span> comparisons found
+		{{ comparisons.total + selfevals.length }} <span ng-if="!listFilters.group && !listFilters.author">total</span> comparisons found
 		<span ng-if="listFilters.group && !listFilters.author"> for Group "{{ (groups.groups | filter:{id:listFilters.group}:true)[0].name }}"</span>
 		<span ng-if="listFilters.author"> for "{{ (students.students | filter:{user: {id:listFilters.author} }:true)[0].user.name }}"</span>
 	</h2>

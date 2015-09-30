@@ -223,54 +223,6 @@
 							pdfs="answer.files">
 						</acj-pdf-inline>
 					</div>
-					
-					<!-- Instructor Answer Replies Section -->
-					<a href="" ng-click="showReplies = !showReplies">			
-						<h3 class="reply-heading" ng-if="instResults.length">
-							<i class="fa fa-chevron-down" ng-show="showReplies"></i>
-							<i class="fa fa-chevron-right" ng-hide="showReplies"></i>
-							{{instResults.length}}
-							<span ng-if="instResults.length == 1">reply</span>
-							<span ng-if="instResults.length > 1">replies</span>
-							to instructor's answer
-						</h3>
-					</a>
-					
-					<div ng-show="showReplies">
-						
-						<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer) as instResults" class="each-reply" >
-							
-							<hr ng-hide="$first" />
-							
-							<!-- Instructor Reply Metadata Header -->
-							<div class="each-header clearfix">
-                                <acj-avatar user-id="comment.user_id" avatar="comment.user_avatar" display-name="comment.user_displayname" full-name="comment.user_fullname"></acj-avatar>
-								<span class="label label-info" ng-if="instructors[comment.user_id]">
-									{{instructors[comment.user_id]}}
-								</span>
-								<strong>replied</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
-								<div class="manager-actions pull-right" ng-if="canManagePosts || comment.user_id == loggedInUserId">
-									<a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, question.id, answer.id, comment.id)" keyword="reply">
-										<i class="fa fa-trash-o"></i>
-									</a>
-									<a href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
-										Edit
-									</a>
-								</div>
-							</div>
-							
-							<!-- Instructor Reply -->
-							<div class="content" mathjax="comment.content"
-								 ng-bind-html="comment.content">
-							</div>
-						
-						</div><!-- closes each-reply (instructor) -->
-						
-					</div><!--closes toggle div -->
-					
-					<p><a ng-if="question.can_reply || canManagePosts" href="#/course/{{courseId}}/question/{{question.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary pull-left btn-reply">
-						Reply
-					</a></p>
 				
 				</div><!-- closes each-answer (instructor) -->
 				
@@ -343,7 +295,7 @@
 
 							<!-- Student Reply Metadata Header -->
 							<div class="each-header clearfix">
-                                <acj-avatar user-id="comment.user_id" avatar="comment.user_avatar" display-name="comment.user_displayname" full-name="comment.user_fullname"></acj-avatar>
+								<acj-avatar user-id="comment.user_id" avatar="comment.user_avatar" display-name="comment.user_displayname" full-name="comment.user_fullname"></acj-avatar>
 								<span class="label label-info" ng-if="instructors[comment.user_id]">
 									{{instructors[comment.user_id]}}
 								</span>
