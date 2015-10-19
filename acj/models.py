@@ -635,26 +635,49 @@ class Judgements(db.Model):
         scores = Scores.query.filter(Scores.answers_id.in_(answer_ids)). \
             order_by(Scores.answers_id, Scores.criteriaandquestions_id).all()
 
-        score_index = 0
-        for answer_id in answer_ids:
-            for question_criterion in question_criteria:
-                if (scores[score_index].answers_id == answer_id and
-                        scores[score_index].criteriaandquestions_id == question_criterion.id):
-                    # existing score
-                    score = scores[score_index]
-                    score_index += 1
-                else:
-                    # create a new one
-                    score = Scores(answers_id=answer_id, question_criterion=question_criterion)
-                score.rounds = rounds.get(answer_id, 0)
-                score.score = wins.get_score(answer_id, question_criterion.id)
-                score.wins = wins.get_total_wins(answer_id, question_criterion.id)
-                db.session.add(score)
+        question_criteria_ids = [criterion.id for criterion in question_criteria]
+        updated_scores = update_scores(scores, answer_ids, question_criteria_ids, wins, rounds)
+        db.session.add_all(updated_scores)
         db.session.commit()
 
-        if score_index != len(scores):
-            current_app.logger.error(
-                'Inconsistent scores. Got {} scores in database but updated {}!'.format(len(scores), score_index))
+
+def update_scores(scores, answer_ids, question_criteria_ids, wins, rounds):
+    # score_index = 0
+    new_scores = []
+    for answer_id in answer_ids:
+        for question_criterion_id in question_criteria_ids:
+            score = None
+            for s in scores:
+                if s.answers_id == answer_id and s.criteriaandquestions_id == question_criterion_id:
+                    score = s
+            if not score:
+                score = Scores(answers_id=answer_id, criteriaandquestions_id=question_criterion_id)
+                new_scores.append(score)
+
+            # if (len(scores) == score_index or
+            #     scores[score_index].answers_id > answer_id or
+            #     scores[score_index].answers_id <= answer_id and
+            #         scores[score_index].criteriaandquestions_id > question_criterion_id):
+            #     # create a new one
+            #     score = Scores(answers_id=answer_id, criteriaandquestions_id=question_criterion_id)
+            #     new_scores.append(score)
+            # elif (scores[score_index].answers_id == answer_id and
+            #         scores[score_index].criteriaandquestions_id == question_criterion_id):
+            #     # existing score
+            #     score = scores[score_index]
+            #     score_index += 1
+            # else:
+            #     current_app.logger.error(
+            #         'Wrong answer_id {} and criterion_id {}'.format(answer_id, question_criterion_id))
+            score.rounds = rounds.get(answer_id, 0)
+            score.score = wins.get_score(answer_id, question_criterion_id)
+            score.wins = wins.get_total_wins(answer_id, question_criterion_id)
+
+    # if score_index != len(scores):
+    #     current_app.logger.error(
+    #         'Inconsistent scores. Got {} scores in database but updated {}!'.format(len(scores), score_index))
+
+    return scores + new_scores
 
 
 class AnswerPairings(db.Model):

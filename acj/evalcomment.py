@@ -233,7 +233,7 @@ def convert_judgement(judgement):
     :return: dict
     """
     return {
-        'content': judgement.comment.content,
+        'content': judgement.comment.content if judgement.comment else None,
         'criteriaandquestions_id': judgement.criteriaandquestions_id,
         'winner': judgement.answers_id_winner,
     }
