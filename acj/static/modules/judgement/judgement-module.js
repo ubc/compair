@@ -150,6 +150,17 @@ module.controller(
 				judgement['judgements'].push(criterionWinner);
 				comments[questionCriterion.id] = questionCriterion.comment;
 			});
+			// save comments for each individual answer
+			angular.forEach($scope.answerPair.answers, function(answer) {
+				var params = {
+					courseId: courseId,
+					questionId: questionId,
+					answerId: answer.id,
+					commentId: _.get(answer, 'comment.id')
+				};
+				answer.comment.evaluation = true;
+				AnswerCommentResource.save(params, answer.comment);
+			});
 			JudgementResource.save(
 				{'courseId': courseId, 'questionId': questionId}, judgement).
 				$promise.then(
@@ -222,17 +233,6 @@ module.controller(
 						Toaster.reqerror("Comparison Submit Failed", ret);
 					}
 			);
-			// save comments for each individual answer
-			angular.forEach($scope.answerPair.answers, function(answer) {
-				var params = {
-					courseId: courseId,
-					questionId: questionId,
-					answerId: answer.id,
-					commentId: _.get(answer, 'comment.id')
-				};
-				answer.comment.evaluation = true;
-				AnswerCommentResource.save(params, answer.comment);
-			});
 		};
 
 		// flag answer for instructor
