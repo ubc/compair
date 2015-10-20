@@ -365,9 +365,9 @@ describe('judgement-module', function () {
 				var expectedJudgementComments = {judgements: mockJudgementResponse.objects};
 				expectedJudgementComments.judgements[0].comment = 'criteria comment 1';
 				expectedJudgementComments.judgements[1].comment = 'criteria comment 2';
-				$httpBackend.expectPOST('/api/courses/3/questions/9/judgements', expectedJudgement).respond(mockJudgementResponse);
 				$httpBackend.expectPOST('/api/courses/3/questions/9/answers/407/comments', expectedAnswerComment1).respond({});
 				$httpBackend.expectPOST('/api/courses/3/questions/9/answers/279/comments/3703', expectedAnswerComment2).respond({});
+				$httpBackend.expectPOST('/api/courses/3/questions/9/judgements', expectedJudgement).respond(mockJudgementResponse);
 				$httpBackend.expectPOST('/api/courses/3/questions/9/judgements/comments', expectedJudgementComments).respond({});
 				$httpBackend.expectGET('/api/courses/3/questions/9/judgements/users/1/count').respond({"count": 1.0});
 
