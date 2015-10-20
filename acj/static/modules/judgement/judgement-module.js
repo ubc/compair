@@ -18,7 +18,7 @@ var module = angular.module('ubc.ctlt.acj.judgement',
 );
 
 /***** Providers *****/
-module.factory('JudgementResource',
+module.factory('JudgementResource', ['$resource',
 	function($resource) {
 		var resourceUrl = 
 			'/api/courses/:courseId/questions/:questionId/judgements';
@@ -32,9 +32,9 @@ module.factory('JudgementResource',
 			}
 		);
 		return ret;
-});
+}]);
 
-module.factory('EvalCommentResource',
+module.factory('EvalCommentResource', ['$resource',
 	function($resource) {
 		var url = '/api/courses/:courseId/questions/:questionId/judgements/comments';
 		var ret = $resource(url, {},
@@ -44,16 +44,16 @@ module.factory('EvalCommentResource',
 		);
 		ret.MODEL = "PostsForJudgements";
 		return ret;
-});
+}]);
 
-module.factory('AnswerPairingResource',
+module.factory('AnswerPairingResource', ['$resource',
 	function($resource) {
 		var resourceUrl = '/api/courses/:courseId/questions/:questionId/answerpairing';
 		var ret = $resource(
 			resourceUrl
 		);
 		return ret;
-});
+}]);
 
 
 /***** Constants *****/
@@ -61,7 +61,9 @@ module.constant('required_rounds', 6);
 
 /***** Controllers *****/
 module.controller(
-	'JudgementController', 
+	'JudgementController', ['$log', '$location', '$route', '$scope', '$timeout', '$routeParams', '$anchorScroll',
+		'QuestionResource', 'AnswerResource', 'CoursesCriteriaResource', 'JudgementResource', 'AnswerCommentResource',
+		'EvalCommentResource', 'Session', 'Toaster',
 	function($log, $location, $route, $scope, $timeout, $routeParams, $anchorScroll, QuestionResource, AnswerResource,
 		CoursesCriteriaResource, JudgementResource, AnswerCommentResource, EvalCommentResource, Session, Toaster)
 	{
@@ -255,11 +257,13 @@ module.controller(
 			);
 
 		};
-	}
+	}]
 );
 
 module.controller(
 	'JudgementSelfEvalController',
+	['$log', '$location', '$scope', '$routeParams', 'AnswerResource', 'JudgementResource', 'AnswerCommentResource',
+		'Session', 'Toaster',
 	function($log, $location, $scope, $routeParams, AnswerResource, JudgementResource,
 			 AnswerCommentResource, Session, Toaster)
 	{
@@ -311,7 +315,7 @@ module.controller(
 					}
 			)
 		};
-	}
+	}]
 );
 
 // End anonymous function

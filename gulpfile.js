@@ -8,6 +8,7 @@ var gulp = require('gulp'),
 	inject = require('gulp-inject'),
 	mainBowerFiles = require('main-bower-files'),
 	minifyCss = require('gulp-minify-css'),
+	rev = require('gulp-rev'),
 	Server = require('karma').Server,
 	protractor = require('gulp-protractor').protractor,
 	webdriver_standalone = require('gulp-protractor').webdriver_standalone,
@@ -17,6 +18,7 @@ var gulp = require('gulp'),
 
 var cssFilename = 'acj.css',
 	jsLibsFilename = 'bowerJsLibs.js',
+	jsFilename = 'acj.js',
 	karmaCommonConf = 'acj/static/test/config/karma.conf.js';
 
 // download Bower packages and copy them to the lib directory
@@ -34,37 +36,51 @@ gulp.task('bowerWiredep', ['bowerInstall'], function () {
 
 // compile css
 gulp.task('less', function () {
-  gulp.src('./acj/static/less/acj.less')
-    .pipe(less())
-	.pipe(minifyCss())
-    .pipe(gulp.dest('./acj/static'));
+	return gulp.src('./acj/static/less/acj.less')
+		.pipe(less())
+		.pipe(gulp.dest('./acj/static/build'));
 });
 
 gulp.task('prod_compile_minify_css', ['less'], function() {
-	gulp.src('./acj/static/' + cssFilename)
+	return gulp.src('./acj/static/build/' + cssFilename)
 		.pipe(minifyCss())
-		.pipe(gulp.dest('./acj/static/'));
+		.pipe(gulp.dest('./acj/static/build'));
 });
 gulp.task('prod_minify_js_libs', function() {
-	gulp.src(mainBowerFiles({"filter": /.*\.js/}))
+	return gulp.src(mainBowerFiles({"filter": /.*\.js/}))
 		.pipe(concat(jsLibsFilename))
 		.pipe(uglify())
-		.pipe(gulp.dest('./acj/static/'));
+		.pipe(gulp.dest('./acj/static/build'));
 });
-gulp.task('prod', ['prod_minify_js_libs', 'prod_compile_minify_css'], function(){
+gulp.task('prod_minify_js', function() {
+	return gulp.src('./acj/static/modules/judgement/judgement-module.js')
+		.pipe(concat(jsFilename))
+		.pipe(uglify())
+		.pipe(gulp.dest('./acj/static/build'));
+});
+gulp.task('revision', ['prod_minify_js_libs', 'prod_compile_minify_css', 'prod_minify_js'], function() {
+	return gulp.src(['./acj/static/build/*.css', './acj/static/build/*.js'])
+		.pipe(rev())
+		.pipe(gulp.dest('./acj/static/dist'))
+		.pipe(rev.manifest())
+		.pipe(gulp.dest('./acj/static/build'));
+});
+gulp.task('prod', ['revision'], function(){
+	var manifest = require("./acj/static/build/rev-manifest.json");
 	// modify includes to use the minified files
-	gulp.src('./acj/static/index.html')
+	return gulp.src('./acj/static/index.html')
 		.pipe(htmlReplace(
 			{
-				prod_minify_js_libs: jsLibsFilename,
-				prod_compile_minify_css: cssFilename
+				prod_minify_js_libs: 'dist/' + manifest[jsLibsFilename],
+				prod_minify_js: 'dist/' + manifest[jsFilename],
+				prod_compile_minify_css: 'dist/' + manifest[cssFilename]
 			},
 			{keepBlockTags: true}))
 		.pipe(gulp.dest('./acj/static/'));
 });
 
 gulp.task('tracking', function() {
-   gulp.src('./acj/static/index.html')
+   return gulp.src('./acj/static/index.html')
        .pipe(inject(gulp.src(['./acj/static/tracking.js']), {read: false, relative: true}))
        .pipe(gulp.dest('./acj/static/'));
 });
@@ -82,7 +98,7 @@ gulp.task('tdd', function (done) {
  * Behavior driven development. This task runs acceptance tests
  */
 gulp.task('bdd', function (done) {
-	gulp.src(["acj/static/test/features/*.feature"])
+	return gulp.src(["acj/static/test/features/*.feature"])
 		.pipe(protractor({
 			configFile: "acj/static/test/config/protractor_cucumber.js",
 			args: ['--baseUrl', 'http://127.0.0.1:8080']
@@ -115,7 +131,7 @@ gulp.task('test:acceptance', ['webdriver_update', 'server:frontend', 'bdd'], fun
  * Run tests on ci
  */
 gulp.task('test:ci', ['server:frontend'], function (done) {
-	gulp.src(["acj/static/test/features/*.feature"])
+	return gulp.src(["acj/static/test/features/*.feature"])
 		.pipe(protractor({
 			configFile: "acj/static/test/config/protractor_saucelab.js",
 			args: ['--baseUrl', 'http://127.0.0.1:8000']
