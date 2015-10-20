@@ -53,7 +53,10 @@ gulp.task('prod_minify_js_libs', function() {
 		.pipe(gulp.dest('./acj/static/build'));
 });
 gulp.task('prod_minify_js', function() {
-	return gulp.src('./acj/static/modules/judgement/judgement-module.js')
+	return gulp.src([
+		'./acj/static/modules/judgement/judgement-module.js',
+		'./acj/static/modules/comment/comment-module.js',
+	])
 		.pipe(concat(jsFilename))
 		.pipe(uglify())
 		.pipe(gulp.dest('./acj/static/build'));

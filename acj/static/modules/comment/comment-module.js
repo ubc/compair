@@ -19,38 +19,30 @@ var module = angular.module('ubc.ctlt.acj.comment',
 );
 
 /***** Providers *****/
-module.factory(
-	"QuestionCommentResource",
-	function ($resource)
-	{
-		var ret = $resource(
-			'/api/courses/:courseId/questions/:questionId/comments/:commentId',
-			{commentId: '@id'}
-		);
-		ret.MODEL = "PostsForQuestionsAndPostsForComments";
-		return ret;
-	}
-);
+module.factory("QuestionCommentResource", ['$resource', function ($resource) {
+	var ret = $resource(
+		'/api/courses/:courseId/questions/:questionId/comments/:commentId',
+		{commentId: '@id'}
+	);
+	ret.MODEL = "PostsForQuestionsAndPostsForComments";
+	return ret;
+}]);
 
-module.factory(
-	"AnswerCommentResource",
-	function ($resource, Interceptors)
-	{
-		var url = '/api/courses/:courseId/questions/:questionId/answers/:answerId/comments/:commentId';
-		var ret = $resource(
-			url, {commentId: '@id'},
-			{
-				'get': {cache: true},
-				'save': {method: 'POST', url: url, interceptor: Interceptors.answerCommentCache},
-				'delete': {method: 'DELETE', url: url, interceptor: Interceptors.answerCommentCache},
-				allSelfEval: {url: '/api/selfeval/courses/:courseId/questions'},
-				query: {url: '/api/courses/:courseId/questions/:questionId/answer_comments', isArray: true}
-			}
-		);
-		ret.MODEL = "PostsForAnswersAndPostsForComments";
-		return ret;
-	}
-);
+module.factory("AnswerCommentResource", ['$resource', 'Interceptors', function ($resource, Interceptors) {
+	var url = '/api/courses/:courseId/questions/:questionId/answers/:answerId/comments/:commentId';
+	var ret = $resource(
+		url, {commentId: '@id'},
+		{
+			'get': {cache: true},
+			'save': {method: 'POST', url: url, interceptor: Interceptors.answerCommentCache},
+			'delete': {method: 'DELETE', url: url, interceptor: Interceptors.answerCommentCache},
+			allSelfEval: {url: '/api/selfeval/courses/:courseId/questions'},
+			query: {url: '/api/courses/:courseId/questions/:questionId/answer_comments', isArray: true}
+		}
+	);
+	ret.MODEL = "PostsForAnswersAndPostsForComments";
+	return ret;
+}]);
 
 module.filter('author', function() {
 	return function(input, authorId) {
@@ -86,6 +78,7 @@ module.directive('acjAnswerContent', function() {
 /***** Controllers *****/
 module.controller(
 	"QuestionCommentCreateController",
+	['$scope', '$log', '$location', '$routeParams', 'QuestionCommentResource', 'QuestionResource', 'Toaster',
 	function ($scope, $log, $location, $routeParams, QuestionCommentResource, QuestionResource, Toaster)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
@@ -117,11 +110,12 @@ module.controller(
 					}
 				);
 		};
-	}
+	}]
 );
 
 module.controller(
 	"QuestionCommentEditController",
+	['$scope', '$log', '$location', '$routeParams', 'QuestionCommentResource', 'QuestionResource', 'Toaster',
 	function ($scope, $log, $location, $routeParams, QuestionCommentResource, QuestionResource, Toaster)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
@@ -155,11 +149,13 @@ module.controller(
 				function(ret) { Toaster.reqerror("Comment Save Failed.", ret);}
 			);
 		};
-	}
+	}]
 );
 
 module.controller(
 	"AnswerCommentCreateController",
+	['$scope', '$log', '$location', '$routeParams', 'AnswerCommentResource', 'AnswerResource', 'QuestionResource',
+		'Authorize', 'Toaster',
 	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource,
 			  QuestionResource, Authorize, Toaster)
 	{
@@ -201,11 +197,12 @@ module.controller(
 					}
 				);
 		};
-	}
+	}]
 );
 
 module.controller(
 	"AnswerCommentEditController",
+	['$scope', '$log', '$location', '$routeParams', 'AnswerCommentResource', 'AnswerResource', 'Toaster',
 	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, Toaster)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
@@ -225,11 +222,14 @@ module.controller(
 				function(ret) { Toaster.reqerror("Reply Not Updated", ret);}
 			);
 		};
-	}
+	}]
 );
 
 module.controller(
 	"JudgementCommentController",
+	['$scope', '$log', '$routeParams', 'breadcrumbs', 'EvalCommentResource', 'CoursesCriteriaResource',
+		'CourseResource', 'QuestionResource', 'AnswerResource', 'AnswerCommentResource', 'AttachmentResource',
+		'GroupResource', 'Toaster',
 	function ($scope, $log, $routeParams, breadcrumbs, EvalCommentResource, CoursesCriteriaResource,
 			  CourseResource, QuestionResource, AnswerResource, AnswerCommentResource, AttachmentResource,
 			  GroupResource, Toaster)
@@ -327,14 +327,16 @@ module.controller(
 				$scope.comparisons = ret;
 				$scope.comparisons.grouped = _.groupBy($scope.comparisons.objects, 'user_id');
 				var user_ids = _($scope.comparisons.objects).pluck('user_id').uniq().join(',');
-				AnswerCommentResource.query({'courseId': $scope.courseId, 'questionId': questionId, user_ids: user_ids, selfeval: 'only'}, function(ret) {
-					$scope.selfevals = ret;
-				})
+				if (user_ids) {
+					AnswerCommentResource.query({'courseId': $scope.courseId, 'questionId': questionId, user_ids: user_ids, selfeval: 'only'}, function(ret) {
+						$scope.selfevals = ret;
+					})
+				}
 			});
 		};
 
 		$scope.updateList();
-	}
+	}]
 );
 
 function convertScore(answer) {
