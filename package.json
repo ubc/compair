@@ -37,6 +37,6 @@
     "karma-ng-html2js-preprocessor": "~0.1",
     "karma-phantomjs-launcher": "~0.2",
     "lodash": "^3.10",
-    "protractor": "~2.1.0"
+    "protractor": "~2.5.1"
   }
 }
