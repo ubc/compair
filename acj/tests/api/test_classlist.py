@@ -23,17 +23,14 @@ class ClassListAPITest(ACJAPITestCase):
             rv = self.client.get(self.url)
             self.assert403(rv)
 
-        # test invalid course id
-        with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.get('/api/courses/999/users')
-            self.assert404(rv)
+        expected = [
+            self.data.get_authorized_instructor(),
+            self.data.get_authorized_ta(),
+            self.data.get_authorized_student()]
+        expected.sort(key=lambda x: x.firstname)
 
+        with self.login(self.data.get_authorized_instructor().username):
             # test authorized user
-            expected = [
-                self.data.get_authorized_instructor(),
-                self.data.get_authorized_ta(),
-                self.data.get_authorized_student()]
-            expected.sort(key=lambda x: x.firstname)
             rv = self.client.get(self.url)
             self.assert200(rv)
             self.assertEqual(len(expected), len(rv.json['objects']))
@@ -52,6 +49,13 @@ class ClassListAPITest(ACJAPITestCase):
                     [user.username, user.student_no or '', user.firstname, user.lastname, user.email, user.displayname],
                     next(reader)
                 )
+
+        with self.login(self.data.get_authorized_ta().username):
+            rv = self.client.get(self.url)
+            self.assert200(rv)
+            self.assertEqual(len(expected), len(rv.json['objects']))
+            for key, user in enumerate(expected):
+                self.assertEqual(user.id, rv.json['objects'][key]['id'])
 
     def test_get_instructor_labels(self):
         url = self.url + "/instructors/labels"

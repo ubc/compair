@@ -16,7 +16,7 @@ from flask.ext.restful.reqparse import RequestParser
 
 from . import dataformat
 from .core import db
-from .authorization import allow, require
+from .authorization import allow, require, USER_IDENTITY
 from .core import event
 from .models import CoursesAndUsers, Courses, Users, UserTypesForSystem, UserTypesForCourse, GroupsAndUsers
 from .util import new_restful_api
@@ -196,10 +196,8 @@ class ClasslistRootAPI(Resource):
     # TODO Pagination
     @login_required
     def get(self, course_id):
-        course = Courses.exists_or_404(course_id)
-        # only users that can edit the course can view enrolment
-        require(EDIT, course)
-        restrict_users = not allow(READ, CoursesAndUsers(courses_id=course_id))
+        require(READ, CoursesAndUsers(courses_id=course_id))
+        restrict_users = not allow(READ, USER_IDENTITY)
 
         # expire current_user from the session. When loading classlist from database, if the
         # user is already in the session, e.g. instructor for the course, the User.coursesandusers
