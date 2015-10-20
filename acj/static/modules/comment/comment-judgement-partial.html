@@ -76,8 +76,8 @@
                     </a></p>
 
                     <div class="row" ng-show="showAnswers">
-                        <acj-answer-content answer="(answers | filter:{id:judgement.answer1.id}:true)[0]" is-chosen="criterion.winner == judgement.answer1.id" title="Odd-Numbered Answer" criteria-and-questions="criterion.criteriaandquestions_id"></acj-answer-content>
-                        <acj-answer-content answer="(answers | filter:{id:judgement.answer2.id}:true)[0]" is-chosen="criterion.winner == judgement.answer2.id" title="Even-Numbered Answer" criteria-and-questions="criterion.criteriaandquestions_id"></acj-answer-content>
+                        <acj-answer-content answer="(answers | filter:{id:judgement.answer1.id}:true)[0]" is-chosen="criterion.winner == judgement.answer1.id" title="Odd-Numbered Answer" criteria-and-questions="criterion.criteriaandquestions_id" show-score="true"></acj-answer-content>
+                        <acj-answer-content answer="(answers | filter:{id:judgement.answer2.id}:true)[0]" is-chosen="criterion.winner == judgement.answer2.id" title="Even-Numbered Answer" criteria-and-questions="criterion.criteriaandquestions_id" show-score="true"></acj-answer-content>
                     </div>
 
                 </div>
