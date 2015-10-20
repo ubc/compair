@@ -323,7 +323,8 @@ module.controller(
 
 		$scope.updateList = function() {
 			var params = angular.merge({'courseId': $scope.courseId, 'questionId': questionId}, $scope.listFilters);
-			$scope.comparisons = EvalCommentResource.view(params, function (ret) {
+			EvalCommentResource.view(params, function (ret) {
+				$scope.comparisons = ret;
 				$scope.comparisons.grouped = _.groupBy($scope.comparisons.objects, 'user_id');
 				var user_ids = _($scope.comparisons.objects).pluck('user_id').uniq().join(',');
 				AnswerCommentResource.query({'courseId': $scope.courseId, 'questionId': questionId, user_ids: user_ids, selfeval: 'only'}, function(ret) {
