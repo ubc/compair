@@ -1,5 +1,5 @@
 var myAfterHooks = function () {
-	this.After(function (callback) {
+	this.After(function (scenario, callback) {
 		// Again, "this" is set to the World instance the scenario just finished
 		// playing with.
 		browser.executeAsyncScript(

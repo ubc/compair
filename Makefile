@@ -27,7 +27,7 @@ clean:
 	find . -name '*.pyo' -exec rm -f {} \;
 	find . -name '*~' -exec rm -f {} \;
 	rm -rf bower_components node_modules
-	rm -rf acj/static/dist/*
+	rm -rf acj/static/dist acj/static/build
 
 lint:
 	flake8 --exclude=env .
