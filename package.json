@@ -26,7 +26,7 @@
   "devDependencies": {
     "chai": "~3.2",
     "chai-as-promised": "~5.1",
-    "cucumber": "latest",
+    "cucumber": "0.6.0",
     "gulp-protractor": "~1.0",
     "gulp-rev": "^6.0.1",
     "jasmine-core": "latest",

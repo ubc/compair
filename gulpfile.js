@@ -100,7 +100,7 @@ gulp.task('tdd', function (done) {
 /**
  * Behavior driven development. This task runs acceptance tests
  */
-gulp.task('bdd', function (done) {
+gulp.task('bdd', ['webdriver_update'], function (done) {
 	return gulp.src(["acj/static/test/features/*.feature"])
 		.pipe(protractor({
 			configFile: "acj/static/test/config/protractor_cucumber.js",
@@ -126,7 +126,7 @@ gulp.task('test:unit', function (done) {
 /**
  * Run acceptance tests
  */
-gulp.task('test:acceptance', ['webdriver_update', 'server:frontend', 'bdd'], function() {
+gulp.task('test:acceptance', ['server:frontend', 'bdd'], function() {
 	connect.serverClose();
 });
 
