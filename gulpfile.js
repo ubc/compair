@@ -101,7 +101,7 @@ gulp.task('tdd', function (done) {
  * Behavior driven development. This task runs acceptance tests
  */
 gulp.task('bdd', ['webdriver_update'], function (done) {
-	return gulp.src(["acj/static/test/features/*.feature"])
+	gulp.src(["acj/static/test/features/*.feature"])
 		.pipe(protractor({
 			configFile: "acj/static/test/config/protractor_cucumber.js",
 			args: ['--baseUrl', 'http://127.0.0.1:8080']
@@ -134,7 +134,7 @@ gulp.task('test:acceptance', ['server:frontend', 'bdd'], function() {
  * Run tests on ci
  */
 gulp.task('test:ci', ['server:frontend'], function (done) {
-	return gulp.src(["acj/static/test/features/*.feature"])
+	gulp.src(["acj/static/test/features/*.feature"])
 		.pipe(protractor({
 			configFile: "acj/static/test/config/protractor_saucelab.js",
 			args: ['--baseUrl', 'http://127.0.0.1:8000']
