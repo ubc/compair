@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from flask.ext.script import Manager, Server
 
 from acj.manage.database import manager as database_manager

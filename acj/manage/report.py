@@ -18,6 +18,8 @@ def create(course_id):
     course_name = ''
     if course_id:
         course_name = Courses.query.with_entities(Courses.name).filter_by(id=course_id).scalar()
+        if not course_name:
+            raise RuntimeError("Course with ID {} is not found.".format(course_id))
         course_name = course_name.replace('"', '')
         course_name += '_'
 
