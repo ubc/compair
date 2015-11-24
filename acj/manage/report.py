@@ -4,6 +4,7 @@
 import csv
 
 from flask.ext.script import Manager
+from sqlalchemy import and_
 from sqlalchemy.orm import aliased
 
 from acj.models import Scores, PostsForAnswers, CriteriaAndPostsForQuestions, Criteria, Posts, Judgements, \
@@ -50,8 +51,10 @@ def create(course_id):
                       scores2.score, Judgements.answers_id_winner). \
         join(Judgements.question_criterion).join(CriteriaAndPostsForQuestions.criterion). \
         join(Judgements.answerpairing). \
-        join(Scores, Scores.answers_id == AnswerPairings.answers_id1). \
-        join(scores2, scores2.answers_id == AnswerPairings.answers_id2). \
+        join(Scores, and_(Scores.answers_id == AnswerPairings.answers_id1,
+                          Scores.criteriaandquestions_id == Judgements.criteriaandquestions_id)). \
+        join(scores2, and_(scores2.answers_id == AnswerPairings.answers_id2,
+                           scores2.criteriaandquestions_id == Judgements.criteriaandquestions_id)). \
         order_by(CriteriaAndPostsForQuestions.questions_id, CriteriaAndPostsForQuestions.id, Judgements.users_id)
 
     if course_id:
