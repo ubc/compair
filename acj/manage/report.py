@@ -8,7 +8,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import aliased
 
 from acj.models import Scores, PostsForAnswers, CriteriaAndPostsForQuestions, Criteria, Posts, Judgements, \
-    AnswerPairings, Courses
+    AnswerPairings, Courses, Users, CoursesAndUsers
 
 manager = Manager(usage="Generate Reports")
 
@@ -68,6 +68,24 @@ def create(course_id):
         course_name + 'comparisons.csv',
         ['User Id', 'Question Id', 'Criterion Id', 'Criterion', 'Answer 1', 'Score 1', 'Answer 2', 'Score 2', 'Winner'],
         comparisons
+    )
+
+
+    query = Users.query. \
+        with_entities(Users.id, Users.student_no). \
+        order_by(Users.id)
+
+    if course_id:
+        query = query. \
+            join(Users.coursesandusers). \
+            filter(CoursesAndUsers.courses_id == course_id)
+
+    users = query.all()
+
+    write_csv(
+            course_name + 'users.csv',
+            ['User Id', 'Student #'],
+            users
     )
 
     print('Done.')
