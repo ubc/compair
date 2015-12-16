@@ -128,20 +128,23 @@ module.directive('comparisonPreview', function() {
 				/* call the function before setting the criteria, passing in selected criteria and all course criteria arrays */
 				pickCriteria($scope.selectedCriteria, $scope.courseCriteria);
 				/* then set question criteria as the ones we've determined should be previewed */
-				$scope.questionCriteria = $scope.previewCriteria;
-				/* set current round # and total round # for preview */
+				$scope.question.criteria = $scope.previewCriteria;
+				/* set current round #, answer #s, and total round # for preview */
 				$scope.current = 1;
+				$scope.firstAnsNum = 1;
+				$scope.secondAnsNum = 2;
 				$scope.total = $scope.question.num_judgement_req;
 				/* answer pair shown is dummy content, no files */
 				$scope.answerPair = {
-					answer1: {
+					answers: [
+					{
 						content: "<p>The first student answer in the pair will appear here.</p>",
 						files: []
 					},
-					answer2: {
+					{
 						content: "<p>The second student answer in the pair will appear here.</p>",
 						files: []
-					}
+					} ]
 				};
 				/* student view preview is comparison template */
 				$scope.thePreview = $modal.open({
