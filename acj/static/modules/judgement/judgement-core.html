@@ -27,13 +27,13 @@
 		<h2 class="col-md-6">Answer Pair</h2>
 		<h2 class="col-md-6 text-right rounds"><span ng-hide="answerPairError" class="label label-warning">Round {{current}} / {{total}}</span></h2>
 		
-		<div ng-show="answerPairError" class="alert alert-danger" role="alert">
-			<p>Sorry, answer comparisons for the question are not available at this time. Please check again later.</p>
+		<div ng-show="answerPairError" class="alert alert-info" role="alert">
+			<p><strong>Break time!</strong> You've compared the currently available answer pairs. Please check back later to compare new pairs after more answers have been submitted.</p>
 		</div>
 		
 		<div class="col-md-6" ng-hide="answerPairError">
 			<div class="answer-choice clearfix">
-				<h3 class="text-center">Answer {{(current - 1) + current}}</h3>
+				<h3 class="text-center">Answer {{firstAnsNum}}</h3>
 				<div mathjax="answerPair.answers[0].content"
 					ng-bind-html="answerPair.answers[0].content">
 				</div>
@@ -55,7 +55,7 @@
 		
 		<div class="col-md-6" ng-hide="answerPairError">
 			<div class="answer-choice clearfix">
-				<h3 class="text-center">Answer {{current * 2}}</h3>
+				<h3 class="text-center">Answer {{secondAnsNum}}</h3>
 				<div mathjax="answerPair.answers[1].content"
 					ng-bind-html="answerPair.answers[1].content">
 				</div>
@@ -93,7 +93,7 @@
 				
 				<div class="col-md-6">
 					<label class="cke-label">
-						Your feedback for Answer {{(current - 1) + current}} (shown to instructors and author)
+						Your feedback for Answer {{firstAnsNum}} (shown to instructors and author)
 						<i class="fa fa-arrow-down"></i>
 					</label>
 					<textarea
@@ -102,7 +102,7 @@
 				</div>
 				<div class="col-md-6">
 					<label class="cke-label">
-						Your feedback for Answer {{current * 2}} (shown to instructors and author)
+						Your feedback for Answer {{secondAnsNum}} (shown to instructors and author)
 						<i class="fa fa-arrow-down"></i>
 					</label>
 					<textarea
@@ -153,7 +153,7 @@
 											name="answer{{answerPair.answers[0].id}}" required
 											ng-model="questionCriterion.winner"
 											ng-value="answerPair.answers[0].id">
-										Answer {{(current - 1) + current}}
+										Answer {{firstAnsNum}}
 									</label>
 									<label class="btn btn-primary" ng-class=
 										"{active:questionCriterion.winner==answerPair.answers[1].id}">
@@ -161,7 +161,7 @@
 											name="answer{{answerPair.answers[0].id}}" required
 											ng-model="questionCriterion.winner"
 											ng-value="answerPair.answers[1].id">
-										Answer {{current * 2}}
+										Answer {{secondAnsNum}}
 									</label>
 								</div>
 							</div>

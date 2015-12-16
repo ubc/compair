@@ -93,7 +93,12 @@ module.controller(
 				{'courseId': courseId, 'questionId': questionId, 'userId': userId}).
 				$promise.then(
 					function(ret) {
+						// current comparison round user is on
 						$scope.current = ret.count + 1;
+						// first answer # in pair
+						$scope.firstAnsNum = ret.count + $scope.current;
+						// second answer # in pair
+						$scope.secondAnsNum = $scope.current * 2;
 					},
 					function(ret) {
 						Toaster.reqerror("Comparisons Total Not Found", ret);
@@ -122,7 +127,7 @@ module.controller(
 					});
 			}, function (ret) {
 				$scope.answerPairError = true;
-				Toaster.reqerror("Answer Pair Not Found", ret);
+				Toaster.info("You've compared the available answers!", "Please check back later for more answers.");
 			}
 		);
 		
