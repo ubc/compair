@@ -2,7 +2,7 @@
 	
 	<h1>Compare Answers</h1>
 	
-	<p class="intro-text">For each round, give individual feedback for the answers in the pair, choose the one that better matches the  criteria  below, and submit your comparison. Please note <strong>answers are not automatically saved</strong> as you type.</p>
+	<p class="intro-text">For each round, you'll give helpful feedback on the answers in the pair, choose which better matches the criteria below, and submit the comparison. Please note <strong>answers are not automatically saved</strong> as you type.</p>
 	
 	<p class="question-toggle"><a href="" ng-click="showQuestion = !showQuestion">
 		<i class="fa fa-chevron-down" ng-show="showQuestion"></i>
@@ -83,13 +83,11 @@
 			
 			<hr />
 			
-			<h3>1) Give constructive feedback to the authors of each answer</h3>
+			<h3>1) Give detailed feedback to the author of each answer</h3>
 			
 			<div class="row sub-step">
 				
-				<p class="intro-text">Use instructor-provided guidelines, or explain what each author did well or could improve on based on the comparison criteria:
-					<span ng-repeat="questionCriterion in question.criteria">{{questionCriterion.criterion.name}} </span>
-				</p>
+				<p class="intro-text">Use any instructor-provided guidelines or answer the general questions: What did the author do well? Where might the author improve? Remember to make your comments&mdash;including criticisms&mdash;<strong>encouraging, respectful, and specific</strong>. Instructors do read what you write here.</p>
 				
 				<div class="col-md-6">
 					<label class="cke-label">
@@ -128,7 +126,7 @@
 			
 			<h3>2) Choose the answer that best meets the criteria below</h3>
 			
-			<p class="intro-text">Your selection helps determine a criteria-based ranking of the answers.</p>
+			<p class="intro-text">Your selection helps determine a criteria-based student ranking of the answers. Include a <strong>detailed critical explanation</strong>, which can re-use points made in the feedback section above and be more direct. Other students <em>do not</em> see what you write here.</p>
 			
 			<div ng-if="question.criteria.length == 0" class="text-center">
 				<p>No criteria have been set for this question yet. Please select one or more of the course criteria.</p>

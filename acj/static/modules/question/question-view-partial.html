@@ -168,7 +168,7 @@
 				<!-- Students should see before evaluating before the evaluation period -->
 				<p class="intro-text"
 				   ng-if="!canManagePosts && ((answered && question.answer_period) || (!question.answer_period)) && !question.judging_period && !question.after_judging">
-					Comparison period begins <span ng-if="question.judge_start > 0">{{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}}</span> <span ng-if="question.judge_start <= 0">after the answer period ends</span>. After comparing answer pairs, you will be able to read all answers written by your classmates and instructors here.
+					Comparisons begin <span ng-if="question.judge_start > 0">{{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}}</span> <span ng-if="question.judge_start <= 0">after the answer due date passes</span>. After comparing answer pairs, you will be able to read all answers written by your classmates and instructors here.
 				</p>
 				
 				<!-- Students should see before evaluating during the evaluation period (regular comparison) -->
@@ -178,7 +178,7 @@
 				
 				<!-- Students should see before evaluating during the evaluation period (self-evaluation) -->
 				<p class="intro-text" ng-if="!canManagePosts && question.judging_period && judged_req_met && !selfEval_req_met">
-					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" title="Compare answers">Compare answers</a> for the assignment first, then read answers written by your classmates and instructors here.
+					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" title="Compare answers">Compare your answer</a> for the assignment first, then read answers written by your classmates and instructors here.
 				</p>
 				
 				<!-- Anyone sees during the answer period, if no answers provided yet -->
@@ -438,7 +438,7 @@
 				<!-- Comparison Header -->
 				<div class="each-header">
                     <acj-avatar user-id="comment.user_id" avatar="comment.avatar" me="true"></acj-avatar>
-					<strong>submitted</strong> on {{ comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
+					<strong>compared</strong> on {{ comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
 				</div>
 					
 				<div ng-repeat="criterion in comment.criteria_judgements">
