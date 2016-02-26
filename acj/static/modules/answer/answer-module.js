@@ -132,7 +132,9 @@ module.controller(
 							function (ret) {
 								var current_time = ret.date;
 								var trigger_time = due_date.getTime() - current_time  - 600000; //(10 mins)
-								$timeout(countDown, trigger_time);
+								if (trigger_time < 86400000) { //(1 day)
+									$timeout(countDown, trigger_time);
+								}
 							},
 							function (ret) {
 								Toaster.reqerror("Unable to get the current time", ret);
@@ -223,7 +225,9 @@ module.controller(
 						function (ret) {
 							var current_time = ret.date;
 							var trigger_time = due_date.getTime() - current_time  - 600000; //(10 mins)
-							$timeout(countDown, trigger_time);
+							if (trigger_time < 86400000) { //(1 day)
+								$timeout(countDown, trigger_time);
+							}
 						},
 						function (ret) {
 							Toaster.reqerror("Unable to get the current time", ret);
