@@ -293,6 +293,19 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 });
 
 /***** Filters *****/
+module.filter("excludeInstr", function() {
+	return function(items, instructors) {
+		var filtered = [];
+		angular.forEach(items, function(item) {
+			// if user id is NOT in the instructors array, keep it
+			if (!instructors[item.user_id]) {
+				filtered.push(item);
+			}
+		});
+		return filtered;
+	};
+});
+
 module.filter("notScoredEnd", function () {
 	return function (array, key) {
 		if (!angular.isArray(array)) return;
@@ -597,6 +610,59 @@ module.controller("QuestionViewController",
 			$scope.answers = AnswerResource.get(params, function(response) {
 				$scope.totalNumAnswers = response.total;
 			});
+			// TO DO: grab the right array of answer ids/scores depending on the criteria selected and load into allScores here
+			// (can use $scope.answerFilters.orderBy to grab the criteria ID for requesting the scores)
+			$scope.allScores = {
+				"104":"0",
+				"95":"0",
+				"85":"4.38635",
+				"183":"2.19318",
+				"110":"2.19318",
+				"109":"2.19318",
+				"99":"2.19318",
+				"96":"1.96212",
+				"98":"1.61186",
+				"112":"1.46212",
+				"108":"1.46212",
+				"94":"1.46212",
+				"84":"1.23106",
+				"83":"1.23106",
+				"81":"0.768941",
+				"97":"0.731059" };
+			$scope.rankScores($scope.allScores);
+		};
+		
+		// function to show the simple ranking for the student view
+		$scope.rankScores = function(allScores) {
+			// first sort scores high-to-low
+			$scope.rankSort = [];
+			for (var prop in allScores) {
+				if (allScores.hasOwnProperty(prop)) {
+					$scope.rankSort.push({
+						'key': prop,
+						'value': allScores[prop]
+					});
+				}
+			}
+			// need to sort by id (key) first to get ties to show up correctly later
+			$scope.rankSort.sort(function(a, b) { return b.key - a.key; });
+			$scope.rankSort.sort(function(a, b) { return b.value - a.value; });
+			// then loop through scores to increment ranking number
+			$scope.rankNumber = 0;
+			var prevScore = -1;
+			var tied = "";
+			for (var answer in $scope.rankSort) {
+				if (prevScore != $scope.rankSort[answer].value) {
+					$scope.rankNumber += 1;
+					tied = "";
+				}
+				if (prevScore == $scope.rankSort[answer].value) {
+					tied = " (tied)";
+				}
+				// now overwrite score with ranking number plus tied status
+				allScores[$scope.rankSort[answer].key] = ($scope.rankNumber+tied);
+				prevScore = $scope.rankSort[answer].value;
+			}
 		};
 
 		var filterWatcher = function(newValue, oldValue) {

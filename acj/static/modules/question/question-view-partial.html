@@ -200,7 +200,7 @@
 					
 					<!-- Instructor Answer Metadata Header -->
 					<div class="each-header clearfix">
-                        <acj-avatar user-id="answer.user_id" avatar="answer.user_avatar" display-name="answer.user_displayname" full-name="answer.user_fullname"></acj-avatar>
+						<acj-avatar user-id="answer.user_id" avatar="answer.user_avatar" display-name="answer.user_displayname" full-name="answer.user_fullname"></acj-avatar>
 						<span class="label label-info" ng-if="instructors[answer.user_id]">{{instructors[answer.user_id]}}&nbsp;</span>
 						<strong>said</strong>:
 						<div class="manager-actions pull-right" ng-if="canManagePosts">
@@ -227,11 +227,11 @@
 				</div><!-- closes each-answer (instructor) -->
 				
 				<!-- Student Answers Section -->
-				<div class="each-answer clearfix" ng-repeat="answer in answers.objects | notScoredEnd:answerFilters.orderBy as results" ng-if="!instructors[answer.user_id] && (see_answers || answer.user_id == loggedInUserId || canManagePosts)">
+				<div class="each-answer clearfix" ng-repeat="answer in answers.objects | notScoredEnd:answerFilters.orderBy | excludeInstr:instructors as results" ng-if="(see_answers || answer.user_id == loggedInUserId || canManagePosts)">
 				<!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.user_id] && (see_answers || (answer.user_id == loggedInUserId && question.answer_period) || canManagePosts)"> -->
 					<!-- Student Answer Metadata Header -->
 					<div class="each-header clearfix">
-                        <acj-avatar user-id="answer.user_id" avatar="answer.user_avatar" display-name="answer.user_displayname" full-name="answer.user_fullname" me="!canManagePosts && answer.user_id == loggedInUserId"></acj-avatar>
+						<acj-avatar user-id="answer.user_id" avatar="answer.user_avatar" display-name="answer.user_displayname" full-name="answer.user_fullname" me="!canManagePosts && answer.user_id == loggedInUserId"></acj-avatar>
 						<strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
 						<div class="manager-actions pull-right" ng-if="canManagePosts || (answer.user_id == loggedInUserId && question.answer_period && !question.judging_period)">
 							<span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
@@ -271,9 +271,17 @@
 							<i class="fa fa-question-circle"></i>
 						</a>
 					</p>
-					<p class="pull-right" ng-if="canManagePosts && answer.scores.length == 0" class="score-display">
-						<em>Not Evaluated</em>
+					<!-- Student Rank (not used for instructor answers) -->
+					<p class="pull-right score-display" ng-if="!canManagePosts && score.criteriaandquestions_id==answerFilters.orderBy && answer.scores.length > 0" ng-repeat="score in answer.scores">
+						<em>
+							Students Ranked: <strong>{{allScores[answer.posts_id]}}</strong>
+						</em>
 					</p>
+					<!-- No Student Score/Rank -->
+					<p class="pull-right score-display" ng-if="answer.scores.length == 0">
+						<em>Not Compared</em>
+					</p>
+
 
 					<!-- Student Answer Replies Section -->
 					<a href="" ng-click="showReplies = !showReplies; showReplies && loadComments(answer)">
@@ -353,7 +361,7 @@
 			<!-- Student Answer Metadata Header -->
 			<div class="each-evaluation clearfix" ng-repeat="answer in user_answers.objects">
 				<div class="each-header clearfix">
-                    <acj-avatar user-id="answer.user_id" avatar="answer.user_avatar" me="true"></acj-avatar>
+					<acj-avatar user-id="answer.user_id" avatar="answer.user_avatar" me="true"></acj-avatar>
 					<strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
 					<div class="manager-actions pull-right" ng-if="canManagePosts || (answer.user_id == loggedInUserId && question.answer_period && !question.judging_period)">
 						<span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
@@ -403,7 +411,7 @@
 
 						<!-- Student Reply Metadata Header -->
 						<div class="each-header clearfix">
-                            <acj-avatar user-id="comment.user_id" avatar="comment.user_avatar" display-name="comment.user_displayname" full-name="comment.user_fullname"></acj-avatar>
+							<acj-avatar user-id="comment.user_id" avatar="comment.user_avatar" display-name="comment.user_displayname" full-name="comment.user_fullname"></acj-avatar>
 							<span class="label label-info" ng-if="instructors[comment.user_id]">
 								{{instructors[comment.user_id]}}
 							</span>

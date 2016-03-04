@@ -181,7 +181,7 @@
 				Compare Answers
 			</a>
 
-			<!-- BUTTON when user is an admin AND (the comparison period is active OR is complete) -->
+			<!-- BUTTON when user is an admin AND (the comparison period is active OR is complete OR 1+ comparison exists) -->
 			<a class="btn btn-success" title="Comparisons" ng-href="#/course/{{course.id}}/question/{{question.id}}/comparisons"
 			   ng-show="canManagePosts && (question.judging_period || question.after_judging || question.evaluation_count > 0)">
 				See Comparisons
