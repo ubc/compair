@@ -1,5 +1,5 @@
 <div ng-controller="LoginController" class="login-screen">
-	<h2 class="text-center">Peer Answer Comparison Tool (PACT)</h2>
+	<h2 class="text-center">Compair</h2>
 	<div class="row">
 		<form name="loginForm" class="form col-sm-6" ng-submit="submit()" novalidate>
 			<fieldset>
@@ -18,7 +18,7 @@
 				<div ng-show="showReplies">
 					<div class="form-group has-feedback"
 						ng-class="{'has-error': loginForm.username.$invalid, 'has-success': loginForm.username.$valid}">
-						<label for="inputUser" class="required-star">Username</label>
+						<label for="inputUser" class="required-star">Compair Username</label>
 						<input type="text" id="inputUser" name="username"
 							ng-model="username" required placeholder=""
 							class="form-control">
@@ -27,7 +27,7 @@
 					</div>
 					<div class="form-group has-feedback"
 						ng-class="{'has-error': loginForm.password.$invalid, 'has-success': loginForm.password.$valid}">
-						<label for="inputPass" class="required-star">Password</label>
+						<label for="inputPass" class="required-star">Compair Password</label>
 						<input type="password" id="inputPass" name="password" ng-model="password" required
 							   placeholder="" class="form-control">
 						<!-- <span ng-show="loginForm.password.$valid" class="fa fa-check form-control-feedback"></span>
