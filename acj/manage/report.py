@@ -4,10 +4,11 @@
 import csv
 
 from flask.ext.script import Manager
+from sqlalchemy import and_
 from sqlalchemy.orm import aliased
 
 from acj.models import Scores, PostsForAnswers, CriteriaAndPostsForQuestions, Criteria, Posts, Judgements, \
-    AnswerPairings, Courses
+    AnswerPairings, Courses, Users, CoursesAndUsers
 
 manager = Manager(usage="Generate Reports")
 
@@ -18,6 +19,8 @@ def create(course_id):
     course_name = ''
     if course_id:
         course_name = Courses.query.with_entities(Courses.name).filter_by(id=course_id).scalar()
+        if not course_name:
+            raise RuntimeError("Course with ID {} is not found.".format(course_id))
         course_name = course_name.replace('"', '')
         course_name += '_'
 
@@ -48,8 +51,10 @@ def create(course_id):
                       scores2.score, Judgements.answers_id_winner). \
         join(Judgements.question_criterion).join(CriteriaAndPostsForQuestions.criterion). \
         join(Judgements.answerpairing). \
-        join(Scores, Scores.answers_id == AnswerPairings.answers_id1). \
-        join(scores2, scores2.answers_id == AnswerPairings.answers_id2). \
+        join(Scores, and_(Scores.answers_id == AnswerPairings.answers_id1,
+                          Scores.criteriaandquestions_id == Judgements.criteriaandquestions_id)). \
+        join(scores2, and_(scores2.answers_id == AnswerPairings.answers_id2,
+                           scores2.criteriaandquestions_id == Judgements.criteriaandquestions_id)). \
         order_by(CriteriaAndPostsForQuestions.questions_id, CriteriaAndPostsForQuestions.id, Judgements.users_id)
 
     if course_id:
@@ -63,6 +68,24 @@ def create(course_id):
         course_name + 'comparisons.csv',
         ['User Id', 'Question Id', 'Criterion Id', 'Criterion', 'Answer 1', 'Score 1', 'Answer 2', 'Score 2', 'Winner'],
         comparisons
+    )
+
+
+    query = Users.query. \
+        with_entities(Users.id, Users.student_no). \
+        order_by(Users.id)
+
+    if course_id:
+        query = query. \
+            join(Users.coursesandusers). \
+            filter(CoursesAndUsers.courses_id == course_id)
+
+    users = query.all()
+
+    write_csv(
+            course_name + 'users.csv',
+            ['User Id', 'Student #'],
+            users
     )
 
     print('Done.')
