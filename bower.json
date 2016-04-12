@@ -27,7 +27,7 @@
     "angular-sanitize": "~1.4.7",
     "angular-http-auth": "~1.2.2",
     "angular-ckeditor": "~0.2.0",
-    "ng-breadcrumbs": "~0.4.1",
+    "es-breadcrumbs": "~0.4.1",
     "angular-loading-bar": "~0.8.0",
     "AngularJS-Toaster": "~0.4.15",
     "angular-moment": "~0.10.2",

@@ -13,7 +13,7 @@ class {'python':
   pip        => true,
   dev        => true,
   virtualenv => true,
-  gunicorn   => false,
+  gunicorn   => 'absent',
 }
 
 python::virtualenv { '/vagrant':

@@ -19,7 +19,7 @@
     "main-bower-files": "latest",
     "gulp-html-replace": "latest",
     "gulp-minify-css": "latest",
-    "gulp-inject": "latest",
+    "gulp-inject": "~3.0",
     "gulp-connect": "latest",
     "proxy-middleware": "latest"
   },
@@ -36,6 +36,7 @@
     "karma-junit-reporter": "^0.3.3",
     "karma-ng-html2js-preprocessor": "~0.1",
     "karma-phantomjs-launcher": "~0.2",
+    "phantomjs": "~2.1",
     "lodash": "^3.10",
     "protractor": "~2.5.1"
   }
