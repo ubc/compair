@@ -1,6 +1,7 @@
 var users = {
     'admin': { username: 'root', password: 'password' },
-    'instructor1': { username: 'instructor1', password: 'password' }
+    'instructor1': { username: 'instructor1', password: 'password' },
+    'student1': { username: 'student1', password: 'password' }
 };
 
 function UserFactory() {

@@ -79,6 +79,29 @@ module.exports.session = function ($httpBackend, Session, $rootScope) {
 			"read": {'global': true}
 		}
 	};
+    var permission_student = {
+        "Courses": {
+            "create": {'global': false},
+            "delete": {'global': false, '1': false, '2': false},
+            "edit": {'global': false, '1': false, '2': false},
+            "manage": {'global': false, '1': false, '2': false},
+            "read": {'global': true, '1': true, '2': true}
+        },
+        "PostsForQuestions": {
+            "create": {'global': false, '1': false, '2': false},
+            "delete": {'global': false, '1': false, '2': false},
+            "edit": {'global': false, '1': false, '2': false},
+            "manage": {'global': false, '1': false, '2': false},
+            "read": {'global': true, '1': true, '2': true}
+        },
+        "Users": {
+            "create": {'global': false},
+            "delete": {'global': false},
+            "edit": {'global': true},
+            "manage": {'global': false},
+            "read": {'global': true}
+        }
+    }
 
 	var users = {
 		'root':  {
@@ -88,6 +111,14 @@ module.exports.session = function ($httpBackend, Session, $rootScope) {
 		'instructor1': {
 			"userid": 2,
 			"permissions": permission_instructor
+		},
+		'student1': {
+			"userid": 3,
+			"permissions": permission_student
+		},
+		'student2': {
+			"userid": 4,
+			"permissions": permission_student
 		}
 	};
 
@@ -99,8 +130,36 @@ module.exports.session = function ($httpBackend, Session, $rootScope) {
 		'instructor1': {
 			"id": 2,
 			"permissions": permission_instructor
+		},
+		'student1': {
+			"id": 3,
+			"permissions": permission_student
+		},
+		'student2': {
+			"id": 4,
+			"permissions": permission_student
 		}
 	};
+    
+    var usertypes = {
+		'root': [
+            { "id": 1, "name": "Student" }, 
+            { "id": 2, "name": "Instructor" }, 
+            { "id": 3, "name": "System Administrator"  }
+        ],
+		'instructor1': [
+            { "id": 1, "name": "Student" }, 
+            { "id": 2, "name": "Instructor" }
+        ],
+		'student1': [
+            { "id": 1, "name": "Student" }, 
+            { "id": 2, "name": "Instructor" }
+        ],
+		'student2': [
+            { "id": 1, "name": "Student" }, 
+            { "id": 2, "name": "Instructor" }
+        ]
+    }
 
 
 	$httpBackend.whenGET('/api/session').respond(function(method, url, data, headers) {
@@ -118,6 +177,17 @@ module.exports.session = function ($httpBackend, Session, $rootScope) {
 		return [200, users[username].permissions, {}];
 	});
 
+	$httpBackend.whenGET('/api/usertypes').respond(function(method, url, data, headers) {
+		var username = undefined;
+		Session.getUser().then(function(user) {
+			username =user.username;
+		});
+		// Propagate getUser() promise resolution to 'then' functions using $apply().
+		$rootScope.$apply();
+        
+		return [200, usertypes[username], {}];
+	});
+    
 	$httpBackend.whenPOST('/api/login').respond(function(method, url, data, headers) {
 		authenticated = true;
 		current_user = angular.fromJson(data).username;
@@ -169,12 +239,62 @@ module.exports.user = function($httpBackend) {
 				"name": "Instructor"
 			},
 			"usertypesforsystem_id": 2
-		}];
+		},
+		{ // student1
+            "avatar": "8ddf878039b70767c4a5bcf4f0c4f65e",
+            "created": "Sun, 11 Jan 2015 07:59:17 -0000",
+            "displayname": "First Student",
+            "email": "first.student@exmple.com",
+            "firstname": "First",
+            "fullname": "First Student",
+            "id": 3,
+            "lastname": "Student",
+            "lastonline": "Sun, 11 Jan 2015 08:25:08 -0000",
+            "modified": "Sun, 11 Jan 2015 08:25:08 -0000",
+            "student_no": null,
+            "username": "student1",
+            "usertypeforsystem": {
+                "id": 1,
+                "name": "Student"
+            },
+            "usertypesforsystem_id": 1
+		},
+		{ // student2
+            "avatar": "8ddf878039b70767c4a5bcf4f0c4f65e",
+            "created": "Sun, 11 Jan 2015 07:59:17 -0000",
+            "displayname": "Second Student",
+            "email": "second.student@exmple.com",
+            "firstname": "Second",
+            "fullname": "Second Student",
+            "id": 4,
+            "lastname": "Student",
+            "lastonline": "Sun, 11 Jan 2015 08:25:08 -0000",
+            "modified": "Sun, 11 Jan 2015 08:25:08 -0000",
+            "student_no": null,
+            "username": "student2",
+            "usertypeforsystem": {
+                "id": 1,
+                "name": "Student"
+            },
+            "usertypesforsystem_id": 1
+		}
+    ];
+        
+	$httpBackend.whenPOST('/api/users').respond({
+        "avatar": "8ddf878039b70767c4a5bcf4f0c4f65e", 
+        "created": "Thu, 14 Apr 2016 19:45:33 -0000", 
+        "displayname": "Second Student", 
+        "id": 4, 
+        "lastonline": null
+    });
 
 	$httpBackend.whenGET(/^\/api\/users\/\d+$/).respond(function(method, url, data, headers) {
 		var id = url.split('/').pop();
 		return [200, users[id], {}];
 	});
+    
+    // get edit button
+	$httpBackend.whenGET(/^\/api\/users\/\d+\/edit$/).respond({"available": true});
 };
 
 
