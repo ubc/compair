@@ -6,10 +6,13 @@ var CoursePage = function() {
 	this.get = function(courseId) {
 		return browser.get(env.baseUrl + '#/course/' + courseId);
 	};
-
-	this.addAssignment = function() {
-		return addAssignmentButton.click();
-	};
+    
+    this.clickButton = function(button) {
+        switch (button) {
+            case "Add Assignment":
+                return addAssignmentButton.click();
+        }
+    }
 };
 
 module.exports = CoursePage;

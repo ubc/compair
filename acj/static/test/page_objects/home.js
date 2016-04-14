@@ -9,10 +9,15 @@ var HomePage = function() {
     this.get = function() {
         return browser.get(env.baseUrl);
     };
-
-    this.addCourse = function() {
-        return addCourseButton.click();
-    };
+    
+    this.clickButton = function(button) {
+        switch (button) {
+            case "Add Course":
+                return addCourseButton.click();
+            case "Create User":
+                return createUserButton.click();
+        }
+    }
 };
 
 module.exports = HomePage;

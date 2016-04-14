@@ -12,6 +12,7 @@ var backEndMocks = require('../../factories/http_backend_mocks.js');
 
 var commonStepDefinitionsWrapper = function() {
 	var pageFactory = new PageFactory();
+    var page;
 	var userFactory = new UserFactory();
 	var mocks = [
 		backEndMocks.session,
@@ -44,6 +45,46 @@ var commonStepDefinitionsWrapper = function() {
 			element(by.model(list[i].element)).sendKeys(list[i].content);
 		}
 		done();
+	});
+    
+    // generate page factory
+	this.Given(/^I'm on "([^"]*)" page$/, function (pageName) {
+		page = pageFactory.createPage(pageName);
+		return page.get();
+	});
+
+	this.Given(/^I'm on "([^"]*)" page for course with id "([^"]*)"$/, function (pageName, id) {
+		page = pageFactory.createPage(pageName);
+		return page.get(id);
+	});
+    
+    // click button on page factory
+	this.When(/^I select "([^"]*)" button$/, function (button) {
+		return page.clickButton(button);
+	});
+    
+    //submit form button
+	this.When(/^I submit form with "([^"]*)" button$/, function (button) {
+		return element(by.css('input[type=submit][value='+button+']')).click();
+	});
+
+    // page verification
+	this.When(/^I should be on "([^"]*)" page$/, function (page, done) {
+		var page_regex = {
+			'course': /.*\/course\/\d+/,
+			'user profile': /.*\/user\/\d+/
+		};
+		expect(browser.getCurrentUrl()).to.eventually.match(page_regex[page]).and.notify(done);
+	});
+
+    // pause test (helpful for debugging)
+	this.When(/^I should be paused$/, function (page, done) {
+		browser.pause();
+	});
+    
+    // verify content on page
+	this.Then(/^I should see "([^"]*)" in "([^"]*)" on the page$/, function (text, locator, done) {
+		expect(element(by.css(locator)).getText()).to.eventually.equal(text).and.notify(done);
 	});
 };
 module.exports = commonStepDefinitionsWrapper;

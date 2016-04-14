@@ -21,6 +21,6 @@ Feature: Create Question
       | element        | content       |
       | question.title | Test Question |
     And I select the first criteria
-    When I click on "Save" button
+    When I submit form with "Save" button
     Then I should be on "course" page
     And I should see "Test Question »" in "h3" on the page
