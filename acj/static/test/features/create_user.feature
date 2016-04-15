@@ -5,7 +5,7 @@ Feature: Create User
     Given I'm "admin"
     And I'm on "home" page
     When I select "Create User" button
-    Then "Create User" page should load
+    Then I should be on the "create user" page
 
   Scenario: Creating a user as admin
     Given I'm "admin"
@@ -20,7 +20,7 @@ Feature: Create User
       | user.firstname              | Second            |
       | user.lastname               | Student           |
     When I submit form with "Save" button
-    Then I should be on "user profile" page
+    Then I should be on the "profile" page
     And I should see "Second Student's Profile" in "h1" on the page
 
   Scenario: Creating a user as admin
@@ -36,5 +36,5 @@ Feature: Create User
       | user.firstname              | Second            |
       | user.lastname               | Student           |
     When I submit form with "Save" button
-    Then I should be on "user profile" page
+    Then I should be on the "profile" page
     And I should see "Second Student's Profile" in "h1" on the page

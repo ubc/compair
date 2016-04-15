@@ -20,5 +20,5 @@ Feature: Create Course
       | element     | content     |
       | course.name | Test Course |
     When I submit form with "Save" button
-    Then I should be on "course" page
+    Then I should be on the "course" page
     And I should see "Test Course" in "h1" on the page

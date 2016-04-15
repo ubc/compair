@@ -7,12 +7,11 @@ Feature: Create Question
     When I select "Add Assignment" button
     Then "Add Assignment" page should load
 
-  Scenario: Loading add question page by Add Assignment button as admin
+  Scenario: Loading add question page by Add Assignment button as instructor
     Given I'm "instructor1"
     And I'm on "course" page for course with id "1"
     When I select "Add Assignment" button
     Then "Add Assignment" page should load
-
 
   Scenario: Creating a question as instructor
     Given I'm "instructor1"
@@ -22,5 +21,5 @@ Feature: Create Question
       | question.title | Test Question |
     And I select the first criteria
     When I submit form with "Save" button
-    Then I should be on "course" page
+    Then I should be on the "course" page
     And I should see "Test Question »" in "h3" on the page

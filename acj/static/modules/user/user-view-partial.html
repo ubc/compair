@@ -1,6 +1,6 @@
 <div>
 	<div class="pull-right" ng-if="canManageUser || showEditButton.available || ownProfile">
-		<a ng-href="#/user/{{user.id}}/edit" class="btn btn-primary">
+		<a id="edit-profile-btn" ng-href="#/user/{{user.id}}/edit" class="btn btn-primary">
 			<i class="fa fa-edit"></i> Edit
 		</a>
 	</div>
@@ -10,37 +10,37 @@
 	<hr>
 	<div class="col-md-4 gravatar-img">
 		<a href="https://en.gravatar.com/" title="Add or edit your user image with Gravatar">
-		   <img class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
+		   <img id="user_avatar" class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
 		</a>
 	</div>
 	<div class="col-md-8 user-details">
 		<div class="row" ng-if="canCreateUser || ownProfile">
 			<strong class="col-md-3">Application Role:</strong>
-			<div class="col-md-9">{{ user.system_role }}</div>
+			<div id="user_system_role" class="col-md-9">{{ user.system_role }}</div>
 		</div>
 		<div class="row" ng-if="canCreateUser || ownProfile">
 			<strong class="col-md-3">Username:</strong>
-			<div class="col-md-9">{{ user.username }}</div>
+			<div id="user_username" class="col-md-9">{{ user.username }}</div>
 		</div>
 		<div class="row" ng-if="canCreateUser || ownProfile">
 			<strong class="col-md-3">Student Number:</strong>
-			<div class="col-md-9">{{ user.student_no }}</div>
+			<div id="user_student_no"  class="col-md-9">{{ user.student_no }}</div>
 		</div>
 		<div class="row" ng-if="canCreateUser || ownProfile">
 			<strong class="col-md-3">Name:</strong>
-			<div class="col-md-9">{{ user.fullname }}</div>
+			<div id="user_fullname" class="col-md-9">{{ user.fullname }}</div>
 		</div>
 		<div class="row">
 			<strong class="col-md-3">Display Name:</strong>
-			<div class="col-md-9">{{ user.displayname }}</div>
+			<div id="user_displayname" class="col-md-9">{{ user.displayname }}</div>
 		</div>
 		<div class="row" ng-if="canCreateUser || ownProfile">
 			<strong class="col-md-3">Email:</strong>
-			<div class="col-md-9">{{ user.email }}</div>
+			<div id="user_email"  class="col-md-9">{{ user.email }}</div>
 		</div>
 		<div class="row">
 			<strong class="col-md-3">Last Online:</strong>
-            <div ng-show="user.lastonline" class="col-md-9">{{ user.lastonline | amDateFormat: 'MMM Do, YYYY @ h:mm a' }}</div>
+            <div id="user_lastonline" ng-show="user.lastonline" class="col-md-9">{{ user.lastonline | amDateFormat: 'MMM Do, YYYY @ h:mm a' }}</div>
 		</div>
 		<!-- <div class="row">
 			<strong class="col-md-3">Created On:</strong>
