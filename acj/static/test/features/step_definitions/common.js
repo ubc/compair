@@ -41,10 +41,48 @@ var commonStepDefinitionsWrapper = function() {
 	// fill in form
 	this.Given(/^I fill in:$/, function (data, done) {
 		var list = data.hashes();
-		for (var i = 0; i < list.length; i++) {
-			element(by.model(list[i].element)).sendKeys(list[i].content);
-		}
-		done();
+        
+        var allPromises = list.map(function(item){
+            return element(by.model(item.element)).getTagName().then(function(tagName) {
+                //clear inputs and textareas
+                if (tagName == 'input' || tagName == 'textarea') {
+                    return element(by.model(item.element)).clear().then(function() {
+                        return element(by.model(item.element)).sendKeys(item.content);
+                    });
+                } else {
+                    return element(by.model(item.element)).sendKeys(item.content);
+                }
+            });
+        });
+        
+        protractor.promise.all(allPromises).then(function(){
+            done();
+        });
+	});
+
+	// verify the form
+	this.Given(/^I should see form fields:$/, function (data, done) {
+		var list = data.hashes();
+        
+        var allPromises = list.map(function(item){
+            return expect(element(by.model(item.element)).isPresent()).to.become(true);
+        });
+        
+        protractor.promise.all(allPromises).then(function(){
+            done();
+        });
+	});
+    
+	this.Given(/^I should not see form fields:$/, function (data, done) {
+		var list = data.hashes();
+        
+        var allPromises = list.map(function(item){
+            return expect(element(by.model(item.element)).isPresent()).to.become(false);
+        });
+        
+        protractor.promise.all(allPromises).then(function(){
+            done();
+        });
 	});
     
     // generate page factory

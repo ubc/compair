@@ -371,7 +371,7 @@ module.exports.course = function($httpBackend) {
 		],
 		"description": null,
 		"id": 1,
-		"name": "Test Course"
+		"name": "Test Course 1"
 	};
 
 	var course2 = {
@@ -391,7 +391,7 @@ module.exports.course = function($httpBackend) {
 		"enable_student_create_tags": false,
 		"id": 2,
 		"modified": "Sun, 11 Jan 2015 08:44:46 -0000",
-		"name": "Test Course"
+		"name": "Test Course 2"
 	};
 
 	var post1 = {

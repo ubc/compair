@@ -17,8 +17,8 @@ Feature: Create Course
     Given I'm "instructor1"
     And I'm on "create course" page
     And I fill in:
-      | element     | content     |
-      | course.name | Test Course |
+      | element     | content       |
+      | course.name | Test Course 2 |
     When I submit form with "Save" button
     Then I should be on the "course" page
-    And I should see "Test Course" in "h1" on the page
+    And I should see "Test Course 2" in "h1" on the page
