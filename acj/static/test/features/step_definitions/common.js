@@ -43,14 +43,16 @@ var commonStepDefinitionsWrapper = function() {
 		var list = data.hashes();
         
         var allPromises = list.map(function(item){
-            return element(by.model(item.element)).getTagName().then(function(tagName) {
-                //clear inputs and textareas
+            var fillElement = element(by.model(item.element));
+            
+            return fillElement.getTagName().then(function(tagName) {
+                // clear inputs and textareas then send keys
                 if (tagName == 'input' || tagName == 'textarea') {
-                    return element(by.model(item.element)).clear().then(function() {
-                        return element(by.model(item.element)).sendKeys(item.content);
+                    return fillElement.clear().then(function() {
+                        return fillElement.sendKeys(item.content);
                     });
                 } else {
-                    return element(by.model(item.element)).sendKeys(item.content);
+                    return fillElement.sendKeys(item.content);
                 }
             });
         });
@@ -58,6 +60,22 @@ var commonStepDefinitionsWrapper = function() {
         protractor.promise.all(allPromises).then(function(){
             done();
         });
+	});
+    
+    this.Given(/^I fill in rich text "([^"]*)" for "([^"]*)"$/, function (text, id, done) {
+        //load the ckeditor iframe
+        var iframe = element(by.css("#"+id+" iframe"));
+        browser.wait(iframe.isPresent(), 1000);
+        browser.driver.switchTo().frame(iframe.getWebElement());
+        // clear the content
+        browser.driver.executeScript("document.body.innerHTML = '';")
+        browser.driver.findElement(by.css("body")).sendKeys(text);
+        browser.driver.switchTo().defaultContent();
+        done();
+	});
+    
+	this.Given(/^I toggle the "([^"]*)" checkbox$/, function (label, done) {
+		return element(by.cssContainingText('label', label)).click();
 	});
 
 	// verify the form

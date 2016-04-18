@@ -386,7 +386,7 @@ module.exports.course = function($httpBackend) {
 				"inQuestion": false
 			}
 		],
-		"description": null,
+		"description": "<p>This is the description for Test Course 2<p>",
 		"enable_student_create_questions": false,
 		"enable_student_create_tags": false,
 		"id": 2,
