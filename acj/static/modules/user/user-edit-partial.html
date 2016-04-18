@@ -7,7 +7,7 @@
 		<form name="changePasswordForm" class="form" ng-submit="changePassword()" novalidate>
 			<fieldset>
 				<legend>Password</legend>
-				<acj-field-with-feedback form-control="changePasswordForm.oldpassword" ng-if="!canManageUsers">
+				<acj-field-with-feedback form-control="changePasswordForm.oldpassword" ng-if="ownProfile || !canManageUsers">
 					<label for="oldpassword" class="required-star">Old Password</label>
 					<input class="form-control" id="oldpassword" type="password"
 						name="oldpassword" ng-model="password.oldpassword"
