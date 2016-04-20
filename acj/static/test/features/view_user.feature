@@ -2,7 +2,7 @@ Feature: View Profile
   As user, I want to view profiles of users
 
   Scenario: Loading own profile as admin
-    Given I'm "admin"
+    Given I'm a System Administrator
     And I'm on "home" page
     When I select "Profile" button
     Then I should be on the "profile" page
@@ -23,7 +23,7 @@ Feature: View Profile
       
   # TODO: add steps to get to other user's profile page without direct link
   Scenario: Loading other user's profile as admin
-    Given I'm "admin"
+    Given I'm a System Administrator
     And I'm on "user" page for user with id "2"
     Then I should see text:
       | locator                     | text                          |
@@ -41,7 +41,7 @@ Feature: View Profile
       | #user_lastonline            |
   
   Scenario: Loading own profile as instructor
-    Given I'm "instructor1"
+    Given I'm an Instructor
     And I'm on "home" page
     When I select "Profile" button
     Then I should be on the "profile" page
@@ -62,7 +62,7 @@ Feature: View Profile
       
   # TODO: add steps to get to other user's profile page without direct link
   Scenario: Loading other user's profile as instructor with edit permissions
-    Given I'm "instructor1"
+    Given I'm an Instructor with students
     And I'm on "user" page for user with id "3"
     Then I should see text:
       | locator                     | text                          |
@@ -81,7 +81,7 @@ Feature: View Profile
 
   # TODO: add steps to get to other user's profile page without direct link
   Scenario: Loading other user's profile as instructor without edit permissions
-    Given I'm "instructor1"
+    Given I'm an Instructor with students
     And I'm on "user" page for user with id "4"
     Then I should see text:
       | locator                     | text                          |
@@ -100,7 +100,7 @@ Feature: View Profile
 
 
   Scenario: Loading own profile as student
-    Given I'm "student1"
+    Given I'm a Student
     And I'm on "home" page
     When I select "Profile" button
     Then I should be on the "profile" page
@@ -121,7 +121,7 @@ Feature: View Profile
 
   # TODO: add steps to get to other user's profile page without direct link
   Scenario: Loading other user's profile as student
-    Given I'm "student1"
+    Given I'm a Student
     And I'm on "user" page for user with id "2"
     Then I should see text:
       | locator                     | text                          |

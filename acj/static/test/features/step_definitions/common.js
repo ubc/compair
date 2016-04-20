@@ -7,31 +7,10 @@ chai.use(chaiAsPromised);
 var expect = chai.expect;
 
 var PageFactory  = require('../../factories/page_factory.js');
-var UserFactory  = require('../../factories/user_factory.js');
-var backEndMocks = require('../../factories/http_backend_mocks.js');
 
 var commonStepDefinitionsWrapper = function() {
 	var pageFactory = new PageFactory();
-    var page;
-	var userFactory = new UserFactory();
-	var mocks = [
-		backEndMocks.session,
-		backEndMocks.user,
-		backEndMocks.course,
-		backEndMocks.question
-	];
-
-	// login and setup mock backend
-	this.Given(/^I'm "([^"]*)"$/, function (username, done) {
-		backEndMocks.build(browser, mocks);
-		var loginDialog = pageFactory.createPage('login');
-		loginDialog.get('/');
-		loginDialog.login(userFactory.getUser(username)).then(function() {
-			// wait for displayname is populated before we reload the page
-			browser.wait(browser.isElementPresent(element(by.binding('loggedInUser.displayname'))), 5000);
-			done();
-		});
-	});
+    var page;   
 
 	// check title of page
 	this.Then(/^"([^"]*)" page should load$/, function (content_title, done) {
@@ -82,25 +61,21 @@ var commonStepDefinitionsWrapper = function() {
 	this.Given(/^I should see form fields:$/, function (data, done) {
 		var list = data.hashes();
         
-        var allPromises = list.map(function(item){
-            return expect(element(by.model(item.element)).isPresent()).to.become(true);
+        list.forEach(function(item){
+            expect(element(by.model(item.element)).isPresent()).to.eventually.equal(true);
         });
         
-        protractor.promise.all(allPromises).then(function(){
-            done();
-        });
+        done();
 	});
     
 	this.Given(/^I should not see form fields:$/, function (data, done) {
 		var list = data.hashes();
         
-        var allPromises = list.map(function(item){
-            return expect(element(by.model(item.element)).isPresent()).to.become(false);
+        list.forEach(function(item){
+            expect(element(by.model(item.element)).isPresent()).to.eventually.equal(false);
         });
         
-        protractor.promise.all(allPromises).then(function(){
-            done();
-        });
+        done();
 	});
     
     // generate page factory
@@ -132,10 +107,10 @@ var commonStepDefinitionsWrapper = function() {
     // page verification
 	this.When(/^I should be on the "([^"]*)" page$/, function (page, done) {
 		var page_regex = {
-			'course': /.*\/course\/\d+/,
-			'profile': /.*\/user\/\d+/,
-            'create user': /.*\/user\/create/,
-			'edit profile': /.*\/user\/\d+\/edit/
+			'course': /.*\/course\/\d+$/,
+			'profile': /.*\/user\/\d+$/,
+            'create user': /.*\/user\/create$/,
+			'edit profile': /.*\/user\/\d+\/edit$/
 		};
 		expect(browser.getCurrentUrl()).to.eventually.match(page_regex[page]).and.notify(done);
 	});
@@ -148,50 +123,43 @@ var commonStepDefinitionsWrapper = function() {
 	this.Then(/^I should see text:$/, function (data, done) {
 		var list = data.hashes();
         
-        var allPromises = list.map(function(item){
-            return expect(element(by.css(item.locator)).getText()).to.eventually.equal(item.text);
+        list.forEach(function(item){
+            expect(element(by.css(item.locator)).getText()).to.eventually.equal(item.text);
         });
         
-        protractor.promise.all(allPromises).then(function(){
-            done();
-        });
+        done();
 	});
     
 	this.Then(/^I should see "([^"]*)" on the page$/, function (locator, done) {
-        expect(element(by.css(locator)).isPresent()).to.become(true).and.notify(done);
+        expect(element(by.css(locator)).isPresent()).to.eventually.equal(true).and.notify(done);
 	});
     
-	this.Then(/^I should see:$/, function (data, done) {
+	this.Then('I should see:', function (data, done) {
 		var list = data.hashes();
         
-        var allPromises = list.map(function(item){
-            return expect(element(by.css(item.locator)).isPresent()).to.become(true).and.notify(done);
+        list.forEach(function(item){
+            expect(element(by.css(item.locator)).isPresent()).to.eventually.equal(true);
         });
         
-        protractor.promise.all(allPromises).then(function(){
-            done();
-        });
+        done();
 	});
     
-    
 	this.Then(/^I should not see "([^"]*)" on the page$/, function (locator, done) {
-        expect(element(by.css(locator)).isPresent()).to.become(false).and.notify(done);
+        expect(element(by.css(locator)).isPresent()).to.eventually.equal(false).and.notify(done);
 	});
     
 	this.Then(/^I should not see:$/, function (data, done) {
 		var list = data.hashes();
         
-        var allPromises = list.map(function(item){
-            return expect(element(by.css(item.locator)).isPresent()).to.become(false);
+        list.map(function(item){
+            expect(element(by.css(item.locator)).isPresent()).to.eventually.equal(false);
         });
         
-        protractor.promise.all(allPromises).then(function(){
-            done();
-        });
+        done();
 	});
 
     // pause test (helpful for debugging)
-	this.When(/^I should be paused$/, function (page, done) {
+	this.Then('pause', function (page, done) {
 		browser.pause();
 	});
 };

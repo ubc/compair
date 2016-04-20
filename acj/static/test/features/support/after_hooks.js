@@ -4,7 +4,8 @@ var myAfterHooks = function () {
 		// playing with.
 		browser.executeAsyncScript(
 			'var cb = arguments[arguments.length - 1];' +
-			'window.angular.element("#logout-link").scope().logout().then(cb);').then(function() {
+			'var logoutScope = window.angular.element("#logout-link").scope();' +
+			'if(logoutScope) { logoutScope.logout().then(cb); } else { cb() }').then(function() {
 				browser.manage().deleteAllCookies().then(function () {
 					// Release control:
 					callback();
