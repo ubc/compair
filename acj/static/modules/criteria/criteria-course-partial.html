@@ -33,19 +33,19 @@
 	
 	<div class="row">
 		<div class="col-sm-2">
-			<p><a href="" class="btn btn-small btn-primary" ng-click="changeCriterion()">Add New</a></p>
+			<p><a id="add-new-criteria" href="" class="btn btn-small btn-primary" ng-click="changeCriterion()">Add New</a></p>
 		</div>
 		<div class="col-sm-1">
 			<p>OR</p>
 		</div>
 		<div class="form-group col-sm-6">
-			<select class="form-control" ng-model="selected" ng-options="key as c.name for (key, c) in availableCriteria">
+			<select id="select-default-criteria" class="form-control" ng-model="selected" ng-options="key as c.name for (key, c) in availableCriteria">
 				<option value="">- select a default -</option>
 			</select>
 		</div>
 		<div class="col-sm-3">
 			<!-- used length because when list is empty the empty option gets a value of 0 which is valid -->
-			<p><a class="btn btn-small btn-primary" ng-click="add(selected)" ng-disabled="!selected || !availableCriteria.length">Add Selected</a></p>
+			<p><a id="add-default-criteria" class="btn btn-small btn-primary" ng-click="add(selected)" ng-disabled="!selected || !availableCriteria.length">Add Selected</a></p>
 		</div>
         </div>
 	

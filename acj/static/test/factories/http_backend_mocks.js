@@ -267,6 +267,25 @@ module.exports.httpbackendMock = function(storageFixture) {
             return [200, storage.courses[id-1], {}];
         });
         
+        // edit course by id
+        $httpBackend.whenPOST(/\/api\/courses\/\d+$/).respond(function(method, url, data, headers) {
+            data = JSON.parse(data);
+            
+            var criteria = data.criteria;
+            delete data.criteria;
+            
+            var id = url.split('/').pop();
+            storage.courses[id-1] = angular.merge(storage.courses[id-1], data);
+            
+            // setup course criteria
+            storage.course_criteria[id] = [];
+            angular.forEach(criteria, function(criteria, key) {
+                storage.course_criteria[id].push(criteria.id);
+            });
+            
+            return [200, storage.courses[id-1], {}];
+        });
+        
         // get course criteria by course id
         $httpBackend.whenGET(/\/api\/courses\/\d+\/criteria$/).respond(function(method, url, data, headers){
             var id = url.replace('/criteria', '').split('/').pop();
@@ -275,7 +294,9 @@ module.exports.httpbackendMock = function(storageFixture) {
             
             if (storage.course_criteria[id]) {
                 angular.forEach(storage.course_criteria[id], function(criteriaId) {
-                    criteriaList.push(storage.criteria[criteriaId-1]);
+                    var criteria = angular.copy(storage.criteria[criteriaId-1]);
+                    criteria.active = true;
+                    criteriaList.push(criteria);
                 });
             }
             
@@ -322,7 +343,43 @@ module.exports.httpbackendMock = function(storageFixture) {
         $httpBackend.whenGET('/api/criteria/default').respond(default_criteria);
         */
         
-        $httpBackend.whenGET('/api/criteria').respond(storage.criteria);
+        // get current user's criteria
+        $httpBackend.whenGET('/api/criteria').respond({
+            "criteria": storage.criteria
+        });
+        
+        // create new criteria
+        $httpBackend.whenPOST('/api/criteria').respond(function(method, url, data, headers) {
+            data = JSON.parse(data);
+            
+            var id = storage.criteria.length + 1;
+            var currentUser = angular.copy(storage.users[storage.loginDetails.id-1]);
+            
+            var newCriteria = {
+                "id": id, 
+                "users_id": currentUser.id,
+                "name": data.name, 
+                "description": data.description, 
+                "default": data.default, 
+                "judged": false,  
+                "created": "Mon, 18 Apr 2016 17:38:23 -0000", 
+                "modified": "Mon, 18 Apr 2016 17:38:23 -0000"
+            };
+            
+            storage.criteria.push(newCriteria);
+            
+            return [200, newCriteria, {}];
+        });
+        
+        // update criteria by id
+        $httpBackend.whenPOST(/\/api\/criteria\/\d+$/).respond(function(method, url, data, headers) {
+            data = JSON.parse(data);
+            var id = url.split('/').pop();
+            
+            storage.criteria[id-1] = angular.merge(storage.criteria[id-1], data);
+            
+            return [200, storage.criteria[id-1], {}];
+        });
 
         $httpBackend.whenGET(/\/api\/selfeval\/courses\/\d+\/questions$/).respond({
             "replies": {}

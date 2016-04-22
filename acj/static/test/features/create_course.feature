@@ -16,12 +16,12 @@ Feature: Create Course
   Scenario: Creating a course as instructor
     Given I'm an Instructor
     And I'm on "create course" page
-    And I toggle the "Add a course description:" checkbox
-    And I fill in the course description with "This is the description for Test Course 2"
+    When I toggle the "Add a course description:" checkbox
     And I fill in:
       | element     | content       |
       | course.name | Test Course 2 |
-    When I submit form with "Save" button
+    And I fill in the course description with "This is the description for Test Course 2"
+    And I submit form with "Save" button
     Then I should be on the "course" page
     And I should see "Test Course 2" in "h1" on the page
     And I should see "This is the description for Test Course 2" in "div.intro-text" on the page
