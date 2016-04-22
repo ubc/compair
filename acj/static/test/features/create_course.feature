@@ -17,7 +17,7 @@ Feature: Create Course
     Given I'm an Instructor
     And I'm on "create course" page
     And I toggle the "Add a course description:" checkbox
-    And I fill in rich text "This is the description for Test Course 2" for "cke_courseDescription"
+    And I fill in the course description with "This is the description for Test Course 2"
     And I fill in:
       | element     | content       |
       | course.name | Test Course 2 |

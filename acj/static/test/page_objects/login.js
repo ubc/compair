@@ -17,8 +17,10 @@ LoginDialog.prototype.login = function(user) {
     internalLoginTextElm.click();
     usernameElm.sendKeys(user.username);
     passwordElm.sendKeys(user.password);
+    
+    loginButtonElm.click();
 
-    return loginButtonElm.click();
+    return browser.wait(browser.isElementPresent(element(by.binding('loggedInUser.displayname'))), 5000);
 };
 
 LoginDialog.prototype.logout = function() {

@@ -58,7 +58,7 @@ storage.course_criteria[course1.id] = [1];
 storage.course_criteria[course2.id] = [1];
 
 storage.loginDetails = { id: instructor.id, username: instructor.username, password: "password" };
-var session = sessionFactory.generateSession(instructor.id, instructor.system_role, {		
+storage.session = sessionFactory.generateSession(instructor.id, instructor.system_role, {		
     "Courses": {
         "delete": {'1': false, '2': false},
         "edit": {'1': true, '2': true},
@@ -66,13 +66,12 @@ var session = sessionFactory.generateSession(instructor.id, instructor.system_ro
         "read": {'1': true, '2': true}
     },
     "PostsForQuestions": {
-        "create": {'1': true, '2': true},
-        "delete": {'1': true, '2': true},
-        "edit": {'1': true, '2': true},
-        "manage": {'1': true, '2': true},
-        "read": {'1': true, '2': true}
+        "create": {'1': true},
+        "delete": {'1': true},
+        "edit": {'1': true},
+        "manage": {'1': true},
+        "read": {'1': true}
     },
 });
-storage.session = session;
 
 module.exports = storage;

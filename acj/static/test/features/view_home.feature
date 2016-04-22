@@ -9,15 +9,6 @@ Feature: View Home
       | CHEM 111      |
       | PHYS 101      |
 
-  Scenario: Filtering home page courses as admin
-    Given I'm a System Administrator with courses
-    And I'm on "home" page
-    When I filter home page courses by "CHEM"
-    Then I should see "1" courses
-    And I should see my courses with names:
-      | name          |
-      | CHEM 111      |
-
   Scenario: Loading home page as instructor
     Given I'm an Instructor with courses
     And I'm on "home" page

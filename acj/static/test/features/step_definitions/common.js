@@ -41,18 +41,6 @@ var commonStepDefinitionsWrapper = function() {
         });
 	});
     
-    this.Given(/^I fill in rich text "([^"]*)" for "([^"]*)"$/, function (text, id, done) {
-        //load the ckeditor iframe
-        var iframe = element(by.css("#"+id+" iframe"));
-        browser.wait(iframe.isPresent(), 1000);
-        browser.driver.switchTo().frame(iframe.getWebElement());
-        // clear the content
-        browser.driver.executeScript("document.body.innerHTML = '';")
-        browser.driver.findElement(by.css("body")).sendKeys(text);
-        browser.driver.switchTo().defaultContent();
-        done();
-	});
-    
 	this.Given(/^I toggle the "([^"]*)" checkbox$/, function (label, done) {
 		return element(by.cssContainingText('label', label)).click();
 	});
@@ -120,42 +108,12 @@ var commonStepDefinitionsWrapper = function() {
 		expect(element(by.css(locator)).getText()).to.eventually.equal(text).and.notify(done);
 	});
     
-	this.Then(/^I should see text:$/, function (data, done) {
-		var list = data.hashes();
-        
-        list.forEach(function(item){
-            expect(element(by.css(item.locator)).getText()).to.eventually.equal(item.text);
-        });
-        
-        done();
-	});
-    
 	this.Then(/^I should see "([^"]*)" on the page$/, function (locator, done) {
         expect(element(by.css(locator)).isPresent()).to.eventually.equal(true).and.notify(done);
 	});
     
-	this.Then('I should see:', function (data, done) {
-		var list = data.hashes();
-        
-        list.forEach(function(item){
-            expect(element(by.css(item.locator)).isPresent()).to.eventually.equal(true);
-        });
-        
-        done();
-	});
-    
 	this.Then(/^I should not see "([^"]*)" on the page$/, function (locator, done) {
         expect(element(by.css(locator)).isPresent()).to.eventually.equal(false).and.notify(done);
-	});
-    
-	this.Then(/^I should not see:$/, function (data, done) {
-		var list = data.hashes();
-        
-        list.map(function(item){
-            expect(element(by.css(item.locator)).isPresent()).to.eventually.equal(false);
-        });
-        
-        done();
 	});
 
     // pause test (helpful for debugging)

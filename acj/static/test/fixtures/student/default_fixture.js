@@ -41,8 +41,7 @@ storage.users.push(student);
 
 
 storage.loginDetails = { id: student.id, username: student.username, password: "password" };
-var session = sessionFactory.generateSession(student.id, student.system_role, {});
-storage.session = session;
+storage.session = sessionFactory.generateSession(student.id, student.system_role, {});
 
 
 module.exports = storage;
