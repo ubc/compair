@@ -9,7 +9,7 @@ var HomePage = function() {
         profileButton = element(by.css('#own-profile-link'));
 
     this.get = function() {
-        return browser.get(env.baseUrl);
+        return browser.get(env.baseUrl+'#/');
     };
     
     this.clickButton = function(button) {
