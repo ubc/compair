@@ -8,19 +8,13 @@ exports.config = {
     specs: ['../features/**/*.feature'],
 	framework: 'cucumber',
 	multiCapabilities: [{
-		'browserName': 'chrome',
+		'browserName': process.env.TEST_BROWSER_NAME,
 		'tunnel-identifier': process.env.TRAVIS_JOB_NUMBER,
 		'build': process.env.TRAVIS_BUILD_NUMBER,
 		'name': 'acj suite tests',
-		'version': '39',
-		'selenium-version': '2.52.0'
-	}, {
-		'browserName': 'firefox',
-		'tunnel-identifier': process.env.TRAVIS_JOB_NUMBER,
-		'build': process.env.TRAVIS_BUILD_NUMBER,
-		'name': 'acj suite tests',
-		'version': '34',
-		'selenium-version': '2.52.0'
+		'version': process.env.TEST_BROWSER_VERSION,
+		'selenium-version': '2.52.0',
+		'maxDuration': 3600 // 1 hour
 	}],
     cucumberOpts: {
         format: 'pretty'
