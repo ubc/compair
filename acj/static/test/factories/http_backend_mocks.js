@@ -79,6 +79,52 @@ module.exports.session = function ($httpBackend, Session, $rootScope) {
 			"read": {'global': true}
 		}
 	};
+    var permission_student_1 = {
+        "Courses": {
+            "create": {'global': false},
+            "delete": {'global': false, '1': false, '2': false},
+            "edit": {'global': false, '1': false, '2': false},
+            "manage": {'global': false, '1': false, '2': false},
+            "read": {'global': true, '1': true, '2': true}
+        },
+        "PostsForQuestions": {
+            "create": {'global': false, '1': false, '2': false},
+            "delete": {'global': false, '1': false, '2': false},
+            "edit": {'global': false, '1': false, '2': false},
+            "manage": {'global': false, '1': false, '2': false},
+            "read": {'global': true, '1': true, '2': true}
+        },
+        "Users": {
+            "create": {'global': false},
+            "delete": {'global': false},
+            "edit": {'global': true},
+            "manage": {'global': false},
+            "read": {'global': true}
+        }
+    }
+    var permission_student_2 = {
+        "Courses": {
+            "create": {'global': false},
+            "delete": {'global': false},
+            "edit": {'global': false},
+            "manage": {'global': false},
+            "read": {'global': true}
+        },
+        "PostsForQuestions": {
+            "create": {'global': false},
+            "delete": {'global': false},
+            "edit": {'global': false},
+            "manage": {'global': false},
+            "read": {'global': true}
+        },
+        "Users": {
+            "create": {'global': false},
+            "delete": {'global': false},
+            "edit": {'global': true},
+            "manage": {'global': false},
+            "read": {'global': true}
+        }
+    }
 
 	var users = {
 		'root':  {
@@ -88,6 +134,14 @@ module.exports.session = function ($httpBackend, Session, $rootScope) {
 		'instructor1': {
 			"userid": 2,
 			"permissions": permission_instructor
+		},
+		'student1': {
+			"userid": 3,
+			"permissions": permission_student_1
+		},
+		'student2': {
+			"userid": 4,
+			"permissions": permission_student_2
 		}
 	};
 
@@ -99,8 +153,36 @@ module.exports.session = function ($httpBackend, Session, $rootScope) {
 		'instructor1': {
 			"id": 2,
 			"permissions": permission_instructor
+		},
+		'student1': {
+			"id": 3,
+			"permissions": permission_student_1
+		},
+		'student2': {
+			"id": 4,
+			"permissions": permission_student_2
 		}
 	};
+    
+    var usertypes = {
+		'root': [
+            { "id": 1, "name": "Student" }, 
+            { "id": 2, "name": "Instructor" }, 
+            { "id": 3, "name": "System Administrator"  }
+        ],
+		'instructor1': [
+            { "id": 1, "name": "Student" }, 
+            { "id": 2, "name": "Instructor" }
+        ],
+		'student1': [
+            { "id": 1, "name": "Student" }, 
+            { "id": 2, "name": "Instructor" }
+        ],
+		'student2': [
+            { "id": 1, "name": "Student" }, 
+            { "id": 2, "name": "Instructor" }
+        ]
+    }
 
 
 	$httpBackend.whenGET('/api/session').respond(function(method, url, data, headers) {
@@ -118,6 +200,38 @@ module.exports.session = function ($httpBackend, Session, $rootScope) {
 		return [200, users[username].permissions, {}];
 	});
 
+	$httpBackend.whenGET('/api/usertypes').respond(function(method, url, data, headers) {
+		var username = undefined;
+		Session.getUser().then(function(user) {
+			username =user.username;
+		});
+		// Propagate getUser() promise resolution to 'then' functions using $apply().
+		$rootScope.$apply();
+        
+		return [200, usertypes[username], {}];
+	});
+    
+    // get edit button
+	$httpBackend.whenGET(/^\/api\/users\/\d+\/edit$/).respond(function(method, url, data, headers) {
+		var editId = url.split('/')[3];
+        
+        var username = undefined;
+		Session.getUser().then(function(user) {
+			username = user.username;
+		});
+		// Propagate getUser() promise resolution to 'then' functions using $apply().
+		$rootScope.$apply();
+        
+        // Edit button is availble for: yourself, system admins, and members of an instructor's class
+        var available = editId == users[username].userid;
+        switch (username) {
+            case 'root': available = true; break;
+            case 'instructor1': available = (editId == 3); break;
+        }
+        
+		return [200, {"available": available}, {}];
+	});
+    
 	$httpBackend.whenPOST('/api/login').respond(function(method, url, data, headers) {
 		authenticated = true;
 		current_user = angular.fromJson(data).username;
@@ -144,6 +258,7 @@ module.exports.user = function($httpBackend) {
 			"lastonline": "Sun, 11 Jan 2015 02:55:59 -0000",
 			"modified": "Sun, 11 Jan 2015 02:55:59 -0000",
 			"student_no": null,
+            "system_role": "System Administrator", 
 			"username": "root",
 			"usertypeforsystem": {
 				"id": 3,
@@ -163,13 +278,63 @@ module.exports.user = function($httpBackend) {
 			"lastonline": "Sun, 11 Jan 2015 08:25:08 -0000",
 			"modified": "Sun, 11 Jan 2015 08:25:08 -0000",
 			"student_no": null,
+            "system_role": "Instructor", 
 			"username": "instructor1",
 			"usertypeforsystem": {
 				"id": 2,
 				"name": "Instructor"
 			},
 			"usertypesforsystem_id": 2
-		}];
+		},
+		{ // student1
+            "avatar": "8ddf878039b70767c4a5bcf4f0c4f65e",
+            "created": "Sun, 11 Jan 2015 07:59:17 -0000",
+            "displayname": "First Student",
+            "email": "first.student@exmple.com",
+            "firstname": "First",
+            "fullname": "First Student",
+            "id": 3,
+            "lastname": "Student",
+            "lastonline": "Sun, 11 Jan 2015 08:25:08 -0000",
+            "modified": "Sun, 11 Jan 2015 08:25:08 -0000",
+            "student_no": null,
+            "system_role": "Student", 
+            "username": "student1",
+            "usertypeforsystem": {
+                "id": 1,
+                "name": "Student"
+            },
+            "usertypesforsystem_id": 1
+		},
+		{ // student2
+            "avatar": "8ddf878039b70767c4a5bcf4f0c4f65e",
+            "created": "Sun, 11 Jan 2015 07:59:17 -0000",
+            "displayname": "Second Student",
+            "email": "second.student@exmple.com",
+            "firstname": "Second",
+            "fullname": "Second Student",
+            "id": 4,
+            "lastname": "Student",
+            "lastonline": "Sun, 11 Jan 2015 08:25:08 -0000",
+            "modified": "Sun, 11 Jan 2015 08:25:08 -0000",
+            "student_no": null,
+            "system_role": "Student", 
+            "username": "student2",
+            "usertypeforsystem": {
+                "id": 1,
+                "name": "Student"
+            },
+            "usertypesforsystem_id": 1
+		}
+    ];
+        
+	$httpBackend.whenPOST('/api/users').respond({
+        "avatar": "8ddf878039b70767c4a5bcf4f0c4f65e", 
+        "created": "Thu, 14 Apr 2016 19:45:33 -0000", 
+        "displayname": "Second Student", 
+        "id": 4, 
+        "lastonline": null
+    });
 
 	$httpBackend.whenGET(/^\/api\/users\/\d+$/).respond(function(method, url, data, headers) {
 		var id = url.split('/').pop();
@@ -206,7 +371,7 @@ module.exports.course = function($httpBackend) {
 		],
 		"description": null,
 		"id": 1,
-		"name": "Test Course"
+		"name": "Test Course 1"
 	};
 
 	var course2 = {
@@ -221,12 +386,12 @@ module.exports.course = function($httpBackend) {
 				"inQuestion": false
 			}
 		],
-		"description": null,
+		"description": "<p>This is the description for Test Course 2<p>",
 		"enable_student_create_questions": false,
 		"enable_student_create_tags": false,
 		"id": 2,
 		"modified": "Sun, 11 Jan 2015 08:44:46 -0000",
-		"name": "Test Course"
+		"name": "Test Course 2"
 	};
 
 	var post1 = {
@@ -276,6 +441,14 @@ module.exports.course = function($httpBackend) {
 	var courses = {
 		"objects": [course1, course2]
 	};
+
+	var courseroles = [
+        { "id": 2, "name": "Instructor" }, 
+        { "id": 3, "name": "Teaching Assistant" }, 
+        { "id": 4, "name": "Student" }
+    ];
+    
+	$httpBackend.whenGET('/api/courseroles').respond(courseroles);
 
 	$httpBackend.whenGET(/\/api\/users\/\d+\/courses$/).respond(courses);
 	$httpBackend.whenGET(/\/api\/courses\/\d+\/name$/).respond(function(method, url, data, headers) {
