@@ -27,6 +27,7 @@ module.controller(
 	{
 		$scope.breadcrumbs = breadcrumbs;
 		$scope.isLoggedIn = false;
+		$scope.isCollapsed = true;
 
 		// determine if we're in a course so we know whether to show
 		// the course settings
