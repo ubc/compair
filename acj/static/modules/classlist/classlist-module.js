@@ -21,6 +21,7 @@ var module = angular.module('ubc.ctlt.acj.classlist',
 /***** Providers *****/
 module.factory(
 	"ClassListResource",
+	["$resource", "$cacheFactory", "Interceptors",
 	function ($resource, $cacheFactory, Interceptors)
 	{
 		var url = '/api/courses/:courseId/users/:userId';
@@ -46,11 +47,13 @@ module.factory(
 		ret.MODEL = "CoursesAndUsers";
 		return ret;
 	}
-);
+]);
 
 /***** Controllers *****/
 module.controller(
 	'ClassViewController',
+	["$scope", "$log", "$routeParams", "$route", "ClassListResource", "CourseResource",
+			 "CourseRoleResource", "GroupResource", "Toaster", "Session", "SaveAs",
 	function($scope, $log, $routeParams, $route, ClassListResource, CourseResource,
 			 CourseRoleResource, GroupResource, Toaster, Session, SaveAs)
 	{
@@ -147,10 +150,11 @@ module.controller(
 			});
 		};
 	}
-);
+]);
 
 module.controller(
 	'ClassImportController',
+	["$scope", "$log", "$location", "$routeParams", "ClassListResource", "CourseResource", "Toaster", "importService",
 	function($scope, $log, $location, $routeParams, ClassListResource, CourseResource, Toaster, importService)
 	{
 		$scope.course = {};
@@ -175,10 +179,11 @@ module.controller(
 			$scope.uploader.uploadAll();
 		};
 	}
-);
+]);
 
 module.controller(
 	'ClassImportResultsController',
+	["$scope", "$log", "$routeParams", "ClassListResource", "Toaster", "importService",
 	function($scope, $log, $routeParams, ClassListResource, Toaster, importService)
 	{
 		$scope.results = importService.getResults();
@@ -187,10 +192,11 @@ module.controller(
 		$scope.courseId = $routeParams['courseId'];
 		$scope.headers = ['Username', 'Student Number', 'First Name', 'Last Name', 'Email', 'Message'];
 	}
-);
+]);
 
 module.controller(
 	'EnrolController',
+	["$scope", "$log", "$routeParams", "$route", "$location", "ClassListResource", "Toaster", "UserResource",
 	function($scope, $log, $routeParams, $route, $location, ClassListResource, Toaster, UserResource)
 	{
 		var courseId = $routeParams['courseId'];
@@ -217,7 +223,7 @@ module.controller(
 			});
 		}
 	}
-);
+]);
 
 // End anonymous function
 })();

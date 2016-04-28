@@ -154,8 +154,8 @@ module.controller(
 
 module.controller(
 	"AnswerCommentCreateController",
-	['$scope', '$log', '$location', '$routeParams', 'AnswerCommentResource', 'AnswerResource', 'QuestionResource',
-		'Authorize', 'Toaster',
+	['$scope', '$log', '$location', '$routeParams', 'AnswerCommentResource', 'AnswerResource', 
+		'QuestionResource', 'Authorize', 'Toaster',
 	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource,
 			  QuestionResource, Authorize, Toaster)
 	{

@@ -13,7 +13,7 @@ var module = angular.module('ubc.ctlt.acj.toaster',
 );
 
 /***** Providers *****/
-module.factory('Toaster', function($log, toaster) {
+module.factory('Toaster', [ "$log", "toaster", function($log, toaster) {
 	// should be short, so don't need that much time
 	toaster.success = function(title, msg) {
 		this.pop("success", title, msg, 5000);
@@ -50,7 +50,7 @@ module.factory('Toaster', function($log, toaster) {
 		}
 	};
 	return toaster;
-});
+}]);
 
 /***** Controllers *****/
 

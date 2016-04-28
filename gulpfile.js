@@ -54,8 +54,11 @@ gulp.task('prod_minify_js_libs', function() {
 });
 gulp.task('prod_minify_js', function() {
 	return gulp.src([
-		'./acj/static/modules/judgement/judgement-module.js',
-		'./acj/static/modules/comment/comment-module.js',
+		'./acj/static/acj-config.js',
+		'./acj/static/modules/**/*-module.js',
+		'./acj/static/modules/**/*-directives.js',
+		'./acj/static/modules/**/*-service.js',
+		'./acj/static/modules/common/pdf.js',
 	])
 		.pipe(concat(jsFilename))
 		.pipe(uglify())

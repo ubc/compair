@@ -13,18 +13,22 @@ var module = angular.module('ubc.ctlt.acj.report',
 );
 
 /***** Providers *****/
-module.factory('ReportResource', function($q, $routeParams, $log, $resource)
+module.factory('ReportResource', 
+	[ "$q", "$routeParams", "$log", "$resource", 
+	function($q, $routeParams, $log, $resource)
 {
 	var ret = $resource('/api/courses/:id/report', {id: '@id'});
 	ret.MODEL = "Courses"; // add constant to identify the model
 		// being used, this is for permissions checking
 		// and should match the server side model name
 	return ret;
-});
+}]);
 
 /***** Controllers *****/
 module.controller(
 	'ReportCreateController',
+	[ "$scope", "$log", "CourseResource", "ReportResource", "UserResource",
+			 "GroupResource", "QuestionResource", "Session", "Toaster",
 	function($scope, $log, CourseResource, ReportResource, UserResource,
 			 GroupResource, QuestionResource, Session, Toaster)
 	{
@@ -108,7 +112,7 @@ module.controller(
 			);
 		};
 	}
-);
+]);
 
 // End anonymous function
 })();

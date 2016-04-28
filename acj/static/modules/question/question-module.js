@@ -55,6 +55,7 @@ module.directive(
 
 module.directive(
 	'getHeight',
+	[ "$timeout",
 	function($timeout) {
 		return {
 			restrict: 'A',
@@ -71,7 +72,7 @@ module.directive(
 			}
 		};
 	}
-);
+]);
 
 module.directive(
 	'toolTip',
@@ -159,6 +160,7 @@ module.directive('comparisonPreview', function() {
 /***** Providers *****/
 module.factory(
 	"QuestionResource",
+	[ "$resource", "Interceptors",
 	function ($resource, Interceptors)
 	{
 		var url = '/api/courses/:courseId/questions/:questionId';
@@ -173,10 +175,11 @@ module.factory(
 		ret.MODEL = "PostsForQuestions";
 		return ret;
 	}
-);
+]);
 
 module.factory(
 	"AttachmentResource",
+	[ "$resource", 
 	function ($resource)
 	{
 		var ret = $resource(
@@ -186,10 +189,11 @@ module.factory(
 		ret.MODEL = "FilesForPosts";
 		return ret;
 	}
-);
+]);
 
 module.factory(
 	"SelfEvaluationTypeResource",
+	[ "$resource", 
 	function($resource)
 	{
 		var url = '/api/selfevaltypes';
@@ -200,10 +204,12 @@ module.factory(
 		ret.model = "SelfEvalTypes";
 		return ret;
 	}
-);
+]);
 
 /***** Services *****/
-module.service('attachService', function(FileUploader, $location, Toaster) {
+module.service('attachService', 
+		["FileUploader", "$location", "Toaster", 
+		function(FileUploader, $location, Toaster) {
 	var filename = '';
 	var alias = '';
 
@@ -290,7 +296,7 @@ module.service('attachService', function(FileUploader, $location, Toaster) {
 		getAlias: getAlias,
 		resetName: resetName
 	};
-});
+}]);
 
 /***** Filters *****/
 module.filter("excludeInstr", function() {
@@ -324,9 +330,12 @@ module.filter("notScoredEnd", function () {
 
 /***** Controllers *****/
 module.controller("QuestionViewController",
+	["$scope", "$log", "$routeParams", "$location", "AnswerResource", "Authorize", "QuestionResource", "QuestionCommentResource",
+			 "AttachmentResource", "CoursesCriteriaResource", "JudgementResource", "EvalCommentResource", "CourseResource", 
+			 "required_rounds", "Session", "Toaster", "AnswerCommentResource", "GroupResource",
 	function($scope, $log, $routeParams, $location, AnswerResource, Authorize, QuestionResource, QuestionCommentResource,
-			 AttachmentResource, CoursesCriteriaResource, JudgementResource, EvalCommentResource, CourseResource, required_rounds, Session, Toaster,
-			AnswerCommentResource, GroupResource)
+			 AttachmentResource, CoursesCriteriaResource, JudgementResource, EvalCommentResource, CourseResource, 
+			 required_rounds, Session, Toaster, AnswerCommentResource, GroupResource)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
@@ -697,8 +706,10 @@ module.controller("QuestionViewController",
 			$scope.updateAnswerList();
 		};
 	}
-);
+]);
 module.controller("QuestionCreateController",
+	[ "$scope", "$log", "$location", "$routeParams", "QuestionResource", "CoursesCriteriaResource",
+			 "QuestionsCriteriaResource", "required_rounds", "Toaster", "attachService", "SelfEvaluationTypeResource",
 	function($scope, $log, $location, $routeParams, QuestionResource, CoursesCriteriaResource,
 			 QuestionsCriteriaResource, required_rounds, Toaster, attachService, SelfEvaluationTypeResource)
 	{
@@ -847,9 +858,12 @@ module.controller("QuestionCreateController",
 			}
 		);
 	}
-);
+]);
 
 module.controller("QuestionEditController",
+	[ "$scope", "$log", "$location", "$routeParams", "$filter", "QuestionResource", "AttachmentResource",
+			 "QuestionsCriteriaResource", "CoursesCriteriaResource", "required_rounds", "Toaster",
+			 "SelfEvaluationTypeResource", "attachService",
 	function($scope, $log, $location, $routeParams, $filter, QuestionResource, AttachmentResource,
 			 QuestionsCriteriaResource, CoursesCriteriaResource, required_rounds, Toaster,
 			 SelfEvaluationTypeResource, attachService)
@@ -1059,7 +1073,7 @@ module.controller("QuestionEditController",
 			);
 		};
 	}
-);
+]);
 
 // End anonymous function
 })();

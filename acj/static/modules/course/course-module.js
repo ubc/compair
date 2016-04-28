@@ -21,7 +21,9 @@ var module = angular.module('ubc.ctlt.acj.course',
 );
 
 /***** Providers *****/
-module.factory('CourseResource', function($q, $routeParams, $log, $resource, Interceptors)
+module.factory('CourseResource', 
+	["$q", "$routeParams", "$log", "$resource", "Interceptors", 
+	function($q, $routeParams, $log, $resource, Interceptors)
 {
 	var url = '/api/courses/:id';
 	var ret = $resource('/api/courses/:id', {id: '@id'},
@@ -42,11 +44,13 @@ module.factory('CourseResource', function($q, $routeParams, $log, $resource, Int
 		// being used, this is for permissions checking
 		// and should match the server side model name
 	return ret;
-});
+}]);
 
 /***** Controllers *****/
 module.controller(
 	'CourseQuestionsController',
+	["$scope", "$log", "$routeParams", "CourseResource", "QuestionResource", "Authorize",
+			 "AnswerCommentResource", "AuthenticationService", "required_rounds", "Toaster",
 	function($scope, $log, $routeParams, CourseResource, QuestionResource, Authorize,
 			 AnswerCommentResource, AuthenticationService, required_rounds, Toaster)
 	{
@@ -198,7 +202,7 @@ module.controller(
 			}
 		}
 	}
-);
+]);
 
 module.controller(
 	'CourseController', ['$scope', '$log', '$route', '$routeParams', '$location', 'Session', 'Authorize',

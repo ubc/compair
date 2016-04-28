@@ -16,6 +16,7 @@ var module = angular.module('ubc.ctlt.acj.group',
 /***** Providers *****/
 module.factory(
 	"GroupResource",
+	["$resource", "Interceptors",
 	function ($resource, Interceptors)
 	{
 		var url = '/api/courses/:courseId/groups/:groupId';
@@ -30,12 +31,13 @@ module.factory(
 		ret.MODEL = 'Groups';
 		return ret;
 	}
-);
+]);
 
 /***** Controllers *****/
 module.controller(
 	'GroupImportController',
-	function($scope, $log, $location,$routeParams, CourseResource, Toaster, importService)
+	["$scope", "$log", "$location", "$routeParams", "CourseResource", "Toaster", "importService",
+	function($scope, $log, $location, $routeParams, CourseResource, Toaster, importService)
 	{
 		$scope.course = {};
 		var courseId = $routeParams['courseId'];
@@ -70,10 +72,11 @@ module.controller(
 			$scope.uploader.uploadAll();
 		};
 	}
-);
+]);
 
 module.controller(
 	'GroupImportResultsController',
+	["$scope", "$log", "$location", "$routeParams", "CourseResource", "Toaster", "importService",
 	function($scope, $log, $location, $routeParams, CourseResource, Toaster, importService)
 	{
 		$scope.invalids = importService.getResults().invalids;
@@ -83,6 +86,6 @@ module.controller(
 		// TODO: change "Row" to something more meaningful
 		$scope.headers = ['Row', 'Message'];
 	}
-);
+]);
 
 })();
