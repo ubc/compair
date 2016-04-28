@@ -43,6 +43,16 @@ module.exports.httpbackendMock = function(storageFixture) {
             // questionId -> [answerId]
             question_answers: {},
             criteria: [],
+            groups: [],
+            // userId -> [groupId]
+            user_group: {},
+            user_search_results: {
+                "objects": [],
+                "page":1,
+                "pages":1,
+                "per_page":20,
+                "total":0
+            },
             selfEvalTypes: [
                 { "id": 1, "name": "No Comparison with Another Answer" }
             ],
@@ -155,6 +165,9 @@ module.exports.httpbackendMock = function(storageFixture) {
             
             return [200, returnData, {}]
         });
+        
+        // search for user by text
+        $httpBackend.whenGET(/\/api\/users\?search\=.*$/).respond(storage.user_search_results);
         
         // get edit button availability
         $httpBackend.whenGET(/\/api\/users\/\d+\/edit$/).respond(function(method, url, data, headers) {
@@ -303,6 +316,106 @@ module.exports.httpbackendMock = function(storageFixture) {
             return [200, { 'objects': criteriaList }, {}];
         });
         
+        
+        // get course users by course id
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/users$/).respond(function(method, url, data, headers){
+            var courseId = url.replace('/users', '').split('/').pop();
+            
+            var userList = [];
+            
+            angular.forEach(storage.users, function(user) {
+                if (storage.users_and_courses[user.id]) {
+                    angular.forEach(storage.users_and_courses[user.id], function(userCoruseInfo) {
+                        
+                        if (courseId == userCoruseInfo.courseId) {
+                            var user_copy = angular.copy(user);
+                            user_copy.course_role = storage.courseroles[userCoruseInfo.role-2].name;
+                            user_copy.group_id = 0;
+                            
+                            if (storage.user_group[user.id]) {
+                                user_copy.group_id = storage.user_group[user.id];
+                            }
+                            
+                            userList.push(user_copy);
+                        }
+                    });
+                }
+            });
+            
+            return [200, { 'objects': userList }, {}];
+        });
+        
+        // get course groups by course id
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/groups$/).respond({ 'groups': storage.groups });
+        
+        // update user role in course
+        $httpBackend.whenPOST(/\/api\/courses\/\d+\/users\/\d+$/).respond(function(method, url, data, headers) {
+            data = JSON.parse(data);
+            var courseId = url.split('/')[3];
+            var userId = url.split('/').pop();
+            var courseRoleId = data.course_role_id;
+            
+            storage.users_and_courses[userId] = [
+                { courseId: courseId, role: courseRoleId }
+            ];
+            
+            var returnData = {
+                course_role: storage.courseroles[courseRoleId-2].name,
+                fullname: storage.users[userId-1].fullname,
+                user_id: userId
+            }
+            
+            return [200, returnData, {}];
+        });
+        
+        // drop user from coruse
+        $httpBackend.whenDELETE(/\/api\/courses\/\d+\/users\/\d+$/).respond(function(method, url, data, headers) {
+            var userId = url.split('/').pop();
+            
+            storage.users_and_courses[userId] = [];
+            
+            var returnData = {
+                "user": {
+                    "fullname": storage.users[userId-1].fullname,
+                    "id": userId
+                }, 
+                "usertypesforcourse": {
+                    "id": 1, 
+                    "name": "Dropped"
+                }
+            }
+            
+            return [200, returnData, {}];
+        });
+        
+        // update user group in course
+        $httpBackend.whenPOST(/\/api\/courses\/\d+\/users\/\d+\/groups\/\d+$/).respond(function(method, url, data, headers) {
+            var userId = url.split('/')[5];
+            var groupId = url.split('/').pop();
+            
+            storage.user_group[userId] = groupId;
+            
+            var returnData = {
+                "groups_name": storage.groups[groupId-1].name
+            };
+            
+            return [200, returnData, {}];
+        });
+        
+        // remove user from groups in course
+        $httpBackend.whenDELETE(/\/api\/courses\/\d+\/users\/\d+\/groups$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
+            var userId = url.split('/')[5];
+            
+            delete storage.user_group[userId];
+            
+            var returnData = {
+                "course_id": courseId,
+                "user_id": userId
+            };
+            
+            return [200, returnData, {}];
+        });
         
         $httpBackend.whenGET(/\/api\/courses\/\d+\/judgements\/availpair$/).respond({
             "availPairsLogic": {}

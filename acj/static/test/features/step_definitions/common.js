@@ -30,9 +30,17 @@ var commonStepDefinitionsWrapper = function() {
                     return fillElement.clear().then(function() {
                         return fillElement.sendKeys(item.content);
                     });
+                } else if (tagName == 'select') {
+					if (browser.browserName == "firefox") {
+						fillElement.click();
+					}
+					fillElement.sendKeys(item.content);
+					
+					// force blur
+                    return element(by.css("body")).click();
                 } else {
                     return fillElement.sendKeys(item.content);
-                }
+				}
             });
         });
         
@@ -101,6 +109,7 @@ var commonStepDefinitionsWrapper = function() {
 	this.When(/^I should be on the "([^"]*)" page$/, function (page, done) {
 		var page_regex = {
 			'course': /.*\/course\/\d+$/,
+			'manage users': /.*\/course\/\d+\/user$/,
             'edit course': /.*\/course\/\d+\/configure$/,
 			'profile': /.*\/user\/\d+$/,
             'create user': /.*\/user\/create$/,
@@ -120,6 +129,14 @@ var commonStepDefinitionsWrapper = function() {
     
 	this.Then(/^I should not see "([^"]*)" on the page$/, function (locator, done) {
         expect(element(by.css(locator)).isPresent()).to.eventually.equal(false).and.notify(done);
+	});
+	
+	this.Then("I should see a success message", function (done) {
+		expect(element(by.css("#toast-container .toast.toast-success")).isPresent()).to.eventually.equal(true).and.notify(done);
+	});
+	
+	this.Then("I should see a failure message", function (done) {
+		expect(element(by.css("#toast-container .toast.toast-error")).isPresent()).to.eventually.equal(true).and.notify(done);
 	});
 
     // pause test (helpful for debugging)

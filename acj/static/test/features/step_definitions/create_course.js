@@ -7,7 +7,7 @@ chai.use(chaiAsPromised);
 var expect = chai.expect;
 
 var createCourseStepDefinitionsWrapper = function () {
-	this.Given(/^I fill in the course description with "([^"]*)"$/, function(text, done) {
+    this.Given(/^I fill in the course description with "([^"]*)"$/, function(text, done) {
         //load the ckeditor iframe
         browser.wait(browser.isElementPresent(element(by.css("#cke_courseDescription iframe"))), 1000);
         browser.driver.switchTo().frame(element(by.css("#cke_courseDescription iframe")).getWebElement());
@@ -16,6 +16,6 @@ var createCourseStepDefinitionsWrapper = function () {
         browser.driver.findElement(by.css("body")).sendKeys(text);
         browser.driver.switchTo().defaultContent();
         done();
-	});
+    });
 };
 module.exports = createCourseStepDefinitionsWrapper;
