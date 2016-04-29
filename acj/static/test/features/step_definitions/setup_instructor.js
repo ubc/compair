@@ -40,6 +40,14 @@ var setupInstructorStepDefinitionsWrapper = function () {
         done();
 	});
     
+	this.Given("I'm an Instructor with questions", function (done) {
+        var fixture  = require('../../fixtures/instructor/has_questions_fixture.js');
+		backEndMocks.build(browser, fixture);
+        
+		loginDialog.get('/');
+		loginDialog.login(fixture.loginDetails);
+        done();
+	});
 };
 
 module.exports = setupInstructorStepDefinitionsWrapper;

@@ -37,6 +37,11 @@ module.exports.httpbackendMock = function(storageFixture) {
             course_questions: {},
             // questionId -> [criteriaId]
             question_criteria: {},
+            answers: [],
+            // courseId -> [answerId]
+            course_answers: {},
+            // questionId -> [answerId]
+            question_answers: {},
             criteria: [],
             selfEvalTypes: [
                 { "id": 1, "name": "No Comparison with Another Answer" }
@@ -98,7 +103,6 @@ module.exports.httpbackendMock = function(storageFixture) {
         // get user by id
         $httpBackend.whenGET(/^\/api\/users\/\d+$/).respond(function(method, url, data, headers) {
             var id = url.split('/').pop();
-            console.log(storage.users[id-1]);
             return [200, storage.users[id-1], {}];
         });
         
@@ -269,16 +273,11 @@ module.exports.httpbackendMock = function(storageFixture) {
             
             var criteriaList = [];
             
-            console.log(criteriaList);
-            
             if (storage.course_criteria[id]) {
                 angular.forEach(storage.course_criteria[id], function(criteriaId) {
-                    console.log(criteriaId, storage.criteria[criteriaId-1]);
                     criteriaList.push(storage.criteria[criteriaId-1]);
                 });
             }
-            
-            console.log(criteriaList);
             
             return [200, { 'objects': criteriaList }, {}];
         });
@@ -290,8 +289,26 @@ module.exports.httpbackendMock = function(storageFixture) {
         $httpBackend.whenGET(/\/api\/courses\/\d+\/judgements\/count$/).respond({
             "judgements": 0
         });
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/answers\/answered$/).respond({
-            "answered": {}
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/answers\/answered$/).respond(function(method, url, data, headers){
+            var courseId = url.split('/')[3];
+            var currentUser = angular.copy(storage.users[storage.loginDetails.id-1]);
+            
+            var answered = {};
+            
+            // get all answers in course
+            if (storage.course_answers[courseId]) {
+                angular.forEach(storage.course_answers[courseId], function(answerId) {
+                    var answer = storage.answers[answerId-1];
+                    
+                    // if answer is by current user, set answered to true for question
+                    if (answer.user_id == currentUser.id) {
+                        answered[answer.questions_id] = 1;
+                    }
+                });
+            }
+            
+            
+            return [200, { 'answered': answered }, {}];
         });
         
         /*
