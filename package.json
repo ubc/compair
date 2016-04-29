@@ -38,6 +38,7 @@
     "karma-phantomjs-launcher": "~0.2",
     "phantomjs": "~2.1",
     "lodash": "^3.10",
-    "protractor": "~2.5.1"
+    "protractor": "~3.2.2",
+    "object-assign": "~4.0"
   }
 }
