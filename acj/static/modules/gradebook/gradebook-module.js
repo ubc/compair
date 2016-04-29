@@ -21,15 +21,18 @@ var module = angular.module('ubc.ctlt.acj.gradebook',
 /***** Providers *****/
 module.factory(
 	'GradebookResource',
+	['$resource',
 	function($resource)
 	{
 		var ret = $resource('/api/courses/:courseId/questions/:questionId/gradebook');
 		return ret;
 	}
-);
+]);
 
 /***** Controllers *****/
 module.controller("GradebookController",
+	["$scope", "$log", "$routeParams", "CourseResource", "GradebookResource", 
+		"GroupResource", "QuestionResource", "Authorize", "Toaster", "QuestionsCriteriaResource",
 	function($scope, $log, $routeParams, CourseResource, GradebookResource, 
 		GroupResource, QuestionResource, Authorize, Toaster, QuestionsCriteriaResource)
 	{
@@ -124,7 +127,7 @@ module.controller("GradebookController",
 		}
 
 	}
-);
+]);
 
 // End anonymous function
 })();

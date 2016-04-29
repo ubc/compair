@@ -16,7 +16,7 @@ var module = angular.module('ubc.ctlt.acj.login',
 );
 
 /***** Providers *****/
-module.factory('LoginResource', function($resource) {
+module.factory('LoginResource', ["$resource", function($resource) {
 	return $resource(
 		'/api/:operation',
 		{},
@@ -25,7 +25,7 @@ module.factory('LoginResource', function($resource) {
 			logout: { method:'DELETE', params: {operation: "logout"} }
 		}
 	);
-});
+}]);
 
 /***** Directives *****/
 // TODO this might be useful elsewhere, if we need to autofocus something
@@ -33,7 +33,7 @@ module.factory('LoginResource', function($resource) {
 // it only works before onload, so it doesn't do anything if we pop the login modal
 // after the entire page has been loaded.
 // The timeout forces a wait for the loginbox to be rendered.
-module.directive('autoFocus', function($timeout, $log) {
+module.directive('autoFocus', ["$timeout", "$log", function($timeout, $log) {
     return {
         restrict: 'AC',
         link: function(scope, _element, attr) {
@@ -42,11 +42,13 @@ module.directive('autoFocus', function($timeout, $log) {
             }, 100);
         }
     };
-});
+}]);
 
 /***** Listeners *****/
 // display the login page if user is not logged in
-module.run(function ($rootScope, $route, $location, $log, $modal, $cacheFactory, AuthenticationService, Toaster, $http) {
+module.run(
+	["$rootScope", "$route", "$location", "$log", "$modal", "$cacheFactory", "AuthenticationService", "Toaster", "$http",
+	function ($rootScope, $route, $location, $log, $modal, $cacheFactory, AuthenticationService, Toaster, $http) {
 	// Create a modal dialog box for containing the login form
 	var loginBox;
 	var isOpen = false;
@@ -98,12 +100,14 @@ module.run(function ($rootScope, $route, $location, $log, $modal, $cacheFactory,
 //			$route.reload();
 //		}
 //	});
-});
+}]);
 
 
 /***** Controllers *****/
 module.controller(
 	"LoginController",
+	[ "$rootScope", "$scope", "$location", "$log", "$route",
+	  "LoginResource", "AuthenticationService",
 	function LoginController($rootScope, $scope, $location, $log, $route,
 							 LoginResource,
 							 AuthenticationService)
@@ -150,10 +154,11 @@ module.controller(
 
 		};
 	}
-);
+]);
 
 module.controller(
 	"LogoutController",
+	[ "$scope", "$location", "$log", "$route", "LoginResource", "AuthenticationService", "Toaster",
 	function LogoutController($scope, $location, $log, $route, LoginResource, AuthenticationService, Toaster) {
 		$scope.logout = function() {
 			return LoginResource.logout().$promise.then(
@@ -172,6 +177,6 @@ module.controller(
 			);
 		};
 	}
-);
+]);
 // End anonymous function
 })();

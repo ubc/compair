@@ -21,6 +21,8 @@ var module = angular.module('ubc.ctlt.acj.home',
 /***** Controllers *****/
 module.controller(
 	'HomeController',
+    ["$rootScope", "$scope", "$location", "$log",
+     "Session", "AuthenticationService", "Authorize", "CourseResource", "Toaster", "UserResource",
 	function HomeController($rootScope, $scope, $location, $log,
                             Session,
 							AuthenticationService,
@@ -46,6 +48,6 @@ module.controller(
             );
         });
 	}
-);
+]);
 // End anonymous function
 })();

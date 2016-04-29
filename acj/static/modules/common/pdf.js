@@ -2,10 +2,10 @@
 // http://viewerjs.org/
 (function() {
 var module = angular.module('ubc.ctlt.acj.common.pdf', ['ui.bootstrap'])
-	.run(function ($http, $templateCache){
+	.run([ "$http", "$templateCache", function ($http, $templateCache){
 		// load the template into cache - but this breaks the overlay, as the file will not load, so commenting it out
 		// $http.get('modules/common/pdf-overlaid-template.html', {cache:$templateCache});
-	});
+	}]);
 
 // Display a PDF in a viewerjs iframe.
 // Assumes that all PDF files are in the static/pdf directory in ACJ
@@ -20,7 +20,7 @@ module.directive('acjPdfInline', function() {
 			pdfs: '=',
 			label: '@'
 		},
-		controller: function ($scope, $log, $sce, $modal) {
+		controller: ["$scope", "$log", "$sce", "$modal", function ($scope, $log, $sce, $modal) {
 			$scope.pdfname = "";
 			$scope.updatePDF = function (name) {
 				if (name != $scope.pdfname) {
@@ -42,7 +42,7 @@ module.directive('acjPdfInline', function() {
 					scope: $scope
 				});
 			}
-		}
+		}]
 	};
 });
 

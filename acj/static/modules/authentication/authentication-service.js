@@ -10,6 +10,7 @@ var module = angular.module(
 );
 
 module.factory('AuthenticationService',
+	["$rootScope", "$resource", "$log", "$http", "$q", "authService", "Session",
 	function ($rootScope, $resource, $log, $http, $q, authService, Session) {
 		return {
 			// Use these constants to listen to login or logout events.
@@ -38,7 +39,7 @@ module.factory('AuthenticationService',
 			}
 		};
 	}
-);
+]);
 
 // end anonymous function
 })();

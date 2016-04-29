@@ -22,6 +22,8 @@ var module = angular.module('ubc.ctlt.acj.navbar',
 /***** Controllers *****/
 module.controller(
 	"NavbarController",
+	["$scope", "$log", "$route", "breadcrumbs",
+		"Session", "AuthenticationService", "Authorize", "CourseResource", "UserResource", "QuestionResource",
 	function NavbarController($scope, $log, $route, breadcrumbs,
 		Session, AuthenticationService, Authorize, CourseResource, UserResource, QuestionResource)
 	{
@@ -98,7 +100,7 @@ module.controller(
 			steps.unshift({element: '#stepTutorial', intro: intro});
 		});
 	}
-);
+]);
 
 // End anonymous function
 })();

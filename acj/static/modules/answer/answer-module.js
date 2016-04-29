@@ -91,6 +91,8 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
 /***** Controllers *****/
 module.controller(
 	"AnswerCreateController",
+	["$scope", "$log", "$location", "$routeParams", "AnswerResource", "ClassListResource",
+		"QuestionResource", "TimerResource", "Toaster", "Authorize", "attachService", "Session", "$timeout",
 	function ($scope, $log, $location, $routeParams, AnswerResource, ClassListResource,
 		QuestionResource, TimerResource, Toaster, Authorize, attachService, Session, $timeout)
 	{
@@ -180,10 +182,12 @@ module.controller(
 				);
 		};
 	}
-);
+]);
 
 module.controller(
 	"AnswerEditController",
+	["$scope", "$log", "$location", "$routeParams", "AnswerResource", "$timeout",
+		"QuestionResource", "TimerResource", "AttachmentResource", "attachService", "Toaster", "Authorize",
 	function ($scope, $log, $location, $routeParams, AnswerResource, $timeout,
 		QuestionResource, TimerResource, AttachmentResource, attachService, Toaster, Authorize)
 	{
@@ -278,7 +282,7 @@ module.controller(
 			);
 		};
 	}
-);
+]);
 
 // End anonymous function
 })();
