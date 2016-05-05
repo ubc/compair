@@ -68,7 +68,7 @@ storage.course_criteria[course1.id] = [1];
 storage.course_criteria[course2.id] = [1];
 
 storage.loginDetails = { id: student.id, username: student.username, password: "password" };
-var session = sessionFactory.generateSession(student.id, student.system_role, {
+storage.session = sessionFactory.generateSession(student.id, student.system_role, {
     "Courses": {
         "delete": {'1': false, '2': false},
         "edit": {'1': false, '2': false},
@@ -83,6 +83,5 @@ var session = sessionFactory.generateSession(student.id, student.system_role, {
         "read": {'1': true, '2': true}
     },
 });
-storage.session = session;
 
 module.exports = storage;

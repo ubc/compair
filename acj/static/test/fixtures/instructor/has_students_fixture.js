@@ -71,7 +71,7 @@ storage.users_and_courses[student1.id] = [
 
 
 storage.loginDetails = { id: instructor.id, username: instructor.username, password: "password" };
-var session = sessionFactory.generateSession(instructor.id, instructor.system_role, {
+storage.session = sessionFactory.generateSession(instructor.id, instructor.system_role, {
     "Courses": {
         "delete": {'1': false},
         "edit": {'1': true},
@@ -79,7 +79,6 @@ var session = sessionFactory.generateSession(instructor.id, instructor.system_ro
         "read": {'1': true}
     }
 });
-storage.session = session;
 
 
 module.exports = storage;

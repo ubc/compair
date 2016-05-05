@@ -21,6 +21,7 @@ module.exports.httpbackendMock = function(storageFixture) {
             "created": "Sun, 11 Jan 2015 07:45:31 -0000",
             "modified": "Sun, 11 Jan 2015 07:45:31 -0000"
         };
+
         
         var storage = {
             loginDetails: { id: null, username: null, password: null },
@@ -36,7 +37,7 @@ module.exports.httpbackendMock = function(storageFixture) {
             course_questions: {},
             // questionId -> [criteriaId]
             question_criteria: {},
-            criteria: [default_criteria],
+            criteria: [],
             selfEvalTypes: [
                 { "id": 1, "name": "No Comparison with Another Answer" }
             ],
@@ -54,6 +55,11 @@ module.exports.httpbackendMock = function(storageFixture) {
         // add fixture data to storage
         if (storageFixture) {
             storage = angular.merge({}, storage, storageFixture);
+        }
+        
+        // add default criteria is storage criteria is empty 
+        if (storage.criteria.length == 0) {
+            storage.criteria.push(default_criteria);
         }
         
         // Start Session

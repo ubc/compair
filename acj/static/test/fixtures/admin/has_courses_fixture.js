@@ -53,7 +53,6 @@ storage.course_criteria[course2.id] = [1];
 
 
 storage.loginDetails = { id: admin.id, username: admin.username, password: "password" };
-var session = sessionFactory.generateSession(admin.id, admin.system_role, {});
-storage.session = session;
+storage.session = sessionFactory.generateSession(admin.id, admin.system_role, {});
 
 module.exports = storage;
