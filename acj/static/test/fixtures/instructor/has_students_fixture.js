@@ -7,11 +7,17 @@ var sessionFactory = new SessionFactory();
 var CourseFactory  = require('../../factories/course_factory.js');
 var courseFactory = new CourseFactory();
 
+var GroupFactory  = require('../../factories/group_factory.js');
+var groupFactory = new GroupFactory();
+
 var storage = {
     session: {},
     users: [],
     courses: [],
-    users_and_courses: []
+    users_and_courses: [],
+    groups: [],
+    user_group: {},
+    user_search_results: {}
 }
 
 var admin = userFactory.generateUser(1, "System Administrator", {
@@ -60,6 +66,15 @@ var course = courseFactory.generateCourse(1, {
 });
 storage.courses.push(course);
 
+var group1 = groupFactory.generateGroup(1, "First Group");
+storage.groups.push(group1);
+var group2 = groupFactory.generateGroup(2, "Second Group");
+storage.groups.push(group2);
+var group3 = groupFactory.generateGroup(3, "Third Group");
+storage.groups.push(group2);
+storage.user_group[student1.id] = group1.id
+
+
 // users_and_courses
 storage.users_and_courses[instructor.id] = [
     { courseId: course.id, role: 2 }
@@ -68,6 +83,10 @@ storage.users_and_courses[instructor.id] = [
 storage.users_and_courses[student1.id] = [
     { courseId: course.id, role: 4 }
 ];
+
+// user_search_results
+storage.user_search_results.objects = [student2];
+storage.user_search_results.total = 1;
 
 
 storage.loginDetails = { id: instructor.id, username: instructor.username, password: "password" };

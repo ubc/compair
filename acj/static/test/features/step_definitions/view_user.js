@@ -7,18 +7,16 @@ chai.use(chaiAsPromised);
 var expect = chai.expect;
 
 var viewUserStepDefinitionsWrapper = function () {
-    //root's Profile 
-    //student1's Profile 
     
-	this.Then(/^I should see the edit profile button$/, function (done) {
+    this.Then(/^I should see the edit profile button$/, function (done) {
         expect(element(by.css("#edit-profile-btn")).isPresent()).to.eventually.equal(true).and.notify(done);
     });
     
-	this.Then(/^I should not see the edit profile button$/, function (done) {
+    this.Then(/^I should not see the edit profile button$/, function (done) {
         expect(element(by.css("#edit-profile-btn")).isPresent()).to.eventually.equal(false).and.notify(done);
     });
     
-	this.Then(/^I should see root's profile$/, function (done) {
+    this.Then(/^I should see root's profile$/, function (done) {
         expect(element(by.css("h1")).getText()).to.eventually.equal("root's Profile");
         expect(element(by.css("#user_system_role")).getText()).to.eventually.equal("System Administrator");
         expect(element(by.css("#user_username")).getText()).to.eventually.equal("root");
@@ -31,9 +29,9 @@ var viewUserStepDefinitionsWrapper = function () {
         expect(element(by.css("#user_lastonline")).isPresent()).to.eventually.equal(true);
         
         done();
-	});
+    });
     
-	this.Then(/^I should see First Instructor's profile$/, function (done) {
+    this.Then(/^I should see First Instructor's profile$/, function (done) {
         expect(element(by.css("h1")).getText()).to.eventually.equal("First Instructor's Profile");
         expect(element(by.css("#user_system_role")).getText()).to.eventually.equal("Instructor");
         expect(element(by.css("#user_username")).getText()).to.eventually.equal("instructor1");
@@ -46,9 +44,9 @@ var viewUserStepDefinitionsWrapper = function () {
         expect(element(by.css("#user_lastonline")).isPresent()).to.eventually.equal(true);
         
         done();
-	});
+    });
     
-	this.Then(/^I should see First Instructor's profile$/, function (done) {
+    this.Then(/^I should see First Instructor's profile$/, function (done) {
         expect(element(by.css("h1")).getText()).to.eventually.equal("First Instructor's Profile");
         expect(element(by.css("#user_system_role")).getText()).to.eventually.equal("Instructor");
         expect(element(by.css("#user_username")).getText()).to.eventually.equal("instructor1");
@@ -61,9 +59,9 @@ var viewUserStepDefinitionsWrapper = function () {
         expect(element(by.css("#user_lastonline")).isPresent()).to.eventually.equal(true);
         
         done();
-	});
+    });
     
-	this.Then(/^I should see the student view of First Instructor's profile$/, function (done) {
+    this.Then(/^I should see the student view of First Instructor's profile$/, function (done) {
         expect(element(by.css("h1")).getText()).to.eventually.equal("First Instructor's Profile");
         expect(element(by.css("#user_displayname")).getText()).to.eventually.equal("First Instructor");
         
@@ -77,9 +75,9 @@ var viewUserStepDefinitionsWrapper = function () {
         expect(element(by.css("#user_email")).isPresent()).to.eventually.equal(false);
         
         done();
-	});
+    });
     
-	this.Then(/^I should see First Student's profile$/, function (done) {
+    this.Then(/^I should see First Student's profile$/, function (done) {
         expect(element(by.css("h1")).getText()).to.eventually.equal("First Student's Profile");
         expect(element(by.css("#user_system_role")).getText()).to.eventually.equal("Student");
         expect(element(by.css("#user_username")).getText()).to.eventually.equal("student1");
@@ -92,7 +90,7 @@ var viewUserStepDefinitionsWrapper = function () {
         expect(element(by.css("#user_lastonline")).isPresent()).to.eventually.equal(true);
         
         done();
-	});
+    });
 };
 
 module.exports = viewUserStepDefinitionsWrapper;
