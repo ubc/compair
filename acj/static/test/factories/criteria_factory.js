@@ -6,7 +6,7 @@ var criteriaTemplate = {
     "name": null, 
     "description": null,
     "default": true, 
-    "judged": true,  
+    "judged": false,  
     "created": "Mon, 18 Apr 2016 17:38:23 -0000", 
     "modified": "Mon, 18 Apr 2016 17:38:23 -0000", 
 }
@@ -16,7 +16,7 @@ function CriteriaFactory() {};
 CriteriaFactory.prototype.generateCriteria = function (id, user_id, parameters) {
     var newCriteria = objectAssign({}, criteriaTemplate, parameters);
     newCriteria.id = id;
-    newCriteria.user_id = user_id;
+    newCriteria.users_id = user_id;
     
     return newCriteria;
 };

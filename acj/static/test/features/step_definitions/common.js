@@ -89,13 +89,19 @@ var commonStepDefinitionsWrapper = function() {
     
     //submit form button
 	this.When(/^I submit form with "([^"]*)" button$/, function (button) {
-		return element(by.css('input[type=submit][value='+button+']')).click();
+		return element(by.css('input[type=submit][value="'+button+'"]')).click();
+	});
+    
+    //submit modal form button
+	this.When(/^I submit modal form with "([^"]*)" button$/, function (button) {
+		return element(by.css('.modal input[type=button][value="'+button+'"]')).click();
 	});
 
     // page verification
 	this.When(/^I should be on the "([^"]*)" page$/, function (page, done) {
 		var page_regex = {
 			'course': /.*\/course\/\d+$/,
+            'edit course': /.*\/course\/\d+\/configure$/,
 			'profile': /.*\/user\/\d+$/,
             'create user': /.*\/user\/create$/,
 			'edit profile': /.*\/user\/\d+\/edit$/

@@ -16,10 +16,10 @@ Feature: Create Question
   Scenario: Creating a question as instructor
     Given I'm an Instructor with courses
     And I'm on "create question" page for course with id "1"
-    And I fill in:
+    When I fill in:
       | element        | content       |
       | question.title | Test Question |
     And I select the first criteria
-    When I submit form with "Save" button
+    And I submit form with "Save" button
     Then I should be on the "course" page
     And I should see "Test Question »" in "h3" on the page

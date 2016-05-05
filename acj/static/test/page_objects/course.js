@@ -1,7 +1,8 @@
 var env = require('../env.js');
 
 var CoursePage = function() {
-	var addAssignmentButton = element(by.css('#add-question-btn'));
+	var addAssignmentButton = element(by.css('#add-question-btn')),
+        editCoruseButton = element(by.css('#edit-course-btn'));;
 
 	this.get = function(courseId) {
 		return browser.get(env.baseUrl + '#/course/' + courseId);
@@ -11,6 +12,8 @@ var CoursePage = function() {
         switch (button) {
             case "Add Assignment":
                 return addAssignmentButton.click();
+            case "Edit Course":
+                return editCoruseButton.click();
         }
     }
 };
