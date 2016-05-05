@@ -7,11 +7,11 @@ exports.config = {
         format: 'pretty'
     },
     multiCapabilities: [ {
-        'browserName': 'firefox',
+        'browserName': 'chrome',
         'tunnel-identifier': process.env.TRAVIS_JOB_NUMBER,
         'build': process.env.TRAVIS_BUILD_NUMBER,
         'name': 'acj suite tests',
-        'version': '34',
+        'version': '50',
         'selenium-version': '2.44.0'
     }],
 };

@@ -31,6 +31,15 @@ var setupStudentStepDefinitionsWrapper = function () {
         done();
 	});
     
+	this.Given("I'm a Student with questions", function (done) {
+        var fixture  = require('../../fixtures/student/has_questions_fixture.js');
+		backEndMocks.build(browser, fixture);
+        
+		loginDialog.get('/');
+		loginDialog.login(fixture.loginDetails);
+        done();
+	});
+    
 };
 
 module.exports = setupStudentStepDefinitionsWrapper;
