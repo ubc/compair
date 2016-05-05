@@ -184,7 +184,23 @@ module.exports.httpbackendMock = function(storageFixture) {
             }
             
             return [200, { "available": available }, {}];
+        });  
+        
+        // update user details
+        $httpBackend.whenPOST(/^\/api\/users\/\d+$/).respond(function(method, url, data, headers) {
+            var data = JSON.parse(data);
+            var editId = url.split('/').pop();
+            storage.users[editId-1] = data;
+            return [200, data, {}];
         });
+
+        // update user password
+        $httpBackend.whenPOST(/^\/api\/users\/\d+\/password$/).respond(function(method, url, data, headers) {
+            var editId = url.split('/')[3];
+            //no need to actually change the password
+            return [200, storage.users[editId-1], {}];
+        });
+
         
         // End User
         

@@ -71,7 +71,14 @@ storage.users_and_courses[student1.id] = [
 
 
 storage.loginDetails = { id: instructor.id, username: instructor.username, password: "password" };
-var session = sessionFactory.generateSession(instructor.id, instructor.system_role, {});
+var session = sessionFactory.generateSession(instructor.id, instructor.system_role, {
+    "Courses": {
+        "delete": {'1': false},
+        "edit": {'1': true},
+        "manage": {'1': false},
+        "read": {'1': true}
+    }
+});
 storage.session = session;
 
 
