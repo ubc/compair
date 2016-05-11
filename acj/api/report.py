@@ -10,9 +10,9 @@ from flask.ext.restful import Resource, reqparse
 
 from sqlalchemy import func
 
-from .authorization import require
-from .core import event
-from .models import \
+from acj.authorization import require
+from acj.core import event
+from acj.models import \
     PostsForQuestions, CoursesAndUsers, Courses, Posts, PostsForAnswers, UserTypesForCourse, \
     Judgements, AnswerPairings, PostsForAnswersAndPostsForComments, PostsForComments, \
     CriteriaAndPostsForQuestions, GroupsAndUsers, Groups

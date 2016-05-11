@@ -9,12 +9,12 @@ from flask.ext.restful import Resource
 from sqlalchemy import func, and_
 from sqlalchemy.orm import load_only, undefer, joinedload
 
-from .authorization import require
-from .models import Courses, PostsForQuestions, UserTypesForCourse, Users, CoursesAndUsers, Judgements, \
+from acj.authorization import require
+from acj.models import Courses, PostsForQuestions, UserTypesForCourse, Users, CoursesAndUsers, Judgements, \
     AnswerPairings, PostsForAnswersAndPostsForComments, PostsForAnswers, Posts, Scores, \
     PostsForComments
 from .util import new_restful_api
-from .core import event
+from acj.core import event
 
 
 

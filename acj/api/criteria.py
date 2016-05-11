@@ -6,9 +6,9 @@ from sqlalchemy import or_, and_
 from sqlalchemy.orm import load_only, contains_eager
 
 from . import dataformat
-from .core import event, db
-from .authorization import require, allow
-from .models import CriteriaAndCourses, Courses, Criteria, PostsForQuestions, CriteriaAndPostsForQuestions, \
+from acj.core import event, db
+from acj.authorization import require, allow
+from acj.models import CriteriaAndCourses, Courses, Criteria, PostsForQuestions, CriteriaAndPostsForQuestions, \
     Judgements, Posts
 from .util import new_restful_api
 

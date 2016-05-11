@@ -1,7 +1,7 @@
 from data.fixtures import PostsFactory, PostsForQuestionsFactory
 
 from acj.core import db
-from acj.util import get_model_changes
+from acj.api.util import get_model_changes
 from acj.tests.test_acj import ACJTestCase
 
 

@@ -7,10 +7,10 @@ from sqlalchemy.orm import load_only
 from sqlalchemy import exc, asc, or_
 
 from . import dataformat
-from .authorization import is_user_access_restricted, require, allow
-from .core import db, event
+from acj.authorization import is_user_access_restricted, require, allow
+from acj.core import db, event
 from .util import new_restful_api, get_model_changes, pagination_parser
-from .models import Users, UserTypesForSystem, Courses, UserTypesForCourse, PostsForQuestions, Posts
+from acj.models import Users, UserTypesForSystem, Courses, UserTypesForCourse, PostsForQuestions, Posts
 
 users_api = Blueprint('users_api', __name__)
 user_types_api = Blueprint('user_types_api', __name__)
