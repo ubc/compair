@@ -6,9 +6,9 @@ from sqlalchemy import exc
 from sqlalchemy.orm import joinedload, contains_eager, subqueryload
 
 from . import dataformat
-from .authorization import require
-from .core import db, event
-from .models import Courses, UserTypesForCourse, CoursesAndUsers, CriteriaAndCourses
+from acj.authorization import require
+from acj.core import db, event
+from acj.models import Courses, UserTypesForCourse, CoursesAndUsers, CriteriaAndCourses
 from .util import pagination, new_restful_api, get_model_changes
 
 courses_api = Blueprint('courses_api', __name__)

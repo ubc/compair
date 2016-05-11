@@ -10,11 +10,11 @@ from sqlalchemy.orm import load_only, joinedload, contains_eager
 from sqlalchemy.sql.expression import and_, or_
 
 from . import dataformat
-from .core import db, event
-from .models import Judgements, PostsForComments, PostsForJudgements, Courses, PostsForQuestions, Posts, \
+from acj.core import db, event
+from acj.models import Judgements, PostsForComments, PostsForJudgements, Courses, PostsForQuestions, Posts, \
     AnswerPairings, CoursesAndUsers, CriteriaAndPostsForQuestions, Users, \
     PostsForAnswersAndPostsForComments
-from .util import new_restful_api, pagination_parser
+from acj.util import new_restful_api, pagination_parser
 from .authorization import allow, require
 
 evalcomments_api = Blueprint('evalcomments_api', __name__)

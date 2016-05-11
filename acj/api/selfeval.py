@@ -4,8 +4,8 @@ from flask.ext.restful import Resource, marshal
 from sqlalchemy import func, and_
 
 from . import dataformat
-from .core import event
-from .models import SelfEvaluationTypes, PostsForAnswersAndPostsForComments, PostsForAnswers, Courses, \
+from acj.core import event
+from acj.models import SelfEvaluationTypes, PostsForAnswersAndPostsForComments, PostsForAnswers, Courses, \
     PostsForComments, Posts, PostsForQuestions
 from .util import new_restful_api
 

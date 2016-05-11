@@ -10,8 +10,8 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 
 from . import dataformat
-from .core import db, event
-from .models import FilesForPosts
+from acj.core import db, event
+from acj.models import FilesForPosts
 from .util import new_restful_api
 
 attachment_api = Blueprint('attachment_api', __name__)
