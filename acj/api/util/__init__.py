@@ -10,7 +10,7 @@ from flask.ext.restful import Api
 from flask.ext.sqlalchemy import Model
 from sqlalchemy import inspect
 
-from .core import db
+from acj.core import db
 
 
 def pagination(model):

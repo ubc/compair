@@ -10,9 +10,9 @@ from sqlalchemy import desc, or_
 from sqlalchemy.orm import joinedload, undefer_group, contains_eager
 
 from . import dataformat
-from .core import db, event
-from .authorization import allow, require
-from .models import PostsForQuestions, Courses, Posts, \
+from acj.core import db, event
+from acj.authorization import allow, require
+from acj.models import PostsForQuestions, Courses, Posts, \
     PostsForQuestionsAndSelfEvaluationTypes
 from .util import new_restful_api, get_model_changes
 from .attachment import add_new_file, delete_file

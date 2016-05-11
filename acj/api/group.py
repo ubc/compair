@@ -13,9 +13,9 @@ from flask.ext.restful.reqparse import RequestParser
 from flask.ext.login import current_user
 
 from . import dataformat
-from .authorization import require
-from .core import db, event
-from .models import Groups, GroupsAndUsers, CoursesAndUsers, Users, Courses, UserTypesForCourse
+from acj.authorization import require
+from acj.core import db, event
+from acj.models import Groups, GroupsAndUsers, CoursesAndUsers, Users, Courses, UserTypesForCourse
 from .util import new_restful_api
 from .attachment import allowed_file
 

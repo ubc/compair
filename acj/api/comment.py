@@ -7,10 +7,10 @@ from sqlalchemy import and_, or_
 from sqlalchemy.orm import load_only, joinedload, contains_eager
 
 from . import dataformat
-from .core import db
-from .authorization import require, allow, USER_IDENTITY
-from .core import event
-from .models import Posts, PostsForComments, PostsForAnswers, \
+from acj.core import db
+from acj.authorization import require, allow, USER_IDENTITY
+from acj.core import event
+from acj.models import Posts, PostsForComments, PostsForAnswers, \
     PostsForQuestions, Courses, PostsForQuestionsAndPostsForComments, \
     PostsForAnswersAndPostsForComments, UserTypesForCourse, UserTypesForSystem
 from .util import new_restful_api, get_model_changes, pagination_parser

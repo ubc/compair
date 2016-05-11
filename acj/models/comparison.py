@@ -7,6 +7,9 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from . import *
 
 from acj.core import db
+import acj.algorithms
+from acj.algorithms.comparison_pair import ComparisonPair
+from acj.algorithms.comparison_result import ComparisonResult
 
 class Comparison(DefaultTableMixin, WriteTrackingMixin):
     # table columns

@@ -11,10 +11,10 @@ from sqlalchemy import or_, and_
 from sqlalchemy.orm import load_only
 
 from . import dataformat
-from .core import db
+from acj.core import db
 from acj.authorization import require
-from .core import event
-from .models import PostsForAnswers, Posts, Judgements, AnswerPairings, Courses, \
+from acj.core import event
+from acj.models import PostsForAnswers, Posts, Judgements, AnswerPairings, Courses, \
     PostsForQuestions, CoursesAndUsers, UserTypesForCourse, CriteriaAndPostsForQuestions
 from .util import new_restful_api
 

@@ -7,13 +7,14 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import load_only, joinedload, contains_eager, undefer_group
 
 from . import dataformat
-from .core import db
-from .authorization import require, allow, is_user_access_restricted
-from .models import Posts, PostsForAnswers, PostsForQuestions, Courses, Users, \
+from acj.core import db
+from acj.authorization import require, allow, is_user_access_restricted
+from acj.models import Posts, PostsForAnswers, PostsForQuestions, Courses, Users, \
     Judgements, AnswerPairings, Scores, GroupsAndUsers, CoursesAndUsers, UserTypesForCourse
+    
 from .util import new_restful_api, get_model_changes, pagination_parser
 from .attachment import add_new_file, delete_file
-from .core import event
+from acj.core import event
 
 answers_api = Blueprint('answers_api', __name__)
 api = new_restful_api(answers_api)
