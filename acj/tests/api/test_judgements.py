@@ -363,13 +363,20 @@ class JudgementAPITests(ACJAPITestCase):
         that has more wins should have the highest scores.
         """
         # Make sure all answers are judged first
-        winner_ids = self._submit_all_possible_judgements_for_user(
-            self.data.get_authorized_student().id)['winners']
-        winner_ids.extend(self._submit_all_possible_judgements_for_user(
-            self.data.get_secondary_authorized_student().id)['winners'])
-
+        judgements_auth = self._submit_all_possible_judgements_for_user(
+            self.data.get_authorized_student().id)
+        judgements_secondary = self._submit_all_possible_judgements_for_user(
+            self.data.get_secondary_authorized_student().id)
+        
+        loser_ids = judgements_auth['losers']
+        loser_ids.extend(judgements_secondary['losers'])
+        winner_ids = judgements_auth['winners']
+        winner_ids.extend(judgements_secondary['winners'])
+        
         # Count the number of wins each answer has had
         num_wins_by_id = {}
+        for loser_id in loser_ids:
+            num_wins_by_id[loser_id] = num_wins_by_id.setdefault(loser_id, 0)
         for winner_id in winner_ids:
             num_wins = num_wins_by_id.setdefault(winner_id, 0)
             num_wins_by_id[winner_id] = num_wins + 1

@@ -1,7 +1,10 @@
 import unittest
 
-from acj.models import Users, Judgements, update_scores, WinsTable, Scores
+from acj.models import Users, Judgements, update_scores, Scores
 from test_acj import ACJTestCase
+import acj.algorithms
+from acj.algorithms.comparison_pair import ComparisonPair
+from acj.algorithms.comparison_result import ComparisonResult
 
 
 class TestUsersModel(ACJTestCase):
@@ -44,24 +47,35 @@ class TestJudgementModel(ACJTestCase):
 
 class TestUtils(ACJTestCase):
     def test_update_scores(self):
-        wins = WinsTable([1])
-        scores = update_scores([], [1, 2], [1], wins, {})
+    
+        criteria_comparison_results = {
+            1: acj.algorithms.calculate_scores(
+               [ComparisonPair(1,2, winning_key=1)], "acj", None
+            )
+        }
+        scores = update_scores([], criteria_comparison_results)
         self.assertEqual(len(scores), 2)
         for score in scores:
             self.assertIsNone(score.id)
 
         score = Scores(answers_id=1, criteriaandquestions_id=1, id=2)
-        scores = update_scores([score], [1, 2], [1], wins, {})
+        scores = update_scores([score], criteria_comparison_results)
         self.assertEqual(len(scores), 2)
         self.assertEqual(scores[0].id, 2)
         self.assertIsNone(scores[1].id)
 
-        wins = WinsTable([1, 2])
+    
+        criteria_comparison_results = {
+            1: acj.algorithms.calculate_scores(
+               [ComparisonPair(1,2, winning_key=1)], "acj", None
+            ),
+            2: acj.algorithms.calculate_scores(
+               [ComparisonPair(1,2, winning_key=1)], "acj", None
+            )
+        }
         score = Scores(answers_id=1, criteriaandquestions_id=1, id=2)
-        scores = update_scores([score], [1, 2], [1, 2], wins, {})
+        scores = update_scores([score], criteria_comparison_results)
         self.assertEqual(len(scores), 4)
-        # self.assertEqual(scores[0].id, 2)
-        # self.assertIsNone(scores[1].id)
 
 if __name__ == '__main__':
     unittest.main()
