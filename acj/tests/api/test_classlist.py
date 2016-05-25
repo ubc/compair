@@ -4,7 +4,7 @@ import io
 
 from data.fixtures.test_data import BasicTestData
 from acj.tests.test_acj import ACJAPITestCase
-from acj.models import UserTypesForCourse
+from acj.models import CourseRole
 
 
 class ClassListAPITest(ACJAPITestCase):
@@ -42,11 +42,11 @@ class ClassListAPITest(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual('text/csv', rv.content_type)
             reader = csv.reader(rv.data.decode(encoding='UTF-8').splitlines(), delimiter=',')
-            self.assertEqual(['username', 'student_no', 'firstname', 'lastname', 'email', 'displayname'], next(reader))
+            self.assertEqual(['username', 'student_number', 'firstname', 'lastname', 'email', 'displayname'], next(reader))
 
             for key, user in enumerate(expected):
                 self.assertEqual(
-                    [user.username, user.student_no or '', user.firstname, user.lastname, user.email, user.displayname],
+                    [user.username, user.student_number or '', user.firstname, user.lastname, user.email, user.displayname],
                     next(reader)
                 )
 
@@ -185,7 +185,7 @@ class ClassListAPITest(ACJAPITestCase):
             expected = {
                 'user_id': self.data.get_dropped_instructor().id,
                 'fullname': self.data.get_dropped_instructor().fullname,
-                'course_role': UserTypesForCourse.TYPE_INSTRUCTOR
+                'course_role': CourseRole.instructor.value
             }
             rv = self.client.post(
                 url,
@@ -199,7 +199,7 @@ class ClassListAPITest(ACJAPITestCase):
             expected = {
                 'user_id': self.data.get_unauthorized_instructor().id,
                 'fullname': self.data.get_unauthorized_instructor().fullname,
-                'course_role': UserTypesForCourse.TYPE_INSTRUCTOR
+                'course_role': CourseRole.instructor.value
             }
             rv = self.client.post(
                 url,
@@ -209,12 +209,11 @@ class ClassListAPITest(ACJAPITestCase):
             self.assertEqual(expected, rv.json)
 
             # test enrolling a different role - eg. Student
-            ta_role_id = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_TA).first().id
-            role = {'course_role_id': str(ta_role_id)}
+            role = {'course_role': CourseRole.teaching_assistant.value }
             expected = {
                 'user_id': self.data.get_unauthorized_instructor().id,
                 'fullname': self.data.get_unauthorized_instructor().fullname,
-                'course_role': UserTypesForCourse.TYPE_TA
+                'course_role': CourseRole.teaching_assistant.value
             }
             rv = self.client.post(
                 url,
@@ -225,7 +224,6 @@ class ClassListAPITest(ACJAPITestCase):
 
     def test_unenrol_instructor(self):
         url = self._create_enrol_url(self.url, self.data.get_authorized_instructor().id)
-        dropped_role_id = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
 
         # test login required
         rv = self.client.delete(url)
@@ -254,14 +252,9 @@ class ClassListAPITest(ACJAPITestCase):
 
             # test success
             expected = {
-                'user': {
-                    'id': self.data.get_authorized_instructor().id,
-                    'fullname': self.data.get_authorized_instructor().fullname
-                },
-                'usertypesforcourse': {
-                    'id': dropped_role_id,
-                    'name': UserTypesForCourse.TYPE_DROPPED
-                }
+                'user_id': self.data.get_authorized_instructor().id,
+                'fullname': self.data.get_authorized_instructor().fullname,
+                'course_role': CourseRole.dropped.value
             }
             rv = self.client.delete(url)
             self.assert200(rv)
@@ -313,7 +306,7 @@ class ClassListAPITest(ACJAPITestCase):
             self.assert400(rv)
 
             # test no username provided
-            content = "".join([",\n", auth_student.username, ",", auth_student.student_no])
+            content = "".join([",\n", auth_student.username, ",", auth_student.student_number])
             uploaded_file = io.BytesIO(content.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
@@ -337,7 +330,7 @@ class ClassListAPITest(ACJAPITestCase):
             uploaded_file.close()
 
             # test duplicate student number in system
-            content = "".join(['username1,', auth_student.student_no, "\n", auth_student.username])
+            content = "".join(['username1,', auth_student.student_number, "\n", auth_student.username])
             uploaded_file = io.BytesIO(content.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
@@ -350,8 +343,8 @@ class ClassListAPITest(ACJAPITestCase):
 
             # test duplicate student number in file
             content = "".join([
-                auth_student.username, ",", auth_student.student_no, "\n",
-                "username1,", auth_student.student_no])
+                auth_student.username, ",", auth_student.student_number, "\n",
+                "username1,", auth_student.student_number])
             uploaded_file = io.BytesIO(content.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)

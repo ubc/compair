@@ -1,42 +1,42 @@
 import datetime
 import json
 
-from data.fixtures.test_data import SimpleQuestionsTestData
-from acj.models import PostsForQuestions
+from data.fixtures.test_data import SimpleAssignmentTestData
+from acj.models import Assignment
 from acj.tests.test_acj import ACJAPITestCase
 
 
-class QuestionsAPITests(ACJAPITestCase):
+class AssignmentAPITests(ACJAPITestCase):
     def setUp(self):
-        super(QuestionsAPITests, self).setUp()
-        self.data = SimpleQuestionsTestData()
-        self.url = '/api/courses/' + str(self.data.get_course().id) + '/questions'
+        super(AssignmentAPITests, self).setUp()
+        self.data = SimpleAssignmentTestData()
+        self.url = '/api/courses/' + str(self.data.get_course().id) + '/assignments'
 
-    def test_get_single_question(self):
-        question_expected = self.data.get_questions()[0]
-        questions_api_url = self.url + '/' + str(question_expected.id)
+    def test_get_single_assignment(self):
+        assignment_expected = self.data.get_assignments()[0]
+        assignment_api_url = self.url + '/' + str(assignment_expected.id)
         # Test login required
-        rv = self.client.get(questions_api_url)
+        rv = self.client.get(assignment_api_url)
         self.assert401(rv)
         # Test unauthorized user
         with self.login(self.data.get_unauthorized_instructor().username):
-            rv = self.client.get(questions_api_url)
+            rv = self.client.get(assignment_api_url)
             self.assert403(rv)
 
         with self.login(self.data.get_unauthorized_student().username):
-            rv = self.client.get(questions_api_url)
+            rv = self.client.get(assignment_api_url)
             self.assert403(rv)
 
-        # Test non-existent question
+        # Test non-existent assignment
         with self.login(self.data.get_authorized_instructor().username):
             rv = self.client.get(self.url + '/939023')
             self.assert404(rv)
-            # Test get actual question
-            rv = self.client.get(questions_api_url)
+            # Test get actual assignment
+            rv = self.client.get(assignment_api_url)
             self.assert200(rv)
-            self._verify_question(question_expected, rv.json['question'])
+            self._verify_assignment(assignment_expected, rv.json)
 
-    def test_get_all_questions(self):
+    def test_get_all_assignments(self):
         # Test login required
         rv = self.client.get(self.url)
         self.assert401(rv)
@@ -49,29 +49,29 @@ class QuestionsAPITests(ACJAPITestCase):
             rv = self.client.get(self.url)
             self.assert403(rv)
             # Test non-existent course
-            rv = self.client.get('/api/courses/390484/questions')
+            rv = self.client.get('/api/courses/390484/assignments')
             self.assert404(rv)
 
-        # Test receives all questions
+        # Test receives all assignments
         with self.login(self.data.get_authorized_instructor().username):
             rv = self.client.get(self.url)
             self.assert200(rv)
-            for i, expected in enumerate(self.data.get_questions()):
-                actual = rv.json['questions'][i]
-                self._verify_question(expected, actual)
+            for i, expected in enumerate(self.data.get_assignments()):
+                actual = rv.json['objects'][i]
+                self._verify_assignment(expected, actual)
 
-    def test_create_question(self):
+    def test_create_assignment(self):
         now = datetime.datetime.utcnow()
-        question_expected = {
-            'title': 'this is a new question\'s title',
-            'post': {'content': 'this is the new question\'s content.'},
+        assignment_expected = {
+            'name': 'this is a new assignment\'s name',
+            'description': 'this is the new assignment\'s description.',
             'answer_start': now.isoformat() + 'Z',
             'answer_end': (now + datetime.timedelta(days=7)).isoformat() + 'Z',
-            'num_judgement_req': 3}
+            'number_of_comparisons': 3}
         # Test login required
         rv = self.client.post(
             self.url,
-            data=json.dumps(question_expected),
+            data=json.dumps(assignment_expected),
             content_type='application/json')
         self.assert401(rv)
 
@@ -79,21 +79,21 @@ class QuestionsAPITests(ACJAPITestCase):
         with self.login(self.data.get_unauthorized_instructor().username):
             rv = self.client.post(
                 self.url,
-                data=json.dumps(question_expected),
+                data=json.dumps(assignment_expected),
                 content_type='application/json')
             self.assert403(rv)
 
         with self.login(self.data.get_unauthorized_student().username):
             rv = self.client.post(
                 self.url,
-                data=json.dumps(question_expected),
+                data=json.dumps(assignment_expected),
                 content_type='application/json')
             self.assert403(rv)
 
-        with self.login(self.data.get_authorized_student().username):  # student post questions not implemented
+        with self.login(self.data.get_authorized_student().username):  # student post assignments not implemented
             rv = self.client.post(
                 self.url,
-                data=json.dumps(question_expected),
+                data=json.dumps(assignment_expected),
                 content_type='application/json')
             self.assert403(rv)
 
@@ -101,41 +101,43 @@ class QuestionsAPITests(ACJAPITestCase):
         with self.login(self.data.get_authorized_instructor().username):
             rv = self.client.post(
                 self.url,
-                data=json.dumps({'title': 'blah'}),
+                data=json.dumps({'name': 'blah'}),
                 content_type='application/json')
             self.assert400(rv)
             # Test actual creation
             rv = self.client.post(
                 self.url,
-                data=json.dumps(question_expected),
+                data=json.dumps(assignment_expected),
                 content_type='application/json')
             self.assert200(rv)
             self.assertEqual(
-                question_expected['title'], rv.json['title'],
-                "Question create did not return the same title!")
+                assignment_expected['name'], rv.json['name'],
+                "assignment create did not return the same name!")
             self.assertEqual(
-                question_expected['post']['content'], rv.json['post']['content'],
-                "Question create did not return the same content!")
-            # Test getting the question again
+                assignment_expected['description'], rv.json['description'],
+                "assignment create did not return the same description!")
+            # Test getting the assignment again
             rv = self.client.get(self.url + '/' + str(rv.json['id']))
             self.assert200(rv)
             self.assertEqual(
-                question_expected['title'], rv.json['question']['title'],
-                "Question create did not save title properly!")
+                assignment_expected['name'], rv.json['name'],
+                "assignment create did not save name properly!")
             self.assertEqual(
-                question_expected['post']['content'], rv.json['question']['post']['content'],
-                "Question create did not save content properly!")
+                assignment_expected['description'], rv.json['description'],
+                "assignment create did not save description properly!")
 
-    def test_edit_question(self):
-        question = self.data.get_questions()[0]
-        url = self.url + '/' + str(question.id)
+    def test_edit_assignment(self):
+        assignment = self.data.get_assignments()[0]
+        url = self.url + '/' + str(assignment.id)
         expected = {
-            'id': question.id,
-            'title': 'This is the new title.',
-            'post': {'content': 'new_content'},
-            'answer_start': question.answer_start.isoformat() + 'Z',
-            'answer_end': question.answer_end.isoformat() + 'Z',
-            'num_judgement_req': question.num_judgement_req
+            'id': assignment.id,
+            'name': 'This is the new name.',
+            'description': 'new_description',
+            'answer_start': assignment.answer_start.isoformat() + 'Z',
+            'answer_end': assignment.answer_end.isoformat() + 'Z',
+            'number_of_comparisons': assignment.number_of_comparisons,
+            'students_can_reply': assignment.students_can_reply,
+            'enable_self_eval': assignment.enable_self_eval
         }
 
         # test login required
@@ -149,11 +151,11 @@ class QuestionsAPITests(ACJAPITestCase):
 
         # test invalid course id
         with self.login(self.data.get_authorized_instructor().username):
-            invalid_url = '/api/courses/999/questions/' + str(question.id)
+            invalid_url = '/api/courses/999/assignments/' + str(assignment.id)
             rv = self.client.post(invalid_url, data=json.dumps(expected), content_type='application/json')
             self.assert404(rv)
 
-            # test invalid question id
+            # test invalid assignment id
             invalid_url = self.url + '/999'
             rv = self.client.post(invalid_url, data=json.dumps(expected), content_type='application/json')
             self.assert404(rv)
@@ -161,41 +163,42 @@ class QuestionsAPITests(ACJAPITestCase):
             # test edit by author
             rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
             self.assert200(rv)
-            self._verify_question(question, rv.json)
+            self._verify_assignment(assignment, rv.json)
 
         # test edit by user who can manage posts (TA)
         with self.login(self.data.get_authorized_ta().username):
             ta_expected = {
-                'id': question.id,
-                'title': 'Another Title',
-                'post': {'content': 'new_content'},
-                'answer_start': question.answer_start.isoformat() + 'Z',
-                'answer_end': question.answer_end.isoformat() + 'Z',
-                'num_judgement_req': question.num_judgement_req
+                'id': assignment.id,
+                'name': 'Another name',
+                'description': 'new_description',
+                'answer_start': assignment.answer_start.isoformat() + 'Z',
+                'answer_end': assignment.answer_end.isoformat() + 'Z',
+                'number_of_comparisons': assignment.number_of_comparisons,
+                'students_can_reply': assignment.students_can_reply,
+                'enable_self_eval': assignment.enable_self_eval
             }
             rv = self.client.post(url, data=json.dumps(ta_expected), content_type='application/json')
             self.assert200(rv)
-            self.assertEqual(ta_expected['title'], rv.json['title'])
-            self.assertEqual(ta_expected['post']['content'], rv.json['post']['content'])
+            self.assertEqual(ta_expected['name'], rv.json['name'])
+            self.assertEqual(ta_expected['description'], rv.json['description'])
 
-    def test_delete_question(self):
-        # Test deleting the question
-        ques_id = PostsForQuestions.query.first().id
+    def test_delete_assignment(self):
+        # Test deleting the assignment
+        ques_id = Assignment.query.first().id
         expected_ret = {'id': ques_id}
         with self.login(self.data.get_authorized_student().username):
             rv = self.client.delete(self.url + '/' + str(ques_id))
             self.assert403(rv)
             self.assertEqual(
-                '<p>' + self.data.get_authorized_student().username + ' does not have delete access to Question 1</p>',
+                '<p>' + self.data.get_authorized_student().username + ' does not have delete access to assignment 1</p>',
                 rv.json['message'])
 
         with self.login(self.data.get_authorized_instructor().username):
             rv = self.client.delete(self.url + '/' + str(ques_id))
             self.assert200(rv)
-            self.assertEqual(expected_ret['id'], rv.json['id'], "Question " + str(rv.json['id']) + " deleted successfully")
+            self.assertEqual(expected_ret['id'], rv.json['id'], "assignment " + str(rv.json['id']) + " deleted successfully")
 
-    def _verify_question(self, expected, actual):
-        self.assertEqual(expected.title, actual['title'])
-        self.assertEqual(expected.posts_id, actual['post']['id'])
-        self.assertEqual(expected.post.content, actual['post']['content'])
-        self.assertEqual(expected.post.user.id, actual['post']['user']['id'])
+    def _verify_assignment(self, expected, actual):
+        self.assertEqual(expected.name, actual['name'])
+        self.assertEqual(expected.description, actual['description'])
+        self.assertEqual(expected.user_id, actual['user_id'])

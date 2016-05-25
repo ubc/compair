@@ -1,14 +1,13 @@
 import unittest
 
-from acj.models import Users, Judgements, update_scores, Scores
+from acj.models import User, Comparison, Score
+from acj.models.comparison import update_scores
 from test_acj import ACJTestCase
-import acj.algorithms
-from acj.algorithms.comparison_pair import ComparisonPair
-from acj.algorithms.comparison_result import ComparisonResult
-
+from acj.algorithms import ComparisonPair
+from acj.algorithms.score import calculate_score
 
 class TestUsersModel(ACJTestCase):
-    user = Users()
+    user = User()
 
     def setUp(self):
         self.user.firstname = "John"
@@ -34,31 +33,31 @@ class TestUsersModel(ACJTestCase):
         self.assertTrue(self.user.verify_password('123456'))
 
 
-class TestJudgementModel(ACJTestCase):
-    judgement = Judgements()
+class TestCompareModel(ACJTestCase):
+    comparison = Comparison()
 
     def setUp(self):
         pass
 
     def test_caculate_scores(self):
         pass
-        # Judgements.calculate_scores(1)
+        # Comparison.calculate_scores(1)
 
 
 class TestUtils(ACJTestCase):
     def test_update_scores(self):
     
         criteria_comparison_results = {
-            1: acj.algorithms.calculate_scores(
-               [ComparisonPair(1,2, winning_key=1)], "acj", None
-            )
+            1: calculate_score(comparison_pairs=[
+                ComparisonPair(1,2, winning_key=1)
+            ])
         }
         scores = update_scores([], criteria_comparison_results)
         self.assertEqual(len(scores), 2)
         for score in scores:
             self.assertIsNone(score.id)
 
-        score = Scores(answers_id=1, criteriaandquestions_id=1, id=2)
+        score = Score(answer_id=1, criteria_id=1, id=2)
         scores = update_scores([score], criteria_comparison_results)
         self.assertEqual(len(scores), 2)
         self.assertEqual(scores[0].id, 2)
@@ -66,14 +65,14 @@ class TestUtils(ACJTestCase):
 
     
         criteria_comparison_results = {
-            1: acj.algorithms.calculate_scores(
-               [ComparisonPair(1,2, winning_key=1)], "acj", None
-            ),
-            2: acj.algorithms.calculate_scores(
-               [ComparisonPair(1,2, winning_key=1)], "acj", None
-            )
+            1: calculate_score(comparison_pairs=[
+                   ComparisonPair(1,2, winning_key=1)
+            ]),
+            2: calculate_score(comparison_pairs=[
+               ComparisonPair(1,2, winning_key=1)
+            ])
         }
-        score = Scores(answers_id=1, criteriaandquestions_id=1, id=2)
+        score = Score(answer_id=1, criteria_id=1, id=2)
         scores = update_scores([score], criteria_comparison_results)
         self.assertEqual(len(scores), 4)
 

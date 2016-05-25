@@ -2,34 +2,32 @@ import json
 import copy
 import operator
 
-from data.fixtures.test_data import JudgmentsTestData
-from acj.models import PostsForAnswers, Posts, Judgements
+from data.fixtures.test_data import ComparisonTestData
+from acj.models import Answer, Comparison
 from acj.tests.test_acj import ACJAPITestCase
-from acj.judgement import AnswerPairGenerator
+from acj.core import db
 
 
-class JudgementAPITests(ACJAPITestCase):
+class ComparisonAPITests(ACJAPITestCase):
     def setUp(self):
-        super(JudgementAPITests, self).setUp()
-        self.data = JudgmentsTestData()
+        super(ComparisonAPITests, self).setUp()
+        self.data = ComparisonTestData()
         self.course = self.data.get_course()
-        self.question = self.data.get_questions()[0]
-        self.base_url = self._build_url(self.course.id, self.question.id)
-        self.answer_pair_url = self.base_url + '/pair'
+        self.assignment = self.data.get_assignments()[0]
+        self.base_url = self._build_url(self.course.id, self.assignment.id)
 
-    def _build_url(self, course_id, question_id, tail=""):
+    def _build_url(self, course_id, assignment_id, tail=""):
         url = \
-            '/api/courses/' + str(course_id) + '/questions/' + str(question_id) + '/judgements' + \
+            '/api/courses/' + str(course_id) + '/assignments/' + str(assignment_id) + '/comparisons' + \
             tail
         return url
 
-    def _build_judgement_submit(self, answerpair_id, winner_id):
+    def _build_comparison_submit(self, winner_id):
         submit = {
-            'answerpair_id': answerpair_id,
-            'judgements': [
+            'comparisons': [
                 {
-                    'question_criterion_id': self.question.criteria[0].id,
-                    'answer_id_winner': winner_id
+                    'criteria_id': self.assignment.assignment_criteria[0].criteria_id,
+                    'winner_id': winner_id
                 }
             ]
         }
@@ -37,71 +35,71 @@ class JudgementAPITests(ACJAPITestCase):
 
     def test_get_answer_pair_access_control(self):
         # test login required
-        rv = self.client.get(self.answer_pair_url)
+        rv = self.client.get(self.base_url)
         self.assert401(rv)
         # test deny access to unenroled users
         with self.login(self.data.get_unauthorized_student().username):
-            rv = self.client.get(self.answer_pair_url)
+            rv = self.client.get(self.base_url)
             self.assert403(rv)
 
         with self.login(self.data.get_unauthorized_instructor().username):
-            rv = self.client.get(self.answer_pair_url)
+            rv = self.client.get(self.base_url)
             self.assert403(rv)
 
         # enroled user from this point on
         with self.login(self.data.get_authorized_student().username):
             # test non-existent course
-            rv = self.client.get(self._build_url(9993929, self.question.id, '/pair'))
+            rv = self.client.get(self._build_url(9993929, self.assignment.id))
             self.assert404(rv)
-            # test non-existent question
-            rv = self.client.get(self._build_url(self.course.id, 23902390, '/pair'))
+            # test non-existent assignment
+            rv = self.client.get(self._build_url(self.course.id, 23902390))
             self.assert404(rv)
-            # no judgements has been entered yet, question is not in judging period
+            # no comparisons has been entered yet, assignment is not in comparing period
             rv = self.client.get(self._build_url(
-                self.course.id, self.data.get_question_in_answer_period().id, '/pair'))
+                self.course.id, self.data.get_assignment_in_answer_period().id))
             self.assert403(rv)
 
     def test_get_answer_pair_basic(self):
         with self.login(self.data.get_authorized_student().username):
-            # no judgements has been entered yet
-            rv = self.client.get(self.answer_pair_url)
+            # no comparisons has been entered yet
+            rv = self.client.get(self.base_url)
             self.assert200(rv)
             actual_answer_pair = rv.json
-            actual_answer1 = actual_answer_pair['answers'][0]
-            actual_answer2 = actual_answer_pair['answers'][1]
+            actual_answer1 = actual_answer_pair['objects'][0]['answer1']
+            actual_answer2 = actual_answer_pair['objects'][0]['answer2']
             expected_answer_ids = [answer.id for answer in self.data.get_student_answers()]
-            # make sure that we actually got answers for the question we're targetting
+            # make sure that we actually got answers for the assignment we're targetting
             self.assertIn(actual_answer1['id'], expected_answer_ids)
             self.assertIn(actual_answer2['id'], expected_answer_ids)
 
     def test_get_answer_pair_answer_exclusions_for_answers_with_no_scores(self):
         """
-        The user doing judgements should not see their own answer in a judgement.
+        The user doing comparisons should not see their own answer in a comparison.
         Instructor and TA answers should not show up.
         Answers cannot be paired with itself.
         For answers that don't have a score yet, which means they're randomly matched up.
         """
         with self.login(self.data.get_authorized_student().username):
-            excluded_student_answer = PostsForAnswers.query.join(Posts).filter(
-                Posts.users_id == self.data.get_authorized_student().id,
-                PostsForAnswers.questions_id == self.question.id).first()
+            excluded_student_answer = Answer.query.filter(
+                Answer.user_id == self.data.get_authorized_student().id,
+                Answer.assignment_id == self.assignment.id).first()
             self.assertTrue(excluded_student_answer, "Missing authorized student's answer.")
-            excluded_instructor_answer = PostsForAnswers.query.join(Posts).filter(
-                Posts.users_id == self.data.get_authorized_instructor().id,
-                PostsForAnswers.questions_id == self.question.id).first()
+            excluded_instructor_answer = Answer.query.filter(
+                Answer.user_id == self.data.get_authorized_instructor().id,
+                Answer.assignment_id == self.assignment.id).first()
             self.assertTrue(excluded_instructor_answer, "Missing instructor answer")
-            excluded_ta_answer = PostsForAnswers.query.join(Posts).filter(
-                Posts.users_id == self.data.get_authorized_ta().id,
-                PostsForAnswers.questions_id == self.question.id).first()
+            excluded_ta_answer = Answer.query.filter(
+                Answer.user_id == self.data.get_authorized_ta().id,
+                Answer.assignment_id == self.assignment.id).first()
             self.assertTrue(excluded_ta_answer, "Missing TA answer")
-            # no judgements has been entered yet, this tests the randomized pairing when no answers has
+            # no comparisons has been entered yet, this tests the randomized pairing when no answers has
             # scores, since it's randomized though, we'll have to run it lots of times to be sure
             for i in range(50):
-                rv = self.client.get(self.answer_pair_url)
+                rv = self.client.get(self.base_url)
                 self.assert200(rv)
                 actual_answer_pair = rv.json
-                actual_answer1 = actual_answer_pair['answers'][0]
-                actual_answer2 = actual_answer_pair['answers'][1]
+                actual_answer1 = actual_answer_pair['objects'][0]['answer1']
+                actual_answer2 = actual_answer_pair['objects'][0]['answer2']
                 # exclude student's own answer
                 self.assertNotEqual(actual_answer1['id'], excluded_student_answer.id)
                 self.assertNotEqual(actual_answer2['id'], excluded_student_answer.id)
@@ -116,12 +114,12 @@ class JudgementAPITests(ACJAPITestCase):
         # won't be generated since we have too few answers
         with self.login(self.data.get_authorized_student_with_no_answers().username):
             for i in range(50):
-                rv = self.client.get(self.answer_pair_url)
+                rv = self.client.get(self.base_url)
                 self.assert200(rv)
                 # answer cannot be paired with itself
-                self.assertNotEqual(rv.json['answers'][0]['id'], rv.json['answers'][1]['id'])
+                self.assertNotEqual(rv.json['objects'][0]['answer1_id'], rv.json['objects'][0]['answer2_id'])
 
-    def test_submit_judgement_access_control(self):
+    def test_submit_comparison_access_control(self):
         # test login required
         rv = self.client.post(
             self.base_url,
@@ -131,23 +129,23 @@ class JudgementAPITests(ACJAPITestCase):
 
         # establish expected data by first getting an answer pair
         with self.login(self.data.get_authorized_student().username):
-            rv = self.client.get(self.answer_pair_url)
+            rv = self.client.get(self.base_url)
             self.assert200(rv)
             # expected_answer_pair = rv.json
-            judgement_submit = self._build_judgement_submit(rv.json['id'], rv.json['answers'][0]['id'])
+            comparison_submit = self._build_comparison_submit(rv.json['objects'][0]['answer1_id'])
 
         # test deny access to unenroled users
         with self.login(self.data.get_unauthorized_student().username):
             rv = self.client.post(
                 self.base_url,
-                data=json.dumps(judgement_submit),
+                data=json.dumps(comparison_submit),
                 content_type='application/json')
             self.assert403(rv)
 
         with self.login(self.data.get_unauthorized_instructor().username):
             rv = self.client.post(
                 self.base_url,
-                data=json.dumps(judgement_submit),
+                data=json.dumps(comparison_submit),
                 content_type='application/json')
             self.assert403(rv)
 
@@ -155,7 +153,7 @@ class JudgementAPITests(ACJAPITestCase):
         with self.login(self.data.get_authorized_instructor().username):
             rv = self.client.post(
                 self.base_url,
-                data=json.dumps(judgement_submit),
+                data=json.dumps(comparison_submit),
                 content_type='application/json')
             self.assert403(rv)
 
@@ -163,157 +161,149 @@ class JudgementAPITests(ACJAPITestCase):
         with self.login(self.data.get_authorized_student().username):
             # test non-existent course
             rv = self.client.post(
-                self._build_url(9999999, self.question.id),
-                data=json.dumps(judgement_submit),
+                self._build_url(9999999, self.assignment.id),
+                data=json.dumps(comparison_submit),
                 content_type='application/json')
             self.assert404(rv)
-            # test non-existent question
+            # test non-existent assignment
             rv = self.client.post(
                 self._build_url(self.course.id, 9999999),
-                data=json.dumps(judgement_submit),
+                data=json.dumps(comparison_submit),
                 content_type='application/json')
             self.assert404(rv)
             # test reject missing criteria
-            faulty_judgements = copy.deepcopy(judgement_submit)
-            faulty_judgements['judgements'] = []
+            faulty_comparisons = copy.deepcopy(comparison_submit)
+            faulty_comparisons['comparisons'] = []
             rv = self.client.post(
                 self.base_url,
-                data=json.dumps(faulty_judgements),
+                data=json.dumps(faulty_comparisons),
                 content_type='application/json')
             self.assert400(rv)
             # test reject missing course criteria id
-            faulty_judgements = copy.deepcopy(judgement_submit)
-            del faulty_judgements['judgements'][0]['question_criterion_id']
+            faulty_comparisons = copy.deepcopy(comparison_submit)
+            del faulty_comparisons['comparisons'][0]['criteria_id']
             rv = self.client.post(
                 self.base_url,
-                data=json.dumps(faulty_judgements),
+                data=json.dumps(faulty_comparisons),
                 content_type='application/json')
             self.assert400(rv)
             # test reject missing winner
-            faulty_judgements = copy.deepcopy(judgement_submit)
-            del faulty_judgements['judgements'][0]['answer_id_winner']
+            faulty_comparisons = copy.deepcopy(comparison_submit)
+            del faulty_comparisons['comparisons'][0]['winner_id']
             rv = self.client.post(
                 self.base_url,
-                data=json.dumps(faulty_judgements),
+                data=json.dumps(faulty_comparisons),
                 content_type='application/json')
             self.assert400(rv)
             # test invalid criteria id
-            faulty_judgements = copy.deepcopy(judgement_submit)
-            faulty_judgements['judgements'][0]['question_criterion_id'] = 3930230
+            faulty_comparisons = copy.deepcopy(comparison_submit)
+            faulty_comparisons['comparisons'][0]['criteria_id'] = 3930230
             rv = self.client.post(
                 self.base_url,
-                data=json.dumps(faulty_judgements),
+                data=json.dumps(faulty_comparisons),
                 content_type='application/json')
             self.assert400(rv)
             # test invalid winner id
-            faulty_judgements = copy.deepcopy(judgement_submit)
-            faulty_judgements['judgements'][0]['answer_id_winner'] = 2382301
+            faulty_comparisons = copy.deepcopy(comparison_submit)
+            faulty_comparisons['comparisons'][0]['winner_id'] = 2382301
             rv = self.client.post(
                 self.base_url,
-                data=json.dumps(faulty_judgements),
+                data=json.dumps(faulty_comparisons),
                 content_type='application/json')
             self.assert400(rv)
-            # test invalid answer pair
-            faulty_judgements = copy.deepcopy(judgement_submit)
-            faulty_judgements['answerpair_id'] = 2382301
-            rv = self.client.post(
-                self.base_url,
-                data=json.dumps(faulty_judgements),
-                content_type='application/json')
-            self.assert404(rv)
 
-    def test_submit_judgement_basic(self):
+    def test_submit_comparison_basic(self):
         with self.login(self.data.get_authorized_student().username):
-            # calculate number of judgements to do before user has judged all the pairs it can
+            # calculate number of comparisons to do before user has compared all the pairs it can
             num_eligible_answers = -1  # need to minus one to exclude the logged in user's own answer
             for answer in self.data.get_student_answers():
-                if answer.question.id == self.question.id:
+                if answer.assignment.id == self.assignment.id:
                     num_eligible_answers += 1
-            # n - 1 possible pairs before all answers have been judged
-            num_possible_judgements = num_eligible_answers - 1
+            # n - 1 possible pairs before all answers have been compared
+            num_possible_comparisons = num_eligible_answers - 1
             winner_ids = []
-            for i in range(num_possible_judgements):
+            for i in range(num_possible_comparisons):
                 # establish expected data by first getting an answer pair
-                rv = self.client.get(self.answer_pair_url)
+                rv = self.client.get(self.base_url)
                 self.assert200(rv)
                 expected_answer_pair = rv.json
-                judgement_submit = self._build_judgement_submit(rv.json['id'], rv.json['answers'][0]['id'])
-                winner_ids.append(rv.json['answers'][0]['id'])
+                comparison_submit = self._build_comparison_submit(rv.json['objects'][0]['answer1_id'])
+                winner_ids.append(rv.json['objects'][0]['winner_id'])
                 # test normal post
                 rv = self.client.post(
                     self.base_url,
-                    data=json.dumps(judgement_submit),
+                    data=json.dumps(comparison_submit),
                     content_type='application/json')
                 self.assert200(rv)
-                actual_judgements = rv.json['objects']
-                self._validate_judgement_submit(judgement_submit, actual_judgements, expected_answer_pair)
-                # Resubmit of same judgement should fail
+                actual_comparisons = rv.json['objects']
+                self._validate_comparison_submit(comparison_submit, actual_comparisons, expected_answer_pair)
+                # Resubmit of same comparison should fail
                 rv = self.client.post(
                     self.base_url,
-                    data=json.dumps(judgement_submit),
+                    data=json.dumps(comparison_submit),
                     content_type='application/json')
                 self.assert400(rv)
-            # all answers has been judged by the user, errors out when trying to get another pair
-            rv = self.client.get(self.answer_pair_url)
+            # all answers has been compared by the user, errors out when trying to get another pair
+            rv = self.client.get(self.base_url)
             self.assert400(rv)
 
-    def _validate_judgement_submit(self, judgement_submit, actual_judgements, expected_answer_pair):
+    def _validate_comparison_submit(self, comparison_submit, actual_comparisons, expected_answer_pair):
         self.assertEqual(
-            len(actual_judgements), len(judgement_submit['judgements']),
-            "The number of judgements saved does not match the number sent")
-        for actual_judgement in actual_judgements:
+            len(actual_comparisons), len(comparison_submit['comparisons']),
+            "The number of comparisons saved does not match the number sent")
+        for actual_comparison in actual_comparisons:
             self.assertEqual(
-                expected_answer_pair['answers'][0]['id'],
-                actual_judgement['answerpairing']['answers_id1'],
-                "Expected and actual judgement answer1 id did not match")
+                expected_answer_pair['objects'][0]['answer1_id'],
+                actual_comparison['answer1_id'],
+                "Expected and actual comparison answer1 id did not match")
             self.assertEqual(
-                expected_answer_pair['answers'][1]['id'],
-                actual_judgement['answerpairing']['answers_id2'],
-                "Expected and actual judgement answer2 id did not match")
-            found_judgement = False
-            for expected_judgement in judgement_submit['judgements']:
-                if expected_judgement['question_criterion_id'] != \
-                        actual_judgement['question_criterion']['id']:
+                expected_answer_pair['objects'][0]['answer2_id'],
+                actual_comparison['answer2_id'],
+                "Expected and actual comparison answer2 id did not match")
+            found_comparison = False
+            for expected_comparison in comparison_submit['comparisons']:
+                if expected_comparison['criteria_id'] != \
+                        actual_comparison['criteria_id']:
                     continue
                 self.assertEqual(
-                    expected_judgement['answer_id_winner'],
-                    actual_judgement['answers_id_winner'],
+                    expected_comparison['winner_id'],
+                    actual_comparison['winner_id'],
                     "Expected and actual winner answer id did not match.")
-                found_judgement = True
+                found_comparison = True
             self.assertTrue(
-                found_judgement,
-                "Actual judgement received contains a judgement that was not sent.")
+                found_comparison,
+                "Actual comparison received contains a comparison that was not sent.")
 
     def test_get_answer_pair_answer_exclusion_with_scored_answers(self):
         """
-        The user doing judgements should not see their own answer in a judgement.
+        The user doing comparisons should not see their own answer in a comparison.
         Instructor and TA answers should not show up.
         Answers cannot be paired with itself.
         Scored answer pairing means answers should be matched up to similar scores.
         """
-        # Make sure all answers are judged first
-        self._submit_all_possible_judgements_for_user(
+        # Make sure all answers are compared first
+        self._submit_all_possible_comparisons_for_user(
             self.data.get_authorized_student().id)
-        self._submit_all_possible_judgements_for_user(
+        self._submit_all_possible_comparisons_for_user(
             self.data.get_secondary_authorized_student().id)
 
         with self.login(self.data.get_authorized_student_with_no_answers().username):
-            excluded_instructor_answer = PostsForAnswers.query.join(Posts).filter(
-                Posts.users_id == self.data.get_authorized_instructor().id,
-                PostsForAnswers.questions_id == self.question.id).first()
+            excluded_instructor_answer = Answer.query.filter(
+                Answer.user_id == self.data.get_authorized_instructor().id,
+                Answer.assignment_id == self.assignment.id).first()
             self.assertTrue(excluded_instructor_answer, "Missing instructor answer")
-            excluded_ta_answer = PostsForAnswers.query.join(Posts).filter(
-                Posts.users_id == self.data.get_authorized_ta().id,
-                PostsForAnswers.questions_id == self.question.id).first()
+            excluded_ta_answer = Answer.query.filter(
+                Answer.user_id == self.data.get_authorized_ta().id,
+                Answer.assignment_id == self.assignment.id).first()
             self.assertTrue(excluded_ta_answer, "Missing TA answer")
-            # no judgements has been entered yet, this tests the randomized pairing when no answers has
+            # no comparisons has been entered yet, this tests the randomized pairing when no answers has
             # scores, since it's randomized though, we'll have to run it lots of times to be sure
             for i in range(50):
-                rv = self.client.get(self.answer_pair_url)
+                rv = self.client.get(self.base_url)
                 self.assert200(rv)
                 actual_answer_pair = rv.json
-                actual_answer1 = actual_answer_pair['answers'][0]
-                actual_answer2 = actual_answer_pair['answers'][1]
+                actual_answer1 = actual_answer_pair['objects'][0]['answer1']
+                actual_answer2 = actual_answer_pair['objects'][0]['answer2']
                 # exclude instructor answer
                 self.assertNotEqual(actual_answer1['id'], excluded_instructor_answer.id)
                 self.assertNotEqual(actual_answer2['id'], excluded_instructor_answer.id)
@@ -323,34 +313,34 @@ class JudgementAPITests(ACJAPITestCase):
                 # answer cannot be paired with itself
                 self.assertNotEqual(actual_answer1['id'], actual_answer2['id'])
 
-    def _submit_all_possible_judgements_for_user(self, user_id):
+    def _submit_all_possible_comparisons_for_user(self, user_id):
         # self.login(username)
-        # calculate number of judgements to do before user has judged all the pairs it can
-        num_eligible_answers = -1  # need to minus one to exclude the logged in user's own answer
+        # calculate number of comparisons to do before user has compared all the pairs it can
+        num_eligible_answers = 0  # need to minus one to exclude the logged in user's own answer
         for answer in self.data.get_student_answers():
-            if answer.question.id == self.question.id:
+            if answer.assignment_id == self.assignment.id and answer.user_id != user_id:
                 num_eligible_answers += 1
-        # n - 1 possible pairs before all answers have been judged
-        num_possible_judgements = num_eligible_answers - 1
+        # n - 1 possible pairs before all answers have been compared
+        num_possible_comparisons = num_eligible_answers - 1
         winner_ids = []
         loser_ids = []
-        for i in range(num_possible_judgements):
-            pair_generator = AnswerPairGenerator(self.course.id, self.question, user_id)
-            answerpairing = pair_generator.get_pair()
-            # answer_pair = AnswerPairings.query.get(answerpairing.id)
-            # establish expected data by first getting an answer pair
-            # rv = self.client.get(self.answer_pair_url)
-            # self.assert200(rv)
-            # expected_answer_pair = rv.json
-            min_id = min([answerpairing.answers_id1, answerpairing.answers_id2])
-            max_id = max([answerpairing.answers_id1, answerpairing.answers_id2])
-            judgement_submit = self._build_judgement_submit(answerpairing.id, min_id)
+        for i in range(num_possible_comparisons):
+            comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id)
+            answer1_id = comparisons[0].answer1_id
+            answer2_id = comparisons[0].answer2_id
+            min_id = min([answer1_id, answer2_id])
+            max_id = max([answer1_id, answer2_id])
             winner_ids.append(min_id)
             loser_ids.append(max_id)
-            Judgements.create_judgement(judgement_submit, answerpairing, user_id)
-            Judgements.calculate_scores(self.question.id)
+            for comparison in comparisons:
+                comparison.completed = True
+                comparison.winner_id = min_id
+                db.session.add(comparison)
+            db.session.commit()
+            
+            Comparison.calculate_scores(self.assignment.id)
         # test normal post
-        # rv = self.client.post(self.base_url, data=json.dumps(judgement_submit),
+        # rv = self.client.post(self.base_url, data=json.dumps(comparison_submit),
         # 					  content_type='application/json')
         # self.assert200(rv)
         # self.logout()
@@ -362,16 +352,16 @@ class JudgementAPITests(ACJAPITestCase):
         This is just a rough check on whether score calculations are correct. Answers
         that has more wins should have the highest scores.
         """
-        # Make sure all answers are judged first
-        judgements_auth = self._submit_all_possible_judgements_for_user(
+        # Make sure all answers are compared first
+        comparisons_auth = self._submit_all_possible_comparisons_for_user(
             self.data.get_authorized_student().id)
-        judgements_secondary = self._submit_all_possible_judgements_for_user(
+        comparisons_secondary = self._submit_all_possible_comparisons_for_user(
             self.data.get_secondary_authorized_student().id)
         
-        loser_ids = judgements_auth['losers']
-        loser_ids.extend(judgements_secondary['losers'])
-        winner_ids = judgements_auth['winners']
-        winner_ids.extend(judgements_secondary['winners'])
+        loser_ids = comparisons_auth['losers']
+        loser_ids.extend(comparisons_secondary['losers'])
+        winner_ids = comparisons_auth['winners']
+        winner_ids.extend(comparisons_secondary['winners'])
         
         # Count the number of wins each answer has had
         num_wins_by_id = {}
@@ -385,24 +375,24 @@ class JudgementAPITests(ACJAPITestCase):
         answers = self.data.get_student_answers()
         answer_scores = {}
         for answer in answers:
-            if answer.question.id == self.question.id:
+            if answer.assignment.id == self.assignment.id:
                 answer_scores[answer.id] = answer.scores[0].score
 
         # Check that ranking by score and by wins match, this only works for low number of
-        # judgements
-        expected_ranking_by_wins = [answer_id for (answer_id, wins) in sorted(
-            num_wins_by_id.items(),
-            key=operator.itemgetter(1))]
-        actual_ranking_by_scores = [answer_id for (answer_id, score) in sorted(
-            answer_scores.items(),
-            key=operator.itemgetter(1)) if score > 0]
+        # comparisons
+        sorted_expect_ranking = sorted(num_wins_by_id.items(), key=operator.itemgetter(1))
+        expected_ranking_by_wins = [answer_id for (answer_id, wins) in sorted_expect_ranking]
+        
+        sorted_actual_ranking = sorted(answer_scores.items(), key=operator.itemgetter(1))
+        actual_ranking_by_scores = [answer_id for (answer_id, score) in sorted_actual_ranking]
+        
         self.assertSequenceEqual(actual_ranking_by_scores, expected_ranking_by_wins)
 
     def test_comparison_count_matched_pairing(self):
-        # Make sure all answers are judged first
-        answer_ids = self._submit_all_possible_judgements_for_user(
+        # Make sure all answers are compared first
+        answer_ids = self._submit_all_possible_comparisons_for_user(
             self.data.get_authorized_student().id)
-        answer_ids2 = self._submit_all_possible_judgements_for_user(
+        answer_ids2 = self._submit_all_possible_comparisons_for_user(
             self.data.get_secondary_authorized_student().id)
         compared_ids = \
             answer_ids['winners'] + answer_ids2['winners'] + \
@@ -430,13 +420,13 @@ class JudgementAPITests(ACJAPITestCase):
 
         # Check that the 2 answers with 1 win gets returned
         with self.login(self.data.get_authorized_student_with_no_answers().username):
-            rv = self.client.get(self.answer_pair_url)
+            rv = self.client.get(self.base_url)
             self.assert200(rv)
-            self.assertIn(rv.json['answers'][0]['id'], possible_answer_ids)
-            self.assertIn(rv.json['answers'][1]['id'], possible_answer_ids)
+            self.assertIn(rv.json['objects'][0]['answer1_id'], possible_answer_ids)
+            self.assertIn(rv.json['objects'][0]['answer2_id'], possible_answer_ids)
 
-    def test_get_judgement_count(self):
-        url = self._build_url(self.data.get_course().id, self.question.id)
+    def test_get_comparison_count(self):
+        url = self._build_url(self.data.get_course().id, self.assignment.id)
 
         # test login required
         tail = '/users/' + str(self.data.get_authorized_student().id) + '/count'
@@ -452,11 +442,11 @@ class JudgementAPITests(ACJAPITestCase):
         with self.login(self.data.get_authorized_instructor().username):
             tail = '/users/' + str(self.data.get_authorized_instructor().id) + '/count'
             # test invalid course id
-            invalid_url = self._build_url(999, self.question.id)
+            invalid_url = self._build_url(999, self.assignment.id)
             rv = self.client.get(invalid_url + tail)
             self.assert404(rv)
 
-            # test invalid question id
+            # test invalid assignment id
             invalid_url = self._build_url(self.data.get_course().id, 999)
             rv = self.client.get(invalid_url + tail)
             self.assert404(rv)
@@ -467,7 +457,7 @@ class JudgementAPITests(ACJAPITestCase):
             self.assertEqual(rv.json['count'], 0)
 
         # test authorized student
-        winners = self._submit_all_possible_judgements_for_user(
+        winners = self._submit_all_possible_comparisons_for_user(
             self.data.get_authorized_student().id)['winners']
         tail = '/users/' + str(self.data.get_authorized_student().id) + '/count'
         with self.login(self.data.get_authorized_student().username):
@@ -475,8 +465,8 @@ class JudgementAPITests(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual(rv.json['count'], len(winners))
 
-    def test_get_all_judgement_count(self):
-        url = '/api/courses/' + str(self.data.get_course().id) + '/judgements/count'
+    def test_get_all_comparison_count(self):
+        url = '/api/courses/' + str(self.data.get_course().id) + '/comparisons/count'
 
         # test login required
         rv = self.client.get(url)
@@ -489,37 +479,37 @@ class JudgementAPITests(ACJAPITestCase):
 
         with self.login(self.data.get_authorized_instructor().username):
             # test invalid course id
-            rv = self.client.get('/api/courses/999/judgements/count')
+            rv = self.client.get('/api/courses/999/comparisons/count')
             self.assert404(rv)
 
-            questions = self.data.get_questions()
+            assignments = self.data.get_assignments()
             # test authorized instructor
             rv = self.client.get(url)
             self.assert200(rv)
-            count = rv.json['judgements']
+            count = rv.json['comparisons']
 
-            for ques in questions:
-                question_id = str(ques.id)
-                self.assertTrue(question_id in count)
-                self.assertEqual(count[question_id], 0)
+            for assignment in assignments:
+                assignment_id = str(assignment.id)
+                self.assertTrue(assignment_id in count)
+                self.assertEqual(count[assignment_id], 0)
 
         # test authorized student
-        winners = self._submit_all_possible_judgements_for_user(
+        winners = self._submit_all_possible_comparisons_for_user(
             self.data.get_authorized_student().id)['winners']
-        judgement_count = len(winners)
+        comparison_count = len(winners)
         with self.login(self.data.get_authorized_student().username):
             rv = self.client.get(url)
             self.assert200(rv)
-            count = rv.json['judgements']
+            count = rv.json['comparisons']
 
-            for ques in questions:
-                question_id = str(ques.id)
-                self.assertTrue(question_id in count)
-                jcount = judgement_count if ques.id == self.question.id else 0
-                self.assertEqual(count[question_id], jcount)
+            for assignment in assignments:
+                assignment_id = str(assignment.id)
+                self.assertTrue(assignment_id in count)
+                jcount = comparison_count if assignment.id == self.assignment.id else 0
+                self.assertEqual(count[assignment_id], jcount)
 
-    def test_get_all_availPair_logic(self):
-        url = '/api/courses/' + str(self.data.get_course().id) + '/judgements/availpair'
+    def test_get_all_comparison_available_logic(self):
+        url = '/api/courses/' + str(self.data.get_course().id) + '/comparisons/comparison_available'
 
         # test login required
         rv = self.client.get(url)
@@ -532,35 +522,35 @@ class JudgementAPITests(ACJAPITestCase):
 
         with self.login(self.data.get_authorized_student().username):
             # test invalid course id
-            invalid_url = '/api/courses/999/judgements/availpair'
+            invalid_url = '/api/courses/999/comparisons/comparison_available'
             rv = self.client.get(invalid_url)
             self.assert404(rv)
 
-            first_ques = self.data.get_questions()[0]
-            last_ques = self.data.get_questions()[-1]
-            expected = {ques.id: True for ques in self.data.get_questions()}
-            expected[last_ques.id] = False
-            # test authorized student - when haven't judged
+            first_assignment = self.data.get_assignments()[0]
+            last_assignment = self.data.get_assignments()[-1]
+            expected = {assignment.id: True for assignment in self.data.get_assignments()}
+            expected[last_assignment.id] = False
+            # test authorized student - when haven't compared
             rv = self.client.get(url)
             self.assert200(rv)
-            logic = rv.json['availPairsLogic']
-            for ques in self.data.get_questions():
-                self.assertEqual(logic[str(ques.id)], expected[ques.id])
+            logic = rv.json['comparison_available']
+            for assignment in self.data.get_assignments():
+                self.assertEqual(logic[str(assignment.id)], expected[assignment.id])
 
-        self._submit_all_possible_judgements_for_user(self.data.get_authorized_student().id)
+        self._submit_all_possible_comparisons_for_user(self.data.get_authorized_student().id)
         with self.login(self.data.get_authorized_student().username):
-            # test authorized student - when have judged all
+            # test authorized student - when have compared all
             rv = self.client.get(url)
             self.assert200(rv)
-            logic = rv.json['availPairsLogic']
-            expected[first_ques.id] = False
-            for ques in self.data.get_questions():
-                self.assertEqual(logic[str(ques.id)], expected[ques.id])
+            logic = rv.json['comparison_available']
+            expected[first_assignment.id] = False
+            for assignment in self.data.get_assignments():
+                self.assertEqual(logic[str(assignment.id)], expected[assignment.id])
 
-    def test_get_availPair_logic(self):
-        url = self._build_url(self.data.get_course().id, self.question.id)
+    def test_get_comparison_available_logic(self):
+        url = self._build_url(self.data.get_course().id, self.assignment.id)
 
-        tail = '/users/' + str(self.data.get_unauthorized_student().id) + '/availpair'
+        tail = '/users/' + str(self.data.get_unauthorized_student().id) + '/comparison_available'
         # test login required
         rv = self.client.get(url + tail)
         self.assert401(rv)
@@ -571,26 +561,26 @@ class JudgementAPITests(ACJAPITestCase):
             self.assert403(rv)
 
         # test invalid course id
-        tail = '/users/' + str(self.data.get_authorized_student().id) + '/availpair'
+        tail = '/users/' + str(self.data.get_authorized_student().id) + '/comparison_available'
         with self.login(self.data.get_authorized_student().username):
-            invalid_url = self._build_url(999, self.question.id)
+            invalid_url = self._build_url(999, self.assignment.id)
             rv = self.client.get(invalid_url + tail)
             self.assert404(rv)
 
-            # test invalid question id
+            # test invalid assignment id
             invalid_url = self._build_url(self.data.get_course().id, 999)
             rv = self.client.get(invalid_url + tail)
             self.assert404(rv)
 
         with self.login(self.data.get_authorized_student().username):
-            # test authorized student - when haven't judged
+            # test authorized student - when haven't compared
             rv = self.client.get(url + tail)
             self.assert200(rv)
-            self.assertTrue(rv.json['availPairsLogic'])
+            self.assertTrue(rv.json['comparison_available'])
 
-            self._submit_all_possible_judgements_for_user(self.data.get_authorized_student().id)
-            # test authorized student - when have judged all
+            self._submit_all_possible_comparisons_for_user(self.data.get_authorized_student().id)
+            # test authorized student - when have compared all
             self.login(self.data.get_authorized_student().username)
             rv = self.client.get(url + tail)
             self.assert200(rv)
-            self.assertFalse(rv.json['availPairsLogic'])
+            self.assertFalse(rv.json['comparison_available'])
