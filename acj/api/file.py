@@ -11,16 +11,16 @@ from flask.ext.restful import Resource, marshal
 
 from . import dataformat
 from acj.core import db, event
-from acj.models import FilesForPosts
+from acj.models import File, Assignment, Answer
 from .util import new_restful_api
 
-attachment_api = Blueprint('attachment_api', __name__)
-api = new_restful_api(attachment_api)
+file_api = Blueprint('file_api', __name__)
+api = new_restful_api(file_api)
 
 # events
 on_save_tmp_file = event.signal('TMP_FILE_CREATE')
-on_attachment_get = event.signal('ATTACHMENT_GET')
-on_attachment_delete = event.signal('ATTACHMENT_DELETE')
+on_file_get = event.signal('FILE_GET')
+on_file_delete = event.signal('FILE_DELETE')
 
 
 def allowed_file(filename, allowed):
@@ -33,7 +33,7 @@ def random_generator(size=8, chars=string.ascii_uppercase + string.digits):
 
 
 # /
-class AttachmentAPI(Resource):
+class FileAPI(Resource):
     @login_required
     def post(self):
         uploaded_file = request.files['file']
@@ -51,75 +51,90 @@ class AttachmentAPI(Resource):
             current_app.logger.debug("Temporarily saved tmpUpload/" + name)
             return {'name': name}
         return False
-api.add_resource(AttachmentAPI, '')
+api.add_resource(FileAPI, '')
 
-
-# /post/post_id
-class AttachmentPostIdAPI(Resource):
+# /file_id
+class FileIdAPI(Resource):
     @login_required
-    def get(self, post_id):
+    def get(self, file_id):
         # TODO: change to return list of attachments
-        uploaded_file = FilesForPosts.query.filter_by(posts_id=post_id).first()
+        uploaded_file = File.query.get_or_404(file_id)
 
-        on_attachment_get.send(
+        on_file_get.send(
             self,
-            event_name=on_attachment_get.name,
+            event_name=on_file_get.name,
             user=current_user,
-            data={'post_id': post_id})
+            data={'file_id': file_id})
 
         if uploaded_file:
-            return {'file': marshal(uploaded_file, dataformat.get_files_for_posts())}
+            return {'file': marshal(uploaded_file, dataformat.get_file())}
         return {'file': False}
-api.add_resource(AttachmentPostIdAPI, '/post/<int:post_id>')
-
-
-# /post/post_id/file_id
-class AttachmentPostIdFileIdAPI(Resource):
+        
     @login_required
-    def delete(self, post_id, file_id):
-        uploaded_file = FilesForPosts.query.filter_by(posts_id=post_id).filter_by(id=file_id).first()
+    def delete(self, file_id):
+        uploaded_file = File.query.get_or_404(file_id)
 
-        on_attachment_delete.send(
+        on_file_delete.send(
             self,
-            event_name=on_attachment_delete.name,
+            event_name=on_file_delete.name,
             user=current_user,
-            data={'post_id': post_id, 'file_id': file_id})
+            data={'file_id': file_id})
 
         if uploaded_file:
             tmp_name = os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], uploaded_file.name)
             os.remove(tmp_name)
+            
+            assignments = Assignment.query.filter_by(file_id=file_id).all()
+            for assignment in assignments:
+                assignment.file_id = None
+                db.session.add(assignment)
+                
+            answers = Answer.query.filter_by(file_id=file_id).all()
+            for answer in answers:
+                answer.file_id = None
+                db.session.add(answer)
+            
             db.session.delete(uploaded_file)
             db.session.commit()
-            current_app.logger.debug("SuccessFully deleted " + uploaded_file.name + " for post " + str(post_id))
+            current_app.logger.debug("SuccessFully deleted " + uploaded_file.name)
 
-api.add_resource(AttachmentPostIdFileIdAPI, '/post/<int:post_id>/<int:file_id>')
+api.add_resource(FileIdAPI, '/<int:file_id>')
+
 
 
 # move file from temporary location to "permanent" location
-# makes a FilesForPosts entry
-def add_new_file(alias, name, course_id, question_id, post_id):
-    tmp_name = str(course_id) + '_' + str(question_id) + '_' + str(post_id) + '.pdf'
+# makes a File entry
+def add_new_file(alias, name, model_name, model_id):
+    tmp_name = str(model_name) + '_' + str(model_id) + '.pdf'
+    
     shutil.move(os.path.join(
         current_app.config['UPLOAD_FOLDER'], name),
         os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], tmp_name))
-    uploaded_file = FilesForPosts(
-        posts_id=post_id, author_id=current_user.id,
-        name=tmp_name, alias=alias)
+        
+    uploaded_file = File(user_id=current_user.id, name=tmp_name, alias=alias)
+        
     db.session.add(uploaded_file)
     db.session.commit()
     current_app.logger.debug(
         "Moved and renamed " + name + " from " + current_app.config['UPLOAD_FOLDER'] +
         " to " + os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], tmp_name))
+    
+    return uploaded_file.id
 
 
-# delete file from Post
-def delete_file(post_id):
-    # TODO: delete ALL files under post with post_id
-    uploaded_file = FilesForPosts.query.filter_by(posts_id=post_id).first()
-    if uploaded_file:
+# delete file
+def delete_file(file_id):
+    if file_id == None:
+        return
+    
+    uploaded_file = File.query.get(file_id)
+    if uploaded_file != None:
         try:
             os.remove(os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], uploaded_file.name))
             current_app.logger.debug("Successfully deleted file " + uploaded_file.name + " for post " + str(post_id))
         except OSError as e:
             if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
                 raise  # re-raise exception if a different error occured
+        
+        db.session.remove(uploaded_file)
+        db.session.commit()

@@ -1,23 +1,20 @@
 import math
 from collections import namedtuple
 
+from acj.algorithms.score.score_algorithm import ScoreAlgorithm
 from acj.algorithms.comparison_pair import ComparisonPair
 from acj.algorithms.comparison_result import ComparisonResult
 
-
 OpponentStats = namedtuple('OpponentStats', ['rounds', 'wins', 'loses'])
 
-class ScoreACJ:
-    def __init__(self, log=None):
-        self.log = log
+class ComparativeJudgementScoreAlgorithm(ScoreAlgorithm):
+    def __init__(self):
+        ScoreAlgorithm.__init__(self)
+        
         # storage[key][opponent_key] = OpponentStats
         self.storage = {}
-        
-    def _debug(self, message):
-        if self.log != None:
-            self.log.debug(message)
             
-    def calculate_scores(self, comparison_pairs):
+    def calculate_score(self, comparison_pairs):
         """
         Calculate scores for a set of comparisons
         :param comparisons: array of 
