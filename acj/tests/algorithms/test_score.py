@@ -1,11 +1,9 @@
 import unittest
 
-import acj.algorithms
-from acj.algorithms.comparison_pair import ComparisonPair
-from acj.algorithms.comparison_result import ComparisonResult
+from acj.algorithms import ComparisonPair, ComparisonResult
+from acj.algorithms.score import calculate_score
         
-class TestAlgorithms(unittest.TestCase):
-    logger = None
+class TestScore(unittest.TestCase):
 
     def setUp(self):
         self.comparisons = [
@@ -14,13 +12,15 @@ class TestAlgorithms(unittest.TestCase):
             ComparisonPair(2,3,winning_key=2)
         ]
 
-    def test_calculate_scores(self):
-        # test acj score algorithm
-        self.algorithm = "acj"
+    def test_calculate_score(self):
+        # test comparitive judgement score algorithm
+        self.package_name = "comparative_judgement"
         
-        results = acj.algorithms.calculate_scores(
-            self.comparisons, self.algorithm, self.logger
+        results = calculate_score(
+            package_name=self.package_name,
+            comparison_pairs=self.comparisons
         )
+        
         self.assertEqual(len(results.items()), 3)
         
         self.assertIsInstance(results.get(1), ComparisonResult)
@@ -42,7 +42,5 @@ class TestAlgorithms(unittest.TestCase):
         self.assertEqual(results.get(3).total_loses, 2)
         
         
-        
-
 if __name__ == '__main__':
     unittest.main()

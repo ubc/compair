@@ -1,28 +1,28 @@
 import io
 
-from data.fixtures.test_data import GroupsTestData
+from data.fixtures.test_data import TestFixture
 from acj.tests.test_acj import ACJAPITestCase
 
 
-class GroupsAPITests(ACJAPITestCase):
+class CourseGroupsAPITests(ACJAPITestCase):
     def setUp(self):
-        super(GroupsAPITests, self).setUp()
-        self.data = GroupsTestData()
+        super(CourseGroupsAPITests, self).setUp()
+        self.fixtures = TestFixture().add_course(num_students=30, num_groups=3)
 
     def test_get_active_groups(self):
-        url = '/api/courses/'+str(self.data.get_course().id)+'/groups'
+        url = '/api/courses/'+str(self.fixtures.course.id)+'/groups'
 
         # test login required
         rv = self.client.get(url)
         self.assert401(rv)
 
         # test unauthorized user
-        with self.login(self.data.get_unauthorized_instructor().username):
+        with self.login(self.fixtures.unauthorized_instructor.username):
             rv = self.client.get(url)
             self.assert403(rv)
 
         # test invalid course id
-        with self.login(self.data.get_authorized_instructor().username):
+        with self.login(self.fixtures.instructor.username):
             invalid_url = '/api/courses/999/groups'
             rv = self.client.get(invalid_url)
             self.assert404(rv)
@@ -30,154 +30,137 @@ class GroupsAPITests(ACJAPITestCase):
             # test successful query
             rv = self.client.get(url)
             self.assert200(rv)
-            actual = rv.json['groups']
-            self.assertEqual(len(actual), 1)
-            self.assertEqual(actual[0]['id'], self.data.get_active_group().id)
-            self.assertEqual(actual[0]['name'], self.data.get_active_group().name)
+            actual = rv.json['group_names']
+            self.assertEqual(len(actual), 3)
+            self.assertEqual(actual[0], self.fixtures.groups[0])
 
         # test TA
-        with self.login(self.data.get_authorized_ta().username):
+        with self.login(self.fixtures.ta.username):
             self.assert200(rv)
-            actual = rv.json['groups']
-            self.assertEqual(len(actual), 1)
-            self.assertEqual(actual[0]['id'], self.data.get_active_group().id)
-            self.assertEqual(actual[0]['name'], self.data.get_active_group().name)
+            actual = rv.json['group_names']
+            self.assertEqual(len(actual), 3)
+            self.assertEqual(actual[0], self.fixtures.groups[0])
 
     def test_get_group_members(self):
-        course_id = self.data.get_course().id
-        group_id = self.data.get_active_group().id
-        url = '/api/courses/'+str(course_id)+'/groups/'+str(group_id)
+        course_id = self.fixtures.course.id
+        group_name = self.fixtures.groups[0]
+        url = '/api/courses/'+str(course_id)+'/groups/'+group_name
 
         # test login required
         rv = self.client.get(url)
         self.assert401(rv)
 
         # test unauthorized user
-        with self.login(self.data.get_unauthorized_instructor().username):
+        with self.login(self.fixtures.unauthorized_instructor.username):
             rv = self.client.get(url)
             self.assert403(rv)
 
         # test invalid course id
-        with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.get('/api/courses/999/groups/'+str(group_id))
+        with self.login(self.fixtures.instructor.username):
+            rv = self.client.get('/api/courses/999/groups/'+group_name)
             self.assert404(rv)
 
             # test invalid group id
-            rv = self.client.get('/api/courses/'+str(course_id)+'/groups/999')
+            rv = self.client.get('/api/courses/'+str(course_id)+'/groups/asdasdasdasd')
             self.assert404(rv)
 
             # test authorized instructor
             rv = self.client.get(url)
             self.assert200(rv)
-            self.assertEqual(1, len(rv.json['students']))
-            self.assertEqual(self.data.get_active_member().users_id, rv.json['students'][0]['user']['id'])
+            self.assertEqual(10, len(rv.json['students']))
+            self.assertEqual(self.fixtures.students[0].id, rv.json['students'][0]['user']['id'])
 
         # test authorized teaching assistant
-        with self.login(self.data.get_authorized_ta().username):
+        with self.login(self.fixtures.ta.username):
             rv = self.client.get(url)
             self.assert200(rv)
-            self.assertEqual(1, len(rv.json['students']))
-            self.assertEqual(self.data.get_active_member().users_id, rv.json['students'][0]['user']['id'])
+            self.assertEqual(10, len(rv.json['students']))
+            self.assertEqual(self.fixtures.students[0].id, rv.json['students'][0]['user']['id'])
 
     def test_group_enrolment(self):
         # frequently used objects
-        course = self.data.get_course()
-        group = self.data.get_active_group()
+        course = self.fixtures.course
+        group_name = self.fixtures.groups[0]
 
         # test login required
-        url = self._create_group_user_url(course, self.data.get_authorized_student(), group)
+        url = self._create_group_user_url(course, self.fixtures.students[0], group_name)
         rv = self.client.post(url, data={}, content_type='application/json')
         self.assert401(rv)
 
         # test unauthorized user
-        with self.login(self.data.get_unauthorized_instructor().username):
-            url = self._create_group_user_url(course, self.data.get_authorized_student(), group)
+        with self.login(self.fixtures.unauthorized_instructor.username):
+            url = self._create_group_user_url(course, self.fixtures.students[0], group_name)
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert403(rv)
 
-        with self.login(self.data.get_authorized_instructor().username):
+        with self.login(self.fixtures.instructor.username):
             # test user that is already in group
-            url = self._create_group_user_url(course, self.data.get_authorized_student(), group)
+            url = self._create_group_user_url(course, self.fixtures.students[0], group_name)
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert200(rv)
-            self.assertEqual(rv.json['groups_name'], group.name)
+            self.assertEqual(rv.json['group_name'], group_name)
 
             # test user that has never been in the group
-            url = self._create_group_user_url(course, self.data.get_authorized_instructor(), group)
+            url = self._create_group_user_url(course, self.fixtures.instructor, group_name)
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert200(rv)
-            self.assertEqual(rv.json['groups_name'], group.name)
+            self.assertEqual(rv.json['group_name'], group_name)
 
             # test user that has left the group
-            url = self._create_group_user_url(course, self.data.get_authorized_ta(), group)
+            url = self._create_group_user_url(course, self.fixtures.ta, group_name)
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert200(rv)
-            self.assertEqual(rv.json['groups_name'], group.name)
+            self.assertEqual(rv.json['group_name'], group_name)
 
             # test user that is not enroled in the course anymore - eg. DROPPED
-            url = self._create_group_user_url(course, self.data.get_dropped_instructor(), group)
+            url = self._create_group_user_url(course, self.fixtures.dropped_instructor, group_name)
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert404(rv)
 
             # test user that has never been in the course
-            url = self._create_group_user_url(course, self.data.get_unauthorized_student(), group)
-            rv = self.client.post(url, data={}, content_type='application/json')
-            self.assert404(rv)
-
-            # test inactive group
-            url = self._create_group_user_url(course, self.data.get_authorized_student(), self.data.get_inactive_group())
-            rv = self.client.post(url, data={}, content_type='application/json')
-            self.assert404(rv)
-
-            # test group that is in another course
-            url = self._create_group_user_url(course, self.data.get_authorized_student(), self.data.get_unauthorized_group())
+            url = self._create_group_user_url(course, self.fixtures.unauthorized_student, group_name)
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert404(rv)
 
             # test invalid course id
-            url = '/api/courses/999/users/'+str(self.data.get_authorized_student().id)+'/groups/'+str(group.id)
+            url = '/api/courses/999/users/'+str(self.fixtures.students[0].id)+'/groups/'+group_name
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert404(rv)
 
             # test invalid user id
-            url = '/api/courses/'+str(course.id)+'/users/999/groups/'+str(group.id)
-            rv = self.client.post(url, data={}, content_type='application/json')
-            self.assert404(rv)
-
-            # test invalid group id
-            url = '/api/courses/'+str(course.id)+'/users/'+str(self.data.get_authorized_student().id)+'/groups/999'
+            url = '/api/courses/'+str(course.id)+'/users/999/groups/'+group_name
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert404(rv)
 
     def test_group_unenrolment(self):
-        course = self.data.get_course()
+        course = self.fixtures.course
 
         # test login required
-        url = self._create_group_user_url(course, self.data.get_authorized_student())
+        url = self._create_group_user_url(course, self.fixtures.students[0])
         rv = self.client.delete(url)
         self.assert401(rv)
 
         # test unauthorzied user
-        with self.login(self.data.get_unauthorized_instructor().username):
-            url = self._create_group_user_url(course, self.data.get_authorized_student())
+        with self.login(self.fixtures.unauthorized_instructor.username):
+            url = self._create_group_user_url(course, self.fixtures.students[0])
             rv = self.client.delete(url)
             self.assert403(rv)
 
-        with self.login(self.data.get_authorized_instructor().username):
+        with self.login(self.fixtures.instructor.username):
             # test user in course
-            url = self._create_group_user_url(course, self.data.get_authorized_student())
+            url = self._create_group_user_url(course, self.fixtures.students[0])
             rv = self.client.delete(url)
             self.assert200(rv)
-            self.assertEqual(rv.json['user_id'], self.data.get_authorized_student().id)
+            self.assertEqual(rv.json['user_id'], self.fixtures.students[0].id)
             self.assertEqual(rv.json['course_id'], course.id)
 
             # test user not in course
-            url = self._create_group_user_url(course, self.data.get_unauthorized_student())
+            url = self._create_group_user_url(course, self.fixtures.unauthorized_student)
             rv = self.client.delete(url)
             self.assert404(rv)
 
             # test invalid course id
-            url = '/api/courses/999/users/'+str(self.data.get_authorized_student().id)+'/groups'
+            url = '/api/courses/999/users/'+str(self.fixtures.students[0].id)+'/groups'
             rv = self.client.delete(url)
             self.assert404(rv)
 
@@ -187,9 +170,9 @@ class GroupsAPITests(ACJAPITestCase):
             self.assert404(rv)
 
     def test_import_groups(self):
-        url = '/api/courses/' + str(self.data.get_course().id) + '/groups'
+        url = '/api/courses/' + str(self.fixtures.course.id) + '/groups'
 
-        content = self.data.get_authorized_student().username + "," + self.data.get_active_group().name
+        content = self.fixtures.students[0].username + "," + self.fixtures.groups[0]
         encoded_content = content.encode()
         filename = "groups.csv"
 
@@ -201,24 +184,24 @@ class GroupsAPITests(ACJAPITestCase):
 
         # test unauthorized user
         uploaded_file = io.BytesIO(encoded_content)
-        with self.login(self.data.get_authorized_student().username):
+        with self.login(self.fixtures.students[0].username):
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert403(rv)
             uploaded_file.close()
 
         uploaded_file = io.BytesIO(encoded_content)
-        with self.login(self.data.get_authorized_ta().username):
+        with self.login(self.fixtures.ta.username):
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert403(rv)
             uploaded_file.close()
 
         uploaded_file = io.BytesIO(encoded_content)
-        with self.login(self.data.get_unauthorized_instructor().username):
+        with self.login(self.fixtures.unauthorized_instructor.username):
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert403(rv)
             uploaded_file.close()
 
-        with self.login(self.data.get_authorized_instructor().username):
+        with self.login(self.fixtures.instructor.username):
             # test invalid course id
             invalid_url = '/api/courses/999/groups'
             uploaded_file = io.BytesIO(encoded_content)
@@ -257,53 +240,53 @@ class GroupsAPITests(ACJAPITestCase):
             self.assertEqual(1, len(rv.json['invalids']))
             invalid = rv.json['invalids'][0]
             member = [
-                '["', self.data.get_authorized_student().username, '", "',
-                self.data.get_active_group().name, '"]']
+                '["', self.fixtures.students[0].username, '", "',
+                self.fixtures.groups[0], '"]']
             self.assertEqual("".join(member), invalid['member'])
             self.assertEqual("This user already exists in the file.", invalid['message'])
             uploaded_file.close()
 
             # test missing username
-            missing_username = "," + self.data.get_active_group().name
+            missing_username = "," + self.fixtures.groups[0]
             uploaded_file = io.BytesIO(missing_username.encode())
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(1, rv.json['success'])
             self.assertEqual(1, len(rv.json['invalids']))
             invalid = rv.json['invalids'][0]
-            member = ['["", "', self.data.get_active_group().name, '"]']
+            member = ['["", "', self.fixtures.groups[0], '"]']
             self.assertEqual("".join(member), invalid['member'])
             self.assertEqual("No user with this username exists.", invalid['message'])
             uploaded_file.close()
 
             # test missing group name
-            missing_group = self.data.get_authorized_student().username + ","
+            missing_group = self.fixtures.students[0].username + ","
             uploaded_file = io.BytesIO(missing_group.encode())
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(0, rv.json['success'])
             self.assertEqual(1, len(rv.json['invalids']))
             invalid = rv.json['invalids'][0]
-            member = ['["', self.data.get_authorized_student().username, '", ""]']
+            member = ['["', self.fixtures.students[0].username, '", ""]']
             self.assertEqual("".join(member), invalid['member'])
             self.assertEqual("The group name is invalid.", invalid['message'])
             uploaded_file.close()
 
             # test invalid user
-            invalid_user = "username9999," + self.data.get_active_group().name
+            invalid_user = "username9999," + self.fixtures.groups[0]
             uploaded_file = io.BytesIO(invalid_user.encode())
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(1, rv.json['success'])
             self.assertEqual(1, len(rv.json['invalids']))
             invalid = rv.json['invalids'][0]
-            member = ['["username9999", "', self.data.get_active_group().name, '"]']
+            member = ['["username9999", "', self.fixtures.groups[0], '"]']
             self.assertEqual("".join(member), invalid['member'])
             self.assertEqual("No user with this username exists.", invalid['message'])
             uploaded_file.close()
 
             # test successful import with username
-            with_username = self.data.get_authorized_student().username + "," + self.data.get_active_group().name
+            with_username = self.fixtures.students[0].username + "," + self.fixtures.groups[0]
             uploaded_file = io.BytesIO(with_username.encode())
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert200(rv)
@@ -312,16 +295,16 @@ class GroupsAPITests(ACJAPITestCase):
             uploaded_file.close()
 
             # test successful import with student number
-            with_studentno = self.data.get_authorized_student().student_no + "," + self.data.get_active_group().name
+            with_studentno = self.fixtures.students[0].student_number + "," + self.fixtures.groups[0]
             uploaded_file = io.BytesIO(with_studentno.encode())
-            rv = self.client.post(url, data=dict(userIdentifier="student_no", file=(uploaded_file, filename)))
+            rv = self.client.post(url, data=dict(userIdentifier="student_number", file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(1, rv.json['success'])
             self.assertEqual(0, len(rv.json['invalids']))
             uploaded_file.close()
 
             # test import user not in course
-            unauthorized_student = self.data.get_unauthorized_student().username + "," + self.data.get_active_group().name
+            unauthorized_student = self.fixtures.unauthorized_student.username + "," + self.fixtures.groups[0]
             uploaded_file = io.BytesIO(unauthorized_student.encode())
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert200(rv)
@@ -329,32 +312,14 @@ class GroupsAPITests(ACJAPITestCase):
             self.assertEqual(1, len(rv.json['invalids']))
             invalid = rv.json['invalids'][0]
             member = [
-                '["', self.data.get_unauthorized_student().username, '", "',
-                self.data.get_active_group().name, '"]']
+                '["', self.fixtures.unauthorized_student.username, '", "',
+                self.fixtures.groups[0], '"]']
             self.assertEqual("".join(member), invalid['member'])
             self.assertEqual("The user is not enroled in the course", invalid['message'])
             uploaded_file.close()
 
-            # test adding to inactive group
-            inactive_group = self.data.get_authorized_student().username + "," + self.data.get_inactive_group().name
-            uploaded_file = io.BytesIO(inactive_group.encode())
-            rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
-            self.assert200(rv)
-            self.assertEqual(1, rv.json['success'])
-            self.assertEqual(0, len(rv.json['invalids']))
-            uploaded_file.close()
-
-            # test adding inactive group member
-            inactive_member = self.data.get_inactive_member().user.username + "," + self.data.get_active_group().name
-            uploaded_file = io.BytesIO(inactive_member.encode())
-            rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
-            self.assert200(rv)
-            self.assertEqual(1, rv.json['success'])
-            self.assertEqual(0, len(rv.json['invalids']))
-            uploaded_file.close()
-
             # test placing instructor in group
-            add_instructor = self.data.get_authorized_instructor().username + "," + self.data.get_active_group().name
+            add_instructor = self.fixtures.instructor.username + "," + self.fixtures.groups[0]
             uploaded_file = io.BytesIO(add_instructor.encode())
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert200(rv)
@@ -363,7 +328,7 @@ class GroupsAPITests(ACJAPITestCase):
             uploaded_file.close()
 
             # test placing TA in group
-            add_ta = self.data.get_authorized_ta().username + "," + self.data.get_active_group().name
+            add_ta = self.fixtures.ta.username + "," + self.fixtures.groups[0]
             uploaded_file = io.BytesIO(add_ta.encode())
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert200(rv)
@@ -371,8 +336,8 @@ class GroupsAPITests(ACJAPITestCase):
             self.assertEqual(0, len(rv.json['invalids']))
             uploaded_file.close()
 
-    def _create_group_user_url(self, course, user, group=None):
+    def _create_group_user_url(self, course, user, group_name=None):
         url = '/api/courses/'+str(course.id)+'/users/'+str(user.id)+'/groups'
-        if group:
-            url = url+'/'+str(group.id)
+        if group_name:
+            url = url+'/'+group_name
         return url
