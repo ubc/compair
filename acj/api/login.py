@@ -2,8 +2,8 @@ from flask import Blueprint, jsonify, request, session as sess, current_app, url
 from flask_login import current_user, login_required, login_user, logout_user
 
 from acj import cas
-from .authorization import get_logged_in_user_permissions
-from .models import Users
+from acj.authorization import get_logged_in_user_permissions
+from acj.models import User
 
 login_api = Blueprint("login_api", __name__, url_prefix='/api')
 
@@ -17,7 +17,7 @@ def login():
     username = param['username']
     password = param['password']
     # grab the user from the username
-    user = Users.query.filter_by(username=username).first()
+    user = User.query.filter_by(username=username).first()
     if not user:
         current_app.logger.debug("Login failed, invalid username for: " + username)
     elif not user.verify_password(password):
@@ -33,7 +33,7 @@ def login():
 @login_api.route('/logout', methods=['DELETE'])
 @login_required
 def logout():
-    current_user.update_lastonline()
+    current_user.update_last_online()
     logout_user()  # flask-login delete user info
     if 'CAS_LOGIN' in sess:
         sess.pop('CAS_LOGIN')
@@ -63,7 +63,7 @@ def auth_cas():
     username = cas.username
 
     if username is not None:
-        user = Users.query.filter_by(username=username).first()
+        user = User.query.filter_by(username=username).first()
         msg = None
         if not user:
             current_app.logger.debug("Login failed, invalid username for: " + username)
@@ -83,7 +83,7 @@ def auth_cas():
 def authenticate(user):
     # username valid, password valid, login successful
     # "remember me" functionality is available, do we want to implement?
-    user.update_lastonline()
+    user.update_last_online()
     login_user(user)  # flask-login store user info
     current_app.logger.debug("Login successful for: " + user.username)
     return get_logged_in_user_permissions()

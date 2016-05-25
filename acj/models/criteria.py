@@ -28,11 +28,16 @@ class Criteria(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     scores = db.relationship("Score", backref="criteria", lazy='dynamic')
     
     # hyprid and other functions
-    compare_count = column_property(
-        select([func.count(AssignmentCriteria.id)]).
-        where(AssignmentCriteria.criteria_id == id)
-    )
-
     @hybrid_property
     def compared(self):
         return self.compare_count > 0
+
+    @classmethod
+    def __declare_last__(cls):
+        super(cls, cls).__declare_last__()
+        
+        cls.compare_count = column_property(
+            select([func.count(AssignmentCriteria.id)]).
+            where(AssignmentCriteria.criteria_id == cls.id).
+            where(AssignmentCriteria.active == True)
+        )

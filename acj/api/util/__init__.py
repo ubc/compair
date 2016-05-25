@@ -20,7 +20,7 @@ def pagination(model):
     object. It also injects the queried objects into the get list method. e.g.::
 
         class UserAPI
-            @pagination(Users)
+            @pagination(User)
             @marshal_with(user_fields)
             def get(self, objects):
                 # change objects if necessary here

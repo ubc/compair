@@ -1,12 +1,15 @@
 import hashlib
 from flask import current_app
 from enum import Enum
+from datetime import datetime
+import time
 
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.orm import synonym, load_only, column_property, backref, contains_eager, joinedload, Load
+from sqlalchemy.orm import synonym, load_only, backref, contains_eager, joinedload, Load
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy_enum34 import EnumType
 
 from flask.ext.login import UserMixin
 from . import *
@@ -28,7 +31,7 @@ class User(DefaultTableMixin, WriteTrackingMixin, UserMixin):
     # table columns
     username = db.Column(db.String(255), unique=True, nullable=False)
     _password = db.Column(db.String(255), unique=False, nullable=False)
-    system_role = db.Column(db.Enum(SystemRole), nullable=False, index=True)
+    system_role = db.Column(EnumType(SystemRole, name="system_role"), nullable=False, index=True)
     displayname = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(254))  # email addresses are max 254 characters
     firstname = db.Column(db.String(255))
@@ -39,13 +42,30 @@ class User(DefaultTableMixin, WriteTrackingMixin, UserMixin):
     # relationships
     
     # user many-to-many course with association user_course
-    user_courses = db.relationship("UserCourse", back_populates="user", lazy='dynamic')
-    assignment_comments = db.relationship("AssignmentComment", backref="user", lazy='dynamic')
-    answers = db.relationship("Answer", backref="user", lazy='dynamic')
-    answer_responses = db.relationship("AnswerResponse", backref="user", lazy='dynamic')
-    criteria = db.relationship("Criteria", backref="user", lazy='dynamic')
-    files = db.relationship("File", backref="user", lazy='dynamic')
-    comparisons = db.relationship("Comparison", backref="user", lazy='dynamic')
+    user_courses = db.relationship("UserCourse", 
+        foreign_keys='UserCourse.user_id', 
+        back_populates="user")
+    assignments = db.relationship("Assignment", 
+        foreign_keys='Assignment.user_id', 
+        backref="user", lazy='dynamic')
+    assignment_comments = db.relationship("AssignmentComment", 
+        foreign_keys='AssignmentComment.user_id', 
+        backref="user", lazy='dynamic')
+    answers = db.relationship("Answer", 
+        foreign_keys='Answer.user_id', 
+        backref="user", lazy='dynamic')
+    answer_comments = db.relationship("AnswerComment", 
+        foreign_keys='AnswerComment.user_id', 
+        backref="user", lazy='dynamic')
+    criteria = db.relationship("Criteria", 
+        foreign_keys='Criteria.user_id', 
+        backref="user", lazy='dynamic')
+    files = db.relationship("File", 
+        foreign_keys='File.user_id', 
+        backref="user", lazy='dynamic')
+    comparisons = db.relationship("Comparison", 
+        foreign_keys='Comparison.user_id', 
+        backref="user", lazy='dynamic')
     
     # hyprid and other functions
     
@@ -89,8 +109,8 @@ class User(DefaultTableMixin, WriteTrackingMixin, UserMixin):
         pwd_context = getattr(security, current_app.config['PASSLIB_CONTEXT'])
         return pwd_context.verify(password, self.password)
 
-    def update_lastonline(self):
-        self.lastonline = datetime.datetime.utcnow()
+    def update_last_online(self):
+        self.last_online = datetime.utcnow()
         db.session.add(self)
         db.session.commit()
 
@@ -117,10 +137,9 @@ class User(DefaultTableMixin, WriteTrackingMixin, UserMixin):
     def get_course_role(self, course_id):
         """ Return user's course role by course id """
         
-        user_course = self.user_courses.filter(Course.id==course_id)
-        
-        if user_course is not None:
-            return user_course.course_role
+        for user_course in self.user_courses:
+            if user_course.course_id == course_id:
+                return user_course.course_role
 
         return None
 

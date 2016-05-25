@@ -3,7 +3,7 @@ from .mixins import ActiveMixin, DefaultTableMixin, WriteTrackingMixin
 
 # models & enums
 from .activity_log import ActivityLog
-from .answer_response import AnswerResponse
+from .answer_comment import AnswerComment
 from .answer import Answer
 from .assignment_criteria import AssignmentCriteria
 from .assignment_comment import AssignmentComment

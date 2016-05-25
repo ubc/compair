@@ -12,10 +12,8 @@ from sqlalchemy import func
 
 from acj.authorization import require
 from acj.core import event
-from acj.models import \
-    PostsForQuestions, CoursesAndUsers, Courses, Posts, PostsForAnswers, UserTypesForCourse, \
-    Judgements, AnswerPairings, PostsForAnswersAndPostsForComments, PostsForComments, \
-    CriteriaAndPostsForQuestions, GroupsAndUsers, Groups
+from acj.models import CourseRole, Assignment, UserCourse, Course, Answer, \
+    AnswerComment, AssignmentCriteria, Comparison
 from .util import new_restful_api
 
 report_api = Blueprint('report_api', __name__)
@@ -27,7 +25,7 @@ app = Flask(__name__)
 app.config['PERMANENT_REPORT_UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 report_parser = reqparse.RequestParser()
-report_parser.add_argument('group_id', type=int)
+report_parser.add_argument('group_name', type=str)
 # may change 'type' to int
 report_parser.add_argument('type', type=str, required=True)
 report_parser.add_argument('assignment', type=int)
@@ -37,63 +35,71 @@ on_export_report = event.signal('EXPORT_REPORT')
 # should we have a different event for each type of report?
 
 
-def name_generator(course, report_name, group_id, file_type="csv"):
+def name_generator(course, report_name, group_name, file_type="csv"):
     date = time.strftime("%Y-%m-%d--%H-%M-%S")
-    group_name = ""
-    if group_id:
-        group_name = Groups.query.get_or_404(group_id).name
-        group_name += '-'
+    group_name_output = ""
+    if group_name:
+        group_name_output = group_name + '-'
     # return report_name + "_" + course.name + "_" + random_generator(4) + "." + file_type
-    return course.name + "-" + group_name + report_name + "--" + date + "." + file_type
+    return course.name + "-" + group_name_output + report_name + "--" + date + "." + file_type
 
 
 class ReportRootAPI(Resource):
     @login_required
     def post(self, course_id):
-        course = Courses.query.get_or_404(course_id)
-        post = Posts(courses_id=course.id)
-        question = PostsForQuestions(post=post)
-        require(MANAGE, question)
+        course = Course.get_active_or_404(course_id)
+        assignment = Assignment(course_id=course.id)
+        require(MANAGE, assignment)
 
         params = report_parser.parse_args()
-        group_id = params.get('group_id', None)
+        group_name = params.get('group_name', None)
         report_type = params.get('type')
-        assignment = params.get('assignment', None)
+        
+        assignments = []
+        assignment_id = params.get('assignment_id', None)
+        if assignment_id:
+            assignment = Assignment.get_active_or_404(assignment_id)
+            assignments = [assignment]
+        else:
+            assignments = Assignment.query \
+                .filter_by(
+                    course_id=course_id,
+                    active=True
+                ) \
+                .all()
 
         if report_type == "participation_stat":
-            if assignment:
-                question = PostsForQuestions.query.get_or_404(assignment)
-                questions = [question]
-                data = participation_stat_report(course_id, questions, group_id, False)
+            if assignment_id:
+                data = participation_stat_report(course_id, assignments, group_name, False)
             else:
-                questions = PostsForQuestions.query.join(Posts).filter_by(courses_id=course_id).all()
-                data = participation_stat_report(course_id, questions, None, True)
+                data = participation_stat_report(course_id, assignments, None, True)
 
             title = [
-                'Question', 'Username', 'Last Name', 'First Name', 'Answer Submitted', 'Answer ID',
+                'Assignment', 'Username', 'Last Name', 'First Name', 'Answer Submitted', 'Answer ID',
                 'Evaluations Submitted', 'Evaluations Required', 'Evaluation Requirements Met',
                 'Replies Submitted']
             titles = [title]
+            
         elif report_type == "participation":
             user_titles = ['Last Name', 'First Name', 'Student No']
-            if assignment:
-                question = PostsForQuestions.query.filter_by(id=assignment).join(Posts).filter_by(
-                    courses_id=course_id).first_or_404()
-                questions = [question]
-            else:
-                questions = PostsForQuestions.query.join(Posts).filter_by(courses_id=course_id) \
-                    .order_by(PostsForQuestions.answer_start).all()
-            data = participation_report(course_id, questions, group_id)
+            data = participation_report(course_id, assignments, group_name)
 
             title_row1 = [""] * len(user_titles)
             title_row2 = user_titles
-            for q in questions:
-                criteria = CriteriaAndPostsForQuestions.query.filter_by(questions_id=q.id, active=True).all()
-                title_row1 += [q.title] + [""] * len(criteria)
-                for c in criteria:
-                    title_row2.append('Percentage Score for "' + c.criterion.name + '"')
-                title_row2.append("Evaluations Submitted (" + str(q.num_judgement_req) + ' required)')
-                if q.selfevaltype_id:
+            
+            for assignment in assignments:
+                assignment_criteria = AssignmentCriteria.query \
+                    .filter_by(
+                        assignment_id=assignment.id, 
+                        active=True
+                    ) \
+                    .all()
+                    
+                title_row1 += [assignment.title] + [""] * len(assignment_criteria)
+                for criteria in assignment_criteria:
+                    title_row2.append('Percentage Score for "' + criteria.criteria.name + '"')
+                title_row2.append("Evaluations Submitted (" + str(assignment.number_of_comparisons) + ' required)')
+                if assignment.enable_self_eval:
                     title_row1 += [""]
                     title_row2.append("Self Evaluation Submitted")
             titles = [title_row1, title_row2]
@@ -101,7 +107,7 @@ class ReportRootAPI(Resource):
         else:
             return {'error': 'The requested report type cannot be found'}, 400
 
-        name = name_generator(course, report_type, group_id)
+        name = name_generator(course, report_type, group_name)
         tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], name)
 
         report = open(tmp_name, 'wb')
@@ -125,39 +131,52 @@ class ReportRootAPI(Resource):
 api.add_resource(ReportRootAPI, '')
 
 
-def participation_stat_report(course_id, assignments, group_id, overall):
+def participation_stat_report(course_id, assignments, group_name, overall):
     report = []
-    student = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first().id
-    classlist = CoursesAndUsers.query.filter_by(courses_id=course_id). \
-        filter(CoursesAndUsers.usertypesforcourse_id == student).all()
-    if group_id:
-        user_ids = [u.users_id for u in classlist]
-        classlist = GroupsAndUsers.query.filter_by(groups_id=group_id, active=True) \
-            .filter(GroupsAndUsers.users_id.in_(user_ids)).all()
+    
+    classlist = UserCourse.query \
+        .filter_by(
+            course_id=course_id,
+            course_role=CourseRole.student
+        )
+    if group_name:
+        classlist = classlist.filter_by(group_name=group_name)
+    classlist = classlist.all()
 
     total_req = 0
     total = {}
 
-    for ques in assignments:
+    for assignment in assignments:
         # ANSWERS: assume max one answer per user
-        answers = PostsForAnswers.query.filter_by(questions_id=ques.id).all()
-        answers = {a.users_id: a.id for a in answers}
+        answers = Answer.query \
+            .filter_by(active=True) \
+            .filter_by(assignment_id=assignment.id) \
+            .all()
+        answers = {a.user_id: a.id for a in answers}
+        
         # EVALUATIONS
-        evaluations = Judgements.query.with_entities(Judgements.users_id, func.count(Judgements.id)). \
-            join(AnswerPairings).filter_by(questions_id=ques.id).group_by(Judgements.users_id).all()
-        evaluations = {usersId: count for (usersId, count) in evaluations}
+        evaluations = Comparison.query \
+            .with_entities(Comparison.user_id, func.count(Comparison.id)) \
+            .filter_by(assignment_id=assignment.id) \
+            .group_by(Comparison.user_id) \
+            .all()
+        evaluations = {user_id: count for (user_id, count) in evaluations}
+        
         # COMMENTS
-        comments = PostsForAnswersAndPostsForComments.query. \
-            join(PostsForAnswers).filter(PostsForAnswers.questions_id == ques.id). \
-            join(PostsForComments, Posts). \
-            with_entities(Posts.users_id, func.count(PostsForAnswersAndPostsForComments.id)). \
-            group_by(Posts.users_id).all()
-        comments = {usersId: count for (usersId, count) in comments}
-        total_req += ques.num_judgement_req  # for overall required
-        criteria_count = len(ques.criteria)
+        comments = AnswerComment.query \
+            .join(Answer) \
+            .filter(Answer.assignment_id == assignment.id) \
+            .with_entities(AnswerComment.user_id, func.count(AnswerComment.id)) \
+            .group_by(AnswerComment.user_id) \
+            .all()
+        comments = {user_id: count for (user_id, count) in comments}
+        
+        total_req += assignment.number_of_comparisons  # for overall required
+        criteria_count = len(assignment.assignment_criteria)
+        
         for student in classlist:
             user = student.user
-            temp = [ques.title, user.username, user.lastname, user.firstname]
+            temp = [assignment.title, user.username, user.lastname, user.firstname]
 
             # OVERALL
             if user.id not in total:
@@ -174,9 +193,9 @@ def participation_stat_report(course_id, assignments, group_id, overall):
 
             eval_submitted = evaluations[user.id] if user.id in evaluations else 0
             eval_submitted /= criteria_count
-            eval_req_met = 'Yes' if eval_submitted >= ques.num_judgement_req else 'No'
+            eval_req_met = 'Yes' if eval_submitted >= assignment.number_of_comparisons else 'No'
             total[user.id]['total_evaluations'] += eval_submitted
-            temp.extend([eval_submitted, ques.num_judgement_req, eval_req_met])
+            temp.extend([eval_submitted, assignment.number_of_comparisons, eval_req_met])
 
             comment_count = comments[user.id] if user.id in comments else 0
             total[user.id]['total_comments'] += comment_count
@@ -199,89 +218,98 @@ def participation_stat_report(course_id, assignments, group_id, overall):
     return report
 
 
-def participation_report(course_id, questions, group_id):
+def participation_report(course_id, assignments, group_name):
     report = []
-    student = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first().id
-    classlist = CoursesAndUsers.query.filter_by(courses_id=course_id). \
-        filter(CoursesAndUsers.usertypesforcourse_id == student).all()
-    if group_id:
-        user_ids = [u.users_id for u in classlist]
-        classlist = GroupsAndUsers.query.filter_by(groups_id=group_id, active=True) \
-            .filter(GroupsAndUsers.users_id.in_(user_ids)).all()
+    
+    classlist = UserCourse.query \
+        .filter_by(
+            course_id=course_id,
+            course_role=CourseRole.student
+        )
+    if group_name:
+        classlist = classlist.filter_by(group_name=group_name)
+    classlist = classlist.all()
 
-    question_ids = [q.id for q in questions]
+    assignment_ids = [assignment.id for assignment in assignments]
     user_ids = [u.user.id for u in classlist]
 
     # ANSWERS - scores
-    answers = PostsForAnswers.query.filter(PostsForAnswers.questions_id.in_(question_ids)) \
-        .join(Posts).filter(Posts.users_id.in_(user_ids)).all()
+    answers = Answer.query \
+        .filter(Answer.assignment_id.in_(assignment_ids)) \
+        .filter(Answer.user_id.in_(user_ids)) \
+        .all()
 
-    scores = {}  # structure - userId/quesId/criteriaandquestions_id/normalized_score
-    for ans in answers:
-        if ans.users_id not in scores:
-            scores[ans.users_id] = {}
-        if ans.questions_id not in scores[ans.users_id]:
-            scores[ans.users_id][ans.questions_id] = {}
-        for s in ans.scores:
-            scores[ans.users_id][ans.questions_id][s.criteriaandquestions_id] = s.normalized_score
+    scores = {}  # structure - user_id/assignment_id/criteria_id/normalized_score
+    for answer in answers:
+        user_object = scores.setdefault(answer.user_id, {})
+        assignment_object = user_object.setdefault(answer.assignment_id, {})
+        assignment_object[s.criteria_id] = s.normalized_score
 
     # COMPARISONS
-    comparisons = Judgements.query.filter(Judgements.users_id.in_(user_ids)) \
-        .join(AnswerPairings).filter(AnswerPairings.questions_id.in_(question_ids)) \
-        .with_entities(AnswerPairings.questions_id, Judgements.users_id, func.count(Judgements.id)) \
-        .group_by(AnswerPairings.questions_id, Judgements.users_id).all()
+    comparisons_counts = Comparison.query \
+        .filter(Comparison.user_id.in_(user_ids)) \
+        .filter(Comparison.assignment_id.in_(assignment_ids)) \
+        .with_entities(Comparison.assignment_id, Comparison.user_id, func.count(Comparison.id)) \
+        .group_by(Comparison.assignment_id, Comparison.user_id) \
+        .all()
 
-    judgements = {}  # structure - userId/quesId/count
-    for (quesId, userId, count) in comparisons:
-        judgements.setdefault(userId, {}).setdefault(quesId, 0)
-        judgements[userId][quesId] = count
+    comparisons = {}  # structure - user_id/assignment_id/count
+    for (assignment_id, user_id, count) in comparisons_counts:
+        comparisons.setdefault(user_id, {}).setdefault(assignment_id, 0)
+        comparisons[user_id][assignment_id] = count
 
     # CRITERIA
-    criteriaandpostsforquestions = CriteriaAndPostsForQuestions.query \
-        .filter(CriteriaAndPostsForQuestions.questions_id.in_(question_ids)) \
-        .filter_by(active=True).order_by(CriteriaAndPostsForQuestions.id).all()
+    assignment_criteria = AssignmentCriteria.query \
+        .filter(AssignmentCriteria.assignment_id.in_(assignment_ids)) \
+        .filter_by(active=True) \
+        .order_by(AssignmentCriteria.id) \
+        .all()
 
-    criteria = {}  # structure - quesId/criterionId
-    for criterion in criteriaandpostsforquestions:
-        criteria.setdefault(criterion.questions_id, [])
-        criteria[criterion.questions_id].append(criterion.id)
+    criteria = {}  # structure - assignment_id/criterion_id
+    for assignment_criterion in assignment_criteria:
+        criteria.setdefault(assignment_criterion.assignment_id, [])
+        criteria[assignment_criterion.assignment_id] \
+            .append(assignment_criterion.criteria_id)
 
     # SELF-EVALUATION - assuming no comparions
-    selfeval = PostsForAnswersAndPostsForComments.query.filter_by(selfeval=True) \
-        .join(PostsForAnswers).filter(PostsForAnswers.questions_id.in_(question_ids)) \
-        .join(PostsForComments, Posts).filter(Posts.users_id.in_(user_ids)) \
-        .with_entities(PostsForAnswers.questions_id, Posts.users_id, func.count(PostsForAnswersAndPostsForComments.id)) \
-        .group_by(PostsForAnswers.questions_id, Posts.users_id).all()
+    self_eval = AnswerComment.query \
+        .filter_by(self_eval=True) \
+        .join(Answer) \
+        .filter(Answer.assignment_id.in_(assignment_ids)) \
+        .filter(AnswerComment.user_id.in_(user_ids)) \
+        .with_entities(Answer.assignment_id, AnswerComment.user_id, func.count(AnswerComment.id)) \
+        .group_by(Answer.assignment_id, AnswerComment.user_id) \
+        .all()
 
-    comments = {}  # structure - userId/quesId/count
-    for (quesId, userId, count) in selfeval:
-        comments.setdefault(userId, {}).setdefault(quesId, 0)
-        comments[userId][quesId] = count
+    comments = {}  # structure - user_id/assignment_id/count
+    for (assignment_id, user_id, count) in self_eval:
+        comments.setdefault(user_id, {}).setdefault(assignment_id, 0)
+        comments[user_id][assignment_id] = count
 
-    for coursesanduser in classlist:
-        user = coursesanduser.user
-        temp = [user.lastname, user.firstname, user.student_no]
+    for user_courses in classlist:
+        user = user_courses.user
+        temp = [user.lastname, user.firstname, user.student_number]
 
-        for ques in questions:
-            for criterion in criteria[ques.id]:
-                if user.id not in scores or ques.id not in scores[user.id]:
+        for assignment in assignments:
+            for criterion in criteria[assignment.id]:
+                if user.id not in scores or assignment.id not in scores[user.id]:
                     score = 'No Answer'
-                elif criterion not in scores[user.id][ques.id]:
+                elif criterion not in scores[user.id][assignment.id]:
                     score = 'Not Evaluated'
                 else:
-                    score = scores[user.id][ques.id][criterion]
+                    score = scores[user.id][assignment.id][criterion]
                 temp.append(score)
-            if user.id not in judgements or ques.id not in judgements[user.id]:
-                judged = 0
+            if user.id not in comparisons or assignment.id not in comparisons[user.id]:
+                compared = 0
             else:
-                judged = judgements[user.id][ques.id] / len(criteria[ques.id])
-            temp.append(str(judged))
+                compared = comparisons[user.id][assignment.id] / len(criteria[assignment.id])
+            temp.append(str(compared))
             # self-evaluation
-            if ques.selfevaltype_id:
-                if user.id not in comments or ques.id not in comments[user.id]:
+            if assignment.enable_self_eval:
+                if user.id not in comments or assignment.id not in comments[user.id]:
                     temp.append(0)
                 else:
-                    temp.append(comments[user.id][ques.id])
+                    temp.append(comments[user.id][assignment.id])
         report.append(temp)
 
     return report

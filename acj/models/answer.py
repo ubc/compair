@@ -5,6 +5,7 @@ from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from . import *
+from importlib import import_module
 
 from acj.core import db
 
@@ -27,47 +28,57 @@ class Answer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     # user via User Model
     # file via File Model
     
-    responses = db.relationship("AnswerResponse", backref="answer", lazy="dynamic")
-    scores = db.relationship("Score", backref="answer", lazy="dynamic", 
-        order_by='score.criteria_id')
-    
+    comments = db.relationship("AnswerComment", backref="answer")
+    scores = db.relationship("Score", backref="answer")
     
     # hyprid and other functions
-    course_id = association_proxy('assignment', 'course_id')
+    course_id = association_proxy('assignment', 'course_id', creator=lambda course_id:
+        import_module('acj.models.assignment').Assignment(course_id=course_id))
     user_avatar = association_proxy('user', 'avatar')
     user_displayname = association_proxy('user', 'displayname')
     user_fullname = association_proxy('user', 'fullname')
     user_system_role = association_proxy('user', 'system_role')
     
-    #TODO
-    response_count = column_property(
-        select([func.count(AnswerResponse.id)]).
-        where(AnswerResponse.answer_id == id),
-        deferred=True,
-        group='counts'
-    )
-    
-    private_response_count = column_property(
-        select([func.count(AnswerResponse.id)]).
-        where(and_(
-            AnswerResponse.answer_id == id,
-            or_(AnswerResponse.private == True,
-                AnswerResponse.self_eval == False)
-        )),
-        deferred=True,
-        group='counts'
-    )
-    
-    self_eval_count = column_property(
-        select([func.count(AnswerResponse.id)]).
-        where(AnswerResponse.self_eval == True),
-        deferred=True,
-        group='counts'
-    )
-
     @hybrid_property
-    def public_response_count(self):
-        return self.response_count - self.private_response_count
+    def public_comment_count(self):
+        return self.comment_count - self.private_comment_count
+    
+    @classmethod
+    def __declare_last__(cls):
+        super(cls, cls).__declare_last__()
+        
+        cls.comment_count = column_property(
+            select([func.count(AnswerComment.id)]).
+            where(and_(
+                AnswerComment.answer_id == cls.id,
+                AnswerComment.active == True
+            )),
+            deferred=True,
+            group='counts'
+        )
+        
+        cls.private_comment_count = column_property(
+            select([func.count(AnswerComment.id)]).
+            where(and_(
+                AnswerComment.answer_id == cls.id,
+                AnswerComment.active == True,
+                or_(AnswerComment.private == True,
+                    AnswerComment.self_eval == True)
+            )),
+            deferred=True,
+            group='counts'
+        )
+        
+        cls.self_eval_count = column_property(
+            select([func.count(AnswerComment.id)]).
+            where(and_(
+                AnswerComment.self_eval == True,
+                AnswerComment.active == True,
+                AnswerComment.answer_id == cls.id
+            )),
+            deferred=True,
+            group='counts'
+        )
 
     
 
