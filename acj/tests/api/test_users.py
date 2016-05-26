@@ -105,7 +105,6 @@ class UsersAPITests(ACJAPITestCase):
 
     def test_create_user(self):
         url = '/api/users'
-        self.client.file_name = 'user_create.json'
 
         # test login required
         expected = UserFactory.stub(system_role=SystemRole.student.value)

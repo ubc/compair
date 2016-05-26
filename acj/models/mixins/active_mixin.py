@@ -12,7 +12,8 @@ class ActiveMixin(db.Model):
         return db.Column(
             db.Boolean(name='active'),
             default=True,
-            nullable=False
+            nullable=False, 
+            index=True
         )
         
     @classmethod

@@ -37,7 +37,9 @@ class CriteriaAPI(Resource):
     @login_required
     def get(self):
         if allow(MANAGE, Criteria):
-            criteria = Criteria.query.all()
+            criteria = Criteria.query \
+                .order_by(Criteria.public.desc(), Criteria.created) \
+                .all()
         else:
             criteria = Criteria.query \
                 .filter(or_(
@@ -47,6 +49,7 @@ class CriteriaAPI(Resource):
                     ), 
                     Criteria.public == True
                 )) \
+                .order_by(Criteria.public.desc(), Criteria.created) \
                 .all()
 
         on_criteria_list_get.send(

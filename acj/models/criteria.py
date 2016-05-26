@@ -14,8 +14,10 @@ class Criteria(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
         nullable=False)
     name = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text)
-    public = db.Column(db.Boolean(name='public'), default=False, nullable=False)
-    default = db.Column(db.Boolean(name='default'), default=True, nullable=False)
+    public = db.Column(db.Boolean(name='public'), default=False, 
+        nullable=False, index=True)
+    default = db.Column(db.Boolean(name='default'), default=True, 
+        nullable=False, index=True)
     
     # relationships
     # user via User Model

@@ -30,6 +30,8 @@ class AdaptivePairGenerator(PairGenerator):
     
         self.comparison_pairs = comparison_pairs
         self.scored_objects = scored_objects
+        self.rounds = []
+        self.round_objects = {}
         
         # change None value scores to zero
         for (index, scored_object) in enumerate(self.scored_objects):

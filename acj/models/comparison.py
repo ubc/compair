@@ -32,8 +32,8 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         nullable=True)
     round_compared = db.Column(db.Integer, default=0, nullable=False)
     content = db.Column(db.Text)
-    completed = db.Column(db.Boolean(name='completed'), 
-        default=False, nullable=False)
+    completed = db.Column(db.Boolean(name='completed'), default=False, 
+        nullable=False, index=True)
     
     # relationships
     # assignment via Assignment Model

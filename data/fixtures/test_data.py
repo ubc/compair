@@ -300,6 +300,7 @@ class ComparisonTestData(CriteriaTestData):
 
 class TestFixture:
     def __init__(self):
+        self.default_criteria = Criteria.query.get(1)
         self.course = self.assignment = None
         self.instructor = self.ta = None
         self.students = []

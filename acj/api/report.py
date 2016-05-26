@@ -3,7 +3,7 @@ import os
 import time
 
 from bouncer.constants import MANAGE
-from flask import Blueprint, Flask, current_app
+from flask import Blueprint, Flask, current_app, abort
 from flask.ext.login import login_required, current_user
 
 from flask.ext.restful import Resource, reqparse
@@ -56,7 +56,7 @@ class ReportRootAPI(Resource):
         report_type = params.get('type')
         
         assignments = []
-        assignment_id = params.get('assignment_id', None)
+        assignment_id = params.get('assignment', None)
         if assignment_id:
             assignment = Assignment.get_active_or_404(assignment_id)
             assignments = [assignment]
@@ -67,12 +67,21 @@ class ReportRootAPI(Resource):
                     active=True
                 ) \
                 .all()
+        
+        if group_name:
+            # ensure that group_name is valid
+            group_exists = UserCourse.query \
+                .filter(
+                    UserCourse.group_name == group_name,
+                    UserCourse.course_id == course_id,
+                    UserCourse.course_role != CourseRole.dropped
+                ) \
+                .first()
+            if group_exists == None:
+                abort(404) 
 
         if report_type == "participation_stat":
-            if assignment_id:
-                data = participation_stat_report(course_id, assignments, group_name, False)
-            else:
-                data = participation_stat_report(course_id, assignments, None, True)
+            data = participation_stat_report(course_id, assignments, group_name, assignment_id is None)
 
             title = [
                 'Assignment', 'Username', 'Last Name', 'First Name', 'Answer Submitted', 'Answer ID',
@@ -95,7 +104,7 @@ class ReportRootAPI(Resource):
                     ) \
                     .all()
                     
-                title_row1 += [assignment.title] + [""] * len(assignment_criteria)
+                title_row1 += [assignment.name] + [""] * len(assignment_criteria)
                 for criteria in assignment_criteria:
                     title_row2.append('Percentage Score for "' + criteria.criteria.name + '"')
                 title_row2.append("Evaluations Submitted (" + str(assignment.number_of_comparisons) + ' required)')
@@ -134,14 +143,14 @@ api.add_resource(ReportRootAPI, '')
 def participation_stat_report(course_id, assignments, group_name, overall):
     report = []
     
-    classlist = UserCourse.query \
+    user_course_students = UserCourse.query \
         .filter_by(
             course_id=course_id,
             course_role=CourseRole.student
         )
     if group_name:
-        classlist = classlist.filter_by(group_name=group_name)
-    classlist = classlist.all()
+        user_course_students = user_course_students.filter_by(group_name=group_name)
+    user_course_students = user_course_students.all()
 
     total_req = 0
     total = {}
@@ -174,17 +183,16 @@ def participation_stat_report(course_id, assignments, group_name, overall):
         total_req += assignment.number_of_comparisons  # for overall required
         criteria_count = len(assignment.assignment_criteria)
         
-        for student in classlist:
-            user = student.user
-            temp = [assignment.title, user.username, user.lastname, user.firstname]
+        for user_course_student in user_course_students:
+            user = user_course_student.user
+            temp = [assignment.name, user.username, user.lastname, user.firstname]
 
             # OVERALL
-            if user.id not in total:
-                total[user.id] = {
-                    'total_answers': 0,
-                    'total_evaluations': 0,
-                    'total_comments': 0
-                }
+            total.setdefault(user.id, {
+                'total_answers': 0,
+                'total_evaluations': 0,
+                'total_comments': 0
+            })
 
             submitted = 1 if user.id in answers else 0
             answer_id = answers[user.id] if submitted else 'N/A'
@@ -204,9 +212,13 @@ def participation_stat_report(course_id, assignments, group_name, overall):
             report.append(temp)
 
     if overall:
-        for student in classlist:
-            user = student.user
-            sum_submission = total[user.id]
+        for user_course_student in user_course_students:
+            user = user_course_student.user
+            sum_submission = total.setdefault(user.id, {
+                'total_answers': 0,
+                'total_evaluations': 0,
+                'total_comments': 0
+            })
             # assume a user can only at most do the required number
             req_met = 'Yes' if sum_submission['total_evaluations'] >= total_req else 'No'
             temp = [
@@ -243,7 +255,8 @@ def participation_report(course_id, assignments, group_name):
     for answer in answers:
         user_object = scores.setdefault(answer.user_id, {})
         assignment_object = user_object.setdefault(answer.assignment_id, {})
-        assignment_object[s.criteria_id] = s.normalized_score
+        for s in answer.scores:
+            assignment_object[s.criteria_id] = s.normalized_score
 
     # COMPARISONS
     comparisons_counts = Comparison.query \
