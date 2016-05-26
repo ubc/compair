@@ -18,8 +18,10 @@ class AnswerComment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"),
         nullable=False)
     content = db.Column(db.Text)
-    private = db.Column(db.Boolean(name='private'), default=True, nullable=False)
-    self_eval = db.Column(db.Boolean(name='self_eval'), default=False, nullable=False)
+    private = db.Column(db.Boolean(name='private'), default=True, 
+        nullable=False, index=True)
+    self_eval = db.Column(db.Boolean(name='self_eval'), default=False, 
+        nullable=False, index=True)
     
     # relationships
     # answer via Answer Model

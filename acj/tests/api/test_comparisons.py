@@ -7,6 +7,7 @@ from acj.models import Answer, Comparison
 from acj.tests.test_acj import ACJAPITestCase
 from acj.core import db
 
+import mock
 
 class ComparisonAPITests(ACJAPITestCase):
     def setUp(self):
@@ -347,7 +348,8 @@ class ComparisonAPITests(ACJAPITestCase):
 
         return {'winners': winner_ids, 'losers': loser_ids}
 
-    def test_score_calculation(self):
+    @mock.patch('random.shuffle')
+    def test_score_calculation(self, mock_shuffle):
         """
         This is just a rough check on whether score calculations are correct. Answers
         that has more wins should have the highest scores.

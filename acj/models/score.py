@@ -17,7 +17,7 @@ class Score(DefaultTableMixin, WriteTrackingMixin):
     criteria_id = db.Column(db.Integer, db.ForeignKey('criteria.id', ondelete="CASCADE"),
         nullable=False)
         
-    score = db.Column(db.Float, default=0, nullable=False)
+    score = db.Column(db.Float, default=0, nullable=False, index=True)
     excepted_score = db.Column(db.Float, default=0, nullable=False)
     rounds = db.Column(db.Integer, default=0, nullable=False)
     wins = db.Column(db.Integer, default=0, nullable=False)
