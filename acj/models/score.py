@@ -20,7 +20,6 @@ class Score(DefaultTableMixin, WriteTrackingMixin):
     score = db.Column(db.Float, default=0, nullable=False)
     excepted_score = db.Column(db.Float, default=0, nullable=False)
     rounds = db.Column(db.Integer, default=0, nullable=False)
-    rounds = db.Column(db.Integer, default=0, nullable=False)
     wins = db.Column(db.Integer, default=0, nullable=False)
     opponents = db.Column(db.Integer, default=0, nullable=False)
     
@@ -32,7 +31,7 @@ class Score(DefaultTableMixin, WriteTrackingMixin):
     # hyprid and other functions
     @classmethod
     def __declare_last__(cls):
-        super(WriteTrackingMixin, cls).__declare_last__()
+        super(cls, cls).__declare_last__()
         
         s_alias = cls.__table__.alias()
         cls.normalized_score = column_property(

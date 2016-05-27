@@ -32,7 +32,7 @@ def create_app(conf=config, settings_override=None):
     def load_user(user_id):
         app.logger.debug("User logging in, ID: " + user_id)
         return User.query. \
-            options(joinedload("user_course")). \
+            options(joinedload("user_courses")). \
             get(int(user_id))
 
     @login_manager.unauthorized_handler

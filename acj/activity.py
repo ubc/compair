@@ -1,24 +1,25 @@
 import json
 import datetime
+from enum import Enum
 from hashlib import md5
 
 from flask import session
 from flask.ext.login import user_logged_in, user_logged_out
 
-from .models import Activities
+from .models import ActivityLog
 from .core import db
 
 
 def log(sender, event_name='UNKNOWN', **extra):
     params = dict({'event': event_name})
     if 'user' in extra:
-        params['users_id'] = extra['user'].id
+        params['user_id'] = extra['user'].id
     elif 'user_id' in extra:
-        params['users_id'] = extra['user_id']
+        params['user_id'] = extra['user_id']
     if 'course' in extra:
-        params['courses_id'] = extra['course'].id
+        params['course_id'] = extra['course'].id
     elif 'course_id' in extra:
-        params['courses_id'] = extra['course_id']
+        params['course_id'] = extra['course_id']
     if 'data' in extra:
         if isinstance(extra['data'], str):
             params['data'] = extra['data']
@@ -31,7 +32,7 @@ def log(sender, event_name='UNKNOWN', **extra):
     if 'session_token' in session:
         params['session_id'] = md5(session['session_token'].encode('UTF-8')).hexdigest()
 
-    activity = Activities(**params)
+    activity = ActivityLog(**params)
     db.session.add(activity)
     db.session.commit()
 
@@ -50,5 +51,7 @@ class JSONDateTimeEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (datetime.date, datetime.datetime)):
             return obj.isoformat()
+        elif isinstance(obj, Enum):
+            return str(obj.value)
         else:
             return json.JSONEncoder.default(self, obj)

@@ -15,18 +15,16 @@ from werkzeug.utils import secure_filename
 from flask.ext.restful.reqparse import RequestParser
 
 from . import dataformat
-from .core import db
-from .authorization import allow, require, USER_IDENTITY
-from .core import event
-from .models import CoursesAndUsers, Courses, Users, UserTypesForSystem, UserTypesForCourse, GroupsAndUsers
+from acj.core import db, event
+from acj.authorization import allow, require, USER_IDENTITY
+from acj.models import UserCourse, Course, User, SystemRole, CourseRole
 from .util import new_restful_api
-from .attachment import random_generator, allowed_file
+from .file import random_generator, allowed_file
 
 classlist_api = Blueprint('classlist_api', __name__)
 api = new_restful_api(classlist_api)
 
 new_course_user_parser = RequestParser()
-new_course_user_parser.add_argument('course_role_id', type=int)
 new_course_user_parser.add_argument('course_role', type=str)
 
 # upload file column name to index number
@@ -61,18 +59,15 @@ def import_users(course_id, users):
 
     # constants
     letters_digits = string.ascii_letters + string.digits
-    normal_user = UserTypesForSystem.query.filter_by(name=UserTypesForSystem.TYPE_NORMAL).first().id
-    student = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first().id
-    dropped = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
 
     usernames = [u[USERNAME] for u in users if len(u) > USERNAME]
-    usernames_system = Users.query.filter(Users.username.in_(usernames)).all()
+    usernames_system = User.query.filter(User.username.in_(usernames)).all()
     usernames_system = {u.username: u for u in usernames_system}
 
-    student_no = [u[STUDENTNO] for u in users if len(u) > STUDENTNO]
-    if len(student_no) > 0:
-        studentno_system = Users.query.filter(Users.student_no.in_(student_no)).all()
-        studentno_system = {u.student_no: u.username for u in studentno_system}
+    student_number = [u[STUDENTNO] for u in users if len(u) > STUDENTNO]
+    if len(student_number) > 0:
+        studentno_system = User.query.filter(User.student_number.in_(student_number)).all()
+        studentno_system = {u.student_number: u.username for u in studentno_system}
     else:
         studentno_system = {}
 
@@ -83,7 +78,7 @@ def import_users(course_id, users):
             continue  # skip empty row
 
         # TEMP USER
-        temp = Users()
+        temp = User()
         temp.username = user[USERNAME].lower() if length > USERNAME and user[USERNAME] else None
 
         # VALIDATION
@@ -102,48 +97,53 @@ def import_users(course_id, users):
             # user exists in the system, skip user creation
             exist_usernames.append(u.username)
             usernames_system.setdefault(u.username, u)
-            exist_studentnos.append(u.student_no)
-            studentno_system.setdefault(u.student_no, u.username)
+            exist_studentnos.append(u.student_number)
+            studentno_system.setdefault(u.student_number, u.username)
             continue
 
-        u.student_no = user[STUDENTNO] if length > STUDENTNO and user[STUDENTNO] else None
+        u.student_number = user[STUDENTNO] if length > STUDENTNO and user[STUDENTNO] else None
         u.firstname = user[FIRSTNAME] if length > FIRSTNAME and user[FIRSTNAME] else None
         u.lastname = user[LASTNAME] if length > LASTNAME and user[LASTNAME] else None
         u.email = user[EMAIL] if length > EMAIL and user[EMAIL] else None
         u.password = user[PASSWORD] if length > PASSWORD and user[PASSWORD] else random_generator(16, letters_digits)
 
         # validate student number (if not None)
-        if u.student_no:
+        if u.student_number:
             # invalid if already showed up in file
-            if u.student_no in exist_studentnos:
+            if u.student_number in exist_studentnos:
                 invalids.append({'user': u, 'message': 'This student number already exists in the file.'})
                 continue
             # invalid if student number already exists in the system
-            elif u.student_no in studentno_system:
+            elif u.student_number in studentno_system:
                 invalids.append({'user': u, 'message': 'This student number already exists in the system.'})
                 continue
-
-        u.usertypesforsystem_id = normal_user
+                
+        u.system_role = SystemRole.student
         displayname = user[DISPLAYNAME] if length > DISPLAYNAME and user[DISPLAYNAME] else None
         u.displayname = displayname if displayname else display_name_generator()
 
         exist_usernames.append(u.username)
         usernames_system.setdefault(u.username, u)
-        exist_studentnos.append(u.student_no)
-        studentno_system.setdefault(u.student_no, u.username)
+        exist_studentnos.append(u.student_number)
+        studentno_system.setdefault(u.student_number, u.username)
         db.session.add(u)
     db.session.commit()
 
-    enroled = CoursesAndUsers.query.filter_by(courses_id=course_id).all()
-    enroled = {e.users_id: e for e in enroled}
-    students = CoursesAndUsers.query.filter_by(courses_id=course_id, usertypesforcourse_id=student).all()
-    students = {s.users_id: s for s in students}
+    enroled = UserCourse.query.filter_by(course_id=course_id).all()
+    enroled = {e.user_id: e for e in enroled}
+    students = UserCourse.query \
+        .filter_by(
+            course_id=course_id, 
+            course_role=CourseRole.student
+        ) \
+        .all()
+    students = {s.user_id: s for s in students}
 
     # enrol valid users in file
-    to_enrol = Users.query.filter(Users.username.in_(exist_usernames)).all()
+    to_enrol = User.query.filter(User.username.in_(exist_usernames)).all()
     for user in to_enrol:
-        enrol = enroled.get(user.id, CoursesAndUsers(courses_id=course_id, users_id=user.id))
-        enrol.usertypesforcourse_id = student
+        enrol = enroled.get(user.id, UserCourse(course_id=course_id, user_id=user.id))
+        enrol.course_role = CourseRole.student
         db.session.add(enrol)
         if user.id in students:
             del students[user.id]
@@ -151,12 +151,12 @@ def import_users(course_id, users):
     db.session.commit()
 
     # unenrol users not in file anymore
-    for users_id in students:
-        enrolment = students.get(users_id)
+    for user_id in students:
+        enrolment = students.get(user_id)
         # skip users that are already dropped
-        if enrolment.usertypesforcourse_id == dropped:
+        if enrolment.course_role == CourseRole.dropped:
             continue
-        enrolment.usertypesforcourse_id = dropped
+        enrolment.course_role = CourseRole.dropped
         db.session.add(enrolment)
     db.session.commit()
 
@@ -175,7 +175,7 @@ def import_users(course_id, users):
 
 @api.representation('text/csv')
 def output_csv(data, code, headers=None):
-    fieldnames = ['username', 'student_no', 'firstname', 'lastname', 'email', 'displayname']
+    fieldnames = ['username', 'student_number', 'firstname', 'lastname', 'email', 'displayname']
     csv_buffer = StringIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames, extrasaction='ignore')
     writer.writeheader()
@@ -196,26 +196,25 @@ class ClasslistRootAPI(Resource):
     # TODO Pagination
     @login_required
     def get(self, course_id):
-        require(READ, CoursesAndUsers(courses_id=course_id))
-        restrict_users = not allow(READ, USER_IDENTITY)
+        require(READ, UserCourse(course_id=course_id))
+        restrict_user = not allow(READ, USER_IDENTITY)
 
         # expire current_user from the session. When loading classlist from database, if the
-        # user is already in the session, e.g. instructor for the course, the User.coursesandusers
+        # user is already in the session, e.g. instructor for the course, the User.user_courses
         # is not loaded from the query below, but from session. In this case, if user has more
-        # than one course, User.coursesandusers will return multiple row. Thus violating the
+        # than one course, User.user_courses will return multiple row. Thus violating the
         # course_role constrain.
         db.session.expire(current_user)
 
-        class_list = Users.query. \
-            join(CoursesAndUsers). \
-            join(UserTypesForCourse, and_(
-                CoursesAndUsers.usertypesforcourse_id == UserTypesForCourse.id,
-                UserTypesForCourse.name.notlike(UserTypesForCourse.TYPE_DROPPED))). \
-            options(joinedload('usertypeforsystem')). \
-            options(contains_eager('coursesandusers').contains_eager('usertypeforcourse')). \
-            options(joinedload(Users.groups)). \
-            filter(CoursesAndUsers.courses_id == course_id). \
-            order_by(Users.firstname).all()
+        class_list = User.query \
+            .join(UserCourse, UserCourse.user_id == User.id) \
+            .options(joinedload(User.user_courses)) \
+            .filter(and_(
+                UserCourse.course_id == course_id,
+                UserCourse.course_role != CourseRole.dropped
+            )) \
+            .order_by(User.firstname) \
+            .all()
 
         on_classlist_get.send(
             self,
@@ -223,13 +222,14 @@ class ClasslistRootAPI(Resource):
             user=current_user,
             course_id=course_id)
 
-        return {'objects': marshal(class_list, dataformat.get_users_in_course(restrict_users=restrict_users))}
+        return {'objects': marshal(class_list, dataformat.get_users_in_course(restrict_user=restrict_user))}
 
     @login_required
     def post(self, course_id):
-        Courses.query.get_or_404(course_id)
-        coursesandusers = CoursesAndUsers(courses_id=course_id)
-        require(EDIT, coursesandusers)
+        Course.get_active_or_404(course_id)
+        user_course = UserCourse(course_id=course_id)
+        require(EDIT, user_course)
+        
         uploaded_file = request.files['file']
         results = {'success': 0, 'invalids': []}
         if uploaded_file and allowed_file(uploaded_file.filename, current_app.config['UPLOAD_ALLOWED_EXTENSIONS']):
@@ -261,49 +261,51 @@ class ClasslistRootAPI(Resource):
 api.add_resource(ClasslistRootAPI, '')
 
 
-# /:userId/enrol
+# /:userId
 class EnrolAPI(Resource):
     @login_required
     def post(self, course_id, user_id):
         """
         Enrol or update a user enrolment in the course
 
-        The payload for the request has to contain either course_role_id or course_role. e.g.
-        {"course_role_id":3} or {"couse_role":"Student"}
+        The payload for the request has to contain course_role. e.g.
+        {"couse_role":"Student"}
 
         :param course_id:
         :param user_id:
         :return:
         """
-        course = Courses.query.get_or_404(course_id)
-        user = Users.query.get_or_404(user_id)
-        coursesandusers = CoursesAndUsers.query.filter_by(users_id=user.id, courses_id=course.id).first()
-        if not coursesandusers:
-            coursesandusers = CoursesAndUsers(courses_id=course.id)
-        require(EDIT, coursesandusers)
+        course = Course.get_active_or_404(course_id)
+        user = User.query.get_or_404(user_id)
+        
+        user_course = UserCourse.query.filter_by(user_id=user.id, course_id=course.id).first()
+        if not user_course:
+            user_course = UserCourse(course_id=course.id)
+        require(EDIT, user_course)
 
         params = new_course_user_parser.parse_args()
-        role_id = params.get('course_role_id')
         role_name = params.get('course_role')
-
-        if role_id:
-            user_type = UserTypesForCourse.query.get_or_404(role_id)
-        else:
-            user_type = UserTypesForCourse.query.filter_by(name=role_name).one()
-
-        if not user_type:
+        
+        course_roles = [
+            CourseRole.dropped.value, 
+            CourseRole.student.value, 
+            CourseRole.teaching_assistant.value, 
+            CourseRole.instructor.value
+        ]
+        if role_name not in course_roles:
             abort(404)
-
-        if coursesandusers.usertypesforcourse_id != user_type.id:
-            coursesandusers.users_id = user.id
-            coursesandusers.usertypesforcourse_id = user_type.id
-            db.session.add(coursesandusers)
+        
+        course_role = CourseRole(role_name)
+        if user_course.course_role != course_role:
+            user_course.user_id = user.id
+            user_course.course_role = course_role
+            db.session.add(user_course)
             db.session.commit()
 
         result = {
             'user_id': user.id,
             'fullname': user.fullname,
-            'course_role': user_type.name
+            'course_role': course_role.value
         }
 
         on_classlist_enrol.send(
@@ -317,16 +319,19 @@ class EnrolAPI(Resource):
 
     @login_required
     def delete(self, course_id, user_id):
-        course = Courses.query.get_or_404(course_id)
-        user = Users.query.get_or_404(user_id)
-        coursesandusers = CoursesAndUsers.query.filter_by(users_id=user.id, courses_id=course.id).first_or_404()
-        require(EDIT, coursesandusers)
-        drop = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first()
-        coursesandusers.usertypesforcourse_id = drop.id
+        course = Course.get_active_or_404(course_id)
+        user = User.query.get_or_404(user_id)
+        user_course = UserCourse.query.filter_by(user_id=user.id, course_id=course.id).first_or_404()
+        require(EDIT, user_course)
+        
+        user_course.course_role = CourseRole.dropped
         result = {
-            'user': {'id': user.id, 'fullname': user.fullname},
-            'usertypesforcourse': {'id': drop.id, 'name': drop.name}}
-        db.session.add(coursesandusers)
+            'user_id': user.id,
+            'fullname': user.fullname,
+            'course_role': CourseRole.dropped.value
+        }
+            
+        db.session.add(user_course)
 
         on_classlist_unenrol.send(
             self,
@@ -346,11 +351,15 @@ api.add_resource(EnrolAPI, '/<int:user_id>')
 class TeachersAPI(Resource):
     @login_required
     def get(self, course_id):
-        course = Courses.query.get_or_404(course_id)
+        course = Course.get_active_or_404(course_id)
         require(READ, course)
-        instructors = CoursesAndUsers.query.filter_by(courses_id=course_id).join(UserTypesForCourse).filter(
-            UserTypesForCourse.name.in_([UserTypesForCourse.TYPE_TA, UserTypesForCourse.TYPE_INSTRUCTOR])).all()
-        instructor_ids = {u.users_id: u.usertypeforcourse.name for u in instructors}
+        instructors = UserCourse.query \
+            .filter(and_(
+                UserCourse.course_id==course_id,
+                UserCourse.course_role.in_([CourseRole.teaching_assistant, CourseRole.instructor])
+            )) \
+            .all()
+        instructor_ids = {u.user_id: u.course_role.value for u in instructors}
 
         on_classlist_instructor_label.send(
             self,
@@ -368,21 +377,30 @@ api.add_resource(TeachersAPI, '/instructors/labels')
 class StudentsAPI(Resource):
     @login_required
     def get(self, course_id):
-        course = Courses.query.get_or_404(course_id)
+        course = Course.get_active_or_404(course_id)
         require(READ, course)
-        students = Users.query. \
-            options(joinedload(Users.groups).joinedload(GroupsAndUsers.group)). \
-            join(CoursesAndUsers).filter_by(courses_id=course_id). \
-            join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_STUDENT). \
+        students = User.query \
+            .join(UserCourse, UserCourse.user_id == User.id) \
+            .filter(
+                UserCourse.course_id == course_id,
+                UserCourse.course_role == CourseRole.student
+            ). \
             all()
 
-        coursesandusers = CoursesAndUsers(courses_id=course_id)
-        if allow(READ, coursesandusers):
+        user_course = UserCourse(course_id=course_id)
+        
+        if allow(READ, user_course):
+            group_names = UserCourse.query \
+                .with_entities(UserCourse.group_name) \
+                .distinct() \
+                .filter_by(course_id=course_id) \
+                .all()
+                
             users = [
                 {'user': {
                     'id': u.id,
                     'name': u.fullname if u.fullname else u.displayname,
-                    'groups': [g.group.name for g in u.groups]
+                    'group_names': group_names
                 }}
                 for u in students]
         else:

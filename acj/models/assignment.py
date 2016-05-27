@@ -14,6 +14,8 @@ from acj.core import db
 
 class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     # table columns
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"), 
+        nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('course.id', ondelete="CASCADE"), 
         nullable=False)
     file_id = db.Column(db.Integer, db.ForeignKey('file.id', ondelete="SET NULL"), 
@@ -31,88 +33,39 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
         default=False, nullable=False)
     
     # relationships
+    # user via User Model
     # course via Course Model
     # file via File Model
     
     # assignment many-to-many criteria with association assignment_criteria
-    assignment_criteria = db.relationship("AssignmentCriteria", 
-        back_populates="assignment", lazy='dynamic')
+    assignment_criteria = db.relationship("AssignmentCriteria", back_populates="assignment")
     
-    _answers = db.relationship("Answer", backref="assignment", lazy="dynamic", 
-        order_by="answer.created DESC")
+    answers = db.relationship("Answer", backref="assignment", lazy="dynamic", 
+        order_by=Answer.created.desc())
     comments = db.relationship("AssignmentComment", backref="assignment", lazy="dynamic")
     comparisons = db.relationship("Comparison", backref="assignment", lazy="dynamic")
     scores = db.relationship("Score", backref="assignment", lazy="dynamic")
     
     # hyprid and other functions
+    user_avatar = association_proxy('user', 'avatar')
+    user_displayname = association_proxy('user', 'displayname')
+    user_fullname = association_proxy('user', 'fullname')
+    user_system_role = association_proxy('user', 'system_role')
 
     @hybrid_property
-    def criteria(self):
-        return self.assignment_criteria.join(Criteria) \
-            .filter(AssignmentCriteria.active==True) \
-            .filter(Criteria.active==True)
-            
-    @hybrid_property
-    def answers(self):
-        return self._answers \
-            .filter(Answer.active==True)
+    def compared(self):
+        return self.compare_count > 0
+    
+    def completed_comparison_count_for_user(self, user_id):
+        comparison_count = self.comparisons \
+            .filter_by(
+                user_id=user_id,
+                completed=True
+            ) \
+            .count()
         
-    answers_count = column_property(
-        select([func.count(Answer.id)]).
-        where(and_(
-            Answer.assignment_id == id,
-            Answer.active == True
-        )),
-        deferred=True,
-        group="counts"
-    )
-
-    comments_count = column_property(
-        select([func.count(AssignmentComment.id)]).
-        where(and_(
-            AssignmentComment.assignment_id == id, 
-            AssignmentComment.active == True
-        )),
-        deferred=True,
-        group="counts"
-    )
-
-    criteria_count = column_property(
-        select([func.count(AssignmentCriteria.id)]).
-        where(and_(
-            AssignmentCriteria.assignment_id == id, 
-            AssignmentCriteria.active == True
-        )),
-        deferred=True,
-        group="counts"
-    )
-
-    compared = column_property(
-        select([func.count(Comparison.id) > 0]).
-        where(Comparison.assignment_id == id),
-        deferred=True,
-        group="counts"
-    )
-
-    compare_count = column_property(
-        select([func.count(Comparison.id)]).
-        where(Comparison.assignment_id == id),
-        deferred=True,
-        group="counts"
-    )
-
-    _self_eval_count = column_property(
-        select([func.count(AnswerResponse.id)]).
-        where(and_(
-            AnswerResponse.self_eval == True,
-            AnswerResponse.active == True,
-            AnswerResponse.answer_id == Answer.id,
-            Answer.assignment_id == id
-        )),
-        deferred=True,
-        group="counts"
-    )
-
+        return comparison_count / self.criteria_count
+        
     @hybrid_property
     def available(self):
         now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
@@ -160,6 +113,59 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
 
     def __repr__(self):
         if self.id:
-            return "Assignment " + str(self.id)
+            return "assignment " + str(self.id)
         else:
-            return "Assignment"
+            return "assignment"
+            
+    @classmethod
+    def __declare_last__(cls):
+        super(cls, cls).__declare_last__()
+        
+        cls.answers_count = column_property(
+            select([func.count(Answer.id)]).
+            where(and_(
+                Answer.assignment_id == cls.id,
+                Answer.active == True
+            )),
+            deferred=True,
+            group="counts"
+        )
+
+        cls.comments_count = column_property(
+            select([func.count(AssignmentComment.id)]).
+            where(and_(
+                AssignmentComment.assignment_id == cls.id, 
+                AssignmentComment.active == True
+            )),
+            deferred=True,
+            group="counts"
+        )
+
+        cls.criteria_count = column_property(
+            select([func.count(AssignmentCriteria.id)]).
+            where(and_(
+                AssignmentCriteria.assignment_id == cls.id, 
+                AssignmentCriteria.active == True
+            )),
+            deferred=True,
+            group="counts"
+        )
+
+        cls.compare_count = column_property(
+            select([func.count(Comparison.id)]).
+            where(Comparison.assignment_id == cls.id),
+            deferred=True,
+            group="counts"
+        )
+
+        cls._self_eval_count = column_property(
+            select([func.count(AnswerComment.id)]).
+            where(and_(
+                AnswerComment.self_eval == True,
+                AnswerComment.active == True,
+                AnswerComment.answer_id == Answer.id,
+                Answer.assignment_id == cls.id
+            )),
+            deferred=True,
+            group="counts"
+        )

@@ -10,9 +10,8 @@ from sqlalchemy import func, and_
 from sqlalchemy.orm import load_only, undefer, joinedload
 
 from acj.authorization import require
-from acj.models import Courses, PostsForQuestions, UserTypesForCourse, Users, CoursesAndUsers, Judgements, \
-    AnswerPairings, PostsForAnswersAndPostsForComments, PostsForAnswers, Posts, Scores, \
-    PostsForComments
+from acj.models import Course, Assignment, CourseRole, User, UserCourse, Comparison, \
+    AnswerComment, Answer, Score
 from .util import new_restful_api
 from acj.core import event
 
@@ -35,72 +34,56 @@ def normalize_score(score, max_score, ndigits=0):
 # /
 class GradebookAPI(Resource):
     @login_required
-    def get(self, course_id, question_id):
-        Courses.query.options(load_only('id')).get_or_404(course_id)
-        question = PostsForQuestions.query.\
-            options(undefer('criteria_count')).\
-            options(joinedload('criteria')).\
-            get_or_404(question_id)
-        require(MANAGE, question)
+    def get(self, course_id, assignment_id):
+        Course.get_active_or_404(course_id)
+        
+        assignment = Assignment.get_active_or_404(
+            assignment_id, 
+            joinedloads=['criteria']
+        )
+        require(MANAGE, assignment)
 
         # get all students in this course
-        # student_type = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first()
-        students = Users.query. \
-            with_entities(Users.id, Users.displayname, Users.firstname, Users.lastname). \
-            join(CoursesAndUsers). \
-            join(UserTypesForCourse). \
+        students = User.query. \
+            with_entities(User.id, User.displayname, User.firstname, User.lastname). \
+            join(UserCourse, UserCourse.user_id == User.id). \
             filter(
-                CoursesAndUsers.courses_id == course_id,
-                CoursesAndUsers.usertypesforcourse_id == UserTypesForCourse.id,
-                UserTypesForCourse.name == UserTypesForCourse.TYPE_STUDENT). \
+                UserCourse.course_id == course_id,
+                UserCourse.course_role == CourseRole.student,
+            ). \
             all()
-
         student_ids = [student.id for student in students]
-        # get students judgements counts for this question
-        judgements = Users.query. \
-            with_entities(Users.id, func.count(Judgements.id).label('judgement_count')). \
-            join(Judgements). \
-            join(AnswerPairings, and_(
-                AnswerPairings.id == Judgements.answerpairings_id,
-                AnswerPairings.questions_id == question_id)). \
-            filter(Users.id.in_(student_ids)).\
-            group_by(Users.id).all()
+        
+        # get students comparisons counts for this assignment
+        comparisons = User.query. \
+            with_entities(User.id, func.count(Comparison.id).label('compare_count')). \
+            join(Comparison). \
+            filter(Comparison.assignment_id == assignment_id).\
+            filter(User.id.in_(student_ids)).\
+            group_by(User.id).all()
 
-        # we want only the count for judgements by current students in the course
-        num_judgements_per_student = {user_id: int(judgement_count/question.criteria_count)
-                                      for (user_id, judgement_count) in judgements}
-
-        # count number of answers each student has submitted
-        # answers = Users.query. \
-        #     with_entities(Users.id, func.count(PostsForAnswers.id).label('answer_count')). \
-        #     outerjoin(Posts). \
-        #     outerjoin(PostsForAnswers, and_(
-        #         PostsForAnswers.posts_id == Posts.id,
-        #         PostsForAnswers.questions_id == question_id)). \
-        #     filter(Users.id.in_(student_ids)). \
-        #     group_by(Users.id).all()
-        #
-        # num_answers_per_student = dict(answers)
+        # we want only the count for comparisons by current students in the course
+        num_comparisons_per_student = {user_id: int(compare_count/assignment.criteria_count)
+                                      for (user_id, compare_count) in comparisons}
 
         # find out the scores that students get
-        criteria_ids = [c.id for c in question.criteria]
-        stmt = PostsForAnswers.query. \
-            join(Posts). \
-            with_entities(Posts.users_id, PostsForAnswers.flagged, Scores.criteriaandquestions_id, Scores.normalized_score.label('ns')). \
-            outerjoin(Scores, and_(
-                PostsForAnswers.id == Scores.answers_id,
-                Scores.criteriaandquestions_id.in_(criteria_ids))). \
-            filter(PostsForAnswers.questions_id == question_id). \
+        criteria_ids = [c.criteria_id for c in assignment.assignment_criteria]
+        stmt = Answer.query. \
+            with_entities(Answer.user_id, Answer.flagged, Score.criteria_id, Score.normalized_score.label('ns')). \
+            outerjoin(Score, and_(
+                Answer.id == Score.answer_id,
+                Score.criteria_id.in_(criteria_ids))). \
+            filter(Answer.assignment_id == assignment_id). \
             subquery()
 
-        scores_by_user = Users.query. \
-            with_entities(Users.id, stmt.c.flagged, stmt.c.criteriaandquestions_id, stmt.c.ns). \
-            outerjoin(stmt, Users.id == stmt.c.users_id). \
-            filter(Users.id.in_(student_ids)). \
+        scores_by_user = User.query. \
+            with_entities(User.id, stmt.c.flagged, stmt.c.criteria_id, stmt.c.ns). \
+            outerjoin(stmt, User.id == stmt.c.user_id). \
+            filter(User.id.in_(student_ids)). \
             all()
 
         # process the results into dicts
-        init_scores = {c.id: 'Not Evaluated' for c in question.criteria}
+        init_scores = {c.criteria_id: 'Not Evaluated' for c in assignment.assignment_criteria}
         scores_by_user_id = {student_id: copy.deepcopy(init_scores) for student_id in student_ids}
         flagged_by_user_id = {}
         num_answers_per_student = {}
@@ -113,38 +96,35 @@ class GradebookAPI(Resource):
                     scores_by_user_id[score[0]][score[2]] = round(score[3], 3)
             else:
                 # no answer from the student
-                scores_by_user_id[score[0]] = {c.id: 'No Answer' for c in question.criteria}
+                scores_by_user_id[score[0]] = {c.criteria_id: 'No Answer' for c in assignment.assignment_criteria}
 
         include_self_eval = False
-        num_selfeval_per_student = {}
-        if question.selfevaltype_id:
+        num_self_eval_per_student = {}
+        if assignment.enable_self_eval:
             include_self_eval = True
             # assuming self-evaluation with no comparison
-            stmt = Posts.query. \
-                with_entities(Posts.users_id, func.count('*').label('comment_count')). \
-                join(PostsForComments). \
-                join(PostsForAnswersAndPostsForComments, and_(
-                    PostsForAnswersAndPostsForComments.comments_id == PostsForComments.id,
-                    PostsForAnswersAndPostsForComments.selfeval)). \
-                join(PostsForAnswers, and_(
-                    PostsForAnswers.id == PostsForAnswersAndPostsForComments.answers_id,
-                    PostsForAnswers.questions_id == question_id)) .\
-                group_by(Posts.users_id).subquery()
+            stmt = AnswerComment.query. \
+                with_entities(AnswerComment.user_id, func.count('*').label('comment_count')). \
+                filter_by(self_eval=True). \
+                join(Answer, and_(
+                    Answer.id == AnswerComment.answer_id,
+                    Answer.assignment_id == assignment_id)) .\
+                group_by(AnswerComment.user_id).subquery()
 
-            comments_by_user_id = Users.query. \
-                with_entities(Users.id, stmt.c.comment_count). \
-                outerjoin(stmt, Users.id == stmt.c.users_id). \
-                filter(Users.id.in_(student_ids)). \
-                order_by(Users.id). \
+            comments_by_user_id = User.query. \
+                with_entities(User.id, stmt.c.comment_count). \
+                outerjoin(stmt, User.id == stmt.c.user_id). \
+                filter(User.id.in_(student_ids)). \
+                order_by(User.id). \
                 all()
 
-            num_selfeval_per_student = dict(comments_by_user_id)
-            num_selfeval_per_student.update((k, 0) for k, v in num_selfeval_per_student.items() if v is None)
+            num_self_eval_per_student = dict(comments_by_user_id)
+            num_self_eval_per_student.update((k, 0) for k, v in num_self_eval_per_student.items() if v is None)
 
         # {'gradebook':[{user1}. {user2}, ...]}
-        # user id, username, first name, last name, answer submitted, judgements submitted
+        # user id, username, first name, last name, answer submitted, comparisons submitted
         gradebook = []
-        no_answer = {c.id: 'No Answer' for c in question.criteria}
+        no_answer = {c.criteria_id: 'No Answer' for c in assignment.assignment_criteria}
         for student in students:
             entry = {
                 'userid': student.id,
@@ -152,17 +132,17 @@ class GradebookAPI(Resource):
                 'firstname': student.firstname,
                 'lastname': student.lastname,
                 'num_answers': num_answers_per_student.get(student.id, 0),
-                'num_judgements': num_judgements_per_student.get(student.id, 0),
+                'num_comparisons': num_comparisons_per_student.get(student.id, 0),
                 'scores': scores_by_user_id.get(student.id, no_answer),
                 'flagged': flagged_by_user_id.get(student.id, 'No Answer')
             }
             if include_self_eval:
-                entry['num_selfeval'] = num_selfeval_per_student[student.id]
+                entry['num_self_eval'] = num_self_eval_per_student[student.id]
             gradebook.append(entry)
 
         ret = {
             'gradebook': gradebook,
-            'num_judgements_required': question.num_judgement_req,
+            'num_comparisons_required': assignment.number_of_comparisons,
             'include_self_eval': include_self_eval
         }
 
@@ -171,7 +151,7 @@ class GradebookAPI(Resource):
             event_name=on_gradebook_get.name,
             user=current_user,
             course_id=course_id,
-            data={'question_id': question_id})
+            data={'assignment_id': assignment_id})
 
         return jsonify(ret)
 

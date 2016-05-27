@@ -168,7 +168,7 @@ describe('judgement-module', function () {
 				"questions_id": 9,
 				"scores": [
 					{
-						"answers_id": 407,
+						"answer_id": 407,
 						"criteriaandquestions_id": 12,
 						"id": 645,
 						"normalized_score": 75,
@@ -177,7 +177,7 @@ describe('judgement-module', function () {
 						"wins": 3
 					},
 					{
-						"answers_id": 407,
+						"answer_id": 407,
 						"criteriaandquestions_id": 13,
 						"id": 646,
 						"normalized_score": 0,
@@ -202,7 +202,7 @@ describe('judgement-module', function () {
 				"questions_id": 9,
 				"scores": [
 					{
-						"answers_id": 279,
+						"answer_id": 279,
 						"criteriaandquestions_id": 12,
 						"id": 445,
 						"normalized_score": 75,
@@ -211,7 +211,7 @@ describe('judgement-module', function () {
 						"wins": 3
 					},
 					{
-						"answers_id": 279,
+						"answer_id": 279,
 						"criteriaandquestions_id": 13,
 						"id": 446,
 						"normalized_score": 40,
@@ -279,12 +279,12 @@ describe('judgement-module', function () {
 				"objects": [
 					{
 						"answerpairing": {
-							"answers_id1": 407,
-							"answers_id2": 279,
+							"answer1_id": 407,
+							"answer2_id": 279,
 							"id": 1479,
 							"questions_id": 9
 						},
-						"answers_id_winner": 407,
+						"winner_id": 407,
 						"id": 1592,
 						"question_criterion": {
 							"active": true,
@@ -304,12 +304,12 @@ describe('judgement-module', function () {
 					},
 					{
 						"answerpairing": {
-							"answers_id1": 407,
-							"answers_id2": 279,
+							"answer1_id": 407,
+							"answer2_id": 279,
 							"id": 1479,
 							"questions_id": 9
 						},
-						"answers_id_winner": 279,
+						"winner_id": 279,
 						"id": 1593,
 						"question_criterion": {
 							"active": true,

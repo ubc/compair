@@ -2,10 +2,10 @@ from bouncer.constants import ALL, MANAGE, EDIT, READ, CREATE, DELETE
 from flask_bouncer import ensure
 from flask_login import current_user
 from werkzeug.exceptions import Unauthorized, Forbidden
+from sqlalchemy import and_
 
-from .models import Courses, CoursesAndUsers, Users, UserTypesForCourse, UserTypesForSystem, PostsForQuestions, PostsForAnswers, \
-    PostsForAnswersAndPostsForComments, Judgements, Criteria, CriteriaAndCourses, \
-    PostsForJudgements, Groups, GroupsAndUsers, CriteriaAndPostsForQuestions, Posts, PostsForComments
+from .models import Course, User, UserCourse, CourseRole, SystemRole, Assignment, Answer, \
+    AnswerComment, Comparison, Criteria, AssignmentComment, AssignmentCriteria
 
 USER_IDENTITY = 'permission_user_identity'
 
@@ -18,84 +18,88 @@ def define_authorization(user, they):
         return  # user isn't logged in
 
     def if_my_student(student):
-        course_subquery = Courses.query.with_entities(Courses.id). \
-            join(CoursesAndUsers).filter_by(users_id=user.id). \
-            join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_INSTRUCTOR). \
-            subquery()
-        exists = Courses.query. \
-            join(CoursesAndUsers).filter_by(users_id=student.id). \
-            join(UserTypesForCourse).filter_by(name=UserTypesForCourse.TYPE_STUDENT). \
-            filter(Courses.id.in_(course_subquery)). \
-            count()
+        course_subquery = Course.query \
+            .with_entities(Course.id) \
+            .join(UserCourse) \
+            .filter(and_(
+                UserCourse.user_id == user.id,
+                UserCourse.course_role == CourseRole.instructor
+            )) \
+            .subquery()
+        exists = Course.query. \
+            join(UserCourse) \
+            .filter(and_(
+                UserCourse.user_id == student.id,
+                UserCourse.course_role == CourseRole.student
+            )) \
+            .filter(Course.id.in_(course_subquery)) \
+            .count()
         return bool(exists)
-
-    def if_equal_or_lower_than_me(target):
-        if user.usertypeforsystem.name == UserTypesForSystem.TYPE_INSTRUCTOR:
-            system_role = UserTypesForSystem.query.get(target.usertypesforsystem_id)
-            return system_role.name != UserTypesForSystem.TYPE_SYSADMIN
-
-        # student can't create user
-        return False
+        
+    def if_system_role_equal_or_lower_than_me(target):
+        
+        if user.system_role == SystemRole.instructor:
+            return target.system_role != SystemRole.sys_admin
+        elif user.system_role == SystemRole.sys_admin:
+            return True
+        else:
+            # student can't create user
+            return False
 
     # Assign permissions based on system roles
-    user_system_role = user.usertypeforsystem.name
-    if user_system_role == UserTypesForSystem.TYPE_SYSADMIN:
+    if user.system_role == SystemRole.sys_admin:
         # sysadmin can do anything
         they.can(MANAGE, ALL)
-    elif user_system_role == UserTypesForSystem.TYPE_INSTRUCTOR:
+    elif user.system_role == SystemRole.instructor:
         # instructors can create courses
-        they.can(CREATE, Courses)
+        they.can(CREATE, Course)
         they.can(CREATE, Criteria)
-        they.can(EDIT, Users, if_my_student)
-        they.can(CREATE, Users, if_equal_or_lower_than_me)
+        they.can(EDIT, User, if_my_student)
+        they.can(CREATE, User, if_system_role_equal_or_lower_than_me)
         they.can(READ, USER_IDENTITY)
 
     # users can edit and read their own user account
-    they.can(READ, Users, id=user.id)
-    they.can(EDIT, Users, id=user.id)
+    they.can(READ, User, id=user.id)
+    they.can(EDIT, User, id=user.id)
     # they can also look at their own course enrolments
-    they.can(READ, CoursesAndUsers, users_id=user.id)
+    they.can(READ, UserCourse, user_id=user.id)
     # they can read and edit their own criteria
-    they.can(READ, Criteria, users_id=user.id)
-    they.can(EDIT, Criteria, users_id=user.id)
+    they.can(READ, Criteria, user_id=user.id)
+    they.can(EDIT, Criteria, user_id=user.id)
 
     # Assign permissions based on course roles
     # give access to courses the user is enroled in
-    for entry in user.coursesandusers:
-        if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_DROPPED:
+    for entry in user.user_courses:
+        if entry.course_role == CourseRole.dropped:
             continue
-        they.can(READ, Courses, id=entry.courses_id)
-        they.can(READ, PostsForQuestions, courses_id=entry.courses_id)
-        they.can((READ, CREATE), PostsForAnswers, courses_id=entry.courses_id)
-        they.can((EDIT, DELETE), PostsForAnswers, users_id=user.id)
-        they.can((READ, CREATE), PostsForComments, course_id=entry.courses_id)
-        they.can((EDIT, DELETE), PostsForComments, user_id=user.id)
-        they.can((READ, CREATE), PostsForAnswersAndPostsForComments, courses_id=entry.courses_id)
+        they.can(READ, Course, id=entry.course_id)
+        they.can(READ, Assignment, course_id=entry.course_id)
+        they.can((READ, CREATE), Answer, course_id=entry.course_id)
+        they.can((EDIT, DELETE), Answer, user_id=user.id)
+        they.can((READ, CREATE), AssignmentComment, course_id=entry.course_id)
+        they.can((EDIT, DELETE), AssignmentComment, user_id=user.id)
+        they.can((READ, CREATE), AnswerComment, course_id=entry.course_id)
         # owner of the answer comment
-        they.can((EDIT, DELETE), PostsForAnswersAndPostsForComments, users_id=user.id)
+        they.can((EDIT, DELETE), AnswerComment, user_id=user.id)
         # instructors can modify the course and enrolment
-        if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_INSTRUCTOR:
-            they.can(EDIT, Courses, id=entry.courses_id)
-            they.can(EDIT, CoursesAndUsers, courses_id=entry.courses_id)
-            they.can((CREATE, DELETE), CriteriaAndCourses, courses_id=entry.courses_id)
-            they.can((CREATE, DELETE), Groups, courses_id=entry.courses_id)
-            they.can((CREATE, DELETE), GroupsAndUsers, courses_id=entry.courses_id)
-        # instructors and ta can do anything they want to posts
-        if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_INSTRUCTOR or \
-                entry.usertypeforcourse.name == UserTypesForCourse.TYPE_TA:
-            they.can(MANAGE, PostsForQuestions, courses_id=entry.courses_id)
-            they.can(MANAGE, PostsForAnswers, courses_id=entry.courses_id)
-            they.can(MANAGE, PostsForComments, course_id=entry.courses_id)
-            they.can(MANAGE, PostsForAnswersAndPostsForComments, courses_id=entry.courses_id)
-            they.can(MANAGE, PostsForJudgements, courses_id=entry.courses_id)
-            they.can(READ, Groups, courses_id=entry.courses_id)
-            they.can(READ, GroupsAndUsers, courses_id=entry.courses_id)
-            they.can(READ, CoursesAndUsers, courses_id=entry.courses_id)
-            they.can((CREATE, DELETE), CriteriaAndPostsForQuestions, courses_id=entry.courses_id)
+        if entry.course_role == CourseRole.instructor:
+            they.can(EDIT, Course, id=entry.course_id)
+            they.can(EDIT, UserCourse, course_id=entry.course_id)
+        # instructors and ta can do anything they want to assignments
+        if entry.course_role == CourseRole.instructor or \
+                entry.course_role == CourseRole.teaching_assistant:
+            they.can(MANAGE, Assignment, course_id=entry.course_id)
+            they.can(MANAGE, Answer, course_id=entry.course_id)
+            they.can(MANAGE, AssignmentComment, course_id=entry.course_id)
+            they.can(MANAGE, AnswerComment, course_id=entry.course_id)
+            they.can(READ, UserCourse, course_id=entry.course_id)
+            they.can((CREATE, DELETE), AssignmentCriteria, course_id=entry.course_id)
             they.can(READ, USER_IDENTITY)
-        # only students can submit judgements for now
-        if entry.usertypeforcourse.name == UserTypesForCourse.TYPE_STUDENT:
-            they.can(CREATE, Judgements, courses_id=entry.courses_id)
+            # TA can create criteria
+            they.can(CREATE, Criteria)
+        # only students can submit comparisons for now
+        if entry.course_role == CourseRole.student:
+            they.can(CREATE, Comparison, course_id=entry.course_id)
 
 
 # Tell the client side about a user's permissions.
@@ -106,20 +110,16 @@ def define_authorization(user, they):
 # Note that it looks like Flask-Bouncer judges a user to have permission
 # on an model if they're allowed to operate on one instance of it.
 # E.g.: A user who can only EDIT their own User object would have
-# ensure(READ, Users) return True
+# ensure(READ, User) return True
 def get_logged_in_user_permissions():
-    user = Users.query.get(current_user.id)
+    user = User.query.get(current_user.id)
     require(READ, user)
-    dropped_id = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
-    courses = CoursesAndUsers.query.filter_by(users_id=current_user.id) \
-        .filter(CoursesAndUsers.usertypesforcourse_id != dropped_id).all()
-    admin = user.usertypeforsystem.name == "System Administrator"
+    courses = UserCourse.query.filter_by(user_id=current_user.id) \
+        .filter(UserCourse.course_role != CourseRole.dropped).all()
+    admin = user.system_role == SystemRole.sys_admin
     permissions = {}
     models = {
-        Users.__name__: Users,
-    }
-    post_based_models = {
-        PostsForQuestions.__name__: PostsForQuestions()
+        User.__name__: user,
     }
     operations = {
         MANAGE,
@@ -143,37 +143,35 @@ def get_logged_in_user_permissions():
                 permissions[model_name][operation]['global'] = False
     # course model
     # model_name / operation / courseId OR global
-    permissions['Courses'] = {CREATE: {'global': allow(CREATE, Courses)}}
+    permissions['Course'] = {CREATE: {'global': allow(CREATE, Course)}}
     mod_operations = {MANAGE, READ, EDIT, DELETE}
     for operation in mod_operations:
-        permissions['Courses'].setdefault(operation, {})
-        permissions['Courses'][operation]['global'] = admin
+        permissions['Course'].setdefault(operation, {})
+        permissions['Course'][operation]['global'] = admin
         for course in courses:
-            course_id = str(course.courses_id)
+            course_id = str(course.course_id)
             try:
-                ensure(operation, Courses(id=course.courses_id))
-                permissions['Courses'][operation][course_id] = True
-                permissions['Courses'][operation]['global'] = True
+                ensure(operation, Course(id=course.course_id))
+                permissions['Course'][operation][course_id] = True
+                permissions['Course'][operation]['global'] = True
             except Unauthorized:
-                permissions['Courses'][operation][course_id] = False
+                permissions['Course'][operation][course_id] = False
 
-    # post-based models
-    for model_name, model in post_based_models.items():
-        permissions.setdefault(model_name, {})
-        for operation in operations:
-            permissions[model_name].setdefault(operation, {})
-            permissions[model_name][operation]['global'] = admin
-            for course in courses:
-                course_id = str(course.courses_id)
-                try:
-                    m = model
-                    p = Posts(courses_id=course.courses_id)
-                    setattr(m, 'post', p)
-                    ensure(operation, m)
-                    permissions[model_name][operation][course_id] = True
-                    permissions[model_name][operation]['global'] = True
-                except Unauthorized:
-                    permissions[model_name][operation][course_id] = False
+    # assignment model
+    # model_name / operation / courseId OR global
+    permissions['Assignment'] = {}
+    mod_operations = {MANAGE, READ, EDIT, CREATE, DELETE}
+    for operation in mod_operations:
+        permissions['Assignment'].setdefault(operation, {})
+        permissions['Assignment'][operation]['global'] = admin
+        for course in courses:
+            course_id = str(course.course_id)
+            try:
+                ensure(operation, Assignment(course_id=course.course_id))
+                permissions['Assignment'][operation][course_id] = True
+                permissions['Assignment'][operation]['global'] = True
+            except Unauthorized:
+                permissions['Assignment'][operation][course_id] = False
 
     return permissions
 
@@ -214,7 +212,7 @@ def is_user_access_restricted(user):
     # Determine if the logged in user can view full info on the target user
     access_restricted = not allow(READ, user)
     if access_restricted:
-        enrolments = CoursesAndUsers.query.filter_by(users_id=user.id).all()
+        enrolments = UserCourse.query.filter_by(user_id=user.id).all()
         # if the logged in user can edit the target user's enrolments, then we let them see full info
         for enrolment in enrolments:
             if allow(EDIT, enrolment):

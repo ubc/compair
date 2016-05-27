@@ -2,9 +2,10 @@ from enum import Enum
 
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.orm import synonym, load_only, column_property, backref, contains_eager, joinedload, Load
+from sqlalchemy.orm import synonym, load_only, backref, contains_eager, joinedload, Load
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy_enum34 import EnumType
 
 from . import *
 
@@ -18,12 +19,12 @@ class UserCourse(DefaultTableMixin, WriteTrackingMixin):
         nullable=False)
     course_id = db.Column(db.Integer,  db.ForeignKey("course.id", ondelete="CASCADE"), 
         nullable=False)
-    courserole = db.Column(db.Enum(CourseRole), nullable=False, index=True)
+    course_role = db.Column(EnumType(CourseRole, name="course_role"), nullable=False, index=True)
     group_name = db.Column(db.String(255), nullable=True)
     
     # relationships
     # user many-to-many course with association user_course
-    user = db.relationship("User", back_populates="user_courses")
+    user = db.relationship("User", foreign_keys=[user_id], back_populates="user_courses")
     course = db.relationship("Course", back_populates="user_courses")
     
     __table_args__ = (
