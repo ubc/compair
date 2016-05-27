@@ -3,12 +3,12 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-// TODO 
+// TODO
 // Create the module with a unique name.
 // The module needs a unique name that prevents conflicts with 3rd party modules
-// We're using "ubc.ctlt.acj" as the project's prefix, followed by the module 
+// We're using "ubc.ctlt.acj" as the project's prefix, followed by the module
 // name.
-var module = angular.module('ubc.ctlt.acj.gradebook', 
+var module = angular.module('ubc.ctlt.acj.gradebook',
 	[
 		'ngResource',
 		'ngRoute',
@@ -31,9 +31,9 @@ module.factory(
 
 /***** Controllers *****/
 module.controller("GradebookController",
-	["$scope", "$log", "$routeParams", "CourseResource", "GradebookResource", 
+	["$scope", "$log", "$routeParams", "CourseResource", "GradebookResource",
 		"GroupResource", "QuestionResource", "Authorize", "Toaster", "QuestionsCriteriaResource",
-	function($scope, $log, $routeParams, CourseResource, GradebookResource, 
+	function($scope, $log, $routeParams, CourseResource, GradebookResource,
 		GroupResource, QuestionResource, Authorize, Toaster, QuestionsCriteriaResource)
 	{
 		$scope.users = [];

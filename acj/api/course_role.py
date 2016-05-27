@@ -27,6 +27,6 @@ class UserCourseRolesAPI(Resource):
         )
 
         return course_roles
-        
+
 api = new_restful_api(user_course_role_api)
 api.add_resource(UserCourseRolesAPI, '')

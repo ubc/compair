@@ -1,14 +1,14 @@
 describe('ACJ testsuite - Student', function() {
 	var rootURL = "/static/index.html#";
 	var reset = false;
-	
+
 	beforeEach(function() {
 		if (!reset) {
 			browser().navigateTo('/resetdb');
             reset = true;
         }
 	});
-	
+
 	describe('questions', function() {
 		it('user is logged in', function() {
 			browser().navigateTo(rootURL + '/login');
@@ -38,7 +38,7 @@ describe('ACJ testsuite - Student', function() {
 			expect(repeater("ul.postingsList.padding0 li").count()).toBe(qCount.value - 1);
 		});
 	});
-	
+
 	describe('answers', function() {
 		it('go to answer page', function() {
 			element('a[ng-click="setType(\'discussion\');switchEdits(-1)"]').click();

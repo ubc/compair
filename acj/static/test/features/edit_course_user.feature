@@ -17,7 +17,7 @@ Feature: Edit Course Users
       | displayname           |
       | First Instructor      |
       | First Student         |
-    
+
   Scenario: Sorting course user as instructor
     Given I'm an Instructor with students
     And I'm on "edit course user" page for course with id "1"
@@ -26,7 +26,7 @@ Feature: Edit Course Users
       | displayname            |
       | First Student          |
       | First Instructor       |
-    
+
   Scenario: Adding user to course as instructor
     Given I'm an Instructor with students
     And I'm on "edit course user" page for course with id "1"
@@ -44,7 +44,7 @@ Feature: Edit Course Users
       | First Instructor       |
       | First Student          |
       | Second Student         |
-    
+
   Scenario: Removing user to course as instructor
     Given I'm an Instructor with students
     And I'm on "edit course user" page for course with id "1"
@@ -53,17 +53,17 @@ Feature: Edit Course Users
     And I should see course users with displaynames:
       | displayname            |
       | First Instructor       |
-    
+
   Scenario: Changing user's group in course as instructor
     Given I'm an Instructor with students
     And I'm on "edit course user" page for course with id "1"
     When I set the second user's group to "Second Group"
     Then I should see a success message
-    
+
   Scenario: Removing user from groups in course as instructor
     Given I'm an Instructor with students
     And I'm on "edit course user" page for course with id "1"
     When I set the second user's group to "- None -"
     Then I should see a success message
-    
-   
+
+

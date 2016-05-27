@@ -62,17 +62,17 @@ class AssignmentCommentRootAPI(Resource):
         Course.get_active_or_404(course_id)
         Assignment.get_active_or_404(assignment_id)
         require(CREATE, AssignmentComment(course_id=course_id))
-        
+
         new_assignment_comment = AssignmentComment(assignment_id=assignment_id)
-        
+
         params = new_assignment_comment_parser.parse_args()
-        
+
         new_assignment_comment.content = params.get("content")
         if not new_assignment_comment.content:
             return {"error": "The comment content is empty!"}, 400
-            
+
         new_assignment_comment.user_id = current_user.id
-        
+
         db.session.add(new_assignment_comment)
 
         on_assignment_comment_create.send(
@@ -91,13 +91,13 @@ api.add_resource(AssignmentCommentRootAPI, '')
 # / id
 class AssignmentCommentIdAPI(Resource):
     @login_required
-    
+
     def get(self, course_id, assignment_id, assignment_comment_id):
         Course.get_active_or_404(course_id)
         Assignment.get_active_or_404(assignment_id)
-        
+
         assignment_comment = AssignmentComment.get_active_or_404(assignment_comment_id)
-            
+
         require(READ, assignment_comment)
 
         on_assignment_comment_get.send(
@@ -113,20 +113,20 @@ class AssignmentCommentIdAPI(Resource):
     def post(self, course_id, assignment_id, assignment_comment_id):
         Course.get_active_or_404(course_id)
         Assignment.get_active_or_404(assignment_id)
-        
+
         assignment_comment = AssignmentComment.get_active_or_404(assignment_comment_id)
-            
+
         require(EDIT, assignment_comment)
 
         params = existing_assignment_comment_parser.parse_args()
         # make sure the comment id in the rul and the id matches
         if params['id'] != assignment_comment_id:
             return {"error": "Comment id does not match URL."}, 400
-            
+
         # modify comment according to new values, preserve original values if values not passed
         if not params.get("content"):
             return {"error": "The comment content is empty!"}, 400
-        
+
         assignment_comment.content = params.get("content")
         db.session.add(assignment_comment)
 
@@ -144,9 +144,9 @@ class AssignmentCommentIdAPI(Resource):
     def delete(self, course_id, assignment_id, assignment_comment_id):
         Course.get_active_or_404(course_id)
         Assignment.get_active_or_404(assignment_id)
-        
+
         assignment_comment = AssignmentComment.get_active_or_404(assignment_comment_id)
-            
+
         require(DELETE, assignment_comment)
         data = marshal(assignment_comment, dataformat.get_assignment_comment(False))
         assignment_comment.active = False
@@ -160,6 +160,6 @@ class AssignmentCommentIdAPI(Resource):
             data=data)
 
         return {'id': assignment_comment.id}
-        
+
 api.add_resource(AssignmentCommentIdAPI, '/<int:assignment_comment_id>')
 

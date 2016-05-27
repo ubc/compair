@@ -38,7 +38,7 @@ class CourseFactory(SQLAlchemyModelFactory):
 class UserCourseFactory(SQLAlchemyModelFactory):
     FACTORY_FOR = UserCourse
     FACTORY_SESSION = db.session
-    
+
     course_id = 1
     user_id = 1
     course_role = CourseRole.instructor
@@ -71,7 +71,7 @@ class AssignmentFactory(SQLAlchemyModelFactory):
     compare_start = None
     compare_end = None
     number_of_comparisons = 3
-    # Make sure created dates are unique. 
+    # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 
 
@@ -79,7 +79,7 @@ class ScoreFactory(SQLAlchemyModelFactory):
     FACTORY_FOR = Score
     FACTORY_SESSION = db.session
     score = 5
-    
+
     assignment_id = 1
     answer_id = 1
     criteria_id = 1
@@ -91,7 +91,7 @@ class AnswerFactory(SQLAlchemyModelFactory):
     assignment_id = 1
     user_id = 1
     content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
-    # Make sure created dates are unique. 
+    # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 
 
@@ -99,11 +99,11 @@ class AssignmentCommentFactory(SQLAlchemyModelFactory):
     FACTORY_FOR = AssignmentComment
     FACTORY_SESSION = db.session
     assignment_id = 1
-    
+
     course_id = 1
     user_id = 1
     content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
-    # Make sure created dates are unique. 
+    # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 
 
@@ -111,22 +111,22 @@ class AnswerCommentFactory(SQLAlchemyModelFactory):
     FACTORY_FOR = AnswerComment
     FACTORY_SESSION = db.session
     answer_id = 1
-    
+
     course_id = 1
     user_id = 1
     content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
-    # Make sure created dates are unique. 
+    # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 
 
 class ComparisonFactory(SQLAlchemyModelFactory):
     FACTORY_FOR = Comparison
     FACTORY_SESSION = db.session
-    
+
     assignment_id = 1
     criteria_id = 1
     course_id = 1
     user_id = 1
     content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
-    # Make sure created dates are unique. 
+    # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))

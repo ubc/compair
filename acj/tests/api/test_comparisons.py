@@ -338,7 +338,7 @@ class ComparisonAPITests(ACJAPITestCase):
                 comparison.winner_id = min_id
                 db.session.add(comparison)
             db.session.commit()
-            
+
             Comparison.calculate_scores(self.assignment.id)
         # test normal post
         # rv = self.client.post(self.base_url, data=json.dumps(comparison_submit),
@@ -359,12 +359,12 @@ class ComparisonAPITests(ACJAPITestCase):
             self.data.get_authorized_student().id)
         comparisons_secondary = self._submit_all_possible_comparisons_for_user(
             self.data.get_secondary_authorized_student().id)
-        
+
         loser_ids = comparisons_auth['losers']
         loser_ids.extend(comparisons_secondary['losers'])
         winner_ids = comparisons_auth['winners']
         winner_ids.extend(comparisons_secondary['winners'])
-        
+
         # Count the number of wins each answer has had
         num_wins_by_id = {}
         for loser_id in loser_ids:
@@ -384,10 +384,10 @@ class ComparisonAPITests(ACJAPITestCase):
         # comparisons
         sorted_expect_ranking = sorted(num_wins_by_id.items(), key=operator.itemgetter(1))
         expected_ranking_by_wins = [answer_id for (answer_id, wins) in sorted_expect_ranking]
-        
+
         sorted_actual_ranking = sorted(answer_scores.items(), key=operator.itemgetter(1))
         actual_ranking_by_scores = [answer_id for (answer_id, score) in sorted_actual_ranking]
-        
+
         self.assertSequenceEqual(actual_ranking_by_scores, expected_ranking_by_wins)
 
     def test_comparison_count_matched_pairing(self):

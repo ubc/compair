@@ -6,9 +6,9 @@ String.prototype.format = function() {
 };
 
 var myApp = angular.module('myApp', [
-	'ngRoute', 
-	'http-auth-interceptor', 
-	'ngCookies', 
+	'ngRoute',
+	'http-auth-interceptor',
+	'ngCookies',
 	'ng-breadcrumbs',
 	'angular-loading-bar',
 	'ubc.ctlt.acj.common',
@@ -64,12 +64,12 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
 	$httpProvider.interceptors.push('defaultErrorHandlerInterceptor');
 
 	$routeProvider
-		.when ('/', 
+		.when ('/',
 			{
 				templateUrl: 'modules/home/home-partial.html',
 				label: "Home" // breadcrumb label
 			})
-		.when ('/course/new', 
+		.when ('/course/new',
 			{
 				templateUrl: 'modules/course/course-partial.html',
 				label: "Add Course",
@@ -77,12 +77,12 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
 				controllerAs: 'rc',
 				method: 'new'
 			})
-		.when ('/course/:courseId', 
+		.when ('/course/:courseId',
 			{
 				templateUrl: 'modules/course/course-questions-partial.html',
 				label: "Course Assignments"
 			})
-		.when ('/course/:courseId/configure', 
+		.when ('/course/:courseId/configure',
 			{
 				templateUrl: 'modules/course/course-partial.html',
 				label: "Edit Course",
@@ -115,12 +115,12 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
 				templateUrl: 'modules/group/group-import-results-partial.html',
 				label: "Results"
 			})
-		.when ('/course/:courseId/question/create', 
+		.when ('/course/:courseId/question/create',
 			{
 				templateUrl: 'modules/question/question-create-partial.html',
 				label: "Add Assignment"
 			})
-		.when ('/course/:courseId/question/:questionId', 
+		.when ('/course/:courseId/question/:questionId',
 			{
 				templateUrl: 'modules/question/question-view-partial.html',
 				label: "View Assignment"
@@ -130,7 +130,7 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
 				templateUrl: 'modules/question/question-edit-partial.html',
 				label: "Edit Assignment"
 			})
-		.when ('/course/:courseId/question/:questionId/answer/create', 
+		.when ('/course/:courseId/question/:questionId/answer/create',
 			{
 				templateUrl: 'modules/answer/answer-create-partial.html',
 				label: "Answer"
@@ -160,7 +160,7 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
 				templateUrl: 'modules/comment/comment-answer-edit-partial.html',
 				label: "Edit Reply"
 			})
-		.when ('/course/:courseId/question/:questionId/compare', 
+		.when ('/course/:courseId/question/:questionId/compare',
 			{
 				templateUrl: 'modules/judgement/judgement-partial.html',
 				label: "Compare Answers"

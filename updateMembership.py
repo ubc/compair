@@ -25,12 +25,12 @@ for course in courses:
     postParams['oauth_signature_method'] = 'HMAC-SHA1'
     postParams['oauth_timestamp'] = timestamp
     postParams['oauth_nonce'] = nonce
-    
+
     req = oauth.OAuthRequest(http_url=course.LTIURL, http_method='POST', parameters=postParams)
     hmacAlg = hmac.HMAC('acjsecret&', urls.url_quote_plus(req.get_normalized_http_method()) + '&' + urls.url_quote_plus(course.LTIURL) + '&' + urls.url_quote_plus(req.get_normalized_parameters()), hashlib.sha1)
-    
+
     postParams['oauth_signature'] = base64.b64encode(hmacAlg.digest())
-    
+
     xmlString = requests.post(course.LTIURL, data=postParams).text
     root = ET.fromstring(xmlString)
     #find the course in ACJ, create if it does not exist
@@ -39,15 +39,15 @@ for course in courses:
         newCourse = Course(course.courseName)
         db_session.add(newCourse)
         commit()
-        
+
     #create a list with all users in the course
     userlist = []
     for member in root.find('memberships').findall('member'):
         role = 'Student'
         if member.find('roles').text and 'Instructor' in member.find('roles').text:
             role = 'Teacher'
-        userlist.append({"username": member.find('person_sourcedid').text, "password": member.find('person_sourcedid').text, 
-                         "usertype": role, "email": member.find('person_contact_email_primary').text, "firstname": member.find('person_name_given').text, 
+        userlist.append({"username": member.find('person_sourcedid').text, "password": member.find('person_sourcedid').text,
+                         "usertype": role, "email": member.find('person_contact_email_primary').text, "firstname": member.find('person_name_given').text,
                          "lastname": member.find('person_name_family').text, "display": member.find('person_name_full').text})
     #add missing users to ACJ
     if userlist:
@@ -56,7 +56,7 @@ for course in courses:
     courseId = Course.query.filter_by(name = course.courseName).first().id
     for member in root.find('memberships').findall('member'):
         userId = User.query.filter_by(username = member.find('person_sourcedid').text).first().id
-        
+
         enrolled = Enrollment.query.filter_by(cid = courseId).with_entities(Enrollment.uid).all()
         enrolled =  [item for sublist in enrolled for item in sublist]
         if userId not in enrolled:

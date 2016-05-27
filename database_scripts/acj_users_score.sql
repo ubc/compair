@@ -9,7 +9,7 @@ SELECT p.users_id, cq.id, c.name, scores.score
 FROM (
 	SELECT s.score, s.answer_id, s.criteriaandquestions_id
 	FROM Scores as s
-	WHERE s.criteriaandquestions_id IN 
+	WHERE s.criteriaandquestions_id IN
 	(SELECT id FROM CriteriaAndQuestions
 		WHERE questions_id = @questionId and active = 1)
 ) as scores

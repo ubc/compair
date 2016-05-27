@@ -118,9 +118,9 @@ class SimpleAssignmentTestData(BasicTestData):
 
     def create_assignment(self, course, author, answer_start, answer_end):
         assignment = AssignmentFactory(
-            course_id=course.id, 
-            user_id=author.id, 
-            answer_start=answer_start, 
+            course_id=course.id,
+            user_id=author.id,
+            answer_start=answer_start,
             answer_end=answer_end
         )
         AssignmentCriteriaFactory(criteria=DefaultFixture.DEFAULT_CRITERIA, assignment=assignment)
@@ -148,7 +148,7 @@ class AssignmentCommentsTestData(SimpleAssignmentTestData):
 
     def create_assignment_comment(self, user, course, assignment):
         assignment_comment = AssignmentCommentFactory(
-            assignment=assignment, 
+            assignment=assignment,
             user=user
         )
         db.session.commit()
@@ -175,12 +175,12 @@ class SimpleAnswersTestData(SimpleAssignmentTestData):
 
     def create_answer(self, assignment, author):
         answer = AnswerFactory(
-            assignment_id=assignment.id, 
+            assignment_id=assignment.id,
             user_id=author.id
         )
         ScoreFactory(
             assignment_id=assignment.id,
-            answer=answer, 
+            answer=answer,
             criteria_id=assignment.assignment_criteria[0].criteria_id
         )
         db.session.commit()
@@ -341,15 +341,15 @@ class TestFixture:
         for i in range(num_answers):
             for assignment in self.assignments:
                 answer = AnswerFactory(
-                    assignment=assignment, 
+                    assignment=assignment,
                     user=self.students[i % len(self.students)]
                 )
                 # half of the answers have scores
                 if i < num_answers/2:
-                    ScoreFactory( 
+                    ScoreFactory(
                         assignment=assignment,
-                        answer=answer, 
-                        criteria_id=assignment.assignment_criteria[0].criteria_id, 
+                        answer=answer,
+                        criteria_id=assignment.assignment_criteria[0].criteria_id,
                         score=random.random() * 5
                     )
                 db.session.commit()
@@ -374,7 +374,7 @@ class TestFixture:
             student = UserFactory(system_role=SystemRole.student)
             students.append(student)
         self.students += students
-        
+
         if num_groups > 0:
             student_per_group = int(len(self.students) / num_groups) if num_groups is not 0 else 0
             for idx in range(num_groups):

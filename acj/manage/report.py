@@ -25,7 +25,7 @@ def create(course_id):
         course_name += '_'
 
     query = Score.query. \
-        with_entities(Answer.user_id, Answer.assignment_id, Answer.id, 
+        with_entities(Answer.user_id, Answer.assignment_id, Answer.id,
                       Criteria.id, Criteria.name, Score.score). \
         join(Score.answer). \
         join(Answer). \

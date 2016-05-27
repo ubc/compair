@@ -35,9 +35,9 @@ def define_authorization(user, they):
             .filter(Course.id.in_(course_subquery)) \
             .count()
         return bool(exists)
-        
+
     def if_system_role_equal_or_lower_than_me(target):
-        
+
         if user.system_role == SystemRole.instructor:
             return target.system_role != SystemRole.sys_admin
         elif user.system_role == SystemRole.sys_admin:

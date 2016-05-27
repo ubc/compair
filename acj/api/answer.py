@@ -11,7 +11,7 @@ from acj.core import db
 from acj.authorization import require, allow, is_user_access_restricted
 from acj.models import Answer, Assignment, Course, User, Comparison, \
     Score, UserCourse, CourseRole
-    
+
 from .util import new_restful_api, get_model_changes, pagination_parser
 from .file import add_new_file, delete_file
 from acj.core import event
@@ -74,7 +74,7 @@ class AnswerRootAPI(Resource):
         restrict_user = not allow(MANAGE, assignment)
 
         params = answer_list_parser.parse_args()
-        
+
         if restrict_user and not assignment.after_comparing:
             # only the answer from student himself/herself should be returned
             params['author'] = current_user.id
@@ -130,7 +130,7 @@ class AnswerRootAPI(Resource):
             # that don't have score yet
             query = query.outerjoin(Score) \
                 .filter(or_(
-                    Score.criteria_id == params['orderBy'], 
+                    Score.criteria_id == params['orderBy'],
                     Score.criteria_id.is_(None)
                  ))
             query = query.order_by(Score.score.desc(), Answer.created.desc())
@@ -149,8 +149,8 @@ class AnswerRootAPI(Resource):
             course_id=course_id,
             data={'assignment_id': assignment_id})
 
-        return {"objects": marshal(page.items, dataformat.get_answer(restrict_user)), 
-                "page": page.page, "pages": page.pages, 
+        return {"objects": marshal(page.items, dataformat.get_answer(restrict_user)),
+                "page": page.page, "pages": page.pages,
                 "total": page.total, "per_page": page.per_page}
 
     @login_required
@@ -160,16 +160,16 @@ class AnswerRootAPI(Resource):
         if not assignment.answer_grace and not allow(MANAGE, assignment):
             return {'error': answer_deadline_message}, 403
         require(CREATE, Answer(course_id=course_id))
-        
+
         answer = Answer(assignment_id=assignment_id)
-        
+
         params = new_answer_parser.parse_args()
         answer.content = params.get("content")
-        
+
         file_name = params.get('file_name')
         if not (answer.content or file_name):
             return {"error": "The answer content is empty!"}, 400
-        
+
         user = params.get("user")
         answer.user_id = user if user else current_user.id
 
@@ -197,11 +197,11 @@ class AnswerRootAPI(Resource):
             data=marshal(answer, dataformat.get_answer(False)))
 
         if file_name:
-            answer.file_id = add_new_file(params.get('file_alias'), file_name, 
+            answer.file_id = add_new_file(params.get('file_alias'), file_name,
                 Answer.__name__, answer.id)
-                
+
             db.session.commit()
-        
+
         return marshal(answer, dataformat.get_answer())
 
 
@@ -214,9 +214,9 @@ class AnswerIdAPI(Resource):
     def get(self, course_id, assignment_id, answer_id):
         Course.get_active_or_404(course_id)
         Assignment.get_active_or_404(assignment_id)
-        
+
         answer = Answer.get_active_or_404(
-            answer_id, 
+            answer_id,
             joinedloads=['file', 'user', 'scores']
         )
         require(READ, answer)
@@ -238,19 +238,19 @@ class AnswerIdAPI(Resource):
             return {'error': answer_deadline_message}, 403
         answer = Answer.get_active_or_404(answer_id)
         require(EDIT, answer)
-        
+
         params = existing_answer_parser.parse_args()
         # make sure the answer id in the url and the id matches
         if params['id'] != answer_id:
             return {"error": "Answer id does not match the URL."}, 400
-            
+
         # modify answer according to new values, preserve original values if values not passed
         answer.content = params.get("content")
         uploaded = params.get('uploadFile')
         file_name = params.get('file_name')
         if not (answer.content or uploaded or file_name):
             return {"error": "The answer content is empty!"}, 400
-            
+
         db.session.add(answer)
         db.session.commit()
 
@@ -262,11 +262,11 @@ class AnswerIdAPI(Resource):
             data=get_model_changes(answer))
 
         if file_name:
-            answer.file_id = add_new_file(params.get('file_alias'), file_name, 
+            answer.file_id = add_new_file(params.get('file_alias'), file_name,
                 Answer.__name__, answer.id)
-                
+
             db.session.commit()
-        
+
         return marshal(answer, dataformat.get_answer())
 
     @login_required
@@ -275,7 +275,7 @@ class AnswerIdAPI(Resource):
         Assignment.get_active_or_404(assignment_id)
         answer = Answer.get_active_or_404(answer_id)
         require(DELETE, answer)
-        
+
         delete_file(answer.file_id)
         answer.file_id = None
         answer.active = False
@@ -308,7 +308,7 @@ class AnswerUserIdAPI(Resource):
         Course.get_active_or_404(course_id)
         assignment = Assignment.get_active_or_404(assignment_id)
         require(READ, Answer(course_id=course_id))
-        
+
         answers = Answer.query. \
             options(joinedload('comments')). \
             options(joinedload('file')). \
@@ -348,13 +348,13 @@ class AnswerFlagAPI(Resource):
         Course.get_active_or_404(course_id)
         answer = Answer.get_active_or_404(answer_id)
         require(READ, answer)
-        
+
         # anyone can flag an answer, but only the original flagger or someone who can manage
         # the answer can unflag it
         if answer.flagged and answer.flagger_user_id != current_user.id and \
                 not allow(MANAGE, answer):
             return {"error": "You do not have permission to unflag this answer."}, 400
-            
+
         params = flag_parser.parse_args()
         answer.flagged = params['flagged']
         answer.flagger_user_id = current_user.id
@@ -392,7 +392,7 @@ class AnswerCountAPI(Resource):
         Course.get_active_or_404(course_id)
         Assignment.get_active_or_404(assignment_id)
         require(READ, Answer(course_id=course_id))
-        
+
         answered = Answer.query. \
             filter_by(
                 assignment_id=assignment_id,

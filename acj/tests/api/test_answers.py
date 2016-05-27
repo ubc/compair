@@ -132,7 +132,7 @@ class AnswersAPITests(ACJAPITestCase):
 
             # add instructor answer
             answer = AnswerFactory(
-                assignment=self.fixtures.assignment, 
+                assignment=self.fixtures.assignment,
                 user=self.fixtures.instructor
             )
             self.fixtures.answers.append(answer)

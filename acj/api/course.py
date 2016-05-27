@@ -68,7 +68,7 @@ class CourseListAPI(Resource):
             new_course.end_date = datetime.datetime.strptime(
                 new_course.end_date,
                 '%Y-%m-%dT%H:%M:%S.%fZ')
-        
+
         try:
             # create the course
             db.session.add(new_course)
@@ -131,19 +131,19 @@ class CourseAPI(Resource):
         # modify course according to new values, preserve original values if values not passed
         course.name = params.get("name", course.name)
         course.description = params.get("description", course.description)
-        
+
         course.start_date = params.get("start_date", None)
         if course.start_date is not None:
             course.start_date = datetime.datetime.strptime(
                 course.start_date,
                 '%Y-%m-%dT%H:%M:%S.%fZ')
-                
+
         course.end_date = params.get("end_date", None)
         if course.end_date is not None:
             course.end_date = datetime.datetime.strptime(
                 course.end_date,
                 '%Y-%m-%dT%H:%M:%S.%fZ')
-                
+
         db.session.commit()
 
         on_course_modified.send(
@@ -162,7 +162,7 @@ class CourseAnsweredAPI(Resource):
     def get(self, course_id):
         course = Course.get_active_or_404(course_id)
         require(READ, course)
-        
+
         answered = Answer.query \
             .with_entities(Answer.assignment_id, func.count(Answer.id)) \
             .filter_by(

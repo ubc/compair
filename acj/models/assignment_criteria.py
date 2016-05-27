@@ -12,16 +12,16 @@ class AssignmentCriteria(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     __tablename__ = 'assignment_criteria'
 
     # table columns
-    assignment_id = db.Column(db.Integer, db.ForeignKey("assignment.id", ondelete="CASCADE"), 
+    assignment_id = db.Column(db.Integer, db.ForeignKey("assignment.id", ondelete="CASCADE"),
         nullable=False)
-    criteria_id = db.Column(db.Integer,  db.ForeignKey("criteria.id", ondelete="CASCADE"), 
+    criteria_id = db.Column(db.Integer,  db.ForeignKey("criteria.id", ondelete="CASCADE"),
         nullable=False)
-    
+
     # relationships
     # assignment many-to-many criteria with association assignment_criteria
     assignment = db.relationship("Assignment", back_populates="assignment_criteria")
     criteria = db.relationship("Criteria", back_populates="assignment_criteria")
-    
+
     course_id = association_proxy('assignment', 'course_id', creator=lambda course_id:
         import_module('acj.models.assignment').Assignment(course_id=course_id))
     __table_args__ = (

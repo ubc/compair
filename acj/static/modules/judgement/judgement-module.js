@@ -3,7 +3,7 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.judgement', 
+var module = angular.module('ubc.ctlt.acj.judgement',
 	[
 		'ubc.ctlt.acj.answer',
 		'ubc.ctlt.acj.comment',
@@ -20,7 +20,7 @@ var module = angular.module('ubc.ctlt.acj.judgement',
 /***** Providers *****/
 module.factory('JudgementResource', ['$resource',
 	function($resource) {
-		var resourceUrl = 
+		var resourceUrl =
 			'/api/courses/:courseId/questions/:questionId/judgements';
 		var ret = $resource(
 			resourceUrl,
@@ -71,7 +71,7 @@ module.controller(
 		var questionId = $scope.questionId = $routeParams['questionId'];
 		var userId;
 		$scope.submitted = false;
-		
+
 		$scope.question = {};
 		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
 			function (ret)
@@ -104,7 +104,7 @@ module.controller(
 						Toaster.reqerror("Comparisons Total Not Found", ret);
 					}
 				);
-		});	
+		});
 
 		// get an answerpair to be judged from the server
 		$scope.answerPairError = false;
@@ -130,7 +130,7 @@ module.controller(
 				Toaster.info("You've compared the available answers!", "Please check back later for more answers.");
 			}
 		);
-		
+
 		// enable scrolling to evaluation step 2, when step 2 revealed
 		//$scope.showNext = function(selector) {
 			// ensure hidden step revealed first
@@ -139,9 +139,9 @@ module.controller(
 				//window.scrollTo(0, $(selector)[0].offsetTop - 220);
 			//}, 0);
 		//};
-		
+
 		$scope.preventExit = true; //user should be warned before leaving page by default
-		
+
 		// save judgement to server
 		$scope.judgementSubmit = function() {
 			var judgement = {};
@@ -176,7 +176,7 @@ module.controller(
 						evaluations['judgements'] = [];
 						angular.forEach(ret.objects,
 							function(judge) {
-								var temp = judge;								
+								var temp = judge;
 								temp['comment'] = comments[judge.question_criterion.id];
 								evaluations['judgements'].push(temp);
 							}
@@ -245,12 +245,12 @@ module.controller(
 		// flag answer for instructor
 		$scope.toggleAnswerFlag = function(answer) {
 			var params = {'flagged': !answer['flagged']};
-			var resultMsg = 
+			var resultMsg =
 				"Answer has been flagged as inappropriate or incomplete.";
 			if (answer['flagged']) {
 				resultMsg = "Answer has been unflagged.";
 			}
-			AnswerResource.flagged({'courseId':courseId,'questionId':questionId, 
+			AnswerResource.flagged({'courseId':courseId,'questionId':questionId,
 				'answerId': answer['id']}, params).$promise.then(
 				function() {
 					answer.flagged = params['flagged'];
@@ -275,7 +275,7 @@ module.controller(
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var questionId = $scope.questionId = $routeParams['questionId'];
 		$scope.comment = {};
-		
+
 		Session.getUser().then(function(user) {
 			var userId = user.id;
 			var count = JudgementResource.count(

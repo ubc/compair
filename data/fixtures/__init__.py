@@ -70,13 +70,13 @@ class SampleDataFixture(object):
             for student in self.students:
                 UserCourseFactory(user=student, course=course,
                                   course_role=CourseRole.student)
-                                       
+
             # create 5 assignments by the instructor
             for i in range(5):
                 minutes = random.randint(0, 59)
                 created = datetime.utcnow() - timedelta(days=1, minutes=minutes)
-                assignment = AssignmentFactory(course=course, 
-                    user=self.instructor, content=content, created=created, 
+                assignment = AssignmentFactory(course=course,
+                    user=self.instructor, content=content, created=created,
                     name=generator.get_assignment())
                 # insert default criteria into assignment
                 AssignmentCriteriaFactory(criterion=DEFAULT_CRITERIA, assignment=assignment)
@@ -84,7 +84,7 @@ class SampleDataFixture(object):
                 for student in self.students:
                     minutes = random.randint(0, 59)
                     created = datetime.utcnow() - timedelta(minutes=minutes)
-                    AnswerFactory(course=course, 
+                    AnswerFactory(course=course,
                         user=student, content=generator.get_answer(),
                         created=created, assignment=assignment)
 

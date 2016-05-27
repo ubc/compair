@@ -14,9 +14,9 @@ class File(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
         nullable=False)
     name = db.Column(db.String(255), nullable=False)
     alias = db.Column(db.String(255), nullable=False)
-    
+
     # relationships
     # user via User Model
-    
+
     assignments = db.relationship("Assignment", backref="file", lazy='dynamic')
     answers = db.relationship("Answer", backref="file", lazy='dynamic')

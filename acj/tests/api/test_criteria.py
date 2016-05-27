@@ -23,9 +23,9 @@ class CriteriaAPITests(ACJAPITestCase):
         else:
             return '/api/courses/' + str(course_id) + '/assignments/' + str(assignment_id) + '/criteria/' + str(criteria_id)
 
-    def test_create_criteria(self):  
+    def test_create_criteria(self):
         criteria_api_url = '/api/criteria'
-              
+
         criteria_expected = {
             'name': 'Which is more accurate?',
             'description': 'Please answer honestly.'

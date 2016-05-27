@@ -73,7 +73,7 @@ class AssignmentIdAPI(Resource):
         assignment = Assignment.get_active_or_404(assignment_id)
         require(EDIT, assignment)
         params = existing_assignment_parser.parse_args()
-        
+
         # make sure the assignment id in the url and the id matches
         if params['id'] != assignment_id:
             return {"error": "Assignment id does not match URL."}, 400
@@ -102,7 +102,7 @@ class AssignmentIdAPI(Resource):
             'number_of_comparisons', assignment.number_of_comparisons)
         assignment.enable_self_eval = params.get(
             'enable_self_eval', assignment.enable_self_eval)
-        
+
         criteria_ids = [c['id'] for c in params.criteria]
         for c in assignment.assignment_criteria:
             c.active = c.criteria_id not in criteria_ids
@@ -113,7 +113,7 @@ class AssignmentIdAPI(Resource):
                 assignment_criteria = AssignmentCriteria(
                     assignment_id=assignment_id, criteria_id=criteria_id)
                 assignment.assignment_criteria.append(assignment_criteria)
-                
+
         on_assignment_modified.send(
             self,
             event_name=on_assignment_modified.name,
@@ -122,12 +122,12 @@ class AssignmentIdAPI(Resource):
             data=get_model_changes(assignment))
 
         db.session.commit()
-        
+
         file_name = params.get("file_name")
         if file_name:
-            assignment.file_id = add_new_file(params.get('file_alias'), file_name, 
+            assignment.file_id = add_new_file(params.get('file_alias'), file_name,
                 Assignment.__name__, assignment.id)
-                
+
             db.session.commit()
 
         return marshal(assignment, dataformat.get_assignment())
@@ -197,25 +197,25 @@ class AssignmentRootAPI(Resource):
         new_assignment = Assignment(course_id=course_id)
         require(CREATE, new_assignment)
         params = new_assignment_parser.parse_args()
-        
+
         new_assignment.user_id = current_user.id
         new_assignment.name = params.get("name")
         new_assignment.description = params.get("description")
         new_assignment.answer_start = dateutil.parser.parse(params.get('answer_start'))
         new_assignment.answer_end = dateutil.parser.parse(params.get('answer_end'))
-        
+
         new_assignment.compare_start = params.get('compare_start', None)
         if new_assignment.compare_start is not None:
             new_assignment.compare_start = dateutil.parser.parse(params.get('compare_start', None))
-            
+
         new_assignment.compare_end = params.get('compare_end', None)
         if new_assignment.compare_end is not None:
             new_assignment.compare_end = dateutil.parser.parse(params.get('compare_end', None))
-            
+
         new_assignment.students_can_reply = params.get('students_can_reply', False)
         new_assignment.number_of_comparisons = params.get('number_of_comparisons')
         new_assignment.enable_self_eval = params.get('enable_self_eval')
-        
+
         criteria_ids = [c['id'] for c in params.criteria]
         for c in criteria_ids:
             assignment_criteria = AssignmentCriteria(assignment=new_assignment, criteria_id=c)
@@ -223,12 +223,12 @@ class AssignmentRootAPI(Resource):
 
         db.session.add(new_assignment)
         db.session.commit()
-        
+
         file_name = params.get("file_name")
         if file_name:
-            new_assignment.file_id = add_new_file(params.get('file_alias'), file_name, 
+            new_assignment.file_id = add_new_file(params.get('file_alias'), file_name,
                 Assignment.__name__, new_assignment.id)
-                
+
             db.session.add(new_assignment)
             db.session.commit()
 

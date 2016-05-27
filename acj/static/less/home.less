@@ -3,47 +3,47 @@
 /***** HOME SCREEN *****/
 
 .home-screen {
-  
+
   .search-courses {
     margin-top: 1.4em;
   }
-  
+
   /* div surrounding list of courses */
   .course-list {
-    
+
     .blue-box();
-    
+
     /* class for div surrounding each course */
     .each-course {
-      
+
       display: block;
       padding: 1em;
       text-shadow: 0 -1px 0 #eee;
       border-bottom: 1px solid @link-blue;
-      
+
       &:last-child {
         border-bottom: none;
       }
-      
+
       &:hover {
         color: @link-blue;
         text-decoration: none;
         background: #DBEBF9;
       }
-      
+
     }//closes each-course
-    
+
     /* course names */
     h3 {
       margin-top: .5em;
     }
-    
+
     /* right-side arrow icon */
     .fa-arrow-right {
       font-size: 1.5em;
     }
-  
+
   }//closes course-list
-  
+
 }//closes home-screen
 

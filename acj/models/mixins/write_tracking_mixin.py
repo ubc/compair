@@ -4,4 +4,3 @@ from .modify_tracking_mixin import ModifyTrackingMixin
 
 class WriteTrackingMixin(ModifyTrackingMixin, CreateTrackingMixin):
     __abstract__ = True
-    

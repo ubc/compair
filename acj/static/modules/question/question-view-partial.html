@@ -1,34 +1,34 @@
 <div ng-controller="QuestionViewController" class="question-screen">
-	
+
 	<div class="standalone-question">
-		
+
 		<!-- Question -->
 		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
-		
+
 		<!-- Question Details -->
 		<div class="questionmathjax question-desc" mathjax="question.post.content"
 			 ng-bind-html="question.post.content">
 		</div>
-		
+
 		<!-- Question Attachment -->
 		<acj-pdf-inline label="See assignment details:" pdfs="question.post.files">
 		</acj-pdf-inline>
-		
+
 		<!-- Question Answer/Evaluation Periods -->
 		<div ng-show="canManagePosts">
 			<p><em>Answering Period: {{question.answer_start | amDateFormat: 'MMM D @ h:mm a'}} - {{question.answer_end | amDateFormat: 'MMM D @ h:mm a'}}
 			<span ng-if="question.judge_start > 0 && question.judge_end > 0"><br />Comparing Period: {{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}} - {{question.judge_end | amDateFormat: 'MMM D @ h:mm a'}}</em></p>
 		</div>
-		
+
 		<!-- Question Metadata Footer -->
 		<ul class="list-inline question-metadata-list">
-			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">	
+			<li ng-if="canManagePosts || question.post.user.id == loggedInUserId">
 				<a ng-href="#/course/{{courseId}}/question/{{question.id}}/edit" ng-if="canManagePosts || question.post.user.id == loggedInUserId" title="Edit">
 					Edit
-				</a> 
+				</a>
 			</li>
 			<li>
-				Posted by 
+				Posted by
 				<a ng-href="#/user/{{question.post.user.id}}">
 					{{question.post.user.displayname}}
 					<span ng-if="canManagePosts && question.post.user.fullname">
@@ -56,15 +56,15 @@
 				</a>
 			</li>
 		</ul>
-		
+
 		<!-- Question Actions -->
-		
+
 		<!-- BUTTON when user is admin OR (user has not answered AND the answer period is active) -->
 		<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" class="btn btn-success" title="Answer Question"
 		   ng-show="canManagePosts || (!answered && question.answer_period)">
 			Answer
 		</a>
-		
+
 		<!-- BUTTON when user is not an admin AND the comparison period is active AND the user has not finished pair comparisons AND either (the answer period is active AND the question has been answered) OR (the answer period is not active)
 			 basically we force users to answer first, if they can
 			 enabled only when answer pairs are available for comparison (so when no logic is false)
@@ -73,7 +73,7 @@
 		   ng-show="!canManagePosts && question.judging_period && !judged_req_met && ((question.answer_period && answered) || !question.answer_period)" ng-disabled="!availPairsLogic">
 			Compare Answers
 		</a>
-		
+
 		<!-- BUTTON when user is not an admin AND the comparison period is active AND user has finished pair comparisons AND has a self-evaluation remaining AND either (the answer period is active AND the question has been answered) OR (the answer period is not active)
 			 basically we force users to answer first, if they can
 			 enabled only when user has answered question
@@ -82,21 +82,21 @@
 		   ng-show="!canManagePosts && question.judging_period && judged_req_met && (!angular.isUndefined(selfEval_req_met) && !selfEval_req_met) && ((question.answer_period && answered) || !question.answer_period)" ng-disabled="!answered">
 			Compare Answers
 		</a>
-		
+
 		<!-- BUTTON when user is an admin AND (the comparison period is active OR is complete) -->
 		<a class="btn btn-success" title="Comparisons" ng-href="#/course/{{courseId}}/question/{{question.id}}/comparisons"
 		   ng-show="canManagePosts && (question.judging_period || question.after_judging)">
 			See Comparisons
 		</a>
-		
+
 		<!-- ADDITIONAL TEXT when answer pairs are not available for comparison AND user is not admin AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the question has been answered) OR (the answer period is not active)-->
 		<p ng-if="!availPairsLogic && !canManagePosts && question.judging_period && (evaluation + selfEval > 0) && ((question.answer_period && answered) || !question.answer_period)"><br /><em>Not enough answers to compare (Refresh the page to check again) </em></p>
-		
+
 		<!-- ADDITIONAL TEXT when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has a self-evaluation remaining AND has not answered question -->
 		<p ng-if="!canManagePosts && question.judging_period && judged_req_met && !selfEval_req_met && !answered"><br /><em>Self-evaluation comparison unavailable (You have not answered the assignment)</em></p>
-		
+
 	</div><!-- closes question box -->
-	
+
 	<!-- Tabs -->
 	<ul class="nav nav-tabs" role="tablist">
 	  <li id="answers" ng-class="{active:showTab('answers')}">
@@ -112,15 +112,15 @@
 		<a ng-click="setTab('participation')" href="">Participation</a>
 	  </li>
 	</ul>
-	
+
 	<!-- Tab Content -->
 	<div class="tab-content">
-		
+
 		<div class="tab-pane" ng-class="{active: showTab('answers')}" id="answers-tab">
-			
+
 			<!-- Answers Tab Header -->
 			<div class="tab-header">
-			
+
 				<div class="row">
 					<div class="col-sm-6">
 						<h2>Answers
@@ -129,7 +129,7 @@
 						</h2>
 						<p ng-if="numPages > 1">(Page {{answerFilters.page}} of {{numPages}})</p>
 					</div>
-					
+
 					<div class="col-sm-6 text-right multi-filters">
 						<div ng-if="question.answers_count && (canManagePosts || see_answers)">
 							<span class="filter">
@@ -158,46 +158,46 @@
 				   ng-if="canManagePosts && !question.answer_period && !question.available">
 					Answering period begins {{question.answer_start | amDateFormat: 'MMM D @ h:mm a'}}. Would you like to <a ng-href="#/course/{{courseId}}/question/{{question.id}}/edit" title="Edit the question">change the answer date</a> for this assignment?
 				</p>
-				
+
 				<!-- Students should see before answering during the answer period -->
 				<p class="intro-text"
 				   ng-if="!canManagePosts && !answered && question.answer_period">
 					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/answer/create" title="Answer the question">Answer</a> and compare answer pairs for the assignment first, then read all answers written by your classmates and instructors here.
 				</p>
-				
+
 				<!-- Students should see before evaluating before the evaluation period -->
 				<p class="intro-text"
 				   ng-if="!canManagePosts && ((answered && question.answer_period) || (!question.answer_period)) && !question.judging_period && !question.after_judging">
 					Comparisons begin <span ng-if="question.judge_start > 0">{{question.judge_start | amDateFormat: 'MMM D @ h:mm a'}}</span> <span ng-if="question.judge_start <= 0">after the answer due date passes</span>. After comparing answer pairs, you will be able to read all answers written by your classmates and instructors here.
 				</p>
-				
+
 				<!-- Students should see before evaluating during the evaluation period (regular comparison) -->
 				<p class="intro-text" ng-if="!canManagePosts && question.judging_period && !judged_req_met && ((answered && question.answer_period) || !question.answer_period)">
 					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/compare" title="Compare answers">Compare answers</a> for the assignment first, then read answers written by your classmates and instructors here.
 				</p>
-				
+
 				<!-- Students should see before evaluating during the evaluation period (self-evaluation) -->
 				<p class="intro-text" ng-if="!canManagePosts && question.judging_period && judged_req_met && !selfEval_req_met">
 					<a ng-href="#/course/{{courseId}}/question/{{question.id}}/judgement" title="Compare answers">Compare your answer</a> for the assignment first, then read answers written by your classmates and instructors here.
 				</p>
-				
+
 				<!-- Anyone sees during the answer period, if no answers provided yet -->
 				<p class="intro-text" ng-if="question.answer_period && !question.answers_count">
 					No answers given for this assignment yet.
 				</p>
-				
+
 				<!-- Students see after evaluating before the evaluation period is over -->
 				<p class="intro-text" ng-if="!canManagePosts && judged_req_met && selfEval_req_met && !see_answers">
 					You have successfully finished comparisons for this assignment! Answers written by your classmates and instructors will be available here beginning <strong>{{ answerAvail | amDateFormat: 'MMM D @ h:mm a'}}</strong>.
 				</p>
-				
+
 			</div>
-			
+
 			<div class="all-answers">
 
 				<!-- Instructor Answers Section -->
 				<div class="each-answer clearfix" ng-repeat="answer in answers.objects | filter:adminFilter()" ng-if="instructors[answer.user_id] && (see_answers || canManagePosts)">
-					
+
 					<!-- Instructor Answer Metadata Header -->
 					<div class="each-header clearfix">
 						<acj-avatar user-id="answer.user_id" avatar="answer.user_avatar" display-name="answer.user_displayname" full-name="answer.user_fullname"></acj-avatar>
@@ -212,20 +212,20 @@
 							</a>
 						</div>
 					</div>
-					
+
 					<!-- Instructor Answer -->
 					<div class="content instructor-answer">
 						<div mathjax="answer.content"
 							ng-bind-html="answer.content">
 						</div>
 						<!-- Instructor Attachment -->
-						<acj-pdf-inline label="See assignment details:" 
+						<acj-pdf-inline label="See assignment details:"
 							pdfs="answer.files">
 						</acj-pdf-inline>
 					</div>
-				
+
 				</div><!-- closes each-answer (instructor) -->
-				
+
 				<!-- Student Answers Section -->
 				<div class="each-answer clearfix" ng-repeat="answer in answers.objects | notScoredEnd:answerFilters.orderBy | excludeInstr:instructors as results" ng-if="(see_answers || answer.user_id == loggedInUserId || canManagePosts)">
 				<!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.user_id] && (see_answers || (answer.user_id == loggedInUserId && question.answer_period) || canManagePosts)"> -->
@@ -298,7 +298,7 @@
 					<div ng-show="showReplies">
 
 						<div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer)" class="each-reply">
-					
+
 							<hr ng-hide="$first" />
 
 							<!-- Student Reply Metadata Header -->
@@ -339,9 +339,9 @@
 				<div class="each-answer clearfix" ng-if="question.answers_count && results.length < 1 && (see_answers || canManagePosts)">
 					<p>No answers were found with these filter settings. Try another choice above.</p>
 				</div>
-				
+
 			</div><!-- closes answered show-hide div -->
-			
+
 			<div class="text-center">
 				<pagination total-items="totalNumAnswers" ng-model="answerFilters.page" max-size="10" class="pagination-sm" boundary-links="true" direction-links="false" items-per-page="answerFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></pagination>
 			</div>
@@ -349,7 +349,7 @@
 		</div><!-- closes answers-tab -->
 
 		<div class="tab-pane" ng-class="{active: showTab('comparisons')}" id="comparisons-tab">
-		
+
 			<!-- Comparisons Tab Header -->
 			<div class="tab-header">
 				<div>
@@ -357,7 +357,7 @@
 					<p class="intro-text">Work you have submitted for this assignment appears below. Feedback for your answer can be found in the replies underneath the answer.</p>
 				</div>
 			</div>
-			
+
 			<!-- Student Answer Metadata Header -->
 			<div class="each-evaluation clearfix" ng-repeat="answer in user_answers.objects">
 				<div class="each-header clearfix">
@@ -379,19 +379,19 @@
 						</a>
 					</div>
 				</div>
-				
+
 				<!-- Student Answer -->
 				<div class="content {{answer.post_id}}">
 					<div mathjax="answer.content"
 						 ng-bind-html="answer.content">
 					</div>
-					
+
 					<!-- Student Attachment -->
 					<acj-pdf-inline label="See answer details:"
 						pdfs="answer.files" ng-click="revealAnswer(answer.posts_id)">
 					</acj-pdf-inline>
 				</div>
-				
+
 				<!-- Student Answer Replies Section -->
 				<a href="" ng-click="showReplies = !showReplies; showReplies && loadComments(answer)">
 					<h3 class="reply-heading" ng-if="answer.comments_count">
@@ -437,22 +437,22 @@
 					</div><!-- closes each-reply (student) -->
 
 				</div><!-- closes toggle div -->
-				
+
 			</div>
-			
+
 			<!-- Comparisons Section -->
 			<div class="each-evaluation" ng-repeat="comment in comparisons.objects">
-				
+
 				<!-- Comparison Header -->
 				<div class="each-header">
                     <acj-avatar user-id="comment.user_id" avatar="comment.avatar" me="true"></acj-avatar>
 					<strong>compared</strong> on {{ comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
 				</div>
-					
+
 				<div ng-repeat="criterion in comment.criteria_judgements">
-					
+
 					<h5 class="content">Comparison for "{{ evalcriteria[criterion.criteriaandquestions_id] }}"</h5>
-					
+
 					<div class="content" mathjax="criterion.content"
 						ng-bind-html="criterion.content">
 					</div>
@@ -470,22 +470,22 @@
                     </div>
 
 				</div>
-				
+
 				<h5 class="content">Feedback for Odd-Numbered Answer</h5>
-				
+
 				<!-- feedback for odd-numbered answer -->
 				<div class="content" mathjax="comment.answer1.feedback"
 					ng-bind-html="comment.answer1.feedback">
 				</div>
-				
+
 				<h5 class="content">Feedback for Even-Numbered Answer</h5>
-				
+
 				<!-- feedback for even-numbered answer -->
 				<div class="content" mathjax="comment.answer2.feedback"
 					ng-bind-html="comment.answer2.feedback"></div>
-				
+
 			</div><!-- closes each-evaluation -->
-			
+
 			<div class="each-evaluation" ng-if="!user_answers.objects && comparisons.objects.length < 1">
 				<p>(Nothing saved under your name yet.)</p>
 			</div>
@@ -512,9 +512,9 @@
 			</div>
 
 		</div><!-- closes comparisons-tab -->
-		
+
 		<div class="tab-pane" ng-class="{active: showTab('help')}" id="comments-tab">
-		
+
 			<!-- Comments Tab Header -->
 			<div class="tab-header">
 				<div class="row">
@@ -529,7 +529,7 @@
 					</div>
 				</div>
 			</div>
-			
+
 			<div class="each-comment">
 				<blockquote>
 					<p>For general technical issues, please try:</p>
@@ -542,10 +542,10 @@
 					</ul>
 				</blockquote>
 			</div>
-			
+
 			<!-- Comments Section -->
 			<div ng-repeat="(commentKey, comment) in comments.objects" class="each-comment">
-				
+
 				<!-- Comment Metadata Header -->
 				<div class="each-header clearfix">
                     <acj-avatar user-id="comment.user_id" avatar="comment.user_avatar" display-name="comment.user_displayname" full-name="comment.user_fullname" me="comment.user_id == loggedInUserId"></acj-avatar>
@@ -562,20 +562,20 @@
 						</a>
 					</div>
 				</div>
-				
+
 				<!-- Comment -->
 				<div class="content" mathjax="comment.content"
 					 ng-bind-html="comment.content">
 				</div>
-			
+
 			</div><!-- closes each-comment -->
-			
+
 		</div><!-- closes comments-tab -->
-		
+
 		<div class="tab-pane" ng-class="{active: showTab('participation')}" id="participation-tab" ng-if="canManagePosts && showTab('participation')">
 			<ng-include src="'modules/gradebook/gradebook-partial.html'"></ng-include>
 		</div><!-- closes gradebook-tab -->
 
 	</div><!-- closes tab-content -->
-	
+
 </div>

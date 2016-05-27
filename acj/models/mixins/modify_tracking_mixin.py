@@ -11,7 +11,7 @@ from acj.core import db
 
 class ModifyTrackingMixin(db.Model):
     __abstract__ = True
-    
+
     @declared_attr
     def modified(cls):
         return db.Column(
@@ -20,24 +20,24 @@ class ModifyTrackingMixin(db.Model):
             onupdate=datetime.utcnow,
             nullable=False
         )
-    
+
     @declared_attr
     def modified_user_id(cls):
         return db.Column(
-            db.Integer, 
+            db.Integer,
             db.ForeignKey('user.id', ondelete="SET NULL"),
             nullable=True
-        )  
+        )
 
     @classmethod
     def __declare_last__(cls):
         @event.listens_for(cls, 'before_insert')
         def receive_before_update(mapper, conn, target):
             target.modified = datetime.utcnow()
-            
-            if current_user.is_authenticated(): 
+
+            if current_user.is_authenticated():
                 target.modified_user_id = current_user.id
-            
+
         @event.listens_for(cls, 'before_update')
         def receive_before_update(mapper, conn, target):
             # only update fields when there is a real change
@@ -45,6 +45,6 @@ class ModifyTrackingMixin(db.Model):
             if Session.object_session(target). \
                     is_modified(target, include_collections=False):
                 target.modified = datetime.utcnow()
-                
+
                 if current_user.is_authenticated():
                     target.modified_user_id = current_user.id

@@ -14,12 +14,12 @@ class Course(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     description = db.Column(db.Text)
     start_date = db.Column(db.DateTime(timezone=True), nullable=True)
     end_date = db.Column(db.DateTime(timezone=True), nullable=True)
-    
+
     # relationships
-    
+
     # user many-to-many course with association user_course
     user_courses = db.relationship("UserCourse", back_populates="course", lazy="dynamic")
-    
+
     assignments = db.relationship("Assignment", backref="course", lazy="dynamic")
-    
+
     # hyprid and other functions

@@ -94,7 +94,7 @@ function SessionFactory() {};
 SessionFactory.prototype.generateSession = function (userId, type, additionalPermissions) {
     var newSession = objectAssign({}, permissionTemplates[type]);
     newSession.id = userId;
-    
+
     if(additionalPermissions) {
         for(var domain in additionalPermissions) {
             for(var action in additionalPermissions[domain]) {
@@ -104,7 +104,7 @@ SessionFactory.prototype.generateSession = function (userId, type, additionalPer
             }
         }
     }
-    
+
     return newSession;
 };
 

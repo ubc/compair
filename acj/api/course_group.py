@@ -46,8 +46,8 @@ def import_members(course_id, identifier, members):
     elif identifier not in ['username', 'student_number']:
         invalids.append({'member': {}, 'message': 'A valid user identifier is not given.'})
         return {'success': count, 'invalids': invalids}
-        
-    
+
+
     # make set all group names to None initially
     user_courses = UserCourse.query.filter_by(course_id=course_id).all()
     for user_course in user_courses:
@@ -61,7 +61,7 @@ def import_members(course_id, identifier, members):
             UserCourse.course_role != CourseRole.dropped
         )) \
         .all()
-        
+
     # add groups
     groups = set(g[GROUP_NAME] for g in members)
     for group_name in groups:
@@ -70,7 +70,7 @@ def import_members(course_id, identifier, members):
             # skip for now - generate errors below
             continue
         count += 1
-        
+
     enroled = [e.user_id for e in enroled]
     # enrol users to groups
     for member in members:
@@ -95,7 +95,7 @@ def import_members(course_id, identifier, members):
             continue
 
         if user.id in enroled:
-            # get the user_course instance 
+            # get the user_course instance
             user_course = next(user_course for user_course in user.user_courses if user_course.course_id == course_id)
             user_course.group_name = member[GROUP_NAME]
             db.session.add(user_course)
@@ -118,7 +118,7 @@ class GroupRootAPI(Resource):
         course = Course.get_active_or_404(course_id)
         user_course = UserCourse(course_id=course_id)
         require(READ, user_course)
-        
+
         group_names = UserCourse.query \
             .with_entities(UserCourse.group_name) \
             .distinct() \
@@ -136,15 +136,15 @@ class GroupRootAPI(Resource):
             user=current_user,
             course_id=course_id
         )
-        
+
         return {'group_names': [group.group_name for group in group_names] }
-        
+
     @login_required
     def post(self, course_id):
         Course.get_active_or_404(course_id)
         user_course = UserCourse(course_id=course_id)
         require(EDIT, user_course)
-        
+
         params = import_parser.parse_args()
         identifier = params.get('userIdentifier')
         file = request.files['file']
@@ -184,7 +184,7 @@ class GroupIdAPI(Resource):
         Course.get_active_or_404(course_id)
         user_course = UserCourse(course_id=course_id)
         require(READ, user_course)
-        
+
         members = User.query \
             .join(UserCourse, UserCourse.user_id == User.id) \
             .filter(and_(
@@ -193,7 +193,7 @@ class GroupIdAPI(Resource):
                 UserCourse.group_name == group_name
             )) \
             .all()
-            
+
         if len(members) == 0:
             abort(404)
 
@@ -205,5 +205,5 @@ class GroupIdAPI(Resource):
             data={'group_name': group_name})
 
         return {'students': [{'user': {'id': u.id, 'name': u.fullname}} for u in members]}
-        
+
 api.add_resource(GroupIdAPI, '/<group_name>')

@@ -16,23 +16,23 @@ class Score(DefaultTableMixin, WriteTrackingMixin):
         nullable=False)
     criteria_id = db.Column(db.Integer, db.ForeignKey('criteria.id', ondelete="CASCADE"),
         nullable=False)
-        
+
     score = db.Column(db.Float, default=0, nullable=False, index=True)
     excepted_score = db.Column(db.Float, default=0, nullable=False)
     rounds = db.Column(db.Integer, default=0, nullable=False)
     wins = db.Column(db.Integer, default=0, nullable=False)
     opponents = db.Column(db.Integer, default=0, nullable=False)
-    
+
     # relationships
     # assignment via Assignment Model
     # answer via Answer Model
     # criteria via Criteria Model
-    
+
     # hyprid and other functions
     @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()
-        
+
         s_alias = cls.__table__.alias()
         cls.normalized_score = column_property(
             select([cls.score / func.max(s_alias.c.score) * 100]).

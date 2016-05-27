@@ -5,7 +5,7 @@ GroupFactory.prototype.generateGroup = function (id, name) {
         id: id,
         name: name
     };
-    
+
     return newGroup;
 };
 

@@ -60,9 +60,9 @@ def create_app(conf=config, settings_override=None):
     @bouncer.user_loader
     def bouncer_user_loader():
         return current_user
-        
+
     app = register_api_blueprints(app)
 
     return app
-    
+
 log_events(log)

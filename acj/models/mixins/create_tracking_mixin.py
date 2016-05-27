@@ -11,7 +11,7 @@ from acj.core import db
 
 class CreateTrackingMixin(db.Model):
     __abstract__ = True
-    
+
     @declared_attr
     def created(cls):
         return db.Column(
@@ -19,20 +19,20 @@ class CreateTrackingMixin(db.Model):
             default=datetime.utcnow,
             nullable=False
         )
-    
+
     @declared_attr
     def created_user_id(cls):
         return db.Column(
-            db.Integer, 
+            db.Integer,
             db.ForeignKey('user.id', ondelete="SET NULL"),
             nullable=True
-        )    
+        )
 
     @classmethod
     def __declare_last__(cls):
         @event.listens_for(cls, 'before_insert')
         def receive_before_update(mapper, conn, target):
             target.created = datetime.utcnow()
-            
+
             if current_user.is_authenticated():
                 target.created_user_id = current_user.id

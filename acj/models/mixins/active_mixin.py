@@ -6,16 +6,16 @@ from acj.core import db
 
 class ActiveMixin(db.Model):
     __abstract__ = True
-    
+
     @declared_attr
     def active(cls):
         return db.Column(
             db.Boolean(name='active'),
             default=True,
-            nullable=False, 
+            nullable=False,
             index=True
         )
-        
+
     @classmethod
     def get_active_or_404(cls, model_id, joinedloads=[]):
         query = cls.query
@@ -23,7 +23,7 @@ class ActiveMixin(db.Model):
         if len(joinedloads) > 0:
             for load_string in joinedloads:
                 query.options(joinedload(load_string))
-        
+
         model = query.get_or_404(model_id)
         if model is None:
             abort(404)

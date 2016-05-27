@@ -179,7 +179,7 @@ module.factory(
 
 module.factory(
 	"AttachmentResource",
-	[ "$resource", 
+	[ "$resource",
 	function ($resource)
 	{
 		var ret = $resource(
@@ -193,7 +193,7 @@ module.factory(
 
 module.factory(
 	"SelfEvaluationTypeResource",
-	[ "$resource", 
+	[ "$resource",
 	function($resource)
 	{
 		var url = '/api/selfevaltypes';
@@ -207,8 +207,8 @@ module.factory(
 ]);
 
 /***** Services *****/
-module.service('attachService', 
-		["FileUploader", "$location", "Toaster", 
+module.service('attachService',
+		["FileUploader", "$location", "Toaster",
 		function(FileUploader, $location, Toaster) {
 	var filename = '';
 	var alias = '';
@@ -331,10 +331,10 @@ module.filter("notScoredEnd", function () {
 /***** Controllers *****/
 module.controller("QuestionViewController",
 	["$scope", "$log", "$routeParams", "$location", "AnswerResource", "Authorize", "QuestionResource", "QuestionCommentResource",
-			 "AttachmentResource", "CoursesCriteriaResource", "JudgementResource", "EvalCommentResource", "CourseResource", 
+			 "AttachmentResource", "CoursesCriteriaResource", "JudgementResource", "EvalCommentResource", "CourseResource",
 			 "required_rounds", "Session", "Toaster", "AnswerCommentResource", "GroupResource",
 	function($scope, $log, $routeParams, $location, AnswerResource, Authorize, QuestionResource, QuestionCommentResource,
-			 AttachmentResource, CoursesCriteriaResource, JudgementResource, EvalCommentResource, CourseResource, 
+			 AttachmentResource, CoursesCriteriaResource, JudgementResource, EvalCommentResource, CourseResource,
 			 required_rounds, Session, Toaster, AnswerCommentResource, GroupResource)
 	{
 		$scope.courseId = $routeParams['courseId'];
@@ -640,7 +640,7 @@ module.controller("QuestionViewController",
 				"97":"0.731059" };
 			$scope.rankScores($scope.allScores);
 		};
-		
+
 		// function to show the simple ranking for the student view
 		$scope.rankScores = function(allScores) {
 			// first sort scores high-to-low

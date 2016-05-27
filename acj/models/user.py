@@ -38,37 +38,37 @@ class User(DefaultTableMixin, WriteTrackingMixin, UserMixin):
     lastname = db.Column(db.String(255))
     student_number = db.Column(db.String(50), unique=True, nullable=True)
     last_online = db.Column(db.DateTime)
-    
+
     # relationships
-    
+
     # user many-to-many course with association user_course
-    user_courses = db.relationship("UserCourse", 
-        foreign_keys='UserCourse.user_id', 
+    user_courses = db.relationship("UserCourse",
+        foreign_keys='UserCourse.user_id',
         back_populates="user")
-    assignments = db.relationship("Assignment", 
-        foreign_keys='Assignment.user_id', 
+    assignments = db.relationship("Assignment",
+        foreign_keys='Assignment.user_id',
         backref="user", lazy='dynamic')
-    assignment_comments = db.relationship("AssignmentComment", 
-        foreign_keys='AssignmentComment.user_id', 
+    assignment_comments = db.relationship("AssignmentComment",
+        foreign_keys='AssignmentComment.user_id',
         backref="user", lazy='dynamic')
-    answers = db.relationship("Answer", 
-        foreign_keys='Answer.user_id', 
+    answers = db.relationship("Answer",
+        foreign_keys='Answer.user_id',
         backref="user", lazy='dynamic')
-    answer_comments = db.relationship("AnswerComment", 
-        foreign_keys='AnswerComment.user_id', 
+    answer_comments = db.relationship("AnswerComment",
+        foreign_keys='AnswerComment.user_id',
         backref="user", lazy='dynamic')
-    criteria = db.relationship("Criteria", 
-        foreign_keys='Criteria.user_id', 
+    criteria = db.relationship("Criteria",
+        foreign_keys='Criteria.user_id',
         backref="user", lazy='dynamic')
-    files = db.relationship("File", 
-        foreign_keys='File.user_id', 
+    files = db.relationship("File",
+        foreign_keys='File.user_id',
         backref="user", lazy='dynamic')
-    comparisons = db.relationship("Comparison", 
-        foreign_keys='Comparison.user_id', 
+    comparisons = db.relationship("Comparison",
+        foreign_keys='Comparison.user_id',
         backref="user", lazy='dynamic')
-    
+
     # hyprid and other functions
-    
+
     def _get_password(self):
         return self._password
 
@@ -136,7 +136,7 @@ class User(DefaultTableMixin, WriteTrackingMixin, UserMixin):
 
     def get_course_role(self, course_id):
         """ Return user's course role by course id """
-        
+
         for user_course in self.user_courses:
             if user_course.course_id == course_id:
                 return user_course.course_role

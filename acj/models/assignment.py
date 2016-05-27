@@ -14,11 +14,11 @@ from acj.core import db
 
 class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     # table columns
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"), 
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"),
         nullable=False)
-    course_id = db.Column(db.Integer, db.ForeignKey('course.id', ondelete="CASCADE"), 
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id', ondelete="CASCADE"),
         nullable=False)
-    file_id = db.Column(db.Integer, db.ForeignKey('file.id', ondelete="SET NULL"), 
+    file_id = db.Column(db.Integer, db.ForeignKey('file.id', ondelete="SET NULL"),
         nullable=True)
     name = db.Column(db.String(255))
     description = db.Column(db.Text)
@@ -26,26 +26,26 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     answer_end = db.Column(db.DateTime(timezone=True))
     compare_start = db.Column(db.DateTime(timezone=True), nullable=True)
     compare_end = db.Column(db.DateTime(timezone=True), nullable=True)
-    number_of_comparisons = db.Column(db.Integer, nullable=False) 
-    students_can_reply = db.Column(db.Boolean(name='students_can_reply'), 
+    number_of_comparisons = db.Column(db.Integer, nullable=False)
+    students_can_reply = db.Column(db.Boolean(name='students_can_reply'),
         default=False, nullable=False)
-    enable_self_eval = db.Column(db.Boolean(name='enable_self_eval'), 
+    enable_self_eval = db.Column(db.Boolean(name='enable_self_eval'),
         default=False, nullable=False)
-    
+
     # relationships
     # user via User Model
     # course via Course Model
     # file via File Model
-    
+
     # assignment many-to-many criteria with association assignment_criteria
     assignment_criteria = db.relationship("AssignmentCriteria", back_populates="assignment")
-    
-    answers = db.relationship("Answer", backref="assignment", lazy="dynamic", 
+
+    answers = db.relationship("Answer", backref="assignment", lazy="dynamic",
         order_by=Answer.created.desc())
     comments = db.relationship("AssignmentComment", backref="assignment", lazy="dynamic")
     comparisons = db.relationship("Comparison", backref="assignment", lazy="dynamic")
     scores = db.relationship("Score", backref="assignment", lazy="dynamic")
-    
+
     # hyprid and other functions
     user_avatar = association_proxy('user', 'avatar')
     user_displayname = association_proxy('user', 'displayname')
@@ -55,7 +55,7 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     @hybrid_property
     def compared(self):
         return self.compare_count > 0
-    
+
     def completed_comparison_count_for_user(self, user_id):
         comparison_count = self.comparisons \
             .filter_by(
@@ -63,9 +63,9 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
                 completed=True
             ) \
             .count()
-        
+
         return comparison_count / self.criteria_count
-        
+
     @hybrid_property
     def available(self):
         now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
@@ -116,11 +116,11 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
             return "assignment " + str(self.id)
         else:
             return "assignment"
-            
+
     @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()
-        
+
         cls.answers_count = column_property(
             select([func.count(Answer.id)]).
             where(and_(
@@ -134,7 +134,7 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
         cls.comments_count = column_property(
             select([func.count(AssignmentComment.id)]).
             where(and_(
-                AssignmentComment.assignment_id == cls.id, 
+                AssignmentComment.assignment_id == cls.id,
                 AssignmentComment.active == True
             )),
             deferred=True,
@@ -144,7 +144,7 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
         cls.criteria_count = column_property(
             select([func.count(AssignmentCriteria.id)]).
             where(and_(
-                AssignmentCriteria.assignment_id == cls.id, 
+                AssignmentCriteria.assignment_id == cls.id,
                 AssignmentCriteria.active == True
             )),
             deferred=True,

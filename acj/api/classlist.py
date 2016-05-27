@@ -117,7 +117,7 @@ def import_users(course_id, users):
             elif u.student_number in studentno_system:
                 invalids.append({'user': u, 'message': 'This student number already exists in the system.'})
                 continue
-                
+
         u.system_role = SystemRole.student
         displayname = user[DISPLAYNAME] if length > DISPLAYNAME and user[DISPLAYNAME] else None
         u.displayname = displayname if displayname else display_name_generator()
@@ -133,7 +133,7 @@ def import_users(course_id, users):
     enroled = {e.user_id: e for e in enroled}
     students = UserCourse.query \
         .filter_by(
-            course_id=course_id, 
+            course_id=course_id,
             course_role=CourseRole.student
         ) \
         .all()
@@ -229,7 +229,7 @@ class ClasslistRootAPI(Resource):
         Course.get_active_or_404(course_id)
         user_course = UserCourse(course_id=course_id)
         require(EDIT, user_course)
-        
+
         uploaded_file = request.files['file']
         results = {'success': 0, 'invalids': []}
         if uploaded_file and allowed_file(uploaded_file.filename, current_app.config['UPLOAD_ALLOWED_EXTENSIONS']):
@@ -277,7 +277,7 @@ class EnrolAPI(Resource):
         """
         course = Course.get_active_or_404(course_id)
         user = User.query.get_or_404(user_id)
-        
+
         user_course = UserCourse.query.filter_by(user_id=user.id, course_id=course.id).first()
         if not user_course:
             user_course = UserCourse(course_id=course.id)
@@ -285,16 +285,16 @@ class EnrolAPI(Resource):
 
         params = new_course_user_parser.parse_args()
         role_name = params.get('course_role')
-        
+
         course_roles = [
-            CourseRole.dropped.value, 
-            CourseRole.student.value, 
-            CourseRole.teaching_assistant.value, 
+            CourseRole.dropped.value,
+            CourseRole.student.value,
+            CourseRole.teaching_assistant.value,
             CourseRole.instructor.value
         ]
         if role_name not in course_roles:
             abort(404)
-        
+
         course_role = CourseRole(role_name)
         if user_course.course_role != course_role:
             user_course.user_id = user.id
@@ -323,14 +323,14 @@ class EnrolAPI(Resource):
         user = User.query.get_or_404(user_id)
         user_course = UserCourse.query.filter_by(user_id=user.id, course_id=course.id).first_or_404()
         require(EDIT, user_course)
-        
+
         user_course.course_role = CourseRole.dropped
         result = {
             'user_id': user.id,
             'fullname': user.fullname,
             'course_role': CourseRole.dropped.value
         }
-            
+
         db.session.add(user_course)
 
         on_classlist_unenrol.send(
@@ -388,14 +388,14 @@ class StudentsAPI(Resource):
             all()
 
         user_course = UserCourse(course_id=course_id)
-        
+
         if allow(READ, user_course):
             group_names = UserCourse.query \
                 .with_entities(UserCourse.group_name) \
                 .distinct() \
                 .filter_by(course_id=course_id) \
                 .all()
-                
+
             users = [
                 {'user': {
                     'id': u.id,

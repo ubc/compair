@@ -1,7 +1,7 @@
 <div ng-controller="JudgementCommentController" class="evaluations-screen">
 
 	<h1>Comparisons for "{{ parent.title }}"</h1>
-	
+
 	<p class="intro-text">Filter by a group (if available) and student evaluator's name, or select "any" for these options to see the full list of available comparisons.</p>
 
 	<div class="form-group row">
@@ -24,7 +24,7 @@
 			<label for="toggleAll">Show compared answers for all comparisons below</label>
 		</div>
 	</div>
-	
+
 	<hr />
 
 	<h2>
@@ -109,11 +109,11 @@
 		</div>
 
 	</div>
-	
+
 	<div class="text-center">
 		<pagination total-items="comparisons.total" ng-model="listFilters.page" max-size="10" class="pagination-sm" boundary-links="true" direction-links="false" items-per-page="listFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></pagination>
 	</div>
-	
+
 	<div ng-show="!comparisons.objects.length">
 		<p>No comparisons were found<span ng-if="group.name || search.userId.name"> with these filter settings. Try another group or student evaluator above</span>.</p>
 	</div>

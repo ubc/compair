@@ -174,19 +174,19 @@ class AnswerCommentListAPI(Resource):
         Assignment.get_active_or_404(assignment_id)
         Answer.get_active_or_404(answer_id)
         require(CREATE, AnswerComment(course_id=course_id))
-        
+
         answer_comment = AnswerComment(answer_id=answer_id)
-        
+
         params = new_answer_comment_parser.parse_args()
         answer_comment.content = params.get("content")
         if not answer_comment.content:
             return {"error": "The comment content is empty!"}, 400
-        
+
         if params.get('user_id') and current_user.system_role == SystemRole.sys_admin:
             answer_comment.user_id = params.get('user_id')
         else:
             answer_comment.user_id = current_user.id
-            
+
         answer_comment.self_eval = params.get("self_eval", False)
         answer_comment.private = params.get("private", False)
         db.session.add(answer_comment)
@@ -216,7 +216,7 @@ class AnswerCommentAPI(Resource):
         Course.get_active_or_404(course_id)
         Assignment.get_active_or_404(assignment_id)
         Answer.get_active_or_404(answer_id)
-        
+
         answer_comment = AnswerComment.get_active_or_404(answer_comment_id)
         require(READ, answer_comment)
 
@@ -237,20 +237,20 @@ class AnswerCommentAPI(Resource):
         Course.get_active_or_404(course_id)
         Assignment.get_active_or_404(assignment_id)
         Answer.get_active_or_404(answer_id)
-        
+
         answer_comment = AnswerComment.get_active_or_404(answer_comment_id)
         require(EDIT, answer_comment)
-        
+
         params = existing_answer_comment_parser.parse_args()
         # make sure the answer comment id in the url and the id matches
         if params['id'] != answer_comment_id:
             return {"error": "Comment id does not match URL."}, 400
-            
+
         # modify answer comment according to new values, preserve original values if values not passed
         answer_comment.content = params.get("content")
         if not answer_comment.content:
             return {"error": "The comment content is empty!"}, 400
-            
+
         db.session.add(answer_comment)
 
         on_answer_comment_modified.send(
@@ -270,7 +270,7 @@ class AnswerCommentAPI(Resource):
         """
         answer_comment = AnswerComment.get_active_or_404(answer_comment_id)
         require(DELETE, answer_comment)
-        
+
         data = marshal(answer_comment, dataformat.get_answer_comment(False))
         answer_comment.active = False
         db.session.commit()

@@ -26,7 +26,7 @@ class GroupUserIdAPI(Resource):
     def post(self, course_id, user_id, group_name):
         Course.get_active_or_404(course_id)
         User.query.get_or_404(user_id)
-        
+
         user_course = UserCourse.query \
             .filter(and_(
                 UserCourse.course_id == course_id,
@@ -34,9 +34,9 @@ class GroupUserIdAPI(Resource):
                 UserCourse.course_role != CourseRole.dropped
             )) \
             .first_or_404()
-        
+
         require(EDIT, user_course)
-        
+
         user_course.group_name = group_name
         db.session.add(user_course)
         db.session.commit()
@@ -59,11 +59,11 @@ class GroupUserAPI(Resource):
         User.query.get_or_404(user_id)
         user_course = UserCourse.query \
             .filter_by(
-                course_id=course_id, 
+                course_id=course_id,
                 user_id=user_id
             ) \
             .first_or_404()
-            
+
         require(EDIT, user_course)
         user_course.group_name = None
         db.session.add(user_course)

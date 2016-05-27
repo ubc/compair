@@ -26,7 +26,7 @@ Feature: Edit Course
     Then I should be on the "course" page
     And I should see "New Name" in "h1" on the page
     And I should see "This is the new description" in "div.intro-text" on the page
-    
+
   Scenario: Editing a course's criteria as instructor
     Given I'm an Instructor with courses
     And I'm on "edit course" page for course with id "1"
@@ -45,4 +45,3 @@ Feature: Edit Course
     And I submit modal form with "Add New" button
     And I submit form with "Save" button
     Then I should be on the "course" page
-  

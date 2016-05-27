@@ -67,7 +67,7 @@ describe('ACJ', function() {
 				$scope : scope,
 				$http: $http
 			});
-			
+
 		}));
 
 		afterEach(function() {

@@ -3,7 +3,7 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.answer', 
+var module = angular.module('ubc.ctlt.acj.answer',
 	[
 		'ngResource',
 		'timer',
@@ -75,7 +75,7 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
 				save: {method: 'POST', url: url, interceptor: cacheInterceptor},
 				delete: {method: 'DELETE', url: url, interceptor: cacheInterceptor},
 				flagged: {
-					method: 'POST', 
+					method: 'POST',
 					url: '/api/courses/:courseId/questions/:questionId/answers/:answerId/flagged',
 					interceptor: cacheInterceptor
 				},
@@ -197,7 +197,7 @@ module.controller(
 
 		$scope.uploader = attachService.getUploader();
 		$scope.resetName = attachService.resetName();
-		
+
 		$scope.question = {};
 		$scope.answer = {};
 		var countDown = function() {
@@ -268,7 +268,7 @@ module.controller(
 					$scope.submitted = false;
 					Toaster.success("Answer Updated!");
 					$location.path('/course/' + $scope.courseId + '/question/' +questionId);
-					
+
 				},
 				function(ret) {
 					$scope.submitted = false;

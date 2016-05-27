@@ -10,14 +10,14 @@ from acj.core import db
 
 class ActivityLog(DefaultTableMixin):
     __tablename__ = 'activity_log'
-    
+
     # table columns
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="SET NULL"),
         nullable=True)
     course_id = db.Column(db.Integer, db.ForeignKey('course.id', ondelete="SET NULL"),
         nullable=True)
     timestamp = db.Column(
-        db.TIMESTAMP, 
+        db.TIMESTAMP,
         default=func.current_timestamp(),
         nullable=False
     )

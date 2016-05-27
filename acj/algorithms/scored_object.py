@@ -1,4 +1,4 @@
 from collections import namedtuple
-ScoredObject = namedtuple('ScoredObject', 
+ScoredObject = namedtuple('ScoredObject',
     ['key', 'score', 'round']
 )

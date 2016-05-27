@@ -16,7 +16,7 @@ function CourseFactory() {};
 CourseFactory.prototype.generateCourse = function (id, parameters) {
     var newCourse = objectAssign({}, courseTemplate, parameters);
     newCourse.id = id;
-    
+
     return newCourse;
 };
 

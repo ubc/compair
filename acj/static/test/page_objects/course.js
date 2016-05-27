@@ -8,7 +8,7 @@ var CoursePage = function() {
 	this.get = function(courseId) {
 		return browser.get(env.baseUrl + '#/course/' + courseId);
 	};
-    
+
     this.clickButton = function(button) {
         switch (button) {
             case "Add Assignment":

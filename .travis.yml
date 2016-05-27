@@ -11,18 +11,18 @@ env:
   global:
     - secure: imeWytgo5kReh6HgPqhaWlsK+oWN8TObyYlrrsA6CASmeJT6GEOpghXimJ8avNpGmcNHji+3GfWKuirUBew9RxAaiYkdjrFZ6nPibmt1HJJfiL1hQMHhp9rCnMBdxevH4/8Wl86bN5/YIwglXhqDplVEmrWqiHzKfw9BBRfOrVc=
     - secure: D5aySdfAWW2Z5aJN3PSW4FBDKSGEbCSPgDUBEoAkwXbmpvZA29RqUP4O2P6wMC7CeVUI4A7+bAalsgIgYt3YLsT1QJE3IV679axHPDdEIP45oZy4+S7KkI4cCfI+R6lnwU7Lp/eW42lc+mugKLZ2hDs0mcx6+tHAoazGgIRyRzA=
-  matrix: 
+  matrix:
     - DISABLE_MOCK=true DB=sqlite DATABASE_URI="sqlite:///:memory:"
     - DISABLE_MOCK=true DB=mysql DATABASE_URI="mysql+pymysql://root@localhost/acj"
-matrix:   
+matrix:
   include:
     - python: "3.4"
-      env: INTEGRATION_TEST=true TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=50 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:" 
+      env: INTEGRATION_TEST=true TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=50 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
     - python: "3.4"
-      env: INTEGRATION_TEST=true TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=44 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:" 
+      env: INTEGRATION_TEST=true TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=44 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
   allow_failures:
-      - env: INTEGRATION_TEST=true TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=50 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:" 
-      - env: INTEGRATION_TEST=true TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=44 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:" 
+      - env: INTEGRATION_TEST=true TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=50 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
+      - env: INTEGRATION_TEST=true TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=44 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
 
 addons:
   sauce_connect: true
@@ -41,7 +41,7 @@ notifications:
 
 sudo: false
 
-# skip builds for database redesign 
+# skip builds for database redesign
 branches:
   except:
     - /^0\.9\.x-266-.*$/

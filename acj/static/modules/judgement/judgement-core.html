@@ -1,15 +1,15 @@
 <div class="evaluate-screen">
-	
+
 	<h1>Compare Answers</h1>
-	
+
 	<p class="intro-text">For each round, you'll give helpful feedback on the answers in the pair, choose which better matches the criteria below, and submit the comparison. Please note <strong>answers are not automatically saved</strong> as you type.</p>
-	
+
 	<p class="question-toggle"><a href="" ng-click="showQuestion = !showQuestion">
 		<i class="fa fa-chevron-down" ng-show="showQuestion"></i>
 		<i class="fa fa-chevron-right" ng-hide="showQuestion"></i>
 		Show question "{{question.title}}"
 	</a></p>
-	
+
 	<div ng-show="showQuestion" class="standalone-question">
 		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
 		<div mathjax="question.post.content"
@@ -19,18 +19,18 @@
 		<acj-pdf-inline label="See question details:" pdfs="question.post.files">
 		</acj-pdf-inline>
 	</div>
-	
+
 	<div class="row answer-pair">
-		
+
 		<hr />
-		
+
 		<h2 class="col-md-6">Answer Pair</h2>
 		<h2 class="col-md-6 text-right rounds"><span ng-hide="answerPairError" class="label label-warning">Round {{current}} / {{total}}</span></h2>
-		
+
 		<div ng-show="answerPairError" class="alert alert-info" role="alert">
 			<p><strong>Break time!</strong> You've compared the currently available answer pairs. Please check back later to compare new pairs after more answers have been submitted.</p>
 		</div>
-		
+
 		<div class="col-md-6" ng-hide="answerPairError">
 			<div class="answer-choice clearfix">
 				<h3 class="text-center">Answer {{firstAnsNum}}</h3>
@@ -38,7 +38,7 @@
 					ng-bind-html="answerPair.answers[0].content">
 				</div>
 				<!-- Attachment -->
-				<acj-pdf-inline label="See detail:" 
+				<acj-pdf-inline label="See detail:"
 					pdfs="answerPair.answers[0].files">
 				</acj-pdf-inline>
 				<!-- Flagging -->
@@ -52,7 +52,7 @@
 				</a>
 			</div>
 		</div>
-		
+
 		<div class="col-md-6" ng-hide="answerPairError">
 			<div class="answer-choice clearfix">
 				<h3 class="text-center">Answer {{secondAnsNum}}</h3>
@@ -60,7 +60,7 @@
 					ng-bind-html="answerPair.answers[1].content">
 				</div>
 				<!-- Attachment -->
-				<acj-pdf-inline label="See detail:" 
+				<acj-pdf-inline label="See detail:"
 					pdfs="answerPair.answers[1].files">
 				</acj-pdf-inline>
 				<!-- Flagging -->
@@ -74,21 +74,21 @@
 				</a>
 			</div>
 		</div>
-		
+
 	</div>
-	
+
 	<form name="judgementForm" ng-submit="judgementSubmit()" novalidate ng-hide="answerPairError" confirm-form-exit form-type="compare">
-		
+
 		<div>
-			
+
 			<hr />
-			
+
 			<h3>1) Give detailed feedback to the author of each answer</h3>
-			
+
 			<div class="row sub-step">
-				
+
 				<p class="intro-text">Use any instructor-provided guidelines or answer the general questions: What did the author do well? Where might the author improve? Remember to make your comments&mdash;including criticisms&mdash;<strong>encouraging, respectful, and specific</strong>. Instructors do read what you write here.</p>
-				
+
 				<div class="col-md-6">
 					<label class="cke-label">
 						Your feedback for Answer {{firstAnsNum}} (shown to instructors and author)
@@ -108,7 +108,7 @@
 					</textarea>
 				</div>
 			</div>
-			
+
 			<!-- <div class="form-group">
 				<input
 					ng-disabled="!(!!answerPair.answers[0].comment.content && !!answerPair.answers[1].comment.content)"
@@ -116,30 +116,30 @@
 					ng-show="!isStep2Shown"
 					value="Next" class="btn btn-success btn-lg center-block" />
 			</div> -->
-			
+
 		</div>
-		
+
 		<!--<div ng-show="isStep2Shown" id="step-2">-->
 		<div>
-			
+
 			<hr />
-			
+
 			<h3>2) Choose the answer that best meets the criteria below</h3>
-			
+
 			<p class="intro-text">Your selection helps determine a criteria-based student ranking of the answers. Include a <strong>detailed critical explanation</strong>, which can re-use points made in the feedback section above and be more direct. Other students <em>do not</em> see what you write here.</p>
-			
+
 			<div ng-if="question.criteria.length == 0" class="text-center">
 				<p>No criteria have been set for this question yet. Please select one or more of the course criteria.</p>
 				<br />
 			</div>
-			
+
 			<div class="form-group sub-step" ng-repeat="questionCriterion in question.criteria">
-				
+
 				<div class="each-criterion sub-step">
 					<fieldset>
 						<div class="row">
 							<div class="col-sm-6 text-center">
-								<h4><i class="fa fa-gavel"></i> {{questionCriterion.criterion.name}}</h4>	
+								<h4><i class="fa fa-gavel"></i> {{questionCriterion.criterion.name}}</h4>
 								<div class="criteria"
 									ng-bind-html="questionCriterion.criterion.description">
 								</div>
@@ -147,7 +147,7 @@
 								<div class="btn-group">
 									<label class="btn btn-primary" ng-class=
 										"{active:questionCriterion.winner==answerPair.answers[0].id}">
-										<input type="radio" class="hideRadio" 
+										<input type="radio" class="hideRadio"
 											name="answer{{answerPair.answers[0].id}}" required
 											ng-model="questionCriterion.winner"
 											ng-value="answerPair.answers[0].id">
@@ -155,7 +155,7 @@
 									</label>
 									<label class="btn btn-primary" ng-class=
 										"{active:questionCriterion.winner==answerPair.answers[1].id}">
-										<input type="radio" class="hideRadio" 
+										<input type="radio" class="hideRadio"
 											name="answer{{answerPair.answers[0].id}}" required
 											ng-model="questionCriterion.winner"
 											ng-value="answerPair.answers[1].id">
@@ -175,23 +175,23 @@
 						</div>
 					</fieldset>
 				</div>
-				
+
 			</div>
-			
+
 			<div class="form-group sub-step">
 				<!-- button to submit and refresh page IF evaluations remain for user -->
 				<input ng-disabled="judgementForm.$invalid || submitted" type="submit"
 					value="Submit" class="btn btn-success btn-lg center-block" />
 				<p ng-if="submitted" class="text-center" >
 					<i class="fa fa-spin fa-spinner"></i>
-					&nbsp; Saving comparison...  
+					&nbsp; Saving comparison...
 				</p>
-				
+
 			</div>
-			
-			
+
+
 		</div>
-		
+
 	</form>
 
 </div>

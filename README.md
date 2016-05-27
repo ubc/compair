@@ -27,21 +27,21 @@ Developer Installation
 
 	git clone git@github.com:ubc/acj-versus.git acj
 	cd acj && vagrant up
-	
+
 ### Start Up the ACJ server
 
 	vagrant ssh -c "cd /vagrant && make rundev"
-	
+
 Now you should be able to open your browser and access ACJ instance using the following address:
 
 	http://localhost:8080/static/index.html#/
-	
+
 ### Access Database
 
 A MySQL database is installed and the port 3306 is forwarded to host 3306 (in case there is a conflict, vagrant will pick another port, watch for the information when vagrant starts). From host, database can be connect by:
 
 	mysql -u acj -P 3306 -p acj
-	
+
 The default password is `acjacj`
 
 If you already have a MySQL server running on your host, you may need to use the following command:
@@ -50,7 +50,7 @@ If you already have a MySQL server running on your host, you may need to use the
 
 Generate Production Release
 ---------------------------
-Run `gulp prod` to generate the production version. This currently just does two things: 
+Run `gulp prod` to generate the production version. This currently just does two things:
 1. Combine all Bower managed javascript libraries into a single minified file.
 2. Compile and minify the less files into a single css file.
 

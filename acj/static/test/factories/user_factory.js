@@ -13,7 +13,7 @@ var userTempalte = {
     "created": "Sat, 27 Dec 2014 20:13:11 -0000",
     "modified": "Sun, 11 Jan 2015 02:55:59 -0000",
     "lastonline": "Sun, 11 Jan 2015 02:55:59 -0000",
-    "system_role": null, 
+    "system_role": null,
     "usertypeforsystemTemplate": null,
     "usertypesforsystem_id": null
 }
@@ -30,10 +30,10 @@ UserFactory.prototype.generateUser = function (id, userType, parameters) {
     var newUser = objectAssign({}, userTempalte, parameters);
     newUser.id = id;
     newUser.system_role = userType;
-    
+
     newUser.usertypeforsystem = objectAssign({}, usertypeforsystemTemplate);
     newUser.usertypeforsystem.name = userType;
-    
+
     switch (userType) {
         case "System Administrator":
             newUser.usertypesforsystem_id = 3;
@@ -48,7 +48,7 @@ UserFactory.prototype.generateUser = function (id, userType, parameters) {
             newUser.usertypeforsystem.id = 1;
             break;
     }
-    
+
     return newUser;
 };
 

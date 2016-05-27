@@ -7,8 +7,8 @@
      * It retrieves the user information and permissions from backend if they are not
      * available. Otherwise, provides the information from local cached values.
      */
-    module.factory('Session', 
-            [ "$http", "$q", "$cookies", "$log", "UserResource", 
+    module.factory('Session',
+            [ "$http", "$q", "$cookies", "$log", "UserResource",
             function ($http, $q, $cookies, $log, UserResource) {
         return {
             _user: new UserResource,

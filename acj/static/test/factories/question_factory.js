@@ -1,26 +1,26 @@
 var objectAssign = require('object-assign');
 
 var questionTemplate = {
-    "id": null, 
+    "id": null,
     "title": null,
-    "criteria": [], 
-    "can_reply": true, 
-    "available": false, 
-    "judged": false, 
-    "judging_period": false, 
-    "after_judging": false, 
-    "selfevaltype_id": 0, 
-    "comments_count": 0, 
-    "evaluation_count": 0, 
+    "criteria": [],
+    "can_reply": true,
+    "available": false,
+    "judged": false,
+    "judging_period": false,
+    "after_judging": false,
+    "selfevaltype_id": 0,
+    "comments_count": 0,
+    "evaluation_count": 0,
     "answers_count": 0,
-    "answer_period": false, 
-    "answer_end": "Thu, 28 Apr 2016 06:59:00 -0000", 
-    "answer_start": "Wed, 20 Apr 2016 07:00:00 -0000", 
-    "num_judgement_req": 3, 
-    "judge_end": null, 
-    "judge_start": null, 
-    "modified": "Tue, 19 Apr 2016 20:06:43 -0000", 
-    "post": {}, 
+    "answer_period": false,
+    "answer_end": "Thu, 28 Apr 2016 06:59:00 -0000",
+    "answer_start": "Wed, 20 Apr 2016 07:00:00 -0000",
+    "num_judgement_req": 3,
+    "judge_end": null,
+    "judge_start": null,
+    "modified": "Tue, 19 Apr 2016 20:06:43 -0000",
+    "post": {},
 }
 
 var postTempalte = {
@@ -45,10 +45,10 @@ function QuestionFactory() {};
 QuestionFactory.prototype.generateQuestion = function (id, user, parameters) {
     var newQuestion = objectAssign({}, questionTemplate, parameters);
     newQuestion.id = id;
-    
+
     newQuestion.post = objectAssign({}, postTempalte, parameters.post);
     newQuestion.post.user = objectAssign({}, user);
-    
+
     return newQuestion;
 };
 

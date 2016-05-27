@@ -87,8 +87,8 @@
 						<strong>{{ entry.flagged }}</strong>
 					</td>
 					<td class="text-center" ng-class="{
-						'text-danger': entry.num_judgements == 0, 
-						'text-warning': entry.num_judgements > 0 && 
+						'text-danger': entry.num_judgements == 0,
+						'text-warning': entry.num_judgements > 0 &&
 								 entry.num_judgements < numJudgementsRequired,
 						'text-success': entry.num_judgements >= numJudgementsRequired
 						}">

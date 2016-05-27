@@ -258,7 +258,7 @@ describe('course-module', function () {
 						expect(criterion).toEqual(updated);
 						expect(closeFunc).toHaveBeenCalled();
 					});
-					
+
 					it('should listen to CRITERIA_ADDED event and close dialog', function() {
 						$rootScope.course.criteria = [];
 						var criteria = {id: 1};

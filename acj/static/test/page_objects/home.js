@@ -11,7 +11,7 @@ var HomePage = function() {
     this.get = function() {
         return browser.get(env.baseUrl+'#/');
     };
-    
+
     this.clickButton = function(button) {
         switch (button) {
             case "Add Course":

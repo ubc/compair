@@ -11,24 +11,24 @@ from acj.core import db
 
 class AnswerComment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     __tablename__ = 'answer_comment'
-    
+
     # table columns
     answer_id = db.Column(db.Integer, db.ForeignKey('answer.id', ondelete="CASCADE"),
         nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"),
         nullable=False)
     content = db.Column(db.Text)
-    private = db.Column(db.Boolean(name='private'), default=True, 
+    private = db.Column(db.Boolean(name='private'), default=True,
         nullable=False, index=True)
-    self_eval = db.Column(db.Boolean(name='self_eval'), default=False, 
+    self_eval = db.Column(db.Boolean(name='self_eval'), default=False,
         nullable=False, index=True)
-    
+
     # relationships
     # answer via Answer Model
     # user via User Model
-    
+
     #readonly
-    
+
     # hyprid and other functionsx
     course_id = association_proxy('answer', 'course_id', creator=lambda course_id:
         import_module('acj.models.answer').Answer(course_id=course_id))

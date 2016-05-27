@@ -21,8 +21,8 @@ var module = angular.module('ubc.ctlt.acj.course',
 );
 
 /***** Providers *****/
-module.factory('CourseResource', 
-	["$q", "$routeParams", "$log", "$resource", "Interceptors", 
+module.factory('CourseResource',
+	["$q", "$routeParams", "$log", "$resource", "Interceptors",
 	function($q, $routeParams, $log, $resource, Interceptors)
 {
 	var url = '/api/courses/:id';

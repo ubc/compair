@@ -13,8 +13,8 @@ var module = angular.module('ubc.ctlt.acj.report',
 );
 
 /***** Providers *****/
-module.factory('ReportResource', 
-	[ "$q", "$routeParams", "$log", "$resource", 
+module.factory('ReportResource',
+	[ "$q", "$routeParams", "$log", "$resource",
 	function($q, $routeParams, $log, $resource)
 {
 	var ret = $resource('/api/courses/:id/report', {id: '@id'});

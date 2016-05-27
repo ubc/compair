@@ -44,9 +44,9 @@ class CriteriaAPI(Resource):
             criteria = Criteria.query \
                 .filter(or_(
                     and_(
-                        Criteria.user_id == current_user.id, 
+                        Criteria.user_id == current_user.id,
                         Criteria.default == True
-                    ), 
+                    ),
                     Criteria.public == True
                 )) \
                 .order_by(Criteria.public.desc(), Criteria.created) \
@@ -62,14 +62,14 @@ class CriteriaAPI(Resource):
     @login_required
     def post(self):
         params = new_criterion_parser.parse_args()
-        
+
         criterion = Criteria(user_id=current_user.id)
         require(CREATE, criterion)
-        
+
         criterion.name = params.get("name")
         criterion.description = params.get("description", None)
         criterion.default = params.get("default")
-        
+
         db.session.add(criterion)
         db.session.commit()
 
@@ -105,7 +105,7 @@ class CriteriaIdAPI(Resource):
     def post(self, criteria_id):
         criterion = Criteria.get_active_or_404(criteria_id)
         require(EDIT, criterion)
-        
+
         params = existing_criterion_parser.parse_args()
         criterion.name = params.get('name', criterion.name)
         criterion.description = params.get('description', criterion.description)

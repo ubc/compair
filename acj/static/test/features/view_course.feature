@@ -13,7 +13,7 @@ Feature: View Course
       | Question Being Judged   |
       | Question Being Answered |
       | Question Upcoming       |
-      
+
   Scenario: Loading course page as instructor
     Given I'm an Instructor with questions
     And I'm on "home" page
@@ -26,7 +26,7 @@ Feature: View Course
       | Question Being Judged   |
       | Question Being Answered |
       | Question Upcoming       |
-      
+
   Scenario: Filtering questions on course page as instructor
     Given I'm an Instructor with questions
     And I'm on "course" page for course with id "1"
@@ -35,7 +35,7 @@ Feature: View Course
     And I should see my questions with names:
       | name                    |
       | Question Being Answered |
-      
+
   Scenario: Filtering questions on course page as instructor
     Given I'm an Instructor with questions
     And I'm on "course" page for course with id "1"
@@ -44,7 +44,7 @@ Feature: View Course
     And I should see my questions with names:
       | name                    |
       | Question Being Judged   |
-      
+
   Scenario: Filtering questions on course page as instructor
     Given I'm an Instructor with questions
     And I'm on "course" page for course with id "1"
@@ -53,8 +53,8 @@ Feature: View Course
     And I should see my questions with names:
       | name                    |
       | Question Upcoming       |
-      
-      
+
+
   Scenario: Loading course page as student
     Given I'm a Student with questions
     And I'm on "home" page
@@ -66,7 +66,7 @@ Feature: View Course
       | Question Finished       |
       | Question Being Judged   |
       | Question Being Answered |
-      
+
   Scenario: Filtering questions on course page as student
     Given I'm a Student with questions
     And I'm on "course" page for course with id "1"
@@ -75,5 +75,4 @@ Feature: View Course
     And I should see my questions with names:
       | name                    |
       | Question Being Answered |
-      
-      
+

@@ -46,7 +46,7 @@ class TestCompareModel(ACJTestCase):
 
 class TestUtils(ACJTestCase):
     def test_update_scores(self):
-    
+
         criteria_comparison_results = {
             1: calculate_score(comparison_pairs=[
                 ComparisonPair(1,2, winning_key=1)
@@ -63,7 +63,7 @@ class TestUtils(ACJTestCase):
         self.assertEqual(scores[0].id, 2)
         self.assertIsNone(scores[1].id)
 
-    
+
         criteria_comparison_results = {
             1: calculate_score(comparison_pairs=[
                    ComparisonPair(1,2, winning_key=1)

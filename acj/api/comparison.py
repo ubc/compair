@@ -31,10 +31,10 @@ apiAll = new_restful_api(all_course_comparisons_api)
 
 def comparisons_type(value):
     return dict(value)
-    
+
 update_comparison_parser = RequestParser()
 update_comparison_parser.add_argument(
-    'comparisons', type=comparisons_type, required=True, 
+    'comparisons', type=comparisons_type, required=True,
     action="append", help="Missing comparisons.")
 
 
@@ -57,10 +57,10 @@ class CompareRootAPI(Resource):
         assignment = Assignment.get_active_or_404(assignment_id)
         require(READ, assignment)
         restrict_user = not allow(MANAGE, assignment)
-        
+
         if not assignment.compare_period:
             return {'error': 'Evaluation period is not active.'}, 403
-            
+
         # check if user has comparisons they have not completed yet
         comparisons = Comparison.query \
             .filter_by(
@@ -69,7 +69,7 @@ class CompareRootAPI(Resource):
                 completed=False
             ) \
             .all()
-            
+
         if len(comparisons) > 0:
             on_comparison_get.send(
                 self,
@@ -81,7 +81,7 @@ class CompareRootAPI(Resource):
             # if there aren't incomplete comparisons, assign a new one
             try:
                 comparisons = Comparison.create_new_comparison_set(assignment_id, current_user.id)
-                
+
                 on_comparison_create.send(
                     self,
                     event_name=on_comparison_create.name,
@@ -94,9 +94,9 @@ class CompareRootAPI(Resource):
                 return {"error": "You have compared all the currently available answers."}, 400
             except UnknownPairGeneratorException:
                 return {"error": "Generating scored pairs failed, this really shouldn't happen."}, 500
-        
+
         return {'objects': marshal(comparisons, dataformat.get_comparison(restrict_user))}
-    
+
     @login_required
     def post(self, course_id, assignment_id):
         """
@@ -104,13 +104,13 @@ class CompareRootAPI(Resource):
         """
         Course.get_active_or_404(course_id)
         assignment = Assignment.get_active_or_404(assignment_id)
-        
+
         if not assignment.compare_period:
             return {'error': 'Evaluation period is not active.'}, 403
         require(READ, assignment)
         require(CREATE, Comparison)
         restrict_user = not allow(MANAGE, assignment)
-        
+
         comparisons = Comparison.query \
             .filter_by(
                 assignment_id=assignment_id,
@@ -118,64 +118,64 @@ class CompareRootAPI(Resource):
                 completed=False
             ) \
             .all()
-            
+
         params = update_comparison_parser.parse_args()
         completed = True
-        
+
         # check if there are any comparisons to update
         if len(comparisons) == 0:
             return {"error": "There are no comparisons open for evaluation."}, 400
-            
+
         # check if number of comparisons submitted matches number of comparisons needed
         if len(comparisons) != len(params['comparisons']):
             return {"error": "Not all criteria were evaluated."}, 400
-        
+
         # check if each comparison has an criteria Id and a winner id
         for comparison_to_update in params['comparisons']:
             # ensure criteria param is present
             if 'criteria_id' not in comparison_to_update:
                 return {"error": "Missing criteria_id in evaluation."}, 400
-                
+
             # set default values for cotnent and winner
             comparison_to_update.setdefault('content', None)
             winner_id = comparison_to_update.setdefault('winner_id', None)
-            
+
             # if winner isn't set for any comparisons, then the comparison set isn't complete yet
             if winner_id == None:
                 completed = False
-            
+
             # check that we're using criteria that were assigned to the course and that we didn't
             # get duplicate criteria in comparisons
             known_criterion = False
             for comparison in comparisons:
                 if comparison_to_update['criteria_id'] == comparison.criteria_id:
                     known_criterion = True
-                    
+
                     # check that the winner id matches one of the answer pairs
                     if winner_id != comparison.answer1_id and winner_id != comparison.answer2_id:
                         return {"error": "Selected answer does not match the available answers in comparison."}, 400
-                    
+
                     break
-                    
+
             if not known_criterion:
                 return {"error": "Unknown criterion submitted!"}, 400
-                
-        
-        # update comparisons   
+
+
+        # update comparisons
         for comparison in comparisons:
             comparison.completed = completed
-            
-            for comparison_to_update in params['comparisons']:    
+
+            for comparison_to_update in params['comparisons']:
                 if comparison_to_update['criteria_id'] != comparison.criteria_id:
                     continue
-                
+
                 comparison.winner_id = comparison_to_update['winner_id']
                 comparison.content = comparison_to_update['content']
-                
+
             db.session.add(comparison)
-        
+
         db.session.commit()
-            
+
         # update answer scores
         current_app.logger.debug("Doing scoring")
         Comparison.calculate_scores(assignment_id)
@@ -200,7 +200,7 @@ class UserCompareCount(Resource):
         require(READ, course)
         assignment = Assignment.get_active_or_404(assignment_id)
         require(READ, assignment)
-        
+
         count = assignment.completed_comparison_count_for_user(user_id)
 
         on_assignment_comparison_count.send(
@@ -223,14 +223,14 @@ class UserAllCompareCount(Resource):
     def get(self, course_id):
         course = Course.get_active_or_404(course_id)
         require(READ, course)
-        
+
         assignments = Assignment.query \
             .filter_by(
                 active=True,
                 course_id=course.id
             ) \
             .all()
-        
+
         comparisons = {assignment.id: assignment \
             .completed_comparison_count_for_user(current_user.id) \
             for assignment in assignments}
@@ -312,7 +312,7 @@ class ComparisonAvailable(Resource):
         course = Course.get_active_or_404(course_id)
         require(READ, course)
         assignment = Assignment.get_active_or_404(assignment_id)
-        
+
         # ineligible authors - eg. instructors, TAs, dropped student, current user
         ineligible_users = UserCourse.query. \
             filter(and_(

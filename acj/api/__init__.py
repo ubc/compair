@@ -2,59 +2,59 @@ def register_api_blueprints(app):
     # Initialize rest of the api modules
     from .course import course_api
     app.register_blueprint(course_api, url_prefix='/api/courses')
-    
+
     from .classlist import classlist_api
     app.register_blueprint(classlist_api, url_prefix='/api/courses/<int:course_id>/users')
-    
+
     from .course_group import course_group_api
     app.register_blueprint(course_group_api, url_prefix='/api/courses/<int:course_id>/groups')
-    
+
     from .course_group_user import course_group_user_api
     app.register_blueprint(course_group_user_api, url_prefix='/api/courses/<int:course_id>/users/<int:user_id>/groups')
-    
+
     from .login import login_api
     app.register_blueprint(login_api)
-    
+
     from .users import user_api
     app.register_blueprint(user_api, url_prefix='/api/users')
-    
+
     from .system_role import system_roles_api
     app.register_blueprint(system_roles_api, url_prefix='/api/system_roles')
-    
+
     from .course_role import user_course_role_api
     app.register_blueprint(user_course_role_api, url_prefix='/api/course_roles')
-    
+
     from .assignment import assignment_api
     app.register_blueprint(assignment_api, url_prefix='/api/courses/<int:course_id>/assignments')
-    
+
     from .answer import answers_api
     app.register_blueprint(
         answers_api,
         url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>/answers')
-        
+
     from .file import file_api
     app.register_blueprint(
         file_api,
         url_prefix='/api/attachment')
-        
+
     from .assignment_comment import assignment_comment_api
     app.register_blueprint(
         assignment_comment_api,
         url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>/comments')
-        
+
     from .answer_comment import answer_comment_api
     app.register_blueprint(
         answer_comment_api,
         url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>')
-        
+
     from .criteria import criteria_api
     app.register_blueprint(criteria_api, url_prefix='/api/criteria')
-        
+
     from .assignment_criteria import assignment_criteria_api
     app.register_blueprint(
         assignment_criteria_api,
         url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>/criteria')
-        
+
     from .comparison import comparison_api, all_course_comparisons_api
     app.register_blueprint(
         comparison_api,
@@ -62,22 +62,22 @@ def register_api_blueprints(app):
     app.register_blueprint(
         all_course_comparisons_api,
         url_prefix='/api/courses/<int:course_id>/comparisons')
-        
+
     from .report import report_api
     app.register_blueprint(report_api, url_prefix='/api/courses/<int:course_id>/report')
-    
+
     from .gradebook import gradebook_api
     app.register_blueprint(
         gradebook_api,
         url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>/gradebook')
-    
+
     from .common import timer_api
     app.register_blueprint(timer_api, url_prefix='/api/timer')
 
     @app.route('/')
     def route_root():
         return redirect('/static/index.html#/')
-    
+
     return app
 
 
@@ -93,11 +93,11 @@ def log_events(log):
     on_teaching_course_get.connect(log)
     on_user_edit_button_get.connect(log)
     on_user_password_update.connect(log)
-    
+
     # system roles
     from .system_role import on_system_role_all_get
     on_system_role_all_get.connect(log)
-    
+
     # course roles
     from .course_role import on_course_roles_all_get
     on_course_roles_all_get.connect(log)
@@ -170,7 +170,7 @@ def log_events(log):
     on_comparison_get.connect(log)
     on_comparison_create.connect(log)
     on_comparison_update.connect(log)
-    
+
     on_assignment_comparison_count.connect(log)
     on_course_comparison_count.connect(log)
 
@@ -190,7 +190,7 @@ def log_events(log):
     on_course_group_get.connect(log)
     on_course_group_import.connect(log)
     on_course_group_members_get.connect(log)
-    
+
     # course user group events
     from .course_group_user import on_course_group_user_create, on_course_group_user_delete
     on_course_group_user_create.connect(log)
