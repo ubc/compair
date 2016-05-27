@@ -1,19 +1,18 @@
 import unittest
 
-from acj.algorithms.score_acj import ScoreACJ
-from acj.algorithms.comparison_pair import ComparisonPair
-from acj.algorithms.comparison_result import ComparisonResult
+from acj.algorithms.score.comparative_judgement.score_algorithm import ComparativeJudgementScoreAlgorithm
+from acj.algorithms import ComparisonPair, ComparisonResult
         
-class TestScoreACJ(unittest.TestCase):
-    score_algorithm = ScoreACJ(None)
+class TestScoreComparitiveJudgement(unittest.TestCase):
+    score_algorithm = ComparativeJudgementScoreAlgorithm()
 
     def setUp(self):
         pass
 
-    def test_calculate_scores(self):
+    def test_calculate_score(self):
         # empty comparison set
         comparisons = []
-        results = self.score_algorithm.calculate_scores(comparisons)
+        results = self.score_algorithm.calculate_score(comparisons)
         
         self.assertEqual(len(results.items()), 0)
         
@@ -21,7 +20,7 @@ class TestScoreACJ(unittest.TestCase):
         comparisons = [
             ComparisonPair(1,2,winning_key=1)
         ]
-        results = self.score_algorithm.calculate_scores(comparisons)
+        results = self.score_algorithm.calculate_score(comparisons)
             
         self.assertEqual(len(results.items()), 2)
         
@@ -44,7 +43,7 @@ class TestScoreACJ(unittest.TestCase):
         comparisons = [
             ComparisonPair(1,2,winning_key=None)
         ]
-        results = self.score_algorithm.calculate_scores(comparisons)
+        results = self.score_algorithm.calculate_score(comparisons)
             
         self.assertEqual(len(results.items()), 2)
         
@@ -68,7 +67,7 @@ class TestScoreACJ(unittest.TestCase):
             ComparisonPair(1,3, winning_key=1),
             ComparisonPair(2,4, winning_key=2)
         ]
-        results = self.score_algorithm.calculate_scores(comparisons)
+        results = self.score_algorithm.calculate_score(comparisons)
         
         self.assertEqual(len(results.items()), 4)
         
@@ -101,7 +100,7 @@ class TestScoreACJ(unittest.TestCase):
         comparisons = [
             ComparisonPair(1,2, winning_key=None)
         ]
-        results = self.score_algorithm.calculate_scores(comparisons)
+        results = self.score_algorithm.calculate_score(comparisons)
         
         self.assertEqual(len(results.items()), 2)
         
@@ -127,8 +126,8 @@ class TestScoreACJ(unittest.TestCase):
             ComparisonPair(1,2, winning_key=1),
             ComparisonPair(1,2, winning_key=2)
         ]
-        results_1 = self.score_algorithm.calculate_scores(comparisons_1)
-        results_2 = self.score_algorithm.calculate_scores(comparisons_2)
+        results_1 = self.score_algorithm.calculate_score(comparisons_1)
+        results_2 = self.score_algorithm.calculate_score(comparisons_2)
         
         self.assertEqual(results_2.get(1).total_opponents, 1)
         self.assertEqual(results_2.get(2).total_opponents, 1)
@@ -145,8 +144,8 @@ class TestScoreACJ(unittest.TestCase):
             ComparisonPair(1,2, winning_key=1),
             ComparisonPair(1,2, winning_key=1)
         ]
-        results_1 = self.score_algorithm.calculate_scores(comparisons_1)
-        results_2 = self.score_algorithm.calculate_scores(comparisons_2)
+        results_1 = self.score_algorithm.calculate_score(comparisons_1)
+        results_2 = self.score_algorithm.calculate_score(comparisons_2)
         
         # 1 win should have a lower score than 2 wins against same opponent
         self.assertLess(results_1.get(1).score, results_2.get(1).score)
