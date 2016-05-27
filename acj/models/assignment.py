@@ -4,7 +4,7 @@ import pytz
 
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.orm import synonym, load_only, column_property, backref, contains_eager, joinedload, Load
+from sqlalchemy.orm import column_property
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -29,7 +29,7 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     number_of_comparisons = db.Column(db.Integer, nullable=False)
     students_can_reply = db.Column(db.Boolean(name='students_can_reply'),
         default=False, nullable=False)
-    enable_self_eval = db.Column(db.Boolean(name='enable_self_eval'),
+    enable_self_evaluation = db.Column(db.Boolean(name='enable_self_evaluation'),
         default=False, nullable=False)
 
     # relationships
@@ -53,6 +53,19 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     user_system_role = association_proxy('user', 'system_role')
 
     @hybrid_property
+    def criteria(self):
+        from . import Criteria, AssignmentCriteria
+        return Criteria.query \
+            .with_entities(Criteria) \
+            .join(AssignmentCriteria) \
+            .filter(and_(
+                Criteria.active == True,
+                AssignmentCriteria.active == True,
+                AssignmentCriteria.assignment_id == self.id
+            )) \
+            .all()
+
+    @hybrid_property
     def compared(self):
         return self.compare_count > 0
 
@@ -64,13 +77,13 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
             ) \
             .count()
 
-        return comparison_count / self.criteria_count
+        return comparison_count / self.criteria_count if self.criteria_count else 0
 
     @hybrid_property
     def available(self):
         now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
         answer_start = self.answer_start.replace(tzinfo=pytz.utc)
-        return answer_start <= now
+        return True
 
     @hybrid_property
     def answer_period(self):
@@ -109,7 +122,7 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     @hybrid_property
     def evaluation_count(self):
         evaluation_count = self.compare_count / self.criteria_count if self.criteria_count else 0
-        return evaluation_count + self._self_eval_count
+        return evaluation_count + self.self_evaluation_count
 
     def __repr__(self):
         if self.id:
@@ -121,7 +134,7 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()
 
-        cls.answers_count = column_property(
+        cls.answer_count = column_property(
             select([func.count(Answer.id)]).
             where(and_(
                 Answer.assignment_id == cls.id,
@@ -131,7 +144,7 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
             group="counts"
         )
 
-        cls.comments_count = column_property(
+        cls.comment_count = column_property(
             select([func.count(AssignmentComment.id)]).
             where(and_(
                 AssignmentComment.assignment_id == cls.id,
@@ -158,10 +171,10 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
             group="counts"
         )
 
-        cls._self_eval_count = column_property(
+        cls.self_evaluation_count = column_property(
             select([func.count(AnswerComment.id)]).
             where(and_(
-                AnswerComment.self_eval == True,
+                AnswerComment.comment_type == AnswerCommentType.self_evaluation,
                 AnswerComment.active == True,
                 AnswerComment.answer_id == Answer.id,
                 Answer.assignment_id == cls.id

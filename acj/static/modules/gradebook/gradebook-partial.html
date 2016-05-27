@@ -3,32 +3,32 @@
 		<div class="row">
 			<h2 class="col-sm-6">
 				Participation
-				<span ng-show="gb.group && !gb.student">for "{{gb.group.name}}"</span>
-				<span ng-show="gb.student">for "{{ gb.student.user.name }}"</span>
+				<span ng-show="gb.group && !gb.student">for "{{gb.group}}"</span>
+				<span ng-show="gb.student">for "{{ gb.student.name }}"</span>
 			</h2>
 			<div class="col-sm-6 text-right multi-filters">
-				<span class="filter" ng-if="canManagePosts">
+				<span class="filter" ng-if="canManageAssignment">
 					<label>Show: &nbsp;</label>
 					<select ng-if="groups.length > 0" ng-model="gb.group" class="nullable"
-							ng-options="g as g.name for g in groups | orderBy: 'name'" ng-change="groupChange()">
+							ng-options="g as g for g in groups | orderBy: 'toString()'" ng-change="groupChange()">
 						<option value="">All groups</option>
 					</select>
 					<select ng-model="gb.student" class="nullable"
-							ng-options="u as u.user.name for u in users | orderBy: 'user.name'" ng-change="userChange()">
+							ng-options="u as u.name for u in users | orderBy: 'name'" ng-change="userChange()">
 						<option value="">All students</option>
 					</select>
 				</span>
 				<br />
-				<span class="filter" ng-if="canManagePosts">
+				<span class="filter" ng-if="canManageAssignment">
 					<label>Display scores <a href="" tooltip="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
 							<i class="fa fa-question-circle"></i></a> below for: &nbsp;</label>
 					<select ng-model="gb.sortby"
-							ng-options="c.id as c.criterion.name for c in criteria" ng-change="criteriaChange()">
+							ng-options="c.id as c.name for c in criteria" ng-change="criteriaChange()">
 					</select>
 				</span>
 			</div>
 		</div>
-		<p class="intro-text" ng-if="canManagePosts">To export data reports for participation and other application statistics, go to <a ng-href="#/report">Download Reports</a>.</p>
+		<p class="intro-text" ng-if="canManageAssignment">To export data reports for participation and other application statistics, go to <a ng-href="#/report">Download Reports</a>.</p>
 	</div>
 	<div class="table-responsive">
 		<table class="table table-striped table-bordered">
@@ -53,10 +53,10 @@
 					<th class="text-center"><a href="" ng-click="reverse = predicate == 'flagged' && !reverse; predicate='flagged'">
 						Flagged</a>
 					</th>
-					<th class="text-center"><a href="" ng-click="reverse = predicate == 'num_judgements' && !reverse; predicate='num_judgements'">
+					<th class="text-center"><a href="" ng-click="reverse = predicate == 'num_comparisons' && !reverse; predicate='num_comparisons'">
 						Evaluations</a>
 					</th>
-					<th class="text-center" ng-show="includeSelfEval"><a href="" ng-click="reverse = predicate == 'num_selfeval' && !reverse; predicate='num_selfeval'">
+					<th class="text-center" ng-show="includeSelfEval"><a href="" ng-click="reverse = predicate == 'num_self_evaluation' && !reverse; predicate='num_self_evaluation'">
 						Self-Evaluation</a>
 					</th>
 				</tr>
@@ -87,15 +87,15 @@
 						<strong>{{ entry.flagged }}</strong>
 					</td>
 					<td class="text-center" ng-class="{
-						'text-danger': entry.num_judgements == 0,
-						'text-warning': entry.num_judgements > 0 &&
-								 entry.num_judgements < numJudgementsRequired,
-						'text-success': entry.num_judgements >= numJudgementsRequired
+						'text-danger': entry.num_comparisons == 0,
+						'text-warning': entry.num_comparisons > 0 &&
+								 entry.num_comparisons < numerOfComparisonsRequired,
+						'text-success': entry.num_comparisons >= numerOfComparisonsRequired
 						}">
-						<strong>{{entry.num_judgements}} / {{ numJudgementsRequired }}</strong>
+						<strong>{{entry.num_comparisons}} / {{ numerOfComparisonsRequired }}</strong>
 					</td>
-					<td class="text-center text-success" ng-show="includeSelfEval && entry.num_selfeval > 0"><strong>Yes</strong></td>
-					<td class="text-center text-danger" ng-show="includeSelfEval && entry.num_selfeval == 0"><strong>No</strong></td>
+					<td class="text-center text-success" ng-show="includeSelfEval && entry.num_self_evaluation > 0"><strong>Yes</strong></td>
+					<td class="text-center text-danger" ng-show="includeSelfEval && entry.num_self_evaluation == 0"><strong>No</strong></td>
 				</tr>
 			</tbody>
 		</table>

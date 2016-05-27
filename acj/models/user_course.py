@@ -2,7 +2,6 @@ from enum import Enum
 
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.orm import synonym, load_only, backref, contains_eager, joinedload, Load
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_enum34 import EnumType
@@ -27,6 +26,11 @@ class UserCourse(DefaultTableMixin, WriteTrackingMixin):
     # user many-to-many course with association user_course
     user = db.relationship("User", foreign_keys=[user_id], back_populates="user_courses")
     course = db.relationship("Course", back_populates="user_courses")
+
+    # hyprid and other functions
+    @classmethod
+    def __declare_last__(cls):
+        super(cls, cls).__declare_last__()
 
     __table_args__ = (
         # prevent duplicate user in course

@@ -30,14 +30,14 @@ class CourseGroupsAPITests(ACJAPITestCase):
             # test successful query
             rv = self.client.get(url)
             self.assert200(rv)
-            actual = rv.json['group_names']
+            actual = rv.json['objects']
             self.assertEqual(len(actual), 3)
             self.assertEqual(actual[0], self.fixtures.groups[0])
 
         # test TA
         with self.login(self.fixtures.ta.username):
             self.assert200(rv)
-            actual = rv.json['group_names']
+            actual = rv.json['objects']
             self.assertEqual(len(actual), 3)
             self.assertEqual(actual[0], self.fixtures.groups[0])
 
@@ -68,14 +68,14 @@ class CourseGroupsAPITests(ACJAPITestCase):
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(10, len(rv.json['students']))
-            self.assertEqual(self.fixtures.students[0].id, rv.json['students'][0]['user']['id'])
+            self.assertEqual(self.fixtures.students[0].id, rv.json['students'][0]['id'])
 
         # test authorized teaching assistant
         with self.login(self.fixtures.ta.username):
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(10, len(rv.json['students']))
-            self.assertEqual(self.fixtures.students[0].id, rv.json['students'][0]['user']['id'])
+            self.assertEqual(self.fixtures.students[0].id, rv.json['students'][0]['id'])
 
     def test_group_enrolment(self):
         # frequently used objects

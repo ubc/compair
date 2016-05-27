@@ -6,12 +6,7 @@ var sessionFactory = new SessionFactory();
 
 var storage = {
     session: {},
-    users: [],
-    userTypes: [
-        { "id": 1, "name": "Student" }, 
-        { "id": 2, "name": "Instructor" }, 
-        { "id": 3, "name": "System Administrator"  }
-    ]
+    users: []
 }
 
 var admin = userFactory.generateUser(1, "System Administrator", {

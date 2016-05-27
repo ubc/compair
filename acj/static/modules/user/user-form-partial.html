@@ -3,10 +3,10 @@
 		<legend>User Login</legend>
 		<p class="instructional-text">This application provides three user roles with increasing levels of permission. <strong>Students</strong> can post and edit their own answers, comments, and replies. <strong>Instructors</strong> can additionally add and edit their own courses and assignments. <strong>System Administrators</strong> can additionally create users and manage which users can access a course.</p>
 		<div class="form-group">
-			<label for="userType" class="required-star">Application Role </label>
-			<select class="form-control" id="userType" name="userType"
-				ng-model="user.usertypesforsystem_id" required
-				ng-options="usertype.id as usertype.name for usertype in usertypes"></select>
+			<label for="system_role" class="required-star">Application Role </label>
+			<select class="form-control" id="system_role" name="system_role"
+				ng-model="user.system_role" required
+				ng-options="system_role as system_role for system_role in system_roles"></select>
 		</div>
 		<acj-field-with-feedback form-control="userForm.username">
 			<label for="username" class="required-star">Username </label>
@@ -14,10 +14,10 @@
 				name="username" ng-model="user.username"
 				required />
 		</acj-field-with-feedback>
-		<acj-field-with-feedback form-control="userForm.student_no">
-			<label for="student_no">Student Number </label>
-			<input class="form-control" id="student_no" type="text"
-				name="student_no" ng-model="user.student_no"/>
+		<acj-field-with-feedback form-control="userForm.student_number">
+			<label for="student_number">Student Number </label>
+			<input class="form-control" id="student_number" type="text"
+				name="student_number" ng-model="user.student_number"/>
 		</acj-field-with-feedback>
 		<div ng-if="method == 'new'">
 			<acj-field-with-feedback form-control="userForm.password">

@@ -1,6 +1,6 @@
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.orm import synonym, load_only, backref, contains_eager, joinedload, Load
+from sqlalchemy.orm import load_only
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask import current_app
@@ -51,6 +51,10 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
     user_displayname = association_proxy('user', 'displayname')
     user_fullname = association_proxy('user', 'fullname')
     user_system_role = association_proxy('user', 'system_role')
+
+    @classmethod
+    def __declare_last__(cls):
+        super(cls, cls).__declare_last__()
 
     @classmethod
     def create_new_comparison_set(cls, assignment_id, user_id):
@@ -158,9 +162,10 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
             options(load_only('winner_id', 'criteria_id', 'answer1_id', 'answer2_id')) . \
             filter(Comparison.assignment_id == assignment_id).all()
 
-        assignment_criteria = AssignmentCriteria.query. \
-            with_entities(AssignmentCriteria.criteria_id) . \
-            filter_by(assignment_id=assignment_id, active=True).all()
+        assignment_criteria = AssignmentCriteria.query \
+            .with_entities(AssignmentCriteria.criteria_id) \
+            .filter_by(assignment_id=assignment_id, active=True) \
+            .all()
 
         criteria_comparison_results = {}
         answer_ids = set()
@@ -188,12 +193,12 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         scores = Score.query.filter(Score.answer_id.in_(answer_ids)). \
             order_by(Score.answer_id, Score.criteria_id).all()
 
-        updated_scores = update_scores(scores, criteria_comparison_results)
+        updated_scores = update_scores(scores, assignment_id, criteria_comparison_results)
         db.session.add_all(updated_scores)
         db.session.commit()
 
 
-def update_scores(scores, criteria_comparison_results):
+def update_scores(scores, assignment_id, criteria_comparison_results):
     from . import Score
 
     new_scores = []
@@ -204,7 +209,11 @@ def update_scores(scores, criteria_comparison_results):
                 if s.answer_id == answer_id and s.criteria_id == criteria_id:
                     score = s
             if not score:
-                score = Score(answer_id=answer_id, criteria_id=criteria_id)
+                score = Score(
+                    assignment_id=assignment_id,
+                    answer_id=answer_id,
+                    criteria_id=criteria_id
+                )
                 new_scores.append(score)
 
             score.excepted_score = comparison_results.score

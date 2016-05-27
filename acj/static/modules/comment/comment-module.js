@@ -12,37 +12,45 @@ var module = angular.module('ubc.ctlt.acj.comment',
 		'ubc.ctlt.acj.common.interceptor',
 		'ubc.ctlt.acj.course',
 		'ubc.ctlt.acj.criteria',
-		'ubc.ctlt.acj.judgement',
-		'ubc.ctlt.acj.question',
+		'ubc.ctlt.acj.comparison',
+		'ubc.ctlt.acj.assignment',
 		'ubc.ctlt.acj.toaster'
 	]
 );
 
 /***** Providers *****/
-module.factory("QuestionCommentResource", ['$resource', function ($resource) {
+module.factory("AssignmentCommentResource", ['$resource', function ($resource) {
 	var ret = $resource(
-		'/api/courses/:courseId/questions/:questionId/comments/:commentId',
+		'/api/courses/:courseId/assignments/:assignmentId/comments/:commentId',
 		{commentId: '@id'}
 	);
-	ret.MODEL = "PostsForQuestionsAndPostsForComments";
+	ret.MODEL = "AssignmentComment";
 	return ret;
 }]);
 
 module.factory("AnswerCommentResource", ['$resource', 'Interceptors', function ($resource, Interceptors) {
-	var url = '/api/courses/:courseId/questions/:questionId/answers/:answerId/comments/:commentId';
+	var url = '/api/courses/:courseId/assignments/:assignmentId/answers/:answerId/comments/:commentId';
 	var ret = $resource(
 		url, {commentId: '@id'},
 		{
 			'get': {cache: true},
 			'save': {method: 'POST', url: url, interceptor: Interceptors.answerCommentCache},
 			'delete': {method: 'DELETE', url: url, interceptor: Interceptors.answerCommentCache},
-			allSelfEval: {url: '/api/selfeval/courses/:courseId/questions'},
-			query: {url: '/api/courses/:courseId/questions/:questionId/answer_comments', isArray: true}
+			query: {url: '/api/courses/:courseId/assignments/:assignmentId/answer_comments', isArray: true}
 		}
 	);
-	ret.MODEL = "PostsForAnswersAndPostsForComments";
+	ret.MODEL = "AnswerComment";
 	return ret;
 }]);
+
+module.constant('AnswerCommentType', {
+    public: "Public",
+    private: "Private",
+    evaluation: "Evaluation",
+    self_evaluation: "Self Evaluation"
+});
+
+
 
 module.filter('author', function() {
 	return function(input, authorId) {
@@ -66,9 +74,9 @@ module.directive('acjAnswerContent', function() {
 	return {
 		scope: {
 			answer: '=',
-			title: '@',
+			name: '@',
 			isChosen: '=',
-			criteriaAndQuestions: '=',
+			criteria: '=',
 			showScore: '='
 		},
 		templateUrl: 'modules/comment/answer-content.html'
@@ -77,31 +85,31 @@ module.directive('acjAnswerContent', function() {
 
 /***** Controllers *****/
 module.controller(
-	"QuestionCommentCreateController",
-	['$scope', '$log', '$location', '$routeParams', 'QuestionCommentResource', 'QuestionResource', 'Toaster',
-	function ($scope, $log, $location, $routeParams, QuestionCommentResource, QuestionResource, Toaster)
+	"AssignmentCommentCreateController",
+	['$scope', '$log', '$location', '$routeParams', 'AssignmentCommentResource', 'AssignmentResource', 'Toaster',
+	function ($scope, $log, $location, $routeParams, AssignmentCommentResource, AssignmentResource, Toaster)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
-		var questionId = $scope.questionId = $routeParams['questionId'];
+		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
 
 		$scope.comment = {};
-		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
+		AssignmentResource.get({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
 			function(ret) {
-				$scope.parent = ret.question;
+				$scope.parent = ret;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve the question "+questionId, ret);
+				Toaster.reqerror("Unable to retrieve the assignment "+assignmentId, ret);
 			}
 		);
 		$scope.commentSubmit = function () {
 			$scope.submitted = true;
-			QuestionCommentResource.save({'courseId': courseId, 'questionId': questionId},
+			AssignmentCommentResource.save({'courseId': courseId, 'assignmentId': assignmentId},
 				$scope.comment).$promise.then(
 					function (ret)
 					{
 						$scope.submitted = false;
 						Toaster.success("New comment posted!");
-						$location.path('/course/'+courseId+'/question/'+questionId);
+						$location.path('/course/'+courseId+'/assignment/'+assignmentId);
 					},
 					function (ret)
 					{
@@ -114,17 +122,17 @@ module.controller(
 );
 
 module.controller(
-	"QuestionCommentEditController",
-	['$scope', '$log', '$location', '$routeParams', 'QuestionCommentResource', 'QuestionResource', 'Toaster',
-	function ($scope, $log, $location, $routeParams, QuestionCommentResource, QuestionResource, Toaster)
+	"AssignmentCommentEditController",
+	['$scope', '$log', '$location', '$routeParams', 'AssignmentCommentResource', 'AssignmentResource', 'Toaster',
+	function ($scope, $log, $location, $routeParams, AssignmentCommentResource, AssignmentResource, Toaster)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
-		var questionId = $scope.questionId = $routeParams['questionId'];
+		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
 		var commentId = $routeParams['commentId'];
 
 		$scope.comment = {};
-		$scope.parent = {}; // question
-		QuestionCommentResource.get({'courseId': courseId, 'questionId': questionId, 'commentId': commentId}).$promise.then(
+		$scope.parent = {}; // assignment
+		AssignmentCommentResource.get({'courseId': courseId, 'assignmentId': assignmentId, 'commentId': commentId}).$promise.then(
 			function(ret) {
 				$scope.comment = ret;
 			},
@@ -132,19 +140,19 @@ module.controller(
 				Toaster.reqerror("Unable to retrieve comment "+commentId, ret);
 			}
 		);
-		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
+		AssignmentResource.get({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
 			function(ret) {
-				$scope.parent = ret.question;
+				$scope.parent = ret;
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve the question "+questionId, ret);
+				Toaster.reqerror("Unable to retrieve the assignment "+assignmentId, ret);
 			}
 		);
 		$scope.commentSubmit = function () {
-			QuestionCommentResource.save({'courseId': courseId, 'questionId': questionId}, $scope.comment).$promise.then(
+			AssignmentCommentResource.save({'courseId': courseId, 'assignmentId': assignmentId}, $scope.comment).$promise.then(
 				function() {
 					Toaster.success("Comment Updated!");
-					$location.path('/course/' + courseId + '/question/' +questionId);
+					$location.path('/course/' + courseId + '/assignment/' +assignmentId);
 				},
 				function(ret) { Toaster.reqerror("Comment Save Failed.", ret);}
 			);
@@ -154,41 +162,43 @@ module.controller(
 
 module.controller(
 	"AnswerCommentCreateController",
-	['$scope', '$log', '$location', '$routeParams', 'AnswerCommentResource', 'AnswerResource', 
-		'QuestionResource', 'Authorize', 'Toaster',
+	['$scope', '$log', '$location', '$routeParams', 'AnswerCommentResource', 'AnswerResource',
+		'AssignmentResource', 'Authorize', 'Toaster', 'AnswerCommentType',
 	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource,
-			  QuestionResource, Authorize, Toaster)
+			  AssignmentResource, Authorize, Toaster, AnswerCommentType)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
-		var questionId = $scope.questionId = $routeParams['questionId'];
+		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
 		var answerId = $routeParams['answerId'];
 		$scope.answerComment = true;
-		$scope.canManagePosts =
-			Authorize.can(Authorize.MANAGE, QuestionResource.MODEL, courseId);
-		$scope.comment = {};
+		$scope.canManageAssignment =
+			Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, courseId);
+		$scope.comment = {
+            'comment_type': AnswerCommentType.private
+        };
 
-		$scope.parent = AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId});
+		$scope.parent = AnswerResource.get({'courseId': courseId, 'assignmentId': assignmentId, 'answerId': answerId});
 
 		// only need to do this query if the user cannot manage users
-		QuestionResource.get({'courseId': courseId, 'questionId': questionId}).$promise.then(
+		AssignmentResource.get({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
 			function (ret) {
-				if (!$scope.canManagePosts && !ret.question.can_reply) {
-					Toaster.error("No replies can be made for answers in this question.");
-					$location.path('/course/' + courseId + '/question/' + questionId);
+				if (!$scope.canManageAssignment && !ret.students_can_reply) {
+					Toaster.error("No replies can be made for answers in this assignment.");
+					$location.path('/course/' + courseId + '/assignment/' + assignmentId);
 				}
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve the question.", ret);
+				Toaster.reqerror("Unable to retrieve the assignment.", ret);
 			});
 		$scope.commentSubmit = function () {
 			$scope.submitted = true;
-			AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': answerId},
+			AnswerCommentResource.save({'courseId': courseId, 'assignmentId': assignmentId, 'answerId': answerId},
 				$scope.comment).$promise.then(
 					function (ret)
 					{
 						$scope.submitted = false;
 						Toaster.success("New reply posted!");
-						$location.path('/course/'+courseId+'/question/'+questionId);
+						$location.path('/course/'+courseId+'/assignment/'+assignmentId);
 					},
 					function (ret)
 					{
@@ -206,18 +216,18 @@ module.controller(
 	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, Toaster)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
-		var questionId = $scope.questionId = $routeParams['questionId'];
+		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
 		var answerId = $routeParams['answerId'];
 		var commentId = $routeParams['commentId'];
 		$scope.answerComment = true;
 
-		$scope.comment = AnswerCommentResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId, 'commentId': commentId});
-		$scope.parent = AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': answerId});
+		$scope.comment = AnswerCommentResource.get({'courseId': courseId, 'assignmentId': assignmentId, 'answerId': answerId, 'commentId': commentId});
+		$scope.parent = AnswerResource.get({'courseId': courseId, 'assignmentId': assignmentId, 'answerId': answerId});
 		$scope.commentSubmit = function () {
-			AnswerCommentResource.save({'courseId': courseId, 'questionId': questionId, 'answerId': answerId, 'commentId': commentId}, $scope.comment).$promise.then(
+			AnswerCommentResource.save({'courseId': courseId, 'assignmentId': assignmentId, 'answerId': answerId, 'commentId': commentId}, $scope.comment).$promise.then(
 				function() {
 					Toaster.success("Reply Updated!");
-					$location.path('/course/' + courseId + '/question/' +questionId);
+					$location.path('/course/' + courseId + '/assignment/' +assignmentId);
 				},
 				function(ret) { Toaster.reqerror("Reply Not Updated", ret);}
 			);
@@ -226,18 +236,16 @@ module.controller(
 );
 
 module.controller(
-	"JudgementCommentController",
-	['$scope', '$log', '$routeParams', 'breadcrumbs', 'EvalCommentResource', 'CoursesCriteriaResource',
-		'CourseResource', 'QuestionResource', 'AnswerResource', 'AnswerCommentResource', 'AttachmentResource',
-		'GroupResource', 'Toaster',
-	function ($scope, $log, $routeParams, breadcrumbs, EvalCommentResource, CoursesCriteriaResource,
-			  CourseResource, QuestionResource, AnswerResource, AnswerCommentResource, AttachmentResource,
-			  GroupResource, Toaster)
+	"ComparisonCommentController",
+	['$scope', '$log', '$routeParams', 'breadcrumbs', 'CourseResource', 'AssignmentResource',
+        'AnswerResource', 'AnswerCommentResource', 'AttachmentResource', 'GroupResource', 'Toaster',
+	function ($scope, $log, $routeParams, breadcrumbs, CourseResource, AssignmentResource,
+        AnswerResource, AnswerCommentResource, AttachmentResource, GroupResource, Toaster)
 	{
 		var courseId = $routeParams['courseId'];
-		var questionId = $routeParams['questionId'];
+		var assignmentId = $routeParams['assignmentId'];
 		$scope.courseId = courseId;
-		$scope.questionId = questionId;
+		$scope.assignmentId = assignmentId;
 		$scope.listFilters = {
 			page: 1,
 			perPage: 20,
@@ -245,11 +253,10 @@ module.controller(
 			author: null
 		};
 		$scope.answers = [];
-		$scope.selfevals = [];
 
 		CourseResource.get({'id':courseId},
 			function (ret) {
-				breadcrumbs.options = {'Course Questions': ret['name']};
+				breadcrumbs.options = {'Course assignments': ret['name']};
 			},
 			function (ret) {
 				Toaster.reqerror("Course Not Found For ID "+ courseId, ret);
@@ -263,49 +270,33 @@ module.controller(
 			}
 		);
 
-		QuestionResource.get({'courseId': courseId, 'questionId': questionId},
+		AssignmentResource.get({'courseId': courseId, 'assignmentId': assignmentId},
 			function(ret) {
-				$scope.parent = ret.question;
+				$scope.parent = ret;
 				$scope.criteria = {};
-				angular.forEach(ret.question.criteria, function(criterion, key){
-					$scope.criteria[criterion['id']] = criterion['criterion']['name'];
+				angular.forEach(ret.criteria, function(criterion, key){
+					$scope.criteria[criterion['id']] = criterion['name'];
 				});
 			},
 			function (ret) {
-				Toaster.reqerror("Unable to retrieve the question "+questionId, ret);
+				Toaster.reqerror("Unable to retrieve the assignment "+assignmentId, ret);
 			}
 		);
 
-		$scope.groups = GroupResource.get({'courseId': courseId},
-			function (ret) {},
+		GroupResource.get({'courseId': courseId},
+			function (ret) {
+                $scope.groups = ret.objects
+            },
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve the groups in the course.", ret);
 			}
 		);
 
-		$scope.loadAnswer = function(id) {
-			if (_.find($scope.answers, {id: id})) return;
-			AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'answerId': id}, function(response) {
-				$scope.answers.push(convertScore(response));
-			});
-		};
-
 		$scope.loadAnswerByAuthor = function(author_id) {
 			if (_.find($scope.answers, {user_id: author_id})) return;
-			AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'author': author_id}, function(response) {
+			AnswerResource.get({'courseId': courseId, 'assignmentId': assignmentId, 'author': author_id}, function(response) {
 				var answer = response.objects[0];
 				$scope.answers.push(convertScore(answer));
-			});
-		};
-
-		$scope.loadAllAnswers = function() {
-			var missingIds = _($scope.comparisons.objects).pluck('answer1.id')
-				.concat(_.pluck($scope.comparisons.objects, 'answer2.id'))
-				.uniq().difference(_.pluck($scope.answers, 'id')).value();
-			AnswerResource.get({'courseId': courseId, 'questionId': questionId, 'ids': missingIds.join(','), 'perPage': missingIds.length}, function(response) {
-				_.forEach(response.objects, function(answer) {
-					$scope.answers.push(convertScore(answer));
-				});
 			});
 		};
 
@@ -322,17 +313,12 @@ module.controller(
 		});
 
 		$scope.updateList = function() {
-			var params = angular.merge({'courseId': $scope.courseId, 'questionId': questionId}, $scope.listFilters);
-			EvalCommentResource.view(params, function (ret) {
+			var params = angular.merge({'courseId': $scope.courseId, 'assignmentId': assignmentId}, $scope.listFilters);
+
+            AnswerResource.comparisons(params, function(ret) {
 				$scope.comparisons = ret;
 				$scope.comparisons.grouped = _.groupBy($scope.comparisons.objects, 'user_id');
-				var user_ids = _($scope.comparisons.objects).pluck('user_id').uniq().join(',');
-				if (user_ids) {
-					AnswerCommentResource.query({'courseId': $scope.courseId, 'questionId': questionId, user_ids: user_ids, selfeval: 'only'}, function(ret) {
-						$scope.selfevals = ret;
-					})
-				}
-			});
+            });
 		};
 
 		$scope.updateList();
@@ -342,7 +328,7 @@ module.controller(
 function convertScore(answer) {
 	var scores = answer.scores;
 	answer.scores = _.reduce(scores, function(results, score) {
-		results[score.criteriaandquestions_id] = score.normalized_score;
+		results[score.criteria_id] = score.normalized_score;
 		return results;
 	}, {});
 

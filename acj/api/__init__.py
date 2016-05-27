@@ -1,3 +1,5 @@
+from flask import redirect
+
 def register_api_blueprints(app):
     # Initialize rest of the api modules
     from .course import course_api
@@ -131,7 +133,7 @@ def log_events(log):
 
     # answer events
     from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, on_answer_flag, \
-        on_answer_delete, on_user_answer_get, on_user_answered_count
+        on_answer_delete, on_user_answer_get, on_user_answered_count, on_answer_comparisons_get
     on_answer_modified.connect(log)
     on_answer_get.connect(log)
     on_answer_list_get.connect(log)
@@ -140,6 +142,7 @@ def log_events(log):
     on_answer_delete.connect(log)
     on_user_answer_get.connect(log)
     on_user_answered_count.connect(log)
+    on_answer_comparisons_get.connect(log)
 
     # answer comment events
     from .answer_comment import on_answer_comment_modified, on_answer_comment_get, on_answer_comment_list_get, \

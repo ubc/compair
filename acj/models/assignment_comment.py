@@ -1,6 +1,5 @@
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.orm import synonym, load_only, backref, contains_eager, joinedload, Load
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -30,3 +29,7 @@ class AssignmentComment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     user_displayname = association_proxy('user', 'displayname')
     user_fullname = association_proxy('user', 'fullname')
     user_system_role = association_proxy('user', 'system_role')
+
+    @classmethod
+    def __declare_last__(cls):
+        super(cls, cls).__declare_last__()

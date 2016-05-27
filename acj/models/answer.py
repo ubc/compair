@@ -1,6 +1,6 @@
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.orm import synonym, load_only, column_property, backref, contains_eager, joinedload, Load
+from sqlalchemy.orm import column_property
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -40,8 +40,8 @@ class Answer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     user_system_role = association_proxy('user', 'system_role')
 
     @hybrid_property
-    def public_comment_count(self):
-        return self.comment_count - self.private_comment_count
+    def private_comment_count(self):
+        return self.comment_count - self.public_comment_count
 
     @classmethod
     def __declare_last__(cls):
@@ -57,22 +57,21 @@ class Answer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
             group='counts'
         )
 
-        cls.private_comment_count = column_property(
+        cls.public_comment_count = column_property(
             select([func.count(AnswerComment.id)]).
             where(and_(
                 AnswerComment.answer_id == cls.id,
                 AnswerComment.active == True,
-                or_(AnswerComment.private == True,
-                    AnswerComment.self_eval == True)
+                AnswerComment.comment_type == AnswerCommentType.public
             )),
             deferred=True,
             group='counts'
         )
 
-        cls.self_eval_count = column_property(
+        cls.self_evaluation_count = column_property(
             select([func.count(AnswerComment.id)]).
             where(and_(
-                AnswerComment.self_eval == True,
+                AnswerComment.comment_type == AnswerCommentType.self_evaluation,
                 AnswerComment.active == True,
                 AnswerComment.answer_id == cls.id
             )),

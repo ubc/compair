@@ -1,7 +1,7 @@
 <div ng-if="answer">
-    <acj-avatar user-id="answer.user_id" avatar="answer.user_avatar" display-name="answer.user_displayname"></acj-avatar>
+    <acj-avatar user-id="answer.user_id" avatar="answer.user.avatar" display-name="answer.user.displayname"></acj-avatar>
     <strong>answered</strong> on {{ answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
     <div class="content" mathjax="answer.content" ng-bind-html="answer.content"></div>
-    <acj-pdf-inline ng-if="answer" label="See details:" pdfs="answer.files"></acj-pdf-inline>
+    <acj-pdf-inline ng-if="answer" label="See details:" pdf="answer.file"></acj-pdf-inline>
 </div>
 <div ng-if="!answer"><p><i>(No answer has been submitted by this student.)</i></p></div>

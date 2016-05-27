@@ -17,7 +17,8 @@ module.directive('acjPdfInline', function() {
 	return {
 		templateUrl: 'modules/common/pdf-inline-template.html',
 		scope: {
-			pdfs: '=',
+			pdf: '=?',
+			pdfs: '=?',
 			label: '@'
 		},
 		controller: ["$scope", "$log", "$sce", "$modal", function ($scope, $log, $sce, $modal) {
@@ -36,7 +37,7 @@ module.directive('acjPdfInline', function() {
 			};
 			$scope.openPDF = function (name) {
 				$scope.file = 'pdf/' + name;
-				$scope.title = 'Attached PDF: Use + and - to zoom';
+				$scope.name = 'Attached PDF: Use + and - to zoom';
 				$modal.open({
 					templateUrl: 'modules/common/pdf-overlaid-template.html',
 					scope: $scope

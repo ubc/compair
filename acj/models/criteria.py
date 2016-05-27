@@ -1,6 +1,6 @@
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.orm import synonym, load_only, column_property, backref, contains_eager, joinedload, Load
+from sqlalchemy.orm import column_property
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -39,7 +39,8 @@ class Criteria(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
         super(cls, cls).__declare_last__()
 
         cls.compare_count = column_property(
-            select([func.count(AssignmentCriteria.id)]).
-            where(AssignmentCriteria.criteria_id == cls.id).
-            where(AssignmentCriteria.active == True)
+            select([func.count(Comparison.id)]).
+            where(Comparison.criteria_id == cls.id),
+            deferred=True,
+            group="counts"
         )

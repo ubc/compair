@@ -55,8 +55,7 @@ class AssignmentAPITests(ACJAPITestCase):
         # Test receives all assignments
         with self.login(self.data.get_authorized_instructor().username):
             rv = self.client.get(self.url)
-            self.assert200(rv)
-            for i, expected in enumerate(self.data.get_assignments()):
+            for i, expected in enumerate(reversed(self.data.get_assignments())):
                 actual = rv.json['objects'][i]
                 self._verify_assignment(expected, actual)
 
@@ -67,7 +66,13 @@ class AssignmentAPITests(ACJAPITestCase):
             'description': 'this is the new assignment\'s description.',
             'answer_start': now.isoformat() + 'Z',
             'answer_end': (now + datetime.timedelta(days=7)).isoformat() + 'Z',
-            'number_of_comparisons': 3}
+            'number_of_comparisons': 3,
+            'students_can_reply': False,
+            'enable_self_evaluation': False,
+            'criteria': [
+                { 'id': self.data.get_default_criteria().id }
+            ]
+        }
         # Test login required
         rv = self.client.post(
             self.url,
@@ -97,13 +102,21 @@ class AssignmentAPITests(ACJAPITestCase):
                 content_type='application/json')
             self.assert403(rv)
 
-        # Test bad format
         with self.login(self.data.get_authorized_instructor().username):
+            # Test bad format
             rv = self.client.post(
                 self.url,
                 data=json.dumps({'name': 'blah'}),
                 content_type='application/json')
             self.assert400(rv)
+            # Test zero criteria
+            bad_criteria = assignment_expected.copy()
+            bad_criteria['criteria'] = []
+            rv = self.client.post(
+                self.url,
+                data=json.dumps(bad_criteria),
+                content_type='application/json')
+            self.assert403(rv)
             # Test actual creation
             rv = self.client.post(
                 self.url,
@@ -137,7 +150,10 @@ class AssignmentAPITests(ACJAPITestCase):
             'answer_end': assignment.answer_end.isoformat() + 'Z',
             'number_of_comparisons': assignment.number_of_comparisons,
             'students_can_reply': assignment.students_can_reply,
-            'enable_self_eval': assignment.enable_self_eval
+            'enable_self_evaluation': assignment.enable_self_evaluation,
+            'criteria': [
+                { 'id': self.data.get_default_criteria().id }
+            ]
         }
 
         # test login required
@@ -149,8 +165,9 @@ class AssignmentAPITests(ACJAPITestCase):
             rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
             self.assert403(rv)
 
-        # test invalid course id
+
         with self.login(self.data.get_authorized_instructor().username):
+            # test invalid course id
             invalid_url = '/api/courses/999/assignments/' + str(assignment.id)
             rv = self.client.post(invalid_url, data=json.dumps(expected), content_type='application/json')
             self.assert404(rv)
@@ -160,13 +177,27 @@ class AssignmentAPITests(ACJAPITestCase):
             rv = self.client.post(invalid_url, data=json.dumps(expected), content_type='application/json')
             self.assert404(rv)
 
+            # Test zero criteria
+            bad_criteria = expected.copy()
+            bad_criteria['criteria'] = []
+            rv = self.client.post(url, data=json.dumps(bad_criteria), content_type='application/json')
+            self.assert403(rv)
+
             # test edit by author
             rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
             self.assert200(rv)
             self._verify_assignment(assignment, rv.json)
 
-        # test edit by user who can manage posts (TA)
+            # test edit by author add & remove criteria
+            new_criteria = self.data.create_criteria(self.data.get_authorized_instructor())
+            add_criteria = expected.copy()
+            add_criteria['criteria'] = [{ 'id': new_criteria.id }]
+            rv = self.client.post(url, data=json.dumps(add_criteria), content_type='application/json')
+            self.assert200(rv)
+            self._verify_assignment(assignment, rv.json)
+
         with self.login(self.data.get_authorized_ta().username):
+            # test edit by user who can manage posts (TA)
             ta_expected = {
                 'id': assignment.id,
                 'name': 'Another name',
@@ -175,26 +206,37 @@ class AssignmentAPITests(ACJAPITestCase):
                 'answer_end': assignment.answer_end.isoformat() + 'Z',
                 'number_of_comparisons': assignment.number_of_comparisons,
                 'students_can_reply': assignment.students_can_reply,
-                'enable_self_eval': assignment.enable_self_eval
+                'enable_self_evaluation': assignment.enable_self_evaluation,
+                'criteria': [
+                    { 'id': self.data.get_default_criteria().id }
+                ]
             }
             rv = self.client.post(url, data=json.dumps(ta_expected), content_type='application/json')
             self.assert200(rv)
             self.assertEqual(ta_expected['name'], rv.json['name'])
             self.assertEqual(ta_expected['description'], rv.json['description'])
 
+            # test edit by TA add & remove criteria
+            ta_new_criteria = self.data.create_criteria(self.data.get_authorized_ta())
+            ta_add_criteria = ta_expected.copy()
+            ta_add_criteria['criteria'] = [{ 'id': ta_new_criteria.id }]
+            rv = self.client.post(url, data=json.dumps(ta_add_criteria), content_type='application/json')
+            self.assert200(rv)
+            self._verify_assignment(assignment, rv.json)
+
     def test_delete_assignment(self):
         # Test deleting the assignment
-        ques_id = Assignment.query.first().id
-        expected_ret = {'id': ques_id}
+        assignment_id = Assignment.query.first().id
+        expected_ret = {'id': assignment_id}
         with self.login(self.data.get_authorized_student().username):
-            rv = self.client.delete(self.url + '/' + str(ques_id))
+            rv = self.client.delete(self.url + '/' + str(assignment_id))
             self.assert403(rv)
             self.assertEqual(
                 '<p>' + self.data.get_authorized_student().username + ' does not have delete access to assignment 1</p>',
                 rv.json['message'])
 
         with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.delete(self.url + '/' + str(ques_id))
+            rv = self.client.delete(self.url + '/' + str(assignment_id))
             self.assert200(rv)
             self.assertEqual(expected_ret['id'], rv.json['id'], "assignment " + str(rv.json['id']) + " deleted successfully")
 

@@ -33,17 +33,6 @@ class TestUsersModel(ACJTestCase):
         self.assertTrue(self.user.verify_password('123456'))
 
 
-class TestCompareModel(ACJTestCase):
-    comparison = Comparison()
-
-    def setUp(self):
-        pass
-
-    def test_caculate_scores(self):
-        pass
-        # Comparison.calculate_scores(1)
-
-
 class TestUtils(ACJTestCase):
     def test_update_scores(self):
 
@@ -52,13 +41,13 @@ class TestUtils(ACJTestCase):
                 ComparisonPair(1,2, winning_key=1)
             ])
         }
-        scores = update_scores([], criteria_comparison_results)
+        scores = update_scores([], 1, criteria_comparison_results)
         self.assertEqual(len(scores), 2)
         for score in scores:
             self.assertIsNone(score.id)
 
         score = Score(answer_id=1, criteria_id=1, id=2)
-        scores = update_scores([score], criteria_comparison_results)
+        scores = update_scores([score], 1, criteria_comparison_results)
         self.assertEqual(len(scores), 2)
         self.assertEqual(scores[0].id, 2)
         self.assertIsNone(scores[1].id)
@@ -73,7 +62,7 @@ class TestUtils(ACJTestCase):
             ])
         }
         score = Score(answer_id=1, criteria_id=1, id=2)
-        scores = update_scores([score], criteria_comparison_results)
+        scores = update_scores([score], 1, criteria_comparison_results)
         self.assertEqual(len(scores), 4)
 
 if __name__ == '__main__':

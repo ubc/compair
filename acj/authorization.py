@@ -59,13 +59,11 @@ def define_authorization(user, they):
         they.can(READ, USER_IDENTITY)
 
     # users can edit and read their own user account
-    they.can(READ, User, id=user.id)
-    they.can(EDIT, User, id=user.id)
+    they.can((READ, EDIT), User, id=user.id)
     # they can also look at their own course enrolments
     they.can(READ, UserCourse, user_id=user.id)
     # they can read and edit their own criteria
-    they.can(READ, Criteria, user_id=user.id)
-    they.can(EDIT, Criteria, user_id=user.id)
+    they.can((READ, EDIT), Criteria, user_id=user.id)
 
     # Assign permissions based on course roles
     # give access to courses the user is enroled in

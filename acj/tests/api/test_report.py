@@ -367,15 +367,15 @@ class ReportAPITest(ACJAPITestCase):
                     Comparison.criteria_id == default_criteria.id
                 ) \
                 .all()
-            evaulations_submitted = len(comparisons)
+            evaluations_submitted = len(comparisons)
 
-            user_stats["evaluations_submitted"] += evaulations_submitted
-            excepted_row.append(str(evaulations_submitted))
+            user_stats["evaluations_submitted"] += evaluations_submitted
+            excepted_row.append(str(evaluations_submitted))
 
             user_stats["evaluations_required"] += assignment.number_of_comparisons
             excepted_row.append(str(assignment.number_of_comparisons))
 
-            if assignment.number_of_comparisons > evaulations_submitted:
+            if assignment.number_of_comparisons > evaluations_submitted:
                 user_stats["evaluation_requirments_met"] = False
                 excepted_row.append("No")
             else:
@@ -446,7 +446,7 @@ class ReportAPITest(ACJAPITestCase):
                         Comparison.criteria_id == default_criteria.id
                     ) \
                     .all()
-                evaulations_submitted = len(comparisons)
+                evaluations_submitted = len(comparisons)
 
-                self.assertEqual(row[index], str(evaulations_submitted))
+                self.assertEqual(row[index], str(evaluations_submitted))
                 index += 1

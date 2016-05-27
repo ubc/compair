@@ -8,7 +8,7 @@ from factory.alchemy import SQLAlchemyModelFactory
 from acj.core import db
 from acj.models import Course, User, CourseRole, SystemRole, Criteria, \
     UserCourse, AssignmentCriteria, Assignment, Score, Answer, AssignmentComment, \
-    AnswerComment, Comparison
+    AnswerComment, Comparison, AnswerCommentType
 
 
 class UserFactory(SQLAlchemyModelFactory):
@@ -111,6 +111,7 @@ class AnswerCommentFactory(SQLAlchemyModelFactory):
     FACTORY_FOR = AnswerComment
     FACTORY_SESSION = db.session
     answer_id = 1
+    comment_type = AnswerCommentType.private
 
     course_id = 1
     user_id = 1

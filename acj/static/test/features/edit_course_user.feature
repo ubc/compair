@@ -34,9 +34,7 @@ Feature: Edit Course Users
       | element     | content   |
       | user        | Second    |
     And I select the first user search result
-    And I fill in:
-      | element               | content   |
-      | user.course_role_id   | Student   |
+    And I select the Student role for the user
     And I submit form with "Enrol" button
     Then I should see "3" users listed for the course
     And I should see course users with displaynames:
@@ -60,7 +58,7 @@ Feature: Edit Course Users
     When I set the second user's group to "Second Group"
     Then I should see a success message
 
-  Scenario: Removing user from groups in course as instructor
+  Scenario: Removing user from group in course as instructor
     Given I'm an Instructor with students
     And I'm on "edit course user" page for course with id "1"
     When I set the second user's group to "- None -"

@@ -42,7 +42,10 @@ class AnswersAPITests(ACJAPITestCase):
             rv = self.client.get(self.base_url)
             self.assert200(rv)
             actual_answers = rv.json['objects']
-            expected_answers = Answer.query.filter_by(active=True, assignment_id=self.fixtures.assignment.id).paginate(1, 20)
+            expected_answers = Answer.query \
+                .filter_by(active=True, assignment_id=self.fixtures.assignment.id) \
+                .order_by(Answer.created.desc()) \
+                .paginate(1, 20)
             for i, expected in enumerate(expected_answers.items):
                 actual = actual_answers[i]
                 self.assertEqual(expected.content, actual['content'])
@@ -55,7 +58,10 @@ class AnswersAPITests(ACJAPITestCase):
             rv = self.client.get(self.base_url + '?page=2')
             self.assert200(rv)
             actual_answers = rv.json['objects']
-            expected_answers = Answer.query.filter_by(active=True, assignment_id=self.fixtures.assignment.id).paginate(2, 20)
+            expected_answers = Answer.query \
+                .filter_by(active=True, assignment_id=self.fixtures.assignment.id) \
+                .order_by(Answer.created.desc()) \
+                .paginate(2, 20)
             for i, expected in enumerate(expected_answers.items):
                 actual = actual_answers[i]
                 self.assertEqual(expected.content, actual['content'])
@@ -73,7 +79,7 @@ class AnswersAPITests(ACJAPITestCase):
             # test the result is paged and sorted
             expected = sorted(
                 self.fixtures.answers,
-                key=lambda ans: ans.scores[0].score if len(ans.scores) else 0,
+                key=lambda ans: (ans.scores[0].score if len(ans.scores) else 0, ans.created),
                 reverse=True)[:20]
             self.assertEqual([a.id for a in expected], [a['id'] for a in result])
             self.assertEqual(1, rv.json['page'])
@@ -229,9 +235,20 @@ class AnswersAPITests(ACJAPITestCase):
             actual_answer = Answer.query.get(rv['id'])
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
+            # test instructor could submit multiple answers for his/her own
+            expected_answer.update({'user_id': self.fixtures.instructor.id})
+            response = self.client.post(
+                self.base_url,
+                data=json.dumps(expected_answer),
+                content_type='application/json')
+            self.assert200(response)
+            rv = json.loads(response.data.decode('utf-8'))
+            actual_answer = Answer.query.get(rv['id'])
+            self.assertEqual(expected_answer['content'], actual_answer.content)
+
             # test instructor could submit on behave of a student
             self.fixtures.add_students(1)
-            expected_answer.update({'user': self.fixtures.students[-1].id})
+            expected_answer.update({'user_id': self.fixtures.students[-1].id})
             response = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
@@ -242,7 +259,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
             # test instructor can not submit additional answers for a student
-            expected_answer.update({'user': self.fixtures.students[0].id})
+            expected_answer.update({'user_id': self.fixtures.students[0].id})
             response = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),

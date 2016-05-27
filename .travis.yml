@@ -40,8 +40,3 @@ notifications:
   slack: ubcctlt:cyfS7OeXqRjqhyrpIMHJ0SRd
 
 sudo: false
-
-# skip builds for database redesign
-branches:
-  except:
-    - /^0\.9\.x-266-.*$/

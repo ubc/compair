@@ -1,7 +1,7 @@
 var env = require('../env.js');
 
 var CoursePage = function() {
-	var addAssignmentButton = element(by.css('#add-question-btn')),
+	var addAssignmentButton = element(by.css('#add-assignment-btn')),
         editCoruseButton = element(by.css('#edit-course-btn')),
         manageUsersButton = element(by.css('#manage-users-btn'));
 

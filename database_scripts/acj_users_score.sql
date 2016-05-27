@@ -1,23 +1,22 @@
 /*
 For getting a list of users and their scores for each criterion
-Note: CHANGE questionId and output file name before using the script
+Note: CHANGE assignmentId and output file name before using the script
 */
 
-SET @questionId = 3;
+SET @assignmentId = 3;
 
-SELECT p.users_id, cq.id, c.name, scores.score
+SELECT p.user_id, cq.id, c.name, scores.score
 FROM (
-	SELECT s.score, s.answer_id, s.criteriaandquestions_id
+	SELECT s.score, s.answer_id, s.criteria_id
 	FROM Scores as s
-	WHERE s.criteriaandquestions_id IN
-	(SELECT id FROM CriteriaAndQuestions
-		WHERE questions_id = @questionId and active = 1)
+	WHERE s.criteria_id IN
+	(SELECT id FROM AssignmentCriteria
+		WHERE assignment_id = @assignmentId and active = 1)
 ) as scores
-JOIN CriteriaAndQuestions as cq ON cq.id = scores.criteriaandquestions_id
+JOIN AssignmentCriteria as ac ON ac.id = scores.criteria_id
 JOIN Criteria as c ON c.id = cq.criteria_id
-JOIN Answers AS a ON a.id = scores.answer_id
-JOIN Posts AS p ON p.id = a.posts_id
-ORDER BY cq.id ASC, p.users_id ASC
+JOIN Answer AS a ON a.id = scores.answer_id
+ORDER BY ac.id ASC, a.user_id ASC
 INTO OUTFILE '/tmp/test.csv'
 FIELDS TERMINATED BY ','
 ENCLOSED BY '"'

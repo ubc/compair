@@ -10,8 +10,8 @@
 			</div>
 			<label>as</label>
 			<div class="input-group">
-				<select class="form-control" name="role" ng-model="user.course_role_id" required
-					ng-options="role.id as role.name for role in roles">
+				<select id="enrol-select-course-role" class="form-control" name="role" ng-model="user.course_role" required
+					ng-options="course_role as course_role for course_role in course_roles">
 					<option value="">- select course role -</option>
 				</select>
 			</div>

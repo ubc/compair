@@ -1,6 +1,5 @@
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.orm import synonym, load_only, backref, contains_eager, joinedload, Load
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -20,7 +19,7 @@ class AssignmentCriteria(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     # relationships
     # assignment many-to-many criteria with association assignment_criteria
     assignment = db.relationship("Assignment", back_populates="assignment_criteria")
-    criteria = db.relationship("Criteria", back_populates="assignment_criteria")
+    criteria = db.relationship("Criteria", back_populates="assignment_criteria", lazy='immediate')
 
     course_id = association_proxy('assignment', 'course_id', creator=lambda course_id:
         import_module('acj.models.assignment').Assignment(course_id=course_id))
@@ -29,3 +28,7 @@ class AssignmentCriteria(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
         db.UniqueConstraint('assignment_id', 'criteria_id', name='_unique_assignment_and_criteria'),
         DefaultTableMixin.default_table_args
     )
+
+    @classmethod
+    def __declare_last__(cls):
+        super(cls, cls).__declare_last__()

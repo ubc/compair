@@ -4,13 +4,15 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import func, or_, and_
-from sqlalchemy.orm import load_only, joinedload, contains_eager, undefer_group
+from sqlalchemy.orm import joinedload, undefer_group
+from itertools import groupby
+from operator import attrgetter
 
 from . import dataformat
 from acj.core import db
 from acj.authorization import require, allow, is_user_access_restricted
 from acj.models import Answer, Assignment, Course, User, Comparison, \
-    Score, UserCourse, CourseRole
+    Score, UserCourse, CourseRole, AnswerComment, AnswerCommentType
 
 from .util import new_restful_api, get_model_changes, pagination_parser
 from .file import add_new_file, delete_file
@@ -20,7 +22,7 @@ answers_api = Blueprint('answers_api', __name__)
 api = new_restful_api(answers_api)
 
 new_answer_parser = RequestParser()
-new_answer_parser.add_argument('user', type=int, default=None)
+new_answer_parser.add_argument('user_id', type=int, default=None)
 new_answer_parser.add_argument('content', type=str, default=None)
 new_answer_parser.add_argument('file_name', type=str, default=None)
 new_answer_parser.add_argument('file_alias', type=str, default=None)
@@ -34,6 +36,10 @@ answer_list_parser.add_argument('group', type=str, required=False, default=None)
 answer_list_parser.add_argument('author', type=int, required=False, default=None)
 answer_list_parser.add_argument('orderBy', type=str, required=False, default=None)
 answer_list_parser.add_argument('ids', type=str, required=False, default=None)
+
+answer_comparison_list_parser = pagination_parser.copy()
+answer_comparison_list_parser.add_argument('group', type=str, required=False, default=None)
+answer_comparison_list_parser.add_argument('author', type=int, required=False, default=None)
 
 flag_parser = RequestParser()
 flag_parser.add_argument(
@@ -51,6 +57,7 @@ on_answer_delete = event.signal('ANSWER_DELETE')
 on_answer_flag = event.signal('ANSWER_FLAG')
 on_user_answer_get = event.signal('USER_ANSWER_GET')
 on_user_answered_count = event.signal('USER_ANSWERED_COUNT')
+on_answer_comparisons_get = event.signal('ANSWER_COMPARISONS_GET')
 
 # messages
 answer_deadline_message = 'Answer deadline has passed.'
@@ -80,12 +87,12 @@ class AnswerRootAPI(Resource):
             params['author'] = current_user.id
 
         # this query could be further optimized by reduction the selected columns
-        query = Answer.query. \
-            options(joinedload('file')). \
-            options(joinedload('user')). \
-            options(joinedload('scores')). \
-            options(undefer_group('counts')). \
-            filter_by(
+        query = Answer.query \
+            .options(joinedload('file')) \
+            .options(joinedload('user')) \
+            .options(joinedload('scores')) \
+            .options(undefer_group('counts')) \
+            .filter_by(
                 assignment_id=assignment_id,
                 active=True
             )
@@ -170,17 +177,30 @@ class AnswerRootAPI(Resource):
         if not (answer.content or file_name):
             return {"error": "The answer content is empty!"}, 400
 
-        user = params.get("user")
-        answer.user_id = user if user else current_user.id
+        user_id = params.get("user_id")
+        # we allow instructor and TA to submit multiple answers for other users in the class
+        if user_id and not allow(MANAGE, Answer(course_id=course_id)):
+            return {"error": "Only instructors and teaching assistants can submit an answer on behalf of another user."}, 400
+
+        answer.user_id = user_id if user_id else current_user.id
+
+        user_course = UserCourse.query \
+            .filter_by(
+                course_id=course_id,
+                user_id=answer.user_id
+            ) \
+            .first_or_404()
 
         # we allow instructor and TA to submit multiple answers for their own,
         # but not for student. Each student can only have one answer.
-        if not allow(MANAGE, Answer(course_id=course_id)) or user is not None:
-            # check if there is a previous answer submitted
+        instructors_and_tas = [CourseRole.instructor.value, CourseRole.teaching_assistant.value]
+        if user_course.course_role.value not in instructors_and_tas:
+            # check if there is a previous answer submitted for the student
             prev_answer = Answer.query. \
                 filter_by(
                     assignment_id=assignment_id,
-                    user_id=answer.user_id
+                    user_id=answer.user_id,
+                    active=True
                 ). \
                 first()
             if prev_answer:
@@ -292,6 +312,141 @@ class AnswerIdAPI(Resource):
 
 
 api.add_resource(AnswerIdAPI, '/<int:answer_id>')
+
+
+# /comparisons
+class AnswerComparisonsAPI(Resource):
+    @login_required
+    def get(self, course_id, assignment_id):
+        Course.get_active_or_404(course_id)
+        assignment = Assignment.get_active_or_404(assignment_id)
+        require(READ, assignment)
+
+        can_manage = allow(MANAGE, Comparison(course_id=course_id))
+        restrict_user = is_user_access_restricted(current_user)
+
+        params = answer_comparison_list_parser.parse_args()
+
+        # each pagination entry would be one comparison set by a user for the assignment
+        comparison_sets = Comparison.query \
+            .with_entities(Comparison.user_id, Comparison.answer1_id, Comparison.answer2_id) \
+            .filter_by(assignment_id=assignment_id) \
+            .group_by(Comparison.user_id, Comparison.answer1_id, Comparison.answer2_id)
+
+        if not can_manage:
+            comparison_sets = comparison_sets.filter_by(user_id=current_user.id)
+        elif params['author']:
+            comparison_sets = comparison_sets.filter_by(user_id=params['author'])
+        elif params['group']:
+            subquery = User.query \
+                .with_entities(User.id) \
+                .join('user_courses') \
+                .filter_by(group_name=params['group']) \
+                .subquery()
+            comparison_sets = comparison_sets.filter(Comparison.user_id.in_(subquery))
+
+        page = comparison_sets.paginate(params['page'], params['perPage'])
+
+        results = []
+
+        if page.total:
+
+            # retrieve the comparisons
+            conditions = []
+            for user_id, answer1_id, answer2_id in page.items:
+                conditions.append(and_(
+                    Comparison.user_id == user_id,
+                    Comparison.answer1_id == answer1_id,
+                    Comparison.answer2_id == answer2_id
+                ))
+            comparisons = Comparison.query \
+                .options(joinedload('answer1')) \
+                .options(joinedload('answer2')) \
+                .options(joinedload('criteria')) \
+                .filter_by(completed=True) \
+                .filter(or_(*conditions)) \
+                .order_by(Comparison.user_id, Comparison.created) \
+                .all()
+
+            # retrieve the answer comments
+            user_comparioson_answers = {}
+            for (user_id, answer1_id, answer2_id), group_set in groupby(comparisons, attrgetter('user_id', 'answer1_id', 'answer2_id')):
+                user_answers = user_comparioson_answers.setdefault(user_id, set())
+                user_answers.add(answer1_id)
+                user_answers.add(answer2_id)
+
+            conditions = [
+
+            ]
+            for user_id, answer_set in user_comparioson_answers.iteritems():
+                conditions.append(and_(
+                        AnswerComment.user_id == user_id,
+                        AnswerComment.comment_type == AnswerCommentType.evaluation,
+                        AnswerComment.answer_id.in_(list(answer_set))
+                ))
+                conditions.append(and_(
+                    AnswerComment.comment_type == AnswerCommentType.self_evaluation,
+                    AnswerComment.user_id == user_id
+                ))
+
+            answer_comments = AnswerComment.query \
+                .filter(or_(*conditions)) \
+                .all()
+
+            for (user_id, answer1_id, answer2_id), group_set in groupby(comparisons, attrgetter('user_id', 'answer1_id', 'answer2_id')):
+                group = list(group_set)
+                default = group[0]
+
+                comparison_set = {
+                    'course_id': default.course_id,
+                    'assignment_id': default.assignment_id,
+                    'user_id': default.user_id,
+
+                    'comparisons': [comparison for comparison in group],
+                    'answer1_id': default.answer1_id,
+                    'answer2_id': default.answer2_id,
+                    'answer1': default.answer1,
+                    'answer2': default.answer2,
+
+                    'user': {
+                        'id': default.user_id,
+                        'fullname': default.user_fullname,
+                        'displayname': default.user_displayname,
+                        'avatar': default.user_avatar
+                    },
+                    'answer1_feedback': [comment for comment in answer_comments if
+                        comment.user_id == user_id and
+                        comment.answer_id == default.answer1_id and
+                        comment.comment_type == AnswerCommentType.evaluation
+                    ],
+                    'answer2_feedback': [comment for comment in answer_comments if
+                        comment.user_id == user_id and
+                        comment.answer_id == default.answer2_id and
+                        comment.comment_type == AnswerCommentType.evaluation
+                    ],
+                    'self_evaluation': [comment for comment in answer_comments if
+                        comment.user_id == user_id and
+                        comment.comment_type == AnswerCommentType.self_evaluation
+                    ],
+
+                    'created': default.created
+                }
+
+                results.append(comparison_set)
+
+        on_answer_comparisons_get.send(
+            self,
+            event_name=on_answer_comparisons_get.name,
+            user=current_user,
+            course_id=course_id,
+            data={'assignment_id': assignment_id}
+        )
+
+        return {'objects': marshal(results, dataformat.get_comparison_set(restrict_user)), "page": page.page,
+                "pages": page.pages, "total": page.total, "per_page": page.per_page}
+
+
+api.add_resource(AnswerComparisonsAPI, '/comparisons')
 
 
 # /user

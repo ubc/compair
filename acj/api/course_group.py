@@ -124,7 +124,6 @@ class GroupRootAPI(Resource):
             .distinct() \
             .filter(and_(
                 UserCourse.course_id == course.id,
-                UserCourse.course_role != CourseRole.dropped,
                 UserCourse.group_name != None
             )) \
             .order_by(UserCourse.group_name) \
@@ -137,7 +136,7 @@ class GroupRootAPI(Resource):
             course_id=course_id
         )
 
-        return {'group_names': [group.group_name for group in group_names] }
+        return {'objects': [group.group_name for group in group_names] }
 
     @login_required
     def post(self, course_id):
@@ -178,7 +177,7 @@ class GroupRootAPI(Resource):
 api.add_resource(GroupRootAPI, '')
 
 # /:group_name
-class GroupIdAPI(Resource):
+class GroupNameAPI(Resource):
     @login_required
     def get(self, course_id, group_name):
         Course.get_active_or_404(course_id)
@@ -204,6 +203,6 @@ class GroupIdAPI(Resource):
             course_id=course_id,
             data={'group_name': group_name})
 
-        return {'students': [{'user': {'id': u.id, 'name': u.fullname}} for u in members]}
+        return {'students': [{'id': u.id, 'name': u.fullname} for u in members]}
 
-api.add_resource(GroupIdAPI, '/<group_name>')
+api.add_resource(GroupNameAPI, '/<group_name>')
