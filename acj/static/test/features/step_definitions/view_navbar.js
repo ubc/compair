@@ -8,7 +8,7 @@ var expect = chai.expect;
 
 var viewNavbarStepDefinitionsWrapper = function () {
     this.Then("I should see the brand home link", function (done) {
-        expect(element(by.cssContainingText(".navbar-header a.navbar-brand", "Compair")).isPresent())
+        expect(element(by.cssContainingText(".navbar-header a.navbar-brand", "ComPAIR")).isPresent())
             .to.eventually.equal(true).and.notify(done);
     });
     
