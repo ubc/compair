@@ -35,7 +35,7 @@ class TestPairAdaptive(unittest.TestCase):
             ScoredObject(2, 0.2, 1)
         ]
         comparisons = [
-            ComparisonPair(1,2,winning_key=1)
+            ComparisonPair(1,2,None)
         ]
 
         with self.assertRaises(UserComparedAllObjectsException):
@@ -49,9 +49,9 @@ class TestPairAdaptive(unittest.TestCase):
             ScoredObject(4, 0.2, 3)
         ]
         comparisons = [
-            ComparisonPair(1,2,winning_key=1),
-            ComparisonPair(1,3,winning_key=1),
-            ComparisonPair(1,4,winning_key=1)
+            ComparisonPair(1,2,None),
+            ComparisonPair(1,3,None),
+            ComparisonPair(1,4,None)
         ]
 
         with self.assertRaises(UserComparedAllObjectsException):
@@ -100,7 +100,7 @@ class TestPairAdaptive(unittest.TestCase):
             ScoredObject(3, 0.9, 3)
         ]
         comparisons = [
-            ComparisonPair(1,2,winning_key=1)
+            ComparisonPair(1,2,None)
         ]
         results = self.pair_algorithm.generate_pair(scored_objects, comparisons)
 
@@ -131,7 +131,7 @@ class TestPairAdaptive(unittest.TestCase):
             ScoredObject(4, 0.4, 3)
         ]
         comparisons = [
-            ComparisonPair(1,2,winning_key=1)
+            ComparisonPair(1,2,None)
         ]
 
         results = self.pair_algorithm.generate_pair(scored_objects, comparisons)
