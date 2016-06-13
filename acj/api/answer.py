@@ -167,6 +167,7 @@ class AnswerRootAPI(Resource):
         if not assignment.answer_grace and not allow(MANAGE, assignment):
             return {'error': answer_deadline_message}, 403
         require(CREATE, Answer(course_id=course_id))
+        restrict_user = not allow(MANAGE, assignment)
 
         answer = Answer(assignment_id=assignment_id)
 
@@ -214,7 +215,7 @@ class AnswerRootAPI(Resource):
             event_name=on_answer_create.name,
             user=current_user,
             course_id=course_id,
-            data=marshal(answer, dataformat.get_answer(False)))
+            data=marshal(answer, dataformat.get_answer(restrict_user)))
 
         if file_name:
             answer.file_id = add_new_file(params.get('file_alias'), file_name,
@@ -222,7 +223,7 @@ class AnswerRootAPI(Resource):
 
             db.session.commit()
 
-        return marshal(answer, dataformat.get_answer())
+        return marshal(answer, dataformat.get_answer(restrict_user))
 
 
 api.add_resource(AnswerRootAPI, '')
@@ -233,13 +234,14 @@ class AnswerIdAPI(Resource):
     @login_required
     def get(self, course_id, assignment_id, answer_id):
         Course.get_active_or_404(course_id)
-        Assignment.get_active_or_404(assignment_id)
+        assignment = Assignment.get_active_or_404(assignment_id)
 
         answer = Answer.get_active_or_404(
             answer_id,
             joinedloads=['file', 'user', 'scores']
         )
         require(READ, answer)
+        restrict_user = not allow(MANAGE, assignment)
 
         on_answer_get.send(
             self,
@@ -248,7 +250,7 @@ class AnswerIdAPI(Resource):
             course_id=course_id,
             data={'assignment_id': assignment_id, 'answer_id': answer_id})
 
-        return marshal(answer, dataformat.get_answer(True))
+        return marshal(answer, dataformat.get_answer(restrict_user))
 
     @login_required
     def post(self, course_id, assignment_id, answer_id):
@@ -258,6 +260,7 @@ class AnswerIdAPI(Resource):
             return {'error': answer_deadline_message}, 403
         answer = Answer.get_active_or_404(answer_id)
         require(EDIT, answer)
+        restrict_user = not allow(MANAGE, assignment)
 
         params = existing_answer_parser.parse_args()
         # make sure the answer id in the url and the id matches
@@ -287,7 +290,7 @@ class AnswerIdAPI(Resource):
 
             db.session.commit()
 
-        return marshal(answer, dataformat.get_answer())
+        return marshal(answer, dataformat.get_answer(restrict_user))
 
     @login_required
     def delete(self, course_id, assignment_id, answer_id):
@@ -463,6 +466,7 @@ class AnswerUserIdAPI(Resource):
         Course.get_active_or_404(course_id)
         assignment = Assignment.get_active_or_404(assignment_id)
         require(READ, Answer(course_id=course_id))
+        restrict_user = not allow(MANAGE, assignment)
 
         answers = Answer.query. \
             options(joinedload('comments')). \
@@ -484,7 +488,7 @@ class AnswerUserIdAPI(Resource):
             course_id=course_id,
             data={'assignment_id': assignment_id})
 
-        return {"objects": marshal( answers, dataformat.get_answer(True))}
+        return {"objects": marshal( answers, dataformat.get_answer(restrict_user))}
 
 
 api.add_resource(AnswerUserIdAPI, '/user')
@@ -501,8 +505,10 @@ class AnswerFlagAPI(Resource):
         :return: marked answer
         """
         Course.get_active_or_404(course_id)
+        assignment = Assignment.get_active_or_404(assignment_id)
         answer = Answer.get_active_or_404(answer_id)
         require(READ, answer)
+        restrict_user = not allow(MANAGE, assignment)
 
         # anyone can flag an answer, but only the original flagger or someone who can manage
         # the answer can unflag it
@@ -524,10 +530,7 @@ class AnswerFlagAPI(Resource):
             data={'answer_id': answer_id, 'flag': answer.flagged})
 
         db.session.commit()
-        return marshal(
-            answer,
-            dataformat.get_answer(restrict_user=is_user_access_restricted(current_user))
-        )
+        return marshal(answer, dataformat.get_answer(restrict_user))
 
 
 api.add_resource(AnswerFlagAPI, '/<int:answer_id>/flagged')

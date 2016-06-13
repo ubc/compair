@@ -49,6 +49,10 @@ class AnswersAPITests(ACJAPITestCase):
             for i, expected in enumerate(expected_answers.items):
                 actual = actual_answers[i]
                 self.assertEqual(expected.content, actual['content'])
+                self.assertEqual(len(expected.scores), len(actual['scores']))
+                for index, score in enumerate(expected.scores):
+                    self.assertEqual(score.rank, actual['scores'][index]['rank'])
+                    self.assertFalse('normalized_score' in actual['scores'][index])
             self.assertEqual(1, rv.json['page'])
             self.assertEqual(2, rv.json['pages'])
             self.assertEqual(20, rv.json['per_page'])
@@ -65,6 +69,10 @@ class AnswersAPITests(ACJAPITestCase):
             for i, expected in enumerate(expected_answers.items):
                 actual = actual_answers[i]
                 self.assertEqual(expected.content, actual['content'])
+                self.assertEqual(len(expected.scores), len(actual['scores']))
+                for index, score in enumerate(expected.scores):
+                    self.assertEqual(score.rank, actual['scores'][index]['rank'])
+                    self.assertFalse('normalized_score' in actual['scores'][index])
             self.assertEqual(2, rv.json['page'])
             self.assertEqual(2, rv.json['pages'])
             self.assertEqual(20, rv.json['per_page'])
@@ -342,6 +350,10 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(assignment_id, rv.json['assignment_id'])
             self.assertEqual(answer.user_id, rv.json['user_id'])
             self.assertEqual(answer.content, rv.json['content'])
+            self.assertEqual(len(answer.scores), len(rv.json['scores']))
+            for index, score in enumerate(answer.scores):
+                self.assertEqual(score.rank, rv.json['scores'][index]['rank'])
+                self.assertFalse('normalized_score' in rv.json['scores'][index])
 
         # test authorized teaching assistant
         with self.login(self.fixtures.ta.username):
@@ -350,6 +362,10 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(assignment_id, rv.json['assignment_id'])
             self.assertEqual(answer.user_id, rv.json['user_id'])
             self.assertEqual(answer.content, rv.json['content'])
+            self.assertEqual(len(answer.scores), len(rv.json['scores']))
+            for index, score in enumerate(answer.scores):
+                self.assertFalse('rank' in rv.json['scores'][index])
+                self.assertEqual(int(score.normalized_score), rv.json['scores'][index]['normalized_score'])
 
         # test authorized instructor
         with self.login(self.fixtures.instructor.username):
@@ -358,6 +374,10 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(assignment_id, rv.json['assignment_id'])
             self.assertEqual(answer.user_id, rv.json['user_id'])
             self.assertEqual(answer.content, rv.json['content'])
+            self.assertEqual(len(answer.scores), len(rv.json['scores']))
+            for index, score in enumerate(answer.scores):
+                self.assertFalse('rank' in rv.json['scores'][index])
+                self.assertEqual(int(score.normalized_score), rv.json['scores'][index]['normalized_score'])
 
     def test_edit_answer(self):
         assignment_id = self.fixtures.assignments[0].id
@@ -513,6 +533,10 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(1, len(rv.json['objects']))
             self.assertEqual(answer.id, rv.json['objects'][0]['id'])
             self.assertEqual(answer.content, rv.json['objects'][0]['content'])
+            self.assertEqual(len(answer.scores), len(rv.json['objects'][0]['scores']))
+            for index, score in enumerate(answer.scores):
+                self.assertEqual(score.rank, rv.json['objects'][0]['scores'][index]['rank'])
+                self.assertFalse('normalized_score' in rv.json['objects'][0]['scores'][index])
 
         with self.login(self.fixtures.instructor.username):
             rv = self.client.get(url)

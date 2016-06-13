@@ -134,7 +134,9 @@ def get_answer(restrict_user=True):
         'file': fields.Nested(get_file(), allow_null=True),
         'flagged': fields.Boolean,
 
-        'scores': fields.List(fields.Nested(get_score())),
+        'scores': fields.List(fields.Nested(get_score(
+            restrict_user=restrict_user
+        ))),
         'comment_count': fields.Integer,
         'private_comment_count': fields.Integer,
         'public_comment_count': fields.Integer,
@@ -209,7 +211,6 @@ def get_file():
 
 def get_comparison(restrict_user=True, with_answers=True):
     ret = {
-        'id': fields.Integer,
         'course_id': fields.Integer,
         'assignment_id': fields.Integer,
         'criterion_id': fields.Integer,
@@ -246,7 +247,8 @@ def get_comparison_set(restrict_user=True):
         'user_id': fields.Integer,
 
         'comparisons': fields.List(fields.Nested(get_comparison(
-            restrict_user=restrict_user, with_answers=False))),
+            restrict_user=restrict_user, with_answers=False
+        ))),
 
         'answer1_id': fields.Integer,
         'answer2_id': fields.Integer,
@@ -278,10 +280,13 @@ def get_import_users_results(restrict_user=True):
     }
 
 
-def get_score():
-    return {
-        'id': fields.Integer,
-        'criterion_id': fields.Integer,
-        'answer_id': fields.Integer,
-        'normalized_score': fields.Integer
+def get_score(restrict_user=True):
+    ret = {
+        'criterion_id': fields.Integer
     }
+    if restrict_user:
+        ret['rank'] = fields.Integer
+    else:
+        ret['normalized_score'] = fields.Integer
+
+    return ret

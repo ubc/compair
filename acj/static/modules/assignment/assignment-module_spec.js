@@ -290,21 +290,15 @@ describe('course-module', function () {
                 "public_comment_count": 0,
                 "scores": [
                     {
-                        "answer_id": 6,
                         "criterion_id": 1,
-                        "id": 13,
                         "normalized_score": 100
                     },
                     {
-                        "answer_id": 6,
                         "criterion_id": 2,
-                        "id": 15,
                         "normalized_score": 100
                     },
                     {
-                        "answer_id": 6,
                         "criterion_id": 3,
-                        "id": 17,
                         "normalized_score": 100
                     }
                 ],
@@ -329,21 +323,15 @@ describe('course-module', function () {
                 "public_comment_count": 0,
                 "scores": [
                     {
-                        "answer_id": 4,
                         "criterion_id": 1,
-                        "id": 1,
                         "normalized_score": 78
                     },
                     {
-                        "answer_id": 4,
                         "criterion_id": 2,
-                        "id": 3,
                         "normalized_score": 78
                     },
                     {
-                        "answer_id": 4,
                         "criterion_id": 3,
-                        "id": 5,
                         "normalized_score": 100
                     }
                 ],
@@ -368,21 +356,15 @@ describe('course-module', function () {
                 "public_comment_count": 0,
                 "scores": [
                     {
-                        "answer_id": 3,
                         "criterion_id": 1,
-                        "id": 8,
                         "normalized_score": 78
                     },
                     {
-                        "answer_id": 3,
                         "criterion_id": 2,
-                        "id": 10,
                         "normalized_score": 78
                     },
                     {
-                        "answer_id": 3,
                         "criterion_id": 3,
-                        "id": 12,
                         "normalized_score": 78
                     }
                 ],
@@ -407,21 +389,15 @@ describe('course-module', function () {
                 "public_comment_count": 0,
                 "scores": [
                     {
-                        "answer_id": 9,
                         "criterion_id": 1,
-                        "id": 7,
                         "normalized_score": 68
                     },
                     {
-                        "answer_id": 9,
                         "criterion_id": 2,
-                        "id": 9,
                         "normalized_score": 68
                     },
                     {
-                        "answer_id": 9,
                         "criterion_id": 3,
-                        "id": 11,
                         "normalized_score": 68
                     }
                 ],
@@ -446,21 +422,15 @@ describe('course-module', function () {
                 "public_comment_count": 0,
                 "scores": [
                     {
-                        "answer_id": 7,
                         "criterion_id": 1,
-                        "id": 2,
                         "normalized_score": 68
                     },
                     {
-                        "answer_id": 7,
                         "criterion_id": 2,
-                        "id": 4,
                         "normalized_score": 36
                     },
                     {
-                        "answer_id": 7,
                         "criterion_id": 3,
-                        "id": 6,
                         "normalized_score": 36
                     }
                 ],
@@ -485,21 +455,15 @@ describe('course-module', function () {
                 "public_comment_count": 0,
                 "scores": [
                     {
-                        "answer_id": 5,
                         "criterion_id": 1,
-                        "id": 19,
                         "normalized_score": 68
                     },
                     {
-                        "answer_id": 5,
                         "criterion_id": 2,
-                        "id": 21,
                         "normalized_score": 68
                     },
                     {
-                        "answer_id": 5,
                         "criterion_id": 3,
-                        "id": 23,
                         "normalized_score": 36
                     }
                 ],
@@ -524,21 +488,15 @@ describe('course-module', function () {
                 "public_comment_count": 0,
                 "scores": [
                     {
-                        "answer_id": 2,
                         "criterion_id": 1,
-                        "id": 26,
                         "normalized_score": 68
                     },
                     {
-                        "answer_id": 2,
                         "criterion_id": 2,
-                        "id": 28,
                         "normalized_score": 68
                     },
                     {
-                        "answer_id": 2,
                         "criterion_id": 3,
-                        "id": 30,
                         "normalized_score": 36
                     }
                 ],
@@ -563,21 +521,15 @@ describe('course-module', function () {
                 "public_comment_count": 0,
                 "scores": [
                     {
-                        "answer_id": 10,
                         "criterion_id": 1,
-                        "id": 20,
                         "normalized_score": 57
                     },
                     {
-                        "answer_id": 10,
                         "criterion_id": 2,
-                        "id": 22,
                         "normalized_score": 36
                     },
                     {
-                        "answer_id": 10,
                         "criterion_id": 3,
-                        "id": 24,
                         "normalized_score": 78
                     }
                 ],
@@ -602,21 +554,15 @@ describe('course-module', function () {
                 "public_comment_count": 0,
                 "scores": [
                     {
-                        "answer_id": 8,
                         "criterion_id": 1,
-                        "id": 14,
                         "normalized_score": 57
                     },
                     {
-                        "answer_id": 8,
                         "criterion_id": 2,
-                        "id": 16,
                         "normalized_score": 57
                     },
                     {
-                        "answer_id": 8,
                         "criterion_id": 3,
-                        "id": 18,
                         "normalized_score": 36
                     }
                 ],
@@ -641,21 +587,15 @@ describe('course-module', function () {
                 "public_comment_count": 0,
                 "scores": [
                     {
-                        "answer_id": 1,
                         "criterion_id": 1,
-                        "id": 25,
                         "normalized_score": 36
                     },
                     {
-                        "answer_id": 1,
                         "criterion_id": 2,
-                        "id": 27,
                         "normalized_score": 100
                     },
                     {
-                        "answer_id": 1,
                         "criterion_id": 3,
-                        "id": 29,
                         "normalized_score": 100
                     }
                 ],
@@ -930,9 +870,6 @@ describe('course-module', function () {
                 expect($rootScope.comments.objects).toEqual(comments);
                 expect($rootScope.assignment.comment_count).toEqual(comments.length);
             });
-
-            // updateAnswerList
-            // rankScores
         });
 	});
 
