@@ -15,9 +15,9 @@
 				<ul id="logged-in-nav-options" class="nav navbar-nav" ng-show="loggedInUser.isLoggedIn()">
 					<!-- Breadcrumbs in a dropdown -->
 					<!-- <li class="dropdown">
-						<a href="" class="dropdown-toggle" 
+						<a href="" class="dropdown-toggle"
 							data-toggle="dropdown">
-							<span ng-repeat="breadcrumb in breadcrumbs.get() 
+							<span ng-repeat="breadcrumb in breadcrumbs.get()
 								track by breadcrumb.path">
 								<i ng-if="$first && $last" class="fa fa-home"></i>
 								<span ng-if="$last" ng-bind="breadcrumb.label">
@@ -26,7 +26,7 @@
 							</span>
 						</a>
 						<ul class="dropdown-menu">
-							<li ng-repeat="breadcrumb in breadcrumbs.get() 
+							<li ng-repeat="breadcrumb in breadcrumbs.get()
 								track by breadcrumb.path">
 								<a ng-href="#{{ breadcrumb.path }}">
 									<i ng-if="$first" class="fa fa-home"></i>
@@ -35,7 +35,7 @@
 							</li>
 						</ul>
 					</li> -->
-					<li ng-if="canManageQuestions">
+					<li ng-if="canManageAssignments">
 						<a ng-href="#/report" id="download-report-btn">
 							<i class="fa fa-bar-chart-o"></i>
 							Download Reports
@@ -73,8 +73,8 @@
 						</a>
 					</li> -->
 					<!-- Leftover -->
-					<!-- <li data-match-route="/judgepage.*" ng-show="check">
-						<a href="#/quickjudge">Random Judge</a>
+					<!-- <li data-match-route="/comparepage.*" ng-show="check">
+						<a href="#/quickcompare">Random compare</a>
 					</li>
 					<li data-match-route="/createuser" ng-show="check && usertype!='Student'">
 						<a href="#/createuser">Create User</a>
@@ -120,7 +120,7 @@
 		</div>
 	</div>
 	<ul class="breadcrumb-trail">
-		<li ng-repeat="breadcrumb in breadcrumbs.get() 
+		<li ng-repeat="breadcrumb in breadcrumbs.get()
 			track by breadcrumb.path" ng-if="!($first && $last)">
 			<a ng-class="{'last-crumb': $last}" ng-href="#{{ breadcrumb.path }}">
 				<span ng-bind="breadcrumb.label"></span>

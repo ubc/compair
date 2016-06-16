@@ -24,7 +24,7 @@
 		</div>
 		<div class="row" ng-if="canCreateUser || ownProfile">
 			<strong class="col-md-3">Student Number:</strong>
-			<div id="user_student_no"  class="col-md-9">{{ user.student_no }}</div>
+			<div id="user_student_number"  class="col-md-9">{{ user.student_number }}</div>
 		</div>
 		<div class="row" ng-if="canCreateUser || ownProfile">
 			<strong class="col-md-3">Name:</strong>
@@ -40,7 +40,7 @@
 		</div>
 		<div class="row">
 			<strong class="col-md-3">Last Online:</strong>
-            <div id="user_lastonline" ng-show="user.lastonline" class="col-md-9">{{ user.lastonline | amDateFormat: 'MMM Do, YYYY @ h:mm a' }}</div>
+            <div id="user_last_online" ng-show="user.last_online" class="col-md-9">{{ user.last_online | amDateFormat: 'MMM Do, YYYY @ h:mm a' }}</div>
 		</div>
 		<!-- <div class="row">
 			<strong class="col-md-3">Created On:</strong>

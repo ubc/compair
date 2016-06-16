@@ -1,5 +1,5 @@
 <div ng-controller="ClassImportController">
-	
+
 	<h1>Import Users</h1>
 	<p class="intro-text">Create, enrol, or drop multiple users in this course at the same time by importing a CSV file with a list of the course's students.</p>
 	<p>Note the following guidelines:</p>
@@ -14,7 +14,7 @@
 		<fieldset>
 			<legend>For {{course_name}}</legend>
 			<label for="importFile">Choose CSV File</label>
-			<input type="file" nv-file-select uploader="uploader" 
+			<input type="file" nv-file-select uploader="uploader"
 				id="importFile" ng-click="uploader.clearQueue()"/>
 		</fieldset>
 	</div>
@@ -41,5 +41,5 @@
 		<li>If a display name is <em>not</em> given, <strong>the user is assigned an annonymous display name default</strong>, e.g., "Student1234".</li>
 		<li>If a password is <em>not</em> given, <strong>the default password saved for the user is the username</strong>.</li>
 	</ul>
-	
+
 </div>

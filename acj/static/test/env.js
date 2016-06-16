@@ -3,7 +3,7 @@ var webServerDefaultPort = 8080;
 
 module.exports = {
   // The address of a running selenium server.
-  seleniumAddress: 
+  seleniumAddress:
     (process.env.SELENIUM_URL || 'http://localhost:4444/wd/hub'),
 
   // Capabilities to be passed to the webdriver instance.

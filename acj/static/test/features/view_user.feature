@@ -8,13 +8,13 @@ Feature: View Profile
     Then I should be on the "profile" page
     And I should see root's profile
     And I should see the edit profile button
-      
+
   Scenario: Loading other user's profile as admin
     Given I'm a System Administrator
     And I'm on "user" page for user with id "2"
     Then I should see First Instructor's profile
     And I should see the edit profile button
-  
+
   Scenario: Loading own profile as instructor
     Given I'm an Instructor
     And I'm on "home" page
@@ -22,7 +22,7 @@ Feature: View Profile
     Then I should be on the "profile" page
     And I should see First Instructor's profile
     And I should see the edit profile button
-      
+
   Scenario: Loading other user's profile as instructor with edit permissions
     Given I'm an Instructor with students
     And I'm on "user" page for user with id "3"

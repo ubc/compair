@@ -17,9 +17,9 @@ module.exports = function (config) {
     },
 
     urlRoot: '/_karma_/',
-    
+
     reporters: ['dots', 'junit'],
-    
+
     junitReporter: {
       outputFile: 'test_out/e2e.xml',
       suite: 'e2e'

@@ -9,7 +9,7 @@ var CreateCoursePage = function() {
     this.get = function() {
         return browser.get(env.baseUrl + '#/course/new');
     };
-    
+
     this.clickButton = function(button) {
         switch (button) {
             case "Add Course":

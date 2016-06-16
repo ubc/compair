@@ -6,9 +6,9 @@ String.prototype.format = function() {
 };
 
 var myApp = angular.module('myApp', [
-	'ngRoute', 
-	'http-auth-interceptor', 
-	'ngCookies', 
+	'ngRoute',
+	'http-auth-interceptor',
+	'ngCookies',
 	'ng-breadcrumbs',
 	'angular-loading-bar',
 	'ubc.ctlt.acj.common',
@@ -21,10 +21,10 @@ var myApp = angular.module('myApp', [
 	'ubc.ctlt.acj.group',
 	'ubc.ctlt.acj.gradebook',
 	'ubc.ctlt.acj.home',
-	'ubc.ctlt.acj.judgement',
+	'ubc.ctlt.acj.comparison',
 	'ubc.ctlt.acj.login',
 	'ubc.ctlt.acj.navbar',
-	'ubc.ctlt.acj.question',
+	'ubc.ctlt.acj.assignment',
 	'ubc.ctlt.acj.report'
 ]);
 
@@ -64,12 +64,12 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
 	$httpProvider.interceptors.push('defaultErrorHandlerInterceptor');
 
 	$routeProvider
-		.when ('/', 
+		.when ('/',
 			{
 				templateUrl: 'modules/home/home-partial.html',
 				label: "Home" // breadcrumb label
 			})
-		.when ('/course/new', 
+		.when ('/course/new',
 			{
 				templateUrl: 'modules/course/course-partial.html',
 				label: "Add Course",
@@ -77,12 +77,12 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
 				controllerAs: 'rc',
 				method: 'new'
 			})
-		.when ('/course/:courseId', 
+		.when ('/course/:courseId',
 			{
-				templateUrl: 'modules/course/course-questions-partial.html',
+				templateUrl: 'modules/course/course-assignments-partial.html',
 				label: "Course Assignments"
 			})
-		.when ('/course/:courseId/configure', 
+		.when ('/course/:courseId/configure',
 			{
 				templateUrl: 'modules/course/course-partial.html',
 				label: "Edit Course",
@@ -115,67 +115,69 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
 				templateUrl: 'modules/group/group-import-results-partial.html',
 				label: "Results"
 			})
-		.when ('/course/:courseId/question/create', 
+		.when ('/course/:courseId/assignment/create',
 			{
-				templateUrl: 'modules/question/question-create-partial.html',
-				label: "Add Assignment"
+				templateUrl: 'modules/assignment/assignment-create-partial.html',
+				label: "Add Assignment",
+				method: 'new'
 			})
-		.when ('/course/:courseId/question/:questionId', 
+		.when ('/course/:courseId/assignment/:assignmentId',
 			{
-				templateUrl: 'modules/question/question-view-partial.html',
+				templateUrl: 'modules/assignment/assignment-view-partial.html',
 				label: "View Assignment"
 			})
-		.when ('/course/:courseId/question/:questionId/edit',
+		.when ('/course/:courseId/assignment/:assignmentId/edit',
 			{
-				templateUrl: 'modules/question/question-edit-partial.html',
-				label: "Edit Assignment"
+				templateUrl: 'modules/assignment/assignment-edit-partial.html',
+				label: "Edit Assignment",
+				method: 'edit'
 			})
-		.when ('/course/:courseId/question/:questionId/answer/create', 
+		.when ('/course/:courseId/assignment/:assignmentId/answer/create',
 			{
 				templateUrl: 'modules/answer/answer-create-partial.html',
 				label: "Answer"
 			})
-		.when ('/course/:courseId/question/:questionId/answer/:answerId/edit',
+		.when ('/course/:courseId/assignment/:assignmentId/answer/:answerId/edit',
 			{
 				templateUrl: 'modules/answer/answer-edit-partial.html',
 				label: "Edit Answer"
 			})
-		.when ('/course/:courseId/question/:questionId/comment/create',
+		.when ('/course/:courseId/assignment/:assignmentId/comment/create',
 			{
-				templateUrl: 'modules/comment/comment-question-create-partial.html',
+				templateUrl: 'modules/comment/comment-assignment-create-partial.html',
 				label: "Comment on Assignment"
 			})
-		.when ('/course/:courseId/question/:questionId/comment/:commentId/edit',
+		.when ('/course/:courseId/assignment/:assignmentId/comment/:commentId/edit',
 			{
-				templateUrl: 'modules/comment/comment-question-edit-partial.html',
+				templateUrl: 'modules/comment/comment-assignment-edit-partial.html',
 				label: "Edit Comment on Assignment"
 			})
-		.when('/course/:courseId/question/:questionId/answer/:answerId/comment/create',
+		.when('/course/:courseId/assignment/:assignmentId/answer/:answerId/comment/create',
 			{
 				templateUrl: 'modules/comment/comment-answer-create-partial.html',
 				label: "Reply"
 			})
-		.when('/course/:courseId/question/:questionId/answer/:answerId/comment/:commentId/edit',
+		.when('/course/:courseId/assignment/:assignmentId/answer/:answerId/comment/:commentId/edit',
 			{
 				templateUrl: 'modules/comment/comment-answer-edit-partial.html',
 				label: "Edit Reply"
 			})
-		.when ('/course/:courseId/question/:questionId/compare', 
+		.when ('/course/:courseId/assignment/:assignmentId/compare',
 			{
-				templateUrl: 'modules/judgement/judgement-partial.html',
+				templateUrl: 'modules/comparison/comparison-partial.html',
 				label: "Compare Answers"
 			})
-		.when('/course/:courseId/question/:questionId/selfevaluation',
+		.when('/course/:courseId/assignment/:assignmentId/self_evaluation',
 			{
-				templateUrl: 'modules/judgement/judgement-selfevaluation-partial.html',
+				templateUrl: 'modules/comparison/comparison-self_evaluation-partial.html',
 				label: "Self-Evaluation"
 			})
-		.when ('/course/:courseId/question/:questionId/comparisons',
+		.when ('/course/:courseId/assignment/:assignmentId/comparisons',
 			   {
-				   templateUrl: 'modules/comment/comment-judgement-partial.html',
+				   templateUrl: 'modules/comment/comment-comparison-partial.html',
 				   label: "Comparisons"
 			   })
-		.when('/course/:courseId/question/:questionId/post/:postId',
+		.when('/course/:courseId/assignment/:assignmentId/file/:fileId',
 			{
 				templateUrl: 'modules/attachment/attachment-pdf-partial.html',
 				label: "View Attachment"

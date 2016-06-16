@@ -18,7 +18,7 @@ Feature: Create User
     And I'm on "create user" page
     And I fill in:
       | element                     | content           |
-      | user.usertypesforsystem_id  | Student           |
+      | user.system_role            | Student           |
       | user.username               | student2          |
       | user.verifyPassword         | password          |
       | user.password               | password          |

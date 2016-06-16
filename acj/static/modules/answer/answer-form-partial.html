@@ -2,36 +2,36 @@
 
 <form class="form" name="answerForm" ng-submit="answerSubmit()" novalidate confirm-form-exit form-type="answer">
 	<fieldset>
-		<h2><i class="fa fa-comments"></i> {{question.title}}</h2>
-		<div class="question-desc" mathjax="question.post.content"
-			ng-bind-html="question.post.content">
+		<h2><i class="fa fa-comments"></i> {{assignment.name}}</h2>
+		<div class="assignment-desc" mathjax="assignment.description"
+			ng-bind-html="assignment.description">
 		</div>
-		
+
 		<!-- Attachment -->
-		<acj-pdf-inline label="See question details:" pdfs="question.post.files">
+		<acj-pdf-inline label="See assignment details:" pdf="assignment.file">
 		</acj-pdf-inline>
 
 		<hr />
 
-		<div class="h3 text-center" ng-show="!canManagePosts && showCountDown">
-			<timer end-time="question.answer_end">
+		<div class="h3 text-center" ng-show="!canManageAssignment && showCountDown">
+			<timer end-time="assignment.answer_end">
 				<span title="Official time remaining until deadline" class="bg-danger alert text-danger">{{minutes}} minutes {{seconds}} seconds left</span>
 			</timer>
 			<br /><br />
 			<span class="h4">(Answer must be saved by deadline to be accepted)</span>
 		</div>
 
-		<div class="form-group" ng-if="canManagePosts && create">
-			<label for="user">Submit As</label>
-			<select id="user" name="user" ng-model="answer.user"  class="form-control" required
+		<div class="form-group" ng-if="canManageAssignment && create">
+			<label for="user_id">Submit As</label>
+			<select id="user_id" name="user_id" ng-model="answer.user_id"  class="form-control" required
 					ng-options="u.id as u.fullname for u in classlist">
 			</select>
 		</div>
 
 		<div>
 			<label for="importFile">Attach PDF (maximum size 25MB)</label>
-			<p ng-hide="(uploader.queue.length) || (answer.files.length && answer.uploadedFile)"><span class="required-star"></span><em>Tip: Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> or using <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a> or <a href="http://www.google.com/chrome/">Chrome</a> if you have problems uploading.</em></p>
-			<input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (answer.files.length && answer.uploadedFile)" multiple/>
+			<p ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)"><span class="required-star"></span><em>Tip: Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> or using <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a> or <a href="http://www.google.com/chrome/">Chrome</a> if you have problems uploading.</em></p>
+			<input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)" multiple/>
 			<p class="instructional-text" ng-show="uploader.queue.length"><strong>Save this answer</strong> to submit the file below. You may also remove the file and upload another instead.</p>
 			<div class="row" ng-repeat="item in uploader.queue">
 				<div class="col-md-7"><i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong></div>
@@ -47,13 +47,13 @@
 			</div>
 		</div>
 		<br>
-		<div ng-show="answer.files.length && answer.uploadedFile">
-			<div class="row" ng-repeat="file in answer.files">
+		<div ng-show="answer.file && answer.uploadedFile">
+			<div class="row">
 				<div class="col-md-4">
-					<i class="fa fa-paperclip"></i> Attached File: <strong>{{file.alias}}</strong>
+					<i class="fa fa-paperclip"></i> Attached File: <strong>{{answer.file.alias}}</strong>
 				</div>
 				<div class="col-md-1">
-					<a ng-click="deleteFile(file.posts_id, file.id)" class="btn btn-danger btn-xs">
+					<a ng-click="deleteFile(answer.file.id)" class="btn btn-danger btn-xs">
 						<i class="fa fa-trash-o"></i> Remove
 					</a>
 				</div>

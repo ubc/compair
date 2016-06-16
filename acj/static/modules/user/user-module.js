@@ -19,7 +19,7 @@ module.factory('UserResource', ['$resource', function($resource) {
 		'getEditButton': {url: '/api/users/:id/edit'},
 		'password': {method: 'POST', url: '/api/users/:id/password'}
 	});
-	User.MODEL = "Users";
+	User.MODEL = "User";
 
 	User.prototype.isLoggedIn = function() {
 		return this.hasOwnProperty('id');
@@ -27,20 +27,23 @@ module.factory('UserResource', ['$resource', function($resource) {
 
 	return User;
 }]);
-module.factory('UserTypeResource', ['$resource', function($resource) {
-	var ret = $resource('/api/usertypes/:id', {id: '@id'});
-	ret.MODEL = "UserTypesForSystem";
-	return ret;
-}]);
-module.factory('CourseRoleResource', ['$resource', function($resource){
-	var ret = $resource('/api/courseroles');
-	ret.MODEL = "UserTypesForCourse";
-	return ret;
-}]);
+
+module.constant('SystemRole', {
+    student: "Student",
+    instructor: "Instructor",
+    sys_admin: "System Administrator"
+});
+
+module.constant('CourseRole', {
+    dropped: "Dropped",
+    instructor: "Instructor",
+    teaching_assistant: "Teaching Assistant",
+    student: "Student"
+});
 
 /***** Controllers *****/
-module.controller("UserController", ['$scope', '$log', '$route', '$routeParams', '$location', 'breadcrumbs', 'Session', 'UserResource', 'Authorize', 'UserTypeResource', 'Toaster',
-	function($scope, $log, $route, $routeParams, $location, breadcrumbs, Session, UserResource, Authorize, UserTypeResource, Toaster) {
+module.controller("UserController", ['$scope', '$log', '$route', '$routeParams', '$location', 'breadcrumbs', 'Session', 'UserResource', 'Authorize', 'SystemRole', 'Toaster',
+	function($scope, $log, $route, $routeParams, $location, breadcrumbs, Session, UserResource, Authorize, SystemRole, Toaster) {
 		var userId;
 		var self = this;
 		var messages = {
@@ -50,16 +53,17 @@ module.controller("UserController", ['$scope', '$log', '$route', '$routeParams',
 		$scope.user = {};
 		$scope.method = 'new';
 		$scope.password = {};
+        $scope.system_roles = [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin]
 		Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
 			$scope.canManageUsers = result;
 		});
 		Session.getUser().then(function(user) {
 			$scope.ownProfile = userId == user.id;
-		});
-		$scope.usertypes = UserTypeResource.query(function(ret) {
-			if ($scope.method == 'new') {
-				$scope.user.usertypesforsystem_id = ret[0].id;
-			}
+
+            // remove system admin from system roles if current_user is not an admin
+            if (user.system_role != SystemRole.sys_admin) {
+                $scope.system_roles.pop()
+            }
 		});
 
 		$scope.save = function() {
@@ -103,6 +107,10 @@ module.controller("UserController", ['$scope', '$log', '$route', '$routeParams',
 			if (self.hasOwnProperty($route.current.method)) {
 				self[$scope.method]();
 			}
+
+            if ($scope.method == 'new') {
+                $scope.user.system_role = SystemRole.student;
+            }
 		}
 	}]
 );

@@ -5,11 +5,10 @@ from flask.ext.login import login_user, logout_user
 from werkzeug.exceptions import Unauthorized
 
 from data.fixtures import DefaultFixture
-from data.fixtures import UsersFactory
+from data.fixtures import UserFactory
 from data.fixtures.test_data import BasicTestData
-from acj import Users
 from acj.tests.test_acj import ACJAPITestCase
-from acj.models import UserTypesForSystem, UserTypesForCourse
+from acj.models import User, SystemRole, CourseRole
 
 
 class UsersAPITests(ACJAPITestCase):
@@ -54,7 +53,7 @@ class UsersAPITests(ACJAPITestCase):
             self.assertIn('email', root)
 
     def test_users_info_restricted(self):
-        user = UsersFactory(usertypeforsystem=DefaultFixture.SYS_ROLE_NORMAL)
+        user = UserFactory(system_role=SystemRole.student)
 
         with self.login(user.username, user.password):
             rv = self.client.get('/api/users/' + str(DefaultFixture.ROOT_USER.id))
@@ -81,49 +80,48 @@ class UsersAPITests(ACJAPITestCase):
             self.assertEqual(users['total'], 1)
             self.assertEqual(users['objects'][0]['username'], self.data.get_unauthorized_instructor().username)
 
-    def test_usertypes(self):
+    def test_system_roles(self):
         # test login required
-        rv = self.client.get('/api/usertypes')
+        rv = self.client.get('/api/system_roles')
         self.assert401(rv)
 
         # test results
         with self.login('root'):
-            rv = self.client.get('/api/usertypes')
+            rv = self.client.get('/api/system_roles')
             self.assert200(rv)
             types = rv.json
             self.assertEqual(len(types), 3)
-            self.assertEqual(types[0]['name'], UserTypesForSystem.TYPE_NORMAL)
-            self.assertEqual(types[1]['name'], UserTypesForSystem.TYPE_INSTRUCTOR)
-            self.assertEqual(types[2]['name'], UserTypesForSystem.TYPE_SYSADMIN)
+            self.assertEqual(types[0], SystemRole.student.value)
+            self.assertEqual(types[1], SystemRole.instructor.value)
+            self.assertEqual(types[2], SystemRole.sys_admin.value)
 
         with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.get('/api/usertypes')
+            rv = self.client.get('/api/system_roles')
             self.assert200(rv)
             types = rv.json
             self.assertEqual(len(types), 2)
-            self.assertEqual(types[0]['name'], UserTypesForSystem.TYPE_NORMAL)
-            self.assertEqual(types[1]['name'], UserTypesForSystem.TYPE_INSTRUCTOR)
+            self.assertEqual(types[0], SystemRole.student.value)
+            self.assertEqual(types[1], SystemRole.instructor.value)
 
     def test_create_user(self):
         url = '/api/users'
-        self.client.file_name = 'user_create.json'
 
         # test login required
-        expected = UsersFactory.stub(usertypesforsystem_id=DefaultFixture.SYS_ROLE_NORMAL.id)
+        expected = UserFactory.stub(system_role=SystemRole.student.value)
         rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
         self.assert401(rv)
 
         # test unauthorized user
         with self.login(self.data.get_authorized_student().username):
-            expected = UsersFactory.stub(usertypesforsystem_id=DefaultFixture.SYS_ROLE_NORMAL.id)
+            expected = UserFactory.stub(system_role=SystemRole.student.value)
             rv = self.client.post(
                 url, data=json.dumps(expected.__dict__), content_type='application/json', record='unauthorized')
             self.assert403(rv)
 
         with self.login(self.data.get_authorized_instructor().username):
             # test duplicate username
-            expected = UsersFactory.stub(
-                usertypesforsystem_id=DefaultFixture.SYS_ROLE_NORMAL.id,
+            expected = UserFactory.stub(
+                system_role=SystemRole.student.value,
                 username=self.data.get_authorized_student().username)
             rv = self.client.post(
                 url, data=json.dumps(expected.__dict__), content_type='application/json', record='duplicate_username')
@@ -131,28 +129,28 @@ class UsersAPITests(ACJAPITestCase):
             self.assertEqual("This username already exists. Please pick another.", rv.json['error'])
 
             # test duplicate student number
-            expected = UsersFactory.stub(
-                usertypesforsystem_id=DefaultFixture.SYS_ROLE_NORMAL.id,
-                student_no=self.data.get_authorized_student().student_no)
+            expected = UserFactory.stub(
+                system_role=SystemRole.student.value,
+                student_number=self.data.get_authorized_student().student_number)
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assertStatus(rv, 409)
             self.assertEqual("This student number already exists. Please pick another.", rv.json['error'])
 
             # test creating student
-            expected = UsersFactory.stub(usertypesforsystem_id=DefaultFixture.SYS_ROLE_NORMAL.id)
+            expected = UserFactory.stub(system_role=SystemRole.student.value)
             rv = self.client.post(
                 url, data=json.dumps(expected.__dict__), content_type="application/json", record='create_student')
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
 
             # test creating instructor
-            expected = UsersFactory.stub(usertypesforsystem_id=DefaultFixture.SYS_ROLE_INSTRUCTOR.id)
+            expected = UserFactory.stub(system_role=SystemRole.instructor.value)
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
 
             # test creating admin
-            expected = UsersFactory.stub(usertypesforsystem_id=DefaultFixture.SYS_ROLE_ADMIN.id)
+            expected = UserFactory.stub(system_role=SystemRole.sys_admin.value)
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert403(rv)
 
@@ -162,8 +160,8 @@ class UsersAPITests(ACJAPITestCase):
         expected = {
             'id': user.id,
             'username': user.username,
-            'student_no': user.student_no,
-            'usertypesforsystem_id': user.usertypesforsystem_id,
+            'student_number': user.student_number,
+            'system_role': user.system_role.value,
             'firstname': user.firstname,
             'lastname': user.lastname,
             'displayname': user.displayname,
@@ -199,7 +197,7 @@ class UsersAPITests(ACJAPITestCase):
 
             # test duplicate student number
             duplicate = expected.copy()
-            duplicate['student_no'] = self.data.get_unauthorized_student().student_no
+            duplicate['student_number'] = self.data.get_unauthorized_student().student_number
             rv = self.client.post(url, data=json.dumps(duplicate), content_type='application/json')
             self.assertStatus(rv, 409)
             self.assertEqual("This student number already exists. Please pick another.", rv.json['error'])
@@ -219,8 +217,7 @@ class UsersAPITests(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual("thebest", rv.json['displayname'])
 
-        # test unable to update username, student_no, usertypesforsystem_id - instructor
-        student = UserTypesForSystem.query.filter_by(name=UserTypesForSystem.TYPE_NORMAL).first()
+        # test unable to update username, student_number, system_role - instructor
         with self.login(user.username):
             valid = expected.copy()
             valid['username'] = "wrongUsername"
@@ -229,16 +226,16 @@ class UsersAPITests(ACJAPITestCase):
             self.assertEqual(user.username, rv.json['username'])
 
             valid = expected.copy()
-            valid['student_no'] = "999999999999"
+            valid['student_number'] = "999999999999"
             rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
             self.assert200(rv)
-            self.assertEqual(user.student_no, rv.json['student_no'])
+            self.assertEqual(user.student_number, rv.json['student_number'])
 
             valid = expected.copy()
-            valid['usertypesforsystem_id'] = student.id
+            valid['system_role'] = SystemRole.student.value
             rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
             self.assert200(rv)
-            self.assertEqual(user.usertypesforsystem_id, rv.json['usertypesforsystem_id'])
+            self.assertEqual(user.system_role.value, rv.json['system_role'])
 
         # test updating username, student number, usertype for system - admin
         with self.login('root'):
@@ -249,16 +246,16 @@ class UsersAPITests(ACJAPITestCase):
             self.assertEqual('newUsername', rv.json['username'])
 
             valid = expected.copy()
-            valid['student_no'] = '99999999'
+            valid['student_number'] = '99999999'
             rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
             self.assert200(rv)
-            self.assertEqual('99999999', rv.json['student_no'])
+            self.assertEqual('99999999', rv.json['student_number'])
 
             valid = expected.copy()
-            valid['usertypesforsystem_id'] = student.id
+            valid['system_role'] = SystemRole.student.value
             rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
             self.assert200(rv)
-            self.assertEqual(user.usertypesforsystem_id, rv.json['usertypesforsystem_id'])
+            self.assertEqual(user.system_role.value, rv.json['system_role'])
 
     def test_get_course_list(self):
         # test login required
@@ -273,7 +270,7 @@ class UsersAPITests(ACJAPITestCase):
             self.assert404(rv)
 
             # test admin
-            admin_id = Users.query.filter_by(username='root').first().id
+            admin_id = User.query.filter_by(username='root').first().id
             url = '/api/users/' + str(admin_id) + '/courses'
             rv = self.client.get(url)
             self.assert200(rv)
@@ -425,7 +422,7 @@ class UsersAPITests(ACJAPITestCase):
             self.assertEqual(self.data.get_authorized_student().id, rv.json['id'])
 
     def test_get_course_roles(self):
-        url = '/api/courseroles'
+        url = '/api/course_roles'
 
         # test login required
         rv = self.client.get(url)
@@ -437,9 +434,9 @@ class UsersAPITests(ACJAPITestCase):
             self.assert200(rv)
             types = rv.json
             self.assertEqual(len(types), 3)
-            self.assertEqual(types[0]['name'], UserTypesForCourse.TYPE_INSTRUCTOR)
-            self.assertEqual(types[1]['name'], UserTypesForCourse.TYPE_TA)
-            self.assertEqual(types[2]['name'], UserTypesForCourse.TYPE_STUDENT)
+            self.assertEqual(types[0], CourseRole.student.value)
+            self.assertEqual(types[1], CourseRole.teaching_assistant.value)
+            self.assertEqual(types[2], CourseRole.instructor.value)
 
     def test_get_edit_button(self):
         url = '/api/users/' + str(self.data.get_authorized_student().id) + '/edit'
@@ -466,11 +463,11 @@ class UsersAPITests(ACJAPITestCase):
             self.assertTrue(rv.json['available'])
 
     def _verify_permissions(self, userid, permissions):
-        user = Users.query.get(userid)
+        user = User.query.get(userid)
         with self.app.app_context():
             # can't figure out how to get into logged in app context, so just force a login here
             login_user(user, force=True)
-            admin = user.usertypeforsystem.name == 'System Administrator'
+            admin = user.system_role == SystemRole.sys_admin
             for model_name, operations in permissions.items():
                 for operation, permission in operations.items():
                     expected = True
@@ -488,5 +485,5 @@ class UsersAPITests(ACJAPITestCase):
     def _generate_search_users(self, user):
         return {
             'id': user.id,
-            'display': user.fullname + ' (' + user.displayname + ') - ' + user.usertypeforsystem.name,
+            'display': user.fullname + ' (' + user.displayname + ') - ' + user.system_role,
             'name': user.fullname}

@@ -1,14 +1,14 @@
-// Shows the instructor summary of student participations by question
+// Shows the instructor summary of student participations by assignment
 
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-// TODO 
+// TODO
 // Create the module with a unique name.
 // The module needs a unique name that prevents conflicts with 3rd party modules
-// We're using "ubc.ctlt.acj" as the project's prefix, followed by the module 
+// We're using "ubc.ctlt.acj" as the project's prefix, followed by the module
 // name.
-var module = angular.module('ubc.ctlt.acj.gradebook', 
+var module = angular.module('ubc.ctlt.acj.gradebook',
 	[
 		'ngResource',
 		'ngRoute',
@@ -24,17 +24,17 @@ module.factory(
 	['$resource',
 	function($resource)
 	{
-		var ret = $resource('/api/courses/:courseId/questions/:questionId/gradebook');
+		var ret = $resource('/api/courses/:courseId/assignments/:assignmentId/gradebook');
 		return ret;
 	}
 ]);
 
 /***** Controllers *****/
 module.controller("GradebookController",
-	["$scope", "$log", "$routeParams", "CourseResource", "GradebookResource", 
-		"GroupResource", "QuestionResource", "Authorize", "Toaster", "QuestionsCriteriaResource",
-	function($scope, $log, $routeParams, CourseResource, GradebookResource, 
-		GroupResource, QuestionResource, Authorize, Toaster, QuestionsCriteriaResource)
+	["$scope", "$log", "$routeParams", "CourseResource", "GradebookResource",
+		"GroupResource", "AssignmentResource", "Authorize", "Toaster", "AssignmentCriteriaResource",
+	function($scope, $log, $routeParams, CourseResource, GradebookResource,
+		GroupResource, AssignmentResource, Authorize, Toaster, AssignmentCriteriaResource)
 	{
 		$scope.users = [];
 		$scope.gb = {};
@@ -42,21 +42,20 @@ module.controller("GradebookController",
 
 		CourseResource.getStudents({'id': $scope.courseId}).$promise.then(
 			function (ret) {
-				$scope.allStudents = ret.students;
-				$scope.users = ret.students;
-				userIds = $scope.getUserIds(ret.students);
+				$scope.allStudents = ret.objects;
+				$scope.users = ret.objects;
+				userIds = $scope.getUserIds(ret.objects);
 			},
 			function (ret) {
 				Toaster.reqerror("Class list retrieval failed", ret);
 			}
 		);
-		GradebookResource.get(
-			{'courseId': $scope.courseId,'questionId': $scope.questionId}).$promise.then(
+		GradebookResource.get({'courseId': $scope.courseId,'assignmentId': $scope.assignmentId}).$promise.then(
 			function(ret)
 			{
 				$scope.gradebook = ret['gradebook'];
-				$scope.numJudgementsRequired=ret['num_judgements_required'];
-				$scope.includeSelfEval = ret['include_self_eval'];
+				$scope.numerOfComparisonsRequired=ret['number_of_comparisons_required'];
+				$scope.includeSelfEval = ret['include_self_evaluation'];
 			},
 			function (ret)
 			{
@@ -64,12 +63,12 @@ module.controller("GradebookController",
 			}
 		);
 
-		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL, $scope.courseId).then(function(result) {
-			$scope.canManagePosts = result;
-			if ($scope.canManagePosts) {
+		Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, $scope.courseId).then(function(result) {
+			$scope.canManageAssignment = result;
+			if ($scope.canManageAssignment) {
 				GroupResource.get({'courseId': $scope.courseId}).$promise.then(
 					function (ret) {
-						$scope.groups = ret.groups;
+						$scope.groups = ret.objects;
 					},
 					function (ret) {
 						Toaster.reqerror("Unable to retrieve the groups in the course.", ret);
@@ -78,11 +77,11 @@ module.controller("GradebookController",
 			}
 		});
 
-		QuestionsCriteriaResource.get(
-			{'courseId': $scope.courseId, 'questionId': $scope.questionId}).$promise.then(
+		AssignmentCriteriaResource.get(
+			{'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
 			function (ret) {
-				$scope.criteria = ret['criteria'];
-				$scope.gb['sortby'] = ret['criteria'][0]['id'];
+				$scope.criteria = ret['objects'];
+				$scope.gb['sortby'] = ret['objects'][0]['id'];
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve the criteria.", ret);
@@ -95,7 +94,7 @@ module.controller("GradebookController",
 				userIds = $scope.getUserIds($scope.allStudents);
 				$scope.users = $scope.allStudents;
 			} else {
-				GroupResource.get({'courseId': $scope.courseId, 'groupId': $scope.gb.group.id}).$promise.then(
+				GroupResource.get({'courseId': $scope.courseId, 'groupName': $scope.gb.group}).$promise.then(
 					function (ret) {
 						$scope.users = ret.students;
 						userIds = $scope.getUserIds(ret.students);
@@ -112,7 +111,7 @@ module.controller("GradebookController",
 			if ($scope.gb.student == null) {
 				userIds = $scope.getUserIds($scope.users);
 			} else {
-				userIds[$scope.gb.student.user.id] = 1;
+				userIds[$scope.gb.student.id] = 1;
 			}
 		};
 

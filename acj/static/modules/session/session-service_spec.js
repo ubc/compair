@@ -4,21 +4,21 @@ describe('Service: Session', function() {
     var expectedSession = {
         "id": id,
         "permissions": {
-            "Courses": {
+            "Course": {
                 "create": true,
                 "delete": true,
                 "edit": true,
                 "manage": true,
                 "read": true
             },
-            "PostsForQuestions": {
+            "Assignment": {
                 "create": true,
                 "delete": true,
                 "edit": true,
                 "manage": true,
                 "read": true
             },
-            "Users": {
+            "User": {
                 "create": true,
                 "delete": true,
                 "edit": true,
@@ -36,14 +36,10 @@ describe('Service: Session', function() {
         fullname: "John Smith",
         id: id,
         lastname: "Smith",
-        lastonline: "Tue, 12 Aug 2014 20:53:31 -0000",
+        last_online: "Tue, 12 Aug 2014 20:53:31 -0000",
         modified: "Tue, 12 Aug 2014 20:53:31 -0000",
         username: "root",
-        usertypeforsystem: {
-            id: 3,
-            name: "System Administrator"
-        },
-        usertypesforsystem_id: 3
+        system_role: "System Administrator"
     };
 
     beforeEach(module('ubc.ctlt.acj.session'));

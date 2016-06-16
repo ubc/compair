@@ -1,13 +1,13 @@
 <form name="commentForm" class="form" ng-submit="commentSubmit()" novalidate>
 	<fieldset>
-		<h2 ng-if="parent.title"><i class="fa fa-comments"></i> {{parent.title}}</h2>
-		<i class="fa fa-quote-left pull-left" ng-if="!parent.title && parent.content"></i>
-		<i class="fa fa-quote-right pull-right" ng-if="!parent.title && parent.content"></i>
-		<div class="question-desc" mathjax="parent.content"
+		<h2 ng-if="parent.name"><i class="fa fa-comments"></i> {{parent.name}}</h2>
+		<i class="fa fa-quote-left pull-left" ng-if="!parent.name && parent.content"></i>
+		<i class="fa fa-quote-right pull-right" ng-if="!parent.name && parent.content"></i>
+		<div class="assignment-desc" mathjax="parent.content"
 			ng-bind-html="parent.content">
 		</div>
 		<!-- Attachment -->
-		<acj-pdf-inline label="See question details:" pdfs="parent.files">
+		<acj-pdf-inline label="See assignment details:" pdf="parent.file">
 		</acj-pdf-inline>
 
 		<hr />
@@ -15,9 +15,10 @@
 			<textarea ng-model="comment.content" id="commentContent" class="form-control" rows="8" ckeditor required>
 			</textarea>
 		</div>
-		<div class="form-group" ng-if="answerComment">
-			<input id="type" type="checkbox" ng-model="comment.type" ng-true-value="1">
-			<label for="type">Show this reply to the whole class</label>
+		<div class="form-group" ng-if="answerComment && (comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private)">
+            <input id="comment_type" type="checkbox" ng-model="comment.comment_type"
+                   ng-true-value="AnswerCommentType.public" ng-false-value="AnswerCommentType.private">
+            <label for="comment_type">Show this reply to the whole class</label>
 		</div>
 	</fieldset>
 	<input type="submit" class="btn btn-success btn-lg center-block" value="Save"

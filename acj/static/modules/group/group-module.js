@@ -19,16 +19,16 @@ module.factory(
 	["$resource", "Interceptors",
 	function ($resource, Interceptors)
 	{
-		var url = '/api/courses/:courseId/groups/:groupId';
+		var url = '/api/courses/:courseId/groups/:groupName';
 		var unenrolUrl = '/api/courses/:courseId/users/:userId/groups';
-		var ret = $resource(url, {groupId: '@groupId'},
+		var ret = $resource(url, {groupName: '@groupName'},
 			{
-				enrol: {method: 'POST', url: unenrolUrl+'/:groupId', interceptor: Interceptors.enrolCache},
+				enrol: {method: 'POST', url: unenrolUrl+'/:groupName', interceptor: Interceptors.enrolCache},
 				unenrol: {method: 'DELETE', url: unenrolUrl, interceptor: Interceptors.enrolCache}
 			}
 		);
 
-		ret.MODEL = 'Groups';
+		ret.MODEL = 'Group';
 		return ret;
 	}
 ]);
@@ -52,7 +52,7 @@ module.controller(
 
 		$scope.userIdentifiers = [
 			{'key': 'username', 'label': 'Username'},
-			{'key': 'student_no', 'label': 'Student Number'}
+			{'key': 'student_number', 'label': 'Student Number'}
 		];
 		$scope.userIdentifier = $scope.userIdentifiers[0].key;
 

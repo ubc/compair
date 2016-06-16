@@ -11,8 +11,7 @@ var storage = {
     session: {},
     users: [],
     courses: [],
-    course_criteria: {},
-    users_and_courses: []
+    user_courses: []
 }
 
 var admin = userFactory.generateUser(1, "System Administrator", {
@@ -51,31 +50,27 @@ var course1 = courseFactory.generateCourse(1, {
 });
 storage.courses.push(course1);
 
-var course2 = courseFactory.generateCourse(1, {
+var course2 = courseFactory.generateCourse(2, {
     name: "PHYS 101",
     description: "<p>PHYS 101  description<p>",
 });
 storage.courses.push(course2);
 
-// users_and_courses
-storage.users_and_courses[student.id] = [
-    { courseId: course1.id, role: 4 },
-    { courseId: course2.id, role: 4 }
+// user_courses
+storage.user_courses[student.id] = [
+    { courseId: course1.id, courseRole: "Student", groupName: null },
+    { courseId: course2.id, courseRole: "Student", groupName: null }
 ];
-
-// course_criteria
-storage.course_criteria[course1.id] = [1];
-storage.course_criteria[course2.id] = [1];
 
 storage.loginDetails = { id: student.id, username: student.username, password: "password" };
 storage.session = sessionFactory.generateSession(student.id, student.system_role, {
-    "Courses": {
+    "Course": {
         "delete": {'1': false, '2': false},
         "edit": {'1': false, '2': false},
         "manage": {'1': false, '2': false},
         "read": {'1': true, '2': true}
     },
-    "PostsForQuestions": {
+    "Assignment": {
         "create": {'1': false, '2': false},
         "delete": {'1': false, '2': false},
         "edit": {'1': false, '2': false},

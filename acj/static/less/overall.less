@@ -19,7 +19,7 @@ h6 {
 
 /* fieldsets for forms look like blue box */
 fieldset {
-  
+
   margin: 2em 0;
   padding: 1.5em;
   background: @bkgrd-blue;
@@ -28,7 +28,7 @@ fieldset {
   h2 {
     margin-top: .5em;
   }
-  
+
   .instructional-text {
     margin: .5em 0 2em 0;
     padding: 1em;
@@ -36,10 +36,10 @@ fieldset {
     font-size: 1.1em;
     border: 2px dotted @green-blue;
   }
-  
+
   hr {
     margin: 2em 0 2.5em 0;
-    border-color: @green-blue;  
+    border-color: @green-blue;
   }
 
 }//closes fieldset
@@ -61,7 +61,7 @@ legend {
   color: #fff;
   font-size: 1.2em;
   width: auto;
-  background: @link-blue;  
+  background: @link-blue;
 }
 
 /* for adding a required star after labels */
@@ -78,11 +78,11 @@ input[type=checkbox] {
 /* submit buttons */
 .btn[type=submit] {
   margin-bottom: 2em;
-  
+
   &.inline-submit {
     margin: 0 1em;
   }
-  
+
 }
 
 /* fix placement of bootstrap form feedback icons */
@@ -106,19 +106,19 @@ dt {
 .sub-nav {
   margin: 1.5em 0 2em 0;
   text-align: right;
-  
+
   .btn {
     margin: 0 0 1em .2em;
   }
-  
+
 }//closes sub-nav
 
 /* class for filters */
 .filter {
-  
+
   display: inline-block;
   margin: .4em 0;
-  
+
   label {
     margin: 0;
     font-size: 1.1em;
@@ -129,7 +129,7 @@ dt {
     padding: .2em;
     max-width: 20em;
   }
-  
+
 }//closes .filter
 
 /* class for introductory text on each page (if used) */
@@ -141,33 +141,33 @@ dt {
     margin: 1em 0;
   }
 
-/* class for divs surrounding questions */
-.standalone-question {
-  
+/* class for divs surrounding assignments */
+.standalone-assignment {
+
   margin: 2em 0 4em 0;
   padding: 2em;
   .blue-box();
-  
-  /* question title */
+
+  /* assignment name */
   h2 {
     margin: 0 0 .5em 0;
   }
-  
-  /* question details */
+
+  /* assignment details */
   div {
     font-size: 1.1em;
   }
 
-}//closes standalone-question
+}//closes standalone-assignment
 
-/* class for question description divs (for non-standalone-questions */
-.question-desc {
+/* class for assignment description divs (for non-standalone-assignments */
+.assignment-desc {
   margin: 1.5em 0;
   font-size: 1.1em;
 }
 
 /* need to constrain oversized images submitted by users */
-.question-desc img,
+.assignment-desc img,
 .each-answer .content img,
 .answer-choice img {
   max-width: 100%;
@@ -201,30 +201,30 @@ a.cke_button.cke_button__anchor {
 }
 
 .modal-backdrop.am-fade {
-  
+
   opacity: .5;
   transition: opacity .15s linear;
-  
+
   &.ng-enter {
-  
+
     opacity: 0;
-    
+
     &.ng-enter-active {
       opacity: .5;
     }
-  
+
   }//closes ng-enter
-  
+
   &.ng-leave {
-    
+
     opacity: .5;
-    
+
     &.ng-leave-active {
       opacity: 0;
     }
-  
+
   }//closes ng-leave
-  
+
 }//closes am-fade
 
 /* for ie9 */

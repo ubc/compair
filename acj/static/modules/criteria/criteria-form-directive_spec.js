@@ -18,7 +18,7 @@ describe('criteria-module', function () {
         beforeEach(inject(function ($rootScope) {
             scope = $rootScope;
         }));
-        
+
         describe('with criterion binding', function() {
             beforeEach(inject(function ($compile) {
                 scope.criterion = {};

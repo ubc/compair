@@ -2,9 +2,9 @@ import json
 import datetime
 
 from acj import db
-from data.fixtures import PostsFactory, PostsForAnswersFactory
+from data.fixtures import AnswerFactory
 from data.fixtures.test_data import TestFixture
-from acj.models import PostsForAnswers
+from acj.models import Answer
 from acj.tests.test_acj import ACJAPITestCase
 
 
@@ -12,10 +12,10 @@ class AnswersAPITests(ACJAPITestCase):
     def setUp(self):
         super(AnswersAPITests, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=30, num_groups=2)
-        self.base_url = self._build_url(self.fixtures.course.id, self.fixtures.question.id)
+        self.base_url = self._build_url(self.fixtures.course.id, self.fixtures.assignment.id)
 
-    def _build_url(self, course_id, question_id, tail=""):
-        url = '/api/courses/' + str(course_id) + '/questions/' + str(question_id) + '/answers' + tail
+    def _build_url(self, course_id, assignment_id, tail=""):
+        url = '/api/courses/' + str(course_id) + '/assignments/' + str(assignment_id) + '/answers' + tail
         return url
 
     def test_get_all_answers(self):
@@ -36,13 +36,16 @@ class AnswersAPITests(ACJAPITestCase):
             rv = self.client.get(self._build_url(self.fixtures.course.id, 4903409))
             self.assert404(rv)
             # test data retrieve is correct
-            self.fixtures.question.answer_end = datetime.datetime.now() - datetime.timedelta(days=1)
-            db.session.add(self.fixtures.question)
+            self.fixtures.assignment.answer_end = datetime.datetime.now() - datetime.timedelta(days=1)
+            db.session.add(self.fixtures.assignment)
             db.session.commit()
             rv = self.client.get(self.base_url)
             self.assert200(rv)
             actual_answers = rv.json['objects']
-            expected_answers = PostsForAnswers.query.filter_by(questions_id=self.fixtures.question.id).paginate(1, 20)
+            expected_answers = Answer.query \
+                .filter_by(active=True, assignment_id=self.fixtures.assignment.id) \
+                .order_by(Answer.created.desc()) \
+                .paginate(1, 20)
             for i, expected in enumerate(expected_answers.items):
                 actual = actual_answers[i]
                 self.assertEqual(expected.content, actual['content'])
@@ -55,7 +58,10 @@ class AnswersAPITests(ACJAPITestCase):
             rv = self.client.get(self.base_url + '?page=2')
             self.assert200(rv)
             actual_answers = rv.json['objects']
-            expected_answers = PostsForAnswers.query.filter_by(questions_id=self.fixtures.question.id).paginate(2, 20)
+            expected_answers = Answer.query \
+                .filter_by(active=True, assignment_id=self.fixtures.assignment.id) \
+                .order_by(Answer.created.desc()) \
+                .paginate(2, 20)
             for i, expected in enumerate(expected_answers.items):
                 actual = actual_answers[i]
                 self.assertEqual(expected.content, actual['content'])
@@ -66,14 +72,14 @@ class AnswersAPITests(ACJAPITestCase):
 
             # test sorting
             rv = self.client.get(
-                self.base_url + '?orderBy={}'.format(self.fixtures.question.criteria[0].id)
+                self.base_url + '?orderBy={}'.format(self.fixtures.assignment.assignment_criteria[0].criteria_id)
             )
             self.assert200(rv)
             result = rv.json['objects']
             # test the result is paged and sorted
             expected = sorted(
                 self.fixtures.answers,
-                key=lambda ans: ans.scores[0].score if len(ans.scores) else 0,
+                key=lambda ans: (ans.scores[0].score if len(ans.scores) else 0, ans.created),
                 reverse=True)[:20]
             self.assertEqual([a.id for a in expected], [a['id'] for a in result])
             self.assertEqual(1, rv.json['page'])
@@ -89,7 +95,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(result[0]['user_id'], self.fixtures.students[0].id)
 
             # test group filter
-            rv = self.client.get(self.base_url + '?group={}'.format(self.fixtures.groups[0].id))
+            rv = self.client.get(self.base_url + '?group={}'.format(self.fixtures.groups[0]))
             self.assert200(rv)
             result = rv.json['objects']
             self.assertEqual(len(result), len(self.fixtures.answers) / len(self.fixtures.groups))
@@ -104,8 +110,8 @@ class AnswersAPITests(ACJAPITestCase):
             # test combined filter
             rv = self.client.get(
                 self.base_url + '?orderBy={}&group={}'.format(
-                    self.fixtures.question.criteria[0].id,
-                    self.fixtures.groups[0].id
+                    self.fixtures.assignment.assignment_criteria[0].criteria_id,
+                    self.fixtures.groups[0]
                 )
             )
             self.assert200(rv)
@@ -120,8 +126,8 @@ class AnswersAPITests(ACJAPITestCase):
             # all filters
             rv = self.client.get(
                 self.base_url + '?orderBy={}&group={}&author={}&page=1&perPage=20'.format(
-                    self.fixtures.question.criteria[0].id,
-                    self.fixtures.groups[0].id,
+                    self.fixtures.assignment.assignment_criteria[0].criteria_id,
+                    self.fixtures.groups[0],
                     self.fixtures.students[0].id
                 )
             )
@@ -131,11 +137,13 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(result[0]['user_id'], self.fixtures.students[0].id)
 
             # add instructor answer
-            post = PostsFactory(course=self.fixtures.course, user=self.fixtures.instructor)
-            answer = PostsForAnswersFactory(question=self.fixtures.question, post=post)
+            answer = AnswerFactory(
+                assignment=self.fixtures.assignment,
+                user=self.fixtures.instructor
+            )
             self.fixtures.answers.append(answer)
             db.session.commit()
-            rv = self.client.get(self.base_url + '?orderBy={}'.format(self.fixtures.question.criteria[0].id))
+            rv = self.client.get(self.base_url + '?orderBy={}'.format(self.fixtures.assignment.assignment_criteria[0].criteria_id))
             self.assert200(rv)
             result = rv.json['objects']
             self.assertEqual(len(self.fixtures.answers), rv.json['total'])
@@ -143,8 +151,8 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(self.fixtures.instructor.id, result[0]['user_id'])
 
             # test data retrieve before answer period ended with non-privileged user
-            self.fixtures.question.answer_end = datetime.datetime.now() + datetime.timedelta(days=2)
-            db.session.add(self.fixtures.question)
+            self.fixtures.assignment.answer_end = datetime.datetime.now() + datetime.timedelta(days=2)
+            db.session.add(self.fixtures.assignment)
             db.session.commit()
             rv = self.client.get(self.base_url)
             self.assert200(rv)
@@ -193,7 +201,7 @@ class AnswersAPITests(ACJAPITestCase):
                 data=json.dumps(invalid_answer),
                 content_type='application/json')
             self.assert400(response)
-            # test invalid question
+            # test invalid assignment
             response = self.client.post(
                 self._build_url(self.fixtures.course.id, 9392402),
                 data=json.dumps(expected_answer),
@@ -201,7 +209,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.assert404(response)
             # test invalid course
             response = self.client.post(
-                self._build_url(9392402, self.fixtures.question.id),
+                self._build_url(9392402, self.fixtures.assignment.id),
                 data=json.dumps(expected_answer), content_type='application/json')
             self.assert404(response)
 
@@ -214,8 +222,8 @@ class AnswersAPITests(ACJAPITestCase):
             self.assert200(response)
             # retrieve again and verify
             rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = PostsForAnswers.query.get(rv['id'])
-            self.assertEqual(expected_answer['content'], actual_answer.post.content)
+            actual_answer = Answer.query.get(rv['id'])
+            self.assertEqual(expected_answer['content'], actual_answer.content)
 
             # test instructor could submit multiple answers for his/her own
             response = self.client.post(
@@ -224,23 +232,34 @@ class AnswersAPITests(ACJAPITestCase):
                 content_type='application/json')
             self.assert200(response)
             rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = PostsForAnswers.query.get(rv['id'])
-            self.assertEqual(expected_answer['content'], actual_answer.post.content)
+            actual_answer = Answer.query.get(rv['id'])
+            self.assertEqual(expected_answer['content'], actual_answer.content)
 
-            # test instructor could submit on behave of a student
-            self.fixtures.add_students(1)
-            expected_answer.update({'user': self.fixtures.students[-1].id})
+            # test instructor could submit multiple answers for his/her own
+            expected_answer.update({'user_id': self.fixtures.instructor.id})
             response = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
                 content_type='application/json')
             self.assert200(response)
             rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = PostsForAnswers.query.get(rv['id'])
-            self.assertEqual(expected_answer['content'], actual_answer.post.content)
+            actual_answer = Answer.query.get(rv['id'])
+            self.assertEqual(expected_answer['content'], actual_answer.content)
+
+            # test instructor could submit on behave of a student
+            self.fixtures.add_students(1)
+            expected_answer.update({'user_id': self.fixtures.students[-1].id})
+            response = self.client.post(
+                self.base_url,
+                data=json.dumps(expected_answer),
+                content_type='application/json')
+            self.assert200(response)
+            rv = json.loads(response.data.decode('utf-8'))
+            actual_answer = Answer.query.get(rv['id'])
+            self.assertEqual(expected_answer['content'], actual_answer.content)
 
             # test instructor can not submit additional answers for a student
-            expected_answer.update({'user': self.fixtures.students[0].id})
+            expected_answer.update({'user_id': self.fixtures.students[0].id})
             response = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
@@ -250,7 +269,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual({"error": "An answer has already been submitted."}, rv)
 
     def test_get_answer(self):
-        question_id = self.fixtures.questions[0].id
+        assignment_id = self.fixtures.assignments[0].id
         answer = self.fixtures.answers[0]
 
         # test login required
@@ -264,38 +283,38 @@ class AnswersAPITests(ACJAPITestCase):
 
         # test invalid course id
         with self.login(self.fixtures.students[0].username):
-            rv = self.client.get(self._build_url(999, question_id, '/' + str(answer.id)))
+            rv = self.client.get(self._build_url(999, assignment_id, '/' + str(answer.id)))
             self.assert404(rv)
 
             # test invalid answer id
-            rv = self.client.get(self._build_url(self.fixtures.course.id, question_id, '/' + str(999)))
+            rv = self.client.get(self._build_url(self.fixtures.course.id, assignment_id, '/' + str(999)))
             self.assert404(rv)
 
             # test authorized student
             rv = self.client.get(self.base_url + '/' + str(answer.id))
             self.assert200(rv)
-            self.assertEqual(question_id, rv.json['questions_id'])
-            self.assertEqual(answer.post.users_id, rv.json['user_id'])
-            self.assertEqual(answer.post.content, rv.json['content'])
+            self.assertEqual(assignment_id, rv.json['assignment_id'])
+            self.assertEqual(answer.user_id, rv.json['user_id'])
+            self.assertEqual(answer.content, rv.json['content'])
 
         # test authorized teaching assistant
         with self.login(self.fixtures.ta.username):
             rv = self.client.get(self.base_url + '/' + str(answer.id))
             self.assert200(rv)
-            self.assertEqual(question_id, rv.json['questions_id'])
-            self.assertEqual(answer.post.users_id, rv.json['user_id'])
-            self.assertEqual(answer.post.content, rv.json['content'])
+            self.assertEqual(assignment_id, rv.json['assignment_id'])
+            self.assertEqual(answer.user_id, rv.json['user_id'])
+            self.assertEqual(answer.content, rv.json['content'])
 
         # test authorized instructor
         with self.login(self.fixtures.instructor.username):
             rv = self.client.get(self.base_url + '/' + str(answer.id))
             self.assert200(rv)
-            self.assertEqual(question_id, rv.json['questions_id'])
-            self.assertEqual(answer.post.users_id, rv.json['user_id'])
-            self.assertEqual(answer.post.content, rv.json['content'])
+            self.assertEqual(assignment_id, rv.json['assignment_id'])
+            self.assertEqual(answer.user_id, rv.json['user_id'])
+            self.assertEqual(answer.content, rv.json['content'])
 
     def test_edit_answer(self):
-        question_id = self.fixtures.questions[0].id
+        assignment_id = self.fixtures.assignments[0].id
         answer = self.fixtures.answers[0]
         expected = {'id': str(answer.id), 'content': 'This is an edit'}
 
@@ -317,12 +336,12 @@ class AnswersAPITests(ACJAPITestCase):
         # test invalid course id
         with self.login(self.fixtures.students[0].username):
             rv = self.client.post(
-                self._build_url(999, question_id, '/' + str(answer.id)),
+                self._build_url(999, assignment_id, '/' + str(answer.id)),
                 data=json.dumps(expected),
                 content_type='application/json')
             self.assert404(rv)
 
-            # test invalid question id
+            # test invalid assignment id
             rv = self.client.post(
                 self._build_url(self.fixtures.course.id, 999, '/' + str(answer.id)),
                 data=json.dumps(expected),
@@ -395,9 +414,9 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(answer_id2, rv.json['id'])
 
     def test_get_user_answers(self):
-        question_id = self.fixtures.questions[0].id
+        assignment_id = self.fixtures.assignments[0].id
         answer = self.fixtures.answers[0]
-        url = self._build_url(self.fixtures.course.id, question_id, '/user')
+        url = self._build_url(self.fixtures.course.id, assignment_id, '/user')
 
         # test login required
         rv = self.client.get(url)
@@ -405,27 +424,27 @@ class AnswersAPITests(ACJAPITestCase):
 
         # test invalid course
         with self.login(self.fixtures.students[0].username):
-            rv = self.client.get(self._build_url(999, question_id, '/user'))
+            rv = self.client.get(self._build_url(999, assignment_id, '/user'))
             self.assert404(rv)
 
-            # test invalid question
+            # test invalid assignment
             rv = self.client.get(self._build_url(self.fixtures.course.id, 999, '/user'))
             self.assert404(rv)
 
             # test successful queries
             rv = self.client.get(url)
             self.assert200(rv)
-            self.assertEqual(1, len(rv.json['answer']))
-            self.assertEqual(answer.id, rv.json['answer'][0]['id'])
-            self.assertEqual(answer.post.content, rv.json['answer'][0]['content'])
+            self.assertEqual(1, len(rv.json['objects']))
+            self.assertEqual(answer.id, rv.json['objects'][0]['id'])
+            self.assertEqual(answer.content, rv.json['objects'][0]['content'])
 
         with self.login(self.fixtures.instructor.username):
             rv = self.client.get(url)
             self.assert200(rv)
-            self.assertEqual(0, len(rv.json['answer']))
+            self.assertEqual(0, len(rv.json['objects']))
 
     def test_flag_answer(self):
-        answer = self.fixtures.question.answers[0]
+        answer = self.fixtures.assignment.answers[0]
         flag_url = self.base_url + "/" + str(answer.id) + "/flagged"
         # test login required
         expected_flag_on = {'flagged': True}
@@ -496,7 +515,7 @@ class AnswersAPITests(ACJAPITestCase):
                 rv.json['flagged'],
                 "Expected answer to be flagged.")
 
-    def test_get_question_answered(self):
+    def test_get_assignment_answered(self):
         count_url = self.base_url + '/count'
 
         # test login required
@@ -511,11 +530,11 @@ class AnswersAPITests(ACJAPITestCase):
         # test invalid course id
         self.fixtures.add_students(1)
         with self.login(self.fixtures.students[-1].username):
-            rv = self.client.get('/api/courses/999/questions/1/answers/count')
+            rv = self.client.get('/api/courses/999/assignments/1/answers/count')
             self.assert404(rv)
 
-            # test invalid question id
-            rv = self.client.get('/api/courses/1/questions/999/answers/count')
+            # test invalid assignment id
+            rv = self.client.get('/api/courses/1/assignments/999/answers/count')
             self.assert404(rv)
 
             # test successful query - no answers
@@ -530,7 +549,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(1, rv.json['answered'])
 
     def test_get_answered_count(self):
-        answered_url = '/api/courses/' + str(self.fixtures.course.id) + '/answers/answered'
+        answered_url = '/api/courses/' + str(self.fixtures.course.id) + '/answered'
 
         # test login required
         rv = self.client.get(answered_url)
@@ -547,65 +566,14 @@ class AnswersAPITests(ACJAPITestCase):
             rv = self.client.get('/api/courses/999/answered')
             self.assert404(rv)
 
-            # test successful query - have not answered any questions in the course
+            # test successful query - have not answered any assignments in the course
             rv = self.client.get(answered_url)
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['answered']))
 
-        # test successful query - have submitted one answer per question
+        # test successful query - have submitted one answer per assignment
         with self.login(self.fixtures.students[0].username):
             rv = self.client.get(answered_url)
             self.assert200(rv)
-            expected = {str(question.id): 1 for question in self.fixtures.questions}
+            expected = {str(assignment.id): 1 for assignment in self.fixtures.assignments}
             self.assertEqual(expected, rv.json['answered'])
-
-    def test_get_answers_view(self):
-        view_url = \
-            '/api/courses/' + str(self.fixtures.course.id) + '/questions/' + \
-            str(self.fixtures.questions[0].id) + '/answers/view'
-
-        # test login required
-        rv = self.client.get(view_url)
-        self.assert401(rv)
-
-        # test unauthorized user
-        with self.login(self.fixtures.unauthorized_instructor.username):
-            rv = self.client.get(view_url)
-            self.assert403(rv)
-
-        # test invalid course id
-        with self.login(self.fixtures.instructor.username):
-            rv = self.client.get('/api/courses/999/questions/' + str(self.fixtures.questions[0].id) + '/answers/view')
-            self.assert404(rv)
-
-            # test invalid question id
-            rv = self.client.get('/api/courses/' + str(self.fixtures.course.id) + '/questions/999/answers/view')
-            self.assert404(rv)
-
-            # test successful query
-            rv = self.client.get(view_url)
-            self.assert200(rv)
-            expected = self.fixtures.answers
-
-            self.assertEqual(30, len(rv.json['answers']))
-            for i, exp in enumerate(expected):
-                actual = rv.json['answers'][str(exp.id)]
-                self.assertEqual(exp.id, actual['id'])
-                self.assertEqual(exp.post.content, actual['content'])
-                self.assertFalse(actual['file'])
-
-        # test successful query - student
-        with self.login(self.fixtures.students[0].username):
-            rv = self.client.get(view_url)
-            self.assert200(rv)
-
-            actual = rv.json['answers']
-            expected = self.fixtures.answers[0]
-
-            self.assertEqual(1, len(actual))
-            self.assertTrue(str(expected.id) in actual)
-            answer = actual[str(expected.id)]
-            self.assertEqual(expected.id, answer['id'])
-            self.assertEqual(expected.post.content, answer['content'])
-            self.assertFalse(answer['file'])
-            self.assertFalse('scores' in answer)

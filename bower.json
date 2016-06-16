@@ -5,7 +5,7 @@
   "authors": [
     "UBC CTLT"
   ],
-  "description": "Student learning tool where instructors and students may post and respond to questions. A method called Adaptive Comparative Judgement is used to give a ranking to the question responses.",
+  "description": "Student learning tool where instructors and students may respond and comment on assignments. A method called Adaptive Comparative Judgement is used to give a ranking to the assignment responses.",
   "main": "acj/static/acj.css",
   "license": "GPLv3",
   "private": true,

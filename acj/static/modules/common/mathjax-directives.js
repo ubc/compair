@@ -1,5 +1,5 @@
 // Directives to integrate mathjax into AngularJS
-// 
+//
 // Code from:
 // https://github.com/ViktorQvarfordt/AngularJS-MathJax-Directive
 // Unfortunately, it's not Bower enabled, so have to manually include it

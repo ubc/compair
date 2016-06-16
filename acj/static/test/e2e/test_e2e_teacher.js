@@ -1,14 +1,14 @@
 describe('ACJ testsuite - Teacher', function() {
 	var rootURL = "/static/index.html#";
 	var reset = false;
-	
+
 	beforeEach(function() {
 		if (!reset) {
 			browser().navigateTo('/resetdb');
             reset = true;
         }
 	});
-	
+
 	describe('course', function() {
 		it('user is logged in', function() {
 			browser().navigateTo(rootURL + '/login');
@@ -27,7 +27,7 @@ describe('ACJ testsuite - Teacher', function() {
 			element('a[href^="#/editcourse/"]').click();
 			input("newname").enter("test course 201");
 			element('button[ng-click="submit();submitted=true"]').click();
-			
+
 			expect(element("h2.ng-binding").text()).toBe("Edit Course - test course 201");
 			input("newtag").enter("Testtag 1");
 			element("button.btn.btn-primary.btn-sm").click();
@@ -46,7 +46,7 @@ describe('ACJ testsuite - Teacher', function() {
 			expect(repeater('p[ng-click="drop(student, \'S\')"]').count()).toBe(3);
 			element('p[ng-click="drop(student, \'S\')"]').click();
 			expect(repeater('p[ng-click="drop(student, \'S\')"]').count()).toBe(0);
-			
+
 			input("params.filter()[name]").enter("Three");
 			expect(repeater('tr[ng-repeat="teacher in teachers"]').count()).toBe(1);
 			input("params.filter()[name]").enter("Seven");

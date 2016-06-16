@@ -10,8 +10,8 @@ var module = angular.module('ubc.ctlt.acj.attachment',
 );
 
 /***** Services *****/
-module.service('importService', 
-		['FileUploader', '$location', "$cacheFactory", "CourseResource", "Toaster", 
+module.service('importService',
+		['FileUploader', '$location', "$cacheFactory", "CourseResource", "Toaster",
 		function(FileUploader, $location, $cacheFactory, CourseResource, Toaster) {
 	var results = {};
 	var uploader = null;

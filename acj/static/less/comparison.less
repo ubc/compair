@@ -1,0 +1,153 @@
+
+
+/***** EVALUATE SCREEN *****/
+
+.evaluate-screen {
+
+  /* class for p tag that precedes standalone-assignment div */
+  .assignment-toggle {
+    margin-top: 2.5em;
+  }
+    .assignment-toggle + .standalone-assignment {
+      margin-top: 0;
+    }
+
+  .standalone-assignment {
+    margin-bottom: 0;
+  }
+
+  /* class for divs underneath each step (indented a bit more) */
+  .sub-step {
+    margin: 0 1.3em;
+  }
+
+  /* class for div surrounding each answer choice */
+  .answer-choice {
+
+    margin: 2em 0;
+    padding: 2em;
+    .gray-box();
+
+    /* answer choice number names */
+    h3 {
+      margin-top: 0;
+    }
+
+  }//closes answer-choice
+
+  /* class automatically applied to ckeditor */
+  .cke {
+    margin-bottom: 2em;
+  }
+
+  /* class given to labels for ckeditors */
+  .cke-label {
+    margin: 1em 0 .5em 0;
+    display: block;
+    font-size: 1.15em;
+    font-weight: normal;
+  }
+
+  /* step divider */
+  hr {
+    margin: 2em 0;
+  }
+
+  /* class for div containing each criterion */
+  .each-criterion {
+
+    /* class for div containing the criteria (assignment and details) */
+    .criteria {
+      margin-bottom: 1.5em;
+      font-size: 1.1em;
+    }
+
+    /* answer selection buttons */
+    .btn {
+      margin-bottom: 1em;
+      padding: .6em 2em;
+      font-weight: bold;
+    }
+
+    /* hide the actual answer inputs (radio buttons) */
+    .hideRadio {
+      width: 0;
+      opacity: 0;
+    }
+
+  }//closes each-criterion
+
+}//closes evaluate-screen
+
+
+/***** EVALUATIONS SCREEN *****/
+
+.evaluations-screen {
+
+  /* class for div surroundings evaluations */
+  .evaluations {
+    border: 1px solid @border-gray;
+  }
+
+  /* each evaluation matches look of each answer/comment/etc. elsewhere */
+  .each-evaluation {
+    padding: 1em 1em 2em 1em;
+    border-bottom: 1px solid @border-gray;
+  }
+    .each-evaluation:nth-child(odd){
+      background: @bkgrd-gray;
+    }
+
+    /* class for h4 that = student name */
+    .evaluator-heading {
+      margin: -1em -.8em 1em -.8em;
+      padding: .7em 0;
+      background: @border-gray;
+    }
+
+    /* class for div that = student answer */
+    .evaluator-answer {
+      margin: -1.3em -1em 1em -1em;
+      padding: 1em;
+      background: #fff;
+      border-bottom: 1px solid @border-gray;
+
+      > .answer > div {
+        padding: 1em 0 1em 2em;
+        border-left: 5px solid @border-gray;
+      }
+
+    }//closes evaluator-answer
+
+    /* main content also matches look of each answer/comment/etc. elsewhere */
+    .content {
+      margin: 1em 0 1.5em 0;
+      font-size: 1.15em;
+    }
+
+    /* headings for comparison/feedback/self-evaluation inside each evaluation */
+    h5 {
+      padding-bottom: .3em;
+      color: #888;
+      font-size: 1em;
+      border-bottom: 2px solid @border-gray;
+    }
+
+    /* class for p tag answer toggle */
+    .show-answers {
+      margin-bottom: 2em;
+    }
+
+    /* class for input for all answer toggle */
+    .show-all {
+      margin-top: 2.5em;
+    }
+
+    /* answer text */
+    .answer-choice {
+      margin: 0 0 1em 2em;
+      font-size: .9em;
+    }
+
+}//closes evaluations-screen
+

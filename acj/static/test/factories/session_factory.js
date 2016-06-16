@@ -1,21 +1,21 @@
 var objectAssign = require('object-assign');
 
 var permission_admin = {
-    "Courses": {
+    "Course": {
         "create": {'global': true},
         "delete": {'global': true},
         "edit": {'global': true},
         "manage": {'global': true},
         "read": {'global': true}
     },
-    "PostsForQuestions": {
+    "Assignment": {
         "create": {'global': true},
         "delete": {'global': true},
         "edit": {'global': true},
         "manage": {'global': true},
         "read": {'global': true}
     },
-    "Users": {
+    "User": {
         "create": {'global': true},
         "delete": {'global': true},
         "edit": {'global': true},
@@ -25,21 +25,21 @@ var permission_admin = {
 };
 
 var permission_instructor = {
-    "Courses": {
+    "Course": {
         "create": {'global': true},
         "delete": {'global': false},
         "edit": {'global': true},
         "manage": {'global': false},
         "read": {'global': true}
     },
-    "PostsForQuestions": {
+    "Assignment": {
         "create": {'global': true},
         "delete": {'global': true},
         "edit": {'global': true},
         "manage": {'global': true},
         "read": {'global': true}
     },
-    "Users": {
+    "User": {
         "create": {'global': true},
         "delete": {'global': false},
         "edit": {'global': true},
@@ -50,21 +50,21 @@ var permission_instructor = {
 
 
 var permission_student = {
-    "Courses": {
+    "Course": {
         "create": {'global': false},
         "delete": {'global': false},
         "edit": {'global': false},
         "manage": {'global': false},
         "read": {'global': true}
     },
-    "PostsForQuestions": {
+    "Assignment": {
         "create": {'global': false},
         "delete": {'global': false},
         "edit": {'global': false},
         "manage": {'global': false},
         "read": {'global': true}
     },
-    "Users": {
+    "User": {
         "create": {'global': false},
         "delete": {'global': false},
         "edit": {'global': true},
@@ -94,7 +94,7 @@ function SessionFactory() {};
 SessionFactory.prototype.generateSession = function (userId, type, additionalPermissions) {
     var newSession = objectAssign({}, permissionTemplates[type]);
     newSession.id = userId;
-    
+
     if(additionalPermissions) {
         for(var domain in additionalPermissions) {
             for(var action in additionalPermissions[domain]) {
@@ -104,7 +104,7 @@ SessionFactory.prototype.generateSession = function (userId, type, additionalPer
             }
         }
     }
-    
+
     return newSession;
 };
 

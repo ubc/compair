@@ -13,16 +13,15 @@ var module = angular.module('ubc.ctlt.acj.course',
 		'ubc.ctlt.acj.comment',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.interceptor',
-		'ubc.ctlt.acj.criteria',
-		'ubc.ctlt.acj.judgement',
-		'ubc.ctlt.acj.question',
+		'ubc.ctlt.acj.comparison',
+		'ubc.ctlt.acj.assignment',
 		'ubc.ctlt.acj.toaster'
 	]
 );
 
 /***** Providers *****/
-module.factory('CourseResource', 
-	["$q", "$routeParams", "$log", "$resource", "Interceptors", 
+module.factory('CourseResource',
+	["$q", "$routeParams", "$log", "$resource", "Interceptors",
 	function($q, $routeParams, $log, $resource, Interceptors)
 {
 	var url = '/api/courses/:id';
@@ -33,14 +32,14 @@ module.factory('CourseResource',
 			'get': {url: url, cache: true},
 			'save': {method: 'POST', url: url, interceptor: Interceptors.cache},
 			'delete': {method: 'DELETE', url: url, interceptor: Interceptors.cache},
-			'getJudgementCount': {url: '/api/courses/:id/judgements/count'},
-			'getAvailPairLogic': {url: '/api/courses/:id/judgements/availpair'},
-			'getAnswered': {url: '/api/courses/:id/answers/answered'},
+			'getComparisonCount': {url: '/api/courses/:id/comparisons/count'},
+			'getComparisonAvailable': {url: '/api/courses/:id/comparisons/available'},
+			'getAnswered': {url: '/api/courses/:id/answered'},
 			'getInstructorsLabels': {url: '/api/courses/:id/users/instructors/labels'},
 			'getStudents': {url: '/api/courses/:id/users/students'}
 		}
 	);
-	ret.MODEL = "Courses"; // add constant to identify the model
+	ret.MODEL = "Course"; // add constant to identify the model
 		// being used, this is for permissions checking
 		// and should match the server side model name
 	return ret;
@@ -48,27 +47,27 @@ module.factory('CourseResource',
 
 /***** Controllers *****/
 module.controller(
-	'CourseQuestionsController',
-	["$scope", "$log", "$routeParams", "CourseResource", "QuestionResource", "Authorize",
-			 "AnswerCommentResource", "AuthenticationService", "required_rounds", "Toaster",
-	function($scope, $log, $routeParams, CourseResource, QuestionResource, Authorize,
-			 AnswerCommentResource, AuthenticationService, required_rounds, Toaster)
+	'CourseAssignmentsController',
+	["$scope", "$log", "$routeParams", "CourseResource", "AssignmentResource", "Authorize",
+			 "AuthenticationService", "required_rounds", "Toaster",
+	function($scope, $log, $routeParams, CourseResource, AssignmentResource, Authorize,
+			 AuthenticationService, required_rounds, Toaster)
 	{
 		// get course info
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		$scope.answered = {};
 		$scope.count = {};
 		$scope.filters = [];
-		Authorize.can(Authorize.CREATE, QuestionResource.MODEL, courseId).then(function(result) {
-				$scope.canCreateQuestions = result;
+		Authorize.can(Authorize.CREATE, AssignmentResource.MODEL, courseId).then(function(result) {
+				$scope.canCreateAssignments = result;
 		});
 		Authorize.can(Authorize.EDIT, CourseResource.MODEL, courseId).then(function(result) {
 				$scope.canEditCourse = result;
 		});
-		Authorize.can(Authorize.MANAGE, QuestionResource.MODEL, courseId).then(function(result) {
-				$scope.canManagePosts = result;
+		Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, courseId).then(function(result) {
+				$scope.canManageAssignment = result;
 				$scope.filters.push('All course assignments');
-				if ($scope.canManagePosts) {
+				if ($scope.canManageAssignment) {
 					$scope.filters.push('Assignments being answered', 'Assignments being compared', 'Upcoming assignments');
 				} else {
 					$scope.filters.push('My pending assignments');
@@ -84,44 +83,37 @@ module.controller(
 			}
 		);
 
-		CourseResource.getAvailPairLogic({'id': courseId}).$promise.then(
+		CourseResource.getComparisonAvailable({'id': courseId}).$promise.then(
 			function (ret) {
-				$scope.availPairsLogic = ret.availPairsLogic;
+				$scope.comparisonAvailable = ret.available;
 			},
 			function (ret) {
 				Toaster.reqerror("Unable to retrieve the answer pairs availablilty.", ret);
 			}
 		);
 
-		// get course questions
-		QuestionResource.get({'courseId': courseId}).$promise.then(
+		// get course assignments
+		AssignmentResource.get({'courseId': courseId}).$promise.then(
 			function (ret)
 			{
-				$scope.questions = ret.questions;
-				CourseResource.getJudgementCount({'id': courseId}).$promise.then(
+				$scope.assignments = ret.objects;
+				CourseResource.getComparisonCount({'id': courseId}).$promise.then(
 					function (ret) {
-						var judged = ret.judgements;
-						for (var key in $scope.questions) {
-							ques = $scope.questions[key];
-							var required = ques.num_judgement_req;
-							if (!(ques.id in judged))
-								judged[ques.id] = 0;
-							ques['left'] = judged[ques.id] <= required ?
-								required - judged[ques.id] : 0;
-							var answered = ques.id in $scope.answered ? $scope.answered[ques.id] : 0;
-							var count = ques.answers_count;
-							var diff = count - answered;
-							/// number of evaluations available
-							ques['eval_left'] = ((diff * (diff - 1)) / 2);
-							ques['warning'] = (required - judged[ques.id]) > ques['eval_left'];
-							// number of evaluations left to complete minus number of available
-							ques['leftover'] = ques['left'] - ques['eval_left'];
+						var compared = ret.comparisons;
+						for (var key in $scope.assignments) {
+							assignment = $scope.assignments[key];
+							var required = assignment.number_of_comparisons;
+							if (!(assignment.id in compared)) {
+								compared[assignment.id] = 0;
+                            }
+							assignment['left'] = compared[assignment.id] <= required ?
+								required - compared[assignment.id] : 0;
 							// if evaluation period is set answers can be seen after it ends
-							if (ques['judge_end']) {
-								ques['answers_available'] = ques['after_judging'];
+							if (assignment['compare_end']) {
+								assignment['answers_available'] = assignment['after_comparing'];
 							// if an evaluation period is NOT set - answers can be seen after req met
 							} else {
-								ques['answers_available'] = ques['after_judging'] && ques['left'] < 1;
+								assignment['answers_available'] = assignment['after_comparing'] && assignment['left'] < 1;
 							}
 						}
 					},
@@ -129,30 +121,31 @@ module.controller(
 						Toaster.reqerror("Evaluations Not Found", ret)
 					}
 				);
-				AnswerCommentResource.allSelfEval({'courseId': courseId}).$promise.then(
-					function (ret) {
-						var replies = ret.replies;
-						for (var key in $scope.questions) {
-							ques = $scope.questions[key];
-							ques['selfeval_left'] = 0;
-							/*
-							Assumptions made:
-							- only one self-evaluation type per question
-							- if self-eval is required but not one is submitted --> 1 needs to be completed
-							 */
-							if (ques.selfevaltype_id && !replies[ques.id]) {
-								ques['selfeval_left'] = 1;
-							}
-						}
-					},
-					function (ret) {
-						Toaster.reqerror("Self-Evaluation records Not Found.", ret);
-					}
-				);
+
+                CourseResource.getComparisonAvailable({'id': courseId}).$promise.then(
+                    function (ret) {
+                        var replies = ret.available;
+                        for (var key in $scope.assignments) {
+                            assignment = $scope.assignments[key];
+                            assignment['self_evaluation_left'] = 0;
+                            /*
+                            Assumptions made:
+                            - only one self-evaluation type per assignment
+                            - if self-evaluation is required but not one is submitted --> 1 needs to be completed
+                            */
+                            if (assignment.enable_self_evaluation && !replies[assignment.id]) {
+                                assignment['self_evaluation_left'] = 1;
+                            }
+                        }
+                    },
+                    function (ret) {
+                        Toaster.reqerror("Self-Evaluation records Not Found.", ret);
+                    }
+                );
 			},
 			function (ret)
 			{
-				Toaster.reqerror("Questions Not Found For Course ID " +
+				Toaster.reqerror("Assignments Not Found For Course ID " +
 					courseId, ret);
 			}
 		);
@@ -165,37 +158,37 @@ module.controller(
 			}
 		);
 
-		$scope.deleteQuestion = function(key, course_id, question_id) {
-			QuestionResource.delete({'courseId': course_id, 'questionId': question_id}).$promise.then(
+		$scope.deleteAssignment = function(key, course_id, assignment_id) {
+			AssignmentResource.delete({'courseId': course_id, 'assignmentId': assignment_id}).$promise.then(
 				function (ret) {
-					$scope.questions.splice(key, 1);
-					Toaster.success("Successfully deleted question " + ret.id);
+					$scope.assignments.splice(key, 1);
+					Toaster.success("Successfully deleted assignment " + ret.id);
 				},
 				function (ret) {
-					Toaster.reqerror("Question deletion failed", ret);
+					Toaster.reqerror("Assignment deletion failed", ret);
 				}
 			);
 		};
 
-		$scope.questionFilter = function(filter) {
-			return function(question) {
+		$scope.assignmentFilter = function(filter) {
+			return function(assignment) {
 				switch(filter) {
-					// return all questions
+					// return all assignments
 					case "All course assignments":
 						return true;
-					// INSTRUCTOR: return all questions in answer period
+					// INSTRUCTOR: return all assignments in answer period
 					case "Assignments being answered":
-						return question.answer_period;
-					// INSTRUCTOR: return all questions in comparison period
+						return assignment.answer_period;
+					// INSTRUCTOR: return all assignments in comparison period
 					case "Assignments being compared":
-						return question.judging_period;
-					// INSTRUCTOR: return all questions that are unavailable to students at the moment
+						return assignment.compare_period;
+					// INSTRUCTOR: return all assignments that are unavailable to students at the moment
 					case "Upcoming assignments":
-						return !question.available;
-					// STUDENTS: return all questions that need to be answered or compared
+						return !assignment.available;
+					// STUDENTS: return all assignments that need to be answered or compared
 					case "My pending assignments":
-						return (question.answer_period && !$scope.answered[question.id]) ||
-							(question.judging_period && (question.left || question.selfeval_left));
+						return (assignment.answer_period && !$scope.answered[assignment.id]) ||
+							(assignment.compare_period && (assignment.left || assignment.self_evaluation_left));
 					default:
 						return false;
 				}
@@ -205,53 +198,25 @@ module.controller(
 ]);
 
 module.controller(
-	'CourseController', ['$scope', '$log', '$route', '$routeParams', '$location', 'Session', 'Authorize',
-		'CourseResource', 'CriteriaResource', 'CoursesCriteriaResource', '$modal', 'Toaster',
-	function($scope, $log, $route, $routeParams, $location, Session, Authorize, CourseResource, CriteriaResource,
-			 CoursesCriteriaResource, $modal, Toaster) {
+	'CourseController',
+    ['$scope', '$log', '$route', '$routeParams', '$location', 'Session', 'Authorize',
+	 'CourseResource', 'Toaster',
+	function($scope, $log, $route, $routeParams, $location, Session, Authorize,
+            CourseResource, Toaster) {
 		var self = this;
+        $scope.course = {};
 		var messages = {
 			new: {title: 'Course Created', msg: 'The course created successfully'},
 			edit: {title: 'Course Successfully Updated', msg: 'Your course changes have been saved.'}
 		};
-		//initialize course so this scope can access data from included form
-		$scope.course = {criteria: []};
-		$scope.availableCriteria = [];
 
-		self.removeCourseCriteria = function() {
-			$scope.availableCriteria = _.filter($scope.availableCriteria, function(c) {
-				return !_($scope.course.criteria).pluck('id').includes(c.id);
-			});
-		};
 		self.edit = function() {
 			$scope.courseId = $routeParams['courseId'];
-			$scope.course = CourseResource.get({'id':$scope.courseId}, function() {
-				CoursesCriteriaResource.get({courseId: $scope.course.id}, function(ret) {
-					$scope.course.criteria	= ret.objects;
-					if ($scope.availableCriteria.length) {
-						self.removeCourseCriteria();
-					}
-				});
-			});
+			$scope.course = CourseResource.get({'id':$scope.courseId});
 		};
-
-		Authorize.can(Authorize.MANAGE, CoursesCriteriaResource.MODEL).then(function(result) {
-			$scope.canManageCriteriaCourses = result;
-		});
 
 		Session.getUser().then(function(user) {
 			$scope.loggedInUserId = user.id;
-		});
-
-		CriteriaResource.get().$promise.then(function (ret) {
-			$scope.availableCriteria = ret.criteria;
-			if ($scope.course.criteria && !$scope.course.criteria.length) {
-				// if we don't have any criterion, e.g. new course, add a default one automatically
-				$scope.course.criteria.push(_.find($scope.availableCriteria, {id: 1}));
-			}
-
-			// we need to remove the existing course criteria from available list
-			self.removeCourseCriteria();
 		});
 
 		$scope.save = function() {
@@ -263,50 +228,6 @@ module.controller(
 				$location.path('/course/' + ret.id);
 			}).$promise.finally(function() {
 				$scope.submitted = false;
-			});
-		};
-
-		$scope.add = function(key) {
-			// not proceed if empty option is being added
-			if (key === undefined || key === null || key < 0 || key >= $scope.availableCriteria.length)
-				return;
-			$scope.course.criteria.push($scope.availableCriteria[key]);
-			$scope.availableCriteria.splice(key, 1);
-		};
-		// remove criterion from course - eg. make it inactive
-		$scope.remove = function(key) {
-			var criterion = $scope.course.criteria[key];
-			$scope.course.criteria.splice(key, 1);
-			if (criterion.default == true) {
-				$scope.availableCriteria.push(criterion);
-			}
-		};
-
-		$scope.changeCriterion = function(criterion) {
-			var modalScope = $scope.$new();
-			modalScope.criterion = angular.copy(criterion);
-			var modalInstance;
-			var criteriaUpdateListener = $scope.$on('CRITERIA_UPDATED', function(event, c) {
-				angular.copy(c.criterion, criterion);
-				modalInstance.close();
-			});
-			var criteriaAddListener = $scope.$on('CRITERIA_ADDED', function(event, criteria) {
-				$scope.course.criteria.push(criteria);
-				modalInstance.close();
-			});
-			var criteriaCancelListener = $scope.$on('CRITERIA_CANCEL', function() {
-				modalInstance.dismiss('cancel');
-			});
-			modalInstance = $modal.open({
-				animation: true,
-				template: '<criteria-form criterion=criterion></criteria-form>',
-				scope: modalScope
-			});
-			// we need to remove the listener, otherwise on multiple click, multiple listeners will be registered
-			modalInstance.result.finally(function(){
-				criteriaUpdateListener();
-				criteriaAddListener();
-				criteriaCancelListener();
 			});
 		};
 

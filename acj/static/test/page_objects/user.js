@@ -6,7 +6,7 @@ var UserPage = function() {
 	this.get = function(userId) {
 		return browser.get(env.baseUrl + '#/user/' + userId);
 	};
-    
+
     this.clickButton = function(button) {
         switch (button) {
             case "Edit":
