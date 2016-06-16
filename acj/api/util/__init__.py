@@ -93,16 +93,22 @@ def get_model_changes(model):
             # skip synonym attributes, who has problem with .history
             if attr.key in synonyms:
                 continue
-
             if isinstance(attr.value, Model):
                 # recursive call on related model
                 ret = get_model_changes(attr.value)
                 if ret is not None:
                     changes[attr.key] = ret
+            elif isinstance(attr.value, list):
+                # TODO: fix change tracking for assocated lists
+                continue
             else:
                 history = attr.history
                 if attr.state.modified and history.has_changes():
-                    changes[attr.key] = {'before': history.deleted[0], 'after': history.added[0]}
+                    changes[attr.key] = {}
+                    if len(history.deleted) > 0:
+                        changes[attr.key]['before'] = history.deleted[0]
+                    if len(history.added) > 0:
+                        changes[attr.key]['after'] = history.added[0]
 
     return changes
 

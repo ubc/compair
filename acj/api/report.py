@@ -13,7 +13,7 @@ from sqlalchemy import func
 from acj.authorization import require
 from acj.core import event
 from acj.models import CourseRole, Assignment, UserCourse, Course, Answer, \
-    AnswerComment, AssignmentCriteria, Comparison
+    AnswerComment, AssignmentCriteria, Comparison, AnswerCommentType
 from .util import new_restful_api
 
 report_api = Blueprint('report_api', __name__)
@@ -54,7 +54,7 @@ class ReportRootAPI(Resource):
         params = report_parser.parse_args()
         group_name = params.get('group_name', None)
         report_type = params.get('type')
-        
+
         assignments = []
         assignment_id = params.get('assignment', None)
         if assignment_id:
@@ -67,7 +67,7 @@ class ReportRootAPI(Resource):
                     active=True
                 ) \
                 .all()
-        
+
         if group_name:
             # ensure that group_name is valid
             group_exists = UserCourse.query \
@@ -78,7 +78,7 @@ class ReportRootAPI(Resource):
                 ) \
                 .first()
             if group_exists == None:
-                abort(404) 
+                abort(404)
 
         if report_type == "participation_stat":
             data = participation_stat_report(course_id, assignments, group_name, assignment_id is None)
@@ -88,27 +88,27 @@ class ReportRootAPI(Resource):
                 'Evaluations Submitted', 'Evaluations Required', 'Evaluation Requirements Met',
                 'Replies Submitted']
             titles = [title]
-            
+
         elif report_type == "participation":
             user_titles = ['Last Name', 'First Name', 'Student No']
             data = participation_report(course_id, assignments, group_name)
 
             title_row1 = [""] * len(user_titles)
             title_row2 = user_titles
-            
+
             for assignment in assignments:
                 assignment_criteria = AssignmentCriteria.query \
                     .filter_by(
-                        assignment_id=assignment.id, 
+                        assignment_id=assignment.id,
                         active=True
                     ) \
                     .all()
-                    
+
                 title_row1 += [assignment.name] + [""] * len(assignment_criteria)
                 for criteria in assignment_criteria:
                     title_row2.append('Percentage Score for "' + criteria.criteria.name + '"')
                 title_row2.append("Evaluations Submitted (" + str(assignment.number_of_comparisons) + ' required)')
-                if assignment.enable_self_eval:
+                if assignment.enable_self_evaluation:
                     title_row1 += [""]
                     title_row2.append("Self Evaluation Submitted")
             titles = [title_row1, title_row2]
@@ -142,7 +142,7 @@ api.add_resource(ReportRootAPI, '')
 
 def participation_stat_report(course_id, assignments, group_name, overall):
     report = []
-    
+
     user_course_students = UserCourse.query \
         .filter_by(
             course_id=course_id,
@@ -162,7 +162,7 @@ def participation_stat_report(course_id, assignments, group_name, overall):
             .filter_by(assignment_id=assignment.id) \
             .all()
         answers = {a.user_id: a.id for a in answers}
-        
+
         # EVALUATIONS
         evaluations = Comparison.query \
             .with_entities(Comparison.user_id, func.count(Comparison.id)) \
@@ -170,7 +170,7 @@ def participation_stat_report(course_id, assignments, group_name, overall):
             .group_by(Comparison.user_id) \
             .all()
         evaluations = {user_id: count for (user_id, count) in evaluations}
-        
+
         # COMMENTS
         comments = AnswerComment.query \
             .join(Answer) \
@@ -179,10 +179,10 @@ def participation_stat_report(course_id, assignments, group_name, overall):
             .group_by(AnswerComment.user_id) \
             .all()
         comments = {user_id: count for (user_id, count) in comments}
-        
+
         total_req += assignment.number_of_comparisons  # for overall required
         criteria_count = len(assignment.assignment_criteria)
-        
+
         for user_course_student in user_course_students:
             user = user_course_student.user
             temp = [assignment.name, user.username, user.lastname, user.firstname]
@@ -199,11 +199,11 @@ def participation_stat_report(course_id, assignments, group_name, overall):
             total[user.id]['total_answers'] += submitted
             temp.extend([submitted, answer_id])
 
-            eval_submitted = evaluations[user.id] if user.id in evaluations else 0
-            eval_submitted /= criteria_count
-            eval_req_met = 'Yes' if eval_submitted >= assignment.number_of_comparisons else 'No'
-            total[user.id]['total_evaluations'] += eval_submitted
-            temp.extend([eval_submitted, assignment.number_of_comparisons, eval_req_met])
+            evaluation_submitted = evaluations[user.id] if user.id in evaluations else 0
+            evaluation_submitted /= criteria_count if criteria_count else 0
+            evaluation_req_met = 'Yes' if evaluation_submitted >= assignment.number_of_comparisons else 'No'
+            total[user.id]['total_evaluations'] += evaluation_submitted
+            temp.extend([evaluation_submitted, assignment.number_of_comparisons, evaluation_req_met])
 
             comment_count = comments[user.id] if user.id in comments else 0
             total[user.id]['total_comments'] += comment_count
@@ -232,7 +232,7 @@ def participation_stat_report(course_id, assignments, group_name, overall):
 
 def participation_report(course_id, assignments, group_name):
     report = []
-    
+
     classlist = UserCourse.query \
         .filter_by(
             course_id=course_id,
@@ -285,8 +285,8 @@ def participation_report(course_id, assignments, group_name):
             .append(assignment_criterion.criteria_id)
 
     # SELF-EVALUATION - assuming no comparions
-    self_eval = AnswerComment.query \
-        .filter_by(self_eval=True) \
+    self_evaluation = AnswerComment.query \
+        .filter_by(comment_type=AnswerCommentType.self_evaluation) \
         .join(Answer) \
         .filter(Answer.assignment_id.in_(assignment_ids)) \
         .filter(AnswerComment.user_id.in_(user_ids)) \
@@ -295,7 +295,7 @@ def participation_report(course_id, assignments, group_name):
         .all()
 
     comments = {}  # structure - user_id/assignment_id/count
-    for (assignment_id, user_id, count) in self_eval:
+    for (assignment_id, user_id, count) in self_evaluation:
         comments.setdefault(user_id, {}).setdefault(assignment_id, 0)
         comments[user_id][assignment_id] = count
 
@@ -318,7 +318,7 @@ def participation_report(course_id, assignments, group_name):
                 compared = comparisons[user.id][assignment.id] / len(criteria[assignment.id])
             temp.append(str(compared))
             # self-evaluation
-            if assignment.enable_self_eval:
+            if assignment.enable_self_evaluation:
                 if user.id not in comments or assignment.id not in comments[user.id]:
                     temp.append(0)
                 else:

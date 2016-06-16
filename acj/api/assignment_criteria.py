@@ -3,7 +3,6 @@ from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal, reqparse, marshal_with
 from sqlalchemy import or_, and_
-from sqlalchemy.orm import load_only, contains_eager
 
 from . import dataformat
 from acj.core import event, db
@@ -27,6 +26,15 @@ class AssignmentCriteriaRootAPI(Resource):
         assignment = Assignment.get_active_or_404(assignment_id)
         require(READ, course)
 
+        criteria = Criteria.query \
+            .join(AssignmentCriteria) \
+            .filter(and_(
+                AssignmentCriteria.assignment_id == assignment.id,
+                AssignmentCriteria.active == True,
+                Criteria.active == True)
+            ) \
+            .all()
+
         assignment_criteria = AssignmentCriteria.query \
             .filter_by(assignment_id=assignment.id, active=True) \
             .order_by(AssignmentCriteria.id).all()
@@ -37,7 +45,7 @@ class AssignmentCriteriaRootAPI(Resource):
             user=current_user
         )
 
-        return marshal(assignment_criteria, dataformat.get_assignment_criteria())
+        return {'objects': marshal(criteria, dataformat.get_criteria()) }
 
 
 api.add_resource(AssignmentCriteriaRootAPI, '')
@@ -55,8 +63,11 @@ class AssignmentCriteriaAPI(Resource):
         assignment_criteria = AssignmentCriteria(assignment=assignment)
         require(CREATE, assignment_criteria)
 
-        assignment_criteria = AssignmentCriteria.query.filter_by(criteria_id=criteria_id). \
-            filter_by(assignment_id=assignment_id).first()
+        assignment_criteria = AssignmentCriteria.query \
+            .filter_by(criteria_id=criteria_id) \
+            .filter_by(assignment_id=assignment_id) \
+            .first()
+
         if assignment_criteria:
             assignment_criteria.active = True
         else:
@@ -76,7 +87,7 @@ class AssignmentCriteriaAPI(Resource):
 
         db.session.commit()
 
-        return marshal(assignment_criteria, dataformat.get_assignment_criteria())
+        return marshal(assignment_criteria.criteria, dataformat.get_criteria())
 
     @login_required
     def delete(self, course_id, assignment_id, criteria_id):
@@ -98,6 +109,7 @@ class AssignmentCriteriaAPI(Resource):
                 assignment_id=assignment_id,
             ) \
             .first()
+
         # if a comparison has already been made - don't remove from assignment
         if comparison:
             msg = \
@@ -118,7 +130,7 @@ class AssignmentCriteriaAPI(Resource):
 
         db.session.commit()
 
-        return marshal(assignment_criteria, dataformat.get_assignment_criteria())
+        return marshal(assignment_criteria.criteria, dataformat.get_criteria())
 
 
 api.add_resource(AssignmentCriteriaAPI, '/<int:criteria_id>')

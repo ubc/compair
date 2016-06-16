@@ -13,11 +13,11 @@ module.exports.httpbackendMock = function(storageFixture) {
 
         var default_criteria = {
             "id": 1,
-            "users_id": 1,
+            "user_id": 1,
             "name": "Which is better?",
             "description": "<p>Choose the response that you think is the better of the two.</p>",
             "default": true,
-            "judged": false,
+            "compared": false,
             "created": "Sun, 11 Jan 2015 07:45:31 -0000",
             "modified": "Sun, 11 Jan 2015 07:45:31 -0000"
         };
@@ -28,43 +28,25 @@ module.exports.httpbackendMock = function(storageFixture) {
             session: {},
             users: [],
             courses: [],
-            // userId -> [ { courseId, roleId} ]
-            users_and_courses: {},
-            // courseId -> [criteriaId]
-            course_criteria: {},
-            questions: [],
-            // courseId -> [questionId]
-            course_questions: {},
-            // questionId -> [criteriaId]
-            question_criteria: {},
+            // userId -> [ { courseId, courseRole, groupName} ]
+            user_courses: {},
+            assignments: [],
+            // courseId -> [assignmentId]
+            course_assignments: {},
             answers: [],
             // courseId -> [answerId]
             course_answers: {},
-            // questionId -> [answerId]
-            question_answers: {},
+            // assignmentId -> [answerId]
+            assignment_answers: {},
             criteria: [],
             groups: [],
-            // userId -> [groupId]
-            user_group: {},
             user_search_results: {
                 "objects": [],
                 "page":1,
                 "pages":1,
                 "per_page":20,
                 "total":0
-            },
-            selfEvalTypes: [
-                { "id": 1, "name": "No Comparison with Another Answer" }
-            ],
-            userTypes: [
-                { "id": 1, "name": "Student" },
-                { "id": 2, "name": "Instructor" }
-            ],
-            courseroles: [
-                { "id": 2, "name": "Instructor" },
-                { "id": 3, "name": "Teaching Assistant" },
-                { "id": 4, "name": "Student" }
-            ]
+            }
         }
 
         // add fixture data to storage
@@ -107,9 +89,6 @@ module.exports.httpbackendMock = function(storageFixture) {
 
         // Start User
 
-        // get user types
-        $httpBackend.whenGET('/api/usertypes').respond(storage.userTypes);
-
         // get user by id
         $httpBackend.whenGET(/^\/api\/users\/\d+$/).respond(function(method, url, data, headers) {
             var id = url.split('/').pop();
@@ -127,31 +106,16 @@ module.exports.httpbackendMock = function(storageFixture) {
                 "firstname": null,
                 "fullname": null,
                 "lastname": null,
-                "student_no": null,
+                "student_number": null,
                 "avatar": "63a9f0ea7bb98050796b649e85481845",
                 "created": "Sat, 27 Dec 2014 20:13:11 -0000",
                 "modified": "Sun, 11 Jan 2015 02:55:59 -0000",
-                "lastonline": "Sun, 11 Jan 2015 02:55:59 -0000",
-                "usertypeforsystem": {
-                    "id": null,
-                    "name": null
-                },
-                "system_role": null,
-                "usertypesforsystem_id": null
+                "last_online": "Sun, 11 Jan 2015 02:55:59 -0000",
+                "system_role": null
             };
 
             newUser = angular.merge({}, newUser, data);
             newUser.fullname = newUser.firstname + " " + newUser.lastname;
-            newUser.usertypeforsystem.id = newUser.usertypesforsystem_id;
-
-            var userType = "";
-            switch (newUser.usertypesforsystem_id) {
-                case 3: userType = "System Administrator"; break;
-                case 2: userType = "Instructor"; break;
-                case 1: userType = "Student"; break;
-            }
-            newUser.system_role = userType;
-            newUser.usertypeforsystem.name = userType;
 
             storage.users.push(newUser);
 
@@ -160,7 +124,7 @@ module.exports.httpbackendMock = function(storageFixture) {
                 displayname: newUser.displayname,
                 avatar: newUser.avatar,
                 created: newUser.created,
-                lastonline: newUser.lastonline
+                last_online: newUser.last_online
             }
 
             return [200, returnData, {}]
@@ -176,7 +140,7 @@ module.exports.httpbackendMock = function(storageFixture) {
 
             var available = false;
             // admins can edit anyone
-            if (currentUser.usertypesforsystem_id == 3) {
+            if (currentUser.system_role == "System Administrator") {
                 available = true;
 
             // anyone can edit themselves
@@ -184,18 +148,18 @@ module.exports.httpbackendMock = function(storageFixture) {
                 available = true;
 
             // teachers can edit users in their class
-            } else if (currentUser.usertypesforsystem_id == 2) {
+            } else if (currentUser.system_role == "Instructor") {
 
                 // if both current user and edit user have courses
-                if (storage.users_and_courses[currentUser.id] && storage.users_and_courses[editId]) {
+                if (storage.user_courses[currentUser.id] && storage.user_courses[editId]) {
 
                     // check courses current user is instructor of
-                    angular.forEach(storage.users_and_courses[currentUser.id], function(course_and_role) {
-                        if (course_and_role.role == 2) {
+                    angular.forEach(storage.user_courses[currentUser.id], function(course_and_role) {
+                        if (course_and_role.courseRole == "Instructor") {
                             var courseId = course_and_role.courseId;
 
                             // check if edit user in course
-                            angular.forEach(storage.users_and_courses[currentUser.id], function(course_and_role) {
+                            angular.forEach(storage.user_courses[currentUser.id], function(course_and_role) {
                                 // if edit user in course
                                 if (course_and_role.courseId == courseId) {
                                     available = true;
@@ -230,21 +194,10 @@ module.exports.httpbackendMock = function(storageFixture) {
 
         // Start Courses
 
-        // get course roles
-        $httpBackend.whenGET('/api/courseroles').respond(storage.courseroles);
-
         // get current user courses
         $httpBackend.whenGET(/\/api\/users\/\d+\/courses$/).respond({
             "objects": storage.courses
         });
-
-        /*
-        TODO check if needed
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/name$/).respond(function(method, url, data, headers) {
-            var id = url.replace('/name', '').split('/').pop();
-            return [200, {'course_name': courses.objects[id-1].name}, {}];
-        });
-        */
 
         // create new course
         $httpBackend.whenPOST('/api/courses').respond(function(method, url, data, headers) {
@@ -257,19 +210,11 @@ module.exports.httpbackendMock = function(storageFixture) {
                 "name": data.name,
                 "description": data.description,
                 "available": true,
-                "enable_student_create_questions": false,
-                "enable_student_create_tags": false,
                 "modified": "Sun, 11 Jan 2015 08:44:46 -0000",
                 "created": "Sun, 11 Jan 2015 08:44:46 -0000"
             }
 
             storage.courses.push(newCourse);
-
-            // setup course criteria
-            storage.course_criteria[id] = [];
-            angular.forEach(data.criteria, function(criteria, key) {
-                storage.course_criteria[id].push(criteria.id);
-            });
 
             return [200, newCourse, {}];
         });
@@ -284,36 +229,10 @@ module.exports.httpbackendMock = function(storageFixture) {
         $httpBackend.whenPOST(/\/api\/courses\/\d+$/).respond(function(method, url, data, headers) {
             data = JSON.parse(data);
 
-            var criteria = data.criteria;
-            delete data.criteria;
-
             var id = url.split('/').pop();
             storage.courses[id-1] = angular.merge(storage.courses[id-1], data);
 
-            // setup course criteria
-            storage.course_criteria[id] = [];
-            angular.forEach(criteria, function(criteria, key) {
-                storage.course_criteria[id].push(criteria.id);
-            });
-
             return [200, storage.courses[id-1], {}];
-        });
-
-        // get course criteria by course id
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/criteria$/).respond(function(method, url, data, headers){
-            var id = url.replace('/criteria', '').split('/').pop();
-
-            var criteriaList = [];
-
-            if (storage.course_criteria[id]) {
-                angular.forEach(storage.course_criteria[id], function(criteriaId) {
-                    var criteria = angular.copy(storage.criteria[criteriaId-1]);
-                    criteria.active = true;
-                    criteriaList.push(criteria);
-                });
-            }
-
-            return [200, { 'objects': criteriaList }, {}];
         });
 
 
@@ -324,17 +243,13 @@ module.exports.httpbackendMock = function(storageFixture) {
             var userList = [];
 
             angular.forEach(storage.users, function(user) {
-                if (storage.users_and_courses[user.id]) {
-                    angular.forEach(storage.users_and_courses[user.id], function(userCoruseInfo) {
+                if (storage.user_courses[user.id]) {
+                    angular.forEach(storage.user_courses[user.id], function(userCoruseInfo) {
 
                         if (courseId == userCoruseInfo.courseId) {
                             var user_copy = angular.copy(user);
-                            user_copy.course_role = storage.courseroles[userCoruseInfo.role-2].name;
-                            user_copy.group_id = 0;
-
-                            if (storage.user_group[user.id]) {
-                                user_copy.group_id = storage.user_group[user.id];
-                            }
+                            user_copy.course_role = userCoruseInfo.courseRole;
+                            user_copy.group_name = userCoruseInfo.groupName;
 
                             userList.push(user_copy);
                         }
@@ -345,22 +260,79 @@ module.exports.httpbackendMock = function(storageFixture) {
             return [200, { 'objects': userList }, {}];
         });
 
+        // get course students by course id
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/users\/students$/).respond(function(method, url, data, headers){
+            var courseId = url.replace('/users', '').split('/').pop();
+
+            var userList = [];
+
+            angular.forEach(storage.users, function(user) {
+                if (storage.user_courses[user.id]) {
+                    angular.forEach(storage.user_courses[user.id], function(userCoruseInfo) {
+                        if (courseId == userCoruseInfo.courseId && userCoruseInfo.courseRole == "Student") {
+                            userList.push({
+                                course_role: userCoruseInfo.courseRole,
+                                id: user.id,
+                                group_name: userCoruseInfo.groupName
+                            });
+                        }
+                    });
+                }
+            });
+
+            return [200, { 'objects': userList }, {}];
+        });
+
+        // get course instructor labels
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/users\/instructors\/labels$/).respond(function(method, url, data, headers){
+            var courseId = url.replace('/users', '').split('/').pop();
+
+            var userList = {};
+
+            angular.forEach(storage.users, function(user) {
+                if (storage.user_courses[user.id]) {
+                    angular.forEach(storage.user_courses[user.id], function(userCoruseInfo) {
+                        if (courseId == userCoruseInfo.courseId) {
+                            if (userCoruseInfo.courseRole == "Instructor") {
+                                userList[user.id] = "Instructor";
+                            } else if (userCoruseInfo.courseRole == "Teaching Assistant") {
+                                userList[user.id] = "Teaching Assistant";
+                            }
+                        }
+                    });
+                }
+            });
+
+            return [200, { 'objects': userList }, {}];
+        });
+
         // get course groups by course id
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/groups$/).respond({ 'groups': storage.groups });
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/groups$/).respond({ 'objects': storage.groups });
 
         // update user role in course
         $httpBackend.whenPOST(/\/api\/courses\/\d+\/users\/\d+$/).respond(function(method, url, data, headers) {
             data = JSON.parse(data);
             var courseId = url.split('/')[3];
             var userId = url.split('/').pop();
-            var courseRoleId = data.course_role_id;
+            var courseRole = data.course_role;
 
-            storage.users_and_courses[userId] = [
-                { courseId: courseId, role: courseRoleId }
-            ];
+            var found = false;
+
+            angular.forEach(storage.user_courses[userId], function(userCoruseInfo) {
+                if (userCoruseInfo.courseId == courseId) {
+                    found = true;
+                    userCoruseInfo.courseRole = courseRole;
+                }
+            });
+
+            if (!found) {
+                storage.user_courses[userId] = [
+                    { courseId: courseId, courseRole: courseRole, groupName: null }
+                ];
+            }
 
             var returnData = {
-                course_role: storage.courseroles[courseRoleId-2].name,
+                course_role: courseRole,
                 fullname: storage.users[userId-1].fullname,
                 user_id: userId
             }
@@ -372,42 +344,46 @@ module.exports.httpbackendMock = function(storageFixture) {
         $httpBackend.whenDELETE(/\/api\/courses\/\d+\/users\/\d+$/).respond(function(method, url, data, headers) {
             var userId = url.split('/').pop();
 
-            storage.users_and_courses[userId] = [];
+            storage.user_courses[userId] = [];
 
             var returnData = {
-                "user": {
-                    "fullname": storage.users[userId-1].fullname,
-                    "id": userId
-                },
-                "usertypesforcourse": {
-                    "id": 1,
-                    "name": "Dropped"
-                }
+                fullname: storage.users[userId-1].fullname,
+                user_id: userId,
+                course_role: "Dropped"
             }
 
             return [200, returnData, {}];
         });
 
         // update user group in course
-        $httpBackend.whenPOST(/\/api\/courses\/\d+\/users\/\d+\/groups\/\d+$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/courses\/\d+\/users\/\d+\/groups\/.+$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
             var userId = url.split('/')[5];
-            var groupId = url.split('/').pop();
+            var groupName = url.split('/').pop();
 
-            storage.user_group[userId] = groupId;
+            angular.forEach(storage.user_courses[userId], function(userCoruseInfo) {
+                if (userCoruseInfo.courseId == courseId) {
+                    userCoruseInfo.groupName = groupName;
+                }
+            });
 
             var returnData = {
-                "groups_name": storage.groups[groupId-1].name
+                "group_name": groupName
             };
 
             return [200, returnData, {}];
         });
 
-        // remove user from groups in course
+        // remove user from group in course
         $httpBackend.whenDELETE(/\/api\/courses\/\d+\/users\/\d+\/groups$/).respond(function(method, url, data, headers) {
             var courseId = url.split('/')[3];
             var userId = url.split('/')[5];
 
-            delete storage.user_group[userId];
+            angular.forEach(storage.user_courses[userId], function(userCoruseInfo) {
+                if (userCoruseInfo.courseId == courseId) {
+                    userCoruseInfo.groupName = null;
+                }
+            });
 
             var returnData = {
                 "course_id": courseId,
@@ -417,13 +393,14 @@ module.exports.httpbackendMock = function(storageFixture) {
             return [200, returnData, {}];
         });
 
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/judgements\/availpair$/).respond({
-            "availPairsLogic": {}
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/comparisons\/available$/).respond({
+            "available": {}
         });
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/judgements\/count$/).respond({
-            "judgements": 0
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/comparisons\/count$/).respond({
+            "comparisons": {}
         });
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/answers\/answered$/).respond(function(method, url, data, headers){
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/comparisons\/available$/).respond(false);
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/answered$/).respond(function(method, url, data, headers){
             var courseId = url.split('/')[3];
             var currentUser = angular.copy(storage.users[storage.loginDetails.id-1]);
 
@@ -434,9 +411,9 @@ module.exports.httpbackendMock = function(storageFixture) {
                 angular.forEach(storage.course_answers[courseId], function(answerId) {
                     var answer = storage.answers[answerId-1];
 
-                    // if answer is by current user, set answered to true for question
+                    // if answer is by current user, set answered to true for assignment
                     if (answer.user_id == currentUser.id) {
-                        answered[answer.questions_id] = 1;
+                        answered[answer.assignment_id] = 1;
                     }
                 });
             }
@@ -445,20 +422,9 @@ module.exports.httpbackendMock = function(storageFixture) {
             return [200, { 'answered': answered }, {}];
         });
 
-        /*
-        TODO: check usage
-        $httpBackend.whenPOST(/\/api\/courses\/\d+\/criteria\/\d$/).respond(function(method, url, data, headers) {
-        });
-        */
-
-        /*
-        TODO: check usage
-        $httpBackend.whenGET('/api/criteria/default').respond(default_criteria);
-        */
-
         // get current user's criteria
         $httpBackend.whenGET('/api/criteria').respond({
-            "criteria": storage.criteria
+            "objects": storage.criteria
         });
 
         // create new criteria
@@ -470,11 +436,11 @@ module.exports.httpbackendMock = function(storageFixture) {
 
             var newCriteria = {
                 "id": id,
-                "users_id": currentUser.id,
+                "user_id": currentUser.id,
                 "name": data.name,
                 "description": data.description,
                 "default": data.default,
-                "judged": false,
+                "compared": false,
                 "created": "Mon, 18 Apr 2016 17:38:23 -0000",
                 "modified": "Mon, 18 Apr 2016 17:38:23 -0000"
             };
@@ -494,125 +460,150 @@ module.exports.httpbackendMock = function(storageFixture) {
             return [200, storage.criteria[id-1], {}];
         });
 
-        $httpBackend.whenGET(/\/api\/selfeval\/courses\/\d+\/questions$/).respond({
-            "replies": {}
-        });
-
-
         // End Courses
 
 
 
-        // Start Questions
+        // Start Assignments
 
-        $httpBackend.whenGET('/api/selfevaltypes').respond({
-            'types': storage.selfEvalTypes
-        });
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments$/).respond(function(method, url, data, headers) {
+            var id = url.replace('/assignments', '').split('/').pop();
 
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/questions$/).respond(function(method, url, data, headers) {
-            var id = url.replace('/questions', '').split('/').pop();
+            var assignmentList = [];
 
-            var questionList = [];
-
-            if (storage.course_questions[id]) {
-                angular.forEach(storage.course_questions[id], function(questionId) {
-                    questionList.push(storage.questions[questionId-1]);
+            if (storage.course_assignments[id]) {
+                angular.forEach(storage.course_assignments[id], function(assignmentId) {
+                    assignmentList.push(storage.assignments[assignmentId-1]);
                 });
             }
 
-            return [200, { 'questions': questionList }, {}]
+            return [200, { 'objects': assignmentList }, {}]
         });
 
-        $httpBackend.whenPOST(/\/api\/courses\/\d+\/questions$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/courses\/\d+\/assignments$/).respond(function(method, url, data, headers) {
             data = JSON.parse(data);
 
-            var courseId = url.replace('/questions', '').split('/').pop();
+            var courseId = url.replace('/assignments', '').split('/').pop();
             var currentUser = angular.copy(storage.users[storage.loginDetails.id-1]);
 
-            var newQuestion = {
+            var newAssignment = {
                 "id": null,
-                "title": null,
-                "num_judgement_req": null,
+                "name": null,
+                "number_of_comparisons": null,
                 "answer_end": null,
                 "answer_start": null,
-                "can_reply": null,
-                "judge_end": null,
-                "judge_start": null,
-                "after_judging": false,
+                "students_can_reply": null,
+                "compare_end": null,
+                "compare_start": null,
+                "after_comparing": false,
                 "answer_period": false,
-                "answers_count": 0,
+                "answer_count": 0,
                 "available": false,
-                "comments_count": 0,
+                "comment_count": 0,
                 "criteria": [],
                 "evaluation_count": 0,
-                "judged": false,
-                "judging_period": false,
+                "compared": false,
+                "compare_period": false,
                 "modified": "Wed, 20 Apr 2016 21:50:31 -0000",
-                "selfevaltype_id": 0,
-                "post": {
-                    "id": null,
-                    "content": null,
-                    "files": [],
-                    "user": angular.copy(currentUser),
-                    "created": "Wed, 20 Apr 2016 21:50:31 -0000",
-                    "modified": "Wed, 20 Apr 2016 21:50:31 -0000"
-                }
+                "enable_self_evaluation": false,
+                "content": null,
+                "file": [],
+                "user": angular.copy(currentUser),
             }
-            newQuestion = angular.merge(newQuestion, data);
-            newQuestion.id = storage.questions.length + 1;
+            newAssignment = angular.merge(newAssignment, data);
+            newAssignment.id = storage.assignments.length + 1;
 
-            storage.questions.push(newQuestion);
+            storage.assignments.push(newAssignment);
 
-            if (!storage.course_questions[courseId]) {
-                storage.course_questions[courseId] = [];
+            if (!storage.course_assignments[courseId]) {
+                storage.course_assignments[courseId] = [];
             }
-            storage.course_questions[courseId].push(newQuestion.id)
+            storage.course_assignments[courseId].push(newAssignment.id)
 
-            return [200, newQuestion, {}]
+            return [200, newAssignment, {}]
         });
 
-        $httpBackend.whenPOST(/\/api\/courses\/\d+\/questions\/\d+\/criteria\/\d+$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/courses\/\d+\/assignments\/\d+$/).respond(function(method, url, data, headers) {
             data = JSON.parse(data);
 
             var courseId = url.split('/')[3];
-            var questionId = url.split('/')[5];
-            var criteriaId = url.split('/').pop();
+            var assignmentId = url.split('/')[5];
 
-            if (!storage.question_criteria[questionId]) {
-                storage.question_criteria[questionId] = [];
-            }
-            var active = false,
-                activeIndex = null;
-            angular.forEach(storage.question_criteria[questionId], function(activeCriteriaId, index) {
-                if (activeCriteriaId == criteriaId) {
-                    active = true;
-                    activeIndex = index;
-                }
-            });
+            storage.assignments[assignmentId-1] = angular.merge(storage.assignments[assignmentId-1], data);
 
-            if (active) {
-                // remvoe criteria
-                storage.question_criteria[questionId] = storage.question_criteria[questionId].splice(activeIndex, 1);
-            } else {
-                // add criteria
-                storage.question_criteria[questionId].push(criteriaId);
-            }
-
-            var criteria = storage.criteria[criteriaId-1];
-            var returnData = {
-                'active': !active,
-                'criterion': criteria
-            }
-
-            return [200, returnData, {}]
+            return [200, storage.assignments[assignmentId-1], {}]
         });
 
-        $httpBackend.whenPOST(/\/api\/courses\/\d+\/questions\/\d+\/criteria\/\d+$/).respond({
+        $httpBackend.whenPOST(/\/api\/courses\/\d+\/assignments\/\d+\/criteria\/\d+$/).respond({
             'active': true,
             'criterion': default_criteria
         });
 
-        // End Questions
+        // get assignment by course id and assignment id
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
+            var assignmentId = url.split('/')[5];
+
+            return [200, storage.assignments[assignmentId-1], {}]
+        });
+
+        // get assignment comments
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+\/comments$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
+            var assignmentId = url.split('/')[5];
+
+            return [200, {objects: []}, {}]
+        });
+
+        // get assignment answers count
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+\/answers\/count$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
+            var assignmentId = url.split('/')[5];
+
+            return [200, {answered: 0}, {}]
+        });
+
+        // get assignment comparisons available
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+\/comparisons\/users\/\d+\/available$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
+            var assignmentId = url.split('/')[5];
+            var userId = url.split('/')[8];
+
+            return [200, {available: true}, {}]
+        });
+
+        // get assignment comparisons count
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+\/comparisons\/users\/\d+\/count$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
+            var assignmentId = url.split('/')[5];
+            var userId = url.split('/')[8];
+
+            return [200, {count: 0}, {}]
+        });
+
+        // get assignment answer comments
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+\/answer_comments\?.*$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
+            var assignmentId = url.split('/')[5];
+
+            return [200, [], {}]
+        });
+
+        // get assignment answers
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+\/answers\?.*$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
+            var assignmentId = url.split('/')[5];
+
+            return [200, {
+                objects: [],
+                page: 1,
+                pages: 1,
+                per_page: 20,
+                total: 0
+            }, {}]
+        });
+
+        // End Assignments
     })
     .run(function($httpBackend) {
         $httpBackend.whenGET(/.*/).passThrough();

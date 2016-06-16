@@ -3,7 +3,6 @@ from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal, reqparse, marshal_with
 from sqlalchemy import or_, and_
-from sqlalchemy.orm import load_only, contains_eager
 
 from . import dataformat
 from acj.core import event, db

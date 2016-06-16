@@ -5,6 +5,7 @@ from hashlib import md5
 
 from flask import session
 from flask.ext.login import user_logged_in, user_logged_out
+from flask.ext.sqlalchemy import Model
 
 from .models import ActivityLog
 from .core import db

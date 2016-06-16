@@ -20,9 +20,8 @@ class ActiveMixin(db.Model):
     def get_active_or_404(cls, model_id, joinedloads=[]):
         query = cls.query
         # load relationships if needed
-        if len(joinedloads) > 0:
-            for load_string in joinedloads:
-                query.options(joinedload(load_string))
+        for load_string in joinedloads:
+            query.options(joinedload(load_string))
 
         model = query.get_or_404(model_id)
         if model is None:

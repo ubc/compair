@@ -41,7 +41,7 @@ module.factory('Authorize',
                         return $q.when(false);
                     }
 
-                    if (user.usertypeforsystem.name == "System Administrator")
+                    if (user.system_role == "System Administrator")
                     {
                         return $q.when(true);
                     }

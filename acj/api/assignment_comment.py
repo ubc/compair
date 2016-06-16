@@ -4,7 +4,6 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal, abort
 from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import and_, or_
-from sqlalchemy.orm import load_only, joinedload, contains_eager
 
 from . import dataformat
 from acj.core import db

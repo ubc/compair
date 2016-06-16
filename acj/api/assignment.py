@@ -7,7 +7,7 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import desc, or_
-from sqlalchemy.orm import joinedload, undefer_group, contains_eager
+from sqlalchemy.orm import joinedload, undefer_group
 
 from . import dataformat
 from acj.core import db, event
@@ -26,12 +26,12 @@ new_assignment_parser.add_argument('description', type=str, default=None)
 new_assignment_parser.add_argument('answer_start', type=str, required=True)
 new_assignment_parser.add_argument('answer_end', type=str, required=True)
 new_assignment_parser.add_argument('compare_start', type=str, default=None)
-new_assignment_parser.add_argument('compareend', type=str, default=None)
+new_assignment_parser.add_argument('compare_end', type=str, default=None)
 new_assignment_parser.add_argument('file_name', type=str, default=None)
 new_assignment_parser.add_argument('file_alias', type=str, default=None)
 new_assignment_parser.add_argument('students_can_reply', type=bool, default=False)
 new_assignment_parser.add_argument('number_of_comparisons', type=int, required=True)
-new_assignment_parser.add_argument('enable_self_eval', type=int, default=None)
+new_assignment_parser.add_argument('enable_self_evaluation', type=int, default=None)
 # has to add location parameter, otherwise MultiDict will screw up the list
 new_assignment_parser.add_argument('criteria', type=list, default=[], location='json')
 
@@ -100,19 +100,31 @@ class AssignmentIdAPI(Resource):
         assignment.students_can_reply = params.get('students_can_reply', False)
         assignment.number_of_comparisons = params.get(
             'number_of_comparisons', assignment.number_of_comparisons)
-        assignment.enable_self_eval = params.get(
-            'enable_self_eval', assignment.enable_self_eval)
+        assignment.enable_self_evaluation = params.get(
+            'enable_self_evaluation', assignment.enable_self_evaluation)
 
         criteria_ids = [c['id'] for c in params.criteria]
-        for c in assignment.assignment_criteria:
-            c.active = c.criteria_id not in criteria_ids
-        # add the new ones
         existing_ids = [c.criteria_id for c in assignment.assignment_criteria]
-        for criteria_id in criteria_ids:
-            if criteria_id not in existing_ids:
-                assignment_criteria = AssignmentCriteria(
-                    assignment_id=assignment_id, criteria_id=criteria_id)
-                assignment.assignment_criteria.append(assignment_criteria)
+        if assignment.compared:
+            if set(criteria_ids) != set(existing_ids):
+                msg = 'The criteria cannot be changed in the assignment ' + \
+                      'because they have already been used in an evaluation.'
+                return {"error": msg}, 403
+        else:
+            # assignment not comapred yet, can change criteria
+            if len(criteria_ids) == 0:
+                msg = 'You must add at least one criterion to the assignment '
+                return {"error": msg}, 403
+            # disable old ones
+            for c in assignment.assignment_criteria:
+                c.active = c.criteria_id in criteria_ids
+            # add the new ones
+            for criteria_id in criteria_ids:
+                if criteria_id not in existing_ids:
+                    assignment_criteria = AssignmentCriteria(
+                        assignment_id=assignment_id, criteria_id=criteria_id)
+                    assignment.assignment_criteria.append(assignment_criteria)
+
 
         on_assignment_modified.send(
             self,
@@ -165,18 +177,25 @@ class AssignmentRootAPI(Resource):
         require(READ, course)
         # Get all assignments for this course, default order is most recent first
         assignment = Assignment(course_id=course_id)
-        base_query = Assignment.query. \
-            options(joinedload("assignment_criteria").joinedload("criteria")). \
-            options(undefer_group('counts')). \
-            filter(Assignment.course_id == course_id). \
-            order_by(desc(Assignment.created))
+        base_query = Assignment.query \
+            .options(joinedload("assignment_criteria").joinedload("criteria")) \
+            .options(undefer_group('counts')) \
+            .filter(
+                Assignment.course_id == course_id,
+                Assignment.active == True
+            ) \
+            .order_by(desc(Assignment.created))
+
         if allow(MANAGE, assignment):
             assignments = base_query.all()
         else:
             now = datetime.datetime.utcnow()
-            assignments = base_query. \
-                filter(or_(Assignment.answer_start.is_(None), now >= Assignment.answer_start)).\
-                all()
+            assignments = base_query \
+                .filter(or_(
+                    Assignment.answer_start.is_(None),
+                    now >= Assignment.answer_start
+                ))\
+                .all()
 
         restrict_user = not allow(MANAGE, assignment)
 
@@ -214,9 +233,12 @@ class AssignmentRootAPI(Resource):
 
         new_assignment.students_can_reply = params.get('students_can_reply', False)
         new_assignment.number_of_comparisons = params.get('number_of_comparisons')
-        new_assignment.enable_self_eval = params.get('enable_self_eval')
+        new_assignment.enable_self_evaluation = params.get('enable_self_evaluation')
 
         criteria_ids = [c['id'] for c in params.criteria]
+        if len(criteria_ids) == 0:
+            msg = 'You must add at least one criterion to the assignment '
+            return {"error": msg}, 403
         for c in criteria_ids:
             assignment_criteria = AssignmentCriteria(assignment=new_assignment, criteria_id=c)
             db.session.add(assignment_criteria)

@@ -80,7 +80,7 @@ class UsersAPITests(ACJAPITestCase):
             self.assertEqual(users['total'], 1)
             self.assertEqual(users['objects'][0]['username'], self.data.get_unauthorized_instructor().username)
 
-    def test_usertypes(self):
+    def test_system_roles(self):
         # test login required
         rv = self.client.get('/api/system_roles')
         self.assert401(rv)

@@ -3,13 +3,12 @@ import uuid
 import csv
 import string
 
-from bouncer.constants import EDIT, READ
+from bouncer.constants import EDIT, READ, MANAGE
 from flask import Blueprint, request, current_app, make_response
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal, abort
 from six import StringIO
 from sqlalchemy import and_
-from sqlalchemy.orm import joinedload, contains_eager
 from werkzeug.utils import secure_filename
 
 from flask.ext.restful.reqparse import RequestParser
@@ -208,13 +207,19 @@ class ClasslistRootAPI(Resource):
 
         class_list = User.query \
             .join(UserCourse, UserCourse.user_id == User.id) \
-            .options(joinedload(User.user_courses)) \
+            .add_columns(UserCourse.course_role, UserCourse.group_name) \
             .filter(and_(
                 UserCourse.course_id == course_id,
                 UserCourse.course_role != CourseRole.dropped
             )) \
             .order_by(User.firstname) \
             .all()
+
+        for (_user, _course_role, _group_name) in class_list:
+            _user.course_role = _course_role
+            _user.group_name = _group_name
+
+        class_list = [_user for (_user, _course_role, _group_name) in class_list]
 
         on_classlist_get.send(
             self,
@@ -379,37 +384,35 @@ class StudentsAPI(Resource):
     def get(self, course_id):
         course = Course.get_active_or_404(course_id)
         require(READ, course)
+        restrict_user = not allow(MANAGE, course)
+
         students = User.query \
+            .with_entities(User, UserCourse.group_name) \
             .join(UserCourse, UserCourse.user_id == User.id) \
             .filter(
                 UserCourse.course_id == course_id,
                 UserCourse.course_role == CourseRole.student
-            ). \
-            all()
+            ) \
+            .all()
 
+        users = []
         user_course = UserCourse(course_id=course_id)
-
-        if allow(READ, user_course):
-            group_names = UserCourse.query \
-                .with_entities(UserCourse.group_name) \
-                .distinct() \
-                .filter_by(course_id=course_id) \
-                .all()
-
-            users = [
-                {'user': {
-                    'id': u.id,
-                    'name': u.fullname if u.fullname else u.displayname,
-                    'group_names': group_names
-                }}
-                for u in students]
-        else:
-            users = []
-            for u in students:
-                name = u.displayname
-                if u.id == current_user.id:
+        for u in students:
+            if allow(READ, user_course):
+                users.append({
+                    'id': u.User.id,
+                    'name': u.User.fullname if u.User.fullname else u.User.displayname,
+                    'group_name': u.group_name
+                })
+            else:
+                name = u.User.displayname
+                if u.User.id == current_user.id:
                     name += ' (You)'
-                users.append({'user': {'id': u.id, 'name': name}})
+                users.append({
+                    'id': u.User.id,
+                    'name': name,
+                    'group_name': u.group_name
+                })
 
         on_classlist_student.send(
             self,
@@ -418,7 +421,7 @@ class StudentsAPI(Resource):
             course_id=course_id
         )
 
-        return {'students': users}
+        return { 'objects': users }
 
 
 api.add_resource(StudentsAPI, '/students')

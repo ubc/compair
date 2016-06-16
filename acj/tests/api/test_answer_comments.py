@@ -4,7 +4,7 @@ import six
 from data.fixtures.test_data import AnswerCommentsTestData
 from acj.tests.test_acj import ACJAPITestCase
 from acj.api.answer_comment import api, AnswerCommentListAPI, AnswerCommentAPI
-
+from acj.models import AnswerCommentType
 
 class AnswerCommentListAPITests(ACJAPITestCase):
     """ Tests for answer comment list API """
@@ -47,7 +47,7 @@ class AnswerCommentListAPITests(ACJAPITestCase):
                 self.data.get_answer_comments_by_assignment(self.assignments[0])[1].content, rv.json[0]['content'])
             self.assertIn(
                 self.data.get_answer_comments_by_assignment(self.assignments[0])[1].user_fullname,
-                rv.json[0]['user_fullname'])
+                rv.json[0]['user']['fullname'])
 
         # test non-owner student of answer access comments
         with self.login(self.data.get_authorized_student().username):
@@ -64,7 +64,10 @@ class AnswerCommentListAPITests(ACJAPITestCase):
 
     def test_get_list_query_params(self):
         comment = AnswerCommentsTestData.create_answer_comment(
-            self.data.get_extra_student(0), self.answers[self.assignments[0].id][0], self_eval=True)
+            self.data.get_extra_student(0),
+            self.answers[self.assignments[0].id][0],
+            comment_type=AnswerCommentType.self_evaluation
+        )
 
         base_params = {
             'course_id': self.course.id,
@@ -82,12 +85,12 @@ class AnswerCommentListAPITests(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual(2, len(rv.json))
 
-            rv = self.client.get(self.get_url(self_eval='false', **params))
+            rv = self.client.get(self.get_url(self_evaluation='false', **params))
             self.assert200(rv)
             self.assertEqual(1, len(rv.json))
             self.assertEqual(extra_student2_answer_comment_id, rv.json[0]['id'])
 
-            rv = self.client.get(self.get_url(self_eval='only', **params))
+            rv = self.client.get(self.get_url(self_evaluation='only', **params))
             self.assert200(rv)
             # self.assertEqual(1, rv.json['total'])
             self.assertEqual(1, len(rv.json))
@@ -106,12 +109,12 @@ class AnswerCommentListAPITests(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual(3, len(rv.json))
 
-            rv = self.client.get(self.get_url(self_eval='false', **params))
+            rv = self.client.get(self.get_url(self_evaluation='false', **params))
             self.assert200(rv)
             self.assertEqual(2, len(rv.json))
             self.assertNotIn(comment.id, (c['id'] for c in rv.json))
 
-            rv = self.client.get(self.get_url(self_eval='only', **params))
+            rv = self.client.get(self.get_url(self_evaluation='only', **params))
             self.assert200(rv)
             self.assertEqual(1, len(rv.json))
             self.assertEqual(comment.id, rv.json[0]['id'])
@@ -169,7 +172,10 @@ class AnswerCommentListAPITests(ACJAPITestCase):
         url = self.get_url(
             course_id=self.course.id, assignment_id=self.assignments[0].id,
             answer_id=self.answers[self.assignments[0].id][0].id)
-        content = {'content': 'great answer'}
+        content = {
+            'comment_type': AnswerCommentType.private.value,
+            'content': 'great answer'
+        }
 
         # test login required
         rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
@@ -202,6 +208,12 @@ class AnswerCommentListAPITests(ACJAPITestCase):
             # test empty content
             empty = content.copy()
             empty['content'] = ''
+            rv = self.client.post(url, data=json.dumps(empty), content_type='application/json')
+            self.assert400(rv)
+
+            # test empty comment type
+            empty = content.copy()
+            empty['comment_type'] = ''
             rv = self.client.post(url, data=json.dumps(empty), content_type='application/json')
             self.assert400(rv)
 
@@ -275,7 +287,11 @@ class AnswerCommentAPITests(ACJAPITestCase):
         url = self.get_url(
             course_id=self.course.id, assignment_id=self.assignments[0].id,
             answer_id=self.answers[self.assignments[0].id][0].id, answer_comment_id=comment.id)
-        content = {'id': comment.id, 'content': 'insightful.'}
+        content = {
+            'id': comment.id,
+            'content': 'insightful.',
+            'comment_type': AnswerCommentType.private.value
+        }
 
         # test login required
         rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
@@ -320,6 +336,12 @@ class AnswerCommentAPITests(ACJAPITestCase):
             rv = self.client.post(url, data=json.dumps(empty), content_type='application/json')
             self.assert400(rv)
             self.assertEqual("The comment content is empty!", rv.json['error'])
+
+            # test empty comment_type
+            empty = content.copy()
+            empty['comment_type'] = ''
+            rv = self.client.post(url, data=json.dumps(empty), content_type='application/json')
+            self.assert400(rv)
 
         # test authorized instructor
         with self.login(self.data.get_authorized_instructor().username):

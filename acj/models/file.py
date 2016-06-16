@@ -1,6 +1,5 @@
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.orm import synonym, load_only, backref, contains_eager, joinedload, Load
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -20,3 +19,7 @@ class File(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
 
     assignments = db.relationship("Assignment", backref="file", lazy='dynamic')
     answers = db.relationship("Answer", backref="file", lazy='dynamic')
+
+    @classmethod
+    def __declare_last__(cls):
+        super(cls, cls).__declare_last__()

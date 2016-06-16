@@ -1,4 +1,4 @@
-// When a user makes a judgement between 2 answers, they can decide which answer
+// When a user makes a comparison between 2 answers, they can decide which answer
 // is the better choice according to multiple criteria.
 
 // Isolate this module's creation by putting it in an anonymous function
@@ -9,16 +9,9 @@ var module = angular.module('ubc.ctlt.acj.criteria', [
 	'ubc.ctlt.acj.common.form'
 ]);
 
-/***** Providers *****/
-module.factory('CoursesCriteriaResource', ['$resource', function($resource) {
-	var ret = $resource('/api/courses/:courseId/criteria/:criteriaId', {criteriaId: '@id'});
-	ret.MODEL = "CriteriaAndCourses";
-	return ret;
-}]);
-
-module.factory('QuestionsCriteriaResource', ['$resource', function($resource) {
-	var ret = $resource('/api/courses/:courseId/questions/:questionId/criteria/:criteriaId', {criteriaId: '@id'});
-	ret.MODEL = "CriteriaAndPostsForQuestions";
+module.factory('AssignmentCriteriaResource', ['$resource', function($resource) {
+	var ret = $resource('/api/courses/:courseId/assignments/:assignmentId/criteria/:criteriaId', {criteriaId: '@id'});
+	ret.MODEL = "AssignmentCriteria";
 	return ret;
 }]);
 
@@ -35,8 +28,9 @@ module.controller('CriterionConfigureController',
 		// update criterion
 		$scope.$on('CRITERIA_ADDED', function() {
 			var courseId = $routeParams['courseId'];
+			var assignmentId = $routeParams['assignmentId'];
 			Toaster.success("Criterion Updated", "Successfully saved your criterion changes.");
-			$location.path('/course/' + courseId + '/configure');
+			$location.path('/course/' + courseId + '/assignment/' + assignmentId + '/edit');
 		});
 	}]
 );

@@ -4,13 +4,12 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal, abort
 from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import and_, or_
-from sqlalchemy.orm import load_only, joinedload, contains_eager
 
 from . import dataformat
 from acj.core import db
 from acj.authorization import require, allow, USER_IDENTITY
 from acj.core import event
-from acj.models import Answer, Assignment, Course, AnswerComment, CourseRole, SystemRole
+from acj.models import Answer, Assignment, Course, AnswerComment, CourseRole, SystemRole, AnswerCommentType
 from .util import new_restful_api, get_model_changes, pagination_parser
 
 answer_comment_api = Blueprint('answer_comment_api', __name__)
@@ -19,15 +18,16 @@ api = new_restful_api(answer_comment_api)
 new_answer_comment_parser = RequestParser()
 new_answer_comment_parser.add_argument('user_id', type=int, default=None)
 new_answer_comment_parser.add_argument('content', type=str, required=True)
-new_answer_comment_parser.add_argument('self_eval', type=bool, required=False, default=False)
-new_answer_comment_parser.add_argument('private', type=bool, required=False, default=False)
+new_answer_comment_parser.add_argument('comment_type', type=str, required=True)
 
 existing_answer_comment_parser = RequestParser()
 existing_answer_comment_parser.add_argument('id', type=int, required=True, help="Comment id is required.")
 existing_answer_comment_parser.add_argument('content', type=str, required=True)
+existing_answer_comment_parser.add_argument('comment_type', type=str, required=True)
 
 answer_comment_list_parser = pagination_parser.copy()
-answer_comment_list_parser.add_argument('self_eval', type=str, required=False, default='true')
+answer_comment_list_parser.add_argument('self_evaluation', type=str, required=False, default='true')
+answer_comment_list_parser.add_argument('evaluation', type=str, required=False, default='true')
 answer_comment_list_parser.add_argument('ids', type=str, required=False, default=None)
 answer_comment_list_parser.add_argument('answer_ids', type=str, required=False, default=None)
 answer_comment_list_parser.add_argument('assignment_id', type=int, required=False, default=None)
@@ -54,7 +54,7 @@ class AnswerCommentListAPI(Resource):
 
         .. sourcecode:: http
 
-            GET /api/answer_comments?ids=1,2,3&self_eval=only HTTP/1.1
+            GET /api/answer_comments?ids=1,2,3&self_evaluation=only HTTP/1.1
             Host: example.com
             Accept: application/json
 
@@ -73,9 +73,7 @@ class AnswerCommentListAPI(Resource):
                 'user_displayname': 'John',
                 'user_fullname': 'John Smith',
                 'user_avatar': '12k3jjh24k32jhjksaf',
-                'self_eval': true,
-                'private': true,
-                'type': 0,
+                'comment_type': 'self_evaluation',
                 'course_id': 1,
             }]
 
@@ -83,7 +81,9 @@ class AnswerCommentListAPI(Resource):
         :query string answer_ids: a comma separated answer IDs for answer filter
         :query int assignment_id: filter the answer comments with a assignment
         :query string user_ids: a comma separated user IDs that own the comments
-        :query string self_eval: indicate whether the result should include self-evaluation comments or self-eval only.
+        :query string self_evaluation: indicate whether the result should include self-evaluation comments or self-evaluation only.
+                Possible values: true, false or only. Default true.
+        :query string evaluation: indicate whether the result should include evaluation comments or evaluation only.
                 Possible values: true, false or only. Default true.
         :reqheader Accept: the response content type depends on :mailheader:`Accept` header
         :resheader Content-Type: this depends on :mailheader:`Accept` header of request
@@ -119,29 +119,34 @@ class AnswerCommentListAPI(Resource):
             # on non-owners
             if current_user.get_course_role(answer.course_id) == CourseRole.student \
                     and answer.user_id != current_user.id:
-                public_comment_condition = and_(
-                    AnswerComment.private.isnot(True),
-                    AnswerComment.self_eval.isnot(True)
-                )
                 # public comments or comments owned by current user
-                clauses.append(or_(public_comment_condition, AnswerComment.user_id == current_user.id))
+                clauses.append(or_(
+                    AnswerComment.comment_type == AnswerCommentType.public,
+                    AnswerComment.user_id == current_user.id
+                ))
 
             conditions.append(and_(*clauses))
 
         query = AnswerComment.query. \
-            options(contains_eager(AnswerComment.user)) . \
             filter(AnswerComment.active==True) .\
             filter(or_(*conditions))
 
         if params['ids']:
             query = query.filter(AnswerComment.id.in_(params['ids'].split(',')))
 
-        if params['self_eval'] == 'false':
-            # do not include self-eval
-            query = query.filter(AnswerComment.self_eval.is_(False))
-        elif params['self_eval'] == 'only':
-            # only self_eval
-            query = query.filter(AnswerComment.self_eval.is_(True))
+        if params['self_evaluation'] == 'false':
+            # do not include self-evaluation
+            query = query.filter(AnswerComment.comment_type != AnswerCommentType.self_evaluation)
+        elif params['self_evaluation'] == 'only':
+            # only self_evaluation
+            query = query.filter(AnswerComment.comment_type == AnswerCommentType.self_evaluation)
+
+        if params['evaluation'] == 'false':
+            # do not include evalulation comments
+            query = query.filter(AnswerComment.comment_type != AnswerCommentType.evaluation)
+        elif params['evaluation'] == 'only':
+            # only evaluation
+            query = query.filter(AnswerComment.comment_type == AnswerCommentType.evaluation)
 
         if params['assignment_id']:
             query = query.join(AnswerComment.answer). \
@@ -187,9 +192,20 @@ class AnswerCommentListAPI(Resource):
         else:
             answer_comment.user_id = current_user.id
 
-        answer_comment.self_eval = params.get("self_eval", False)
-        answer_comment.private = params.get("private", False)
+        comment_types = [
+            AnswerCommentType.public.value,
+            AnswerCommentType.private.value,
+            AnswerCommentType.evaluation.value,
+            AnswerCommentType.self_evaluation.value
+        ]
+
+        comment_type = params.get("comment_type")
+        if comment_type not in comment_types:
+            abort(400)
+        answer_comment.comment_type = AnswerCommentType(comment_type)
+
         db.session.add(answer_comment)
+        db.session.commit()
 
         on_answer_comment_create.send(
             self,
@@ -198,7 +214,6 @@ class AnswerCommentListAPI(Resource):
             course_id=course_id,
             data=marshal(answer_comment, dataformat.get_answer_comment(False)))
 
-        db.session.commit()
         return marshal(answer_comment, dataformat.get_answer_comment())
 
 api.add_resource(
@@ -248,6 +263,20 @@ class AnswerCommentAPI(Resource):
 
         # modify answer comment according to new values, preserve original values if values not passed
         answer_comment.content = params.get("content")
+
+        comment_types = [
+            AnswerCommentType.public.value,
+            AnswerCommentType.private.value,
+            AnswerCommentType.evaluation.value,
+            AnswerCommentType.self_evaluation.value
+        ]
+
+        comment_type = params.get("comment_type", AnswerCommentType.private.value)
+        if comment_type not in comment_types:
+            abort(400)
+
+        answer_comment.comment_type = AnswerCommentType(comment_type)
+
         if not answer_comment.content:
             return {"error": "The comment content is empty!"}, 400
 

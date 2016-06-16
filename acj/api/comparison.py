@@ -8,7 +8,6 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import or_, and_
-from sqlalchemy.orm import load_only
 
 from . import dataformat
 from acj.core import db
@@ -94,6 +93,8 @@ class CompareRootAPI(Resource):
                 return {"error": "You have compared all the currently available answers."}, 400
             except UnknownPairGeneratorException:
                 return {"error": "Generating scored pairs failed, this really shouldn't happen."}, 500
+
+
 
         return {'objects': marshal(comparisons, dataformat.get_comparison(restrict_user))}
 
@@ -192,6 +193,7 @@ class CompareRootAPI(Resource):
 api.add_resource(CompareRootAPI, '')
 
 
+
 # /users/:user_id/count
 class UserCompareCount(Resource):
     @login_required
@@ -211,11 +213,9 @@ class UserCompareCount(Resource):
             data={'assignment_id': assignment_id, 'user_id': user_id, 'count': count}
         )
 
-        return {"count": count}
-
+        return {'count': count}
 
 api.add_resource(UserCompareCount, '/users/<int:user_id>/count')
-
 
 # /count
 class UserAllCompareCount(Resource):
@@ -249,7 +249,7 @@ class UserAllCompareCount(Resource):
 apiAll.add_resource(UserAllCompareCount, '/count')
 
 
-# /comparison_available
+# /available
 # returns True if there are enough eligible answers to generate at least one pair to evaluate
 # for each assignment in the course
 class ComparisonAvailableAll(Resource):
@@ -276,7 +276,7 @@ class ComparisonAvailableAll(Resource):
         ineligible_user_ids_base = [u[0] for u in ineligible_users]
         ineligible_user_ids_base.append(current_user.id)
 
-        comparison_available = {}
+        available = {}
         for assignment in assignments:
             assignment_id = assignment[0]
             # ineligible authors (potentially) - eg. authors for answers that the user has seen
@@ -296,15 +296,14 @@ class ComparisonAvailableAll(Resource):
                     Answer.user_id.notin_(ineligible_user_ids)
                 )) \
                 .count()
-            comparison_available[assignment_id] = eligible_answers / 2 >= 1  # min 1 pair required
+            available[assignment_id] = eligible_answers / 2 >= 1  # min 1 pair required
 
-        return {'comparison_available': comparison_available}
-
-
-apiAll.add_resource(ComparisonAvailableAll, '/comparison_available')
+        return {'available': available}
 
 
-# /users/:userId/comparison_available
+apiAll.add_resource(ComparisonAvailableAll, '/available')
+
+# /users/:userId/available
 # returns True if there are enough eligible answers to generate at least one pair to evaluate
 class ComparisonAvailable(Resource):
     @login_required
@@ -340,11 +339,11 @@ class ComparisonAvailable(Resource):
                 Answer.user_id.notin_(ineligible_user_ids)
             )) \
             .count()
-        comparison_available = eligible_answers / 2 >= 1  # min 1 pair required
+        available = eligible_answers / 2 >= 1  # min 1 pair required
 
-        return {'comparison_available': comparison_available}
+        return {'available': available}
 
 
-api.add_resource(ComparisonAvailable, '/users/<int:user_id>/comparison_available')
+api.add_resource(ComparisonAvailable, '/users/<int:user_id>/available')
 
 

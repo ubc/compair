@@ -9,7 +9,7 @@ describe('ACJ testsuite - Student', function() {
         }
 	});
 
-	describe('questions', function() {
+	describe('assignments', function() {
 		it('user is logged in', function() {
 			browser().navigateTo(rootURL + '/login');
 			input('username').enter('testuser');
@@ -17,20 +17,20 @@ describe('ACJ testsuite - Student', function() {
 		    element('.btn.btn-primary').click();
 			expect(browser().location().url()).toBe('/');
 		});
-		it('go to question page', function() {
+		it('go to assignment page', function() {
 			element('#step2').click();
-			expect(browser().location().url()).toMatch(/\/questionpage\/./);
+			expect(browser().location().url()).toMatch(/\/assignmentpage\/./);
 		});
-		it('create question', function() {
+		it('create assignment', function() {
 			var qCount = repeater("ul.postingsList.padding0 li").count();
 			qCount.execute(function(){});
-			input('title').enter("unittestquiz");
-			contenteditable('div[name="question"]').enter('unit test question');
+			input('name').enter("unittestquiz");
+			contenteditable('div[name="assignment"]').enter('unit test assignment');
 			contenteditable('div[name="answerq"]').enter('unit test answer');
 			element(".btn.btn-primary:first").click();
 			expect(repeater("ul.postingsList.padding0 li").count()).toBe(qCount.value + 1);
 		});
-		it('delete the created question', function() {
+		it('delete the created assignment', function() {
 			var qCount = repeater("ul.postingsList.padding0 li").count();
 			qCount.execute(function(){});
 			confirmOK();
@@ -59,25 +59,25 @@ describe('ACJ testsuite - Student', function() {
 			element("a.btn.btn-danger.btn-sm.btnWidth:first").click();
 			expect(repeater("ul.postingsList.padding0 li").count()).toBe(qCount.value - 1);
 		});
-		it('return to question page', function() {
-			element('a[href^="#/questionpage/"]').click();
-			expect(browser().location().url()).toMatch(/\/questionpage\/./);
+		it('return to assignment page', function() {
+			element('a[href^="#/assignmentpage/"]').click();
+			expect(browser().location().url()).toMatch(/\/assignmentpage\/./);
 		});
 	});
-	describe('judge', function() {
-		it('random judge', function() {
-			element('a[href="#/quickjudge"]').click();
+	describe('compare', function() {
+		it('random compare', function() {
+			element('a[href="#/quickcompare"]').click();
 			element('#stepNext').click();
 			element("div[ng-click=\"sideSelect($index, \'right\', crit.id);pick=\'right\'\"]").click();
 			element("#stepSubmit").click();
-			expect(element("li.alert.alert-success.text-center").text()).toBe("Script & Judgement updated");
+			expect(element("li.alert.alert-success.text-center").text()).toBe("Script & Comparison updated");
 		});
-		it('judge answers', function() {
+		it('compare answers', function() {
 			element('a[ng-click="setType(\'discussion\');switchEdits(-1)"]').click();
-			element('a#stepJudge:not(.ng-hide):first').click();
+			element('a#stepcompare:not(.ng-hide):first').click();
 			element("div[ng-click=\"sideSelect($index, \'left\', crit.id);pick=\'left\'\"]").click();
 			element("#stepSubmit").click();
-			expect(element("li.alert.alert-success.text-center").text()).toBe("Script & Judgement updated");
+			expect(element("li.alert.alert-success.text-center").text()).toBe("Script & Comparison updated");
 		});
 		it('user is logged out', function() {
 			element('.dropdown-menu:last-child a').click();

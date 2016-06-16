@@ -4,10 +4,14 @@ from flask.ext.restful import fields
 class UnwrapSystemRole(fields.Raw):
     def format(self, system_role):
         return system_role.value
-        
+
 class UnwrapCourseRole(fields.Raw):
     def format(self, course_role):
         return course_role.value
+
+class UnwrapAnswerCommentType(fields.Raw):
+    def format(self, comment_type):
+        return comment_type.value
 
 def get_user(restrict_user=True):
     restricted = {
@@ -72,46 +76,52 @@ def get_criteria():
     return data_format
 
 
-def get_assignment_criteria():
-    data_format = {
-        'id': fields.Integer,
-        'active': fields.Boolean,
-        'criterion': fields.Nested(get_criteria())
-    }
-    return data_format
-
-
 def get_assignment(restrict_user=True):
-    return {
+    ret = {
         'id': fields.Integer,
+        'course_id': fields.Integer,
         'user_id': fields.Integer,
+
         'name': fields.String,
         'description': fields.String,
-        'criteria': fields.Nested(get_assignment_criteria()),
-        'file': fields.Nested(get_file()),
+        'number_of_comparisons': fields.Integer,
+
+        'criteria': fields.List(fields.Nested(get_criteria())),
+        'file': fields.Nested(get_file(), allow_null=True),
+
         'answer_start': fields.DateTime,
         'answer_end': fields.DateTime,
         'compare_start': fields.DateTime,
         'compare_end': fields.DateTime,
-        'students_can_reply': fields.Boolean,
-        'enable_self_eval': fields.Boolean,
-        'number_of_comparisons': fields.Integer,
         'available': fields.Boolean,
+
+        'students_can_reply': fields.Boolean,
+        'enable_self_evaluation': fields.Boolean,
+
+        'compared': fields.Boolean,
+
         'answer_period': fields.Boolean,
         'compare_period': fields.Boolean,
         'after_comparing': fields.Boolean,
-        'compared': fields.Boolean,
         'evaluation_count': fields.Integer,
-        'comments_count': fields.Integer,
-        'answers_count': fields.Integer,
-        'user_displayname': fields.String,
-        'user_avatar': fields.String,
+        'comment_count': fields.Integer,
+        'answer_count': fields.Integer,
+        'self_evaluation_count': fields.Integer,
+
+        'user': {
+            'id': fields.Integer(attribute="user_id"),
+            'displayname': fields.String(attribute="user_displayname"),
+            'avatar': fields.String(attribute="user_avatar"),
+        },
+
         'modified': fields.DateTime,
         'created': fields.DateTime
     }
     if not restrict_user:
-        ret.update({'user_fullname': fields.String})
-    
+        ret['user']['fullname'] = fields.String(attribute="user_fullname")
+
+    return ret
+
 
 def get_answer(restrict_user=True):
     ret = {
@@ -119,19 +129,26 @@ def get_answer(restrict_user=True):
         'course_id': fields.Integer,
         'assignment_id': fields.Integer,
         'user_id': fields.Integer,
+
         'content': fields.String,
-        'file': fields.Nested(get_file()),
+        'file': fields.Nested(get_file(), allow_null=True),
         'flagged': fields.Boolean,
-        'scores': fields.Nested(get_score()),
-        'comments_count': fields.Integer,
-        'private_comments_count': fields.Integer,
-        'public_comments_count': fields.Integer,
-        'user_displayname': fields.String,
-        'user_avatar': fields.String,
+
+        'scores': fields.List(fields.Nested(get_score())),
+        'comment_count': fields.Integer,
+        'private_comment_count': fields.Integer,
+        'public_comment_count': fields.Integer,
+
+        'user': {
+            'id': fields.Integer(attribute="user_id"),
+            'displayname': fields.String(attribute="user_displayname"),
+            'avatar': fields.String(attribute="user_avatar"),
+        },
+
         'created': fields.DateTime
     }
     if not restrict_user:
-        ret.update({'user_fullname': fields.String})
+        ret['user']['fullname'] = fields.String(attribute="user_fullname")
 
     return ret
 
@@ -142,13 +159,20 @@ def get_assignment_comment(restrict_user=True):
         'course_id': fields.Integer,
         'assignment_id': fields.Integer,
         'user_id': fields.Integer,
+
         'content': fields.String,
-        'user_displayname': fields.String,
-        'user_avatar': fields.String,
+
+        'user': {
+            'id': fields.Integer(attribute="user_id"),
+            'displayname': fields.String(attribute="user_displayname"),
+            'avatar': fields.String(attribute="user_avatar"),
+        },
+
         'created': fields.DateTime,
     }
     if not restrict_user:
-        ret.update({'user_fullname': fields.String})
+        ret['user']['fullname'] = fields.String(attribute="user_fullname")
+
     return ret
 
 
@@ -160,14 +184,18 @@ def get_answer_comment(restrict_user=True):
         'answer_id': fields.Integer,
         'user_id': fields.Integer,
         'content': fields.String,
-        'private': fields.Boolean,
-        'self_eval': fields.Boolean,
-        'user_displayname': fields.String,
-        'user_avatar': fields.String,
+        'comment_type': UnwrapAnswerCommentType(attribute='comment_type'),
+
+        'user': {
+            'id': fields.Integer(attribute="user_id"),
+            'displayname': fields.String(attribute="user_displayname"),
+            'avatar': fields.String(attribute="user_avatar"),
+        },
         'created': fields.DateTime,
     }
     if not restrict_user:
-        ret.update({'user_fullname': fields.String})
+        ret['user']['fullname'] = fields.String(attribute="user_fullname")
+
     return ret
 
 
@@ -179,8 +207,8 @@ def get_file():
     }
 
 
-def get_comparison(restrict_user=True):
-    return {
+def get_comparison(restrict_user=True, with_answers=True):
+    ret = {
         'id': fields.Integer,
         'course_id': fields.Integer,
         'assignment_id': fields.Integer,
@@ -188,18 +216,59 @@ def get_comparison(restrict_user=True):
         'user_id': fields.Integer,
         'answer1_id': fields.Integer,
         'answer2_id': fields.Integer,
-        'winner_id': fields.Integer,
+        'winner_id': fields.Integer(default=None),
+
         'content': fields.String,
-        'answer1': fields.Nested(get_answer()),
-        'answer2': fields.Nested(get_answer()),
-        'criterion': fields.Nested(get_criteria()),
-        'user_displayname': fields.String,
-        'user_avatar': fields.String,
+        'criteria': fields.Nested(get_criteria()),
+
+        'user': {
+            'id': fields.Integer(attribute="user_id"),
+            'displayname': fields.String(attribute="user_displayname"),
+            'avatar': fields.String(attribute="user_avatar"),
+        },
         'created': fields.DateTime
     }
     if not restrict_user:
-        ret.update({'user_fullname': fields.String})
+        ret['user']['fullname'] = fields.String(attribute="user_fullname")
 
+    if with_answers:
+        ret['answer1'] = fields.Nested(get_answer(
+            restrict_user=restrict_user))
+        ret['answer2'] = fields.Nested(get_answer(
+            restrict_user=restrict_user))
+
+    return ret
+
+def get_comparison_set(restrict_user=True):
+    ret = {
+        'course_id': fields.Integer,
+        'assignment_id': fields.Integer,
+        'user_id': fields.Integer,
+
+        'comparisons': fields.List(fields.Nested(get_comparison(
+            restrict_user=restrict_user, with_answers=False))),
+
+        'answer1_id': fields.Integer,
+        'answer2_id': fields.Integer,
+        'answer1': fields.Nested(get_answer()),
+        'answer2': fields.Nested(get_answer()),
+
+        'user': {
+            'id': fields.Integer(attribute="user.id"),
+            'displayname': fields.String(attribute="user.displayname"),
+            'avatar': fields.String(attribute="user.avatar"),
+        },
+
+        'answer1_feedback': fields.List(fields.Nested(get_answer_comment(restrict_user))),
+        'answer2_feedback': fields.List(fields.Nested(get_answer_comment(restrict_user))),
+        'self_evaluation': fields.List(fields.Nested(get_answer_comment(restrict_user))),
+        'created': fields.DateTime
+    }
+
+    if not restrict_user:
+        ret['user']['fullname'] = fields.String(attribute="user.fullname")
+
+    return ret
 
 def get_import_users_results(restrict_user=True):
     user = get_user(restrict_user)
@@ -214,8 +283,5 @@ def get_score():
         'id': fields.Integer,
         'criteria_id': fields.Integer,
         'answer_id': fields.Integer,
-        'rounds': fields.Integer,
-        'wins': fields.Integer,
-        'score': fields.Float,
         'normalized_score': fields.Integer
     }

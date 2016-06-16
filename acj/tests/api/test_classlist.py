@@ -114,36 +114,36 @@ class ClassListAPITest(ACJAPITestCase):
             # test success - instructor
             rv = self.client.get(url)
             self.assert200(rv)
-            students = rv.json['students']
+            students = rv.json['objects']
             expected = {
                 'id': self.data.get_authorized_student().id,
                 'name': self.data.get_authorized_student().fullname
             }
-            self.assertEqual(students[0]['user']['id'], expected['id'])
-            self.assertEqual(students[0]['user']['name'], expected['name'])
+            self.assertEqual(students[0]['id'], expected['id'])
+            self.assertEqual(students[0]['name'], expected['name'])
 
         with self.login(self.data.get_authorized_ta().username):
             rv = self.client.get(url)
             self.assert200(rv)
-            students = rv.json['students']
+            students = rv.json['objects']
             expected = {
                 'id': self.data.get_authorized_student().id,
                 'name': self.data.get_authorized_student().fullname
             }
-            self.assertEqual(students[0]['user']['id'], expected['id'])
-            self.assertEqual(students[0]['user']['name'], expected['name'])
+            self.assertEqual(students[0]['id'], expected['id'])
+            self.assertEqual(students[0]['name'], expected['name'])
 
         # test success - student
         with self.login(self.data.get_authorized_student().username):
             rv = self.client.get(url)
             self.assert200(rv)
-            students = rv.json['students']
+            students = rv.json['objects']
             expected = {
                 'id': self.data.get_authorized_student().id,
                 'name': self.data.get_authorized_student().displayname
             }
-            self.assertEqual(students[0]['user']['id'], expected['id'])
-            self.assertEqual(students[0]['user']['name'], expected['name'] + ' (You)')
+            self.assertEqual(students[0]['id'], expected['id'])
+            self.assertEqual(students[0]['name'], expected['name'] + ' (You)')
 
     def test_enrol_instructor(self):
         url = self._create_enrol_url(self.url, self.data.get_dropped_instructor().id)
@@ -166,7 +166,7 @@ class ClassListAPITest(ACJAPITestCase):
 
         # test invalid course id
         with self.login(self.data.get_authorized_instructor().username):
-            invalid_url = '/api/courses/999/users/instructors/' + str(self.data.get_dropped_instructor().id) + '/enrol'
+            invalid_url = '/api/courses/999/users/' + str(self.data.get_dropped_instructor().id)
             rv = self.client.post(
                 invalid_url,
                 data=json.dumps(role),
@@ -235,7 +235,7 @@ class ClassListAPITest(ACJAPITestCase):
             self.assert403(rv)
 
         # test invalid course id
-        invalid_url = '/api/courses/999/users/instructors/' + str(self.data.get_authorized_instructor().id) + '/enrol'
+        invalid_url = '/api/courses/999/users/' + str(self.data.get_authorized_instructor().id)
         with self.login(self.data.get_authorized_instructor().username):
             rv = self.client.delete(invalid_url)
             self.assert404(rv)

@@ -4,21 +4,21 @@ describe('user-module', function () {
 	var mockSession = {
 		"id": id,
 		"permissions": {
-			"Courses": {
+			"Course": {
 				"create": true,
 				"delete": true,
 				"edit": true,
 				"manage": true,
 				"read": true
 			},
-			"PostsForQuestions": {
+			"Assignment": {
 				"create": true,
 				"delete": true,
 				"edit": true,
 				"manage": true,
 				"read": true
 			},
-			"Users": {
+			"User": {
 				"create": true,
 				"delete": true,
 				"edit": true,
@@ -36,14 +36,10 @@ describe('user-module', function () {
 		fullname: "John Smith",
 		id: id,
 		lastname: "Smith",
-		lastonline: "Tue, 12 Aug 2014 20:53:31 -0000",
+		last_online: "Tue, 12 Aug 2014 20:53:31 -0000",
 		modified: "Tue, 12 Aug 2014 20:53:31 -0000",
 		username: "root",
-		usertypeforsystem: {
-			id: 3,
-			name: "System Administrator"
-		},
-		usertypesforsystem_id: 3
+		system_role: "System Administrator"
 	};
 	beforeEach(module('ubc.ctlt.acj.user'));
 	beforeEach(inject(function ($injector) {
@@ -59,7 +55,6 @@ describe('user-module', function () {
 
 	describe('UserController', function () {
 		var $rootScope, createController, $location;
-		var mockTypes = [{id: 1, name: 'Admin'}, {id: 2, name: 'Instructor'}, {id: 3, name: 'Student'}];
 
 		beforeEach(inject(function ($controller, _$rootScope_, _$location_) {
 			$rootScope = _$rootScope_;
@@ -74,7 +69,6 @@ describe('user-module', function () {
 		}));
 
 		it('should have correct initial states', function () {
-			$httpBackend.expectGET('/api/usertypes').respond(mockTypes);
 			var controller = createController();
 			expect($rootScope.user).toEqual({});
 			expect($rootScope.method).toEqual('new');
@@ -87,16 +81,13 @@ describe('user-module', function () {
 
 		describe('view: ', function () {
 			var controller;
-			beforeEach(function () {
-				$httpBackend.whenGET('/api/usertypes').respond(mockTypes);
-			});
 			describe('new', function () {
 				beforeEach(function () {
 					controller = createController({current: {method: 'new'}}, {userId: 2});
 				});
 
 				it('should be correctly initialized', function () {
-					$httpBackend.flush();
+			        expect($rootScope.user).toEqual({ 'system_role': 'Student'});
 				});
 
 				it('should be able to save new user', function () {

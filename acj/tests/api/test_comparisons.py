@@ -510,8 +510,8 @@ class ComparisonAPITests(ACJAPITestCase):
                 jcount = comparison_count if assignment.id == self.assignment.id else 0
                 self.assertEqual(count[assignment_id], jcount)
 
-    def test_get_all_comparison_available_logic(self):
-        url = '/api/courses/' + str(self.data.get_course().id) + '/comparisons/comparison_available'
+    def test_get_all_available(self):
+        url = '/api/courses/' + str(self.data.get_course().id) + '/comparisons/available'
 
         # test login required
         rv = self.client.get(url)
@@ -524,7 +524,7 @@ class ComparisonAPITests(ACJAPITestCase):
 
         with self.login(self.data.get_authorized_student().username):
             # test invalid course id
-            invalid_url = '/api/courses/999/comparisons/comparison_available'
+            invalid_url = '/api/courses/999/comparisons/available'
             rv = self.client.get(invalid_url)
             self.assert404(rv)
 
@@ -535,7 +535,7 @@ class ComparisonAPITests(ACJAPITestCase):
             # test authorized student - when haven't compared
             rv = self.client.get(url)
             self.assert200(rv)
-            logic = rv.json['comparison_available']
+            logic = rv.json['available']
             for assignment in self.data.get_assignments():
                 self.assertEqual(logic[str(assignment.id)], expected[assignment.id])
 
@@ -544,15 +544,15 @@ class ComparisonAPITests(ACJAPITestCase):
             # test authorized student - when have compared all
             rv = self.client.get(url)
             self.assert200(rv)
-            logic = rv.json['comparison_available']
+            available = rv.json['available']
             expected[first_assignment.id] = False
             for assignment in self.data.get_assignments():
-                self.assertEqual(logic[str(assignment.id)], expected[assignment.id])
+                self.assertEqual(available[str(assignment.id)], expected[assignment.id])
 
-    def test_get_comparison_available_logic(self):
+    def test_get_available(self):
         url = self._build_url(self.data.get_course().id, self.assignment.id)
 
-        tail = '/users/' + str(self.data.get_unauthorized_student().id) + '/comparison_available'
+        tail = '/users/' + str(self.data.get_unauthorized_student().id) + '/available'
         # test login required
         rv = self.client.get(url + tail)
         self.assert401(rv)
@@ -563,7 +563,7 @@ class ComparisonAPITests(ACJAPITestCase):
             self.assert403(rv)
 
         # test invalid course id
-        tail = '/users/' + str(self.data.get_authorized_student().id) + '/comparison_available'
+        tail = '/users/' + str(self.data.get_authorized_student().id) + '/available'
         with self.login(self.data.get_authorized_student().username):
             invalid_url = self._build_url(999, self.assignment.id)
             rv = self.client.get(invalid_url + tail)
@@ -578,11 +578,11 @@ class ComparisonAPITests(ACJAPITestCase):
             # test authorized student - when haven't compared
             rv = self.client.get(url + tail)
             self.assert200(rv)
-            self.assertTrue(rv.json['comparison_available'])
+            self.assertTrue(rv.json['available'])
 
             self._submit_all_possible_comparisons_for_user(self.data.get_authorized_student().id)
             # test authorized student - when have compared all
             self.login(self.data.get_authorized_student().username)
             rv = self.client.get(url + tail)
             self.assert200(rv)
-            self.assertFalse(rv.json['comparison_available'])
+            self.assertFalse(rv.json['available'])

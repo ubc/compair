@@ -55,7 +55,7 @@ on_user_password_update = event.signal('USER_PASSWORD_UPDATE')
 def check_valid_system_role(system_role):
     system_roles = [
         SystemRole.sys_admin.value,
-        SystemRole.instructor.value, 
+        SystemRole.instructor.value,
         SystemRole.student.value
     ]
     if system_role not in system_roles:
@@ -98,7 +98,7 @@ class UserAPI(Resource):
                 return {"error": "This student number already exists. Please pick another."}, 409
             else:
                 user.student_number = student_number
-            
+
             system_role = params.get("system_role", user.system_role.value)
             check_valid_system_role(system_role)
             user.system_role = SystemRole(system_role)
@@ -159,11 +159,11 @@ class UserListAPI(Resource):
         user.firstname = params.get("firstname")
         user.lastname = params.get("lastname")
         user.displayname = params.get("displayname")
-        
+
         system_role = params.get("system_role")
         check_valid_system_role(system_role)
         user.system_role = SystemRole(system_role)
-        
+
         require(CREATE, user)
 
         username_exists = User.query.filter_by(username=user.username).first()
@@ -222,7 +222,7 @@ class UserCourseListAPI(Resource):
             data={'userid': user_id})
 
         return {'objects': marshal(courses, dataformat.get_course(include_details=False))}
-        
+
 # courses/teaching
 class TeachingUserCourseListAPI(Resource):
     @login_required
@@ -231,7 +231,7 @@ class TeachingUserCourseListAPI(Resource):
             courses = Course.query.all()
             course_list = [{'id': c.id, 'name': c.name} for c in courses]
         else:
-            course_list = [ {'id': user_course.course_id, 'name': user_course.course.name} 
+            course_list = [ {'id': user_course.course_id, 'name': user_course.course.name}
                 for user_course in current_user.user_courses
                 if allow(MANAGE, Assignment(course_id=user_course.course_id))]
 

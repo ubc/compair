@@ -36,6 +36,11 @@ class BasicTestData:
         db.session.commit()
         return course
 
+    def create_criteria(self, user):
+        citeria = CriteriaFactory(user=user)
+        db.session.commit()
+        return citeria
+
     def create_instructor(self):
         return self.create_user(SystemRole.instructor)
 
@@ -63,10 +68,10 @@ class BasicTestData:
         self.enrol_user(user, course, CourseRole.dropped)
 
     def enrol_user(self, user, course, type):
-        coursesandusers = UserCourseFactory(course_id=course.id, user_id=user.id,
+        user_courses = UserCourseFactory(course_id=course.id, user_id=user.id,
                                             course_role=type)
         db.session.commit()
-        return coursesandusers
+        return user_courses
 
     def get_authorized_instructor(self):
         return self.authorized_instructor
@@ -255,7 +260,7 @@ class ComparisonTestData(CriteriaTestData):
         self.enrol_student(self.authorized_student_with_no_answers, self.get_course())
         self.student_answers = copy.copy(self.answers)
         for assignment in self.get_assignments():
-            # make sure we're allowed to judge existing assignments
+            # make sure we're allowed to compare existing assignments
             self.set_assignment_to_comparison_period(assignment)
             answer = self.create_answer(assignment, self.secondary_authorized_student)
             self.answers.append(answer)
@@ -391,7 +396,7 @@ class TestFixture:
         return self
 
     def enrol_user(self, user, course, type, group_name=None):
-        coursesandusers = UserCourseFactory(course=course, user=user,
+        user_courses = UserCourseFactory(course=course, user=user,
                                             course_role=type, group_name=group_name)
         db.session.commit()
-        return coursesandusers
+        return user_courses

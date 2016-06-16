@@ -33,7 +33,7 @@ module.service('Interceptors', ['$q', '$cacheFactory', 'AnswerResource', functio
 		response: function(response) {
 			var cache = $cacheFactory.get('$http');
 			// match both object endpoint and list endpoint
-			var url = response.config.url.match(/\/api\/courses\/\d+\/questions\/\d+\/answers\/\d+\/comments(\/\d+)?/g);
+			var url = response.config.url.match(/\/api\/courses\/\d+\/assignments\/\d+\/answers\/\d+\/comments(\/\d+)?/g);
 			cache.remove(url[0]);
 			var listUrl = url[0].replace(/\/\d+$/g, "");
 			if (listUrl != url[0]) {

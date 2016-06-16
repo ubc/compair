@@ -1,6 +1,6 @@
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.orm import synonym, load_only, column_property, backref, contains_eager, joinedload, Load
+from sqlalchemy.orm import column_property
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 

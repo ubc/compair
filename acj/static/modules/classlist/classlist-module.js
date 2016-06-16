@@ -44,7 +44,7 @@ module.factory(
 				}
 			}
 		);
-		ret.MODEL = "CoursesAndUsers";
+		ret.MODEL = "UserCourse";
 		return ret;
 	}
 ]);
@@ -53,9 +53,9 @@ module.factory(
 module.controller(
 	'ClassViewController',
 	["$scope", "$log", "$routeParams", "$route", "ClassListResource", "CourseResource",
-			 "CourseRoleResource", "GroupResource", "Toaster", "Session", "SaveAs",
+			 "CourseRole", "GroupResource", "Toaster", "Session", "SaveAs",
 	function($scope, $log, $routeParams, $route, ClassListResource, CourseResource,
-			 CourseRoleResource, GroupResource, Toaster, Session, SaveAs)
+			 CourseRole, GroupResource, Toaster, Session, SaveAs)
 	{
 		$scope.course = {};
 		$scope.classlist = {};
@@ -82,27 +82,20 @@ module.controller(
 		);
 		GroupResource.get({'courseId':courseId},
 			function (ret) {
-				$scope.groups = ret.groups;
+				$scope.groups = ret.objects;
 			},
 			function (ret) {
 				Toaster.reqerror("Groups Retrieval Failed", ret);
 			}
 		);
 
-		CourseRoleResource.query(
-			function (ret) {
-				$scope.roles = ret;
-			},
-			function (ret) {
-				Toaster.reqerror("No Course Roles Found", ret);
-			}
-		);
+        $scope.course_roles = [CourseRole.student, CourseRole.teaching_assistant, CourseRole.instructor]
 
-		$scope.update = function(userId, groupId) {
-			if (groupId) {
-				GroupResource.enrol({'courseId': courseId, 'userId': userId, 'groupId': groupId}, {},
+		$scope.update = function(userId, groupName) {
+			if (groupName) {
+				GroupResource.enrol({'courseId': courseId, 'userId': userId, 'groupName': groupName}, {},
 					function (ret) {
-						Toaster.success("Successfully enroled the user into " + ret.groups_name);
+						Toaster.success("Successfully enroled the user into " + ret.group_name);
 					},
 					function (ret) {
 						Toaster.reqerror("Failed to enrol the user into the group.", ret);
@@ -120,14 +113,13 @@ module.controller(
 			}
 		};
 
-		$scope.enrol = function(user, course_role) {
-			var role = {'course_role': course_role};
-			ClassListResource.enrol({'courseId': courseId, 'userId': user.id}, role,
+		$scope.enrol = function(user) {
+			ClassListResource.enrol({'courseId': courseId, 'userId': user.id}, user,
 				function (ret) {
 					Toaster.success("User Added", 'Successfully changed '+ ret.fullname +'\'s course role to ' + ret.course_role);
 				},
 				function (ret) {
-					Toaster.reqerror("User Add Failed For ID " + user.user.id, ret);
+					Toaster.reqerror("User Add Failed For ID " + user.id, ret);
 				}
 			);
 		};
@@ -135,7 +127,7 @@ module.controller(
 		$scope.unenrol = function(userId) {
 			ClassListResource.unenrol({'courseId': courseId, 'userId': userId},
 				function (ret) {
-					Toaster.success("Successfully unenroled " + ret.user.fullname + " from the course.");
+					Toaster.success("Successfully unenroled " + ret.fullname + " from the course.");
 					$route.reload();
 				},
 				function (ret) {

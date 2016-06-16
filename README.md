@@ -9,7 +9,7 @@ Adaptive Comparative Judgement (ACJ) is based on the law of comparative judgemen
 First used for psychological measurements, today it offers an alternative to marking, especially for performance assessments for which achievement can be difficult to describe in mark schemes and for those where inter-marker reliability is often a problem.
 
 This application is based on an updated 2012 paper which details ACJ's method and history.
-Students answer questions asked by instructors or other students and are then able to compare and judge the given answers. From these judgements a score for each answer is calculated according to ACJ's methods.
+Students answer questions asked by instructors or other students and are then able to compare and judge the given answers. From these comparisons, a score for each answer is calculated according to ACJ's methods.
 
 
 Frameworks

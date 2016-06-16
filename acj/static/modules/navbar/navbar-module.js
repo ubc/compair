@@ -10,7 +10,7 @@ var module = angular.module('ubc.ctlt.acj.navbar',
 		'ubc.ctlt.acj.authentication',
 		'ubc.ctlt.acj.course',
 		'ubc.ctlt.acj.login', // for LogoutController
-		'ubc.ctlt.acj.question',
+		'ubc.ctlt.acj.assignment',
 		'ubc.ctlt.acj.user'
 	]
 );
@@ -23,9 +23,9 @@ var module = angular.module('ubc.ctlt.acj.navbar',
 module.controller(
 	"NavbarController",
 	["$scope", "$log", "$route", "breadcrumbs",
-		"Session", "AuthenticationService", "Authorize", "CourseResource", "UserResource", "QuestionResource",
+		"Session", "AuthenticationService", "Authorize", "CourseResource", "UserResource", "AssignmentResource",
 	function NavbarController($scope, $log, $route, breadcrumbs,
-		Session, AuthenticationService, Authorize, CourseResource, UserResource, QuestionResource)
+		Session, AuthenticationService, Authorize, CourseResource, UserResource, AssignmentResource)
 	{
 		$scope.breadcrumbs = breadcrumbs;
 		$scope.isLoggedIn = false;
@@ -41,8 +41,8 @@ module.controller(
 			Authorize.can(Authorize.CREATE, CourseResource.MODEL).then(function (result) {
 				$scope.canCreateCourses = result;
 			});
-			Authorize.can(Authorize.MANAGE, QuestionResource.MODEL).then(function (result) {
-				$scope.canManageQuestions = result;
+			Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL).then(function (result) {
+				$scope.canManageAssignments = result;
 			});
 		};
 		$scope.setInCourse = function() {
@@ -54,7 +54,7 @@ module.controller(
 				CourseResource.get({'id': courseId}).$promise.then(
 					function(ret)
 					{
-						breadcrumbs.options = {'Course Questions': ret['name']};
+						breadcrumbs.options = {'Course Assignments': ret['name']};
 					}
 				);
 			}
@@ -87,8 +87,8 @@ module.controller(
 			$scope.$emit(AuthenticationService.LOGIN_REQUIRED_EVENT);
 		};
 
-		// TODO Not sure what listening to judgement, steps do
-		$scope.$on("JUDGEMENT", function(event) {
+		// TODO Not sure what listening to comparison, steps do
+		$scope.$on("COMPARISON", function(event) {
 			route = $scope.breadcrumb[$scope.breadcrumb.length - 1].link ? $scope.breadcrumb[$scope.breadcrumb.length - 1].link : "";
 			$location.path(route.replace("#/", ""));
 		});

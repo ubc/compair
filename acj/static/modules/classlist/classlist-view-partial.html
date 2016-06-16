@@ -51,7 +51,7 @@
 							Last Name</a>
 					</th>
 					<th>
-						<a href="" ng-click="reverse = predicate == 'student_no' && ! reverse; predicate = 'student_no'">
+						<a href="" ng-click="reverse = predicate == 'student_number' && ! reverse; predicate = 'student_number'">
 							Student Number</a>
 					</th>
 					<th>
@@ -82,17 +82,18 @@
 					</td>
 					<td>{{user.firstname}}</td>
 					<td>{{user.lastname}}</td>
-					<td>{{user.student_no}}</td>
+					<td>{{user.student_number}}</td>
 					<td><a ng-href="#/user/{{user.id}}">{{user.displayname}}</a></td>
 					<td>{{user.email}}</td>
 					<td>
-						<select ng-if="loggedInUserId != user.id" ng-model="user.course_role" ng-options="r.name as r.name for r in roles"
-								ng-change="enrol(user, user.course_role)"></select>
-						<span ng-if="loggedInUserId == user.id">{{ user.course_role }}</span>
+						<select ng-if="loggedInUserId != user.id" ng-model="user.course_role"
+                                ng-options="course_role as course_role for course_role in course_roles"
+								ng-change="enrol(user)"></select>
+						<span ng-if="loggedInUserId == user.id">{{ course_role }}</span>
 					</td>
 					<td ng-if="groups.length > 0">
-						<select ng-model="user.group_id" ng-options="g.id as g.name for g in groups"
-								ng-change="update(user.id, user.group_id)">
+						<select ng-model="user.group_name" ng-options="g as g for g in groups"
+								ng-change="update(user.id, user.group_name)">
 							<option value="">- None -</option>
 						</select>
 					</td>

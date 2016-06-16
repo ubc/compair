@@ -1,8 +1,19 @@
-<div class="pdfInline" ng-if="pdfs.length">
+<div class="pdfInline" ng-if="(pdfs && pdfs.length) || pdf">
 	<!-- List of files, user clicks on one to view in iframe -->
 	<ul class="list-inline">
 		<li>{{label}}</li>
-		<li ng-repeat="pdf in pdfs">
+		<li ng-if="pdf">
+			<a href="" class="btn btn-primary btn-xs"
+				ng-click="updatePDF(pdf.name);">
+				<i class="fa fa-file-pdf-o"></i> Show PDF Below
+			</a>
+			&nbsp; <em>or</em> &nbsp;
+			<a href="" class="btn btn-primary btn-xs"
+			   ng-click="openPDF(pdf.name);">
+				Open PDF Pop-up <i class="fa fa-external-link"></i>
+			</a>
+		</li>
+		<li ng-repeat="pdf in pdfs" ng-if="pdfs && pdfs.length)">
 			<a href="" class="btn btn-primary btn-xs"
 				ng-click="updatePDF(pdf.name);">
 				<i class="fa fa-file-pdf-o"></i> Show PDF Below
