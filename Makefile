@@ -20,7 +20,7 @@ env:
 deps:
 	pip install -r requirements.txt
 	npm install
-	node_modules/.bin/gulp
+	node_modules/gulp/bin/gulp.js
 
 clean:
 	find . -name '*.pyc' -exec rm -f {} \;
@@ -33,10 +33,10 @@ lint:
 	flake8 --exclude=env .
 
 testa:
-	node_modules/.bin/gulp test:acceptance
+	node_modules/gulp/bin/gulp.js test:acceptance
 
 testf:
-	node_modules/.bin/gulp test:unit
+	node_modules/gulp/bin/gulp.js test:unit
 
 testb:
 	python -m unittest discover -s acj/tests/
