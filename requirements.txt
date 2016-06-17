@@ -22,3 +22,4 @@ SQLAlchemy-Enum34==1.0.1
 mock==2.0.0
 elo==0.1
 trueskill==0.4.3
+pyLTI==0.4.1
