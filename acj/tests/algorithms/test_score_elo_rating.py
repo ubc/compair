@@ -1,10 +1,10 @@
 import unittest
 
-from acj.algorithms.score.comparative_judgement.score_algorithm import ComparativeJudgementScoreAlgorithm
+from acj.algorithms.score.elo_rating.score_algorithm import EloAlgorithmWrapper
 from acj.algorithms import ComparisonPair, ScoredObject, InvalidWinningKeyException
 
-class TestScoreComparitiveJudgement(unittest.TestCase):
-    score_algorithm = ComparativeJudgementScoreAlgorithm()
+class TestScoreEloRating(unittest.TestCase):
+    score_algorithm = EloAlgorithmWrapper()
 
     def setUp(self):
         pass
@@ -38,12 +38,11 @@ class TestScoreComparitiveJudgement(unittest.TestCase):
         self.assertEqual(results.get(2).wins, 0)
         self.assertEqual(results.get(2).loses, 1)
 
+        self.assertAlmostEqual(results.get(1).score, results.get(1).variable1)
+        self.assertAlmostEqual(results.get(2).score, results.get(2).variable1)
+
         self.assertGreater(results.get(1).score, results.get(2).score)
-        self.assertGreater(results.get(2).score, 0)
-
         self.assertGreater(results.get(1).variable1, results.get(2).variable1)
-        self.assertGreater(results.get(2).variable1, 0)
-
 
         # one comparison set with no winner
         # it should only increment rounds and not effect score
@@ -65,7 +64,7 @@ class TestScoreComparitiveJudgement(unittest.TestCase):
         self.assertEqual(results.get(2).loses, 0)
 
         self.assertAlmostEqual(results.get(1).score, results.get(2).score)
-        self.assertAlmostEqual(results.get(1).variable1, results.get(2).variable1)
+        self.assertGreater(results.get(2).score, 0)
 
         # comparison set with scores 1 > 2 ~= 3 > 4
         comparisons = [
@@ -103,11 +102,6 @@ class TestScoreComparitiveJudgement(unittest.TestCase):
         self.assertGreater(results.get(3).score, results.get(4).score)
         self.assertGreater(results.get(4).score, 0)
 
-        self.assertGreater(results.get(1).variable1, results.get(2).variable1)
-        self.assertAlmostEqual(results.get(2).variable1, results.get(3).variable1)
-        self.assertGreater(results.get(3).variable1, results.get(4).variable1)
-        self.assertGreater(results.get(4).variable1, 0)
-
         # multiple comparisons between same pairs
         comparisons_1 = [
             ComparisonPair(1,2, winning_key=1)
@@ -127,11 +121,6 @@ class TestScoreComparitiveJudgement(unittest.TestCase):
         # 1 lose should have a lower score than 1 win & 1 lose against same opponent
         self.assertLess(results_1.get(2).score, results_2.get(2).score)
 
-        # 1 win should have a higher expected score than 1 win & 1 lose against same opponent
-        self.assertGreater(results_1.get(1).variable1, results_2.get(1).variable1)
-        # 1 lose should have a lower expected score than 1 win & 1 lose against same opponent
-        self.assertLess(results_1.get(2).variable1, results_2.get(2).variable1)
-
         comparisons_1 = [
             ComparisonPair(1,2, winning_key=1)
         ]
@@ -147,22 +136,14 @@ class TestScoreComparitiveJudgement(unittest.TestCase):
         # 1 lose should have a higher score than 2 loses against same opponent
         self.assertGreater(results_1.get(2).score, results_2.get(2).score)
 
-        # 1 win should have a lower expected score than 2 wins against same opponent
-        self.assertLess(results_1.get(1).variable1, results_2.get(1).variable1)
-        # 1 lose should have a higher expected score than 2 loses against same opponent
-        self.assertGreater(results_1.get(2).variable1, results_2.get(2).variable1)
-
     def test_calculate_score_1vs1(self):
-        # comparative judgement 1 vs 1 does not rely on the variables in scored object
-        # it acts very similar to calculate score except limited to the 2 keys provided
-
         # no winning key error raised
         key1_scored_object = ScoredObject(
-            key=1, score=None, variable1=None, variable2=None,
+            key=1, score=1400, variable1=1400, variable2=None,
             rounds=None, wins=None, loses=None, opponents=None
         )
         key2_scored_object = ScoredObject(
-            key=2, score=None, variable1=None, variable2=None,
+            key=2, score=1400, variable1=1400, variable2=None,
             rounds=None, wins=None, loses=None, opponents=None
         )
         winning_key = None
@@ -172,13 +153,13 @@ class TestScoreComparitiveJudgement(unittest.TestCase):
             self.score_algorithm.calculate_score_1vs1(
                 key1_scored_object, key2_scored_object, winning_key, comparisons)
 
-        # one comparison and empty comparison set
+        # empty comparison set
         key1_scored_object = ScoredObject(
-            key=1, score=None, variable1=None, variable2=None,
+            key=1, score=1400, variable1=1400, variable2=None,
             rounds=None, wins=None, loses=None, opponents=None
         )
         key2_scored_object = ScoredObject(
-            key=2, score=None, variable1=None, variable2=None,
+            key=2, score=1400, variable1=1400, variable2=None,
             rounds=None, wins=None, loses=None, opponents=None
         )
         winning_key = 1
@@ -210,13 +191,43 @@ class TestScoreComparitiveJudgement(unittest.TestCase):
         self.assertGreater(key1_results.variable1, key2_results.variable1)
         self.assertGreater(key2_results.variable1, 0)
 
-        # one comparison and comparison set without winners
+        # No value given for variables
         key1_scored_object = ScoredObject(
             key=1, score=None, variable1=None, variable2=None,
             rounds=None, wins=None, loses=None, opponents=None
         )
         key2_scored_object = ScoredObject(
             key=2, score=None, variable1=None, variable2=None,
+            rounds=None, wins=None, loses=None, opponents=None
+        )
+        winning_key = 1
+        comparisons = []
+        key1_results, key2_results = self.score_algorithm.calculate_score_1vs1(
+            key1_scored_object, key2_scored_object, winning_key, comparisons)
+
+        self.assertEqual(key1_results.rounds, 1)
+        self.assertEqual(key1_results.opponents, 1)
+        self.assertEqual(key1_results.wins, 1)
+        self.assertEqual(key1_results.loses, 0)
+
+        self.assertEqual(key2_results.rounds, 1)
+        self.assertEqual(key2_results.opponents, 1)
+        self.assertEqual(key2_results.wins, 0)
+        self.assertEqual(key2_results.loses, 1)
+
+        self.assertGreater(key1_results.score, key2_results.score)
+        self.assertGreater(key2_results.score, 0)
+
+        self.assertGreater(key1_results.variable1, key2_results.variable1)
+        self.assertGreater(key2_results.variable1, 0)
+
+        # comparison set without winners
+        key1_scored_object = ScoredObject(
+            key=1, score=1400, variable1=1400, variable2=None,
+            rounds=None, wins=None, loses=None, opponents=None
+        )
+        key2_scored_object = ScoredObject(
+            key=2, score=1400, variable1=1400, variable2=None,
             rounds=None, wins=None, loses=None, opponents=None
         )
         winning_key = 1
@@ -246,11 +257,11 @@ class TestScoreComparitiveJudgement(unittest.TestCase):
 
         # comparison set with scores 1 > 2 ~= 3 > 4
         key1_scored_object = ScoredObject(
-            key=1, score=None, variable1=None, variable2=None,
+            key=1, score=1405, variable1=1405, variable2=None,
             rounds=None, wins=None, loses=None, opponents=None
         )
         key2_scored_object = ScoredObject(
-            key=2, score=None, variable1=None, variable2=None,
+            key=2, score=1405, variable1=1405, variable2=None,
             rounds=None, wins=None, loses=None, opponents=None
         )
         winning_key = 1
@@ -279,11 +290,11 @@ class TestScoreComparitiveJudgement(unittest.TestCase):
 
         # multiple comparisons between same pairs
         key1_scored_object = ScoredObject(
-            key=1, score=None, variable1=None, variable2=None,
+            key=1, score=1400, variable1=1400, variable2=None,
             rounds=None, wins=None, loses=None, opponents=None
         )
         key2_scored_object = ScoredObject(
-            key=2, score=None, variable1=None, variable2=None,
+            key=2, score=1400, variable1=1400, variable2=None,
             rounds=None, wins=None, loses=None, opponents=None
         )
         winning_key = 1
@@ -292,11 +303,11 @@ class TestScoreComparitiveJudgement(unittest.TestCase):
             key1_scored_object, key2_scored_object, winning_key, comparisons)
 
         key1_scored_object = ScoredObject(
-            key=1, score=None, variable1=None, variable2=None,
+            key=1, score=key1_results_1.score, variable1=key1_results_1.variable1, variable2=key1_results_1.variable2,
             rounds=None, wins=None, loses=None, opponents=None
         )
         key2_scored_object = ScoredObject(
-            key=2, score=None, variable1=None, variable2=None,
+            key=2, score=key2_results_1.score, variable1=key2_results_1.variable1, variable2=key2_results_1.variable2,
             rounds=None, wins=None, loses=None, opponents=None
         )
         winning_key = 2
@@ -316,13 +327,12 @@ class TestScoreComparitiveJudgement(unittest.TestCase):
         # 1 lose should have a lower expected score than 1 win & 1 lose against same opponent
         self.assertLess(key2_results_1.variable1, key2_results_2.variable1)
 
-
         key1_scored_object = ScoredObject(
-            key=1, score=None, variable1=None, variable2=None,
+            key=1, score=1400, variable1=1400, variable2=None,
             rounds=None, wins=None, loses=None, opponents=None
         )
         key2_scored_object = ScoredObject(
-            key=2, score=None, variable1=None, variable2=None,
+            key=2, score=1400, variable1=1400, variable2=None,
             rounds=None, wins=None, loses=None, opponents=None
         )
         winning_key = 1
@@ -331,11 +341,11 @@ class TestScoreComparitiveJudgement(unittest.TestCase):
             key1_scored_object, key2_scored_object, winning_key, comparisons)
 
         key1_scored_object = ScoredObject(
-            key=1, score=None, variable1=None, variable2=None,
+            key=1, score=key1_results_1.score, variable1=key1_results_1.variable1, variable2=key1_results_1.variable2,
             rounds=None, wins=None, loses=None, opponents=None
         )
         key2_scored_object = ScoredObject(
-            key=2, score=None, variable1=None, variable2=None,
+            key=2, score=key2_results_1.score, variable1=key2_results_1.variable1, variable2=key2_results_1.variable2,
             rounds=None, wins=None, loses=None, opponents=None
         )
         winning_key = 1
@@ -356,13 +366,13 @@ class TestScoreComparitiveJudgement(unittest.TestCase):
         self.assertGreater(key2_results_1.variable1, key2_results_2.variable1)
 
 
-        # adding unrelated comparisons should not effect 1 vs 1 scores or stats results
+        # adding unrelated comparisons should not effect 1 vs 1 stats results
         key1_scored_object = ScoredObject(
-            key=1, score=None, variable1=None, variable2=None,
+            key=1, score=1405, variable1=1405, variable2=None,
             rounds=None, wins=None, loses=None, opponents=None
         )
         key2_scored_object = ScoredObject(
-            key=2, score=None, variable1=None, variable2=None,
+            key=2, score=1405, variable1=1405, variable2=None,
             rounds=None, wins=None, loses=None, opponents=None
         )
         winning_key = 1
@@ -396,6 +406,8 @@ class TestScoreComparitiveJudgement(unittest.TestCase):
         self.assertEqual(key2_results_1.opponents, key2_results_2.opponents)
         self.assertEqual(key2_results_1.wins, key2_results_2.wins)
         self.assertEqual(key2_results_1.loses, key2_results_2.loses)
+
+
 
 
 if __name__ == '__main__':

@@ -20,3 +20,5 @@ alembic==0.8.0
 enum34==1.1.4
 SQLAlchemy-Enum34==1.0.1
 mock==2.0.0
+elo==0.1
+trueskill==0.4.3

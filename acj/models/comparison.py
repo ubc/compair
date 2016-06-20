@@ -9,9 +9,9 @@ from . import *
 from importlib import import_module
 
 from acj.core import db
-from acj.algorithms import ScoredObject, ComparisonPair
+from acj.algorithms import ScoredObject, ComparisonPair, ScoredObject
 from acj.algorithms.pair import generate_pair
-from acj.algorithms.score import calculate_score
+from acj.algorithms.score import calculate_score, calculate_score_1vs1
 
 
 class Comparison(DefaultTableMixin, WriteTrackingMixin):
@@ -50,6 +50,13 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
     user_fullname = association_proxy('user', 'fullname')
     user_system_role = association_proxy('user', 'system_role')
 
+    def convert_to_comparison_pair(self):
+        return ComparisonPair(
+            key1=self.answer1_id,
+            key2=self.answer2_id,
+            winning_key=self.winner_id
+        )
+
     @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()
@@ -70,7 +77,6 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
             for non_student in non_students]
         ineligible_user_ids.append(user_id)
 
-        # TODO: try score vs excepted score
         answers_with_score = Answer.query \
             .with_entities(Answer, func.avg(Score.score).label('average_score') ) \
             .outerjoin(Score) \
@@ -86,7 +92,9 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
             scored_objects.append(ScoredObject(
                 key=answer_with_score.Answer.id,
                 score=answer_with_score.average_score,
-                round=answer_with_score.Answer.round
+                rounds=answer_with_score.Answer.round,
+                variable1=None, variable2=None,
+                wins=None, loses=None, opponents=None
             ))
 
         comparisons = Comparison.query \
@@ -98,13 +106,9 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
             ) \
             .all()
 
-        comparison_pairs = []
-        for comparison in comparisons:
-            comparison_pairs.append(ComparisonPair(
-                comparison.answer1_id,
-                comparison.answer2_id,
-                None
-            ))
+        comparison_pairs = [ComparisonPair(
+            comparison.answer1_id, comparison.answer2_id, winning_key=None
+        ) for comparison in comparisons]
 
         comparison_pair = generate_pair(
             package_name="adaptive",
@@ -146,12 +150,89 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         return new_comparisons
 
     @classmethod
+    def update_scores_1vs1(cls, comparisons):
+        from . import Score, ScoringAlgorithm
+
+        assignment_id = comparisons[0].assignment_id
+        answer1_id = comparisons[0].answer1_id
+        answer2_id = comparisons[0].answer2_id
+
+        # get all other comparisons for the answers not including the ones being calculated
+        other_comparisons = Comparison.query . \
+            options(load_only('winner_id', 'criterion_id', 'answer1_id', 'answer2_id')) . \
+            filter(and_(
+                Comparison.assignment_id == assignment_id,
+                ~Comparison.id.in_([comparison.id for comparison in comparisons]),
+                or_(
+                    Comparison.answer1_id.in_([answer1_id, answer2_id]),
+                    Comparison.answer2_id.in_([answer1_id, answer2_id])
+                )
+            )) \
+            .all()
+
+        scores = Score.query .\
+            options(load_only('answer_id', 'criterion_id', 'score', 'variable1', 'variable2', 'rounds')) . \
+            filter(and_(
+                Score.answer_id.in_([answer1_id, answer2_id])
+            )) \
+            .all()
+
+        new_scores = []
+        for comparison in comparisons:
+            score1 = next((score for score in scores
+                if score.answer_id == answer1_id and
+                score.criterion_id == comparison.criterion_id),
+                None)
+            key1_scored_object = score1.convert_to_scored_object() if score1 != None else ScoredObject(
+                key=answer1_id, score= None, variable1=None, variable2=None,
+                rounds=0, wins=0, opponents=0, loses=0,
+            )
+
+            score2 = next((score for score in scores
+                if score.answer_id == answer2_id and score.criterion_id == comparison.criterion_id),
+                None)
+            key2_scored_object = score2.convert_to_scored_object() if score2 != None else ScoredObject(
+                key=answer2_id, score= None, variable1=None, variable2=None,
+                rounds=0, wins=0, opponents=0, loses=0,
+            )
+
+            result_1, result_2 = calculate_score_1vs1(
+                package_name=ScoringAlgorithm.true_skill.value,
+                key1_scored_object=key1_scored_object,
+                key2_scored_object=key2_scored_object,
+                winning_key=comparison.winner_id,
+                other_comparison_pairs=[comparison.convert_to_comparison_pair() for comparison in other_comparisons],
+                log=current_app.logger
+            )
+
+            for answer_id, score, result in [(answer1_id, score1, result_1), (answer2_id, score2, result_2)]:
+                if score == None:
+                    score = Score(
+                        assignment_id=assignment_id,
+                        answer_id=answer1_id,
+                        criterion_id=comparison.criterion_id
+                    )
+                    new_scores.append(score)
+                score.score = result.score
+                score.variable1 = result.variable1
+                score.variable2 = result.variable2
+                score.rounds = result.rounds
+                score.wins = result.wins
+                score.loses = result.loses
+                score.opponents = result.opponents
+
+        updated_scores = scores + new_scores
+        db.session.add_all(updated_scores)
+        db.session.commit()
+
+    @classmethod
     def calculate_scores(cls, assignment_id):
-        from . import Score, AssignmentCriterion
+        from . import Score, AssignmentCriterion, ScoringAlgorithm
         # get all comparisons for this assignment and only load the data we need
         comparisons = Comparison.query . \
             options(load_only('winner_id', 'criterion_id', 'answer1_id', 'answer2_id')) . \
-            filter(Comparison.assignment_id == assignment_id).all()
+            filter(Comparison.assignment_id == assignment_id) \
+            .all()
 
         assignment_criteria = AssignmentCriterion.query \
             .with_entities(AssignmentCriterion.criterion_id) \
@@ -165,17 +246,13 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
             for comparison in comparisons:
                 if comparison.criterion_id != assignment_criterion.criterion_id:
                     continue
-                answer1_id = comparison.answer1_id
-                answer2_id = comparison.answer2_id
-                answer_ids.add(answer1_id)
-                answer_ids.add(answer2_id)
-                winner = comparison.winner_id
-                comparison_pairs.append(ComparisonPair(
-                        answer1_id, answer2_id, winning_key=winner
-                ))
+                answer_ids.add(comparison.answer1_id)
+                answer_ids.add(comparison.answer2_id)
+
+                comparison_pairs.append(comparison.convert_to_comparison_pair())
 
             criterion_comparison_results[assignment_criterion.criterion_id] = calculate_score(
-                package_name="comparative_judgement",
+                package_name=ScoringAlgorithm.true_skill.value,
                 comparison_pairs=comparison_pairs,
                 log=current_app.logger
             )
@@ -207,12 +284,12 @@ def update_scores(scores, assignment_id, criterion_comparison_results):
                 )
                 new_scores.append(score)
 
-            score.excepted_score = comparison_results.score
-            score.rounds = comparison_results.total_rounds
-            score.wins = comparison_results.total_wins
-            score.opponents = comparison_results.total_opponents
-
-            # a good average score value is excepted score / number of opponents
-            score.score = score.excepted_score / score.opponents
+            score.score = comparison_results.score
+            score.variable1 = comparison_results.variable1
+            score.variable2 = comparison_results.variable2
+            score.rounds = comparison_results.rounds
+            score.wins = comparison_results.wins
+            score.loses = comparison_results.loses
+            score.opponents = comparison_results.opponents
 
     return scores + new_scores

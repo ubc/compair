@@ -178,8 +178,10 @@ class CompareRootAPI(Resource):
         db.session.commit()
 
         # update answer scores
-        current_app.logger.debug("Doing scoring")
-        Comparison.calculate_scores(assignment_id)
+        if completed:
+            current_app.logger.debug("Doing scoring")
+            Comparison.update_scores_1vs1(comparisons)
+            #Comparison.calculate_scores(assignment_id)
 
         on_comparison_update.send(
             self,
