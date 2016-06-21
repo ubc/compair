@@ -265,14 +265,14 @@
 					<!-- <p ng-show="!showReadMore">No More To Read!!! ({{thisHeight}})</p> -->
 
 					<!-- Student Score (not used for instructor answers) -->
-					<p class="pull-right score-display" ng-if="canManageAssignment && score.criteria_id==answerFilters.orderBy && answer.scores.length > 0" ng-repeat="score in answer.scores">
+					<p class="pull-right score-display" ng-if="canManageAssignment && score.criterion_id==answerFilters.orderBy && answer.scores.length > 0" ng-repeat="score in answer.scores">
 						<em>Score: {{score.normalized_score}}%</em>
 						<a href="" tooltip="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
 							<i class="fa fa-question-circle"></i>
 						</a>
 					</p>
 					<!-- Student Rank (not used for instructor answers) -->
-					<p class="pull-right score-display" ng-if="!canManageAssignment && score.criteria_id==answerFilters.orderBy && answer.scores.length > 0" ng-repeat="score in answer.scores">
+					<p class="pull-right score-display" ng-if="!canManageAssignment && score.criterion_id==answerFilters.orderBy && answer.scores.length > 0" ng-repeat="score in answer.scores">
 						<em>
 							Students Ranked: <strong>{{allScores[answer.id]}}</strong>
 						</em>
@@ -451,7 +451,7 @@
 				</div>
 
 				<div ng-repeat="comparison in comparison_set.comparisons">
-					<h5 class="content">Comparison for "{{ comparison.criteria.name }}"</h5>
+					<h5 class="content">Comparison for "{{ comparison.criterion.name }}"</h5>
 
 					<div class="content" mathjax="comparison.content"
 						ng-bind-html="comparison.content">
@@ -464,8 +464,8 @@
                         Show compared answers
                     </a></p>
                     <div class="row" ng-show="showAnswers">
-                        <acj-answer-content answer="comparison_set.answer1" is-chosen="comparison.winner_id == comparison_set.answer1_id" name="Odd-Numbered Answer" criteria="comparison.criteria_id" show-score="false"></acj-answer-content>
-                        <acj-answer-content answer="comparison_set.answer2" is-chosen="comparison.winner_id == comparison_set.answer2_id" name="Even-Numbered Answer" criteria="comparison.criteria_id" show-score="false"></acj-answer-content>
+                        <acj-answer-content answer="comparison_set.answer1" is-chosen="comparison.winner_id == comparison_set.answer1_id" name="Odd-Numbered Answer" criterion="comparison.criterion_id" show-score="false"></acj-answer-content>
+                        <acj-answer-content answer="comparison_set.answer2" is-chosen="comparison.winner_id == comparison_set.answer2_id" name="Even-Numbered Answer" criterion="comparison.criterion_id" show-score="false"></acj-answer-content>
                     </div>
 
 				</div>

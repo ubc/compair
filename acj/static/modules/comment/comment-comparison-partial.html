@@ -63,7 +63,7 @@
 
                 <div ng-repeat="comparison in comparison_set.comparisons">
 
-                    <h5 class="content">Comparison for "{{comparison.criteria.name}}"</h5>
+                    <h5 class="content">Comparison for "{{comparison.criterion.name}}"</h5>
 
                     <div class="content" mathjax="comparison.content"
                          ng-bind-html="comparison.content">
@@ -77,8 +77,8 @@
                     </a></p>
 
                     <div class="row" ng-show="showAnswers">
-                        <acj-answer-content answer="comparison_set.answer1" is-chosen="comparison.winner_id == comparison_set.answer1_id" name="Odd-Numbered Answer" criteria="comparison.criteria_id" show-score="true"></acj-answer-content>
-                        <acj-answer-content answer="comparison_set.answer2" is-chosen="comparison.winner_id == comparison_set.answer2_id" name="Even-Numbered Answer" criteria="comparison.criteria_id" show-score="true"></acj-answer-content>
+                        <acj-answer-content answer="comparison_set.answer1" is-chosen="comparison.winner_id == comparison_set.answer1_id" name="Odd-Numbered Answer" criterion="comparison.criterion_id" show-score="true"></acj-answer-content>
+                        <acj-answer-content answer="comparison_set.answer2" is-chosen="comparison.winner_id == comparison_set.answer2_id" name="Even-Numbered Answer" criterion="comparison.criterion_id" show-score="true"></acj-answer-content>
                     </div>
 
                 </div>

@@ -68,23 +68,23 @@ class GradebookAPI(Resource):
                                       for (user_id, compare_count) in comparisons}
 
         # find out the scores that students get
-        criteria_ids = [c.criteria_id for c in assignment.assignment_criteria]
+        criterion_ids = [c.criterion_id for c in assignment.assignment_criteria]
         stmt = Answer.query. \
-            with_entities(Answer.user_id, Answer.flagged, Score.criteria_id, Score.normalized_score.label('ns')). \
+            with_entities(Answer.user_id, Answer.flagged, Score.criterion_id, Score.normalized_score.label('ns')). \
             outerjoin(Score, and_(
                 Answer.id == Score.answer_id,
-                Score.criteria_id.in_(criteria_ids))). \
+                Score.criterion_id.in_(criterion_ids))). \
             filter(Answer.assignment_id == assignment_id). \
             subquery()
 
         scores_by_user = User.query. \
-            with_entities(User.id, stmt.c.flagged, stmt.c.criteria_id, stmt.c.ns). \
+            with_entities(User.id, stmt.c.flagged, stmt.c.criterion_id, stmt.c.ns). \
             outerjoin(stmt, User.id == stmt.c.user_id). \
             filter(User.id.in_(student_ids)). \
             all()
 
         # process the results into dicts
-        init_scores = {c.criteria_id: 'Not Evaluated' for c in assignment.assignment_criteria}
+        init_scores = {c.criterion_id: 'Not Evaluated' for c in assignment.assignment_criteria}
         scores_by_user_id = {student_id: copy.deepcopy(init_scores) for student_id in student_ids}
         flagged_by_user_id = {}
         num_answers_per_student = {}
@@ -97,7 +97,7 @@ class GradebookAPI(Resource):
                     scores_by_user_id[score[0]][score[2]] = round(score[3], 3)
             else:
                 # no answer from the student
-                scores_by_user_id[score[0]] = {c.criteria_id: 'No Answer' for c in assignment.assignment_criteria}
+                scores_by_user_id[score[0]] = {c.criterion_id: 'No Answer' for c in assignment.assignment_criteria}
 
         include_self_evaluation = False
         num_self_evaluation_per_student = {}
@@ -126,7 +126,7 @@ class GradebookAPI(Resource):
         # {'gradebook':[{user1}. {user2}, ...]}
         # user id, username, first name, last name, answer submitted, comparisons submitted
         gradebook = []
-        no_answer = {c.criteria_id: 'No Answer' for c in assignment.assignment_criteria}
+        no_answer = {c.criterion_id: 'No Answer' for c in assignment.assignment_criteria}
         for student in students:
             entry = {
                 'userid': student.id,

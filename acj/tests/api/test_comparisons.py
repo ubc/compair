@@ -27,7 +27,7 @@ class ComparisonAPITests(ACJAPITestCase):
         submit = {
             'comparisons': [
                 {
-                    'criteria_id': self.assignment.assignment_criteria[0].criteria_id,
+                    'criterion_id': self.assignment.assignment_criteria[0].criterion_id,
                     'winner_id': winner_id
                 }
             ]
@@ -182,7 +182,7 @@ class ComparisonAPITests(ACJAPITestCase):
             self.assert400(rv)
             # test reject missing course criteria id
             faulty_comparisons = copy.deepcopy(comparison_submit)
-            del faulty_comparisons['comparisons'][0]['criteria_id']
+            del faulty_comparisons['comparisons'][0]['criterion_id']
             rv = self.client.post(
                 self.base_url,
                 data=json.dumps(faulty_comparisons),
@@ -196,9 +196,9 @@ class ComparisonAPITests(ACJAPITestCase):
                 data=json.dumps(faulty_comparisons),
                 content_type='application/json')
             self.assert400(rv)
-            # test invalid criteria id
+            # test invalid criterion id
             faulty_comparisons = copy.deepcopy(comparison_submit)
-            faulty_comparisons['comparisons'][0]['criteria_id'] = 3930230
+            faulty_comparisons['comparisons'][0]['criterion_id'] = 3930230
             rv = self.client.post(
                 self.base_url,
                 data=json.dumps(faulty_comparisons),
@@ -263,8 +263,8 @@ class ComparisonAPITests(ACJAPITestCase):
                 "Expected and actual comparison answer2 id did not match")
             found_comparison = False
             for expected_comparison in comparison_submit['comparisons']:
-                if expected_comparison['criteria_id'] != \
-                        actual_comparison['criteria_id']:
+                if expected_comparison['criterion_id'] != \
+                        actual_comparison['criterion_id']:
                     continue
                 self.assertEqual(
                     expected_comparison['winner_id'],

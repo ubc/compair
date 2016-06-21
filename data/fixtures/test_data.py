@@ -6,16 +6,16 @@ import factory.fuzzy
 
 from acj import db
 from six.moves import range
-from acj.models import SystemRole, CourseRole, Criteria, Course
+from acj.models import SystemRole, CourseRole, Criterion, Course
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
-    AnswerFactory, CriteriaFactory, ComparisonFactory, AssignmentCriteriaFactory, \
+    AnswerFactory, CriterionFactory, ComparisonFactory, AssignmentCriterionFactory, \
     AssignmentCommentFactory, AnswerCommentFactory, ScoreFactory
 from data.fixtures import DefaultFixture
 
 
 class BasicTestData:
     def __init__(self):
-        self.default_criteria = Criteria.query.get(1)
+        self.default_criterion = Criterion.query.get(1)
         self.main_course = self.create_course()
         self.secondary_course = self.create_course()
         self.authorized_instructor = self.create_instructor()
@@ -36,8 +36,8 @@ class BasicTestData:
         db.session.commit()
         return course
 
-    def create_criteria(self, user):
-        citeria = CriteriaFactory(user=user)
+    def create_criterion(self, user):
+        citeria = CriterionFactory(user=user)
         db.session.commit()
         return citeria
 
@@ -97,8 +97,8 @@ class BasicTestData:
     def get_dropped_instructor(self):
         return self.dropped_instructor
 
-    def get_default_criteria(self):
-        return self.default_criteria
+    def get_default_criterion(self):
+        return self.default_criterion
 
 
 class SimpleAssignmentTestData(BasicTestData):
@@ -128,9 +128,9 @@ class SimpleAssignmentTestData(BasicTestData):
             answer_start=answer_start,
             answer_end=answer_end
         )
-        AssignmentCriteriaFactory(criteria=DefaultFixture.DEFAULT_CRITERIA, assignment=assignment)
+        AssignmentCriterionFactory(criterion=DefaultFixture.DEFAULT_CRITERION, assignment=assignment)
         db.session.commit()
-        self.criteria_by_assignments[assignment.id] = assignment.assignment_criteria[0].criteria
+        self.criteria_by_assignments[assignment.id] = assignment.assignment_criteria[0].criterion
         return assignment
 
     def get_assignments(self):
@@ -186,7 +186,7 @@ class SimpleAnswersTestData(SimpleAssignmentTestData):
         ScoreFactory(
             assignment_id=assignment.id,
             answer=answer,
-            criteria_id=assignment.assignment_criteria[0].criteria_id
+            criterion_id=assignment.assignment_criteria[0].criterion_id
         )
         db.session.commit()
         return answer
@@ -224,36 +224,35 @@ class AnswerCommentsTestData(SimpleAnswersTestData):
         return self.answer_comments_by_assignment[assignment.id]
 
 
-class CriteriaTestData(SimpleAnswersTestData):
+class CriterionTestData(SimpleAnswersTestData):
     def __init__(self):
         SimpleAnswersTestData.__init__(self)
-        # inactive course criteria
-        self.criteria = CriteriaFactory(user=self.get_authorized_instructor())
-        # criteria created by another instructor
-        self.secondary_criteria = CriteriaFactory(user=self.get_unauthorized_instructor())
-        # second criteria
-        self.criteria2 = CriteriaFactory(user=self.get_authorized_instructor())
+        self.criterion = CriterionFactory(user=self.get_authorized_instructor())
+        # criterion created by another instructor
+        self.secondary_criterion = CriterionFactory(user=self.get_unauthorized_instructor())
+        # second criterion
+        self.criterion2 = CriterionFactory(user=self.get_authorized_instructor())
         db.session.commit()
 
-    def get_criteria(self):
-        return self.criteria
+    def get_criterion(self):
+        return self.criterion
 
-    def get_criteria2(self):
-        return self.criteria2
+    def get_criterion2(self):
+        return self.criterion2
 
-    def get_secondary_criteria(self):
-        return self.secondary_criteria
+    def get_secondary_criterion(self):
+        return self.secondary_criterion
 
-    def get_inactive_criteria_course(self):
-        return self.inactive_criteria_course
+    def get_inactive_criterion_course(self):
+        return self.inactive_criterion_course
 
     def get_criteria_by_assignment(self, assignment):
         return self.criteria_by_assignments[assignment.id]
 
 
-class ComparisonTestData(CriteriaTestData):
+class ComparisonTestData(CriterionTestData):
     def __init__(self):
-        CriteriaTestData.__init__(self)
+        CriterionTestData.__init__(self)
         self.secondary_authorized_student = self.create_normal_user()
         self.enrol_student(self.secondary_authorized_student, self.get_course())
         self.authorized_student_with_no_answers = self.create_normal_user()
@@ -305,7 +304,7 @@ class ComparisonTestData(CriteriaTestData):
 
 class TestFixture:
     def __init__(self):
-        self.default_criteria = Criteria.query.get(1)
+        self.default_criterion = Criterion.query.get(1)
         self.course = self.assignment = None
         self.instructor = self.ta = None
         self.students = []
@@ -354,7 +353,7 @@ class TestFixture:
                     ScoreFactory(
                         assignment=assignment,
                         answer=answer,
-                        criteria_id=assignment.assignment_criteria[0].criteria_id,
+                        criterion_id=assignment.assignment_criteria[0].criterion_id,
                         score=random.random() * 5
                     )
                 db.session.commit()
@@ -367,7 +366,7 @@ class TestFixture:
             answer_end = datetime.datetime.now() - datetime.timedelta(
                 days=2) if is_answer_period_end else datetime.datetime.now() + datetime.timedelta(days=7)
             assignment = AssignmentFactory(course=self.course, answer_end=answer_end)
-            AssignmentCriteriaFactory(criteria=DefaultFixture.DEFAULT_CRITERIA, assignment=assignment)
+            AssignmentCriterionFactory(criterion=DefaultFixture.DEFAULT_CRITERION, assignment=assignment)
             self.assignments.append(assignment)
         db.session.commit()
 

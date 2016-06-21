@@ -10,12 +10,12 @@ from .system_role import SystemRole
 from .activity_log import ActivityLog
 from .answer_comment import AnswerComment
 from .answer import Answer
-from .assignment_criteria import AssignmentCriteria
+from .assignment_criterion import AssignmentCriterion
 from .assignment_comment import AssignmentComment
 from .comparison import Comparison
 from .assignment import Assignment
 from .course import Course
-from .criteria import Criteria
+from .criterion import Criterion
 from .file import File
 from .score import Score
 from .user import User

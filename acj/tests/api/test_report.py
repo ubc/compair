@@ -301,7 +301,7 @@ class ReportAPITest(ACJAPITestCase):
             self.assertEqual(expected_heading, heading)
 
     def _check_participation_stat_report_user_overall_row(self, student, row, overall_stats):
-            default_criteria = self.fixtures.default_criteria
+            default_criterion = self.fixtures.default_criterion
             excepted_row = []
 
             overall_stats.setdefault(student.id, {
@@ -328,7 +328,7 @@ class ReportAPITest(ACJAPITestCase):
 
 
     def _check_participation_stat_report_user_row(self, assignment, student, row, overall_stats):
-            default_criteria = self.fixtures.default_criteria
+            default_criterion = self.fixtures.default_criterion
             excepted_row = []
 
             overall_stats.setdefault(student.id, {
@@ -364,7 +364,7 @@ class ReportAPITest(ACJAPITestCase):
                 .filter(
                     Comparison.user_id == student.id,
                     Comparison.assignment_id == assignment.id,
-                    Comparison.criteria_id == default_criteria.id
+                    Comparison.criterion_id == default_criterion.id
                 ) \
                 .all()
             evaluations_submitted = len(comparisons)
@@ -397,7 +397,7 @@ class ReportAPITest(ACJAPITestCase):
 
 
     def _check_participation_report_heading_rows(self, assignments, heading1, heading2):
-            default_criteria = self.fixtures.default_criteria
+            default_criterion = self.fixtures.default_criterion
 
             expected_heading1 = ['', '', '']
             for assignment in assignments:
@@ -406,14 +406,14 @@ class ReportAPITest(ACJAPITestCase):
 
             expected_heading2 = ['Last Name', 'First Name', 'Student No']
             for assignment in assignments:
-                expected_heading2.append("Percentage Score for \""+default_criteria.name+"\"")
+                expected_heading2.append("Percentage Score for \""+default_criterion.name+"\"")
                 expected_heading2.append("Evaluations Submitted ("+str(assignment.number_of_comparisons)+" required)")
 
             self.assertEqual(expected_heading1, heading1)
             self.assertEqual(expected_heading2, heading2)
 
     def _check_participation_report_user_row(self, assignments, student, row):
-            default_criteria = self.fixtures.default_criteria
+            default_criterion = self.fixtures.default_criterion
 
             self.assertEqual(row[0], student.lastname)
             self.assertEqual(row[1], student.firstname)
@@ -443,7 +443,7 @@ class ReportAPITest(ACJAPITestCase):
                     .filter(
                         Comparison.user_id == student.id,
                         Comparison.assignment_id == assignment.id,
-                        Comparison.criteria_id == default_criteria.id
+                        Comparison.criterion_id == default_criterion.id
                     ) \
                     .all()
                 evaluations_submitted = len(comparisons)

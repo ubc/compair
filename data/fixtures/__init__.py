@@ -4,15 +4,15 @@
 from datetime import datetime, timedelta
 import random
 
-from acj.models import SystemRole, CourseRole, Criteria
-from data.factories import UserFactory, CriteriaFactory, \
+from acj.models import SystemRole, CourseRole, Criterion
+from data.factories import UserFactory, CriterionFactory, \
     CourseFactory, UserCourseFactory, AssignmentFactory, AnswerFactory, \
-    AssignmentCriteriaFactory
+    AssignmentCriterionFactory
 
 
 class DefaultFixture(object):
     ROOT_USER = None
-    DEFAULT_CRITERIA = None
+    DEFAULT_CRITERION = None
 
     def __init__(self):
         DefaultFixture.ROOT_USER = UserFactory(
@@ -22,7 +22,7 @@ class DefaultFixture(object):
         name = "Which is better?"
         description = "<p>Choose the response that you think is the better of the two.</p>"
         public = True
-        DefaultFixture.DEFAULT_CRITERIA = CriteriaFactory(name=name, description=description, public=public,
+        DefaultFixture.DEFAULT_CRITERION = CriterionFactory(name=name, description=description, public=public,
                                                           user=DefaultFixture.ROOT_USER)
 
 
@@ -34,17 +34,14 @@ class SampleDataFixture(object):
 
     def __init__(self):
         # initialize with default values in cases of DefaultFixture being unavailable
-        DEFAULT_CRITERIA = DefaultFixture.DEFAULT_CRITERIA if DefaultFixture.DEFAULT_CRITERIA else \
-            Criteria.query.filter_by(name="Which is better?").first()
+        DEFAULT_CRITERION = DefaultFixture.DEFAULT_CRITERION if DefaultFixture.DEFAULT_CRITERION else \
+            Criterion.query.filter_by(name="Which is better?").first()
 
         # create courses
         self.courses = []
         for course_name in self.COURSE_NAMES:
             course = CourseFactory(name=course_name, description=course_name + " Course Description")
             self.courses.append(course)
-        # insert default criteria into each course
-        for course in self.courses:
-            CriteriaAndCourseFactory(criterion=DEFAULT_CRITERIA, course=course)
         # create instructors
         for instructor_name in self.INSTRUCTOR_NAMES:
             self.instructor = UserFactory(username=instructor_name,
@@ -78,8 +75,8 @@ class SampleDataFixture(object):
                 assignment = AssignmentFactory(course=course,
                     user=self.instructor, content=content, created=created,
                     name=generator.get_assignment())
-                # insert default criteria into assignment
-                AssignmentCriteriaFactory(criterion=DEFAULT_CRITERIA, assignment=assignment)
+                # insert default criterion into assignment
+                AssignmentCriterionFactory(criterion=DEFAULT_CRITERION, assignment=assignment)
                 # create answers by each student for this assignment
                 for student in self.students:
                     minutes = random.randint(0, 59)

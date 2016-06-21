@@ -14,7 +14,7 @@ class Score(DefaultTableMixin, WriteTrackingMixin):
         nullable=False)
     answer_id = db.Column(db.Integer, db.ForeignKey('answer.id', ondelete="CASCADE"),
         nullable=False)
-    criteria_id = db.Column(db.Integer, db.ForeignKey('criteria.id', ondelete="CASCADE"),
+    criterion_id = db.Column(db.Integer, db.ForeignKey('criterion.id', ondelete="CASCADE"),
         nullable=False)
 
     score = db.Column(db.Float, default=0, nullable=False, index=True)
@@ -26,7 +26,7 @@ class Score(DefaultTableMixin, WriteTrackingMixin):
     # relationships
     # assignment via Assignment Model
     # answer via Answer Model
-    # criteria via Criteria Model
+    # criterion via Criterion Model
 
     # hyprid and other functions
     @classmethod
@@ -37,12 +37,12 @@ class Score(DefaultTableMixin, WriteTrackingMixin):
         cls.normalized_score = column_property(
             select([cls.score / func.max(s_alias.c.score) * 100]).
             where(and_(
-                s_alias.c.criteria_id == cls.criteria_id,
+                s_alias.c.criterion_id == cls.criterion_id,
                 s_alias.c.assignment_id == cls.assignment_id,
             ))
         )
 
     __table_args__ = (
-        db.UniqueConstraint('answer_id', 'criteria_id', name='_unique_answer_and_criteria'),
+        db.UniqueConstraint('answer_id', 'criterion_id', name='_unique_answer_and_criterion'),
         DefaultTableMixin.default_table_args
     )

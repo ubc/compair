@@ -7,7 +7,7 @@ from flask.ext.script import Manager
 from sqlalchemy import and_
 from sqlalchemy.orm import aliased
 
-from acj.models import Score, Answer, Criteria, Comparison, \
+from acj.models import Score, Answer, Criterion, Comparison, \
     Course, User, UserCourse
 
 manager = Manager(usage="Generate Reports")
@@ -26,11 +26,11 @@ def create(course_id):
 
     query = Score.query. \
         with_entities(Answer.user_id, Answer.assignment_id, Answer.id,
-                      Criteria.id, Criteria.name, Score.score). \
+                      Criterion.id, Criterion.name, Score.score). \
         join(Score.answer). \
         join(Answer). \
-        join(Score.criteria). \
-        order_by(Answer.assignment_id, Criteria.id, Answer.user_id)
+        join(Score.criterion). \
+        order_by(Answer.assignment_id, Criterion.id, Answer.user_id)
 
     if course_id:
         query = query.filter(Answer.course_id == course_id)
@@ -46,15 +46,15 @@ def create(course_id):
     score2 = aliased(Score)
     query = Comparison.query. \
         with_entities(Comparison.user_id, Comparison.assignment_id,
-                      Comparison.criteria_id, Criteria.name,
+                      Comparison.criterion_id, Criterion.name,
                       Comparison.answer1_id, Score.score, Comparison.answer2_id,
                       score2.score, Comparison.winner_id). \
-        join(Comparison.criteria). \
+        join(Comparison.criterion). \
         join(Score, and_(Score.answer_id == Comparison.answer1_id,
-                          Score.criteria_id == Comparison.criteria_id)). \
+                          Score.criterion_id == Comparison.criterion_id)). \
         join(score2, and_(score2.answer_id == Comparison.answer2_id,
-                           score2.criteria_id == Comparison.criteria_id)). \
-        order_by(Comparison.assignment_id, Comparison.criteria_id, Comparison.user_id)
+                           score2.criterion_id == Comparison.criterion_id)). \
+        order_by(Comparison.assignment_id, Comparison.criterion_id, Comparison.user_id)
 
     if course_id:
         query = query. \

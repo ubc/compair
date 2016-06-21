@@ -70,7 +70,7 @@ class AssignmentAPITests(ACJAPITestCase):
             'students_can_reply': False,
             'enable_self_evaluation': False,
             'criteria': [
-                { 'id': self.data.get_default_criteria().id }
+                { 'id': self.data.get_default_criterion().id }
             ]
         }
         # Test login required
@@ -152,7 +152,7 @@ class AssignmentAPITests(ACJAPITestCase):
             'students_can_reply': assignment.students_can_reply,
             'enable_self_evaluation': assignment.enable_self_evaluation,
             'criteria': [
-                { 'id': self.data.get_default_criteria().id }
+                { 'id': self.data.get_default_criterion().id }
             ]
         }
 
@@ -189,9 +189,9 @@ class AssignmentAPITests(ACJAPITestCase):
             self._verify_assignment(assignment, rv.json)
 
             # test edit by author add & remove criteria
-            new_criteria = self.data.create_criteria(self.data.get_authorized_instructor())
+            new_criterion = self.data.create_criterion(self.data.get_authorized_instructor())
             add_criteria = expected.copy()
-            add_criteria['criteria'] = [{ 'id': new_criteria.id }]
+            add_criteria['criteria'] = [{ 'id': new_criterion.id }]
             rv = self.client.post(url, data=json.dumps(add_criteria), content_type='application/json')
             self.assert200(rv)
             self._verify_assignment(assignment, rv.json)
@@ -208,7 +208,7 @@ class AssignmentAPITests(ACJAPITestCase):
                 'students_can_reply': assignment.students_can_reply,
                 'enable_self_evaluation': assignment.enable_self_evaluation,
                 'criteria': [
-                    { 'id': self.data.get_default_criteria().id }
+                    { 'id': self.data.get_default_criterion().id }
                 ]
             }
             rv = self.client.post(url, data=json.dumps(ta_expected), content_type='application/json')
@@ -217,9 +217,9 @@ class AssignmentAPITests(ACJAPITestCase):
             self.assertEqual(ta_expected['description'], rv.json['description'])
 
             # test edit by TA add & remove criteria
-            ta_new_criteria = self.data.create_criteria(self.data.get_authorized_ta())
+            ta_new_criterion = self.data.create_criterion(self.data.get_authorized_ta())
             ta_add_criteria = ta_expected.copy()
-            ta_add_criteria['criteria'] = [{ 'id': ta_new_criteria.id }]
+            ta_add_criteria['criteria'] = [{ 'id': ta_new_criterion.id }]
             rv = self.client.post(url, data=json.dumps(ta_add_criteria), content_type='application/json')
             self.assert200(rv)
             self._verify_assignment(assignment, rv.json)

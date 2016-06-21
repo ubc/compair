@@ -36,24 +36,24 @@ class TestUsersModel(ACJTestCase):
 class TestUtils(ACJTestCase):
     def test_update_scores(self):
 
-        criteria_comparison_results = {
+        criterion_comparison_results = {
             1: calculate_score(comparison_pairs=[
                 ComparisonPair(1,2, winning_key=1)
             ])
         }
-        scores = update_scores([], 1, criteria_comparison_results)
+        scores = update_scores([], 1, criterion_comparison_results)
         self.assertEqual(len(scores), 2)
         for score in scores:
             self.assertIsNone(score.id)
 
-        score = Score(answer_id=1, criteria_id=1, id=2)
-        scores = update_scores([score], 1, criteria_comparison_results)
+        score = Score(answer_id=1, criterion_id=1, id=2)
+        scores = update_scores([score], 1, criterion_comparison_results)
         self.assertEqual(len(scores), 2)
         self.assertEqual(scores[0].id, 2)
         self.assertIsNone(scores[1].id)
 
 
-        criteria_comparison_results = {
+        criterion_comparison_results = {
             1: calculate_score(comparison_pairs=[
                    ComparisonPair(1,2, winning_key=1)
             ]),
@@ -61,8 +61,8 @@ class TestUtils(ACJTestCase):
                ComparisonPair(1,2, winning_key=1)
             ])
         }
-        score = Score(answer_id=1, criteria_id=1, id=2)
-        scores = update_scores([score], 1, criteria_comparison_results)
+        score = Score(answer_id=1, criterion_id=1, id=2)
+        scores = update_scores([score], 1, criterion_comparison_results)
         self.assertEqual(len(scores), 4)
 
 if __name__ == '__main__':

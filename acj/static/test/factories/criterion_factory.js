@@ -1,6 +1,6 @@
 var objectAssign = require('object-assign');
 
-var criteriaTemplate = {
+var criterionTemplate = {
     "id": null,
     "user_id": null,
     "name": null,
@@ -11,17 +11,17 @@ var criteriaTemplate = {
     "modified": "Mon, 18 Apr 2016 17:38:23 -0000",
 }
 
-function CriteriaFactory() {};
+function CriterionFactory() {};
 
-CriteriaFactory.prototype.generateCriteria = function (id, user_id, parameters) {
-    var newCriteria = objectAssign({}, criteriaTemplate, parameters);
-    newCriteria.id = id;
-    newCriteria.user_id = user_id;
+CriterionFactory.prototype.generateCriterion = function (id, user_id, parameters) {
+    var newCriterion = objectAssign({}, criterionTemplate, parameters);
+    newCriterion.id = id;
+    newCriterion.user_id = user_id;
 
-    return newCriteria;
+    return newCriterion;
 };
 
-CriteriaFactory.prototype.getDefaultCriteria = function () {
+CriterionFactory.prototype.getDefaultCriterion = function () {
     return {
         "id": 1,
         "user_id": 1,
@@ -34,4 +34,4 @@ CriteriaFactory.prototype.getDefaultCriteria = function () {
     };
 };
 
-module.exports = CriteriaFactory;
+module.exports = CriterionFactory;

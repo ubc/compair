@@ -20,7 +20,7 @@ var module = angular.module('ubc.ctlt.acj.assignment',
 		'ubc.ctlt.acj.common.interceptor',
 		'ubc.ctlt.acj.common.mathjax',
 		'ubc.ctlt.acj.common.pdf',
-		'ubc.ctlt.acj.criteria',
+		'ubc.ctlt.acj.criterion',
 		'ubc.ctlt.acj.group',
 		'ubc.ctlt.acj.comparison',
 		'ubc.ctlt.acj.toaster',
@@ -122,10 +122,10 @@ module.directive('comparisonPreview', function() {
                     file: null
                 }
 				$scope.comparisons = [];
-                angular.forEach($scope.assignment.criteria, function(criteria) {
+                angular.forEach($scope.assignment.criteria, function(criterion) {
                     $scope.comparisons.push({
-                        'criteria_id': criteria.id,
-                        'criteria': criteria,
+                        'criterion_id': criterion.id,
+                        'criterion': criterion,
                         'content': '',
                         'winner_id': null
                     });
@@ -306,6 +306,7 @@ module.controller("AssignmentViewController",
              GroupResource, AnswerCommentType)
 	{
 		$scope.courseId = $routeParams['courseId'];
+        $scope.AnswerCommentType = AnswerCommentType;
 		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
 		var params = {
 			courseId: $scope.courseId,
@@ -654,10 +655,10 @@ module.controller("AssignmentViewController",
 ]);
 module.controller("AssignmentWriteController",
 	[ "$scope", "$log", "$location", "$routeParams", "$route", "AssignmentResource", "$modal", "Authorize",
-			 "AssignmentCriteriaResource", "CriteriaResource", "required_rounds", "Toaster", "attachService",
+			 "AssignmentCriterionResource", "CriterionResource", "required_rounds", "Toaster", "attachService",
              "AttachmentResource", "Session",
 	function($scope, $log, $location, $routeParams, $route, AssignmentResource, $modal, Authorize,
-			 AssignmentCriteriaResource, CriteriaResource, required_rounds, Toaster, attachService,
+			 AssignmentCriterionResource, CriterionResource, required_rounds, Toaster, attachService,
              AttachmentResource, Session)
 	{
 		var courseId = $routeParams['courseId'];
@@ -778,11 +779,11 @@ module.controller("AssignmentWriteController",
 			);
 		};
 
-        Authorize.can(Authorize.MANAGE, AssignmentCriteriaResource.MODEL).then(function(result) {
+        Authorize.can(Authorize.MANAGE, AssignmentCriterionResource.MODEL).then(function(result) {
 			$scope.canManageCriteriaAssignment = result;
 		});
 
-		CriteriaResource.get().$promise.then(function (ret) {
+		CriterionResource.get().$promise.then(function (ret) {
 			$scope.availableCriteria = ret.objects;
 			if (!$scope.assignment.criteria.length) {
 				// if we don't have any criterion, e.g. new assignment, add a default one automatically
@@ -815,27 +816,27 @@ module.controller("AssignmentWriteController",
 			var modalScope = $scope.$new();
 			modalScope.criterion = angular.copy(criterion);
 			var modalInstance;
-			var criteriaUpdateListener = $scope.$on('CRITERIA_UPDATED', function(event, c) {
+			var criterionUpdateListener = $scope.$on('CRITERION_UPDATED', function(event, c) {
 				angular.copy(c, criterion);
 				modalInstance.close();
 			});
-			var criteriaAddListener = $scope.$on('CRITERIA_ADDED', function(event, criteria) {
-				$scope.assignment.criteria.push(criteria);
+			var criterionAddListener = $scope.$on('CRITERION_ADDED', function(event, criterion) {
+				$scope.assignment.criteria.push(criterion);
 				modalInstance.close();
 			});
-			var criteriaCancelListener = $scope.$on('CRITERIA_CANCEL', function() {
+			var criterionCancelListener = $scope.$on('CRITERION_CANCEL', function() {
 				modalInstance.dismiss('cancel');
 			});
 			modalInstance = $modal.open({
 				animation: true,
-				template: '<criteria-form criterion=criterion></criteria-form>',
+				template: '<criterion-form criterion=criterion></criterion-form>',
 				scope: modalScope
 			});
 			// we need to remove the listener, otherwise on multiple click, multiple listeners will be registered
 			modalInstance.result.finally(function(){
-				criteriaUpdateListener();
-				criteriaAddListener();
-				criteriaCancelListener();
+				criterionUpdateListener();
+				criterionAddListener();
+				criterionCancelListener();
 			});
 		};
 

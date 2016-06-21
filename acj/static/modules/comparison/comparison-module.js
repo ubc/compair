@@ -7,7 +7,7 @@ var module = angular.module('ubc.ctlt.acj.comparison',
 	[
 		'ubc.ctlt.acj.answer',
 		'ubc.ctlt.acj.comment',
-		'ubc.ctlt.acj.criteria',
+		'ubc.ctlt.acj.criterion',
 		'ubc.ctlt.acj.assignment',
 		'ubc.ctlt.acj.toaster',
 		'ubc.ctlt.acj.common.form',
@@ -143,7 +143,7 @@ module.controller(
             comparisons_submit = []
 			angular.forEach($scope.comparisons, function(comparison) {
                 comparisons_submit.push({
-					criteria_id: comparison.criteria_id,
+					criterion_id: comparison.criterion_id,
 					content: comparison.content,
 					winner_id: comparison.winner_id
 				});

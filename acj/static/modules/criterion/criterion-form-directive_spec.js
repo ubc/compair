@@ -1,7 +1,7 @@
-describe('criteria-module', function () {
+describe('criterion-module', function () {
 	var $httpBackend;
-    beforeEach(module('ubc.ctlt.acj.criteria'));
-    beforeEach(module('modules/criteria/criteria-form-partial.html',
+    beforeEach(module('ubc.ctlt.acj.criterion'));
+    beforeEach(module('modules/criterion/criterion-form-partial.html',
         'modules/common/form-field-with-feedback-template.html'));
 
     beforeEach(inject(function ($injector) {
@@ -13,7 +13,7 @@ describe('criteria-module', function () {
         $httpBackend.verifyNoOutstandingRequest();
     });
 
-    describe('criteria-form-directive', function () {
+    describe('criterion-form-directive', function () {
         var element, scope, directiveScope;
         beforeEach(inject(function ($rootScope) {
             scope = $rootScope;
@@ -23,7 +23,7 @@ describe('criteria-module', function () {
             beforeEach(inject(function ($compile) {
                 scope.criterion = {};
                 element = angular.element(
-                    '<criteria-form criterion=criterion></criteria-form>'
+                    '<criterion-form criterion=criterion></criterion-form>'
                 );
                 $compile(element)(scope);
                 scope.$digest();
@@ -41,7 +41,7 @@ describe('criteria-module', function () {
                 expect(directiveScope.criterion.description).toEqual('description');
             });
 
-            it('should emit CRITERIA_UPDATED event when click on submit', function() {
+            it('should emit CRITERION_UPDATED event when click on submit', function() {
                 spyOn(directiveScope, '$emit');
                 var response = {
                     id: 1,
@@ -56,7 +56,7 @@ describe('criteria-module', function () {
                 directiveScope.criterionSubmit();
                 $httpBackend.flush();
 
-                expect(directiveScope.$emit).toHaveBeenCalledWith('CRITERIA_UPDATED', jasmine.objectContaining(response));
+                expect(directiveScope.$emit).toHaveBeenCalledWith('CRITERION_UPDATED', jasmine.objectContaining(response));
             })
         });
 
@@ -65,7 +65,7 @@ describe('criteria-module', function () {
                 scope.criterion = {name:'Test'};
 
                 element = angular.element(
-                    '<criteria-form></criteria-form>'
+                    '<criterion-form></criterion-form>'
                 );
                 $compile(element)(scope);
                 scope.$digest();
@@ -106,7 +106,7 @@ describe('criteria-module', function () {
 
                     expect(directiveScope.criterionSubmitted).toBe(false);
                     expect(directiveScope.criterion).toEqual({name:'', description:'', default: false});
-                    expect(directiveScope.$emit).toHaveBeenCalledWith('CRITERIA_ADDED', jasmine.objectContaining(response));
+                    expect(directiveScope.$emit).toHaveBeenCalledWith('CRITERION_ADDED', jasmine.objectContaining(response));
                 });
 
                 it('should reset criterionSubmitted flag when failed submitting', function() {

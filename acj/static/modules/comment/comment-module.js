@@ -11,7 +11,7 @@ var module = angular.module('ubc.ctlt.acj.comment',
 		'ubc.ctlt.acj.common.mathjax',
 		'ubc.ctlt.acj.common.interceptor',
 		'ubc.ctlt.acj.course',
-		'ubc.ctlt.acj.criteria',
+		'ubc.ctlt.acj.criterion',
 		'ubc.ctlt.acj.comparison',
 		'ubc.ctlt.acj.assignment',
 		'ubc.ctlt.acj.toaster'
@@ -76,7 +76,7 @@ module.directive('acjAnswerContent', function() {
 			answer: '=',
 			name: '@',
 			isChosen: '=',
-			criteria: '=',
+			criterion: '=',
 			showScore: '='
 		},
 		templateUrl: 'modules/comment/answer-content.html'
@@ -170,6 +170,7 @@ module.controller(
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
 		var answerId = $routeParams['answerId'];
+        $scope.AnswerCommentType = AnswerCommentType;
 		$scope.answerComment = true;
 		$scope.canManageAssignment =
 			Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, courseId);
@@ -220,6 +221,7 @@ module.controller(
 		var answerId = $routeParams['answerId'];
 		var commentId = $routeParams['commentId'];
 		$scope.answerComment = true;
+        $scope.AnswerCommentType = AnswerCommentType;
 
 		$scope.comment = AnswerCommentResource.get({'courseId': courseId, 'assignmentId': assignmentId, 'answerId': answerId, 'commentId': commentId});
 		$scope.parent = AnswerResource.get({'courseId': courseId, 'assignmentId': assignmentId, 'answerId': answerId});
@@ -328,7 +330,7 @@ module.controller(
 function convertScore(answer) {
 	var scores = answer.scores;
 	answer.scores = _.reduce(scores, function(results, score) {
-		results[score.criteria_id] = score.normalized_score;
+		results[score.criterion_id] = score.normalized_score;
 		return results;
 	}, {});
 

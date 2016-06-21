@@ -62,7 +62,7 @@ def get_course(include_details=True):
     return data_format
 
 
-def get_criteria():
+def get_criterion():
     data_format = {
         'id': fields.Integer,
         'name': fields.String,
@@ -86,7 +86,7 @@ def get_assignment(restrict_user=True):
         'description': fields.String,
         'number_of_comparisons': fields.Integer,
 
-        'criteria': fields.List(fields.Nested(get_criteria())),
+        'criteria': fields.List(fields.Nested(get_criterion())),
         'file': fields.Nested(get_file(), allow_null=True),
 
         'answer_start': fields.DateTime,
@@ -212,14 +212,14 @@ def get_comparison(restrict_user=True, with_answers=True):
         'id': fields.Integer,
         'course_id': fields.Integer,
         'assignment_id': fields.Integer,
-        'criteria_id': fields.Integer,
+        'criterion_id': fields.Integer,
         'user_id': fields.Integer,
         'answer1_id': fields.Integer,
         'answer2_id': fields.Integer,
         'winner_id': fields.Integer(default=None),
 
         'content': fields.String,
-        'criteria': fields.Nested(get_criteria()),
+        'criteria': fields.Nested(get_criterion()),
 
         'user': {
             'id': fields.Integer(attribute="user_id"),
@@ -281,7 +281,7 @@ def get_import_users_results(restrict_user=True):
 def get_score():
     return {
         'id': fields.Integer,
-        'criteria_id': fields.Integer,
+        'criterion_id': fields.Integer,
         'answer_id': fields.Integer,
         'normalized_score': fields.Integer
     }

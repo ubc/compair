@@ -72,7 +72,7 @@ class AnswersAPITests(ACJAPITestCase):
 
             # test sorting
             rv = self.client.get(
-                self.base_url + '?orderBy={}'.format(self.fixtures.assignment.assignment_criteria[0].criteria_id)
+                self.base_url + '?orderBy={}'.format(self.fixtures.assignment.assignment_criteria[0].criterion_id)
             )
             self.assert200(rv)
             result = rv.json['objects']
@@ -110,7 +110,7 @@ class AnswersAPITests(ACJAPITestCase):
             # test combined filter
             rv = self.client.get(
                 self.base_url + '?orderBy={}&group={}'.format(
-                    self.fixtures.assignment.assignment_criteria[0].criteria_id,
+                    self.fixtures.assignment.assignment_criteria[0].criterion_id,
                     self.fixtures.groups[0]
                 )
             )
@@ -126,7 +126,7 @@ class AnswersAPITests(ACJAPITestCase):
             # all filters
             rv = self.client.get(
                 self.base_url + '?orderBy={}&group={}&author={}&page=1&perPage=20'.format(
-                    self.fixtures.assignment.assignment_criteria[0].criteria_id,
+                    self.fixtures.assignment.assignment_criteria[0].criterion_id,
                     self.fixtures.groups[0],
                     self.fixtures.students[0].id
                 )
@@ -143,7 +143,7 @@ class AnswersAPITests(ACJAPITestCase):
             )
             self.fixtures.answers.append(answer)
             db.session.commit()
-            rv = self.client.get(self.base_url + '?orderBy={}'.format(self.fixtures.assignment.assignment_criteria[0].criteria_id))
+            rv = self.client.get(self.base_url + '?orderBy={}'.format(self.fixtures.assignment.assignment_criteria[0].criterion_id))
             self.assert200(rv)
             result = rv.json['objects']
             self.assertEqual(len(self.fixtures.answers), rv.json['total'])

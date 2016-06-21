@@ -49,12 +49,12 @@ def register_api_blueprints(app):
         answer_comment_api,
         url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>')
 
-    from .criteria import criteria_api
-    app.register_blueprint(criteria_api, url_prefix='/api/criteria')
+    from .criterion import criterion_api
+    app.register_blueprint(criterion_api, url_prefix='/api/criteria')
 
-    from .assignment_criteria import assignment_criteria_api
+    from .assignment_criterion import assignment_criterion_api
     app.register_blueprint(
-        assignment_criteria_api,
+        assignment_criterion_api,
         url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>/criteria')
 
     from .comparison import comparison_api, all_course_comparisons_api
@@ -153,19 +153,19 @@ def log_events(log):
     on_answer_comment_create.connect(log)
     on_answer_comment_delete.connect(log)
 
-    # criteria events
-    from .criteria import criteria_get, criteria_update, on_criteria_list_get, criteria_create
-    criteria_get.connect(log)
-    criteria_update.connect(log)
-    on_criteria_list_get.connect(log)
-    criteria_create.connect(log)
+    # criterion events
+    from .criterion import criterion_get, criterion_update, on_criterion_list_get, criterion_create
+    criterion_get.connect(log)
+    criterion_update.connect(log)
+    on_criterion_list_get.connect(log)
+    criterion_create.connect(log)
 
-    # assignment criteria events
-    from .assignment_criteria import on_assignment_criteria_create, on_assignment_criteria_delete, \
-        on_assignment_criteria_get
-    on_assignment_criteria_create.connect(log)
-    on_assignment_criteria_delete.connect(log)
-    on_assignment_criteria_get.connect(log)
+    # assignment criterion events
+    from .assignment_criterion import on_assignment_criterion_create, on_assignment_criterion_delete, \
+        on_assignment_criterion_get
+    on_assignment_criterion_create.connect(log)
+    on_assignment_criterion_delete.connect(log)
+    on_assignment_criterion_get.connect(log)
 
     # comparison events
     from .comparison import on_comparison_get, on_comparison_create, on_comparison_update, \

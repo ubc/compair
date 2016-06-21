@@ -22,7 +22,7 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"),
         nullable=False)
-    criteria_id = db.Column(db.Integer, db.ForeignKey('criteria.id', ondelete="CASCADE"),
+    criterion_id = db.Column(db.Integer, db.ForeignKey('criterion.id', ondelete="CASCADE"),
         nullable=False)
     answer1_id = db.Column(db.Integer, db.ForeignKey('answer.id', ondelete="CASCADE"),
         nullable=False)
@@ -38,7 +38,7 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
     # relationships
     # assignment via Assignment Model
     # user via User Model
-    # criteria via Criteria Model
+    # criterion via Criterion Model
 
     answer1 = db.relationship("Answer", foreign_keys=[answer1_id])
     answer2 = db.relationship("Answer", foreign_keys=[answer2_id])
@@ -62,9 +62,9 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
 
         assignment = Assignment.query.get(assignment_id)
 
-        # choose one of the assignments criteria randomly
+        # choose one of the assignments criterion randomly
         assignment_criteria = random.choice(assignment.assignment_criteria)
-        criteria_id = assignment_criteria.criteria_id
+        criterion_id = assignment_criteria.criterion_id
 
         # ineligible authors - eg. instructors, TAs, dropped student, current user
 
@@ -86,8 +86,8 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
                 Answer.assignment_id == assignment_id,
                 Answer.active == True,
                 or_(
-                    Score.criteria_id == criteria_id,
-                    Score.criteria_id == None
+                    Score.criterion_id == criterion_id,
+                    Score.criterion_id == None
                 )
             )) \
             .all()
@@ -104,7 +104,7 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
             .filter_by(
                 user_id=user_id,
                 assignment_id=assignment_id,
-                criteria_id=criteria_id
+                criterion_id=criterion_id
             )
 
         comparison_pairs = []
@@ -129,12 +129,12 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
 
         new_comparisons = []
         for assignment_criteria in assignment.assignment_criteria:
-            criteria_id = assignment_criteria.criteria_id
+            criterion_id = assignment_criteria.criterion_id
 
             comparison = Comparison(
                 assignment_id=assignment_id,
                 user_id=user_id,
-                criteria_id=criteria_id,
+                criterion_id=criterion_id,
                 answer1_id=answer1.id,
                 answer2_id=answer2.id,
                 winner_id=None,
@@ -156,23 +156,23 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
 
     @classmethod
     def calculate_scores(cls, assignment_id):
-        from . import Score, AssignmentCriteria
+        from . import Score, AssignmentCriterion
         # get all comparisons for this assignment and only load the data we need
         comparisons = Comparison.query . \
-            options(load_only('winner_id', 'criteria_id', 'answer1_id', 'answer2_id')) . \
+            options(load_only('winner_id', 'criterion_id', 'answer1_id', 'answer2_id')) . \
             filter(Comparison.assignment_id == assignment_id).all()
 
-        assignment_criteria = AssignmentCriteria.query \
-            .with_entities(AssignmentCriteria.criteria_id) \
+        assignment_criteria = AssignmentCriterion.query \
+            .with_entities(AssignmentCriterion.criterion_id) \
             .filter_by(assignment_id=assignment_id, active=True) \
             .all()
 
-        criteria_comparison_results = {}
+        criterion_comparison_results = {}
         answer_ids = set()
         for assignment_criterion in assignment_criteria:
             comparison_pairs = []
             for comparison in comparisons:
-                if comparison.criteria_id != assignment_criterion.criteria_id:
+                if comparison.criterion_id != assignment_criterion.criterion_id:
                     continue
                 answer1_id = comparison.answer1_id
                 answer2_id = comparison.answer2_id
@@ -183,7 +183,7 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
                         answer1_id, answer2_id, winning_key=winner
                 ))
 
-            criteria_comparison_results[assignment_criterion.criteria_id] = calculate_score(
+            criterion_comparison_results[assignment_criterion.criterion_id] = calculate_score(
                 package_name="comparative_judgement",
                 comparison_pairs=comparison_pairs,
                 log=current_app.logger
@@ -191,28 +191,28 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
 
         # load existing scores
         scores = Score.query.filter(Score.answer_id.in_(answer_ids)). \
-            order_by(Score.answer_id, Score.criteria_id).all()
+            order_by(Score.answer_id, Score.criterion_id).all()
 
-        updated_scores = update_scores(scores, assignment_id, criteria_comparison_results)
+        updated_scores = update_scores(scores, assignment_id, criterion_comparison_results)
         db.session.add_all(updated_scores)
         db.session.commit()
 
 
-def update_scores(scores, assignment_id, criteria_comparison_results):
+def update_scores(scores, assignment_id, criterion_comparison_results):
     from . import Score
 
     new_scores = []
-    for criteria_id, criteria_comparison_result in criteria_comparison_results.items():
-        for answer_id, comparison_results in criteria_comparison_result.items():
+    for criterion_id, criterion_comparison_result in criterion_comparison_results.items():
+        for answer_id, comparison_results in criterion_comparison_result.items():
             score = None
             for s in scores:
-                if s.answer_id == answer_id and s.criteria_id == criteria_id:
+                if s.answer_id == answer_id and s.criterion_id == criterion_id:
                     score = s
             if not score:
                 score = Score(
                     assignment_id=assignment_id,
                     answer_id=answer_id,
-                    criteria_id=criteria_id
+                    criterion_id=criterion_id
                 )
                 new_scores.append(score)
 

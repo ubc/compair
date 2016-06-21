@@ -13,7 +13,7 @@ from sqlalchemy import func
 from acj.authorization import require
 from acj.core import event
 from acj.models import CourseRole, Assignment, UserCourse, Course, Answer, \
-    AnswerComment, AssignmentCriteria, Comparison, AnswerCommentType
+    AnswerComment, AssignmentCriterion, Comparison, AnswerCommentType
 from .util import new_restful_api
 
 report_api = Blueprint('report_api', __name__)
@@ -97,7 +97,7 @@ class ReportRootAPI(Resource):
             title_row2 = user_titles
 
             for assignment in assignments:
-                assignment_criteria = AssignmentCriteria.query \
+                assignment_criteria = AssignmentCriterion.query \
                     .filter_by(
                         assignment_id=assignment.id,
                         active=True
@@ -105,8 +105,8 @@ class ReportRootAPI(Resource):
                     .all()
 
                 title_row1 += [assignment.name] + [""] * len(assignment_criteria)
-                for criteria in assignment_criteria:
-                    title_row2.append('Percentage Score for "' + criteria.criteria.name + '"')
+                for assignment_criterion in assignment_criteria:
+                    title_row2.append('Percentage Score for "' + assignment_criterion.criterion.name + '"')
                 title_row2.append("Evaluations Submitted (" + str(assignment.number_of_comparisons) + ' required)')
                 if assignment.enable_self_evaluation:
                     title_row1 += [""]
@@ -251,12 +251,12 @@ def participation_report(course_id, assignments, group_name):
         .filter(Answer.user_id.in_(user_ids)) \
         .all()
 
-    scores = {}  # structure - user_id/assignment_id/criteria_id/normalized_score
+    scores = {}  # structure - user_id/assignment_id/criterion_id/normalized_score
     for answer in answers:
         user_object = scores.setdefault(answer.user_id, {})
         assignment_object = user_object.setdefault(answer.assignment_id, {})
         for s in answer.scores:
-            assignment_object[s.criteria_id] = s.normalized_score
+            assignment_object[s.criterion_id] = s.normalized_score
 
     # COMPARISONS
     comparisons_counts = Comparison.query \
@@ -272,17 +272,17 @@ def participation_report(course_id, assignments, group_name):
         comparisons[user_id][assignment_id] = count
 
     # CRITERIA
-    assignment_criteria = AssignmentCriteria.query \
-        .filter(AssignmentCriteria.assignment_id.in_(assignment_ids)) \
+    assignment_criteria = AssignmentCriterion.query \
+        .filter(AssignmentCriterion.assignment_id.in_(assignment_ids)) \
         .filter_by(active=True) \
-        .order_by(AssignmentCriteria.id) \
+        .order_by(AssignmentCriterion.id) \
         .all()
 
     criteria = {}  # structure - assignment_id/criterion_id
     for assignment_criterion in assignment_criteria:
         criteria.setdefault(assignment_criterion.assignment_id, [])
         criteria[assignment_criterion.assignment_id] \
-            .append(assignment_criterion.criteria_id)
+            .append(assignment_criterion.criterion_id)
 
     # SELF-EVALUATION - assuming no comparions
     self_evaluation = AnswerComment.query \

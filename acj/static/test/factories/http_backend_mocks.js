@@ -11,7 +11,7 @@ module.exports.httpbackendMock = function(storageFixture) {
     .run(function($httpBackend) {
         var authenticated = false;
 
-        var default_criteria = {
+        var default_criterion = {
             "id": 1,
             "user_id": 1,
             "name": "Which is better?",
@@ -54,9 +54,9 @@ module.exports.httpbackendMock = function(storageFixture) {
             storage = angular.merge({}, storage, storageFixture);
         }
 
-        // add default criteria is storage criteria is empty
+        // add default criterion is storage criterion is empty
         if (storage.criteria.length == 0) {
-            storage.criteria.push(default_criteria);
+            storage.criteria.push(default_criterion);
         }
 
         // Start Session
@@ -427,14 +427,14 @@ module.exports.httpbackendMock = function(storageFixture) {
             "objects": storage.criteria
         });
 
-        // create new criteria
+        // create new criterion
         $httpBackend.whenPOST('/api/criteria').respond(function(method, url, data, headers) {
             data = JSON.parse(data);
 
             var id = storage.criteria.length + 1;
             var currentUser = angular.copy(storage.users[storage.loginDetails.id-1]);
 
-            var newCriteria = {
+            var newCriterion = {
                 "id": id,
                 "user_id": currentUser.id,
                 "name": data.name,
@@ -445,12 +445,12 @@ module.exports.httpbackendMock = function(storageFixture) {
                 "modified": "Mon, 18 Apr 2016 17:38:23 -0000"
             };
 
-            storage.criteria.push(newCriteria);
+            storage.criteria.push(newCriterion);
 
-            return [200, newCriteria, {}];
+            return [200, newCriterion, {}];
         });
 
-        // update criteria by id
+        // update criterion by id
         $httpBackend.whenPOST(/\/api\/criteria\/\d+$/).respond(function(method, url, data, headers) {
             data = JSON.parse(data);
             var id = url.split('/').pop();
@@ -536,7 +536,7 @@ module.exports.httpbackendMock = function(storageFixture) {
 
         $httpBackend.whenPOST(/\/api\/courses\/\d+\/assignments\/\d+\/criteria\/\d+$/).respond({
             'active': true,
-            'criterion': default_criteria
+            'criterion': default_criterion
         });
 
         // get assignment by course id and assignment id

@@ -10,8 +10,8 @@ var courseFactory = new CourseFactory();
 var AssignmentFactory  = require('../../factories/assignment_factory.js');
 var assignmentFactory = new AssignmentFactory();
 
-var CriteriaFactory  = require('../../factories/criteria_factory.js');
-var criteriaFactory = new CriteriaFactory();
+var CriterionFactory  = require('../../factories/criterion_factory.js');
+var criterionFactory = new CriterionFactory();
 
 var storage = {
     session: {},
@@ -49,23 +49,23 @@ var course = courseFactory.generateCourse(1, {
 storage.courses.push(course);
 
 
-var defaultCriteria = criteriaFactory.getDefaultCriteria();
-storage.criteria.push(defaultCriteria);
+var defaultCriterion = criterionFactory.getDefaultCriterion();
+storage.criteria.push(defaultCriterion);
 
-var criteria2 = criteriaFactory.generateCriteria(2, instructor.id, {
+var criterion2 = criterionFactory.generateCriterion(2, instructor.id, {
     "name": "Which sounds better?",
     "description": "<p>Choose the response that you think sounds more accurate of the two.</p>",
     "default": true,
 });
-storage.criteria.push(criteria2);
+storage.criteria.push(criterion2);
 
-var criteria3 = criteriaFactory.generateCriteria(3, instructor.id, {
+var criterion3 = criterionFactory.generateCriterion(3, instructor.id, {
     "name": "Which looks better?",
     "description": "<p>Choose the response that you think looks more accurate of the two.</p>",
     "default": false,
     "compared": false
 });
-storage.criteria.push(criteria3);
+storage.criteria.push(criterion3);
 
 
 // user_courses
@@ -75,7 +75,7 @@ storage.user_courses[instructor.id] = [
 
 storage.course_assignments[course.id] = [];
 
-var assignment_finished = assignmentFactory.generateAssignment(1, instructor, [defaultCriteria, criteria3], {
+var assignment_finished = assignmentFactory.generateAssignment(1, instructor, [defaultCriterion, criterion3], {
     "name": "Assignment Finished",
     "students_can_reply": true,
     "available": true,
@@ -88,7 +88,7 @@ var assignment_finished = assignmentFactory.generateAssignment(1, instructor, [d
 storage.assignments.push(assignment_finished);
 storage.course_assignments[course.id].push(assignment_finished.id);
 
-var assignment_being_compared = assignmentFactory.generateAssignment(2, instructor, [defaultCriteria, criteria3], {
+var assignment_being_compared = assignmentFactory.generateAssignment(2, instructor, [defaultCriterion, criterion3], {
     "name": "Assignment Being Compared",
     "students_can_reply": true,
     "available": true,
@@ -101,7 +101,7 @@ var assignment_being_compared = assignmentFactory.generateAssignment(2, instruct
 storage.assignments.push(assignment_being_compared);
 storage.course_assignments[course.id].push(assignment_being_compared.id);
 
-var assignment_being_answered = assignmentFactory.generateAssignment(3, instructor, [defaultCriteria, criteria3], {
+var assignment_being_answered = assignmentFactory.generateAssignment(3, instructor, [defaultCriterion, criterion3], {
     "name": "Assignment Being Answered",
     "students_can_reply": true,
     "available": true,
@@ -114,7 +114,7 @@ var assignment_being_answered = assignmentFactory.generateAssignment(3, instruct
 storage.assignments.push(assignment_being_answered);
 storage.course_assignments[course.id].push(assignment_being_answered.id);
 
-var assignment_upcoming = assignmentFactory.generateAssignment(4, instructor, [defaultCriteria, criteria3], {
+var assignment_upcoming = assignmentFactory.generateAssignment(4, instructor, [defaultCriterion, criterion3], {
     "name": "Assignment Upcoming",
     "students_can_reply": true,
     "available": false,

@@ -14,7 +14,7 @@ from acj.core import db
 from acj.authorization import require, allow
 from acj.core import event
 from acj.models import Answer, Score, Comparison, Course, \
-    Assignment, UserCourse, CourseRole, AssignmentCriteria
+    Assignment, UserCourse, CourseRole, AssignmentCriterion
 from .util import new_restful_api
 
 from acj.algorithms import InsufficientObjectsForPairException, \
@@ -131,11 +131,11 @@ class CompareRootAPI(Resource):
         if len(comparisons) != len(params['comparisons']):
             return {"error": "Not all criteria were evaluated."}, 400
 
-        # check if each comparison has an criteria Id and a winner id
+        # check if each comparison has a criterion Id and a winner id
         for comparison_to_update in params['comparisons']:
-            # ensure criteria param is present
-            if 'criteria_id' not in comparison_to_update:
-                return {"error": "Missing criteria_id in evaluation."}, 400
+            # ensure criterion param is present
+            if 'criterion_id' not in comparison_to_update:
+                return {"error": "Missing criterion_id in evaluation."}, 400
 
             # set default values for cotnent and winner
             comparison_to_update.setdefault('content', None)
@@ -149,7 +149,7 @@ class CompareRootAPI(Resource):
             # get duplicate criteria in comparisons
             known_criterion = False
             for comparison in comparisons:
-                if comparison_to_update['criteria_id'] == comparison.criteria_id:
+                if comparison_to_update['criterion_id'] == comparison.criterion_id:
                     known_criterion = True
 
                     # check that the winner id matches one of the answer pairs
@@ -167,7 +167,7 @@ class CompareRootAPI(Resource):
             comparison.completed = completed
 
             for comparison_to_update in params['comparisons']:
-                if comparison_to_update['criteria_id'] != comparison.criteria_id:
+                if comparison_to_update['criterion_id'] != comparison.criterion_id:
                     continue
 
                 comparison.winner_id = comparison_to_update['winner_id']

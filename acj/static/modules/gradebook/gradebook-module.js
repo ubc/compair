@@ -32,9 +32,9 @@ module.factory(
 /***** Controllers *****/
 module.controller("GradebookController",
 	["$scope", "$log", "$routeParams", "CourseResource", "GradebookResource",
-		"GroupResource", "AssignmentResource", "Authorize", "Toaster", "AssignmentCriteriaResource",
+		"GroupResource", "AssignmentResource", "Authorize", "Toaster", "AssignmentCriterionResource",
 	function($scope, $log, $routeParams, CourseResource, GradebookResource,
-		GroupResource, AssignmentResource, Authorize, Toaster, AssignmentCriteriaResource)
+		GroupResource, AssignmentResource, Authorize, Toaster, AssignmentCriterionResource)
 	{
 		$scope.users = [];
 		$scope.gb = {};
@@ -77,7 +77,7 @@ module.controller("GradebookController",
 			}
 		});
 
-		AssignmentCriteriaResource.get(
+		AssignmentCriterionResource.get(
 			{'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
 			function (ret) {
 				$scope.criteria = ret['objects'];

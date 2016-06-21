@@ -153,7 +153,7 @@ describe('comparison-module', function () {
             "scores": [
                 {
                     "answer_id": 407,
-                    "criteria_id": 12,
+                    "criterion_id": 12,
                     "id": 645,
                     "normalized_score": 75,
                     "rounds": 6,
@@ -162,7 +162,7 @@ describe('comparison-module', function () {
                 },
                 {
                     "answer_id": 407,
-                    "criteria_id": 13,
+                    "criterion_id": 13,
                     "id": 646,
                     "normalized_score": 0,
                     "rounds": 6,
@@ -191,7 +191,7 @@ describe('comparison-module', function () {
             "scores": [
                 {
                     "answer_id": 279,
-                    "criteria_id": 12,
+                    "criterion_id": 12,
                     "id": 445,
                     "normalized_score": 75,
                     "rounds": 8,
@@ -200,7 +200,7 @@ describe('comparison-module', function () {
                 },
                 {
                     "answer_id": 279,
-                    "criteria_id": 13,
+                    "criterion_id": 13,
                     "id": 446,
                     "normalized_score": 40,
                     "rounds": 8,
@@ -221,7 +221,7 @@ describe('comparison-module', function () {
                 'id': 1,
                 'course_id': 1,
                 'assignment_id': 9,
-                'criteria_id': 4,
+                'criterion_id': 4,
                 'user_id': id,
                 'answer1_id': 407,
                 'answer2_id': 279,
@@ -230,7 +230,7 @@ describe('comparison-module', function () {
                 'winner_id': null,
 
                 'content': '',
-                'criteria': {
+                'criterion': {
                     "created": "Fri, 09 Jan 2015 22:47:02 -0000",
                     "default": true,
                     "description": "criterionn 1",
@@ -252,7 +252,7 @@ describe('comparison-module', function () {
                 'id': 2,
                 'course_id': 1,
                 'assignment_id': 9,
-                'criteria_id': 5,
+                'criterion_id': 5,
                 'user_id': id,
                 'answer1_id': 407,
                 'answer2_id': 279,
@@ -261,7 +261,7 @@ describe('comparison-module', function () {
                 'winner_id': null,
 
                 'content': '',
-                'criteria': {
+                'criterion': {
                     "created": "Fri, 09 Jan 2015 22:50:06 -0000",
                     "default": true,
                     "description": "criterion 2",
@@ -343,9 +343,9 @@ describe('comparison-module', function () {
 				"objects": angular.copy(mockComparisons)
 			};
             mockComparisonResponse.objects[0].winner_id = 407;
-            mockComparisonResponse.objects[0].content = 'criteria comment 1';
+            mockComparisonResponse.objects[0].content = 'criterion comment 1';
             mockComparisonResponse.objects[1].winner_id = 279;
-            mockComparisonResponse.objects[1].content = 'criteria comment 2';
+            mockComparisonResponse.objects[1].content = 'criterion comment 2';
 
 			beforeEach(function() {
 				$httpBackend.whenGET('/api/courses/3/assignments/9').respond(mockAssignment);
@@ -369,12 +369,12 @@ describe('comparison-module', function () {
 				var expectedComparison = {
                     "comparisons":[
                         {
-                            criteria_id: 4,
-                            content: 'criteria comment 1',
+                            criterion_id: 4,
+                            content: 'criterion comment 1',
                             winner_id: 407
                         }, {
-                            criteria_id: 5,
-                            content: 'criteria comment 2',
+                            criterion_id: 5,
+                            content: 'criterion comment 2',
                             winner_id: 279
                         }
                     ]
@@ -386,9 +386,9 @@ describe('comparison-module', function () {
 				$rootScope.answer2.comment.content = 'Feedback 2';
 				// save comparison selection and comments
 				$rootScope.comparisons[0].winner_id = mockComparisons[0].answer1_id;
-				$rootScope.comparisons[0].content = 'criteria comment 1';
+				$rootScope.comparisons[0].content = 'criterion comment 1';
 				$rootScope.comparisons[1].winner_id = mockComparisons[0].answer2_id;
-				$rootScope.comparisons[1].content = 'criteria comment 2';
+				$rootScope.comparisons[1].content = 'criterion comment 2';
 				$httpBackend.expectPOST('/api/courses/3/assignments/9/answers/407/comments', expectedAnswerComment1).respond({});
 				$httpBackend.expectPOST('/api/courses/3/assignments/9/answers/279/comments/3703', expectedAnswerComment2).respond({});
 				$httpBackend.expectPOST('/api/courses/3/assignments/9/comparisons', expectedComparison).respond(mockComparisonResponse);

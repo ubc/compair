@@ -17,7 +17,7 @@ var myApp = angular.module('myApp', [
 	'ubc.ctlt.acj.classlist',
 	'ubc.ctlt.acj.comment',
 	'ubc.ctlt.acj.course',
-	'ubc.ctlt.acj.criteria',
+	'ubc.ctlt.acj.criterion',
 	'ubc.ctlt.acj.group',
 	'ubc.ctlt.acj.gradebook',
 	'ubc.ctlt.acj.home',
@@ -173,10 +173,10 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
 				label: "Self-Evaluation"
 			})
 		.when ('/course/:courseId/assignment/:assignmentId/comparisons',
-			   {
-				   templateUrl: 'modules/comment/comment-comparison-partial.html',
-				   label: "Comparisons"
-			   })
+            {
+                templateUrl: 'modules/comment/comment-comparison-partial.html',
+                label: "Comparisons"
+            })
 		.when('/course/:courseId/assignment/:assignmentId/file/:fileId',
 			{
 				templateUrl: 'modules/attachment/attachment-pdf-partial.html',
@@ -184,7 +184,7 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
 			})
 		.when('/course/:courseId/criterion/:criterionId/edit',
 			{
-				templateUrl: 'modules/criteria/criteria-configure-partial.html',
+				templateUrl: 'modules/criterion/criterion-configure-partial.html',
 				label: "Edit Criterion"
 			})
 		.when('/report',{

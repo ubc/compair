@@ -5,7 +5,7 @@ from werkzeug.exceptions import Unauthorized, Forbidden
 from sqlalchemy import and_
 
 from .models import Course, User, UserCourse, CourseRole, SystemRole, Assignment, Answer, \
-    AnswerComment, Comparison, Criteria, AssignmentComment, AssignmentCriteria
+    AnswerComment, Comparison, Criterion, AssignmentComment, AssignmentCriterion
 
 USER_IDENTITY = 'permission_user_identity'
 
@@ -53,7 +53,7 @@ def define_authorization(user, they):
     elif user.system_role == SystemRole.instructor:
         # instructors can create courses
         they.can(CREATE, Course)
-        they.can(CREATE, Criteria)
+        they.can(CREATE, Criterion)
         they.can(EDIT, User, if_my_student)
         they.can(CREATE, User, if_system_role_equal_or_lower_than_me)
         they.can(READ, USER_IDENTITY)
@@ -63,7 +63,7 @@ def define_authorization(user, they):
     # they can also look at their own course enrolments
     they.can(READ, UserCourse, user_id=user.id)
     # they can read and edit their own criteria
-    they.can((READ, EDIT), Criteria, user_id=user.id)
+    they.can((READ, EDIT), Criterion, user_id=user.id)
 
     # Assign permissions based on course roles
     # give access to courses the user is enroled in
@@ -91,10 +91,10 @@ def define_authorization(user, they):
             they.can(MANAGE, AssignmentComment, course_id=entry.course_id)
             they.can(MANAGE, AnswerComment, course_id=entry.course_id)
             they.can(READ, UserCourse, course_id=entry.course_id)
-            they.can((CREATE, DELETE), AssignmentCriteria, course_id=entry.course_id)
+            they.can((CREATE, DELETE), AssignmentCriterion, course_id=entry.course_id)
             they.can(READ, USER_IDENTITY)
             # TA can create criteria
-            they.can(CREATE, Criteria)
+            they.can(CREATE, Criterion)
         # only students can submit comparisons for now
         if entry.course_role == CourseRole.student:
             they.can(CREATE, Comparison, course_id=entry.course_id)

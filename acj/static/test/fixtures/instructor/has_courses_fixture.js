@@ -7,9 +7,6 @@ var sessionFactory = new SessionFactory();
 var CourseFactory  = require('../../factories/course_factory.js');
 var courseFactory = new CourseFactory();
 
-var CriteriaFactory  = require('../../factories/criteria_factory.js');
-var criteriaFactory = new CriteriaFactory();
-
 var storage = {
     session: {},
     users: [],

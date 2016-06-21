@@ -7,14 +7,14 @@ SET @assignmentId = 3;
 
 SELECT p.user_id, cq.id, c.name, scores.score
 FROM (
-	SELECT s.score, s.answer_id, s.criteria_id
+	SELECT s.score, s.answer_id, s.criterion_id
 	FROM Scores as s
-	WHERE s.criteria_id IN
-	(SELECT id FROM AssignmentCriteria
+	WHERE s.criterion_id IN
+	(SELECT id FROM assignment_criterion
 		WHERE assignment_id = @assignmentId and active = 1)
 ) as scores
-JOIN AssignmentCriteria as ac ON ac.id = scores.criteria_id
-JOIN Criteria as c ON c.id = cq.criteria_id
+JOIN assignment_criterion as ac ON ac.id = scores.criterion_id
+JOIN criterion as c ON c.id = cq.criterion_id
 JOIN Answer AS a ON a.id = scores.answer_id
 ORDER BY ac.id ASC, a.user_id ASC
 INTO OUTFILE '/tmp/test.csv'

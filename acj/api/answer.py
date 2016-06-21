@@ -133,12 +133,12 @@ class AnswerRootAPI(Resource):
 
         if params['orderBy'] and len(user_ids) != 1:
             # order answer ids by one criterion and pagination, in case there are multiple criteria in assignment
-            # left join on Score and add or condition for criteria_id is None to include all answers
+            # left join on Score and add or condition for criterion_id is None to include all answers
             # that don't have score yet
             query = query.outerjoin(Score) \
                 .filter(or_(
-                    Score.criteria_id == params['orderBy'],
-                    Score.criteria_id.is_(None)
+                    Score.criterion_id == params['orderBy'],
+                    Score.criterion_id.is_(None)
                  ))
             query = query.order_by(Score.score.desc(), Answer.created.desc())
         else:
@@ -362,7 +362,7 @@ class AnswerComparisonsAPI(Resource):
             comparisons = Comparison.query \
                 .options(joinedload('answer1')) \
                 .options(joinedload('answer2')) \
-                .options(joinedload('criteria')) \
+                .options(joinedload('criterion')) \
                 .filter_by(completed=True) \
                 .filter(or_(*conditions)) \
                 .order_by(Comparison.user_id, Comparison.created) \

@@ -37,8 +37,8 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     # course via Course Model
     # file via File Model
 
-    # assignment many-to-many criteria with association assignment_criteria
-    assignment_criteria = db.relationship("AssignmentCriteria", back_populates="assignment")
+    # assignment many-to-many criterion with association assignment_criteria
+    assignment_criteria = db.relationship("AssignmentCriterion", back_populates="assignment")
 
     answers = db.relationship("Answer", backref="assignment", lazy="dynamic",
         order_by=Answer.created.desc())
@@ -54,14 +54,14 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
 
     @hybrid_property
     def criteria(self):
-        from . import Criteria, AssignmentCriteria
-        return Criteria.query \
-            .with_entities(Criteria) \
-            .join(AssignmentCriteria) \
+        from . import Criterion, AssignmentCriterion
+        return Criterion.query \
+            .with_entities(Criterion) \
+            .join(AssignmentCriterion) \
             .filter(and_(
-                Criteria.active == True,
-                AssignmentCriteria.active == True,
-                AssignmentCriteria.assignment_id == self.id
+                Criterion.active == True,
+                AssignmentCriterion.active == True,
+                AssignmentCriterion.assignment_id == self.id
             )) \
             .all()
 
@@ -155,10 +155,10 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
         )
 
         cls.criteria_count = column_property(
-            select([func.count(AssignmentCriteria.id)]).
+            select([func.count(AssignmentCriterion.id)]).
             where(and_(
-                AssignmentCriteria.assignment_id == cls.id,
-                AssignmentCriteria.active == True
+                AssignmentCriterion.assignment_id == cls.id,
+                AssignmentCriterion.active == True
             )),
             deferred=True,
             group="counts"

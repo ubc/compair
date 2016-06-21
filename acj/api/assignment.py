@@ -12,7 +12,7 @@ from sqlalchemy.orm import joinedload, undefer_group
 from . import dataformat
 from acj.core import db, event
 from acj.authorization import allow, require
-from acj.models import Assignment, Course, AssignmentCriteria
+from acj.models import Assignment, Course, AssignmentCriterion
 from .util import new_restful_api, get_model_changes
 from .file import add_new_file, delete_file
 
@@ -103,27 +103,27 @@ class AssignmentIdAPI(Resource):
         assignment.enable_self_evaluation = params.get(
             'enable_self_evaluation', assignment.enable_self_evaluation)
 
-        criteria_ids = [c['id'] for c in params.criteria]
-        existing_ids = [c.criteria_id for c in assignment.assignment_criteria]
+        criterion_ids = [c['id'] for c in params.criteria]
+        existing_ids = [c.criterion_id for c in assignment.assignment_criteria]
         if assignment.compared:
-            if set(criteria_ids) != set(existing_ids):
+            if set(criterion_ids) != set(existing_ids):
                 msg = 'The criteria cannot be changed in the assignment ' + \
                       'because they have already been used in an evaluation.'
                 return {"error": msg}, 403
         else:
             # assignment not comapred yet, can change criteria
-            if len(criteria_ids) == 0:
+            if len(criterion_ids) == 0:
                 msg = 'You must add at least one criterion to the assignment '
                 return {"error": msg}, 403
             # disable old ones
             for c in assignment.assignment_criteria:
-                c.active = c.criteria_id in criteria_ids
+                c.active = c.criterion_id in criterion_ids
             # add the new ones
-            for criteria_id in criteria_ids:
-                if criteria_id not in existing_ids:
-                    assignment_criteria = AssignmentCriteria(
-                        assignment_id=assignment_id, criteria_id=criteria_id)
-                    assignment.assignment_criteria.append(assignment_criteria)
+            for criterion_id in criterion_ids:
+                if criterion_id not in existing_ids:
+                    assignment_criterion = AssignmentCriterion(
+                        assignment_id=assignment_id, criterion_id=criterion_id)
+                    assignment.assignment_criteria.append(assignment_criterion)
 
 
         on_assignment_modified.send(
@@ -178,7 +178,7 @@ class AssignmentRootAPI(Resource):
         # Get all assignments for this course, default order is most recent first
         assignment = Assignment(course_id=course_id)
         base_query = Assignment.query \
-            .options(joinedload("assignment_criteria").joinedload("criteria")) \
+            .options(joinedload("assignment_criteria").joinedload("criterion")) \
             .options(undefer_group('counts')) \
             .filter(
                 Assignment.course_id == course_id,
@@ -235,13 +235,13 @@ class AssignmentRootAPI(Resource):
         new_assignment.number_of_comparisons = params.get('number_of_comparisons')
         new_assignment.enable_self_evaluation = params.get('enable_self_evaluation')
 
-        criteria_ids = [c['id'] for c in params.criteria]
-        if len(criteria_ids) == 0:
+        criterion_ids = [c['id'] for c in params.criteria]
+        if len(criterion_ids) == 0:
             msg = 'You must add at least one criterion to the assignment '
             return {"error": msg}, 403
-        for c in criteria_ids:
-            assignment_criteria = AssignmentCriteria(assignment=new_assignment, criteria_id=c)
-            db.session.add(assignment_criteria)
+        for c in criterion_ids:
+            assignment_criterion = AssignmentCriterion(assignment=new_assignment, criterion_id=c)
+            db.session.add(assignment_criterion)
 
         db.session.add(new_assignment)
         db.session.commit()

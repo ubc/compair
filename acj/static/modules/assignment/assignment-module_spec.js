@@ -291,19 +291,19 @@ describe('course-module', function () {
                 "scores": [
                     {
                         "answer_id": 6,
-                        "criteria_id": 1,
+                        "criterion_id": 1,
                         "id": 13,
                         "normalized_score": 100
                     },
                     {
                         "answer_id": 6,
-                        "criteria_id": 2,
+                        "criterion_id": 2,
                         "id": 15,
                         "normalized_score": 100
                     },
                     {
                         "answer_id": 6,
-                        "criteria_id": 3,
+                        "criterion_id": 3,
                         "id": 17,
                         "normalized_score": 100
                     }
@@ -330,19 +330,19 @@ describe('course-module', function () {
                 "scores": [
                     {
                         "answer_id": 4,
-                        "criteria_id": 1,
+                        "criterion_id": 1,
                         "id": 1,
                         "normalized_score": 78
                     },
                     {
                         "answer_id": 4,
-                        "criteria_id": 2,
+                        "criterion_id": 2,
                         "id": 3,
                         "normalized_score": 78
                     },
                     {
                         "answer_id": 4,
-                        "criteria_id": 3,
+                        "criterion_id": 3,
                         "id": 5,
                         "normalized_score": 100
                     }
@@ -369,19 +369,19 @@ describe('course-module', function () {
                 "scores": [
                     {
                         "answer_id": 3,
-                        "criteria_id": 1,
+                        "criterion_id": 1,
                         "id": 8,
                         "normalized_score": 78
                     },
                     {
                         "answer_id": 3,
-                        "criteria_id": 2,
+                        "criterion_id": 2,
                         "id": 10,
                         "normalized_score": 78
                     },
                     {
                         "answer_id": 3,
-                        "criteria_id": 3,
+                        "criterion_id": 3,
                         "id": 12,
                         "normalized_score": 78
                     }
@@ -408,19 +408,19 @@ describe('course-module', function () {
                 "scores": [
                     {
                         "answer_id": 9,
-                        "criteria_id": 1,
+                        "criterion_id": 1,
                         "id": 7,
                         "normalized_score": 68
                     },
                     {
                         "answer_id": 9,
-                        "criteria_id": 2,
+                        "criterion_id": 2,
                         "id": 9,
                         "normalized_score": 68
                     },
                     {
                         "answer_id": 9,
-                        "criteria_id": 3,
+                        "criterion_id": 3,
                         "id": 11,
                         "normalized_score": 68
                     }
@@ -447,19 +447,19 @@ describe('course-module', function () {
                 "scores": [
                     {
                         "answer_id": 7,
-                        "criteria_id": 1,
+                        "criterion_id": 1,
                         "id": 2,
                         "normalized_score": 68
                     },
                     {
                         "answer_id": 7,
-                        "criteria_id": 2,
+                        "criterion_id": 2,
                         "id": 4,
                         "normalized_score": 36
                     },
                     {
                         "answer_id": 7,
-                        "criteria_id": 3,
+                        "criterion_id": 3,
                         "id": 6,
                         "normalized_score": 36
                     }
@@ -486,19 +486,19 @@ describe('course-module', function () {
                 "scores": [
                     {
                         "answer_id": 5,
-                        "criteria_id": 1,
+                        "criterion_id": 1,
                         "id": 19,
                         "normalized_score": 68
                     },
                     {
                         "answer_id": 5,
-                        "criteria_id": 2,
+                        "criterion_id": 2,
                         "id": 21,
                         "normalized_score": 68
                     },
                     {
                         "answer_id": 5,
-                        "criteria_id": 3,
+                        "criterion_id": 3,
                         "id": 23,
                         "normalized_score": 36
                     }
@@ -525,19 +525,19 @@ describe('course-module', function () {
                 "scores": [
                     {
                         "answer_id": 2,
-                        "criteria_id": 1,
+                        "criterion_id": 1,
                         "id": 26,
                         "normalized_score": 68
                     },
                     {
                         "answer_id": 2,
-                        "criteria_id": 2,
+                        "criterion_id": 2,
                         "id": 28,
                         "normalized_score": 68
                     },
                     {
                         "answer_id": 2,
-                        "criteria_id": 3,
+                        "criterion_id": 3,
                         "id": 30,
                         "normalized_score": 36
                     }
@@ -564,19 +564,19 @@ describe('course-module', function () {
                 "scores": [
                     {
                         "answer_id": 10,
-                        "criteria_id": 1,
+                        "criterion_id": 1,
                         "id": 20,
                         "normalized_score": 57
                     },
                     {
                         "answer_id": 10,
-                        "criteria_id": 2,
+                        "criterion_id": 2,
                         "id": 22,
                         "normalized_score": 36
                     },
                     {
                         "answer_id": 10,
-                        "criteria_id": 3,
+                        "criterion_id": 3,
                         "id": 24,
                         "normalized_score": 78
                     }
@@ -603,19 +603,19 @@ describe('course-module', function () {
                 "scores": [
                     {
                         "answer_id": 8,
-                        "criteria_id": 1,
+                        "criterion_id": 1,
                         "id": 14,
                         "normalized_score": 57
                     },
                     {
                         "answer_id": 8,
-                        "criteria_id": 2,
+                        "criterion_id": 2,
                         "id": 16,
                         "normalized_score": 57
                     },
                     {
                         "answer_id": 8,
-                        "criteria_id": 3,
+                        "criterion_id": 3,
                         "id": 18,
                         "normalized_score": 36
                     }
@@ -642,19 +642,19 @@ describe('course-module', function () {
                 "scores": [
                     {
                         "answer_id": 1,
-                        "criteria_id": 1,
+                        "criterion_id": 1,
                         "id": 25,
                         "normalized_score": 36
                     },
                     {
                         "answer_id": 1,
-                        "criteria_id": 2,
+                        "criterion_id": 2,
                         "id": 27,
                         "normalized_score": 100
                     },
                     {
                         "answer_id": 1,
-                        "criteria_id": 3,
+                        "criterion_id": 3,
                         "id": 29,
                         "normalized_score": 100
                     }
@@ -1017,22 +1017,22 @@ describe('course-module', function () {
                 it('should open a modal dialog', function() {
                     expect($modal.open).toHaveBeenCalledWith({
                         animation: true,
-                        template: '<criteria-form criterion=criterion></criteria-form>',
+                        template: '<criterion-form criterion=criterion></criterion-form>',
                         scope: jasmine.any(Object)
                     })
                 });
 
-                it('should listen on CRITERIA_UPDATED event and close dialog', function() {
+                it('should listen on CRITERION_UPDATED event and close dialog', function() {
                     var updated = {id: 1, name: 'test1'};
-                    $rootScope.$broadcast("CRITERIA_UPDATED", updated);
+                    $rootScope.$broadcast("CRITERION_UPDATED", updated);
                     expect(criterion).toEqual(updated);
                     expect(closeFunc).toHaveBeenCalled();
                 });
 
-                it('should listen to CRITERIA_ADDED event and close dialog', function() {
+                it('should listen to CRITERION_ADDED event and close dialog', function() {
                     $rootScope.assignment.criteria = [];
                     var criteria = {id: 1};
-                    $rootScope.$broadcast("CRITERIA_ADDED", criteria);
+                    $rootScope.$broadcast("CRITERION_ADDED", criteria);
                     expect($rootScope.assignment.criteria).toEqual([criteria]);
                     expect(closeFunc).toHaveBeenCalled();
                 });
@@ -1040,7 +1040,7 @@ describe('course-module', function () {
                 it('should un-register listener when dialog is closed', function() {
                     deferred.resolve();
                     $rootScope.$digest();
-                    $rootScope.$broadcast('CRITERIA_UPDATED');
+                    $rootScope.$broadcast('CRITERION_UPDATED');
                     expect(closeFunc).not.toHaveBeenCalled();
                 });
             });
@@ -1180,22 +1180,22 @@ describe('course-module', function () {
                 it('should open a modal dialog', function() {
                     expect($modal.open).toHaveBeenCalledWith({
                         animation: true,
-                        template: '<criteria-form criterion=criterion></criteria-form>',
+                        template: '<criterion-form criterion=criterion></criterion-form>',
                         scope: jasmine.any(Object)
                     })
                 });
 
-                it('should listen on CRITERIA_UPDATED event and close dialog', function() {
+                it('should listen on CRITERION_UPDATED event and close dialog', function() {
                     var updated = {id: 1, name: 'test1'};
-                    $rootScope.$broadcast("CRITERIA_UPDATED", updated);
+                    $rootScope.$broadcast("CRITERION_UPDATED", updated);
                     expect(criterion).toEqual(updated);
                     expect(closeFunc).toHaveBeenCalled();
                 });
 
-                it('should listen to CRITERIA_ADDED event and close dialog', function() {
+                it('should listen to CRITERION_ADDED event and close dialog', function() {
                     $rootScope.assignment.criteria = [];
                     var criteria = {id: 1};
-                    $rootScope.$broadcast("CRITERIA_ADDED", criteria);
+                    $rootScope.$broadcast("CRITERION_ADDED", criteria);
                     expect($rootScope.assignment.criteria).toEqual([criteria]);
                     expect(closeFunc).toHaveBeenCalled();
                 });
@@ -1203,7 +1203,7 @@ describe('course-module', function () {
                 it('should un-register listener when dialog is closed', function() {
                     deferred.resolve();
                     $rootScope.$digest();
-                    $rootScope.$broadcast('CRITERIA_UPDATED');
+                    $rootScope.$broadcast('CRITERION_UPDATED');
                     expect(closeFunc).not.toHaveBeenCalled();
                 });
             });
@@ -1278,8 +1278,3 @@ describe('course-module', function () {
         });
 	});
 });
-
-/*
-
-
-*/

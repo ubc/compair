@@ -56,8 +56,8 @@ class User(DefaultTableMixin, WriteTrackingMixin, UserMixin):
     answer_comments = db.relationship("AnswerComment",
         foreign_keys='AnswerComment.user_id',
         backref="user", lazy='dynamic')
-    criteria = db.relationship("Criteria",
-        foreign_keys='Criteria.user_id',
+    criteria = db.relationship("Criterion",
+        foreign_keys='Criterion.user_id',
         backref="user", lazy='dynamic')
     files = db.relationship("File",
         foreign_keys='File.user_id',

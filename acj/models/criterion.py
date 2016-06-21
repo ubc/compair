@@ -8,7 +8,7 @@ from . import *
 
 from acj.core import db
 
-class Criteria(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
+class Criterion(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     # table columns
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"),
         nullable=False)
@@ -22,12 +22,12 @@ class Criteria(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     # relationships
     # user via User Model
 
-    # assignment many-to-many criteria with association assignment_criteria
-    assignment_criteria = db.relationship("AssignmentCriteria",
-        back_populates="criteria", lazy='dynamic')
+    # assignment many-to-many criterion with association assignment_criteria
+    assignment_criteria = db.relationship("AssignmentCriterion",
+        back_populates="criterion", lazy='dynamic')
 
-    comparisons = db.relationship("Comparison", backref="criteria", lazy='dynamic')
-    scores = db.relationship("Score", backref="criteria", lazy='dynamic')
+    comparisons = db.relationship("Comparison", backref="criterion", lazy='dynamic')
+    scores = db.relationship("Score", backref="criterion", lazy='dynamic')
 
     # hyprid and other functions
     @hybrid_property
@@ -40,7 +40,7 @@ class Criteria(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
 
         cls.compare_count = column_property(
             select([func.count(Comparison.id)]).
-            where(Comparison.criteria_id == cls.id),
+            where(Comparison.criterion_id == cls.id),
             deferred=True,
             group="counts"
         )

@@ -2,7 +2,7 @@
 <h1><span ng-hide="{{ criterion && criterion.id }}">Add</span><span ng-show="{{ criterion && criterion.id }}">Edit</span> Criterion</h1>
 <br />
 <ng-form name="criterionForm" class="form">
-	<acj-field-with-feedback form-control="criterionForm.criteriaName">
+	<acj-field-with-feedback form-control="criterionForm.criterionName">
 		<label class="required-star" for="criterionName">Comparison Question</label>
 		<input type="text" maxlength="255" placeholder="e.g. Which answer is better?"
 			   ng-model="criterion.name" id="criterionName" name="criterionName" class="form-control" required/>

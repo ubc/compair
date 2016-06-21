@@ -6,8 +6,8 @@ import factory.fuzzy
 from factory.alchemy import SQLAlchemyModelFactory
 
 from acj.core import db
-from acj.models import Course, User, CourseRole, SystemRole, Criteria, \
-    UserCourse, AssignmentCriteria, Assignment, Score, Answer, AssignmentComment, \
+from acj.models import Course, User, CourseRole, SystemRole, Criterion, \
+    UserCourse, AssignmentCriterion, Assignment, Score, Answer, AssignmentComment, \
     AnswerComment, Comparison, AnswerCommentType
 
 
@@ -45,15 +45,15 @@ class UserCourseFactory(SQLAlchemyModelFactory):
     group_name = None
 
 
-class CriteriaFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = Criteria
+class CriterionFactory(SQLAlchemyModelFactory):
+    FACTORY_FOR = Criterion
     FACTORY_SESSION = db.session
-    name = factory.Sequence(lambda n: u'criteria %d' % n)
-    description = factory.Sequence(lambda n: u'This is criteria %d' % n)
+    name = factory.Sequence(lambda n: u'criterion %d' % n)
+    description = factory.Sequence(lambda n: u'This is criterion %d' % n)
     default = True
 
-class AssignmentCriteriaFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = AssignmentCriteria
+class AssignmentCriterionFactory(SQLAlchemyModelFactory):
+    FACTORY_FOR = AssignmentCriterion
     FACTORY_SESSION = db.session
     active = True
 
@@ -82,7 +82,7 @@ class ScoreFactory(SQLAlchemyModelFactory):
 
     assignment_id = 1
     answer_id = 1
-    criteria_id = 1
+    criterion_id = 1
 
 
 class AnswerFactory(SQLAlchemyModelFactory):
@@ -125,7 +125,7 @@ class ComparisonFactory(SQLAlchemyModelFactory):
     FACTORY_SESSION = db.session
 
     assignment_id = 1
-    criteria_id = 1
+    criterion_id = 1
     course_id = 1
     user_id = 1
     content = factory.Sequence(lambda n: u'this is some content for post %d' % n)

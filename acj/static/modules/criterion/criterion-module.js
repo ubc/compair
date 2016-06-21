@@ -4,29 +4,29 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.criteria', [
+var module = angular.module('ubc.ctlt.acj.criterion', [
 	'ngResource',
 	'ubc.ctlt.acj.common.form'
 ]);
 
-module.factory('AssignmentCriteriaResource', ['$resource', function($resource) {
-	var ret = $resource('/api/courses/:courseId/assignments/:assignmentId/criteria/:criteriaId', {criteriaId: '@id'});
-	ret.MODEL = "AssignmentCriteria";
+module.factory('AssignmentCriterionResource', ['$resource', function($resource) {
+	var ret = $resource('/api/courses/:courseId/assignments/:assignmentId/criteria/:criterionId', {criterionId: '@id'});
+	ret.MODEL = "AssignmentCriterion";
 	return ret;
 }]);
 
-module.factory('CriteriaResource', ['$resource', function($resource) {
-	return $resource('/api/criteria/:criteriaId', {criteriaId: '@id'});
+module.factory('CriterionResource', ['$resource', function($resource) {
+	return $resource('/api/criteria/:criterionId', {criterionId: '@id'});
 }]);
 
 /***** Controllers *****/
 module.controller('CriterionConfigureController',
-	['$scope', '$routeParams', '$location', 'CriteriaResource', 'Toaster',
-	function($scope, $routeParams, $location, CriteriaResource, Toaster) {
+	['$scope', '$routeParams', '$location', 'CriterionResource', 'Toaster',
+	function($scope, $routeParams, $location, CriterionResource, Toaster) {
 		var criterionId = $routeParams['criterionId'];
-		$scope.criterion = CriteriaResource.get({'criteriaId': criterionId});
+		$scope.criterion = CriterionResource.get({'criterionId': criterionId});
 		// update criterion
-		$scope.$on('CRITERIA_ADDED', function() {
+		$scope.$on('CRITERION_ADDED', function() {
 			var courseId = $routeParams['courseId'];
 			var assignmentId = $routeParams['assignmentId'];
 			Toaster.success("Criterion Updated", "Successfully saved your criterion changes.");

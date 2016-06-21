@@ -2,29 +2,29 @@
 	'use strict';
 
 	angular
-		.module('ubc.ctlt.acj.criteria')
+		.module('ubc.ctlt.acj.criterion')
 
-		.directive('criteriaForm', ['CriteriaResource', 'EditorOptions', function (CriteriaResource, EditorOptions) {
+		.directive('criterionForm', ['CriterionResource', 'EditorOptions', function (CriterionResource, EditorOptions) {
 			return {
 				restrict: 'E',
 				scope: {
 					criterion: '=?'
 				},
-				templateUrl: 'modules/criteria/criteria-form-partial.html',
+				templateUrl: 'modules/criterion/criterion-form-partial.html',
 				link: function (scope, element, attrs) {
 					scope.editorOptions = EditorOptions.basic;
 					scope.criterionSubmitted = false;
 					scope.cancel = function (ret) {
-						scope.$emit('CRITERIA_CANCEL', ret);
+						scope.$emit('CRITERION_CANCEL', ret);
 					}
 
 					scope.criterionSubmit = function () {
 						scope.criterionSubmitted = true;
-						CriteriaResource.save({}, scope.criterion, function (ret) {
+						CriterionResource.save({}, scope.criterion, function (ret) {
 							if (scope.criterion.id) {
-								scope.$emit('CRITERIA_UPDATED', ret);
+								scope.$emit('CRITERION_UPDATED', ret);
 							} else {
-								scope.$emit('CRITERIA_ADDED', ret);
+								scope.$emit('CRITERION_ADDED', ret);
 							}
 							resetForm();
 						}).$promise.finally(function () {
