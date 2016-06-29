@@ -408,12 +408,10 @@ class AnswerComparisonsAPI(Resource):
                     'answer1': default.answer1,
                     'answer2': default.answer2,
 
-                    'user': {
-                        'id': default.user_id,
-                        'fullname': default.user_fullname,
-                        'displayname': default.user_displayname,
-                        'avatar': default.user_avatar
-                    },
+                    'user_fullname': default.user_fullname,
+                    'user_displayname': default.user_displayname,
+                    'user_avatar': default.user_avatar,
+
                     'answer1_feedback': [comment for comment in answer_comments if
                         comment.user_id == user_id and
                         comment.answer_id == default.answer1_id and
