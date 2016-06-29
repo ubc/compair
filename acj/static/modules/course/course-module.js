@@ -224,7 +224,7 @@ module.controller(
 			CourseResource.save({id: $scope.course.id}, $scope.course, function (ret) {
 				Toaster.success(messages[$scope.method].title, messages[$scope.method].msg);
 				// refresh permissions
-				Session.refresh();
+				Session.refreshPermissions();
 				$location.path('/course/' + ret.id);
 			}).$promise.finally(function() {
 				$scope.submitted = false;
