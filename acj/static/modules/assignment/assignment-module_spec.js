@@ -1069,7 +1069,8 @@ describe('course-module', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
                     $rootScope.assignment.availableCheck = true;
-                    $rootScope.date.cstart.date.setDate($rootScope.date.astart.date.getDate()-1);
+                    $rootScope.date.cstart.date = angular.copy($rootScope.date.astart.date);
+                    $rootScope.date.cstart.date.setDate($rootScope.date.cstart.date.getDate()-1);
                     var currentPath = $location.path();
 
                     $rootScope.assignmentSubmit();
@@ -1230,7 +1231,8 @@ describe('course-module', function () {
                 it('should error when answer start is not before compare start', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.availableCheck = true;
-                    $rootScope.date.cstart.date.setDate($rootScope.date.astart.date.getDate()-1);
+                    $rootScope.date.cstart.date = angular.copy($rootScope.date.astart.date);
+                    $rootScope.date.cstart.date.setDate($rootScope.date.cstart.date.getDate()-1);
                     var currentPath = $location.path();
 
                     $rootScope.assignmentSubmit();
