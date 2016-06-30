@@ -99,14 +99,6 @@ module.directive('comparisonPreview', function() {
 		controller: function ($scope, $modal) {
 			/* need to pass to comparison template all expected properties to complete the preview */
 			$scope.previewPopup = function() {
-				/* assignment has name that is entered, content that is entered, number of comparisons that is entered (or else 3), no files */
-				$scope.assignment = {
-					name: $scope.assignment.name,
-                    description: $scope.assignment.description,
-                    file: $scope.assignment.file,
-					number_of_comparisons: $scope.assignment.number_of_comparisons ? $scope.assignment.number_of_comparisons : 3,
-                    criteria: $scope.assignment.criteria
-				};
 				/* set current round #, answer #s, and total round # for preview */
 				$scope.current = 1;
 				$scope.firstAnsNum = 1;

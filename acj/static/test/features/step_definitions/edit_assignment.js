@@ -62,10 +62,13 @@ var editAssignmentStepDefinitionsWrapper = function () {
         done();
     });
 
-    this.Then("I should not be able to modify criteria", function() {
+    this.Then("I should see a warning message in the edit criterion modal", function() {
+        return expect(element(by.css('.modal .intro-text.text-warning')).isPresent()).to.eventually.equal(true);
+    });
+
+    this.Then("I should not be able to remove criteria", function() {
         return element.all(by.repeater("(key, criterion) in assignment.criteria")).then(function(elements) {
             return elements.map(function(item) {
-                expect(item.element(by.cssContainingText('a', 'Edit')).isPresent()).to.eventually.equal(false);
                 return expect(item.element(by.cssContainingText('a', 'Drop')).isPresent()).to.eventually.equal(false);
             });
         });
