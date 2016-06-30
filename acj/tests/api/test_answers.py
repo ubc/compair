@@ -268,6 +268,52 @@ class AnswersAPITests(ACJAPITestCase):
             rv = json.loads(response.data.decode('utf-8'))
             self.assertEqual({"error": "An answer has already been submitted."}, rv)
 
+            # test instructor can submit outside of grace period
+            self.fixtures.assignment.answer_end = datetime.datetime.utcnow() - datetime.timedelta(minutes=2)
+            db.session.add(self.fixtures.assignment)
+            db.session.commit()
+
+            self.fixtures.add_students(1)
+            expected_answer.update({'user_id': self.fixtures.students[-1].id})
+            response = self.client.post(
+                self.base_url,
+                data=json.dumps(expected_answer),
+                content_type='application/json')
+            self.assert200(response)
+            rv = json.loads(response.data.decode('utf-8'))
+            actual_answer = Answer.query.get(rv['id'])
+            self.assertEqual(expected_answer['content'], actual_answer.content)
+
+        # test create successful
+        self.fixtures.add_students(1)
+        expected_answer = {'content': 'this is some answer content'}
+        with self.login(self.fixtures.students[-1].username):
+            # test student can not submit answers after answer grace period
+            self.fixtures.assignment.answer_end = datetime.datetime.utcnow() - datetime.timedelta(minutes=2)
+            db.session.add(self.fixtures.assignment)
+            db.session.commit()
+
+            response = self.client.post(
+                self.base_url,
+                data=json.dumps(expected_answer),
+                content_type='application/json')
+            self.assert403(response)
+            self.assertEqual("Answer deadline has passed.", response.json['error'])
+
+            # test student can submit answers within answer grace period
+            self.fixtures.assignment.answer_end = datetime.datetime.utcnow() - datetime.timedelta(seconds=15)
+            db.session.add(self.fixtures.assignment)
+            db.session.commit()
+
+            response = self.client.post(
+                self.base_url,
+                data=json.dumps(expected_answer),
+                content_type='application/json')
+            self.assert200(response)
+            rv = json.loads(response.data.decode('utf-8'))
+            actual_answer = Answer.query.get(rv['id'])
+            self.assertEqual(expected_answer['content'], actual_answer.content)
+
     def test_get_answer(self):
         assignment_id = self.fixtures.assignments[0].id
         answer = self.fixtures.answers[0]
@@ -374,15 +420,45 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual('This is an edit', rv.json['content'])
 
         # test edit by user that can manage posts
-        expected['content'] = 'This is another edit'
+        manage_expected = {
+            'id': str(answer.id),
+            'content': 'This is another edit'
+        }
         with self.login(self.fixtures.instructor.username):
+            rv = self.client.post(
+                self.base_url + '/' + str(answer.id),
+                data=json.dumps(manage_expected),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(answer.id, rv.json['id'])
+            self.assertEqual('This is another edit', rv.json['content'])
+
+        # test edit by author
+        with self.login(self.fixtures.students[0].username):
+            # test student can not submit answers after answer grace period
+            self.fixtures.assignment.answer_end = datetime.datetime.utcnow() - datetime.timedelta(minutes=10)
+            db.session.add(self.fixtures.assignment)
+            db.session.commit()
+
+            rv = self.client.post(
+                self.base_url + '/' + str(answer.id),
+                data=json.dumps(expected),
+                content_type='application/json')
+            self.assert403(rv)
+            self.assertEqual("Answer deadline has passed.", rv.json['error'])
+
+            # test student can submit answers within answer grace period
+            self.fixtures.assignment.answer_end = datetime.datetime.utcnow() - datetime.timedelta(seconds=15)
+            db.session.add(self.fixtures.assignment)
+            db.session.commit()
+
             rv = self.client.post(
                 self.base_url + '/' + str(answer.id),
                 data=json.dumps(expected),
                 content_type='application/json')
             self.assert200(rv)
             self.assertEqual(answer.id, rv.json['id'])
-            self.assertEqual('This is another edit', rv.json['content'])
+            self.assertEqual('This is an edit', rv.json['content'])
 
     def test_delete_answer(self):
         answer_id = self.fixtures.answers[0].id

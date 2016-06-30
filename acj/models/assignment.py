@@ -109,6 +109,17 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
             return self.compare_start.replace(tzinfo=pytz.utc) <= now < self.compare_end.replace(tzinfo=pytz.utc)
 
     @hybrid_property
+    def compare_grace(self):
+        now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+        if self.compare_start and self.compare_end:
+            grace = self.compare_end.replace(tzinfo=pytz.utc) + datetime.timedelta(seconds=60)  # add 60 seconds
+            compare_start = self.compare_start.replace(tzinfo=pytz.utc)
+            return compare_start <= now < grace
+        else:
+            answer_end = self.answer_end.replace(tzinfo=pytz.utc)
+            return now >= answer_end
+
+    @hybrid_property
     def after_comparing(self):
         now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
         answer_end = self.answer_end.replace(tzinfo=pytz.utc)
