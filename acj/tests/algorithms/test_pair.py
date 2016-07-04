@@ -7,10 +7,22 @@ class TestPair(unittest.TestCase):
 
     def setUp(self):
         self.scored_objects = [
-            ScoredObject(1, 0.7, 1),
-            ScoredObject(2, 0.2, 1),
-            ScoredObject(3, None, 0),
-            ScoredObject(4, None, 0),
+            ScoredObject(
+                key=1, score=0.7, variable1=None, variable2=None,
+                rounds=1, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=2, score=0.2, variable1=None, variable2=None,
+                rounds=1, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=3, score=None, variable1=None, variable2=None,
+                rounds=0, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=4, score=None, variable1=None, variable2=None,
+                rounds=0, wins=None, loses=None, opponents=None
+            )
         ]
 
         self.comparisons = []

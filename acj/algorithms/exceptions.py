@@ -6,3 +6,6 @@ class UserComparedAllObjectsException(Exception):
 
 class UnknownPairGeneratorException(Exception):
     pass
+
+class InvalidWinningKeyException(Exception):
+    pass

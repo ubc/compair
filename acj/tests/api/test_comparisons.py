@@ -387,10 +387,8 @@ class ComparisonAPITests(ACJAPITestCase):
         comparisons_secondary = self._submit_all_possible_comparisons_for_user(
             self.data.get_secondary_authorized_student().id)
 
-        loser_ids = comparisons_auth['losers']
-        loser_ids.extend(comparisons_secondary['losers'])
-        winner_ids = comparisons_auth['winners']
-        winner_ids.extend(comparisons_secondary['winners'])
+        loser_ids = comparisons_auth['losers'] + comparisons_secondary['losers']
+        winner_ids = comparisons_auth['winners'] + comparisons_secondary['winners']
 
         # Count the number of wins each answer has had
         num_wins_by_id = {}
@@ -409,7 +407,8 @@ class ComparisonAPITests(ACJAPITestCase):
 
         # Check that ranking by score and by wins match, this only works for low number of
         # comparisons
-        sorted_expect_ranking = sorted(num_wins_by_id.items(), key=operator.itemgetter(1))
+        sorted_expect_ranking = sorted(num_wins_by_id.items(), key=operator.itemgetter(0), reverse=True)
+        sorted_expect_ranking = sorted(sorted_expect_ranking, key=operator.itemgetter(1))
         expected_ranking_by_wins = [answer_id for (answer_id, wins) in sorted_expect_ranking]
 
         sorted_actual_ranking = sorted(answer_scores.items(), key=operator.itemgetter(1))

@@ -38,11 +38,11 @@ class AdaptivePairGenerator(PairGenerator):
             if scored_object.score == None:
                 self.scored_objects[index] = scored_object._replace(score=0)
 
-        self.rounds = list(set([a.round for a in self.scored_objects]))
+        self.rounds = list(set([a.rounds for a in self.scored_objects]))
         self.rounds.sort()
 
         for scored_object in self.scored_objects:
-            round = self.round_objects.setdefault(scored_object.round, [])
+            round = self.round_objects.setdefault(scored_object.rounds, [])
             round.append(scored_object)
 
         # check valid
@@ -185,5 +185,5 @@ class AdaptivePairGenerator(PairGenerator):
         # reinit round_objects
         self.round_objects = {}
         for scored_object in self.scored_objects:
-            round = self.round_objects.setdefault(scored_object.round, [])
+            round = self.round_objects.setdefault(scored_object.rounds, [])
             round.append(scored_object)

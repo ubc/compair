@@ -22,7 +22,10 @@ class TestPairAdaptive(unittest.TestCase):
 
         # not enough scored objects for comparison (only 1 scored object)
         scored_objects = [
-            ScoredObject(1, None, 0)
+            ScoredObject(
+                key=1, score=None, variable1=None, variable2=None,
+                rounds=0, wins=None, loses=None, opponents=None
+            )
         ]
         comparisons = []
 
@@ -31,8 +34,14 @@ class TestPairAdaptive(unittest.TestCase):
 
         # User compard all objects error
         scored_objects = [
-            ScoredObject(1, 0.7, 1),
-            ScoredObject(2, 0.2, 1)
+            ScoredObject(
+                key=1, score=0.7, variable1=None, variable2=None,
+                rounds=1, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=2, score=0.2, variable1=None, variable2=None,
+                rounds=1, wins=None, loses=None, opponents=None
+            )
         ]
         comparisons = [
             ComparisonPair(1,2,None)
@@ -43,10 +52,22 @@ class TestPairAdaptive(unittest.TestCase):
 
         # User compard all objects error
         scored_objects = [
-            ScoredObject(1, 0.7, 4),
-            ScoredObject(2, 0.2, 4),
-            ScoredObject(3, 0.5, 3),
-            ScoredObject(4, 0.2, 3)
+            ScoredObject(
+                key=1, score=0.7, variable1=None, variable2=None,
+                rounds=4, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=2, score=0.2, variable1=None, variable2=None,
+                rounds=4, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=3, score=0.5, variable1=None, variable2=None,
+                rounds=3, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=4, score=0.2, variable1=None, variable2=None,
+                rounds=3, wins=None, loses=None, opponents=None
+            )
         ]
         comparisons = [
             ComparisonPair(1,2,None),
@@ -59,8 +80,14 @@ class TestPairAdaptive(unittest.TestCase):
 
         # Returns a comparison pair
         scored_objects = [
-            ScoredObject(1, None, 0),
-            ScoredObject(2, None, 0)
+            ScoredObject(
+                key=1, score=None, variable1=None, variable2=None,
+                rounds=0, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=2, score=None, variable1=None, variable2=None,
+                rounds=0, wins=None, loses=None, opponents=None
+            )
         ]
         comparisons = []
         results = self.pair_algorithm.generate_pair(scored_objects, comparisons)
@@ -76,12 +103,30 @@ class TestPairAdaptive(unittest.TestCase):
 
         # Selects lowest round objects first
         scored_objects = [
-            ScoredObject(1, 0.5, 2),
-            ScoredObject(2, 0.5, 2),
-            ScoredObject(3, 0.5, 2),
-            ScoredObject(4, 0.5, 2),
-            ScoredObject(5, 0.5, 1),
-            ScoredObject(6, 0.5, 1)
+            ScoredObject(
+                key=1, score=0.5, variable1=None, variable2=None,
+                rounds=2, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=2, score=0.5, variable1=None, variable2=None,
+                rounds=2, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=3, score=0.5, variable1=None, variable2=None,
+                rounds=2, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=4, score=0.5, variable1=None, variable2=None,
+                rounds=2, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=5, score=0.5, variable1=None, variable2=None,
+                rounds=1, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=6, score=0.5, variable1=None, variable2=None,
+                rounds=1, wins=None, loses=None, opponents=None
+            )
         ]
         comparisons = []
 
@@ -95,9 +140,18 @@ class TestPairAdaptive(unittest.TestCase):
 
         # Can select previously compared object but not with same opponent
         scored_objects = [
-            ScoredObject(1, 0.5, 2),
-            ScoredObject(2, 0.5, 2),
-            ScoredObject(3, 0.9, 3)
+            ScoredObject(
+                key=1, score=0.5, variable1=None, variable2=None,
+                rounds=2, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=2, score=0.5, variable1=None, variable2=None,
+                rounds=2, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=3, score=0.5, variable1=None, variable2=None,
+                rounds=3, wins=None, loses=None, opponents=None
+            )
         ]
         comparisons = [
             ComparisonPair(1,2,None)
@@ -109,10 +163,22 @@ class TestPairAdaptive(unittest.TestCase):
 
         # Select opponent with closest score (mock shuffle order)
         scored_objects = [
-            ScoredObject(1, 0.5, 3),
-            ScoredObject(2, 0.7, 3),
-            ScoredObject(3, 0.2, 3),
-            ScoredObject(4, 0.4, 3)
+            ScoredObject(
+                key=1, score=0.5, variable1=None, variable2=None,
+                rounds=3, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=2, score=0.7, variable1=None, variable2=None,
+                rounds=3, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=3, score=0.2, variable1=None, variable2=None,
+                rounds=3, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=4, score=0.4, variable1=None, variable2=None,
+                rounds=3, wins=None, loses=None, opponents=None
+            )
         ]
         comparisons = []
         results = self.pair_algorithm.generate_pair(scored_objects, comparisons)
@@ -125,10 +191,22 @@ class TestPairAdaptive(unittest.TestCase):
 
         # Select opponent with closest score (mock shuffle order)
         scored_objects = [
-            ScoredObject(1, 0.5, 3),
-            ScoredObject(2, 0.5, 3),
-            ScoredObject(3, 0.2, 3),
-            ScoredObject(4, 0.4, 3)
+            ScoredObject(
+                key=1, score=0.5, variable1=None, variable2=None,
+                rounds=3, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=2, score=0.5, variable1=None, variable2=None,
+                rounds=3, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=3, score=0.2, variable1=None, variable2=None,
+                rounds=3, wins=None, loses=None, opponents=None
+            ),
+            ScoredObject(
+                key=4, score=0.4, variable1=None, variable2=None,
+                rounds=3, wins=None, loses=None, opponents=None
+            )
         ]
         comparisons = [
             ComparisonPair(1,2,None)
