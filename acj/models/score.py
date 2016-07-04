@@ -38,7 +38,7 @@ class Score(DefaultTableMixin, WriteTrackingMixin):
     """
 
     scoring_algorithm = db.Column(EnumType(ScoringAlgorithm, name="scoring_algorithm"),
-        nullable=False, default=ScoringAlgorithm.true_skill)
+        nullable=True, default=ScoringAlgorithm.true_skill)
     score = db.Column(db.Float, default=0, nullable=False, index=True)
     variable1 = db.Column(db.Float, nullable=True)
     variable2 = db.Column(db.Float, nullable=True)
