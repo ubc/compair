@@ -45,8 +45,14 @@ Feature: Edit Assignment
     And I submit form with "Save" button
     Then I should be on the "course" page
 
-  Scenario: Cannot Edit a assignment's criterion as instructor after its been compared
+  Scenario: Editing assignment's criterion as instructor after the criterion has been compared
     Given I'm an Instructor with assignments
     And I'm on "edit assignment" page for assignment with id "1" and course id "1"
-    Then I should not be able to modify criteria
-    And I should not be able to add criteria
+    When I edit the second criterion
+    Then I should see a warning message in the edit criterion modal
+
+  Scenario: Cannot add or remove an assignment's criterion as instructor after its been compared
+    Given I'm an Instructor with assignments
+    And I'm on "edit assignment" page for assignment with id "1" and course id "1"
+    Then I should not be able to add criteria
+    And I should not be able to remove criteria

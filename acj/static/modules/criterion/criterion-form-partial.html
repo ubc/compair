@@ -2,6 +2,10 @@
 <h1><span ng-hide="{{ criterion && criterion.id }}">Add</span><span ng-show="{{ criterion && criterion.id }}">Edit</span> Criterion</h1>
 <br />
 <ng-form name="criterionForm" class="form">
+	<p ng-if="criterion.compared" class="intro-text bg-warning text-warning alert">
+        <i class="fa fa-warning"></i>
+        This criterion has already been compared by students. Please make minor text updates only.
+    </p>
 	<acj-field-with-feedback form-control="criterionForm.criterionName">
 		<label class="required-star" for="criterionName">Comparison Question</label>
 		<input type="text" maxlength="255" placeholder="e.g. Which answer is better?"

@@ -63,7 +63,7 @@ var criterion3 = criterionFactory.generateCriterion(3, instructor.id, {
     "name": "Which looks better?",
     "description": "<p>Choose the response that you think looks more accurate of the two.</p>",
     "default": false,
-    "compared": false
+    "compared": true
 });
 storage.criteria.push(criterion3);
 
