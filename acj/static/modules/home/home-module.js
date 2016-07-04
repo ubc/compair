@@ -34,8 +34,6 @@ module.controller(
             $scope.canAddCourse = canAddCourse;
         });
         Session.getUser().then(function(user) {
-            //TODO: why do we need a LOGIN_EVENT here?
-            $rootScope.$broadcast(AuthenticationService.LOGIN_EVENT);
             UserResource.getUserCourses(
                 {id: user.id}).$promise.then(
                 function(ret) {

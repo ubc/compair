@@ -78,6 +78,9 @@ module.controller(
 		$scope.$on(AuthenticationService.LOGIN_EVENT, function() {
 		   $scope.getPermissions();
 		});
+		$scope.$on(Session.PERMISSION_REFRESHED_EVENT, function() {
+		   $scope.getPermissions();
+		});
 
 		// listen for changes in authentication state
 //		$scope.$on(AuthenticationService.LOGIN_EVENT, updateAuthentication);

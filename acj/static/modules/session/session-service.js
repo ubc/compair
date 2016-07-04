@@ -8,11 +8,14 @@
      * available. Otherwise, provides the information from local cached values.
      */
     module.factory('Session',
-            [ "$http", "$q", "$cookies", "$log", "UserResource",
-            function ($http, $q, $cookies, $log, UserResource) {
+            ["$rootScope",  "$http", "$q", "$cookies", "$log", "UserResource",
+            function ($rootScope, $http, $q, $cookies, $log, UserResource) {
+        var PERMISSION_REFRESHED_EVENT = "event:Session-refreshPermissions";
+
         return {
             _user: new UserResource,
             _permissions: null,
+            PERMISSION_REFRESHED_EVENT: PERMISSION_REFRESHED_EVENT,
             /**
              * Get user object from Session. The user is loaded from local cache if
              * it's already received from remote. Otherwise, it issues API calls.
@@ -102,11 +105,30 @@
                 $cookies.remove('current.permissions');
             },
 			refresh: function() {
+                var scope = this;
+                var deferred = $q.defer();
+                return $http.get('/api/session', { cache:true })
+                    .then(function (result) {
+                        // retrieve logged in user's information
+                        // return a promise for chaining
+                        var u = UserResource.get({"id": result.data.id}, function(user) {
+                            $cookies.putObject('current.user', user);
+                            angular.extend(scope._user, user);
+                            deferred.resolve(scope._user);
+                        });
+                        angular.extend(scope._user, u);
+                        scope._permissions = result.data.permissions;
+                        $cookies.putObject('current.permissions', scope._permissions);
+                        return deferred.promise;
+                    });
+			},
+			refreshPermissions: function() {
 				var scope = this;
 				return $http.get('/api/session/permission')
                     .then(function (result) {
 						scope._permissions = result.data;
 						$cookies.putObject('current.permissions', result.data);
+                        $rootScope.$broadcast(PERMISSION_REFRESHED_EVENT);
 						return true;
                     });
 			}

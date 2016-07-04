@@ -70,6 +70,12 @@ module.controller("UserController", ['$scope', '$log', '$route', '$routeParams',
 			$scope.submitted = true;
 			UserResource.save({'id': userId}, $scope.user, function(ret) {
 				Toaster.success(messages[$scope.method].title, messages[$scope.method].msg);
+                Session.getUser().then(function(user) {
+                    // refresh User's info on editing own profile and displaynmae changed
+                    if (userId == user.id && $scope.user.displayname != user.displayname) {
+                        Session.refresh();
+                    }
+                });
 				$location.path('/user/' + ret.id);
 			}).$promise.finally(function() {
 				$scope.submitted = false;
