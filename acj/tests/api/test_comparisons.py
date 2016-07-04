@@ -1,6 +1,7 @@
 import json
 import copy
 import operator
+import datetime
 
 from data.fixtures.test_data import ComparisonTestData
 from acj.models import Answer, Comparison
@@ -212,6 +213,32 @@ class ComparisonAPITests(ACJAPITestCase):
                 data=json.dumps(faulty_comparisons),
                 content_type='application/json')
             self.assert400(rv)
+
+            # test past grace period
+            self.assignment.compare_start = datetime.datetime.utcnow() - datetime.timedelta(days=7)
+            self.assignment.compare_end = datetime.datetime.utcnow() - datetime.timedelta(minutes=2)
+            db.session.add(self.assignment)
+            db.session.commit()
+            ok_comparisons = copy.deepcopy(comparison_submit)
+            rv = self.client.post(
+                self.base_url,
+                data=json.dumps(ok_comparisons),
+                content_type='application/json')
+            self.assert403(rv)
+            self.assertEqual("Assignment comparison deadline has passed.", rv.json['error'])
+
+            # test within grace period
+            self.assignment.compare_start = datetime.datetime.utcnow() - datetime.timedelta(days=7)
+            self.assignment.compare_end = datetime.datetime.utcnow() - datetime.timedelta(seconds=15)
+            db.session.add(self.assignment)
+            db.session.commit()
+            ok_comparisons = copy.deepcopy(comparison_submit)
+            rv = self.client.post(
+                self.base_url,
+                data=json.dumps(ok_comparisons),
+                content_type='application/json')
+            self.assert200(rv)
+
 
     def test_submit_comparison_basic(self):
         with self.login(self.data.get_authorized_student().username):

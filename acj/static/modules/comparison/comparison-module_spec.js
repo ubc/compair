@@ -297,6 +297,10 @@ describe('comparison-module', function () {
 			"user_id": 1
 		}];
 
+        var mockTimer = {
+            "date": 1467325647825
+        }
+
 		beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_) {
 			$rootScope = _$rootScope_;
 			$location = _$location_;
@@ -319,6 +323,8 @@ describe('comparison-module', function () {
 			$httpBackend.expectGET('/api/courses/3/assignments/9/comparisons').respond({
                 'objects':mockComparisons
             });
+			$httpBackend.expectGET('/api/timer').respond(mockTimer);
+
 			$httpBackend.expectGET('/api/courses/3/assignments/9/answer_comments?answer_ids=279,407&evaluation=only&user_ids=1').respond(mockComments);
 			createController({}, {courseId:3, assignmentId:9});
 			expect($rootScope.assignment).toEqual({});
@@ -355,6 +361,7 @@ describe('comparison-module', function () {
                 $httpBackend.expectGET('/api/courses/3/assignments/9/comparisons').respond({
                     'objects':mockComparisons
                 });
+			    $httpBackend.expectGET('/api/timer').respond(mockTimer);
 				$httpBackend.whenGET('/api/courses/3/assignments/9/answer_comments?answer_ids=279,407&evaluation=only&user_ids=1').respond(mockComments);
 				$mockRoute = jasmine.createSpyObj('route', ['reload']);
 				controller = createController($mockRoute, {courseId:3, assignmentId:9});

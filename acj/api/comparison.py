@@ -45,6 +45,9 @@ on_comparison_update = event.signal('COMPARISON_UPDATE')
 on_assignment_comparison_count = event.signal('ASSIGNMENT_COMPARISON_COUNT')
 on_course_comparison_count = event.signal('COURSE_COMPARISON_COUNT')
 
+#messages
+comparison_deadline_message = 'Assignment comparison deadline has passed.'
+
 # /
 class CompareRootAPI(Resource):
     @login_required
@@ -57,8 +60,8 @@ class CompareRootAPI(Resource):
         require(READ, assignment)
         restrict_user = not allow(MANAGE, assignment)
 
-        if not assignment.compare_period:
-            return {'error': 'Evaluation period is not active.'}, 403
+        if not assignment.compare_grace:
+            return {'error': comparison_deadline_message}, 403
 
         # check if user has comparisons they have not completed yet
         comparisons = Comparison.query \
@@ -106,8 +109,9 @@ class CompareRootAPI(Resource):
         Course.get_active_or_404(course_id)
         assignment = Assignment.get_active_or_404(assignment_id)
 
-        if not assignment.compare_period:
-            return {'error': 'Evaluation period is not active.'}, 403
+        if not assignment.compare_grace:
+            return {'error': comparison_deadline_message}, 403
+
         require(READ, assignment)
         require(CREATE, Comparison)
         restrict_user = not allow(MANAGE, assignment)

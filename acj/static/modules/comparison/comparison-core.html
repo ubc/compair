@@ -24,6 +24,14 @@
 
 		<hr />
 
+        <div class="h3 text-center" ng-show="showCountDown && !comparisonsError">
+            <timer end-time="assignment.compare_end">
+                <span title="Official time remaining until deadline" class="bg-danger alert text-danger">{{minutes}} minutes {{seconds}} seconds left</span>
+            </timer>
+            <br /><br />
+            <span class="h4">(Comparison must be saved by deadline to be accepted)</span>
+        </div>
+
 		<h2 class="col-md-6">Answer Pair</h2>
 		<h2 class="col-md-6 text-right rounds"><span ng-hide="comparisonsError" class="label label-warning">Round {{current}} / {{total}}</span></h2>
 

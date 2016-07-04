@@ -40,14 +40,18 @@ module.constant('required_rounds', 6);
 module.controller(
 	'ComparisonController',
     ['$log', '$location', '$route', '$scope', '$timeout', '$routeParams', '$anchorScroll', 'AssignmentResource', 'AnswerResource',
-        'ComparisonResource', 'AnswerCommentResource', 'Session', 'Toaster', 'AnswerCommentType',
+        'ComparisonResource', 'AnswerCommentResource', 'Session', 'Toaster', 'AnswerCommentType', "TimerResource",
 	function($log, $location, $route, $scope, $timeout, $routeParams, $anchorScroll, AssignmentResource, AnswerResource,
-		ComparisonResource, AnswerCommentResource, Session, Toaster, AnswerCommentType)
+		ComparisonResource, AnswerCommentResource, Session, Toaster, AnswerCommentType, TimerResource)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
 		var userId;
 		$scope.submitted = false;
+
+		var countDown = function() {
+			$scope.showCountDown = true;
+		};
 
 		$scope.assignment = {};
 		AssignmentResource.get({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
@@ -58,6 +62,22 @@ module.controller(
 				if ($scope.assignment.enable_self_evaluation) {
 					$scope.total += 1;
 				}
+                // if there is a comparison end date, check if timer is needed
+                var due_date = new Date($scope.assignment.compare_end);
+                if (due_date) {
+                    TimerResource.get(
+                        function (ret) {
+                            var current_time = ret.date;
+                            var trigger_time = due_date.getTime() - current_time - 600000; //(10 mins)
+                            if (trigger_time < 86400000) { //(1 day)
+                                $timeout(countDown, trigger_time);
+                            }
+                        },
+                        function (ret) {
+                            Toaster.reqerror("Unable to get the current time", ret);
+                        }
+                    );
+                }
 			},
 			function (ret)
 			{
@@ -201,7 +221,13 @@ module.controller(
                         });
 					},
 					function(ret) {
-						Toaster.reqerror("Comparison Submit Failed", ret);
+						$scope.submitted = false;
+						// if compare period is not in session
+						if (ret.status == '403' && 'error' in ret.data) {
+							Toaster.error(ret.data.error);
+						} else {
+						    Toaster.reqerror("Comparison Submit Failed", ret);
+						}
 					}
 			);
 		};
