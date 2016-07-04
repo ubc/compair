@@ -5,8 +5,6 @@ from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask import current_app
 
-import random
-
 from . import *
 from importlib import import_module
 
@@ -62,12 +60,7 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
 
         assignment = Assignment.query.get(assignment_id)
 
-        # choose one of the assignments criterion randomly
-        assignment_criteria = random.choice(assignment.assignment_criteria)
-        criterion_id = assignment_criteria.criterion_id
-
         # ineligible authors - eg. instructors, TAs, dropped student, current user
-
         non_students = UserCourse.query \
             .filter(and_(
                 UserCourse.course_id == assignment.course_id,
@@ -79,40 +72,38 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
 
         # TODO: try score vs excepted score
         answers_with_score = Answer.query \
-            .with_entities(Answer, Score.score) \
+            .with_entities(Answer, func.avg(Score.score).label('average_score') ) \
             .outerjoin(Score) \
             .filter(and_(
                 Answer.user_id.notin_(ineligible_user_ids),
                 Answer.assignment_id == assignment_id,
-                Answer.active == True,
-                or_(
-                    Score.criterion_id == criterion_id,
-                    Score.criterion_id == None
-                )
+                Answer.active == True
             )) \
-            .all()
+            .group_by(Answer.id)
 
         scored_objects = []
         for answer_with_score in answers_with_score:
             scored_objects.append(ScoredObject(
                 key=answer_with_score.Answer.id,
-                score=answer_with_score.score,
+                score=answer_with_score.average_score,
                 round=answer_with_score.Answer.round
             ))
 
         comparisons = Comparison.query \
+            .with_entities(Comparison.answer1_id, Comparison.answer2_id) \
+            .distinct() \
             .filter_by(
                 user_id=user_id,
-                assignment_id=assignment_id,
-                criterion_id=criterion_id
-            )
+                assignment_id=assignment_id
+            ) \
+            .all()
 
         comparison_pairs = []
         for comparison in comparisons:
             comparison_pairs.append(ComparisonPair(
                 comparison.answer1_id,
                 comparison.answer2_id,
-                winning_key=comparison.winner_id
+                None
             ))
 
         comparison_pair = generate_pair(
