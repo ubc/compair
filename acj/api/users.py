@@ -14,9 +14,12 @@ from acj.models import User, SystemRole, Course, UserCourse, CourseRole, Assignm
 
 user_api = Blueprint('user_api', __name__)
 
+def non_blank_str(value):
+    return None if str(value) == "" else str(value)
+
 new_user_parser = RequestParser()
 new_user_parser.add_argument('username', type=str, required=True)
-new_user_parser.add_argument('student_number', type=str)
+new_user_parser.add_argument('student_number', type=non_blank_str)
 new_user_parser.add_argument('system_role', type=str, required=True)
 new_user_parser.add_argument('firstname', type=str, required=True)
 new_user_parser.add_argument('lastname', type=str, required=True)
@@ -27,7 +30,7 @@ new_user_parser.add_argument('password', type=str, required=True)
 existing_user_parser = RequestParser()
 existing_user_parser.add_argument('id', type=int, required=True)
 existing_user_parser.add_argument('username', type=str, required=True)
-existing_user_parser.add_argument('student_number', type=str)
+existing_user_parser.add_argument('student_number', type=non_blank_str)
 existing_user_parser.add_argument('system_role', type=str, required=True)
 existing_user_parser.add_argument('firstname', type=str, required=True)
 existing_user_parser.add_argument('lastname', type=str, required=True)
