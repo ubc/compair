@@ -59,10 +59,16 @@
 
 		<!-- Assignment Actions -->
 
-		<!-- BUTTON when user is admin OR (user has not answered AND the answer period is active) -->
+        <!-- BUTTON when user does not have an answer draft AND (user is admin OR (user has not answered AND the answer period is active) -->
 		<a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/create" class="btn btn-success" title="Answer Assignment"
-		   ng-show="canManageAssignment || (!assignment.status.answers.answered && assignment.answer_period)">
+		   ng-show="!assignment.status.answers.has_draft && (canManageAssignment || (!assignment.status.answers.answered && assignment.answer_period))">
 			Answer
+		</a>
+
+        <!-- BUTTON when user has an answer draft AND (user is admin OR (user has not answered AND the answer period is active) -->
+		<a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{assignment.status.answers.draft_ids[0]}}/edit" class="btn btn-success" title="Answer Assignment"
+		   ng-show="assignment.status.answers.has_draft && (canManageAssignment || (!assignment.status.answers.answered && assignment.answer_period))">
+			Finish Answering
 		</a>
 
 		<!-- BUTTON when user is not an admin AND the comparison period is active AND the user has not finished pair comparisons AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active)
@@ -178,7 +184,7 @@
 
 				<!-- Students should see before evaluating during the evaluation period (self-evaluation) -->
 				<p class="intro-text" ng-if="!canManageAssignment && assignment.compare_period && compared_req_met && !self_evaluation_req_met">
-					<a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/comparison" title="Compare answers">Compare your answer</a> for the assignment first, then read answers written by your classmates and instructors here.
+					<a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare" title="Compare answers">Compare your answer</a> for the assignment first, then read answers written by your classmates and instructors here.
 				</p>
 
 				<!-- Anyone sees during the answer period, if no answers provided yet -->

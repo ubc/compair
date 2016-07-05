@@ -685,15 +685,18 @@ describe('course-module', function () {
                     "status": {
                         "answers": {
                             "answered": true,
-                            "count": 1
+                            "count": 1,
+                            "draft_ids": [],
+                            "has_draft": true
                         },
                         "comparisons": {
                             "available": false,
-                            "count": 0
+                            "count": 0,
+                            "left": 3,
+                            "self_evauluation_completed": false
                         }
                     }
                 });
-                $httpBackend.expectGET('/api/courses/1/assignments/1/answer_comments?self_evaluation=only&user_ids='+id).respond([]);
                 $httpBackend.expectGET('/api/courses/1/assignments/1/answers?orderBy=1&page=1&perPage=20').respond(mockAnswers);
                 $httpBackend.flush();
             });

@@ -137,6 +137,7 @@ def get_answer(restrict_user=True):
         'content': fields.String,
         'file': fields.Nested(get_file(), allow_null=True),
         'flagged': fields.Boolean,
+        'draft': fields.Boolean,
 
         'scores': fields.List(fields.Nested(get_score(
             restrict_user=restrict_user
@@ -176,6 +177,7 @@ def get_answer_comment(restrict_user=True):
         'user_id': fields.Integer,
         'content': fields.String,
         'comment_type': UnwrapAnswerCommentType(attribute='comment_type'),
+        'draft': fields.Boolean,
 
         'user': get_partial_user(restrict_user),
         'created': fields.DateTime,

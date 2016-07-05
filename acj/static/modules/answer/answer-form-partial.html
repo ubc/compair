@@ -21,7 +21,7 @@
 			<span class="h4">(Answer must be saved by deadline to be accepted)</span>
 		</div>
 
-		<div class="form-group" ng-if="canManageAssignment && create">
+		<div class="form-group" ng-if="canManageAssignment && showUserList">
 			<label for="user_id">Submit As</label>
 			<select id="user_id" name="user_id" ng-model="answer.user_id"  class="form-control" required
 					ng-options="u.id as u.fullname for u in classlist">
@@ -66,6 +66,20 @@
 			</textarea>
 		</div>
 	</fieldset>
-	<input type="submit" class="btn btn-success btn-lg center-block" value="Save"
-		ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess)" />
+    <div class="row" ng-show="answer.draft">
+        <div class="col-md-3 col-md-offset-3 col-xs-6">
+            <input type="submit" class="btn btn-success btn-lg center-block" value="Save Draft"
+                ng-click="answer.draft = true"
+                ng-disabled="submitted || (uploader.queue.length && !uploader.queue[0].isSuccess)" />
+        </div>
+        <div class="col-md-3 col-xs-6">
+            <input type="submit" class="btn btn-success btn-lg center-block" value="Submit Answer"
+                ng-click="answer.draft = false"
+                ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess)" />
+        </div>
+    </div>
+    <div ng-show="!answer.draft">
+        <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
+            ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess)" />
+    </div>
 </form>

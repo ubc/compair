@@ -44,6 +44,8 @@ module.controller(
 		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
 		var userId;
 		$scope.submitted = false;
+        $scope.isDraft = false;
+		$scope.preventExit = true; //user should be warned before leaving page by default
 
 		var countDown = function() {
 			$scope.showCountDown = true;
@@ -112,7 +114,7 @@ module.controller(
 
                     var answer_ids = [$scope.answer1.id, $scope.answer2.id].sort().join(',');
                     AnswerCommentResource.query(
-                        {'courseId':courseId, 'assignmentId':assignmentId, 'answer_ids': answer_ids, 'user_ids': userId, 'evaluation':'only'},
+                        {'courseId':courseId, 'assignmentId':assignmentId, 'answer_ids': answer_ids, 'user_ids': userId, 'evaluation':'only', 'draft':'true'},
                         function(ret) {
                             _.forEach(ret, function(comment) {
                                 if (comment.answer_id == $scope.answer1.id) {
@@ -121,7 +123,8 @@ module.controller(
                                     $scope.answer2.comment = comment;
                                 }
                             });
-                        });
+                        }
+                    );
                 }, function (ret) {
                     $scope.comparisonsError = true;
                     Toaster.info("You've compared the available answers!", "Please check back later for more answers.");
@@ -138,8 +141,6 @@ module.controller(
 			//}, 0);
 		//};
 
-		$scope.preventExit = true; //user should be warned before leaving page by default
-
 		// save comparison to server
 		$scope.comparisonSubmit = function() {
 			$scope.submitted = true;
@@ -152,22 +153,31 @@ module.controller(
 					commentId: _.get(answer, 'comment.id')
 				};
                 answer.comment.comment_type = AnswerCommentType.evaluation;
-				AnswerCommentResource.save(params, answer.comment);
+                answer.comment.draft = $scope.isDraft;
+				AnswerCommentResource.save(params, answer.comment).$promise.then(
+                    function(ret) {
+                        // need comment id if saving draft
+                        answer.comment = ret;
+                    }
+                );
 			});
             comparisons_submit = []
 			angular.forEach($scope.comparisons, function(comparison) {
                 comparisons_submit.push({
 					criterion_id: comparison.criterion_id,
 					content: comparison.content,
-					winner_id: comparison.winner_id
+					winner_id: comparison.winner_id,
+                    draft: $scope.isDraft
 				});
 			});
 
 			ComparisonResource.save(
-				{'courseId': courseId, 'assignmentId': assignmentId}, {
-                    'comparisons': comparisons_submit
-                }).$promise.then(
-					function(ret) {
+                {'courseId': courseId, 'assignmentId': assignmentId},
+                { 'comparisons': comparisons_submit }
+            ).$promise.then(
+                function(ret) {
+                    $scope.submitted = false;
+                    if (!$scope.isDraft) {
                         AssignmentResource.getCurrentUserStatus({'id': $scope.courseId, 'assignmentId': assignmentId},
                             function(ret) {
                                 var comparisons_count = ret.status.comparisons.count;
@@ -195,16 +205,19 @@ module.controller(
                                 $location.path('/course/' + courseId);
                             }
                         );
-					},
-					function(ret) {
-						$scope.submitted = false;
-						// if compare period is not in session
-						if (ret.status == '403' && 'error' in ret.data) {
-							Toaster.error(ret.data.error);
-						} else {
-						    Toaster.reqerror("Comparison Submit Failed", ret);
-						}
-					}
+                    } else {
+                        Toaster.success("Saved Draft Successfully!", "Remember to submit your comparison before the deadline.");
+                    }
+                },
+                function(ret) {
+                    $scope.submitted = false;
+                    // if compare period is not in session
+                    if (ret.status == '403' && 'error' in ret.data) {
+                        Toaster.error(ret.data.error);
+                    } else {
+                        Toaster.reqerror("Comparison Submit Failed", ret);
+                    }
+                }
 			);
 		};
 
@@ -226,7 +239,6 @@ module.controller(
 					Toaster.reqerror("Unable To Change Flag", ret);
 				}
 			);
-
 		};
 	}]
 );
@@ -240,7 +252,9 @@ module.controller(
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
-		$scope.comment = {};
+		$scope.comment = {
+            draft: true
+        };
 
         AssignmentResource.getCurrentUserStatus({'id': courseId, 'assignmentId': assignmentId},
             function (ret) {
@@ -252,34 +266,57 @@ module.controller(
             }
         );
 
-		AnswerResource.user({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
-			function (ret) {
-				if (!ret.objects.length) {
-					Toaster.error("No Answer Found", "Your answer for this assignment was not found, so the self-evaluation is unavailable.");
-					$location.path('/course/' + courseId);
-				} else {
-					$scope.parent = ret.objects[0];
-				}
-			},
-			function (ret) {
-				Toaster.reqerror("Unable To Retrieve Answer", ret);
-			}
-		);
+		Session.getUser().then(function(user) {
+			userId = user.id;
+            AnswerResource.user({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
+                function (ret) {
+                    var answer = {}
+                    if (!ret.objects.length) {
+                        Toaster.error("No Answer Found", "Your answer for this assignment was not found, so the self-evaluation is unavailable.");
+                        $location.path('/course/' + courseId);
+                    } else {
+                        answer = ret.objects[0];
+                        $scope.parent = answer;
+                    }
+                    AnswerCommentResource.query(
+                        {'courseId':courseId, 'assignmentId':assignmentId, 'answer_ids': answer.id, 'user_ids': userId, 'self_evaluation':'only', 'draft':'only'},
+                        function(ret) {
+                            if (ret.length > 0) {
+                                $scope.comment = ret[0];
+                            }
+                        }
+                    );
+                },
+                function (ret) {
+                    Toaster.reqerror("Unable To Retrieve Answer", ret);
+                }
+            );
+		});
 
 		$scope.commentSubmit = function () {
 			$scope.submitted = true;
 			$scope.comment.comment_type = AnswerCommentType.self_evaluation;
-			AnswerCommentResource.save({'courseId': courseId, 'assignmentId': assignmentId, 'answerId': $scope.parent.id},
-				$scope.comment).$promise.then(
-					function (ret) {
-						$scope.submitted = false;
-						Toaster.success("Your Self-Evaluation Saved Successfully", "Your assignment is now complete. Good work!");
-						$location.path('/course/' + courseId);
-					},
-					function (ret) {
-						$scope.submitted = false;
-						Toaster.reqerror("Unable To Save Self-Evaluation", ret);
-					}
+            var params = {
+                courseId: courseId,
+                assignmentId: assignmentId,
+                answerId: $scope.parent.id,
+                commentId: _.get($scope.comment, 'id')
+            };
+			AnswerCommentResource.save(params, $scope.comment).$promise.then(
+                function (ret) {
+                    $scope.submitted = false;
+                    if (ret.draft) {
+                        $scope.comment = ret;
+                        Toaster.success("Saved Draft Successfully!", "Remember to submit your self-evaluation before the deadline.");
+                    } else {
+                        Toaster.success("Your Self-Evaluation Saved Successfully", "Your assignment is now complete. Good work!");
+                        $location.path('/course/' + courseId);
+                    }
+                },
+                function (ret) {
+                    $scope.submitted = false;
+                    Toaster.reqerror("Unable To Save Self-Evaluation", ret);
+                }
 			)
 		};
 	}]

@@ -6,13 +6,14 @@ from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
-from sqlalchemy import desc, or_, func
-from sqlalchemy.orm import joinedload, undefer_group
+from sqlalchemy import desc, or_, func, and_
+from sqlalchemy.orm import joinedload, undefer_group, load_only
 
 from . import dataformat
 from acj.core import db, event
 from acj.authorization import allow, require
-from acj.models import Assignment, Course, AssignmentCriterion, Answer, Comparison
+from acj.models import Assignment, Course, AssignmentCriterion, Answer, Comparison, \
+    AnswerComment, AnswerCommentType
 from .util import new_restful_api, get_model_changes
 from .file import add_new_file, delete_file
 
@@ -105,13 +106,14 @@ class AssignmentIdAPI(Resource):
             'enable_self_evaluation', assignment.enable_self_evaluation)
 
         criterion_ids = [c['id'] for c in params.criteria]
-        existing_ids = [c.criterion_id for c in assignment.assignment_criteria]
         if assignment.compared:
-            if set(criterion_ids) != set(existing_ids):
+            active_ids = [c.id for c in assignment.criteria]
+            if set(criterion_ids) != set(active_ids):
                 msg = 'The criteria cannot be changed in the assignment ' + \
                       'because they have already been used in an evaluation.'
                 return {"error": msg}, 403
         else:
+            existing_ids = [c.criterion_id for c in assignment.assignment_criteria]
             # assignment not comapred yet, can change criteria
             if len(criterion_ids) == 0:
                 msg = 'You must add at least one criterion to the assignment '
@@ -125,7 +127,6 @@ class AssignmentIdAPI(Resource):
                     assignment_criterion = AssignmentCriterion(
                         assignment_id=assignment_id, criterion_id=criterion_id)
                     assignment.assignment_criteria.append(assignment_criterion)
-
 
         on_assignment_modified.send(
             self,
@@ -279,9 +280,20 @@ class AssignmentIdStatusAPI(Resource):
             .filter_by(
                 user_id=current_user.id,
                 assignment_id=assignment_id,
-                active=True
+                active=True,
+                draft=False
             ) \
             .count()
+
+        drafts = Answer.query \
+            .options(load_only('id')) \
+            .filter_by(
+                user_id=current_user.id,
+                assignment_id=assignment_id,
+                active=True,
+                draft=True
+            ) \
+            .all()
 
         comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
         comparison_availble = Comparison.comparison_avialble_for_user(course_id, assignment_id, current_user.id)
@@ -290,12 +302,30 @@ class AssignmentIdStatusAPI(Resource):
             'answers': {
                 'answered': answer_count > 0,
                 'count': answer_count,
+                'has_draft': len(drafts) > 0,
+                'draft_ids': [draft.id for draft in drafts]
             },
             'comparisons': {
                 'available': comparison_availble,
-                'count': comparison_count
+                'count': comparison_count,
+                'left': max(0, assignment.number_of_comparisons - comparison_count)
             }
         }
+
+        if assignment.enable_self_evaluation:
+            self_evauluations = AnswerComment.query \
+                .join("answer") \
+                .filter(and_(
+                    AnswerComment.user_id == current_user.id,
+                    AnswerComment.active == True,
+                    AnswerComment.comment_type == AnswerCommentType.self_evaluation,
+                    AnswerComment.draft == False,
+                    Answer.assignment_id == assignment_id,
+                    Answer.active == True,
+                    Answer.draft == False
+                )) \
+                .count()
+            status['comparisons']['self_evauluation_completed'] = self_evauluations > 0
 
         on_assignment_get_current_user_status.send(
             self,
@@ -329,10 +359,39 @@ class AssignmentRootStatusAPI(Resource):
             ) \
             .filter_by(
                 user_id=current_user.id,
-                active=True
+                active=True,
+                draft=False
             ) \
             .filter(Answer.assignment_id.in_(assignment_ids)) \
             .group_by(Answer.assignment_id) \
+            .all()
+
+        # get self evauluation status for assignments with self evauluations enabled
+        self_evauluations = AnswerComment.query \
+            .join("answer") \
+            .with_entities(
+                Answer.assignment_id,
+                func.count(Answer.assignment_id).label('self_evauluation_count')
+            ) \
+            .filter(and_(
+                AnswerComment.user_id == current_user.id,
+                AnswerComment.active == True,
+                AnswerComment.comment_type == AnswerCommentType.self_evaluation,
+                AnswerComment.draft == False,
+                Answer.active == True,
+                Answer.draft == False,
+                Answer.assignment_id.in_(assignment_ids)
+            )) \
+            .group_by(Answer.assignment_id) \
+            .all()
+
+        drafts = Answer.query \
+            .options(load_only('id', 'assignment_id')) \
+            .filter_by(
+                user_id=current_user.id,
+                active=True,
+                draft=True
+            ) \
             .all()
 
         statuses = {}
@@ -341,6 +400,7 @@ class AssignmentRootStatusAPI(Resource):
                 (result.answer_count for result in answer_counts if result.assignment_id == assignment.id),
                 0
             )
+            assignment_drafts = [draft for draft in drafts if draft.assignment_id == assignment.id]
             comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
             comparison_availble = Comparison.comparison_avialble_for_user(course_id, assignment.id, current_user.id)
 
@@ -348,12 +408,22 @@ class AssignmentRootStatusAPI(Resource):
                 'answers': {
                     'answered': answer_count > 0,
                     'count': answer_count,
+                    'has_draft': len(assignment_drafts) > 0,
+                    'draft_ids': [draft.id for draft in assignment_drafts]
                 },
                 'comparisons': {
                     'available': comparison_availble,
-                    'count': comparison_count
+                    'count': comparison_count,
+                    'left': max(0, assignment.number_of_comparisons - comparison_count)
                 }
             }
+
+            if assignment.enable_self_evaluation:
+                self_evauluation_count = next(
+                    (result.self_evauluation_count for result in self_evauluations if result.assignment_id == assignment.id),
+                    0
+                )
+                statuses[assignment.id]['comparisons']['self_evauluation_completed'] = self_evauluation_count > 0
 
         on_assignment_list_get_current_user_status.send(
             self,

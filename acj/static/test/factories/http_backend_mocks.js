@@ -406,11 +406,14 @@ module.exports.httpbackendMock = function(storageFixture) {
                     statuses[assignmentId] = {
                         "answers": {
                             "answered": false,
-                            "count": 0
+                            "count": 0,
+                            "draft_ids": [],
+                            "has_draft": true
                         },
                         "comparisons": {
                             "available": true,
-                            "count": 0
+                            "count": 0,
+                            "left": 3
                         }
                     }
                 });
@@ -575,11 +578,14 @@ module.exports.httpbackendMock = function(storageFixture) {
             status = {
                 "answers": {
                     "answered": false,
-                    "count": 0
+                    "count": 0,
+                    "draft_ids": [],
+                    "has_draft": true
                 },
                 "comparisons": {
                     "available": true,
-                    "count": 0
+                    "count": 0,
+                    "left": 3
                 }
             }
 

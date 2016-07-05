@@ -129,7 +129,7 @@
 					<!-- Completed Assignment Feedback (for students) -->
 					<li ng-if="!canManageAssignment && ((assignment.left + assignment.self_evaluation_left == 0) || assignment.status.answers.answered)">
 						You
-						<span ng-if="answered"><strong>assignment.status.answers.answered</strong> <span ng-if="assignment.left + assignment.self_evaluation_left == 0">and </span></span>
+						<span ng-if="answered"><strong>answered</strong> <span ng-if="assignment.left + assignment.self_evaluation_left == 0">and </span></span>
 						<span ng-if="assignment.left + assignment.self_evaluation_left == 0"><strong>compared</strong></span>
 					</li>
 					<!-- Pending Assignment Feedback (for students) -->
@@ -158,11 +158,17 @@
 		<!-- Assignment Actions -->
 		<div class="col-sm-3 text-right action-btns">
 
-			<!-- BUTTON when user is admin OR (user has not answered AND the answer period is active) -->
-			<a class="btn btn-success" title="Answer Assignment" ng-href="#/course/{{course.id}}/assignment/{{assignment.id}}/answer/create"
-			   ng-show="canManageAssignment || (!assignment.status.answers.answered && assignment.answer_period)">
-				Answer
-			</a>
+            <!-- BUTTON when user does not have an answer draft AND (user is admin OR (user has not answered AND the answer period is active) -->
+            <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/create" class="btn btn-success" title="Answer Assignment"
+            ng-show="!assignment.status.answers.has_draft && (canManageAssignment || (!assignment.status.answers.answered && assignment.answer_period))">
+                Answer
+            </a>
+
+            <!-- BUTTON when user has an answer draft AND (user is admin OR (user has not answered AND the answer period is active) -->
+            <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{assignment.status.answers.draft_ids[0]}}/edit" class="btn btn-success" title="Answer Assignment"
+            ng-show="assignment.status.answers.has_draft && (canManageAssignment || (!assignment.status.answers.answered && assignment.answer_period))">
+                Finish Answer
+            </a>
 
 			<!-- BUTTON when user is not an admin AND the comparison period is active AND the user has not finished pair comparisons AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active)
 			     basically we force users to answer first, if they can

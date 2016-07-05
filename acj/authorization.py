@@ -72,13 +72,17 @@ def define_authorization(user, they):
             continue
         they.can(READ, Course, id=entry.course_id)
         they.can(READ, Assignment, course_id=entry.course_id)
-        they.can((READ, CREATE), Answer, course_id=entry.course_id)
-        they.can((EDIT, DELETE), Answer, user_id=user.id)
+        # only owner/Instructors/TAs can read answer drafts
+        they.can(READ, Answer, course_id=entry.course_id, draft=False)
+        they.can(CREATE, Answer, course_id=entry.course_id)
+        they.can((EDIT, DELETE, READ), Answer, user_id=user.id)
         they.can((READ, CREATE), AssignmentComment, course_id=entry.course_id)
         they.can((EDIT, DELETE), AssignmentComment, user_id=user.id)
-        they.can((READ, CREATE), AnswerComment, course_id=entry.course_id)
+        # only owner/Instructors/TAs can read answer comment drafts
+        they.can(READ, AnswerComment, course_id=entry.course_id, draft=False)
+        they.can(CREATE, AnswerComment, course_id=entry.course_id)
         # owner of the answer comment
-        they.can((EDIT, DELETE), AnswerComment, user_id=user.id)
+        they.can((EDIT, DELETE, READ), AnswerComment, user_id=user.id)
         # instructors can modify the course and enrolment
         if entry.course_role == CourseRole.instructor:
             they.can(EDIT, Course, id=entry.course_id)

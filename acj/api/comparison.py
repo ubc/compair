@@ -134,6 +134,10 @@ class CompareRootAPI(Resource):
 
         # check if each comparison has a criterion Id and a winner id
         for comparison_to_update in params['comparisons']:
+            # check if saving a draft
+            if 'draft' in comparison_to_update and comparison_to_update['draft']:
+                completed = False
+
             # ensure criterion param is present
             if 'criterion_id' not in comparison_to_update:
                 return {"error": "Missing criterion_id in evaluation."}, 400
@@ -154,7 +158,7 @@ class CompareRootAPI(Resource):
                     known_criterion = True
 
                     # check that the winner id matches one of the answer pairs
-                    if winner_id != comparison.answer1_id and winner_id != comparison.answer2_id:
+                    if winner_id not in [comparison.answer1_id, comparison.answer2_id, None]:
                         return {"error": "Selected answer does not match the available answers in comparison."}, 400
 
                     break

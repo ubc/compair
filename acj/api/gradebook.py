@@ -75,6 +75,7 @@ class GradebookAPI(Resource):
                 Answer.id == Score.answer_id,
                 Score.criterion_id.in_(criterion_ids))). \
             filter(Answer.assignment_id == assignment_id). \
+            filter(Answer.draft == False). \
             subquery()
 
         scores_by_user = User.query. \
@@ -107,6 +108,7 @@ class GradebookAPI(Resource):
             stmt = AnswerComment.query \
                 .with_entities(AnswerComment.user_id, func.count('*').label('comment_count')) \
                 .filter_by(comment_type=AnswerCommentType.self_evaluation) \
+                .filter_by(draft=False) \
                 .join(Answer, and_(
                     Answer.id == AnswerComment.answer_id,
                     Answer.assignment_id == assignment_id)) \
