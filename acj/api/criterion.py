@@ -37,6 +37,7 @@ class CriteriaAPI(Resource):
     def get(self):
         if allow(MANAGE, Criterion):
             criteria = Criterion.query \
+                .filter_by(active=True) \
                 .order_by(Criterion.public.desc(), Criterion.created) \
                 .all()
         else:

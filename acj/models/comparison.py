@@ -123,13 +123,11 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         round_compared = min(answer1.round+1, answer2.round+1)
 
         new_comparisons = []
-        for assignment_criteria in assignment.assignment_criteria:
-            criterion_id = assignment_criteria.criterion_id
-
+        for criterion in assignment.criteria:
             comparison = Comparison(
                 assignment_id=assignment_id,
                 user_id=user_id,
-                criterion_id=criterion_id,
+                criterion_id=criterion.id,
                 answer1_id=answer1.id,
                 answer2_id=answer2.id,
                 winner_id=None,
@@ -170,11 +168,8 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
             )) \
             .all()
 
-        scores = Score.query .\
-            options(load_only('answer_id', 'criterion_id', 'score', 'variable1', 'variable2', 'rounds')) . \
-            filter(and_(
-                Score.answer_id.in_([answer1_id, answer2_id])
-            )) \
+        scores = Score.query \
+            .filter( Score.answer_id.in_([answer1_id, answer2_id] ) ) \
             .all()
 
         new_scores = []
@@ -209,7 +204,7 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
                 if score == None:
                     score = Score(
                         assignment_id=assignment_id,
-                        answer_id=answer1_id,
+                        answer_id=answer_id,
                         criterion_id=comparison.criterion_id
                     )
                     new_scores.append(score)

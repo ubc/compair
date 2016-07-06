@@ -68,7 +68,7 @@ class GradebookAPI(Resource):
                                       for (user_id, compare_count) in comparisons}
 
         # find out the scores that students get
-        criterion_ids = [c.criterion_id for c in assignment.assignment_criteria]
+        criterion_ids = [criterion.id for criterion in assignment.criteria]
         stmt = Answer.query. \
             with_entities(Answer.user_id, Answer.flagged, Score.criterion_id, Score.normalized_score.label('ns')). \
             outerjoin(Score, and_(
@@ -84,7 +84,7 @@ class GradebookAPI(Resource):
             all()
 
         # process the results into dicts
-        init_scores = {c.criterion_id: 'Not Evaluated' for c in assignment.assignment_criteria}
+        init_scores = {criterion.id: 'Not Evaluated' for criterion in assignment.criteria}
         scores_by_user_id = {student_id: copy.deepcopy(init_scores) for student_id in student_ids}
         flagged_by_user_id = {}
         num_answers_per_student = {}
@@ -97,7 +97,7 @@ class GradebookAPI(Resource):
                     scores_by_user_id[score[0]][score[2]] = round(score[3], 3)
             else:
                 # no answer from the student
-                scores_by_user_id[score[0]] = {c.criterion_id: 'No Answer' for c in assignment.assignment_criteria}
+                scores_by_user_id[score[0]] = {criterion.id: 'No Answer' for criterion in assignment.criteria}
 
         include_self_evaluation = False
         num_self_evaluation_per_student = {}
@@ -126,7 +126,7 @@ class GradebookAPI(Resource):
         # {'gradebook':[{user1}. {user2}, ...]}
         # user id, username, first name, last name, answer submitted, comparisons submitted
         gradebook = []
-        no_answer = {c.criterion_id: 'No Answer' for c in assignment.assignment_criteria}
+        no_answer = {criterion.id: 'No Answer' for criterion in assignment.criteria}
         for student in students:
             entry = {
                 'userid': student.id,

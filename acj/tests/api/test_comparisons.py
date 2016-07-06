@@ -28,7 +28,7 @@ class ComparisonAPITests(ACJAPITestCase):
         submit = {
             'comparisons': [
                 {
-                    'criterion_id': self.assignment.assignment_criteria[0].criterion_id,
+                    'criterion_id': self.assignment.criteria[0].id,
                     'winner_id': winner_id
                 }
             ]
@@ -367,12 +367,6 @@ class ComparisonAPITests(ACJAPITestCase):
             db.session.commit()
 
             Comparison.calculate_scores(self.assignment.id)
-        # test normal post
-        # rv = self.client.post(self.base_url, data=json.dumps(comparison_submit),
-        # 					  content_type='application/json')
-        # self.assert200(rv)
-        # self.logout()
-
         return {'winners': winner_ids, 'losers': loser_ids}
 
     @mock.patch('random.shuffle')

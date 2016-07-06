@@ -122,7 +122,6 @@ def get_assignment(restrict_user=True):
 
     return ret
 
-
 def get_answer(restrict_user=True):
     ret = {
         'id': fields.Integer,
@@ -219,7 +218,7 @@ def get_comparison(restrict_user=True, with_answers=True):
         'winner_id': fields.Integer(default=None),
 
         'content': fields.String,
-        'criteria': fields.Nested(get_criterion()),
+        'criterion': fields.Nested(get_criterion()),
 
         'user': {
             'id': fields.Integer(attribute="user_id"),

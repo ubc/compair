@@ -128,9 +128,11 @@ class SimpleAssignmentTestData(BasicTestData):
             answer_start=answer_start,
             answer_end=answer_end
         )
+        disabled_criterion = CriterionFactory(user_id=author.id, default=False, active=False)
         AssignmentCriterionFactory(criterion=DefaultFixture.DEFAULT_CRITERION, assignment=assignment)
+        AssignmentCriterionFactory(criterion=disabled_criterion, assignment=assignment, active=False)
         db.session.commit()
-        self.criteria_by_assignments[assignment.id] = assignment.assignment_criteria[0].criterion
+        self.criteria_by_assignments[assignment.id] = assignment.criteria[0]
         return assignment
 
     def get_assignments(self):
@@ -186,7 +188,7 @@ class SimpleAnswersTestData(SimpleAssignmentTestData):
         ScoreFactory(
             assignment_id=assignment.id,
             answer=answer,
-            criterion_id=assignment.assignment_criteria[0].criterion_id
+            criterion_id=assignment.criteria[0].id
         )
         db.session.commit()
         return answer
@@ -353,7 +355,7 @@ class TestFixture:
                     ScoreFactory(
                         assignment=assignment,
                         answer=answer,
-                        criterion_id=assignment.assignment_criteria[0].criterion_id,
+                        criterion_id=assignment.criteria[0].id,
                         score=random.random() * 5
                     )
                 db.session.commit()
@@ -367,6 +369,8 @@ class TestFixture:
                 days=2) if is_answer_period_end else datetime.datetime.now() + datetime.timedelta(days=7)
             assignment = AssignmentFactory(course=self.course, answer_end=answer_end)
             AssignmentCriterionFactory(criterion=DefaultFixture.DEFAULT_CRITERION, assignment=assignment)
+            disabled_criterion = CriterionFactory(user_id=self.instructor.id, default=False, active=False)
+            AssignmentCriterionFactory(criterion=disabled_criterion, assignment=assignment, active=False)
             self.assignments.append(assignment)
         db.session.commit()
 

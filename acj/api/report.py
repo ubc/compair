@@ -181,7 +181,7 @@ def participation_stat_report(course_id, assignments, group_name, overall):
         comments = {user_id: count for (user_id, count) in comments}
 
         total_req += assignment.number_of_comparisons  # for overall required
-        criteria_count = len(assignment.assignment_criteria)
+        criteria_count = len(assignment.criteria)
 
         for user_course_student in user_course_students:
             user = user_course_student.user
