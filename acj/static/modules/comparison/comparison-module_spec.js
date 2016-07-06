@@ -317,8 +317,17 @@ describe('comparison-module', function () {
 
 		it('should have correct initial states', function () {
 			$httpBackend.expectGET('/api/courses/3/assignments/9').respond(mockAssignment);
-            $httpBackend.expectGET('/api/courses/3/assignments/9/comparisons/users/1/count').respond({
-                "count": 0
+            $httpBackend.expectGET('/api/courses/3/assignments/9/status').respond({
+                "status": {
+                    "answers": {
+                        "answered": true,
+                        "count": 1
+                    },
+                    "comparisons": {
+                        "available": true,
+                        "count": 0
+                    }
+                }
             });
 			$httpBackend.expectGET('/api/courses/3/assignments/9/comparisons').respond({
                 'objects':mockComparisons
@@ -355,8 +364,17 @@ describe('comparison-module', function () {
 
 			beforeEach(function() {
 				$httpBackend.whenGET('/api/courses/3/assignments/9').respond(mockAssignment);
-                $httpBackend.expectGET('/api/courses/3/assignments/9/comparisons/users/1/count').respond({
-                    "count": 0
+                $httpBackend.expectGET('/api/courses/3/assignments/9/status').respond({
+                    "status": {
+                        "answers": {
+                            "answered": true,
+                            "count": 1
+                        },
+                        "comparisons": {
+                            "available": true,
+                            "count": 0
+                        }
+                    }
                 });
                 $httpBackend.expectGET('/api/courses/3/assignments/9/comparisons').respond({
                     'objects':mockComparisons
@@ -399,8 +417,17 @@ describe('comparison-module', function () {
 				$httpBackend.expectPOST('/api/courses/3/assignments/9/answers/407/comments', expectedAnswerComment1).respond({});
 				$httpBackend.expectPOST('/api/courses/3/assignments/9/answers/279/comments/3703', expectedAnswerComment2).respond({});
 				$httpBackend.expectPOST('/api/courses/3/assignments/9/comparisons', expectedComparison).respond(mockComparisonResponse);
-                $httpBackend.expectGET('/api/courses/3/assignments/9/comparisons/users/1/count').respond({
-                    "count": 1
+                $httpBackend.expectGET('/api/courses/3/assignments/9/status').respond({
+                    "status": {
+                        "answers": {
+                            "answered": true,
+                            "count": 1
+                        },
+                        "comparisons": {
+                            "available": true,
+                            "count": 1
+                        }
+                    }
                 });
 
 				expect($rootScope.preventExit).toBe(true);

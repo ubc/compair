@@ -363,6 +363,14 @@ class TestFixture:
 
         return self
 
+    def add_answer(self, assignment, user):
+        answer = AnswerFactory(
+            assignment=assignment,
+            user=user
+        )
+        db.session.commit()
+        self.answers.append(answer)
+
     def add_assignments(self, num_assignments=1, is_answer_period_end=False):
         for _ in range(num_assignments):
             answer_end = datetime.datetime.now() - datetime.timedelta(

@@ -56,7 +56,6 @@ on_answer_create = event.signal('ANSWER_CREATE')
 on_answer_delete = event.signal('ANSWER_DELETE')
 on_answer_flag = event.signal('ANSWER_FLAG')
 on_user_answer_get = event.signal('USER_ANSWER_GET')
-on_user_answered_count = event.signal('USER_ANSWERED_COUNT')
 on_answer_comparisons_get = event.signal('ANSWER_COMPARISONS_GET')
 
 # messages
@@ -531,39 +530,3 @@ class AnswerFlagAPI(Resource):
 
 
 api.add_resource(AnswerFlagAPI, '/<int:answer_id>/flagged')
-
-
-# /count
-class AnswerCountAPI(Resource):
-    @login_required
-    def get(self, course_id, assignment_id):
-        """
-        Return number of answers submitted for the assignment by current user.
-
-        :param course_id:
-        :param assignment_id:
-        :return: answer count
-        """
-        Course.get_active_or_404(course_id)
-        Assignment.get_active_or_404(assignment_id)
-        require(READ, Answer(course_id=course_id))
-
-        answered = Answer.query. \
-            filter_by(
-                assignment_id=assignment_id,
-                active=True,
-                user_id=current_user.id
-            ). \
-            count()
-
-        on_user_answered_count.send(
-            self,
-            event_name=on_user_answered_count.name,
-            user=current_user,
-            course_id=course_id,
-            data={'assignment_id': assignment_id})
-
-        return {'answered': answered}
-
-
-api.add_resource(AnswerCountAPI, '/count')

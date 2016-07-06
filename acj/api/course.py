@@ -27,7 +27,6 @@ on_course_modified = event.signal('COURSE_MODIFIED')
 on_course_get = event.signal('COURSE_GET')
 on_course_list_get = event.signal('COURSE_LIST_GET')
 on_course_create = event.signal('COURSE_CREATE')
-on_user_course_answered_count = event.signal('USER_COURSE_ANSWERED_COUNT')
 
 
 class CourseListAPI(Resource):
@@ -154,29 +153,3 @@ class CourseAPI(Resource):
         return marshal(course, dataformat.get_course())
 
 api.add_resource(CourseAPI, '/<int:course_id>')
-
-
-class CourseAnsweredAPI(Resource):
-    @login_required
-    def get(self, course_id):
-        course = Course.get_active_or_404(course_id)
-        require(READ, course)
-
-        answered = Answer.query \
-            .with_entities(Answer.assignment_id, func.count(Answer.id)) \
-            .filter_by(
-                course_id=course_id,
-                user_id=current_user.id
-            ) \
-            .group_by(Answer.assignment_id).all()
-        answered = dict(answered)
-
-        on_user_course_answered_count.send(
-            self,
-            event_name=on_user_course_answered_count.name,
-            user=current_user,
-            course_id=course_id)
-
-        return { 'answered': answered }
-
-api.add_resource(CourseAnsweredAPI, '/<int:course_id>/answered')

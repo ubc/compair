@@ -738,17 +738,20 @@ describe('course-module', function () {
                 controller = createController({}, {courseId: 1, assignmentId: 1});
                 $httpBackend.expectGET('/api/courses/1/users/students').respond(mockStudents);
                 $httpBackend.expectGET('/api/courses/1/assignments/1/comments').respond(mockAssignmentComments);
-                $httpBackend.expectGET('/api/courses/1/assignments/1/answers/count').respond({
-                    "answered": 1
-                });
                 $httpBackend.expectGET('/api/courses/1/users/instructors/labels').respond(mockInstructorLabels);
-                $httpBackend.expectGET('/api/courses/1/assignments/1/comparisons/users/'+id+'/available').respond({
-                    "available": false
-                });
                 $httpBackend.expectGET('/api/courses/1/assignments/1').respond(mockAssignment);
                 $httpBackend.expectGET('/api/courses/1/groups').respond(mockGroups);
-                $httpBackend.expectGET('/api/courses/1/assignments/1/comparisons/users/'+id+'/count').respond({
-                    "count": 0
+                $httpBackend.expectGET('/api/courses/1/assignments/1/status').respond({
+                    "status": {
+                        "answers": {
+                            "answered": true,
+                            "count": 1
+                        },
+                        "comparisons": {
+                            "available": false,
+                            "count": 0
+                        }
+                    }
                 });
                 $httpBackend.expectGET('/api/courses/1/assignments/1/answer_comments?self_evaluation=only&user_ids='+id).respond([]);
                 $httpBackend.expectGET('/api/courses/1/assignments/1/answers?orderBy=1&page=1&perPage=20').respond(mockAnswers);
@@ -777,7 +780,7 @@ describe('course-module', function () {
                 expect($rootScope.self_evaluation_req_met).toBe(false);
                 expect($rootScope.self_evaluation).toEqual(1);
                 expect($rootScope.loggedInUserId).toEqual(id);
-                expect($rootScope.comparisonAvailable).toBe(false);
+                expect($rootScope.assignment.status.comparisons.available).toBe(false);
                 expect($rootScope.canManageAssignment).toBe(true);
 
                 expect($rootScope.answerAvail).toEqual(new Date(mockAssignment.compare_end));
@@ -789,7 +792,7 @@ describe('course-module', function () {
 
                 expect($rootScope.comments.objects).toEqual(mockAssignmentComments.objects);
 
-                expect($rootScope.answered).toBe(true);
+                expect($rootScope.assignment.status.answers.answered).toBe(true);
 
                 expect($rootScope.instructors).toEqual(mockInstructorLabels.instructors);
 
@@ -838,28 +841,28 @@ describe('course-module', function () {
                 answer = mockAnswers.objects[0];
 
                 expect($rootScope.assignment.answer_count).toEqual(12);
-                expect($rootScope.answered).toBe(true);
+                expect($rootScope.assignment.status.answers.answered).toBe(true);
 
                 $rootScope.deleteAnswer(answer, mockAssignment.course_id, mockAssignment.id, answer.id);
                 $httpBackend.expectDELETE('/api/courses/1/assignments/1/answers/'+answer.id).respond({id: answer.id});
                 $httpBackend.flush();
 
                 expect($rootScope.assignment.answer_count).toEqual(11);
-                expect($rootScope.answered).toBe(false);
+                expect($rootScope.assignment.status.answers.answered).toBe(false);
             });
 
             it('should be able to delete answers', function () {
                 answer = mockAnswers.objects[0];
 
                 expect($rootScope.assignment.answer_count).toEqual(12);
-                expect($rootScope.answered).toBe(true);
+                expect($rootScope.assignment.status.answers.answered).toBe(true);
 
                 $rootScope.deleteAnswer(answer, mockAssignment.course_id, mockAssignment.id, answer.id);
                 $httpBackend.expectDELETE('/api/courses/1/assignments/1/answers/'+answer.id).respond({id: answer.id});
                 $httpBackend.flush();
 
                 expect($rootScope.assignment.answer_count).toEqual(11);
-                expect($rootScope.answered).toBe(false);
+                expect($rootScope.assignment.status.answers.answered).toBe(false);
             });
 
             it('should be able to unflag answer', function () {

@@ -32,9 +32,7 @@ module.factory('CourseResource',
 			'get': {url: url, cache: true},
 			'save': {method: 'POST', url: url, interceptor: Interceptors.cache},
 			'delete': {method: 'DELETE', url: url, interceptor: Interceptors.cache},
-			'getComparisonCount': {url: '/api/courses/:id/comparisons/count'},
-			'getComparisonAvailable': {url: '/api/courses/:id/comparisons/available'},
-			'getAnswered': {url: '/api/courses/:id/answered'},
+			'getCurrentUserStatus': {url: '/api/courses/:id/assignments/status'},
 			'getInstructorsLabels': {url: '/api/courses/:id/users/instructors/labels'},
 			'getStudents': {url: '/api/courses/:id/users/students'}
 		}
@@ -83,31 +81,23 @@ module.controller(
 			}
 		);
 
-		CourseResource.getComparisonAvailable({'id': courseId}).$promise.then(
-			function (ret) {
-				$scope.comparisonAvailable = ret.available;
-			},
-			function (ret) {
-				Toaster.reqerror("Unable to retrieve the answer pairs availablilty.", ret);
-			}
-		);
-
 		// get course assignments
 		AssignmentResource.get({'courseId': courseId}).$promise.then(
 			function (ret)
 			{
 				$scope.assignments = ret.objects;
-				CourseResource.getComparisonCount({'id': courseId}).$promise.then(
+
+                CourseResource.getCurrentUserStatus({'id': courseId}).$promise.then(
 					function (ret) {
-						var compared = ret.comparisons;
+                        var statuses = ret.statuses;
 						for (var key in $scope.assignments) {
 							assignment = $scope.assignments[key];
+                            assignment.status = statuses[assignment.id]
+
+                            // comparison count
 							var required = assignment.number_of_comparisons;
-							if (!(assignment.id in compared)) {
-								compared[assignment.id] = 0;
-                            }
-							assignment['left'] = compared[assignment.id] <= required ?
-								required - compared[assignment.id] : 0;
+							assignment['left'] = assignment.status.comparisons.count <= required ?
+								required - assignment.status.comparisons.count : 0;
 							// if evaluation period is set answers can be seen after it ends
 							if (assignment['compare_end']) {
 								assignment['answers_available'] = assignment['after_comparing'];
@@ -115,46 +105,28 @@ module.controller(
 							} else {
 								assignment['answers_available'] = assignment['after_comparing'] && assignment['left'] < 1;
 							}
-						}
-					},
-					function (ret) {
-						Toaster.reqerror("Evaluations Not Found", ret)
-					}
-				);
 
-                CourseResource.getComparisonAvailable({'id': courseId}).$promise.then(
-                    function (ret) {
-                        var replies = ret.available;
-                        for (var key in $scope.assignments) {
-                            assignment = $scope.assignments[key];
+                            // comparison available
                             assignment['self_evaluation_left'] = 0;
                             /*
                             Assumptions made:
                             - only one self-evaluation type per assignment
                             - if self-evaluation is required but not one is submitted --> 1 needs to be completed
                             */
-                            if (assignment.enable_self_evaluation && !replies[assignment.id]) {
+                            if (assignment.enable_self_evaluation && !assignment.status.comparisons.available) {
                                 assignment['self_evaluation_left'] = 1;
                             }
-                        }
-                    },
-                    function (ret) {
-                        Toaster.reqerror("Self-Evaluation records Not Found.", ret);
-                    }
+						}
+					},
+					function (ret) {
+						Toaster.reqerror("Assignment Status Not Found", ret)
+					}
                 );
 			},
 			function (ret)
 			{
 				Toaster.reqerror("Assignments Not Found For Course ID " +
 					courseId, ret);
-			}
-		);
-		CourseResource.getAnswered({'id': courseId}).$promise.then(
-			function(ret) {
-				$scope.answered = ret.answered;
-			},
-			function (ret) {
-				Toaster.reqerror("Answers Not Found", ret);
 			}
 		);
 

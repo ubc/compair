@@ -393,18 +393,28 @@ module.exports.httpbackendMock = function(storageFixture) {
             return [200, returnData, {}];
         });
 
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/comparisons\/available$/).respond({
-            "available": {}
-        });
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/comparisons\/count$/).respond({
-            "comparisons": {}
-        });
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/comparisons\/available$/).respond(false);
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/answered$/).respond(function(method, url, data, headers){
+        // get all assignment status in course for current user
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/status$/).respond(function(method, url, data, headers){
             var courseId = url.split('/')[3];
             var currentUser = angular.copy(storage.users[storage.loginDetails.id-1]);
 
-            var answered = {};
+            statuses = {}
+
+            // setup default data
+            if (storage.course_assignments[courseId]) {
+                angular.forEach(storage.course_assignments[courseId], function(assignmentId) {
+                    statuses[assignmentId] = {
+                        "answers": {
+                            "answered": false,
+                            "count": 0
+                        },
+                        "comparisons": {
+                            "available": true,
+                            "count": 0
+                        }
+                    }
+                });
+            }
 
             // get all answers in course
             if (storage.course_answers[courseId]) {
@@ -413,13 +423,13 @@ module.exports.httpbackendMock = function(storageFixture) {
 
                     // if answer is by current user, set answered to true for assignment
                     if (answer.user_id == currentUser.id) {
-                        answered[answer.assignment_id] = 1;
+                        statuses[answer.assignment_id]['answers']['answered'] = true;
+                        statuses[answer.assignment_id]['answers']['count']++;
                     }
                 });
             }
 
-
-            return [200, { 'answered': answered }, {}];
+            return [200, {"statuses": statuses}, {}];
         });
 
         // get current user's criteria
@@ -555,30 +565,38 @@ module.exports.httpbackendMock = function(storageFixture) {
             return [200, {objects: []}, {}]
         });
 
-        // get assignment answers count
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+\/answers\/count$/).respond(function(method, url, data, headers) {
+        // get assignment status for current user
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+\/status$/).respond(function(method, url, data, headers){
             var courseId = url.split('/')[3];
+            var currentUser = angular.copy(storage.users[storage.loginDetails.id-1]);
             var assignmentId = url.split('/')[5];
 
-            return [200, {answered: 0}, {}]
-        });
+            // setup default data
+            status = {
+                "answers": {
+                    "answered": false,
+                    "count": 0
+                },
+                "comparisons": {
+                    "available": true,
+                    "count": 0
+                }
+            }
 
-        // get assignment comparisons available
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+\/comparisons\/users\/\d+\/available$/).respond(function(method, url, data, headers) {
-            var courseId = url.split('/')[3];
-            var assignmentId = url.split('/')[5];
-            var userId = url.split('/')[8];
+            // get all answers in course
+            if (storage.course_answers[courseId]) {
+                angular.forEach(storage.course_answers[courseId], function(answerId) {
+                    var answer = storage.answers[answerId-1];
 
-            return [200, {available: true}, {}]
-        });
+                    // if answer is by current user for assignment, set answered to true for assignment
+                    if (answer.assignment_id == assignmentId && answer.user_id == currentUser.id) {
+                        status['answers']['answered'] = true;
+                        status['answers']['count']++;
+                    }
+                });
+            }
 
-        // get assignment comparisons count
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+\/comparisons\/users\/\d+\/count$/).respond(function(method, url, data, headers) {
-            var courseId = url.split('/')[3];
-            var assignmentId = url.split('/')[5];
-            var userId = url.split('/')[8];
-
-            return [200, {count: 0}, {}]
+            return [200, {"status": status}, {}];
         });
 
         // get assignment answer comments

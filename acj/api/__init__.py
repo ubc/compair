@@ -20,12 +20,6 @@ def register_api_blueprints(app):
     from .users import user_api
     app.register_blueprint(user_api, url_prefix='/api/users')
 
-    from .system_role import system_roles_api
-    app.register_blueprint(system_roles_api, url_prefix='/api/system_roles')
-
-    from .course_role import user_course_role_api
-    app.register_blueprint(user_course_role_api, url_prefix='/api/course_roles')
-
     from .assignment import assignment_api
     app.register_blueprint(assignment_api, url_prefix='/api/courses/<int:course_id>/assignments')
 
@@ -96,31 +90,23 @@ def log_events(log):
     on_user_edit_button_get.connect(log)
     on_user_password_update.connect(log)
 
-    # system roles
-    from .system_role import on_system_role_all_get
-    on_system_role_all_get.connect(log)
-
-    # course roles
-    from .course_role import on_course_roles_all_get
-    on_course_roles_all_get.connect(log)
-
     # course events
-    from .course import on_course_modified, on_course_get, on_course_list_get, on_course_create, \
-        on_user_course_answered_count
+    from .course import on_course_modified, on_course_get, on_course_list_get, on_course_create
     on_course_modified.connect(log)
     on_course_get.connect(log)
     on_course_list_get.connect(log)
     on_course_create.connect(log)
-    on_user_course_answered_count.connect(log)
 
     # assignment events
     from .assignment import on_assignment_modified, on_assignment_get, on_assignment_list_get, on_assignment_create, \
-        on_assignment_delete
+        on_assignment_delete, on_assignment_list_get_current_user_status, on_assignment_get_current_user_status
     on_assignment_modified.connect(log)
     on_assignment_get.connect(log)
     on_assignment_list_get.connect(log)
     on_assignment_create.connect(log)
     on_assignment_delete.connect(log)
+    on_assignment_list_get_current_user_status.connect(log)
+    on_assignment_get_current_user_status.connect(log)
 
     # assignment comment events
     from .assignment_comment import on_assignment_comment_modified, on_assignment_comment_get, \
@@ -133,7 +119,7 @@ def log_events(log):
 
     # answer events
     from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, on_answer_flag, \
-        on_answer_delete, on_user_answer_get, on_user_answered_count, on_answer_comparisons_get
+        on_answer_delete, on_user_answer_get, on_answer_comparisons_get
     on_answer_modified.connect(log)
     on_answer_get.connect(log)
     on_answer_list_get.connect(log)
@@ -141,7 +127,6 @@ def log_events(log):
     on_answer_flag.connect(log)
     on_answer_delete.connect(log)
     on_user_answer_get.connect(log)
-    on_user_answered_count.connect(log)
     on_answer_comparisons_get.connect(log)
 
     # answer comment events
@@ -168,14 +153,10 @@ def log_events(log):
     on_assignment_criterion_get.connect(log)
 
     # comparison events
-    from .comparison import on_comparison_get, on_comparison_create, on_comparison_update, \
-        on_assignment_comparison_count, on_course_comparison_count
+    from .comparison import on_comparison_get, on_comparison_create, on_comparison_update
     on_comparison_get.connect(log)
     on_comparison_create.connect(log)
     on_comparison_update.connect(log)
-
-    on_assignment_comparison_count.connect(log)
-    on_course_comparison_count.connect(log)
 
     # classlist events
     from .classlist import on_classlist_get, on_classlist_upload, on_classlist_enrol, on_classlist_unenrol, \

@@ -6,13 +6,13 @@ from flask import Blueprint
 from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, or_, func
 from sqlalchemy.orm import joinedload, undefer_group
 
 from . import dataformat
 from acj.core import db, event
 from acj.authorization import allow, require
-from acj.models import Assignment, Course, AssignmentCriterion
+from acj.models import Assignment, Course, AssignmentCriterion, Answer, Comparison
 from .util import new_restful_api, get_model_changes
 from .file import add_new_file, delete_file
 
@@ -44,7 +44,8 @@ on_assignment_get = event.signal('ASSIGNMENT_GET')
 on_assignment_list_get = event.signal('ASSIGNMENT_LIST_GET')
 on_assignment_create = event.signal('ASSIGNMENT_CREATE')
 on_assignment_delete = event.signal('ASSIGNMENT_DELETE')
-
+on_assignment_list_get_current_user_status = event.signal('ASSIGNMENT_LIST_GET_CURRENT_USER_STATUS')
+on_assignment_get_current_user_status = event.signal('ASSIGNMENT_GET_CURRENT_USER_STATUS')
 
 # /id
 class AssignmentIdAPI(Resource):
@@ -264,3 +265,103 @@ class AssignmentRootAPI(Resource):
         return marshal(new_assignment, dataformat.get_assignment())
 
 api.add_resource(AssignmentRootAPI, '')
+
+
+# /id/status
+class AssignmentIdStatusAPI(Resource):
+    @login_required
+    def get(self, course_id, assignment_id):
+        Course.get_active_or_404(course_id)
+        assignment = Assignment.get_active_or_404(assignment_id)
+        require(READ, assignment)
+
+        answer_count = Answer.query \
+            .filter_by(
+                user_id=current_user.id,
+                assignment_id=assignment_id,
+                active=True
+            ) \
+            .count()
+
+        comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
+        comparison_availble = Comparison.comparison_avialble_for_user(course_id, assignment_id, current_user.id)
+
+        status = {
+            'answers': {
+                'answered': answer_count > 0,
+                'count': answer_count,
+            },
+            'comparisons': {
+                'available': comparison_availble,
+                'count': comparison_count
+            }
+        }
+
+        on_assignment_get_current_user_status.send(
+            self,
+            event_name=on_assignment_get.name,
+            user=current_user,
+            course_id=course_id,
+            data=status)
+
+        return {"status": status}
+
+api.add_resource(AssignmentIdStatusAPI, '/<int:assignment_id>/status')
+
+
+
+# /status
+class AssignmentRootStatusAPI(Resource):
+    @login_required
+    def get(self, course_id):
+        course = Course.get_active_or_404(course_id)
+        require(READ, course)
+
+        assignments = course.assignments \
+            .filter_by(active=True) \
+            .all()
+        assignment_ids = [assignment.id for assignment in assignments]
+
+        answer_counts = Answer.query \
+            .with_entities(
+                Answer.assignment_id,
+                func.count(Answer.assignment_id).label('answer_count')
+            ) \
+            .filter_by(
+                user_id=current_user.id,
+                active=True
+            ) \
+            .filter(Answer.assignment_id.in_(assignment_ids)) \
+            .group_by(Answer.assignment_id) \
+            .all()
+
+        statuses = {}
+        for assignment in assignments:
+            answer_count = next(
+                (result.answer_count for result in answer_counts if result.assignment_id == assignment.id),
+                0
+            )
+            comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
+            comparison_availble = Comparison.comparison_avialble_for_user(course_id, assignment.id, current_user.id)
+
+            statuses[assignment.id] = {
+                'answers': {
+                    'answered': answer_count > 0,
+                    'count': answer_count,
+                },
+                'comparisons': {
+                    'available': comparison_availble,
+                    'count': comparison_count
+                }
+            }
+
+        on_assignment_list_get_current_user_status.send(
+            self,
+            event_name=on_assignment_get.name,
+            user=current_user,
+            course_id=course_id,
+            data=statuses)
+
+        return {"statuses": statuses}
+
+api.add_resource(AssignmentRootStatusAPI, '/status')
