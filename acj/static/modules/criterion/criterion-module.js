@@ -6,7 +6,9 @@
 
 var module = angular.module('ubc.ctlt.acj.criterion', [
 	'ngResource',
-	'ubc.ctlt.acj.common.form'
+	'ubc.ctlt.acj.common.form',
+    'ubc.ctlt.acj.common.mathjax',
+    'ubc.ctlt.acj.common.highlightjs',
 ]);
 
 module.factory('AssignmentCriterionResource', ['$resource', function($resource) {
@@ -21,10 +23,12 @@ module.factory('CriterionResource', ['$resource', function($resource) {
 
 /***** Controllers *****/
 module.controller('CriterionConfigureController',
-	['$scope', '$routeParams', '$location', 'CriterionResource', 'Toaster',
-	function($scope, $routeParams, $location, CriterionResource, Toaster) {
+	['$scope', '$routeParams', '$location', 'CriterionResource', 'Toaster', 'EditorOptions',
+	function($scope, $routeParams, $location, CriterionResource, Toaster, EditorOptions) {
 		var criterionId = $routeParams['criterionId'];
+        $scope.editorOptions = EditorOptions.basic;
 		$scope.criterion = CriterionResource.get({'criterionId': criterionId});
+
 		// update criterion
 		$scope.$on('CRITERION_ADDED', function() {
 			var courseId = $routeParams['courseId'];

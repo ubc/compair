@@ -3,8 +3,7 @@
 	<div class="row">
 		<header class="col-sm-6">
 			<h1><i class="fa fa-book"></i> {{course.name}}</h1>
-			<div class="intro-text"
-				 ng-bind-html="course.description">
+			<div class="intro-text" mathjax hljs ng-bind-html="course.description">
 			</div>
 		</header>
 		<div class="col-sm-6 sub-nav">
@@ -79,9 +78,7 @@
 
 				<!-- Details -->
 				<div class="assignment-desc">
-					<div mathjax
-						 ng-bind-html="assignment.description">
-					</div>
+					<div mathjax hljs ng-bind-html="assignment.description"></div>
 					<!-- Attachment -->
 					<acj-pdf-inline label="See assignment details:"
 						pdf="assignment.file">

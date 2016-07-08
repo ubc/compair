@@ -6,9 +6,7 @@
 		<h2><i class="fa fa-comments"></i> {{assignment.name}}</h2>
 
 		<!-- Assignment Details -->
-		<div class="assignmentmathjax assignment-desc" mathjax="assignment.description"
-			 ng-bind-html="assignment.description">
-		</div>
+		<div class="assignmentmathjax assignment-desc" mathjax hljs ng-bind-html="assignment.description"></div>
 
 		<!-- Assignment Attachment -->
 		<acj-pdf-inline label="See assignment details:" pdf="assignment.file">
@@ -221,9 +219,7 @@
 
 					<!-- Instructor Answer -->
 					<div class="content instructor-answer">
-						<div mathjax="answer.content"
-							ng-bind-html="answer.content">
-						</div>
+						<div mathjax hljs ng-bind-html="answer.content"></div>
 						<!-- Instructor Attachment -->
 						<acj-pdf-inline label="See assignment details:"
 							pdf="answer.file">
@@ -258,9 +254,7 @@
 
 					<!-- Student Answer -->
 					<div class="content {{answer.id}}" get-height>
-						<div mathjax="answer.content"
-							 ng-bind-html="answer.content">
-						</div>
+						<div mathjax hljs ng-bind-html="answer.content"></div>
 						<!-- Student Attachment -->
 						<acj-pdf-inline label="See answer details:"
 							pdf="answer.file" ng-click="revealAnswer(answer.id)">
@@ -329,9 +323,7 @@
 							</div>
 
 							<!-- Student Reply -->
-							<div class="content" mathjax="comment.content"
-								 ng-bind-html="comment.content">
-							</div>
+							<div class="content" mathjax hljs ng-bind-html="comment.content"></div>
 
 						</div><!-- closes each-reply (student) -->
 
@@ -389,8 +381,7 @@
 
 				<!-- Student Answer -->
 				<div class="content {{answer.id}}">
-					<div mathjax="answer.content"
-						 ng-bind-html="answer.content">
+					<div mathjax hljs ng-bind-html="answer.content">
 					</div>
 
 					<!-- Student Attachment -->
@@ -437,9 +428,7 @@
 						</div>
 
 						<!-- Student Reply -->
-						<div class="content" mathjax="comment.content"
-							 ng-bind-html="comment.content">
-						</div>
+						<div class="content" mathjax hljs ng-bind-html="comment.content"></div>
 
 					</div><!-- closes each-reply (student) -->
 
@@ -459,9 +448,7 @@
 				<div ng-repeat="comparison in comparison_set.comparisons">
 					<h5 class="content">Comparison for "{{ comparison.criterion.name }}"</h5>
 
-					<div class="content" mathjax="comparison.content"
-						ng-bind-html="comparison.content">
-					</div>
+					<div class="content" mathjax hljs ng-bind-html="comparison.content"></div>
 
                     <!-- Answers -->
                     <p class="show-answers"><a href="" ng-click="showAnswers = !showAnswers;">
@@ -480,16 +467,14 @@
 
 				<!-- feedback for odd-numbered answer -->
                 <div ng-repeat="feedback in comparison_set.answer1_feedback">
-                    <div class="content" mathjax="feedback.content"
-                        ng-bind-html="feedback.content"></div>
+                    <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
                 </div>
 
 				<h5 class="content">Feedback for Even-Numbered Answer</h5>
 
 				<!-- feedback for even-numbered answer -->
                 <div ng-repeat="feedback in comparison_set.answer2_feedback">
-                    <div class="content" mathjax="feedback.content"
-                        ng-bind-html="feedback.content"></div>
+                    <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
                 </div>
 
 			</div><!-- closes each-evaluation -->
@@ -514,9 +499,7 @@
                         </a>
                         </div>
                     </div>
-                    <div class="content" mathjax="comment.content"
-                        ng-bind-html="comment.content">
-                    </div>
+                    <div class="content" mathjax hljs ng-bind-html="comment.content"></div>
                 </div>
 			</div>
 
@@ -573,9 +556,7 @@
 				</div>
 
 				<!-- Comment -->
-				<div class="content" mathjax="comment.content"
-					 ng-bind-html="comment.content">
-				</div>
+				<div class="content" mathjax hljs ng-bind-html="comment.content"></div>
 
 			</div><!-- closes each-comment -->
 

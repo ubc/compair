@@ -3,9 +3,7 @@
 <form class="form" name="answerForm" ng-submit="answerSubmit()" novalidate confirm-form-exit form-type="answer">
 	<fieldset>
 		<h2><i class="fa fa-comments"></i> {{assignment.name}}</h2>
-		<div class="assignment-desc" mathjax="assignment.description"
-			ng-bind-html="assignment.description">
-		</div>
+		<div class="assignment-desc" mathjax hljs ng-bind-html="assignment.description"></div>
 
 		<!-- Attachment -->
 		<acj-pdf-inline label="See assignment details:" pdf="assignment.file">
@@ -62,7 +60,7 @@
 		</div>
 		<div class="form-group">
 			<textarea ng-model="answer.content" id="answerContent"
-				class="form-control" rows="8" ckeditor ng-required="!(uploader.queue.length || uploadedFile)">
+				class="form-control" rows="8" ckeditor="editorOptions" ng-required="!(uploader.queue.length || uploadedFile)">
 			</textarea>
 		</div>
 	</fieldset>

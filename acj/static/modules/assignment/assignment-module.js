@@ -19,6 +19,7 @@ var module = angular.module('ubc.ctlt.acj.assignment',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.interceptor',
 		'ubc.ctlt.acj.common.mathjax',
+		'ubc.ctlt.acj.common.highlightjs',
 		'ubc.ctlt.acj.common.pdf',
 		'ubc.ctlt.acj.criterion',
 		'ubc.ctlt.acj.group',
@@ -599,15 +600,16 @@ module.controller("AssignmentViewController",
 module.controller("AssignmentWriteController",
 	[ "$scope", "$log", "$location", "$routeParams", "$route", "AssignmentResource", "$modal", "Authorize",
 			 "AssignmentCriterionResource", "CriterionResource", "required_rounds", "Toaster", "attachService",
-             "AttachmentResource", "Session",
+             "AttachmentResource", "Session", "EditorOptions",
 	function($scope, $log, $location, $routeParams, $route, AssignmentResource, $modal, Authorize,
 			 AssignmentCriterionResource, CriterionResource, required_rounds, Toaster, attachService,
-             AttachmentResource, Session)
+             AttachmentResource, Session, EditorOptions)
 	{
 		var courseId = $routeParams['courseId'];
         //initialize assignment so this scope can access data from included form
 		$scope.assignment = {criteria: []};
         $scope.availableCriteria = [];
+        $scope.editorOptions = EditorOptions.basic;
 
 		$scope.uploader = attachService.getUploader();
 		$scope.resetName = attachService.resetName();
@@ -758,6 +760,7 @@ module.controller("AssignmentWriteController",
 		$scope.changeCriterion = function(criterion) {
 			var modalScope = $scope.$new();
 			modalScope.criterion = angular.copy(criterion);
+			modalScope.editorOptions = EditorOptions.basic;
 			var modalInstance;
 			var criterionUpdateListener = $scope.$on('CRITERION_UPDATED', function(event, c) {
 				angular.copy(c, criterion);
@@ -772,7 +775,7 @@ module.controller("AssignmentWriteController",
 			});
 			modalInstance = $modal.open({
 				animation: true,
-				template: '<criterion-form criterion=criterion></criterion-form>',
+				template: '<criterion-form criterion=criterion editor-options=editorOptions></criterion-form>',
 				scope: modalScope
 			});
 			// we need to remove the listener, otherwise on multiple click, multiple listeners will be registered

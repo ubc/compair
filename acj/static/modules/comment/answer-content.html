@@ -9,8 +9,7 @@
                 </span>
             </span>
         </h4>
-        <div mathjax="answer.content" ng-if="answer"
-             ng-bind-html="answer.content"></div>
+        <div mathjax hljs ng-if="answer" ng-bind-html="answer.content"></div>
         <div ng-if="!answer"><i>(This answer has been deleted.)</i></div>
         <!-- Attachments -->
         <acj-pdf-inline label="See details:" pdf="answer.file"></acj-pdf-inline>

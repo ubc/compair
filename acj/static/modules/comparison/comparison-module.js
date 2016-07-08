@@ -12,6 +12,7 @@ var module = angular.module('ubc.ctlt.acj.comparison',
 		'ubc.ctlt.acj.toaster',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.mathjax',
+		'ubc.ctlt.acj.common.highlightjs',
 		'ubc.ctlt.acj.common.pdf',
 		'ubc.ctlt.acj.session'
 	]
@@ -37,8 +38,10 @@ module.controller(
 	'ComparisonController',
     ['$log', '$location', '$route', '$scope', '$timeout', '$routeParams', '$anchorScroll', 'AssignmentResource', 'AnswerResource',
         'ComparisonResource', 'AnswerCommentResource', 'Session', 'Toaster', 'AnswerCommentType', "TimerResource",
+        'EditorOptions',
 	function($log, $location, $route, $scope, $timeout, $routeParams, $anchorScroll, AssignmentResource, AnswerResource,
-		ComparisonResource, AnswerCommentResource, Session, Toaster, AnswerCommentType, TimerResource)
+		ComparisonResource, AnswerCommentResource, Session, Toaster, AnswerCommentType, TimerResource,
+        EditorOptions)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
@@ -46,6 +49,8 @@ module.controller(
 		$scope.submitted = false;
         $scope.isDraft = false;
 		$scope.preventExit = true; //user should be warned before leaving page by default
+
+        $scope.editorOptions = EditorOptions.basic;
 
 		var countDown = function() {
 			$scope.showCountDown = true;
@@ -246,15 +251,17 @@ module.controller(
 module.controller(
 	'ComparisonSelfEvalController',
 	['$log', '$location', '$scope', '$routeParams', 'AnswerResource', 'AssignmentResource', 'AnswerCommentResource',
-		'Session', 'Toaster', 'AnswerCommentType',
+		'Session', 'Toaster', 'AnswerCommentType', 'EditorOptions',
 	function($log, $location, $scope, $routeParams, AnswerResource, AssignmentResource,
-			 AnswerCommentResource, Session, Toaster, AnswerCommentType)
+			 AnswerCommentResource, Session, Toaster, AnswerCommentType, EditorOptions)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
 		$scope.comment = {
             draft: true
         };
+
+		$scope.editorOptions = EditorOptions.basic;
 
         AssignmentResource.getCurrentUserStatus({'id': courseId, 'assignmentId': assignmentId},
             function (ret) {

@@ -960,7 +960,7 @@ describe('course-module', function () {
                 it('should open a modal dialog', function() {
                     expect($modal.open).toHaveBeenCalledWith({
                         animation: true,
-                        template: '<criterion-form criterion=criterion></criterion-form>',
+                        template: '<criterion-form criterion=criterion editor-options=editorOptions></criterion-form>',
                         scope: jasmine.any(Object)
                     })
                 });
@@ -1124,7 +1124,7 @@ describe('course-module', function () {
                 it('should open a modal dialog', function() {
                     expect($modal.open).toHaveBeenCalledWith({
                         animation: true,
-                        template: '<criterion-form criterion=criterion></criterion-form>',
+                        template: '<criterion-form criterion=criterion editor-options=editorOptions></criterion-form>',
                         scope: jasmine.any(Object)
                     })
                 });

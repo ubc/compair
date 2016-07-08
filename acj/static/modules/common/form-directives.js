@@ -3,7 +3,7 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.common.form', []);
+var module = angular.module('ubc.ctlt.acj.common.form', ['ckeditor']);
 
 /***** Directives *****/
 // add the css and elements required to show bootstrap's validation feedback
@@ -69,17 +69,9 @@ module.directive('confirmFormExit', function(){
 
 /***** Providers *****/
 module.service('EditorOptions', function() {
-	this.basic = 
-	{
-		language: 'en',
-		disableInline: true,
-		removeButtons: 'Anchor,Strike,Subscript,Superscript',
-		toolbarGroups: [
-			{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
-			{ name: 'links' }
-		]
+	this.basic = {
+        customConfig: '../../lib_extension/ckeditor/config.js'
 	};
-
 });
 
 // End anonymous function

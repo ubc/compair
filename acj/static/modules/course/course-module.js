@@ -8,13 +8,14 @@ var module = angular.module('ubc.ctlt.acj.course',
 		'angularMoment',
 		'ngResource',
 		'ngRoute',
-		'ckeditor',
 		'ui.bootstrap',
 		'ubc.ctlt.acj.comment',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.interceptor',
 		'ubc.ctlt.acj.comparison',
 		'ubc.ctlt.acj.assignment',
+		'ubc.ctlt.acj.common.highlightjs',
+		'ubc.ctlt.acj.common.pdf',
 		'ubc.ctlt.acj.toaster'
 	]
 );
@@ -172,10 +173,11 @@ module.controller(
 module.controller(
 	'CourseController',
     ['$scope', '$log', '$route', '$routeParams', '$location', 'Session', 'Authorize',
-	 'CourseResource', 'Toaster',
+	 'CourseResource', 'Toaster', 'EditorOptions',
 	function($scope, $log, $route, $routeParams, $location, Session, Authorize,
-            CourseResource, Toaster) {
+            CourseResource, Toaster, EditorOptions) {
 		var self = this;
+        $scope.editorOptions = EditorOptions.basic;
         $scope.course = {};
 		var messages = {
 			new: {title: 'Course Created', msg: 'The course created successfully'},

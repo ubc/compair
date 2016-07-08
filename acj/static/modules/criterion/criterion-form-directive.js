@@ -4,15 +4,15 @@
 	angular
 		.module('ubc.ctlt.acj.criterion')
 
-		.directive('criterionForm', ['CriterionResource', 'EditorOptions', function (CriterionResource, EditorOptions) {
+		.directive('criterionForm', ['CriterionResource', function (CriterionResource) {
 			return {
 				restrict: 'E',
-				scope: {
-					criterion: '=?'
+                scope: {
+					criterion: '=?',
+                    editorOptions: '=?'
 				},
 				templateUrl: 'modules/criterion/criterion-form-partial.html',
 				link: function (scope, element, attrs) {
-					scope.editorOptions = EditorOptions.basic;
 					scope.criterionSubmitted = false;
 					scope.cancel = function (ret) {
 						scope.$emit('CRITERION_CANCEL', ret);
