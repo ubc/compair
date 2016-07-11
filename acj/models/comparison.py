@@ -58,6 +58,38 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         )
 
     @classmethod
+    def comparison_avialble_for_user(cls, course_id, assignment_id, user_id):
+        from . import UserCourse, CourseRole, Answer
+        # ineligible authors - eg. instructors, TAs, dropped student, user
+        ineligible_users = UserCourse.query. \
+            filter(and_(
+                UserCourse.course_id == course_id,
+                UserCourse.course_role != CourseRole.student
+            )). \
+            values(UserCourse.user_id)
+        ineligible_user_ids_base = [u[0] for u in ineligible_users]
+        ineligible_user_ids_base.append(user_id)
+
+        # ineligible authors (potentially) - eg. authors for answers that the user has seen
+        compared = Comparison.query \
+            .filter_by(
+                user_id=user_id,
+                assignment_id=assignment_id
+            ) \
+            .all()
+        compared_authors1 = [c.answer1.user_id for c in compared]
+        compared_authors2 = [c.answer2.user_id for c in compared]
+        ineligible_user_ids = ineligible_user_ids_base + compared_authors1 + compared_authors2
+
+        eligible_answers = Answer.query \
+            .filter(and_(
+                Answer.assignment_id == assignment_id,
+                Answer.user_id.notin_(ineligible_user_ids)
+            )) \
+            .count()
+        return eligible_answers / 2 >= 1  # min 1 pair required
+
+    @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()
 
@@ -141,7 +173,7 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         answers = [answer1, answer2]
         for answer in answers:
             # update round counts via sqlalchemy increase counter
-            answer.round = Answer.round + 1
+            answer.round += 1
             db.session.add(answer)
         db.session.commit()
 
@@ -169,7 +201,7 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
             .all()
 
         scores = Score.query \
-            .filter( Score.answer_id.in_([answer1_id, answer2_id] ) ) \
+            .filter( Score.answer_id.in_([answer1_id, answer2_id]) ) \
             .all()
 
         new_scores = []

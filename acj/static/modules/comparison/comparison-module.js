@@ -23,11 +23,7 @@ module.factory('ComparisonResource', ['$resource',
 		var resourceUrl = '/api/courses/:courseId/assignments/:assignmentId/comparisons';
 		var ret = $resource(
 			resourceUrl,
-			{},
-			{
-                'count': {url: resourceUrl + '/users/:userId/count'},
-				'getComparisonAvailable': {url: resourceUrl + '/users/:userId/available'}
-			}
+			{}
 		);
 		return ret;
 }]);
@@ -92,21 +88,19 @@ module.controller(
         $scope.comparisons = [];
 		Session.getUser().then(function(user) {
 			userId = user.id;
-			ComparisonResource.count(
-				{'courseId': courseId, 'assignmentId': assignmentId, 'userId': userId}).
-				$promise.then(
-					function(ret) {
-						// current comparison round user is on
-						$scope.current = ret.count + 1;
-						// first answer # in pair
-						$scope.firstAnsNum = ret.count + $scope.current;
-						// second answer # in pair
-						$scope.secondAnsNum = $scope.current * 2;
-					},
-					function(ret) {
-						Toaster.reqerror("Comparisons Total Not Found", ret);
-					}
-				);
+            AssignmentResource.getCurrentUserStatus({'id': $scope.courseId, 'assignmentId': assignmentId},
+                function (ret) {
+                    // current comparison round user is on
+                    $scope.current = ret.status.comparisons.count + 1;
+                    // first answer # in pair
+                    $scope.firstAnsNum = ret.status.comparisons.count + $scope.current;
+                    // second answer # in pair
+                    $scope.secondAnsNum = $scope.current * 2;
+                },
+                function (ret) {
+                    Toaster.reqerror("Assignment Status Not Found", ret);
+                }
+            );
             ComparisonResource.get({'courseId': courseId, 'assignmentId': assignmentId},
                 function (ret) {
                     // check if there is any existing comments from current user
@@ -174,51 +168,33 @@ module.controller(
                     'comparisons': comparisons_submit
                 }).$promise.then(
 					function(ret) {
-                        Session.getUser().then(function(user) {
-                            var userId = user.id;
-                            var count = ComparisonResource.count(
-                                {'courseId': courseId, 'assignmentId': assignmentId, 'userId': userId}).
-                                $promise.then(
-                                    function(ret) {
-                                        if ($scope.assignment.number_of_comparisons > ret.count) {
-                                            var left = $scope.assignment.number_of_comparisons - ret.count;
-                                            Toaster.success("Your Comparison Saved Successfully", "The next answer pair is now being loaded. Good luck on the next round!");
-                                            $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
-                                            $route.reload();
-                                            window.scrollTo(0, 0);
-                                        // self-evaluation
-                                        } else if ($scope.assignment.enable_self_evaluation) {
-                                            AssignmentResource.getAnswered({'id': $scope.courseId,
-                                                'assignmentId': assignmentId}).$promise.then(
-                                                    function (ret) {
-                                                        // if user has an answer submitted
-                                                        if(ret.answered > 0) {
-                                                            Toaster.success("Your Comparison Saved Successfully", "Write a self-evaluation, and your assignment will be complete!");
-                                                            $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
-                                                            $location.path('/course/'+courseId+'/assignment/'+assignmentId+'/self_evaluation');
-                                                        } else {
-                                                            Toaster.success("Your Comparison Saved Successfully");
-                                                            $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
-                                                            $location.path('/course/' + courseId);
-                                                        }
-                                                    },
-                                                    function (ret) {
-                                                        Toaster.reqerror("Your Answer Not Found", ret);
-                                                    }
-                                            );
-                                        } else {
-                                            Toaster.success("Your Comparison Saved Successfully", "Your assignment is now complete. Good work!");
-                                            $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
-                                            $location.path('/course/' + courseId);
-                                        }
-                                    },
-                                    function(ret) {
-                                        Toaster.success("Your Comparison Saved Successfully");
-                                        $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
-                                        $location.path('/course/' + courseId);
-                                    }
-                                );
-                        });
+                        AssignmentResource.getCurrentUserStatus({'id': $scope.courseId, 'assignmentId': assignmentId},
+                            function(ret) {
+                                var comparisons_count = ret.status.comparisons.count;
+
+                                if ($scope.assignment.number_of_comparisons > comparisons_count) {
+                                    var left = $scope.assignment.number_of_comparisons - comparisons_count;
+                                    Toaster.success("Your Comparison Saved Successfully", "The next answer pair is now being loaded. Good luck on the next round!");
+                                    $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
+                                    $route.reload();
+                                    window.scrollTo(0, 0);
+                                // self-evaluation
+                                } else if ($scope.assignment.enable_self_evaluation && ret.status.answers.answered) {
+                                    Toaster.success("Your Comparison Saved Successfully", "Write a self-evaluation, and your assignment will be complete!");
+                                    $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
+                                    $location.path('/course/'+courseId+'/assignment/'+assignmentId+'/self_evaluation');
+                                } else {
+                                    Toaster.success("Your Comparison Saved Successfully", "Your assignment is now complete. Good work!");
+                                    $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
+                                    $location.path('/course/' + courseId);
+                                }
+                            },
+                            function(ret) {
+                                Toaster.success("Your Comparison Saved Successfully");
+                                $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
+                                $location.path('/course/' + courseId);
+                            }
+                        );
 					},
 					function(ret) {
 						$scope.submitted = false;
@@ -257,28 +233,24 @@ module.controller(
 
 module.controller(
 	'ComparisonSelfEvalController',
-	['$log', '$location', '$scope', '$routeParams', 'AnswerResource', 'ComparisonResource', 'AnswerCommentResource',
+	['$log', '$location', '$scope', '$routeParams', 'AnswerResource', 'AssignmentResource', 'AnswerCommentResource',
 		'Session', 'Toaster', 'AnswerCommentType',
-	function($log, $location, $scope, $routeParams, AnswerResource, ComparisonResource,
+	function($log, $location, $scope, $routeParams, AnswerResource, AssignmentResource,
 			 AnswerCommentResource, Session, Toaster, AnswerCommentType)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
 		$scope.comment = {};
 
-		Session.getUser().then(function(user) {
-			var userId = user.id;
-			var count = ComparisonResource.count(
-				{'courseId': courseId, 'assignmentId': assignmentId, 'userId': userId}).
-				$promise.then(
-					function(ret) {
-						$scope.total = ret.count + 1;
-					},
-					function(ret) {
-						Toaster.reqerror("Comparisons Total Not Found", ret);
-					}
-				);
-		});
+        AssignmentResource.getCurrentUserStatus({'id': courseId, 'assignmentId': assignmentId},
+            function (ret) {
+                // current comparison round user is on
+                $scope.total = ret.status.comparisons.count + 1;
+            },
+            function (ret) {
+                Toaster.reqerror("Assignment Status Not Found", ret);
+            }
+        );
 
 		AnswerResource.user({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
 			function (ret) {

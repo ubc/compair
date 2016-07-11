@@ -80,29 +80,6 @@ class UsersAPITests(ACJAPITestCase):
             self.assertEqual(users['total'], 1)
             self.assertEqual(users['objects'][0]['username'], self.data.get_unauthorized_instructor().username)
 
-    def test_system_roles(self):
-        # test login required
-        rv = self.client.get('/api/system_roles')
-        self.assert401(rv)
-
-        # test results
-        with self.login('root'):
-            rv = self.client.get('/api/system_roles')
-            self.assert200(rv)
-            types = rv.json
-            self.assertEqual(len(types), 3)
-            self.assertEqual(types[0], SystemRole.student.value)
-            self.assertEqual(types[1], SystemRole.instructor.value)
-            self.assertEqual(types[2], SystemRole.sys_admin.value)
-
-        with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.get('/api/system_roles')
-            self.assert200(rv)
-            types = rv.json
-            self.assertEqual(len(types), 2)
-            self.assertEqual(types[0], SystemRole.student.value)
-            self.assertEqual(types[1], SystemRole.instructor.value)
-
     def test_create_user(self):
         url = '/api/users'
 
@@ -420,23 +397,6 @@ class UsersAPITests(ACJAPITestCase):
                 content_type='application/json')
             self.assert200(rv)
             self.assertEqual(self.data.get_authorized_student().id, rv.json['id'])
-
-    def test_get_course_roles(self):
-        url = '/api/course_roles'
-
-        # test login required
-        rv = self.client.get(url)
-        self.assert401(rv)
-
-        # test successful query
-        with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.get(url)
-            self.assert200(rv)
-            types = rv.json
-            self.assertEqual(len(types), 3)
-            self.assertEqual(types[0], CourseRole.student.value)
-            self.assertEqual(types[1], CourseRole.teaching_assistant.value)
-            self.assertEqual(types[2], CourseRole.instructor.value)
 
     def test_get_edit_button(self):
         url = '/api/users/' + str(self.data.get_authorized_student().id) + '/edit'

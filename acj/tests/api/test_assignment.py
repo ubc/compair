@@ -1,9 +1,10 @@
 import datetime
 import json
 
-from data.fixtures.test_data import SimpleAssignmentTestData
-from acj.models import Assignment
+from data.fixtures.test_data import SimpleAssignmentTestData, ComparisonTestData, TestFixture
+from acj.models import Assignment, Comparison
 from acj.tests.test_acj import ACJAPITestCase
+from acj.core import db
 
 
 class AssignmentAPITests(ACJAPITestCase):
@@ -244,3 +245,356 @@ class AssignmentAPITests(ACJAPITestCase):
         self.assertEqual(expected.name, actual['name'])
         self.assertEqual(expected.description, actual['description'])
         self.assertEqual(expected.user_id, actual['user_id'])
+
+class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
+    def setUp(self):
+        super(AssignmentStatusComparisonsAPITests, self).setUp()
+        self.data = ComparisonTestData()
+        self.url = '/api/courses/' + str(self.data.get_course().id) + '/assignments'
+        self.assignment = self.data.get_assignments()[0]
+
+    def _submit_all_possible_comparisons_for_user(self, user_id):
+        # self.login(username)
+        # calculate number of comparisons to do before user has compared all the pairs it can
+        num_eligible_answers = 0  # need to minus one to exclude the logged in user's own answer
+        for answer in self.data.get_student_answers():
+            if answer.assignment_id == self.assignment.id and answer.user_id != user_id:
+                num_eligible_answers += 1
+        # n - 1 possible pairs before all answers have been compared
+        num_possible_comparisons = num_eligible_answers - 1
+        winner_ids = []
+        loser_ids = []
+        for i in range(num_possible_comparisons):
+            comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id)
+            answer1_id = comparisons[0].answer1_id
+            answer2_id = comparisons[0].answer2_id
+            min_id = min([answer1_id, answer2_id])
+            max_id = max([answer1_id, answer2_id])
+            winner_ids.append(min_id)
+            loser_ids.append(max_id)
+            for comparison in comparisons:
+                comparison.completed = True
+                comparison.winner_id = min_id
+                db.session.add(comparison)
+            db.session.commit()
+
+            Comparison.calculate_scores(self.assignment.id)
+        return {'winners': winner_ids, 'losers': loser_ids}
+
+    def test_get_all_status(self):
+        url = self.url + '/status'
+        assignments = self.data.get_assignments()
+
+        # test login required
+        rv = self.client.get(url)
+        self.assert401(rv)
+
+        # test unauthorized user
+        with self.login(self.data.get_unauthorized_student().username):
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        # test invalid input
+        with self.login(self.data.get_authorized_student().username):
+            # test invalid course id
+            invalid_url = '/api/courses/999/assignments/status'
+            rv = self.client.get(invalid_url)
+            self.assert404(rv)
+
+        with self.login(self.data.get_authorized_instructor().username):
+            # test authorized instructor
+            rv = self.client.get(url)
+            self.assert200(rv)
+
+            for assignment in assignments:
+                self.assertTrue(str(assignment.id) in rv.json['statuses'])
+                status = rv.json['statuses'][str(assignment.id)]
+                if assignments[0].id == assignment.id:
+                    self.assertTrue(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertTrue(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 1)
+                elif assignments[1].id == assignment.id:
+                    self.assertTrue(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertTrue(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 1)
+                else:
+                    self.assertFalse(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertFalse(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 0)
+
+        with self.login(self.data.get_authorized_student().username):
+            # test authorized student - when haven't compared
+            rv = self.client.get(url)
+            self.assert200(rv)
+            for assignment in assignments:
+                self.assertTrue(str(assignment.id) in rv.json['statuses'])
+                status = rv.json['statuses'][str(assignment.id)]
+                if assignments[0].id == assignment.id:
+                    self.assertTrue(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertTrue(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 1)
+                elif assignments[1].id == assignment.id:
+                    self.assertTrue(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertTrue(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 1)
+                else:
+                    self.assertFalse(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertFalse(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 0)
+
+            compare_results = self._submit_all_possible_comparisons_for_user(self.data.get_authorized_student().id)
+
+            # test authorized student - when have compared all
+            rv = self.client.get(url)
+            self.assert200(rv)
+            for assignment in assignments:
+                self.assertTrue(str(assignment.id) in rv.json['statuses'])
+                status = rv.json['statuses'][str(assignment.id)]
+                if assignments[0].id == assignment.id:
+                    self.assertFalse(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], len(compare_results['winners']))
+                    self.assertTrue(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 1)
+                elif assignments[1].id == assignment.id:
+                    self.assertTrue(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertTrue(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 1)
+                else:
+                    self.assertFalse(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertFalse(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 0)
+
+    def test_get_status(self):
+        url = self.url + '/' + str(self.assignment.id) + '/status'
+
+        # test login required
+        rv = self.client.get(url)
+        self.assert401(rv)
+
+        # test unauthorized user
+        with self.login(self.data.get_unauthorized_student().username):
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        # test invalid course id
+        with self.login(self.data.get_authorized_student().username):
+            invalid_url = '/api/courses/999/assignments/'+str(self.assignment.id)+'/status'
+            rv = self.client.get(invalid_url)
+            self.assert404(rv)
+
+            # test invalid assignment id
+            invalid_url = '/api/courses/'+str(self.data.get_course().id)+'/assignments/999/status'
+            rv = self.client.get(invalid_url)
+            self.assert404(rv)
+
+        with self.login(self.data.get_authorized_instructor().username):
+            # test authorized instructor
+            rv = self.client.get(url)
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertEqual(status['comparisons']['count'], 0)
+            self.assertTrue(status['comparisons']['available'])
+            self.assertTrue(status['answers']['answered'])
+            self.assertEqual(status['answers']['count'], 1)
+
+        with self.login(self.data.get_authorized_student().username):
+            # test authorized student - when haven't compared
+            rv = self.client.get(url)
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertEqual(status['comparisons']['count'], 0)
+            self.assertTrue(status['comparisons']['available'])
+            self.assertTrue(status['answers']['answered'])
+            self.assertEqual(status['answers']['count'], 1)
+
+            compare_results = self._submit_all_possible_comparisons_for_user(self.data.get_authorized_student().id)
+            # test authorized student - when have compared all
+            self.login(self.data.get_authorized_student().username)
+            rv = self.client.get(url)
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertEqual(status['comparisons']['count'], len(compare_results['winners']))
+            self.assertFalse(status['comparisons']['available'])
+            self.assertTrue(status['answers']['answered'])
+            self.assertEqual(status['answers']['count'], 1)
+
+class AssignmentStatusAnswersAPITests(ACJAPITestCase):
+    def setUp(self):
+        super(AssignmentStatusAnswersAPITests, self).setUp()
+        self.fixtures = TestFixture().add_course(num_students=30, num_assignments=2, num_groups=2)
+        self.url = '/api/courses/' + str(self.fixtures.course.id) + '/assignments'
+
+    def test_get_all_status(self):
+        url = self.url + '/status'
+        assignments = self.fixtures.assignments
+
+        # test login required
+        rv = self.client.get(url)
+        self.assert401(rv)
+
+        # test unauthorized user
+        with self.login(self.fixtures.unauthorized_student.username):
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        # test invalid input
+        with self.login(self.fixtures.students[0].username):
+            # test invalid course id
+            invalid_url = '/api/courses/999/assignments/status'
+            rv = self.client.get(invalid_url)
+            self.assert404(rv)
+
+        with self.login(self.fixtures.instructor.username):
+            # test authorized instructor
+            rv = self.client.get(url)
+            self.assert200(rv)
+
+            for assignment in assignments:
+                self.assertTrue(str(assignment.id) in rv.json['statuses'])
+                status = rv.json['statuses'][str(assignment.id)]
+                if assignments[0].id == assignment.id:
+                    self.assertTrue(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertFalse(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 0)
+                else:
+                    self.assertTrue(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertFalse(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 0)
+
+            # test authorized instructor - multiple answers
+            self.fixtures.add_answer(assignments[0], self.fixtures.instructor)
+            self.fixtures.add_answer(assignments[0], self.fixtures.instructor)
+            self.fixtures.add_answer(assignments[0], self.fixtures.instructor)
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+
+            for assignment in assignments:
+                self.assertTrue(str(assignment.id) in rv.json['statuses'])
+                status = rv.json['statuses'][str(assignment.id)]
+                if assignments[0].id == assignment.id:
+                    self.assertTrue(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertTrue(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 3)
+                else:
+                    self.assertTrue(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertFalse(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 0)
+
+        self.fixtures.add_students(1)
+        with self.login(self.fixtures.students[-1].username):
+            # test authorized student - no answers
+            rv = self.client.get(url)
+            self.assert200(rv)
+            for assignment in assignments:
+                self.assertTrue(str(assignment.id) in rv.json['statuses'])
+                status = rv.json['statuses'][str(assignment.id)]
+                if assignments[0].id == assignment.id:
+                    self.assertTrue(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertFalse(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 0)
+                else:
+                    self.assertTrue(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertFalse(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 0)
+
+            # test authorized student - answered
+            self.fixtures.add_answer(assignments[0], self.fixtures.students[-1])
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            for assignment in assignments:
+                self.assertTrue(str(assignment.id) in rv.json['statuses'])
+                status = rv.json['statuses'][str(assignment.id)]
+                if assignments[0].id == assignment.id:
+                    self.assertTrue(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertTrue(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 1)
+                else:
+                    self.assertTrue(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertFalse(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 0)
+
+    def test_get_status(self):
+        url = self.url + '/' + str(self.fixtures.assignment.id) + '/status'
+
+        # test login required
+        rv = self.client.get(url)
+        self.assert401(rv)
+
+        # test unauthorized user
+        with self.login(self.fixtures.unauthorized_student.username):
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        # test invalid course id
+        with self.login(self.fixtures.students[0].username):
+            invalid_url = '/api/courses/999/assignments/'+str(self.fixtures.assignment.id)+'/status'
+            rv = self.client.get(invalid_url)
+            self.assert404(rv)
+
+            # test invalid assignment id
+            invalid_url = '/api/courses/'+str(self.fixtures.course.id)+'/assignments/999/status'
+            rv = self.client.get(invalid_url)
+            self.assert404(rv)
+
+        with self.login(self.fixtures.instructor.username):
+            # test authorized instructor
+            rv = self.client.get(url)
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertTrue(status['comparisons']['available'])
+            self.assertEqual(status['comparisons']['count'], 0)
+            self.assertFalse(status['answers']['answered'])
+            self.assertEqual(status['answers']['count'], 0)
+
+            # test authorized instructor - multiple answers
+            self.fixtures.add_answer(self.fixtures.assignment, self.fixtures.instructor)
+            self.fixtures.add_answer(self.fixtures.assignment, self.fixtures.instructor)
+            self.fixtures.add_answer(self.fixtures.assignment, self.fixtures.instructor)
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertTrue(status['comparisons']['available'])
+            self.assertEqual(status['comparisons']['count'], 0)
+            self.assertTrue(status['answers']['answered'])
+            self.assertEqual(status['answers']['count'], 3)
+
+        self.fixtures.add_students(1)
+        with self.login(self.fixtures.students[-1].username):
+            # test authorized student - no answers
+            rv = self.client.get(url)
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertTrue(status['comparisons']['available'])
+            self.assertEqual(status['comparisons']['count'], 0)
+            self.assertFalse(status['answers']['answered'])
+            self.assertEqual(status['answers']['count'], 0)
+
+            # test authorized student - answered
+            self.fixtures.add_answer(self.fixtures.assignment, self.fixtures.students[-1])
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertTrue(status['comparisons']['available'])
+            self.assertEqual(status['comparisons']['count'], 0)
+            self.assertTrue(status['answers']['answered'])
+            self.assertEqual(status['answers']['count'], 1)

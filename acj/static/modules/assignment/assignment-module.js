@@ -144,7 +144,7 @@ module.factory(
 				'get': {url: url, cache: true},
 				'save': {method: 'POST', url: url, interceptor: Interceptors.cache},
 				'delete': {method: 'DELETE', url: url, interceptor: Interceptors.cache},
-				'getAnswered': {url: '/api/courses/:id/assignments/:assignmentId/answers/count'}
+				'getCurrentUserStatus': {url: '/api/courses/:id/assignments/:assignmentId/status'}
 			}
 		);
 		ret.MODEL = "Assignment";
@@ -304,7 +304,6 @@ module.controller("AssignmentViewController",
 			courseId: $scope.courseId,
 			assignmentId: assignmentId
 		};
-		var myAnsCount = 0; // for the event of deleting own answer
 		$scope.allStudents = {};
 		var userIds = {};
 		$scope.totalNumAnswers = 0;
@@ -320,11 +319,9 @@ module.controller("AssignmentViewController",
 
 		Session.getUser().then(function(user) {
 			$scope.loggedInUserId = user.id;
-			ComparisonResource.getComparisonAvailable(angular.extend({'userId': $scope.loggedInUserId}, params), function (ret) {
-				$scope.comparisonAvailable = ret.available;
-			});
 
-            AssignmentResource.get(params, function (ret) {
+            AssignmentResource.get(params,
+                function (ret) {
                     ret.answer_start = new Date(ret.answer_start);
                     ret.answer_end = new Date(ret.answer_end);
                     ret.compare_start = new Date(ret.compare_start);
@@ -345,11 +342,16 @@ module.controller("AssignmentViewController",
                         $scope.answerAvail = $scope.assignment.answer_end;
                     }
 
-                    ComparisonResource.count(angular.extend({'userId': $scope.loggedInUserId}, params), function (ret) {
-                            $scope.compared_req_met = ret.count >= $scope.assignment.number_of_comparisons;
+                    AssignmentResource.getCurrentUserStatus({'id': $scope.courseId, 'assignmentId': assignmentId},
+                        function (ret) {
+                            $scope.assignment.status = ret.status;
+
+                            var comparisons_count = $scope.assignment.status.comparisons.count;
+                            $scope.compared_req_met = comparisons_count >= $scope.assignment.number_of_comparisons;
+
                             $scope.evaluation = 0;
                             if (!$scope.compared_req_met) {
-                                $scope.evaluation = $scope.assignment.number_of_comparisons - ret.count;
+                                $scope.evaluation = $scope.assignment.number_of_comparisons - comparisons_count;
                             }
                             // if evaluation period is set answers can be seen after it ends
                             if ($scope.assignment.compare_end) {
@@ -358,10 +360,14 @@ module.controller("AssignmentViewController",
                             } else {
                                 $scope.see_answers = $scope.assignment.after_comparing && $scope.compared_req_met;
                             }
-                            var diff = $scope.assignment.answer_count - myAnsCount;
+                            var diff = $scope.assignment.answer_count - $scope.assignment.status.answers.count;
                             var evaluation_left = ((diff * (diff - 1)) / 2);
-                            $scope.warning = ($scope.assignment.number_of_comparisons - ret.count) > evaluation_left;
-                    });
+                            $scope.warning = ($scope.assignment.number_of_comparisons - comparisons_count) > evaluation_left;
+                        },
+                        function (ret) {
+                            Toaster.reqerror("Assignment Status Not Found", ret);
+                        }
+                    );
 
                     // get the self evaluation if enabled in assignment
                     if ($scope.assignment.enable_self_evaluation) {
@@ -401,16 +407,6 @@ module.controller("AssignmentViewController",
         $scope.assignment = {};
 
 		$scope.comments = AssignmentCommentResource.get(params);
-
-		AssignmentResource.getAnswered({'id': $scope.courseId, 'assignmentId': assignmentId},
-			function (ret) {
-				myAnsCount = ret.answered;
-				$scope.answered = ret.answered > 0;
-			},
-			function (ret) {
-				Toaster.reqerror("Answers Not Found", ret);
-			}
-		);
 
         $scope.instructors = {};
 		CourseResource.getInstructorsLabels({'id': $scope.courseId},
@@ -488,8 +484,8 @@ module.controller("AssignmentViewController",
 					$scope.answers.objects.splice($scope.answers.objects.indexOf(answer), 1);
 					$scope.assignment.answer_count -= 1;
 					if ($scope.loggedInUserId == authorId) {
-						myAnsCount--;
-						$scope.answered = myAnsCount > 0;
+						$scope.assignment.status.answers.count--;
+						$scope.assignment.status.answers.answered = $scope.assignment.status.answers.count > 0;
 					}
 				},
 				function (ret) {
