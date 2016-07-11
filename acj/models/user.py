@@ -97,9 +97,12 @@ class User(DefaultTableMixin, WriteTrackingMixin, UserMixin):
             3.md5 hash the final string
         Defaults to a hash of the user's username if no email is available
         """
-        hash_input = self.username
-        if self.email:
-            hash_input = self.email
+        hash_input = None
+        if self.system_role == SystemRole.student:
+            hash_input = str(self.id) + "@compair"
+        else:
+            hash_input = self.email if self.email else self.username
+
         m = hashlib.md5()
         m.update(hash_input.strip().lower().encode('utf-8'))
         return m.hexdigest()

@@ -13,6 +13,17 @@ class UnwrapAnswerCommentType(fields.Raw):
     def format(self, comment_type):
         return comment_type.value
 
+def get_partial_user(restrict_user=True):
+    ret = {
+        'id': fields.Integer(attribute="user_id"),
+        'displayname': fields.String(attribute="user_displayname"),
+        'avatar': fields.String(attribute="user_avatar"),
+    }
+    if not restrict_user:
+        ret['fullname'] = fields.String(attribute="user_fullname")
+
+    return ret
+
 def get_user(restrict_user=True):
     restricted = {
         'id': fields.Integer,
@@ -108,17 +119,11 @@ def get_assignment(restrict_user=True):
         'answer_count': fields.Integer,
         'self_evaluation_count': fields.Integer,
 
-        'user': {
-            'id': fields.Integer(attribute="user_id"),
-            'displayname': fields.String(attribute="user_displayname"),
-            'avatar': fields.String(attribute="user_avatar"),
-        },
+        'user': get_partial_user(restrict_user),
 
         'modified': fields.DateTime,
         'created': fields.DateTime
     }
-    if not restrict_user:
-        ret['user']['fullname'] = fields.String(attribute="user_fullname")
 
     return ret
 
@@ -140,16 +145,9 @@ def get_answer(restrict_user=True):
         'private_comment_count': fields.Integer,
         'public_comment_count': fields.Integer,
 
-        'user': {
-            'id': fields.Integer(attribute="user_id"),
-            'displayname': fields.String(attribute="user_displayname"),
-            'avatar': fields.String(attribute="user_avatar"),
-        },
-
+        'user': get_partial_user(restrict_user),
         'created': fields.DateTime
     }
-    if not restrict_user:
-        ret['user']['fullname'] = fields.String(attribute="user_fullname")
 
     return ret
 
@@ -160,19 +158,11 @@ def get_assignment_comment(restrict_user=True):
         'course_id': fields.Integer,
         'assignment_id': fields.Integer,
         'user_id': fields.Integer,
-
         'content': fields.String,
 
-        'user': {
-            'id': fields.Integer(attribute="user_id"),
-            'displayname': fields.String(attribute="user_displayname"),
-            'avatar': fields.String(attribute="user_avatar"),
-        },
-
+        'user': get_partial_user(restrict_user),
         'created': fields.DateTime,
     }
-    if not restrict_user:
-        ret['user']['fullname'] = fields.String(attribute="user_fullname")
 
     return ret
 
@@ -187,15 +177,9 @@ def get_answer_comment(restrict_user=True):
         'content': fields.String,
         'comment_type': UnwrapAnswerCommentType(attribute='comment_type'),
 
-        'user': {
-            'id': fields.Integer(attribute="user_id"),
-            'displayname': fields.String(attribute="user_displayname"),
-            'avatar': fields.String(attribute="user_avatar"),
-        },
+        'user': get_partial_user(restrict_user),
         'created': fields.DateTime,
     }
-    if not restrict_user:
-        ret['user']['fullname'] = fields.String(attribute="user_fullname")
 
     return ret
 
@@ -221,15 +205,9 @@ def get_comparison(restrict_user=True, with_answers=True):
         'content': fields.String,
         'criterion': fields.Nested(get_criterion()),
 
-        'user': {
-            'id': fields.Integer(attribute="user_id"),
-            'displayname': fields.String(attribute="user_displayname"),
-            'avatar': fields.String(attribute="user_avatar"),
-        },
+        'user': get_partial_user(restrict_user),
         'created': fields.DateTime
     }
-    if not restrict_user:
-        ret['user']['fullname'] = fields.String(attribute="user_fullname")
 
     if with_answers:
         ret['answer1'] = fields.Nested(get_answer(
@@ -254,20 +232,13 @@ def get_comparison_set(restrict_user=True):
         'answer1': fields.Nested(get_answer()),
         'answer2': fields.Nested(get_answer()),
 
-        'user': {
-            'id': fields.Integer(attribute="user.id"),
-            'displayname': fields.String(attribute="user.displayname"),
-            'avatar': fields.String(attribute="user.avatar"),
-        },
+        'user': get_partial_user(restrict_user),
 
         'answer1_feedback': fields.List(fields.Nested(get_answer_comment(restrict_user))),
         'answer2_feedback': fields.List(fields.Nested(get_answer_comment(restrict_user))),
         'self_evaluation': fields.List(fields.Nested(get_answer_comment(restrict_user))),
         'created': fields.DateTime
     }
-
-    if not restrict_user:
-        ret['user']['fullname'] = fields.String(attribute="user.fullname")
 
     return ret
 
