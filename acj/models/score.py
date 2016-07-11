@@ -65,6 +65,30 @@ class Score(DefaultTableMixin, WriteTrackingMixin):
             opponents=self.opponents
         )
 
+    @hybrid_property
+    def rank(self):
+        scores = Score.get_assignment_scores(self.assignment_id, self.criterion_id)
+
+        for index, score in enumerate(scores):
+            if score.normalized_score == self.normalized_score:
+                return index + 1
+
+        return None
+
+    # TODO: this should be cached
+    @classmethod
+    def get_assignment_scores(cls, assignment_id, criterion_id):
+        return Score.query \
+            .with_entities(Score.normalized_score) \
+            .distinct() \
+            .filter(and_(
+                Score.assignment_id == assignment_id,
+                Score.criterion_id == criterion_id
+            )) \
+            .order_by(Score.normalized_score.desc()) \
+            .all()
+
+
     @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()

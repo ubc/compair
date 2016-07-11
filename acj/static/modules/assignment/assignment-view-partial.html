@@ -274,7 +274,7 @@
 					<!-- Student Rank (not used for instructor answers) -->
 					<p class="pull-right score-display" ng-if="!canManageAssignment && score.criterion_id==answerFilters.orderBy && answer.scores.length > 0" ng-repeat="score in answer.scores">
 						<em>
-							Students Ranked: <strong>{{allScores[answer.id]}}</strong>
+							Students Ranked: <strong>{{score.rank}} <span ng-if="rankCount[score.rank] > 1">(tied)</span></strong>
 						</em>
 					</p>
 					<!-- No Student Score/Rank -->
