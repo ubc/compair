@@ -57,6 +57,5 @@ def downgrade():
             batch_op.drop_constraint('uq_Scores_answers_id_criteriaandquestions_id', type_='unique')
             batch_op.alter_column('answers_id', nullable=True, existing_type=sa.Integer)
     except ValueError:
-        logging.warn('Drop unique constraint is not support for SQLite, '
-                     'dropping uq_Scores_answers_id_criteriaandquestions_id ignored!')
+        logging.warn('Drop unique constraint is not support for SQLite, dropping uq_Scores_answers_id_criteriaandquestions_id ignored!')
 

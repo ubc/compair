@@ -19,6 +19,8 @@ Feature: Edit Course
     When I fill in:
       | element     | content   |
       | course.name | New Name  |
+      | course.year | 2020      |
+      | course.term | Winter    |
     And I fill in the course description with "This is the new description"
     And I submit form with "Save" button
     Then I should be on the "course" page

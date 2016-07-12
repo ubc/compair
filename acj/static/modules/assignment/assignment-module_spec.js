@@ -47,7 +47,12 @@ describe('course-module', function () {
         "description": null,
         "id": 1,
         "modified": "Fri, 09 Jan 2015 17:23:59 -0000",
-        "name": "Test Course"
+        "name": "Test Course",
+        "year": 2015,
+        "term": "Winter",
+        "fullname": "Test Course Winter 2015",
+        "start_time": null,
+        "end_time": null
     };
     var mockCritiera = {
         "objects": [

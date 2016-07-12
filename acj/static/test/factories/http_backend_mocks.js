@@ -208,7 +208,12 @@ module.exports.httpbackendMock = function(storageFixture) {
             var newCourse = {
                 "id": id,
                 "name": data.name,
+                "year": data.year,
+                "term": data.term,
+                "fullname": data.name + " " + data.term + " " + data.year,
                 "description": data.description,
+                "start_time": null,
+                "end_time": null,
                 "available": true,
                 "modified": "Sun, 11 Jan 2015 08:44:46 -0000",
                 "created": "Sun, 11 Jan 2015 08:44:46 -0000"

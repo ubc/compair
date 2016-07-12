@@ -1,3 +1,6 @@
+import datetime
+
+import dateutil.parser
 from bouncer.constants import MANAGE, READ, CREATE, EDIT
 from flask import Blueprint, current_app
 from flask.ext.restful import Resource, marshal_with, marshal, reqparse, abort
@@ -15,6 +18,8 @@ api = new_restful_api(course_api)
 
 new_course_parser = reqparse.RequestParser()
 new_course_parser.add_argument('name', type=str, required=True, help='Course name is required.')
+new_course_parser.add_argument('year', type=int, required=True, help='Course year is required.')
+new_course_parser.add_argument('term', type=str, required=True, help='Course term/semester is required.')
 new_course_parser.add_argument('description', type=str)
 new_course_parser.add_argument('start_date', type=str, default=None)
 new_course_parser.add_argument('end_date', type=str, default=None)
@@ -54,6 +59,8 @@ class CourseListAPI(Resource):
 
         new_course = Course(
             name=params.get("name"),
+            year=params.get("year"),
+            term=params.get("term"),
             description=params.get("description", None),
             start_date=params.get('start_date', None),
             end_date=params.get('end_date', None)
@@ -72,7 +79,10 @@ class CourseListAPI(Resource):
             db.session.add(new_course)
             # also need to enrol the user as an instructor
             new_user_course = UserCourse(
-                course=new_course, user_id=current_user.id, course_role=CourseRole.instructor)
+                course=new_course,
+                user_id=current_user.id,
+                course_role=CourseRole.instructor
+            )
             db.session.add(new_user_course)
 
             db.session.commit()
@@ -83,10 +93,6 @@ class CourseListAPI(Resource):
                 user=current_user,
                 data=marshal(new_course, dataformat.get_course()))
 
-        except exc.IntegrityError:
-            db.session.rollback()
-            current_app.logger.error("Failed to add new course. Duplicate.")
-            return {"error": "A course with the same name already exists."}, 400
         except exc.SQLAlchemyError as e:
             db.session.rollback()
             current_app.logger.error("Failed to add new course. " + str(e))
@@ -128,6 +134,8 @@ class CourseAPI(Resource):
             return {"error": "Course id does not match URL."}, 400
         # modify course according to new values, preserve original values if values not passed
         course.name = params.get("name", course.name)
+        course.year = params.get("year", course.year)
+        course.term = params.get("term", course.term)
         course.description = params.get("description", course.description)
 
         course.start_date = params.get("start_date", None)

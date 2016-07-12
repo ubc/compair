@@ -47,7 +47,10 @@ describe('course-module', function () {
         "description": null,
         "id": 1,
         "modified": "Fri, 09 Jan 2015 17:23:59 -0000",
-        "name": "Test Course"
+        "name": "Test Course",
+        "year": 2015,
+        "term": "Winter",
+        "fullname": "Test Course Winter 2015"
     };
     beforeEach(module('ubc.ctlt.acj.course'));
     beforeEach(inject(function ($injector) {
@@ -95,7 +98,11 @@ describe('course-module', function () {
 
                 it('should be able to save new course', function () {
                     var course = {
-                        "name": "Test111", "descriptionCheck": true, "description": "<p>Description</p>\n"
+                        "name": "Test111",
+                        "year": 2015,
+                        "term": "Winter",
+                        "descriptionCheck": true,
+                        "description": "<p>Description</p>\n"
                     };
                     $rootScope.course = angular.copy(course);
                     $rootScope.course.id = undefined;
@@ -127,6 +134,8 @@ describe('course-module', function () {
                 it('should be able to save edited course', function () {
                     var editedCourse = angular.copy(editCourse);
                     editedCourse.name = 'new name';
+                    editedCourse.year = 2016;
+                    editedCourse.term = "Summer";
                     $rootScope.course = editedCourse;
                     $httpBackend.expectPOST('/api/courses/2', $rootScope.course).respond(editedCourse);
                     $httpBackend.expectGET('/api/session/permission').respond(mockSession['permissions']);
