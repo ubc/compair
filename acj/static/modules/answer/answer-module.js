@@ -91,15 +91,38 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
 
 /***** Controllers *****/
 module.controller(
-	"AnswerCreateController",
-	["$scope", "$log", "$location", "$routeParams", "AnswerResource", "ClassListResource",
-		"AssignmentResource", "TimerResource", "Toaster", "Authorize", "attachService", "Session", "$timeout",
-	function ($scope, $log, $location, $routeParams, AnswerResource, ClassListResource,
-		AssignmentResource, TimerResource, Toaster, Authorize, attachService, Session, $timeout)
+	"AnswerWriteController",
+	["$scope", "$log", "$location", "$routeParams", "AnswerResource", "ClassListResource", "$route",
+		"AssignmentResource", "TimerResource", "Toaster", "Authorize", "Session", "$timeout",
+        "attachService", "AttachmentResource",
+	function ($scope, $log, $location, $routeParams, AnswerResource, ClassListResource, $route,
+		AssignmentResource, TimerResource, Toaster, Authorize, Session, $timeout,
+        attachService, AttachmentResource)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var assignmentId = $routeParams['assignmentId'];
-		$scope.create = true;
+		$scope.assignment = {};
+		$scope.answer = {};
+        $scope.preventExit = true; //user should be warned before leaving page by default
+
+        if ($route.current.method == "new") {
+		    $scope.showUserList = true;
+            $scope.answer.draft = true;
+        } else if ($route.current.method == "edit") {
+            $scope.answerId = $routeParams['answerId'];
+            AnswerResource.get({'courseId': $scope.courseId, 'assignmentId': assignmentId, 'answerId': $scope.answerId}).$promise.then(
+                function (ret) {
+                    $scope.answer = ret;
+
+                    if (ret.file) {
+                        $scope.answer.uploadedFile = ret.file
+                    }
+                },
+                function (ret) {
+                    Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
+                }
+            );
+        }
 
 		$scope.uploader = attachService.getUploader();
 		$scope.resetName = attachService.resetName();
@@ -110,7 +133,8 @@ module.controller(
 
 		Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, $scope.courseId).then(function(canManageAssignment){
 			$scope.canManageAssignment = canManageAssignment;
-			if ($scope.canManageAssignment) {
+
+			if ($route.current.method == "new" && $scope.canManageAssignment) {
 				// get list of users in the course
 				ClassListResource.get({'courseId': $scope.courseId}).$promise.then(
 					function (ret) {
@@ -126,89 +150,6 @@ module.controller(
 			}
 		});
 
-		$scope.assignment = {};
-		AssignmentResource.get({'courseId': $scope.courseId, 'assignmentId': assignmentId}).
-			$promise.then(
-				function (ret)
-				{
-					$scope.assignment = ret;
-					var due_date = new Date($scope.assignment.answer_end);
-					if (!$scope.canManageAssignment) {
-						TimerResource.get(
-							function (ret) {
-								var current_time = ret.date;
-								var trigger_time = due_date.getTime() - current_time  - 600000; //(10 mins)
-								if (trigger_time < 86400000) { //(1 day)
-									$timeout(countDown, trigger_time);
-								}
-							},
-							function (ret) {
-								Toaster.reqerror("Unable to get the current time", ret);
-							}
-						);
-					}
-				},
-				function (ret)
-				{
-					Toaster.reqerror("Unable to load assignment.", ret);
-				}
-			);
-
-		$scope.answer = {};
-		$scope.preventExit = true; //user should be warned before leaving page by default
-		$scope.answerSubmit = function () {
-			$scope.submitted = true;
-			$scope.answer.file_name = attachService.getName();
-			$scope.answer.file_alias = attachService.getAlias();
-			AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': assignmentId},
-				$scope.answer).$promise.then(
-					function (ret)
-					{
-						$scope.submitted = false;
-						Toaster.success("New answer posted!");
-						$scope.preventExit = false; //user has saved answer, does not need warning when leaving page
-						$location.path('/course/' + $scope.courseId + '/assignment/' +
-							assignmentId);
-					},
-					function (ret)
-					{
-						$scope.submitted = false;
-						// if answer period is not in session
-						if (ret.status == '403' && 'error' in ret.data) {
-							Toaster.error(ret.data.error);
-						} else {
-							Toaster.reqerror("Answer Save Failed.", ret);
-						}
-					}
-				);
-		};
-	}
-]);
-
-module.controller(
-	"AnswerEditController",
-	["$scope", "$log", "$location", "$routeParams", "AnswerResource", "$timeout",
-		"AssignmentResource", "TimerResource", "AttachmentResource", "attachService", "Toaster", "Authorize",
-	function ($scope, $log, $location, $routeParams, AnswerResource, $timeout,
-		AssignmentResource, TimerResource, AttachmentResource, attachService, Toaster, Authorize)
-	{
-		$scope.courseId = $routeParams['courseId'];
-		var assignmentId = $routeParams['assignmentId'];
-		$scope.answerId = $routeParams['answerId'];
-
-		$scope.uploader = attachService.getUploader();
-		$scope.resetName = attachService.resetName();
-
-		$scope.assignment = {};
-		$scope.answer = {};
-		var countDown = function() {
-			$scope.showCountDown = true;
-		};
-
-		Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, $scope.courseId).then(function(canManageAssignment){
-			$scope.canManageAssignment = canManageAssignment;
-		});
-
 		$scope.deleteFile = function(file_id) {
 			AttachmentResource.delete({'fileId': file_id}).$promise.then(
 				function (ret) {
@@ -222,68 +163,69 @@ module.controller(
 		};
 
 		AssignmentResource.get({'courseId': $scope.courseId, 'assignmentId': assignmentId}).$promise.then(
-			function (ret) {
-				$scope.assignment = ret;
-				due_date = new Date($scope.assignment.answer_end);
-				if (!$scope.canManageAssignment) {
-					TimerResource.get(
-						function (ret) {
-							var current_time = ret.date;
-							var trigger_time = due_date.getTime() - current_time  - 600000; //(10 mins)
-							if (trigger_time < 86400000) { //(1 day)
-								$timeout(countDown, trigger_time);
-							}
-						},
-						function (ret) {
-							Toaster.reqerror("Unable to get the current time", ret);
-						}
-					);
-				}
-			},
-			function (ret) {
-				Toaster.reqerror("Unable to retrieve assignment "+assignmentId, ret);
-			}
-		);
-		AnswerResource.get({'courseId': $scope.courseId, 'assignmentId': assignmentId, 'answerId': $scope.answerId}).$promise.then(
-			function (ret) {
-				$scope.answer = ret;
-
-                if (ret.file) {
-                    AttachmentResource.get({'fileId': ret.file.id}).$promise.then(
+            function (ret) {
+                $scope.assignment = ret;
+                var due_date = new Date($scope.assignment.answer_end);
+                if (!$scope.canManageAssignment) {
+                    TimerResource.get(
                         function (ret) {
-                            $scope.answer.uploadedFile = ret.file;
+                            var current_time = ret.date;
+                            var trigger_time = due_date.getTime() - current_time  - 600000; //(10 mins)
+                            if (trigger_time < 86400000) { //(1 day)
+                                $timeout(countDown, trigger_time);
+                            }
                         },
                         function (ret) {
-                            Toaster.reqerror("Unable to retrieve attachment", ret);
+                            Toaster.reqerror("Unable to get the current time", ret);
                         }
                     );
                 }
-			},
-			function (ret) {
-				Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
-			}
-		);
+            },
+            function (ret) {
+                Toaster.reqerror("Unable to load assignment.", ret);
+            }
+        );
+
 		$scope.answerSubmit = function () {
+			$scope.submitted = true;
 			$scope.answer.file_name = attachService.getName();
 			$scope.answer.file_alias = attachService.getAlias();
-			$scope.submitted = true;
-			AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': assignmentId}, $scope.answer).$promise.then(
-				function() {
-					$scope.submitted = false;
-					Toaster.success("Answer Updated!");
-					$location.path('/course/' + $scope.courseId + '/assignment/' +assignmentId);
+            var wasDraft = $scope.answer.draft;
 
-				},
-				function(ret) {
-					$scope.submitted = false;
-					// if answer period is not in session
-					if (ret.status == '403' && 'error' in ret.data) {
-						Toaster.error(ret.data.error);
-					} else {
-						Toaster.reqerror("Answer Save Failed.", ret);
-					}
-				}
-			);
+			AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': assignmentId}, $scope.answer).$promise.then(
+                function (ret) {
+                    $scope.submitted = false;
+
+                    if (ret.draft) {
+                        $scope.answer = ret;
+                        if (ret.file) {
+                            $scope.answer.uploadedFile = ret.file;
+                            $scope.uploader.clearQueue();
+                            $scope.resetName();
+                        }
+
+                        Toaster.success("Saved Draft Successfully!", "Remember to submit your answer before the deadline.");
+                    } else {
+                        $scope.preventExit = false; //user has saved answer, does not need warning when leaving page
+                        // if was a draft, show new success message
+                        if (wasDraft) {
+                            Toaster.success("New answer posted!");
+                        } else {
+                            Toaster.success("Answer Updated!");
+                        }
+                        $location.path('/course/' + $scope.courseId + '/assignment/' +assignmentId);
+                    }
+                },
+                function (ret) {
+                    $scope.submitted = false;
+                    // if answer period is not in session
+                    if (ret.status == '403' && 'error' in ret.data) {
+                        Toaster.error(ret.data.error);
+                    } else {
+                        Toaster.reqerror("Answer Save Failed.", ret);
+                    }
+                }
+            );
 		};
 	}
 ]);

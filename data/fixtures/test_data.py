@@ -163,14 +163,15 @@ class AssignmentCommentsTestData(SimpleAssignmentTestData):
 
 
 class SimpleAnswersTestData(SimpleAssignmentTestData):
-    def __init__(self, num_answer=2):
+    def __init__(self, num_answer=2, num_draft_answers=1):
         SimpleAssignmentTestData.__init__(self)
         self.extra_student = []
-        for _ in range(num_answer):
+        for _ in range(num_answer + num_draft_answers):
             student = self.create_normal_user()
             self.extra_student.append(student)
             self.enrol_student(student, self.get_course())
         self.answers = []
+        self.draft_answers = []
         self.answersByassignment = {}
         for assignment in self.get_assignments():
             answers_for_assignment = []
@@ -180,10 +181,20 @@ class SimpleAnswersTestData(SimpleAssignmentTestData):
                 self.answersByassignment[assignment.id] = answers_for_assignment
             self.answers += answers_for_assignment
 
-    def create_answer(self, assignment, author):
+            # add some draft answers to all assignments. generally these shouldn't be returned by the API
+            # except for the answers API in some cases. hence they are stored outside of self.answers
+            # and answersByassignment
+            draft_answers_for_assignment = []
+            for i in range(num_draft_answers):
+                answer = self.create_answer(assignment, self.extra_student[num_answer+i], draft=True)
+                draft_answers_for_assignment.append(answer)
+            self.draft_answers += draft_answers_for_assignment
+
+    def create_answer(self, assignment, author, draft=False):
         answer = AnswerFactory(
             assignment_id=assignment.id,
-            user_id=author.id
+            user_id=author.id,
+            draft=draft
         )
         ScoreFactory(
             assignment_id=assignment.id,
@@ -212,7 +223,12 @@ class AnswerCommentsTestData(SimpleAnswersTestData):
                                                                 self.answersByassignment[assignment.id][1])
             comment_extra_student2 = self.create_answer_comment(self.get_extra_student(1),
                                                                 self.answersByassignment[assignment.id][0])
-            self.answer_comments_by_assignment[assignment.id] = [comment_extra_student1, comment_extra_student2]
+            draft_comment_extra_student2 = self.create_answer_comment(self.get_extra_student(1),
+                                                                self.answersByassignment[assignment.id][0],
+                                                                draft=True)
+            self.answer_comments_by_assignment[assignment.id] = [
+                comment_extra_student1, comment_extra_student2, draft_comment_extra_student2
+            ]
 
     @staticmethod
     def create_answer_comment(user, answer, **kwargs):
@@ -221,6 +237,9 @@ class AnswerCommentsTestData(SimpleAnswersTestData):
         )
         db.session.commit()
         return answer_comment
+
+    def get_non_draft_answer_comments_by_assignment(self, assignment):
+        return [comment for comment in self.answer_comments_by_assignment[assignment.id] if not comment.draft]
 
     def get_answer_comments_by_assignment(self, assignment):
         return self.answer_comments_by_assignment[assignment.id]
@@ -312,12 +331,14 @@ class TestFixture:
         self.students = []
         self.assignments = []
         self.answers = []
+        self.draft_answers = []
         self.groups = []
         self.unauthorized_instructor = UserFactory(system_role=SystemRole.instructor)
         self.unauthorized_student = UserFactory(system_role=SystemRole.student)
         self.dropped_instructor = UserFactory(system_role=SystemRole.instructor)
+        self.draft_student = None
 
-    def add_course(self, num_students=5, num_assignments=1, num_groups=0, num_answers='#'):
+    def add_course(self, num_students=5, num_assignments=1, num_groups=0, num_answers='#', with_draft_student=False):
         self.course = CourseFactory()
         self.instructor = UserFactory(system_role=SystemRole.instructor)
         self.enrol_user(self.instructor, self.course, CourseRole.instructor)
@@ -333,6 +354,11 @@ class TestFixture:
         self.assignment = self.assignments[0]
 
         self.add_answers(num_answers)
+
+        if with_draft_student:
+            self.add_students(1)
+            self.draft_student = self.students[-1]
+            self.add_draft_answers([self.draft_student])
 
         return self
 
@@ -370,6 +396,19 @@ class TestFixture:
         )
         db.session.commit()
         self.answers.append(answer)
+
+    def add_draft_answers(self, students):
+        for student in students:
+            for assignment in self.assignments:
+                answer = AnswerFactory(
+                    assignment=assignment,
+                    user=student,
+                    draft=True
+                )
+                db.session.commit()
+                self.draft_answers.append(answer)
+
+        return self
 
     def add_assignments(self, num_assignments=1, is_answer_period_end=False):
         for _ in range(num_assignments):

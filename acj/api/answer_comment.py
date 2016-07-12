@@ -17,17 +17,20 @@ api = new_restful_api(answer_comment_api)
 
 new_answer_comment_parser = RequestParser()
 new_answer_comment_parser.add_argument('user_id', type=int, default=None)
-new_answer_comment_parser.add_argument('content', type=str, required=True)
+new_answer_comment_parser.add_argument('content', type=str)
 new_answer_comment_parser.add_argument('comment_type', type=str, required=True)
+new_answer_comment_parser.add_argument('draft', type=bool, default=False)
 
 existing_answer_comment_parser = RequestParser()
 existing_answer_comment_parser.add_argument('id', type=int, required=True, help="Comment id is required.")
-existing_answer_comment_parser.add_argument('content', type=str, required=True)
+existing_answer_comment_parser.add_argument('content', type=str)
 existing_answer_comment_parser.add_argument('comment_type', type=str, required=True)
+existing_answer_comment_parser.add_argument('draft', type=bool, default=False)
 
 answer_comment_list_parser = pagination_parser.copy()
 answer_comment_list_parser.add_argument('self_evaluation', type=str, required=False, default='true')
 answer_comment_list_parser.add_argument('evaluation', type=str, required=False, default='true')
+answer_comment_list_parser.add_argument('draft', type=str, required=False, default='false')
 answer_comment_list_parser.add_argument('ids', type=str, required=False, default=None)
 answer_comment_list_parser.add_argument('answer_ids', type=str, required=False, default=None)
 answer_comment_list_parser.add_argument('assignment_id', type=int, required=False, default=None)
@@ -85,6 +88,8 @@ class AnswerCommentListAPI(Resource):
                 Possible values: true, false or only. Default true.
         :query string evaluation: indicate whether the result should include evaluation comments or evaluation only.
                 Possible values: true, false or only. Default true.
+        :query string draft: indicate whether the result should include drafts for current user or not.
+                Possible values: true, false or only. Default false.
         :reqheader Accept: the response content type depends on :mailheader:`Accept` header
         :resheader Content-Type: this depends on :mailheader:`Accept` header of request
         :statuscode 200: no error
@@ -105,6 +110,7 @@ class AnswerCommentListAPI(Resource):
 
         answers = Answer.query. \
             filter_by(active=True). \
+            filter_by(draft=False). \
             filter(Answer.id.in_(answer_ids)).all() if answer_ids else []
         if answer_ids and not answers:
             # non-existing answer ids. we return empty result
@@ -148,6 +154,25 @@ class AnswerCommentListAPI(Resource):
             # only evaluation
             query = query.filter(AnswerComment.comment_type == AnswerCommentType.evaluation)
 
+        if params['draft'] == 'true':
+            # with draft (current_user)
+            query = query.filter(or_(
+                AnswerComment.draft == False,
+                and_(
+                    AnswerComment.draft == True,
+                    AnswerComment.user_id == current_user.id
+                )
+            ))
+        elif params['draft'] == 'only':
+            # only draft (current_user)
+            query = query.filter(and_(
+                AnswerComment.draft == True,
+                AnswerComment.user_id == current_user.id
+            ))
+        else:
+            # do not include draft. Default
+            query = query.filter(AnswerComment.draft == False)
+
         if params['assignment_id']:
             query = query.join(AnswerComment.answer). \
                 filter_by(assignment_id=params['assignment_id'])
@@ -156,11 +181,11 @@ class AnswerCommentListAPI(Resource):
             user_ids = params['user_ids'].split(',')
             query = query.filter(AnswerComment.user_id.in_(user_ids))
 
-        answer_reponses = query.order_by(AnswerComment.created.desc()).all()
+        answer_comments = query.order_by(AnswerComment.created.desc()).all()
 
         # checking the permission
-        for answer_reponse in answer_reponses:
-            require(READ, answer_reponse.answer)
+        for answer_comment in answer_comments:
+            require(READ, answer_comment.answer)
 
         on_answer_comment_list_get.send(
             self,
@@ -168,7 +193,7 @@ class AnswerCommentListAPI(Resource):
             user=current_user,
             data={'answer_ids': ','.join([str(answer_id) for answer_id in answer_ids])})
 
-        return marshal(answer_reponses, dataformat.get_answer_comment(not allow(READ, USER_IDENTITY)))
+        return marshal(answer_comments, dataformat.get_answer_comment(not allow(READ, USER_IDENTITY)))
 
     @login_required
     def post(self, course_id, assignment_id, answer_id):
@@ -183,8 +208,10 @@ class AnswerCommentListAPI(Resource):
         answer_comment = AnswerComment(answer_id=answer_id)
 
         params = new_answer_comment_parser.parse_args()
+        answer_comment.draft = params.get('draft')
         answer_comment.content = params.get("content")
-        if not answer_comment.content:
+        # require content not empty if not a draft
+        if not answer_comment.content and not answer_comment.draft:
             return {"error": "The comment content is empty!"}, 400
 
         if params.get('user_id') and current_user.system_role == SystemRole.sys_admin:
@@ -276,8 +303,12 @@ class AnswerCommentAPI(Resource):
             abort(400)
 
         answer_comment.comment_type = AnswerCommentType(comment_type)
+        # only update draft param if currently a draft
+        if answer_comment.draft:
+            answer_comment.draft = params.get('draft', answer_comment.draft)
 
-        if not answer_comment.content:
+        # require content not empty if not a draft
+        if not answer_comment.content and not answer_comment.draft:
             return {"error": "The comment content is empty!"}, 400
 
         db.session.add(answer_comment)

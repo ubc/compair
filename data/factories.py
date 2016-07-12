@@ -91,6 +91,7 @@ class AnswerFactory(SQLAlchemyModelFactory):
     assignment_id = 1
     user_id = 1
     content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
+    draft = False
     # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 
@@ -116,6 +117,7 @@ class AnswerCommentFactory(SQLAlchemyModelFactory):
     course_id = 1
     user_id = 1
     content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
+    draft = False
     # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 

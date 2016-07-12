@@ -11,7 +11,7 @@ from acj.tests.test_acj import ACJAPITestCase
 class AnswersAPITests(ACJAPITestCase):
     def setUp(self):
         super(AnswersAPITests, self).setUp()
-        self.fixtures = TestFixture().add_course(num_students=30, num_groups=2)
+        self.fixtures = TestFixture().add_course(num_students=30, num_groups=2, with_draft_student=True)
         self.base_url = self._build_url(self.fixtures.course.id, self.fixtures.assignment.id)
 
     def _build_url(self, course_id, assignment_id, tail=""):
@@ -43,7 +43,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.assert200(rv)
             actual_answers = rv.json['objects']
             expected_answers = Answer.query \
-                .filter_by(active=True, assignment_id=self.fixtures.assignment.id) \
+                .filter_by(active=True, draft=False, assignment_id=self.fixtures.assignment.id) \
                 .order_by(Answer.created.desc()) \
                 .paginate(1, 20)
             for i, expected in enumerate(expected_answers.items):
@@ -63,7 +63,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.assert200(rv)
             actual_answers = rv.json['objects']
             expected_answers = Answer.query \
-                .filter_by(active=True, assignment_id=self.fixtures.assignment.id) \
+                .filter_by(active=True, draft=False, assignment_id=self.fixtures.assignment.id) \
                 .order_by(Answer.created.desc()) \
                 .paginate(2, 20)
             for i, expected in enumerate(expected_answers.items):
@@ -276,6 +276,21 @@ class AnswersAPITests(ACJAPITestCase):
             rv = json.loads(response.data.decode('utf-8'))
             self.assertEqual({"error": "An answer has already been submitted."}, rv)
 
+        # test create draft successful
+        self.fixtures.add_students(1)
+        expected_answer = {'content': 'this is some answer content', 'draft': True}
+        with self.login(self.fixtures.students[-1].username):
+            response = self.client.post(
+                self.base_url,
+                data=json.dumps(expected_answer),
+                content_type='application/json')
+            self.assert200(response)
+            rv = json.loads(response.data.decode('utf-8'))
+            actual_answer = Answer.query.get(rv['id'])
+            self.assertEqual(expected_answer['content'], actual_answer.content)
+            self.assertEqual(expected_answer['draft'], actual_answer.draft)
+
+        with self.login(self.fixtures.instructor.username):
             # test instructor can submit outside of grace period
             self.fixtures.assignment.answer_end = datetime.datetime.utcnow() - datetime.timedelta(minutes=2)
             db.session.add(self.fixtures.assignment)
@@ -325,6 +340,7 @@ class AnswersAPITests(ACJAPITestCase):
     def test_get_answer(self):
         assignment_id = self.fixtures.assignments[0].id
         answer = self.fixtures.answers[0]
+        draft_answer = self.fixtures.draft_answers[0]
 
         # test login required
         rv = self.client.get(self.base_url + '/' + str(answer.id))
@@ -344,16 +360,30 @@ class AnswersAPITests(ACJAPITestCase):
             rv = self.client.get(self._build_url(self.fixtures.course.id, assignment_id, '/' + str(999)))
             self.assert404(rv)
 
+            # test invalid get another user's draft answer
+            rv = self.client.get(self.base_url + '/' + str(draft_answer.id))
+            self.assert403(rv)
+
             # test authorized student
             rv = self.client.get(self.base_url + '/' + str(answer.id))
             self.assert200(rv)
             self.assertEqual(assignment_id, rv.json['assignment_id'])
             self.assertEqual(answer.user_id, rv.json['user_id'])
             self.assertEqual(answer.content, rv.json['content'])
+            self.assertFalse(rv.json['draft'])
             self.assertEqual(len(answer.scores), len(rv.json['scores']))
             for index, score in enumerate(answer.scores):
                 self.assertEqual(score.rank, rv.json['scores'][index]['rank'])
                 self.assertFalse('normalized_score' in rv.json['scores'][index])
+
+        # test authorized student draft answer
+        with self.login(self.fixtures.draft_student.username):
+            rv = self.client.get(self.base_url + '/' + str(draft_answer.id))
+            self.assert200(rv)
+            self.assertEqual(assignment_id, rv.json['assignment_id'])
+            self.assertEqual(draft_answer.user_id, rv.json['user_id'])
+            self.assertEqual(draft_answer.content, rv.json['content'])
+            self.assertTrue(rv.json['draft'])
 
         # test authorized teaching assistant
         with self.login(self.fixtures.ta.username):
@@ -383,6 +413,8 @@ class AnswersAPITests(ACJAPITestCase):
         assignment_id = self.fixtures.assignments[0].id
         answer = self.fixtures.answers[0]
         expected = {'id': str(answer.id), 'content': 'This is an edit'}
+        draft_answer = self.fixtures.draft_answers[0]
+        draft_expected = {'id': str(draft_answer.id), 'content': 'This is an edit', 'draft': True}
 
         # test login required
         rv = self.client.post(
@@ -428,6 +460,42 @@ class AnswersAPITests(ACJAPITestCase):
                 data=json.dumps(expected),
                 content_type='application/json')
             self.assert400(rv)
+
+        # test edit draft by author
+        with self.login(self.fixtures.draft_student.username):
+            rv = self.client.post(
+                self.base_url + '/' + str(draft_answer.id),
+                data=json.dumps(draft_expected),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(draft_answer.id, rv.json['id'])
+            self.assertEqual('This is an edit', rv.json['content'])
+            self.assertEqual(draft_answer.draft, rv.json['draft'])
+            self.assertTrue(rv.json['draft'])
+
+            # set draft to false
+            draft_expected_copy = draft_expected.copy()
+            draft_expected_copy['draft'] = False
+            rv = self.client.post(
+                self.base_url + '/' + str(draft_answer.id),
+                data=json.dumps(draft_expected_copy),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(draft_answer.id, rv.json['id'])
+            self.assertEqual('This is an edit', rv.json['content'])
+            self.assertEqual(draft_answer.draft, rv.json['draft'])
+            self.assertFalse(rv.json['draft'])
+
+            # setting draft to true when false should not work
+            rv = self.client.post(
+                self.base_url + '/' + str(draft_answer.id),
+                data=json.dumps(draft_expected),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(draft_answer.id, rv.json['id'])
+            self.assertEqual('This is an edit', rv.json['content'])
+            self.assertEqual(draft_answer.draft, rv.json['draft'])
+            self.assertFalse(rv.json['draft'])
 
         # test edit by author
         with self.login(self.fixtures.students[0].username):
@@ -512,6 +580,7 @@ class AnswersAPITests(ACJAPITestCase):
     def test_get_user_answers(self):
         assignment_id = self.fixtures.assignments[0].id
         answer = self.fixtures.answers[0]
+        draft_answer = self.fixtures.draft_answers[0]
         url = self._build_url(self.fixtures.course.id, assignment_id, '/user')
 
         # test login required
@@ -533,10 +602,16 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(1, len(rv.json['objects']))
             self.assertEqual(answer.id, rv.json['objects'][0]['id'])
             self.assertEqual(answer.content, rv.json['objects'][0]['content'])
-            self.assertEqual(len(answer.scores), len(rv.json['objects'][0]['scores']))
-            for index, score in enumerate(answer.scores):
-                self.assertEqual(score.rank, rv.json['objects'][0]['scores'][index]['rank'])
-                self.assertFalse('normalized_score' in rv.json['objects'][0]['scores'][index])
+            self.assertEqual(answer.draft, rv.json['objects'][0]['draft'])
+
+        # test successful draft queries
+        with self.login(self.fixtures.draft_student.username):
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['objects']))
+            self.assertEqual(draft_answer.id, rv.json['objects'][0]['id'])
+            self.assertEqual(draft_answer.content, rv.json['objects'][0]['content'])
+            self.assertEqual(draft_answer.draft, rv.json['objects'][0]['draft'])
 
         with self.login(self.fixtures.instructor.username):
             rv = self.client.get(url)
@@ -544,7 +619,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(0, len(rv.json['objects']))
 
     def test_flag_answer(self):
-        answer = self.fixtures.assignment.answers[0]
+        answer = self.fixtures.answers[0]
         flag_url = self.base_url + "/" + str(answer.id) + "/flagged"
         # test login required
         expected_flag_on = {'flagged': True}
@@ -554,6 +629,7 @@ class AnswersAPITests(ACJAPITestCase):
             data=json.dumps(expected_flag_on),
             content_type='application/json')
         self.assert401(rv)
+
         # test unauthorized users
         with self.login(self.fixtures.unauthorized_student.username):
             rv = self.client.post(

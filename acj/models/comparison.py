@@ -84,7 +84,9 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         eligible_answers = Answer.query \
             .filter(and_(
                 Answer.assignment_id == assignment_id,
-                Answer.user_id.notin_(ineligible_user_ids)
+                Answer.user_id.notin_(ineligible_user_ids),
+                Answer.draft == False,
+                Answer.active == True
             )) \
             .count()
         return eligible_answers / 2 >= 1  # min 1 pair required
@@ -115,7 +117,8 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
             .filter(and_(
                 Answer.user_id.notin_(ineligible_user_ids),
                 Answer.assignment_id == assignment_id,
-                Answer.active == True
+                Answer.active == True,
+                Answer.draft == False
             )) \
             .group_by(Answer.id)
 

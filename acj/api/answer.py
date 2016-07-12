@@ -26,6 +26,7 @@ new_answer_parser.add_argument('user_id', type=int, default=None)
 new_answer_parser.add_argument('content', type=str, default=None)
 new_answer_parser.add_argument('file_name', type=str, default=None)
 new_answer_parser.add_argument('file_alias', type=str, default=None)
+new_answer_parser.add_argument('draft', type=bool, default=False)
 
 existing_answer_parser = new_answer_parser.copy()
 existing_answer_parser.add_argument('id', type=int, required=True, help="Answer id is required.")
@@ -93,7 +94,8 @@ class AnswerRootAPI(Resource):
             .options(undefer_group('counts')) \
             .filter_by(
                 assignment_id=assignment_id,
-                active=True
+                active=True,
+                draft=False
             )
 
         user_ids = []
@@ -172,6 +174,7 @@ class AnswerRootAPI(Resource):
 
         params = new_answer_parser.parse_args()
         answer.content = params.get("content")
+        answer.draft = params.get("draft")
 
         file_name = params.get('file_name')
         if not (answer.content or file_name):
@@ -268,6 +271,9 @@ class AnswerIdAPI(Resource):
 
         # modify answer according to new values, preserve original values if values not passed
         answer.content = params.get("content")
+        # can only change draft status while a draft
+        if answer.draft:
+            answer.draft = params.get("draft")
         uploaded = params.get('uploadFile')
         file_name = params.get('file_name')
         if not (answer.content or uploaded or file_name):
@@ -377,9 +383,7 @@ class AnswerComparisonsAPI(Resource):
                 user_answers.add(answer1_id)
                 user_answers.add(answer2_id)
 
-            conditions = [
-
-            ]
+            conditions = []
             for user_id, answer_set in user_comparioson_answers.iteritems():
                 conditions.append(and_(
                         AnswerComment.user_id == user_id,
@@ -393,6 +397,7 @@ class AnswerComparisonsAPI(Resource):
 
             answer_comments = AnswerComment.query \
                 .filter(or_(*conditions)) \
+                .filter_by(draft=False) \
                 .all()
 
             for (user_id, answer1_id, answer2_id), group_set in groupby(comparisons, attrgetter('user_id', 'answer1_id', 'answer2_id')):
@@ -462,7 +467,7 @@ class AnswerUserIdAPI(Resource):
         """
         Course.get_active_or_404(course_id)
         assignment = Assignment.get_active_or_404(assignment_id)
-        require(READ, Answer(course_id=course_id))
+        require(READ, Answer(user_id=current_user.id))
         restrict_user = not allow(MANAGE, assignment)
 
         answers = Answer.query. \
@@ -528,6 +533,5 @@ class AnswerFlagAPI(Resource):
 
         db.session.commit()
         return marshal(answer, dataformat.get_answer(restrict_user))
-
 
 api.add_resource(AnswerFlagAPI, '/<int:answer_id>/flagged')

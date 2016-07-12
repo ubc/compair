@@ -4,7 +4,7 @@ import six
 from data.fixtures.test_data import AnswerCommentsTestData
 from acj.tests.test_acj import ACJAPITestCase
 from acj.api.answer_comment import api, AnswerCommentListAPI, AnswerCommentAPI
-from acj.models import AnswerCommentType
+from acj.models import AnswerCommentType, AnswerComment
 
 class AnswerCommentListAPITests(ACJAPITestCase):
     """ Tests for answer comment list API """
@@ -44,9 +44,9 @@ class AnswerCommentListAPITests(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual(1, len(rv.json))
             self.assertEqual(
-                self.data.get_answer_comments_by_assignment(self.assignments[0])[1].content, rv.json[0]['content'])
+                self.data.get_non_draft_answer_comments_by_assignment(self.assignments[0])[1].content, rv.json[0]['content'])
             self.assertIn(
-                self.data.get_answer_comments_by_assignment(self.assignments[0])[1].user_fullname,
+                self.data.get_non_draft_answer_comments_by_assignment(self.assignments[0])[1].user_fullname,
                 rv.json[0]['user']['fullname'])
 
         # test non-owner student of answer access comments
@@ -67,6 +67,12 @@ class AnswerCommentListAPITests(ACJAPITestCase):
             self.data.get_extra_student(0),
             self.answers[self.assignments[0].id][0],
             comment_type=AnswerCommentType.self_evaluation
+        )
+        draft_comment = AnswerCommentsTestData.create_answer_comment(
+            self.data.get_extra_student(0),
+            self.answers[self.assignments[0].id][0],
+            comment_type=AnswerCommentType.evaluation,
+            draft=True
         )
 
         base_params = {
@@ -131,7 +137,7 @@ class AnswerCommentListAPITests(ACJAPITestCase):
             self.assertEqual(3, len(rv.json))
             six.assertCountEqual(
                 self,
-                [comment.id] + [c.id for c in self.data.answer_comments_by_assignment[self.assignments[0].id]],
+                [comment.id] + [c.id for c in self.data.get_non_draft_answer_comments_by_assignment(self.assignments[0])],
                 [c['id'] for c in rv.json])
 
             rv = self.client.get(self.get_url(**base_params) + '?assignment_id=' + str(self.assignments[1].id))
@@ -139,7 +145,7 @@ class AnswerCommentListAPITests(ACJAPITestCase):
             self.assertEqual(2, len(rv.json))
             six.assertCountEqual(
                 self,
-                [c.id for c in self.data.answer_comments_by_assignment[self.assignments[1].id]],
+                [c.id for c in self.data.get_non_draft_answer_comments_by_assignment(self.assignments[1])],
                 [c['id'] for c in rv.json])
 
             # test user_ids filter
@@ -167,6 +173,23 @@ class AnswerCommentListAPITests(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual(1, len(rv.json))
             self.assertEqual(self.data.get_extra_student(0).id, rv.json[0]['user_id'])
+
+        # test drafts
+        with self.login(self.data.get_extra_student(0).username):
+            params = dict(base_params, user_ids=self.data.get_extra_student(0).id)
+            rv = self.client.get(self.get_url(draft='only', **params))
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json))
+            self.assertEqual(draft_comment.id, rv.json[0]['id'])
+
+            rv = self.client.get(self.get_url(draft='false', **params))
+            self.assert200(rv)
+            self.assertEqual(3, len(rv.json))
+
+            rv = self.client.get(self.get_url(draft='true', **params))
+            self.assert200(rv)
+            self.assertEqual(4, len(rv.json))
+            self.assertEqual(draft_comment.id, rv.json[0]['id'])
 
     def test_create_answer_comment(self):
         url = self.get_url(
@@ -221,6 +244,23 @@ class AnswerCommentListAPITests(ACJAPITestCase):
             rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
             self.assert200(rv)
             self.assertEqual(content['content'], rv.json['content'])
+            self.assertFalse(rv.json['draft'])
+
+            # test authorized user draft
+            draft_content = content.copy()
+            draft_content['draft'] = True
+            rv = self.client.post(url, data=json.dumps(draft_content), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(content['content'], rv.json['content'])
+            self.assertTrue(rv.json['draft'])
+
+            # test authorized user draft - empty content
+            empty = draft_content.copy()
+            empty['content'] = None
+            rv = self.client.post(url, data=json.dumps(empty), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(empty['content'], rv.json['content'])
+            self.assertTrue(rv.json['draft'])
 
 
 class AnswerCommentAPITests(ACJAPITestCase):
@@ -240,6 +280,10 @@ class AnswerCommentAPITests(ACJAPITestCase):
         url = self.get_url(
             course_id=self.course.id, assignment_id=self.assignments[0].id,
             answer_id=self.answers[self.assignments[0].id][0].id, answer_comment_id=comment.id)
+        draft_comment = self.data.get_answer_comments_by_assignment(self.assignments[0])[2]
+        draft_url = self.get_url(
+            course_id=self.course.id, assignment_id=self.assignments[0].id,
+            answer_id=self.answers[self.assignments[0].id][0].id, answer_comment_id=draft_comment.id)
 
         # test login required
         rv = self.client.get(url)
@@ -248,6 +292,11 @@ class AnswerCommentAPITests(ACJAPITestCase):
         # test unauthorized user
         with self.login(self.data.get_unauthorized_instructor().username):
             rv = self.client.get(url)
+            self.assert403(rv)
+
+        # test unauthorized user student fetching draft of another student
+        with self.login(self.data.get_extra_student(0).username):
+            rv = self.client.get(draft_url)
             self.assert403(rv)
 
         # test invalid course id
@@ -276,11 +325,25 @@ class AnswerCommentAPITests(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual(comment.content, rv.json['content'])
 
+            # test draft
+            rv = self.client.get(draft_url)
+            self.assert200(rv)
+            self.assertEqual(draft_comment.content, rv.json['content'])
+            self.assertTrue(rv.json['draft'])
+
         # test author
         with self.login(self.data.get_extra_student(0).username):
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(comment.content, rv.json['content'])
+
+        # test draft author
+        with self.login(self.data.get_extra_student(1).username):
+            rv = self.client.get(draft_url)
+            self.assert200(rv)
+            self.assertEqual(draft_comment.content, rv.json['content'])
+            self.assertTrue(rv.json['draft'])
+
 
     def test_edit_answer_comment(self):
         comment = self.data.get_answer_comments_by_assignment(self.assignments[0])[0]
@@ -291,6 +354,16 @@ class AnswerCommentAPITests(ACJAPITestCase):
             'id': comment.id,
             'content': 'insightful.',
             'comment_type': AnswerCommentType.private.value
+        }
+        draft_comment = self.data.get_answer_comments_by_assignment(self.assignments[0])[2]
+        draft_url = self.get_url(
+            course_id=self.course.id, assignment_id=self.assignments[0].id,
+            answer_id=self.answers[self.assignments[0].id][0].id, answer_comment_id=draft_comment.id)
+        draft_content = {
+            'id': draft_comment.id,
+            'content': 'insightful.',
+            'comment_type': AnswerCommentType.private.value,
+            'draft': True
         }
 
         # test login required
@@ -355,6 +428,29 @@ class AnswerCommentAPITests(ACJAPITestCase):
             rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
             self.assert200(rv)
             self.assertEqual(content['content'], rv.json['content'])
+            self.assertFalse(rv.json['draft'])
+
+            # ignored setting draft to True when draft is already False
+            content['draft'] = True
+            rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(content['content'], rv.json['content'])
+            self.assertFalse(rv.json['draft'])
+
+        # test draft author
+        with self.login(self.data.get_extra_student(1).username):
+            draft_content['content'] = 'I am the author'
+            rv = self.client.post(draft_url, data=json.dumps(draft_content), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(draft_content['content'], rv.json['content'])
+            self.assertTrue(rv.json['draft'])
+
+            # can change draft to False when draft is True
+            draft_content['draft'] = False
+            rv = self.client.post(draft_url, data=json.dumps(draft_content), content_type='application/json')
+            self.assert200(rv)
+            self.assertFalse(rv.json['draft'])
+
 
     def test_delete_answer_comment(self):
         comment = self.data.get_answer_comments_by_assignment(self.assignments[0])[0]

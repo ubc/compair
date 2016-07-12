@@ -135,12 +135,14 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
 		.when ('/course/:courseId/assignment/:assignmentId/answer/create',
 			{
 				templateUrl: 'modules/answer/answer-create-partial.html',
-				label: "Answer"
+				label: "Answer",
+				method: 'new'
 			})
 		.when ('/course/:courseId/assignment/:assignmentId/answer/:answerId/edit',
 			{
 				templateUrl: 'modules/answer/answer-edit-partial.html',
-				label: "Edit Answer"
+				label: "Edit Answer",
+				method: 'edit'
 			})
 		.when ('/course/:courseId/assignment/:assignmentId/comment/create',
 			{

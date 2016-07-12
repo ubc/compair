@@ -21,6 +21,21 @@
             <label for="comment_type">Show this reply to the whole class</label>
 		</div>
 	</fieldset>
-	<input type="submit" class="btn btn-success btn-lg center-block" value="Save"
-		ng-disabled="commentForm.$invalid || submitted" />
+
+    <div class="row" ng-show="comment.draft">
+        <div class="col-md-3 col-md-offset-3 col-xs-6">
+            <input type="submit" class="btn btn-success btn-lg center-block" value="Save Draft"
+                ng-click="comment.draft = true"
+                ng-disabled="submitted" />
+        </div>
+        <div class="col-md-3 col-xs-6">
+            <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
+                ng-click="comment.draft = false"
+                ng-disabled="commentForm.$invalid || submitted" />
+        </div>
+    </div>
+    <div ng-show="!comment.draft">
+        <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
+            ng-disabled="commentForm.$invalid || submitted" />
+    </div>
 </form>

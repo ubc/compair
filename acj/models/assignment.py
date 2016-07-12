@@ -149,7 +149,8 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
             select([func.count(Answer.id)]).
             where(and_(
                 Answer.assignment_id == cls.id,
-                Answer.active == True
+                Answer.active == True,
+                Answer.draft == False
             )),
             deferred=True,
             group="counts"
@@ -188,6 +189,7 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
                 AnswerComment.comment_type == AnswerCommentType.self_evaluation,
                 AnswerComment.active == True,
                 AnswerComment.answer_id == Answer.id,
+                AnswerComment.draft == False,
                 Answer.assignment_id == cls.id
             )),
             deferred=True,

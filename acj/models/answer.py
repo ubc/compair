@@ -22,6 +22,7 @@ class Answer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     flagged = db.Column(db.Boolean(name='flagged'), default=False, nullable=False)
     flagger_user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="SET NULL"),
         nullable=True)
+    draft = db.Column(db.Boolean(name='draft'), default=False, nullable=False)
 
     # relationships
     # assignment via Assignment Model
@@ -51,7 +52,8 @@ class Answer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
             select([func.count(AnswerComment.id)]).
             where(and_(
                 AnswerComment.answer_id == cls.id,
-                AnswerComment.active == True
+                AnswerComment.active == True,
+                AnswerComment.draft == False
             )),
             deferred=True,
             group='counts'
@@ -62,6 +64,7 @@ class Answer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
             where(and_(
                 AnswerComment.answer_id == cls.id,
                 AnswerComment.active == True,
+                AnswerComment.draft == False,
                 AnswerComment.comment_type == AnswerCommentType.public
             )),
             deferred=True,
@@ -73,6 +76,7 @@ class Answer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
             where(and_(
                 AnswerComment.comment_type == AnswerCommentType.self_evaluation,
                 AnswerComment.active == True,
+                AnswerComment.draft == False,
                 AnswerComment.answer_id == cls.id
             )),
             deferred=True,

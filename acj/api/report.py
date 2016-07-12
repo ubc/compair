@@ -160,6 +160,7 @@ def participation_stat_report(course_id, assignments, group_name, overall):
         answers = Answer.query \
             .filter_by(active=True) \
             .filter_by(assignment_id=assignment.id) \
+            .filter_by(draft=False) \
             .all()
         answers = {a.user_id: a.id for a in answers}
 
@@ -175,6 +176,7 @@ def participation_stat_report(course_id, assignments, group_name, overall):
         comments = AnswerComment.query \
             .join(Answer) \
             .filter(Answer.assignment_id == assignment.id) \
+            .filter(AnswerComment.draft == False) \
             .with_entities(AnswerComment.user_id, func.count(AnswerComment.id)) \
             .group_by(AnswerComment.user_id) \
             .all()
@@ -249,6 +251,7 @@ def participation_report(course_id, assignments, group_name):
     answers = Answer.query \
         .filter(Answer.assignment_id.in_(assignment_ids)) \
         .filter(Answer.user_id.in_(user_ids)) \
+        .filter(Answer.draft == False) \
         .all()
 
     scores = {}  # structure - user_id/assignment_id/criterion_id/normalized_score
@@ -290,6 +293,7 @@ def participation_report(course_id, assignments, group_name):
         .join(Answer) \
         .filter(Answer.assignment_id.in_(assignment_ids)) \
         .filter(AnswerComment.user_id.in_(user_ids)) \
+        .filter(AnswerComment.draft == False) \
         .with_entities(Answer.assignment_id, AnswerComment.user_id, func.count(AnswerComment.id)) \
         .group_by(Answer.assignment_id, AnswerComment.user_id) \
         .all()

@@ -11,7 +11,8 @@ from flask import current_app
 class ReportAPITest(ACJAPITestCase):
     def setUp(self):
         super(ReportAPITest, self).setUp()
-        self.fixtures = TestFixture().add_course(num_students=30, num_assignments=2, num_groups=2, num_answers=25)
+        self.fixtures = TestFixture().add_course(num_students=30, num_assignments=2, num_groups=2, num_answers=25,
+            with_draft_student=True)
         self.url = "/api/courses/" + str(self.fixtures.course.id) + "/report"
         self.files_to_cleanup = []
 
@@ -348,7 +349,8 @@ class ReportAPITest(ACJAPITestCase):
             answer = Answer.query \
                 .filter(
                     Answer.user_id == student.id,
-                    Answer.assignment_id == assignment.id
+                    Answer.assignment_id == assignment.id,
+                    Answer.draft == False
                 ) \
                 .first()
 
@@ -424,7 +426,8 @@ class ReportAPITest(ACJAPITestCase):
                 answer = Answer.query \
                     .filter(
                         Answer.user_id == student.id,
-                        Answer.assignment_id == assignment.id
+                        Answer.assignment_id == assignment.id,
+                        Answer.draft == False
                     ) \
                     .first()
 
@@ -437,7 +440,6 @@ class ReportAPITest(ACJAPITestCase):
                 else:
                     self.assertEqual(row[index], "No Answer")
                 index += 1
-
 
                 comparisons = Comparison.query \
                     .filter(

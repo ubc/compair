@@ -24,12 +24,13 @@ class ComparisonAPITests(ACJAPITestCase):
             tail
         return url
 
-    def _build_comparison_submit(self, winner_id):
+    def _build_comparison_submit(self, winner_id, draft=False):
         submit = {
             'comparisons': [
                 {
                     'criterion_id': self.assignment.criteria[0].id,
-                    'winner_id': winner_id
+                    'winner_id': winner_id,
+                    'draft': draft
                 }
             ]
         }
@@ -133,7 +134,7 @@ class ComparisonAPITests(ACJAPITestCase):
         with self.login(self.data.get_authorized_student().username):
             rv = self.client.get(self.base_url)
             self.assert200(rv)
-            # expected_answer_pair = rv.json
+            # expected_comparisons = rv.json
             comparison_submit = self._build_comparison_submit(rv.json['objects'][0]['answer1_id'])
 
         # test deny access to unenroled users
@@ -184,14 +185,6 @@ class ComparisonAPITests(ACJAPITestCase):
             # test reject missing course criteria id
             faulty_comparisons = copy.deepcopy(comparison_submit)
             del faulty_comparisons['comparisons'][0]['criterion_id']
-            rv = self.client.post(
-                self.base_url,
-                data=json.dumps(faulty_comparisons),
-                content_type='application/json')
-            self.assert400(rv)
-            # test reject missing winner
-            faulty_comparisons = copy.deepcopy(comparison_submit)
-            del faulty_comparisons['comparisons'][0]['winner_id']
             rv = self.client.post(
                 self.base_url,
                 data=json.dumps(faulty_comparisons),
@@ -254,17 +247,38 @@ class ComparisonAPITests(ACJAPITestCase):
                 # establish expected data by first getting an answer pair
                 rv = self.client.get(self.base_url)
                 self.assert200(rv)
-                expected_answer_pair = rv.json
-                comparison_submit = self._build_comparison_submit(rv.json['objects'][0]['answer1_id'])
-                winner_ids.append(rv.json['objects'][0]['winner_id'])
-                # test normal post
+                expected_comparisons = rv.json
+
+                # test draft post
+                comparison_submit = self._build_comparison_submit(rv.json['objects'][0]['answer1_id'], True)
                 rv = self.client.post(
                     self.base_url,
                     data=json.dumps(comparison_submit),
                     content_type='application/json')
                 self.assert200(rv)
                 actual_comparisons = rv.json['objects']
-                self._validate_comparison_submit(comparison_submit, actual_comparisons, expected_answer_pair)
+                self._validate_comparison_submit(comparison_submit, actual_comparisons, expected_comparisons)
+
+                # test draft post (no answer id)
+                comparison_submit = self._build_comparison_submit(None)
+                rv = self.client.post(
+                    self.base_url,
+                    data=json.dumps(comparison_submit),
+                    content_type='application/json')
+                self.assert200(rv)
+                actual_comparisons = rv.json['objects']
+                self._validate_comparison_submit(comparison_submit, actual_comparisons, expected_comparisons)
+
+                # test normal post
+                comparison_submit = self._build_comparison_submit(rv.json['objects'][0]['answer1_id'])
+                winner_ids.append(rv.json['objects'][0]['winner_id'])
+                rv = self.client.post(
+                    self.base_url,
+                    data=json.dumps(comparison_submit),
+                    content_type='application/json')
+                self.assert200(rv)
+                actual_comparisons = rv.json['objects']
+                self._validate_comparison_submit(comparison_submit, actual_comparisons, expected_comparisons)
                 # Resubmit of same comparison should fail
                 rv = self.client.post(
                     self.base_url,
@@ -275,17 +289,17 @@ class ComparisonAPITests(ACJAPITestCase):
             rv = self.client.get(self.base_url)
             self.assert400(rv)
 
-    def _validate_comparison_submit(self, comparison_submit, actual_comparisons, expected_answer_pair):
+    def _validate_comparison_submit(self, comparison_submit, actual_comparisons, expected_comparisons):
         self.assertEqual(
             len(actual_comparisons), len(comparison_submit['comparisons']),
             "The number of comparisons saved does not match the number sent")
         for actual_comparison in actual_comparisons:
             self.assertEqual(
-                expected_answer_pair['objects'][0]['answer1_id'],
+                expected_comparisons['objects'][0]['answer1_id'],
                 actual_comparison['answer1_id'],
                 "Expected and actual comparison answer1 id did not match")
             self.assertEqual(
-                expected_answer_pair['objects'][0]['answer2_id'],
+                expected_comparisons['objects'][0]['answer2_id'],
                 actual_comparison['answer2_id'],
                 "Expected and actual comparison answer2 id did not match")
             found_comparison = False

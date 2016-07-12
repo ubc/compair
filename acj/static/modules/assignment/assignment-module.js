@@ -346,12 +346,12 @@ module.controller("AssignmentViewController",
                         function (ret) {
                             $scope.assignment.status = ret.status;
 
-                            var comparisons_count = $scope.assignment.status.comparisons.count;
+                            var comparisons_count = ret.status.comparisons.count;
                             $scope.compared_req_met = comparisons_count >= $scope.assignment.number_of_comparisons;
 
                             $scope.evaluation = 0;
                             if (!$scope.compared_req_met) {
-                                $scope.evaluation = $scope.assignment.number_of_comparisons - comparisons_count;
+                                $scope.evaluation = ret.status.comparisons.left;
                             }
                             // if evaluation period is set answers can be seen after it ends
                             if ($scope.assignment.compare_end) {
@@ -360,24 +360,19 @@ module.controller("AssignmentViewController",
                             } else {
                                 $scope.see_answers = $scope.assignment.after_comparing && $scope.compared_req_met;
                             }
-                            var diff = $scope.assignment.answer_count - $scope.assignment.status.answers.count;
+                            var diff = $scope.assignment.answer_count - ret.status.answers.count;
                             var evaluation_left = ((diff * (diff - 1)) / 2);
-                            $scope.warning = ($scope.assignment.number_of_comparisons - comparisons_count) > evaluation_left;
+                            $scope.warning = ret.status.comparisons.left > evaluation_left;
+
+                            if ($scope.assignment.enable_self_evaluation) {
+                                $scope.self_evaluation_req_met = ret.status.comparisons.self_evauluation_completed;
+                                $scope.self_evaluation = $scope.self_evaluation_req_met ? 0 : 1;
+                            }
                         },
                         function (ret) {
                             Toaster.reqerror("Assignment Status Not Found", ret);
                         }
                     );
-
-                    // get the self evaluation if enabled in assignment
-                    if ($scope.assignment.enable_self_evaluation) {
-                        AnswerCommentResource.query(angular.extend({}, params, {user_ids: $scope.loggedInUserId, self_evaluation: 'only'}),
-                            function (ret) {
-                                $scope.self_evaluation_req_met = ret.length > 0;
-                                $scope.self_evaluation = 1 - ret.length;
-                            }
-                        );
-                    }
                     // update the answer list
                     $scope.updateAnswerList();
                     // register watcher here so that we start watching when all filter values are set
