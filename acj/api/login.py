@@ -1,12 +1,32 @@
-from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect
+import os
+from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask, render_template
 from flask_login import current_user, login_required, login_user, logout_user
 
 from acj import cas
 from acj.authorization import get_logged_in_user_permissions
 from acj.models import User
+from pylti.flask import lti, LTI_SESSION_KEY
+import logging
 
 login_api = Blueprint("login_api", __name__, url_prefix='/api')
+VERSION = '0.0.1'
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+                    datefmt='%m-%d %H:%M',
+                    filename='myapp.log',
+                    filemode='w')
+# define a Handler which writes INFO messages or higher to the sys.stderr
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+# set a format which is simpler for console use
+formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+# tell the handler to use this format
+console.setFormatter(formatter)
+# add the handler to the root logger
+logging.getLogger('').addHandler(console)
 
+def error(exception=None):
+    return str(exception)
 
 @login_api.route('/login', methods=['POST'])
 def login():
@@ -29,6 +49,12 @@ def login():
     # login unsuccessful
     return jsonify({"error": 'Sorry, unrecognized username or password.'}), 400
 
+@login_api.route('/lti/auth', methods=['POST'])
+@lti(request='initial', error=error)
+def lti_auth(lti=lti):
+    """Kickstarts the LTI integration flow.
+    """
+    return lti.user_id
 
 @login_api.route('/logout', methods=['DELETE'])
 @login_required
