@@ -12,6 +12,18 @@
                        type="text" class="form-control" required maxlength="255" placeholder="e.g. BIOL 112 - Biology of the Cell" auto-focus />
             </acj-field-with-feedback>
 
+            <acj-field-with-feedback form-control="courseForm.courseYear">
+                <label for="courseYear" class="required-star">Year</label>
+                <input id="courseYear" name="courseYear" ng-model="course.year"
+                       type="number" class="form-control" required min="1900" />
+            </acj-field-with-feedback>
+
+            <acj-field-with-feedback form-control="courseForm.courseTerm">
+                <label for="courseTerm" class="required-star">Term/Semester</label>
+                <input id="courseTerm" name="courseTerm" ng-model="course.term"
+                       type="text" class="form-control" required maxlength="255" />
+            </acj-field-with-feedback>
+
             <input id="descriptionCheck" type="checkbox" ng-model="course.descriptionCheck" ng-checked="course.descriptionCheck || course.description" ng-disabled="course.description">
             <label for="descriptionCheck">Add a course description<span ng-show="course.descriptionCheck || course.description">:</span></label>
             <br />

@@ -199,20 +199,19 @@ class UserCourseListAPI(Resource):
     def get(self, user_id):
         User.query.get_or_404(user_id)
         # we want to list courses only, so only check the association table
-        keys = dataformat.get_course(include_details=False).keys()
         if allow(MANAGE, Course):
             courses = Course.query \
-                .options(load_only(*keys)) \
-                .order_by(asc(Course.name)) \
+                .filter_by(active=True) \
+                .order_by(Course.name) \
                 .all()
         else:
             courses = Course.query \
                 .join(UserCourse) \
                 .filter(and_(
                     UserCourse.user_id == user_id,
-                    UserCourse.course_role != CourseRole.dropped
+                    UserCourse.course_role != CourseRole.dropped,
+                    Course.active == True
                 )) \
-                .options(load_only(*keys)) \
                 .order_by(Course.name) \
                 .all()
 
@@ -224,7 +223,7 @@ class UserCourseListAPI(Resource):
             user=current_user,
             data={'userid': user_id})
 
-        return {'objects': marshal(courses, dataformat.get_course(include_details=False))}
+        return {'objects': marshal(courses, dataformat.get_course())}
 
 # courses/teaching
 class TeachingUserCourseListAPI(Resource):

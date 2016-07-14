@@ -57,21 +57,19 @@ def get_users_in_course(restrict_user=True):
 
 
 def get_course(include_details=True):
-    data_format = {
+    return {
         'id': fields.Integer,
         'name': fields.String,
+        'year': fields.Integer,
+        'term': fields.String,
+        'fullname': fields.String,
         'description': fields.String,
+        'start_date': fields.DateTime,
+        'end_date': fields.DateTime,
+        'available': fields.Boolean,
+        'modified': fields.DateTime,
+        'created': fields.DateTime
     }
-    if include_details:
-        details = {
-            'start_date': fields.DateTime,
-            'end_date': fields.DateTime,
-            'modified': fields.DateTime,
-            'created': fields.DateTime
-        }
-        data_format.update(details)
-    return data_format
-
 
 def get_criterion():
     data_format = {

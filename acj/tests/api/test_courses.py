@@ -1,3 +1,4 @@
+import datetime
 import json
 from acj import db
 
@@ -18,6 +19,18 @@ class CoursesAPITests(ACJAPITestCase):
         self.assertEqual(
             course_expected.id, course_actual['id'],
             "Expected course id does not match actual.")
+        self.assertEqual(
+            course_expected.description, course_actual['description'],
+            "Expected course description does not match actual.")
+        self.assertEqual(
+            course_expected.year, course_actual['year'],
+            "Expected course description does not match actual.")
+        self.assertEqual(
+            course_expected.term, course_actual['term'],
+            "Expected course description does not match actual.")
+        self.assertEqual(
+            course_expected.available, course_actual['available'],
+            "Expected course availability does not match actual.")
 
     def test_get_single_course(self):
         course_api_url = '/api/courses/' + str(self.data.get_course().id)
@@ -81,6 +94,10 @@ class CoursesAPITests(ACJAPITestCase):
     def test_create_course(self):
         course_expected = {
             'name': 'ExpectedCourse1',
+            'year': 2015,
+            'term': 'Winter',
+            'start_date': None,
+            'end_date': None,
             'description': 'Test Course One Description Test'
         }
         # Test login required
@@ -104,24 +121,40 @@ class CoursesAPITests(ACJAPITestCase):
             # Verify return
             course_actual = rv.json
             self.assertEqual(course_expected['name'], course_actual['name'])
+            self.assertEqual(course_expected['year'], course_actual['year'])
+            self.assertEqual(course_expected['term'], course_actual['term'])
             self.assertEqual(course_expected['description'], course_actual['description'])
+            self.assertTrue(course_actual['available'])
 
             # Verify the course is created in db
             course_in_db = Course.query.get(course_actual['id'])
             self.assertEqual(course_in_db.name, course_actual['name'])
+            self.assertEqual(course_in_db.year, course_actual['year'])
+            self.assertEqual(course_in_db.term, course_actual['term'])
             self.assertEqual(course_in_db.description, course_actual['description'])
+            self.assertTrue(course_in_db.available)
 
-    def test_create_duplicate_course(self):
-        with self.login(self.data.get_authorized_instructor().username):
-            course_existing = self.data.get_course()
-            course_expected = {
-                'name': course_existing.name,
-                'description': course_existing.description
-            }
-            rv = self.client.post(
-                '/api/courses',
-                data=json.dumps(course_expected), content_type='application/json')
-            self.assert400(rv)
+            # Starts in the future
+            now = datetime.datetime.utcnow()
+            course_expected['start_date'] = (now + datetime.timedelta(days=7)).isoformat() + 'Z',
+            course_expected['end_date'] = None
+            rv = self.client.post('/api/courses', data=json.dumps(course_expected), content_type='application/json')
+            self.assert200(rv)
+            self.assertFalse(rv.json['available'])
+
+            # Ended in the past
+            course_expected['start_date'] = None
+            course_expected['end_date'] = (now - datetime.timedelta(days=7)).isoformat() + 'Z',
+            rv = self.client.post('/api/courses', data=json.dumps(course_expected), content_type='application/json')
+            self.assert200(rv)
+            self.assertFalse(rv.json['available'])
+
+            # Is currently available
+            course_expected['start_date'] = (now - datetime.timedelta(days=7)).isoformat() + 'Z',
+            course_expected['end_date'] = (now + datetime.timedelta(days=7)).isoformat() + 'Z',
+            rv = self.client.post('/api/courses', data=json.dumps(course_expected), content_type='application/json')
+            self.assert200(rv)
+            self.assertTrue(rv.json['available'])
 
     def test_create_course_with_bad_data_format(self):
         with self.login(self.data.get_authorized_instructor().username):
@@ -134,6 +167,10 @@ class CoursesAPITests(ACJAPITestCase):
         expected = {
             'id': self.data.get_course().id,
             'name': 'ExpectedCourse',
+            'year': 2015,
+            'term': 'Winter',
+            'start_date': None,
+            'end_date': None,
             'description': 'Test Description'
         }
         url = '/api/courses/' + str(self.data.get_course().id)
@@ -165,3 +202,26 @@ class CoursesAPITests(ACJAPITestCase):
             self.assertEqual(expected['id'], rv.json['id'])
             self.assertEqual(expected['name'], rv.json['name'])
             self.assertEqual(expected['description'], rv.json['description'])
+            self.assertTrue(rv.json['available'])
+
+            # Starts in the future
+            now = datetime.datetime.utcnow()
+            expected['start_date'] = (now + datetime.timedelta(days=7)).isoformat() + 'Z',
+            expected['end_date'] = None
+            rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+            self.assert200(rv)
+            self.assertFalse(rv.json['available'])
+
+            # Ended in the past
+            expected['start_date'] = None
+            expected['end_date'] = (now - datetime.timedelta(days=7)).isoformat() + 'Z',
+            rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+            self.assert200(rv)
+            self.assertFalse(rv.json['available'])
+
+            # Is currently available
+            expected['start_date'] = (now - datetime.timedelta(days=7)).isoformat() + 'Z',
+            expected['end_date'] = (now + datetime.timedelta(days=7)).isoformat() + 'Z',
+            rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+            self.assert200(rv)
+            self.assertTrue(rv.json['available'])

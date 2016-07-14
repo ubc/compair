@@ -34,6 +34,9 @@ storage.users.push(admin);
 
 var course = courseFactory.generateCourse(1, {
     name: "CHEM 111",
+    year: 2015,
+    term: "Winter",
+    fullname: "CHEM 111 Winter 2015",
     description: "<p>CHEM 111 description<p>",
 });
 storage.courses.push(course);

@@ -184,6 +184,10 @@ module.controller(
             edit: {title: 'Course Successfully Updated', msg: 'Your course changes have been saved.'}
         };
 
+        self['new'] = function() {
+            $scope.course.year = new Date().getFullYear();
+        };
+
         self.edit = function() {
             $scope.courseId = $routeParams['courseId'];
             $scope.course = CourseResource.get({'id':$scope.courseId});
