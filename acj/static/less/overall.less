@@ -17,6 +17,13 @@ h6 {
   font-weight: bold;
 }
 
+/* code highlighting blocks shouldn't have boxes around them */
+pre {
+    background-color: transparent;
+    border: none;
+    padding: 0px;
+}
+
 /* fieldsets for forms look like blue box */
 fieldset {
 
@@ -187,11 +194,6 @@ dt {
   width: 0%;
   height: 1em;
   background: @link-blue;
-}
-
-/* hide anchor button in ckeditor */
-a.cke_button.cke_button__anchor {
-  display: none;
 }
 
 /* angularstrap's modal */

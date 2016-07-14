@@ -65,9 +65,7 @@
 
                     <h5 class="content">Comparison for "{{comparison.criterion.name}}"</h5>
 
-                    <div class="content" mathjax="comparison.content"
-                         ng-bind-html="comparison.content">
-                    </div>
+                    <div class="content" mathjax hljs ng-bind-html="comparison.content"></div>
 
                     <!-- Answers -->
                     <p class="show-answers"><a href="" ng-click="showAnswers = !showAnswers;">
@@ -87,16 +85,14 @@
 
 				<!-- feedback for odd-numbered answer -->
                 <div ng-repeat="feedback in comparison_set.answer1_feedback">
-                    <div class="content" mathjax="feedback.content"
-                        ng-bind-html="feedback.content"></div>
+                    <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
                 </div>
 
 				<h5 class="content">Feedback for Even-Numbered Answer</h5>
 
 				<!-- feedback for even-numbered answer -->
                 <div ng-repeat="feedback in comparison_set.answer2_feedback">
-                    <div class="content" mathjax="feedback.content"
-                        ng-bind-html="feedback.content"></div>
+                    <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
                 </div>
             </div>
             <div class="each-evaluation" ng-if="comparisons[0].self_evaluation.length > 0" ng-init="self_evaluations=comparisons[0].self_evaluation">
@@ -106,9 +102,7 @@
                         <strong>self-evaluated</strong> on {{ self_evaluation.created | amDateFormat: 'MMM D @ h:mm a'}}:
                     </div>
 
-                    <div class="content" mathjax="self_evaluation.content"
-                        ng-bind-html="self_evaluation.content">
-                    </div>
+                    <div class="content" mathjax hljs ng-bind-html="self_evaluation.content"></div>
                 </div>
             </div>
 		</div>

@@ -9,6 +9,7 @@ var module = angular.module('ubc.ctlt.acj.comment',
 		'ubc.ctlt.acj.classlist',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.mathjax',
+		'ubc.ctlt.acj.common.highlightjs',
 		'ubc.ctlt.acj.common.interceptor',
 		'ubc.ctlt.acj.course',
 		'ubc.ctlt.acj.criterion',
@@ -87,10 +88,14 @@ module.directive('acjAnswerContent', function() {
 module.controller(
 	"AssignmentCommentCreateController",
 	['$scope', '$log', '$location', '$routeParams', 'AssignmentCommentResource', 'AssignmentResource', 'Toaster',
-	function ($scope, $log, $location, $routeParams, AssignmentCommentResource, AssignmentResource, Toaster)
+     'EditorOptions',
+	function ($scope, $log, $location, $routeParams, AssignmentCommentResource, AssignmentResource, Toaster,
+              EditorOptions)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
+
+        $scope.editorOptions = EditorOptions.basic;
 
 		$scope.comment = {};
 		AssignmentResource.get({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
@@ -124,11 +129,15 @@ module.controller(
 module.controller(
 	"AssignmentCommentEditController",
 	['$scope', '$log', '$location', '$routeParams', 'AssignmentCommentResource', 'AssignmentResource', 'Toaster',
-	function ($scope, $log, $location, $routeParams, AssignmentCommentResource, AssignmentResource, Toaster)
+     'EditorOptions',
+	function ($scope, $log, $location, $routeParams, AssignmentCommentResource, AssignmentResource, Toaster,
+              EditorOptions)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
 		var commentId = $routeParams['commentId'];
+
+        $scope.editorOptions = EditorOptions.basic;
 
 		$scope.comment = {};
 		$scope.parent = {}; // assignment
@@ -163,13 +172,16 @@ module.controller(
 module.controller(
 	"AnswerCommentCreateController",
 	['$scope', '$log', '$location', '$routeParams', 'AnswerCommentResource', 'AnswerResource',
-		'AssignmentResource', 'Authorize', 'Toaster', 'AnswerCommentType',
+		'AssignmentResource', 'Authorize', 'Toaster', 'AnswerCommentType', 'EditorOptions',
 	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource,
-			  AssignmentResource, Authorize, Toaster, AnswerCommentType)
+			  AssignmentResource, Authorize, Toaster, AnswerCommentType, EditorOptions)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
 		var answerId = $routeParams['answerId'];
+
+        $scope.editorOptions = EditorOptions.basic;
+
         $scope.AnswerCommentType = AnswerCommentType;
 		$scope.answerComment = true;
 		$scope.canManageAssignment =
@@ -214,12 +226,17 @@ module.controller(
 module.controller(
 	"AnswerCommentEditController",
 	['$scope', '$log', '$location', '$routeParams', 'AnswerCommentResource', 'AnswerResource', 'Toaster',
-	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, Toaster)
+     'EditorOptions',
+	function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, Toaster,
+              EditorOptions)
 	{
 		var courseId = $scope.courseId = $routeParams['courseId'];
 		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
 		var answerId = $routeParams['answerId'];
 		var commentId = $routeParams['commentId'];
+
+        $scope.editorOptions = EditorOptions.basic;
+
 		$scope.answerComment = true;
         $scope.AnswerCommentType = AnswerCommentType;
 

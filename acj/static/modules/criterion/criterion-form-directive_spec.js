@@ -1,8 +1,16 @@
 describe('criterion-module', function () {
 	var $httpBackend;
+
     beforeEach(module('ubc.ctlt.acj.criterion'));
     beforeEach(module('modules/criterion/criterion-form-partial.html',
         'modules/common/form-field-with-feedback-template.html'));
+    beforeEach(function () {
+        module('ckeditor', function ($provide) {
+            $provide.factory('ckeditorDirective', function () {
+                return {  };
+            })
+        });
+    });
 
     beforeEach(inject(function ($injector) {
         $httpBackend = $injector.get('$httpBackend');

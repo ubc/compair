@@ -5,10 +5,14 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>ComPAIR</title>
 
+		<!-- needed when ckeditor is minified or when running unit tests -->
+        <script src="lib_extension/ckeditor/basepath.js"></script>
+
 		<!-- Bower Installed Libs, automatically inserted using gulp modules -->
 		<!-- bower:css -->
 		<link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.css" />
 		<link rel="stylesheet" href="lib/fontawesome/css/font-awesome.css" />
+		<link rel="stylesheet" href="lib/highlightjs/styles/monokai_sublime.css" />
 		<link rel="stylesheet" href="lib/angular-loading-bar/build/loading-bar.css" />
 		<link rel="stylesheet" href="lib/AngularJS-Toaster/toaster.css" />
 		<!-- endbower -->
@@ -24,16 +28,18 @@
 		<script src='lib/angular-route/angular-route.js'></script>
 		<script src='lib/angular-sanitize/angular-sanitize.js'></script>
 		<script src='lib/angular-http-auth/src/http-auth-interceptor.js'></script>
+		<script src='lib/ckeditor/ckeditor.js'></script>
+		<script src='lib/highlightjs/highlight.pack.js'></script>
 		<script src='lib/angular-ckeditor/angular-ckeditor.js'></script>
 		<script src='lib/es-breadcrumbs/dist/ng-breadcrumbs.min.js'></script>
 		<script src='lib/angular-loading-bar/build/loading-bar.js'></script>
 		<script src='lib/AngularJS-Toaster/toaster.js'></script>
 		<script src='lib/moment/moment.js'></script>
+		<script src='lib/momentjs/moment.js'></script>
 		<script src='lib/angular-moment/angular-moment.js'></script>
 		<script src='lib/angular-file-upload/angular-file-upload.min.js'></script>
 		<script src='lib/angular-mocks/angular-mocks.js'></script>
 		<script src='lib/angular-bootstrap/ui-bootstrap-tpls.js'></script>
-		<script src='lib/momentjs/moment.js'></script>
 		<script src='lib/humanize-duration/humanize-duration.js'></script>
 		<script src='lib/angular-timer/dist/angular-timer.js'></script>
 		<script src='lib/lodash/lodash.js'></script>
@@ -52,9 +58,6 @@
 		</script>
 		<!-- endbuild -->
 
-		<!-- CKEditor, not bower managed since need mathjax plugin -->
-		<script src="lib/ckeditor/ckeditor.js"></script>
-
 		<!-- MathJax, should figure out how to bower manage this -->
 		<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_HTMLorMML&delayStartupUntil=configured"></script>
 		<script type="text/javascript">
@@ -62,6 +65,7 @@
 		  skipStartupTypeset: true
 		});
 		MathJax.Hub.Configured();
+        CKEDITOR.plugins.addExternal( 'combinedmath', '../../lib_extension/ckeditor/plugins/combinedmath/' );
 		</script>
 
         <!-- build:prod_minify_js -->
@@ -73,6 +77,7 @@
 		<script src="modules/common/avatar-directive.js"></script>
 		<script src="modules/common/http-interceptor-service.js"></script>
 		<script src="modules/common/mathjax-directives.js"></script>
+		<script src="modules/common/hljs-directives.js"></script>
 		<script src="modules/common/timer-module.js"></script>
 		<script src="modules/common/pdf.js"></script>
 		<!-- - Non-Route Modules -->

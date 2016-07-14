@@ -11,6 +11,7 @@ var module = angular.module('ubc.ctlt.acj.answer',
 		'ubc.ctlt.acj.common.form',
 		'ubc.ctlt.acj.common.interceptor',
 		'ubc.ctlt.acj.common.mathjax',
+		'ubc.ctlt.acj.common.highlightjs',
 		'ubc.ctlt.acj.common.timer',
 		'ubc.ctlt.acj.assignment',
 		'ubc.ctlt.acj.toaster'
@@ -94,16 +95,17 @@ module.controller(
 	"AnswerWriteController",
 	["$scope", "$log", "$location", "$routeParams", "AnswerResource", "ClassListResource", "$route",
 		"AssignmentResource", "TimerResource", "Toaster", "Authorize", "Session", "$timeout",
-        "attachService", "AttachmentResource",
+        "attachService", "AttachmentResource", "EditorOptions",
 	function ($scope, $log, $location, $routeParams, AnswerResource, ClassListResource, $route,
 		AssignmentResource, TimerResource, Toaster, Authorize, Session, $timeout,
-        attachService, AttachmentResource)
+        attachService, AttachmentResource, EditorOptions)
 	{
 		$scope.courseId = $routeParams['courseId'];
 		var assignmentId = $routeParams['assignmentId'];
 		$scope.assignment = {};
 		$scope.answer = {};
         $scope.preventExit = true; //user should be warned before leaving page by default
+		$scope.editorOptions = EditorOptions.basic;
 
         if ($route.current.method == "new") {
 		    $scope.showUserList = true;

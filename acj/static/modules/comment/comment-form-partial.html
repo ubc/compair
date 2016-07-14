@@ -3,21 +3,20 @@
 		<h2 ng-if="parent.name"><i class="fa fa-comments"></i> {{parent.name}}</h2>
 		<i class="fa fa-quote-left pull-left" ng-if="!parent.name && parent.content"></i>
 		<i class="fa fa-quote-right pull-right" ng-if="!parent.name && parent.content"></i>
-		<div class="assignment-desc" mathjax="parent.content"
-			ng-bind-html="parent.content">
-		</div>
+		<div class="assignment-desc" mathjax hljs ng-bind-html="parent.content"></div>
 		<!-- Attachment -->
 		<acj-pdf-inline label="See assignment details:" pdf="parent.file">
 		</acj-pdf-inline>
 
 		<hr />
 		<div class="form-group">
-			<textarea ng-model="comment.content" id="commentContent" class="form-control" rows="8" ckeditor required>
+			<textarea ng-model="comment.content" id="commentContent" class="form-control" rows="8"
+                      ckeditor="editorOptions" required>
 			</textarea>
 		</div>
 		<div class="form-group" ng-if="answerComment && (comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private)">
             <input id="comment_type" type="checkbox" ng-model="comment.comment_type"
-                   ng-true-value="AnswerCommentType.public" ng-false-value="AnswerCommentType.private">
+                   ng-true-value="'{{AnswerCommentType.public}}'" ng-false-value="'{{AnswerCommentType.private}}'">
             <label for="comment_type">Show this reply to the whole class</label>
 		</div>
 	</fieldset>

@@ -26,7 +26,9 @@
     "angular-route": "~1.4.7",
     "angular-sanitize": "~1.4.7",
     "angular-http-auth": "~1.2.2",
-    "angular-ckeditor": "~0.2.0",
+    "ckeditor": "~4.5.9",
+    "highlightjs": "~9.0.0",
+    "angular-ckeditor": "~1.0.3",
     "es-breadcrumbs": "~0.4.1",
     "angular-loading-bar": "~0.8.0",
     "AngularJS-Toaster": "~0.4.15",
@@ -51,6 +53,12 @@
     "bootstrap": {
       "main": [
         "dist/css/bootstrap.css"
+      ]
+    },
+    "highlightjs": {
+      "main": [
+          "highlight.pack.js",
+          "styles/monokai_sublime.css"
       ]
     }
   }
