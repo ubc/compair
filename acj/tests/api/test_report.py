@@ -374,10 +374,10 @@ class ReportAPITest(ACJAPITestCase):
             user_stats["evaluations_submitted"] += evaluations_submitted
             excepted_row.append(str(evaluations_submitted))
 
-            user_stats["evaluations_required"] += assignment.number_of_comparisons
-            excepted_row.append(str(assignment.number_of_comparisons))
+            user_stats["evaluations_required"] += assignment.total_comparisons_required
+            excepted_row.append(str(assignment.total_comparisons_required))
 
-            if assignment.number_of_comparisons > evaluations_submitted:
+            if assignment.total_comparisons_required > evaluations_submitted:
                 user_stats["evaluation_requirments_met"] = False
                 excepted_row.append("No")
             else:
@@ -409,7 +409,7 @@ class ReportAPITest(ACJAPITestCase):
             expected_heading2 = ['Last Name', 'First Name', 'Student No']
             for assignment in assignments:
                 expected_heading2.append("Percentage Score for \""+default_criterion.name+"\"")
-                expected_heading2.append("Evaluations Submitted ("+str(assignment.number_of_comparisons)+" required)")
+                expected_heading2.append("Evaluations Submitted ("+str(assignment.total_comparisons_required)+" required)")
 
             self.assertEqual(expected_heading1, heading1)
             self.assertEqual(expected_heading2, heading2)

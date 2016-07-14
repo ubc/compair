@@ -104,7 +104,7 @@ module.directive('comparisonPreview', function() {
                 $scope.current = 1;
                 $scope.firstAnsNum = 1;
                 $scope.secondAnsNum = 2;
-                $scope.total = $scope.assignment.number_of_comparisons;
+                $scope.total = $scope.assignment.total_steps_required;
                 /* answer pair shown is dummy content, no files */
                 $scope.answer1 = {
                     content: "<p>The first student answer in the pair will appear here.</p>",
@@ -315,8 +315,7 @@ module.controller("AssignmentViewController",
             author: null,
             orderBy: null
         };
-        $scope.self_evaluation_req_met = true;
-        $scope.self_evaluation = 0;
+        $scope.self_evaluation_needed = false;
 
         Session.getUser().then(function(user) {
             $scope.loggedInUserId = user.id;
@@ -346,29 +345,21 @@ module.controller("AssignmentViewController",
                     AssignmentResource.getCurrentUserStatus({'id': $scope.courseId, 'assignmentId': assignmentId},
                         function (ret) {
                             $scope.assignment.status = ret.status;
+                            $scope.comparisons_left = ret.status.comparisons.left;
+                            $scope.self_evaluation_needed = $scope.assignment.enable_self_evaluation ?
+                                !ret.status.comparisons.self_evaluation_completed : false;
+                            $scope.steps_left = $scope.comparisons_left + ($scope.self_evaluation_needed ? 1 : 0);
 
-                            var comparisons_count = ret.status.comparisons.count;
-                            $scope.compared_req_met = comparisons_count >= $scope.assignment.number_of_comparisons;
-
-                            $scope.evaluation = 0;
-                            if (!$scope.compared_req_met) {
-                                $scope.evaluation = ret.status.comparisons.left;
-                            }
-                            // if evaluation period is set answers can be seen after it ends
                             if ($scope.assignment.compare_end) {
+                                // if comparison period is set answers can be seen after it ends
                                 $scope.see_answers = $scope.assignment.after_comparing;
-                                // if an evaluation period is NOT set - answers can be seen after req met
                             } else {
-                                $scope.see_answers = $scope.assignment.after_comparing && $scope.compared_req_met;
+                                // if an comparison period is NOT set - answers can be seen after req met
+                                $scope.see_answers = $scope.assignment.after_comparing && $scope.comparisons_left == 0;
                             }
                             var diff = $scope.assignment.answer_count - ret.status.answers.count;
-                            var evaluation_left = ((diff * (diff - 1)) / 2);
-                            $scope.warning = ret.status.comparisons.left > evaluation_left;
-
-                            if ($scope.assignment.enable_self_evaluation) {
-                                $scope.self_evaluation_req_met = ret.status.comparisons.self_evauluation_completed;
-                                $scope.self_evaluation = $scope.self_evaluation_req_met ? 0 : 1;
-                            }
+                            var possible_comparisons_left = ((diff * (diff - 1)) / 2);
+                            $scope.warning = ret.status.comparisons.left > possible_comparisons_left;
                         },
                         function (ret) {
                             Toaster.reqerror("Assignment Status Not Found", ret);
@@ -613,7 +604,7 @@ module.controller("AssignmentWriteController",
 
         $scope.uploader = attachService.getUploader();
         $scope.resetName = attachService.resetName();
-        $scope.recommended_evaluation = Math.floor(required_rounds / 2);
+        $scope.recommended_comparisons = Math.floor(required_rounds / 2);
 
         Session.getUser().then(function(user) {
             $scope.loggedInUserId = user.id;
@@ -635,8 +626,8 @@ module.controller("AssignmentWriteController",
         if ($route.current.method == "new") {
             //want default to encourage discussion
             $scope.assignment.students_can_reply = true;
-            // default the setting to the recommended # of evaluations
-            $scope.assignment.number_of_comparisons = $scope.recommended_evaluation;
+            // default the setting to the recommended # of comparisons
+            $scope.assignment.number_of_comparisons = $scope.recommended_comparisons;
 
             $scope.date.astart.date.setDate(today.getDate()+1);
             $scope.date.aend.date.setDate(today.getDate()+8);
@@ -799,11 +790,11 @@ module.controller("AssignmentWriteController",
                 $scope.submitted = false;
                 return;
             } else if ($scope.assignment.availableCheck && $scope.assignment.answer_start > $scope.assignment.compare_start) {
-                Toaster.error("Time Period Error", 'Please double-check the answer and evaluation period start and end times.');
+                Toaster.error("Time Period Error", 'Please double-check the answer and comparison period start and end times.');
                 $scope.submitted = false;
                 return;
             } else if ($scope.assignment.availableCheck && $scope.assignment.compare_start >= $scope.assignment.compare_end) {
-                Toaster.error("Time Period Error", 'Evauluation end time must be after evauluation start time.');
+                Toaster.error("Time Period Error", 'comparison end time must be after comparison start time.');
                 $scope.submitted = false;
                 return;
             }

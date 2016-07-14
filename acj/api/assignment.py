@@ -45,8 +45,8 @@ on_assignment_get = event.signal('ASSIGNMENT_GET')
 on_assignment_list_get = event.signal('ASSIGNMENT_LIST_GET')
 on_assignment_create = event.signal('ASSIGNMENT_CREATE')
 on_assignment_delete = event.signal('ASSIGNMENT_DELETE')
-on_assignment_list_get_current_user_status = event.signal('ASSIGNMENT_LIST_GET_CURRENT_USER_STATUS')
-on_assignment_get_current_user_status = event.signal('ASSIGNMENT_GET_CURRENT_USER_STATUS')
+on_assignment_list_get_status = event.signal('ASSIGNMENT_LIST_GET_STATUS')
+on_assignment_get_status = event.signal('ASSIGNMENT_GET_STATUS')
 
 # /id
 class AssignmentIdAPI(Resource):
@@ -308,12 +308,12 @@ class AssignmentIdStatusAPI(Resource):
             'comparisons': {
                 'available': comparison_availble,
                 'count': comparison_count,
-                'left': max(0, assignment.number_of_comparisons - comparison_count)
+                'left': max(0, assignment.total_comparisons_required - comparison_count)
             }
         }
 
         if assignment.enable_self_evaluation:
-            self_evauluations = AnswerComment.query \
+            self_evaluations = AnswerComment.query \
                 .join("answer") \
                 .filter(and_(
                     AnswerComment.user_id == current_user.id,
@@ -325,9 +325,9 @@ class AssignmentIdStatusAPI(Resource):
                     Answer.draft == False
                 )) \
                 .count()
-            status['comparisons']['self_evauluation_completed'] = self_evauluations > 0
+            status['comparisons']['self_evaluation_completed'] = self_evaluations > 0
 
-        on_assignment_get_current_user_status.send(
+        on_assignment_get_status.send(
             self,
             event_name=on_assignment_get.name,
             user=current_user,
@@ -366,12 +366,12 @@ class AssignmentRootStatusAPI(Resource):
             .group_by(Answer.assignment_id) \
             .all()
 
-        # get self evauluation status for assignments with self evauluations enabled
-        self_evauluations = AnswerComment.query \
+        # get self evaluation status for assignments with self evaluations enabled
+        self_evaluations = AnswerComment.query \
             .join("answer") \
             .with_entities(
                 Answer.assignment_id,
-                func.count(Answer.assignment_id).label('self_evauluation_count')
+                func.count(Answer.assignment_id).label('self_evaluation_count')
             ) \
             .filter(and_(
                 AnswerComment.user_id == current_user.id,
@@ -414,18 +414,18 @@ class AssignmentRootStatusAPI(Resource):
                 'comparisons': {
                     'available': comparison_availble,
                     'count': comparison_count,
-                    'left': max(0, assignment.number_of_comparisons - comparison_count)
+                    'left': max(0, assignment.total_comparisons_required - comparison_count)
                 }
             }
 
             if assignment.enable_self_evaluation:
-                self_evauluation_count = next(
-                    (result.self_evauluation_count for result in self_evauluations if result.assignment_id == assignment.id),
+                self_evaluation_count = next(
+                    (result.self_evaluation_count for result in self_evaluations if result.assignment_id == assignment.id),
                     0
                 )
-                statuses[assignment.id]['comparisons']['self_evauluation_completed'] = self_evauluation_count > 0
+                statuses[assignment.id]['comparisons']['self_evaluation_completed'] = self_evaluation_count > 0
 
-        on_assignment_list_get_current_user_status.send(
+        on_assignment_list_get_status.send(
             self,
             event_name=on_assignment_get.name,
             user=current_user,

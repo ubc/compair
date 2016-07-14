@@ -94,6 +94,8 @@ def get_assignment(restrict_user=True):
         'name': fields.String,
         'description': fields.String,
         'number_of_comparisons': fields.Integer,
+        'total_comparisons_required': fields.Integer,
+        'total_steps_required': fields.Integer,
 
         'criteria': fields.List(fields.Nested(get_criterion())),
         'file': fields.Nested(get_file(), allow_null=True),
@@ -214,6 +216,25 @@ def get_comparison(restrict_user=True, with_answers=True):
             restrict_user=restrict_user))
         ret['answer2'] = fields.Nested(get_answer(
             restrict_user=restrict_user))
+
+    return ret
+
+def get_comparison_example(with_answers=True):
+    ret = {
+        'id': fields.Integer,
+        'course_id': fields.Integer,
+        'assignment_id': fields.Integer,
+        'answer1_id': fields.Integer,
+        'answer2_id': fields.Integer,
+        'modified': fields.DateTime,
+        'created': fields.DateTime
+    }
+
+    if with_answers:
+        ret['answer1'] = fields.Nested(get_answer(
+            restrict_user=False))
+        ret['answer2'] = fields.Nested(get_answer(
+            restrict_user=False))
 
     return ret
 

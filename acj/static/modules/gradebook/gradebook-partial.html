@@ -89,10 +89,10 @@
                     <td class="text-center" ng-class="{
                         'text-danger': entry.num_comparisons == 0,
                         'text-warning': entry.num_comparisons > 0 &&
-                                 entry.num_comparisons < numerOfComparisonsRequired,
-                        'text-success': entry.num_comparisons >= numerOfComparisonsRequired
+                                 entry.num_comparisons < totalComparisonsRequired,
+                        'text-success': entry.num_comparisons >= totalComparisonsRequired
                         }">
-                        <strong>{{entry.num_comparisons}} / {{ numerOfComparisonsRequired }}</strong>
+                        <strong>{{entry.num_comparisons}} / {{ totalComparisonsRequired }}</strong>
                     </td>
                     <td class="text-center text-success" ng-show="includeSelfEval && entry.num_self_evaluation > 0"><strong>Yes</strong></td>
                     <td class="text-center text-danger" ng-show="includeSelfEval && entry.num_self_evaluation == 0"><strong>No</strong></td>

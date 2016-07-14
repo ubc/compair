@@ -96,26 +96,18 @@ module.controller(
                             assignment.status = statuses[assignment.id]
 
                             // comparison count
-                            var required = assignment.number_of_comparisons;
-                            assignment.left = assignment.status.comparisons.left;
+                            assignment.comparisons_left = assignment.status.comparisons.left;
+                            assignment.self_evaluation_needed = assignment.enable_self_evaluation ?
+                                !assignment.status.comparisons.self_evaluation_completed : false;
+                            assignment.steps_left = assignment.comparisons_left + (assignment.self_evaluation_needed ? 1 : 0);
 
                             // if evaluation period is set answers can be seen after it ends
                             if (assignment.compare_end) {
                                 assignment.answers_available = assignment.after_comparing;
                             // if an evaluation period is NOT set - answers can be seen after req met
                             } else {
-                                assignment.answers_available = assignment.after_comparing && assignment.left < 1;
-                            }
-
-                            // comparison available
-                            assignment.self_evaluation_left = 0;
-                            /*
-                            Assumptions made:
-                            - only one self-evaluation type per assignment
-                            - if self-evaluation is required but not one is submitted --> 1 needs to be completed
-                            */
-                            if (assignment.enable_self_evaluation && !assignment.status.comparisons.self_evauluation_completed) {
-                                assignment.self_evaluation_left = 1;
+                                assignment.answers_available = assignment.after_comparing &&
+                                    assignment.comparisons_left < 1 && !assignment.self_evaluation_needed;
                             }
                         }
                     },
@@ -161,7 +153,7 @@ module.controller(
                     // STUDENTS: return all assignments that need to be answered or compared
                     case "My pending assignments":
                         return (assignment.answer_period && !$scope.answered[assignment.id]) ||
-                            (assignment.compare_period && (assignment.left || assignment.self_evaluation_left));
+                            (assignment.compare_period && assignment.steps_left > 0);
                     default:
                         return false;
                 }

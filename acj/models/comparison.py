@@ -28,6 +28,8 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         nullable=False)
     winner_id = db.Column(db.Integer, db.ForeignKey('answer.id', ondelete="CASCADE"),
         nullable=True)
+    comparison_example_id = db.Column(db.Integer, db.ForeignKey('comparison_example.id', ondelete="SET NULL"),
+        nullable=True)
     round_compared = db.Column(db.Integer, default=0, nullable=False)
     content = db.Column(db.Text)
     completed = db.Column(db.Boolean(name='completed'), default=False,
@@ -37,6 +39,7 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
     # assignment via Assignment Model
     # user via User Model
     # criterion via Criterion Model
+    # comparison_example via ComparisonExample Model
 
     answer1 = db.relationship("Answer", foreign_keys=[answer1_id])
     answer2 = db.relationship("Answer", foreign_keys=[answer2_id])
@@ -96,15 +99,13 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         super(cls, cls).__declare_last__()
 
     @classmethod
-    def create_new_comparison_set(cls, assignment_id, user_id):
-        from . import Assignment, UserCourse, CourseRole, Answer, Score
-
-        assignment = Assignment.query.get(assignment_id)
+    def _get_new_comparison_pair(cls, course_id, assignment_id, user_id, comparisons):
+        from . import UserCourse, CourseRole, Answer, Score
 
         # ineligible authors - eg. instructors, TAs, dropped student, current user
         non_students = UserCourse.query \
             .filter(and_(
-                UserCourse.course_id == assignment.course_id,
+                UserCourse.course_id == course_id,
                 UserCourse.course_role != CourseRole.student
             ))
         ineligible_user_ids = [non_student.user_id \
@@ -132,15 +133,6 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
                 wins=None, loses=None, opponents=None
             ))
 
-        comparisons = Comparison.query \
-            .with_entities(Comparison.answer1_id, Comparison.answer2_id) \
-            .distinct() \
-            .filter_by(
-                user_id=user_id,
-                assignment_id=assignment_id
-            ) \
-            .all()
-
         comparison_pairs = [ComparisonPair(
             comparison.answer1_id, comparison.answer2_id, winning_key=None
         ) for comparison in comparisons]
@@ -152,10 +144,64 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
             log=current_app.logger
         )
 
-        answer1 = Answer.query.get(comparison_pair.key1)
-        answer2 = Answer.query.get(comparison_pair.key2)
+        return comparison_pair
 
-        round_compared = min(answer1.round+1, answer2.round+1)
+    @classmethod
+    def create_new_comparison_set(cls, assignment_id, user_id):
+        from . import Assignment, UserCourse, CourseRole, Answer, Score, ComparisonExample
+
+        # get all comparisons for the user
+        comparisons = Comparison.query \
+            .with_entities(Comparison.answer1_id, Comparison.answer2_id, Comparison.comparison_example_id) \
+            .distinct() \
+            .filter_by(
+                user_id=user_id,
+                assignment_id=assignment_id
+            ) \
+            .all()
+
+        is_comparison_example_set = False
+        answer1 = None
+        answer2 = None
+        comparison_example_id = None
+        round_compared = 0
+
+        assignment = Assignment.query.get(assignment_id)
+
+        # check comparison examples first
+        comparison_examples = ComparisonExample.query \
+            .filter_by(
+                assignment_id=assignment_id,
+                active=True
+            ) \
+            .all()
+
+        # check if user has not completed all comparison examples
+        for comparison_example in comparison_examples:
+            comparison = next(
+                (c for c in comparisons if c.comparison_example_id == comparison_example.id),
+                None
+            )
+            if comparison == None:
+                is_comparison_example_set = True
+                answer1 = comparison_example.answer1
+                answer2 = comparison_example.answer2
+                comparison_example_id = comparison_example.id
+                break
+
+        if not is_comparison_example_set:
+            comparison_pair = Comparison._get_new_comparison_pair(
+                assignment.course_id, assignment_id, user_id, comparisons)
+            answer1 = Answer.query.get(comparison_pair.key1)
+            answer2 = Answer.query.get(comparison_pair.key2)
+            round_compared = min(answer1.round+1, answer2.round+1)
+
+            # update round counters
+            answers = [answer1, answer2]
+            for answer in answers:
+                answer.round += 1
+                db.session.add(answer)
+            db.session.commit()
 
         new_comparisons = []
         for criterion in assignment.criteria:
@@ -167,18 +213,12 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
                 answer2_id=answer2.id,
                 winner_id=None,
                 round_compared=round_compared,
+                comparison_example_id=comparison_example_id,
                 content=None
             )
             db.session.add(comparison)
             db.session.commit()
             new_comparisons.append(comparison)
-
-        answers = [answer1, answer2]
-        for answer in answers:
-            # update round counts via sqlalchemy increase counter
-            answer.round += 1
-            db.session.add(answer)
-        db.session.commit()
 
         return new_comparisons
 

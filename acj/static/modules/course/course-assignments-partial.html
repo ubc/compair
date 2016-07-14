@@ -124,16 +124,16 @@
                         {{assignment.comment_count}} comment<span ng-if="assignment.comment_count != 1">s</span>
                     </li>
                     <!-- Completed Assignment Feedback (for students) -->
-                    <li ng-if="!canManageAssignment && ((assignment.left + assignment.self_evaluation_left == 0) || assignment.status.answers.answered)">
+                    <li ng-if="!canManageAssignment && (assignment.steps_left == 0 || assignment.status.answers.answered)">
                         You
-                        <span ng-if="answered"><strong>answered</strong> <span ng-if="assignment.left + assignment.self_evaluation_left == 0">and </span></span>
-                        <span ng-if="assignment.left + assignment.self_evaluation_left == 0"><strong>compared</strong></span>
+                        <span ng-if="answered"><strong>answered</strong> <span ng-if="assignment.steps_left == 0">and </span></span>
+                        <span ng-if="assignment.steps_left == 0"><strong>compared</strong></span>
                     </li>
                     <!-- Pending Assignment Feedback (for students) -->
-                    <li ng-if="!canManageAssignment && ((assignment.compare_period && assignment.left + assignment.self_evaluation_left > 0) || (assignment.answer_period && !assignment.status.answers.answered))" class="label label-warning">
-                        <span ng-if="assignment.answer_period && !assignment.status.answers.answered">1 answer<span ng-if="(assignment.compare_period && assignment.left + assignment.self_evaluation_left) > 0">, </span></span>
+                    <li ng-if="!canManageAssignment && ((assignment.compare_period && assignment.steps_left > 0) || (assignment.answer_period && !assignment.status.answers.answered))" class="label label-warning">
+                        <span ng-if="assignment.answer_period && !assignment.status.answers.answered">1 answer<span ng-if="(assignment.compare_period && assignment.steps_left) > 0">, </span></span>
 
-                        <span ng-if="assignment.compare_period && assignment.left + assignment.self_evaluation_left > 0">{{assignment.left + assignment.self_evaluation_left}} comparison<span ng-if="(assignment.left + assignment.self_evaluation_left) != 1">s</span></span>
+                        <span ng-if="assignment.compare_period && assignment.steps_left > 0">{{assignment.steps_left}} comparison<span ng-if="(assignment.steps_left) != 1">s</span></span>
                         needed from you
                     </li>
                     <!-- Answers Active (for instructors) -->
@@ -172,7 +172,7 @@
                  enabled only when answer pairs are available for comparison (a negative number = good)
                  -->
             <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Answers" ng-href="#/course/{{course.id}}/assignment/{{assignment.id}}/compare"
-               ng-show="!canManageAssignment && assignment.compare_period && assignment.left && ((assignment.answer_period && assignment.status.answers.answered) || (!assignment.answer_period))" ng-disabled="!assignment.status.comparisons.available">
+               ng-show="!canManageAssignment && assignment.compare_period && assignment.comparisons_left > 0 && ((assignment.answer_period && assignment.status.answers.answered) || (!assignment.answer_period))" ng-disabled="!assignment.status.comparisons.available">
                 Compare Answers
             </a>
 
@@ -180,7 +180,7 @@
                  basically we force users to answer first, if they can
                  enabled only when user has answered assignment -->
             <a class="btn" ng-class="{'btn-success': assignment.status.answers.answered, 'btn-default': !assignment.status.answers.answered}" title="Compare Answers" ng-href="#/course/{{ course.id }}/assignment/{{ assignment.id }}/self_evaluation"
-               ng-show="!canManageAssignment && assignment.compare_period && !assignment.left && assignment.self_evaluation_left && ((assignment.answer_period && assignment.status.answers.answered) || (!assignment.answer_period))" ng-disabled="!assignment.status.answers.answered">
+               ng-show="!canManageAssignment && assignment.compare_period && !assignment.comparisons_left > 0 && assignment.self_evaluation_needed && ((assignment.answer_period && assignment.status.answers.answered) || (!assignment.answer_period))" ng-disabled="!assignment.status.answers.answered">
                 Compare Answers
             </a>
 
@@ -198,19 +198,19 @@
 
             <!-- ADDITIONAL TEXT when answer pairs are not available for comparison AND user is not admin AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active) -->
             <p class="below-button-text"
-                ng-show="!assignment.status.comparisons.available && !canManageAssignment && assignment.compare_period && assignment.left && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)">
+                ng-show="!assignment.status.comparisons.available && !canManageAssignment && assignment.compare_period && assignment.comparisons_left && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)">
                 Not enough answers to compare<br />(Refresh the page to check again)
             </p>
 
             <!-- ADDITIONAL TEXT when answer pairs are available for comparison AND user is not admin AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active) AND the comparison period has an end date set -->
             <p class="below-button-text"
-                ng-show="assignment.status.comparisons.available && !canManageAssignment && assignment.compare_period && assignment.left && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period) && assignment.compare_end">
+                ng-show="assignment.status.comparisons.available && !canManageAssignment && assignment.compare_period && assignment.comparisons_left && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period) && assignment.compare_end">
                 Comparisons due {{assignment.compare_end | amDateFormat: 'MMM D'}}
             </p>
 
             <!-- ADDITIONAL TEXT when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has a self-evaluation remaining AND has not answered assignment -->
             <p class="below-button-text"
-                ng-show="!canManageAssignment && assignment.compare_period && !assignment.left && assignment.self_evaluation_left && !assignment.status.answers.answered">
+                ng-show="!canManageAssignment && assignment.compare_period && !assignment.comparisons_left && assignment.self_evaluation_needed && !assignment.status.answers.answered">
                 Self-evaluation comparison unavailable<br />(You have not answered the assignment)
             </p>
 

@@ -123,6 +123,8 @@ describe('course-module', function () {
         "modified": "Tue, 07 Jun 2016 22:00:38 -0000",
         "name": "Test Assignment",
         "number_of_comparisons": 3,
+        "total_comparisons_required": 3,
+        "total_steps_required": 4,
         "self_evaluation_count": 4,
         "students_can_reply": true,
         "user": {
@@ -698,7 +700,7 @@ describe('course-module', function () {
                             "available": false,
                             "count": 0,
                             "left": 3,
-                            "self_evauluation_completed": false
+                            "self_evaluation_completed": false
                         }
                     }
                 });
@@ -725,16 +727,14 @@ describe('course-module', function () {
                 });
                 expect($rootScope.reverse).toBe(true);
 
-                expect($rootScope.self_evaluation_req_met).toBe(false);
-                expect($rootScope.self_evaluation).toEqual(1);
+                expect($rootScope.self_evaluation_needed).toBe(true);
                 expect($rootScope.loggedInUserId).toEqual(id);
                 expect($rootScope.assignment.status.comparisons.available).toBe(false);
                 expect($rootScope.canManageAssignment).toBe(true);
 
                 expect($rootScope.answerAvail).toEqual(new Date(mockAssignment.compare_end));
 
-                expect($rootScope.compared_req_met).toBe(false);
-                expect($rootScope.evaluation).toEqual(mockAssignment.number_of_comparisons);
+                expect($rootScope.comparisons_left).toEqual(mockAssignment.total_comparisons_required);
                 expect($rootScope.see_answers).toBe(false);
                 expect($rootScope.warning).toBe(false);
 
@@ -921,7 +921,7 @@ describe('course-module', function () {
                     students_can_reply: true,
                     number_of_comparisons: 3
                 });
-                expect($rootScope.recommended_evaluation).toEqual(3);
+                expect($rootScope.recommended_comparisons).toEqual(3);
                 expect($rootScope.availableCriteria).toEqual(otherCriteria);
                 expect($rootScope.loggedInUserId).toEqual(id);
 
@@ -1023,7 +1023,7 @@ describe('course-module', function () {
 
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Time Period Error', 'Please double-check the answer and evaluation period start and end times.');
+                    expect(toaster.error).toHaveBeenCalledWith('Time Period Error', 'Please double-check the answer and comparison period start and end times.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
@@ -1037,7 +1037,7 @@ describe('course-module', function () {
 
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Time Period Error', 'Evauluation end time must be after evauluation start time.');
+                    expect(toaster.error).toHaveBeenCalledWith('Time Period Error', 'comparison end time must be after comparison start time.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
@@ -1085,7 +1085,7 @@ describe('course-module', function () {
                 expect($rootScope.assignment.criteria).toEqual(mockAssignment.criteria);
                 expect($rootScope.compared).toEqual(mockAssignment.compared);
 
-                expect($rootScope.recommended_evaluation).toEqual(3);
+                expect($rootScope.recommended_comparisons).toEqual(3);
                 expect($rootScope.availableCriteria).toEqual(otherCriteria);
                 expect($rootScope.loggedInUserId).toEqual(id);
 
@@ -1185,7 +1185,7 @@ describe('course-module', function () {
 
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Time Period Error', 'Please double-check the answer and evaluation period start and end times.');
+                    expect(toaster.error).toHaveBeenCalledWith('Time Period Error', 'Please double-check the answer and comparison period start and end times.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
@@ -1198,7 +1198,7 @@ describe('course-module', function () {
 
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Time Period Error', 'Evauluation end time must be after evauluation start time.');
+                    expect(toaster.error).toHaveBeenCalledWith('Time Period Error', 'comparison end time must be after comparison start time.');
                     expect($location.path()).toEqual(currentPath);
                 });
 

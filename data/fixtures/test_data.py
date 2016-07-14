@@ -9,7 +9,7 @@ from six.moves import range
 from acj.models import SystemRole, CourseRole, Criterion, Course
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
     AnswerFactory, CriterionFactory, ComparisonFactory, AssignmentCriterionFactory, \
-    AssignmentCommentFactory, AnswerCommentFactory, ScoreFactory
+    AssignmentCommentFactory, AnswerCommentFactory, ScoreFactory, ComparisonExampleFactory
 from data.fixtures import DefaultFixture
 
 
@@ -279,6 +279,7 @@ class ComparisonTestData(CriterionTestData):
         self.authorized_student_with_no_answers = self.create_normal_user()
         self.enrol_student(self.authorized_student_with_no_answers, self.get_course())
         self.student_answers = copy.copy(self.answers)
+        self.comparisons_examples = []
         for assignment in self.get_assignments():
             # make sure we're allowed to compare existing assignments
             self.set_assignment_to_comparison_period(assignment)
@@ -294,9 +295,25 @@ class ComparisonTestData(CriterionTestData):
             self.answers.append(answer)
             answer = self.create_answer(assignment, self.get_authorized_instructor())
             self.answers.append(answer)
+            # add a comparison example
+            answer1 = self.create_answer(assignment, self.get_authorized_ta())
+            self.answers.append(answer)
+            answer2 = self.create_answer(assignment, self.get_authorized_instructor())
+            self.answers.append(answer)
+            comparison_example = self.create_comparison_example(assignment, answer1, answer2)
+            self.comparisons_examples.append(comparison_example)
         self.answer_period_assignment = self.create_assignment_in_answer_period(
             self.get_course(), self.get_authorized_ta())
         self.assignments.append(self.answer_period_assignment)
+
+    def create_comparison_example(self, assignment, answer1, answer2):
+        comparison_example = ComparisonExampleFactory(
+            assignment=assignment,
+            answer1=answer1,
+            answer2=answer2
+        )
+        db.session.commit()
+        return comparison_example
 
     def get_student_answers(self):
         return self.student_answers
@@ -330,6 +347,7 @@ class TestFixture:
         self.instructor = self.ta = None
         self.students = []
         self.assignments = []
+        self.comparison_examples = []
         self.answers = []
         self.draft_answers = []
         self.groups = []
@@ -396,6 +414,7 @@ class TestFixture:
         )
         db.session.commit()
         self.answers.append(answer)
+        return self
 
     def add_draft_answers(self, students):
         for student in students:
@@ -421,6 +440,19 @@ class TestFixture:
             self.assignments.append(assignment)
         db.session.commit()
 
+        return self
+
+    def add_comparison_example(self, assignment, user):
+        self.add_answer(assignment, user)
+        self.add_answer(assignment, user)
+
+        comparison_example = ComparisonExampleFactory(
+            assignment=assignment,
+            answer1=self.answers[-2],
+            answer2=self.answers[-1]
+        )
+        self.comparison_examples.append(comparison_example)
+        db.session.commit()
         return self
 
     def add_students(self, num_students, num_groups=0):

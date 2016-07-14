@@ -254,6 +254,20 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
         self.assignment = self.data.get_assignments()[0]
 
     def _submit_all_possible_comparisons_for_user(self, user_id):
+        submit_count = 0
+
+        for comparison_example in self.data.comparisons_examples:
+            if comparison_example.assignment_id == self.assignment.id:
+                comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id)
+                self.assertEqual(comparisons[0].answer1_id, comparison_example.answer1_id)
+                self.assertEqual(comparisons[0].answer2_id, comparison_example.answer2_id)
+                for comparison in comparisons:
+                    comparison.completed = True
+                    comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
+                    db.session.add(comparison)
+                submit_count += 1
+                db.session.commit()
+
         # self.login(username)
         # calculate number of comparisons to do before user has compared all the pairs it can
         num_eligible_answers = 0  # need to minus one to exclude the logged in user's own answer
@@ -262,24 +276,17 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
                 num_eligible_answers += 1
         # n - 1 possible pairs before all answers have been compared
         num_possible_comparisons = num_eligible_answers - 1
-        winner_ids = []
-        loser_ids = []
         for i in range(num_possible_comparisons):
             comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id)
-            answer1_id = comparisons[0].answer1_id
-            answer2_id = comparisons[0].answer2_id
-            min_id = min([answer1_id, answer2_id])
-            max_id = max([answer1_id, answer2_id])
-            winner_ids.append(min_id)
-            loser_ids.append(max_id)
             for comparison in comparisons:
                 comparison.completed = True
-                comparison.winner_id = min_id
+                comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
                 db.session.add(comparison)
+            submit_count += 1
             db.session.commit()
 
             Comparison.calculate_scores(self.assignment.id)
-        return {'winners': winner_ids, 'losers': loser_ids}
+        return submit_count
 
     def test_get_all_status(self):
         url = self.url + '/status'
@@ -312,16 +319,19 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
                 if assignments[0].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
-                    self.assertEqual(status['answers']['count'], 1)
+                    self.assertEqual(status['answers']['count'], 2)
                 elif assignments[1].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
-                    self.assertEqual(status['answers']['count'], 1)
+                    self.assertEqual(status['answers']['count'], 2)
                 else:
                     self.assertFalse(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
 
@@ -335,20 +345,23 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
                 if assignments[0].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 1)
                 elif assignments[1].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 1)
                 else:
                     self.assertFalse(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
 
-            compare_results = self._submit_all_possible_comparisons_for_user(self.data.get_authorized_student().id)
+            compare_count_result = self._submit_all_possible_comparisons_for_user(self.data.get_authorized_student().id)
 
             # test authorized student - when have compared all
             rv = self.client.get(url)
@@ -358,19 +371,28 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
                 status = rv.json['statuses'][str(assignment.id)]
                 if assignments[0].id == assignment.id:
                     self.assertFalse(status['comparisons']['available'])
-                    self.assertEqual(status['comparisons']['count'], len(compare_results['winners']))
+                    self.assertEqual(status['comparisons']['count'], compare_count_result)
+                    self.assertEqual(status['comparisons']['left'],
+                        assignment.total_comparisons_required - compare_count_result)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 1)
                 elif assignments[1].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 1)
                 else:
                     self.assertFalse(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
+
+            # test self evaluation enabled
+            for assignment in assignments:
+                assignment.enable_self_evauluation = True
+            db.session.commit()
 
     def test_get_status(self):
         url = self.url + '/' + str(self.assignment.id) + '/status'
@@ -401,9 +423,10 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
             self.assert200(rv)
             status = rv.json['status']
             self.assertEqual(status['comparisons']['count'], 0)
+            self.assertEqual(status['comparisons']['left'], self.assignment.total_comparisons_required)
             self.assertTrue(status['comparisons']['available'])
             self.assertTrue(status['answers']['answered'])
-            self.assertEqual(status['answers']['count'], 1)
+            self.assertEqual(status['answers']['count'], 2)
 
         with self.login(self.data.get_authorized_student().username):
             # test authorized student - when haven't compared
@@ -411,17 +434,20 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
             self.assert200(rv)
             status = rv.json['status']
             self.assertEqual(status['comparisons']['count'], 0)
+            self.assertEqual(status['comparisons']['left'], self.assignment.total_comparisons_required)
             self.assertTrue(status['comparisons']['available'])
             self.assertTrue(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 1)
 
-            compare_results = self._submit_all_possible_comparisons_for_user(self.data.get_authorized_student().id)
+            compare_count_result = self._submit_all_possible_comparisons_for_user(self.data.get_authorized_student().id)
             # test authorized student - when have compared all
             self.login(self.data.get_authorized_student().username)
             rv = self.client.get(url)
             self.assert200(rv)
             status = rv.json['status']
-            self.assertEqual(status['comparisons']['count'], len(compare_results['winners']))
+            self.assertEqual(status['comparisons']['count'], compare_count_result)
+            self.assertEqual(status['comparisons']['left'],
+                self.assignment.total_comparisons_required - compare_count_result)
             self.assertFalse(status['comparisons']['available'])
             self.assertTrue(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 1)
@@ -463,11 +489,13 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
                 if assignments[0].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
                 else:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
 
@@ -485,11 +513,13 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
                 if assignments[0].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 3)
                 else:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
 
@@ -504,11 +534,13 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
                 if assignments[0].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
                 else:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
 
@@ -523,11 +555,13 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
                 if assignments[0].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 1)
                 else:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
 
@@ -561,6 +595,7 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
             status = rv.json['status']
             self.assertTrue(status['comparisons']['available'])
             self.assertEqual(status['comparisons']['count'], 0)
+            self.assertEqual(status['comparisons']['left'], self.fixtures.assignment.total_comparisons_required)
             self.assertFalse(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 0)
 
@@ -574,6 +609,7 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
             status = rv.json['status']
             self.assertTrue(status['comparisons']['available'])
             self.assertEqual(status['comparisons']['count'], 0)
+            self.assertEqual(status['comparisons']['left'], self.fixtures.assignment.total_comparisons_required)
             self.assertTrue(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 3)
 
@@ -585,6 +621,7 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
             status = rv.json['status']
             self.assertTrue(status['comparisons']['available'])
             self.assertEqual(status['comparisons']['count'], 0)
+            self.assertEqual(status['comparisons']['left'], self.fixtures.assignment.total_comparisons_required)
             self.assertFalse(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 0)
 
@@ -596,5 +633,6 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
             status = rv.json['status']
             self.assertTrue(status['comparisons']['available'])
             self.assertEqual(status['comparisons']['count'], 0)
+            self.assertEqual(status['comparisons']['left'], self.fixtures.assignment.total_comparisons_required)
             self.assertTrue(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 1)

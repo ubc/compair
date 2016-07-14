@@ -71,6 +71,8 @@ class ComparisonAPITests(ACJAPITestCase):
             actual_answer1 = actual_answer_pair['objects'][0]['answer1']
             actual_answer2 = actual_answer_pair['objects'][0]['answer2']
             expected_answer_ids = [answer.id for answer in self.data.get_student_answers()]
+            for ce in self.data.comparisons_examples:
+                expected_answer_ids += [ce.answer1_id, ce.answer2_id]
             # make sure that we actually got answers for the assignment we're targetting
             self.assertIn(actual_answer1['id'], expected_answer_ids)
             self.assertIn(actual_answer2['id'], expected_answer_ids)
@@ -242,6 +244,12 @@ class ComparisonAPITests(ACJAPITestCase):
                     num_eligible_answers += 1
             # n - 1 possible pairs before all answers have been compared
             num_possible_comparisons = num_eligible_answers - 1
+            # add number of comparison examples
+            num_comparison_examples = 0
+            for comparisons_example in self.data.comparisons_examples:
+                if comparisons_example.assignment.id == self.assignment.id:
+                    num_comparison_examples += 1
+            num_possible_comparisons += num_comparison_examples
             winner_ids = []
             for i in range(num_possible_comparisons):
                 # establish expected data by first getting an answer pair
@@ -356,6 +364,23 @@ class ComparisonAPITests(ACJAPITestCase):
                 self.assertNotEqual(actual_answer1['id'], actual_answer2['id'])
 
     def _submit_all_possible_comparisons_for_user(self, user_id):
+        example_winner_ids = []
+        example_loser_ids = []
+        for comparison_example in self.data.comparisons_examples:
+            if comparison_example.assignment_id == self.assignment.id:
+                comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id)
+                self.assertEqual(comparisons[0].answer1_id, comparison_example.answer1_id)
+                self.assertEqual(comparisons[0].answer2_id, comparison_example.answer2_id)
+                min_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
+                max_id = max([comparisons[0].answer1_id, comparisons[0].answer2_id])
+                example_winner_ids.append(min_id)
+                example_loser_ids.append(max_id)
+                for comparison in comparisons:
+                    comparison.completed = True
+                    comparison.winner_id = min_id
+                    db.session.add(comparison)
+                db.session.commit()
+
         # self.login(username)
         # calculate number of comparisons to do before user has compared all the pairs it can
         num_eligible_answers = 0  # need to minus one to exclude the logged in user's own answer
@@ -381,7 +406,14 @@ class ComparisonAPITests(ACJAPITestCase):
             db.session.commit()
 
             Comparison.calculate_scores(self.assignment.id)
-        return {'winners': winner_ids, 'losers': loser_ids}
+        return {
+            'comparisons': {
+                'winners': winner_ids, 'losers': loser_ids
+            },
+            'comparison_examples': {
+                'winners': example_winner_ids, 'losers': example_loser_ids
+            }
+        }
 
     @mock.patch('random.shuffle')
     def test_score_calculation(self, mock_shuffle):
@@ -395,8 +427,8 @@ class ComparisonAPITests(ACJAPITestCase):
         comparisons_secondary = self._submit_all_possible_comparisons_for_user(
             self.data.get_secondary_authorized_student().id)
 
-        loser_ids = comparisons_auth['losers'] + comparisons_secondary['losers']
-        winner_ids = comparisons_auth['winners'] + comparisons_secondary['winners']
+        loser_ids = comparisons_auth['comparisons']['losers'] + comparisons_secondary['comparisons']['losers']
+        winner_ids = comparisons_auth['comparisons']['winners'] + comparisons_secondary['comparisons']['winners']
 
         # Count the number of wins each answer has had
         num_wins_by_id = {}
@@ -431,8 +463,10 @@ class ComparisonAPITests(ACJAPITestCase):
         answer_ids2 = self._submit_all_possible_comparisons_for_user(
             self.data.get_secondary_authorized_student().id)
         compared_ids = \
-            answer_ids['winners'] + answer_ids2['winners'] + \
-            answer_ids['losers'] + answer_ids2['losers']
+            answer_ids['comparisons']['winners'] + answer_ids2['comparisons']['winners'] + \
+            answer_ids['comparisons']['losers'] + answer_ids2['comparisons']['losers'] + \
+            answer_ids['comparison_examples']['winners'] + answer_ids2['comparison_examples']['winners'] + \
+            answer_ids['comparison_examples']['losers'] + answer_ids2['comparison_examples']['losers']
 
         # Just a simple test for now, make sure that answers with the smaller number of
         # comparisons are matched up with each other
