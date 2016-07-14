@@ -1,24 +1,24 @@
 <div ng-controller="EnrolController" class="text-right inline-enrol">
-	<form name="enrolForm" class="form-inline row" ng-submit="enrolSubmit()" novalidate role="form">
-		<div class="form-group">
-			<label>Add: </label>
-			<div class="input-group">
-			    <label class="sr-only" for="user">Name</label>
-			    <input type="text" ng-model="user" name="user" required typeahead="u as u.fullname+' ('+u.system_role+')' for u in getUsersAhead($viewValue)"
-				   placeholder="type user's name" class="form-control" autocomplete="off"
-				   typeahead-editable="false" typeahead-min-length="2" typeahead-wait-ms="300">
-			</div>
-			<label>as</label>
-			<div class="input-group">
-				<select id="enrol-select-course-role" class="form-control" name="role" ng-model="user.course_role" required
-					ng-options="course_role as course_role for course_role in course_roles">
-					<option value="">- select course role -</option>
-				</select>
-			</div>
-		</div>
-		<div class="input-group">
-		    <input value="Enrol" type="submit" class="inline-submit btn btn-success" ng-disabled="submitted || enrolForm.$invalid"/>
-		</div>
-	</form>
-	<br />
+    <form name="enrolForm" class="form-inline row" ng-submit="enrolSubmit()" novalidate role="form">
+        <div class="form-group">
+            <label>Add: </label>
+            <div class="input-group">
+                <label class="sr-only" for="user">Name</label>
+                <input type="text" ng-model="user" name="user" required typeahead="u as u.fullname+' ('+u.system_role+')' for u in getUsersAhead($viewValue)"
+                   placeholder="type user's name" class="form-control" autocomplete="off"
+                   typeahead-editable="false" typeahead-min-length="2" typeahead-wait-ms="300">
+            </div>
+            <label>as</label>
+            <div class="input-group">
+                <select id="enrol-select-course-role" class="form-control" name="role" ng-model="user.course_role" required
+                    ng-options="course_role as course_role for course_role in course_roles">
+                    <option value="">- select course role -</option>
+                </select>
+            </div>
+        </div>
+        <div class="input-group">
+            <input value="Enrol" type="submit" class="inline-submit btn btn-success" ng-disabled="submitted || enrolForm.$invalid"/>
+        </div>
+    </form>
+    <br />
 </div>

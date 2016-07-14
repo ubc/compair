@@ -1,36 +1,36 @@
 
 <div>
-	<label>Criteria</label>
+    <label>Criteria</label>
 
-	<div ng-repeat="(key, criterion) in assignment.criteria" class="row">
-		<div class="col-sm-2" ng-if="assignmentId">
-			<p>
+    <div ng-repeat="(key, criterion) in assignment.criteria" class="row">
+        <div class="col-sm-2" ng-if="assignmentId">
+            <p>
                 <a href=""
                    ng-click="changeCriterion(criterion)"
-				   ng-if="(canManageCriteriaAssignment || criterion.user_id==loggedInUserId) && criterion.id != 1">
-				Edit
-			    </a>
+                   ng-if="(canManageCriteriaAssignment || criterion.user_id==loggedInUserId) && criterion.id != 1">
+                Edit
+                </a>
             </p>
-		</div>
-		<div class="col-sm-2">
-			<p>
+        </div>
+        <div class="col-sm-2">
+            <p>
                 <a href="" confirmation-needed="remove(key)" keyword="criterion" ng-if="!assignment.compared">
-				    <i class="fa fa-minus-circle"></i> Drop <i class="visible-xs fa fa-arrow-down"></i>
-			    </a>
+                    <i class="fa fa-minus-circle"></i> Drop <i class="visible-xs fa fa-arrow-down"></i>
+                </a>
             </p><!-- disable from assignment / add to dropdown -->
-		</div>
-		<div class="col-sm-8">
-			<strong>{{ key + 1 }}. {{ criterion.name }}</strong>
-			<div mathjax hljs ng-bind-html="criterion.description"></div>
-		</div>
-	</div>
+        </div>
+        <div class="col-sm-8">
+            <strong>{{ key + 1 }}. {{ criterion.name }}</strong>
+            <div mathjax hljs ng-bind-html="criterion.description"></div>
+        </div>
+    </div>
 
-	<div ng-show="assignment.criteria.length < 1">
-		<p>No criteria added yet for this assignment. Please select or create a new one below.</p>
-	</div>
+    <div ng-show="assignment.criteria.length < 1">
+        <p>No criteria added yet for this assignment. Please select or create a new one below.</p>
+    </div>
 
     <div ng-if="!assignment.compared">
-	    <hr/>
+        <hr/>
 
         <!-- dropdown with leftover criteria / Add button-->
         <label>Add Criteria Assignment</label>

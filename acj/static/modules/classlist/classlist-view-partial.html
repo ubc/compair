@@ -1,105 +1,105 @@
 <div ng-controller="ClassViewController" class="manage-screen">
 
-	<div class="row">
-		<header class="col-md-6">
-			<h1><i class="fa fa-users"></i> Manage Users</h1>
-		</header>
-		<div class="col-md-6 sub-nav">
-			<a ng-href="#/course/{{courseId}}/user/import" class="btn btn-primary">
-				<i class="fa fa-upload"></i>
-				Import Users
-			</a>
+    <div class="row">
+        <header class="col-md-6">
+            <h1><i class="fa fa-users"></i> Manage Users</h1>
+        </header>
+        <div class="col-md-6 sub-nav">
+            <a ng-href="#/course/{{courseId}}/user/import" class="btn btn-primary">
+                <i class="fa fa-upload"></i>
+                Import Users
+            </a>
             <a href="" class="btn btn-primary" ng-click="export()">
                 <i class="fa fa-download"></i>
                 Export Users
             </a>
-			<a ng-href="#/course/{{courseId}}/user/group/import" class="btn btn-primary">
-				<i class="fa fa-list-ul"></i>
-				Assign Groups
-			</a>
-			<!-- TO DO: button should compile the CSV file -->
-			<!-- <a href="" class="btn btn-primary">
-				<i class="fa fa-download"></i>
-				Export Users
-			</a> -->
-		</div>
-	</div>
+            <a ng-href="#/course/{{courseId}}/user/group/import" class="btn btn-primary">
+                <i class="fa fa-list-ul"></i>
+                Assign Groups
+            </a>
+            <!-- TO DO: button should compile the CSV file -->
+            <!-- <a href="" class="btn btn-primary">
+                <i class="fa fa-download"></i>
+                Export Users
+            </a> -->
+        </div>
+    </div>
 
-	<p class="intro-text">Drop or enrol <em>individual</em> users&mdash;who are already in the application&mdash;and assign them to groups <strong>below</strong>. To create, drop, or enrol <em>multiple</em> users in a course at the same time, click <strong>Import Users</strong> above. To assign groups to <em>multiple</em> users in a course at the same time, click <strong>Assign Groups</strong> above.</p>
+    <p class="intro-text">Drop or enrol <em>individual</em> users&mdash;who are already in the application&mdash;and assign them to groups <strong>below</strong>. To create, drop, or enrol <em>multiple</em> users in a course at the same time, click <strong>Import Users</strong> above. To assign groups to <em>multiple</em> users in a course at the same time, click <strong>Assign Groups</strong> above.</p>
 
-	<h2 >Enrolled in {{course_name}}</h2>
-	<hr />
+    <h2 >Enrolled in {{course_name}}</h2>
+    <hr />
 
-	<div class="row">
-		<h3 class="col-md-2">{{ classlist.length }} Users</h3>
-		<div class="col-md-10">
-			<ng-include src="'modules/classlist/classlist-enrol-partial.html'"></ng-include>
-		</div>
-	</div>
+    <div class="row">
+        <h3 class="col-md-2">{{ classlist.length }} Users</h3>
+        <div class="col-md-10">
+            <ng-include src="'modules/classlist/classlist-enrol-partial.html'"></ng-include>
+        </div>
+    </div>
 
-	<div class="table-responsive">
-		<table class="table table-striped">
-			<thead>
-				<tr class>
-					<th>Actions</th>
-					<th>
-						<a href="" ng-click="reverse = predicate == 'firstname' && !reverse; predicate = 'firstname'">
-							First Name</a>
-					</th>
-					<th>
-						<a href="" ng-click="reverse = predicate == 'lastname' && !reverse; predicate = 'lastname'">
-							Last Name</a>
-					</th>
-					<th>
-						<a href="" ng-click="reverse = predicate == 'student_number' && ! reverse; predicate = 'student_number'">
-							Student Number</a>
-					</th>
-					<th>
-						<a href="" ng-click="reverse = predicate == 'displayname' && !reverse; predicate = 'displayname'">
-							Display Name</a>
-					</th>
-					<th>
-						<a href="" ng-click="reverse = predicate == 'email' && !reverse; predicate = 'email'">
-							Email</a>
-					</th>
-					<th>
-						<a href="" ng-click="reverse = predicate == 'course_role' && !reverse; predicate = 'course_role'">
-							Course Role</a>
-					</th>
-					<th ng-if="groups.length > 0">Group</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr ng-repeat="user in classlist | orderBy:predicate:reverse">
-					<td>
-						<a href="#/user/{{user.id}}/edit" target="_blank">
-							Edit
-						</a>
-						&nbsp;|&nbsp;
-						<a href="" confirmation-needed ng-click="unenrol(user.id)" keyword="user">
-							Drop
-						</a>
-					</td>
-					<td>{{user.firstname}}</td>
-					<td>{{user.lastname}}</td>
-					<td>{{user.student_number}}</td>
-					<td><a ng-href="#/user/{{user.id}}">{{user.displayname}}</a></td>
-					<td>{{user.email}}</td>
-					<td>
-						<select ng-if="loggedInUserId != user.id" ng-model="user.course_role"
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr class>
+                    <th>Actions</th>
+                    <th>
+                        <a href="" ng-click="reverse = predicate == 'firstname' && !reverse; predicate = 'firstname'">
+                            First Name</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="reverse = predicate == 'lastname' && !reverse; predicate = 'lastname'">
+                            Last Name</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="reverse = predicate == 'student_number' && ! reverse; predicate = 'student_number'">
+                            Student Number</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="reverse = predicate == 'displayname' && !reverse; predicate = 'displayname'">
+                            Display Name</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="reverse = predicate == 'email' && !reverse; predicate = 'email'">
+                            Email</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="reverse = predicate == 'course_role' && !reverse; predicate = 'course_role'">
+                            Course Role</a>
+                    </th>
+                    <th ng-if="groups.length > 0">Group</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="user in classlist | orderBy:predicate:reverse">
+                    <td>
+                        <a href="#/user/{{user.id}}/edit" target="_blank">
+                            Edit
+                        </a>
+                        &nbsp;|&nbsp;
+                        <a href="" confirmation-needed ng-click="unenrol(user.id)" keyword="user">
+                            Drop
+                        </a>
+                    </td>
+                    <td>{{user.firstname}}</td>
+                    <td>{{user.lastname}}</td>
+                    <td>{{user.student_number}}</td>
+                    <td><a ng-href="#/user/{{user.id}}">{{user.displayname}}</a></td>
+                    <td>{{user.email}}</td>
+                    <td>
+                        <select ng-if="loggedInUserId != user.id" ng-model="user.course_role"
                                 ng-options="course_role as course_role for course_role in course_roles"
-								ng-change="enrol(user)"></select>
-						<span ng-if="loggedInUserId == user.id">{{ course_role }}</span>
-					</td>
-					<td ng-if="groups.length > 0">
-						<select ng-model="user.group_name" ng-options="g as g for g in groups"
-								ng-change="update(user.id, user.group_name)">
-							<option value="">- None -</option>
-						</select>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-	</div>
+                                ng-change="enrol(user)"></select>
+                        <span ng-if="loggedInUserId == user.id">{{ course_role }}</span>
+                    </td>
+                    <td ng-if="groups.length > 0">
+                        <select ng-model="user.group_name" ng-options="g as g for g in groups"
+                                ng-change="update(user.id, user.group_name)">
+                            <option value="">- None -</option>
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
 </div>

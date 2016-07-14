@@ -4,29 +4,29 @@
 (function() {
 
 var module = angular.module('ubc.ctlt.acj.comparison',
-	[
-		'ubc.ctlt.acj.answer',
-		'ubc.ctlt.acj.comment',
-		'ubc.ctlt.acj.criterion',
-		'ubc.ctlt.acj.assignment',
-		'ubc.ctlt.acj.toaster',
-		'ubc.ctlt.acj.common.form',
-		'ubc.ctlt.acj.common.mathjax',
-		'ubc.ctlt.acj.common.highlightjs',
-		'ubc.ctlt.acj.common.pdf',
-		'ubc.ctlt.acj.session'
-	]
+    [
+        'ubc.ctlt.acj.answer',
+        'ubc.ctlt.acj.comment',
+        'ubc.ctlt.acj.criterion',
+        'ubc.ctlt.acj.assignment',
+        'ubc.ctlt.acj.toaster',
+        'ubc.ctlt.acj.common.form',
+        'ubc.ctlt.acj.common.mathjax',
+        'ubc.ctlt.acj.common.highlightjs',
+        'ubc.ctlt.acj.common.pdf',
+        'ubc.ctlt.acj.session'
+    ]
 );
 
 /***** Providers *****/
 module.factory('ComparisonResource', ['$resource',
-	function($resource) {
-		var resourceUrl = '/api/courses/:courseId/assignments/:assignmentId/comparisons';
-		var ret = $resource(
-			resourceUrl,
-			{}
-		);
-		return ret;
+    function($resource) {
+        var resourceUrl = '/api/courses/:courseId/assignments/:assignmentId/comparisons';
+        var ret = $resource(
+            resourceUrl,
+            {}
+        );
+        return ret;
 }]);
 
 
@@ -35,36 +35,36 @@ module.constant('required_rounds', 6);
 
 /***** Controllers *****/
 module.controller(
-	'ComparisonController',
+    'ComparisonController',
     ['$log', '$location', '$route', '$scope', '$timeout', '$routeParams', '$anchorScroll', 'AssignmentResource', 'AnswerResource',
         'ComparisonResource', 'AnswerCommentResource', 'Session', 'Toaster', 'AnswerCommentType', "TimerResource",
         'EditorOptions',
-	function($log, $location, $route, $scope, $timeout, $routeParams, $anchorScroll, AssignmentResource, AnswerResource,
-		ComparisonResource, AnswerCommentResource, Session, Toaster, AnswerCommentType, TimerResource,
+    function($log, $location, $route, $scope, $timeout, $routeParams, $anchorScroll, AssignmentResource, AnswerResource,
+        ComparisonResource, AnswerCommentResource, Session, Toaster, AnswerCommentType, TimerResource,
         EditorOptions)
-	{
-		var courseId = $scope.courseId = $routeParams['courseId'];
-		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
-		var userId;
-		$scope.submitted = false;
+    {
+        var courseId = $scope.courseId = $routeParams['courseId'];
+        var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
+        var userId;
+        $scope.submitted = false;
         $scope.isDraft = false;
-		$scope.preventExit = true; //user should be warned before leaving page by default
+        $scope.preventExit = true; //user should be warned before leaving page by default
 
         $scope.editorOptions = EditorOptions.basic;
 
-		var countDown = function() {
-			$scope.showCountDown = true;
-		};
+        var countDown = function() {
+            $scope.showCountDown = true;
+        };
 
-		$scope.assignment = {};
-		AssignmentResource.get({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
-			function (ret)
-			{
-				$scope.assignment = ret;
-				$scope.total = $scope.assignment.number_of_comparisons;
-				if ($scope.assignment.enable_self_evaluation) {
-					$scope.total += 1;
-				}
+        $scope.assignment = {};
+        AssignmentResource.get({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
+            function (ret)
+            {
+                $scope.assignment = ret;
+                $scope.total = $scope.assignment.number_of_comparisons;
+                if ($scope.assignment.enable_self_evaluation) {
+                    $scope.total += 1;
+                }
                 // if there is a comparison end date, check if timer is needed
                 var due_date = new Date($scope.assignment.compare_end);
                 if (due_date) {
@@ -81,20 +81,20 @@ module.controller(
                         }
                     );
                 }
-			},
-			function (ret)
-			{
-				Toaster.reqerror("Assignment Not Loaded", ret);
-			}
-		);
+            },
+            function (ret)
+            {
+                Toaster.reqerror("Assignment Not Loaded", ret);
+            }
+        );
 
-		// get an comparisons to be compared from the server
-		$scope.comparisonsError = false;
+        // get an comparisons to be compared from the server
+        $scope.comparisonsError = false;
         $scope.answer1 = {};
         $scope.answer2 = {};
         $scope.comparisons = [];
-		Session.getUser().then(function(user) {
-			userId = user.id;
+        Session.getUser().then(function(user) {
+            userId = user.id;
             AssignmentResource.getCurrentUserStatus({'id': $scope.courseId, 'assignmentId': assignmentId},
                 function (ret) {
                     // current comparison round user is on
@@ -135,48 +135,48 @@ module.controller(
                     Toaster.info("You've compared the available answers!", "Please check back later for more answers.");
                 }
             );
-		});
+        });
 
-		// enable scrolling to evaluation step 2, when step 2 revealed
-		//$scope.showNext = function(selector) {
-			// ensure hidden step revealed first
-			//$timeout(function(){
-				// jump to revealed step
-				//window.scrollTo(0, $(selector)[0].offsetTop - 220);
-			//}, 0);
-		//};
+        // enable scrolling to evaluation step 2, when step 2 revealed
+        //$scope.showNext = function(selector) {
+            // ensure hidden step revealed first
+            //$timeout(function(){
+                // jump to revealed step
+                //window.scrollTo(0, $(selector)[0].offsetTop - 220);
+            //}, 0);
+        //};
 
-		// save comparison to server
-		$scope.comparisonSubmit = function() {
-			$scope.submitted = true;
-			// save comments for each individual answer
-			angular.forEach([$scope.answer1, $scope.answer2], function(answer) {
-				var params = {
-					courseId: courseId,
-					assignmentId: assignmentId,
-					answerId: answer.id,
-					commentId: _.get(answer, 'comment.id')
-				};
+        // save comparison to server
+        $scope.comparisonSubmit = function() {
+            $scope.submitted = true;
+            // save comments for each individual answer
+            angular.forEach([$scope.answer1, $scope.answer2], function(answer) {
+                var params = {
+                    courseId: courseId,
+                    assignmentId: assignmentId,
+                    answerId: answer.id,
+                    commentId: _.get(answer, 'comment.id')
+                };
                 answer.comment.comment_type = AnswerCommentType.evaluation;
                 answer.comment.draft = $scope.isDraft;
-				AnswerCommentResource.save(params, answer.comment).$promise.then(
+                AnswerCommentResource.save(params, answer.comment).$promise.then(
                     function(ret) {
                         // need comment id if saving draft
                         answer.comment = ret;
                     }
                 );
-			});
+            });
             comparisons_submit = []
-			angular.forEach($scope.comparisons, function(comparison) {
+            angular.forEach($scope.comparisons, function(comparison) {
                 comparisons_submit.push({
-					criterion_id: comparison.criterion_id,
-					content: comparison.content,
-					winner_id: comparison.winner_id,
+                    criterion_id: comparison.criterion_id,
+                    content: comparison.content,
+                    winner_id: comparison.winner_id,
                     draft: $scope.isDraft
-				});
-			});
+                });
+            });
 
-			ComparisonResource.save(
+            ComparisonResource.save(
                 {'courseId': courseId, 'assignmentId': assignmentId},
                 { 'comparisons': comparisons_submit }
             ).$promise.then(
@@ -223,45 +223,45 @@ module.controller(
                         Toaster.reqerror("Comparison Submit Failed", ret);
                     }
                 }
-			);
-		};
+            );
+        };
 
-		// flag answer for instructor
-		$scope.toggleAnswerFlag = function(answer) {
-			var params = {'flagged': !answer['flagged']};
-			var resultMsg =
-				"Answer has been flagged as inappropriate or incomplete.";
-			if (answer['flagged']) {
-				resultMsg = "Answer has been unflagged.";
-			}
-			AnswerResource.flagged({'courseId':courseId,'assignmentId':assignmentId,
-				'answerId': answer['id']}, params).$promise.then(
-				function() {
-					answer.flagged = params['flagged'];
-					Toaster.success(resultMsg);
-				},
-				function(ret) {
-					Toaster.reqerror("Unable To Change Flag", ret);
-				}
-			);
-		};
-	}]
+        // flag answer for instructor
+        $scope.toggleAnswerFlag = function(answer) {
+            var params = {'flagged': !answer['flagged']};
+            var resultMsg =
+                "Answer has been flagged as inappropriate or incomplete.";
+            if (answer['flagged']) {
+                resultMsg = "Answer has been unflagged.";
+            }
+            AnswerResource.flagged({'courseId':courseId,'assignmentId':assignmentId,
+                'answerId': answer['id']}, params).$promise.then(
+                function() {
+                    answer.flagged = params['flagged'];
+                    Toaster.success(resultMsg);
+                },
+                function(ret) {
+                    Toaster.reqerror("Unable To Change Flag", ret);
+                }
+            );
+        };
+    }]
 );
 
 module.controller(
-	'ComparisonSelfEvalController',
-	['$log', '$location', '$scope', '$routeParams', 'AnswerResource', 'AssignmentResource', 'AnswerCommentResource',
-		'Session', 'Toaster', 'AnswerCommentType', 'EditorOptions',
-	function($log, $location, $scope, $routeParams, AnswerResource, AssignmentResource,
-			 AnswerCommentResource, Session, Toaster, AnswerCommentType, EditorOptions)
-	{
-		var courseId = $scope.courseId = $routeParams['courseId'];
-		var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
-		$scope.comment = {
+    'ComparisonSelfEvalController',
+    ['$log', '$location', '$scope', '$routeParams', 'AnswerResource', 'AssignmentResource', 'AnswerCommentResource',
+        'Session', 'Toaster', 'AnswerCommentType', 'EditorOptions',
+    function($log, $location, $scope, $routeParams, AnswerResource, AssignmentResource,
+             AnswerCommentResource, Session, Toaster, AnswerCommentType, EditorOptions)
+    {
+        var courseId = $scope.courseId = $routeParams['courseId'];
+        var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
+        $scope.comment = {
             draft: true
         };
 
-		$scope.editorOptions = EditorOptions.basic;
+        $scope.editorOptions = EditorOptions.basic;
 
         AssignmentResource.getCurrentUserStatus({'id': courseId, 'assignmentId': assignmentId},
             function (ret) {
@@ -273,8 +273,8 @@ module.controller(
             }
         );
 
-		Session.getUser().then(function(user) {
-			userId = user.id;
+        Session.getUser().then(function(user) {
+            userId = user.id;
             AnswerResource.user({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
                 function (ret) {
                     var answer = {}
@@ -298,18 +298,18 @@ module.controller(
                     Toaster.reqerror("Unable To Retrieve Answer", ret);
                 }
             );
-		});
+        });
 
-		$scope.commentSubmit = function () {
-			$scope.submitted = true;
-			$scope.comment.comment_type = AnswerCommentType.self_evaluation;
+        $scope.commentSubmit = function () {
+            $scope.submitted = true;
+            $scope.comment.comment_type = AnswerCommentType.self_evaluation;
             var params = {
                 courseId: courseId,
                 assignmentId: assignmentId,
                 answerId: $scope.parent.id,
                 commentId: _.get($scope.comment, 'id')
             };
-			AnswerCommentResource.save(params, $scope.comment).$promise.then(
+            AnswerCommentResource.save(params, $scope.comment).$promise.then(
                 function (ret) {
                     $scope.submitted = false;
                     if (ret.draft) {
@@ -324,9 +324,9 @@ module.controller(
                     $scope.submitted = false;
                     Toaster.reqerror("Unable To Save Self-Evaluation", ret);
                 }
-			)
-		};
-	}]
+            )
+        };
+    }]
 );
 
 // End anonymous function

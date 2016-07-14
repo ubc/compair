@@ -11,7 +11,7 @@ var module = angular.module('ubc.ctlt.acj.common.mathjax', []);
 // add the css and elements required to show bootstrap's validation feedback
 // requires the parameter form-control, which passes in the input being validated
 module.directive('mathjax', function() {
-	return function(scope, el, attrs, ctrl) {
+    return function(scope, el, attrs, ctrl) {
       scope.$watch(attrs.mathjax, function() {
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, el[0]]);
       });

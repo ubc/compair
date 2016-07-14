@@ -1,133 +1,133 @@
 <!DOCTYPE html>
 <!--[if IE 9]><html ng-app = "myApp" auth-login class="ie9"><![endif]-->
 <html ng-app = "myApp" auth-login>
-	<head>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>ComPAIR</title>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ComPAIR</title>
 
-		<!-- needed when ckeditor is minified or when running unit tests -->
+        <!-- needed when ckeditor is minified or when running unit tests -->
         <script src="lib_extension/ckeditor/basepath.js"></script>
 
-		<!-- Bower Installed Libs, automatically inserted using gulp modules -->
-		<!-- bower:css -->
-		<link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.css" />
-		<link rel="stylesheet" href="lib/fontawesome/css/font-awesome.css" />
-		<link rel="stylesheet" href="lib/highlightjs/styles/monokai_sublime.css" />
-		<link rel="stylesheet" href="lib/angular-loading-bar/build/loading-bar.css" />
-		<link rel="stylesheet" href="lib/AngularJS-Toaster/toaster.css" />
-		<!-- endbower -->
+        <!-- Bower Installed Libs, automatically inserted using gulp modules -->
+        <!-- bower:css -->
+        <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.css" />
+        <link rel="stylesheet" href="lib/fontawesome/css/font-awesome.css" />
+        <link rel="stylesheet" href="lib/highlightjs/styles/monokai_sublime.css" />
+        <link rel="stylesheet" href="lib/angular-loading-bar/build/loading-bar.css" />
+        <link rel="stylesheet" href="lib/AngularJS-Toaster/toaster.css" />
+        <!-- endbower -->
 
-		<!-- Javascript Libraries -->
-		<!-- build:prod_minify_js_libs -->
-		<!-- bower:js -->
-		<script src='lib/jquery/dist/jquery.js'></script>
-		<script src='lib/angular/angular.js'></script>
-		<script src='lib/angular-animate/angular-animate.js'></script>
-		<script src='lib/angular-cookies/angular-cookies.js'></script>
-		<script src='lib/angular-resource/angular-resource.js'></script>
-		<script src='lib/angular-route/angular-route.js'></script>
-		<script src='lib/angular-sanitize/angular-sanitize.js'></script>
-		<script src='lib/angular-http-auth/src/http-auth-interceptor.js'></script>
-		<script src='lib/ckeditor/ckeditor.js'></script>
-		<script src='lib/highlightjs/highlight.pack.js'></script>
-		<script src='lib/angular-ckeditor/angular-ckeditor.js'></script>
-		<script src='lib/es-breadcrumbs/dist/ng-breadcrumbs.min.js'></script>
-		<script src='lib/angular-loading-bar/build/loading-bar.js'></script>
-		<script src='lib/AngularJS-Toaster/toaster.js'></script>
-		<script src='lib/moment/moment.js'></script>
-		<script src='lib/momentjs/moment.js'></script>
-		<script src='lib/angular-moment/angular-moment.js'></script>
-		<script src='lib/angular-file-upload/angular-file-upload.min.js'></script>
-		<script src='lib/angular-mocks/angular-mocks.js'></script>
-		<script src='lib/angular-bootstrap/ui-bootstrap-tpls.js'></script>
-		<script src='lib/humanize-duration/humanize-duration.js'></script>
-		<script src='lib/angular-timer/dist/angular-timer.js'></script>
-		<script src='lib/lodash/lodash.js'></script>
-		<script src='lib/blob-polyfill/Blob.js'></script>
-		<script src='lib/file-saver.js/FileSaver.js'></script>
-		<script src='lib/angular-file-saver/dist/angular-file-saver.js'></script>
-		<!-- endbower -->
-		<!-- endbuild -->
-
-		<!-- Non-Bower Managed Includes -->
-
-		<!-- ACJ Stylesheet -->
-		<!-- build:prod_compile_minify_css -->
-		<link rel="stylesheet/less" type="text/css" href="less/acj.less" />
-		<script src="//cdnjs.cloudflare.com/ajax/libs/less.js/1.7.3/less.min.js">
-		</script>
-		<!-- endbuild -->
-
-		<!-- MathJax, should figure out how to bower manage this -->
-		<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_HTMLorMML&delayStartupUntil=configured"></script>
-		<script type="text/javascript">
-		MathJax.Hub.Config({
-		  skipStartupTypeset: true
-		});
-		MathJax.Hub.Configured();
-        CKEDITOR.plugins.addExternal( 'combinedmath', '../../lib_extension/ckeditor/plugins/combinedmath/' );
-		</script>
-
-        <!-- build:prod_minify_js -->
-		<!-- AngularJS Modules/Controllers/Services/etc -->
-		<script src="acj-config.js" type="text/javascript"></script>
-		<!-- - Shared Modules -->
-        <script src="modules/common/common-module.js"></script>
-        <script src="modules/common/form-directives.js"></script>
-		<script src="modules/common/avatar-directive.js"></script>
-		<script src="modules/common/http-interceptor-service.js"></script>
-		<script src="modules/common/mathjax-directives.js"></script>
-		<script src="modules/common/hljs-directives.js"></script>
-		<script src="modules/common/timer-module.js"></script>
-		<script src="modules/common/pdf.js"></script>
-		<!-- - Non-Route Modules -->
-		<script src="modules/authentication/authentication-service.js"></script>
-		<script src="modules/authorization/authorization-module.js"></script>
-		<script src="modules/session/session-service.js"></script>
-		<script src="modules/criterion/criterion-module.js"></script>
-        <script src="modules/criterion/criterion-form-directive.js"></script>
-		<script src="modules/toaster/toaster-module.js"></script>
-		<script src="modules/user/user-module.js"></script>
-		<!-- - Individual Route Modules -->
-		<script src="modules/answer/answer-module.js"></script>
-		<script src="modules/attachment/attachment-module.js"></script>
-		<script src="modules/classlist/classlist-module.js"></script>
-		<script src="modules/course/course-module.js"></script>
-		<script src="modules/gradebook/gradebook-module.js"></script>
-		<script src="modules/home/home-module.js"></script>
-        <script src="modules/comment/comment-module.js"></script>
-        <script src="modules/comparison/comparison-module.js"></script>
-		<script src="modules/login/login-module.js"></script>
-		<script src="modules/navbar/navbar-module.js"></script>
-		<script src="modules/assignment/assignment-module.js"></script>
-		<script src="modules/group/group-module.js"></script>
-		<script src="modules/report/report-module.js"></script>
+        <!-- Javascript Libraries -->
+        <!-- build:prod_minify_js_libs -->
+        <!-- bower:js -->
+        <script src='lib/jquery/dist/jquery.js'></script>
+        <script src='lib/angular/angular.js'></script>
+        <script src='lib/angular-animate/angular-animate.js'></script>
+        <script src='lib/angular-cookies/angular-cookies.js'></script>
+        <script src='lib/angular-resource/angular-resource.js'></script>
+        <script src='lib/angular-route/angular-route.js'></script>
+        <script src='lib/angular-sanitize/angular-sanitize.js'></script>
+        <script src='lib/angular-http-auth/src/http-auth-interceptor.js'></script>
+        <script src='lib/ckeditor/ckeditor.js'></script>
+        <script src='lib/highlightjs/highlight.pack.js'></script>
+        <script src='lib/angular-ckeditor/angular-ckeditor.js'></script>
+        <script src='lib/es-breadcrumbs/dist/ng-breadcrumbs.min.js'></script>
+        <script src='lib/angular-loading-bar/build/loading-bar.js'></script>
+        <script src='lib/AngularJS-Toaster/toaster.js'></script>
+        <script src='lib/moment/moment.js'></script>
+        <script src='lib/momentjs/moment.js'></script>
+        <script src='lib/angular-moment/angular-moment.js'></script>
+        <script src='lib/angular-file-upload/angular-file-upload.min.js'></script>
+        <script src='lib/angular-mocks/angular-mocks.js'></script>
+        <script src='lib/angular-bootstrap/ui-bootstrap-tpls.js'></script>
+        <script src='lib/humanize-duration/humanize-duration.js'></script>
+        <script src='lib/angular-timer/dist/angular-timer.js'></script>
+        <script src='lib/lodash/lodash.js'></script>
+        <script src='lib/blob-polyfill/Blob.js'></script>
+        <script src='lib/file-saver.js/FileSaver.js'></script>
+        <script src='lib/angular-file-saver/dist/angular-file-saver.js'></script>
+        <!-- endbower -->
         <!-- endbuild -->
 
-		<!-- Google Analytics -->
-		<script async src='//www.google-analytics.com/analytics.js'></script>
-		<!-- inject:js -->
-		<!-- endinject -->
-	</head>
-	<body>
+        <!-- Non-Bower Managed Includes -->
 
-	<!--[if lt IE 9 ]>
-	<div class="alert-warning">
-		<i class="fa fa-warning"></i>
-		This application only supports <strong>Internet Explorer 9 and higher</strong>. Please <a href="http://windows.microsoft.com/en-ca/internet-explorer/download-ie">upgrade your browser</a> or download <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a>, <a href="http://www.google.com/chrome/">Chrome</a>, or <a href="https://www.apple.com/ca/safari/">Safari</a> to use instead. Thank you!
-	</div>
-	<![endif]-->
+        <!-- ACJ Stylesheet -->
+        <!-- build:prod_compile_minify_css -->
+        <link rel="stylesheet/less" type="text/css" href="less/acj.less" />
+        <script src="//cdnjs.cloudflare.com/ajax/libs/less.js/1.7.3/less.min.js">
+        </script>
+        <!-- endbuild -->
 
-	<!-- Main Navbar -->
-	<ng-include src="'modules/navbar/navbar-partial.html'"></ng-include>
+        <!-- MathJax, should figure out how to bower manage this -->
+        <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_HTMLorMML&delayStartupUntil=configured"></script>
+        <script type="text/javascript">
+        MathJax.Hub.Config({
+          skipStartupTypeset: true
+        });
+        MathJax.Hub.Configured();
+        CKEDITOR.plugins.addExternal( 'combinedmath', '../../lib_extension/ckeditor/plugins/combinedmath/' );
+        </script>
 
-	<!-- Toast Messages from AngularJS-Toaster -->
-	<toaster-container toaster-options="{'limit': 1, 'position-class': 'toast-top-full-width-opaque'}"></toaster-container>
+        <!-- build:prod_minify_js -->
+        <!-- AngularJS Modules/Controllers/Services/etc -->
+        <script src="acj-config.js" type="text/javascript"></script>
+        <!-- - Shared Modules -->
+        <script src="modules/common/common-module.js"></script>
+        <script src="modules/common/form-directives.js"></script>
+        <script src="modules/common/avatar-directive.js"></script>
+        <script src="modules/common/http-interceptor-service.js"></script>
+        <script src="modules/common/mathjax-directives.js"></script>
+        <script src="modules/common/hljs-directives.js"></script>
+        <script src="modules/common/timer-module.js"></script>
+        <script src="modules/common/pdf.js"></script>
+        <!-- - Non-Route Modules -->
+        <script src="modules/authentication/authentication-service.js"></script>
+        <script src="modules/authorization/authorization-module.js"></script>
+        <script src="modules/session/session-service.js"></script>
+        <script src="modules/criterion/criterion-module.js"></script>
+        <script src="modules/criterion/criterion-form-directive.js"></script>
+        <script src="modules/toaster/toaster-module.js"></script>
+        <script src="modules/user/user-module.js"></script>
+        <!-- - Individual Route Modules -->
+        <script src="modules/answer/answer-module.js"></script>
+        <script src="modules/attachment/attachment-module.js"></script>
+        <script src="modules/classlist/classlist-module.js"></script>
+        <script src="modules/course/course-module.js"></script>
+        <script src="modules/gradebook/gradebook-module.js"></script>
+        <script src="modules/home/home-module.js"></script>
+        <script src="modules/comment/comment-module.js"></script>
+        <script src="modules/comparison/comparison-module.js"></script>
+        <script src="modules/login/login-module.js"></script>
+        <script src="modules/navbar/navbar-module.js"></script>
+        <script src="modules/assignment/assignment-module.js"></script>
+        <script src="modules/group/group-module.js"></script>
+        <script src="modules/report/report-module.js"></script>
+        <!-- endbuild -->
 
-	<!-- Main Viewport, where all the module partials are shown -->
-	<div class="container">
-		<!-- ngView, should have it's own row and column css organization -->
-		<div ng-view=""></div>
-	</div>
-	</body>
+        <!-- Google Analytics -->
+        <script async src='//www.google-analytics.com/analytics.js'></script>
+        <!-- inject:js -->
+        <!-- endinject -->
+    </head>
+    <body>
+
+    <!--[if lt IE 9 ]>
+    <div class="alert-warning">
+        <i class="fa fa-warning"></i>
+        This application only supports <strong>Internet Explorer 9 and higher</strong>. Please <a href="http://windows.microsoft.com/en-ca/internet-explorer/download-ie">upgrade your browser</a> or download <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a>, <a href="http://www.google.com/chrome/">Chrome</a>, or <a href="https://www.apple.com/ca/safari/">Safari</a> to use instead. Thank you!
+    </div>
+    <![endif]-->
+
+    <!-- Main Navbar -->
+    <ng-include src="'modules/navbar/navbar-partial.html'"></ng-include>
+
+    <!-- Toast Messages from AngularJS-Toaster -->
+    <toaster-container toaster-options="{'limit': 1, 'position-class': 'toast-top-full-width-opaque'}"></toaster-container>
+
+    <!-- Main Viewport, where all the module partials are shown -->
+    <div class="container">
+        <!-- ngView, should have it's own row and column css organization -->
+        <div ng-view=""></div>
+    </div>
+    </body>
 </html>

@@ -1,103 +1,103 @@
 <div ng-controller="GradebookController">
-	<div class="tab-header">
-		<div class="row">
-			<h2 class="col-sm-6">
-				Participation
-				<span ng-show="gb.group && !gb.student">for "{{gb.group}}"</span>
-				<span ng-show="gb.student">for "{{ gb.student.name }}"</span>
-			</h2>
-			<div class="col-sm-6 text-right multi-filters">
-				<span class="filter" ng-if="canManageAssignment">
-					<label>Show: &nbsp;</label>
-					<select ng-if="groups.length > 0" ng-model="gb.group" class="nullable"
-							ng-options="g as g for g in groups | orderBy: 'toString()'" ng-change="groupChange()">
-						<option value="">All groups</option>
-					</select>
-					<select ng-model="gb.student" class="nullable"
-							ng-options="u as u.name for u in users | orderBy: 'name'" ng-change="userChange()">
-						<option value="">All students</option>
-					</select>
-				</span>
-				<br />
-				<span class="filter" ng-if="canManageAssignment">
-					<label>Display scores <a href="" tooltip="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
-							<i class="fa fa-question-circle"></i></a> below for: &nbsp;</label>
-					<select ng-model="gb.sortby"
-							ng-options="c.id as c.name for c in criteria" ng-change="criteriaChange()">
-					</select>
-				</span>
-			</div>
-		</div>
-		<p class="intro-text" ng-if="canManageAssignment">To export data reports for participation and other application statistics, go to <a ng-href="#/report">Download Reports</a>.</p>
-	</div>
-	<div class="table-responsive">
-		<table class="table table-striped table-bordered">
-			<thead>
-				<tr>
-					<th>
-						<a href="" ng-click="reverse = predicate == 'firstname' && !reverse; predicate='firstname'">
-						First Name</a>
-					</th>
-					<th><a href="" ng-click="reverse = predicate == 'lastname' && !reverse; predicate='lastname'">
-						Last Name</a>
-					</th>
-					<th><a href="" ng-click="reverse = predicate == 'displayname' && !reverse; predicate='displayname'">
-						Display Name</a>
-					</th>
-					<th class="text-center"><a href="" ng-click="reverse = predicate == 'num_answers' && !reverse; predicate='num_answers'">
-						Answered</a>
-					</th>
-					<th class="text-center"><a href="" ng-click="reverse = !reverse; sortScore()">
-						Answer Score</a>
-					</th>
-					<th class="text-center"><a href="" ng-click="reverse = predicate == 'flagged' && !reverse; predicate='flagged'">
-						Flagged</a>
-					</th>
-					<th class="text-center"><a href="" ng-click="reverse = predicate == 'num_comparisons' && !reverse; predicate='num_comparisons'">
-						Evaluations</a>
-					</th>
-					<th class="text-center" ng-show="includeSelfEval"><a href="" ng-click="reverse = predicate == 'num_self_evaluation' && !reverse; predicate='num_self_evaluation'">
-						Self-Evaluation</a>
-					</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr ng-repeat="entry in gradebook | filter:groupFilter() | orderBy:predicate:reverse">
-					<td>{{entry.firstname}}</td>
-					<td>{{entry.lastname}}</td>
-					<td>
-						<a ng-href="#/user/{{entry.userid}}">
-							{{entry.displayname}}
-						</a>
-					</td>
-					<td class="text-center text-success" ng-if="entry.num_answers > 0"><strong>Yes</strong></td>
-					<td class="text-center text-danger" ng-if="entry.num_answers == 0"><strong>No</strong></td>
-					<td class="text-center" ng-class="{
-						'text-danger': entry.num_answers == 0,
-						'text-warning': entry.num_answers > 0 && !(entry.scores[gb.sortby] >= 0),
-						'text-success': entry.scores[gb.sortby] >= 0
-						}">
-						<strong>{{ entry.scores[gb.sortby] }}
-							<span ng-if="entry.scores[gb.sortby] >= 0">%</span></strong>
-					</td>
-					<td class="text-center" ng-class="{
-						'text-success': entry.flagged == 'No' || entry.flagged == 'No Answer',
-						'text-danger': entry.flagged == 'Yes'
-						}">
-						<strong>{{ entry.flagged }}</strong>
-					</td>
-					<td class="text-center" ng-class="{
-						'text-danger': entry.num_comparisons == 0,
-						'text-warning': entry.num_comparisons > 0 &&
-								 entry.num_comparisons < numerOfComparisonsRequired,
-						'text-success': entry.num_comparisons >= numerOfComparisonsRequired
-						}">
-						<strong>{{entry.num_comparisons}} / {{ numerOfComparisonsRequired }}</strong>
-					</td>
-					<td class="text-center text-success" ng-show="includeSelfEval && entry.num_self_evaluation > 0"><strong>Yes</strong></td>
-					<td class="text-center text-danger" ng-show="includeSelfEval && entry.num_self_evaluation == 0"><strong>No</strong></td>
-				</tr>
-			</tbody>
-		</table>
-	</div>
+    <div class="tab-header">
+        <div class="row">
+            <h2 class="col-sm-6">
+                Participation
+                <span ng-show="gb.group && !gb.student">for "{{gb.group}}"</span>
+                <span ng-show="gb.student">for "{{ gb.student.name }}"</span>
+            </h2>
+            <div class="col-sm-6 text-right multi-filters">
+                <span class="filter" ng-if="canManageAssignment">
+                    <label>Show: &nbsp;</label>
+                    <select ng-if="groups.length > 0" ng-model="gb.group" class="nullable"
+                            ng-options="g as g for g in groups | orderBy: 'toString()'" ng-change="groupChange()">
+                        <option value="">All groups</option>
+                    </select>
+                    <select ng-model="gb.student" class="nullable"
+                            ng-options="u as u.name for u in users | orderBy: 'name'" ng-change="userChange()">
+                        <option value="">All students</option>
+                    </select>
+                </span>
+                <br />
+                <span class="filter" ng-if="canManageAssignment">
+                    <label>Display scores <a href="" tooltip="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
+                            <i class="fa fa-question-circle"></i></a> below for: &nbsp;</label>
+                    <select ng-model="gb.sortby"
+                            ng-options="c.id as c.name for c in criteria" ng-change="criteriaChange()">
+                    </select>
+                </span>
+            </div>
+        </div>
+        <p class="intro-text" ng-if="canManageAssignment">To export data reports for participation and other application statistics, go to <a ng-href="#/report">Download Reports</a>.</p>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>
+                        <a href="" ng-click="reverse = predicate == 'firstname' && !reverse; predicate='firstname'">
+                        First Name</a>
+                    </th>
+                    <th><a href="" ng-click="reverse = predicate == 'lastname' && !reverse; predicate='lastname'">
+                        Last Name</a>
+                    </th>
+                    <th><a href="" ng-click="reverse = predicate == 'displayname' && !reverse; predicate='displayname'">
+                        Display Name</a>
+                    </th>
+                    <th class="text-center"><a href="" ng-click="reverse = predicate == 'num_answers' && !reverse; predicate='num_answers'">
+                        Answered</a>
+                    </th>
+                    <th class="text-center"><a href="" ng-click="reverse = !reverse; sortScore()">
+                        Answer Score</a>
+                    </th>
+                    <th class="text-center"><a href="" ng-click="reverse = predicate == 'flagged' && !reverse; predicate='flagged'">
+                        Flagged</a>
+                    </th>
+                    <th class="text-center"><a href="" ng-click="reverse = predicate == 'num_comparisons' && !reverse; predicate='num_comparisons'">
+                        Evaluations</a>
+                    </th>
+                    <th class="text-center" ng-show="includeSelfEval"><a href="" ng-click="reverse = predicate == 'num_self_evaluation' && !reverse; predicate='num_self_evaluation'">
+                        Self-Evaluation</a>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="entry in gradebook | filter:groupFilter() | orderBy:predicate:reverse">
+                    <td>{{entry.firstname}}</td>
+                    <td>{{entry.lastname}}</td>
+                    <td>
+                        <a ng-href="#/user/{{entry.userid}}">
+                            {{entry.displayname}}
+                        </a>
+                    </td>
+                    <td class="text-center text-success" ng-if="entry.num_answers > 0"><strong>Yes</strong></td>
+                    <td class="text-center text-danger" ng-if="entry.num_answers == 0"><strong>No</strong></td>
+                    <td class="text-center" ng-class="{
+                        'text-danger': entry.num_answers == 0,
+                        'text-warning': entry.num_answers > 0 && !(entry.scores[gb.sortby] >= 0),
+                        'text-success': entry.scores[gb.sortby] >= 0
+                        }">
+                        <strong>{{ entry.scores[gb.sortby] }}
+                            <span ng-if="entry.scores[gb.sortby] >= 0">%</span></strong>
+                    </td>
+                    <td class="text-center" ng-class="{
+                        'text-success': entry.flagged == 'No' || entry.flagged == 'No Answer',
+                        'text-danger': entry.flagged == 'Yes'
+                        }">
+                        <strong>{{ entry.flagged }}</strong>
+                    </td>
+                    <td class="text-center" ng-class="{
+                        'text-danger': entry.num_comparisons == 0,
+                        'text-warning': entry.num_comparisons > 0 &&
+                                 entry.num_comparisons < numerOfComparisonsRequired,
+                        'text-success': entry.num_comparisons >= numerOfComparisonsRequired
+                        }">
+                        <strong>{{entry.num_comparisons}} / {{ numerOfComparisonsRequired }}</strong>
+                    </td>
+                    <td class="text-center text-success" ng-show="includeSelfEval && entry.num_self_evaluation > 0"><strong>Yes</strong></td>
+                    <td class="text-center text-danger" ng-show="includeSelfEval && entry.num_self_evaluation == 0"><strong>No</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>

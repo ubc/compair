@@ -5,14 +5,14 @@
 (function() {
 
 var module = angular.module('ubc.ctlt.acj.home',
-	[
-		'ngSanitize',
-		'ubc.ctlt.acj.authentication',
-		'ubc.ctlt.acj.authorization',
-		'ubc.ctlt.acj.course',
-		'ubc.ctlt.acj.toaster',
-		'ubc.ctlt.acj.user'
-	]
+    [
+        'ngSanitize',
+        'ubc.ctlt.acj.authentication',
+        'ubc.ctlt.acj.authorization',
+        'ubc.ctlt.acj.course',
+        'ubc.ctlt.acj.toaster',
+        'ubc.ctlt.acj.user'
+    ]
 );
 
 /***** Providers *****/
@@ -20,16 +20,16 @@ var module = angular.module('ubc.ctlt.acj.home',
 
 /***** Controllers *****/
 module.controller(
-	'HomeController',
+    'HomeController',
     ["$rootScope", "$scope", "$location", "$log",
      "Session", "AuthenticationService", "Authorize", "CourseResource", "Toaster", "UserResource",
-	function HomeController($rootScope, $scope, $location, $log,
+    function HomeController($rootScope, $scope, $location, $log,
                             Session,
-							AuthenticationService,
-							Authorize,
-							CourseResource,
-							Toaster,
-							UserResource) {
+                            AuthenticationService,
+                            Authorize,
+                            CourseResource,
+                            Toaster,
+                            UserResource) {
         Authorize.can(Authorize.CREATE, CourseResource.MODEL).then(function(canAddCourse){
             $scope.canAddCourse = canAddCourse;
         });
@@ -45,7 +45,7 @@ module.controller(
                 }
             );
         });
-	}
+    }
 ]);
 // End anonymous function
 })();

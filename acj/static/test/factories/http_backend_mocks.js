@@ -1,9 +1,9 @@
 module.exports.build = function(browser, storageFixture) {
-	if (process.env.DISABLE_MOCK == 'true') {
-		return;
-	}
+    if (process.env.DISABLE_MOCK == 'true') {
+        return;
+    }
 
-	browser.addMockModule('httpBackEndMock', module.exports.httpbackendMock, storageFixture);
+    browser.addMockModule('httpBackEndMock', module.exports.httpbackendMock, storageFixture);
 };
 
 module.exports.httpbackendMock = function(storageFixture) {

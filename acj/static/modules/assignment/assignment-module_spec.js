@@ -1,54 +1,54 @@
 describe('course-module', function () {
-	var $httpBackend, sessionRequestHandler;
-	var id = 1;
-	var mockSession = {
-		"id": id,
-		"permissions": {
-			"Course": {
-				"create": true,
-				"delete": true,
-				"edit": true,
-				"manage": true,
-				"read": true
-			},
-			"Assignment": {
-				"create": true,
-				"delete": true,
-				"edit": true,
-				"manage": true,
-				"read": true
-			},
-			"User": {
-				"create": true,
-				"delete": true,
-				"edit": true,
-				"manage": true,
-				"read": true
-			}
-		}
-	};
-	var mockUser = {
-		avatar: "63a9f0ea7bb98050796b649e85481845",
-		created: "Tue, 27 May 2014 00:02:38 -0000",
-		displayname: "root",
-		email: null,
-		firstname: "John",
-		fullname: "John Smith",
-		id: id,
-		lastname: "Smith",
-		last_online: "Tue, 12 Aug 2014 20:53:31 -0000",
-		modified: "Tue, 12 Aug 2014 20:53:31 -0000",
-		username: "root",
-		system_role: "System Administrator"
-	};
-	var mockCourse = {
-		"available": true,
-		"created": "Fri, 09 Jan 2015 17:23:59 -0000",
-		"description": null,
-		"id": 1,
-		"modified": "Fri, 09 Jan 2015 17:23:59 -0000",
-		"name": "Test Course"
-	};
+    var $httpBackend, sessionRequestHandler;
+    var id = 1;
+    var mockSession = {
+        "id": id,
+        "permissions": {
+            "Course": {
+                "create": true,
+                "delete": true,
+                "edit": true,
+                "manage": true,
+                "read": true
+            },
+            "Assignment": {
+                "create": true,
+                "delete": true,
+                "edit": true,
+                "manage": true,
+                "read": true
+            },
+            "User": {
+                "create": true,
+                "delete": true,
+                "edit": true,
+                "manage": true,
+                "read": true
+            }
+        }
+    };
+    var mockUser = {
+        avatar: "63a9f0ea7bb98050796b649e85481845",
+        created: "Tue, 27 May 2014 00:02:38 -0000",
+        displayname: "root",
+        email: null,
+        firstname: "John",
+        fullname: "John Smith",
+        id: id,
+        lastname: "Smith",
+        last_online: "Tue, 12 Aug 2014 20:53:31 -0000",
+        modified: "Tue, 12 Aug 2014 20:53:31 -0000",
+        username: "root",
+        system_role: "System Administrator"
+    };
+    var mockCourse = {
+        "available": true,
+        "created": "Fri, 09 Jan 2015 17:23:59 -0000",
+        "description": null,
+        "id": 1,
+        "modified": "Fri, 09 Jan 2015 17:23:59 -0000",
+        "name": "Test Course"
+    };
     var mockCritiera = {
         "objects": [
             {
@@ -74,7 +74,7 @@ describe('course-module', function () {
         ]
     };
 
-	var mockAssignment = {
+    var mockAssignment = {
         "after_comparing": false,
         "answer_count": 12,
         "answer_end": "Wed, 15 Jun 2016 06:59:00 -0000",
@@ -641,37 +641,37 @@ describe('course-module', function () {
         ]
     };
 
-	beforeEach(module('ubc.ctlt.acj.course'));
-	beforeEach(inject(function ($injector) {
-		$httpBackend = $injector.get('$httpBackend');
-		sessionRequestHandler = $httpBackend.when('GET', '/api/session').respond(mockSession);
-		$httpBackend.when('GET', '/api/users/' + id).respond(mockUser);
-	}));
+    beforeEach(module('ubc.ctlt.acj.course'));
+    beforeEach(inject(function ($injector) {
+        $httpBackend = $injector.get('$httpBackend');
+        sessionRequestHandler = $httpBackend.when('GET', '/api/session').respond(mockSession);
+        $httpBackend.when('GET', '/api/users/' + id).respond(mockUser);
+    }));
 
-	afterEach(function () {
-		$httpBackend.verifyNoOutstandingExpectation();
-		$httpBackend.verifyNoOutstandingRequest();
-	});
+    afterEach(function () {
+        $httpBackend.verifyNoOutstandingExpectation();
+        $httpBackend.verifyNoOutstandingRequest();
+    });
 
-	describe('AssignmentViewController', function () {
-		var $rootScope, createController, $location, $modal, $q;
-		var controller;
+    describe('AssignmentViewController', function () {
+        var $rootScope, createController, $location, $modal, $q;
+        var controller;
         var toaster;
 
-		beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_, _Toaster_) {
-			$rootScope = _$rootScope_;
-			$location = _$location_;
-			$modal = _$modal_;
-			$q = _$q_;
-			toaster = _Toaster_;
-			createController = function (route, params) {
-				return $controller('AssignmentViewController', {
-					$scope: $rootScope,
-					$routeParams: params || {},
-					$route: route || {}
-				});
-			}
-		}));
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_, _Toaster_) {
+            $rootScope = _$rootScope_;
+            $location = _$location_;
+            $modal = _$modal_;
+            $q = _$q_;
+            toaster = _Toaster_;
+            createController = function (route, params) {
+                return $controller('AssignmentViewController', {
+                    $scope: $rootScope,
+                    $routeParams: params || {},
+                    $route: route || {}
+                });
+            }
+        }));
 
         describe('view:', function() {
             beforeEach(function () {
@@ -877,27 +877,27 @@ describe('course-module', function () {
                 expect($rootScope.assignment.comment_count).toEqual(comments.length);
             });
         });
-	});
+    });
 
     describe('AssignmentWriteController', function () {
-		var $rootScope, createController, $location, $modal, $q;
-		var controller;
+        var $rootScope, createController, $location, $modal, $q;
+        var controller;
         var defaultCriteria;
         var otherCriteria;
 
-		beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_) {
-			$rootScope = _$rootScope_;
-			$location = _$location_;
-			$modal = _$modal_;
-			$q = _$q_;
-			createController = function (route, params) {
-				return $controller('AssignmentWriteController', {
-					$scope: $rootScope,
-					$routeParams: params || {},
-					$route: route || {}
-				});
-			}
-		}));
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_) {
+            $rootScope = _$rootScope_;
+            $location = _$location_;
+            $modal = _$modal_;
+            $q = _$q_;
+            createController = function (route, params) {
+                return $controller('AssignmentWriteController', {
+                    $scope: $rootScope,
+                    $routeParams: params || {},
+                    $route: route || {}
+                });
+            }
+        }));
 
         describe('new:', function() {
             beforeEach(function () {
@@ -1036,7 +1036,7 @@ describe('course-module', function () {
                     expect($location.path()).toEqual(currentPath);
                 });
 
-				it('should enable save button even if save failed', function() {
+                it('should enable save button even if save failed', function() {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
 
@@ -1045,8 +1045,8 @@ describe('course-module', function () {
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();
-					expect($rootScope.submitted).toBe(false);
-				});
+                    expect($rootScope.submitted).toBe(false);
+                });
 
                 it('should be able to save new assignment', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
@@ -1197,7 +1197,7 @@ describe('course-module', function () {
                     expect($location.path()).toEqual(currentPath);
                 });
 
-				it('should enable save button even if save failed', function() {
+                it('should enable save button even if save failed', function() {
                     $rootScope.assignment = angular.copy(mockAssignment);
 
                     $httpBackend.expectPOST('/api/courses/1/assignments/1', $rootScope.assignment)
@@ -1205,8 +1205,8 @@ describe('course-module', function () {
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();
-					expect($rootScope.submitted).toBe(false);
-				});
+                    expect($rootScope.submitted).toBe(false);
+                });
 
                 it('should be able to save new assignment', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
@@ -1221,5 +1221,5 @@ describe('course-module', function () {
                 });
             });
         });
-	});
+    });
 });

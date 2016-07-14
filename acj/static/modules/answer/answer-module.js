@@ -4,111 +4,111 @@
 (function() {
 
 var module = angular.module('ubc.ctlt.acj.answer',
-	[
-		'ngResource',
-		'timer',
-		'ubc.ctlt.acj.classlist',
-		'ubc.ctlt.acj.common.form',
-		'ubc.ctlt.acj.common.interceptor',
-		'ubc.ctlt.acj.common.mathjax',
-		'ubc.ctlt.acj.common.highlightjs',
-		'ubc.ctlt.acj.common.timer',
-		'ubc.ctlt.acj.assignment',
-		'ubc.ctlt.acj.toaster'
-	]
+    [
+        'ngResource',
+        'timer',
+        'ubc.ctlt.acj.classlist',
+        'ubc.ctlt.acj.common.form',
+        'ubc.ctlt.acj.common.interceptor',
+        'ubc.ctlt.acj.common.mathjax',
+        'ubc.ctlt.acj.common.highlightjs',
+        'ubc.ctlt.acj.common.timer',
+        'ubc.ctlt.acj.assignment',
+        'ubc.ctlt.acj.toaster'
+    ]
 );
 
 /***** Providers *****/
 module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resource, $cacheFactory) {
-		var url = '/api/courses/:courseId/assignments/:assignmentId/answers/:answerId';
-		// keep a list of answer list query URLs so that we can invalidate caches for those later
-		var listCacheKeys = [];
-		var cache = $cacheFactory.get('$http');
+        var url = '/api/courses/:courseId/assignments/:assignmentId/answers/:answerId';
+        // keep a list of answer list query URLs so that we can invalidate caches for those later
+        var listCacheKeys = [];
+        var cache = $cacheFactory.get('$http');
 
-		function invalidListCache(url) {
-			// remove list caches. As list query may contain pagination and query parameters
-			// we have to invalidate all.
-			_.forEach(listCacheKeys, function(key, index, keys) {
-				if (url == undefined || _.startsWith(key, url)) {
-					cache.remove(key);
-					keys.splice(index, 1);
-				}
-			});
-		}
+        function invalidListCache(url) {
+            // remove list caches. As list query may contain pagination and query parameters
+            // we have to invalidate all.
+            _.forEach(listCacheKeys, function(key, index, keys) {
+                if (url == undefined || _.startsWith(key, url)) {
+                    cache.remove(key);
+                    keys.splice(index, 1);
+                }
+            });
+        }
 
-		var cacheInterceptor = {
-			response: function(response) {
-				cache.remove(response.config.url);	// remove cached GET response
-				// removing the suffix of some of the actions - eg. flagged
-				var url = response.config.url.replace(/\/(flagged)/g, "");
-				cache.remove(url);
-				url = url.replace(/\/\d+$/g, "");
+        var cacheInterceptor = {
+            response: function(response) {
+                cache.remove(response.config.url);	// remove cached GET response
+                // removing the suffix of some of the actions - eg. flagged
+                var url = response.config.url.replace(/\/(flagged)/g, "");
+                cache.remove(url);
+                url = url.replace(/\/\d+$/g, "");
 
-				invalidListCache(url);
+                invalidListCache(url);
 
-				return response.data;
-			}
-		};
-		// this function is copied from angular $http to build request URL
-		function buildUrl(url, serializedParams) {
-			if (serializedParams.length > 0) {
-				url += ((url.indexOf('?') == -1) ? '?' : '&') + serializedParams;
-			}
-			return url;
-		}
+                return response.data;
+            }
+        };
+        // this function is copied from angular $http to build request URL
+        function buildUrl(url, serializedParams) {
+            if (serializedParams.length > 0) {
+                url += ((url.indexOf('?') == -1) ? '?' : '&') + serializedParams;
+            }
+            return url;
+        }
 
-		// store answer list query URLs
-		var cacheKeyInterceptor = {
-			response: function(response) {
-				var url = buildUrl(response.config.url, response.config.paramSerializer(response.config.params));
-				if (url.match(/\/api\/courses\/\d+\/assignments\/\d+\/answers\?.*/)) {
-					listCacheKeys.push(url);
-				}
+        // store answer list query URLs
+        var cacheKeyInterceptor = {
+            response: function(response) {
+                var url = buildUrl(response.config.url, response.config.paramSerializer(response.config.params));
+                if (url.match(/\/api\/courses\/\d+\/assignments\/\d+\/answers\?.*/)) {
+                    listCacheKeys.push(url);
+                }
 
-				return response.data;
-			}
-		};
+                return response.data;
+            }
+        };
 
-		var ret = $resource(
-			url, {answerId: '@id'},
-			{
-				get: {url: url, cache: true, interceptor: cacheKeyInterceptor},
-				save: {method: 'POST', url: url, interceptor: cacheInterceptor},
-				delete: {method: 'DELETE', url: url, interceptor: cacheInterceptor},
-				flagged: {
-					method: 'POST',
-					url: '/api/courses/:courseId/assignments/:assignmentId/answers/:answerId/flagged',
-					interceptor: cacheInterceptor
-				},
+        var ret = $resource(
+            url, {answerId: '@id'},
+            {
+                get: {url: url, cache: true, interceptor: cacheKeyInterceptor},
+                save: {method: 'POST', url: url, interceptor: cacheInterceptor},
+                delete: {method: 'DELETE', url: url, interceptor: cacheInterceptor},
+                flagged: {
+                    method: 'POST',
+                    url: '/api/courses/:courseId/assignments/:assignmentId/answers/:answerId/flagged',
+                    interceptor: cacheInterceptor
+                },
                 comparisons: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/comparisons'},
-				user: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/user'}
-			}
-		);
-		ret.MODEL = "Answer";
-		ret.invalidListCache = invalidListCache;
-		return ret;
-	}]
+                user: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/user'}
+            }
+        );
+        ret.MODEL = "Answer";
+        ret.invalidListCache = invalidListCache;
+        return ret;
+    }]
 );
 
 /***** Controllers *****/
 module.controller(
-	"AnswerWriteController",
-	["$scope", "$log", "$location", "$routeParams", "AnswerResource", "ClassListResource", "$route",
-		"AssignmentResource", "TimerResource", "Toaster", "Authorize", "Session", "$timeout",
+    "AnswerWriteController",
+    ["$scope", "$log", "$location", "$routeParams", "AnswerResource", "ClassListResource", "$route",
+        "AssignmentResource", "TimerResource", "Toaster", "Authorize", "Session", "$timeout",
         "attachService", "AttachmentResource", "EditorOptions",
-	function ($scope, $log, $location, $routeParams, AnswerResource, ClassListResource, $route,
-		AssignmentResource, TimerResource, Toaster, Authorize, Session, $timeout,
+    function ($scope, $log, $location, $routeParams, AnswerResource, ClassListResource, $route,
+        AssignmentResource, TimerResource, Toaster, Authorize, Session, $timeout,
         attachService, AttachmentResource, EditorOptions)
-	{
-		$scope.courseId = $routeParams['courseId'];
-		var assignmentId = $routeParams['assignmentId'];
-		$scope.assignment = {};
-		$scope.answer = {};
+    {
+        $scope.courseId = $routeParams['courseId'];
+        var assignmentId = $routeParams['assignmentId'];
+        $scope.assignment = {};
+        $scope.answer = {};
         $scope.preventExit = true; //user should be warned before leaving page by default
-		$scope.editorOptions = EditorOptions.basic;
+        $scope.editorOptions = EditorOptions.basic;
 
         if ($route.current.method == "new") {
-		    $scope.showUserList = true;
+            $scope.showUserList = true;
             $scope.answer.draft = true;
         } else if ($route.current.method == "edit") {
             $scope.answerId = $routeParams['answerId'];
@@ -126,45 +126,45 @@ module.controller(
             );
         }
 
-		$scope.uploader = attachService.getUploader();
-		$scope.resetName = attachService.resetName();
+        $scope.uploader = attachService.getUploader();
+        $scope.resetName = attachService.resetName();
 
-		var countDown = function() {
-			$scope.showCountDown = true;
-		};
+        var countDown = function() {
+            $scope.showCountDown = true;
+        };
 
-		Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, $scope.courseId).then(function(canManageAssignment){
-			$scope.canManageAssignment = canManageAssignment;
+        Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, $scope.courseId).then(function(canManageAssignment){
+            $scope.canManageAssignment = canManageAssignment;
 
-			if ($route.current.method == "new" && $scope.canManageAssignment) {
-				// get list of users in the course
-				ClassListResource.get({'courseId': $scope.courseId}).$promise.then(
-					function (ret) {
-						$scope.classlist = ret.objects;
-					},
-					function (ret) {
-						Toaster.reqerror("No Users Found For Course ID "+$scope.courseId, ret);
-					}
-				);
+            if ($route.current.method == "new" && $scope.canManageAssignment) {
+                // get list of users in the course
+                ClassListResource.get({'courseId': $scope.courseId}).$promise.then(
+                    function (ret) {
+                        $scope.classlist = ret.objects;
+                    },
+                    function (ret) {
+                        Toaster.reqerror("No Users Found For Course ID "+$scope.courseId, ret);
+                    }
+                );
                 Session.getUser().then(function(user) {
                     $scope.answer.user_id = user.id
                 });
-			}
-		});
+            }
+        });
 
-		$scope.deleteFile = function(file_id) {
-			AttachmentResource.delete({'fileId': file_id}).$promise.then(
-				function (ret) {
-					Toaster.success('Attachment deleted successfully');
-					$scope.answer.uploadedFile = false;
-				},
-				function (ret) {
-					Toaster.reqerror('Attachment deletion failed', ret);
-				}
-			);
-		};
+        $scope.deleteFile = function(file_id) {
+            AttachmentResource.delete({'fileId': file_id}).$promise.then(
+                function (ret) {
+                    Toaster.success('Attachment deleted successfully');
+                    $scope.answer.uploadedFile = false;
+                },
+                function (ret) {
+                    Toaster.reqerror('Attachment deletion failed', ret);
+                }
+            );
+        };
 
-		AssignmentResource.get({'courseId': $scope.courseId, 'assignmentId': assignmentId}).$promise.then(
+        AssignmentResource.get({'courseId': $scope.courseId, 'assignmentId': assignmentId}).$promise.then(
             function (ret) {
                 $scope.assignment = ret;
                 var due_date = new Date($scope.assignment.answer_end);
@@ -188,13 +188,13 @@ module.controller(
             }
         );
 
-		$scope.answerSubmit = function () {
-			$scope.submitted = true;
-			$scope.answer.file_name = attachService.getName();
-			$scope.answer.file_alias = attachService.getAlias();
+        $scope.answerSubmit = function () {
+            $scope.submitted = true;
+            $scope.answer.file_name = attachService.getName();
+            $scope.answer.file_alias = attachService.getAlias();
             var wasDraft = $scope.answer.draft;
 
-			AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': assignmentId}, $scope.answer).$promise.then(
+            AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': assignmentId}, $scope.answer).$promise.then(
                 function (ret) {
                     $scope.submitted = false;
 
@@ -228,8 +228,8 @@ module.controller(
                     }
                 }
             );
-		};
-	}
+        };
+    }
 ]);
 
 // End anonymous function

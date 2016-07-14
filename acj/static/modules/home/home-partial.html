@@ -1,41 +1,41 @@
 <div ng-controller="HomeController" class="home-screen">
 
-	<h1 id="view-title">ComPAIR</h1>
+    <h1 id="view-title">ComPAIR</h1>
 
-	<p class="intro-text">Welcome to the ComPAIR tool! With this tool,
-		<span ng-show="!canAddCourse">you will show your understanding of course content by answering the assignments posted by your instructor and then comparing pairs of your peers' answers and offering constructive feedback on how they can improve.</span>
-		<span ng-show="canAddCourse">you can post assignments for students to answer, see how students compare and offer feedback on pairs of their peers' answers, and give individual feedback to each student or to the class as a whole.</span>
-	</p>
+    <p class="intro-text">Welcome to the ComPAIR tool! With this tool,
+        <span ng-show="!canAddCourse">you will show your understanding of course content by answering the assignments posted by your instructor and then comparing pairs of your peers' answers and offering constructive feedback on how they can improve.</span>
+        <span ng-show="canAddCourse">you can post assignments for students to answer, see how students compare and offer feedback on pairs of their peers' answers, and give individual feedback to each student or to the class as a whole.</span>
+    </p>
 
-	<div class="row">
+    <div class="row">
 
-		<h2 class="col-sm-8">Select a course</h2>
+        <h2 class="col-sm-8">Select a course</h2>
 
-		<form class="col-sm-4 search-courses text-right" role="search" ng-show="canAddCourse && courses.length">
-			<div class="form-group">
-				<input class="form-control" type="text"
-					placeholder="Filter courses by keyword" ng-model="courseFilter">
-			</div>
-		</form>
+        <form class="col-sm-4 search-courses text-right" role="search" ng-show="canAddCourse && courses.length">
+            <div class="form-group">
+                <input class="form-control" type="text"
+                    placeholder="Filter courses by keyword" ng-model="courseFilter">
+            </div>
+        </form>
 
-	</div>
+    </div>
 
-	<!-- Course listing -->
-	<div class="course-list" ng-if="courses.length">
-		<a ng-repeat="course in courses | filter:courseFilter"
-			ng-href="#/course/{{course.id}}" class="each-course">
-			<h3 class="clearfix">
-				<i class="fa fa-book"></i>
-				{{course.name}}
-				<i class="fa fa-arrow-right fa-2x pull-right hidden-xs"></i>
-			</h3>
-		</a>
-	</div>
+    <!-- Course listing -->
+    <div class="course-list" ng-if="courses.length">
+        <a ng-repeat="course in courses | filter:courseFilter"
+            ng-href="#/course/{{course.id}}" class="each-course">
+            <h3 class="clearfix">
+                <i class="fa fa-book"></i>
+                {{course.name}}
+                <i class="fa fa-arrow-right fa-2x pull-right hidden-xs"></i>
+            </h3>
+        </a>
+    </div>
 
-	<div ng-if="!courses.length">
-		<hr />
-		<p>No courses currently available.</p>
-		<p ng-if="canAddCourse">Would you like to <a href="#/course/new">add a course</a>?</p>
-	</div>
+    <div ng-if="!courses.length">
+        <hr />
+        <p>No courses currently available.</p>
+        <p ng-if="canAddCourse">Would you like to <a href="#/course/new">add a course</a>?</p>
+    </div>
 
 </div>

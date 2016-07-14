@@ -2,28 +2,28 @@
 <h1><span ng-hide="{{ criterion && criterion.id }}">Add</span><span ng-show="{{ criterion && criterion.id }}">Edit</span> Criterion</h1>
 <br />
 <ng-form name="criterionForm" class="form">
-	<p ng-if="criterion.compared" class="intro-text bg-warning text-warning alert">
+    <p ng-if="criterion.compared" class="intro-text bg-warning text-warning alert">
         <i class="fa fa-warning"></i>
         This criterion has already been compared by students. Please make minor text updates only.
     </p>
-	<acj-field-with-feedback form-control="criterionForm.criterionName">
-		<label class="required-star" for="criterionName">Comparison Question</label>
-		<input type="text" maxlength="255" placeholder="e.g. Which answer is better?"
-			   ng-model="criterion.name" id="criterionName" name="criterionName" class="form-control" required/>
-	</acj-field-with-feedback>
-	<div class="form-group">
-		<label for="criterionDescription">Instructions For Comparing Answers</label>
-		<textarea ckeditor="editorOptions" rows="4"
-			ng-model="criterion.description" id="criterionDescription" name="criterionDescription" class="form-control">
-		</textarea>
-	</div>
-	<div class="form-group">
-		<input type="checkbox" ng-model="criterion.default" name="criterionDefault" id="criterionDefault" />
-		<label for="criterionDefault">Include this criterion in my list of default criteria (to use it in other assignments)</label>
-	</div>
-	<div class="text-center">
-		<input type="button" ng-click="criterionSubmit()" class="btn btn-success btn-lg" value="{{ (criterion && criterion.id) ? 'Update' : 'Add New' }}"
-		ng-disabled="criterionForm.$invalid || criterionSubmitted" />
-	</div>
-	<br />
+    <acj-field-with-feedback form-control="criterionForm.criterionName">
+        <label class="required-star" for="criterionName">Comparison Question</label>
+        <input type="text" maxlength="255" placeholder="e.g. Which answer is better?"
+               ng-model="criterion.name" id="criterionName" name="criterionName" class="form-control" required/>
+    </acj-field-with-feedback>
+    <div class="form-group">
+        <label for="criterionDescription">Instructions For Comparing Answers</label>
+        <textarea ckeditor="editorOptions" rows="4"
+            ng-model="criterion.description" id="criterionDescription" name="criterionDescription" class="form-control">
+        </textarea>
+    </div>
+    <div class="form-group">
+        <input type="checkbox" ng-model="criterion.default" name="criterionDefault" id="criterionDefault" />
+        <label for="criterionDefault">Include this criterion in my list of default criteria (to use it in other assignments)</label>
+    </div>
+    <div class="text-center">
+        <input type="button" ng-click="criterionSubmit()" class="btn btn-success btn-lg" value="{{ (criterion && criterion.id) ? 'Update' : 'Add New' }}"
+        ng-disabled="criterionForm.$invalid || criterionSubmitted" />
+    </div>
+    <br />
 </ng-form>

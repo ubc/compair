@@ -1,5 +1,5 @@
 (function() {
 
-	angular.module('ubc.ctlt.acj.common', []);
+    angular.module('ubc.ctlt.acj.common', []);
 
 })();

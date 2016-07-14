@@ -1,5 +1,5 @@
 describe('criterion-module', function () {
-	var $httpBackend;
+    var $httpBackend;
 
     beforeEach(module('ubc.ctlt.acj.criterion'));
     beforeEach(module('modules/criterion/criterion-form-partial.html',
@@ -131,5 +131,5 @@ describe('criterion-module', function () {
                 })
             })
         });
-	});
+    });
 });

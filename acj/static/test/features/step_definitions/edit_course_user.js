@@ -22,14 +22,14 @@ var editCourseUserStepDefinitionsWrapper = function () {
 
         expect(element.all(by.repeater('user in classlist | orderBy:predicate:reverse')
             .column('user.displayname')).getText()).to.eventually.eql(list).and.notify(done);
-	});
+    });
 
-	this.When("I select the first user search result", function () {
+    this.When("I select the first user search result", function () {
         return element(by.repeater('match in matches track by $index').row(0)).click();
     });
 
 
-	this.When("I select the Student role for the user", function (done) {
+    this.When("I select the Student role for the user", function (done) {
         var fillElement = element(by.css("#enrol-select-course-role"));
 
         if (browser.browserName == "firefox") {
@@ -50,13 +50,13 @@ var editCourseUserStepDefinitionsWrapper = function () {
     this.When(/^I set the second user's group to "([^"]*)"$/, function (groupname, done) {
         var groupSelect = element.all(by.repeater("user in classlist | orderBy:predicate:reverse"))
             .get(1).element(by.model('user.group_name'));
-		if (browser.browserName == "firefox") {
-			groupSelect.click();
-		}
+        if (browser.browserName == "firefox") {
+            groupSelect.click();
+        }
 
         groupSelect.sendKeys(groupname);
-		// force blur
-		element(by.css("h1")).click();
+        // force blur
+        element(by.css("h1")).click();
 
         done();
     });

@@ -1,13 +1,13 @@
 var env = require('../env.js');
 
 var CoursePage = function() {
-	var addAssignmentButton = element(by.css('#add-assignment-btn')),
+    var addAssignmentButton = element(by.css('#add-assignment-btn')),
         editCoruseButton = element(by.css('#edit-course-btn')),
         manageUsersButton = element(by.css('#manage-users-btn'));
 
-	this.get = function(courseId) {
-		return browser.get(env.baseUrl + '#/course/' + courseId);
-	};
+    this.get = function(courseId) {
+        return browser.get(env.baseUrl + '#/course/' + courseId);
+    };
 
     this.clickButton = function(button) {
         switch (button) {

@@ -104,7 +104,7 @@
                 $cookies.remove('current.user');
                 $cookies.remove('current.permissions');
             },
-			refresh: function() {
+            refresh: function() {
                 var scope = this;
                 var deferred = $q.defer();
                 return $http.get('/api/session', { cache:true })
@@ -121,17 +121,17 @@
                         $cookies.putObject('current.permissions', scope._permissions);
                         return deferred.promise;
                     });
-			},
-			refreshPermissions: function() {
-				var scope = this;
-				return $http.get('/api/session/permission')
+            },
+            refreshPermissions: function() {
+                var scope = this;
+                return $http.get('/api/session/permission')
                     .then(function (result) {
-						scope._permissions = result.data;
-						$cookies.putObject('current.permissions', result.data);
+                        scope._permissions = result.data;
+                        $cookies.putObject('current.permissions', result.data);
                         $rootScope.$broadcast(PERMISSION_REFRESHED_EVENT);
-						return true;
+                        return true;
                     });
-			}
+            }
         };
     }]);
 

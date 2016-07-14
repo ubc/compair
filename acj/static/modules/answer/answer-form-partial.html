@@ -1,69 +1,69 @@
 <p class="intro-text">Please note <strong>answers are not automatically saved</strong> as you type.</p>
 
 <form class="form" name="answerForm" ng-submit="answerSubmit()" novalidate confirm-form-exit form-type="answer">
-	<fieldset>
-		<h2><i class="fa fa-comments"></i> {{assignment.name}}</h2>
-		<div class="assignment-desc" mathjax hljs ng-bind-html="assignment.description"></div>
+    <fieldset>
+        <h2><i class="fa fa-comments"></i> {{assignment.name}}</h2>
+        <div class="assignment-desc" mathjax hljs ng-bind-html="assignment.description"></div>
 
-		<!-- Attachment -->
-		<acj-pdf-inline label="See assignment details:" pdf="assignment.file">
-		</acj-pdf-inline>
+        <!-- Attachment -->
+        <acj-pdf-inline label="See assignment details:" pdf="assignment.file">
+        </acj-pdf-inline>
 
-		<hr />
+        <hr />
 
-		<div class="h3 text-center" ng-show="!canManageAssignment && showCountDown">
-			<timer end-time="assignment.answer_end">
-				<span title="Official time remaining until deadline" class="bg-danger alert text-danger">{{minutes}} minutes {{seconds}} seconds left</span>
-			</timer>
-			<br /><br />
-			<span class="h4">(Answer must be saved by deadline to be accepted)</span>
-		</div>
+        <div class="h3 text-center" ng-show="!canManageAssignment && showCountDown">
+            <timer end-time="assignment.answer_end">
+                <span title="Official time remaining until deadline" class="bg-danger alert text-danger">{{minutes}} minutes {{seconds}} seconds left</span>
+            </timer>
+            <br /><br />
+            <span class="h4">(Answer must be saved by deadline to be accepted)</span>
+        </div>
 
-		<div class="form-group" ng-if="canManageAssignment && showUserList">
-			<label for="user_id">Submit As</label>
-			<select id="user_id" name="user_id" ng-model="answer.user_id"  class="form-control" required
-					ng-options="u.id as u.fullname for u in classlist">
-			</select>
-		</div>
+        <div class="form-group" ng-if="canManageAssignment && showUserList">
+            <label for="user_id">Submit As</label>
+            <select id="user_id" name="user_id" ng-model="answer.user_id"  class="form-control" required
+                    ng-options="u.id as u.fullname for u in classlist">
+            </select>
+        </div>
 
-		<div>
-			<label for="importFile">Attach PDF (maximum size 25MB)</label>
-			<p ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)"><span class="required-star"></span><em>Tip: Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> or using <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a> or <a href="http://www.google.com/chrome/">Chrome</a> if you have problems uploading.</em></p>
-			<input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)" multiple/>
-			<p class="instructional-text" ng-show="uploader.queue.length"><strong>Save this answer</strong> to submit the file below. You may also remove the file and upload another instead.</p>
-			<div class="row" ng-repeat="item in uploader.queue">
-				<div class="col-md-7"><i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong></div>
-				<div class="col-md-1">{{item.file.size/1024/1024|number:2}} MB</div>
-				<div class="col-md-2" ng-if="item.progress < 100"><strong>{{item.progress}}% uploaded</strong></div>
-				<div class="col-md-2" ng-if="item.progress == 100 && !item.isSuccess"><strong>Storing file...</strong></div>
-				<div class="col-md-2" ng-if="item.progress == 100 && item.isSuccess"><strong>Attached</strong></div>
-				<div class="col-md-2">
-					<a class="btn btn-danger btn-xs" ng-click="item.cancel();item.remove();resetName();">
-						<i class="fa fa-trash-o"></i> Remove
-					</a>
-				</div>
-			</div>
-		</div>
-		<br>
-		<div ng-show="answer.file && answer.uploadedFile">
-			<div class="row">
-				<div class="col-md-4">
-					<i class="fa fa-paperclip"></i> Attached File: <strong>{{answer.file.alias}}</strong>
-				</div>
-				<div class="col-md-1">
-					<a ng-click="deleteFile(answer.file.id)" class="btn btn-danger btn-xs">
-						<i class="fa fa-trash-o"></i> Remove
-					</a>
-				</div>
-			</div>
-			<br>
-		</div>
-		<div class="form-group">
-			<textarea ng-model="answer.content" id="answerContent"
-				class="form-control" rows="8" ckeditor="editorOptions" ng-required="!(uploader.queue.length || uploadedFile)">
-			</textarea>
-		</div>
-	</fieldset>
+        <div>
+            <label for="importFile">Attach PDF (maximum size 25MB)</label>
+            <p ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)"><span class="required-star"></span><em>Tip: Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> or using <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a> or <a href="http://www.google.com/chrome/">Chrome</a> if you have problems uploading.</em></p>
+            <input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)" multiple/>
+            <p class="instructional-text" ng-show="uploader.queue.length"><strong>Save this answer</strong> to submit the file below. You may also remove the file and upload another instead.</p>
+            <div class="row" ng-repeat="item in uploader.queue">
+                <div class="col-md-7"><i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong></div>
+                <div class="col-md-1">{{item.file.size/1024/1024|number:2}} MB</div>
+                <div class="col-md-2" ng-if="item.progress < 100"><strong>{{item.progress}}% uploaded</strong></div>
+                <div class="col-md-2" ng-if="item.progress == 100 && !item.isSuccess"><strong>Storing file...</strong></div>
+                <div class="col-md-2" ng-if="item.progress == 100 && item.isSuccess"><strong>Attached</strong></div>
+                <div class="col-md-2">
+                    <a class="btn btn-danger btn-xs" ng-click="item.cancel();item.remove();resetName();">
+                        <i class="fa fa-trash-o"></i> Remove
+                    </a>
+                </div>
+            </div>
+        </div>
+        <br>
+        <div ng-show="answer.file && answer.uploadedFile">
+            <div class="row">
+                <div class="col-md-4">
+                    <i class="fa fa-paperclip"></i> Attached File: <strong>{{answer.file.alias}}</strong>
+                </div>
+                <div class="col-md-1">
+                    <a ng-click="deleteFile(answer.file.id)" class="btn btn-danger btn-xs">
+                        <i class="fa fa-trash-o"></i> Remove
+                    </a>
+                </div>
+            </div>
+            <br>
+        </div>
+        <div class="form-group">
+            <textarea ng-model="answer.content" id="answerContent"
+                class="form-control" rows="8" ckeditor="editorOptions" ng-required="!(uploader.queue.length || uploadedFile)">
+            </textarea>
+        </div>
+    </fieldset>
     <div class="row" ng-show="answer.draft">
         <div class="col-md-3 col-md-offset-3 col-xs-6">
             <input type="submit" class="btn btn-success btn-lg center-block" value="Save Draft"

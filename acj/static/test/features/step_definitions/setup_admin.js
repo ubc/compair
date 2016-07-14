@@ -10,35 +10,35 @@ var PageFactory  = require('../../factories/page_factory.js');
 var backEndMocks = require('../../factories/http_backend_mocks.js');
 
 var setupAdminStepDefinitionsWrapper = function () {
-	var pageFactory = new PageFactory();
+    var pageFactory = new PageFactory();
     var loginDialog = pageFactory.createPage('login');
 
-	this.Given("I'm a System Administrator", function (done) {
+    this.Given("I'm a System Administrator", function (done) {
         var fixture  = require('../../fixtures/admin/default_fixture.js');
-		backEndMocks.build(browser, fixture);
+        backEndMocks.build(browser, fixture);
 
-		loginDialog.get('/');
-		loginDialog.login(fixture.loginDetails);
+        loginDialog.get('/');
+        loginDialog.login(fixture.loginDetails);
         done();
-	});
+    });
 
-	this.Given("I'm a System Administrator with courses", function (done) {
+    this.Given("I'm a System Administrator with courses", function (done) {
         var fixture  = require('../../fixtures/admin/has_courses_fixture.js');
-		backEndMocks.build(browser, fixture);
+        backEndMocks.build(browser, fixture);
 
-		loginDialog.get('/');
-		loginDialog.login(fixture.loginDetails);
+        loginDialog.get('/');
+        loginDialog.login(fixture.loginDetails);
         done();
-	});
+    });
 
-	this.Given("I'm a System Administrator with assignments", function (done) {
+    this.Given("I'm a System Administrator with assignments", function (done) {
         var fixture  = require('../../fixtures/admin/has_assignments_fixture.js');
-		backEndMocks.build(browser, fixture);
+        backEndMocks.build(browser, fixture);
 
-		loginDialog.get('/');
-		loginDialog.login(fixture.loginDetails);
+        loginDialog.get('/');
+        loginDialog.login(fixture.loginDetails);
         done();
-	});
+    });
 };
 
 module.exports = setupAdminStepDefinitionsWrapper;

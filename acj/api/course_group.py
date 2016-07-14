@@ -38,7 +38,7 @@ def import_members(course_id, identifier, members):
     # initialize list of users and their statuses
     invalids = []  #invalid entry - eg. no group name
     user_infile = [] # for catching duplicate users
-    count = 0	# keep track of active groups
+    count = 0 # keep track of active groups
 
     # require all rows to have two columns if there are a minimum of one entry
     if len(members) > 0 and len(members[0]) != 2:
