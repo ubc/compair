@@ -13,6 +13,10 @@ class UnwrapAnswerCommentType(fields.Raw):
     def format(self, comment_type):
         return comment_type.value
 
+class UnwrapPairingAlgorithm(fields.Raw):
+    def format(self, pairing_algorithm):
+        return pairing_algorithm.value
+
 def get_partial_user(restrict_user=True):
     ret = {
         'id': fields.Integer(attribute="user_id"),
@@ -108,6 +112,7 @@ def get_assignment(restrict_user=True):
 
         'students_can_reply': fields.Boolean,
         'enable_self_evaluation': fields.Boolean,
+        'pairing_algorithm': UnwrapPairingAlgorithm(attribute='pairing_algorithm'),
 
         'compared': fields.Boolean,
 

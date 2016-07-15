@@ -10,6 +10,7 @@ var assignmentTemplate = {
     "compare_period": false,
     "after_comparing": false,
     "enable_self_evaluation": false,
+    "pairing_algorithm": "random",
     "comment_count": 0,
     "evaluation_count": 0,
     "answer_count": 0,

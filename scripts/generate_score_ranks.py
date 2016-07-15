@@ -24,6 +24,7 @@ import math
 from acj.algorithms import ComparisonPair, ScoredObject
 from acj.algorithms.score import calculate_score_1vs1
 from acj.algorithms.pair import generate_pair
+from acj.models.pairing_algorithm import PairingAlgorithm
 from acj.models.scoring_algorithm import ScoringAlgorithm
 
 CURRENT_FOLDER = os.getcwd() + '/scripts'
@@ -127,7 +128,7 @@ def output_top_stats(stats, stat_range):
         float(stats[4]) / float(min(len(TOP_50_PERCENT), len(stat_range)))
     ]
 
-heading = ["Round"] + ([""] * NUMBER_OF_ANSWERS) + ["Compelted?", "Unique Scores"] + ([""] * NUMBER_OF_ANSWERS) + \
+heading = ["Round"] + ([""] * NUMBER_OF_ANSWERS) + ["Completed?", "Unique Scores"] + ([""] * NUMBER_OF_ANSWERS) + \
     ['B '+str(y)+'0% in B '+str(x)+'0%' for y in range(1,6) for x in range(1,6)] + \
     ['M '+str(y)+'0% in M '+str(x)+'0%' for y in range(1,6) for x in range(1,6)] + \
     ['T '+str(y)+'0% in T '+str(x)+'0%' for y in range(1,6) for x in range(1,6)]
@@ -153,191 +154,197 @@ TOP_30_PERCENT = range((NUMBER_OF_ANSWERS * 70 / 100)+1, NUMBER_OF_ANSWERS+1)
 TOP_40_PERCENT = range((NUMBER_OF_ANSWERS * 60 / 100)+1, NUMBER_OF_ANSWERS+1)
 TOP_50_PERCENT = range((NUMBER_OF_ANSWERS * 50 / 100)+1, NUMBER_OF_ANSWERS+1)
 
-packages = [
+pairing_packages = [
+    PairingAlgorithm.adaptive.value,
+    PairingAlgorithm.random.value
+]
+
+scoring_packages = [
 #    ScoringAlgorithm.comparative_judgement.value,
     ScoringAlgorithm.elo.value,
     ScoringAlgorithm.true_skill.value
 ]
-for package_name in packages:
-    results = []
+for pairing_package_name in pairing_packages:
+    for scoring_package_name in scoring_packages:
+        results = []
 
-    for runtime in range(1, TIMES_TO_RUN_PER_ALGORITHM+1):
-        answers = []
-        for key in ANSWER_RANGE:
-            answers.append(ScoredObject(
-                key=key, score=0, variable1=None, variable2=None,
-                rounds=0, opponents=0, wins=0, loses=0
-            ))
+        for runtime in range(1, TIMES_TO_RUN_PER_ALGORITHM+1):
+            answers = []
+            for key in ANSWER_RANGE:
+                answers.append(ScoredObject(
+                    key=key, score=0, variable1=None, variable2=None,
+                    rounds=0, opponents=0, wins=0, loses=0
+                ))
 
-        students = []
-        for key in STUDENT_RANGE:
-            students.append({
-                'key': key,
-                'comparisons_left': NUMBER_OF_ROUNDS / 2,
-                'comparisons_completed': []
-            })
+            students = []
+            for key in STUDENT_RANGE:
+                students.append({
+                    'key': key,
+                    'comparisons_left': NUMBER_OF_ROUNDS / 2,
+                    'comparisons_completed': []
+                })
 
-        comparisons = []
+            comparisons = []
 
-        for round in range(1, NUMBER_OF_ROUNDS+1):
-            if len(students) == 0:
-                break
-
-            for comparison_in_round in range(ROUND_LENGTH):
+            for round in range(1, NUMBER_OF_ROUNDS+1):
                 if len(students) == 0:
                     break
 
-                random.shuffle(students)
-                student = students[0]
-                student_comparisons = student['comparisons_completed']
+                for comparison_in_round in range(ROUND_LENGTH):
+                    if len(students) == 0:
+                        break
 
-                comparison_pair = generate_pair(
-                    package_name="adaptive",
-                    scored_objects=answers,
-                    comparison_pairs=student_comparisons
+                    random.shuffle(students)
+                    student = students[0]
+                    student_comparisons = student['comparisons_completed']
+
+                    comparison_pair = generate_pair(
+                        package_name=pairing_package_name,
+                        scored_objects=answers,
+                        comparison_pairs=student_comparisons
+                    )
+                    key1 = comparison_pair.key1
+                    key2 = comparison_pair.key2
+                    winning_key = select_winner(round, student['key'], key1, key2)
+                    comparison_pair = comparison_pair._replace(winning_key=winning_key)
+
+                    comparisons.append(comparison_pair)
+                    student['comparisons_completed'].append(comparison_pair)
+                    student['comparisons_left'] = student['comparisons_left'] - 1
+                    if student['comparisons_left'] <= 0:
+                        students.remove(student)
+
+                    index1 = next(index for index, answer in enumerate(answers) if answer.key == key1)
+                    index2 = next(index for index, answer in enumerate(answers) if answer.key == key2)
+
+                    result1, results2 = calculate_score_1vs1(
+                        package_name=scoring_package_name,
+                        key1_scored_object=answers[index1],
+                        key2_scored_object=answers[index2],
+                        winning_key=winning_key,
+                        other_comparison_pairs=comparisons
+                    )
+                    answers[index1] = result1
+                    answers[index2] = results2
+
+                # reverse key order on ties so that we know for sure that the
+                # score order is eventually correct
+                answers = sorted(answers,
+                    key=lambda answer: (
+                        answer.score,
+                        -answer.key
+                    )
                 )
-                key1 = comparison_pair.key1
-                key2 = comparison_pair.key2
-                winning_key = select_winner(round, student['key'], key1, key2)
-                comparison_pair = comparison_pair._replace(winning_key=winning_key)
 
-                comparisons.append(comparison_pair)
-                student['comparisons_completed'].append(comparison_pair)
-                student['comparisons_left'] = student['comparisons_left'] - 1
-                if student['comparisons_left'] <= 0:
-                    students.remove(student)
+                completed = True
+                previous_key = None
 
-                index1 = next(index for index, answer in enumerate(answers) if answer.key == key1)
-                index2 = next(index for index, answer in enumerate(answers) if answer.key == key2)
+                top_10_stats = [0,0,0,0,0]
+                top_20_stats = [0,0,0,0,0]
+                top_30_stats = [0,0,0,0,0]
+                top_40_stats = [0,0,0,0,0]
+                top_50_stats = [0,0,0,0,0]
 
-                result1, results2 = calculate_score_1vs1(
-                    package_name=package_name,
-                    key1_scored_object=answers[index1],
-                    key2_scored_object=answers[index2],
-                    winning_key=winning_key,
-                    other_comparison_pairs=comparisons
-                )
-                answers[index1] = result1
-                answers[index2] = results2
+                mid_10_stats = [0,0,0,0,0]
+                mid_20_stats = [0,0,0,0,0]
+                mid_30_stats = [0,0,0,0,0]
+                mid_40_stats = [0,0,0,0,0]
+                mid_50_stats = [0,0,0,0,0]
 
-            # reverse key order on ties so that we know for sure that the
-            # score order is eventually correct
-            answers = sorted(answers,
-                key=lambda answer: (
-                    answer.score,
-                    -answer.key
-                )
-            )
+                bottom_10_stats = [0,0,0,0,0]
+                bottom_20_stats = [0,0,0,0,0]
+                bottom_30_stats = [0,0,0,0,0]
+                bottom_40_stats = [0,0,0,0,0]
+                bottom_50_stats = [0,0,0,0,0]
 
-            completed = True
-            previous_key = None
+                for index, answer in enumerate(answers):
+                    rank_index = index + 1
+                    if previous_key != None and previous_key > answer.key:
+                        completed = False
+                    previous_key = answer.key
 
-            top_10_stats = [0,0,0,0,0]
-            top_20_stats = [0,0,0,0,0]
-            top_30_stats = [0,0,0,0,0]
-            top_40_stats = [0,0,0,0,0]
-            top_50_stats = [0,0,0,0,0]
+                    if answer.key in BOTTOM_10_PERCENT:
+                        update_bottom_stats(bottom_10_stats, rank_index)
+                    if answer.key in BOTTOM_20_PERCENT:
+                        update_bottom_stats(bottom_20_stats, rank_index)
+                    if answer.key in BOTTOM_30_PERCENT:
+                        update_bottom_stats(bottom_30_stats, rank_index)
+                    if answer.key in BOTTOM_40_PERCENT:
+                        update_bottom_stats(bottom_40_stats, rank_index)
+                    if answer.key in BOTTOM_50_PERCENT:
+                        update_bottom_stats(bottom_50_stats, rank_index)
 
-            mid_10_stats = [0,0,0,0,0]
-            mid_20_stats = [0,0,0,0,0]
-            mid_30_stats = [0,0,0,0,0]
-            mid_40_stats = [0,0,0,0,0]
-            mid_50_stats = [0,0,0,0,0]
+                    if answer.key in MID_10_PERCENT:
+                        update_mid_stats(mid_10_stats, rank_index)
+                    if answer.key in MID_20_PERCENT:
+                        update_mid_stats(mid_20_stats, rank_index)
+                    if answer.key in MID_30_PERCENT:
+                        update_mid_stats(mid_30_stats, rank_index)
+                    if answer.key in MID_40_PERCENT:
+                        update_mid_stats(mid_40_stats, rank_index)
+                    if answer.key in MID_50_PERCENT:
+                        update_mid_stats(mid_50_stats, rank_index)
 
-            bottom_10_stats = [0,0,0,0,0]
-            bottom_20_stats = [0,0,0,0,0]
-            bottom_30_stats = [0,0,0,0,0]
-            bottom_40_stats = [0,0,0,0,0]
-            bottom_50_stats = [0,0,0,0,0]
+                    if answer.key in TOP_10_PERCENT:
+                        update_top_stats(top_10_stats, rank_index)
+                    if answer.key in TOP_20_PERCENT:
+                        update_top_stats(top_20_stats, rank_index)
+                    if answer.key in TOP_30_PERCENT:
+                        update_top_stats(top_30_stats, rank_index)
+                    if answer.key in TOP_40_PERCENT:
+                        update_top_stats(top_40_stats, rank_index)
+                    if answer.key in TOP_50_PERCENT:
+                        update_top_stats(top_50_stats, rank_index)
 
-            for index, answer in enumerate(answers):
-                rank_index = index + 1
-                if previous_key != None and previous_key > answer.key:
-                    completed = False
-                previous_key = answer.key
+                results.append([str(round)] +
+                    [str(answer.key) for answer in answers] +
+                    ["Yes" if completed else "No"] +
+                    [len(set([answer.score for answer in answers]))] +
+                    [str(answer.score) for answer in answers] +
+                    output_botom_stats(bottom_10_stats, BOTTOM_10_PERCENT) +
+                    output_botom_stats(bottom_20_stats, BOTTOM_20_PERCENT) +
+                    output_botom_stats(bottom_30_stats, BOTTOM_30_PERCENT) +
+                    output_botom_stats(bottom_40_stats, BOTTOM_40_PERCENT) +
+                    output_botom_stats(bottom_50_stats, BOTTOM_50_PERCENT) +
+                    output_mid_stats(mid_10_stats, MID_10_PERCENT) +
+                    output_mid_stats(mid_20_stats, MID_20_PERCENT) +
+                    output_mid_stats(mid_30_stats, MID_30_PERCENT) +
+                    output_mid_stats(mid_40_stats, MID_40_PERCENT) +
+                    output_mid_stats(mid_50_stats, MID_50_PERCENT) +
+                    output_top_stats(top_10_stats, TOP_10_PERCENT) +
+                    output_top_stats(top_20_stats, TOP_20_PERCENT) +
+                    output_top_stats(top_30_stats, TOP_30_PERCENT) +
+                    output_top_stats(top_40_stats, TOP_40_PERCENT) +
+                    output_top_stats(top_50_stats, TOP_50_PERCENT))
 
-                if answer.key in BOTTOM_10_PERCENT:
-                    update_bottom_stats(bottom_10_stats, rank_index)
-                if answer.key in BOTTOM_20_PERCENT:
-                    update_bottom_stats(bottom_20_stats, rank_index)
-                if answer.key in BOTTOM_30_PERCENT:
-                    update_bottom_stats(bottom_30_stats, rank_index)
-                if answer.key in BOTTOM_40_PERCENT:
-                    update_bottom_stats(bottom_40_stats, rank_index)
-                if answer.key in BOTTOM_50_PERCENT:
-                    update_bottom_stats(bottom_50_stats, rank_index)
+            results.append([""])
+            results.append([""])
 
-                if answer.key in MID_10_PERCENT:
-                    update_mid_stats(mid_10_stats, rank_index)
-                if answer.key in MID_20_PERCENT:
-                    update_mid_stats(mid_20_stats, rank_index)
-                if answer.key in MID_30_PERCENT:
-                    update_mid_stats(mid_30_stats, rank_index)
-                if answer.key in MID_40_PERCENT:
-                    update_mid_stats(mid_40_stats, rank_index)
-                if answer.key in MID_50_PERCENT:
-                    update_mid_stats(mid_50_stats, rank_index)
+            # disabled opponent counts for now
+            """
+            results.append([""])
+            results.append(["Opponent counts"])
+            results.append([""])
+            # count opponents for answers
+            for answer in answers:
+                opponents = {}
+                for comparison in comparisons:
+                    if comparison.key1 == answer.key:
+                        opponents.setdefault(comparison.key2, 0)
+                        opponents[comparison.key2] += 1
+                    elif comparison.key2 == answer.key:
+                        opponents.setdefault(comparison.key1, 0)
+                        opponents[comparison.key1] += 1
 
-                if answer.key in TOP_10_PERCENT:
-                    update_top_stats(top_10_stats, rank_index)
-                if answer.key in TOP_20_PERCENT:
-                    update_top_stats(top_20_stats, rank_index)
-                if answer.key in TOP_30_PERCENT:
-                    update_top_stats(top_30_stats, rank_index)
-                if answer.key in TOP_40_PERCENT:
-                    update_top_stats(top_40_stats, rank_index)
-                if answer.key in TOP_50_PERCENT:
-                    update_top_stats(top_50_stats, rank_index)
+                results.append(["key: "+str(answer.key)] + [str(opponent)+ "= "+str(count) for opponent, count in opponents.iteritems()])
+            """
 
-            results.append([str(round)] +
-                [str(answer.key) for answer in answers] +
-                ["Yes" if completed else "No"] +
-                [len(set([answer.score for answer in answers]))] +
-                [str(answer.score) for answer in answers] +
-                output_botom_stats(bottom_10_stats, BOTTOM_10_PERCENT) +
-                output_botom_stats(bottom_20_stats, BOTTOM_20_PERCENT) +
-                output_botom_stats(bottom_30_stats, BOTTOM_30_PERCENT) +
-                output_botom_stats(bottom_40_stats, BOTTOM_40_PERCENT) +
-                output_botom_stats(bottom_50_stats, BOTTOM_50_PERCENT) +
-                output_mid_stats(mid_10_stats, MID_10_PERCENT) +
-                output_mid_stats(mid_20_stats, MID_20_PERCENT) +
-                output_mid_stats(mid_30_stats, MID_30_PERCENT) +
-                output_mid_stats(mid_40_stats, MID_40_PERCENT) +
-                output_mid_stats(mid_50_stats, MID_50_PERCENT) +
-                output_top_stats(top_10_stats, TOP_10_PERCENT) +
-                output_top_stats(top_20_stats, TOP_20_PERCENT) +
-                output_top_stats(top_30_stats, TOP_30_PERCENT) +
-                output_top_stats(top_40_stats, TOP_40_PERCENT) +
-                output_top_stats(top_50_stats, TOP_50_PERCENT))
+        with open(CURRENT_FOLDER+"/out_"+pairing_package_name+"_"+scoring_package_name+".csv", "w+") as csvfile:
+            out = csv.writer(csvfile)
 
-        results.append([""])
-        results.append([""])
-
-        # disabled opponent counts for now
-        """
-        results.append([""])
-        results.append(["Opponent counts"])
-        results.append([""])
-        # count opponents for answers
-        for answer in answers:
-            opponents = {}
-            for comparison in comparisons:
-                if comparison.key1 == answer.key:
-                    opponents.setdefault(comparison.key2, 0)
-                    opponents[comparison.key2] += 1
-                elif comparison.key2 == answer.key:
-                    opponents.setdefault(comparison.key1, 0)
-                    opponents[comparison.key1] += 1
-
-            results.append(["key: "+str(answer.key)] + [str(opponent)+ "= "+str(count) for opponent, count in opponents.iteritems()])
-        """
-
-    with open(CURRENT_FOLDER+"/out_"+package_name+".csv", "w+") as csvfile:
-        out = csv.writer(csvfile)
-
-        out.writerow(heading)
-        for result in results:
-            out.writerow(result)
+            out.writerow(heading)
+            for result in results:
+                out.writerow(result)
 
 
 

@@ -4,6 +4,7 @@ from sqlalchemy.orm import load_only
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask import current_app
+from sqlalchemy_enum34 import EnumType
 
 from . import *
 from importlib import import_module
@@ -34,6 +35,8 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
     content = db.Column(db.Text)
     completed = db.Column(db.Boolean(name='completed'), default=False,
         nullable=False, index=True)
+    pairing_algorithm = db.Column(EnumType(PairingAlgorithm, name="pairing_algorithm"),
+        nullable=True, default=PairingAlgorithm.random)
 
     # relationships
     # assignment via Assignment Model
@@ -99,8 +102,8 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         super(cls, cls).__declare_last__()
 
     @classmethod
-    def _get_new_comparison_pair(cls, course_id, assignment_id, user_id, comparisons):
-        from . import UserCourse, CourseRole, Answer, Score
+    def _get_new_comparison_pair(cls, course_id, assignment_id, user_id, pairing_algorithm, comparisons):
+        from . import Assignment, UserCourse, CourseRole, Answer, Score, PairingAlgorithm
 
         # ineligible authors - eg. instructors, TAs, dropped student, current user
         non_students = UserCourse.query \
@@ -138,7 +141,7 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         ) for comparison in comparisons]
 
         comparison_pair = generate_pair(
-            package_name="adaptive",
+            package_name=pairing_algorithm.value,
             scored_objects=scored_objects,
             comparison_pairs=comparison_pairs,
             log=current_app.logger
@@ -167,6 +170,9 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         round_compared = 0
 
         assignment = Assignment.query.get(assignment_id)
+        pairing_algorithm = assignment.pairing_algorithm
+        if pairing_algorithm == None:
+            pairing_algorithm = PairingAlgorithm.random
 
         # check comparison examples first
         comparison_examples = ComparisonExample.query \
@@ -190,8 +196,8 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
                 break
 
         if not is_comparison_example_set:
-            comparison_pair = Comparison._get_new_comparison_pair(
-                assignment.course_id, assignment_id, user_id, comparisons)
+            comparison_pair = Comparison._get_new_comparison_pair(assignment.course_id,
+                assignment_id, user_id, pairing_algorithm, comparisons)
             answer1 = Answer.query.get(comparison_pair.key1)
             answer2 = Answer.query.get(comparison_pair.key2)
             round_compared = min(answer1.round+1, answer2.round+1)
@@ -214,7 +220,8 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
                 winner_id=None,
                 round_compared=round_compared,
                 comparison_example_id=comparison_example_id,
-                content=None
+                content=None,
+                pairing_algorithm=pairing_algorithm
             )
             db.session.add(comparison)
             db.session.commit()

@@ -2,7 +2,7 @@ import datetime
 import json
 
 from data.fixtures.test_data import SimpleAssignmentTestData, ComparisonTestData, TestFixture
-from acj.models import Assignment, Comparison
+from acj.models import Assignment, Comparison, PairingAlgorithm
 from acj.tests.test_acj import ACJAPITestCase
 from acj.core import db
 
@@ -72,7 +72,8 @@ class AssignmentAPITests(ACJAPITestCase):
             'enable_self_evaluation': False,
             'criteria': [
                 { 'id': self.data.get_default_criterion().id }
-            ]
+            ],
+            'pairing_algorithm': PairingAlgorithm.random.value
         }
         # Test login required
         rv = self.client.post(
@@ -130,6 +131,7 @@ class AssignmentAPITests(ACJAPITestCase):
             self.assertEqual(
                 assignment_expected['description'], rv.json['description'],
                 "assignment create did not return the same description!")
+            self.assertEqual(assignment_expected['pairing_algorithm'], rv.json['pairing_algorithm'])
             # Test getting the assignment again
             rv = self.client.get(self.url + '/' + str(rv.json['id']))
             self.assert200(rv)
@@ -139,6 +141,7 @@ class AssignmentAPITests(ACJAPITestCase):
             self.assertEqual(
                 assignment_expected['description'], rv.json['description'],
                 "assignment create did not save description properly!")
+            self.assertEqual(assignment_expected['pairing_algorithm'], rv.json['pairing_algorithm'])
 
     def test_edit_assignment(self):
         assignment = self.data.get_assignments()[0]
@@ -154,7 +157,8 @@ class AssignmentAPITests(ACJAPITestCase):
             'enable_self_evaluation': assignment.enable_self_evaluation,
             'criteria': [
                 { 'id': self.data.get_default_criterion().id }
-            ]
+            ],
+            'pairing_algorithm': PairingAlgorithm.adaptive.value
         }
 
         # test login required
@@ -210,7 +214,8 @@ class AssignmentAPITests(ACJAPITestCase):
                 'enable_self_evaluation': assignment.enable_self_evaluation,
                 'criteria': [
                     { 'id': self.data.get_default_criterion().id }
-                ]
+                ],
+                'pairing_algorithm': PairingAlgorithm.adaptive.value
             }
             rv = self.client.post(url, data=json.dumps(ta_expected), content_type='application/json')
             self.assert200(rv)
@@ -245,6 +250,7 @@ class AssignmentAPITests(ACJAPITestCase):
         self.assertEqual(expected.name, actual['name'])
         self.assertEqual(expected.description, actual['description'])
         self.assertEqual(expected.user_id, actual['user_id'])
+        self.assertEqual(expected.pairing_algorithm.value, actual['pairing_algorithm'])
 
 class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
     def setUp(self):

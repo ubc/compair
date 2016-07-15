@@ -3,7 +3,7 @@ import datetime
 import dateutil.parser
 from bouncer.constants import MANAGE, READ, CREATE, EDIT
 from flask import Blueprint, current_app
-from flask.ext.restful import Resource, marshal_with, marshal, reqparse, abort
+from flask.ext.restful import Resource, marshal_with, marshal, reqparse
 from flask_login import login_required, current_user
 from sqlalchemy import exc, func
 

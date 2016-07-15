@@ -62,7 +62,7 @@ def check_valid_system_role(system_role):
         SystemRole.student.value
     ]
     if system_role not in system_roles:
-        abort(404)
+        abort(400)
 
 # /user_id
 class UserAPI(Resource):

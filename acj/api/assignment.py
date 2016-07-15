@@ -4,7 +4,7 @@ import dateutil.parser
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask import Blueprint
 from flask.ext.login import login_required, current_user
-from flask.ext.restful import Resource, marshal
+from flask.ext.restful import Resource, marshal, abort
 from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import desc, or_, func, and_
 from sqlalchemy.orm import joinedload, undefer_group, load_only
@@ -13,7 +13,7 @@ from . import dataformat
 from acj.core import db, event
 from acj.authorization import allow, require
 from acj.models import Assignment, Course, AssignmentCriterion, Answer, Comparison, \
-    AnswerComment, AnswerCommentType
+    AnswerComment, AnswerCommentType, PairingAlgorithm
 from .util import new_restful_api, get_model_changes
 from .file import add_new_file, delete_file
 
@@ -33,6 +33,7 @@ new_assignment_parser.add_argument('file_alias', type=str, default=None)
 new_assignment_parser.add_argument('students_can_reply', type=bool, default=False)
 new_assignment_parser.add_argument('number_of_comparisons', type=int, required=True)
 new_assignment_parser.add_argument('enable_self_evaluation', type=int, default=None)
+new_assignment_parser.add_argument('pairing_algorithm', type=str, default=None)
 # has to add location parameter, otherwise MultiDict will screw up the list
 new_assignment_parser.add_argument('criteria', type=list, default=[], location='json')
 
@@ -47,6 +48,14 @@ on_assignment_create = event.signal('ASSIGNMENT_CREATE')
 on_assignment_delete = event.signal('ASSIGNMENT_DELETE')
 on_assignment_list_get_status = event.signal('ASSIGNMENT_LIST_GET_STATUS')
 on_assignment_get_status = event.signal('ASSIGNMENT_GET_STATUS')
+
+def check_valid_pairing_algorithm(pairing_algorithm):
+    pairing_algorithms = [
+        PairingAlgorithm.adaptive.value,
+        PairingAlgorithm.random.value
+    ]
+    if pairing_algorithm not in pairing_algorithms:
+        abort(400)
 
 # /id
 class AssignmentIdAPI(Resource):
@@ -104,6 +113,10 @@ class AssignmentIdAPI(Resource):
             'number_of_comparisons', assignment.number_of_comparisons)
         assignment.enable_self_evaluation = params.get(
             'enable_self_evaluation', assignment.enable_self_evaluation)
+
+        pairing_algorithm = params.get("pairing_algorithm")
+        check_valid_pairing_algorithm(pairing_algorithm)
+        assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
 
         criterion_ids = [c['id'] for c in params.criteria]
         if assignment.compared:
@@ -236,6 +249,10 @@ class AssignmentRootAPI(Resource):
         new_assignment.students_can_reply = params.get('students_can_reply', False)
         new_assignment.number_of_comparisons = params.get('number_of_comparisons')
         new_assignment.enable_self_evaluation = params.get('enable_self_evaluation')
+
+        pairing_algorithm = params.get("pairing_algorithm", PairingAlgorithm.random)
+        check_valid_pairing_algorithm(pairing_algorithm)
+        new_assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
 
         criterion_ids = [c['id'] for c in params.criteria]
         if len(criterion_ids) == 0:

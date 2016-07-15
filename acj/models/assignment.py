@@ -7,6 +7,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import column_property
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy_enum34 import EnumType
 
 from . import *
 
@@ -31,6 +32,8 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
         default=False, nullable=False)
     enable_self_evaluation = db.Column(db.Boolean(name='enable_self_evaluation'),
         default=False, nullable=False)
+    pairing_algorithm = db.Column(EnumType(PairingAlgorithm, name="pairing_algorithm"),
+        nullable=True, default=PairingAlgorithm.random)
 
     # relationships
     # user via User Model
