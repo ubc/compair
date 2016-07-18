@@ -8,6 +8,7 @@ from acj.models import User
 from pylti.flask import lti, LTI_SESSION_KEY
 import logging
 
+isLTI = False
 login_api = Blueprint("login_api", __name__, url_prefix='/api')
 VERSION = '0.0.1'
 logging.basicConfig(level=logging.DEBUG,
@@ -54,13 +55,31 @@ def login():
 def lti_auth(lti=lti):
     """Kickstarts the LTI integration flow.
     """
-    return lti.user_id
+    sess['LTI'] = True
+    
+    # todo: if LMS user already linked to a ComPAIR account, establish an appropriate session
+    # otherwise, direct the user to the login screen
+    return redirect("http://localhost:8080/static/index.html#/", code=302)
 
+@login_api.route('/lti/islti', methods=['GET'])
+def is_lti():
+    """Used by the frontend to check if the current
+    session originated from an LTI launch request.
+    """
+    if sess.get('LTI'):
+        if sess['LTI']:
+            return jsonify({'status': True})
+    else:
+        return jsonify({'status': False})
 @login_api.route('/logout', methods=['DELETE'])
 @login_required
 def logout():
     current_user.update_last_online()
     logout_user()  # flask-login delete user info
+    global isLTI
+    isLTI = False
+    if 'LTI' in sess:
+        sess.pop('LTI')
     if 'CAS_LOGIN' in sess:
         sess.pop('CAS_LOGIN')
         return jsonify({'redirect': url_for('cas.logout')})
@@ -109,7 +128,13 @@ def auth_cas():
 def authenticate(user):
     # username valid, password valid, login successful
     # "remember me" functionality is available, do we want to implement?
+    global isLTI
     user.update_last_online()
+    if sess.get('LTI'):
+        if sess['LTI']:
+            isLTI = True
     login_user(user)  # flask-login store user info
+    if isLTI:
+        sess['LTI'] = True
     current_app.logger.debug("Login successful for: " + user.username)
     return get_logged_in_user_permissions()
