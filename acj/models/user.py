@@ -66,6 +66,11 @@ class User(DefaultTableMixin, WriteTrackingMixin, UserMixin):
         foreign_keys='Comparison.user_id',
         backref="user", lazy='dynamic')
 
+    # third party authentification
+    user_oauths = db.relationship("UserOAuth",
+        foreign_keys='UserOAuth.user_id',
+        backref="user", lazy='dynamic')
+
     # hyprid and other functions
 
     def _get_password(self):
