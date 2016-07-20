@@ -46,6 +46,9 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     comparisons = db.relationship("Comparison", backref="assignment", lazy="dynamic")
     scores = db.relationship("Score", backref="assignment", lazy="dynamic")
 
+    # lti
+    lti_resource_links = db.relationship("LTIResourceLink", backref="acj_assignment", lazy='dynamic')
+
     # hyprid and other functions
     user_avatar = association_proxy('user', 'avatar')
     user_displayname = association_proxy('user', 'displayname')

@@ -27,6 +27,9 @@ class UserCourse(DefaultTableMixin, WriteTrackingMixin):
     user = db.relationship("User", foreign_keys=[user_id], back_populates="user_courses")
     course = db.relationship("Course", back_populates="user_courses")
 
+    # lti
+    lti_user_resource_links = db.relationship("LTIUserResourceLink", backref="acj_user_course", lazy='dynamic')
+
     # hyprid and other functions
     @classmethod
     def __declare_last__(cls):
