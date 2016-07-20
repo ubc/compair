@@ -24,6 +24,16 @@ from .score import Score
 from .user import User
 from .user_course import UserCourse
 
+# LTI models
+from .lti import LTIConsumer, LTIContext, LTIResourceLink, \
+    LTIUser, LTIUserResourceLink
+
+# oauth enums
+from .oauth import AuthType
+
+# oauth models
+from .oauth import UserOAuth
+
 
 from acj.core import db
 convention = {
