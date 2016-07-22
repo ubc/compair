@@ -25,6 +25,8 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
 
     # relationships
     # acj_user_course via UserCourse Model
+    # lti_user via LTIUser Model
+    # lti_resource_link via LTIResourceLink Model
 
     # hyprid and other functions
     def is_linked_to_user_course(self):
@@ -53,7 +55,9 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
                 lti_resource_link_id=lti_resource_link.id,
                 lti_user_id=lti_user.id
             )
-        lti_user_resource_link.roles = tool_provider.roles
+            db.session.add(lti_user_resource_link)
+
+        lti_user_resource_link.roles = str(tool_provider.roles)
         lti_user_resource_link.lis_result_sourcedid = tool_provider.lis_result_sourcedid
 
         # set course role every time
@@ -64,10 +68,7 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
         else:
             lti_user_resource_link.course_role = CourseRole.student
 
-        # create/update if needed
-        db.session.add(lti_user_resource_link)
-        if db.session.object_session(lti_user_resource_link).is_modified(lti_user_resource_link, include_collections=False):
-            db.session.commit()
+        db.session.commit()
 
         return lti_user_resource_link
 

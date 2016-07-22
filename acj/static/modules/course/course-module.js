@@ -66,20 +66,20 @@ module.controller(
         $scope.count = {};
         $scope.filters = [];
         Authorize.can(Authorize.CREATE, AssignmentResource.MODEL, courseId).then(function(result) {
-                $scope.canCreateAssignments = result;
+            $scope.canCreateAssignments = result;
         });
         Authorize.can(Authorize.EDIT, CourseResource.MODEL, courseId).then(function(result) {
-                $scope.canEditCourse = result;
+            $scope.canEditCourse = result;
         });
         Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, courseId).then(function(result) {
-                $scope.canManageAssignment = result;
-                $scope.filters.push('All course assignments');
-                if ($scope.canManageAssignment) {
-                    $scope.filters.push('Assignments being answered', 'Assignments being compared', 'Upcoming assignments');
-                } else {
-                    $scope.filters.push('My pending assignments');
-                }
-                $scope.filter = $scope.filters[0];
+            $scope.canManageAssignment = result;
+            $scope.filters.push('All course assignments');
+            if ($scope.canManageAssignment) {
+                $scope.filters.push('Assignments being answered', 'Assignments being compared', 'Upcoming assignments');
+            } else {
+                $scope.filters.push('My pending assignments');
+            }
+            $scope.filter = $scope.filters[0];
         });
         CourseResource.get({'id': courseId}).$promise.then(
             function (ret) {
@@ -167,6 +167,74 @@ module.controller(
                 }
             }
         }
+    }
+]);
+
+module.controller(
+    'CourseSelectModalController',
+    ["$rootScope", "$scope", "$modalInstance",
+     "Session", "Authorize", "CourseResource", "Toaster", "UserResource",
+    function ($rootScope, $scope, $modalInstance,
+              Session, Authorize, CourseResource, Toaster, UserResource) {
+
+        $scope.courses = [];
+        $scope.submitted = false;
+
+        $scope.showDuplicateForm = false;
+        $scope.course = {};
+        $scope.originalCourse = {};
+        $scope.duplicateCourse = {};
+
+        Session.getUser().then(function(user) {
+            UserResource.getUserCourses({id: user.id}).$promise.then(
+                function(ret) {
+                    $scope.courses = ret.objects;
+                },
+                function (ret) {
+                    Toaster.reqerror("Unable to retrieve your courses.", ret);
+                }
+            );
+        });
+
+        $scope.selectCourse = function(course) {
+            $modalInstance.close(course.id);
+        };
+
+        $scope.selectDuplicateCourse = function(course) {
+            $scope.showDuplicateForm = true;
+            $scope.originalCourse = course;
+            $scope.duplicateCourse = {
+                year: new Date().getFullYear()
+            };
+        };
+
+        $scope.cancelSelectDuplicateCourse = function() {
+            $scope.showDuplicateForm = false;
+        };
+
+        $scope.duplicate = function() {
+            $scope.submitted = true;
+            CourseResource.createDuplicate({id: $scope.originalCourse.id}, $scope.duplicateCourse, function (ret) {
+                Toaster.success("Course Duplicated", 'The course was successfully duplicated');
+                // refresh permissions
+                Session.refreshPermissions();
+                $scope.selectCourse(ret);
+            }).$promise.finally(function() {
+                $scope.submitted = false;
+            });
+        };
+
+        $scope.save = function() {
+            $scope.submitted = true;
+            CourseResource.save({}, $scope.course, function (ret) {
+                Toaster.success("Course Created", 'The course was created successfully');
+                // refresh permissions
+                Session.refreshPermissions();
+                $scope.selectCourse(ret);
+            }).$promise.finally(function() {
+                $scope.submitted = false;
+            });
+        };
     }
 ]);
 

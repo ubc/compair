@@ -2,8 +2,9 @@ import os
 from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask, render_template
 from flask_login import current_user, login_required, login_user, logout_user
 from acj import cas
+from acj.core import db
 from acj.authorization import get_logged_in_user_permissions
-from acj.models import User
+from acj.models import User, LTIUser, LTIResourceLink
 
 login_api = Blueprint("login_api", __name__, url_prefix='/api')
 
@@ -23,6 +24,12 @@ def login():
         current_app.logger.debug("Login failed, invalid password for: " + username)
     else:
         permissions = authenticate(user)
+
+        if sess.get('LTI') and sess.get('oauth_create_user_link'):
+            lti_user = LTIUser.query.get_or_404(sess['lti_user'])
+            lti_user.acj_user_id = user.id
+            db.session.commit()
+
         return jsonify({"userid": user.id, "permissions": permissions})
 
     # login unsuccessful
@@ -33,13 +40,20 @@ def login():
 def logout():
     current_user.update_last_online()
     logout_user()  # flask-login delete user info
-    if 'LTI' in sess:
-        sess.pop('LTI')
-    if 'CAS_LOGIN' in sess:
-        sess.pop('CAS_LOGIN')
+
+    if sess.get('LTI'):
+        lti_resource_link = LTIResourceLink.query.get(sess['lti_resource_link'])
+        if lti_resource_link:
+            return_url = lti_resource_link.launch_presentation_return_url
+            if return_url != None and return_url.strip() != "":
+                return jsonify({'redirect': return_url})
+
+    if sess.get('CAS_LOGIN'):
         return jsonify({'redirect': url_for('cas.logout')})
-    else:
-        return ""
+
+    sess.clear()
+
+    return ""
 
 
 @login_api.route('/session', methods=['GET'])
@@ -84,6 +98,6 @@ def authenticate(user):
     # username valid, password valid, login successful
     # "remember me" functionality is available, do we want to implement?
     user.update_last_online()
-    login_user(user)  # flask-login store user info
+    login_user(user) # flask-login store user info
     current_app.logger.debug("Login successful for: " + user.username)
     return get_logged_in_user_permissions()
