@@ -1,14 +1,12 @@
 import os
 from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask, render_template
 from flask_login import current_user, login_required, login_user, logout_user
-
+from mock import Mock
 from acj import cas
 from acj.authorization import get_logged_in_user_permissions
 from acj.models import User
-from pylti.flask import lti, LTI_SESSION_KEY
 import logging
 
-isLTI = False
 login_api = Blueprint("login_api", __name__, url_prefix='/api')
 VERSION = '0.0.1'
 logging.basicConfig(level=logging.DEBUG,
@@ -50,27 +48,6 @@ def login():
     # login unsuccessful
     return jsonify({"error": 'Sorry, unrecognized username or password.'}), 400
 
-@login_api.route('/lti/auth', methods=['POST'])
-@lti(request='initial', error=error)
-def lti_auth(lti=lti):
-    """Kickstarts the LTI integration flow.
-    """
-    sess['LTI'] = True
-    
-    # todo: if LMS user already linked to a ComPAIR account, establish an appropriate session
-    # otherwise, direct the user to the login screen
-    return redirect("http://localhost:8080/static/index.html#/", code=302)
-
-@login_api.route('/lti/islti', methods=['GET'])
-def is_lti():
-    """Used by the frontend to check if the current
-    session originated from an LTI launch request.
-    """
-    if sess.get('LTI'):
-        if sess['LTI']:
-            return jsonify({'status': True})
-    else:
-        return jsonify({'status': False})
 @login_api.route('/logout', methods=['DELETE'])
 @login_required
 def logout():
