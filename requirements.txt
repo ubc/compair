@@ -21,4 +21,4 @@ SQLAlchemy-Enum34==1.0.1
 mock==2.0.0
 elo==0.1
 trueskill==0.4.4
--e git://github.com/andrew-gardener/lti.git#egg=lti
+lti==0.8.4

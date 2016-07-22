@@ -1,40 +1,17 @@
 <form name="userForm" class="form" ng-submit="save()" novalidate>
-    <fieldset ng-if="method == 'new'|| canManageUsers">
-        <legend>User Login</legend>
-        <p class="instructional-text">This application provides three user roles with increasing levels of permission. <strong>Students</strong> can post and edit their own answers, comments, and replies. <strong>Instructors</strong> can additionally add and edit their own courses and assignments. <strong>System Administrators</strong> can additionally create users and manage which users can access a course.</p>
-        <div class="form-group">
+    <fieldset>
+        <legend>Account Details</legend>
+        <p class="instructional-text" ng-if="canManageUsers || (method == 'new' && canCreateUsers)">
+            This application provides three user roles with increasing levels of permission.
+            <strong>Students</strong> can post and edit their own answers, comments, and replies.
+            <strong>Instructors</strong> can additionally add and edit their own courses and assignments.
+            <strong>System Administrators</strong> can additionally create users and manage which users can access a course.</p>
+        <div class="form-group" ng-if="canManageUsers || (method == 'new' && canCreateUsers)">
             <label for="system_role" class="required-star">Application Role </label>
             <select class="form-control" id="system_role" name="system_role"
                 ng-model="user.system_role" required
                 ng-options="system_role as system_role for system_role in system_roles"></select>
         </div>
-        <acj-field-with-feedback form-control="userForm.username">
-            <label for="username" class="required-star">Username </label>
-            <input class="form-control" id="username" type="text"
-                name="username" ng-model="user.username"
-                required />
-        </acj-field-with-feedback>
-        <acj-field-with-feedback form-control="userForm.student_number">
-            <label for="student_number">Student Number </label>
-            <input class="form-control" id="student_number" type="text"
-                name="student_number" ng-model="user.student_number"/>
-        </acj-field-with-feedback>
-        <div ng-if="method == 'new'">
-            <acj-field-with-feedback form-control="userForm.password">
-                <label for=password" class="required-star">Password </label>
-                <input class="form-control" id="password" type="password"
-                    name="password" ng-model="user.password" required />
-            </acj-field-with-feedback>
-            <acj-field-with-feedback form-control="userForm.verifyPassword">
-                <label for=verifyPassword" class="required-star">Verify Password </label>
-                <input class="form-control" id="verifyPassword" type="password"
-                    name="verifyPassword" ng-model="user.verifyPassword"
-                    required pw-match="password" />
-            </acj-field-with-feedback>
-        </div>
-    </fieldset>
-    <fieldset>
-        <legend>User Details</legend>
         <acj-field-with-feedback form-control="userForm.displayName">
             <label for="displayName" class="required-star">Display Name (visible to everyone) </label>
             <input class="form-control" id="displayName" type="text"
@@ -53,11 +30,43 @@
                 name="lastName" ng-model="user.lastname"
                 required />
         </acj-field-with-feedback>
+        <acj-field-with-feedback form-control="userForm.student_number">
+            <label for="student_number">Student Number </label>
+            <input class="form-control" id="student_number" type="text"
+                name="student_number" ng-model="user.student_number"/>
+        </acj-field-with-feedback>
         <acj-field-with-feedback form-control="userForm.email">
             <label for="email">Email </label>
             <input class="form-control" id="email" type="email"
                 name="email" ng-model="user.email" />
         </acj-field-with-feedback>
+    </fieldset>
+
+    <fieldset ng-if="method == 'new' || canManageUsers">
+        <legend>Account Login</legend>
+        <p class="instructional-text">
+            This information will set the username and password for logging in to ComPAIR without an external login (like CWL).
+            The username you set does not appear anywehere to other users in the application but does need to be unique.
+        </p>
+        <acj-field-with-feedback form-control="userForm.username">
+            <label for="username" class="required-star">ComPAIR Username </label>
+            <input class="form-control" id="username" type="text"
+                name="username" ng-model="user.username"
+                required />
+        </acj-field-with-feedback>
+        <div ng-if="method == 'new'">
+            <acj-field-with-feedback form-control="userForm.password">
+                <label for=password" class="required-star">ComPAIR Password </label>
+                <input class="form-control" id="password" type="password"
+                    name="password" ng-model="user.password" required />
+            </acj-field-with-feedback>
+            <acj-field-with-feedback form-control="userForm.verifyPassword">
+                <label for=verifyPassword" class="required-star">Verify Password </label>
+                <input class="form-control" id="verifyPassword" type="password"
+                    name="verifyPassword" ng-model="user.verifyPassword"
+                    required pw-match="password" />
+            </acj-field-with-feedback>
+        </div>
     </fieldset>
     <input type="submit" class="btn btn-success center-block btn-lg" value="Save"
         ng-disabled="userForm.$invalid || submitted" />

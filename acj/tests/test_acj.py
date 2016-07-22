@@ -12,7 +12,8 @@ from acj import create_app
 from acj.manage.database import populate
 from acj.core import db
 from acj.tests import test_app_settings
-
+from lti import ToolConsumer
+from lti.utils import parse_qs
 
 # Tests Checklist
 # - Unauthenticated users refused access with 401
@@ -90,6 +91,35 @@ class ACJAPITestCase(ACJTestCase):
         self.assert200(rv)
         yield rv
         self.client.delete('/api/logout', follow_redirects=True)
+
+    @contextmanager
+    def lti_launch(self, lti_consumer, lti_resource_link_id, user_id=None, context_id=None, assignment_id=None, roles=None):
+
+        launch_params = {
+            'resource_link_id': lti_resource_link_id
+        }
+        if user_id:
+            launch_params['user_id'] = user_id
+        if context_id:
+            launch_params['context_id'] = context_id
+        if assignment_id:
+            launch_params['custom_assignment'] = assignment_id
+        if roles:
+            launch_params['roles'] = roles
+
+        tool_consumer = ToolConsumer(
+            lti_consumer.oauth_consumer_key,
+            lti_consumer.oauth_consumer_secret,
+            params=launch_params,
+            #launch_url not actually used. Just needed for validation
+            launch_url='http://localhost/api/lti/auth'
+        )
+
+        launch_request = tool_consumer.generate_launch_request()
+        lauch_data = parse_qs(launch_request.body.decode('utf-8'))
+        rv = self.client.post('/api/lti/auth', data=lauch_data, follow_redirects=True)
+        self.assert200(rv)
+        yield rv
 
     def get_url(self, **values):
         return self.api.url_for(self.resource, **values)

@@ -23,6 +23,7 @@ var myApp = angular.module('myApp', [
     'ubc.ctlt.acj.home',
     'ubc.ctlt.acj.comparison',
     'ubc.ctlt.acj.login',
+    'ubc.ctlt.acj.lti',
     'ubc.ctlt.acj.navbar',
     'ubc.ctlt.acj.assignment',
     'ubc.ctlt.acj.report'
@@ -220,6 +221,12 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
                 label: "User Profile",
                 controller: 'UserController',
                 method: 'view'
+            })
+        .when('/lti',
+            {
+                templateUrl: 'modules/lti/lti-setup-partial.html',
+                label: "Setup ComPAIR",
+                controller: 'LTIController'
             })
         .otherwise({redirectTo: '/'});
 

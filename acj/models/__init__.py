@@ -28,13 +28,6 @@ from .user_course import UserCourse
 from .lti import LTIConsumer, LTIContext, LTIResourceLink, \
     LTIUser, LTIUserResourceLink
 
-# oauth enums
-from .oauth import AuthType
-
-# oauth models
-from .oauth import UserOAuth
-
-
 from acj.core import db
 convention = {
     "ix": 'ix_%(column_0_label)s',

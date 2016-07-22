@@ -67,9 +67,9 @@ class User(DefaultTableMixin, WriteTrackingMixin, UserMixin):
         backref="user", lazy='dynamic')
 
     # third party authentification
-    user_oauths = db.relationship("UserOAuth",
-        foreign_keys='UserOAuth.user_id',
-        backref="user", lazy='dynamic')
+    lti_user_links = db.relationship("LTIUser",
+        foreign_keys='LTIUser.acj_user_id',
+        backref="acj_user", lazy='dynamic')
 
     # hyprid and other functions
 

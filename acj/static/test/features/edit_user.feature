@@ -6,8 +6,7 @@ Feature: Edit Profile
     And I'm on 'user' page for user with id '1'
     When I select 'Edit' button
     Then I should be on the 'edit profile' page
-    And I should see the User Login section of the Edit User form
-    And I should see the User Details section of the Edit User form
+    And I should see the full Account Details and Account Login sections of the Edit User form
     And I should see the Password section of the Edit User form
 
   Scenario: Loading edit other user's profile as admin
@@ -15,8 +14,7 @@ Feature: Edit Profile
     And I'm on 'user' page for user with id '2'
     When I select 'Edit' button
     Then I should be on the 'edit profile' page
-    And I should see the User Login section of the Edit User form
-    And I should see the User Details section of the Edit User form
+    And I should see the full Account Details and Account Login sections of the Edit User form
     And I should see the Password section of the Edit User form without old password
 
   Scenario: Loading edit own profile as instructor
@@ -24,8 +22,7 @@ Feature: Edit Profile
     And I'm on 'user' page for user with id '2'
     When I select 'Edit' button
     Then I should be on the 'edit profile' page
-    And I should not see the User Login section of the Edit User form
-    And I should see the User Details section of the Edit User form
+    And I should see the incomplete Account Details section of the Edit User form
     And I should see the Password section of the Edit User form
 
   Scenario: Edit own profile as instructor
@@ -54,8 +51,7 @@ Feature: Edit Profile
     And I'm on 'user' page for user with id '3'
     When I select 'Edit' button
     Then I should be on the 'edit profile' page
-    And I should not see the User Login section of the Edit User form
-    And I should see the User Details section of the Edit User form
+    And I should see the incomplete Account Details section of the Edit User form
     And I should not see the Password section of the Edit User form
 
   Scenario: Edit another user's profile as instructor
@@ -64,6 +60,7 @@ Feature: Edit Profile
     When I fill form item 'user.displayname' in with 'student123'
     And I fill form item 'user.firstname' in with 'student'
     And I fill form item 'user.lastname' in with '123'
+    And I fill form item 'user.student_number' in with '1234567890'
     And I fill form item 'user.email' in with 'student.123@example.com'
     And I submit form with 'Save' button
     Then I should be on the 'profile' page
@@ -74,8 +71,7 @@ Feature: Edit Profile
     And I'm on 'user' page for user with id '3'
     When I select 'Edit' button
     Then I should be on the 'edit profile' page
-    And I should not see the User Login section of the Edit User form
-    And I should see the User Details section of the Edit User form
+    And I should see the incomplete Account Details section of the Edit User form
     And I should see the Password section of the Edit User form
 
   Scenario: Edit own profile as student
@@ -84,6 +80,7 @@ Feature: Edit Profile
     When I fill form item 'user.displayname' in with 'student123'
     And I fill form item 'user.firstname' in with 'student'
     And I fill form item 'user.lastname' in with '123'
+    And I fill form item 'user.student_number' in with '1234567890'
     And I fill form item 'user.email' in with 'student.123@example.com'
     And I submit form with 'Save' button
     Then I should be on the 'profile' page

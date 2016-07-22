@@ -24,6 +24,8 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
 
     # relationships
     # acj_assignment via Assignment Model
+    # lti_consumer via LTIConsumer Model
+    lti_user_resource_links = db.relationship("LTIUserResourceLink", backref="lti_resource_link", lazy="dynamic")
 
 
     # hyprid and other functions
@@ -43,7 +45,7 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
             # check if int conversion worked
             if assignment_id:
                 # check if assignment exists
-                assignment = Assignment.get(assignment_id)
+                assignment = Assignment.query.get(assignment_id)
                 if assignment:
                     self.acj_assignment_id = assignment.id
                     return self
@@ -72,6 +74,7 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
                 lti_consumer_id=lti_consumer.id,
                 resource_link_id=tool_provider.resource_link_id
             )
+            db.session.add(lti_resource_link)
         original_custom_param_assignment_id = lti_resource_link.custom_param_assignment_id
 
         lti_resource_link.resource_link_title = tool_provider.resource_link_title
@@ -83,11 +86,7 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
         if original_custom_param_assignment_id != tool_provider.custom_assignment:
             lti_resource_link._update_link_to_acj_assignment()
 
-        # create/update if needed
-
-        db.session.add(lti_resource_link)
-        if db.session.object_session(lti_resource_link).is_modified(lti_resource_link, include_collections=False):
-            db.session.commit()
+        db.session.commit()
 
         return lti_resource_link
 

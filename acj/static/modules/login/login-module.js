@@ -11,7 +11,8 @@ var module = angular.module('ubc.ctlt.acj.login',
         'ui.bootstrap',
         'ubc.ctlt.acj.authentication',
         'ubc.ctlt.acj.authorization',
-        'ubc.ctlt.acj.user'
+        'ubc.ctlt.acj.user',
+        'ubc.ctlt.acj.lti'
     ]
 );
 
@@ -47,8 +48,10 @@ module.directive('autoFocus', ["$timeout", "$log", function($timeout, $log) {
 /***** Listeners *****/
 // display the login page if user is not logged in
 module.run(
-    ["$rootScope", "$route", "$location", "$log", "$modal", "$cacheFactory", "AuthenticationService", "Toaster", "$http",
-    function ($rootScope, $route, $location, $log, $modal, $cacheFactory, AuthenticationService, Toaster, $http) {
+    ["$rootScope", "$route", "$location", "$log", "$modal", "$cacheFactory", "AuthenticationService",
+     "Toaster", "$http",
+    function ($rootScope, $route, $location, $log, $modal, $cacheFactory, AuthenticationService,
+              Toaster, $http) {
     // Create a modal dialog box for containing the login form
     var loginBox;
     var isOpen = false;
@@ -70,6 +73,9 @@ module.run(
     };
     // Show the login form when we have a login required event
     $rootScope.$on(AuthenticationService.LOGIN_REQUIRED_EVENT, $rootScope.showLogin);
+    $rootScope.$on(AuthenticationService.LTI_LOGIN_REQUIRED_EVENT, $rootScope.showLogin);
+    // Show the create user form when we need to create accounts for LTI / Third party logins
+
     // Hide the login form on login
     $rootScope.$on(AuthenticationService.LOGIN_EVENT, $rootScope.hideLogin);
     // listen to 403 response for CAS user that do not exist in the system
@@ -107,11 +113,17 @@ module.run(
 module.controller(
     "LoginController",
     [ "$rootScope", "$scope", "$location", "$log", "$route",
-      "LoginResource", "AuthenticationService",
-    function LoginController($rootScope, $scope, $location, $log, $route,
-                             LoginResource, AuthenticationService)
+      "LoginResource", "AuthenticationService", "LTI", "LTIResource",
+    function ($rootScope, $scope, $location, $log, $route,
+              LoginResource, AuthenticationService, LTI, LTIResource)
     {
         $scope.submitted = false;
+        $scope.allowCreateUser = LTI.ltiLinkUser();
+
+        // update allowCreateUser if needed
+        $rootScope.$on(AuthenticationService.LTI_LOGIN_REQUIRED_EVENT, function() {
+            $scope.allowCreateUser = LTI.ltiLinkUser();
+        });
 
         $scope.submit = function() {
             $scope.submitted = true;

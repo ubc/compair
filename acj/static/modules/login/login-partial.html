@@ -1,59 +1,74 @@
 <div ng-controller="LoginController" class="login-screen">
-    <h2 class="text-center">ComPAIR</h2>
-    <div class="row">
-        <form name="loginForm" class="form col-sm-6" ng-submit="submit()" novalidate>
-            <fieldset>
-                <h3>Log in with your CWL here:</h3>
-                <a href="/login">
-                    <img class="center-block" src="https://www.auth.cwl.ubc.ca/CWL_login_button.gif" width="76" height="25" alt="CWL Login" border="0" valign="middle">
-                </a>
-                <hr />
-                <a href="" ng-click="showReplies = !showReplies">
-                    <p>
-                        <i class="fa fa-chevron-down" ng-show="showReplies"></i>
-                        <i class="fa fa-chevron-right" ng-hide="showReplies"></i>
-                        <span id="app-login-toggle">Use application's login instead?</span>
-                    </p>
-                </a>
-                <div ng-show="showReplies">
-                    <div class="form-group has-feedback"
-                        ng-class="{'has-error': loginForm.username.$invalid, 'has-success': loginForm.username.$valid}">
-                        <label for="inputUser" class="required-star">ComPAIR Username</label>
-                        <input type="text" id="inputUser" name="username"
-                            ng-model="username" required placeholder=""
-                            class="form-control">
-                        <!-- <span ng-show="!loginForm.username.$invalid" class="fa fa-check form-control-feedback"></span>
-                        <span ng-show="loginForm.username.$invalid" class="fa fa-times form-control-feedback"></span> -->
+    <div ng-show="!showCreateUserForm">
+        <h2 class="text-center">ComPAIR</h2>
+        <div class="row">
+            <form name="loginForm" class="form col-sm-6" ng-submit="submit()" novalidate>
+                <fieldset>
+                    <h3>Log in with your CWL here:</h3>
+                    <a href="/login">
+                        <img class="center-block" src="https://www.auth.cwl.ubc.ca/CWL_login_button.gif" width="76" height="25" alt="CWL Login" border="0" valign="middle">
+                    </a>
+                    <hr />
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <a href="" ng-click="showAppLogin = !showAppLogin">
+                                <p>
+                                    <i class="fa fa-chevron-down" ng-show="showAppLogin"></i>
+                                    <i class="fa fa-chevron-right" ng-hide="showAppLogin"></i>
+                                    <span id="app-login-toggle">Use application's login instead?</span>
+                                </p>
+                            </a>
+                        </div>
+                        <div class="col-xs-6" ng-show="allowCreateUser">|
+                            <a ng-click="showCreateUserForm = true">Create new account</a>
+                        </div>
                     </div>
-                    <div class="form-group has-feedback"
-                        ng-class="{'has-error': loginForm.password.$invalid, 'has-success': loginForm.password.$valid}">
-                        <label for="inputPass" class="required-star">ComPAIR Password</label>
-                        <input type="password" id="inputPass" name="password" ng-model="password" required
-                               placeholder="" class="form-control">
-                        <!-- <span ng-show="loginForm.password.$valid" class="fa fa-check form-control-feedback"></span>
-                        <span ng-show="loginForm.password.$invalid" class="fa fa-times form-control-feedback"></span> -->
+                    <div ng-show="showAppLogin">
+                        <div class="form-group has-feedback"
+                            ng-class="{'has-error': loginForm.username.$invalid, 'has-success': loginForm.username.$valid}">
+                            <label for="inputUser" class="required-star">ComPAIR Username</label>
+                            <input type="text" id="inputUser" name="username"
+                                ng-model="username" required placeholder=""
+                                class="form-control">
+                            <!-- <span ng-show="!loginForm.username.$invalid" class="fa fa-check form-control-feedback"></span>
+                            <span ng-show="loginForm.username.$invalid" class="fa fa-times form-control-feedback"></span> -->
+                        </div>
+                        <div class="form-group has-feedback"
+                            ng-class="{'has-error': loginForm.password.$invalid, 'has-success': loginForm.password.$valid}">
+                            <label for="inputPass" class="required-star">ComPAIR Password</label>
+                            <input type="password" id="inputPass" name="password" ng-model="password" required
+                                    placeholder="" class="form-control">
+                            <!-- <span ng-show="loginForm.password.$valid" class="fa fa-check form-control-feedback"></span>
+                            <span ng-show="loginForm.password.$invalid" class="fa fa-times form-control-feedback"></span> -->
+                        </div>
+                        <div class="alert alert-danger text-center" ng-show="login_err">{{login_err}}</div><br />
+                        <input type="submit" ng-disabled="loginForm.$invalid || submitted" class="btn btn-primary center-block" ng-class="" value="Log In">
+                        <p ng-if="submitted" class="text-center" >
+                            <i class="fa fa-spin fa-spinner"></i>
+                            &nbsp; Logging in...
+                        </p>
                     </div>
-                    <div class="alert alert-danger text-center" ng-show="login_err">{{login_err}}</div><br />
-                    <input type="submit" ng-disabled="loginForm.$invalid || submitted" class="btn btn-primary center-block" ng-class="" value="Log In">
-                    <p ng-if="submitted" class="text-center" >
-                        <i class="fa fa-spin fa-spinner"></i>
-                        &nbsp; Logging in...
-                    </p>
-                </div>
-            </fieldset>
-        </form>
-        <div class="col-sm-6">
-            <br />
-            <h4>Trouble logging in?</h4>
-            <p>Try the following:</p>
-            <ul>
-                <li>Make sure your CWL is functioning normally (try logging in somewhere else).</li>
-                <li>Confirm your registration in the course that is using this application.</li>
-                <li>Enable Java and cookies in your browser settings.</li>
-                <li>Clear your browser cache or try a different one (supported browsers include <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a>, <a href="http://www.google.com/chrome/">Chrome</a>, <a href="https://www.apple.com/ca/safari/">Safari</a>, and <a href="http://windows.microsoft.com/en-ca/internet-explorer/download-ie">IE9+</a>).</li>
-                <li>Disable extra plugins and add-ons for your browser.</li>
-    </li>
-            </ul>
+                </fieldset>
+            </form>
+            <div class="col-sm-6">
+                <br />
+                <h4>Trouble logging in?</h4>
+                <p>Try the following:</p>
+                <ul>
+                    <li>Make sure your CWL is functioning normally (try logging in somewhere else).</li>
+                    <li>Confirm your registration in the course that is using this application.</li>
+                    <li>Enable Java and cookies in your browser settings.</li>
+                    <li>Clear your browser cache or try a different one (supported browsers include <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a>, <a href="http://www.google.com/chrome/">Chrome</a>, <a href="https://www.apple.com/ca/safari/">Safari</a>, and <a href="http://windows.microsoft.com/en-ca/internet-explorer/download-ie">IE9+</a>).</li>
+                    <li>Disable extra plugins and add-ons for your browser.</li>
+                </ul>
+            </div>
         </div>
+    </div>
+    <div ng-show="showCreateUserForm">
+        <p class="pull-right"><a ng-click="showCreateUserForm = false">Cancel</a></p>
+        <h2 class="text-center">Create ComPAIR Account</h2>
+        <br />
+        <p class="intro-text">Please provide the required fields below to create your ComPAIR account.</p>
+        <login-create-user-form></login-create-user-form>
     </div>
 </div>

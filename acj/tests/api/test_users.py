@@ -4,9 +4,8 @@ from flask.ext.bouncer import ensure
 from flask.ext.login import login_user, logout_user
 from werkzeug.exceptions import Unauthorized
 
-from data.fixtures import DefaultFixture
-from data.fixtures import UserFactory
-from data.fixtures.test_data import BasicTestData
+from data.fixtures import DefaultFixture, UserFactory
+from data.fixtures.test_data import BasicTestData, LTITestData
 from acj.tests.test_acj import ACJAPITestCase
 from acj.models import User, SystemRole, CourseRole
 
@@ -130,6 +129,55 @@ class UsersAPITests(ACJAPITestCase):
             expected = UserFactory.stub(system_role=SystemRole.sys_admin.value)
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert403(rv)
+
+    def test_create_user_lti(self):
+        url = '/api/users'
+        lti_data = LTITestData()
+
+        # test login required when LTI and oauth_create_user_link are not present
+        expected = UserFactory.stub(system_role=SystemRole.student.value)
+        rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
+        self.assert401(rv)
+
+        with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
+                user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
+                roles="Instructor"):
+
+            # test create instructor via lti session
+            expected = UserFactory.stub(system_role=None)
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
+            self.assert200(rv)
+            self.assertEqual(expected.displayname, rv.json['displayname'])
+
+            user = User.query.get(rv.json['id'])
+            self.assertEqual(SystemRole.instructor, user.system_role)
+
+        with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
+                user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
+                roles="Student"):
+
+            # test create student via lti session
+            expected = UserFactory.stub(system_role=None)
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
+            self.assert200(rv)
+            self.assertEqual(expected.displayname, rv.json['displayname'])
+
+            user = User.query.get(rv.json['id'])
+            self.assertEqual(SystemRole.student, user.system_role)
+
+        with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
+                user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
+                roles="TeachingAssistant"):
+
+            # test create teaching assistant (student role) via lti session
+            expected = UserFactory.stub(system_role=None)
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
+            self.assert200(rv)
+            self.assertEqual(expected.displayname, rv.json['displayname'])
+
+            user = User.query.get(rv.json['id'])
+            self.assertEqual(SystemRole.student, user.system_role)
+
 
     def test_edit_user(self):
         user = self.data.get_authorized_instructor()
