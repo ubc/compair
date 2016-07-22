@@ -1,4 +1,4 @@
-from flask import Flask, redirect, session, abort, jsonify
+from flask import Flask, redirect, session as sess, abort, jsonify
 from flask.ext.login import current_user
 from sqlalchemy.orm import joinedload
 
@@ -37,8 +37,8 @@ def create_app(conf=config, settings_override=None):
 
     @login_manager.unauthorized_handler
     def unauthorized():
-        if 'CAS_AUTH_MSG' in session:
-            msg = session.pop('CAS_AUTH_MSG')
+        if sess.get('CAS_AUTH_MSG'):
+            msg = sess.pop('CAS_AUTH_MSG')
             response = jsonify({'message': msg, 'status': 403, 'type': 'CAS'})
             response.status_code = 403
             return response

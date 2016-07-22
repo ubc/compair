@@ -9,14 +9,13 @@ from itertools import groupby
 from operator import attrgetter
 
 from . import dataformat
-from acj.core import db
+from acj.core import db, event
 from acj.authorization import require, allow, is_user_access_restricted
 from acj.models import Answer, Assignment, Course, User, Comparison, \
     Score, UserCourse, CourseRole, AnswerComment, AnswerCommentType
 
 from .util import new_restful_api, get_model_changes, pagination_parser
 from .file import add_new_file, delete_file
-from acj.core import event
 
 answers_api = Blueprint('answers_api', __name__)
 api = new_restful_api(answers_api)

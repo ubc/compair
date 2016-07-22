@@ -231,3 +231,6 @@ def log_events(log):
     # gradebook event
     from .gradebook import on_gradebook_get
     on_gradebook_get.connect(log)
+
+    from .ltilaunch import on_lti_course_link
+    on_lti_course_link.connect(log)

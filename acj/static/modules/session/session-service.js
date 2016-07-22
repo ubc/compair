@@ -1,6 +1,10 @@
 (function() {
 
-    var module = angular.module('ubc.ctlt.acj.session', ['ngResource', 'ngCookies', 'ubc.ctlt.acj.user']);
+    var module = angular.module('ubc.ctlt.acj.session', [
+        'ngResource',
+        'ngCookies',
+        'ubc.ctlt.acj.user'
+    ]);
 
     /**
      * Session Service manages the session data for the frontend
@@ -107,30 +111,28 @@
             refresh: function() {
                 var scope = this;
                 var deferred = $q.defer();
-                return $http.get('/api/session', { cache:true })
-                    .then(function (result) {
-                        // retrieve logged in user's information
-                        // return a promise for chaining
-                        var u = UserResource.get({"id": result.data.id}, function(user) {
-                            $cookies.putObject('current.user', user);
-                            angular.extend(scope._user, user);
-                            deferred.resolve(scope._user);
-                        });
-                        angular.extend(scope._user, u);
-                        scope._permissions = result.data.permissions;
-                        $cookies.putObject('current.permissions', scope._permissions);
-                        return deferred.promise;
+                return $http.get('/api/session', { cache:true }).then(function (result) {
+                    // retrieve logged in user's information
+                    // return a promise for chaining
+                    var u = UserResource.get({"id": result.data.id}, function(user) {
+                        $cookies.putObject('current.user', user);
+                        angular.extend(scope._user, user);
+                        deferred.resolve(scope._user);
                     });
+                    angular.extend(scope._user, u);
+                    scope._permissions = result.data.permissions;
+                    $cookies.putObject('current.permissions', scope._permissions);
+                    return deferred.promise;
+                });
             },
             refreshPermissions: function() {
                 var scope = this;
-                return $http.get('/api/session/permission')
-                    .then(function (result) {
-                        scope._permissions = result.data;
-                        $cookies.putObject('current.permissions', result.data);
-                        $rootScope.$broadcast(PERMISSION_REFRESHED_EVENT);
-                        return true;
-                    });
+                return $http.get('/api/session/permission').then(function (result) {
+                    scope._permissions = result.data;
+                    $cookies.putObject('current.permissions', result.data);
+                    $rootScope.$broadcast(PERMISSION_REFRESHED_EVENT);
+                    return true;
+                });
             }
         };
     }]);

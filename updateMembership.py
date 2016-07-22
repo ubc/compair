@@ -9,6 +9,9 @@ import requests
 import xml.etree.ElementTree as ET
 from acj.users import import_users
 from acj.course import enrol_users
+
+#TODO: Remove or modify!
+
 #get all courses to update
 courses = LTIInfo.query.all()
 for course in courses:
