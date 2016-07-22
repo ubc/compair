@@ -15,7 +15,7 @@ import sqlalchemy as sa
 
 from sqlalchemy_enum34 import EnumType
 
-from acj.models import AuthType
+from acj.models import AuthType, SystemRole, CourseRole
 
 def upgrade():
     op.create_table('user_oauth',
@@ -93,6 +93,7 @@ def upgrade():
         sa.Column('lis_person_name_full', sa.String(length=255), nullable=True),
         sa.Column('lis_person_contact_email_primary', sa.String(length=255), nullable=True),
         sa.Column('user_oauth_id', sa.Integer(), nullable=True),
+        sa.Column('system_role', EnumType(SystemRole, name='system_role'), nullable=False),
         sa.Column('modified_user_id', sa.Integer(), nullable=True),
         sa.Column('modified', sa.DateTime(), nullable=False),
         sa.Column('created_user_id', sa.Integer(), nullable=True),
@@ -140,6 +141,7 @@ def upgrade():
         sa.Column('roles', sa.String(length=255), nullable=True),
         sa.Column('lis_result_sourcedid', sa.String(length=255), nullable=True),
         sa.Column('acj_user_course_id', sa.Integer(), nullable=True),
+        sa.Column('course_role', EnumType(CourseRole, name="course_role"), nullable=False),
         sa.Column('modified_user_id', sa.Integer(), nullable=True),
         sa.Column('modified', sa.DateTime(), nullable=False),
         sa.Column('created_user_id', sa.Integer(), nullable=True),
