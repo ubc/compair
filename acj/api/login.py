@@ -1,31 +1,11 @@
 import os
 from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask, render_template
 from flask_login import current_user, login_required, login_user, logout_user
-from mock import Mock
 from acj import cas
 from acj.authorization import get_logged_in_user_permissions
 from acj.models import User
-import logging
 
 login_api = Blueprint("login_api", __name__, url_prefix='/api')
-VERSION = '0.0.1'
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-                    datefmt='%m-%d %H:%M',
-                    filename='myapp.log',
-                    filemode='w')
-# define a Handler which writes INFO messages or higher to the sys.stderr
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-# set a format which is simpler for console use
-formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
-# tell the handler to use this format
-console.setFormatter(formatter)
-# add the handler to the root logger
-logging.getLogger('').addHandler(console)
-
-def error(exception=None):
-    return str(exception)
 
 @login_api.route('/login', methods=['POST'])
 def login():
@@ -53,8 +33,6 @@ def login():
 def logout():
     current_user.update_last_online()
     logout_user()  # flask-login delete user info
-    global isLTI
-    isLTI = False
     if 'LTI' in sess:
         sess.pop('LTI')
     if 'CAS_LOGIN' in sess:
@@ -105,13 +83,7 @@ def auth_cas():
 def authenticate(user):
     # username valid, password valid, login successful
     # "remember me" functionality is available, do we want to implement?
-    global isLTI
     user.update_last_online()
-    if sess.get('LTI'):
-        if sess['LTI']:
-            isLTI = True
     login_user(user)  # flask-login store user info
-    if isLTI:
-        sess['LTI'] = True
     current_app.logger.debug("Login successful for: " + user.username)
     return get_logged_in_user_permissions()
