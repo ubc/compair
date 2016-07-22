@@ -19,17 +19,18 @@ class LTIUser(DefaultTableMixin, WriteTrackingMixin):
     lis_person_name_family = db.Column(db.String(255), nullable=True)
     lis_person_name_full = db.Column(db.String(255), nullable=True)
     lis_person_contact_email_primary = db.Column(db.String(255), nullable=True)
-    user_oauth_id = db.Column(db.Integer, db.ForeignKey("user_oauth.id", ondelete="CASCADE"),
+    acj_user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"),
         nullable=True)
     system_role = db.Column(EnumType(SystemRole, name="system_role"), nullable=False)
 
     # relationships
-    # TODO: build relationship on UserOAuth with
-    # auth_type == AuthType.lti && auth_source_id = self.id
+    # user via User Model
+    # lti_consumer via LTIConsumer Model
+    lti_user_resource_links = db.relationship("LTIUserResourceLink", backref="lti_user", lazy="dynamic")
 
     # hyprid and other functions
     def is_linked_to_user(self):
-        return self.user_oauth_id != None
+        return self.acj_user_id != None
 
     @classmethod
     def get_by_lti_consumer_id_and_user_id(cls, lti_consumer_id, user_id):
@@ -55,23 +56,19 @@ class LTIUser(DefaultTableMixin, WriteTrackingMixin):
         if not lti_user:
             lti_user = LTIUser(
                 lti_consumer_id=lti_consumer.id,
-                user_id=tool_provider.user_id
+                user_id=tool_provider.user_id,
+                system_role= SystemRole.instructor  \
+                    if tool_provider.is_instructor() \
+                    else SystemRole.student
             )
-            # set system role first time only
-            if tool_provider.is_instructor():
-                lti_user.system_role = SystemRole.instructor
-            else:
-                lti_user.system_role = SystemRole.student
+            db.session.add(lti_user)
 
         lti_user.lis_person_name_given = tool_provider.lis_person_name_given
         lti_user.lis_person_name_family = tool_provider.lis_person_name_family
         lti_user.lis_person_name_full = tool_provider.lis_person_name_full
         lti_user.lis_person_contact_email_primary = tool_provider.lis_person_contact_email_primary
 
-        # create/update if needed
-        db.session.add(lti_user)
-        if db.session.object_session(lti_user).is_modified(lti_user, include_collections=False):
-            db.session.commit()
+        db.session.commit()
 
         return lti_user
 

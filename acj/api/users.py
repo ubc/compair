@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, abort
+from flask import Blueprint, current_app, abort, session as sess
 from bouncer.constants import MANAGE, EDIT, CREATE, READ
 from flask.ext.restful import Resource, marshal
 from flask.ext.restful.reqparse import RequestParser
@@ -10,12 +10,17 @@ from . import dataformat
 from acj.authorization import is_user_access_restricted, require, allow
 from acj.core import db, event
 from .util import new_restful_api, get_model_changes, pagination_parser
-from acj.models import User, SystemRole, Course, UserCourse, CourseRole, Assignment
+from acj.models import User, SystemRole, Course, UserCourse, CourseRole, \
+    Assignment, LTIUser
+from acj.api.login import authenticate
 
 user_api = Blueprint('user_api', __name__)
 
 def non_blank_str(value):
-    return None if str(value) == "" else str(value)
+    if value is None:
+        return None
+    else:
+        return None if str(value).strip() == "" else str(value)
 
 new_user_parser = RequestParser()
 new_user_parser.add_argument('username', type=str, required=True)
@@ -151,8 +156,13 @@ class UserListAPI(Resource):
         return {"objects": marshal(page.items, dataformat.get_user(restrict_user)), "page": page.page,
                 "pages": page.pages, "total": page.total, "per_page": page.per_page}
 
-    @login_required
     def post(self):
+        # login_required when oauth_create_user_link not set
+        if not sess.get('oauth_create_user_link'):
+            if not current_app.login_manager._login_disabled and \
+                    not current_user.is_authenticated():
+                return current_app.login_manager.unauthorized()
+
         user = User()
         params = new_user_parser.parse_args()
         user.username = params.get("username")
@@ -163,12 +173,6 @@ class UserListAPI(Resource):
         user.lastname = params.get("lastname")
         user.displayname = params.get("displayname")
 
-        system_role = params.get("system_role")
-        check_valid_system_role(system_role)
-        user.system_role = SystemRole(system_role)
-
-        require(CREATE, user)
-
         username_exists = User.query.filter_by(username=user.username).first()
         if username_exists:
             return {"error": "This username already exists. Please pick another."}, 409
@@ -178,18 +182,44 @@ class UserListAPI(Resource):
         if user.student_number is not None and student_number_exists:
             return {"error": "This student number already exists. Please pick another."}, 409
 
+        # handle oauth_create_user_link setup for third party logins
+        if sess.get('oauth_create_user_link'):
+            if sess.get('LTI'):
+                lti_user = LTIUser.query.get_or_404(sess['lti_user'])
+                lti_user.acj_user = user
+                user.system_role = lti_user.system_role
+        else:
+            system_role = params.get("system_role")
+            check_valid_system_role(system_role)
+            user.system_role = SystemRole(system_role)
+
+            require(CREATE, user)
+
         try:
             db.session.add(user)
             db.session.commit()
-            on_user_create.send(
-                self,
-                event_name=on_user_create.name,
-                user=current_user,
-                data=marshal(user, dataformat.get_user(False)))
+            if current_user.is_authenticated():
+                on_user_create.send(
+                    self,
+                    event_name=on_user_create.name,
+                    user=current_user,
+                    data=marshal(user, dataformat.get_user(False)))
+            else:
+                on_user_create.send(
+                    self,
+                    event_name=on_user_create.name,
+                    data=marshal(user, dataformat.get_user(False)))
+
         except exc.IntegrityError:
             db.session.rollback()
             current_app.logger.error("Failed to add new user. Duplicate.")
             return {'error': 'A user with the same identifier already exists.'}, 400
+
+        # handle oauth_create_user_link teardown for third party logins
+        if sess.get('oauth_create_user_link'):
+            authenticate(user)
+            sess.pop('oauth_create_user_link')
+
         return marshal(user, dataformat.get_user())
 
 

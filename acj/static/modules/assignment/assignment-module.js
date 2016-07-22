@@ -97,7 +97,7 @@ module.directive('comparisonPreview', function() {
     return {
         /* this template is our simple text with button to launch the preview */
         templateUrl: 'modules/assignment/preview-inline-template.html',
-        controller: function ($scope, $modal) {
+        controller: ["$scope", "$modal", function ($scope, $modal) {
             /* need to pass to comparison template all expected properties to complete the preview */
             $scope.previewPopup = function() {
                 /* set current round #, answer #s, and total round # for preview */
@@ -129,7 +129,7 @@ module.directive('comparisonPreview', function() {
                     scope: $scope
                 });
             }
-        }
+        }]
     };
 });
 

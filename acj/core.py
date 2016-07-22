@@ -2,7 +2,7 @@
     The app core, initialize necessary objects
 """
 from blinker import Namespace
-from flask import session
+from flask import session as sess
 from flask.ext.bouncer import Bouncer
 from flask.ext.cas import CAS
 
@@ -31,5 +31,5 @@ event = Namespace()
 # subscribe user_logged_in signal to generate auth token
 @user_logged_in.connect
 def generate_session_token(sender, user, **extra):
-    session['session_token'] = user.generate_session_token()
+    sess['session_token'] = user.generate_session_token()
 

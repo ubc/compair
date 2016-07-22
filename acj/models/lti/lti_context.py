@@ -21,6 +21,7 @@ class LTIContext(DefaultTableMixin, WriteTrackingMixin):
 
     # relationships
     # acj_course via Course Model
+    # lti_consumer via LTIConsumer Model
 
     # hyprid and other functions
     def is_linked_to_course(self):
@@ -50,13 +51,12 @@ class LTIContext(DefaultTableMixin, WriteTrackingMixin):
                 lti_consumer_id=lti_consumer.id,
                 context_id=tool_provider.context_id
             )
+            db.session.add(lti_context)
+
         lti_context.context_type = tool_provider.context_type
         lti_context.context_title = tool_provider.context_title
 
-        # create/update if needed
-        db.session.add(lti_context)
-        if db.session.object_session(lti_context).is_modified(lti_context, include_collections=False):
-            db.session.commit()
+        db.session.commit()
 
         return lti_context
 
