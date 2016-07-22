@@ -24,6 +24,40 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
     # acj_user_course via UserCourse Model
 
     # hyprid and other functions
+    def is_linked_to_user_course(self):
+        return self.acj_user_course_id != None
+
+    @classmethod
+    def get_by_lti_resouce_link_id_and_lti_user_id(cls, lti_resouce_link_id, lti_user_id):
+        lti_user = LTIContext.query \
+            .filter_by(
+                lti_resouce_link_id=lti_resouce_link_id,
+                lti_user_id=lti_user_id
+            ) \
+            .one()
+
+        return lti_user
+
+    @classmethod
+    def get_by_launch_request(cls, lti_resource_link, lti_user, launch_request):
+        lti_user_resource_link = LTIUserResourceLink.get_by_lti_resouce_link_id_and_lti_user_id(
+            lti_resource_link.id, lti_user.id)
+
+        if lti_user_resource_link == None:
+            lti_user_resource_link = LTIUserResourceLink(
+                lti_resource_link_id=lti_resource_link.id,
+                lti_user_id=lti_user.id
+            )
+        lti_user_resource_link.roles = launch_request['roles']
+        lti_user_resource_link.lis_result_sourcedid = launch_request['lis_result_sourcedid']
+
+        # create/update if needed
+        if lti_user_resource_link.session.is_modified(lti_user_resource_link, include_collections=False):
+            db.session.add(lti_user_resource_link)
+            db.session.commit()
+
+        return lti_user_resource_link
+
     @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()

@@ -23,5 +23,36 @@ class LTIConsumer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
 
     # hyprid and other functions
     @classmethod
+    def get_by_consumer_key(cls, consumer_key):
+        lti_consumer = LTIConsumer.query \
+            .filter_by(
+                active=True,
+                key=consumer_key
+            ) \
+            .one()
+
+        return lti_consumer
+
+    @classmethod
+    def get_by_launch_request(cls, launch_request):
+        lti_consumer = LTIConsumer.get_by_consumer_key(
+            launch_request['oauth_consumer_key'])
+
+        if lti_consumer == None:
+            return None
+        lti_consumer.lti_version = launch_request['lti_version']
+        lti_consumer.tool_consumer_instance_guid = launch_request['tool_consumer_instance_guid']
+        lti_consumer.tool_consumer_instance_name = launch_request['tool_consumer_instance_name']
+        lti_consumer.tool_consumer_instance_url = launch_request['tool_consumer_instance_url']
+        lti_consumer.lis_outcome_service_url = launch_request['lis_outcome_service_url']
+
+        # update if needed
+        if lti_consumer.session.is_modified(lti_consumer, include_collections=False):
+            db.session.add(lti_consumer)
+            db.session.commit()
+
+        return lti_consumer
+
+    @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()
