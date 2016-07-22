@@ -7,3 +7,4 @@ sudo puppet module install stankevich-python;
 sudo puppet module install puppetlabs-nodejs;
 sudo puppet module install puppetlabs-mysql;
 sudo puppet module install puppetlabs-apt;
+sudo apt-get install python-lxml;
