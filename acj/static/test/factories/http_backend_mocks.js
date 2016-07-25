@@ -508,6 +508,8 @@ module.exports.httpbackendMock = function(storageFixture) {
                 "id": null,
                 "name": null,
                 "number_of_comparisons": null,
+                "total_comparisons_required": null,
+                "total_steps_required": null,
                 "answer_end": null,
                 "answer_start": null,
                 "students_can_reply": null,
@@ -530,6 +532,9 @@ module.exports.httpbackendMock = function(storageFixture) {
             }
             newAssignment = angular.merge(newAssignment, data);
             newAssignment.id = storage.assignments.length + 1;
+            newAssignment.total_comparisons_required = newAssignment.number_of_comparisons;
+            newAssignment.total_steps_required = newAssignment.total_comparisons_required +
+                (newAssignment.enable_self_evaluation ? 1 : 0);
 
             storage.assignments.push(newAssignment);
 

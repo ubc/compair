@@ -3,25 +3,37 @@ from flask import redirect
 def register_api_blueprints(app):
     # Initialize rest of the api modules
     from .course import course_api
-    app.register_blueprint(course_api, url_prefix='/api/courses')
+    app.register_blueprint(
+        course_api,
+        url_prefix='/api/courses')
 
     from .classlist import classlist_api
-    app.register_blueprint(classlist_api, url_prefix='/api/courses/<int:course_id>/users')
+    app.register_blueprint(
+        classlist_api,
+        url_prefix='/api/courses/<int:course_id>/users')
 
     from .course_group import course_group_api
-    app.register_blueprint(course_group_api, url_prefix='/api/courses/<int:course_id>/groups')
+    app.register_blueprint(
+        course_group_api,
+        url_prefix='/api/courses/<int:course_id>/groups')
 
     from .course_group_user import course_group_user_api
-    app.register_blueprint(course_group_user_api, url_prefix='/api/courses/<int:course_id>/users/<int:user_id>/groups')
+    app.register_blueprint(
+        course_group_user_api,
+        url_prefix='/api/courses/<int:course_id>/users/<int:user_id>/groups')
 
     from .login import login_api
     app.register_blueprint(login_api)
 
     from .users import user_api
-    app.register_blueprint(user_api, url_prefix='/api/users')
+    app.register_blueprint(
+        user_api,
+        url_prefix='/api/users')
 
     from .assignment import assignment_api
-    app.register_blueprint(assignment_api, url_prefix='/api/courses/<int:course_id>/assignments')
+    app.register_blueprint(
+        assignment_api,
+        url_prefix='/api/courses/<int:course_id>/assignments')
 
     from .answer import answers_api
     app.register_blueprint(
@@ -44,23 +56,29 @@ def register_api_blueprints(app):
         url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>')
 
     from .criterion import criterion_api
-    app.register_blueprint(criterion_api, url_prefix='/api/criteria')
+    app.register_blueprint(
+        criterion_api,
+        url_prefix='/api/criteria')
 
     from .assignment_criterion import assignment_criterion_api
     app.register_blueprint(
         assignment_criterion_api,
         url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>/criteria')
 
-    from .comparison import comparison_api, all_course_comparisons_api
+    from .comparison import comparison_api
     app.register_blueprint(
         comparison_api,
         url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>/comparisons')
+
+    from .comparison_example import comparison_example_api
     app.register_blueprint(
-        all_course_comparisons_api,
-        url_prefix='/api/courses/<int:course_id>/comparisons')
+        comparison_example_api,
+        url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>/comparisons/examples')
 
     from .report import report_api
-    app.register_blueprint(report_api, url_prefix='/api/courses/<int:course_id>/report')
+    app.register_blueprint(
+        report_api,
+        url_prefix='/api/courses/<int:course_id>/report')
 
     from .gradebook import gradebook_api
     app.register_blueprint(
@@ -68,7 +86,9 @@ def register_api_blueprints(app):
         url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>/gradebook')
 
     from .common import timer_api
-    app.register_blueprint(timer_api, url_prefix='/api/timer')
+    app.register_blueprint(
+        timer_api,
+        url_prefix='/api/timer')
 
     @app.route('/')
     def route_root():
@@ -99,14 +119,14 @@ def log_events(log):
 
     # assignment events
     from .assignment import on_assignment_modified, on_assignment_get, on_assignment_list_get, on_assignment_create, \
-        on_assignment_delete, on_assignment_list_get_current_user_status, on_assignment_get_current_user_status
+        on_assignment_delete, on_assignment_list_get_status, on_assignment_get_status
     on_assignment_modified.connect(log)
     on_assignment_get.connect(log)
     on_assignment_list_get.connect(log)
     on_assignment_create.connect(log)
     on_assignment_delete.connect(log)
-    on_assignment_list_get_current_user_status.connect(log)
-    on_assignment_get_current_user_status.connect(log)
+    on_assignment_list_get_status.connect(log)
+    on_assignment_get_status.connect(log)
 
     # assignment comment events
     from .assignment_comment import on_assignment_comment_modified, on_assignment_comment_get, \
@@ -157,6 +177,14 @@ def log_events(log):
     on_comparison_get.connect(log)
     on_comparison_create.connect(log)
     on_comparison_update.connect(log)
+
+    # comparison example events
+    from .comparison_example import on_comparison_example_create, on_comparison_example_delete, \
+        on_comparison_example_list_get, on_comparison_example_modified
+    on_comparison_example_create.connect(log)
+    on_comparison_example_delete.connect(log)
+    on_comparison_example_list_get.connect(log)
+    on_comparison_example_modified.connect(log)
 
     # classlist events
     from .classlist import on_classlist_get, on_classlist_upload, on_classlist_enrol, on_classlist_unenrol, \

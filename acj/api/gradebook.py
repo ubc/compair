@@ -146,7 +146,7 @@ class GradebookAPI(Resource):
 
         ret = {
             'gradebook': gradebook,
-            'number_of_comparisons_required': assignment.number_of_comparisons,
+            'total_comparisons_required': assignment.total_comparisons_required,
             'include_self_evaluation': include_self_evaluation
         }
 

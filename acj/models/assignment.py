@@ -44,6 +44,7 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
         order_by=Answer.created.desc())
     comments = db.relationship("AssignmentComment", backref="assignment", lazy="dynamic")
     comparisons = db.relationship("Comparison", backref="assignment", lazy="dynamic")
+    comparison_examples = db.relationship("ComparisonExample", backref="assignment", lazy="dynamic")
     scores = db.relationship("Score", backref="assignment", lazy="dynamic")
 
     # hyprid and other functions
@@ -135,6 +136,14 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
         evaluation_count = self.compare_count / self.criteria_count if self.criteria_count else 0
         return evaluation_count + self.self_evaluation_count
 
+    @hybrid_property
+    def total_comparisons_required(self):
+        return self.number_of_comparisons + self.comparison_example_count
+
+    @hybrid_property
+    def total_steps_required(self):
+        return self.total_comparisons_required + (1 if self.enable_self_evaluation else 0)
+
     def __repr__(self):
         if self.id:
             return "assignment " + str(self.id)
@@ -171,6 +180,16 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
             where(and_(
                 AssignmentCriterion.assignment_id == cls.id,
                 AssignmentCriterion.active == True
+            )),
+            deferred=True,
+            group="counts"
+        )
+
+        cls.comparison_example_count = column_property(
+            select([func.count(ComparisonExample.id)]).
+            where(and_(
+                ComparisonExample.assignment_id == cls.id,
+                ComparisonExample.active == True
             )),
             deferred=True,
             group="counts"

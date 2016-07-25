@@ -8,7 +8,7 @@ from factory.alchemy import SQLAlchemyModelFactory
 from acj.core import db
 from acj.models import Course, User, CourseRole, SystemRole, Criterion, \
     UserCourse, AssignmentCriterion, Assignment, Score, Answer, AssignmentComment, \
-    AnswerComment, Comparison, AnswerCommentType
+    AnswerComment, Comparison, AnswerCommentType, ComparisonExample
 
 
 class UserFactory(SQLAlchemyModelFactory):
@@ -133,5 +133,14 @@ class ComparisonFactory(SQLAlchemyModelFactory):
     course_id = 1
     user_id = 1
     content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
+    # Make sure created dates are unique.
+    created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
+
+class ComparisonExampleFactory(SQLAlchemyModelFactory):
+    FACTORY_FOR = ComparisonExample
+    FACTORY_SESSION = db.session
+
+    assignment_id = 1
+    course_id = 1
     # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))

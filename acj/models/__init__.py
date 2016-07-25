@@ -14,6 +14,7 @@ from .answer import Answer
 from .assignment_criterion import AssignmentCriterion
 from .assignment_comment import AssignmentComment
 from .comparison import Comparison
+from .comparison_example import ComparisonExample
 from .assignment import Assignment
 from .course import Course
 from .criterion import Criterion

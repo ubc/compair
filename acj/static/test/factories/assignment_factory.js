@@ -18,6 +18,8 @@ var assignmentTemplate = {
     "answer_end": "Thu, 28 Apr 2016 06:59:00 -0000",
     "answer_start": "Wed, 20 Apr 2016 07:00:00 -0000",
     "number_of_comparisons": 3,
+    "total_comparisons_required": 3,
+    "total_steps_required": 3,
     "compare_end": null,
     "compare_start": null,
     "modified": "Tue, 19 Apr 2016 20:06:43 -0000",

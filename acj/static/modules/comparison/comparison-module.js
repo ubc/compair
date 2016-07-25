@@ -61,10 +61,7 @@ module.controller(
             function (ret)
             {
                 $scope.assignment = ret;
-                $scope.total = $scope.assignment.number_of_comparisons;
-                if ($scope.assignment.enable_self_evaluation) {
-                    $scope.total += 1;
-                }
+                $scope.total = $scope.assignment.total_steps_required;
                 // if there is a comparison end date, check if timer is needed
                 var due_date = new Date($scope.assignment.compare_end);
                 if (due_date) {
@@ -187,8 +184,7 @@ module.controller(
                             function(ret) {
                                 var comparisons_count = ret.status.comparisons.count;
 
-                                if ($scope.assignment.number_of_comparisons > comparisons_count) {
-                                    var left = $scope.assignment.number_of_comparisons - comparisons_count;
+                                if ($scope.assignment.total_comparisons_required > comparisons_count) {
                                     Toaster.success("Your Comparison Saved Successfully", "The next answer pair is now being loaded. Good luck on the next round!");
                                     $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
                                     $route.reload();

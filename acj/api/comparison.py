@@ -25,9 +25,6 @@ from acj.algorithms import InsufficientObjectsForPairException, \
 comparison_api = Blueprint('comparison_api', __name__)
 api = new_restful_api(comparison_api)
 
-all_course_comparisons_api = Blueprint('all_course_comparisons_api', __name__)
-apiAll = new_restful_api(all_course_comparisons_api)
-
 def comparisons_type(value):
     return dict(value)
 
@@ -128,6 +125,8 @@ class CompareRootAPI(Resource):
         if len(comparisons) == 0:
             return {"error": "There are no comparisons open for evaluation."}, 400
 
+        is_comparison_example = comparisons[0].comparison_example_id != None
+
         # check if number of comparisons submitted matches number of comparisons needed
         if len(comparisons) != len(params['comparisons']):
             return {"error": "Not all criteria were evaluated."}, 400
@@ -183,7 +182,7 @@ class CompareRootAPI(Resource):
         db.session.commit()
 
         # update answer scores
-        if completed:
+        if completed and not is_comparison_example:
             current_app.logger.debug("Doing scoring")
             Comparison.update_scores_1vs1(comparisons)
             #Comparison.calculate_scores(assignment_id)

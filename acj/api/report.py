@@ -107,7 +107,7 @@ class ReportRootAPI(Resource):
                 title_row1 += [assignment.name] + [""] * len(assignment_criteria)
                 for assignment_criterion in assignment_criteria:
                     title_row2.append('Percentage Score for "' + assignment_criterion.criterion.name + '"')
-                title_row2.append("Evaluations Submitted (" + str(assignment.number_of_comparisons) + ' required)')
+                title_row2.append("Evaluations Submitted (" + str(assignment.total_comparisons_required) + ' required)')
                 if assignment.enable_self_evaluation:
                     title_row1 += [""]
                     title_row2.append("Self Evaluation Submitted")
@@ -182,7 +182,7 @@ def participation_stat_report(course_id, assignments, group_name, overall):
             .all()
         comments = {user_id: count for (user_id, count) in comments}
 
-        total_req += assignment.number_of_comparisons  # for overall required
+        total_req += assignment.total_comparisons_required  # for overall required
         criteria_count = len(assignment.criteria)
 
         for user_course_student in user_course_students:
@@ -203,9 +203,9 @@ def participation_stat_report(course_id, assignments, group_name, overall):
 
             evaluation_submitted = evaluations[user.id] if user.id in evaluations else 0
             evaluation_submitted /= criteria_count if criteria_count else 0
-            evaluation_req_met = 'Yes' if evaluation_submitted >= assignment.number_of_comparisons else 'No'
+            evaluation_req_met = 'Yes' if evaluation_submitted >= assignment.total_comparisons_required else 'No'
             total[user.id]['total_evaluations'] += evaluation_submitted
-            temp.extend([evaluation_submitted, assignment.number_of_comparisons, evaluation_req_met])
+            temp.extend([evaluation_submitted, assignment.total_comparisons_required, evaluation_req_met])
 
             comment_count = comments[user.id] if user.id in comments else 0
             total[user.id]['total_comments'] += comment_count

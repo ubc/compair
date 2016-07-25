@@ -5,7 +5,7 @@ from werkzeug.exceptions import Unauthorized, Forbidden
 from sqlalchemy import and_
 
 from .models import Course, User, UserCourse, CourseRole, SystemRole, Assignment, Answer, \
-    AnswerComment, Comparison, Criterion, AssignmentComment, AssignmentCriterion
+    AnswerComment, Comparison, Criterion, AssignmentComment, AssignmentCriterion, ComparisonExample
 
 USER_IDENTITY = 'permission_user_identity'
 
@@ -94,6 +94,7 @@ def define_authorization(user, they):
             they.can(MANAGE, Answer, course_id=entry.course_id)
             they.can(MANAGE, AssignmentComment, course_id=entry.course_id)
             they.can(MANAGE, AnswerComment, course_id=entry.course_id)
+            they.can(MANAGE, ComparisonExample, course_id=entry.course_id)
             they.can(READ, UserCourse, course_id=entry.course_id)
             they.can((CREATE, DELETE), AssignmentCriterion, course_id=entry.course_id)
             they.can(READ, USER_IDENTITY)
