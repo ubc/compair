@@ -33,12 +33,12 @@ class LTIUser(DefaultTableMixin, WriteTrackingMixin):
 
     @classmethod
     def get_by_lti_consumer_id_and_user_id(cls, lti_consumer_id, user_id):
-        lti_user = LTIContext.query \
+        lti_user = LTIUser.query \
             .filter_by(
                 lti_consumer_id=lti_consumer_id,
                 user_id=user_id
             ) \
-            .one()
+            .one_or_none()
 
         return lti_user
 
@@ -52,13 +52,13 @@ class LTIUser(DefaultTableMixin, WriteTrackingMixin):
         lti_user = LTIUser.get_by_lti_consumer_id_and_user_id(
             lti_consumer.id, tool_provider.user_id)
 
-        if lti_user == None:
+        if not lti_user:
             lti_user = LTIUser(
                 lti_consumer_id=lti_consumer.id,
                 user_id=tool_provider.user_id
             )
             # set system role first time only
-            if tool_provider.is_instructor:
+            if tool_provider.is_instructor():
                 lti_user.system_role = SystemRole.instructor
             else:
                 lti_user.system_role = SystemRole.student
@@ -69,8 +69,8 @@ class LTIUser(DefaultTableMixin, WriteTrackingMixin):
         lti_user.lis_person_contact_email_primary = tool_provider.lis_person_contact_email_primary
 
         # create/update if needed
-        if lti_user.session.is_modified(lti_user, include_collections=False):
-            db.session.add(lti_user)
+        db.session.add(lti_user)
+        if db.session.object_session(lti_user).is_modified(lti_user, include_collections=False):
             db.session.commit()
 
         return lti_user

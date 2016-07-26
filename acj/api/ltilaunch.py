@@ -4,7 +4,7 @@ from flask_login import current_user, login_required, login_user, logout_user
 from mock import Mock
 from acj import cas
 from acj.authorization import get_logged_in_user_permissions
-from acj.models import User
+from acj.models import User, LTIConsumer, LTIContext, LTIResourceLink, LTIUser, LTIUserResourceLink
 from pylti.flask import lti, LTI_SESSION_KEY
 import logging
 from lti.contrib.flask import FlaskToolProvider
@@ -34,14 +34,25 @@ logging.getLogger('').addHandler(console)
 def lti_auth():
     """Kickstarts the LTI integration flow.
     """
-    sess['LTI'] = True
     tool_provider = FlaskToolProvider.from_flask_request(request=request)
     validator = MyRequestValidator()
     ok = tool_provider.is_valid_request(validator)
 
     # todo: if LMS user already linked to a ComPAIR account, establish an appropriate session
-    # otherwise, direct the user to the login screen
+    # otherwise, direct the user to the login screen. In either case, set session variables.
     if ok:
+        sess['LTI'] = True
+        lti_consumer = LTIConsumer.get_by_tool_provider(tool_provider)
+        sess['lti_consumer'] = lti_consumer.id
+        lti_user = LTIUser.get_by_tool_provider(lti_consumer, tool_provider)
+        sess['lti_user'] = lti_user.id
+        lti_context = LTIContext.get_by_tool_provider(lti_consumer, tool_provider)
+        sess['lti_context'] = lti_context.id
+        lti_resource_link = LTIResourceLink.get_by_tool_provider(lti_consumer, tool_provider)
+        sess['lti_resource_link'] = lti_resource_link.id
+        lti_user_resource_link = LTIUserResourceLink.get_by_tool_provider(lti_resource_link, lti_user, tool_provider)
+        sess['lti_user_resource_link'] = lti_user_resource_link.id
+        # after setting session, check if accounts linkage exists. If not, redirect.
         return redirect("http://localhost:8080/static/index.html#/", code=302)
     else:
         return "Error: LTI launch request is invalid."
@@ -57,3 +68,29 @@ def is_lti():
     else:
         return jsonify({'status': False})
 
+@lti_api.route('/lti/status', methods=['GET'])
+def status():
+    """Returns information related to the current user:
+    any linked course, assignment, etc. Helps inform 
+    the app as to what to do next, for a given state. e.g.:
+
+"status": {
+    "valid": Bool, #is LTI session
+    "redirect": String, # if the user should be redirected to one of "root", "course", or "assignment" after account setup/etc
+    "course": {
+        "id": Int, #LTI context's acj course id or null/None
+        "exists": Bool, #If the course exists yet or not
+        "course_role": String #the CourseRole string value for the current_user and the context
+    },
+    "assignment": {
+        "id": Int, #LTI link custom assignment id or null/None
+        "exists": Bool #If the assignment exists or not
+    },
+    "user": {
+        "exists": Bool, #If the user exists or not
+        "course_role": String #the SystemRole string value for the current_user
+    }
+}
+    todo: query db for data to return, assemble into JSON object, return obj
+    """
+    return "some JSON"#jsonify({"error": 'Invalid login data format. Expecting json.'}), 400
