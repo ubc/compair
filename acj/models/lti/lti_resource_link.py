@@ -53,12 +53,12 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
 
     @classmethod
     def get_by_lti_consumer_id_and_resource_link_id(cls, lti_consumer_id, resource_link_id):
-        lti_resource_link = LTIContext.query \
+        lti_resource_link = LTIResourceLink.query \
             .filter_by(
                 lti_consumer_id=lti_consumer_id,
                 resource_link_id=resource_link_id
             ) \
-            .one()
+            .one_or_none()
 
         return lti_resource_link
 
@@ -70,7 +70,7 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
         if lti_resource_link == None:
             lti_resource_link = LTIResourceLink(
                 lti_consumer_id=lti_consumer.id,
-                lti_resource_link=tool_provider.resource_link_id
+                resource_link_id=tool_provider.resource_link_id
             )
         original_custom_param_assignment_id = lti_resource_link.custom_param_assignment_id
 
@@ -84,8 +84,9 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
             lti_resource_link._update_link_to_acj_assignment()
 
         # create/update if needed
-        if lti_resource_link.session.is_modified(lti_resource_link, include_collections=False):
-            db.session.add(lti_resource_link)
+
+        db.session.add(lti_resource_link)
+        if db.session.object_session(lti_resource_link).is_modified(lti_resource_link, include_collections=False):
             db.session.commit()
 
         return lti_resource_link
