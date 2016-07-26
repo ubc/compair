@@ -111,11 +111,13 @@ def log_events(log):
     on_user_password_update.connect(log)
 
     # course events
-    from .course import on_course_modified, on_course_get, on_course_list_get, on_course_create
+    from .course import on_course_modified, on_course_get, on_course_list_get, on_course_create, \
+        on_course_duplicate
     on_course_modified.connect(log)
     on_course_get.connect(log)
     on_course_list_get.connect(log)
     on_course_create.connect(log)
+    on_course_duplicate.connect(log)
 
     # assignment events
     from .assignment import on_assignment_modified, on_assignment_get, on_assignment_list_get, on_assignment_create, \
