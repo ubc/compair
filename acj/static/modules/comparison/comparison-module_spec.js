@@ -52,7 +52,7 @@ describe('comparison-module', function () {
         "term": "Winter",
         "fullname": "Test Course Winter 2015",
         "start_time": null,
-        "end_time": null,
+        "end_time": null
     };
     beforeEach(module('ubc.ctlt.acj.comparison'));
     beforeEach(inject(function ($injector) {
@@ -144,6 +144,7 @@ describe('comparison-module', function () {
                 "id": 50
             },
             "enable_self_evaluation": true,
+            "pairing_algorithm": "random",
             "name": "Read the poem below, and make notes on syntax, figurative language, patterns of diction and imagery, and form. Then, imagining that you are writing a 1200-word essay, write a critical premise of 20-60 words as we have discussed in class."
         };
 

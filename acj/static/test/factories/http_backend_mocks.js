@@ -212,8 +212,8 @@ module.exports.httpbackendMock = function(storageFixture) {
                 "term": data.term,
                 "fullname": data.name + " " + data.term + " " + data.year,
                 "description": data.description,
-                "start_time": null,
-                "end_time": null,
+                "start_time": data.start_time,
+                "end_time": data.end_time,
                 "available": true,
                 "modified": "Sun, 11 Jan 2015 08:44:46 -0000",
                 "created": "Sun, 11 Jan 2015 08:44:46 -0000"
@@ -529,6 +529,7 @@ module.exports.httpbackendMock = function(storageFixture) {
                 "content": null,
                 "file": [],
                 "user": angular.copy(currentUser),
+                "pairing_algorithm": null,
             }
             newAssignment = angular.merge(newAssignment, data);
             newAssignment.id = storage.assignments.length + 1;

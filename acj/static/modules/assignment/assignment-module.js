@@ -30,6 +30,11 @@ var module = angular.module('ubc.ctlt.acj.assignment',
     ]
 );
 
+module.constant('PairingAlgorithm', {
+    adaptive: "adaptive",
+    random: "random"
+});
+
 /***** Directives *****/
 module.directive(
     'confirmationNeeded',
@@ -591,10 +596,10 @@ module.controller("AssignmentViewController",
 module.controller("AssignmentWriteController",
     [ "$scope", "$log", "$location", "$routeParams", "$route", "AssignmentResource", "$modal", "Authorize",
              "AssignmentCriterionResource", "CriterionResource", "required_rounds", "Toaster", "attachService",
-             "AttachmentResource", "Session", "EditorOptions",
+             "AttachmentResource", "Session", "EditorOptions", "PairingAlgorithm",
     function($scope, $log, $location, $routeParams, $route, AssignmentResource, $modal, Authorize,
              AssignmentCriterionResource, CriterionResource, required_rounds, Toaster, attachService,
-             AttachmentResource, Session, EditorOptions)
+             AttachmentResource, Session, EditorOptions, PairingAlgorithm)
     {
         var courseId = $routeParams['courseId'];
         //initialize assignment so this scope can access data from included form
@@ -628,6 +633,7 @@ module.controller("AssignmentWriteController",
             $scope.assignment.students_can_reply = true;
             // default the setting to the recommended # of comparisons
             $scope.assignment.number_of_comparisons = $scope.recommended_comparisons;
+            $scope.assignment.pairing_algorithm = PairingAlgorithm.random;
 
             $scope.date.astart.date.setDate(today.getDate()+1);
             $scope.date.aend.date.setDate(today.getDate()+8);
@@ -660,6 +666,10 @@ module.controller("AssignmentWriteController",
                     }
                     $scope.assignment = ret;
                     $scope.compared = ret.compared;
+                    // TODO: Remove temporary edit workaround when the pairing algorithm selection UI is in place
+                    if ($scope.assignment.pairing_algorithm == null) {
+                        $scope.assignment.pairing_algorithm = PairingAlgorithm.random;
+                    }
                     if (ret.file) {
                         AttachmentResource.get({'fileId': ret.file.id}).$promise.then(
                             function (ret) {

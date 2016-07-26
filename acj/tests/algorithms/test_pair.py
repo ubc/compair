@@ -46,6 +46,24 @@ class TestPair(unittest.TestCase):
         self.assertEqual(max_key, 4)
         self.assertEqual(results.winning_key, None)
 
+        # test random pair algorithm
+        self.package_name = "random"
+
+        results = generate_pair(
+            package_name=self.package_name,
+            scored_objects=self.scored_objects,
+            comparison_pairs=self.comparisons
+        )
+
+        self.assertIsInstance(results, ComparisonPair)
+        min_key = min([results.key1, results.key2])
+        max_key = max([results.key1, results.key2])
+
+        # round zero items should be selected
+        self.assertEqual(min_key, 3)
+        self.assertEqual(max_key, 4)
+        self.assertEqual(results.winning_key, None)
+
 
 if __name__ == '__main__':
     unittest.main()
