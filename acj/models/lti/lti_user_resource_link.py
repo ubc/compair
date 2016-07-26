@@ -31,13 +31,13 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
         return self.acj_user_course_id != None
 
     @classmethod
-    def get_by_lti_resouce_link_id_and_lti_user_id(cls, lti_resouce_link_id, lti_user_id):
-        lti_user = LTIContext.query \
+    def get_by_lti_resource_link_id_and_lti_user_id(cls, lti_resource_link_id, lti_user_id):
+        lti_user = LTIUserResourceLink.query \
             .filter_by(
-                lti_resouce_link_id=lti_resouce_link_id,
+                lti_resource_link_id=lti_resource_link_id,
                 lti_user_id=lti_user_id
             ) \
-            .one()
+            .one_or_none()
 
         return lti_user
 
@@ -45,7 +45,7 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
     def get_by_tool_provider(cls, lti_resource_link, lti_user, tool_provider):
         from . import CourseRole
 
-        lti_user_resource_link = LTIUserResourceLink.get_by_lti_resouce_link_id_and_lti_user_id(
+        lti_user_resource_link = LTIUserResourceLink.get_by_lti_resource_link_id_and_lti_user_id(
             lti_resource_link.id, lti_user.id)
 
         if lti_user_resource_link == None:
@@ -57,7 +57,7 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
         lti_user_resource_link.lis_result_sourcedid = tool_provider.lis_result_sourcedid
 
         # set course role every time
-        if tool_provider.is_instructor:
+        if tool_provider.is_instructor():
             lti_user_resource_link.course_role = CourseRole.instructor
         elif tool_provider.has_role("TeachingAssistant"):
             lti_user_resource_link.course_role = CourseRole.teaching_assistant
@@ -65,8 +65,8 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
             lti_user_resource_link.course_role = CourseRole.student
 
         # create/update if needed
-        if lti_user_resource_link.session.is_modified(lti_user_resource_link, include_collections=False):
-            db.session.add(lti_user_resource_link)
+        db.session.add(lti_user_resource_link)
+        if db.session.object_session(lti_user_resource_link).is_modified(lti_user_resource_link, include_collections=False):
             db.session.commit()
 
         return lti_user_resource_link
