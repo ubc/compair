@@ -121,6 +121,24 @@ def add_new_file(alias, name, model_name, model_id):
 
     return uploaded_file.id
 
+def duplicate_file(file, new_model_name, new_model_id):
+    tmp_name = str(new_model_name) + '_' + str(new_model_id) + '.pdf'
+
+    shutil.copy(
+        os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], file.name),
+        os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], tmp_name)
+    )
+
+    duplicated_file = File(user_id=current_user.id, name=tmp_name, alias=file.alias)
+
+    db.session.add(duplicated_file)
+    db.session.commit()
+    current_app.logger.debug(
+        "copied file id:" + str(file.id) + " from " + os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], file.name) +
+        " to " + os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], tmp_name))
+
+    return uploaded_file.id
+
 
 # delete file
 def delete_file(file_id):

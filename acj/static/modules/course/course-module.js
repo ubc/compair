@@ -33,6 +33,7 @@ module.factory('CourseResource',
             'get': {url: url, cache: true},
             'save': {method: 'POST', url: url, interceptor: Interceptors.cache},
             'delete': {method: 'DELETE', url: url, interceptor: Interceptors.cache},
+            'createDuplicate': {method: 'POST', url: '/api/courses/:id/duplicate'},
             'getCurrentUserStatus': {url: '/api/courses/:id/assignments/status'},
             'getInstructorsLabels': {url: '/api/courses/:id/users/instructors/labels'},
             'getStudents': {url: '/api/courses/:id/users/students'}

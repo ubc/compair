@@ -2,9 +2,9 @@ import datetime
 import json
 from acj import db
 
-from data.fixtures.test_data import BasicTestData
+from data.fixtures.test_data import BasicTestData, ComparisonTestData
 from acj.tests.test_acj import ACJAPITestCase
-from acj.models import Course
+from acj.models import Course, UserCourse
 
 
 class CoursesAPITests(ACJAPITestCase):
@@ -134,6 +134,15 @@ class CoursesAPITests(ACJAPITestCase):
             self.assertEqual(course_in_db.description, course_actual['description'])
             self.assertTrue(course_in_db.available)
 
+            # Verify instructor added to course
+            user_course = UserCourse.query \
+                .filter_by(
+                    user_id=self.data.get_authorized_instructor().id,
+                    course_id=course_actual['id']
+                ) \
+                .one_or_none()
+            self.assertIsNotNone(user_course)
+
             # Starts in the future
             now = datetime.datetime.utcnow()
             course_expected['start_date'] = (now + datetime.timedelta(days=7)).isoformat() + 'Z',
@@ -225,3 +234,152 @@ class CoursesAPITests(ACJAPITestCase):
             rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
             self.assert200(rv)
             self.assertTrue(rv.json['available'])
+
+    def test_duplicate_course_simple(self):
+        url = '/api/courses/' + str(self.data.get_course().id) + '/duplicate'
+        expected = {
+            'year': 2015,
+            'term': 'Winter',
+        }
+        # test login required
+        rv = self.client.post(url, content_type='application/json')
+        self.assert401(rv)
+
+        # test unauthorized user
+        with self.login(self.data.get_unauthorized_instructor().username):
+            rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+            self.assert403(rv)
+
+        with self.login(self.data.get_authorized_instructor().username):
+            # test invalid course id
+            rv = self.client.post('/api/courses/999/duplicate', data=json.dumps(expected), content_type='application/json')
+            self.assert404(rv)
+
+            # test year missing
+            invalid_expected = {
+                'term': 'Winter'
+            }
+            rv = self.client.post('/api/courses/999/duplicate', data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert404(rv)
+
+            # test term missing
+            invalid_expected = {
+                'year': 2015
+            }
+            rv = self.client.post('/api/courses/999/duplicate', data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert404(rv)
+
+            # test authorized user
+            original_course = self.data.get_course()
+            rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+            self.assert200(rv)
+
+            # verify course duplicated correctly
+            self.assertNotEqual(original_course.id, rv.json['id'])
+            self.assertEqual(original_course.name, rv.json['name'])
+            self.assertEqual(expected['year'], rv.json['year'])
+            self.assertEqual(expected['term'], rv.json['term'])
+            self.assertEqual(original_course.description, rv.json['description'])
+
+            # verify instructor added to duplicate course
+            user_course = UserCourse.query \
+                .filter_by(
+                    user_id=self.data.get_authorized_instructor().id,
+                    course_id=rv.json['id']
+                ) \
+                .one_or_none()
+            self.assertIsNotNone(user_course)
+
+class CoursesDuplicateComplexAPITests(ACJAPITestCase):
+    def setUp(self):
+        super(CoursesDuplicateComplexAPITests, self).setUp()
+        self.data = ComparisonTestData()
+        self.url = '/api/courses/' + str(self.data.get_course().id) + '/duplicate'
+        self.expected = {
+            'year': 2015,
+            'term': 'Winter',
+        }
+
+    def test_duplicate_course_complex(self):
+        original_course = self.data.get_course()
+
+        # test authorized user
+        with self.login(self.data.get_authorized_instructor().username):
+            rv = self.client.post(self.url, data=json.dumps(self.expected), content_type='application/json')
+            self.assert200(rv)
+
+            duplicate_course = Course.query.get(rv.json['id'])
+            self.assertIsNotNone(duplicate_course)
+
+            # verify course duplicated correctly
+            self.assertNotEqual(original_course.id, duplicate_course.id)
+            self.assertEqual(original_course.name, duplicate_course.name)
+            self.assertEqual(self.expected['year'], duplicate_course.year)
+            self.assertEqual(self.expected['term'], duplicate_course.term)
+            self.assertEqual(original_course.description, duplicate_course.description)
+
+            # verify instructor added to duplicate course
+            user_course = UserCourse.query \
+                .filter_by(
+                    user_id=self.data.get_authorized_instructor().id,
+                    course_id=rv.json['id']
+                ) \
+                .one_or_none()
+            self.assertIsNotNone(user_course)
+
+            original_assignments = original_course.assignments.all()
+            duplicate_assignments = duplicate_course.assignments.all()
+
+            self.assertEqual(len(original_assignments), 3)
+            self.assertEqual(len(original_assignments), len(duplicate_assignments))
+
+            for index, original_assignment in enumerate(original_assignments):
+                duplicate_assignment = duplicate_assignments[index]
+
+                self.assertNotEqual(original_assignment.id, duplicate_assignment.id)
+                self.assertEqual(duplicate_course.id, duplicate_assignment.course_id)
+                self.assertEqual(original_assignment.name, duplicate_assignment.name)
+                self.assertEqual(original_assignment.description, duplicate_assignment.description)
+                self.assertEqual(original_assignment.number_of_comparisons, duplicate_assignment.number_of_comparisons)
+                self.assertEqual(original_assignment.students_can_reply, duplicate_assignment.students_can_reply)
+                self.assertEqual(original_assignment.enable_self_evaluation, duplicate_assignment.enable_self_evaluation)
+                self.assertEqual(original_assignment.pairing_algorithm, duplicate_assignment.pairing_algorithm)
+
+                self.assertEqual(len(original_assignment.criteria), 1)
+                self.assertEqual(len(original_assignment.criteria), len(duplicate_assignment.criteria))
+
+                for index, original_criteria in enumerate(original_assignment.criteria):
+                    duplicate_criteria = duplicate_assignment.criteria[index]
+                    self.assertEqual(original_criteria.id, duplicate_criteria.id)
+
+
+                original_comparison_examples = original_assignment.comparison_examples.all()
+                duplicate_comparison_examples = duplicate_assignment.comparison_examples.all()
+
+                if original_assignment.id in [1,2]:
+                    self.assertEqual(len(original_comparison_examples), 1)
+                else:
+                    self.assertEqual(len(original_comparison_examples), 0)
+                self.assertEqual(len(original_comparison_examples), len(duplicate_comparison_examples))
+
+                for index, original_comparison_example in enumerate(original_comparison_examples):
+                    duplicate_comparison_example = duplicate_comparison_examples[index]
+
+                    self.assertNotEqual(original_comparison_example.id, duplicate_comparison_example.id)
+                    self.assertNotEqual(original_comparison_example.answer1_id, duplicate_comparison_example.answer1_id)
+                    self.assertNotEqual(original_comparison_example.answer2_id, duplicate_comparison_example.answer2_id)
+                    self.assertEqual(duplicate_assignment.id, duplicate_comparison_example.assignment_id)
+
+                    original_answer1 = original_comparison_example.answer1
+                    duplicate_answer1 = duplicate_comparison_example.answer1
+
+                    self.assertNotEqual(original_answer1.id, duplicate_answer1.id)
+                    self.assertEqual(duplicate_assignment.id, duplicate_answer1.assignment_id)
+                    self.assertEqual(original_answer1.content, duplicate_answer1.content)
+
+                    original_answer2 = original_comparison_example.answer2
+                    duplicate_answer2 = duplicate_comparison_example.answer2
+
+                    self.assertNotEqual(original_answer2.id, duplicate_answer2.id)
+                    self.assertEqual(duplicate_assignment.id, duplicate_answer2.assignment_id)
+                    self.assertEqual(original_answer2.content, duplicate_answer2.content)
