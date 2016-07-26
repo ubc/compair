@@ -33,7 +33,7 @@ class LTIContext(DefaultTableMixin, WriteTrackingMixin):
                 lti_consumer_id=lti_consumer_id,
                 context_id=context_id
             ) \
-            .one()
+            .one_or_none()
 
         return lti_context
 
@@ -54,8 +54,8 @@ class LTIContext(DefaultTableMixin, WriteTrackingMixin):
         lti_context.context_title = tool_provider.context_title
 
         # create/update if needed
-        if lti_context.session.is_modified(lti_context, include_collections=False):
-            db.session.add(lti_context)
+        db.session.add(lti_context)
+        if db.session.object_session(lti_context).is_modified(lti_context, include_collections=False):
             db.session.commit()
 
         return lti_context

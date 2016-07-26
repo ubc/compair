@@ -27,7 +27,7 @@ class LTIConsumer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
         lti_consumer = LTIConsumer.query \
             .filter_by(
                 active=True,
-                key=consumer_key
+                oauth_consumer_key=consumer_key
             ) \
             .one()
 
@@ -48,7 +48,7 @@ class LTIConsumer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
         lti_consumer.lis_outcome_service_url = tool_provider.lis_outcome_service_url
 
         # update if needed
-        if lti_consumer.session.is_modified(lti_consumer, include_collections=False):
+        if db.session.object_session(lti_consumer).is_modified(lti_consumer, include_collections=False):
             db.session.add(lti_consumer)
             db.session.commit()
 
