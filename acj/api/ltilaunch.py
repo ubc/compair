@@ -1,5 +1,6 @@
 import os
-from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask, render_template
+import json
+from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask, render_template, Response
 from flask_login import current_user, login_required, login_user, logout_user
 from mock import Mock
 from acj import cas
@@ -10,6 +11,11 @@ import logging
 from lti.contrib.flask import FlaskToolProvider
 from lti import ToolConfig
 from .MyRequestValidator import MyRequestValidator
+
+from acj.core import db
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy import func, select, and_, or_
+from sqlalchemy.ext.hybrid import hybrid_property
 
 isLTI = False
 lti_api = Blueprint("lti_api", __name__, url_prefix='/api')
@@ -91,6 +97,47 @@ def status():
         "course_role": String #the SystemRole string value for the current_user
     }
 }
-    todo: query db for data to return, assemble into JSON object, return obj
     """
-    return "some JSON"#jsonify({"error": 'Invalid login data format. Expecting json.'}), 400
+    isLTISession = False
+    if sess.get('LTI'):
+        isLTISession = True
+    
+    body = {}
+    body['valid'] = isLTISession
+
+    assignment = {}
+    assignment['id'] = None
+    assignment['exists'] = False
+    lti_resource_link = LTIResourceLink.query.get(sess['lti_resource_link'])
+    if lti_resource_link:
+        assignment['id'] = lti_resource_link.acj_assignment_id
+        if assignment['id']:
+            assignment['exists'] = True
+
+    course = {}
+    lti_context = LTIContext.query.get(sess['lti_context'])
+    course['id'] = None
+    course['exists'] = False
+    if lti_context:
+        course['id'] = lti_context.acj_course_id
+        if course['id']:
+            course['exists'] = True
+
+    user = {}
+    user['exists'] = False
+    lti_user = LTIUser.query.get(sess['lti_user'])
+    if lti_user:
+        if lti_user.user_oauth_id:
+            user['exists'] = True
+
+    user['course_role'] = None
+    lti_user_resource_link = LTIUserResourceLink.query.get(sess['lti_user_resource_link'])
+    if lti_user_resource_link:
+        if lti_user_resource_link.course_role:
+            user['course_role'] = lti_user_resource_link.course_role.value
+
+    body['course'] = course
+    body['assignment'] = assignment
+    body['user'] = user
+    js = { "status" : body }
+    return Response(json.dumps(js), mimetype='application/json')
