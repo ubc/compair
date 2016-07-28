@@ -182,7 +182,9 @@ module.controller(
         $scope.submitted = false;
 
         $scope.showDuplicateForm = false;
-        $scope.course = {};
+        $scope.course = {
+            year: new Date().getFullYear()
+        };
         $scope.originalCourse = {};
         $scope.duplicateCourse = {};
 
