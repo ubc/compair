@@ -3,7 +3,6 @@ from acj.models.mixins import ActiveMixin, DefaultTableMixin, WriteTrackingMixin
 
 # import models
 from acj.models import UserCourse, Course, Assignment
-from acj.models.oauth import UserOAuth
 
 # import enums
 from acj.models import SystemRole, CourseRole

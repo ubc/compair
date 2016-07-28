@@ -20,6 +20,9 @@ class LTIConsumer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     lis_outcome_service_url = db.Column(db.Text, nullable=True)
 
     # relationships
+    lti_contexts = db.relationship("LTIContext", backref="lti_consumer", lazy="dynamic")
+    lti_resource_links = db.relationship("LTIResourceLink", backref="lti_consumer", lazy="dynamic")
+    lti_users = db.relationship("LTIUser", backref="lti_consumer", lazy="dynamic")
 
     # hyprid and other functions
     @classmethod
@@ -29,7 +32,7 @@ class LTIConsumer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
                 active=True,
                 oauth_consumer_key=consumer_key
             ) \
-            .one()
+            .one_or_none()
 
         return lti_consumer
 
@@ -47,10 +50,7 @@ class LTIConsumer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
         lti_consumer.tool_consumer_instance_url = tool_provider.tool_consumer_instance_url
         lti_consumer.lis_outcome_service_url = tool_provider.lis_outcome_service_url
 
-        # update if needed
-        if db.session.object_session(lti_consumer).is_modified(lti_consumer, include_collections=False):
-            db.session.add(lti_consumer)
-            db.session.commit()
+        db.session.commit()
 
         return lti_consumer
 

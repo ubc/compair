@@ -21,27 +21,22 @@ var module = angular.module('ubc.ctlt.acj.home',
 /***** Controllers *****/
 module.controller(
     'HomeController',
-    ["$rootScope", "$scope", "$location", "$log",
-     "Session", "AuthenticationService", "Authorize", "CourseResource", "Toaster", "UserResource",
-    function HomeController($rootScope, $scope, $location, $log,
-                            Session,
-                            AuthenticationService,
-                            Authorize,
-                            CourseResource,
-                            Toaster,
-                            UserResource) {
+    ["$rootScope", "$scope", "$location", "Session", "AuthenticationService",
+     "Authorize", "CourseResource", "Toaster", "UserResource",
+    function ($rootScope, $scope, $location, Session, AuthenticationService,
+              Authorize, CourseResource, Toaster, UserResource) {
+
         Authorize.can(Authorize.CREATE, CourseResource.MODEL).then(function(canAddCourse){
             $scope.canAddCourse = canAddCourse;
         });
+
         Session.getUser().then(function(user) {
-            UserResource.getUserCourses(
-                {id: user.id}).$promise.then(
+            UserResource.getUserCourses({id: user.id}).$promise.then(
                 function(ret) {
                     $scope.courses = ret.objects;
                 },
                 function (ret) {
                     Toaster.reqerror("Unable to retrieve your courses.", ret);
-                    $log.error("Failed to retrieve the user's courses.");
                 }
             );
         });

@@ -8,7 +8,10 @@ from factory.alchemy import SQLAlchemyModelFactory
 from acj.core import db
 from acj.models import Course, User, CourseRole, SystemRole, Criterion, \
     UserCourse, AssignmentCriterion, Assignment, Score, Answer, AssignmentComment, \
-    AnswerComment, Comparison, AnswerCommentType
+    AnswerComment, Comparison, AnswerCommentType, \
+    LTIConsumer, LTIContext, LTIResourceLink, LTIUser, LTIUserResourceLink
+
+from oauthlib.common import generate_token
 
 
 class UserFactory(SQLAlchemyModelFactory):
@@ -135,3 +138,44 @@ class ComparisonFactory(SQLAlchemyModelFactory):
     content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
     # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
+
+
+class LTIConsumerFactory(SQLAlchemyModelFactory):
+    FACTORY_FOR = LTIConsumer
+    FACTORY_SESSION = db.session
+
+    oauth_consumer_key = generate_token()
+    oauth_consumer_secret = generate_token()
+
+    lti_version = "LTI-1p0"
+
+class LTIContextFactory(SQLAlchemyModelFactory):
+    FACTORY_FOR = LTIContext
+    FACTORY_SESSION = db.session
+
+    lti_consumer_id = 1
+    context_id = factory.Sequence(lambda n: u'course-v1:LTI%d' % n)
+
+class LTIResourceLinkFactory(SQLAlchemyModelFactory):
+    FACTORY_FOR = LTIResourceLink
+    FACTORY_SESSION = db.session
+
+    lti_consumer_id = 1
+    resource_link_id = factory.Sequence(lambda n: u'unique_resourse_link_id_%d' % n)
+
+class LTIUserFactory(SQLAlchemyModelFactory):
+    FACTORY_FOR = LTIUser
+    FACTORY_SESSION = db.session
+
+    lti_consumer_id = 1
+    user_id = factory.Sequence(lambda n: u'unique_user_id_%d' % n)
+    system_role = SystemRole.student
+
+class LTIUserResourceLinkFactory(SQLAlchemyModelFactory):
+    FACTORY_FOR = LTIUserResourceLink
+    FACTORY_SESSION = db.session
+
+    lti_resource_link_id = 1
+    lti_user_id = factory.Sequence(lambda n: u'unique_user_id_%d' % n)
+    roles = "Student"
+    course_role = CourseRole.student

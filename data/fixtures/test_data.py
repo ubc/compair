@@ -9,9 +9,10 @@ from six.moves import range
 from acj.models import SystemRole, CourseRole, Criterion, Course
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
     AnswerFactory, CriterionFactory, ComparisonFactory, AssignmentCriterionFactory, \
-    AssignmentCommentFactory, AnswerCommentFactory, ScoreFactory
+    AssignmentCommentFactory, AnswerCommentFactory, ScoreFactory, \
+    LTIConsumerFactory, LTIContextFactory, LTIResourceLinkFactory, \
+    LTIUserFactory, LTIUserResourceLinkFactory
 from data.fixtures import DefaultFixture
-
 
 class BasicTestData:
     def __init__(self):
@@ -99,6 +100,87 @@ class BasicTestData:
 
     def get_default_criterion(self):
         return self.default_criterion
+
+class LTITestData:
+    def __init__(self):
+        self.lti_consumer = LTIConsumerFactory()
+
+        self.lti_consumers = [self.lti_consumer]
+        self.lti_contexts = []
+        self.lti_resource_links = []
+        self.lti_users = []
+        self.lti_user_resource_links = []
+
+        db.session.commit()
+
+    def get_consumer(self):
+        return self.lti_consumer
+
+    def get_context(self):
+        return self.lti_context
+
+    def get_resource_link(self):
+        return self.lti_resource_link
+
+    def generate_resource_link_id(self):
+        lti_resource_link = LTIResourceLinkFactory.stub()
+
+        return lti_resource_link.resource_link_id
+
+    def generate_context_id(self):
+        lti_context = LTIContextFactory.stub()
+
+        return lti_context.context_id
+
+    def generate_user_id(self):
+        lti_user= LTIUserFactory.stub()
+
+        return lti_user.user_id
+
+    def create_resource_link(self, lti_consumer, resource_link_id=None):
+        lti_resource_link = LTIResourceLinkFactory(lti_consumer=lti_consumer)
+        if resource_link_id:
+            lti_resource_link.resource_link_id = resource_link_id
+
+        self.lti_resource_links.append(lti_resource_link)
+
+        db.session.commit()
+
+        return lti_resource_link
+
+    def create_context(self, lti_consumer, context_id=None):
+        lti_context = LTIContextFactory(lti_consumer=lti_consumer)
+        if context_id:
+            lti_context.context_id = context_id
+
+        self.lti_contexts.append(lti_context)
+
+        db.session.commit()
+
+        return lti_context
+
+    def create_user(self, lti_consumer, sysem_role=SystemRole.instructor):
+        lti_user = LTIUserFactory(
+            lti_consumer=lti_consumer,
+            sysem_role=sysem_role
+        )
+        self.lti_users.append(lti_user)
+
+        db.session.commit()
+
+        return lti_user
+
+    def create_user_resource_link(self, lti_user, lti_resource_link, course_role=CourseRole.instructor):
+        lti_user_resource_link = LTIUserResourceLinkFactory(
+            lti_user=lti_user,
+            lti_resource_link=lti_resource_link,
+            course_role=course_role
+        )
+        self.lti_user_resource_links.append(lti_user_resource_link)
+
+        db.session.commit()
+
+        return lti_user_resource_link
 
 
 class SimpleAssignmentTestData(BasicTestData):

@@ -15,28 +15,9 @@ import sqlalchemy as sa
 
 from sqlalchemy_enum34 import EnumType
 
-from acj.models import AuthType, SystemRole, CourseRole
+from acj.models import SystemRole, CourseRole
 
 def upgrade():
-    op.create_table('user_oauth',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('user_id', sa.Integer(), nullable=False),
-        sa.Column('auth_type', EnumType(AuthType, name="auth_type"), nullable=False),
-        sa.Column('auth_source_id', sa.Integer(), nullable=False),
-        sa.Column('modified_user_id', sa.Integer(), nullable=True),
-        sa.Column('modified', sa.DateTime(), nullable=False),
-        sa.Column('created_user_id', sa.Integer(), nullable=True),
-        sa.Column('created', sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(['created_user_id'], ['user.id'], ondelete='SET NULL'),
-        sa.ForeignKeyConstraint(['modified_user_id'], ['user.id'], ondelete='SET NULL'),
-        sa.ForeignKeyConstraint(['user_id'], ['user.id'], ondelete='CASCADE'),
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('auth_type', 'auth_source_id', name='_unique_auth_type_and_auth_source'),
-        mysql_charset='utf8',
-        mysql_collate='utf8_unicode_ci',
-        mysql_engine='InnoDB'
-    )
-
     op.create_table('lti_consumer',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('oauth_consumer_key', sa.String(length=255), nullable=False),
@@ -92,7 +73,7 @@ def upgrade():
         sa.Column('lis_person_name_family', sa.String(length=255), nullable=True),
         sa.Column('lis_person_name_full', sa.String(length=255), nullable=True),
         sa.Column('lis_person_contact_email_primary', sa.String(length=255), nullable=True),
-        sa.Column('user_oauth_id', sa.Integer(), nullable=True),
+        sa.Column('acj_user_id', sa.Integer(), nullable=True),
         sa.Column('system_role', EnumType(SystemRole, name='system_role'), nullable=False),
         sa.Column('modified_user_id', sa.Integer(), nullable=True),
         sa.Column('modified', sa.DateTime(), nullable=False),
@@ -101,7 +82,7 @@ def upgrade():
         sa.ForeignKeyConstraint(['created_user_id'], ['user.id'], ondelete='SET NULL'),
         sa.ForeignKeyConstraint(['lti_consumer_id'], ['lti_consumer.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['modified_user_id'], ['user.id'], ondelete='SET NULL'),
-        sa.ForeignKeyConstraint(['user_oauth_id'], ['user_oauth.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['acj_user_id'], ['user.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('lti_consumer_id', 'user_id', name='_unique_lti_consumer_and_lti_user'),
         mysql_charset='utf8',
@@ -163,5 +144,4 @@ def downgrade():
     op.drop_table('lti_resource_link')
     op.drop_table('lti_user')
     op.drop_table('lti_context')
-    op.drop_table('user_oauth')
     op.drop_table('lti_consumer')

@@ -3,7 +3,7 @@ import datetime
 from enum import Enum
 from hashlib import md5
 
-from flask import session
+from flask import session as sess
 from flask.ext.login import user_logged_in, user_logged_out
 from flask.ext.sqlalchemy import Model
 
@@ -30,8 +30,8 @@ def log(sender, event_name='UNKNOWN', **extra):
         params['status'] = extra['status']
     if 'message' in extra:
         params['message'] = extra['message']
-    if 'session_token' in session:
-        params['session_id'] = md5(session['session_token'].encode('UTF-8')).hexdigest()
+    if 'session_token' in sess:
+        params['session_id'] = md5(sess['session_token'].encode('UTF-8')).hexdigest()
 
     activity = ActivityLog(**params)
     db.session.add(activity)
