@@ -141,7 +141,8 @@ class UsersAPITests(ACJAPITestCase):
 
         with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
                 user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
-                roles="Instructor"):
+                roles="Instructor") as lti_response:
+            self.assert200(lti_response)
 
             # test create instructor via lti session
             expected = UserFactory.stub(system_role=None)
@@ -154,7 +155,8 @@ class UsersAPITests(ACJAPITestCase):
 
         with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
                 user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
-                roles="Student"):
+                roles="Student") as lti_response:
+            self.assert200(lti_response)
 
             # test create student via lti session
             expected = UserFactory.stub(system_role=None)
@@ -167,7 +169,8 @@ class UsersAPITests(ACJAPITestCase):
 
         with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
                 user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
-                roles="TeachingAssistant"):
+                roles="TeachingAssistant") as lti_response:
+            self.assert200(lti_response)
 
             # test create teaching assistant (student role) via lti session
             expected = UserFactory.stub(system_role=None)
