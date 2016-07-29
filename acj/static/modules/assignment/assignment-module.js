@@ -12,6 +12,8 @@ var module = angular.module('ubc.ctlt.acj.assignment',
     [
         'angularFileUpload',
         'ngResource',
+        'ngclipboard',
+        'ui.bootstrap',
         'ubc.ctlt.acj.answer',
         'ubc.ctlt.acj.authentication',
         'ubc.ctlt.acj.authorization',
@@ -25,8 +27,7 @@ var module = angular.module('ubc.ctlt.acj.assignment',
         'ubc.ctlt.acj.group',
         'ubc.ctlt.acj.comparison',
         'ubc.ctlt.acj.toaster',
-        'ubc.ctlt.acj.session',
-        'ui.bootstrap'
+        'ubc.ctlt.acj.session'
     ]
 );
 

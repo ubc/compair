@@ -208,7 +208,9 @@ api.add_resource(LTICourseLinkAPI, '/lti/course/<int:course_id>/link')
 
 
 class MyRequestValidator(RequestValidator):
-    enforce_ssl = False
+    @property
+    def enforce_ssl(self):
+        return current_app.config.get('LTI_ENFORCE_SSL', True)
 
     def validate_timestamp_and_nonce(self, timestamp, nonce, request, request_token=None, access_token=None):
         return True
