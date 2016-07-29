@@ -54,6 +54,7 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     user_displayname = association_proxy('user', 'displayname')
     user_fullname = association_proxy('user', 'fullname')
     user_system_role = association_proxy('user', 'system_role')
+    lti_linkable = association_proxy('course', 'lti_linked')
 
     @hybrid_property
     def criteria(self):

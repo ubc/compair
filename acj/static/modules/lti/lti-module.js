@@ -52,13 +52,6 @@ module.factory('LTI',
             return this._lti_status != null && this._lti_status.user &&
                 this._lti_status.user.exists == false;
         },
-        ltiLogoutRedirect: function() {
-            this._check_cookies();
-            if (this._lti_status != null && this._lti_status.redirect != null) {
-                return this._lti_status.redirect;
-            };
-            return false;
-        },
         endActiveSession: function() {
             this._lti_status = null;
             $cookies.remove('current.lti.status');
