@@ -77,30 +77,27 @@ module.factory('LTI',
 /***** Controllers *****/
 module.controller("LTIController",
     ['$rootScope', '$scope', '$location', '$route', "$modal", 'breadcrumbs','Authorize',
-     'CourseRole', 'Toaster', 'AuthenticationService', 'LTI', 'LTIResource',
+     'CourseRole', 'Toaster', 'AuthenticationService', 'LTI', 'LTIResource', 'Session',
     function($rootScope, $scope, $location, $route, $modal, breadcrumbs, Authorize,
-             CourseRole, Toaster, AuthenticationService, LTI, LTIResource) {
-        var self = this;
-
+             CourseRole, Toaster, AuthenticationService, LTI, LTIResource, Session) {
         $scope.status = {};
 
         LTI.getStatus().then(function(status) {
             $scope.status = status;
 
+            // check if valid lti status
             if (!status.valid) {
+                // invalid lti session, get out of here
                 LTI.destroy_lit_status();
-                // redirect out of here
-                return
-            }
+                $location.path('/');
 
             // check if user doesn't exist
-            if (!status.user.exists) {
+            } else if (!status.user.exists) {
+                Session.destroy();
                 $rootScope.$emit(AuthenticationService.LTI_LOGIN_REQUIRED_EVENT);
-                return
-            }
 
             // check if course doesn't exist
-            if (!status.course.exists) {
+            } else if (!status.course.exists) {
                 if (status.course.course_role == CourseRole.instructor) {
                     var modalScope = $scope.$new();
                     modalScope.course = {
@@ -131,19 +128,17 @@ module.controller("LTIController",
                         $route.reload();
                     });
                 } else {
-                    // redirect out of here with proper error message
+                    // student can't setup course, get out of here
+                    Toaster.warning("Course not Ready", "Please wait for your instructor to setup the course and try again.");
+                    $location.path('/');
                 }
-                return
-            }
-
-            // check if assignment set or not
-            if (!status.assignment.exists) {
-                if (status.course.course_role == CourseRole.instructor) {
-                    // redirect to course form
+            } else {
+                // setup complete, redirect to course or assignment is present
+                if (status.assignment.exists) {
+                    $location.path('/course/'+status.course.id+"/assignment/"+status.assignment.id);
                 } else {
-                    // redirect out of here with proper error message
+                    $location.path('/course/'+status.course.id);
                 }
-                return
             }
         });
     }]

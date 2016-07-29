@@ -9,8 +9,8 @@ from . import dataformat
 from acj.core import event, db
 from acj.authorization import require, allow
 from login import authenticate
-from acj.models import User, Course, LTIConsumer, LTIContext, LTIResourceLink, \
-    LTIUser, LTIUserResourceLink
+from acj.models import User, Course, CourseRole, SystemRole, \
+    LTIConsumer, LTIContext, LTIResourceLink, LTIUser, LTIUserResourceLink
 from .util import new_restful_api, get_model_changes, pagination_parser
 
 from lti.contrib.flask import FlaskToolProvider
@@ -33,9 +33,7 @@ class LTIAuthAPI(Resource):
         validator = MyRequestValidator()
         ok = tool_provider.is_valid_request(validator)
 
-        # todo: if LMS user already linked to a ComPAIR account, establish an appropriate session
-        # otherwise, direct the user to the login screen. In either case, set session variables.
-        if ok:
+        if ok and tool_provider.user_id != None:
             # log current user out if needed
             logout_user()
             sess.clear()
@@ -49,7 +47,8 @@ class LTIAuthAPI(Resource):
             sess['lti_user'] = lti_user.id
 
             lti_context = LTIContext.get_by_tool_provider(lti_consumer, tool_provider)
-            sess['lti_context'] = lti_context.id
+            if lti_context:
+                sess['lti_context'] = lti_context.id
 
             lti_resource_link = LTIResourceLink.get_by_tool_provider(lti_consumer, tool_provider)
             sess['lti_resource_link'] = lti_resource_link.id
@@ -57,17 +56,51 @@ class LTIAuthAPI(Resource):
             lti_user_resource_link = LTIUserResourceLink.get_by_tool_provider(lti_resource_link, lti_user, tool_provider)
             sess['lti_user_resource_link'] = lti_user_resource_link.id
 
+            setup_required = False
+            angular_route = None
+
             # if user linked
             if lti_user.is_linked_to_user():
                 authenticate(lti_user.acj_user)
             else:
                 # need to create user link
                 sess['oauth_create_user_link'] = True
+                setup_required = True
 
-            # after setting session, check if accounts linkage exists. If not, redirect.
-            return redirect("/static/index.html#/lti")
+            if not lti_context:
+                # no context, redriect to home page
+                angular_route = "/"
+            elif lti_context.is_linked_to_course():
+                # redirect to course page or assignment page if available
+                angular_route = "/course/"+str(lti_context.acj_course_id)
+                if lti_resource_link.is_linked_to_assignment():
+                    angular_route += "/assignment/"+str(lti_resource_link.acj_assignment_id)
+            elif lti_user_resource_link.course_role == CourseRole.instructor:
+                setup_required = True
+            else:
+                # dislay message to user somehow
+                angular_route = "/"
+
+            if setup_required:
+                # if account/course setup required, redirect to lti controller
+                angular_route = "/lti"
+            elif angular_route == None:
+                # set angular route to home page by default
+                angular_route = "/"
+
+            return redirect("/static/index.html#"+angular_route)
         else:
-            return {"error": 'Error: LTI launch request is invalid.'}, 400
+            display_message = "Invalid Request"
+
+            if ok and tool_provider.user_id == None:
+                display_message = "ComPAIR requires the LTI tool consumer to provide a user_id."
+
+            tool_provider.lti_errormsg = display_message
+            return_url = tool_provider.build_return_url()
+            if return_url:
+                redirect(return_url)
+            else:
+                return display_message, 400
 
 api.add_resource(LTIAuthAPI, '/lti/auth')
 
@@ -153,14 +186,13 @@ class LTICourseLinkAPI(Resource):
         require(EDIT, course)
 
         if not sess.get('LTI'):
-            return 404
+            return {'error': "Your LTI session has expired." }, 404
 
-        lti_context = LTIContext.query.get_or_404(sess['lti_context'])
-        if not lti_context:
-            return 404
+        if not sess.get('lti_context'):
+            return {'error': "Your LTI session has no context." }, 404
 
+        lti_context = LTIContext.query.get_or_404(sess.get('lti_context'))
         lti_context.acj_course_id = course.id
-
         db.session.commit()
 
         on_lti_course_link.send(

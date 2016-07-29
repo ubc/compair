@@ -137,8 +137,11 @@ class LTITestData:
 
         return lti_user.user_id
 
-    def create_resource_link(self, lti_consumer, resource_link_id=None):
-        lti_resource_link = LTIResourceLinkFactory(lti_consumer=lti_consumer)
+    def create_resource_link(self, lti_consumer, resource_link_id=None, acj_assignment=None):
+        lti_resource_link = LTIResourceLinkFactory(
+            lti_consumer=lti_consumer,
+            acj_assignment=acj_assignment
+        )
         if resource_link_id:
             lti_resource_link.resource_link_id = resource_link_id
 
@@ -148,8 +151,11 @@ class LTITestData:
 
         return lti_resource_link
 
-    def create_context(self, lti_consumer, context_id=None):
-        lti_context = LTIContextFactory(lti_consumer=lti_consumer)
+    def create_context(self, lti_consumer, context_id=None, acj_course=None):
+        lti_context = LTIContextFactory(
+            lti_consumer=lti_consumer,
+            acj_course=acj_course
+        )
         if context_id:
             lti_context.context_id = context_id
 
@@ -159,10 +165,11 @@ class LTITestData:
 
         return lti_context
 
-    def create_user(self, lti_consumer, sysem_role=SystemRole.instructor):
+    def create_user(self, lti_consumer, system_role=SystemRole.instructor, acj_user=None):
         lti_user = LTIUserFactory(
             lti_consumer=lti_consumer,
-            sysem_role=sysem_role
+            system_role=system_role,
+            acj_user=acj_user
         )
         self.lti_users.append(lti_user)
 
@@ -170,18 +177,18 @@ class LTITestData:
 
         return lti_user
 
-    def create_user_resource_link(self, lti_user, lti_resource_link, course_role=CourseRole.instructor):
+    def create_user_resource_link(self, lti_user, lti_resource_link, course_role=CourseRole.instructor, acj_user_course=None):
         lti_user_resource_link = LTIUserResourceLinkFactory(
             lti_user=lti_user,
             lti_resource_link=lti_resource_link,
-            course_role=course_role
+            course_role=course_role,
+            acj_user_course=acj_user_course
         )
         self.lti_user_resource_links.append(lti_user_resource_link)
 
         db.session.commit()
 
         return lti_user_resource_link
-
 
 class SimpleAssignmentTestData(BasicTestData):
     def __init__(self):

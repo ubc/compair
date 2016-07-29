@@ -26,7 +26,7 @@ class Course(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     assignments = db.relationship("Assignment", backref="course", lazy="dynamic")
 
     # lti
-    lti_contexts = db.relationship("LTIContext", backref="acj_user", lazy='dynamic')
+    lti_contexts = db.relationship("LTIContext", backref="acj_course", lazy='dynamic')
 
     # hyprid and other functions
     @hybrid_property
