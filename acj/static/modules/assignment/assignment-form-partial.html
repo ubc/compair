@@ -2,6 +2,15 @@
 
     <fieldset>
         <legend>Assignment</legend>
+        <div class="lti-param-copy pull-right" ng-show="assignment.id && assignment.lti_linkable">
+            LTI Parameter: "assignment={{assignment.id}}"
+            <!-- TODO: when ui bootstrap is updated change trigger to 'outsideClick' -->
+            <a href="" tooltip="Copied" tooltip-placement="bottom" tooltip-trigger="click"
+                  ngclipboard data-clipboard-text="assignment={{assignment.id}}">
+                Copy?
+            </a>
+        </div>
+
         <acj-field-with-feedback form-control="assignmentForm.assignmentName">
             <label for="assignmentName" class="required-star">Short Name</label>
             <input class="form-control" id="assignmentName" type="text"

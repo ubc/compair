@@ -116,6 +116,8 @@ def get_assignment(restrict_user=True):
 
         'compared': fields.Boolean,
 
+        'lti_linkable': fields.Boolean,
+
         'answer_period': fields.Boolean,
         'compare_period': fields.Boolean,
         'after_comparing': fields.Boolean,
