@@ -43,14 +43,15 @@ describe('course-module', function () {
     };
     var mockCourse = {
         "available": true,
+        "start_date": null,
+        "end_date": null,
         "created": "Fri, 09 Jan 2015 17:23:59 -0000",
         "description": null,
         "id": 1,
         "modified": "Fri, 09 Jan 2015 17:23:59 -0000",
         "name": "Test Course",
         "year": 2015,
-        "term": "Winter",
-        "fullname": "Test Course Winter 2015"
+        "term": "Winter"
     };
     beforeEach(module('ubc.ctlt.acj.course'));
     beforeEach(inject(function ($injector) {
@@ -88,6 +89,21 @@ describe('course-module', function () {
         describe('view:', function () {
             var controller;
             describe('new', function () {
+                var toaster;
+                var course = {
+                    "name": "Test111",
+                    "year": 2015,
+                    "term": "Winter",
+                    "start_date": null,
+                    "end_date": null,
+                    "descriptionCheck": true,
+                    "description": "<p>Description</p>\n"
+                };
+                beforeEach(inject(function (_Toaster_) {
+                    toaster = _Toaster_;
+                    spyOn(toaster, 'error');
+                }));
+
                 beforeEach(function () {
                     controller = createController({current: {method: 'new'}});
                 });
@@ -96,14 +112,23 @@ describe('course-module', function () {
                     //double check nothing to initialize
                 });
 
+                it('should error when start date is not before end date', function () {
+                    $rootScope.course = angular.copy(course);
+                    $rootScope.course.id = undefined;
+                    $rootScope.date.course_start.date = new Date();
+                    $rootScope.date.course_start.time = new Date();
+                    $rootScope.date.course_end.date = new Date();
+                    $rootScope.date.course_end.time = new Date();
+                    $rootScope.date.course_end.date.setDate($rootScope.date.course_end.date.getDate()-1);
+                    var currentPath = $location.path();
+
+                    $rootScope.save();
+                    expect($rootScope.submitted).toBe(false);
+                    expect(toaster.error).toHaveBeenCalledWith('Course Period Conflict', 'Course end date/time must be after course start date/time.');
+                    expect($location.path()).toEqual(currentPath);
+                });
+
                 it('should be able to save new course', function () {
-                    var course = {
-                        "name": "Test111",
-                        "year": 2015,
-                        "term": "Winter",
-                        "descriptionCheck": true,
-                        "description": "<p>Description</p>\n"
-                    };
                     $rootScope.course = angular.copy(course);
                     $rootScope.course.id = undefined;
                     $httpBackend.expectPOST('/api/courses', $rootScope.course).respond(angular.merge({}, course, {id: 2}));
@@ -118,6 +143,11 @@ describe('course-module', function () {
 
             describe('edit', function () {
                 var editCourse;
+                var toaster;
+                beforeEach(inject(function (_Toaster_) {
+                    toaster = _Toaster_;
+                    spyOn(toaster, 'error');
+                }));
 
                 beforeEach(function () {
                     editCourse = angular.copy(mockCourse);
@@ -129,6 +159,22 @@ describe('course-module', function () {
 
                 it('should be correctly initialized', function () {
                     expect($rootScope.course).toEqualData(_.merge(editCourse));
+                });
+
+                it('should error when start date is not before end date', function () {
+                    var editedCourse = angular.copy(editCourse);
+                    $rootScope.course = editedCourse;
+                    $rootScope.date.course_start.date = new Date();
+                    $rootScope.date.course_start.time = new Date();
+                    $rootScope.date.course_end.date = new Date();
+                    $rootScope.date.course_end.time = new Date();
+                    $rootScope.date.course_end.date.setDate($rootScope.date.course_end.date.getDate()-1);
+                    var currentPath = $location.path();
+
+                    $rootScope.save();
+                    expect($rootScope.submitted).toBe(false);
+                    expect(toaster.error).toHaveBeenCalledWith('Course Period Conflict', 'Course end date/time must be after course start date/time.');
+                    expect($location.path()).toEqual(currentPath);
                 });
 
                 it('should be able to save edited course', function () {

@@ -2,6 +2,13 @@
 
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
+	
+function combineDateTime(datetime) {
+    var date = new Date(datetime.date);
+    var time = new Date(datetime.time);
+    date.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
+    return date;
+}
 
 var module = angular.module('ubc.ctlt.acj.course',
     [
@@ -177,21 +184,69 @@ module.controller(
             edit: {title: 'Course Successfully Updated', msg: 'Your course changes have been saved.'}
         };
 
+        // unlike for assignments, course dates initially blank
+        $scope.format = 'dd-MMMM-yyyy';
+        $scope.date = {
+            'course_start': {'date': null, 'time': new Date().setHours(0, 0, 0, 0)},
+            'course_end': {'date': null, 'time': new Date().setHours(23, 59, 0, 0)},
+        };
+
         self['new'] = function() {
             $scope.course.year = new Date().getFullYear();
         };
 
         self.edit = function() {
             $scope.courseId = $routeParams['courseId'];
-            $scope.course = CourseResource.get({'id':$scope.courseId});
+            CourseResource.get({'id':$scope.courseId}).$promise.then(
+                function (ret) {
+                    // dates may be left blank
+                    $scope.date.course_start.date = ret.start_date != null ? new Date(ret.start_date) : null;
+                    $scope.date.course_end.date = ret.end_date != null ? new Date(ret.end_date) : null;
+                    $scope.date.course_start.time = new Date(ret.start_date);
+                    $scope.date.course_end.time = new Date(ret.end_date);
+                    $scope.course = ret;
+                }
+            );
         };
 
         Session.getUser().then(function(user) {
             $scope.loggedInUserId = user.id;
         });
 
+        $scope.date.course_start.open = function($event) {
+            $event.preventDefault();
+            $event.stopPropagation();
+
+            $scope.date.course_start.opened = true;
+        };
+        $scope.date.course_end.open = function($event) {
+            $event.preventDefault();
+            $event.stopPropagation();
+
+            $scope.date.course_end.opened = true;
+        };
+
         $scope.save = function() {
             $scope.submitted = true;
+
+            if ($scope.date.course_start.date != null) {
+                $scope.course.start_date = combineDateTime($scope.date.course_start);
+            } else {
+                $scope.course.start_date = null;
+            }
+
+            if ($scope.date.course_end.date != null) {
+                $scope.course.end_date = combineDateTime($scope.date.course_end);
+            } else {
+                $scope.course.end_date = null;
+            }
+
+            if ($scope.course.start_date != null && $scope.course.end_date != null && $scope.course.start_date > $scope.course.end_date) {
+                Toaster.error('Course Period Conflict', 'Course end date/time must be after course start date/time.');
+                $scope.submitted = false;
+                return;
+            }
+
             CourseResource.save({id: $scope.course.id}, $scope.course, function (ret) {
                 Toaster.success(messages[$scope.method].title, messages[$scope.method].msg);
                 // refresh permissions

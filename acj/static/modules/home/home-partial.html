@@ -22,11 +22,11 @@
 
     <!-- Course listing -->
     <div class="course-list" ng-if="courses.length">
-        <a ng-repeat="course in courses | filter:courseFilter"
+        <a ng-repeat="course in courses | filter:courseFilter | orderBy:'start_date':true"
             ng-href="#/course/{{course.id}}" class="each-course">
             <h3 class="clearfix">
                 <i class="fa fa-book"></i>
-                {{course.name}}
+                {{course.name}} ({{course.year}} {{course.term}})
                 <i class="fa fa-arrow-right fa-2x pull-right hidden-xs"></i>
             </h3>
         </a>

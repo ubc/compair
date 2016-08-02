@@ -27,10 +27,6 @@ class Course(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
 
     # hyprid and other functions
     @hybrid_property
-    def fullname(self):
-        return '%s %s %s' % (self.name, self.term, self.year)
-
-    @hybrid_property
     def available(self):
         now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
 

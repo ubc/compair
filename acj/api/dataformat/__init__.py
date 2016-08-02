@@ -66,7 +66,6 @@ def get_course(include_details=True):
         'name': fields.String,
         'year': fields.Integer,
         'term': fields.String,
-        'fullname': fields.String,
         'description': fields.String,
         'start_date': fields.DateTime,
         'end_date': fields.DateTime,
