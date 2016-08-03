@@ -705,7 +705,7 @@ describe('course-module', function () {
                         }
                     }
                 });
-                $httpBackend.expectGET('/api/courses/1/assignments/1/answers?orderBy=1&page=1&perPage=20').respond(mockAnswers);
+                $httpBackend.expectGET('/api/courses/1/assignments/1/answers?page=1&perPage=20').respond(mockAnswers);
                 $httpBackend.flush();
             });
 
@@ -724,7 +724,7 @@ describe('course-module', function () {
                     perPage: 20,
                     group_name: null,
                     author: null,
-                    orderBy: mockAssignment.criteria[0].id
+                    orderBy: null
                 });
                 expect($rootScope.reverse).toBe(true);
 

@@ -321,6 +321,7 @@ module.controller("AssignmentViewController",
             orderBy: null
         };
         $scope.self_evaluation_needed = false;
+        $scope.rankLimit = 10; //default is top 10 answers
 
         Session.getUser().then(function(user) {
             $scope.loggedInUserId = user.id;
@@ -334,10 +335,11 @@ module.controller("AssignmentViewController",
                     $scope.assignment = ret;
 
                     $scope.criteria = ret.criteria;
-                    if ($scope.criteria.length >= 1) {
-                        $scope.answerFilters.orderBy = $scope.criteria[0].id;
-                    }
                     $scope.reverse = true;
+                    
+                    if (ret.rank_limit) {
+                        $scope.rankLimit = ret.rank_limit;
+                    }
 
                     $scope.readDate = Date.parse(ret.created);
 

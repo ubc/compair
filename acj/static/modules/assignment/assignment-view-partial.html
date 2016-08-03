@@ -147,10 +147,11 @@
                                     <option value="">All answers</option>
                                 </select>
                             </span><br />
-                            <span class="filter">
-                                <label>Order by ranking for: &nbsp;</label>
+                            <span class="filter" ng-if="rankLimit > 0">
+                                <label>Order by: &nbsp;</label>
                                 <select ng-model="answerFilters.orderBy"
                                         ng-options="c.id as c.name for c in criteria">
+                                    <option value="">Date answer submitted</option>
                                 </select>
                             </span>
                         </div>
@@ -225,6 +226,10 @@
                             pdf="answer.file">
                         </acj-pdf-inline>
                     </div>
+                    
+                    <p class="pull-right">
+                        <em>{{instructors[answer.user_id]}} Response</em>
+                    </p>
 
                 </div><!-- closes each-answer (instructor) -->
 
@@ -273,13 +278,19 @@
                     </p>
                     <!-- Student Rank (not used for instructor answers) -->
                     <p class="pull-right score-display" ng-if="!canManageAssignment && score.criterion_id==answerFilters.orderBy && answer.scores.length > 0" ng-repeat="score in answer.scores">
-                        <em>
+                        <em ng-if="score.rank <= rankLimit">
                             Students Ranked: <strong>{{score.rank}} <span ng-if="rankCount[score.rank] > 1">(tied)</span></strong>
+                        </em>
+                        <em ng-if="score.rank > 0 && score.rank >= rankLimit">
+                            Not in Top {{rankLimit}}
                         </em>
                     </p>
                     <!-- No Student Score/Rank -->
-                    <p class="pull-right score-display" ng-if="answer.scores.length == 0">
+                    <p class="pull-right score-display" ng-if="canManageAssignment && answer.scores.length == 0">
                         <em>Not Compared</em>
+                    </p>
+                    <p class="pull-right score-display" ng-if="!canManageAssignment && score.criterion_id!=answerFilters.orderBy && answer.scores.length == 0">
+                        <em>Not Ranked</em>
                     </p>
 
 
