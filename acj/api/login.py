@@ -4,7 +4,7 @@ from flask_login import current_user, login_required, login_user, logout_user
 from acj import cas
 from acj.core import db
 from acj.authorization import get_logged_in_user_permissions
-from acj.models import User, LTIUser, LTIResourceLink
+from acj.models import User, LTIUser, LTIResourceLink, LTIUserResourceLink, UserCourse, LTIContext
 
 login_api = Blueprint("login_api", __name__, url_prefix='/api')
 
@@ -28,7 +28,21 @@ def login():
         if sess.get('LTI') and sess.get('oauth_create_user_link'):
             lti_user = LTIUser.query.get_or_404(sess['lti_user'])
             lti_user.acj_user_id = user.id
-            db.session.commit()
+        if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
+            lti_context = LTIContext.query.get_or_404(sess['lti_context'])
+            lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
+            if lti_context.is_linked_to_course():
+                user_course = UserCourse.query \
+                .filter_by(
+                    user_id=user.id,
+                    course_id=lti_context.acj_course_id
+                ) \
+                .one_or_none()
+                if user_course is None:
+                    # create new enrollment
+                    new_user_course = UserCourse(user_id=user.id, course_id=lti_context.acj_course_id, course_role=lti_user_resource_link.course_role)
+                    db.session.add(new_user_course)
+        db.session.commit()
 
         return jsonify({"userid": user.id, "permissions": permissions})
 
