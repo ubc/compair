@@ -11,21 +11,24 @@
                 <input id="courseName" name="courseName" ng-model="course.name"
                        type="text" class="form-control" required maxlength="255" placeholder="e.g. BIOL 112 - Biology of the Cell" auto-focus />
             </acj-field-with-feedback>
-
-            <acj-field-with-feedback form-control="courseForm.courseYear">
-                <label for="courseYear" class="required-star">Year</label>
-                <input id="courseYear" name="courseYear" ng-model="course.year"
-                       type="number" class="form-control" required min="1900" />
-            </acj-field-with-feedback>
-
-            <acj-field-with-feedback form-control="courseForm.courseTerm">
-                <label for="courseTerm" class="required-star">Term/Semester</label>
-                <input id="courseTerm" name="courseTerm" ng-model="course.term"
-                       type="text" class="form-control" required maxlength="255" />
-            </acj-field-with-feedback>
-
+	    <div class="row">
+		<div class="col-md-6 form-group">
+			<acj-field-with-feedback form-control="courseForm.courseYear">
+			    <label for="courseYear" class="required-star">Year</label>
+			    <input id="courseYear" name="courseYear" ng-model="course.year"
+				   type="number" class="form-control" required min="1900" />
+			</acj-field-with-feedback>
+		</div>
+		<div class="col-md-6 form-group">
+			<acj-field-with-feedback form-control="courseForm.courseTerm">
+			    <label for="courseTerm" class="required-star">Term/Semester</label>
+			    <input id="courseTerm" name="courseTerm" ng-model="course.term"
+				   type="text" class="form-control" required maxlength="255" />
+			</acj-field-with-feedback>
+		</div>
+	    </div>
             <input id="descriptionCheck" type="checkbox" ng-model="course.descriptionCheck" ng-checked="course.descriptionCheck || course.description" ng-disabled="course.description">
-            <label for="descriptionCheck">Add a course description<span ng-show="course.descriptionCheck || course.description">:</span></label>
+            <label for="descriptionCheck">Add a course description (optional)<span ng-show="course.descriptionCheck || course.description">:</span></label>
             <br />
 
             <div ng-if="course.descriptionCheck || course.description">
@@ -34,6 +37,43 @@
                 </div>
             </div>
         </fieldset>
+
+	<fieldset>
+            <legend>Schedule</legend>
+	    <div class="instructional-text">
+		<p><strong>Optionally set the course dates</strong> during which enrolled students can see and access the course content when they log in. Setting no dates means the course is always accessible to students. (You will be able to set different dates for individual assignments when you create them.) </p>
+	    </div>
+	    <div class="row">
+            <div class="col-md-6 form-group">
+                <label>Course Begins</label><br />
+                <div class="assignment-date">
+                    <span class="input-group">
+                        <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.course_start.date" is-open="date.course_start.opened" />
+                        <span class="input-group-btn">
+                            <button type="button" class="btn btn-default" ng-click="date.course_start.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
+                    </span>
+                </div>
+                <div class="assignment-date">
+                    <timepicker ng-model="date.course_start.time" minute-step="1" mousewheel="false"></timepicker>
+                </div>
+            </div>
+            <div class="col-md-6 form-group">
+                <label>Course Ends</label><br />
+                <div class="assignment-date">
+                    <span class="input-group">
+                        <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.course_end.date" is-open="date.course_end.opened" />
+                        <span class="input-group-btn">
+                            <button type="button" class="btn btn-default" ng-click="date.course_end.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
+                    </span>
+                </div>
+                <div class="assignment-date">
+                    <timepicker ng-model="date.course_end.time" minute-step="1" mousewheel="false"></timepicker>
+                </div>
+            </div>
+        </div>
+	</fieldset>
 
         <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
                ng-disabled="courseForm.$invalid || submitted" />

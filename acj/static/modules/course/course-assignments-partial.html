@@ -2,7 +2,7 @@
 
     <div class="row">
         <header class="col-sm-6">
-            <h1><i class="fa fa-book"></i> {{course.name}}</h1>
+            <h1><i class="fa fa-book"></i> {{course.name}} ({{course.year}} {{course.term}})</h1>
             <div class="intro-text" mathjax hljs ng-bind-html="course.description">
             </div>
         </header>
@@ -24,13 +24,6 @@
                     Manage Users
                 </a>
             </span>
-            <!-- <span ng-if="canCreateAssignments">
-                <a ng-href="#/course/{{course.id}}/gradebook"
-                    class="btn btn-primary">
-                    <i class="glyphicon glyphicon-tasks"></i>
-                    See Activity
-                </a>
-            </span> -->
         </div>
     </div>
 
@@ -44,8 +37,6 @@
             <form class="form-inline searchCourse" role="search" ng-show="assignments.length">
                 <div class="form-group filter">
                     <label>Show: &nbsp;</label>
-                    <!--<input class="form-control" type="text" ng-model="assignmentFilter.name"
-                        placeholder="Search assignment names">-->
                     <select ng-model="filter" ng-options="f for f in filters"></select>
                 </div>
             </form>
@@ -59,7 +50,7 @@
         <p ng-if="canCreateAssignments">Would you like to <a ng-href="#/course/{{course.id}}/assignment/create">add an assignment</a>?</p>
     </div>
 
-    <!-- assignments List -->
+    <!-- Assignments List -->
     <div class="row each-assignment" ng-class="{'first-child': $first}"
         ng-repeat="(key, assignment) in assignments | filter:assignmentFilter(filter) as results">
 
@@ -69,7 +60,7 @@
             <!-- Assignment Info -->
             <div class="media-body">
 
-                <!-- name -->
+                <!-- Name -->
                 <a ng-href="#/course/{{course.id}}/assignment/{{assignment.id}}">
                     <h3 class="media-heading">
                         <i class="fa fa-comments"></i>{{assignment.name}} &raquo;
@@ -98,12 +89,6 @@
                         Posted by
                         <a ng-href="#/user/{{assignment.user_id}}">
                             {{assignment.user.displayname}}
-                            <!-- <span ng-if="canManageAssignment && assignment.user.fullname">
-                                ({{assignment.user.fullname}})
-                            </span>
-                            <span ng-if="canManageAssignment && !assignment.user.fullname">
-                                ({{assignment.user.username}})
-                            </span> -->
                         </a>
                     </li>
                     <!-- Total Answers -->
@@ -132,7 +117,6 @@
                     <!-- Pending Assignment Feedback (for students) -->
                     <li ng-if="!canManageAssignment && ((assignment.compare_period && assignment.steps_left > 0) || (assignment.answer_period && !assignment.status.answers.answered))" class="label label-warning">
                         <span ng-if="assignment.answer_period && !assignment.status.answers.answered">1 answer<span ng-if="(assignment.compare_period && assignment.steps_left) > 0">, </span></span>
-
                         <span ng-if="assignment.compare_period && assignment.steps_left > 0">{{assignment.steps_left}} comparison<span ng-if="(assignment.steps_left) != 1">s</span></span>
                         needed from you
                     </li>

@@ -48,7 +48,6 @@ var course1 = courseFactory.generateCourse(1, {
     name: "CHEM 111",
     year: 2015,
     term: "Winter",
-    fullname: "CHEM 111 Winter 2015",
     description: "<p>CHEM 111 description<p>",
 });
 storage.courses.push(course1);
@@ -57,7 +56,6 @@ var course2 = courseFactory.generateCourse(2, {
     name: "PHYS 101",
     year: 2015,
     term: "Winter",
-    fullname: "PHYS 111 Winter 2015",
     description: "<p>PHYS 101  description<p>",
 });
 storage.courses.push(course2);

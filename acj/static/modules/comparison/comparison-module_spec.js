@@ -43,6 +43,8 @@ describe('comparison-module', function () {
     };
     var mockCourse = {
         "available": true,
+        "start_date": null,
+        "end_date": null,
         "created": "Fri, 09 Jan 2015 17:23:59 -0000",
         "description": null,
         "id": 1,
@@ -50,7 +52,6 @@ describe('comparison-module', function () {
         "name": "Test Course",
         "year": 2015,
         "term": "Winter",
-        "fullname": "Test Course Winter 2015",
         "start_time": null,
         "end_time": null
     };

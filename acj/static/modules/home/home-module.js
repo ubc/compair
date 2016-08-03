@@ -38,6 +38,7 @@ module.controller(
                 {id: user.id}).$promise.then(
                 function(ret) {
                     $scope.courses = ret.objects;
+                    angular.forEach($scope.courses, function(event){ event.start_date = new Date(event.start_date); });
                 },
                 function (ret) {
                     Toaster.reqerror("Unable to retrieve your courses.", ret);

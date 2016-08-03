@@ -210,11 +210,10 @@ module.exports.httpbackendMock = function(storageFixture) {
                 "name": data.name,
                 "year": data.year,
                 "term": data.term,
-                "fullname": data.name + " " + data.term + " " + data.year,
                 "description": data.description,
-                "start_time": data.start_time,
-                "end_time": data.end_time,
                 "available": true,
+                "start_date": data.start_date,
+                "end_date": data.end_date,
                 "modified": "Sun, 11 Jan 2015 08:44:46 -0000",
                 "created": "Sun, 11 Jan 2015 08:44:46 -0000"
             }
