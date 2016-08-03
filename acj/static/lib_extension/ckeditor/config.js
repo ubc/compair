@@ -37,7 +37,7 @@ CKEDITOR.editorConfig = function( config ) {
     config.removeDialogTabs = 'image:advanced;link:advanced';
 
     // change Code Snippet's theme
-    config.codeSnippet_theme = 'monokai_sublime';
+    config.codeSnippet_theme = 'foundation';
 
     config.height="150px";
 

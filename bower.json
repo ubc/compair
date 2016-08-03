@@ -58,7 +58,7 @@
     "highlightjs": {
       "main": [
           "highlight.pack.js",
-          "styles/monokai_sublime.css"
+          "styles/foundation.css"
       ]
     }
   }
