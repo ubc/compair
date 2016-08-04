@@ -2,7 +2,7 @@ import json
 
 from data.fixtures.test_data import SimpleAssignmentTestData, LTITestData
 from acj.tests.test_acj import ACJAPITestCase
-from acj.models import User, UserCourse, SystemRole, CourseRole, \
+from acj.models import User, SystemRole, CourseRole, UserCourse, \
     LTIConsumer, LTIContext, LTIUser, LTIResourceLink, LTIUserResourceLink
 from acj.core import db
 
@@ -136,17 +136,15 @@ class LTILaunchAPITests(ACJAPITestCase):
                 # check that user is logged in
                 self.assertEqual(str(user.id), sess.get('user_id'))
 
-            """
             # verify enrollment
             user_course = UserCourse.query \
                 .filter_by(
-                    course_id=course.id,
                     user_id=user.id,
+                    course_id=course.id,
                     course_role=course_role
                 ) \
                 .one_or_none()
             self.assertIsNotNone(user_course)
-            """
 
             # create assignment - should be automatically linked when custom_assignment is set
             assignment = self.data.create_assignment_in_answer_period(course, self.data.get_authorized_instructor())
@@ -181,7 +179,7 @@ class LTILaunchAPITests(ACJAPITestCase):
         lti_consumer = self.lti_data.lti_consumer
         lti_context = self.lti_data.create_context(lti_consumer)
         lti_user = self.lti_data.create_user(lti_consumer, SystemRole.instructor, instructor)
-        lti_resource_link = self.lti_data.create_resource_link(lti_consumer)
+        lti_resource_link = self.lti_data.create_resource_link(lti_consumer, lti_context)
         lti_user_resource_link = self.lti_data.create_user_resource_link(
             lti_user, lti_resource_link, CourseRole.instructor)
 
