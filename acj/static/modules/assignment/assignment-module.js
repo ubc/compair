@@ -631,8 +631,8 @@ module.controller("AssignmentWriteController",
 
         // initialization method data
         if ($route.current.method == "new") {
-            //want default to encourage discussion
-            $scope.assignment.students_can_reply = true;
+            //want default to disable discussion
+            $scope.assignment.students_can_reply = false;
             // default the setting to the recommended # of comparisons
             $scope.assignment.number_of_comparisons = $scope.recommended_comparisons;
             $scope.assignment.pairing_algorithm = PairingAlgorithm.random;

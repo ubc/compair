@@ -2,7 +2,11 @@
 
     <h1>Compare Answers</h1>
 
-    <p class="intro-text">For each round, you'll give helpful feedback on the answers in the pair, choose which better matches the criteria below, and submit the comparison. Please note <strong>answers are not automatically saved</strong> as you type. However, you may manually save a draft of the round below.</p>
+    <p class="intro-text">
+        For each round, choose which answer better matches the criteria below, give helpful feedback on both answers in the pair, and submit the comparison.
+        Please note <strong>answers are not automatically saved</strong> as you type.
+        However, you may manually save a draft of the round below.
+    </p>
 
     <p class="assignment-toggle"><a href="" ng-click="showAssignment = !showAssignment">
         <i class="fa fa-chevron-down" ng-show="showAssignment "></i>
@@ -85,11 +89,59 @@
 
             <hr />
 
-            <h3>1) Give detailed feedback to the author of each answer</h3>
+            <h3>1) Choose the answer that best meets the criteria below</h3>
+
+            <div ng-if="assignment.criteria.length == 0" class="text-center">
+                <p>No criteria have been set for this assignment yet. Please select one or more criteria.</p>
+                <br />
+            </div>
+
+            <div class="form-group sub-step" ng-repeat="comparison in comparisons">
+
+                <div class="each-criterion sub-step">
+                    <fieldset>
+                        <div class="row">
+                            <div class="col-sm-8">
+                                <h4><i class="fa fa-gavel"></i> {{comparison.criterion.name}}</h4>
+                                <hr />
+                                <div class="criteria" mathjax hljs
+                                     ng-bind-html="comparison.criterion.description">
+                                </div>
+                            </div>
+                            <div class="col-sm-4 text-center">
+                                <p><strong>Select one:</strong></p>
+                                <div class="btn-group">
+                                    <label class="btn btn-primary" ng-class=
+                                        "{active:comparison.winner_id==answer1.id}">
+                                        <input type="radio" class="hideRadio"
+                                            name="answer{{answer1.id}}" required
+                                            ng-model="comparison.winner_id"
+                                            ng-value="answer1.id">
+                                        Answer {{firstAnsNum}}
+                                    </label>
+                                    <label class="btn btn-primary" ng-class=
+                                        "{active:comparison.winner_id==answer2.id}">
+                                        <input type="radio" class="hideRadio"
+                                            name="answer{{answer2.id}}" required
+                                            ng-model="comparison.winner_id"
+                                            ng-value="answer2.id">
+                                        Answer {{secondAnsNum}}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+            </div>
+
+            <hr />
+
+            <h3>2) Give detailed feedback to the author of each answer</h3>
 
             <div class="row sub-step">
 
-                <p class="intro-text">Use any instructor-provided guidelines or answer the general questions: What did the author do well? Where might the author improve? Remember to make your comments&mdash;including criticisms&mdash;<strong>encouraging, respectful, and specific</strong>. Instructors do read what you write here.</p>
+                <p class="intro-text">Use any instructor-provided guidelines or answer general questions, based on the criteria above: <strong>What did the author do well? Where might the author improve?</strong> Remember to make your comments&mdash;including criticisms&mdash;encouraging, respectful, and specific.</p>
 
                 <div class="col-md-6">
                     <label class="cke-label">
@@ -111,90 +163,22 @@
                 </div>
             </div>
 
-            <!-- <div class="form-group">
-                <input
-                    ng-disabled="!(!!answer1.comment.content && !!answer2.comment.content)"
-                    ng-click="isStep2Shown = !isStep2Shown; showNext('#step-2');"
-                    ng-show="!isStep2Shown"
-                    value="Next" class="btn btn-success btn-lg center-block" />
-            </div> -->
-
         </div>
 
-        <!--<div ng-show="isStep2Shown" id="step-2">-->
-        <div>
 
-            <hr />
-
-            <h3>2) Choose the answer that best meets the criteria below</h3>
-
-            <p class="intro-text">Your selection helps determine a criteria-based student ranking of the answers. Include a <strong>detailed critical explanation</strong>, which can re-use points made in the feedback section above and be more direct. Other students <em>do not</em> see what you write here.</p>
-
-            <div ng-if="assignment.criteria.length == 0" class="text-center">
-                <p>No criteria have been set for this assignment yet. Please select one or more criteria.</p>
-                <br />
-            </div>
-
-            <div class="form-group sub-step" ng-repeat="comparison in comparisons">
-
-                <div class="each-criterion sub-step">
-                    <fieldset>
-                        <div class="row">
-                            <div class="col-sm-6 text-center">
-                                <h4><i class="fa fa-gavel"></i> {{comparison.criterion.name}}</h4>
-                                <div class="criteria" mathjax hljs
-                                     ng-bind-html="comparison.criterion.description">
-                                </div>
-                                <p><strong>Select one:</strong></p>
-                                <div class="btn-group">
-                                    <label class="btn btn-primary" ng-class=
-                                        "{active:comparison.winner_id==answer1.id}">
-                                        <input type="radio" class="hideRadio"
-                                            name="answer{{answer1.id}}" required
-                                            ng-model="comparison.winner_id"
-                                            ng-value="answer1.id">
-                                        Answer {{firstAnsNum}}
-                                    </label>
-                                    <label class="btn btn-primary" ng-class=
-                                        "{active:comparison.winner_id==answer2.id}">
-                                        <input type="radio" class="hideRadio"
-                                            name="answer{{answer2.id}}" required
-                                            ng-model="comparison.winner_id"
-                                            ng-value="answer2.id">
-                                        Answer {{secondAnsNum}}
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <label class="text-left cke-label">
-                                    Explain your selection (shown only to instructors)
-                                    <i class="fa fa-arrow-down"></i>
-                                </label>
-                                <textarea
-                                    ng-model="comparison.content" rows="4" ckeditor="editorOptions" required>
-                                </textarea>
-                            </div>
-                        </div>
-                    </fieldset>
-                </div>
-
-            </div>
-
-            <div class="form-group sub-step text-center">
-                <input ng-disabled="submitted" type="submit"
-                    ng-click="$parent.isDraft = true"
-                    value="Save Draft" class="btn btn-default btn-lg" />
-                &nbsp; &nbsp;
-                <!-- button to submit and refresh page IF evaluations remain for user -->
-                <input ng-disabled="comparisonForm.$invalid || submitted" type="submit"
-                    ng-click="$parent.isDraft = false"
-                    value="Submit" class="btn btn-success btn-lg" />
-                <p ng-if="submitted">
-                    <i class="fa fa-spin fa-spinner"></i>
-                    &nbsp; Saving comparison...
-                </p>
-            </div>
-            
+        <div class="form-group sub-step text-center">
+            <input ng-disabled="submitted" type="submit"
+                ng-click="$parent.isDraft = true"
+                value="Save Draft" class="btn btn-default btn-lg" />
+            &nbsp; &nbsp;
+            <!-- button to submit and refresh page IF evaluations remain for user -->
+            <input ng-disabled="comparisonForm.$invalid || submitted" type="submit"
+                ng-click="$parent.isDraft = false"
+                value="Submit" class="btn btn-success btn-lg" />
+            <p ng-if="submitted">
+                <i class="fa fa-spin fa-spinner"></i>
+                &nbsp; Saving comparison...
+            </p>
         </div>
 
     </form>
