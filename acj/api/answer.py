@@ -330,7 +330,7 @@ class AnswerComparisonsAPI(Resource):
         assignment = Assignment.get_active_or_404(assignment_id)
         require(READ, assignment)
 
-        can_manage = allow(MANAGE, Comparison(course_id=course_id))
+        can_read = allow(READ, Comparison(course_id=course_id))
         restrict_user = is_user_access_restricted(current_user)
 
         params = answer_comparison_list_parser.parse_args()
@@ -341,7 +341,7 @@ class AnswerComparisonsAPI(Resource):
             .filter_by(assignment_id=assignment_id) \
             .group_by(Comparison.user_id, Comparison.answer1_id, Comparison.answer2_id)
 
-        if not can_manage:
+        if not can_read:
             comparison_sets = comparison_sets.filter_by(user_id=current_user.id)
         elif params['author']:
             comparison_sets = comparison_sets.filter_by(user_id=params['author'])

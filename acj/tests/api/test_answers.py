@@ -690,3 +690,120 @@ class AnswersAPITests(ACJAPITestCase):
                 expected_flag_off['flagged'],
                 rv.json['flagged'],
                 "Expected answer to be flagged.")
+
+class AnswerComparisonAPITests(ACJAPITestCase):
+    def setUp(self):
+        super(AnswerComparisonAPITests, self).setUp()
+        self.fixtures = TestFixture().add_course(num_students=10, num_groups=2, with_comparisons=True)
+        self.base_url = self._build_url(self.fixtures.course.id, self.fixtures.assignment.id)
+
+    def _build_url(self, course_id, assignment_id, tail=""):
+        url = '/api/courses/' + str(course_id) + '/assignments/' + str(assignment_id) + '/answers/comparisons' + tail
+        return url
+
+    def test_answer_comparisons(self):
+        answer_comparisons_url = self.base_url
+
+        # Test login required
+        rv = self.client.get(answer_comparisons_url, data=json.dumps({}))
+        self.assert401(rv)
+
+        with self.login(self.fixtures.unauthorized_instructor.username):
+            rv = self.client.get(answer_comparisons_url, data=json.dumps({}))
+            self.assert403(rv)
+
+        with self.login(self.fixtures.unauthorized_student.username):
+            rv = self.client.get(answer_comparisons_url, data=json.dumps({}))
+            self.assert403(rv)
+
+        # authorized instructor
+        with self.login(self.fixtures.instructor.username):
+            # test invalid course id
+            rv = self.client.get('/api/courses/999/assignments/'+str(self.fixtures.assignment.id)+'/answers/comparisons', data=json.dumps({}), content_type='application/json')
+            self.assert404(rv)
+
+            # test invalid assignment id
+            rv = self.client.get('/api/courses/'+str(self.fixtures.course.id)+'/assignments/999/answers/comparisons', data=json.dumps({}), content_type='application/json')
+            self.assert404(rv)
+
+            # get pagninated list of all comparisons in assignment
+            rv = self.client.get(answer_comparisons_url, data=json.dumps({}), content_type='application/json')
+            self.assert200(rv)
+
+            total_comparisons = len(self.fixtures.students) * self.fixtures.assignment.total_comparisons_required
+            self.assertEqual(rv.json['page'], 1)
+            self.assertEqual(rv.json['total'], total_comparisons)
+
+            # get pagninated list of all comparisons in assignment for a group
+            group_filter = { 'group': self.fixtures.groups[0] }
+            rv = self.client.get(answer_comparisons_url, data=json.dumps(group_filter), content_type='application/json')
+            self.assert200(rv)
+
+            total_comparisons_for_group = total_comparisons / 2 # since there are 2 groups
+            self.assertEqual(rv.json['page'], 1)
+            self.assertEqual(rv.json['total'], total_comparisons_for_group)
+
+            # get pagninated list of all comparisons in assignment for a user
+            author_filter = { 'author': self.fixtures.students[0].id }
+            rv = self.client.get(answer_comparisons_url, data=json.dumps(author_filter), content_type='application/json')
+            self.assert200(rv)
+
+            self.assertEqual(rv.json['page'], 1)
+            self.assertEqual(rv.json['objects'][0]['user_id'], self.fixtures.students[0].id)
+            self.assertEqual(rv.json['total'], self.fixtures.assignment.total_comparisons_required)
+
+
+        # authorized teaching assistant
+        with self.login(self.fixtures.ta.username):
+            # get pagninated list of all comparisons in assignment
+            rv = self.client.get(answer_comparisons_url, data=json.dumps({}), content_type='application/json')
+            self.assert200(rv)
+
+            total_comparisons = len(self.fixtures.students) * self.fixtures.assignment.total_comparisons_required
+            self.assertEqual(rv.json['page'], 1)
+            self.assertEqual(rv.json['total'], total_comparisons)
+
+            # get pagninated list of all comparisons in assignment for a group
+            group_filter = { 'group': self.fixtures.groups[0] }
+            rv = self.client.get(answer_comparisons_url, data=json.dumps(group_filter), content_type='application/json')
+            self.assert200(rv)
+
+            total_comparisons_for_group = total_comparisons / 2 # since there are 2 groups
+            self.assertEqual(rv.json['page'], 1)
+            self.assertEqual(rv.json['total'], total_comparisons_for_group)
+
+            # get pagninated list of all comparisons in assignment for a user
+            author_filter = { 'author': self.fixtures.students[0].id }
+            rv = self.client.get(answer_comparisons_url, data=json.dumps(author_filter), content_type='application/json')
+            self.assert200(rv)
+
+            self.assertEqual(rv.json['page'], 1)
+            self.assertEqual(rv.json['objects'][0]['user_id'], self.fixtures.students[0].id)
+            self.assertEqual(rv.json['total'], self.fixtures.assignment.total_comparisons_required)
+
+        # authorized student
+        with self.login(self.fixtures.students[1].username):
+            # get pagninated list of all for current user
+            rv = self.client.get(answer_comparisons_url, data=json.dumps({}), content_type='application/json')
+            self.assert200(rv)
+
+            self.assertEqual(rv.json['page'], 1)
+            self.assertEqual(rv.json['objects'][0]['user_id'], self.fixtures.students[1].id)
+            self.assertEqual(rv.json['total'], self.fixtures.assignment.total_comparisons_required)
+
+            # student should always see their own comparisons only regardless of author/group filters
+            group_filter = { 'group': self.fixtures.groups[0] }
+            rv = self.client.get(answer_comparisons_url, data=json.dumps(group_filter), content_type='application/json')
+            self.assert200(rv)
+
+            self.assertEqual(rv.json['page'], 1)
+            self.assertEqual(rv.json['objects'][0]['user_id'], self.fixtures.students[1].id)
+            self.assertEqual(rv.json['total'], self.fixtures.assignment.total_comparisons_required)
+
+            author_filter = { 'author': self.fixtures.students[0].id }
+            rv = self.client.get(answer_comparisons_url, data=json.dumps({}), content_type='application/json')
+            self.assert200(rv)
+
+            self.assertEqual(rv.json['page'], 1)
+            self.assertEqual(rv.json['objects'][0]['user_id'], self.fixtures.students[1].id)
+            self.assertEqual(rv.json['total'], self.fixtures.assignment.total_comparisons_required)

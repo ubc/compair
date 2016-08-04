@@ -441,6 +441,8 @@ module.controller("AssignmentViewController",
             tab = name;
             if (name == "comparisons") {
                 $scope.comparisons = AnswerResource.comparisons(params);
+				var answer_params = angular.extend({}, params, {author: $scope.loggedInUserId});
+				$scope.user_answers = AnswerResource.get(answer_params);
             }
         };
         $scope.showTab = function(name) {
