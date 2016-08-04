@@ -26,6 +26,7 @@ class LTIUser(DefaultTableMixin, WriteTrackingMixin):
     # relationships
     # user via User Model
     # lti_consumer via LTIConsumer Model
+    lti_memberships = db.relationship("LTIMembership", backref="lti_user", lazy="dynamic")
     lti_user_resource_links = db.relationship("LTIUserResourceLink", backref="lti_user", lazy="dynamic")
 
     # hyprid and other functions
@@ -34,14 +35,12 @@ class LTIUser(DefaultTableMixin, WriteTrackingMixin):
 
     @classmethod
     def get_by_lti_consumer_id_and_user_id(cls, lti_consumer_id, user_id):
-        lti_user = LTIUser.query \
+        return LTIUser.query \
             .filter_by(
                 lti_consumer_id=lti_consumer_id,
                 user_id=user_id
             ) \
             .one_or_none()
-
-        return lti_user
 
     @classmethod
     def get_by_tool_provider(cls, lti_consumer, tool_provider):

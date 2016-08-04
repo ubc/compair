@@ -27,14 +27,12 @@ class LTIConsumer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     # hyprid and other functions
     @classmethod
     def get_by_consumer_key(cls, consumer_key):
-        lti_consumer = LTIConsumer.query \
+        return LTIConsumer.query \
             .filter_by(
                 active=True,
                 oauth_consumer_key=consumer_key
             ) \
             .one_or_none()
-
-        return lti_consumer
 
     @classmethod
     def get_by_tool_provider(cls, tool_provider):
