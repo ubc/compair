@@ -7,7 +7,8 @@ from werkzeug.exceptions import Unauthorized
 from data.fixtures import DefaultFixture, UserFactory
 from data.fixtures.test_data import BasicTestData, LTITestData
 from acj.tests.test_acj import ACJAPITestCase
-from acj.models import User, SystemRole, CourseRole
+from acj.models import User, SystemRole, CourseRole, LTIContext
+from acj.core import db
 
 
 class UsersAPITests(ACJAPITestCase):
@@ -139,6 +140,25 @@ class UsersAPITests(ACJAPITestCase):
         rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
         self.assert401(rv)
 
+        # Instructor - no context
+        with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
+                user_id=lti_data.generate_user_id(), context_id=None,
+                roles="Instructor") as lti_response:
+            self.assert200(lti_response)
+
+            # test create instructor via lti session
+            expected = UserFactory.stub(system_role=None)
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
+            self.assert200(rv)
+            self.assertEqual(expected.displayname, rv.json['displayname'])
+
+            user = User.query.get(rv.json['id'])
+            self.assertEqual(SystemRole.instructor, user.system_role)
+
+            # verify not enrolled in any course
+            self.assertEqual(len(user.user_courses), 0)
+
+        # Instructor - with context not linked
         with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
                 user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
                 roles="Instructor") as lti_response:
@@ -152,6 +172,33 @@ class UsersAPITests(ACJAPITestCase):
 
             user = User.query.get(rv.json['id'])
             self.assertEqual(SystemRole.instructor, user.system_role)
+
+            # verify not enrolled in any course
+            self.assertEqual(len(user.user_courses), 0)
+
+        # Instructor - with context linked
+        with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
+                user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
+                roles="Instructor") as lti_response:
+            self.assert200(lti_response)
+
+            lti_context = LTIContext.query.all()[-1]
+            course = self.data.create_course()
+            lti_context.acj_course_id = course.id
+            db.session.commit()
+
+            # test create instructor via lti session
+            expected = UserFactory.stub(system_role=None)
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
+            self.assert200(rv)
+            self.assertEqual(expected.displayname, rv.json['displayname'])
+
+            user = User.query.get(rv.json['id'])
+            self.assertEqual(SystemRole.instructor, user.system_role)
+
+            # verify enrolled in course
+            self.assertEqual(len(user.user_courses), 1)
+            self.assertEqual(user.user_courses[0].course_id, course.id)
 
         with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
                 user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),

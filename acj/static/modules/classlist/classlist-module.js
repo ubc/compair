@@ -13,6 +13,7 @@ var module = angular.module('ubc.ctlt.acj.classlist',
         'ubc.ctlt.acj.group',
         'ubc.ctlt.acj.toaster',
         'ubc.ctlt.acj.user',
+        'ubc.ctlt.acj.lti',
         'ui.bootstrap',
         'fileSaver'
     ]
@@ -55,20 +56,34 @@ module.factory(
 module.controller(
     'ClassViewController',
     ["$scope", "$log", "$routeParams", "$route", "ClassListResource", "CourseResource",
-             "CourseRole", "GroupResource", "Toaster", "Session", "SaveAs", "$modal",
+             "CourseRole", "GroupResource", "Toaster", "Session", "SaveAs", "LTIResource", "$modal",
     function($scope, $log, $routeParams, $route, ClassListResource, CourseResource,
-             CourseRole, GroupResource, Toaster, Session, SaveAs, $modal)
+             CourseRole, GroupResource, Toaster, Session, SaveAs, LTIResource, $modal)
     {
         $scope.course = {};
         $scope.classlist = [];
         var courseId = $routeParams['courseId'];
         $scope.courseId = courseId;
+        $scope.submitted = false;
+        $scope.lti_membership_enabled = false;
+        $scope.lti_membership_pending = 0;
         Session.getUser().then(function(user) {
             $scope.loggedInUserId = user.id;
         });
         CourseResource.get({'id':courseId},
             function (ret) {
-                $scope.course_name = ret['name'];
+                $scope.course_name = ret.name;
+                if (ret.lti_linked) {
+                    LTIResource.getMembershipStatus({id: courseId},
+                        function(ret) {
+                            $scope.lti_membership_enabled = ret.status.enabled;
+                            $scope.lti_membership_pending = ret.status.pending;
+                        },
+                        function(ret) {
+                            Toaster.reqerror("LTI Course Status Error", ret);
+                        }
+                    );
+                }
             },
             function (ret) {
                 Toaster.reqerror("No Course Found For Course ID "+courseId, ret);
@@ -231,6 +246,21 @@ module.controller(
                     Toaster.reqerror("User Not Removed", ret);
                 }
             )
+        };
+
+        $scope.updateLTIMembership = function() {
+            $scope.submitted = true;
+            LTIResource.updateMembership({id: courseId}, {},
+                function(ret) {
+                    $scope.submitted = false;
+                    // reload view to get new membership status
+                    $route.reload();
+                },
+                function(ret) {
+                    $scope.submitted = false;
+                    Toaster.reqerror("LTI Update Course Membership Error", ret);
+                }
+            );
         };
 
         $scope.export = function() {

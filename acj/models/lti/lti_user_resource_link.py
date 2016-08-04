@@ -18,30 +18,22 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
         nullable=False)
     roles = db.Column(db.String(255), nullable=True)
     lis_result_sourcedid = db.Column(db.String(255), nullable=True)
-    acj_user_course_id = db.Column(db.Integer, db.ForeignKey("user_course.id", ondelete="CASCADE"),
-        nullable=True)
     course_role = db.Column(EnumType(CourseRole, name="course_role"),
         nullable=False)
 
     # relationships
-    # acj_user_course via UserCourse Model
     # lti_user via LTIUser Model
     # lti_resource_link via LTIResourceLink Model
 
     # hyprid and other functions
-    def is_linked_to_user_course(self):
-        return self.acj_user_course_id != None
-
     @classmethod
     def get_by_lti_resource_link_id_and_lti_user_id(cls, lti_resource_link_id, lti_user_id):
-        lti_user = LTIUserResourceLink.query \
+        return LTIUserResourceLink.query \
             .filter_by(
                 lti_resource_link_id=lti_resource_link_id,
                 lti_user_id=lti_user_id
             ) \
             .one_or_none()
-
-        return lti_user
 
     @classmethod
     def get_by_tool_provider(cls, lti_resource_link, lti_user, tool_provider):

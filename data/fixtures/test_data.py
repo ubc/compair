@@ -138,11 +138,13 @@ class LTITestData:
 
         return lti_user.user_id
 
-    def create_resource_link(self, lti_consumer, resource_link_id=None, acj_assignment=None):
+    def create_resource_link(self, lti_consumer, lti_context=None, resource_link_id=None, acj_assignment=None):
         lti_resource_link = LTIResourceLinkFactory(
             lti_consumer=lti_consumer,
             acj_assignment=acj_assignment
         )
+        if lti_context:
+            lti_resource_link.lti_context = lti_context
         if resource_link_id:
             lti_resource_link.resource_link_id = resource_link_id
 
@@ -178,12 +180,11 @@ class LTITestData:
 
         return lti_user
 
-    def create_user_resource_link(self, lti_user, lti_resource_link, course_role=CourseRole.instructor, acj_user_course=None):
+    def create_user_resource_link(self, lti_user, lti_resource_link, course_role=CourseRole.instructor):
         lti_user_resource_link = LTIUserResourceLinkFactory(
             lti_user=lti_user,
             lti_resource_link=lti_resource_link,
-            course_role=course_role,
-            acj_user_course=acj_user_course
+            course_role=course_role
         )
         self.lti_user_resource_links.append(lti_user_resource_link)
 

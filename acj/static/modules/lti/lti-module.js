@@ -27,7 +27,9 @@ module.factory('LTIResource',
     var ret = $resource('/api/lti', {},
         {
             'getStatus': {url: '/api/lti/status'},
-            'linkCourse': {method: 'POST', url: '/api/lti/course/:id/link'}
+            'linkCourse': {method: 'POST', url: '/api/lti/course/:id/link'},
+            'getMembershipStatus': {method: 'GET', url: '/api/lti/course/:id/membership/status'},
+            'updateMembership': {method: 'POST', url: '/api/lti/course/:id/membership'}
         }
     );
     return ret;

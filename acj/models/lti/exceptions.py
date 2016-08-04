@@ -1,0 +1,2 @@
+class NoValidContextsForMembershipException(Exception):
+    pass
