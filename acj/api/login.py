@@ -33,11 +33,11 @@ def login():
             lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
             if lti_context.is_linked_to_course():
                 user_course = UserCourse.query \
-                .filter_by(
-                    user_id=user.id,
-                    course_id=lti_context.acj_course_id
-                ) \
-                .one_or_none()
+                    .filter_by(
+                        user_id=user.id,
+                        course_id=lti_context.acj_course_id
+                    ) \
+                    .one_or_none()
                 if user_course is None:
                     # create new enrollment
                     new_user_course = UserCourse(user_id=user.id, course_id=lti_context.acj_course_id, course_role=lti_user_resource_link.course_role)
