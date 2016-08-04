@@ -227,5 +227,8 @@ def log_events(log):
     from .gradebook import on_gradebook_get
     on_gradebook_get.connect(log)
 
-    from .ltilaunch import on_lti_course_link
+    from .ltilaunch import on_lti_course_link, on_lti_course_membership_update, \
+        on_lti_course_membership_status_get
     on_lti_course_link.connect(log)
+    on_lti_course_membership_update.connect(log)
+    on_lti_course_membership_status_get.connect(log)

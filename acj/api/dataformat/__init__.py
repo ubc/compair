@@ -70,6 +70,7 @@ def get_course(include_details=True):
         'start_date': fields.DateTime,
         'end_date': fields.DateTime,
         'available': fields.Boolean,
+        'lti_linked': fields.Boolean,
         'modified': fields.DateTime,
         'created': fields.DateTime
     }

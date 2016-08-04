@@ -49,6 +49,8 @@ def upgrade():
         sa.Column('context_id', sa.String(length=255), nullable=False),
         sa.Column('context_type', sa.String(length=255), nullable=True),
         sa.Column('context_title', sa.String(length=255), nullable=True),
+        sa.Column('ext_ims_lis_memberships_id', sa.String(length=255), nullable=True),
+        sa.Column('ext_ims_lis_memberships_url', sa.Text(), nullable=True),
         sa.Column('acj_course_id', sa.Integer(), nullable=True),
         sa.Column('modified_user_id', sa.Integer(), nullable=True),
         sa.Column('modified', sa.DateTime(), nullable=False),
@@ -93,11 +95,10 @@ def upgrade():
     op.create_table('lti_resource_link',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('lti_consumer_id', sa.Integer(), nullable=False),
+        sa.Column('lti_context_id', sa.Integer(), nullable=True),
         sa.Column('resource_link_id', sa.String(length=255), nullable=False),
         sa.Column('resource_link_title', sa.String(length=255), nullable=True),
         sa.Column('launch_presentation_return_url', sa.Text(), nullable=True),
-        sa.Column('ext_ims_lis_memberships_id', sa.String(length=255), nullable=True),
-        sa.Column('ext_ims_lis_memberships_url', sa.Text(), nullable=True),
         sa.Column('custom_param_assignment_id', sa.String(length=255), nullable=True),
         sa.Column('acj_assignment_id', sa.Integer(), nullable=True),
         sa.Column('modified_user_id', sa.Integer(), nullable=True),
@@ -107,9 +108,32 @@ def upgrade():
         sa.ForeignKeyConstraint(['acj_assignment_id'], ['assignment.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['created_user_id'], ['user.id'], ondelete='SET NULL'),
         sa.ForeignKeyConstraint(['lti_consumer_id'], ['lti_consumer.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['lti_context_id'], ['lti_context.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['modified_user_id'], ['user.id'], ondelete='SET NULL'),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('lti_consumer_id', 'resource_link_id', name='_unique_lti_consumer_and_lti_resource_link'),
+        mysql_charset='utf8',
+        mysql_collate='utf8_unicode_ci',
+        mysql_engine='InnoDB'
+    )
+
+    op.create_table('lti_membership',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('lti_context_id', sa.Integer(), nullable=False),
+        sa.Column('lti_user_id', sa.Integer(), nullable=False),
+        sa.Column('roles', sa.String(length=255), nullable=True),
+        sa.Column('lis_result_sourcedid', sa.String(length=255), nullable=True),
+        sa.Column('course_role', EnumType(CourseRole, name="course_role"), nullable=False),
+        sa.Column('modified_user_id', sa.Integer(), nullable=True),
+        sa.Column('modified', sa.DateTime(), nullable=False),
+        sa.Column('created_user_id', sa.Integer(), nullable=True),
+        sa.Column('created', sa.DateTime(), nullable=False),
+        sa.ForeignKeyConstraint(['created_user_id'], ['user.id'], ondelete='SET NULL'),
+        sa.ForeignKeyConstraint(['lti_context_id'], ['lti_context.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['lti_user_id'], ['lti_user.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['modified_user_id'], ['user.id'], ondelete='SET NULL'),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('lti_context_id', 'lti_user_id', name='_unique_lti_context_and_lti_user'),
         mysql_charset='utf8',
         mysql_collate='utf8_unicode_ci',
         mysql_engine='InnoDB'
@@ -121,13 +145,11 @@ def upgrade():
         sa.Column('lti_user_id', sa.Integer(), nullable=False),
         sa.Column('roles', sa.String(length=255), nullable=True),
         sa.Column('lis_result_sourcedid', sa.String(length=255), nullable=True),
-        sa.Column('acj_user_course_id', sa.Integer(), nullable=True),
         sa.Column('course_role', EnumType(CourseRole, name="course_role"), nullable=False),
         sa.Column('modified_user_id', sa.Integer(), nullable=True),
         sa.Column('modified', sa.DateTime(), nullable=False),
         sa.Column('created_user_id', sa.Integer(), nullable=True),
         sa.Column('created', sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(['acj_user_course_id'], ['user_course.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['created_user_id'], ['user.id'], ondelete='SET NULL'),
         sa.ForeignKeyConstraint(['lti_resource_link_id'], ['lti_resource_link.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['lti_user_id'], ['lti_user.id'], ondelete='CASCADE'),
@@ -141,6 +163,7 @@ def upgrade():
 
 def downgrade():
     op.drop_table('lti_user_resource_link')
+    op.drop_table('lti_membership')
     op.drop_table('lti_resource_link')
     op.drop_table('lti_user')
     op.drop_table('lti_context')

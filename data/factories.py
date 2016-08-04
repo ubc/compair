@@ -9,7 +9,7 @@ from acj.core import db
 from acj.models import Course, User, CourseRole, SystemRole, Criterion, \
     UserCourse, AssignmentCriterion, Assignment, Score, Answer, AssignmentComment, \
     AnswerComment, Comparison, AnswerCommentType, ComparisonExample, \
-    LTIConsumer, LTIContext, LTIResourceLink, LTIUser, LTIUserResourceLink
+    LTIConsumer, LTIContext, LTIResourceLink, LTIMembership, LTIUser, LTIUserResourceLink
 
 from oauthlib.common import generate_token
 
@@ -179,11 +179,20 @@ class LTIUserFactory(SQLAlchemyModelFactory):
     user_id = factory.Sequence(lambda n: u'unique_user_id_%d' % n)
     system_role = SystemRole.student
 
+class LTIMembershipFactory(SQLAlchemyModelFactory):
+    FACTORY_FOR = LTIMembership
+    FACTORY_SESSION = db.session
+
+    lti_context_id = 1
+    lti_user_id = 1
+    roles = "Student"
+    course_role = CourseRole.student
+
 class LTIUserResourceLinkFactory(SQLAlchemyModelFactory):
     FACTORY_FOR = LTIUserResourceLink
     FACTORY_SESSION = db.session
 
     lti_resource_link_id = 1
-    lti_user_id = factory.Sequence(lambda n: u'unique_user_id_%d' % n)
+    lti_user_id = 1
     roles = "Student"
     course_role = CourseRole.student
