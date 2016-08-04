@@ -42,6 +42,8 @@ def login():
                     # create new enrollment
                     new_user_course = UserCourse(user_id=user.id, course_id=lti_context.acj_course_id, course_role=lti_user_resource_link.course_role)
                     db.session.add(new_user_course)
+                else:
+                    user_course.course_role=lti_user_resource_link.course_role
         db.session.commit()
 
         return jsonify({"userid": user.id, "permissions": permissions})

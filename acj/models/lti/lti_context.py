@@ -16,12 +16,16 @@ class LTIContext(DefaultTableMixin, WriteTrackingMixin):
     context_id = db.Column(db.String(255), nullable=False)
     context_type = db.Column(db.String(255), nullable=True)
     context_title = db.Column(db.String(255), nullable=True)
+    ext_ims_lis_memberships_id = db.Column(db.String(255), nullable=True)
+    ext_ims_lis_memberships_url = db.Column(db.Text, nullable=True)
     acj_course_id = db.Column(db.Integer, db.ForeignKey("course.id", ondelete="CASCADE"),
         nullable=True)
 
     # relationships
     # acj_course via Course Model
     # lti_consumer via LTIConsumer Model
+    lti_memberships = db.relationship("LTIMembership", backref="lti_context", lazy="dynamic")
+    lti_resource_links = db.relationship("LTIResourceLink", backref="lti_context")
 
     # hyprid and other functions
     def is_linked_to_course(self):
@@ -29,14 +33,12 @@ class LTIContext(DefaultTableMixin, WriteTrackingMixin):
 
     @classmethod
     def get_by_lti_consumer_id_and_context_id(cls, lti_consumer_id, context_id):
-        lti_context = LTIContext.query \
+        return LTIContext.query \
             .filter_by(
                 lti_consumer_id=lti_consumer_id,
                 context_id=context_id
             ) \
             .one_or_none()
-
-        return lti_context
 
     @classmethod
     def get_by_tool_provider(cls, lti_consumer, tool_provider):
@@ -55,6 +57,8 @@ class LTIContext(DefaultTableMixin, WriteTrackingMixin):
 
         lti_context.context_type = tool_provider.context_type
         lti_context.context_title = tool_provider.context_title
+        lti_context.ext_ims_lis_memberships_id = tool_provider.ext_ims_lis_memberships_id
+        lti_context.ext_ims_lis_memberships_url = tool_provider.ext_ims_lis_memberships_url
 
         db.session.commit()
 
