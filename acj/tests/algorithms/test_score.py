@@ -247,7 +247,3 @@ class TestScore(unittest.TestCase):
         self.assertEqual(key3_results.opponents, 2)
         self.assertEqual(key3_results.wins, 0)
         self.assertEqual(key3_results.loses, 2)
-
-
-if __name__ == '__main__':
-    unittest.main()

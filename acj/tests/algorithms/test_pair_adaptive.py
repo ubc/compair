@@ -218,8 +218,3 @@ class TestPairAdaptive(unittest.TestCase):
         self.assertEqual(results.key1, 1)
         # object 4 should be selected as 0.4 is the closest value to 0.5
         self.assertEqual(results.key2, 4)
-
-
-
-if __name__ == '__main__':
-    unittest.main()

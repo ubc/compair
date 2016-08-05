@@ -1,4 +1,4 @@
-from pair_generator import RandomPairGenerator
+from .pair_generator import RandomPairGenerator
 
 def generate_pair(scored_objects=[], comparison_pairs=[], log=None):
     pair_algorithm = RandomPairGenerator()

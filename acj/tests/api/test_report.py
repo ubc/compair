@@ -92,7 +92,7 @@ class ReportAPITest(ACJAPITestCase):
             self.files_to_cleanup.append(file_name)
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
-            with open(tmp_name, 'rb') as csvfile:
+            with open(tmp_name, 'rt') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
 
                 heading1 = next(reader)
@@ -114,7 +114,7 @@ class ReportAPITest(ACJAPITestCase):
             self.files_to_cleanup.append(file_name)
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
-            with open(tmp_name, 'rb') as csvfile:
+            with open(tmp_name, 'rt') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
 
                 heading1 = next(reader)
@@ -136,7 +136,7 @@ class ReportAPITest(ACJAPITestCase):
             self.files_to_cleanup.append(file_name)
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
-            with open(tmp_name, 'rb') as csvfile:
+            with open(tmp_name, 'rt') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
 
                 heading1 = next(reader)
@@ -162,7 +162,7 @@ class ReportAPITest(ACJAPITestCase):
             self.files_to_cleanup.append(file_name)
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
-            with open(tmp_name, 'rb') as csvfile:
+            with open(tmp_name, 'rt') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
 
                 heading1 = next(reader)
@@ -193,7 +193,7 @@ class ReportAPITest(ACJAPITestCase):
             self.files_to_cleanup.append(file_name)
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
-            with open(tmp_name, 'rb') as csvfile:
+            with open(tmp_name, 'rt') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
 
                 heading = next(reader)
@@ -222,7 +222,7 @@ class ReportAPITest(ACJAPITestCase):
             self.files_to_cleanup.append(file_name)
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
-            with open(tmp_name, 'rb') as csvfile:
+            with open(tmp_name, 'rt') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
 
                 heading = next(reader)
@@ -244,7 +244,7 @@ class ReportAPITest(ACJAPITestCase):
             self.files_to_cleanup.append(file_name)
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
-            with open(tmp_name, 'rb') as csvfile:
+            with open(tmp_name, 'rt') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
 
                 heading = next(reader)
@@ -278,7 +278,7 @@ class ReportAPITest(ACJAPITestCase):
             self.files_to_cleanup.append(file_name)
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
-            with open(tmp_name, 'rb') as csvfile:
+            with open(tmp_name, 'rt') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
 
                 heading = next(reader)

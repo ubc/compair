@@ -13,31 +13,22 @@ var setupStudentStepDefinitionsWrapper = function () {
     var pageFactory = new PageFactory();
     var loginDialog = pageFactory.createPage('login');
 
-    this.Given("I'm a Student", function (done) {
-        var fixture  = require('../../fixtures/student/default_fixture.js');
-        backEndMocks.build(browser, fixture);
-
-        loginDialog.get('/');
-        loginDialog.login(fixture.loginDetails);
-        done();
+    this.Given("I'm a Student", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'student/default_fixture';
+        backEndMocks.setStorageFixture(browser, fixtureName);
+        return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
     });
 
-    this.Given("I'm a Student with courses", function (done) {
-        var fixture  = require('../../fixtures/student/has_courses_fixture.js');
-        backEndMocks.build(browser, fixture);
-
-        loginDialog.get('/');
-        loginDialog.login(fixture.loginDetails);
-        done();
+    this.Given("I'm a Student with courses", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'student/has_courses_fixture';
+        backEndMocks.setStorageFixture(browser, fixtureName);
+        return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
     });
 
-    this.Given("I'm a Student with assignments", function (done) {
-        var fixture  = require('../../fixtures/student/has_assignments_fixture.js');
-        backEndMocks.build(browser, fixture);
-
-        loginDialog.get('/');
-        loginDialog.login(fixture.loginDetails);
-        done();
+    this.Given("I'm a Student with assignments", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'student/has_assignments_fixture';
+        backEndMocks.setStorageFixture(browser, fixtureName);
+        return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
     });
 
 };

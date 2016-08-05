@@ -1,4 +1,4 @@
-from score_algorithm import TrueSkillAlgorithmWrapper
+from .score_algorithm import TrueSkillAlgorithmWrapper
 
 def calculate_score(comparison_pairs=[], log=None):
     score_algorithm = TrueSkillAlgorithmWrapper()

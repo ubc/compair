@@ -7,7 +7,7 @@ chai.use(chaiAsPromised);
 var expect = chai.expect;
 
 var createAssignmentStepDefinitionsWrapper = function () {
-    this.Given(/^I fill in the assignment description with "([^"]*)"$/, function(text, done) {
+    this.Given("I fill in the assignment description with '$text'", function(text) {
         //load the ckeditor iframe
         browser.wait(browser.isElementPresent(element(by.css("#cke_assignmentDescription iframe"))), 1000);
         browser.driver.switchTo().frame(element(by.css("#cke_assignmentDescription iframe")).getWebElement());
@@ -15,7 +15,7 @@ var createAssignmentStepDefinitionsWrapper = function () {
         browser.driver.executeScript("document.body.innerHTML = '';")
         browser.driver.findElement(by.css("body")).sendKeys(text);
         browser.driver.switchTo().defaultContent();
-        done();
+        return element(by.css("body")).click();
     });
 };
 module.exports = createAssignmentStepDefinitionsWrapper;

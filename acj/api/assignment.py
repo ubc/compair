@@ -119,7 +119,7 @@ class AssignmentIdAPI(Resource):
         check_valid_pairing_algorithm(pairing_algorithm)
         assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
         assignment.rank_display_limit = params.get("rank_display_limit", None)
-        if assignment.rank_display_limit <= 0:
+        if assignment.rank_display_limit != None and assignment.rank_display_limit <= 0:
             assignment.rank_display_limit = None
 
         criterion_ids = [c['id'] for c in params.criteria]
@@ -242,7 +242,7 @@ class AssignmentRootAPI(Resource):
         new_assignment.answer_start = dateutil.parser.parse(params.get('answer_start'))
         new_assignment.answer_end = dateutil.parser.parse(params.get('answer_end'))
         new_assignment.rank_display_limit = params.get("rank_display_limit", None)
-        if new_assignment.rank_display_limit <= 0:
+        if new_assignment.rank_display_limit != None and new_assignment.rank_display_limit <= 0:
             new_assignment.rank_display_limit = None
 
         new_assignment.compare_start = params.get('compare_start', None)

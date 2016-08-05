@@ -119,7 +119,7 @@ class ReportRootAPI(Resource):
         name = name_generator(course, report_type, group_name)
         tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], name)
 
-        report = open(tmp_name, 'wb')
+        report = open(tmp_name, 'wt')
         out = csv.writer(report)
         for t in titles:
             out.writerow(t)
@@ -205,7 +205,7 @@ def participation_stat_report(course_id, assignments, group_name, overall):
             temp.extend([submitted, answer_id])
 
             evaluation_submitted = evaluations[user.id] if user.id in evaluations else 0
-            evaluation_submitted /= criteria_count if criteria_count else 0
+            evaluation_submitted = int(evaluation_submitted / criteria_count) if criteria_count else 0
             evaluation_req_met = 'Yes' if evaluation_submitted >= assignment.total_comparisons_required else 'No'
             total[user.id]['total_evaluations'] += evaluation_submitted
             temp.extend([evaluation_submitted, assignment.total_comparisons_required, evaluation_req_met])

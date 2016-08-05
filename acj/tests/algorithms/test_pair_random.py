@@ -218,8 +218,3 @@ class TestPairAdaptive(unittest.TestCase):
         # object 3 should be selected since random shuffle is disabled
         # and object 2 has already been compared with object 1
         self.assertEqual(results.key2, 3)
-
-
-
-if __name__ == '__main__':
-    unittest.main()

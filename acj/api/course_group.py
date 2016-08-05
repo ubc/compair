@@ -153,7 +153,7 @@ class GroupRootAPI(Resource):
             tmpName = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
             file.save(tmpName)
             current_app.logger.debug("Import groups for course "+str(course_id)+" with "+ filename)
-            with open(tmpName, 'rU') as csvfile:
+            with open(tmpName, 'rt') as csvfile:
                 spamreader = csv.reader(csvfile)
                 members = []
                 for row in spamreader:

@@ -22,6 +22,11 @@ deps:
 	npm install
 	node_modules/gulp/bin/gulp.js
 
+deps3:
+	pip3 install -r requirements.txt
+	npm install
+	node_modules/gulp/bin/gulp.js
+
 clean:
 	find . -name '*.pyc' -exec rm -f {} \;
 	find . -name '*.pyo' -exec rm -f {} \;
@@ -41,6 +46,9 @@ testf:
 testb:
 	python -m unittest discover -s acj/tests/
 
+testb3:
+	python3 -m unittest discover -s acj/tests/
+
 tdd:
 	node_modules/karma/bin/karma start acj/static/test/config/karma.conf.js
 
@@ -49,6 +57,9 @@ test: testf testb
 testci:
 	node_modules/karma/bin/karma start acj/static/test/config/karma.conf.js --single-run --browsers PhantomJS
 	python -m unittest discover -s acj/tests/
+
+testsauce:
+	node_modules/.bin/gulp test:acceptance:sauce
 
 run:
 	python manage.py runserver -h 0.0.0.0

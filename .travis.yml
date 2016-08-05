@@ -17,11 +17,11 @@ env:
 matrix:
   include:
     - python: "3.4"
-      env: INTEGRATION_TEST=true TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=50 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
+      env: INTEGRATION_TEST=true TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=52 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
     - python: "3.4"
       env: INTEGRATION_TEST=true TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=44 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
   allow_failures:
-      - env: INTEGRATION_TEST=true TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=50 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
+      - env: INTEGRATION_TEST=true TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=52 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
       - env: INTEGRATION_TEST=true TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=44 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
 
 addons:
@@ -29,6 +29,10 @@ addons:
 
 before_script:
   - sh -c "if [ '$DB' = 'mysql' ]; then mysql -e 'create database IF NOT EXISTS acj;'; fi"
+
+before_install:
+ - nvm install 6.4
+ - if [ "$INTEGRATION_TEST" != "true" ]; then unset SAUCE_USERNAME && unset SAUCE_ACCESS_KEY; fi
 
 # command to install dependencies
 install:

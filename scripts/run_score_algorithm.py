@@ -49,7 +49,7 @@ for package_name in packages:
 
         out.writerow(["id", "score", "rounds", "wins", "normal score"])
 
-        for key, result in results.iteritems():
+        for key, result in results.items():
             out.writerow([result.key, result.score,
                 result.rounds, result.wins, ""])
 

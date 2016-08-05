@@ -64,6 +64,3 @@ class TestUtils(ACJTestCase):
         score = Score(answer_id=1, criterion_id=1, id=2)
         scores = update_scores([score], 1, criterion_comparison_results)
         self.assertEqual(len(scores), 4)
-
-if __name__ == '__main__':
-    unittest.main()

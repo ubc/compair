@@ -69,7 +69,7 @@ storage.groups.push(group1);
 var group2 = "Second Group";
 storage.groups.push(group2);
 var group3 = "Third Group";
-storage.groups.push(group2);
+storage.groups.push(group3);
 
 
 // user_courses

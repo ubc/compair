@@ -3,30 +3,28 @@ Feature: Create User
 
   Scenario: Loading add user page by Create User button as admin
     Given I'm a System Administrator
-    And I'm on "home" page
-    When I select "Create User" button
-    Then I should be on the "create user" page
+    And I'm on 'home' page
+    When I select 'Create User' button
+    Then I should be on the 'create user' page
 
   Scenario: Loading add user page by Create User button as instructor
     Given I'm an Instructor
-    And I'm on "home" page
-    When I select "Create User" button
-    Then I should be on the "create user" page
+    And I'm on 'home' page
+    When I select 'Create User' button
+    Then I should be on the 'create user' page
 
   Scenario: Creating a user as instructor
     Given I'm an Instructor
-    And I'm on "create user" page
-    And I fill in:
-      | element                     | content           |
-      | user.system_role            | Student           |
-      | user.username               | student2          |
-      | user.verifyPassword         | password          |
-      | user.password               | password          |
-      | user.displayname            | Second Student    |
-      | user.firstname              | Second            |
-      | user.lastname               | Student           |
-    When I submit form with "Save" button
-    Then I should be on the "profile" page
-    And I should see "Second Student's Profile" in "h1" on the page
+    And I'm on 'create user' page
+    When I fill form item 'user.system_role' in with 'Student'
+    And I fill form item 'user.username' in with 'student2'
+    And I fill form item 'user.verifyPassword' in with 'password'
+    And I fill form item 'user.password' in with 'password'
+    And I fill form item 'user.displayname' in with 'Second Student'
+    And I fill form item 'user.firstname' in with 'Second'
+    And I fill form item 'user.lastname' in with 'Student'
+    And I submit form with 'Save' button
+    Then I should be on the 'profile' page
+    And I should see 'Second Student's Profile' in 'h1' on the page
 
 

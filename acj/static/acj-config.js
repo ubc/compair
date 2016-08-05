@@ -31,19 +31,21 @@ var myApp = angular.module('myApp', [
 myApp.factory('defaultErrorHandlerInterceptor', ['$q', '$log', 'Toaster', function($q, $log, Toaster) {
     return {
         'responseError': function(rejection) {
-            $log.error(rejection.statusText);
             switch (rejection.status) {
                 case 400:
                 case 409:
+                    $log.error(rejection.statusText);
                     Toaster.warning(rejection.statusText, rejection.data.error);
                     break;
                 case 401:
                     // session interceptor will handle this
                     break;
                 case 403:
+                    $log.error(rejection.statusText);
                     Toaster.error(rejection.statusText, "Sorry, you don't have permission for this action.");
                     break;
                 default:
+                    $log.error(rejection.statusText);
                     // TODO Tell them what support to contact
                     Toaster.error(rejection.statusText, "Unable to connect. This might be a server issue or your connection might be down. Please contact support if the problem continues.");
 

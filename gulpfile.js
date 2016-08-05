@@ -7,14 +7,15 @@ var gulp = require('gulp'),
     htmlReplace = require('gulp-html-replace'),
     inject = require('gulp-inject'),
     mainBowerFiles = require('main-bower-files'),
-    minifyCss = require('gulp-minify-css'),
+    cleanCss = require('gulp-clean-css'),
     rev = require('gulp-rev'),
     Server = require('karma').Server,
     protractor = require('gulp-protractor').protractor,
     webdriver_standalone = require('gulp-protractor').webdriver_standalone,
     webdriver_update = require('gulp-protractor').webdriver_update,
     exec = require('child_process').exec,
-    connect = require('gulp-connect');
+    connect = require('gulp-connect'),
+    sauceConnectLauncher = require('sauce-connect-launcher');
 
 var cssFilename = 'acj.css',
     jsLibsFilename = 'bowerJsLibs.js',
@@ -43,7 +44,7 @@ gulp.task('less', function () {
 
 gulp.task('prod_compile_minify_css', ['less'], function() {
     return gulp.src('./acj/static/build/' + cssFilename)
-        .pipe(minifyCss())
+        .pipe(cleanCss())
         .pipe(gulp.dest('./acj/static/build'));
 });
 gulp.task('prod_minify_js_libs', function() {
@@ -153,6 +154,25 @@ gulp.task('test:ci', ['server:frontend'], function (done) {
 
 
 /**
+ * Run acceptance tests
+ */
+gulp.task('test:acceptance:sauce', ['server:frontend', 'sauce:connect'], function(done) {
+    gulp.src(["acj/static/test/features/*.feature"])
+        .pipe(protractor({
+            configFile: "acj/static/test/config/protractor_saucelab_local.js",
+            args: ['--baseUrl', 'http://127.0.0.1:8000']
+        }))
+        .on('error', function (e) {
+            throw e
+        })
+        .on('end', function() {
+            connect.serverClose();
+            sauceConnectLauncher.clean();
+            done();
+        });
+});
+
+/**
  * Run backend server
  */
 gulp.task('server:backend', function() {
@@ -197,6 +217,25 @@ gulp.task('server:frontend', function() {
         }
     });
 });
+
+/**
+ * Run sauce connect
+ */
+gulp.task('sauce:connect', function(done) {
+    // auto kills on process end
+    sauceConnectLauncher({
+        username: process.env.SAUCE_USERNAME,
+        accessKey: process.env.SAUCE_ACCESS_KEY,
+        verbose: true,
+    }, function (err, sauceConnectProcess) {
+        if (err) {
+            console.error(err.message);
+            return;
+        }
+        done();
+    });
+});
+
 
 
 /**

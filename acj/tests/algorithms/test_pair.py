@@ -63,7 +63,3 @@ class TestPair(unittest.TestCase):
         self.assertEqual(min_key, 3)
         self.assertEqual(max_key, 4)
         self.assertEqual(results.winning_key, None)
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -1,4 +1,4 @@
-from score_algorithm import ComparativeJudgementScoreAlgorithm
+from .score_algorithm import ComparativeJudgementScoreAlgorithm
 
 def calculate_score(comparison_pairs=[], log=None):
     score_algorithm = ComparativeJudgementScoreAlgorithm()

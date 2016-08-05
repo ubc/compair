@@ -32,7 +32,7 @@ def upgrade():
             batch_op.drop_constraint('displayname', type_='unique')
             batch_op.alter_column('displayname', nullable=False, existing_type=sa.String(length=255))
     except ValueError:
-        logging.warn('Drop unique constraint is not support for SQLite, dropping uq_Users_displayname ignored!')
+        logging.warning('Drop unique constraint is not support for SQLite, dropping uq_Users_displayname ignored!')
 
 
 def downgrade():

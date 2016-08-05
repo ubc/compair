@@ -393,7 +393,7 @@ class AnswerComparisonsAPI(Resource):
                 user_answers.add(answer2_id)
 
             conditions = []
-            for user_id, answer_set in user_comparioson_answers.iteritems():
+            for user_id, answer_set in user_comparioson_answers.items():
                 conditions.append(and_(
                         AnswerComment.user_id == user_id,
                         AnswerComment.comment_type == AnswerCommentType.evaluation,

@@ -30,7 +30,7 @@ def upgrade():
                 table_args=(UniqueConstraint('name'))) as batch_op:
             batch_op.drop_constraint('name', type_='unique')
     except ValueError:
-        logging.warn('Drop unique constraint is not support for SQLite, dropping uq_course_name ignored!')
+        logging.warning('Drop unique constraint is not support for SQLite, dropping uq_course_name ignored!')
 
 def downgrade():
     with op.batch_alter_table('course', naming_convention=convention,

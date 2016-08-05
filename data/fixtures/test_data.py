@@ -30,6 +30,7 @@ class BasicTestData:
         self.enrol_instructor(self.unauthorized_instructor, self.secondary_course)
         self.enrol_student(self.unauthorized_student, self.secondary_course)
         self.unenrol(self.dropped_instructor, self.main_course)
+        db.session.commit()
 
     def create_course(self):
         course = CourseFactory()
@@ -68,7 +69,7 @@ class BasicTestData:
         self.enrol_user(user, course, CourseRole.dropped)
 
     def enrol_user(self, user, course, type):
-        user_courses = UserCourseFactory(course_id=course.id, user_id=user.id,
+        user_courses = UserCourseFactory(course=course, user=user,
                                             course_role=type)
         db.session.commit()
         return user_courses
@@ -110,6 +111,7 @@ class SimpleAssignmentTestData(BasicTestData):
                                                                     self.get_authorized_instructor()))
         self.assignments.append(self.create_assignment_in_answer_period(self.get_course(), \
                                                                     self.get_authorized_instructor()))
+        db.session.commit()
 
     def create_assignment_in_comparison_period(self, course, author):
         answer_start = datetime.datetime.now() - datetime.timedelta(days=2)
@@ -123,12 +125,12 @@ class SimpleAssignmentTestData(BasicTestData):
 
     def create_assignment(self, course, author, answer_start, answer_end):
         assignment = AssignmentFactory(
-            course_id=course.id,
-            user_id=author.id,
+            course=course,
+            user=author,
             answer_start=answer_start,
             answer_end=answer_end
         )
-        disabled_criterion = CriterionFactory(user_id=author.id, default=False, active=False)
+        disabled_criterion = CriterionFactory(user=author, default=False, active=False)
         AssignmentCriterionFactory(criterion=DefaultFixture.DEFAULT_CRITERION, assignment=assignment)
         AssignmentCriterionFactory(criterion=disabled_criterion, assignment=assignment, active=False)
         db.session.commit()
@@ -189,17 +191,18 @@ class SimpleAnswersTestData(SimpleAssignmentTestData):
                 answer = self.create_answer(assignment, self.extra_student[num_answer+i], draft=True)
                 draft_answers_for_assignment.append(answer)
             self.draft_answers += draft_answers_for_assignment
+        db.session.commit()
 
     def create_answer(self, assignment, author, draft=False):
         answer = AnswerFactory(
-            assignment_id=assignment.id,
-            user_id=author.id,
+            assignment=assignment,
+            user=author,
             draft=draft
         )
         ScoreFactory(
-            assignment_id=assignment.id,
+            assignment=assignment,
             answer=answer,
-            criterion_id=assignment.criteria[0].id
+            criterion=assignment.criteria[0]
         )
         db.session.commit()
         return answer
@@ -305,6 +308,7 @@ class ComparisonTestData(CriterionTestData):
         self.answer_period_assignment = self.create_assignment_in_answer_period(
             self.get_course(), self.get_authorized_ta())
         self.assignments.append(self.answer_period_assignment)
+        db.session.commit()
 
     def create_comparison_example(self, assignment, answer1, answer2):
         answer1.practice = True
@@ -355,6 +359,7 @@ class TestFixture:
         self.unauthorized_student = UserFactory(system_role=SystemRole.student)
         self.dropped_instructor = UserFactory(system_role=SystemRole.instructor)
         self.draft_student = None
+        db.session.commit()
 
     def add_course(self, num_students=5, num_assignments=1, num_groups=0, num_answers='#', with_draft_student=False, with_comparisons=False):
         self.course = CourseFactory()
@@ -402,7 +407,7 @@ class TestFixture:
                     ScoreFactory(
                         assignment=assignment,
                         answer=answer,
-                        criterion_id=assignment.criteria[0].id,
+                        criterion=assignment.criteria[0],
                         score=random.random() * 5
                     )
                 db.session.commit()
@@ -451,7 +456,7 @@ class TestFixture:
                 days=2) if is_answer_period_end else datetime.datetime.now() + datetime.timedelta(days=7)
             assignment = AssignmentFactory(course=self.course, answer_end=answer_end)
             AssignmentCriterionFactory(criterion=DefaultFixture.DEFAULT_CRITERION, assignment=assignment)
-            disabled_criterion = CriterionFactory(user_id=self.instructor.id, default=False, active=False)
+            disabled_criterion = CriterionFactory(user=self.instructor, default=False, active=False)
             AssignmentCriterionFactory(criterion=disabled_criterion, assignment=assignment, active=False)
             self.assignments.append(assignment)
         db.session.commit()
