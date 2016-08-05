@@ -5,9 +5,9 @@
         </a>
     </div>
     <h1><i class="fa fa-user"></i> {{user.displayname}}'s Profile</h1>
-    <p ng-if="!canCreateUser && ownProfile" class="intro-text">Instructors can always see your profile information if you are enrolled in their course. Students can only see your display name, icon, and the last time you logged in. To make yourself anonymous to other students, click the "Edit" button and change what appears in the "Display Name" field.</p>
-    <p ng-if="canCreateUser" class="intro-text">Instructors can always see student profile information if the student enrolls in the course that instructor is teaching. Students can only see each other's display name, icon, and the last time a student logged in. To ensure student anonymity, have your students check what appears as their display name. To edit student information in bulk, use the "Manage Users" option found on the course page. </p>
-    <p ng-if="canCreateUser" class="intro-text">Only instructors can use personalized icons which can be manage at <a href="https://en.gravatar.com/">Gravatar</a>.</p>
+    <p ng-if="!canCreateUser && ownProfile" class="intro-text">Instructors can always see your complete profile information, if you are enrolled in their course. Students can only see your display name, anonymous icon, and the last time you logged in. To make yourself fully anonymous to other students, click the "Edit" button and change what appears in the "Display Name" field.</p>
+    <p ng-if="canCreateUser" class="intro-text">Instructors can always see complete student profile information, if the student enrolls in a course that instructor is teaching. Students can only see each other's display name, anonymous icon, and the last time a student logged in. To ensure student anonymity, have your students check what appears as their display name. (To edit student information in bulk, use the "Manage Users" option found on the course page.)</p>
+    <p ng-if="canCreateUser && ownProfile" class="intro-text">Instructors may use personalized icons, which can be added and managed through <a href="https://en.gravatar.com/">Gravatar</a>.</p>
     <hr>
     <div class="col-md-4 gravatar-img">
         <a ng-if="canCreateUser" href="https://en.gravatar.com/" title="Add or edit your user image with Gravatar">
