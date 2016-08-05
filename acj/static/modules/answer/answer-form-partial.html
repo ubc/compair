@@ -1,4 +1,4 @@
-<p class="intro-text">Please note <strong>answers are not automatically saved</strong> as you type.</p>
+<p class="intro-text">Please note <strong>answers are not automatically saved</strong> as you type. However, you may manually save a draft of your answer below.</p>
 
 <form class="form" name="answerForm" ng-submit="answerSubmit()" novalidate confirm-form-exit form-type="answer">
     <fieldset>
@@ -16,7 +16,7 @@
                 <span title="Official time remaining until deadline" class="bg-danger alert text-danger">{{minutes}} minutes {{seconds}} seconds left</span>
             </timer>
             <br /><br />
-            <span class="h4">(Answer must be saved by deadline to be accepted)</span>
+            <span class="h4">(Answer must be submitted by deadline to be accepted)</span>
         </div>
 
         <div class="form-group" ng-if="canManageAssignment && showUserList">
@@ -64,17 +64,14 @@
             </textarea>
         </div>
     </fieldset>
-    <div class="row" ng-show="answer.draft">
-        <div class="col-md-3 col-md-offset-3 col-xs-6">
-            <input type="submit" class="btn btn-success btn-lg center-block" value="Save Draft"
-                ng-click="answer.draft = true"
-                ng-disabled="submitted || (uploader.queue.length && !uploader.queue[0].isSuccess)" />
-        </div>
-        <div class="col-md-3 col-xs-6">
-            <input type="submit" class="btn btn-success btn-lg center-block" value="Submit Answer"
-                ng-click="answer.draft = false"
-                ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess)" />
-        </div>
+    <div class="text-center" ng-show="answer.draft">
+        <input type="submit" class="btn btn-default btn-lg" value="Save Draft"
+		    ng-click="answer.draft = true"
+		    ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess)" />
+		&nbsp; &nbsp;
+		<input type="submit" class="btn btn-success btn-lg" value="Submit"
+            ng-click="answer.draft = false"
+            ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess)" />
     </div>
     <div ng-show="!answer.draft">
         <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
