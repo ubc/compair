@@ -65,6 +65,30 @@ module.factory('LTI',
                 $cookies.putObject('current.lti.status', scope._lti_status);
                 return scope._lti_status;
             });
+        },
+        isLTISession: function() {
+            this._check_cookies();
+            return this._lti_status.valid
+        },
+        getDisplayName: function() {
+            this._check_cookies();
+            return this._lti_status.user.displayname
+        },
+        getFirstName: function() {
+            this._check_cookies();
+            return this._lti_status.user.firstname
+        },
+        getLastName: function() {
+            this._check_cookies();
+            return this._lti_status.user.lastname
+        },
+        getEmail: function() {
+            this._check_cookies();
+            return this._lti_status.user.email
+        },
+        getCourseName: function() {
+            this._check_cookies();
+            return this._lti_status.course.name
         }
     };
 }]);
