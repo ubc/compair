@@ -174,16 +174,17 @@ module.controller(
 module.controller(
     'CourseSelectModalController',
     ["$rootScope", "$scope", "$modalInstance",
-     "Session", "Authorize", "CourseResource", "Toaster", "UserResource",
+     "Session", "Authorize", "CourseResource", "Toaster", "UserResource", "LTI",
     function ($rootScope, $scope, $modalInstance,
-              Session, Authorize, CourseResource, Toaster, UserResource) {
+              Session, Authorize, CourseResource, Toaster, UserResource, LTI) {
 
         $scope.courses = [];
         $scope.submitted = false;
 
         $scope.showDuplicateForm = false;
         $scope.course = {
-            year: new Date().getFullYear()
+            year: new Date().getFullYear(),
+            name: LTI.getCourseName()
         };
         $scope.originalCourse = {};
         $scope.duplicateCourse = {};

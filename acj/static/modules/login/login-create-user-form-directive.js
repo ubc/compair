@@ -6,9 +6,9 @@
 
         .directive('loginCreateUserForm',
             ['$route', '$log', 'Session', 'UserResource', 'SystemRole', 'Toaster',
-             'AuthenticationService',
+             'AuthenticationService', 'LTI',
             function ($route, $log, Session, UserResource, SystemRole, Toaster,
-                      AuthenticationService) {
+                      AuthenticationService, LTI) {
             return {
                 restrict: 'E',
                 templateUrl: 'modules/user/user-form-partial.html',
@@ -18,8 +18,16 @@
                     scope.submitted = false;
                     scope.user = {
                         //required parameter that will be ignored by backendup
-                        system_role: SystemRole.student
-                    };
+                        system_role: SystemRole.student,
+                        displayname: ""
+                    }
+                    if (LTI.isLTISession()===true)
+                    {
+                        scope.user.displayname = LTI.getDisplayName()
+                        scope.user.firstname = LTI.getFirstName()
+                        scope.user.lastname = LTI.getLastName()
+                        scope.user.email = LTI.getEmail()
+                    }
                     scope.password = {};
                     scope.system_roles = [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin];
 
