@@ -3,6 +3,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_enum34 import EnumType
+from flask.ext.login import current_user
 
 from . import *
 
@@ -11,6 +12,7 @@ from acj.core import db
 from oauthlib.oauth1 import SIGNATURE_TYPE_BODY, SIGNATURE_HMAC
 from oauthlib.common import generate_nonce, generate_timestamp
 from requests_oauthlib import OAuth1
+from lti.utils import parse_qs
 import requests
 import xml.etree.ElementTree as ET
 
@@ -27,6 +29,9 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
     course_role = db.Column(EnumType(CourseRole, name="course_role"),
         nullable=False)
 
+    acj_course_id = association_proxy('lti_context', 'acj_course_id')
+    acj_user_id = association_proxy('lti_user', 'acj_user_id')
+
     # relationships
     # lti_conext via LTIContext Model
     # lti_user via LTIUser Model
@@ -35,7 +40,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
     # hyprid and other functions
     @classmethod
     def update_membership_for_course(cls, course):
-        from . import NoValidContextsForMembershipException
+        from . import MembershipNoValidContextsException
 
         valid_membership_contexts = [
             lti_context for lti_context in course.lti_contexts \
@@ -43,7 +48,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         ]
 
         if len(valid_membership_contexts) == 0:
-            raise NoValidContextsForMembershipException
+            raise MembershipNoValidContextsException
 
         lti_members = []
         for lti_context in valid_membership_contexts:
@@ -111,7 +116,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             lti_membership = LTIMembership(
                 lti_user=lti_user,
                 lti_context=lti_context,
-                roles=roles,
+                roles=str(roles),
                 lis_result_sourcedid=member.get('lis_result_sourcedid'),
                 course_role=course_role
             )
@@ -156,8 +161,12 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         db.session.add_all(new_user_courses)
         db.session.commit()
 
-        # set user_course to dropped role if missing from membership results
+        # set user_course to dropped role if missing from membership results and not current user
         for user_course in user_courses:
+            # never unenrol current_user
+            if current_user.is_authenticated() and user_course.user_id == current_user.id:
+                continue
+
             lti_member = next(
                 (lti_member for lti_member in lti_members if user_course.user_id == lti_member.acj_user_id),
                 None
@@ -172,28 +181,43 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         params = {
             'id': memberships_id,
             'lti_message_type':'basic-lis-readmembershipsforcontext',
-            'lti_version': 'LTI-1p0'
+            'lti_version': 'LTI-1p0',
+            'oauth_callback': 'about:blank'
         }
 
         request = requests.Request('POST', memberships_url, data=params).prepare()
         sign = OAuth1(lti_consumer.oauth_consumer_key, lti_consumer.oauth_consumer_secret,
             signature_type=SIGNATURE_TYPE_BODY, signature_method=SIGNATURE_HMAC)
         signed_request = sign(request)
+        params = parse_qs(signed_request.body.decode('utf-8'))
 
-        xmlString = requests.post(signed_request.url, data=signed_request.body).text
+        xmlString = LTIMembership._send_membership_request(memberships_url, params)
         root = ET.fromstring(xmlString)
+
+        codemajor = root.find('statusinfo').find('codemajor')
+        if codemajor.text == 'Failure' or codemajor.text == 'Unsupported':
+            raise MembershipInvalidRequestException
+
+        if root.find('memberships') == None or len(root.find('memberships').findall('member')) == 0:
+            raise MembershipNoResultsException
 
         members = []
         for member in root.find('memberships').findall('member'):
+            roles_text = member.findtext('roles')
+
             members.append({
-                'user_id': member.find('user_id').text,
-                'roles': member.find('roles').text,
-                'person_contact_email_primary': member.find('person_contact_email_primary').text,
-                'person_name_given': member.find('person_name_given').text,
-                'person_name_family': member.find('person_name_family').text,
-                'person_name_full': member.find('person_name_full').text
+                'user_id': member.findtext('user_id'),
+                'roles': roles_text.split(",") if roles_text != None else [],
+                'person_contact_email_primary': member.findtext('person_contact_email_primary'),
+                'person_name_given': member.findtext('person_name_given'),
+                'person_name_family': member.findtext('person_name_family'),
+                'person_name_full': member.findtext('person_name_full')
             })
         return members
+
+    @classmethod
+    def _send_membership_request(cls, memberships_url, params):
+        return requests.post(memberships_url, data=params).text
 
     @classmethod
     def __declare_last__(cls):

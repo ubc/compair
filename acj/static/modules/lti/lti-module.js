@@ -134,7 +134,11 @@ module.controller("LTIController",
                     modalInstance.result.then(function (selectedCourseId) {
                         LTIResource.linkCourse({id: selectedCourseId}, {},
                             function(ret) {
-                                Toaster.success("Course Link Successful", "Successfully linked course " + ret.id + " to LTI context");
+                                if (ret.warning) {
+                                    Toaster.warning("Course Link Successful but Membership Import Failed", ret.warning);
+                                } else {
+                                    Toaster.success("Course Link Successful", "Successfully linked course to LTI context");
+                                }
                                 // reload to refresh status and check what to do next
                                 $route.reload();
                             },
