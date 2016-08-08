@@ -64,7 +64,7 @@ module.controller(
                 $scope.total = $scope.assignment.total_steps_required;
                 // if there is a comparison end date, check if timer is needed
                 var due_date = new Date($scope.assignment.compare_end);
-                if (due_date) {
+                if (due_date && $scope.assignment.compare_end != null) {
                     TimerResource.get(
                         function (ret) {
                             var current_time = ret.date;

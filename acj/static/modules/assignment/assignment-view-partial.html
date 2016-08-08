@@ -66,7 +66,7 @@
         <!-- BUTTON when user has an answer draft AND (user is admin OR (user has not answered AND the answer period is active) -->
         <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{assignment.status.answers.draft_ids[0]}}/edit" class="btn btn-success" title="Answer Assignment"
            ng-show="assignment.status.answers.has_draft && (canManageAssignment || (!assignment.status.answers.answered && assignment.answer_period))">
-            Finish Answering
+            Finish Answer
         </a>
 
         <!-- BUTTON when user is not an admin AND the comparison period is active AND the user has not finished pair comparisons AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active)
@@ -167,7 +167,7 @@
                 <!-- Students should see before answering during the answer period -->
                 <p class="intro-text"
                    ng-if="!canManageAssignment && !assignment.status.answers.answered && assignment.answer_period">
-                    <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/create" title="Answer the assignment">Answer</a> and compare answer pairs for the assignment first, then read all answers written by your classmates and instructors here.
+                    <span ng-show="!assignment.status.answers.has_draft"><a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/create" title="Answer the assignment">Answer</a></span><span ng-show="assignment.status.answers.has_draft"><a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{assignment.status.answers.draft_ids[0]}}/edit" title="Finish answering the assignment">Finish answering</a></span> and compare answer pairs for the assignment first, then read all answers written by your classmates and instructors here.
                 </p>
 
                 <!-- Students should see before evaluating before the comparison period -->

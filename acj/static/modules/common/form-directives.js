@@ -43,22 +43,22 @@ module.directive('confirmFormExit', function(){
             window.onbeforeunload = function() {
                 //when confirmation is for answer AND an answer has been written or PDF file uploaded AND the user has not pressed submit
                 if (attrs.formType == 'answer' && (scope.answer.content || scope.uploader.queue.length) && scope.preventExit) {
-                    return "Do you want to refresh this page without saving? Any answering you've done will be lost.";
+                    return "Are you sure you want to refresh this page? Any unsaved changed you've made will be lost.";
                 }
                 //when confirmation is for comparison AND the user has not pressed submit
                 if (attrs.formType == 'compare' && scope.preventExit) {
-                    return "Do you want to refresh this page without saving? Any work you've done for this answer pair will be lost.";
+                    return "Are you sure you want to refresh this page? Any unsaved work you've done for this round will be lost.";
                 }
             }
             //change URL
             scope.$on('$locationChangeStart', function(event, next, current) {
                 if (attrs.formType == 'answer' && (scope.answer.content || scope.uploader.queue.length) && scope.preventExit) {
-                    if (!confirm("Do you want to leave this page without saving? Any answering you've done will be lost.")) {
+                    if (!confirm("Are you sure you want to leave this page? Any unsaved changes you've made will be lost.")) {
                         event.preventDefault();
                     }
                 }
                 if (attrs.formType == 'compare' && scope.preventExit) {
-                    if (!confirm("Do you want to leave this page without saving? Any work you've done for this answer pair will be lost.")) {
+                    if (!confirm("Are you sure you want to leave this page? Any unsaved work you've done for this round will be lost.")) {
                         event.preventDefault();
                     }
                 }

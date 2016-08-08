@@ -207,11 +207,13 @@ module.controller(
                         }
 
                         Toaster.success("Saved Draft Successfully!", "Remember to submit your answer before the deadline.");
+                        $scope.preventExit = false; //user has saved answer, does not need warning when leaving page
+                        $location.path('/course/' + $scope.courseId + '/assignment/' + assignmentId + '/answer/' + $scope.answer.id + '/edit');
                     } else {
                         $scope.preventExit = false; //user has saved answer, does not need warning when leaving page
                         // if was a draft, show new success message
                         if (wasDraft) {
-                            Toaster.success("New answer posted!");
+                            Toaster.success("New Answer Posted!");
                         } else {
                             Toaster.success("Answer Updated!");
                         }
