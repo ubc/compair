@@ -11,7 +11,8 @@ from acj.authorization import require, allow
 from login import authenticate
 from acj.models import User, Course, CourseRole, SystemRole, UserCourse, \
     LTIConsumer, LTIContext, LTIMembership, LTIResourceLink, LTIUser, LTIUserResourceLink
-from acj.models.lti import NoValidContextsForMembershipException
+from acj.models.lti import MembershipNoValidContextsException, \
+    MembershipNoResultsException, MembershipInvalidRequestException
 from .util import new_restful_api, get_model_changes, pagination_parser
 
 from acj.api.classlist import display_name_generator
@@ -212,9 +213,14 @@ class LTICourseLinkAPI(Resource):
         lti_context.acj_course_id = course.id
         db.session.commit()
 
+        membership_warning = False
+
         # automatically fetch membership if enabled for context
         if lti_context.ext_ims_lis_memberships_url and lti_context.ext_ims_lis_memberships_id:
-            LTIMembership.update_membership_for_course(course)
+            try:
+                LTIMembership.update_membership_for_course(course)
+            except:
+                membership_warning = True
 
         on_lti_course_link.send(
             self,
@@ -222,7 +228,10 @@ class LTICourseLinkAPI(Resource):
             user=current_user,
             data={ "course_id": course.id, "lti_context_id": lti_context.id })
 
-        return marshal(course, dataformat.get_course())
+        if membership_warning:
+            return { 'warning': 'LTI membership import failed' }
+        else:
+            return { 'success': True }
 
 api.add_resource(LTICourseLinkAPI, '/lti/course/<int:course_id>/link')
 
@@ -241,8 +250,12 @@ class LTICourseMembershipAPI(Resource):
 
         try:
             LTIMembership.update_membership_for_course(course)
-        except NoValidContextsForMembershipException as err:
+        except MembershipNoValidContextsException as err:
             return {'error': "LTI membership service is not supported for this course" }, 400
+        except MembershipNoResultsException as err:
+            return {'error': "LTI membership service did not return any users" }, 400
+        except MembershipInvalidRequestException as err:
+            return {'error': "LTI membership request was invalid. Please relaunch the ComPAIR course from the LTI consumer and try again" }, 400
 
         on_lti_course_membership_update.send(
             self,

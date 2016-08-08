@@ -154,13 +154,11 @@ class LTITestData:
 
         return lti_resource_link
 
-    def create_context(self, lti_consumer, context_id=None, acj_course=None):
+    def create_context(self, lti_consumer, **kwargs):
         lti_context = LTIContextFactory(
             lti_consumer=lti_consumer,
-            acj_course=acj_course
+            **kwargs
         )
-        if context_id:
-            lti_context.context_id = context_id
 
         self.lti_contexts.append(lti_context)
 

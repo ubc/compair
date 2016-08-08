@@ -253,8 +253,15 @@ module.controller(
             LTIResource.updateMembership({id: courseId}, {},
                 function(ret) {
                     $scope.submitted = false;
-                    // reload view to get new membership status
-                    $route.reload();
+                    ClassListResource.get({'courseId':courseId},
+                        function (ret) {
+                            Toaster.success("Successfully updated enrolment from the course.");
+                            $scope.classlist = ret.objects;
+                        },
+                        function (ret) {
+                            Toaster.reqerror("No Users Found For Course ID "+courseId, ret);
+                        }
+                    );
                 },
                 function(ret) {
                     $scope.submitted = false;

@@ -94,20 +94,12 @@ class ACJAPITestCase(ACJTestCase):
         self.client.delete('/api/logout', follow_redirects=True)
 
     @contextmanager
-    def lti_launch(self, lti_consumer, lti_resource_link_id, user_id=None, context_id=None,
-        assignment_id=None, roles=None, follow_redirects=True):
+    def lti_launch(self, lti_consumer, lti_resource_link_id, assignment_id=None, follow_redirects=True, **kwargs):
 
-        launch_params = {
-            'resource_link_id': lti_resource_link_id
-        }
-        if user_id:
-            launch_params['user_id'] = user_id
-        if context_id:
-            launch_params['context_id'] = context_id
+        launch_params = kwargs.copy()
+        launch_params['resource_link_id'] = lti_resource_link_id
         if assignment_id:
             launch_params['custom_assignment'] = assignment_id
-        if roles:
-            launch_params['roles'] = roles
 
         tool_consumer = ToolConsumer(
             lti_consumer.oauth_consumer_key,

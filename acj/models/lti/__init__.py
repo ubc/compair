@@ -8,7 +8,8 @@ from acj.models import UserCourse, Course, Assignment
 from acj.models import SystemRole, CourseRole
 
 # exceptions
-from .exceptions import NoValidContextsForMembershipException
+from .exceptions import MembershipNoValidContextsException, \
+    MembershipInvalidRequestException, MembershipNoResultsException
 
 # models
 from .lti_consumer import LTIConsumer
