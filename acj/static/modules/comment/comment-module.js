@@ -226,8 +226,8 @@ module.controller(
 module.controller(
     "AnswerCommentEditController",
     ['$scope', '$log', '$location', '$routeParams', 'AnswerCommentResource', 'AnswerResource', 'Toaster',
-     'EditorOptions',
-    function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, Toaster,
+     'AnswerCommentType', 'EditorOptions',
+    function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, Toaster, AnswerCommentType,
               EditorOptions)
     {
         var courseId = $scope.courseId = $routeParams['courseId'];

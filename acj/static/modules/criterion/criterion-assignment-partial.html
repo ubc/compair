@@ -1,17 +1,21 @@
 
 <div>
-    <label>Criteria</label>
+    <label>Comparison Criteria</label>
 
     <div ng-repeat="(key, criterion) in assignment.criteria" class="row">
         <div class="col-sm-2" ng-if="assignmentId">
+            <hr class="visible-xs" />
             <p>
                 <a href=""
                    ng-click="changeCriterion(criterion)"
                    ng-if="(canManageCriteriaAssignment || criterion.user_id==loggedInUserId) && criterion.id != 1">
                 Edit
                 </a>
+                <span ng-if="criterion.id == 1" class="text-muted">
+                    (not editable)
+                </span>
             </p>
-        </div>
+        </div> 
         <div class="col-sm-2">
             <p>
                 <a href="" confirmation-needed="remove(key)" keyword="criterion" ng-if="!assignment.compared">

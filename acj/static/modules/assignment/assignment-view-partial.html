@@ -318,7 +318,7 @@
                                 <span class="label label-info" ng-if="instructors[comment.user_id]">
                                     {{instructors[comment.user_id]}}
                                 </span>
-                                <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation">gave private feedback</strong>
+                                <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation">gave <span class="glyphicon glyphicon-lock"></span> private feedback</strong>
                                 <strong ng-if="comment.comment_type == AnswerCommentType.self_evaluation">self-evaluated</strong>
                                 <strong ng-if="comment.comment_type == AnswerCommentType.public">replied <span ng-if="canManageAssignment || answer.user_id == loggedInUserId" class="label label-info">Public</span></strong>
                                 on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
@@ -364,7 +364,12 @@
             <div class="tab-header">
                 <div>
                     <h2>Your work and feedback</h2>
-                    <p class="intro-text">Work you have submitted for this assignment appears below. Feedback for your answer can be found in the replies underneath the answer.</p>
+                    <p class="intro-text">Work you have submitted
+                    <span ng-show="assignment.status.answers.answered || comparisons.objects.length > 0">&mdash;
+                        <strong><span ng=show="assignment.status.answers.answered">1 answer</span><span ng-show="assignment.status.answers.answered && comparisons.objects.length > 0">,</span>
+                        <span ng-show="comparisons.objects.length > 0">{{comparisons.objects.length}} comparison<span ng-show="comparisons.objects.length > 1">s</span></span></strong>
+                    &mdash;</span>
+                    for this assignment appears below. Feedback for your answer can be found in the replies underneath the answer.</p>
                 </div>
             </div>
 
@@ -423,7 +428,7 @@
                             <span class="label label-info" ng-if="instructors[comment.user_id]">
                                 {{instructors[comment.user_id]}}
                             </span>
-                            <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation">gave private feedback</strong>
+                            <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation">gave <span class="glyphicon glyphicon-lock"></span> private feedback</strong>
                             <strong ng-if="comment.comment_type == AnswerCommentType.self_evaluation">self-evaluated</strong>
                             <strong ng-if="comment.comment_type == AnswerCommentType.public">replied <span ng-if="canManageAssignment || answer.user_id == loggedInUserId" class="label label-info">Public</span></strong>
                             on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
@@ -453,16 +458,12 @@
                 <!-- Comparison Header -->
                 <div class="each-header">
                     <acj-avatar user-id="comparison_set.user_id" avatar="comparison_set.user.avatar" me="true"></acj-avatar>
-                    <strong>compared</strong> on {{ comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
+                    <strong>compared</strong> on {{ comparison_set.created | amDateFormat: 'MMM D @ h:mm a'}}:
                 </div>
-
-                <div ng-repeat="comparison in comparison_set.comparisons">
-                    <h5 class="content">Comparison for "{{ comparison.criterion.name }}"</h5>
-
-                    <div class="content" mathjax hljs ng-bind-html="comparison.content"></div>
-
-                    <!-- Answers -->
-                    <p class="show-answers"><a href="" ng-click="showAnswers = !showAnswers;">
+                
+                <!-- Answers -->
+                <h5 class="contet">Answer Pair</h5>
+                    <p class="show-answers content"><a href="" ng-click="showAnswers = !showAnswers;">
                         <i ng-show="showAnswers" class="fa fa-chevron-down"></i>
                         <i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
                         Show compared answers
@@ -472,6 +473,15 @@
                         <acj-answer-content answer="comparison_set.answer2" is-chosen="comparison.winner_id == comparison_set.answer2_id" name="Even-Numbered Answer" criterion="comparison.criterion_id" show-score="false"></acj-answer-content>
                     </div>
 
+                <h5 class="content">Comparisons</h5>
+                <div ng-repeat="comparison in comparison_set.comparisons">
+                    <div class="content">
+                        <p>"{{ comparison.criterion.name }}"<br />
+                            <span class="glyphicon glyphicon-ok-circle"></span>
+                            <span ng-if="comparison.winner_id == comparison_set.answer1_id"><strong>Odd-numbered answer</strong></span>
+                            <span ng-if="comparison.winner_id == comparison_set.answer2_id"><strong>Even-numbered answer</strong></span>
+                        </p>
+                    </div>
                 </div>
 
                 <h5 class="content">Feedback for Odd-Numbered Answer</h5>

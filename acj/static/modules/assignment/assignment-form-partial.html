@@ -5,14 +5,14 @@
         <acj-field-with-feedback form-control="assignmentForm.assignmentName">
             <label for="assignmentName" class="required-star">Short Name</label>
             <input class="form-control" id="assignmentName" type="text"
-                name="assignmentName" ng-model="assignment.name" placeholder="short question or description for the assignment"
+                name="assignmentName" ng-model="assignment.name" placeholder="short question or title for the assignment"
                 required ng-maxlength="255" auto-focus />
             <span ng-if="assignmentForm.assignmentName.$error.maxlength" class="help-block has-error">Maximum length is 255 characters</span>
         </acj-field-with-feedback>
 
         <div>
             <label for="importFile">Attach PDF (maximum size 25MB)</label>
-            <p ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)"><span class="required-star"></span><em>Tip: Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> or using <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a> or <a href="http://www.google.com/chrome/">Chrome</a> if you have problems uploading.</em></p>
+            <p ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)"><em>Tip: Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> or using <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a> or <a href="http://www.google.com/chrome/">Chrome</a> if you have problems uploading.</em></p>
             <input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)" multiple/>
             <p class="instructional-text" ng-show="uploader.queue.length">The file below will be attached when you <strong>save this assignment</strong>. You may also remove the file and upload another instead.</p>
             <div class="row" ng-repeat="item in uploader.queue">
@@ -53,7 +53,7 @@
     <fieldset>
         <legend>Schedule</legend>
         <div class="instructional-text">
-            <p><strong>Students can answer and edit their answers only during the dates and times you set below.</strong> Students do not see an assignment in the application until the answering period begins. Students can read all answers only <em>after</em> they have completed the required number of comparisons.</p>
+            <p><strong>Students can answer and edit their answers only during the answering dates and times you set below.</strong> Students do not see an assignment in the application until the answering period begins. Students can read all answers only <em>after</em> they have completed the required number of comparisons.</p>
             <p><strong>By default, students can compare answers after the answer period ends.</strong> You may instead set specific dates and times for the comparison period. Note that if you manually set a comparison period, students can read all answers only <em>after</em> the comparison period ends.</p>
         </div>
 
@@ -132,7 +132,7 @@
     <fieldset>
         <legend>Criteria</legend>
         <div class="instructional-text">
-            <p><strong>The selected criteria appear when students compare answers</strong> for this assignment to help guide them in their comparison. For each criterion selected below, students will need to 1) choose a preferred answer from a given pair and 2) write a reason for the selection. (You cannot add or remove criteria after the assignment has been compared by students.)</p>
+            <p><strong>The criteria below appear when students compare answers</strong> for this assignment, to guide them in their critical thinking process. For each criterion, students will need to choose a preferred answer from a given pair. Note that criteria are locked in once students start comparing, so you cannot add or remove inidividual criterion after comparing begins.</p>
             <comparison-preview></comparison-preview>
         </div>
         <ng-include src="'modules/criterion/criterion-assignment-partial.html'"></ng-include>
@@ -141,13 +141,15 @@
     <fieldset>
         <legend>Comparisons</legend>
         <div class="instructional-text">
-            <p>The <strong>recommended minimum number of comparisons per student is {{recommended_comparisons}}</strong>. Using this number (or higher) creates a more accurate ranking of the answers. If you set a lower number, the answers will not be ranked as accurately.</p>
-            <p>For each comparison, students will need to 1) write separate feedback for each answer in a given pair, 2) choose a preferred answer from the pair for each criterion you've set above, and 3) write a reason for the selection for each criterion.</p>
+            <p>For each comparison, students will need to choose a preferred answer for each criterion you've set above and write separate feedback for each answer in a given pair. For this assignment, students are currently required to submit:
+            <strong ng-show="assignment.number_of_comparisons">{{assignment.number_of_comparisons}} comparisons</strong><strong ng-show="!assignment.number_of_comparisons">0 comparisons</strong><span ng-show="assignment.enable_self_evaluation"> and <strong>1 self-evaluation</strong></span>, which means <strong>students will review</strong>
+            <span ng-show="!assignment.enable_self_evaluation"><strong ng-show="assignment.number_of_comparisons">{{assignment.number_of_comparisons*2}} answers.</strong><strong ng-show="!assignment.number_of_comparisons">0 answers.</strong></span>
+            <span ng-show="assignment.enable_self_evaluation"><strong ng-show="assignment.number_of_comparisons">{{assignment.number_of_comparisons*2+1}} answers</strong><strong ng-show="!assignment.number_of_comparisons">1 answer</strong>, including their own.</span></p>
         </div>
 
         <div class="form-group">
             <acj-field-with-feedback form-control="assignmentForm.number_of_comparisons">
-                <label class="required-star">Number of answer comparisons required from each student</label>
+                <label class="required-star">Number of peer answer comparisons required from each student</label>
                 <input type="text" id="number_of_comparisons" name="number_of_comparisons" class="form-control" ng-model="assignment.number_of_comparisons" ng-pattern="/^[1-9]\d*$/" required>
             </acj-field-with-feedback>
         </div>
@@ -155,7 +157,7 @@
         <hr />
 
         <input id="enable_self_evaluation" type="checkbox" name="enable_self_evaluation" ng-model="assignment.enable_self_evaluation">
-        <label for="enable_self_evaluation">Also require students to reflect on their own answer (after completing comparisons)</label>
+        <label for="enable_self_evaluation">Also require students to evaluate their own answer (after completing comparisons)</label>
         <br /><br />
     </fieldset>
 

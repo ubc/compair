@@ -920,7 +920,7 @@ describe('course-module', function () {
             it('should be correctly initialized', function () {
                 expect($rootScope.assignment).toEqual({
                     criteria: [defaultCriteria],
-                    students_can_reply: true,
+                    students_can_reply: false,
                     number_of_comparisons: 3,
                     pairing_algorithm: 'random'
                 });
