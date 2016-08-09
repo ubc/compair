@@ -158,7 +158,44 @@
 
         <input id="enable_self_evaluation" type="checkbox" name="enable_self_evaluation" ng-model="assignment.enable_self_evaluation">
         <label for="enable_self_evaluation">Also require students to evaluate their own answer (after completing comparisons)</label>
-        <br /><br />
+        
+        <hr />
+        
+            <a href="" ng-click="showAdvanced = !showAdvanced">
+                <p>
+                    <i class="fa fa-chevron-down" ng-show="showAdvanced"></i>
+                    <i class="fa fa-chevron-right" ng-hide="showAdvanced"></i>
+                    <span id="app-login-toggle">See advanced options?</span>
+                </p>
+            </a>
+            <div class="row" ng-show="showAdvanced">
+                <div class="col-md-12">
+                    <br />
+                    <label>Set how answer pairs are selected for comparison</label>
+                </div>
+                <div class="form-check col-md-6">
+                    <label class="form-check-label">
+                        <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm" value="random" checked>
+                        Random Selection:
+                    </label>
+                    <ul>
+                        <li>Answers chosen at random for review</li>
+                        <li>Pairings based on chance alone</li>
+                        <li>All students experience similar level of difficulty</li>
+                    </ul>
+                </div>
+                <div class="form-check col-md-6">
+                    <label class="form-check-label">
+                        <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm" value="adaptive">
+                        Adaptive Selection:
+                    </label>
+                    <ul>
+                        <li>Answers chosen by how students have ranked them so far</li>
+                        <li>Pairings based on similarity in answer scores</li>
+                        <li>Later students may experience increased level of difficulty</li>
+                    </ul>
+                </div>
+            </div>
     </fieldset>
 
     <fieldset>
