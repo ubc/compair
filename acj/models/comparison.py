@@ -274,7 +274,7 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
             )
 
             result_1, result_2 = calculate_score_1vs1(
-                package_name=ScoringAlgorithm.true_skill.value,
+                package_name=ScoringAlgorithm.elo.value,
                 key1_scored_object=key1_scored_object,
                 key2_scored_object=key2_scored_object,
                 winning_key=comparison.winner_id,
@@ -329,7 +329,7 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
                 comparison_pairs.append(comparison.convert_to_comparison_pair())
 
             criterion_comparison_results[assignment_criterion.criterion_id] = calculate_score(
-                package_name=ScoringAlgorithm.true_skill.value,
+                package_name=ScoringAlgorithm.elo.value,
                 comparison_pairs=comparison_pairs,
                 log=current_app.logger
             )
