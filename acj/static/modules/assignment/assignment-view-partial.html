@@ -147,7 +147,7 @@
                                     <option value="">All answers</option>
                                 </select>
                             </span><br />
-                            <span class="filter" ng-if="rankLimit > 0">
+                            <span class="filter" ng-if="rankLimit > 0 && assignment.pairing_algorithm != 'random'">
                                 <label>Order by: &nbsp;</label>
                                 <select ng-model="answerFilters.orderBy"
                                         ng-options="c.id as c.name for c in criteria">
