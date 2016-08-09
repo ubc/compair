@@ -59,40 +59,48 @@
                     <acj-avatar user-id="comparison_set.user_id" avatar="comparison_set.user.avatar" display-name="comparison_set.user.displayname"></acj-avatar>
                     <strong>submitted</strong> on {{ comparison_set.created | amDateFormat: 'MMM D @ h:mm a'}}:
                 </div>
+                
+                <!-- Answers -->
+                <h5 class="content">Answer Pair</h5>
+                
+                <p class="show-answers content"><a href="" ng-click="showAnswers = !showAnswers;">
+                    <i ng-show="showAnswers" class="fa fa-chevron-down"></i>
+                    <i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
+                    Show compared answers
+                </a></p>
 
+                <div class="row" ng-show="showAnswers">
+                    <acj-answer-content answer="comparison_set.answer1" is-chosen="comparison.winner_id == comparison_set.answer1_id" name="Odd-Numbered Answer" criterion="comparison.criterion_id" show-score="true"></acj-answer-content>
+                    <acj-answer-content answer="comparison_set.answer2" is-chosen="comparison.winner_id == comparison_set.answer2_id" name="Even-Numbered Answer" criterion="comparison.criterion_id" show-score="true"></acj-answer-content>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="content">Feedback for Odd-Numbered Answer</h5>
+                        <!-- feedback for odd-numbered answer -->
+                        <div ng-repeat="feedback in comparison_set.answer1_feedback">
+                            <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="content">Feedback for Even-Numbered Answer</h5>
+                        <!-- feedback for even-numbered answer -->
+                        <div ng-repeat="feedback in comparison_set.answer2_feedback">
+                            <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h5 class="content">Comparisons</h5>
 
                 <div ng-repeat="comparison in comparison_set.comparisons">
+                    
+                <p class="content">"{{comparison.criterion.name}}"<br />
+                    <span class="glyphicon glyphicon-ok-circle"></span>
+                    <span ng-if="comparison.winner_id == comparison_set.answer1_id"><strong>Odd-numbered answer</strong></span>
+                    <span ng-if="comparison.winner_id == comparison_set.answer2_id"><strong>Even-numbered answer</strong></span>
+                </p>
 
-                    <h5 class="content">Comparison for "{{comparison.criterion.name}}"</h5>
-
-                    <div class="content" mathjax hljs ng-bind-html="comparison.content"></div>
-
-                    <!-- Answers -->
-                    <p class="show-answers"><a href="" ng-click="showAnswers = !showAnswers;">
-                        <i ng-show="showAnswers" class="fa fa-chevron-down"></i>
-                        <i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
-                        Show compared answers
-                    </a></p>
-
-                    <div class="row" ng-show="showAnswers">
-                        <acj-answer-content answer="comparison_set.answer1" is-chosen="comparison.winner_id == comparison_set.answer1_id" name="Odd-Numbered Answer" criterion="comparison.criterion_id" show-score="true"></acj-answer-content>
-                        <acj-answer-content answer="comparison_set.answer2" is-chosen="comparison.winner_id == comparison_set.answer2_id" name="Even-Numbered Answer" criterion="comparison.criterion_id" show-score="true"></acj-answer-content>
-                    </div>
-
-                </div>
-
-                <h5 class="content">Feedback for Odd-Numbered Answer</h5>
-
-                <!-- feedback for odd-numbered answer -->
-                <div ng-repeat="feedback in comparison_set.answer1_feedback">
-                    <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
-                </div>
-
-                <h5 class="content">Feedback for Even-Numbered Answer</h5>
-
-                <!-- feedback for even-numbered answer -->
-                <div ng-repeat="feedback in comparison_set.answer2_feedback">
-                    <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
                 </div>
             </div>
             <div class="each-evaluation" ng-if="comparisons[0].self_evaluation.length > 0" ng-init="self_evaluations=comparisons[0].self_evaluation">
