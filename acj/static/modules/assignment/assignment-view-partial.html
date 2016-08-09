@@ -505,19 +505,19 @@
             </div>
 
             <!-- self evaluation section -->
-            <div ng-class="{'each-evaluation': filteredAnswers.length > 0}" ng-repeat="answer in user_answers.objects">
-                <div ng-repeat="comment in filteredAnswers = (answer.comments | filter:{self_evaluation: true})">
+            <div class="each-evaluation" ng-if="comparisons.objects[0].self_evaluation.length > 0" ng-init="comments=comparisons.objects[0].self_evaluation">
+                <div ng-repeat="comment in comments">
                     <div class="each-header">
                         <acj-avatar user-id="comment.user_id" avatar="comment.user.avatar" me="true"></acj-avatar>
                         <strong>self-evaluated</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right"
-                             ng-if="canManageAssignment || (comment.user_id == loggedInUserId && (comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private)">
-                        <a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="reply">
-                            <i class="fa fa-trash-o"></i>
-                        </a>
-                        <a href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
-                            Edit
-                        </a>
+                             ng-if="canManageAssignment || (comment.user_id == loggedInUserId && (comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private))">
+                            <a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="reply">
+                                <i class="fa fa-trash-o"></i>
+                            </a>
+                            <a href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
+                                Edit
+                            </a>
                         </div>
                     </div>
                     <div class="content" mathjax hljs ng-bind-html="comment.content"></div>
