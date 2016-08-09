@@ -773,6 +773,13 @@ describe('course-module', function () {
                     "per_page": 20,
                     "total": 0
                 });
+                $httpBackend.expectGET('/api/courses/1/assignments/1/answers?author=1').respond({
+                    "objects": [],
+                    "page": 1,
+                    "pages": 0,
+                    "per_page": 20,
+                    "total": 0
+                });
                 $httpBackend.flush();
                 expect($rootScope.showTab('answers')).toBe(false);
                 expect($rootScope.showTab('help')).toBe(false);

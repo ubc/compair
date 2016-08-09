@@ -95,6 +95,7 @@ def define_authorization(user, they):
             they.can(MANAGE, AssignmentComment, course_id=entry.course_id)
             they.can(MANAGE, AnswerComment, course_id=entry.course_id)
             they.can(MANAGE, ComparisonExample, course_id=entry.course_id)
+            they.can(READ, Comparison, course_id=entry.course_id)
             they.can(READ, UserCourse, course_id=entry.course_id)
             they.can((CREATE, DELETE), AssignmentCriterion, course_id=entry.course_id)
             they.can(READ, USER_IDENTITY)

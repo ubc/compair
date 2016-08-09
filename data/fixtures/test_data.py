@@ -6,7 +6,7 @@ import factory.fuzzy
 
 from acj import db
 from six.moves import range
-from acj.models import SystemRole, CourseRole, Criterion, Course
+from acj.models import SystemRole, CourseRole, Criterion, Course, Comparison
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
     AnswerFactory, CriterionFactory, ComparisonFactory, AssignmentCriterionFactory, \
     AssignmentCommentFactory, AnswerCommentFactory, ScoreFactory, ComparisonExampleFactory
@@ -338,8 +338,6 @@ class ComparisonTestData(CriterionTestData):
         db.session.commit()
         return assignment
 
-
-
 class TestFixture:
     def __init__(self):
         self.default_criterion = Criterion.query.get(1)
@@ -356,7 +354,7 @@ class TestFixture:
         self.dropped_instructor = UserFactory(system_role=SystemRole.instructor)
         self.draft_student = None
 
-    def add_course(self, num_students=5, num_assignments=1, num_groups=0, num_answers='#', with_draft_student=False):
+    def add_course(self, num_students=5, num_assignments=1, num_groups=0, num_answers='#', with_draft_student=False, with_comparisons=False):
         self.course = CourseFactory()
         self.instructor = UserFactory(system_role=SystemRole.instructor)
         self.enrol_user(self.instructor, self.course, CourseRole.instructor)
@@ -372,6 +370,9 @@ class TestFixture:
         self.assignment = self.assignments[0]
 
         self.add_answers(num_answers)
+
+        if with_comparisons:
+            self.add_comparisons()
 
         if with_draft_student:
             self.add_students(1)
@@ -404,6 +405,19 @@ class TestFixture:
                     )
                 db.session.commit()
                 self.answers.append(answer)
+
+        return self
+
+    def add_comparisons(self):
+        for assignment in self.assignments:
+            for student in self.students:
+                for i in range(assignment.total_comparisons_required):
+                    comparisons = Comparison.create_new_comparison_set(assignment.id, student.id)
+                    for comparison in comparisons:
+                        comparison.completed = True
+                        comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
+                        db.session.add(comparison)
+                    db.session.commit()
 
         return self
 
