@@ -188,7 +188,7 @@ module.controller(
             }
         );
 
-        $scope.answerSubmit = function () {
+        $scope.answerSubmit = function (answerForm) {
             $scope.submitted = true;
             $scope.answer.file_name = attachService.getName();
             $scope.answer.file_alias = attachService.getAlias();
@@ -204,6 +204,9 @@ module.controller(
                             $scope.answer.uploadedFile = ret.file;
                             $scope.uploader.clearQueue();
                             $scope.resetName();
+                        }
+                        if (answerForm) {
+                            answerForm.$setPristine();
                         }
 
                         Toaster.success("Saved Draft Successfully!", "Remember to submit your answer before the deadline.");
