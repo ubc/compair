@@ -412,7 +412,7 @@
                         <i class="fa fa-chevron-down" ng-show="showReplies"></i>
                         <i class="fa fa-chevron-right" ng-hide="showReplies"></i>
                         <ng-pluralize count="answer.comment_count" when="{'1': '{} reply', 'other': '{} replies'}"></ng-pluralize>
-                        to this answer
+                        to your answer
                         <span ng-if="canManageAssignment || answer.user_id == loggedInUserId">({{ answer.private_comment_count }} private, {{ answer.public_comment_count }} public)</span>
                     </h3>
                 </a>
@@ -433,7 +433,7 @@
                             <strong ng-if="comment.comment_type == AnswerCommentType.public">replied <span ng-if="canManageAssignment || answer.user_id == loggedInUserId" class="label label-info">Public</span></strong>
                             on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
                             <div class="manager-actions pull-right"
-                                 ng-if="canManageAssignment || (comment.user_id == loggedInUserId && (comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.public)">
+                                 ng-if="canManageAssignment || (comment.user_id == loggedInUserId && (comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.public))">
                                 <a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="reply">
                                     <i class="fa fa-trash-o"></i>
                                 </a>
@@ -462,7 +462,7 @@
                 </div>
                 
                 <!-- Answers -->
-                <h5 class="contet">Answer Pair</h5>
+                <h5 class="content">Answer Pair</h5>
                     <p class="show-answers content"><a href="" ng-click="showAnswers = !showAnswers;">
                         <i ng-show="showAnswers" class="fa fa-chevron-down"></i>
                         <i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
@@ -472,7 +472,25 @@
                         <acj-answer-content answer="comparison_set.answer1" is-chosen="comparison.winner_id == comparison_set.answer1_id" name="Odd-Numbered Answer" criterion="comparison.criterion_id" show-score="false"></acj-answer-content>
                         <acj-answer-content answer="comparison_set.answer2" is-chosen="comparison.winner_id == comparison_set.answer2_id" name="Even-Numbered Answer" criterion="comparison.criterion_id" show-score="false"></acj-answer-content>
                     </div>
-
+                    
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="content">Feedback for Odd-Numbered Answer</h5>
+                        <!-- feedback for odd-numbered answer -->
+                        <div ng-repeat="feedback in comparison_set.answer1_feedback">
+                            <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
+                        </div>
+                    </div>
+    
+                    <div class="col-md-6">
+                        <h5 class="content">Feedback for Even-Numbered Answer</h5>
+                        <!-- feedback for even-numbered answer -->
+                        <div ng-repeat="feedback in comparison_set.answer2_feedback">
+                            <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
+                        </div>
+                    </div>
+                </div>
+                    
                 <h5 class="content">Comparisons</h5>
                 <div ng-repeat="comparison in comparison_set.comparisons">
                     <div class="content">
@@ -482,20 +500,6 @@
                             <span ng-if="comparison.winner_id == comparison_set.answer2_id"><strong>Even-numbered answer</strong></span>
                         </p>
                     </div>
-                </div>
-
-                <h5 class="content">Feedback for Odd-Numbered Answer</h5>
-
-                <!-- feedback for odd-numbered answer -->
-                <div ng-repeat="feedback in comparison_set.answer1_feedback">
-                    <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
-                </div>
-
-                <h5 class="content">Feedback for Even-Numbered Answer</h5>
-
-                <!-- feedback for even-numbered answer -->
-                <div ng-repeat="feedback in comparison_set.answer2_feedback">
-                    <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
                 </div>
 
             </div><!-- closes each-evaluation -->
