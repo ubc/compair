@@ -338,7 +338,7 @@ class AnswerComparisonsAPI(Resource):
         # each pagination entry would be one comparison set by a user for the assignment
         comparison_sets = Comparison.query \
             .with_entities(Comparison.user_id, Comparison.answer1_id, Comparison.answer2_id) \
-            .filter_by(assignment_id=assignment_id) \
+            .filter_by(assignment_id=assignment_id, completed=True) \
             .group_by(Comparison.user_id, Comparison.answer1_id, Comparison.answer2_id)
 
         if not can_read:
