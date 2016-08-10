@@ -307,13 +307,14 @@ module.filter("notScoredEnd", function () {
 module.controller("AssignmentViewController",
     ["$scope", "$log", "$routeParams", "$location", "AnswerResource", "Authorize", "AssignmentResource", "AssignmentCommentResource",
              "AttachmentResource", "ComparisonResource", "CourseResource", "required_rounds", "Session", "Toaster", "AnswerCommentResource",
-             "GroupResource", "AnswerCommentType",
+             "GroupResource", "AnswerCommentType", "PairingAlgorithm",
     function($scope, $log, $routeParams, $location, AnswerResource, Authorize, AssignmentResource, AssignmentCommentResource,
              AttachmentResource, ComparisonResource, CourseResource, required_rounds, Session, Toaster, AnswerCommentResource,
-             GroupResource, AnswerCommentType)
+             GroupResource, AnswerCommentType, PairingAlgorithm)
     {
         $scope.courseId = $routeParams['courseId'];
         $scope.AnswerCommentType = AnswerCommentType;
+        $scope.PairingAlgorithm = PairingAlgorithm;
         var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
         var params = {
             courseId: $scope.courseId,
@@ -330,7 +331,7 @@ module.controller("AssignmentViewController",
             orderBy: null
         };
         $scope.self_evaluation_needed = false;
-        $scope.rankLimit = 10; //default is top 10 answers
+        $scope.rankLimit = null;
 
         Session.getUser().then(function(user) {
             $scope.loggedInUserId = user.id;
@@ -345,10 +346,9 @@ module.controller("AssignmentViewController",
 
                     $scope.criteria = ret.criteria;
                     $scope.reverse = true;
-                    
-                    if (ret.rank_limit) {
-                        $scope.rankLimit = ret.rank_limit;
-                    }
+
+                    // rank_display_limit is null, 10, or 20
+                    $scope.rankLimit = ret.rank_display_limit;
 
                     $scope.readDate = Date.parse(ret.created);
 
@@ -619,6 +619,7 @@ module.controller("AssignmentWriteController",
         $scope.assignment = {criteria: []};
         $scope.availableCriteria = [];
         $scope.editorOptions = EditorOptions.basic;
+        $scope.PairingAlgorithm = PairingAlgorithm;
 
         $scope.uploader = attachService.getUploader();
         $scope.resetName = attachService.resetName();
@@ -647,6 +648,7 @@ module.controller("AssignmentWriteController",
             // default the setting to the recommended # of comparisons
             $scope.assignment.number_of_comparisons = $scope.recommended_comparisons;
             $scope.assignment.pairing_algorithm = PairingAlgorithm.random;
+            $scope.assignment.rank_display_limit = 10;
 
             $scope.date.astart.date.setDate(today.getDate()+1);
             $scope.date.aend.date.setDate(today.getDate()+8);

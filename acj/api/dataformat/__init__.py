@@ -112,6 +112,7 @@ def get_assignment(restrict_user=True):
         'students_can_reply': fields.Boolean,
         'enable_self_evaluation': fields.Boolean,
         'pairing_algorithm': UnwrapPairingAlgorithm(attribute='pairing_algorithm'),
+        'rank_display_limit': fields.Integer(default=None),
 
         'compared': fields.Boolean,
 
@@ -277,11 +278,10 @@ def get_import_users_results(restrict_user=True):
 
 def get_score(restrict_user=True):
     ret = {
-        'criterion_id': fields.Integer
+        'criterion_id': fields.Integer,
+        'rank': fields.Integer
     }
-    if restrict_user:
-        ret['rank'] = fields.Integer
-    else:
+    if not restrict_user:
         ret['normalized_score'] = fields.Integer
 
     return ret

@@ -68,25 +68,30 @@ class Score(DefaultTableMixin, WriteTrackingMixin):
     @hybrid_property
     def rank(self):
         scores = Score.get_assignment_scores(self.assignment_id, self.criterion_id)
-
         for index, score in enumerate(scores):
-            if score.normalized_score == self.normalized_score:
+            if score.score == self.score:
                 return index + 1
-
         return None
 
     # TODO: this should be cached
     @classmethod
     def get_assignment_scores(cls, assignment_id, criterion_id):
         return Score.query \
-            .with_entities(Score.normalized_score) \
-            .distinct() \
+            .with_entities(Score.score) \
             .filter(and_(
                 Score.assignment_id == assignment_id,
                 Score.criterion_id == criterion_id
             )) \
-            .order_by(Score.normalized_score.desc()) \
+            .order_by(Score.score.desc()) \
             .all()
+
+    @classmethod
+    def get_score_for_rank(cls, assignment_id, criterion_id, rank):
+        scores = Score.get_assignment_scores(assignment_id, criterion_id)
+        if len(scores) < rank:
+            return None
+        else:
+            return scores[rank-1].score
 
 
     @classmethod

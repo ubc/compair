@@ -134,14 +134,22 @@ class AnswerRootAPI(Resource):
 
         if params['orderBy'] and len(user_ids) != 1:
             # order answer ids by one criterion and pagination, in case there are multiple criteria in assignment
-            # left join on Score and add or condition for criterion_id is None to include all answers
-            # that don't have score yet
-            query = query.outerjoin(Score) \
-                .filter(or_(
-                    Score.criterion_id == params['orderBy'],
-                    Score.criterion_id.is_(None)
-                 ))
+            # does not include answers without a score (Note: ta and instructor never have a score)
+            query = query.join(Score) \
+                .filter(Score.criterion_id == params['orderBy'])
             query = query.order_by(Score.score.desc(), Answer.created.desc())
+
+            # limit answers up to rank if rank_display_limit is set and current_user is restricted (student)
+            if assignment.rank_display_limit and restrict_user:
+                score_for_rank = Score.get_score_for_rank(
+                    assignment_id, params['orderBy'], assignment.rank_display_limit)
+
+                # display answers with score >= score_for_rank
+                if score_for_rank != None:
+                    # will get all answer with a score greater than or eaqual to the score for a given rank
+                    # the '- 0.00001' fixes floating point presicion problems
+                    query = query.filter(Score.score >= score_for_rank - 0.00001)
+
         else:
             query = query.order_by(Answer.created.desc())
 

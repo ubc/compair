@@ -161,13 +161,13 @@
         </div>
 
         <hr />
-        
+
         <p>Add-on comparison options:</p>
-        
+
         <!-- TO DO: hook input into back end -->
         <input id="add_practice" type="checkbox" name="add_practice" ng-model="assignment.addPractice">
         <label for="add_practice">Start students with instructor-created answer pair for practice (before peer comparisons)</label>
-        
+
         <div ng-show="assignment.addPractice">
             <br />
             <div class="row">
@@ -175,7 +175,7 @@
                 <div class="col-md-5 form-group">
                     <!-- TO DO: make entry required if assignment.addPractice" -->
                     <label class="required-star">Answer A</label>
-                    &nbsp;&mdash;&nbsp; 
+                    &nbsp;&mdash;&nbsp;
                     <!-- TO DO: ng-if assignment has not yet been compared, create/pass actual data on click -->
                     <span><a href="" ng-click="changeAnswer('Answer A', answerID)">Edit</a></span>
                     <!-- TO DO: ng-if assignment has been compared -->
@@ -218,16 +218,16 @@
                     </div>
                 </div>
             </div>
-            
+
         </div>
-        
+
         <br />
-        
+
         <input id="enable_self_evaluation" type="checkbox" name="enable_self_evaluation" ng-model="assignment.enable_self_evaluation">
         <label for="enable_self_evaluation">Require that students also evaluate their own answer (after peer comparisons)</label>
-        
+
         <hr />
-        
+
             <a href="" ng-click="showAdvanced = !showAdvanced">
                 <p>
                     <i class="fa fa-chevron-down" ng-show="showAdvanced"></i>
@@ -241,7 +241,7 @@
                     <div class="form-check col-md-1"></div>
                     <div class="form-check col-md-5">
                         <label class="form-check-label">
-                            <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm" value="random" checked>
+                            <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm" value="{{PairingAlgorithm.random}}">
                             Randomly select answers for comparison (no scores/rank):
                         </label>
                         <ul>
@@ -253,7 +253,7 @@
                     <div class="form-check col-md-1"></div>
                     <div class="form-check col-md-5">
                         <label class="form-check-label">
-                            <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm" value="adaptive">
+                            <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm" value="{{PairingAlgorithm.adaptive}}">
                             Adaptively select answers for comparison (add scores/rank):
                         </label>
                         <ul>

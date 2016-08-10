@@ -34,6 +34,7 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
         default=False, nullable=False)
     pairing_algorithm = db.Column(EnumType(PairingAlgorithm, name="pairing_algorithm"),
         nullable=True, default=PairingAlgorithm.random)
+    rank_display_limit = db.Column(db.Integer, nullable=True)
 
     # relationships
     # user via User Model

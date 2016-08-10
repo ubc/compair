@@ -35,6 +35,7 @@ class AnswersAPITests(ACJAPITestCase):
             # test non-existent entry
             rv = self.client.get(self._build_url(self.fixtures.course.id, 4903409))
             self.assert404(rv)
+
             # test data retrieve is correct
             self.fixtures.assignment.answer_end = datetime.datetime.now() - datetime.timedelta(days=1)
             db.session.add(self.fixtures.assignment)
@@ -78,7 +79,9 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(20, rv.json['per_page'])
             self.assertEqual(expected_answers.total, rv.json['total'])
 
-            # test sorting
+            # test sorting by criterion rank (display_rank_limit 10)
+            self.fixtures.assignment.rank_display_limit = 10
+            db.session.commit()
             rv = self.client.get(
                 self.base_url + '?orderBy={}'.format(self.fixtures.assignment.criteria[0].id)
             )
@@ -86,14 +89,52 @@ class AnswersAPITests(ACJAPITestCase):
             result = rv.json['objects']
             # test the result is paged and sorted
             expected = sorted(
-                self.fixtures.answers,
-                key=lambda ans: (ans.scores[0].score if len(ans.scores) else 0, ans.created),
+                [answer for answer in self.fixtures.answers if len(answer.scores)],
+                key=lambda ans: (ans.scores[0].score, ans.created),
+                reverse=True)[:10]
+            self.assertEqual([a.id for a in expected], [a['id'] for a in result])
+            self.assertEqual(1, rv.json['page'])
+            self.assertEqual(1, rv.json['pages'])
+            self.assertEqual(20, rv.json['per_page'])
+            self.assertEqual(len(expected), rv.json['total'])
+
+            # test sorting by criterion rank (display_rank_limit 20)
+            self.fixtures.assignment.rank_display_limit = 20
+            db.session.commit()
+            rv = self.client.get(
+                self.base_url + '?orderBy={}'.format(self.fixtures.assignment.criteria[0].id)
+            )
+            self.assert200(rv)
+            result = rv.json['objects']
+            # test the result is paged and sorted
+            expected = sorted(
+                [answer for answer in self.fixtures.answers if len(answer.scores)],
+                key=lambda ans: (ans.scores[0].score, ans.created),
                 reverse=True)[:20]
             self.assertEqual([a.id for a in expected], [a['id'] for a in result])
             self.assertEqual(1, rv.json['page'])
-            self.assertEqual(2, rv.json['pages'])
+            self.assertEqual(1, rv.json['pages'])
             self.assertEqual(20, rv.json['per_page'])
-            self.assertEqual(expected_answers.total, rv.json['total'])
+            self.assertEqual(len(expected), rv.json['total'])
+
+            # test sorting by criterion rank (display_rank_limit None)
+            self.fixtures.assignment.rank_display_limit = None
+            db.session.commit()
+            rv = self.client.get(
+                self.base_url + '?orderBy={}'.format(self.fixtures.assignment.criteria[0].id)
+            )
+            self.assert200(rv)
+            result = rv.json['objects']
+            # test the result is paged and sorted
+            expected = sorted(
+                [answer for answer in self.fixtures.answers if len(answer.scores)],
+                key=lambda ans: (ans.scores[0].score, ans.created),
+                reverse=True)[:20]
+            self.assertEqual([a.id for a in expected], [a['id'] for a in result])
+            self.assertEqual(1, rv.json['page'])
+            self.assertEqual(1, rv.json['pages'])
+            self.assertEqual(20, rv.json['per_page'])
+            self.assertEqual(len(expected), rv.json['total'])
 
             # test author filter
             rv = self.client.get(self.base_url + '?author={}'.format(self.fixtures.students[0].id))
@@ -151,7 +192,7 @@ class AnswersAPITests(ACJAPITestCase):
             )
             self.fixtures.answers.append(answer)
             db.session.commit()
-            rv = self.client.get(self.base_url + '?orderBy={}'.format(self.fixtures.assignment.criteria[0].id))
+            rv = self.client.get(self.base_url)
             self.assert200(rv)
             result = rv.json['objects']
             self.assertEqual(len(self.fixtures.answers), rv.json['total'])
@@ -394,7 +435,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(answer.content, rv.json['content'])
             self.assertEqual(len(answer.scores), len(rv.json['scores']))
             for index, score in enumerate(answer.scores):
-                self.assertFalse('rank' in rv.json['scores'][index])
+                self.assertEqual(score.rank, rv.json['scores'][index]['rank'])
                 self.assertEqual(int(score.normalized_score), rv.json['scores'][index]['normalized_score'])
 
         # test authorized instructor
@@ -406,7 +447,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(answer.content, rv.json['content'])
             self.assertEqual(len(answer.scores), len(rv.json['scores']))
             for index, score in enumerate(answer.scores):
-                self.assertFalse('rank' in rv.json['scores'][index])
+                self.assertEqual(score.rank, rv.json['scores'][index]['rank'])
                 self.assertEqual(int(score.normalized_score), rv.json['scores'][index]['normalized_score'])
 
     def test_edit_answer(self):
