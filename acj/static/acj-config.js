@@ -204,7 +204,7 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
         .when('/user/create',
             {
                 templateUrl: 'modules/user/user-create-partial.html',
-                label: "Create User",
+                label: "Create Account",
                 controller: 'UserController',
                 method: 'new'
             })

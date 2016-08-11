@@ -9,7 +9,7 @@ var CreateCoursePage = function() {
                 return element(by.css('#create-course-btn')).click();
             case "Download Report":
                 return element(by.css('#download-report-btn')).click();
-            case "Create User":
+            case "Create Account":
                 return element(by.css('#create-user-btn')).click();
         }
     }

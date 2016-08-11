@@ -5,13 +5,7 @@
             <h1><i class="fa fa-users"></i> Manage Users</h1>
         </header>
         <div class="col-md-6 sub-nav">
-            <div ng-show="lti_membership_enabled">
-                <a ng-click="updateLTIMembership()" class="btn btn-primary" ng-disabled="submitted">
-                    <i class="fa fa-upload"></i>
-                    Refresh
-                </a>
-            </div>
-            <div ng-show="!lti_membership_enabled">
+            <span ng-show="canManageUsers">
                 <a ng-href="#/course/{{courseId}}/user/import" class="btn btn-primary">
                     <i class="fa fa-download"></i>
                     Import Users
@@ -23,8 +17,8 @@
                 <!-- <a ng-href="#/course/{{courseId}}/user/group/import" class="btn btn-primary">
                     <i class="fa fa-list-ul"></i>
                     Assign Groups
-	            </a> -->
-            </div>
+                </a> -->
+            </span>
         </div>
     </div>
 
@@ -36,11 +30,18 @@
     <div class="row">
         <h3 class="col-md-2">{{ classlist.length + lti_membership_pending }} Users</h3>
         <div class="col-md-10">
-            <ng-include src="'modules/classlist/classlist-enrol-partial.html'"></ng-include>
+            <div ng-show="lti_membership_enabled" class="text-right">
+                <a ng-click="updateLTIMembership()" class="btn btn-success" ng-disabled="submitted">
+                    Refresh
+                </a>
+            </div>
+            <div ng-show="!lti_membership_enabled">
+                <ng-include src="'modules/classlist/classlist-enrol-partial.html'"></ng-include>
+            </div>
         </div>
     </div>
     <p ng-show="lti_membership_pending > 0">
-        {{lti_membership_pending}} LTI user<span ng-if="lti_membership_pending != 1">s</span> pending ComPAIR setup
+        {{lti_membership_pending}} imported LTI user<span ng-if="lti_membership_pending != 1">s</span> pending ComPAIR account setup
     </p>
     
     <hr />
