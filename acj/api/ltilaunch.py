@@ -10,14 +10,14 @@ from acj.core import event, db
 from acj.authorization import require, allow
 from login import authenticate
 from acj.models import User, Course, CourseRole, SystemRole, UserCourse, \
-    LTIConsumer, LTIContext, LTIMembership, LTIResourceLink, LTIUser, LTIUserResourceLink
+    LTIConsumer, LTIContext, LTIMembership, LTIResourceLink, LTIUser,  \
+    LTIUserResourceLink, LTINonce
 from acj.models.lti import MembershipNoValidContextsException, \
     MembershipNoResultsException, MembershipInvalidRequestException
 from .util import new_restful_api, get_model_changes, pagination_parser
 
 from acj.api.classlist import display_name_generator
 from lti.contrib.flask import FlaskToolProvider
-from lti import ToolProvider
 from oauthlib.oauth1 import RequestValidator
 
 lti_api = Blueprint("lti_api", __name__, url_prefix='/api')
@@ -344,9 +344,9 @@ class ACJRequestValidator(RequestValidator):
     def verifier_length(self):
         return 20, 30
 
-    def validate_timestamp_and_nonce(self, timestamp, nonce, request, request_token=None, access_token=None):
-        # TODO: add oauth nonce/timestamp table
-        return True
+    def validate_timestamp_and_nonce(self, client_key, timestamp, nonce,
+                                     request, request_token=None, access_token=None):
+        return LTINonce.is_valid_nonce(client_key, nonce, timestamp)
 
     def validate_client_key(self, client_key, request):
         lti_consumer = LTIConsumer.query \
@@ -365,8 +365,4 @@ class ACJRequestValidator(RequestValidator):
                 oauth_consumer_key=client_key
             ) \
             .one_or_none()
-
-        if lti_consumer:
-            return lti_consumer.oauth_consumer_secret
-        else:
-            return None
+        return lti_consumer.oauth_consumer_secret if lti_consumer else None

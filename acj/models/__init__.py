@@ -26,7 +26,7 @@ from .user_course import UserCourse
 
 # LTI models
 from .lti import LTIConsumer, LTIContext, LTIMembership, \
-    LTIResourceLink, LTIUser, LTIUserResourceLink
+    LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce
 
 from acj.core import db
 convention = {
