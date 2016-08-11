@@ -7,6 +7,7 @@ from acj.models import User, SystemRole, CourseRole, UserCourse, \
     LTIConsumer, LTIContext, LTIUser, LTIMembership,  \
     LTIResourceLink, LTIUserResourceLink
 from acj.core import db
+from oauthlib.common import generate_nonce, generate_timestamp
 
 class LTILaunchAPITests(ACJAPITestCase):
     def setUp(self):
@@ -171,6 +172,20 @@ class LTILaunchAPITests(ACJAPITestCase):
                 # check that user is logged in
                 self.assertEqual(str(user.id), sess.get('user_id'))
 
+            # ensure replay attacks do not work for lti launch requests
+            nonce = generate_nonce()
+            timestamp = generate_timestamp()
+            with self.lti_launch(lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
+                    assignment_id=assignment.id, follow_redirects=False,
+                    nonce=nonce, timestamp=timestamp) as rv:
+                self.assertRedirects(rv, '/static/index.html#/course/'+str(course.id)+'/assignment/'+str(assignment.id))
+
+            with self.lti_launch(lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
+                    assignment_id=assignment.id, follow_redirects=False,
+                    nonce=nonce, timestamp=timestamp) as rv:
+                self.assert400(rv)
 
     def test_lti_course_link(self):
         instructor = self.data.get_authorized_instructor()

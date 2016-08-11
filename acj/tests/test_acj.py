@@ -94,8 +94,9 @@ class ACJAPITestCase(ACJTestCase):
         self.client.delete('/api/logout', follow_redirects=True)
 
     @contextmanager
-    def lti_launch(self, lti_consumer, lti_resource_link_id, assignment_id=None, follow_redirects=True, **kwargs):
-
+    def lti_launch(self, lti_consumer, lti_resource_link_id,
+                         assignment_id=None, nonce=None, timestamp=None, follow_redirects=True,
+                         **kwargs):
         launch_params = kwargs.copy()
         launch_params['resource_link_id'] = lti_resource_link_id
         if assignment_id:
@@ -109,7 +110,7 @@ class ACJAPITestCase(ACJTestCase):
             launch_url='http://localhost/api/lti/auth'
         )
 
-        launch_request = tool_consumer.generate_launch_request()
+        launch_request = tool_consumer.generate_launch_request(nonce=nonce, timestamp=timestamp)
         lauch_data = parse_qs(launch_request.body.decode('utf-8'))
         rv = self.client.post('/api/lti/auth', data=lauch_data, follow_redirects=follow_redirects)
         yield rv

@@ -20,6 +20,7 @@ class LTIConsumer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     lis_outcome_service_url = db.Column(db.Text, nullable=True)
 
     # relationships
+    lti_nonces = db.relationship("LTINonce", backref="lti_consumer", lazy="dynamic")
     lti_contexts = db.relationship("LTIContext", backref="lti_consumer", lazy="dynamic")
     lti_resource_links = db.relationship("LTIResourceLink", backref="lti_consumer", lazy="dynamic")
     lti_users = db.relationship("LTIUser", backref="lti_consumer", lazy="dynamic")
