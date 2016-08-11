@@ -1,48 +1,51 @@
-<div ng-show="!showDuplicateForm">
-    <h1>Set ComPAIR Course</h1>
-    <br />
-    <p class="intro-text">
-        You're almost ready to start using ComPAIR!
-        Simply create a new ComPAIR course, select an existing ComPAIR course, or duplicate an existing ComPAIR course to begin creating and posting assignments for your students.
-    </p>
+<div class="course-select-screen">
+    <div ng-show="!showDuplicateForm">
+        <h1>Set ComPAIR Course</h1>
+        <br />
+        <p class="intro-text">
+            You're almost ready to start using ComPAIR!
+            Simply create a new ComPAIR course, select an existing ComPAIR course, or duplicate an existing ComPAIR course to begin creating and posting assignments for your students.
+        </p>
 
-    <div class="row">
-        <div class="col-xs-6">
-            <ng-include src="'modules/course/course-partial.html'"></ng-include>
-        </div>
-        <div class="col-xs-6">
-            <h1 id="view-title">Use Existing ({{courses.length}} Found)</h1>
+        <div class="row">
+            <div class="col-md-6">
+                <ng-include src="'modules/course/course-partial.html'"></ng-include>
+            </div>
+            <div class="col-md-6">
+                <h1 id="view-title">Use Existing ({{courses.length}} Found)</h1>
 
-            <!-- Course listing -->
-            <div class="course-list" ng-if="courses.length">
-                <div ng-repeat="course in courses | filter:courseFilter" class="each-course">
-                    <div class="col-sm-9">
-                        <h3 class="clearfix">
-                            {{course.name}}
-                        </h3>
-                    </div>
+                <!-- Course listing -->
+                <div class="course-select-list">
+                    <table class="table table-striped" ng-if="courses.length">
+                        <tr>
+                            <th ng-repeat="header in headers">{{header}}</th>
+                        </tr>
+                        <tr ng-repeat="course in courses | filter:courseFilter">
+                            <td><strong>{{course.name}}</strong></td>
+                            <td>
+                                <div class="text-right action-btns">
+                                    <a class="btn btn-default" ng-click="selectCourse(course)">
+                                        Use This
+                                    </a>
 
-                    <!-- Assignment Actions -->
-                    <div class="col-sm-3 text-right action-btns">
-                        <a class="btn btn-success" ng-click="selectCourse(course)">
-                            Use This
-                        </a>
+                                    <a class="btn btn-default" ng-click="selectDuplicateCourse(course)">
+                                        Duplicate This
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
 
-                        <a class="btn btn-success" ng-click="selectDuplicateCourse(course)">
-                            Duplicate This
-                        </a>
+                    <div ng-if="!courses.length">
+                        <p>No courses currently available.</p>
                     </div>
                 </div>
             </div>
-
-            <div ng-if="!courses.length">
-                <p>No courses currently available.</p>
-            </div>
         </div>
     </div>
-</div>
-<div ng-show="showDuplicateForm">
-    <p class="pull-right"><a ng-click="cancelSelectDuplicateCourse()">Cancel</a></p>
+    <div ng-show="showDuplicateForm">
+        <p class="pull-right"><a ng-click="cancelSelectDuplicateCourse()">Cancel</a></p>
 
-    <ng-include src="'modules/course/course-duplicate-partial.html'"></ng-include>
+        <ng-include src="'modules/course/course-duplicate-partial.html'"></ng-include>
+    </div>
 </div>

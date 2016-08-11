@@ -89,7 +89,6 @@ Feature: Edit Profile
       | user.displayname            | student123                 |
       | user.firstname              | student                    |
       | user.lastname               | 123                        |
-      | user.student_number         | 1234567890                 |
       | user.email                  | student.123@example.com    |
     And I submit form with "Save" button
     Then I should be on the "profile" page
