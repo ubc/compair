@@ -1,12 +1,12 @@
 <form name="userForm" class="form" ng-submit="save()" novalidate>
     <fieldset>
         <legend>Account Details</legend>
-        <p class="instructional-text" ng-if="canManageUsers || (method == 'new' && canCreateUsers)">
+        <p class="instructional-text" ng-if="canManageUsers || (method == 'new' && loggedInUserIsInstructor)">
             This application provides three user roles with increasing levels of permission.
             <strong>Students</strong> can post and edit their own answers, comments, and replies.
             <strong>Instructors</strong> can additionally add and edit their own courses and assignments.
             <strong>System Administrators</strong> can additionally create users and manage which users can access a course.</p>
-        <div class="form-group" ng-if="canManageUsers || (method == 'new' && canCreateUsers)">
+        <div class="form-group" ng-if="canManageUsers || (method == 'new' && loggedInUserIsInstructor)">
             <label for="system_role" class="required-star">Application Role </label>
             <select class="form-control" id="system_role" name="system_role"
                 ng-model="user.system_role" required
@@ -30,7 +30,7 @@
                 name="lastName" ng-model="user.lastname"
                 required />
         </acj-field-with-feedback>
-        <acj-field-with-feedback form-control="userForm.student_number">
+        <acj-field-with-feedback form-control="userForm.student_number" ng-if="method == 'new' || canManageUsers || loggedInUserIsInstructor">
             <label for="student_number">Student Number </label>
             <input class="form-control" id="student_number" type="text"
                 name="student_number" ng-model="user.student_number"/>

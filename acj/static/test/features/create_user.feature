@@ -1,20 +1,14 @@
-Feature: Create User
-  As user, I want to create users
+Feature: Create Account
+  As user, I want to create accounts
 
-  Scenario: Loading add user page by Create User button as admin
+  Scenario: Loading create user page by Create Account button as admin
     Given I'm a System Administrator
     And I'm on "home" page
-    When I select "Create User" button
+    When I select "Create Account" button
     Then I should be on the "create user" page
 
-  Scenario: Loading add user page by Create User button as instructor
-    Given I'm an Instructor
-    And I'm on "home" page
-    When I select "Create User" button
-    Then I should be on the "create user" page
-
-  Scenario: Creating a user as instructor
-    Given I'm an Instructor
+  Scenario: Creating a user as admin
+    Given I'm a System Administrator
     And I'm on "create user" page
     And I fill in:
       | element                     | content           |

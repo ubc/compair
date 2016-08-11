@@ -96,6 +96,13 @@ class UsersAPITests(ACJAPITestCase):
             self.assert403(rv)
 
         with self.login(self.data.get_authorized_instructor().username):
+            expected = UserFactory.stub(system_role=SystemRole.student.value)
+            rv = self.client.post(
+                url, data=json.dumps(expected.__dict__), content_type='application/json', record='unauthorized')
+            self.assert403(rv)
+
+        # only system admins can create users
+        with self.login('root'):
             # test duplicate username
             expected = UserFactory.stub(
                 system_role=SystemRole.student.value,
@@ -129,7 +136,8 @@ class UsersAPITests(ACJAPITestCase):
             # test creating admin
             expected = UserFactory.stub(system_role=SystemRole.sys_admin.value)
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
-            self.assert403(rv)
+            self.assert200(rv)
+            self.assertEqual(expected.displayname, rv.json['displayname'])
 
     def test_create_user_lti(self):
         url = '/api/users'

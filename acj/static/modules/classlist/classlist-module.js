@@ -14,6 +14,7 @@ var module = angular.module('ubc.ctlt.acj.classlist',
         'ubc.ctlt.acj.toaster',
         'ubc.ctlt.acj.user',
         'ubc.ctlt.acj.lti',
+        'ubc.ctlt.acj.authorization',
         'ui.bootstrap',
         'fileSaver'
     ]
@@ -55,8 +56,10 @@ module.controller(
     'ClassViewController',
     ["$scope", "$log", "$routeParams", "$route", "ClassListResource", "CourseResource",
              "CourseRole", "GroupResource", "Toaster", "Session", "SaveAs", "LTIResource",
+             "UserResource", "Authorize",
     function($scope, $log, $routeParams, $route, ClassListResource, CourseResource,
-             CourseRole, GroupResource, Toaster, Session, SaveAs, LTIResource)
+             CourseRole, GroupResource, Toaster, Session, SaveAs, LTIResource,
+             UserResource, Authorize)
     {
         $scope.classlist = {};
         var courseId = $routeParams['courseId'];
@@ -66,6 +69,9 @@ module.controller(
         $scope.lti_membership_pending = 0;
         Session.getUser().then(function(user) {
             $scope.loggedInUserId = user.id;
+        });
+        Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
+            $scope.canManageUsers = result;
         });
         CourseResource.get({'id':courseId},
             function (ret) {

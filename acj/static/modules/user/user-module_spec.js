@@ -162,7 +162,8 @@ describe('user-module', function () {
 
                 it('should be correctly initialized', function () {
                     expect($rootScope.user).toEqualData(viewUser);
-                    expect($rootScope.canCreateUser).toBe(true);
+                    expect($rootScope.canManageUsers).toBe(true);
+                    expect($rootScope.loggedInUserIsInstructor).toBe(false);
                     expect($rootScope.showEditButton).toEqualData({available: 'true'});
                 })
             });

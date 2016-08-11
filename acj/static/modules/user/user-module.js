@@ -64,11 +64,9 @@ module.controller("UserController",
         Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
             $scope.canManageUsers = result;
         });
-        Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function(result) {
-            $scope.canCreateUsers = result;
-        });
         Session.getUser().then(function(user) {
             $scope.ownProfile = userId == user.id;
+            $scope.loggedInUserIsInstructor = user.system_role == SystemRole.instructor;
 
             // remove system admin from system roles if current_user is not an admin
             if (user.system_role != SystemRole.sys_admin) {
@@ -105,9 +103,6 @@ module.controller("UserController",
 
         self.view = function() {
             self.edit();
-            Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function(result) {
-                $scope.canCreateUser = result;
-            });
             $scope.showEditButton = UserResource.getEditButton({"id":userId});
         };
 

@@ -36,16 +36,6 @@ def define_authorization(user, they):
             .count()
         return bool(exists)
 
-    def if_system_role_equal_or_lower_than_me(target):
-
-        if user.system_role == SystemRole.instructor:
-            return target.system_role != SystemRole.sys_admin
-        elif user.system_role == SystemRole.sys_admin:
-            return True
-        else:
-            # student can't create user
-            return False
-
     # Assign permissions based on system roles
     if user.system_role == SystemRole.sys_admin:
         # sysadmin can do anything
@@ -55,7 +45,6 @@ def define_authorization(user, they):
         they.can(CREATE, Course)
         they.can(CREATE, Criterion)
         they.can(EDIT, User, if_my_student)
-        they.can(CREATE, User, if_system_role_equal_or_lower_than_me)
         they.can(READ, USER_IDENTITY)
 
     # users can edit and read their own user account

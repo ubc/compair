@@ -3,7 +3,8 @@
     <fieldset>
         <legend>Assignment</legend>
         <div class="lti-param-copy pull-right" ng-show="assignment.id && assignment.lti_linkable">
-            LTI Parameter: "assignment={{assignment.id}}"
+            LTI Parameter: "<em>assignment={{assignment.id}}</em>"
+            &nbsp;&nbsp;
             <!-- TODO: when ui bootstrap is updated change trigger to 'outsideClick' -->
             <a href="" tooltip="Copied" tooltip-placement="bottom" tooltip-trigger="click"
                   ngclipboard data-clipboard-text="assignment={{assignment.id}}">
