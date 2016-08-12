@@ -10,7 +10,6 @@ from . import *
 from acj.core import db
 
 from oauthlib.oauth1 import SIGNATURE_TYPE_BODY, SIGNATURE_HMAC
-from oauthlib.common import generate_nonce, generate_timestamp
 from requests_oauthlib import OAuth1
 from lti.utils import parse_qs
 import requests
