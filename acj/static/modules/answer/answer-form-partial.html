@@ -1,17 +1,24 @@
-<p class="intro-text">Please note <strong>answers are not automatically saved</strong> as you type. However, you may manually save a draft of your answer below.</p>
+<!-- TO DO: cancel function needs to be included in new directive -->
+<p class="pull-right" ng-show="example"><a href="" ng-click="cancel()">Cancel</a></p>
+<div ng-show="example">
+    <h1>{{answerName}}</h1>
+    <p class="intro-text">This is one answer in the pair students will review as the first comparison for this assignment.</p>
+</div>
+
+<p class="intro-text" ng-hide="example">Please note <strong>answers are not automatically saved</strong> as you type. However, you may manually save a draft of your answer below.</p>
 
 <form class="form" name="answerForm" ng-submit="answerSubmit()" novalidate confirm-form-exit form-type="answer">
     <fieldset>
-        <h2><i class="fa fa-comments"></i> {{assignment.name}}</h2>
-        <div class="assignment-desc" mathjax hljs ng-bind-html="assignment.description"></div>
+        <h2 ng-hide="example"><i class="fa fa-comments"></i> {{assignment.name}}</h2>
+        <div class="assignment-desc" mathjax hljs ng-bind-html="assignment.description" ng-hide="example"></div>
 
         <!-- Attachment -->
-        <acj-pdf-inline label="See assignment details:" pdf="assignment.file">
+        <acj-pdf-inline label="See assignment details:" pdf="assignment.file" ng-hide="example">
         </acj-pdf-inline>
 
-        <hr />
+        <hr ng-hide="example" />
 
-        <div class="h3 text-center" ng-show="!canManageAssignment && showCountDown">
+        <div class="h3 text-center" ng-show="!canManageAssignment && showCountDown" ng-hide="example">
             <timer end-time="assignment.answer_end">
                 <span title="Official time remaining until deadline" class="bg-danger alert text-danger">{{minutes}} minutes {{seconds}} seconds left</span>
             </timer>
@@ -19,7 +26,7 @@
             <span class="h4">(Answer must be submitted by deadline to be accepted)</span>
         </div>
 
-        <div class="form-group" ng-if="canManageAssignment && showUserList">
+        <div class="form-group" ng-if="canManageAssignment && showUserList" ng-hide="example">
             <label for="user_id">Submit As</label>
             <select id="user_id" name="user_id" ng-model="answer.user_id"  class="form-control" required
                     ng-options="u.id as u.fullname for u in classlist">
