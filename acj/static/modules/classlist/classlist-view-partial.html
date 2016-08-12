@@ -40,7 +40,8 @@
     <div class="table-responsive">
         <table class="table table-striped">
             <thead>
-                <tr class>
+                <tr>
+                    <th></th>
                     <th>Actions</th>
                     <th>
                         <a href="" ng-click="reverse = predicate == 'firstname' && !reverse; predicate = 'firstname'">
@@ -70,7 +71,10 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="user in classlist | orderBy:predicate:reverse">
+                <tr ng-class="{'success': user.selected}" ng-repeat="user in classlist | orderBy:predicate:reverse">
+                    <td>
+                        <input ng-click="user.selected = !user.selected" type="checkbox" ng-checked="user.selected">
+                    </td>
                     <td>
                         <a href="#/user/{{user.id}}/edit" target="_blank">
                             Edit
@@ -101,5 +105,46 @@
             </tbody>
         </table>
     </div>
+    <div ng-show="classlist.length > 0">
+        <hr>
+        <label>Add Selected Users to Group</label>
+        <div class="row">
+            <div class="col-sm-2">
+                <p><a id="add-new-group" href="" class="btn btn-small btn-primary" ng-click="addUsersToNewGroup()">Add New</a></p>
+            </div>
+            <div class="col-sm-1">
+                <p>OR</p>
+            </div>
+            <div class="form-group col-sm-6">
+                <select id="select-group" class="form-control" ng-model="selectedGroup"
+                        ng-options="g as g for g in groups">
+                    <option value="">- None -</option>
+                </select>
+            </div>
+            <div class="col-sm-3">
+                <p><a id="add-select-group" class="btn btn-small btn-primary" ng-click="addUsersToGroup(selectedGroup)"
+                      ng-disabled="!groups.length">Update Group</a></p>
+            </div>
+        </div>
 
+        <label>Update Enrolment Status for Selected Users</label>
+        <div class="row">
+            <div class="col-sm-2">
+                <p><a id="drop-users" href="" class="btn btn-small btn-danger" ng-click="updateUsers()">Drop</a></p>
+            </div>
+            <div class="col-sm-1">
+                <p>OR</p>
+            </div>
+            <div class="form-group col-sm-6">
+                <select id="select-group" class="form-control" ng-model="selectedCourseRole"
+                        ng-options="course_role as course_role for course_role in course_roles">
+                    <option value="">- select a role -</option>
+                </select>
+            </div>
+            <div class="col-sm-3">
+                <p><a id="add-select-group" class="btn btn-small btn-primary" ng-click="updateUsers(selectedCourseRole)"
+                      ng-disabled="!selectedCourseRole">Update Course Role</a></p>
+            </div>
+        </div>
+    </div>
 </div>

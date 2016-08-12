@@ -9,7 +9,8 @@ var module = angular.module('ubc.ctlt.acj.group',
         'ubc.ctlt.acj.attachment',
         'ubc.ctlt.acj.common.form',
         'ubc.ctlt.acj.common.interceptor',
-        'ubc.ctlt.acj.toaster'
+        'ubc.ctlt.acj.toaster',
+        'ui.bootstrap'
     ]
 );
 
@@ -23,6 +24,8 @@ module.factory(
         var unenrolUrl = '/api/courses/:courseId/users/:userId/groups';
         var ret = $resource(url, {groupName: '@groupName'},
             {
+                updateUsersGroup: {method: 'POST', url: '/api/courses/:courseId/users/groups/:groupName', interceptor: Interceptors.enrolCache},
+                removeUsersGroup: {method: 'POST', url: '/api/courses/:courseId/users/groups', interceptor: Interceptors.enrolCache},
                 enrol: {method: 'POST', url: unenrolUrl+'/:groupName', interceptor: Interceptors.enrolCache},
                 unenrol: {method: 'DELETE', url: unenrolUrl, interceptor: Interceptors.enrolCache}
             }
@@ -85,6 +88,22 @@ module.controller(
 
         // TODO: change "Row" to something more meaningful
         $scope.headers = ['Row', 'Message'];
+    }
+]);
+
+module.controller(
+    'AddGroupModalController',
+    ["$rootScope", "$scope", "$modalInstance",
+    function ($rootScope, $scope, $modalInstance) {
+        $scope.group = {};
+
+        $scope.cancel = function (ret) {
+            $modalInstance.close();
+        }
+
+        $scope.groupSubmit = function () {
+            $modalInstance.close($scope.group.name);
+        };
     }
 ]);
 

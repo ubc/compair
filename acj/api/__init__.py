@@ -20,7 +20,7 @@ def register_api_blueprints(app):
     from .course_group_user import course_group_user_api
     app.register_blueprint(
         course_group_user_api,
-        url_prefix='/api/courses/<int:course_id>/users/<int:user_id>/groups')
+        url_prefix='/api/courses/<int:course_id>/users')
 
     from .login import login_api
     app.register_blueprint(login_api)
@@ -190,7 +190,8 @@ def log_events(log):
 
     # classlist events
     from .classlist import on_classlist_get, on_classlist_upload, on_classlist_enrol, on_classlist_unenrol, \
-        on_classlist_instructor_label, on_classlist_instructor, on_classlist_student
+        on_classlist_instructor_label, on_classlist_instructor, on_classlist_student, \
+        on_classlist_update_users_course_roles
     on_classlist_get.connect(log)
     on_classlist_upload.connect(log)
     on_classlist_enrol.connect(log)
@@ -198,6 +199,7 @@ def log_events(log):
     on_classlist_instructor_label.connect(log)
     on_classlist_instructor.connect(log)
     on_classlist_student.connect(log)
+    on_classlist_update_users_course_roles.connect(log)
 
     # course group events
     from .course_group import on_course_group_get, on_course_group_import, on_course_group_members_get
@@ -206,9 +208,12 @@ def log_events(log):
     on_course_group_members_get.connect(log)
 
     # course user group events
-    from .course_group_user import on_course_group_user_create, on_course_group_user_delete
+    from .course_group_user import on_course_group_user_create, on_course_group_user_delete, \
+        on_course_group_user_list_create, on_course_group_user_list_delete
     on_course_group_user_create.connect(log)
     on_course_group_user_delete.connect(log)
+    on_course_group_user_list_create.connect(log)
+    on_course_group_user_list_delete.connect(log)
 
     # report event
     from .report import on_export_report
