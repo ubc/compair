@@ -109,7 +109,16 @@ module.directive('comparisonPreview', function() {
                 $scope.current = 1;
                 $scope.firstAnsNum = 1;
                 $scope.secondAnsNum = 2;
-                $scope.total = $scope.assignment.total_steps_required;
+                $scope.total = 0;
+                if ($scope.assignment.number_of_comparisons > 0) {
+                    $scope.total = $scope.assignment.number_of_comparisons;
+                }
+                if ($scope.assignment.addPractice) {
+                    $scope.total++;
+                }
+                if ($scope.assignment.enable_self_evaluation) {
+                    $scope.total++;
+                }
                 /* answer pair shown is dummy content, no files */
                 $scope.answer1 = {
                     content: "<p>The first student answer in the pair will appear here.</p>",
@@ -789,6 +798,38 @@ module.controller("AssignmentWriteController",
                 criterionAddListener();
                 criterionCancelListener();
             });
+        };
+        
+        // TO DO: update temp copy/paste below, create directive, hook up to back end
+        $scope.changeAnswer = function(answerName, answerID) {
+            var modalScope = $scope.$new();
+            modalScope.example = true;
+            modalScope.answerName = answerName;
+            /*modalScope.criterion = angular.copy(criterion);
+            modalScope.editorOptions = EditorOptions.basic;*/
+            var modalInstance;
+            /*var criterionUpdateListener = $scope.$on('CRITERION_UPDATED', function(event, c) {
+                angular.copy(c, criterion);
+                modalInstance.close();
+            });
+            var criterionAddListener = $scope.$on('CRITERION_ADDED', function(event, criterion) {
+                $scope.assignment.criteria.push(criterion);
+                modalInstance.close();
+            });
+            var criterionCancelListener = $scope.$on('CRITERION_CANCEL', function() {
+                modalInstance.dismiss('cancel');
+            });*/
+            modalInstance = $modal.open({
+                animation: true,
+                templateUrl: 'modules/answer/answer-form-partial.html',
+                scope: modalScope
+            });
+            // we need to remove the listener, otherwise on multiple click, multiple listeners will be registered
+            /*modalInstance.result.finally(function(){
+                criterionUpdateListener();
+                criterionAddListener();
+                criterionCancelListener();
+            });*/
         };
 
         $scope.assignmentSubmit = function () {
