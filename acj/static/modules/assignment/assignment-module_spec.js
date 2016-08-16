@@ -91,7 +91,7 @@ describe('course-module', function () {
         "compare_end": "Wed, 22 Jun 2016 06:59:00 -0000",
         "compare_period": true,
         "compare_start": "Mon, 06 Jun 2016 06:59:00 -0000",
-        "compared": true,
+        "compared": false,
         "course_id": 1,
         "created": "Mon, 06 Jun 2016 19:52:27 -0000",
         "criteria": [
@@ -256,6 +256,46 @@ describe('course-module', function () {
                 "file": null,
                 "flagged": true,
                 "id": 12,
+                "private_comment_count": 0,
+                "public_comment_count": 0,
+                "scores": [],
+                "user": {
+                    "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
+                    "displayname": "root",
+                    "fullname": "thkx UeNV",
+                    "id": 1
+                },
+                "user_id": 1
+            },
+            {
+                "assignment_id": 1,
+                "comment_count": 0,
+                "content": "<p>I&#39;m the instructor</p>\n",
+                "course_id": 1,
+                "created": "Mon, 06 Jun 2016 21:07:57 -0000",
+                "file": null,
+                "flagged": true,
+                "id": 100,
+                "private_comment_count": 0,
+                "public_comment_count": 0,
+                "scores": [],
+                "user": {
+                    "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
+                    "displayname": "root",
+                    "fullname": "thkx UeNV",
+                    "id": 1
+                },
+                "user_id": 1
+            },
+            {
+                "assignment_id": 1,
+                "comment_count": 0,
+                "content": "<p>I&#39;m the instructor's second answer</p>\n",
+                "course_id": 1,
+                "created": "Mon, 06 Jun 2016 21:07:57 -0000",
+                "file": null,
+                "flagged": true,
+                "id": 101,
                 "private_comment_count": 0,
                 "public_comment_count": 0,
                 "scores": [],
@@ -651,6 +691,65 @@ describe('course-module', function () {
         ]
     };
 
+    var mockComparisonExamplesEmpty = {
+        "objects": []
+    }
+
+    var mockComparisonExamples = {
+        "objects": [
+            {
+                "answer1": {
+                    "assignment_id": 1,
+                    "comment_count": 0,
+                    "content": "<p>I&#39;m the instructor</p>\n",
+                    "course_id": 1,
+                    "created": "Mon, 06 Jun 2016 21:07:57 -0000",
+                    "file": null,
+                    "flagged": true,
+                    "id": 100,
+                    "private_comment_count": 0,
+                    "public_comment_count": 0,
+                    "scores": [],
+                    "user": {
+                        "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
+                        "displayname": "root",
+                        "fullname": "thkx UeNV",
+                        "id": 1
+                    },
+                    "user_id": 1
+                },
+                "answer1_id": 100,
+                "answer2": {
+                    "assignment_id": 1,
+                    "comment_count": 0,
+                    "content": "<p>I&#39;m the instructor's second answer</p>\n",
+                    "course_id": 1,
+                    "created": "Mon, 06 Jun 2016 21:07:57 -0000",
+                    "file": null,
+                    "flagged": true,
+                    "id": 101,
+                    "private_comment_count": 0,
+                    "public_comment_count": 0,
+                    "scores": [],
+                    "user": {
+                        "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
+                        "displayname": "root",
+                        "fullname": "thkx UeNV",
+                        "id": 1
+                    },
+                    "user_id": 1
+                },
+                "answer2_id": 101,
+                "assignment_id": 1,
+                "course_id": 1,
+                "created": "Wed, 17 Aug 2016 16:38:27 -0000",
+                "id": 1,
+                "modified": "Wed, 17 Aug 2016 16:38:27 -0000"
+            }
+        ]
+    };
+
+
     beforeEach(module('ubc.ctlt.acj.course'));
     beforeEach(inject(function ($injector) {
         $httpBackend = $injector.get('$httpBackend');
@@ -936,6 +1035,10 @@ describe('course-module', function () {
                 expect($rootScope.recommended_comparisons).toEqual(3);
                 expect($rootScope.availableCriteria).toEqual(otherCriteria);
                 expect($rootScope.loggedInUserId).toEqual(id);
+                expect($rootScope.comparison_example).toEqual({
+                    answer1: {},
+                    answer2: {}
+                });
 
                 expect($rootScope.canManageCriteriaAssignment).toBe(true);
             });
@@ -1005,8 +1108,48 @@ describe('course-module', function () {
                 });
             });
 
+            describe('when changeAnswer is called', function() {
+                var deferred;
+                var fakeModal = {
+                    result: {
+                        then: function(confirmCallback, cancelCallback) {
+                            this.confirmCallBack = confirmCallback;
+                            this.cancelCallback = cancelCallback;
+                        }
+                    },
+                    close: function( item ) {
+                        this.result.confirmCallBack( item );
+                    },
+                    dismiss: function( type ) {
+                        this.result.cancelCallback( type );
+                    }
+                };
+                beforeEach(function() {
+                    $rootScope.comparison_example.answer1 = {};
+                    spyOn($modal, 'open').and.returnValue(fakeModal);
+                    $rootScope.changeAnswer($rootScope.comparison_example.answer1, true);
+                });
+
+                it('should open a modal dialog', function() {
+                    expect($modal.open).toHaveBeenCalledWith({
+                        animation: true,
+                        controller: "AnswerExampleModalController",
+                        templateUrl: 'modules/answer/answer-form-partial.html',
+                        scope: jasmine.any(Object)
+                    })
+                });
+
+                it('should update after the close event', function() {
+                    var updated = {content: 'test1'};
+                    $rootScope.modalInstance.close(updated);
+                    expect($rootScope.comparison_example.answer1).toEqual(updated);
+                });
+            });
+
             describe('save', function() {
                 var toaster;
+                var mockPracticeAnswer1 = {content: "content A"};
+                var mockPracticeAnswer2 = {content: "content B"};
                 beforeEach(inject(function (_Toaster_) {
                     toaster = _Toaster_;
                     spyOn(toaster, 'error');
@@ -1063,6 +1206,38 @@ describe('course-module', function () {
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();
                     expect($rootScope.submitted).toBe(false);
+                });
+
+                it('should error when comparison examples enabled and answer A is not set', function () {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.id = undefined;
+                    $rootScope.assignment.addPractice = true;
+                    $rootScope.comparison_example = {
+                        answer1: {},
+                        answer2: mockPracticeAnswer2
+                    };
+
+                    var currentPath = $location.path();
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(false);
+                    expect(toaster.error).toHaveBeenCalledWith('Practice Answer A Error', 'Practice answers needs to have content.');
+                    expect($location.path()).toEqual(currentPath);
+                });
+
+                it('should error when comparison examples enabled and answer B is not set', function () {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.id = undefined;
+                    $rootScope.assignment.addPractice = true;
+                    $rootScope.comparison_example = {
+                        answer1: mockPracticeAnswer1,
+                        answer2: {}
+                    };
+
+                    var currentPath = $location.path();
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(false);
+                    expect(toaster.error).toHaveBeenCalledWith('Practice Answer B Error', 'Practice answers needs to have content.');
+                    expect($location.path()).toEqual(currentPath);
                 });
 
                 it('should be able to save new assignment', function () {
@@ -1077,6 +1252,29 @@ describe('course-module', function () {
                     expect($location.path()).toEqual('/course/1');
                     expect($rootScope.submitted).toBe(false);
                 });
+
+                it('should be able to save new assignment with comparison examples', function () {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.id = undefined;
+                    $rootScope.assignment.addPractice = true;
+                    $rootScope.comparison_example = {
+                        answer1: mockPracticeAnswer1,
+                        answer2: mockPracticeAnswer2
+                    };
+                    $httpBackend.expectPOST('/api/courses/1/assignments', $rootScope.assignment)
+                        .respond(angular.merge({}, mockAssignment, {id: 2}));
+                    $httpBackend.expectPOST('/api/courses/1/assignments/2/answers', $rootScope.comparison_example.answer1)
+                        .respond(angular.merge({}, mockPracticeAnswer1, {id: 100}));
+                    $httpBackend.expectPOST('/api/courses/1/assignments/2/answers', $rootScope.comparison_example.answer2)
+                        .respond(angular.merge({}, mockPracticeAnswer2, {id: 101}));
+                    $httpBackend.expectPOST('/api/courses/1/assignments/2/comparisons/examples', $rootScope.comparison_example)
+                        .respond(angular.merge({}, mockComparisonExamples.objects[0], {id: 1}));
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(true);
+                    $httpBackend.flush();
+                    expect($location.path()).toEqual('/course/1');
+                    expect($rootScope.submitted).toBe(false);
+                });
             });
         });
 
@@ -1085,6 +1283,7 @@ describe('course-module', function () {
                 controller = createController({current: {method: 'edit'}}, {courseId: 1, assignmentId: 1});
                 $httpBackend.expectGET('/api/courses/1/assignments/1').respond(mockAssignment);
                 $httpBackend.expectGET('/api/criteria').respond(mockCritiera);
+                $httpBackend.expectGET('/api/courses/1/assignments/1/comparisons/examples').respond(mockComparisonExamples);
                 $httpBackend.flush();
 
                 defaultCriteria = mockCritiera.objects[0];
@@ -1095,11 +1294,15 @@ describe('course-module', function () {
             it('should be correctly initialized', function () {
                 expect($rootScope.assignment.id).toEqual(mockAssignment.id);
                 expect($rootScope.assignment.criteria).toEqual(mockAssignment.criteria);
+                expect($rootScope.assignment.addPractice).toEqual(true);
                 expect($rootScope.compared).toEqual(mockAssignment.compared);
 
                 expect($rootScope.recommended_comparisons).toEqual(3);
                 expect($rootScope.availableCriteria).toEqual(otherCriteria);
                 expect($rootScope.loggedInUserId).toEqual(id);
+                expect($rootScope.comparison_example.id).toEqual(mockComparisonExamples.objects[0].id);
+                expect($rootScope.comparison_example.answer1_id).toEqual(mockComparisonExamples.objects[0].answer1_id);
+                expect($rootScope.comparison_example.answer2_id).toEqual(mockComparisonExamples.objects[0].answer2_id);
 
                 expect($rootScope.canManageCriteriaAssignment).toBe(true);
             });
@@ -1169,6 +1372,43 @@ describe('course-module', function () {
                 });
             });
 
+            describe('when changeAnswer is called', function() {
+                var deferred;
+                var fakeModal = {
+                    result: {
+                        then: function(confirmCallback, cancelCallback) {
+                            this.confirmCallBack = confirmCallback;
+                            this.cancelCallback = cancelCallback;
+                        }
+                    },
+                    close: function( item ) {
+                        this.result.confirmCallBack( item );
+                    },
+                    dismiss: function( type ) {
+                        this.result.cancelCallback( type );
+                    }
+                };
+                beforeEach(function() {
+                    spyOn($modal, 'open').and.returnValue(fakeModal);
+                    $rootScope.changeAnswer($rootScope.comparison_example.answer1, true);
+                });
+
+                it('should open a modal dialog', function() {
+                    expect($modal.open).toHaveBeenCalledWith({
+                        animation: true,
+                        controller: "AnswerExampleModalController",
+                        templateUrl: 'modules/answer/answer-form-partial.html',
+                        scope: jasmine.any(Object)
+                    })
+                });
+
+                it('should update after the close event', function() {
+                    var updated = angular.merge({}, $rootScope.comparison_example.answer1, {content: 'test123'}) ;
+                    $rootScope.modalInstance.close(updated);
+                    expect($rootScope.comparison_example.answer1).toEqual(updated);
+                });
+            });
+
             describe('save', function() {
                 var toaster;
                 beforeEach(inject(function (_Toaster_) {
@@ -1214,6 +1454,29 @@ describe('course-module', function () {
                     expect($location.path()).toEqual(currentPath);
                 });
 
+                it('should error when comparison examples enabled and answer A is not set', function () {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.addPractice = true;
+                    $rootScope.comparison_example.answer1.content = "";
+                    var currentPath = $location.path();
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(false);
+                    expect(toaster.error).toHaveBeenCalledWith('Practice Answer A Error', 'Practice answers needs to have content.');
+                    expect($location.path()).toEqual(currentPath);
+                });
+
+                it('should error when comparison examples enabled and answer B is not set', function () {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.id = undefined;
+                    $rootScope.assignment.addPractice = true;
+                    $rootScope.comparison_example.answer2.content = "";
+                    var currentPath = $location.path();
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(false);
+                    expect(toaster.error).toHaveBeenCalledWith('Practice Answer B Error', 'Practice answers needs to have content.');
+                    expect($location.path()).toEqual(currentPath);
+                });
+
                 it('should enable save button even if save failed', function() {
                     $rootScope.assignment = angular.copy(mockAssignment);
 
@@ -1227,9 +1490,29 @@ describe('course-module', function () {
 
                 it('should be able to save new assignment', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.addPractice = true;
 
                     $httpBackend.expectPOST('/api/courses/1/assignments/1', $rootScope.assignment)
-                        .respond($rootScope.assignment);
+                        .respond(angular.copy($rootScope.assignment));
+                    $httpBackend.expectPOST('/api/courses/1/assignments/1/comparisons/examples/1', $rootScope.comparison_example)
+                        .respond(mockComparisonExamples.objects[0]);
+
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(true);
+                    $httpBackend.flush();
+                    expect($location.path()).toEqual('/course/1');
+                    expect($rootScope.submitted).toBe(false);
+                });
+
+                it('should be able to save new assignment and delete old comparison example', function () {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.addPractice = false;
+
+                    $httpBackend.expectPOST('/api/courses/1/assignments/1', $rootScope.assignment)
+                        .respond(angular.merge({}, mockAssignment, {id: 2}));
+                    $httpBackend.expectDELETE('/api/courses/1/assignments/2/comparisons/examples/1')
+                        .respond({});
+
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();

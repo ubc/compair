@@ -31,6 +31,7 @@ def create(course_id):
         join(Answer). \
         join(Score.criterion). \
         filter(Answer.draft == False). \
+        filter(Answer.practice == False). \
         order_by(Answer.assignment_id, Criterion.id, Answer.user_id)
 
     if course_id:

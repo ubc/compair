@@ -74,8 +74,11 @@ class GradebookAPI(Resource):
             outerjoin(Score, and_(
                 Answer.id == Score.answer_id,
                 Score.criterion_id.in_(criterion_ids))). \
-            filter(Answer.assignment_id == assignment_id). \
-            filter(Answer.draft == False). \
+            filter(and_(
+                Answer.assignment_id == assignment_id,
+                Answer.draft == False,
+                Answer.practice == False
+            )). \
             subquery()
 
         scores_by_user = User.query. \

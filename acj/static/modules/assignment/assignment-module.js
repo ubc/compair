@@ -168,6 +168,24 @@ module.factory(
 ]);
 
 module.factory(
+    "ComparisonExampleResource",
+    [ "$resource",
+    function ($resource)
+    {
+        var url = '/api/courses/:courseId/assignments/:assignmentId/comparisons/examples/:comparisonExampleId';
+        var ret = $resource(url, {comparisonExampleId: '@id'},
+            {
+                'get': {url: url},
+                'save': {method: 'POST', url: url},
+                'delete': {method: 'DELETE', url: url}
+            }
+        );
+        ret.MODEL = "ComparisonExample";
+        return ret;
+    }
+]);
+
+module.factory(
     "AttachmentResource",
     [ "$resource",
     function ($resource)
@@ -305,10 +323,10 @@ module.filter("notScoredEnd", function () {
 
 /***** Controllers *****/
 module.controller("AssignmentViewController",
-    ["$scope", "$log", "$routeParams", "$location", "AnswerResource", "Authorize", "AssignmentResource", "AssignmentCommentResource",
+    ["$scope", "$routeParams", "$location", "AnswerResource", "Authorize", "AssignmentResource", "AssignmentCommentResource",
              "AttachmentResource", "ComparisonResource", "CourseResource", "required_rounds", "Session", "Toaster", "AnswerCommentResource",
              "GroupResource", "AnswerCommentType", "PairingAlgorithm",
-    function($scope, $log, $routeParams, $location, AnswerResource, Authorize, AssignmentResource, AssignmentCommentResource,
+    function($scope, $routeParams, $location, AnswerResource, Authorize, AssignmentResource, AssignmentCommentResource,
              AttachmentResource, ComparisonResource, CourseResource, required_rounds, Session, Toaster, AnswerCommentResource,
              GroupResource, AnswerCommentType, PairingAlgorithm)
     {
@@ -347,8 +365,9 @@ module.controller("AssignmentViewController",
                     $scope.criteria = ret.criteria;
                     $scope.reverse = true;
 
-                    // rank_display_limit is null, 10, or 20
-                    $scope.rankLimit = ret.rank_display_limit;
+                    if (ret.rank_limit) {
+                        $scope.rankLimit = ret.rank_limit;
+                    }
 
                     $scope.readDate = Date.parse(ret.created);
 
@@ -607,12 +626,14 @@ module.controller("AssignmentViewController",
     }
 ]);
 module.controller("AssignmentWriteController",
-    [ "$scope", "$log", "$location", "$routeParams", "$route", "AssignmentResource", "$modal", "Authorize",
+    [ "$scope", "$q", "$location", "$routeParams", "$route", "AssignmentResource", "$modal", "Authorize",
              "AssignmentCriterionResource", "CriterionResource", "required_rounds", "Toaster", "attachService",
-             "AttachmentResource", "Session", "EditorOptions", "PairingAlgorithm",
-    function($scope, $log, $location, $routeParams, $route, AssignmentResource, $modal, Authorize,
+             "AttachmentResource", "Session", "EditorOptions", "PairingAlgorithm", "ComparisonExampleResource",
+             "AnswerResource",
+    function($scope, $q, $location, $routeParams, $route, AssignmentResource, $modal, Authorize,
              AssignmentCriterionResource, CriterionResource, required_rounds, Toaster, attachService,
-             AttachmentResource, Session, EditorOptions, PairingAlgorithm)
+             AttachmentResource, Session, EditorOptions, PairingAlgorithm, ComparisonExampleResource,
+             AnswerResource)
     {
         var courseId = $routeParams['courseId'];
         //initialize assignment so this scope can access data from included form
@@ -624,6 +645,10 @@ module.controller("AssignmentWriteController",
         $scope.uploader = attachService.getUploader();
         $scope.resetName = attachService.resetName();
         $scope.recommended_comparisons = Math.floor(required_rounds / 2);
+        $scope.comparison_example = {
+            answer1: {},
+            answer2: {}
+        };
 
         Session.getUser().then(function(user) {
             $scope.loggedInUserId = user.id;
@@ -681,6 +706,7 @@ module.controller("AssignmentWriteController",
                     }
                     $scope.assignment = ret;
                     $scope.compared = ret.compared;
+                    $scope.assignment.addPractice = false;
                     // TODO: Remove temporary edit workaround when the pairing algorithm selection UI is in place
                     if ($scope.assignment.pairing_algorithm == null) {
                         $scope.assignment.pairing_algorithm = PairingAlgorithm.random;
@@ -696,6 +722,18 @@ module.controller("AssignmentWriteController",
                             }
                         );
                     }
+
+                    ComparisonExampleResource.get({'courseId': courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
+                        function (ret) {
+                            if (ret.objects.length > 0) {
+                                $scope.comparison_example = ret.objects[0];
+                                $scope.assignment.addPractice = true;
+                            }
+                        },
+                        function () {
+                            Toaster.reqerror("Assignment Practice Answers not Found", "No practice answers found for assignment with id "+$scope.assignmentId);
+                        }
+                    );
                 },
                 function () {
                     Toaster.reqerror("Assignment Not Found", "No assignment found for id "+$scope.assignmentId);
@@ -801,37 +839,42 @@ module.controller("AssignmentWriteController",
                 criterionCancelListener();
             });
         };
-        
-        // TO DO: update temp copy/paste below, create directive, hook up to back end
-        $scope.changeAnswer = function(answerName, answerID) {
+
+        $scope.changeAnswer = function(answer, isAnswer1) {
             var modalScope = $scope.$new();
             modalScope.example = true;
-            modalScope.answerName = answerName;
-            /*modalScope.criterion = angular.copy(criterion);
-            modalScope.editorOptions = EditorOptions.basic;*/
-            var modalInstance;
-            /*var criterionUpdateListener = $scope.$on('CRITERION_UPDATED', function(event, c) {
-                angular.copy(c, criterion);
-                modalInstance.close();
-            });
-            var criterionAddListener = $scope.$on('CRITERION_ADDED', function(event, criterion) {
-                $scope.assignment.criteria.push(criterion);
-                modalInstance.close();
-            });
-            var criterionCancelListener = $scope.$on('CRITERION_CANCEL', function() {
-                modalInstance.dismiss('cancel');
-            });*/
-            modalInstance = $modal.open({
+            modalScope.answerName = isAnswer1 ? 'Answer A' : 'Answer B';
+            modalScope.courseId = courseId;
+            modalScope.assignmentId = $scope.assignment.id;
+            modalScope.answer = angular.copy(answer);
+
+            $scope.modalInstance = $modal.open({
                 animation: true,
+                controller: "AnswerExampleModalController",
                 templateUrl: 'modules/answer/answer-form-partial.html',
                 scope: modalScope
             });
-            // we need to remove the listener, otherwise on multiple click, multiple listeners will be registered
-            /*modalInstance.result.finally(function(){
-                criterionUpdateListener();
-                criterionAddListener();
-                criterionCancelListener();
-            });*/
+
+            $scope.modalInstance.result.then(function (answer) {
+                if (isAnswer1) {
+                    $scope.comparison_example.answer1 = answer;
+                    if (answer.id) {
+                        $scope.comparison_example.answer1_id = answer.id
+                    }
+                } else {
+                    $scope.comparison_example.answer2 = answer;
+                    if (answer.id) {
+                        $scope.comparison_example.answer2_id = answer.id
+                    }
+                }
+            });
+        };
+
+        // revealAnswer function shows full answer content for abbreviated answers (determined by getHeight directive)
+        $scope.revealAnswer = function(answerId) {
+            var thisClass = '.content.'+answerId;      // class for the answer to show is "content" plus the answer's ID
+            $(thisClass).css({'max-height' : 'none'}); // now remove height restriction for this answer
+            this.showReadMore = false;                 // and hide the read more button for this answer
         };
 
         $scope.assignmentSubmit = function () {
@@ -855,6 +898,24 @@ module.controller("AssignmentWriteController",
                 $scope.submitted = false;
                 return;
             }
+
+
+            if ($scope.assignment.addPractice) {
+                var answer1 = $scope.comparison_example.answer1;
+                var answer2 = $scope.comparison_example.answer2;
+
+                if ((!answer1.content || answer1.content.trim() == "") && !answer1.file && (!answer1.file_alias || answer1.file_alias == "")) {
+                    Toaster.error("Practice Answer A Error", 'Practice answers needs to have content.');
+                    $scope.submitted = false;
+                    return;
+                }
+                if ((!answer2.content || answer2.content.trim() == "") && !answer2.file  && (!answer2.file_alias || answer2.file_alias == "")) {
+                    Toaster.error("Practice Answer B Error", 'Practice answers needs to have content.');
+                    $scope.submitted = false;
+                    return;
+                }
+            }
+
             // if option is not checked; make sure no compare dates are saved.
             if (!$scope.assignment.availableCheck) {
                 $scope.assignment.compare_start = null;
@@ -864,13 +925,30 @@ module.controller("AssignmentWriteController",
             $scope.assignment.file_alias = attachService.getAlias();
             AssignmentResource.save({'courseId': courseId}, $scope.assignment)
                 .$promise.then(function (ret) {
-                    $scope.submitted = false;
-                    if ($route.current.method == "new") {
-                        Toaster.success("New Assignment Created",'"' + ret.name + '" should now be listed.');
-                    } else {
-                        Toaster.success("Assignment Updated");
+                    var assignmentId = ret.id;
+                    var promises = [];
+
+                    // only save comparison example changes if assignment hasn't been compared yet
+                    if (!$scope.assignment.compared) {
+                        if ($scope.assignment.addPractice) {
+                            promises.push(saveComparisonsExample(assignmentId, $scope.comparison_example));
+                        } else {
+                            promises.push(deleteComparisonsExample(assignmentId, $scope.comparison_example));
+                        }
                     }
-                    $location.path('/course/' + courseId);
+
+                    $q.all(promises).then(function() {
+                        $scope.submitted = false;
+                        if ($route.current.method == "new") {
+                            Toaster.success("New Assignment Created",'"' + ret.name + '" should now be listed.');
+                        } else {
+                            Toaster.success("Assignment Updated");
+                        }
+                        $location.path('/course/' + courseId);
+                    }, function() {
+                        // error message handled elsewhere
+                        $scope.submitted = false;
+                    });
                 },
                 function (ret) {
                     $scope.submitted = false;
@@ -881,6 +959,81 @@ module.controller("AssignmentWriteController",
                     }
                 }
             );
+        };
+
+        var deleteComparisonsExample = function(assignmentId, comparison_example) {
+            return $q(function(resolve, reject) {
+                if (comparison_example.id) {
+                    ComparisonExampleResource.delete({'courseId': courseId, 'assignmentId': assignmentId}, comparison_example)
+                    .$promise.then(
+                        function (ret) {
+                            comparison_example.id = null;
+                            resolve();
+                        },
+                        function (ret) {
+                            Toaster.reqerror("Practice Answers Selete Failed.", ret);
+                            reject();
+                        }
+                    );
+                } else {
+                    resolve();
+                }
+            });
+        };
+
+        var saveComparisonsExample = function(assignmentId, comparison_example) {
+            return $q(function(resolve, reject) {
+                var promises = [];
+
+                // save answers
+                promises.push(saveNewComparisonsExampleAnswer(assignmentId, comparison_example, comparison_example.answer1, true));
+                promises.push(saveNewComparisonsExampleAnswer(assignmentId, comparison_example, comparison_example.answer2, false));
+
+                // after answers are saved, save comparison example
+                $q.all(promises).then(function() {
+                    ComparisonExampleResource.save({'courseId': courseId, 'assignmentId': assignmentId}, comparison_example)
+                    .$promise.then(
+                        function (ret) {
+                            comparison_example.id = ret.id;
+                            resolve();
+                        },
+                        function (ret) {
+                            Toaster.reqerror("Practice Answers Save Failed.", ret);
+                            reject();
+                        }
+                    );
+                }, function() {
+                    // cannot save comparison example due to errors with answers
+                    reject();
+                });
+            });
+        };
+
+        var saveNewComparisonsExampleAnswer = function(assignmentId, comparison_example, answer, isAnswer1) {
+            return $q(function(resolve, reject) {
+                // only save the answer if new (saved automatically in modal if already exists)
+                if (answer.id == null) {
+                    AnswerResource.save({'courseId': courseId, 'assignmentId': assignmentId}, answer)
+                    .$promise.then(
+                        function (ret) {
+                            if (isAnswer1) {
+                                comparison_example.answer1_id = ret.id;
+                                comparison_example.answer1 = ret;
+                            } else {
+                                comparison_example.answer2_id = ret.id;
+                                comparison_example.answer2 = ret;
+                            }
+                            resolve();
+                        },
+                        function (ret) {
+                            Toaster.reqerror("Practice Answer Save Failed.", ret);
+                            reject();
+                        }
+                    );
+                } else {
+                    resolve();
+                }
+            });
         };
     }
 ]);

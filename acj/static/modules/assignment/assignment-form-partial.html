@@ -163,9 +163,7 @@
         <hr />
 
         <p>Add-on comparison options:</p>
-
-        <!-- TO DO: hook input into back end -->
-        <input id="add_practice" type="checkbox" name="add_practice" ng-model="assignment.addPractice">
+        <input id="add_practice" type="checkbox" name="add_practice" ng-model="assignment.addPractice" ng-disabled="assignment.compared">
         <label for="add_practice">Start students with instructor-created answer pair for practice (before peer comparisons)</label>
 
         <div ng-show="assignment.addPractice">
@@ -173,23 +171,26 @@
             <div class="row">
                 <div class="col-md-1"></div>
                 <div class="col-md-5 form-group">
-                    <!-- TO DO: make entry required if assignment.addPractice" -->
                     <label class="required-star">Answer A</label>
                     &nbsp;&mdash;&nbsp;
-                    <!-- TO DO: ng-if assignment has not yet been compared, create/pass actual data on click -->
-                    <span><a href="" ng-click="changeAnswer('Answer A', answerID)">Edit</a></span>
-                    <!-- TO DO: ng-if assignment has been compared -->
-                    <span class="text-muted">(not editable)</span>
-                    <!-- TO DO: ng-if answer has not been added -->
-                    <div>
+                    <span ng-if="!assignment.compared">
+                        <a href="" ng-click="changeAnswer(comparison_example.answer1, true)">Edit</a>
+                    </span>
+                    <span ng-if="assignment.compared" class="text-muted">(not editable)</span>
+                    <div ng-if="!comparison_example.answer1.content && !comparison_example.answer1.file && !comparison_example.answer1.file_name">
                         <p class="text-muted"><em>Click 'Edit' above to add your example answer here.</em></p>
                     </div>
-                    <!-- TO DO: ng-if answer has been added -->
                     <div>
-                        <!-- TO DO: hook into back end -->
-                        <div mathjax hljs ng-bind-html="answer1.content"></div>
+                        <div mathjax hljs ng-bind-html="comparison_example.answer1.content"></div>
                         <acj-pdf-inline label="See answer details:"
-                            pdf="answer1.file" ng-click="revealAnswer(answer.id)">
+                            pdf="comparison_example.answer1.file"
+                            ng-click="revealAnswer(comparison_example.answer1_id)"
+                            ng-show="!comparison_example.answer1.file_name">
+                        </acj-pdf-inline>
+                        <acj-pdf-inline label="See answer details:"
+                            pdf="{'name': comparison_example.answer1.file_name}"
+                            ng-click="revealAnswer(comparison_example.answer1_id)"
+                            ng-show="comparison_example.answer1.file_name">
                         </acj-pdf-inline>
                     </div>
                 </div>
@@ -197,23 +198,26 @@
                     <label>vs.</label>
                 </div>
                 <div class="col-md-5 form-group">
-                    <!-- TO DO: make entry required if assignment.addPractice" -->
                     <label class="required-star">Answer B</label>
                     &nbsp;&mdash;&nbsp;
-                    <!-- TO DO: ng-if assignment has not yet been compared, create/pass actual data on click -->
-                    <span><a href="" ng-click="changeAnswer('Answer B', answerID)">Edit</a></span>
-                    <!-- TO DO: ng-if assignment has been compared -->
-                    <span class="text-muted">(not editable)</span>
-                    <!-- TO DO: ng-if answer has not been added -->
-                    <div>
+                    <span ng-if="!assignment.compared">
+                        <a href="" ng-click="changeAnswer(comparison_example.answer2, false)">Edit</a>
+                    </span>
+                    <span ng-if="assignment.compared" class="text-muted">(not editable)</span>
+                    <div ng-if="!comparison_example.answer2.content && !comparison_example.answer2.file && !comparison_example.answer2.file_name">
                         <p class="text-muted"><em>Click 'Edit' above to add your example answer here.</em></p>
                     </div>
-                    <!-- TO DO: ng-if answer has been added -->
                     <div>
-                        <!-- TO DO: hook into back end -->
-                        <div mathjax hljs ng-bind-html="answer2.content"></div>
+                        <div mathjax hljs ng-bind-html="comparison_example.answer2.content"></div>
                         <acj-pdf-inline label="See answer details:"
-                            pdf="answer2.file" ng-click="revealAnswer(answer.id)">
+                            pdf="comparison_example.answer2.file"
+                            ng-click="revealAnswer(comparison_example.answer2_id)"
+                            ng-show="!comparison_example.answer2.file_name">
+                        </acj-pdf-inline>
+                        <acj-pdf-inline label="See answer details:"
+                            pdf="{'name': comparison_example.answer2.file_name}"
+                            ng-click="revealAnswer(comparison_example.answer2_id)"
+                            ng-show="comparison_example.answer2.file_name">
                         </acj-pdf-inline>
                     </div>
                 </div>

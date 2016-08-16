@@ -47,12 +47,14 @@ class ComparisonExampleIdAPI(Resource):
 
         if answer1_id:
             answer1 = Answer.get_active_or_404(answer1_id)
+            answer1.practice = True
             comparison_example.answer1_id = answer1_id
         else:
             return {"error": "Comparison examples must have 2 answers"}, 400
 
         if answer2_id:
             answer2 = Answer.get_active_or_404(answer2_id)
+            answer2.practice = True
             comparison_example.answer2_id = answer2_id
         else:
             return {"error": "Comparison examples must have 2 answers"}, 400
@@ -135,12 +137,14 @@ class ComparisonExampleRootAPI(Resource):
 
         if answer1_id:
             answer1 = Answer.get_active_or_404(answer1_id)
+            answer1.practice = True
             new_comparison_example.answer1_id = answer1_id
         else:
             return {"error": "Comparison examples must have 2 answers"}, 400
 
         if answer2_id:
             answer2 = Answer.get_active_or_404(answer2_id)
+            answer2.practice = True
             new_comparison_example.answer2_id = answer2_id
         else:
             return {"error": "Comparison examples must have 2 answers"}, 400

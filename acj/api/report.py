@@ -158,9 +158,12 @@ def participation_stat_report(course_id, assignments, group_name, overall):
     for assignment in assignments:
         # ANSWERS: assume max one answer per user
         answers = Answer.query \
-            .filter_by(active=True) \
-            .filter_by(assignment_id=assignment.id) \
-            .filter_by(draft=False) \
+            .filter_by(
+                active=True,
+                assignment_id=assignment.id,
+                draft=False,
+                practice=False
+            ) \
             .all()
         answers = {a.user_id: a.id for a in answers}
 
@@ -252,6 +255,7 @@ def participation_report(course_id, assignments, group_name):
         .filter(Answer.assignment_id.in_(assignment_ids)) \
         .filter(Answer.user_id.in_(user_ids)) \
         .filter(Answer.draft == False) \
+        .filter(Answer.practice == False) \
         .all()
 
     scores = {}  # structure - user_id/assignment_id/criterion_id/normalized_score

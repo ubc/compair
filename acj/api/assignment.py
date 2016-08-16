@@ -156,7 +156,7 @@ class AssignmentIdAPI(Resource):
 
         file_name = params.get("file_name")
         if file_name:
-            assignment.file_id = add_new_file(params.get('file_alias'), file_name,
+            assignment.file = add_new_file(params.get('file_alias'), file_name,
                 Assignment.__name__, assignment.id)
 
             db.session.commit()
@@ -274,7 +274,7 @@ class AssignmentRootAPI(Resource):
 
         file_name = params.get("file_name")
         if file_name:
-            new_assignment.file_id = add_new_file(params.get('file_alias'), file_name,
+            new_assignment.file = add_new_file(params.get('file_alias'), file_name,
                 Assignment.__name__, new_assignment.id)
 
             db.session.add(new_assignment)
@@ -305,6 +305,7 @@ class AssignmentIdStatusAPI(Resource):
                 user_id=current_user.id,
                 assignment_id=assignment_id,
                 active=True,
+                practice=False,
                 draft=False
             ) \
             .count()
@@ -315,6 +316,7 @@ class AssignmentIdStatusAPI(Resource):
                 user_id=current_user.id,
                 assignment_id=assignment_id,
                 active=True,
+                practice=False,
                 draft=True
             ) \
             .all()
@@ -346,6 +348,7 @@ class AssignmentIdStatusAPI(Resource):
                     AnswerComment.draft == False,
                     Answer.assignment_id == assignment_id,
                     Answer.active == True,
+                    Answer.practice == False,
                     Answer.draft == False
                 )) \
                 .count()
@@ -384,6 +387,7 @@ class AssignmentRootStatusAPI(Resource):
             .filter_by(
                 user_id=current_user.id,
                 active=True,
+                practice=False,
                 draft=False
             ) \
             .filter(Answer.assignment_id.in_(assignment_ids)) \
@@ -403,6 +407,7 @@ class AssignmentRootStatusAPI(Resource):
                 AnswerComment.comment_type == AnswerCommentType.self_evaluation,
                 AnswerComment.draft == False,
                 Answer.active == True,
+                Answer.practice == False,
                 Answer.draft == False,
                 Answer.assignment_id.in_(assignment_ids)
             )) \
@@ -414,6 +419,7 @@ class AssignmentRootStatusAPI(Resource):
             .filter_by(
                 user_id=current_user.id,
                 active=True,
+                practice=False,
                 draft=True
             ) \
             .all()

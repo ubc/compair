@@ -327,13 +327,13 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
                     self.assertEqual(status['comparisons']['count'], 0)
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
-                    self.assertEqual(status['answers']['count'], 2)
+                    self.assertEqual(status['answers']['count'], 1)
                 elif assignments[1].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
-                    self.assertEqual(status['answers']['count'], 2)
+                    self.assertEqual(status['answers']['count'], 1)
                 else:
                     self.assertFalse(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
@@ -432,7 +432,7 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
             self.assertEqual(status['comparisons']['left'], self.assignment.total_comparisons_required)
             self.assertTrue(status['comparisons']['available'])
             self.assertTrue(status['answers']['answered'])
-            self.assertEqual(status['answers']['count'], 2)
+            self.assertEqual(status['answers']['count'], 1)
 
         with self.login(self.data.get_authorized_student().username):
             # test authorized student - when haven't compared

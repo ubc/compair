@@ -18,6 +18,127 @@ var module = angular.module('ubc.ctlt.acj.answer',
     ]
 );
 
+
+/***** Services *****/
+module.service('answerAttachService',
+        ["FileUploader", "$location", "Toaster",
+        function(FileUploader, $location, Toaster) {
+    var filename = '';
+    var alias = '';
+    var fileItemRef = null;
+
+    var getUploader = function(initParams) {
+        var uploader = new FileUploader({
+            url: '/api/attachment',
+            queueLimit: 1,
+            autoUpload: true,
+            headers: {
+                Accept: 'application/json'
+            }
+        });
+
+        filename = '';
+        alias = '';
+        fileItemRef = null;
+
+        if (initParams) {
+            if (initParams.filename) {
+                filename = initParams.filename;
+            }
+            if (initParams.alias) {
+                alias = initParams.alias;
+            }
+            if (initParams.fileRef) {
+                var dummy = new FileUploader.FileItem(uploader, initParams.fileRef);
+                dummy.progress = 100;
+                dummy.isUploaded = true;
+                dummy.isSuccess = true;
+                uploader.queue.push(dummy);
+                fileItemRef = dummy;
+            }
+        }
+
+
+
+        uploader.onCompleteItem = onComplete();
+        uploader.onErrorItem = onError();
+
+        uploader.filters.push({
+            name: 'pdfFilter',
+            fn: function(item) {
+                var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
+                var valid = '|pdf|'.indexOf(type) !== -1;
+                if (!valid) {
+                    Toaster.error("File Type Error", "Only PDF files are accepted.")
+                }
+                return valid;
+            }
+        });
+
+        uploader.filters.push({
+            name: 'sizeFilter',
+            fn: function(item) {
+                var valid = item.size <= 26214400; // 1024 * 1024 * 25 -> max 25MB
+                if (!valid) {
+                    var size = item.size / 1048576; // convert to MB
+                    Toaster.error("File Size Error", "The file size is "+size.toFixed(2)+"MB. The maximum allowed is 25MB.")
+                }
+                return valid;
+            }
+        });
+
+        return uploader;
+    };
+
+    var onComplete = function() {
+        return function(fileItem, response) {
+            if (response) {
+                filename = response['name'];
+                alias = fileItem.file.name;
+                fileItemRef = fileItem;
+            }
+        };
+    };
+
+    var onError = function() {
+        return function(fileItem, response, status) {
+            if (response == '413') {
+                Toaster.error("File Size Error", "The file is larger than 25MB. Please upload a smaller file.");
+            } else {
+                Toaster.reqerror("Attachment Fail", status);
+            }
+        };
+    };
+
+    var resetName = function() {
+        return function() {
+            filename = '';
+            alias = '';
+            fileItemRef = null;
+        };
+    };
+
+    var getName = function() {
+        return filename;
+    };
+
+    var getAlias = function() {
+        return alias;
+    };
+
+    var getFile = function() {
+        return fileItemRef ? fileItemRef.file : null;
+    };
+
+    return {
+        getUploader: getUploader,
+        getName: getName,
+        getAlias: getAlias,
+        getFile: getFile,
+        resetName: resetName
+    };
+}]);
+
 /***** Providers *****/
 module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resource, $cacheFactory) {
         var url = '/api/courses/:courseId/assignments/:assignmentId/answers/:answerId';
@@ -95,10 +216,10 @@ module.controller(
     "AnswerWriteController",
     ["$scope", "$log", "$location", "$routeParams", "AnswerResource", "ClassListResource", "$route",
         "AssignmentResource", "TimerResource", "Toaster", "Authorize", "Session", "$timeout",
-        "attachService", "AttachmentResource", "EditorOptions",
+        "answerAttachService", "AttachmentResource", "EditorOptions",
     function ($scope, $log, $location, $routeParams, AnswerResource, ClassListResource, $route,
         AssignmentResource, TimerResource, Toaster, Authorize, Session, $timeout,
-        attachService, AttachmentResource, EditorOptions)
+        answerAttachService, AttachmentResource, EditorOptions)
     {
         $scope.courseId = $routeParams['courseId'];
         var assignmentId = $routeParams['assignmentId'];
@@ -126,8 +247,8 @@ module.controller(
             );
         }
 
-        $scope.uploader = attachService.getUploader();
-        $scope.resetName = attachService.resetName();
+        $scope.uploader = answerAttachService.getUploader();
+        $scope.resetName = answerAttachService.resetName();
 
         var countDown = function() {
             $scope.showCountDown = true;
@@ -190,8 +311,8 @@ module.controller(
 
         $scope.answerSubmit = function (answerForm) {
             $scope.submitted = true;
-            $scope.answer.file_name = attachService.getName();
-            $scope.answer.file_alias = attachService.getAlias();
+            $scope.answer.file_name = answerAttachService.getName();
+            $scope.answer.file_alias = answerAttachService.getAlias();
             var wasDraft = $scope.answer.draft;
 
             AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': assignmentId}, $scope.answer).$promise.then(
@@ -233,6 +354,98 @@ module.controller(
                     }
                 }
             );
+        };
+    }
+]);
+
+
+
+/***** Controllers *****/
+module.controller(
+    "AnswerExampleModalController",
+    ["$scope", "AnswerResource", "Toaster",
+        "answerAttachService", "AttachmentResource", "EditorOptions", "$modalInstance",
+    function ($scope, AnswerResource, Toaster,
+        answerAttachService, AttachmentResource, EditorOptions, $modalInstance)
+    {
+        //$scope.courseId
+        //$scope.assignmentId
+        //$scope.answer
+        $scope.editorOptions = EditorOptions.basic;
+        var method = $scope.assignmentId ? 'edit' : 'new';
+        $scope.uploader = answerAttachService.getUploader();
+        $scope.resetName = answerAttachService.resetName();
+
+        if (method == 'edit') {
+            // refresh the answer if already exists
+            AnswerResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId, 'answerId': $scope.answer.id})
+            .$promise.then(
+                function (ret) {
+                    $scope.answer = ret;
+
+                    if (ret.file) {
+                        $scope.answer.uploadedFile = ret.file
+                    }
+                },
+                function (ret) {
+                    Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
+                }
+            );
+        } else {
+            // if answer is new, prepopulate the file upload area if needed
+            if ($scope.answer.fileRef) {
+                $scope.uploader = answerAttachService.getUploader({
+                    'filename': $scope.answer.file_name,
+                    'alias': $scope.answer.file_alias,
+                    'fileRef': $scope.answer.fileRef
+                });
+            }
+        }
+
+        $scope.cancel = function() {
+            $modalInstance.dismiss();
+        };
+
+        $scope.deleteFile = function(file_id) {
+            AttachmentResource.delete({'fileId': file_id}).$promise.then(
+                function (ret) {
+                    Toaster.success('Attachment deleted successfully');
+                    $scope.answer.file = null;
+                    $scope.answer.uploadedFile = false;
+                    $scope.answer.fileRef = null;
+                },
+                function (ret) {
+                    Toaster.reqerror('Attachment deletion failed', ret);
+                }
+            );
+        };
+
+        $scope.answerSubmit = function () {
+            $scope.submitted = true;
+            $scope.answer.file_name = answerAttachService.getName();
+            $scope.answer.file_alias = answerAttachService.getAlias();
+
+            // if assignment already exists, save answer immediately
+            if (method == 'edit') {
+                AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answer).$promise.then(
+                    function (ret) {
+                        $scope.answer = ret;
+                        $scope.submitted = false;
+                        Toaster.success("Practice Answer Updated!");
+                        $modalInstance.close($scope.answer);
+                    },
+                    function (ret) {
+                        $scope.submitted = false;
+                        Toaster.reqerror("Practice Answer Save Failed.", ret);
+                    }
+                );
+            // else return the answer to be saved after new assignment is saved
+            } else {
+                // save the uploaded file info in case modal is reopened
+                $scope.answer.fileRef = answerAttachService.getFile();
+
+                $modalInstance.close($scope.answer);
+            }
         };
     }
 ]);

@@ -307,6 +307,8 @@ class ComparisonTestData(CriterionTestData):
         self.assignments.append(self.answer_period_assignment)
 
     def create_comparison_example(self, assignment, answer1, answer2):
+        answer1.practice = True
+        answer2.practice = True
         comparison_example = ComparisonExampleFactory(
             assignment=assignment,
             answer1=answer1,

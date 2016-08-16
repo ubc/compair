@@ -122,6 +122,7 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
                 Answer.user_id.notin_(ineligible_user_ids),
                 Answer.assignment_id == assignment_id,
                 Answer.active == True,
+                Answer.practice == False,
                 Answer.draft == False
             )) \
             .group_by(Answer.id)

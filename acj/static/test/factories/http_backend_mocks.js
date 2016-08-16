@@ -38,6 +38,9 @@ module.exports.httpbackendMock = function(storageFixture) {
             course_answers: {},
             // assignmentId -> [answerId]
             assignment_answers: {},
+            comparison_examples: [],
+            // assignmentId -> [comparisonExampleId]
+            assignment_comparison_examples: {},
             criteria: [],
             groups: [],
             user_search_results: {
@@ -636,6 +639,79 @@ module.exports.httpbackendMock = function(storageFixture) {
                 per_page: 20,
                 total: 0
             }, {}]
+        });
+
+        // get assignment comparison examples
+        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+\/comparisons\/examples$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
+            var assignmentId = url.split('/')[5];
+
+            var exampleList = [];
+
+            if (storage.assignment_comparison_examples[assignmentId]) {
+                angular.forEach(storage.assignment_comparison_examples[assignmentId], function(exampleId) {
+                    exampleList.push(storage.comparison_examples[exampleId-1]);
+                });
+            }
+
+            return [200, { 'objects': exampleList }, {}];
+        });
+
+        // create new comparison examples
+        $httpBackend.whenPOST(/\/api\/courses\/\d+\/assignments\/\d+\/comparisons\/examples$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
+            var assignmentId = url.split('/')[5];
+            data = JSON.parse(data);
+
+            var id = storage.comparison_examples.length + 1;
+
+            var newComparisonExample = {
+                "id": id,
+                "answer1_id": data.answer1.id,
+                "answer1": data.answer1,
+                "answer2_id": data.answer2.id,
+                "answer2": data.answer2,
+                "assignment_id": assignmentId,
+                "course_id": courseId,
+                "modified": "Sun, 11 Jan 2015 08:44:46 -0000",
+                "created": "Sun, 11 Jan 2015 08:44:46 -0000"
+            }
+
+            storage.comparison_examples.push(newComparisonExample);
+            storage.assignment_comparison_examples[assignmentId].push(newComparisonExample.id);
+
+            return [200, newComparisonExample, {}];
+        });
+
+        // edit assignment comparison examples
+        $httpBackend.whenPOST(/\/api\/courses\/\d+\/assignments\/\d+\/comparisons\/examples\/\d+$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
+            var assignmentId = url.split('/')[5];
+
+            data = JSON.parse(data);
+
+            var id = url.split('/').pop();
+            storage.comparison_examples[id-1] = angular.merge(storage.comparison_examples[id-1], data);
+
+            return [200, storage.courses[id-1], {}];
+        });
+
+        // delete assignment comparison examples
+        $httpBackend.whenDELETE(/\/api\/courses\/\d+\/assignments\/\d+\/comparisons\/examples\/\d+$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
+            var assignmentId = url.split('/')[5];
+
+            var id = url.split('/').pop();
+            storage.comparison_examples[id-1] = null;
+
+            // remove comparison example from assignment's data
+            for(var i = storage.assignment_comparison_examples[assignmentId].length - 1; i >= 0; i--) {
+                if(storage.assignment_comparison_examples[assignmentId][i] === id) {
+                    array.splice(i, 1);
+                }
+            }
+
+            return [200, {}, {}];
         });
 
         // End Assignments
