@@ -223,7 +223,7 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
         .when('/lti',
             {
                 templateUrl: 'modules/lti/lti-setup-partial.html',
-                label: "Setup ComPAIR",
+                label: "ComPAIR Setup",
                 controller: 'LTIController'
             })
         .otherwise({redirectTo: '/'});

@@ -4,7 +4,7 @@
         <br />
         <p class="intro-text">
             You're almost ready to start using ComPAIR!
-            Simply create a new ComPAIR course, select an existing ComPAIR course, or duplicate an existing ComPAIR course to begin creating and posting assignments for your students.
+            Simply <strong>create</strong> a new ComPAIR course, <strong>select</strong> an existing ComPAIR course, <strong>or duplicate</strong> an existing ComPAIR course to begin creating and posting assignments for your students.
         </p>
 
         <div class="row">
@@ -37,14 +37,14 @@
                     </table>
 
                     <div ng-if="!courses.length">
-                        <p>No courses currently available.</p>
+                        <p>No courses currently found for you in ComPAIR. Please create a new course using the form on this screen.</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div ng-show="showDuplicateForm">
-        <p class="pull-right"><a ng-click="cancelSelectDuplicateCourse()">Cancel</a></p>
+        <p class="pull-right"><a href="" ng-click="cancelSelectDuplicateCourse()">Cancel</a></p>
 
         <ng-include src="'modules/course/course-duplicate-partial.html'"></ng-include>
     </div>
