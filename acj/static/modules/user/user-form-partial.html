@@ -42,11 +42,10 @@
         </acj-field-with-feedback>
     </fieldset>
 
-    <fieldset ng-if="method == 'new' || canManageUsers">
+    <fieldset>
         <legend>Account Login</legend>
         <p class="instructional-text">
-            This information will set the username and password for logging in to ComPAIR without an external login (like CWL).
-            The username you set does not appear anywehere to other users in the application but does need to be unique.
+            This information will set the <strong>ComPAIR username <span ng-if="method == 'new'">and password</span></strong> for logging in without an external login (like CWL). The username you set does not appear anywehere to other users in the application but does need to be unique.
         </p>
         <acj-field-with-feedback form-control="userForm.username">
             <label for="username" class="required-star">ComPAIR Username </label>

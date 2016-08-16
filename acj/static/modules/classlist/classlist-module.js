@@ -163,7 +163,7 @@ module.controller(
                     $scope.submitted = false;
                     ClassListResource.get({'courseId':courseId},
                         function (ret) {
-                            Toaster.success("Successfully updated enrolment from the course.");
+                            Toaster.success("Enrolment Refreshed", "Successfully updated enrolment for the course.");
                             $scope.classlist = ret.objects;
                         },
                         function (ret) {

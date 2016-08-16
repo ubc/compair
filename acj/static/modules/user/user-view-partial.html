@@ -16,29 +16,29 @@
         <img ng-if="!(canManageUsers || loggedInUserIsInstructor)" id="user_avatar" class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
     </div>
     <div class="col-md-8 user-details">
-        <div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
-            <strong class="col-md-3">Application Role:</strong>
-            <div id="user_system_role" class="col-md-9">{{ user.system_role }}</div>
-        </div>
-        <div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
-            <strong class="col-md-3">Username:</strong>
-            <div id="user_username" class="col-md-9">{{ user.username }}</div>
-        </div>
-        <div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
-            <strong class="col-md-3">Student Number:</strong>
-            <div id="user_student_number"  class="col-md-9">{{ user.student_number }}</div>
-        </div>
-        <div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
-            <strong class="col-md-3">Name:</strong>
-            <div id="user_fullname" class="col-md-9">{{ user.fullname }}</div>
-        </div>
         <div class="row">
             <strong class="col-md-3">Display Name:</strong>
             <div id="user_displayname" class="col-md-9">{{ user.displayname }}</div>
         </div>
+	<div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
+            <strong class="col-md-3">Name:</strong>
+            <div id="user_fullname" class="col-md-9">{{ user.fullname }}</div>
+        </div>
+	<div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
+            <strong class="col-md-3">Student Number:</strong>
+            <div id="user_student_number"  class="col-md-9">{{ user.student_number }}</div>
+        </div>
         <div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
             <strong class="col-md-3">Email:</strong>
             <div id="user_email"  class="col-md-9">{{ user.email }}</div>
+        </div>
+	<div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
+            <strong class="col-md-3">Username:</strong>
+            <div id="user_username" class="col-md-9">{{ user.username }}</div>
+        </div>
+	<div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
+            <strong class="col-md-3">Application Role:</strong>
+            <div id="user_system_role" class="col-md-9">{{ user.system_role }}</div>
         </div>
         <div class="row">
             <strong class="col-md-3">Last Online:</strong>

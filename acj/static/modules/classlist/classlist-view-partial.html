@@ -21,8 +21,8 @@
             </span>
         </div>
     </div>
-
-    <p class="intro-text">Drop or enrol <em>individual</em> users&mdash;who are already in the application&mdash;and assign them to groups <strong>below</strong>. To create, drop, or enrol <em>multiple</em> users in a course at the same time, click <strong>Import Users</strong> above. To assign groups to <em>multiple</em> users in a course at the same time, click <strong>Assign Groups</strong> above.</p>
+    <p class="intro-text" ng-if="lti_membership_enabled">Your class list is managed externally. To update the list automatically, click <strong>Refresh List</strong> below.</p>
+    <p class="intro-text" ng-if="!lti_membership_enabled">Drop or enrol <em>individual</em> users&mdash;who are already in the application&mdash;and assign them to groups <strong>below</strong>. To create, drop, or enrol <em>multiple</em> users in a course at the same time, click <strong>Import Users</strong> above. To assign groups to <em>multiple</em> users in a course at the same time, click <strong>Assign Groups</strong> above.</p>
 
     <h2 >Enrolled in {{course_name}}</h2>
     <hr />
@@ -32,7 +32,7 @@
         <div class="col-md-10">
             <div ng-show="lti_membership_enabled" class="text-right">
                 <a ng-click="updateLTIMembership()" class="btn btn-success" ng-disabled="submitted">
-                    Refresh
+                    Refresh List
                 </a>
             </div>
             <div ng-show="!lti_membership_enabled">
@@ -40,8 +40,8 @@
             </div>
         </div>
     </div>
-    <p ng-show="lti_membership_pending > 0">
-        {{lti_membership_pending}} imported LTI user<span ng-if="lti_membership_pending != 1">s</span> pending ComPAIR account setup
+    <p class="alert alert-info" ng-show="lti_membership_pending > 0">
+        <i class="glyphicon glyphicon-info-sign"></i> Currently, <strong>{{lti_membership_pending}} user<span ng-show="lti_membership_pending != 1">s</span></strong> are pending registration (registered in your external course but not yet in ComPAIR).
     </p>
 
     <div class="table-responsive">
