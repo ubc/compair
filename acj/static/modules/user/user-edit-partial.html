@@ -1,9 +1,9 @@
 <div>
     <h1>Edit User</h1>
     <ng-include src="'modules/user/user-form-partial.html'"></ng-include>
-    <hr ng-if="ownProfile || canManageUsers" />
-    <h1 ng-if="ownProfile || canManageUsers">Update Password</h1>
-    <div ng-if="ownProfile || canManageUsers">
+    <hr ng-if="ownProfile" />
+    <h1 ng-if="ownProfile">Update Password</h1>
+    <div ng-if="ownProfile">
         <form name="changePasswordForm" class="form" ng-submit="changePassword()" novalidate>
             <fieldset>
                 <legend>Password</legend>

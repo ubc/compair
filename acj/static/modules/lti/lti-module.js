@@ -135,9 +135,9 @@ module.controller("LTIController",
                         LTIResource.linkCourse({id: selectedCourseId}, {},
                             function(ret) {
                                 if (ret.warning) {
-                                    Toaster.warning("Course Link Successful but Membership Import Failed", ret.warning);
+                                    Toaster.warning("Course Linked, User Import Failed", ret.warning);
                                 } else {
-                                    Toaster.success("Course Link Successful", "Successfully linked course to LTI context");
+                                    Toaster.success("Course Linked Successfully", "Successfully linked your course as requested.");
                                 }
                                 // reload to refresh status and check what to do next
                                 $route.reload();
@@ -152,7 +152,7 @@ module.controller("LTIController",
                     });
                 } else {
                     // student can't setup course, get out of here
-                    Toaster.warning("Course not Ready", "Please wait for your instructor to setup the course and try again.");
+                    Toaster.warning("Course Not Yet Ready", "Please wait for your instructor to set up the course and try accessing again.");
                     $location.path('/');
                 }
             } else {

@@ -185,6 +185,11 @@ module.controller(
             year: new Date().getFullYear(),
             name: LTI.getCourseName()
         };
+        $scope.format = 'dd-MMMM-yyyy';
+        $scope.date = {
+            'course_start': {'date': null, 'time': new Date().setHours(0, 0, 0, 0)},
+            'course_end': {'date': null, 'time': new Date().setHours(23, 59, 0, 0)},
+        };
         $scope.originalCourse = {};
         $scope.duplicateCourse = {};
 
@@ -226,9 +231,35 @@ module.controller(
                 $scope.submitted = false;
             });
         };
+	
+	$scope.date.course_start.open = function($event) {
+            $event.preventDefault();
+            $event.stopPropagation();
+            $scope.date.course_start.opened = true;
+        };
+        $scope.date.course_end.open = function($event) {
+            $event.preventDefault();
+            $event.stopPropagation();
+            $scope.date.course_end.opened = true;
+        };
 
         $scope.save = function() {
             $scope.submitted = true;
+	    if ($scope.date.course_start.date != null) {
+                $scope.course.start_date = combineDateTime($scope.date.course_start);
+            } else {
+                $scope.course.start_date = null;
+            }
+            if ($scope.date.course_end.date != null) {
+                $scope.course.end_date = combineDateTime($scope.date.course_end);
+            } else {
+                $scope.course.end_date = null;
+            }
+            if ($scope.course.start_date != null && $scope.course.end_date != null && $scope.course.start_date > $scope.course.end_date) {
+                Toaster.error('Course Period Conflict', 'Course end date/time must be after course start date/time.');
+                $scope.submitted = false;
+                return;
+            }
             CourseResource.save({}, $scope.course, function (ret) {
                 Toaster.success("Course Created", 'The course was created successfully');
                 // refresh permissions
