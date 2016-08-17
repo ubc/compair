@@ -7,6 +7,7 @@ from .course_role import CourseRole
 from .pairing_algorithm import PairingAlgorithm
 from .scoring_algorithm import ScoringAlgorithm
 from .system_role import SystemRole
+from .third_party_type import ThirdPartyType
 
 # models
 from .activity_log import ActivityLog
@@ -23,6 +24,7 @@ from .file import File
 from .score import Score
 from .user import User
 from .user_course import UserCourse
+from .third_party_user import ThirdPartyUser
 
 # LTI models
 from .lti import LTIConsumer, LTIContext, LTIMembership, \

@@ -2,11 +2,14 @@ import os
 from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask, render_template
 from flask_login import current_user, login_required, login_user, logout_user
 from acj import cas
-from acj.core import db
+from acj.core import db, event
 from acj.authorization import get_logged_in_user_permissions
-from acj.models import User, LTIUser, LTIResourceLink, LTIUserResourceLink, UserCourse, LTIContext
+from acj.models import User, LTIUser, LTIResourceLink, LTIUserResourceLink, UserCourse, LTIContext, ThirdPartyUser, \
+    ThirdPartyType
 
 login_api = Blueprint("login_api", __name__, url_prefix='/api')
+
+on_user_create = event.signal('USER_CREATE')
 
 @login_api.route('/login', methods=['POST'])
 def login():
@@ -91,23 +94,55 @@ def auth_cas():
     set message in session so that frontend can get the message through /session call
     """
     username = cas.username
+    url = "/static/index.html#/lti" if sess.get('LTI') else "/"
 
     if username is not None:
-        user = User.query.filter_by(username=username).first()
+        thirdpartyuser = ThirdPartyUser.query. \
+            filter_by(
+            unique_identifier=username,
+            type=ThirdPartyType.cwl
+        ).first()
         msg = None
-        if not user:
-            current_app.logger.debug("Login failed, invalid username for: " + username)
-            msg = 'You don\'t have access to this application.'
+        if not thirdpartyuser or not thirdpartyuser.user:
+            if sess.get('oauth_create_user_link') and sess.get('LTI'):
+                sess['CAS_CREATE'] = True
+                sess['CAS_UNIQUE_IDENTIFIER'] = cas.username
+                return redirect(
+                    '/static/index.html#/oauth/create')
+            else:
+                current_app.logger.debug("Login failed, invalid username for: " + username)
+                msg = 'You don\'t have access to this application.'
         else:
-            authenticate(user)
+            authenticate(thirdpartyuser.user)
+            if sess.get('LTI') and sess.get('oauth_create_user_link'):
+                lti_user = LTIUser.query.get_or_404(sess['lti_user'])
+                lti_user.acj_user_id = thirdpartyuser.user_id
+                sess.pop('oauth_create_user_link')
+            if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
+                lti_context = LTIContext.query.get_or_404(sess['lti_context'])
+                lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
+                if lti_context.is_linked_to_course():
+                    user_course = UserCourse.query \
+                        .filter_by(
+                        user_id=thirdpartyuser.user_id,
+                        course_id=lti_context.acj_course_id
+                    ) \
+                        .one_or_none()
+                    if user_course is None:
+                        # create new enrollment
+                        new_user_course = UserCourse(user_id=thirdpartyuser.user_id, course_id=lti_context.acj_course_id,
+                                                     course_role=lti_user_resource_link.course_role)
+                        db.session.add(new_user_course)
+                    else:
+                        user_course.course_role = lti_user_resource_link.course_role
+            db.session.commit()
             sess['CAS_LOGIN'] = True
     else:
         msg = 'Login Failed. Expecting CAS username to be set.'
 
     if msg is not None:
         sess['CAS_AUTH_MSG'] = msg
-
-    return redirect('/')
+    return redirect(url)
 
 
 def authenticate(user):
