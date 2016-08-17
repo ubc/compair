@@ -156,7 +156,7 @@ module.factory(
         var url = '/api/courses/:courseId/assignments/:assignmentId';
         var ret = $resource(url, {assignmentId: '@id'},
             {
-                'get': {url: url, cache: true},
+                'get': {url: url}, //, cache: true},
                 'save': {method: 'POST', url: url, interceptor: Interceptors.cache},
                 'delete': {method: 'DELETE', url: url, interceptor: Interceptors.cache},
                 'getCurrentUserStatus': {url: '/api/courses/:id/assignments/:assignmentId/status'}
