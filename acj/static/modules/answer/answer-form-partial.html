@@ -7,7 +7,7 @@
 
 <p class="intro-text" ng-hide="example">Please note <strong>answers are not automatically saved</strong> as you type. However, you may manually save a draft of your answer below.</p>
 
-<form class="form" name="answerForm" ng-submit="answerSubmit()" novalidate confirm-form-exit form-type="answer">
+<form class="form" name="answerForm" ng-submit="answerSubmit(answerForm)" novalidate confirm-form-exit form-type="answer">
     <fieldset>
         <h2 ng-hide="example"><i class="fa fa-comments"></i> {{assignment.name}}</h2>
         <div class="assignment-desc" mathjax hljs ng-bind-html="assignment.description" ng-hide="example"></div>
@@ -36,7 +36,7 @@
         <div>
             <label for="importFile">Attach PDF (maximum size 25MB)</label>
             <p ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)"><span class="required-star"></span><em>Tip: Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> or using <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a> or <a href="http://www.google.com/chrome/">Chrome</a> if you have problems uploading.</em></p>
-            <input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)" multiple/>
+            <input type="file" nv-file-select uploader="uploader" ng-click="answerForm.$setDirty()" id="importFile" ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)" multiple/>
             <p class="instructional-text" ng-show="uploader.queue.length"><strong>Save this answer</strong> to submit the file below. You may also remove the file and upload another instead.</p>
             <div class="row" ng-repeat="item in uploader.queue">
                 <div class="col-md-7"><i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong></div>

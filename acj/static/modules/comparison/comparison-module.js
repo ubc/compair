@@ -144,7 +144,7 @@ module.controller(
         //};
 
         // save comparison to server
-        $scope.comparisonSubmit = function() {
+        $scope.comparisonSubmit = function(comparisonForm) {
             $scope.submitted = true;
             // save comments for each individual answer
             angular.forEach([$scope.answer1, $scope.answer2], function(answer) {
@@ -207,6 +207,9 @@ module.controller(
                             }
                         );
                     } else {
+                        if (comparisonForm) {
+                            comparisonForm.$setPristine();
+                        }
                         Toaster.success("Saved Draft Successfully!", "Remember to submit your comparison before the deadline.");
                     }
                 },
