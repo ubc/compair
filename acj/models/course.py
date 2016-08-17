@@ -55,9 +55,7 @@ class Course(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
 
         cls.lti_context_count = column_property(
             select([func.count(LTIContext.id)]).
-            where(and_(
-                LTIContext.acj_course_id == cls.id
-            )),
+            where(LTIContext.acj_course_id == cls.id),
             deferred=True,
             group="counts"
         )
