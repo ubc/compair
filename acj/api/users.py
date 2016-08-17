@@ -11,7 +11,7 @@ from acj.authorization import is_user_access_restricted, require, allow
 from acj.core import db, event
 from .util import new_restful_api, get_model_changes, pagination_parser
 from acj.models import User, SystemRole, Course, UserCourse, CourseRole, \
-    Assignment, LTIUser, LTIUserResourceLink, LTIContext
+    Assignment, LTIUser, LTIUserResourceLink, LTIContext, ThirdPartyUser, ThirdPartyType
 from acj.api.login import authenticate
 
 user_api = Blueprint('user_api', __name__)
@@ -196,6 +196,12 @@ class UserListAPI(Resource):
                         new_user_course = UserCourse(user=user, course_id=lti_context.acj_course_id,
                                                      course_role=lti_user_resource_link.course_role)
                         db.session.add(new_user_course)
+                if sess.get('CAS_CREATE'):
+                    thirdpartyuser = ThirdPartyUser()
+                    thirdpartyuser.type = ThirdPartyType.cwl
+                    thirdpartyuser.unique_identifier = sess.get('CAS_UNIQUE_IDENTIFIER')
+                    thirdpartyuser.user_id = user.id
+                    db.session.add(thirdpartyuser)
         else:
             system_role = params.get("system_role")
             check_valid_system_role(system_role)

@@ -54,20 +54,29 @@ module.run(
               Toaster, $http) {
     // Create a modal dialog box for containing the login form
     var loginBox;
+    var modalScope = $rootScope.$new();
     var isOpen = false;
     // Functions to display/hide the login form
+
+    // for creating new account via 3rd-party authentication
+    $rootScope.displayCreateUser = function() {
+        modalScope.showCreateUserForm = true;
+    };
+
     $rootScope.showLogin = function() {
         if (isOpen) return;
         loginBox = $modal.open({
             templateUrl: 'modules/login/login-partial.html',
             backdrop: 'static', // can't close login on backdrop click
-            keyboard: false // can't close login on pressing Esc key
+            keyboard: false, // can't close login on pressing Esc key
+            scope: modalScope
         });
         isOpen = true;
     };
     $rootScope.hideLogin = function() {
         if (loginBox) {
             loginBox.close();
+            modalScope = $rootScope.$new();
         }
         isOpen = false;
     };
@@ -76,6 +85,9 @@ module.run(
     $rootScope.$on(AuthenticationService.LTI_LOGIN_REQUIRED_EVENT, $rootScope.showLogin);
     // Show the create user form when we need to create accounts for LTI / Third party logins
 
+    // Show the login form when we have a 3rd-party authentication login required event
+    $rootScope.$on(AuthenticationService.AUTH_REQUIRED_EVENT, $rootScope.displayCreateUser);
+        
     // Hide the login form on login
     $rootScope.$on(AuthenticationService.LOGIN_EVENT, $rootScope.hideLogin);
     // listen to 403 response for CAS user that do not exist in the system
@@ -112,7 +124,7 @@ module.run(
 /***** Controllers *****/
 module.controller(
     "LoginController",
-    [ "$rootScope", "$scope", "$location", "$log", "$route",
+    [ "$rootScope", "$scope", "$location", "$log", "$route", 
       "LoginResource", "AuthenticationService", "LTI", "LTIResource",
     function ($rootScope, $scope, $location, $log, $route,
               LoginResource, AuthenticationService, LTI, LTIResource)
@@ -123,6 +135,10 @@ module.controller(
         // update allowCreateUser if needed
         $rootScope.$on(AuthenticationService.LTI_LOGIN_REQUIRED_EVENT, function() {
             $scope.allowCreateUser = LTI.ltiLinkUser();
+        });
+
+        $rootScope.$on(AuthenticationService.AUTH_REQUIRED_EVENT, function() {
+            $scope.showCreateUserForm = true;
         });
 
         $scope.submit = function() {
