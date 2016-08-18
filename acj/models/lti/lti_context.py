@@ -31,6 +31,29 @@ class LTIContext(DefaultTableMixin, WriteTrackingMixin):
     def is_linked_to_course(self):
         return self.acj_course_id != None
 
+    def update_enrolment(self, acj_user_id, course_role):
+        from . import UserCourse
+        if self.is_linked_to_course():
+            user_course = UserCourse.query \
+                .filter_by(
+                    user_id=acj_user_id,
+                    course_id=self.acj_course_id
+                ) \
+                .one_or_none()
+
+            if user_course is None:
+                # create new enrollment
+                new_user_course = UserCourse(
+                    user_id=acj_user_id,
+                    course_id=self.acj_course_id,
+                    course_role=course_role
+                )
+                db.session.add(new_user_course)
+            else:
+                user_course.course_role=course_role
+
+            db.session.commit()
+
     @classmethod
     def get_by_lti_consumer_id_and_context_id(cls, lti_consumer_id, context_id):
         return LTIContext.query \

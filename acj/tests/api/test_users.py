@@ -5,9 +5,9 @@ from flask.ext.login import login_user, logout_user
 from werkzeug.exceptions import Unauthorized
 
 from data.fixtures import DefaultFixture, UserFactory
-from data.fixtures.test_data import BasicTestData, LTITestData
+from data.fixtures.test_data import BasicTestData, LTITestData, ThirdPartyAuthTestData
 from acj.tests.test_acj import ACJAPITestCase
-from acj.models import User, SystemRole, CourseRole, LTIContext
+from acj.models import User, SystemRole, CourseRole, LTIContext, ThirdPartyUser, ThirdPartyType
 from acj.core import db
 
 
@@ -208,12 +208,12 @@ class UsersAPITests(ACJAPITestCase):
             self.assertEqual(len(user.user_courses), 1)
             self.assertEqual(user.user_courses[0].course_id, course.id)
 
+        # test create student via lti session
         with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
                 user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
                 roles="Student") as lti_response:
             self.assert200(lti_response)
 
-            # test create student via lti session
             expected = UserFactory.stub(system_role=None)
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
@@ -222,12 +222,12 @@ class UsersAPITests(ACJAPITestCase):
             user = User.query.get(rv.json['id'])
             self.assertEqual(SystemRole.student, user.system_role)
 
+        # test create teaching assistant (student role) via lti session
         with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
                 user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
                 roles="TeachingAssistant") as lti_response:
             self.assert200(lti_response)
 
-            # test create teaching assistant (student role) via lti session
             expected = UserFactory.stub(system_role=None)
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
@@ -237,8 +237,59 @@ class UsersAPITests(ACJAPITestCase):
             self.assertEqual(SystemRole.student, user.system_role)
 
 
+    def test_create_user_lti_and_CAS(self):
+        url = '/api/users'
+        lti_data = LTITestData()
+        auth_data = ThirdPartyAuthTestData()
+
+        with self.client.session_transaction() as sess:
+            sess['CAS_CREATE'] = True
+            sess['CAS_UNIQUE_IDENTIFIER'] = "some_unique_identifier"
+            self.assertIsNone(sess.get('LTI'))
+
+        # test login required when LTI and oauth_create_user_link are not present (even when CAS params are present)
+        expected = UserFactory.stub(system_role=SystemRole.student.value)
+        rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
+        self.assert401(rv)
+
+        # test create student via lti session
+        with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
+                user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
+                roles="Student") as lti_response:
+            self.assert200(lti_response)
+
+            with self.client.session_transaction() as sess:
+                sess['CAS_CREATE'] = True
+                sess['CAS_UNIQUE_IDENTIFIER'] = "some_unique_identifier"
+                self.assertTrue(sess.get('LTI'))
+
+            expected = UserFactory.stub(system_role=None)
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
+            self.assert200(rv)
+            self.assertEqual(expected.displayname, rv.json['displayname'])
+
+            user = User.query.get(rv.json['id'])
+            self.assertEqual(SystemRole.student, user.system_role)
+
+            third_party_user = ThirdPartyUser.query \
+                .filter_by(
+                    third_party_type=ThirdPartyType.cwl,
+                    unique_identifier="some_unique_identifier",
+                    user_id=user.id
+                ) \
+                .one_or_none()
+
+            self.assertIsNotNone(third_party_user)
+
+            with self.client.session_transaction() as sess:
+                self.assertTrue(sess.get('CAS_LOGIN'))
+                self.assertIsNone(sess.get('CAS_CREATE'))
+                self.assertIsNone(sess.get('CAS_UNIQUE_IDENTIFIER'))
+                self.assertIsNone(sess.get('oauth_create_user_link'))
+
+
     def test_edit_user(self):
-        user = self.data.get_authorized_instructor()
+        user = self.data.get_authorized_student()
         url = 'api/users/' + str(user.id)
         expected = {
             'id': user.id,
@@ -250,13 +301,24 @@ class UsersAPITests(ACJAPITestCase):
             'displayname': user.displayname,
             'email': user.email
         }
+        instructor = self.data.get_authorized_instructor()
+        instructor_url = 'api/users/' + str(instructor.id)
+        expected_instructor = {
+            'id': instructor.id,
+            'username': instructor.username,
+            'student_number': instructor.student_number,
+            'system_role': instructor.system_role.value,
+            'firstname': instructor.firstname,
+            'lastname': instructor.lastname,
+            'displayname': instructor.displayname,
+            'email': instructor.email
+        }
 
         # test login required
         rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
         self.assert401(rv)
 
         # test unauthorized user
-        # currently, instructors cannot edit users - except their own profile
         with self.login(self.data.get_unauthorized_instructor().username):
             rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
             self.assert403(rv)
@@ -292,16 +354,25 @@ class UsersAPITests(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual("displayzzz", rv.json['displayname'])
 
-        # test successful update by user
+        # test successful update by user (as instructor)
         with self.login(self.data.get_authorized_instructor().username):
+            valid = expected_instructor.copy()
+            valid['displayname'] = "thebest"
+            rv = self.client.post(instructor_url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual("thebest", rv.json['displayname'])
+
+        # test successful update by user (as student)
+        with self.login(self.data.get_authorized_student().username):
             valid = expected.copy()
             valid['displayname'] = "thebest"
             rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
             self.assert200(rv)
             self.assertEqual("thebest", rv.json['displayname'])
 
-        # test unable to update username, student_number, system_role - instructor
-        with self.login(user.username):
+        # test updating username, student number, usertype for system - instructor
+        with self.login(instructor.username):
+            # for student
             valid = expected.copy()
             valid['username'] = "wrongUsername"
             rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
@@ -320,8 +391,29 @@ class UsersAPITests(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual(user.system_role.value, rv.json['system_role'])
 
+            # for instructor
+            valid = expected_instructor.copy()
+            valid['username'] = "wrongUsername"
+            rv = self.client.post(instructor_url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(instructor.username, rv.json['username'])
+
+            ignored = expected_instructor.copy()
+            ignored['student_number'] = "999999999999"
+            rv = self.client.post(instructor_url, data=json.dumps(ignored), content_type='application/json')
+            self.assert200(rv)
+            self.assertIsNone(rv.json['student_number'])
+            self.assertEqual(instructor.student_number, rv.json['student_number'])
+
+            valid = expected_instructor.copy()
+            valid['system_role'] = SystemRole.student.value
+            rv = self.client.post(instructor_url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(instructor.system_role.value, rv.json['system_role'])
+
         # test updating username, student number, usertype for system - admin
         with self.login('root'):
+            # for student
             valid = expected.copy()
             valid['username'] = 'newUsername'
             rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
@@ -339,6 +431,26 @@ class UsersAPITests(ACJAPITestCase):
             rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
             self.assert200(rv)
             self.assertEqual(user.system_role.value, rv.json['system_role'])
+
+            # for instructor
+            valid = expected_instructor.copy()
+            valid['username'] = "wrongUsername"
+            rv = self.client.post(instructor_url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(instructor.username, rv.json['username'])
+
+            ignored = expected_instructor.copy()
+            ignored['student_number'] = "999999999999"
+            rv = self.client.post(instructor_url, data=json.dumps(ignored), content_type='application/json')
+            self.assert200(rv)
+            self.assertIsNone(rv.json['student_number'])
+            self.assertEqual(instructor.student_number, rv.json['student_number'])
+
+            valid = expected_instructor.copy()
+            valid['system_role'] = SystemRole.student.value
+            rv = self.client.post(instructor_url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(instructor.system_role.value, rv.json['system_role'])
 
     def test_get_course_list(self):
         # test login required
@@ -366,6 +478,19 @@ class UsersAPITests(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual(1, len(rv.json['objects']))
             self.assertEqual(self.data.get_course().name, rv.json['objects'][0]['name'])
+
+            # test search filter
+            url = '/api/users/' + str(self.data.get_authorized_instructor().id) + '/courses?search='+self.data.get_course().name
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['objects']))
+            self.assertEqual(self.data.get_course().name, rv.json['objects'][0]['name'])
+
+            # test search filter
+            url = '/api/users/' + str(self.data.get_authorized_instructor().id) + '/courses?search=notfounds'+self.data.get_course().name
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(0, len(rv.json['objects']))
 
         # test authorized student
         with self.login(self.data.get_authorized_student().username):

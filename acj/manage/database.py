@@ -7,6 +7,10 @@ from flask.ext.script import Manager, prompt_bool
 from alembic import command
 from acj.core import db
 
+from sqlalchemy.engine import reflection
+from sqlalchemy import create_engine
+from sqlalchemy.schema import MetaData, Table, DropTable, ForeignKeyConstraint, DropConstraint
+
 manager = Manager(usage="Perform database operations")
 
 
@@ -14,7 +18,28 @@ manager = Manager(usage="Perform database operations")
 def drop():
     """Drops database tables"""
     if prompt_bool("Are you sure you want to lose all your data"):
-        db.drop_all()
+        inspector = reflection.Inspector.from_engine(db.engine)
+        metadata = MetaData()
+        tbs = []
+        all_fks = []
+        for table_name in inspector.get_table_names():
+            fks = []
+            for fk in inspector.get_foreign_keys(table_name):
+                if not fk['name']:
+                    continue
+                fks.append( ForeignKeyConstraint((),(),name=fk['name']) )
+            t = Table(table_name,metadata,*fks)
+            tbs.append(t)
+            all_fks.extend(fks)
+
+        for fkc in all_fks:
+            db.engine.execute(DropConstraint(fkc))
+
+        for table in tbs:
+            db.engine.execute(DropTable(table))
+
+        db.session.commit()
+
         print ('All tables are dropped.')
         return True
 

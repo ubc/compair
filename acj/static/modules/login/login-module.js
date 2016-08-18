@@ -63,6 +63,11 @@ module.run(
         modalScope.showCreateUserForm = true;
     };
 
+    $rootScope.showLoginWithCreateUser = function() {
+        modalScope.allowCreateUser = true;
+        $rootScope.showLogin();
+    };
+
     $rootScope.showLogin = function() {
         if (isOpen) return;
         loginBox = $modal.open({
@@ -82,12 +87,10 @@ module.run(
     };
     // Show the login form when we have a login required event
     $rootScope.$on(AuthenticationService.LOGIN_REQUIRED_EVENT, $rootScope.showLogin);
-    $rootScope.$on(AuthenticationService.LTI_LOGIN_REQUIRED_EVENT, $rootScope.showLogin);
-    // Show the create user form when we need to create accounts for LTI / Third party logins
-
+    $rootScope.$on(AuthenticationService.LTI_LOGIN_REQUIRED_EVENT, $rootScope.showLoginWithCreateUser);
     // Show the login form when we have a 3rd-party authentication login required event
-    $rootScope.$on(AuthenticationService.AUTH_REQUIRED_EVENT, $rootScope.displayCreateUser);
-        
+    $rootScope.$on(AuthenticationService.AUTH_LOGIN_REQUIRED_EVENT, $rootScope.displayCreateUser);
+
     // Hide the login form on login
     $rootScope.$on(AuthenticationService.LOGIN_EVENT, $rootScope.hideLogin);
     // listen to 403 response for CAS user that do not exist in the system
@@ -124,17 +127,16 @@ module.run(
 /***** Controllers *****/
 module.controller(
     "LoginController",
-    [ "$rootScope", "$scope", "$location", "$log", "$route", 
+    [ "$rootScope", "$scope", "$location", "$log", "$route",
       "LoginResource", "AuthenticationService", "LTI", "LTIResource",
     function ($rootScope, $scope, $location, $log, $route,
               LoginResource, AuthenticationService, LTI, LTIResource)
     {
         $scope.submitted = false;
-        $scope.allowCreateUser = LTI.ltiLinkUser();
 
         // update allowCreateUser if needed
         $rootScope.$on(AuthenticationService.LTI_LOGIN_REQUIRED_EVENT, function() {
-            $scope.allowCreateUser = LTI.ltiLinkUser();
+            $scope.allowCreateUser = true;
         });
 
         $rootScope.$on(AuthenticationService.AUTH_REQUIRED_EVENT, function() {
@@ -143,8 +145,7 @@ module.controller(
 
         $scope.submit = function() {
             $scope.submitted = true;
-            var params = {"username": $scope.username,
-                            "password": $scope.password};
+            var params = {"username": $scope.username,  "password": $scope.password};
             LoginResource.login(params).$promise.then(
                 function(ret) {
                     // login successful

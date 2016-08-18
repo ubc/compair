@@ -20,11 +20,20 @@ class ThirdPartyUser(DefaultTableMixin, WriteTrackingMixin):
     __tablename__ = 'third_party_user'
 
     # table columns
-    type = db.Column(EnumType(ThirdPartyType, name="thirdpartytype"), nullable=False, index=True) # e.g. CWL
-    unique_identifier = db.Column(db.String(255), nullable=False, index=True) # e.g. CWL username
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"),
-        nullable=True) # ie ComPAIR account ID
+    third_party_type = db.Column(EnumType(ThirdPartyType, name="third_party_type"), nullable=False)
+    unique_identifier = db.Column(db.String(255), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=True)
 
+    # relationships
+    # user via User Model
+
+    # hyprid and other functions
     @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()
+
+    __table_args__ = (
+        # prevent duplicate user in course
+        db.UniqueConstraint('third_party_type', 'unique_identifier', name='_unique_third_party_type_and_unique_identifier'),
+        DefaultTableMixin.default_table_args
+    )

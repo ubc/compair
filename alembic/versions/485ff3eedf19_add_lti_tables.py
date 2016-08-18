@@ -1,14 +1,14 @@
 """Add lti tables
 
 Revision ID: 485ff3eedf19
-Revises: 3f27a2b13b82
+Revises: 17b7bd2e218c
 Create Date: 2016-07-20 10:43:22.986658
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '485ff3eedf19'
-down_revision = '3f27a2b13b82'
+down_revision = '17b7bd2e218c'
 
 from alembic import op
 import sqlalchemy as sa

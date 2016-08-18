@@ -54,7 +54,7 @@ module.factory('LTI',
             return this._lti_status != null && this._lti_status.user &&
                 this._lti_status.user.exists == false;
         },
-        endActiveSession: function() {
+        clearStatus: function() {
             this._lti_status = null;
             $cookies.remove('current.lti.status');
         },
@@ -68,23 +68,11 @@ module.factory('LTI',
         },
         isLTISession: function() {
             this._check_cookies();
-            return this._lti_status.valid
+            return this._lti_status && this._lti_status.valid
         },
-        getDisplayName: function() {
+        getLTIUser: function() {
             this._check_cookies();
-            return this._lti_status.user.displayname
-        },
-        getFirstName: function() {
-            this._check_cookies();
-            return this._lti_status.user.firstname
-        },
-        getLastName: function() {
-            this._check_cookies();
-            return this._lti_status.user.lastname
-        },
-        getEmail: function() {
-            this._check_cookies();
-            return this._lti_status.user.email
+            return this.isLTISession() ? this._lti_status.user : {};
         },
         getCourseName: function() {
             this._check_cookies();

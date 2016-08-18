@@ -7,7 +7,8 @@ from acj.core import db
 from acj.models import Course, User, CourseRole, SystemRole, Criterion, \
     UserCourse, AssignmentCriterion, Assignment, Score, Answer, AssignmentComment, \
     AnswerComment, Comparison, AnswerCommentType, ComparisonExample, \
-    LTIConsumer, LTIContext, LTIResourceLink, LTIMembership, LTIUser, LTIUserResourceLink
+    LTIConsumer, LTIContext, LTIResourceLink, LTIMembership, LTIUser, LTIUserResourceLink, \
+    ThirdPartyUser, ThirdPartyType
 
 from oauthlib.common import generate_token
 
@@ -209,3 +210,10 @@ class LTIUserResourceLinkFactory(SQLAlchemyModelFactory):
     lti_user_id = 1
     roles = "Student"
     course_role = CourseRole.student
+
+class ThirdPartyUserFactory(SQLAlchemyModelFactory):
+    FACTORY_FOR = ThirdPartyUser
+    FACTORY_SESSION = db.session
+
+    unique_identifier = factory.Sequence(lambda n: u'unique_identifier_%d' % n)
+    third_party_type = ThirdPartyType.cwl

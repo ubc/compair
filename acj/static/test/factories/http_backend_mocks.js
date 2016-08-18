@@ -244,9 +244,28 @@ angular.module('MyApp.services.mock', [])
 
         // Start Courses
 
+        // get current user courses (fake search)
+        $httpBackend.whenGET(/\/api\/users\/\d+\/courses\?.*search=CHEM.*$/).respond(function(method, url, data, headers) {
+            var courses = [storage.courses[0]]
+
+            return [200, {
+                "objects": courses,
+                "page": 1,
+                "pages": 1,
+                "total": courses.length,
+                "per_page": 20
+            }, {}]
+        });
+
         // get current user courses
-        $httpBackend.whenGET(/\/api\/users\/\d+\/courses$/).respond(function(method, url, data, headers) {
-            return [200, { "objects": storageFixture.storage().courses }, {}];
+        $httpBackend.whenGET(/\/api\/users\/\d+\/courses\?.*$/).respond(function(method, url, data, headers) {
+            return [200, {
+                "objects": storageFixture.storage().courses,
+                "page": 1,
+                "pages": 1,
+                "total": storageFixture.storage().courses.length,
+                "per_page": 20
+            }, {}]
         });
 
         // create new course
