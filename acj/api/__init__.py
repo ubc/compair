@@ -25,7 +25,7 @@ def register_api_blueprints(app):
     from .login import login_api
     app.register_blueprint(login_api)
 
-    from .ltilaunch import lti_api
+    from .lti_launch import lti_api
     app.register_blueprint(lti_api)
 
     from .users import user_api
@@ -232,7 +232,7 @@ def log_events(log):
     from .gradebook import on_gradebook_get
     on_gradebook_get.connect(log)
 
-    from .ltilaunch import on_lti_course_link, on_lti_course_membership_update, \
+    from .lti_launch import on_lti_course_link, on_lti_course_membership_update, \
         on_lti_course_membership_status_get
     on_lti_course_link.connect(log)
     on_lti_course_membership_update.connect(log)

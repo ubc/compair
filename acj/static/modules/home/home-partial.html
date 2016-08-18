@@ -11,18 +11,17 @@
 
         <h2 class="col-sm-8">Select a course</h2>
 
-        <form class="col-sm-4 search-courses text-right" role="search" ng-show="canAddCourse && courses.length">
+        <form class="col-sm-4 search-courses text-right" role="search" ng-show="canAddCourse && (courses.length || courseFilters.search)">
             <div class="form-group">
-                <input class="form-control" type="text"
-                    placeholder="Filter courses by keyword" ng-model="courseFilter">
+                <input class="form-control" type="text" name="search" placeholder="Filter courses by keyword"
+                       ng-model="courseFilters.search" ng-model-options="{ updateOn: 'blur' }">
             </div>
         </form>
-
     </div>
 
     <!-- Course listing -->
     <div class="course-list" ng-if="courses.length">
-        <a ng-repeat="course in courses | filter:courseFilter | orderBy:'start_date':true"
+        <a ng-repeat="course in courses"
             ng-href="#/course/{{course.id}}" class="each-course">
             <h3 class="clearfix">
                 <i class="fa fa-book"></i>
@@ -32,9 +31,17 @@
         </a>
     </div>
 
+    <div class="text-center" ng-if="courses.length">
+        <pagination total-items="totalNumCourses" ng-model="courseFilters.page"
+                    max-size="10" class="pagination-sm" boundary-links="true"
+                    direction-links="false" items-per-page="courseFilters.perPage"
+                    num-pages="numPages" ng-hide="numPages == 1"></pagination>
+    </div>
+
     <div ng-if="!courses.length">
         <hr />
-        <p>No courses currently available.</p>
+        <p ng-if="!courseFilters.search">No courses currently available.</p>
+        <p ng-if="courseFilters.search">No courses found.</p>
         <p ng-if="canAddCourse">Would you like to <a href="#/course/new">add a course</a>?</p>
     </div>
 

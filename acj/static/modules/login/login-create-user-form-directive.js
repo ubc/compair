@@ -11,25 +11,29 @@
                       AuthenticationService, LTI) {
             return {
                 restrict: 'E',
+                scope: true,
                 templateUrl: 'modules/user/user-form-partial.html',
                 link: function (scope, element, attrs) {
         	        scope.method = 'new';
                     scope.canManageUsers = false;
                     scope.submitted = false;
-                    scope.user = {
-                        //required parameter that will be ignored by backendup
-                        system_role: SystemRole.student,
-                        displayname: ""
-                    }
-                    if (LTI.isLTISession()===true)
-                    {
-                        scope.user.displayname = LTI.getDisplayName()
-                        scope.user.firstname = LTI.getFirstName()
-                        scope.user.lastname = LTI.getLastName()
-                        scope.user.email = LTI.getEmail()
-                    }
+
                     scope.password = {};
+                    scope.SystemRole = SystemRole;
                     scope.system_roles = [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin];
+
+                    scope.user = {
+                        // required parameter that will be ignored by backendup
+                        system_role: SystemRole.student
+                    }
+
+                    // check if LTI session
+                    LTI.getStatus().then(function(status) {
+                        if (LTI.isLTISession()) {
+                            // overwrite user with LTI user info
+                            scope.user = LTI.getLTIUser()
+                        }
+                    });
 
                     scope.save = function() {
                         scope.submitted = true;

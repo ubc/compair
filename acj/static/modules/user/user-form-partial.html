@@ -30,7 +30,8 @@
                 name="lastName" ng-model="user.lastname"
                 required />
         </acj-field-with-feedback>
-        <acj-field-with-feedback form-control="userForm.student_number" ng-if="method == 'new' || canManageUsers || loggedInUserIsInstructor">
+        <acj-field-with-feedback form-control="userForm.student_number"
+                                 ng-if="(method == 'new' || canManageUsers || loggedInUserIsInstructor) && user.system_role == SystemRole.student">
             <label for="student_number">Student Number </label>
             <input class="form-control" id="student_number" type="text"
                 name="student_number" ng-model="user.student_number"/>
@@ -45,7 +46,8 @@
     <fieldset>
         <legend>Account Login</legend>
         <p class="instructional-text">
-            This information will set the <strong>ComPAIR username <span ng-if="method == 'new'">and password</span></strong> for logging in without an external login (like CWL). The username you set does not appear anywehere to other users in the application but does need to be unique.
+            This information will set the <strong>ComPAIR username <span ng-if="method == 'new'">and password</span></strong> for logging in without an external login (like CWL).
+            The username you set does not appear anywehere to other users in the application but does need to be unique.
         </p>
         <acj-field-with-feedback form-control="userForm.username">
             <label for="username" class="required-star">ComPAIR Username </label>

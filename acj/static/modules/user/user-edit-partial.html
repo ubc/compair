@@ -3,7 +3,7 @@
     <ng-include src="'modules/user/user-form-partial.html'"></ng-include>
     <hr ng-if="ownProfile" />
     <h1 ng-if="ownProfile">Update Password</h1>
-    <div ng-if="ownProfile">
+    <div ng-if="ownProfile || canManageUsers">
         <form name="changePasswordForm" class="form" ng-submit="changePassword()" novalidate>
             <fieldset>
                 <legend>Password</legend>

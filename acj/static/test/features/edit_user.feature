@@ -6,15 +6,15 @@ Feature: Edit Profile
     And I'm on "user" page for user with id "1"
     When I select "Edit" button
     Then I should be on the "edit profile" page
-    And I should see the full Account Details and Account Login sections of the Edit User form
+    And I should see the full Account Details and Account Login sections of the Edit User form for non-students
     And I should see the Password section of the Edit User form
 
-  Scenario: Loading edit other user's profile as admin
+  Scenario: Loading edit instructor's profile as admin
     Given I'm a System Administrator
     And I'm on "user" page for user with id "2"
     When I select "Edit" button
     Then I should be on the "edit profile" page
-    And I should see the full Account Details and Account Login sections of the Edit User form
+    And I should see the full Account Details and Account Login sections of the Edit User form for non-students
     And I should see the Password section of the Edit User form without old password
 
   Scenario: Loading edit own profile as instructor
@@ -22,7 +22,7 @@ Feature: Edit Profile
     And I'm on "user" page for user with id "2"
     When I select "Edit" button
     Then I should be on the "edit profile" page
-    And I should see the incomplete Account Details section of the Edit User form
+    And I should see the incomplete Account Details section of the Edit User form for non-students
     And I should see the Password section of the Edit User form
 
   Scenario: Edit own profile as instructor
@@ -33,7 +33,6 @@ Feature: Edit Profile
       | user.displayname            | instructor123              |
       | user.firstname              | instructor                 |
       | user.lastname               | 123                        |
-      | user.student_number         | 1234567890                 |
       | user.email                  | instructor.123@example.com |
     And I submit form with "Save" button
     Then I should be on the "profile" page
@@ -56,7 +55,7 @@ Feature: Edit Profile
     And I'm on "user" page for user with id "3"
     When I select "Edit" button
     Then I should be on the "edit profile" page
-    And I should see the incomplete Account Details section of the Edit User form
+    And I should see the incomplete Account Details section of the Edit User form for students
     And I should not see the Password section of the Edit User form
 
   Scenario: Edit another user's profile as instructor
@@ -78,7 +77,7 @@ Feature: Edit Profile
     And I'm on "user" page for user with id "3"
     When I select "Edit" button
     Then I should be on the "edit profile" page
-    And I should see the incomplete Account Details section of the Edit User form
+    And I should see the incomplete Account Details section of the Edit User form for non-students
     And I should see the Password section of the Edit User form
 
   Scenario: Edit own profile as student

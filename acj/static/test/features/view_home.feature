@@ -6,16 +6,16 @@ Feature: View Home
     And I'm on "home" page
     Then I should see my courses with names:
       | name     | year | term    |
-      | PHYS 101 | 2015 | Winter  |
       | CHEM 111 | 2015 | Winter  |
+      | PHYS 101 | 2015 | Winter  |
 
   Scenario: Loading home page as instructor
     Given I'm an Instructor with courses
     And I'm on "home" page
     Then I should see my courses with names:
       | name     | year | term    |
-      | PHYS 101 | 2015 | Winter  |
       | CHEM 111 | 2015 | Winter  |
+      | PHYS 101 | 2015 | Winter  |
 
   Scenario: Filtering home page courses as instructor
     Given I'm an Instructor with courses
@@ -31,5 +31,5 @@ Feature: View Home
     And I'm on "home" page
     Then I should see my courses with names:
       | name     | year | term    |
-      | PHYS 101 | 2015 | Winter  |
       | CHEM 111 | 2015 | Winter  |
+      | PHYS 101 | 2015 | Winter  |

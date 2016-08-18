@@ -6,12 +6,12 @@ import factory.fuzzy
 
 from acj import db
 from six.moves import range
-from acj.models import SystemRole, CourseRole, Criterion, Course, Comparison
+from acj.models import SystemRole, CourseRole, Criterion, Course, Comparison, ThirdPartyType
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
     AnswerFactory, CriterionFactory, ComparisonFactory, AssignmentCriterionFactory, \
     AssignmentCommentFactory, AnswerCommentFactory, ScoreFactory, ComparisonExampleFactory, \
     LTIConsumerFactory, LTIContextFactory, LTIResourceLinkFactory, \
-    LTIUserFactory, LTIUserResourceLinkFactory
+    LTIUserFactory, LTIUserResourceLinkFactory, ThirdPartyUserFactory
 from data.fixtures import DefaultFixture
 
 class BasicTestData:
@@ -188,6 +188,21 @@ class LTITestData:
         db.session.commit()
 
         return lti_user_resource_link
+
+class ThirdPartyAuthTestData:
+    def __init__(self):
+        self.third_party_users = []
+
+    def create_third_party_user(self, **kwargs):
+        third_party_user = ThirdPartyUserFactory(
+            **kwargs
+        )
+
+        self.third_party_users.append(third_party_user)
+
+        db.session.commit()
+
+        return third_party_user
 
 class SimpleAssignmentTestData(BasicTestData):
     def __init__(self):

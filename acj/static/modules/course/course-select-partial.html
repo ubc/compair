@@ -4,7 +4,8 @@
         <br />
         <p class="intro-text">
             You're almost ready to start using ComPAIR!
-            Simply <strong>create</strong> a new ComPAIR course, <strong>select</strong> an existing ComPAIR course, <strong>or duplicate</strong> an existing ComPAIR course to begin creating and posting assignments for your students.
+            Simply <strong>create</strong> a new ComPAIR course or <strong>select</strong> an existing ComPAIR course to begin creating and posting assignments for your students.
+            <!--Simply <strong>create</strong> a new ComPAIR course, <strong>select</strong> an existing ComPAIR course, <strong>or duplicate</strong> an existing ComPAIR course to begin creating and posting assignments for your students.-->
         </p>
 
         <div class="row">
@@ -12,7 +13,7 @@
                 <ng-include src="'modules/course/course-partial.html'"></ng-include>
             </div>
             <div class="col-md-6">
-                <h1 id="view-title">Use Existing ({{courses.length}} Found)</h1>
+                <h1 id="view-title">Use Existing ({{totalNumCourses}} Found)</h1>
 
                 <!-- Course listing -->
                 <div class="course-select-list">
@@ -20,7 +21,7 @@
                         <tr>
                             <th ng-repeat="header in headers">{{header}}</th>
                         </tr>
-                        <tr ng-repeat="course in courses | filter:courseFilter">
+                        <tr ng-repeat="course in courses">
                             <td><strong>{{course.name}}</strong></td>
                             <td>
                                 <div class="text-right action-btns">
@@ -28,13 +29,21 @@
                                         Use This
                                     </a>
 
-                                    <a class="btn btn-default" ng-click="selectDuplicateCourse(course)">
+                                    <!-- TODO: eneable once course duplication feature is complete -->
+                                    <!--<a class="btn btn-default" ng-click="selectDuplicateCourse(course)">
                                         Duplicate This
-                                    </a>
+                                    </a>-->
                                 </div>
                             </td>
                         </tr>
                     </table>
+
+                    <div class="text-center" ng-if="courses.length">
+                        <pagination total-items="totalNumCourses" ng-model="courseFilters.page"
+                                    max-size="10" class="pagination-sm" boundary-links="true"
+                                    direction-links="false" items-per-page="courseFilters.perPage"
+                                    num-pages="numPages" ng-hide="numPages == 1"></pagination>
+                    </div>
 
                     <div ng-if="!courses.length">
                         <p>No courses currently found for you in ComPAIR. Please create a new course using the form on this screen.</p>

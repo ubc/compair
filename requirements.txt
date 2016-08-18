@@ -6,7 +6,7 @@ Flask-Script==2.0.5
 Flask-Testing==0.4.2
 Pillow==2.9.0
 PyMySQL==0.6.6
-SQLAlchemy==1.0.12
+SQLAlchemy==1.0.14
 blinker==1.4
 bouncer==0.1.12
 factory_boy==2.3.1

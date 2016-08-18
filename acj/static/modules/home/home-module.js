@@ -26,21 +26,51 @@ module.controller(
     function ($rootScope, $scope, $location, Session, AuthenticationService,
               Authorize, CourseResource, Toaster, UserResource) {
 
+        $scope.loggedInUserId = null;
+        $scope.totalNumCourses = 0;
+        $scope.courseFilters = {
+            page: 1,
+            perPage: 10,
+            search: null
+        };
+
         Authorize.can(Authorize.CREATE, CourseResource.MODEL).then(function(canAddCourse){
             $scope.canAddCourse = canAddCourse;
         });
 
         Session.getUser().then(function(user) {
-            UserResource.getUserCourses({id: user.id}).$promise.then(
+            $scope.loggedInUserId = user.id;
+            $scope.updateCourseList();
+
+            // register watcher here so that we start watching when all filter values are set
+            $scope.$watchCollection('courseFilters', filterWatcher);
+        });
+
+        $scope.updateCourseList = function() {
+            var params = angular.merge({id: $scope.loggedInUserId}, $scope.courseFilters);
+
+            UserResource.getUserCourses(params).$promise.then(
                 function(ret) {
                     $scope.courses = ret.objects;
+                    $scope.totalNumCourses = ret.total;
                     angular.forEach($scope.courses, function(event){ event.start_date = new Date(event.start_date); });
                 },
                 function (ret) {
                     Toaster.reqerror("Unable to retrieve your courses.", ret);
                 }
             );
-        });
+        };
+
+        var filterWatcher = function(newValue, oldValue) {
+            if (angular.equals(newValue, oldValue)) return;
+            if (oldValue.search != newValue.search) {
+                $scope.courseFilters.page = 1;
+            }
+            if(newValue.search === "") {
+                $scope.courseFilters.search = null;
+            }
+            $scope.updateCourseList();
+        };
     }
 ]);
 // End anonymous function

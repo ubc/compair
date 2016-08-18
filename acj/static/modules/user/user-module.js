@@ -60,6 +60,7 @@ module.controller("UserController",
         $scope.user = {};
         $scope.method = 'new';
         $scope.password = {};
+        $scope.SystemRole = SystemRole;
         $scope.system_roles = [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin]
         Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
             $scope.canManageUsers = result;

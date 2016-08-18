@@ -17,6 +17,8 @@ var viewHomeStepDefinitionsWrapper = function () {
 
     this.When(/^I filter home page courses by "([^"]*)"$/, function (filter, done) {
         element(by.css("form.search-courses input")).sendKeys(filter);
+        // force blur
+        element(by.css("body")).click();
 
         done();
     });

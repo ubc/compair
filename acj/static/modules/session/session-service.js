@@ -107,6 +107,7 @@
                 this._permissions = null;
                 $cookies.remove('current.user');
                 $cookies.remove('current.permissions');
+                $cookies.remove('current.lti.status');
             },
             refresh: function() {
                 var scope = this;

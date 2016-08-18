@@ -50,6 +50,10 @@ user_list_parser = pagination_parser.copy()
 user_list_parser.add_argument('search', type=str, required=False, default=None)
 user_list_parser.add_argument('ids', type=str, required=False, default=None)
 
+user_course_list_parser = pagination_parser.copy()
+user_course_list_parser.add_argument('search', type=str, required=False, default=None)
+
+
 # events
 on_user_modified = event.signal('USER_MODIFIED')
 on_user_get = event.signal('USER_GET')
@@ -92,24 +96,28 @@ class UserAPI(Resource):
         if params['id'] != user_id:
             return {"error": "User id does not match URL."}, 400
 
-        if allow(MANAGE, user):
-            username = params.get("username", user.username)
-            username_exists = User.query.filter_by(username=username).first()
-            if username_exists and username_exists.id != user.id:
-                return {"error": "This username already exists. Please pick another."}, 409
-            else:
-                user.username = username
+        username = params.get("username", user.username)
+        username_exists = User.query.filter_by(username=username).first()
+        if username_exists and username_exists.id != user.id:
+            return {"error": "This username already exists. Please pick another."}, 409
+        else:
+            user.username = username
 
+        if allow(MANAGE, user):
+            system_role = params.get("system_role", user.system_role.value)
+            check_valid_system_role(system_role)
+            user.system_role = SystemRole(system_role)
+
+        # only students should have student numbers
+        if user.system_role == SystemRole.student:
             student_number = params.get("student_number", user.student_number)
             student_number_exists = User.query.filter_by(student_number=student_number).first()
             if student_number is not None and student_number_exists and student_number_exists.id != user.id:
                 return {"error": "This student number already exists. Please pick another."}, 409
             else:
                 user.student_number = student_number
-
-            system_role = params.get("system_role", user.system_role.value)
-            check_valid_system_role(system_role)
-            user.system_role = SystemRole(system_role)
+        else:
+            user.student_number = None
 
         user.firstname = params.get("firstname", user.firstname)
         user.lastname = params.get("lastname", user.lastname)
@@ -188,19 +196,25 @@ class UserListAPI(Resource):
                 lti_user = LTIUser.query.get_or_404(sess['lti_user'])
                 lti_user.acj_user = user
                 user.system_role = lti_user.system_role
+
                 if sess.get('lti_context') and sess.get('lti_user_resource_link'):
                     lti_context = LTIContext.query.get_or_404(sess['lti_context'])
                     lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
                     if lti_context.is_linked_to_course():
                         # create new enrollment
-                        new_user_course = UserCourse(user=user, course_id=lti_context.acj_course_id,
-                                                     course_role=lti_user_resource_link.course_role)
+                        new_user_course = UserCourse(
+                            user=user,
+                            course_id=lti_context.acj_course_id,
+                            course_role=lti_user_resource_link.course_role
+                        )
                         db.session.add(new_user_course)
+
                 if sess.get('CAS_CREATE'):
-                    thirdpartyuser = ThirdPartyUser()
-                    thirdpartyuser.type = ThirdPartyType.cwl
-                    thirdpartyuser.unique_identifier = sess.get('CAS_UNIQUE_IDENTIFIER')
-                    thirdpartyuser.user_id = user.id
+                    thirdpartyuser = ThirdPartyUser(
+                        third_party_type=ThirdPartyType.cwl,
+                        unique_identifier=sess.get('CAS_UNIQUE_IDENTIFIER'),
+                        user=user
+                    )
                     db.session.add(thirdpartyuser)
         else:
             system_role = params.get("system_role")
@@ -208,6 +222,10 @@ class UserListAPI(Resource):
             user.system_role = SystemRole(system_role)
 
             require(CREATE, user)
+
+        # only students can have student numbers
+        if user.system_role != SystemRole.student:
+            user.student_number = None
 
         try:
             db.session.add(user)
@@ -234,6 +252,11 @@ class UserListAPI(Resource):
             authenticate(user)
             sess.pop('oauth_create_user_link')
 
+            if sess.get('CAS_CREATE'):
+                sess.pop('CAS_CREATE')
+                sess.pop('CAS_UNIQUE_IDENTIFIER')
+                sess['CAS_LOGIN'] = True
+
         return marshal(user, dataformat.get_user())
 
 
@@ -242,22 +265,33 @@ class UserCourseListAPI(Resource):
     @login_required
     def get(self, user_id):
         User.query.get_or_404(user_id)
-        # we want to list courses only, so only check the association table
-        if allow(MANAGE, Course):
-            courses = Course.query \
-                .filter_by(active=True) \
-                .order_by(Course.name) \
-                .all()
-        else:
-            courses = Course.query \
-                .join(UserCourse) \
+
+        params = user_course_list_parser.parse_args()
+
+        # Note, start and end dates are optional so default sort is by start_date, end_date, then name
+        query = Course.query \
+            .filter_by(active=True) \
+            .order_by(Course.start_date.desc(), Course.end_date.desc(), Course.name) \
+
+        # we want to list user linked courses only, so only check the association table
+        if not allow(MANAGE, Course):
+            query = query.join(UserCourse) \
                 .filter(and_(
                     UserCourse.user_id == user_id,
-                    UserCourse.course_role != CourseRole.dropped,
-                    Course.active == True
-                )) \
-                .order_by(Course.name) \
-                .all()
+                    UserCourse.course_role != CourseRole.dropped
+                ))
+
+        if params['search']:
+            search_terms = params['search'].split()
+            for search_term in search_terms:
+                if search_term != "":
+                    search = '%{}%'.format(search_term)
+                    query = query.filter(or_(
+                        Course.name.like(search),
+                        Course.year.like(search),
+                        Course.term.like(search)
+                    ))
+        page = query.paginate(params['page'], params['perPage'])
 
         # TODO REMOVE COURSES WHERE COURSE IS UNAVAILABLE?
 
@@ -267,7 +301,9 @@ class UserCourseListAPI(Resource):
             user=current_user,
             data={'userid': user_id})
 
-        return {'objects': marshal(courses, dataformat.get_course())}
+        return {"objects": marshal(page.items, dataformat.get_course()),
+                "page": page.page, "pages": page.pages,
+                "total": page.total, "per_page": page.per_page}
 
 # courses/teaching
 class TeachingUserCourseListAPI(Resource):

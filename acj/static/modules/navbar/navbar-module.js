@@ -15,10 +15,6 @@ var module = angular.module('ubc.ctlt.acj.navbar',
     ]
 );
 
-/***** Providers *****/
-// TODO declare providers here, e.g.:
-// module.factory(...)
-
 /***** Controllers *****/
 module.controller(
     "NavbarController",

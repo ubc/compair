@@ -1,13 +1,13 @@
 import json
 import mock
 
-from data.fixtures.test_data import SimpleAssignmentTestData, LTITestData
+from data.fixtures.test_data import SimpleAssignmentTestData, LTITestData, ThirdPartyAuthTestData
 from acj.tests.test_acj import ACJAPITestCase
 from acj.models import User, SystemRole, CourseRole, UserCourse, \
     LTIConsumer, LTIContext, LTIUser, LTIMembership,  \
     LTIResourceLink, LTIUserResourceLink
 from acj.core import db
-from oauthlib.common import generate_nonce, generate_timestamp
+from oauthlib.common import generate_token, generate_nonce, generate_timestamp
 
 class LTILaunchAPITests(ACJAPITestCase):
     def setUp(self):
@@ -27,6 +27,15 @@ class LTILaunchAPITests(ACJAPITestCase):
             lti_resource_link_id = self.lti_data.generate_resource_link_id()
             lti_user_id = self.lti_data.generate_user_id()
             lti_context_id = self.lti_data.generate_context_id()
+
+            # invalid request - invalid lti_consumer
+            invalid_lti_consumer = LTIConsumer(
+                oauth_consumer_key=generate_token(),
+                oauth_consumer_secret=generate_token()
+            )
+            with self.lti_launch(invalid_lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id, roles=lti_role) as rv:
+                self.assert400(rv)
 
             # invalid request - no user id
             with self.lti_launch(lti_consumer, lti_resource_link_id,
@@ -79,7 +88,7 @@ class LTILaunchAPITests(ACJAPITestCase):
                 self.assertIsNone(sess.get('lti_context'))
                 self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
 
-                # first request for user, oauth_create_user_link should be True
+                # user already exists, oauth_create_user_link should be None
                 self.assertIsNone(sess.get('oauth_create_user_link'))
 
                 # check that user is logged in
@@ -90,12 +99,7 @@ class LTILaunchAPITests(ACJAPITestCase):
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
                     follow_redirects=False) as rv:
-
-                if course_role == CourseRole.instructor:
-                    self.assertRedirects(rv, '/static/index.html#/lti')
-                else:
-                    #TODO: confirm message sent
-                    self.assertRedirects(rv, '/static/index.html#/')
+                self.assertRedirects(rv, '/static/index.html#/lti')
 
             # check session
             with self.client.session_transaction() as sess:
@@ -106,7 +110,7 @@ class LTILaunchAPITests(ACJAPITestCase):
                 self.assertEqual(lti_context.id, sess.get('lti_context'))
                 self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
 
-                # first request for user, oauth_create_user_link should be True
+                # user already exists, oauth_create_user_link should be None
                 self.assertIsNone(sess.get('oauth_create_user_link'))
 
                 # check that user is logged in
@@ -148,6 +152,30 @@ class LTILaunchAPITests(ACJAPITestCase):
                 .one_or_none()
             self.assertIsNotNone(user_course)
 
+            # valid request - user with account and course linked (assignment doesn't exist in db)
+            with self.lti_launch(lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
+                    assignment_id=999, follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/static/index.html#/course/'+str(course.id))
+
+            # check session
+            with self.client.session_transaction() as sess:
+                self.assertTrue(sess.get('LTI'))
+                self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
+                self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
+                self.assertEqual(lti_user.id, sess.get('lti_user'))
+                self.assertEqual(lti_context.id, sess.get('lti_context'))
+                self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
+
+                # user already exists, oauth_create_user_link should be None
+                self.assertIsNone(sess.get('oauth_create_user_link'))
+
+                # check that user is logged in
+                self.assertEqual(str(user.id), sess.get('user_id'))
+
+            # verify lti_resource_link does not retain the invalid assignment_id
+            self.assertIsNone(lti_resource_link.acj_assignment_id)
+
             # create assignment - should be automatically linked when custom_assignment is set
             assignment = self.data.create_assignment_in_answer_period(course, self.data.get_authorized_instructor())
 
@@ -166,11 +194,14 @@ class LTILaunchAPITests(ACJAPITestCase):
                 self.assertEqual(lti_context.id, sess.get('lti_context'))
                 self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
 
-                # first request for user, oauth_create_user_link should be True
+                # user already exists, oauth_create_user_link should be None
                 self.assertIsNone(sess.get('oauth_create_user_link'))
 
                 # check that user is logged in
                 self.assertEqual(str(user.id), sess.get('user_id'))
+
+            # verify lti_resource_link does not retain the invalid assignment_id
+            self.assertEqual(lti_resource_link.acj_assignment_id, assignment.id)
 
             # ensure replay attacks do not work for lti launch requests
             nonce = generate_nonce()
@@ -186,6 +217,188 @@ class LTILaunchAPITests(ACJAPITestCase):
                     assignment_id=assignment.id, follow_redirects=False,
                     nonce=nonce, timestamp=timestamp) as rv:
                 self.assert400(rv)
+
+    def test_lti_status(self):
+        url = '/api/lti/status'
+
+        # test lti session required
+        rv = self.client.get(url, data={}, content_type='application/json')
+        self.assert200(rv)
+        status = rv.json['status']
+        self.assertFalse(status['valid'])
+
+        lti_consumer = self.lti_data.get_consumer()
+        roles = {
+            "Instructor": (SystemRole.instructor, CourseRole.instructor),
+            "Student": (SystemRole.student, CourseRole.student),
+            "TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant)
+        }
+
+        for lti_role, (system_role, course_role) in roles.items():
+            # test new user (no acj user yet)
+            lti_context = self.lti_data.create_context(lti_consumer)
+            lti_user = self.lti_data.create_user(lti_consumer, system_role)
+            lti_resource_link = self.lti_data.create_resource_link(lti_consumer, lti_context)
+            lti_user_resource_link = self.lti_data.create_user_resource_link(
+                lti_user, lti_resource_link, CourseRole.instructor)
+
+            # setup lti session with no context id
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=None, roles=lti_role) as rv:
+                self.assert200(rv)
+
+            # get status
+            rv = self.client.get(url, data={}, content_type='application/json')
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertTrue(status['valid'])
+
+            self.assertFalse(status['user']['exists'])
+            self.assertEqual(status['user']['firstname'], lti_user.lis_person_name_given)
+            self.assertEqual(status['user']['lastname'], lti_user.lis_person_name_family)
+            self.assertIsNotNone(status['user']['displayname'])
+            self.assertEqual(status['user']['email'], lti_user.lis_person_contact_email_primary)
+            self.assertEqual(status['user']['system_role'], system_role.value)
+
+            self.assertFalse(status['course']['exists'])
+            self.assertIsNone(status['course']['id'])
+            self.assertIsNone(status['course']['name'])
+            self.assertEqual(status['course']['course_role'], course_role.value)
+
+            self.assertFalse(status['assignment']['exists'])
+            self.assertIsNone(status['assignment']['id'])
+
+            # setup lti session with context id
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                self.assert200(rv)
+
+            rv = self.client.get(url, data={}, content_type='application/json')
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertTrue(status['valid'])
+
+            self.assertFalse(status['course']['exists'])
+            self.assertIsNone(status['course']['id'])
+            self.assertEqual(status['course']['name'], lti_context.context_title)
+            self.assertEqual(status['course']['course_role'], course_role.value)
+
+            # setup lti session with custom assignment id
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                self.assert200(rv)
+
+            rv = self.client.get(url, data={}, content_type='application/json')
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertTrue(status['valid'])
+
+            self.assertFalse(status['course']['exists'])
+            self.assertIsNone(status['course']['id'])
+            self.assertEqual(status['course']['name'], lti_context.context_title)
+            self.assertEqual(status['course']['course_role'], course_role.value)
+
+            # setup with existing user
+            user = self.data.create_user(system_role)
+            lti_user.acj_user = user
+            db.session.commit()
+
+            # setup lti session with existing user
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                self.assert200(rv)
+
+            rv = self.client.get(url, data={}, content_type='application/json')
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertTrue(status['valid'])
+
+            self.assertTrue(status['user']['exists'])
+            self.assertEqual(status['user']['firstname'], lti_user.lis_person_name_given)
+            self.assertEqual(status['user']['lastname'], lti_user.lis_person_name_family)
+            self.assertIsNotNone(status['user']['displayname'])
+            self.assertEqual(status['user']['email'], lti_user.lis_person_contact_email_primary)
+            self.assertEqual(status['user']['system_role'], system_role.value)
+
+            # setup with existing course
+            course = self.data.create_course()
+            lti_context.acj_course_id = course.id
+            db.session.commit()
+
+            # setup lti session with existing course
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                self.assert200(rv)
+
+            rv = self.client.get(url, data={}, content_type='application/json')
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertTrue(status['valid'])
+
+            self.assertTrue(status['course']['exists'])
+            self.assertEqual(status['course']['id'], course.id)
+            self.assertEqual(status['course']['name'], lti_context.context_title)
+            self.assertEqual(status['course']['course_role'], course_role.value)
+
+            # setup lti session with existing course
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                self.assert200(rv)
+
+            rv = self.client.get(url, data={}, content_type='application/json')
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertTrue(status['valid'])
+
+            self.assertTrue(status['course']['exists'])
+            self.assertEqual(status['course']['id'], course.id)
+            self.assertEqual(status['course']['name'], lti_context.context_title)
+            self.assertEqual(status['course']['course_role'], course_role.value)
+
+            # with no custom assignment param
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                self.assert200(rv)
+
+            rv = self.client.get(url, data={}, content_type='application/json')
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertTrue(status['valid'])
+
+            self.assertFalse(status['assignment']['exists'])
+            self.assertIsNone(status['assignment']['id'])
+
+            # with custom assignment param that doesn't exist
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role,
+                    assignment_id=999) as rv:
+                self.assert200(rv)
+
+            rv = self.client.get(url, data={}, content_type='application/json')
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertTrue(status['valid'])
+
+            self.assertFalse(status['assignment']['exists'])
+            self.assertIsNone(status['assignment']['id'])
+
+            # with custom assignment param that exist
+            instructor = self.data.create_instructor()
+            self.data.enrol_instructor(instructor, course)
+            assignment = self.data.create_assignment_in_answer_period(course, instructor)
+
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role,
+                    assignment_id=assignment.id) as rv:
+                self.assert200(rv)
+
+            rv = self.client.get(url, data={}, content_type='application/json')
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertTrue(status['valid'])
+
+            self.assertTrue(status['assignment']['exists'])
+            self.assertEqual(status['assignment']['id'], assignment.id)
 
     def test_lti_course_link(self):
         instructor = self.data.get_authorized_instructor()
@@ -653,3 +866,122 @@ class LTILaunchAPITests(ACJAPITestCase):
             rv = self.client.post(url_2, data={}, content_type='application/json')
             self.assert400(rv)
             self.assertEqual(rv.json['error'], "LTI membership service is not supported for this course")
+
+    @mock.patch('flask.ext.cas.CAS.username', new_callable= mock.PropertyMock)
+    def test_cas_auth_via_lti_launch(self, mocked_cas_username):
+        url = '/api/auth/cas'
+        auth_data = ThirdPartyAuthTestData()
+
+        lti_consumer = self.lti_data.get_consumer()
+        roles = {
+            "Instructor": (SystemRole.instructor, CourseRole.instructor),
+            "Student": (SystemRole.student, CourseRole.student),
+            "TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant)
+        }
+
+        for lti_role, (system_role, course_role) in roles.items():
+            lti_context = self.lti_data.create_context(lti_consumer)
+            lti_user = self.lti_data.create_user(lti_consumer, system_role)
+            lti_resource_link = self.lti_data.create_resource_link(lti_consumer, lti_context)
+            lti_user_resource_link = self.lti_data.create_user_resource_link(
+                lti_user, lti_resource_link, CourseRole.instructor)
+
+            # un-linked third party user
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                self.assert200(rv)
+
+            third_party_user = auth_data.create_third_party_user()
+            mocked_cas_username.return_value = third_party_user.unique_identifier
+
+            with self.client.get(url, data={}, content_type='application/json', follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/static/index.html#/oauth/create')
+
+            # check session
+            with self.client.session_transaction() as sess:
+                self.assertTrue(sess.get('LTI'))
+
+                # first request for user, oauth_create_user_link should be True
+                self.assertTrue(sess.get('oauth_create_user_link'))
+
+                # check that user is not logged in
+                self.assertIsNone(sess.get('user_id'))
+
+                self.assertTrue(sess.get('CAS_CREATE'))
+                self.assertEqual(third_party_user.unique_identifier, sess.get('CAS_UNIQUE_IDENTIFIER'))
+
+
+            # linked third party user (no context id)
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=None, roles=lti_role) as rv:
+                self.assert200(rv)
+
+            user = self.data.create_user(system_role)
+            third_party_user = auth_data.create_third_party_user(user=user)
+            mocked_cas_username.return_value = third_party_user.unique_identifier
+
+            with self.client.get(url, data={}, content_type='application/json', follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/static/index.html#/lti')
+
+            # check session
+            with self.client.session_transaction() as sess:
+                self.assertTrue(sess.get('LTI'))
+
+                # check that oauth_create_user_link is None
+                self.assertIsNone(sess.get('oauth_create_user_link'))
+
+                # check that user is logged in
+                self.assertEqual(str(user.id), sess.get('user_id'))
+
+                self.assertIsNone(sess.get('CAS_CREATE'))
+                self.assertIsNone(sess.get('CAS_UNIQUE_IDENTIFIER'))
+
+            # check that lti_user is now linked
+            self.assertEqual(lti_user.acj_user_id, user.id)
+
+
+
+            # create fresh lti_user
+            lti_user = self.lti_data.create_user(lti_consumer, system_role)
+
+            course = self.data.create_course()
+            lti_context.acj_course_id = course.id
+            db.session.commit()
+
+            # linked third party user (with linked context id)
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                self.assert200(rv)
+
+            user = self.data.create_user(system_role)
+            third_party_user = auth_data.create_third_party_user(user=user)
+            mocked_cas_username.return_value = third_party_user.unique_identifier
+
+            with self.client.get(url, data={}, content_type='application/json', follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/static/index.html#/lti')
+
+            # check session
+            with self.client.session_transaction() as sess:
+                self.assertTrue(sess.get('LTI'))
+
+                # check that oauth_create_user_link is None
+                self.assertIsNone(sess.get('oauth_create_user_link'))
+
+                # check that user is logged in
+                self.assertEqual(str(user.id), sess.get('user_id'))
+
+                self.assertIsNone(sess.get('CAS_CREATE'))
+                self.assertIsNone(sess.get('CAS_UNIQUE_IDENTIFIER'))
+
+            # check that lti_user is now linked
+            self.assertEqual(lti_user.acj_user_id, user.id)
+
+            # verify enrollment
+            user_course = UserCourse.query \
+                .filter_by(
+                    user_id=user.id,
+                    course_id=course.id,
+                    course_role=course_role
+                ) \
+                .one_or_none()
+            self.assertIsNotNone(user_course)

@@ -2,7 +2,7 @@
 
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
-	
+
 function combineDateTime(datetime) {
     var date = new Date(datetime.date);
     var time = new Date(datetime.time);
@@ -177,8 +177,14 @@ module.controller(
     function ($rootScope, $scope, $modalInstance,
               Session, Authorize, CourseResource, Toaster, UserResource, LTI) {
 
-        $scope.courses = [];
+        $scope.loggedInUserId = null;
         $scope.submitted = false;
+        $scope.totalNumCourses = 0;
+        $scope.courseFilters = {
+            page: 1,
+            perPage: 10
+        };
+        $scope.courses = [];
 
         $scope.showDuplicateForm = false;
         $scope.course = {
@@ -194,14 +200,9 @@ module.controller(
         $scope.duplicateCourse = {};
 
         Session.getUser().then(function(user) {
-            UserResource.getUserCourses({id: user.id}).$promise.then(
-                function(ret) {
-                    $scope.courses = ret.objects;
-                },
-                function (ret) {
-                    Toaster.reqerror("Unable to retrieve your courses.", ret);
-                }
-            );
+            $scope.loggedInUserId = user.id;
+            $scope.updateCourseList();
+            $scope.$watchCollection('courseFilters', filterWatcher);
         });
 
         $scope.selectCourse = function(course) {
@@ -231,8 +232,8 @@ module.controller(
                 $scope.submitted = false;
             });
         };
-	
-	$scope.date.course_start.open = function($event) {
+
+        $scope.date.course_start.open = function($event) {
             $event.preventDefault();
             $event.stopPropagation();
             $scope.date.course_start.opened = true;
@@ -245,7 +246,7 @@ module.controller(
 
         $scope.save = function() {
             $scope.submitted = true;
-	    if ($scope.date.course_start.date != null) {
+            if ($scope.date.course_start.date != null) {
                 $scope.course.start_date = combineDateTime($scope.date.course_start);
             } else {
                 $scope.course.start_date = null;
@@ -260,6 +261,7 @@ module.controller(
                 $scope.submitted = false;
                 return;
             }
+
             CourseResource.save({}, $scope.course, function (ret) {
                 Toaster.success("Course Created", 'The course was created successfully');
                 // refresh permissions
@@ -268,6 +270,26 @@ module.controller(
             }).$promise.finally(function() {
                 $scope.submitted = false;
             });
+        };
+
+        $scope.updateCourseList = function() {
+            var params = angular.merge({id: $scope.loggedInUserId}, $scope.courseFilters);
+
+            UserResource.getUserCourses(params).$promise.then(
+                function(ret) {
+                    $scope.courses = ret.objects;
+                    $scope.totalNumCourses = ret.total;
+                    angular.forEach($scope.courses, function(event){ event.start_date = new Date(event.start_date); });
+                },
+                function (ret) {
+                    Toaster.reqerror("Unable to retrieve your courses.", ret);
+                }
+            );
+        };
+
+        var filterWatcher = function(newValue, oldValue) {
+            if (angular.equals(newValue, oldValue)) return;
+            $scope.updateCourseList();
         };
     }
 ]);

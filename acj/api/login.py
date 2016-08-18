@@ -4,12 +4,10 @@ from flask_login import current_user, login_required, login_user, logout_user
 from acj import cas
 from acj.core import db, event
 from acj.authorization import get_logged_in_user_permissions
-from acj.models import User, LTIUser, LTIResourceLink, LTIUserResourceLink, UserCourse, LTIContext, ThirdPartyUser, \
-    ThirdPartyType
+from acj.models import User, LTIUser, LTIResourceLink, LTIUserResourceLink, UserCourse, LTIContext, \
+    ThirdPartyUser, ThirdPartyType
 
 login_api = Blueprint("login_api", __name__, url_prefix='/api')
-
-on_user_create = event.signal('USER_CREATE')
 
 @login_api.route('/login', methods=['POST'])
 def login():
@@ -31,24 +29,14 @@ def login():
         if sess.get('LTI') and sess.get('oauth_create_user_link'):
             lti_user = LTIUser.query.get_or_404(sess['lti_user'])
             lti_user.acj_user_id = user.id
+            sess.pop('oauth_create_user_link')
+
         if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
             lti_context = LTIContext.query.get_or_404(sess['lti_context'])
             lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
-            if lti_context.is_linked_to_course():
-                user_course = UserCourse.query \
-                    .filter_by(
-                        user_id=user.id,
-                        course_id=lti_context.acj_course_id
-                    ) \
-                    .one_or_none()
-                if user_course is None:
-                    # create new enrollment
-                    new_user_course = UserCourse(user_id=user.id, course_id=lti_context.acj_course_id, course_role=lti_user_resource_link.course_role)
-                    db.session.add(new_user_course)
-                else:
-                    user_course.course_role=lti_user_resource_link.course_role
-        db.session.commit()
+            lti_context.update_enrolment(user.id, lti_user_resource_link.course_role)
 
+        db.session.commit()
         return jsonify({"userid": user.id, "permissions": permissions})
 
     # login unsuccessful
@@ -59,20 +47,21 @@ def login():
 def logout():
     current_user.update_last_online()
     logout_user()  # flask-login delete user info
+    url = ""
 
     if sess.get('LTI'):
         lti_resource_link = LTIResourceLink.query.get(sess['lti_resource_link'])
         if lti_resource_link:
             return_url = lti_resource_link.launch_presentation_return_url
             if return_url != None and return_url.strip() != "":
-                return jsonify({'redirect': return_url})
+                url = jsonify({'redirect': return_url})
 
-    if sess.get('CAS_LOGIN'):
-        return jsonify({'redirect': url_for('cas.logout')})
+    elif sess.get('CAS_LOGIN'):
+        url = jsonify({'redirect': url_for('cas.logout')})
 
     sess.clear()
 
-    return ""
+    return url
 
 
 @login_api.route('/session', methods=['GET'])
@@ -99,42 +88,33 @@ def auth_cas():
     if username is not None:
         thirdpartyuser = ThirdPartyUser.query. \
             filter_by(
-            unique_identifier=username,
-            type=ThirdPartyType.cwl
-        ).first()
+                unique_identifier=username,
+                third_party_type=ThirdPartyType.cwl
+            ) \
+            .first()
         msg = None
+
         if not thirdpartyuser or not thirdpartyuser.user:
-            if sess.get('oauth_create_user_link') and sess.get('LTI'):
+            if sess.get('LTI') and sess.get('oauth_create_user_link'):
                 sess['CAS_CREATE'] = True
                 sess['CAS_UNIQUE_IDENTIFIER'] = cas.username
-                return redirect(
-                    '/static/index.html#/oauth/create')
+                url = '/static/index.html#/oauth/create'
             else:
                 current_app.logger.debug("Login failed, invalid username for: " + username)
                 msg = 'You don\'t have access to this application.'
         else:
             authenticate(thirdpartyuser.user)
+
             if sess.get('LTI') and sess.get('oauth_create_user_link'):
                 lti_user = LTIUser.query.get_or_404(sess['lti_user'])
                 lti_user.acj_user_id = thirdpartyuser.user_id
                 sess.pop('oauth_create_user_link')
+
             if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
                 lti_context = LTIContext.query.get_or_404(sess['lti_context'])
                 lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
-                if lti_context.is_linked_to_course():
-                    user_course = UserCourse.query \
-                        .filter_by(
-                        user_id=thirdpartyuser.user_id,
-                        course_id=lti_context.acj_course_id
-                    ) \
-                        .one_or_none()
-                    if user_course is None:
-                        # create new enrollment
-                        new_user_course = UserCourse(user_id=thirdpartyuser.user_id, course_id=lti_context.acj_course_id,
-                                                     course_role=lti_user_resource_link.course_role)
-                        db.session.add(new_user_course)
-                    else:
-                        user_course.course_role = lti_user_resource_link.course_role
+                lti_context.update_enrolment(thirdpartyuser.user_id, lti_user_resource_link.course_role)
+
             db.session.commit()
             sess['CAS_LOGIN'] = True
     else:
@@ -142,6 +122,7 @@ def auth_cas():
 
     if msg is not None:
         sess['CAS_AUTH_MSG'] = msg
+
     return redirect(url)
 
 
