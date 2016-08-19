@@ -26,6 +26,10 @@ api = new_restful_api(classlist_api)
 new_course_user_parser = RequestParser()
 new_course_user_parser.add_argument('course_role', type=str)
 
+update_users_course_role_parser = RequestParser()
+update_users_course_role_parser.add_argument('ids', type=list, required=True, default=[], location='json')
+update_users_course_role_parser.add_argument('course_role', default=CourseRole.dropped.value, type=str)
+
 # upload file column name to index number
 USERNAME = 0
 STUDENTNO = 1
@@ -43,6 +47,7 @@ on_classlist_unenrol = event.signal('CLASSLIST_UNENROL')
 on_classlist_instructor_label = event.signal('CLASSLIST_INSTRUCTOR_LABEL_GET')
 on_classlist_instructor = event.signal('CLASSLIST_INSTRUCTOR_GET')
 on_classlist_student = event.signal('CLASSLIST_STUDENT_GET')
+on_classlist_update_users_course_roles = event.signal('CLASSLIST_UPDATE_USERS_COURSE_ROLES')
 
 
 def display_name_generator(role="student"):
@@ -188,7 +193,6 @@ def output_csv(data, code, headers=None):
     response.headers.extend(headers or {})
     response.headers['Content-Disposition'] = 'attachment;filename=classlist.csv'
     return response
-
 
 # /
 class ClasslistRootAPI(Resource):
@@ -425,3 +429,55 @@ class StudentsAPI(Resource):
 
 
 api.add_resource(StudentsAPI, '/students')
+
+
+# /roles - set course role for multi users at once
+class UserCourseRoleAPI(Resource):
+    @login_required
+    def post(self, course_id):
+        Course.get_active_or_404(course_id)
+        require(EDIT, UserCourse(course_id=course_id))
+
+        params = update_users_course_role_parser.parse_args()
+
+        role_name = params.get('course_role')
+        course_roles = [
+            CourseRole.dropped.value,
+            CourseRole.student.value,
+            CourseRole.teaching_assistant.value,
+            CourseRole.instructor.value
+        ]
+        if role_name not in course_roles:
+            abort(404)
+        course_role = CourseRole(role_name)
+
+        if len(params.get('ids')) == 0:
+            return {"error": "Must have at least one user id"}, 400
+
+        user_courses = UserCourse.query \
+            .filter(and_(
+                UserCourse.course_id == course_id,
+                UserCourse.user_id.in_(params.get('ids')),
+                UserCourse.course_role != CourseRole.dropped
+            )) \
+            .all()
+
+        if len(params.get('ids')) != len(user_courses):
+            return {"error": "One or more users are not enrolled in the course"}, 400
+
+        for user_course in user_courses:
+            user_course.course_role = course_role
+
+        db.session.commit()
+
+        on_classlist_update_users_course_roles.send(
+            current_app._get_current_object(),
+            event_name=on_classlist_update_users_course_roles.name,
+            user=current_user,
+            course_id=course_id,
+            data={'user_ids': params.get('ids'), 'course_role': role_name})
+
+        return {'course_role': role_name}
+
+
+api.add_resource(UserCourseRoleAPI, '/roles')

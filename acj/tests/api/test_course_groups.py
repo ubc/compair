@@ -1,7 +1,10 @@
 import io
+import json
 
 from data.fixtures.test_data import TestFixture
 from acj.tests.test_acj import ACJAPITestCase
+
+from acj.models import UserCourse
 
 
 class CourseGroupsAPITests(ACJAPITestCase):
@@ -336,8 +339,129 @@ class CourseGroupsAPITests(ACJAPITestCase):
             self.assertEqual(0, len(rv.json['invalids']))
             uploaded_file.close()
 
+    def test_group_multiple_enrolment(self):
+        # frequently used objects
+        course = self.fixtures.course
+        group_name = self.fixtures.groups[0]
+        group_name_2 = self.fixtures.groups[1]
+        student_ids = [self.fixtures.students[0].id, self.fixtures.students[1].id]
+        url = self._create_group_users_url(course, group_name)
+
+        params = { 'ids': student_ids }
+
+        # test login required
+        rv = self.client.post(url,
+            data=json.dumps(params),
+            content_type='application/json')
+        self.assert401(rv)
+
+        # test unauthorized user
+        with self.login(self.fixtures.unauthorized_instructor.username):
+            rv = self.client.post(url,
+                data=json.dumps(params),
+                content_type='application/json')
+            self.assert403(rv)
+
+        with self.login(self.fixtures.instructor.username):
+            # test invalid course id
+            rv = self.client.post('/api/courses/999/users/groups/'+group_name,
+                data=json.dumps(params),
+                content_type='application/json')
+            self.assert404(rv)
+
+            # test missing ids
+            rv = self.client.post(url,
+                data=json.dumps({'ids': []}),
+                content_type='application/json')
+            self.assert400(rv)
+
+            # test invalid ids
+            rv = self.client.post(url,
+                data=json.dumps({'ids': [self.fixtures.unauthorized_student.id]}),
+                content_type='application/json')
+            self.assert400(rv)
+
+            # test enrol users into group
+            rv = self.client.post(url,
+                data=json.dumps(params),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(rv.json['group_name'], group_name)
+
+            for user_course in course.user_courses:
+                if user_course.user_id in student_ids:
+                    self.assertEqual(user_course.group_name, group_name)
+
+            # test enrol users into another group
+            url = self._create_group_users_url(course, group_name_2)
+            rv = self.client.post(url,
+                data=json.dumps(params),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(rv.json['group_name'], group_name_2)
+
+            for user_course in course.user_courses:
+                if user_course.user_id in student_ids:
+                    self.assertEqual(user_course.group_name, group_name_2)
+
+    def test_group_multiple_unenrolment(self):
+        course = self.fixtures.course
+        url = self._create_group_users_url(course)
+
+        student_ids = [self.fixtures.students[0].id, self.fixtures.students[1].id]
+        params = { 'ids': student_ids }
+
+        # test login required
+        rv = self.client.post(url,
+            data=json.dumps(params),
+            content_type='application/json')
+        self.assert401(rv)
+
+        # test unauthorzied user
+        with self.login(self.fixtures.unauthorized_instructor.username):
+            rv = self.client.post(url,
+                data=json.dumps(params),
+                content_type='application/json')
+            self.assert403(rv)
+
+        with self.login(self.fixtures.instructor.username):
+            # test invalid course id
+            rv = self.client.post('/api/courses/999/users/groups',
+                data=json.dumps(params),
+                content_type='application/json')
+            self.assert404(rv)
+
+            # test missing ids
+            rv = self.client.post(url,
+                data=json.dumps({ 'ids': [] }),
+                content_type='application/json')
+            self.assert400(rv)
+
+            # test invalid ids
+            rv = self.client.post(url,
+                data=json.dumps({ 'ids': [self.fixtures.unauthorized_student.id] }),
+                content_type='application/json')
+            self.assert400(rv)
+
+            # test users in course
+            rv = self.client.post(url,
+                data=json.dumps(params),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(rv.json['course_id'], course.id)
+
+            for user_course in course.user_courses:
+                if user_course.user_id in student_ids:
+                    self.assertEqual(user_course.group_name, None)
+
     def _create_group_user_url(self, course, user, group_name=None):
         url = '/api/courses/'+str(course.id)+'/users/'+str(user.id)+'/groups'
+        if group_name:
+            url = url+'/'+group_name
+        return url
+
+    def _create_group_users_url(self, course, group_name=None):
+        url = '/api/courses/'+str(course.id)+'/users/groups'
         if group_name:
             url = url+'/'+group_name
         return url

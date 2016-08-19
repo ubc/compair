@@ -25,6 +25,7 @@ module.factory(
     function ($resource, $cacheFactory, Interceptors)
     {
         var url = '/api/courses/:courseId/users/:userId';
+        var userRolesUrl = '/api/courses/:courseId/users/roles';
         var cache = $cacheFactory('classlist');
         var ret = $resource(
             url, {userId: '@userId'},
@@ -32,6 +33,7 @@ module.factory(
                 get: {cache: cache},
                 enrol: {method: 'POST', url: url, interceptor: Interceptors.enrolCache},
                 unenrol: {method: 'DELETE', url: url, interceptor: Interceptors.enrolCache},
+                updateCourseRoles: {method: 'POST', url: userRolesUrl, interceptor: Interceptors.enrolCache},
                 export: {
                     method: 'GET',
                     url: url,
@@ -53,12 +55,12 @@ module.factory(
 module.controller(
     'ClassViewController',
     ["$scope", "$log", "$routeParams", "$route", "ClassListResource", "CourseResource",
-             "CourseRole", "GroupResource", "Toaster", "Session", "SaveAs",
+             "CourseRole", "GroupResource", "Toaster", "Session", "SaveAs", "$modal",
     function($scope, $log, $routeParams, $route, ClassListResource, CourseResource,
-             CourseRole, GroupResource, Toaster, Session, SaveAs)
+             CourseRole, GroupResource, Toaster, Session, SaveAs, $modal)
     {
         $scope.course = {};
-        $scope.classlist = {};
+        $scope.classlist = [];
         var courseId = $routeParams['courseId'];
         $scope.courseId = courseId;
         Session.getUser().then(function(user) {
@@ -75,6 +77,7 @@ module.controller(
         ClassListResource.get({'courseId':courseId},
             function (ret) {
                 $scope.classlist = ret.objects;
+                $scope.resetSelected();
             },
             function (ret) {
                 Toaster.reqerror("No Users Found For Course ID "+courseId, ret);
@@ -89,7 +92,89 @@ module.controller(
             }
         );
 
-        $scope.course_roles = [CourseRole.student, CourseRole.teaching_assistant, CourseRole.instructor]
+        $scope.resetSelected = function() {
+            angular.forEach($scope.classlist, function(user) {
+                user.selected = false;
+            });
+        };
+
+        $scope.course_roles = [CourseRole.student, CourseRole.teaching_assistant, CourseRole.instructor];
+
+        $scope.addUsersToNewGroup = function() {
+            modalInstance = $modal.open({
+                animation: true,
+                controller: "AddGroupModalController",
+                templateUrl: 'modules/group/group-form-partial.html',
+            }).result.then(function (groupName) {
+                $scope.addUsersToGroup(groupName);
+            }, function () {
+                //cancelled, do nothing
+            });
+        };
+
+        $scope.addUsersToGroup = function(groupName) {
+            var selectedUserIds = $scope.classlist.filter(function(user) {
+                return user.selected;
+            }).map(function(user) {
+                return user.id;
+            });
+
+            if (groupName == undefined) {
+                groupName = null;
+            }
+
+            if (groupName) {
+                GroupResource.updateUsersGroup({'courseId': courseId, 'groupName': groupName}, {ids: selectedUserIds},
+                    function (ret) {
+                        Toaster.success("Successfully enroled the users into " + ret.group_name);
+                        $route.reload();
+                    },
+                    function (ret) {
+                        Toaster.reqerror("Failed to enrol the users into the group.", ret);
+                    }
+                );
+            } else {
+                GroupResource.removeUsersGroup({'courseId': courseId}, {ids: selectedUserIds},
+                    function (ret) {
+                        Toaster.success("Successfully removed the users from groups");
+                        $route.reload();
+                    },
+                    function (ret) {
+                        Toaster.reqerror("Failed to enrol the users into the group.", ret);
+                    }
+                );
+            }
+        };
+
+        $scope.updateUsers = function(courseRole) {
+            var selectedUserIds = $scope.classlist.filter(function(user) {
+                return user.selected;
+            }).map(function(user) {
+                return user.id;
+            });
+
+            if (courseRole) {
+                ClassListResource.updateCourseRoles({'courseId': courseId}, {ids: selectedUserIds, course_role: courseRole},
+                    function (ret) {
+                        Toaster.success("Users Updated", 'Successfully changed users course role to ' + courseRole);
+                        $route.reload();
+                    },
+                    function (ret) {
+                        Toaster.reqerror("Failed to update users course roles", ret);
+                    }
+                );
+            } else {
+                ClassListResource.updateCourseRoles({'courseId': courseId}, {ids: selectedUserIds},
+                    function (ret) {
+                        Toaster.success("User Removed", 'Successfully removed users from course');
+                        $route.reload();
+                    },
+                    function (ret) {
+                        Toaster.reqerror("Failed to remove users from course", ret);
+                    }
+                );
+            }
+        };
 
         $scope.update = function(userId, groupName) {
             if (groupName) {

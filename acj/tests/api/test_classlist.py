@@ -383,5 +383,109 @@ class ClassListAPITest(ACJAPITestCase):
             self.assertEqual(0, len(result['invalids']))
             uploaded_file.close()
 
+    def test_update_course_role_miltiple(self):
+        url = self.url + '/roles'
+
+        user_ids = [self.data.authorized_student.id, self.data.authorized_ta.id]
+        params = {
+            'ids': user_ids,
+            'course_role': CourseRole.instructor.value
+        }
+
+        # test login required
+        rv = self.client.post(
+            url,
+            data=json.dumps(params),
+            content_type='application/json')
+        self.assert401(rv)
+
+        # test unauthorized user
+        with self.login(self.data.get_unauthorized_instructor().username):
+            rv = self.client.post(
+                url,
+                data=json.dumps(params),
+                content_type='application/json')
+            self.assert403(rv)
+
+        with self.login(self.data.get_authorized_instructor().username):
+            # test invalid course id
+            rv = self.client.post(
+                '/api/courses/999/users/roles',
+                data=json.dumps(params),
+                content_type='application/json')
+            self.assert404(rv)
+
+            # test missing user ids
+            missing_ids = params.copy()
+            missing_ids['ids'] = []
+            rv = self.client.post(
+                url,
+                data=json.dumps(missing_ids),
+                content_type='application/json')
+            self.assert400(rv)
+
+            # test invalid user ids
+            invalid_ids = params.copy()
+            invalid_ids['ids'] = [self.data.unauthorized_student.id]
+            rv = self.client.post(
+                url,
+                data=json.dumps(invalid_ids),
+                content_type='application/json')
+            self.assert400(rv)
+
+            # test changing role instructor
+            rv = self.client.post(
+                url,
+                data=json.dumps(params),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(rv.json['course_role'], CourseRole.instructor.value)
+
+            for user_course in self.data.get_course().user_courses:
+                if user_course.user_id in user_ids:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+
+            # test changing teaching assistant
+            params_ta = params.copy()
+            params_ta['course_role'] = CourseRole.teaching_assistant.value
+            rv = self.client.post(
+                url,
+                data=json.dumps(params_ta),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(rv.json['course_role'], CourseRole.teaching_assistant.value)
+
+            for user_course in self.data.get_course().user_courses:
+                if user_course.user_id in user_ids:
+                    self.assertEqual(user_course.course_role, CourseRole.teaching_assistant)
+
+            # test changing role student
+            params_student = params.copy()
+            params_student['course_role'] = CourseRole.student.value
+            rv = self.client.post(
+                url,
+                data=json.dumps(params_student),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(rv.json['course_role'], CourseRole.student.value)
+
+            for user_course in self.data.get_course().user_courses:
+                if user_course.user_id in user_ids:
+                    self.assertEqual(user_course.course_role, CourseRole.student)
+
+            # test changing dropped
+            params_dropped = { 'ids': user_ids }
+            rv = self.client.post(
+                url,
+                data=json.dumps(params_dropped),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(rv.json['course_role'], CourseRole.dropped.value)
+
+            for user_course in self.data.get_course().user_courses:
+                if user_course.user_id in user_ids:
+                    self.assertEqual(user_course.course_role, CourseRole.dropped)
+
+
     def _create_enrol_url(self, url, user_id):
         return url + '/' + str(user_id)
