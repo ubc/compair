@@ -73,6 +73,7 @@ class AssignmentFactory(SQLAlchemyModelFactory):
     compare_start = None
     compare_end = None
     number_of_comparisons = 3
+    rank_display_limit = 10
     # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 

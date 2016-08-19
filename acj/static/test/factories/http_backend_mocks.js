@@ -529,6 +529,7 @@ module.exports.httpbackendMock = function(storageFixture) {
                 "file": [],
                 "user": angular.copy(currentUser),
                 "pairing_algorithm": null,
+                "rank_display_limit": null
             }
             newAssignment = angular.merge(newAssignment, data);
             newAssignment.id = storage.assignments.length + 1;

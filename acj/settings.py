@@ -9,7 +9,7 @@ DATABASE = {
     'host': 'localhost',
     'port': '3306',
     'username': 'acj',
-    'password': 'acj',
+    'password': 'acjacj',
     'database': 'acj',
 }
 

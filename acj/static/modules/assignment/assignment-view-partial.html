@@ -147,7 +147,7 @@
                                     <option value="">All answers</option>
                                 </select>
                             </span><br />
-                            <span class="filter" ng-if="rankLimit > 0 && assignment.pairing_algorithm != 'random'">
+                            <span class="filter" ng-if="rankLimit && assignment.pairing_algorithm != PairingAlgorithm.random">
                                 <label>Order by: &nbsp;</label>
                                 <select ng-model="answerFilters.orderBy"
                                         ng-options="c.id as c.name for c in criteria">
@@ -226,7 +226,7 @@
                             pdf="answer.file">
                         </acj-pdf-inline>
                     </div>
-                    
+
                     <p class="pull-right">
                         <em>{{instructors[answer.user_id]}} Response</em>
                     </p>
@@ -281,7 +281,7 @@
                         <em ng-if="score.rank <= rankLimit">
                             Students Ranked: <strong>{{score.rank}} <span ng-if="rankCount[score.rank] > 1">(tied)</span></strong>
                         </em>
-                        <em ng-if="score.rank > 0 && score.rank >= rankLimit">
+                        <em ng-if="score.rank > 0 && score.rank > rankLimit">
                             Not in Top {{rankLimit}}
                         </em>
                     </p>
@@ -460,7 +460,7 @@
                     <acj-avatar user-id="comparison_set.user_id" avatar="comparison_set.user.avatar" me="true"></acj-avatar>
                     <strong>compared</strong> on {{ comparison_set.created | amDateFormat: 'MMM D @ h:mm a'}}:
                 </div>
-                
+
                 <!-- Answers -->
                 <h5 class="content">Answer Pair</h5>
                     <p class="show-answers content"><a href="" ng-click="showAnswers = !showAnswers;">
@@ -472,7 +472,7 @@
                         <acj-answer-content answer="comparison_set.answer1" is-chosen="comparison.winner_id == comparison_set.answer1_id" name="Odd-Numbered Answer" criterion="comparison.criterion_id" show-score="false"></acj-answer-content>
                         <acj-answer-content answer="comparison_set.answer2" is-chosen="comparison.winner_id == comparison_set.answer2_id" name="Even-Numbered Answer" criterion="comparison.criterion_id" show-score="false"></acj-answer-content>
                     </div>
-                    
+
                 <div class="row">
                     <div class="col-md-6">
                         <h5 class="content">Feedback for Odd-Numbered Answer</h5>
@@ -481,7 +481,7 @@
                             <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
                         </div>
                     </div>
-    
+
                     <div class="col-md-6">
                         <h5 class="content">Feedback for Even-Numbered Answer</h5>
                         <!-- feedback for even-numbered answer -->
@@ -490,7 +490,7 @@
                         </div>
                     </div>
                 </div>
-                    
+
                 <h5 class="content">Comparisons</h5>
                 <div ng-repeat="comparison in comparison_set.comparisons">
                     <div class="content">

@@ -135,7 +135,8 @@ describe('course-module', function () {
             "id": 1
         },
         "user_id": 1,
-        "pairing_algorithm": "random"
+        "pairing_algorithm": "random",
+        "rank_display_limit": 10
     };
 
     var mockStudents = {
@@ -929,7 +930,8 @@ describe('course-module', function () {
                     criteria: [defaultCriteria],
                     students_can_reply: false,
                     number_of_comparisons: 3,
-                    pairing_algorithm: 'random'
+                    pairing_algorithm: 'random',
+                    rank_display_limit: 10
                 });
                 expect($rootScope.recommended_comparisons).toEqual(3);
                 expect($rootScope.availableCriteria).toEqual(otherCriteria);
