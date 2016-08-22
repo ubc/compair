@@ -95,6 +95,7 @@ class AnswerRootAPI(Resource):
             .filter_by(
                 assignment_id=assignment_id,
                 active=True,
+                practice=False,
                 draft=False
             )
 
@@ -228,7 +229,7 @@ class AnswerRootAPI(Resource):
             data=marshal(answer, dataformat.get_answer(restrict_user)))
 
         if file_name:
-            answer.file_id = add_new_file(params.get('file_alias'), file_name,
+            answer.file = add_new_file(params.get('file_alias'), file_name,
                 Answer.__name__, answer.id)
 
             db.session.commit()
@@ -298,7 +299,7 @@ class AnswerIdAPI(Resource):
             data=get_model_changes(answer))
 
         if file_name:
-            answer.file_id = add_new_file(params.get('file_alias'), file_name,
+            answer.file = add_new_file(params.get('file_alias'), file_name,
                 Answer.__name__, answer.id)
 
             db.session.commit()
@@ -400,7 +401,8 @@ class AnswerComparisonsAPI(Resource):
                 ))
                 conditions.append(and_(
                     AnswerComment.comment_type == AnswerCommentType.self_evaluation,
-                    AnswerComment.user_id == user_id
+                    AnswerComment.user_id == user_id,
+                    AnswerComment.assignment_id == assignment_id
                 ))
 
             answer_comments = AnswerComment.query \

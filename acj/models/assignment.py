@@ -163,7 +163,8 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
             where(and_(
                 Answer.assignment_id == cls.id,
                 Answer.active == True,
-                Answer.draft == False
+                Answer.draft == False,
+                Answer.practice == False
             )),
             deferred=True,
             group="counts"

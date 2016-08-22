@@ -18,7 +18,7 @@
 
         <hr ng-hide="example" />
 
-        <div class="h3 text-center" ng-show="!canManageAssignment && showCountDown" ng-hide="example">
+        <div class="h3 text-center" ng-show="!canManageAssignment && showCountDown && example !== true">
             <timer end-time="assignment.answer_end">
                 <span ng-show="minutes > 0 || seconds > 0" title="Official time remaining until deadline" class="bg-danger alert text-danger"><i class="glyphicon glyphicon-time"></i> {{minutes}} minutes {{seconds}} seconds left</span>
                 <span ng-show="minutes == 0 && seconds == 0" class="bg-danger alert text-danger"><i class="glyphicon glyphicon-time"></i> DEADLINE REACHED</span>
@@ -27,7 +27,7 @@
             <span class="h4">(Answer must be submitted before deadline to be accepted)</span>
         </div>
 
-        <div class="form-group" ng-if="canManageAssignment && showUserList" ng-hide="example">
+        <div class="form-group" ng-if="canManageAssignment && showUserList && example !== true">
             <label for="user_id">Submit As</label>
             <select id="user_id" name="user_id" ng-model="answer.user_id"  class="form-control" required
                     ng-options="u.id as u.fullname for u in classlist">

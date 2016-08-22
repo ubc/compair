@@ -119,7 +119,7 @@ def add_new_file(alias, name, model_name, model_id):
         "Moved and renamed " + name + " from " + current_app.config['UPLOAD_FOLDER'] +
         " to " + os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], tmp_name))
 
-    return uploaded_file.id
+    return uploaded_file
 
 def duplicate_file(file, new_model_name, new_model_id):
     tmp_name = str(new_model_name) + '_' + str(new_model_id) + '.pdf'
