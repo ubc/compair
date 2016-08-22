@@ -31,7 +31,7 @@
                 required />
         </acj-field-with-feedback>
         <acj-field-with-feedback form-control="userForm.student_number"
-                                 ng-if="(method == 'new' || canManageUsers || loggedInUserIsInstructor) && user.system_role == SystemRole.student">
+                                 ng-if="(method == 'new' || ownProfile || canManageUsers || loggedInUserIsInstructor) && user.system_role == SystemRole.student">
             <label for="student_number">Student Number </label>
             <input class="form-control" id="student_number" type="text"
                 name="student_number" ng-model="user.student_number"/>
