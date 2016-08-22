@@ -162,58 +162,65 @@ class ComparisonExampleFactory(factory.alchemy.SQLAlchemyModelFactory):
     # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 
-class LTIConsumerFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = LTIConsumer
-    FACTORY_SESSION = db.session
+class LTIConsumerFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = LTIConsumer
+        sqlalchemy_session = db.session
 
     oauth_consumer_key = generate_token()
     oauth_consumer_secret = generate_token()
 
     lti_version = "LTI-1p0"
 
-class LTIContextFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = LTIContext
-    FACTORY_SESSION = db.session
+class LTIContextFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = LTIContext
+        sqlalchemy_session = db.session
 
     lti_consumer_id = 1
     context_id = factory.Sequence(lambda n: u'course-v1:LTI%d' % n)
 
-class LTIResourceLinkFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = LTIResourceLink
-    FACTORY_SESSION = db.session
+class LTIResourceLinkFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = LTIResourceLink
+        sqlalchemy_session = db.session
 
     lti_consumer_id = 1
     resource_link_id = factory.Sequence(lambda n: u'unique_resourse_link_id_%d' % n)
 
-class LTIUserFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = LTIUser
-    FACTORY_SESSION = db.session
+class LTIUserFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = LTIUser
+        sqlalchemy_session = db.session
 
     lti_consumer_id = 1
     user_id = factory.Sequence(lambda n: u'unique_user_id_%d' % n)
     system_role = SystemRole.student
 
-class LTIMembershipFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = LTIMembership
-    FACTORY_SESSION = db.session
+class LTIMembershipFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = LTIMembership
+        sqlalchemy_session = db.session
 
     lti_context_id = 1
     lti_user_id = 1
     roles = "Student"
     course_role = CourseRole.student
 
-class LTIUserResourceLinkFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = LTIUserResourceLink
-    FACTORY_SESSION = db.session
+class LTIUserResourceLinkFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = LTIUserResourceLink
+        sqlalchemy_session = db.session
 
     lti_resource_link_id = 1
     lti_user_id = 1
     roles = "Student"
     course_role = CourseRole.student
 
-class ThirdPartyUserFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = ThirdPartyUser
-    FACTORY_SESSION = db.session
+class ThirdPartyUserFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = ThirdPartyUser
+        sqlalchemy_session = db.session
 
     unique_identifier = factory.Sequence(lambda n: u'unique_identifier_%d' % n)
     third_party_type = ThirdPartyType.cwl

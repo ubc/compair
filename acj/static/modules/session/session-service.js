@@ -87,6 +87,7 @@
                     .then(function (result) {
                         scope._permissions = result.data;
                         $cookies.putObject('current.permissions', scope._permissions);
+                        $rootScope.$broadcast(PERMISSION_REFRESHED_EVENT);
                         return scope._permissions;
                     });
             },
@@ -126,14 +127,9 @@
                     return deferred.promise;
                 });
             },
-            refreshPermissions: function() {
-                var scope = this;
-                return $http.get('/api/session/permission').then(function (result) {
-                    scope._permissions = result.data;
-                    $cookies.putObject('current.permissions', result.data);
-                    $rootScope.$broadcast(PERMISSION_REFRESHED_EVENT);
-                    return true;
-                });
+            expirePermissions: function() {
+                this._permissions = null;
+                $cookies.remove('current.permissions');
             }
         };
     }]);

@@ -26,7 +26,7 @@
     "angular-route": "~1.4.7",
     "angular-sanitize": "~1.4.7",
     "angular-http-auth": "~1.2.2",
-    "ckeditor": "~4.5.9",
+    "ckeditor": "~4.5.10",
     "highlightjs": "~9.0.0",
     "angular-ckeditor": "~1.0.3",
     "es-breadcrumbs": "~0.4.1",

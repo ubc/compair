@@ -246,7 +246,7 @@ angular.module('MyApp.services.mock', [])
 
         // get current user courses (fake search)
         $httpBackend.whenGET(/\/api\/users\/\d+\/courses\?.*search=CHEM.*$/).respond(function(method, url, data, headers) {
-            var courses = [storage.courses[0]]
+            var courses = [storageFixture.storage().courses[0]]
 
             return [200, {
                 "objects": courses,
@@ -659,7 +659,7 @@ angular.module('MyApp.services.mock', [])
             var assignmentId = url.split('/')[5];
 
             // setup default data
-            status = {
+            var status = {
                 "answers": {
                     "answered": false,
                     "count": 0,
@@ -680,13 +680,13 @@ angular.module('MyApp.services.mock', [])
 
                     // if answer is by current user for assignment, set answered to true for assignment
                     if (answer.assignment_id == assignmentId && answer.user_id == currentUser.id) {
-                        status['answers']['answered'] = true;
-                        status['answers']['count']++;
+                        status.answers.answered = true;
+                        status.answers.count += 1;
                     }
                 });
             }
 
-            return [200, {"status": status}, {}];
+            return [200, {"status": status }, {}];
         });
 
         // get assignment answer comments
@@ -782,6 +782,11 @@ angular.module('MyApp.services.mock', [])
             }
 
             return [200, {}, {}];
+        });
+
+        // handle lti status
+        $httpBackend.whenGET(/\/api\/lti\/status$/).respond(function(method, url, data, headers) {
+            return [200, {'valid':false}, {}];
         });
 
         // End Assignments

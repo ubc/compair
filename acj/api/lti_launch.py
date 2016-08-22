@@ -8,7 +8,7 @@ from sqlalchemy import and_, or_
 from . import dataformat
 from acj.core import event, db
 from acj.authorization import require, allow
-from login import authenticate
+from .login import authenticate
 from acj.models import User, Course, LTIConsumer, LTIContext, LTIMembership, \
     LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce
 from acj.models.lti import MembershipNoValidContextsException, \

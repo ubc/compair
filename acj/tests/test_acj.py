@@ -114,6 +114,7 @@ class ACJAPITestCase(ACJTestCase):
         lauch_data = parse_qs(launch_request.body.decode('utf-8'))
         rv = self.client.post('/api/lti/auth', data=lauch_data, follow_redirects=follow_redirects)
         yield rv
+        rv.close()
 
     def get_url(self, **values):
         return self.api.url_for(self.resource, **values)

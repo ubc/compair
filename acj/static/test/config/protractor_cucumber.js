@@ -17,8 +17,9 @@ exports.config = {
         'version': '52',
         'chromedriverVersion': '2.22',
         'selenium-version': '2.53.1',
-        'shardTestFiles': false,
-        'maxInstances': 1,
+        'shardTestFiles': true,
+        'maxInstances': 3,
+        'loggingPrefs': {"browser": "SEVERE"}
     },
     onPrepare: function() {
         // disable angular and css animations so tests run faster

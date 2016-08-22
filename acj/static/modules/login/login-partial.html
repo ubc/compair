@@ -56,8 +56,8 @@
             </div>
         </div>
     </div>
-    <div ng-show="showCreateUserForm">
-        <p class="pull-right"><a href="" ng-click="showCreateUserForm = false;">Cancel</a></p>
+    <div ng-if="showCreateUserForm">
+        <p class="pull-right"><a href="" ng-click="$parent.showCreateUserForm = false;">Cancel</a></p>
         <h2 class="text-center">Create ComPAIR Account</h2>
         <br />
         <p class="intro-text">Please provide the required fields below to create your ComPAIR account.</p>

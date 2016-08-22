@@ -71,7 +71,7 @@ Feature: Edit Profile
     And I'm on 'user' page for user with id '3'
     When I select 'Edit' button
     Then I should be on the 'edit profile' page
-    And I should see the incomplete Account Details section of the Edit User form for non-students
+    And I should see the incomplete Account Details section of the Edit User form for students
     And I should see the Password section of the Edit User form
 
   Scenario: Edit own profile as student

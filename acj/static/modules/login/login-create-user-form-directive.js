@@ -27,8 +27,8 @@
                         system_role: SystemRole.student
                     }
 
-                    // check if LTI session
                     LTI.getStatus().then(function(status) {
+                        // check if LTI session
                         if (LTI.isLTISession()) {
                             // overwrite user with LTI user info
                             scope.user = LTI.getLTIUser()

@@ -40,7 +40,7 @@ var permission_instructor = {
         "read": {'global': true}
     },
     "User": {
-        "create": {'global': true},
+        "create": {'global': false},
         "delete": {'global': false},
         "edit": {'global': true},
         "manage": {'global': false},

@@ -226,7 +226,7 @@ module.controller(
             CourseResource.createDuplicate({id: $scope.originalCourse.id}, $scope.duplicateCourse, function (ret) {
                 Toaster.success("Course Duplicated", 'The course was successfully duplicated');
                 // refresh permissions
-                Session.refreshPermissions();
+                Session.expirePermissions();
                 $scope.selectCourse(ret);
             }).$promise.finally(function() {
                 $scope.submitted = false;
@@ -265,7 +265,7 @@ module.controller(
             CourseResource.save({}, $scope.course, function (ret) {
                 Toaster.success("Course Created", 'The course was created successfully');
                 // refresh permissions
-                Session.refreshPermissions();
+                Session.expirePermissions();
                 $scope.selectCourse(ret);
             }).$promise.finally(function() {
                 $scope.submitted = false;
@@ -374,7 +374,7 @@ module.controller(
             CourseResource.save({id: $scope.course.id}, $scope.course, function (ret) {
                 Toaster.success(messages[$scope.method].title, messages[$scope.method].msg);
                 // refresh permissions
-                Session.refreshPermissions();
+                Session.expirePermissions();
                 $location.path('/course/' + ret.id);
             }).$promise.finally(function() {
                 $scope.submitted = false;

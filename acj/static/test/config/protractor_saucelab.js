@@ -19,7 +19,8 @@ exports.config = {
         'tunnel-identifier': process.env.TRAVIS_JOB_NUMBER,
         'chromedriverVersion': '2.22',
         'selenium-version': '2.53.1',
-        'maxDuration': 3600 // 1 hour
+        'maxDuration': 3600, // 1 hour
+        'loggingPrefs': {"browser": "SEVERE"}
     },
     onPrepare: function() {
         // disable angular and css animations so tests run faster
