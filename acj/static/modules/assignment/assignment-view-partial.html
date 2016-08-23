@@ -346,7 +346,8 @@
 
                 </div><!-- closes each-answer (student) -->
 
-                <div class="each-answer clearfix" ng-if="assignment.answer_count && results.length < 1 && (see_answers || canManageAssignment)">
+                <!-- Anyone sees when there are answers, a filter is set, but no answers show in results (and user has permission to view answers) -->
+                <div class="each-answer clearfix" ng-if="assignment.answer_count > 0 && (answerFilters.group || answerFilters.author || answerFilters.orderBy) && results.length < 1 && (see_answers || canManageAssignment)">
                     <p>No answers were found with these filter settings. Try another choice above.</p>
                 </div>
 
