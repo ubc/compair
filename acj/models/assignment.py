@@ -88,7 +88,7 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     def available(self):
         now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
         answer_start = self.answer_start.replace(tzinfo=pytz.utc)
-        return True
+        return answer_start <= now
 
     @hybrid_property
     def answer_period(self):
