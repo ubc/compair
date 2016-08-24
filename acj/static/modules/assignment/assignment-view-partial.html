@@ -282,7 +282,10 @@
                             Students Ranked: <strong>{{score.rank}} <span ng-if="rankCount[score.rank] > 1">(tied)</span></strong>
                         </em>
                         <em ng-if="score.rank > 0 && score.rank > rankLimit">
-                            Not in Top {{rankLimit}}
+                            Students Ranked: <strong>N/A</strong> 
+                            <a href="" tooltip="Answers that are ranked outside the top {{rankLimit}} do not receive a rank number for this assignment." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
+                                <i class="fa fa-question-circle"></i>
+                            </a>
                         </em>
                     </p>
                     <!-- No Student Score/Rank -->

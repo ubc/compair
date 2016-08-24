@@ -73,7 +73,8 @@ class AssignmentAPITests(ACJAPITestCase):
             'criteria': [
                 { 'id': self.data.get_default_criterion().id }
             ],
-            'pairing_algorithm': PairingAlgorithm.random.value
+            'pairing_algorithm': PairingAlgorithm.random.value,
+            'rank_display_limit': 20
         }
         # Test login required
         rv = self.client.post(
@@ -119,6 +120,7 @@ class AssignmentAPITests(ACJAPITestCase):
                 data=json.dumps(bad_criteria),
                 content_type='application/json')
             self.assert403(rv)
+
             # Test actual creation
             rv = self.client.post(
                 self.url,
@@ -132,6 +134,8 @@ class AssignmentAPITests(ACJAPITestCase):
                 assignment_expected['description'], rv.json['description'],
                 "assignment create did not return the same description!")
             self.assertEqual(assignment_expected['pairing_algorithm'], rv.json['pairing_algorithm'])
+            self.assertEqual(assignment_expected['rank_display_limit'], rv.json['rank_display_limit'])
+
             # Test getting the assignment again
             rv = self.client.get(self.url + '/' + str(rv.json['id']))
             self.assert200(rv)
@@ -142,6 +146,7 @@ class AssignmentAPITests(ACJAPITestCase):
                 assignment_expected['description'], rv.json['description'],
                 "assignment create did not save description properly!")
             self.assertEqual(assignment_expected['pairing_algorithm'], rv.json['pairing_algorithm'])
+            self.assertEqual(assignment_expected['rank_display_limit'], rv.json['rank_display_limit'])
 
     def test_edit_assignment(self):
         assignment = self.data.get_assignments()[0]
@@ -158,7 +163,8 @@ class AssignmentAPITests(ACJAPITestCase):
             'criteria': [
                 { 'id': self.data.get_default_criterion().id }
             ],
-            'pairing_algorithm': PairingAlgorithm.adaptive.value
+            'pairing_algorithm': PairingAlgorithm.adaptive.value,
+            'rank_display_limit': 10
         }
 
         # test login required
@@ -193,6 +199,19 @@ class AssignmentAPITests(ACJAPITestCase):
             self.assert200(rv)
             self._verify_assignment(assignment, rv.json)
 
+            # test change rank limit
+            change_rank_limit = expected.copy()
+            change_rank_limit['rank_display_limit'] = None
+            rv = self.client.post(url, data=json.dumps(change_rank_limit), content_type='application/json')
+            self.assert200(rv)
+            self._verify_assignment(assignment, rv.json)
+
+            change_rank_limit = expected.copy()
+            change_rank_limit['rank_display_limit'] = 100
+            rv = self.client.post(url, data=json.dumps(change_rank_limit), content_type='application/json')
+            self.assert200(rv)
+            self._verify_assignment(assignment, rv.json)
+
             # test edit by author add & remove criteria
             new_criterion = self.data.create_criterion(self.data.get_authorized_instructor())
             add_criteria = expected.copy()
@@ -215,12 +234,15 @@ class AssignmentAPITests(ACJAPITestCase):
                 'criteria': [
                     { 'id': self.data.get_default_criterion().id }
                 ],
-                'pairing_algorithm': PairingAlgorithm.adaptive.value
+                'pairing_algorithm': PairingAlgorithm.random.value,
+                'rank_display_limit': 20
             }
             rv = self.client.post(url, data=json.dumps(ta_expected), content_type='application/json')
             self.assert200(rv)
             self.assertEqual(ta_expected['name'], rv.json['name'])
             self.assertEqual(ta_expected['description'], rv.json['description'])
+            self.assertEqual(ta_expected['pairing_algorithm'], rv.json['pairing_algorithm'])
+            self.assertEqual(ta_expected['rank_display_limit'], rv.json['rank_display_limit'])
 
             # test edit by TA add & remove criteria
             ta_new_criterion = self.data.create_criterion(self.data.get_authorized_ta())
@@ -251,6 +273,7 @@ class AssignmentAPITests(ACJAPITestCase):
         self.assertEqual(expected.description, actual['description'])
         self.assertEqual(expected.user_id, actual['user_id'])
         self.assertEqual(expected.pairing_algorithm.value, actual['pairing_algorithm'])
+        self.assertEqual(expected.rank_display_limit, actual['rank_display_limit'])
 
 class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
     def setUp(self):
