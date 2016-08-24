@@ -118,7 +118,7 @@ class AssignmentIdAPI(Resource):
         pairing_algorithm = params.get("pairing_algorithm")
         check_valid_pairing_algorithm(pairing_algorithm)
         assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
-        assignment.rank_display_limit = params.get("assignment", None)
+        assignment.rank_display_limit = params.get("rank_display_limit", None)
         if assignment.rank_display_limit <= 0:
             assignment.rank_display_limit = None
 

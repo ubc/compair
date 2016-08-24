@@ -365,8 +365,8 @@ module.controller("AssignmentViewController",
                     $scope.criteria = ret.criteria;
                     $scope.reverse = true;
 
-                    if (ret.rank_limit) {
-                        $scope.rankLimit = ret.rank_limit;
+                    if (ret.rank_display_limit) {
+                        $scope.rankLimit = ret.rank_display_limit;
                     }
 
                     $scope.readDate = Date.parse(ret.created);
@@ -673,7 +673,7 @@ module.controller("AssignmentWriteController",
             // default the setting to the recommended # of comparisons
             $scope.assignment.number_of_comparisons = $scope.recommended_comparisons;
             $scope.assignment.pairing_algorithm = PairingAlgorithm.random;
-            $scope.assignment.rank_display_limit = 10;
+            $scope.assignment.rank_display_limit = "0";
 
             $scope.date.astart.date.setDate(today.getDate()+1);
             $scope.date.aend.date.setDate(today.getDate()+8);
@@ -707,6 +707,11 @@ module.controller("AssignmentWriteController",
                     $scope.assignment = ret;
                     $scope.compared = ret.compared;
                     $scope.assignment.addPractice = false;
+                    if ($scope.assignment.rank_display_limit != null) {
+                        $scope.assignment.rank_display_limit = ret.rank_display_limit.toString();
+                    } else {
+                        $scope.assignment.rank_display_limit = "0";
+                    }
                     // TODO: Remove temporary edit workaround when the pairing algorithm selection UI is in place
                     if ($scope.assignment.pairing_algorithm == null) {
                         $scope.assignment.pairing_algorithm = PairingAlgorithm.random;

@@ -246,7 +246,7 @@
                     <div class="form-check col-md-5">
                         <label class="form-check-label">
                             <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm" value="{{PairingAlgorithm.random}}">
-                            Randomly select answers for comparison (no scores/rank):
+                            &nbsp;Randomly select answers for comparison (no scores/rank):
                         </label>
                         <ul>
                             <li>Answers chosen at random for review</li>
@@ -258,13 +258,19 @@
                     <div class="form-check col-md-5">
                         <label class="form-check-label">
                             <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm" value="{{PairingAlgorithm.adaptive}}">
-                            Adaptively select answers for comparison (add scores/rank):
+                            &nbsp;Adaptively select answers for comparison (add scores/rank):
                         </label>
                         <ul>
                             <li>Answers chosen by how students have ranked them so far</li>
                             <li>Pairings based on similarity in answer scores</li>
                             <li>Later students may experience increased level of difficulty</li>
                         </ul>
+                        <label ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}'">Let students see rank for: &nbsp;</label>
+                        <select ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}'" ng-model="assignment.rank_display_limit">
+                            <option value="0">No answers (ranking hidden)</option>
+                            <option value="10">Answers ranked 10th and higher</option>
+                            <option value="20">Answers ranked 20th and higher</option>
+                        </select>
                     </div>
                 </div>
             </div>
