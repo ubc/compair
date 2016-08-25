@@ -95,7 +95,7 @@ class GroupUserListGroupNameAPI(Resource):
         params = user_list_parser.parse_args()
 
         if len(params.get('ids')) == 0:
-            return {"error": "Must have at least one user id"}, 400
+            return {"error": "Please select at least one user below"}, 400
 
         user_courses = UserCourse.query \
             .filter(and_(
@@ -133,7 +133,7 @@ class GroupUserListAPI(Resource):
         params = user_list_parser.parse_args()
 
         if len(params.get('ids')) == 0:
-            return {"error": "Must have at least one user id"}, 400
+            return {"error": "Please select at least one user below"}, 400
 
         user_courses = UserCourse.query \
             .filter(and_(

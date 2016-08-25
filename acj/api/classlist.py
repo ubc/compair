@@ -452,7 +452,7 @@ class UserCourseRoleAPI(Resource):
         course_role = CourseRole(role_name)
 
         if len(params.get('ids')) == 0:
-            return {"error": "Must have at least one user id"}, 400
+            return {"error": "Please select at least one user below"}, 400
 
         user_courses = UserCourse.query \
             .filter(and_(
