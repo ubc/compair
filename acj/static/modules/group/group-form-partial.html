@@ -1,13 +1,13 @@
 <p class="pull-right"><a href="" ng-click="cancel()">Cancel</a></p>
-<h1>Add Group</h1>
-<br />
+<h1>Create New Group</h1>
+<p class="intro-text">Create a new group and add any enrolled users to it. Groups can be used to filter completed answers and comparisons into smaller subsets.</p>
 <ng-form name="groupForm" class="form">
     <acj-field-with-feedback form-control="groupForm.groupName">
         <label class="required-star" for="criterionName">Group Name</label>
         <input type="text" maxlength="255" ng-model="group.name" id="groupName" name="groupName" class="form-control" required/>
     </acj-field-with-feedback>
     <div class="text-center">
-        <input type="button" ng-click="groupSubmit()" class="btn btn-success btn-lg" value="Add New"
+        <input type="button" ng-click="groupSubmit()" class="btn btn-success btn-lg" value="Save"
         ng-disabled="groupForm.$invalid" />
     </div>
     <br />

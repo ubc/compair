@@ -71,7 +71,7 @@ module.controller(
                 $scope.course_name = ret['name'];
             },
             function (ret) {
-                Toaster.reqerror("No Course Found For ID "+courseId, ret);
+                Toaster.reqerror("No Course Found For Course ID "+courseId, ret);
             }
         );
         ClassListResource.get({'courseId':courseId},
@@ -92,6 +92,18 @@ module.controller(
             }
         );
 
+		// enable checkbox to select/deselect all users
+		$scope.selectAll = function() {
+			angular.forEach($scope.classlist, function(user) {
+				user.selected = $scope.selectedAll;
+			});
+		};
+		$scope.checkIfAllSelected = function() {
+			$scope.selectedAll = $scope.classlist.every(function(user) {
+				return user.selected == true
+			})
+		};
+	
         $scope.resetSelected = function() {
             angular.forEach($scope.classlist, function(user) {
                 user.selected = false;
@@ -126,21 +138,21 @@ module.controller(
             if (groupName) {
                 GroupResource.updateUsersGroup({'courseId': courseId, 'groupName': groupName}, {ids: selectedUserIds},
                     function (ret) {
-                        Toaster.success("Successfully enroled the users into " + ret.group_name);
+                        Toaster.success("Update Complete", "Successfully enrolled the user(s) into " + ret.group_name);
                         $route.reload();
                     },
                     function (ret) {
-                        Toaster.reqerror("Failed to enrol the users into the group.", ret);
+                        Toaster.reqerror("User(s) Not Enrolled", ret);
                     }
                 );
             } else {
                 GroupResource.removeUsersGroup({'courseId': courseId}, {ids: selectedUserIds},
                     function (ret) {
-                        Toaster.success("Successfully removed the users from groups");
+                        Toaster.success("User(s) Removed", "Successfully removed the user(s) from groups");
                         $route.reload();
                     },
                     function (ret) {
-                        Toaster.reqerror("Failed to enrol the users into the group.", ret);
+                        Toaster.reqerror("No User(s) Removed", ret);
                     }
                 );
             }
@@ -156,21 +168,21 @@ module.controller(
             if (courseRole) {
                 ClassListResource.updateCourseRoles({'courseId': courseId}, {ids: selectedUserIds, course_role: courseRole},
                     function (ret) {
-                        Toaster.success("Users Updated", 'Successfully changed users course role to ' + courseRole);
+                        Toaster.success("User(s) Updated", "Successfully changed course role to " + courseRole);
                         $route.reload();
                     },
                     function (ret) {
-                        Toaster.reqerror("Failed to update users course roles", ret);
+                        Toaster.reqerror("User(s) Not Updated", ret);
                     }
                 );
             } else {
                 ClassListResource.updateCourseRoles({'courseId': courseId}, {ids: selectedUserIds},
                     function (ret) {
-                        Toaster.success("User Removed", 'Successfully removed users from course');
+                        Toaster.success("User(s) Removed", "Successfully removed user(s) from course.");
                         $route.reload();
                     },
                     function (ret) {
-                        Toaster.reqerror("Failed to remove users from course", ret);
+                        Toaster.reqerror("No User(s) Removed", ret);
                     }
                 );
             }
@@ -180,19 +192,19 @@ module.controller(
             if (groupName) {
                 GroupResource.enrol({'courseId': courseId, 'userId': userId, 'groupName': groupName}, {},
                     function (ret) {
-                        Toaster.success("Successfully enroled the user into " + ret.group_name);
+                        Toaster.success("Update Complete", "Successfully enrolled the user into " + ret.group_name);
                     },
                     function (ret) {
-                        Toaster.reqerror("Failed to enrol the user into the group.", ret);
+                        Toaster.reqerror("Update Not Completed", ret);
                     }
                 );
             } else {
                 GroupResource.unenrol({'courseId': courseId, 'userId': userId},
                     function (ret) {
-                        Toaster.success("Successfully removed the user from the group.");
+                        Toaster.success("User Removed", "Successfully removed the user from the group.");
                     },
                     function (ret) {
-                        Toaster.reqerror("Failed to remove the user from the group.", ret);
+                        Toaster.reqerror("User Not Removed", ret);
                     }
                 );
             }
@@ -204,7 +216,7 @@ module.controller(
                     Toaster.success("User Added", 'Successfully changed '+ ret.fullname +'\'s course role to ' + ret.course_role);
                 },
                 function (ret) {
-                    Toaster.reqerror("User Add Failed For ID " + user.id, ret);
+                    Toaster.reqerror("User Add Failed", "Promblem encountered For ID " + user.id, ret);
                 }
             );
         };
@@ -212,11 +224,11 @@ module.controller(
         $scope.unenrol = function(userId) {
             ClassListResource.unenrol({'courseId': courseId, 'userId': userId},
                 function (ret) {
-                    Toaster.success("Successfully unenroled " + ret.fullname + " from the course.");
+                    Toaster.success("User Removed", "Successfully unenrolled " + ret.fullname + " from the course.");
                     $route.reload();
                 },
                 function (ret) {
-                    Toaster.reqerror("Failed to unerol the user from the course.", ret);
+                    Toaster.reqerror("User Not Removed", ret);
                 }
             )
         };
@@ -288,7 +300,7 @@ module.controller(
                 },
                 function (ret) {
                     $scope.submitted = false;
-                    Toaster.reqerror("User Add Failed For ID " + $scope.user.id, ret);
+                    Toaster.reqerror("User Add Failed", "Problem encountered for ID " + $scope.user.id, ret);
                 }
             );
         };

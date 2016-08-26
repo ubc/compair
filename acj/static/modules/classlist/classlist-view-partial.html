@@ -6,26 +6,21 @@
         </header>
         <div class="col-md-6 sub-nav">
             <a ng-href="#/course/{{courseId}}/user/import" class="btn btn-primary">
-                <i class="fa fa-upload"></i>
+                <i class="fa fa-download"></i>
                 Import Users
             </a>
             <a href="" class="btn btn-primary" ng-click="export()">
-                <i class="fa fa-download"></i>
+                <i class="fa fa-upload"></i>
                 Export Users
             </a>
-            <a ng-href="#/course/{{courseId}}/user/group/import" class="btn btn-primary">
+            <!-- <a ng-href="#/course/{{courseId}}/user/group/import" class="btn btn-primary">
                 <i class="fa fa-list-ul"></i>
                 Assign Groups
-            </a>
-            <!-- TO DO: button should compile the CSV file -->
-            <!-- <a href="" class="btn btn-primary">
-                <i class="fa fa-download"></i>
-                Export Users
-            </a> -->
+	        </a> -->
         </div>
     </div>
 
-    <p class="intro-text">Drop or enrol <em>individual</em> users&mdash;who are already in the application&mdash;and assign them to groups <strong>below</strong>. To create, drop, or enrol <em>multiple</em> users in a course at the same time, click <strong>Import Users</strong> above. To assign groups to <em>multiple</em> users in a course at the same time, click <strong>Assign Groups</strong> above.</p>
+    <p class="intro-text">Drop or enrol users&mdash;who are already in the application&mdash;and assign them to groups <strong>below</strong>. To make significant changes to <em>all</em> users in a course at the same time, click <strong>Import Users</strong> above and follow the directions on the next screen.
 
     <h2 >Enrolled in {{course_name}}</h2>
     <hr />
@@ -36,13 +31,62 @@
             <ng-include src="'modules/classlist/classlist-enrol-partial.html'"></ng-include>
         </div>
     </div>
+    
+    <hr />
+    
+    <div class="row" ng-show="classlist.length > 0">
+	    <div class="col-sm-3 form-group">
+			<select class="form-control" ng-model="bulkActions" ng-init="bulkActions = 'none'">
+				<option value="none">- select bulk action -</option>
+				<option value="add">Add Selected Users to a Group</option>
+				<option value="drop">Drop Selected Users</option>
+				<option value="update">Update Role for Selected Users</option>
+			</select>
+	    </div>
+	    <div class="col-sm-9" ng-show="bulkActions == 'add'">
+			<div class="col-sm-3">
+				<button id="add-new-group" href="" class="btn btn-small btn-default" ng-click="addUsersToNewGroup()">Create New</button>
+			</div>
+			<div class="col-sm-2">
+				OR
+			</div>
+			<div class="form-group col-sm-4">
+				<select id="select-group" class="form-control" ng-model="selectedGroup"
+					ng-options="g as g for g in groups" ng-disabled="!groups.length">
+					<option value="">- select existing group -</option>
+				</select>
+			</div>
+			<div class="col-sm-3">
+				<button id="add-select-group" class="btn btn-small btn-success" ng-click="addUsersToGroup(selectedGroup)"
+					ng-disabled="!selectedGroup">Apply</button>
+			</div>
+	    </div>
+	    <div class="col-sm-9" ng-show="bulkActions == 'drop'">
+			<div class="col-sm-2">
+				<button id="drop-users" href="" class="btn btn-small btn-success" ng-click="updateUsers()" confirmation-needed keyword="group of users">Apply</button>
+			</div>
+	    </div>
+	    <div class="col-sm-9" ng-show="bulkActions == 'update'">
+			<div class="form-group col-sm-6">
+				<select id="select-group" class="form-control" ng-model="selectedCourseRole"
+					ng-options="course_role as course_role for course_role in course_roles">
+				    <option value="">- select new role -</option>
+				</select>
+			</div>
+			<div class="col-sm-3">
+				<button id="add-select-group" class="btn btn-small btn-success" ng-click="updateUsers(selectedCourseRole)"
+				      ng-disabled="!selectedCourseRole">Apply</button>
+			</div>
+	    </div>
+    </div>
+
 
     <div class="table-responsive">
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th></th>
                     <th>Actions</th>
+                    <th><input type="checkbox" ng-model="selectedAll" ng-click="selectAll()" /></th>
                     <th>
                         <a href="" ng-click="reverse = predicate == 'firstname' && !reverse; predicate = 'firstname'">
                             First Name</a>
@@ -73,16 +117,18 @@
             <tbody>
                 <tr ng-class="{'success': user.selected}" ng-repeat="user in classlist | orderBy:predicate:reverse">
                     <td>
-                        <input ng-click="user.selected = !user.selected" type="checkbox" ng-checked="user.selected">
-                    </td>
-                    <td>
                         <a href="#/user/{{user.id}}/edit" target="_blank">
                             Edit
                         </a>
                         &nbsp;|&nbsp;
-                        <a href="" confirmation-needed ng-click="unenrol(user.id)" keyword="user">
+                        <a href="" confirmation-needed ng-click="unenrol(user.id)" keyword="user" ng-if="loggedInUserId != user.id">
                             Drop
                         </a>
+			<span ng-if="loggedInUserId == user.id" class="text-muted">&mdash;  &nbsp; &nbsp;</span>
+						<span>&nbsp;|&nbsp;</span>
+					</td>
+					<td>
+                        <input ng-click="user.selected = !user.selected; checkIfAllSelected()" type="checkbox" ng-checked="user.selected">
                     </td>
                     <td>{{user.firstname}}</td>
                     <td>{{user.lastname}}</td>
@@ -93,7 +139,7 @@
                         <select ng-if="loggedInUserId != user.id" ng-model="user.course_role"
                                 ng-options="course_role as course_role for course_role in course_roles"
                                 ng-change="enrol(user)"></select>
-                        <span ng-if="loggedInUserId == user.id">{{ course_role }}</span>
+                        <span ng-if="loggedInUserId == user.id">{{ user.course_role }}</span>
                     </td>
                     <td ng-if="groups.length > 0">
                         <select ng-model="user.group_name" ng-options="g as g for g in groups"
@@ -104,47 +150,5 @@
                 </tr>
             </tbody>
         </table>
-    </div>
-    <div ng-show="classlist.length > 0">
-        <hr>
-        <label>Add Selected Users to Group</label>
-        <div class="row">
-            <div class="col-sm-2">
-                <p><a id="add-new-group" href="" class="btn btn-small btn-primary" ng-click="addUsersToNewGroup()">Add New</a></p>
-            </div>
-            <div class="col-sm-1">
-                <p>OR</p>
-            </div>
-            <div class="form-group col-sm-6">
-                <select id="select-group" class="form-control" ng-model="selectedGroup"
-                        ng-options="g as g for g in groups">
-                    <option value="">- None -</option>
-                </select>
-            </div>
-            <div class="col-sm-3">
-                <p><a id="add-select-group" class="btn btn-small btn-primary" ng-click="addUsersToGroup(selectedGroup)"
-                      ng-disabled="!groups.length">Update Group</a></p>
-            </div>
-        </div>
-
-        <label>Update Enrolment Status for Selected Users</label>
-        <div class="row">
-            <div class="col-sm-2">
-                <p><a id="drop-users" href="" class="btn btn-small btn-danger" ng-click="updateUsers()">Drop</a></p>
-            </div>
-            <div class="col-sm-1">
-                <p>OR</p>
-            </div>
-            <div class="form-group col-sm-6">
-                <select id="select-group" class="form-control" ng-model="selectedCourseRole"
-                        ng-options="course_role as course_role for course_role in course_roles">
-                    <option value="">- select a role -</option>
-                </select>
-            </div>
-            <div class="col-sm-3">
-                <p><a id="add-select-group" class="btn btn-small btn-primary" ng-click="updateUsers(selectedCourseRole)"
-                      ng-disabled="!selectedCourseRole">Update Course Role</a></p>
-            </div>
-        </div>
     </div>
 </div>
