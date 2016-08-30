@@ -12,7 +12,6 @@ from acj.core import db, event
 from acj.authorization import allow, require
 from acj.models import Assignment, Course, Answer, ComparisonExample
 from .util import new_restful_api, get_model_changes
-from .file import add_new_file, delete_file
 
 comparison_example_api = Blueprint('comparison_example_api', __name__)
 api = new_restful_api(comparison_example_api)

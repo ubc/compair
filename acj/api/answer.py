@@ -15,7 +15,7 @@ from acj.models import Answer, Assignment, Course, User, Comparison, \
     Score, UserCourse, SystemRole, CourseRole, AnswerComment, AnswerCommentType
 
 from .util import new_restful_api, get_model_changes, pagination_parser
-from .file import add_new_file, delete_file
+from .file import add_new_file
 
 answers_api = Blueprint('answers_api', __name__)
 api = new_restful_api(answers_api)
@@ -317,9 +317,9 @@ class AnswerIdAPI(Resource):
         answer = Answer.get_active_or_404(answer_id)
         require(DELETE, answer)
 
-        delete_file(answer.file_id)
-        answer.file_id = None
         answer.active = False
+        if answer.file:
+            answer.file.active = False
         db.session.commit()
 
         on_answer_delete.send(

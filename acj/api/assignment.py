@@ -15,7 +15,7 @@ from acj.authorization import allow, require
 from acj.models import Assignment, Course, AssignmentCriterion, Answer, Comparison, \
     AnswerComment, AnswerCommentType, PairingAlgorithm
 from .util import new_restful_api, get_model_changes
-from .file import add_new_file, delete_file
+from .file import add_new_file
 
 
 assignment_api = Blueprint('assignment_api', __name__)
@@ -169,10 +169,9 @@ class AssignmentIdAPI(Resource):
         require(DELETE, assignment)
         formatted_assignment = marshal(assignment, dataformat.get_assignment(False))
         # delete file when assignment is deleted
-        delete_file(assignment.file_id)
         assignment.active = False
-        assignment.file_id = None
-        db.session.add(assignment)
+        if assignment.file:
+            assignment.file.active = False
         db.session.commit()
 
         on_assignment_delete.send(

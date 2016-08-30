@@ -57,8 +57,7 @@ api.add_resource(FileAPI, '')
 class FileIdAPI(Resource):
     @login_required
     def get(self, file_id):
-        # TODO: change to return list of attachments
-        uploaded_file = File.query.get_or_404(file_id)
+        uploaded_file = File.query.get_active_or_404(file_id)
 
         on_file_get.send(
             self,
@@ -66,9 +65,7 @@ class FileIdAPI(Resource):
             user=current_user,
             data={'file_id': file_id})
 
-        if uploaded_file:
-            return {'file': marshal(uploaded_file, dataformat.get_file())}
-        return {'file': False}
+        return {'file': marshal(uploaded_file, dataformat.get_file())}
 
     @login_required
     def delete(self, file_id):
@@ -87,12 +84,10 @@ class FileIdAPI(Resource):
             assignments = Assignment.query.filter_by(file_id=file_id).all()
             for assignment in assignments:
                 assignment.file_id = None
-                db.session.add(assignment)
 
             answers = Answer.query.filter_by(file_id=file_id).all()
             for answer in answers:
                 answer.file_id = None
-                db.session.add(answer)
 
             db.session.delete(uploaded_file)
             db.session.commit()
@@ -146,7 +141,7 @@ def delete_file(file_id):
         return
 
     uploaded_file = File.query.get(file_id)
-    if uploaded_file != None:
+    if uploaded_file:
         try:
             os.remove(os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], uploaded_file.name))
             current_app.logger.debug("Successfully deleted file " + uploaded_file.name + " for with file id " + str(file_id))
@@ -154,5 +149,5 @@ def delete_file(file_id):
             if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
                 raise  # re-raise exception if a different error occured
 
-        db.session.remove(uploaded_file)
+        db.session.delete(uploaded_file)
         db.session.commit()

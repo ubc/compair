@@ -379,7 +379,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
         # test create successful for system admin
-        with self.login('root', 'password'):
+        with self.login('root'):
             response = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
