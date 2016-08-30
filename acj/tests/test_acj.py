@@ -2,6 +2,7 @@ from contextlib import contextmanager
 import copy
 import json
 import unittest
+import mock
 
 from flask.ext.testing import TestCase
 from os.path import dirname
@@ -92,6 +93,15 @@ class ACJAPITestCase(ACJTestCase):
         self.assert200(rv)
         yield rv
         self.client.delete('/api/logout', follow_redirects=True)
+
+    @contextmanager
+    def cas_login(self, cas_username):
+        with mock.patch('flask.ext.cas.CAS.username', new_callable=mock.PropertyMock) as mocked_cas_username:
+            mocked_cas_username.return_value = cas_username
+            rv = self.client.get('/api/auth/cas', data={}, content_type='application/json', follow_redirects=True)
+            self.assert200(rv)
+            yield rv
+            self.client.delete('/api/logout', follow_redirects=True)
 
     @contextmanager
     def lti_launch(self, lti_consumer, lti_resource_link_id,

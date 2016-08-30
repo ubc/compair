@@ -25,6 +25,12 @@ var setupInstructorStepDefinitionsWrapper = function () {
         return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
     });
 
+    this.Given("I'm a CWL Instructor with students", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'instructor/cwl_has_students_fixture';
+        backEndMocks.setStorageFixture(browser, fixtureName);
+        return loginDialog.skipLogin();
+    });
+
     this.Given("I'm an Instructor with courses", {timeout: 20 * 1000}, function () {
         var fixtureName = 'instructor/has_courses_fixture';
         backEndMocks.setStorageFixture(browser, fixtureName);

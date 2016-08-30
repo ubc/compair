@@ -19,6 +19,12 @@ var setupStudentStepDefinitionsWrapper = function () {
         return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
     });
 
+    this.Given("I'm a CWL Student", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'student/cwl_default_fixture';
+        backEndMocks.setStorageFixture(browser, fixtureName);
+        return loginDialog.skipLogin();
+    });
+
     this.Given("I'm a Student with courses", {timeout: 20 * 1000}, function () {
         var fixtureName = 'student/has_courses_fixture';
         backEndMocks.setStorageFixture(browser, fixtureName);

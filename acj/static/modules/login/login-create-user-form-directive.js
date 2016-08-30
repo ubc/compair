@@ -11,7 +11,9 @@
                       AuthenticationService, LTI) {
             return {
                 restrict: 'E',
-                scope: true,
+                scope: {
+                    uses_acj_login: '=usesAcjLogin'
+                },
                 templateUrl: 'modules/user/user-form-partial.html',
                 link: function (scope, element, attrs) {
         	        scope.method = 'new';
@@ -23,15 +25,17 @@
                     scope.system_roles = [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin];
 
                     scope.user = {
-                        // required parameter that will be ignored by backendup
-                        system_role: SystemRole.student
+                        // required parameter that will be ignored by backend
+                        system_role: SystemRole.student,
+                        uses_acj_login: scope.uses_acj_login
                     }
 
                     LTI.getStatus().then(function(status) {
                         // check if LTI session
                         if (LTI.isLTISession()) {
                             // overwrite user with LTI user info
-                            scope.user = LTI.getLTIUser()
+                            scope.user = LTI.getLTIUser();
+                            scope.user.uses_acj_login = scope.uses_acj_login;
                         }
                     });
 

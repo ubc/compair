@@ -23,18 +23,18 @@ def non_blank_str(value):
         return None if str(value).strip() == "" else str(value)
 
 new_user_parser = RequestParser()
-new_user_parser.add_argument('username', type=str, required=True)
+new_user_parser.add_argument('username', type=str, required=False)
 new_user_parser.add_argument('student_number', type=non_blank_str)
 new_user_parser.add_argument('system_role', type=str, required=True)
 new_user_parser.add_argument('firstname', type=str, required=True)
 new_user_parser.add_argument('lastname', type=str, required=True)
 new_user_parser.add_argument('displayname', type=str, required=True)
 new_user_parser.add_argument('email', type=str)
-new_user_parser.add_argument('password', type=str, required=True)
+new_user_parser.add_argument('password', type=str, required=False)
 
 existing_user_parser = RequestParser()
 existing_user_parser.add_argument('id', type=int, required=True)
-existing_user_parser.add_argument('username', type=str, required=True)
+existing_user_parser.add_argument('username', type=str, required=False)
 existing_user_parser.add_argument('student_number', type=non_blank_str)
 existing_user_parser.add_argument('system_role', type=str, required=True)
 existing_user_parser.add_argument('firstname', type=str, required=True)
@@ -96,12 +96,18 @@ class UserAPI(Resource):
         if params['id'] != user_id:
             return {"error": "User id does not match URL."}, 400
 
-        username = params.get("username", user.username)
-        username_exists = User.query.filter_by(username=username).first()
-        if username_exists and username_exists.id != user.id:
-            return {"error": "This username already exists. Please pick another."}, 409
+        # only update username if user uses acj login method
+        if user.uses_acj_login:
+            username = params.get("username", user.username)
+            if username == None:
+                return {"error": "Missing required parameter: username."}, 400
+            username_exists = User.query.filter_by(username=username).first()
+            if username_exists and username_exists.id != user.id:
+                return {"error": "This username already exists. Please pick another."}, 409
+            else:
+                user.username = username
         else:
-            user.username = username
+            user.username = None
 
         if allow(MANAGE, user):
             system_role = params.get("system_role", user.system_role.value)
@@ -173,17 +179,29 @@ class UserListAPI(Resource):
 
         user = User()
         params = new_user_parser.parse_args()
-        user.username = params.get("username")
-        user.password = params.get("password")
         user.student_number = params.get("student_number", None)
         user.email = params.get("email")
         user.firstname = params.get("firstname")
         user.lastname = params.get("lastname")
         user.displayname = params.get("displayname")
 
-        username_exists = User.query.filter_by(username=user.username).first()
-        if username_exists:
-            return {"error": "This username already exists. Please pick another."}, 409
+        # if creating a CWL user, do not set username or password
+        if sess.get('oauth_create_user_link') and sess.get('LTI') and sess.get('CAS_CREATE'):
+            user.username = None
+            user.password = None
+        else:
+            # else enforce required password and unique username
+            user.password = params.get("password")
+            if user.password == None:
+                return {"error": "Missing required parameter: password."}, 400
+
+            user.username = params.get("username")
+            if user.username == None:
+                return {"error": "Missing required parameter: username."}, 400
+
+            username_exists = User.query.filter_by(username=user.username).first()
+            if username_exists:
+                return {"error": "This username already exists. Please pick another."}, 409
 
         student_number_exists = User.query.filter_by(student_number=user.student_number).first()
         # if student_number is not left blank and it exists -> 409 error
@@ -346,21 +364,25 @@ class UserUpdatePasswordAPI(Resource):
         user = User.query.get_or_404(user_id)
         # anyone who passes checking below should be an instructor or admin
         require(EDIT, user)
-        params = update_password_parser.parse_args()
-        oldpassword = params.get('oldpassword')
-        # if it is not current user changing own password, it must be an instructor or admin
-        # because of above check
-        if current_user.id != user_id or (oldpassword and user.verify_password(oldpassword)):
-            user.password = params.get('newpassword')
-            db.session.add(user)
-            db.session.commit()
-            on_user_password_update.send(
-                self,
-                event_name=on_user_password_update.name,
-                user=current_user)
-            return marshal(user, dataformat.get_user(False))
+
+        if user.uses_acj_login:
+            params = update_password_parser.parse_args()
+            oldpassword = params.get('oldpassword')
+            # if it is not current user changing own password, it must be an instructor or admin
+            # because of above check
+            if current_user.id != user_id or (oldpassword and user.verify_password(oldpassword)):
+                user.password = params.get('newpassword')
+                db.session.add(user)
+                db.session.commit()
+                on_user_password_update.send(
+                    self,
+                    event_name=on_user_password_update.name,
+                    user=current_user)
+                return marshal(user, dataformat.get_user(False))
+            else:
+                return {"error": "The old password is incorrect or you do not have permission to change password."}, 403
         else:
-            return {"error": "The old password is incorrect or you do not have permission to change password."}, 403
+            return {"error": "Cannot update password. User does not use ComPAIR account login authentication method."}, 400
 
 
 api = new_restful_api(user_api)

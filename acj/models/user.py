@@ -28,8 +28,8 @@ def hash_password(password, is_admin=False):
 # to get those methods is to inherit from the UserMixin class.
 class User(DefaultTableMixin, WriteTrackingMixin, UserMixin):
     # table columns
-    username = db.Column(db.String(255), unique=True, nullable=False)
-    _password = db.Column(db.String(255), unique=False, nullable=False)
+    username = db.Column(db.String(255), unique=True, nullable=True)
+    _password = db.Column(db.String(255), unique=False, nullable=True)
     system_role = db.Column(EnumType(SystemRole, name="system_role"), nullable=False, index=True)
     displayname = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(254))  # email addresses are max 254 characters
@@ -65,11 +65,11 @@ class User(DefaultTableMixin, WriteTrackingMixin, UserMixin):
     comparisons = db.relationship("Comparison",
         foreign_keys='Comparison.user_id',
         backref="user", lazy='dynamic')
+    # third party authentification
     third_party_auths = db.relationship("ThirdPartyUser",
         foreign_keys='ThirdPartyUser.user_id',
         backref="user", lazy='dynamic')
-
-    # third party authentification
+    # lti authentification
     lti_user_links = db.relationship("LTIUser",
         foreign_keys='LTIUser.acj_user_id',
         backref="acj_user", lazy='dynamic')
@@ -80,7 +80,7 @@ class User(DefaultTableMixin, WriteTrackingMixin, UserMixin):
         return self._password
 
     def _set_password(self, password):
-        self._password = hash_password(password)
+        self._password = hash_password(password) if password != None else None
 
     password = property(_get_password, _set_password)
     password = synonym('_password', descriptor=password)
@@ -115,7 +115,14 @@ class User(DefaultTableMixin, WriteTrackingMixin, UserMixin):
         m.update(hash_input.strip().lower().encode('utf-8'))
         return m.hexdigest()
 
+    @hybrid_property
+    def uses_acj_login(self):
+        # third party auth users may have their username and password not set
+        return self.username != None and self.password != None
+
     def verify_password(self, password):
+        if self.password == None:
+            return False
         pwd_context = getattr(security, current_app.config['PASSLIB_CONTEXT'])
         return pwd_context.verify(password, self.password)
 

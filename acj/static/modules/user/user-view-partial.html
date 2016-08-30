@@ -24,7 +24,7 @@
             <strong class="col-md-3">Name:</strong>
             <div id="user_fullname" class="col-md-9">{{ user.fullname }}</div>
         </div>
-	<div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
+	<div class="row" ng-if="(canManageUsers || loggedInUserIsInstructor || ownProfile) && user.system_role == SystemRole.student">
             <strong class="col-md-3">Student Number:</strong>
             <div id="user_student_number"  class="col-md-9">{{ user.student_number }}</div>
         </div>
@@ -32,7 +32,7 @@
             <strong class="col-md-3">Email:</strong>
             <div id="user_email"  class="col-md-9">{{ user.email }}</div>
         </div>
-	<div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
+	<div class="row" ng-if="(canManageUsers || loggedInUserIsInstructor || ownProfile) && user.uses_acj_login">
             <strong class="col-md-3">Username:</strong>
             <div id="user_username" class="col-md-9">{{ user.username }}</div>
         </div>

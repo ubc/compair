@@ -162,6 +162,8 @@ class UsersAPITests(ACJAPITestCase):
 
             user = User.query.get(rv.json['id'])
             self.assertEqual(SystemRole.instructor, user.system_role)
+            self.assertIsNotNone(user.password)
+            self.assertEqual(expected.username, user.username)
 
             # verify not enrolled in any course
             self.assertEqual(len(user.user_courses), 0)
@@ -180,6 +182,8 @@ class UsersAPITests(ACJAPITestCase):
 
             user = User.query.get(rv.json['id'])
             self.assertEqual(SystemRole.instructor, user.system_role)
+            self.assertIsNotNone(user.password)
+            self.assertEqual(expected.username, user.username)
 
             # verify not enrolled in any course
             self.assertEqual(len(user.user_courses), 0)
@@ -203,6 +207,8 @@ class UsersAPITests(ACJAPITestCase):
 
             user = User.query.get(rv.json['id'])
             self.assertEqual(SystemRole.instructor, user.system_role)
+            self.assertIsNotNone(user.password)
+            self.assertEqual(expected.username, user.username)
 
             # verify enrolled in course
             self.assertEqual(len(user.user_courses), 1)
@@ -221,6 +227,8 @@ class UsersAPITests(ACJAPITestCase):
 
             user = User.query.get(rv.json['id'])
             self.assertEqual(SystemRole.student, user.system_role)
+            self.assertIsNotNone(user.password)
+            self.assertEqual(expected.username, user.username)
 
         # test create teaching assistant (student role) via lti session
         with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
@@ -235,6 +243,8 @@ class UsersAPITests(ACJAPITestCase):
 
             user = User.query.get(rv.json['id'])
             self.assertEqual(SystemRole.student, user.system_role)
+            self.assertIsNotNone(user.password)
+            self.assertEqual(expected.username, user.username)
 
 
     def test_create_user_lti_and_CAS(self):
@@ -270,6 +280,8 @@ class UsersAPITests(ACJAPITestCase):
 
             user = User.query.get(rv.json['id'])
             self.assertEqual(SystemRole.student, user.system_role)
+            self.assertIsNone(user.password)
+            self.assertIsNone(user.username)
 
             third_party_user = ThirdPartyUser.query \
                 .filter_by(
@@ -452,6 +464,45 @@ class UsersAPITests(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual(instructor.system_role.value, rv.json['system_role'])
 
+        # test edit user with no acj login
+        auth_data = ThirdPartyAuthTestData()
+        cas_user_auth = auth_data.create_cas_user_auth(SystemRole.student)
+        user = cas_user_auth.user
+        self.data.enrol_user(user, self.data.get_course(), CourseRole.student)
+
+        url = 'api/users/' + str(user.id)
+        expected = {
+            'id': user.id,
+            'username': user.username,
+            'student_number': user.student_number,
+            'system_role': user.system_role.value,
+            'firstname': user.firstname,
+            'lastname': user.lastname,
+            'displayname': user.displayname,
+            'email': user.email
+        }
+
+        # edit own profile as cas user
+        with self.cas_login(cas_user_auth.unique_identifier):
+            # cannot change username (must be None)
+            valid = expected.copy()
+            valid['username'] = "wrongUsername"
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            user = User.query.get(rv.json['id'])
+            self.assertIsNone(user.username)
+
+        # test updating username as instructor
+        with self.login(instructor.username):
+            # cannot change username (must be None)
+            valid = expected.copy()
+            valid['username'] = "wrongUsername"
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            user = User.query.get(rv.json['id'])
+            self.assertIsNone(user.username)
+
+
     def test_get_course_list(self):
         # test login required
         url = '/api/users/' + str(self.data.get_authorized_instructor().id) + '/courses'
@@ -628,6 +679,21 @@ class UsersAPITests(ACJAPITestCase):
                 content_type='application/json')
             self.assert200(rv)
             self.assertEqual(self.data.get_authorized_student().id, rv.json['id'])
+
+
+        # test update password of user with no acj login
+        auth_data = ThirdPartyAuthTestData()
+        cas_user_auth = auth_data.create_cas_user_auth(SystemRole.student)
+        user = cas_user_auth.user
+        self.data.enrol_user(user, self.data.get_course(), CourseRole.student)
+        url = 'api/users/' + str(user.id) + '/password'
+
+        # update own password as cas user
+        with self.cas_login(cas_user_auth.unique_identifier):
+            # cannot change password
+            rv = self.client.post(url, data=json.dumps(data), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual("Cannot update password. User does not use ComPAIR account login authentication method.", rv.json['error'])
 
     def test_get_edit_button(self):
         url = '/api/users/' + str(self.data.get_authorized_student().id) + '/edit'
