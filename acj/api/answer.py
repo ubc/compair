@@ -12,7 +12,7 @@ from . import dataformat
 from acj.core import db, event
 from acj.authorization import require, allow, is_user_access_restricted
 from acj.models import Answer, Assignment, Course, User, Comparison, \
-    Score, UserCourse, CourseRole, AnswerComment, AnswerCommentType
+    Score, UserCourse, SystemRole, CourseRole, AnswerComment, AnswerCommentType
 
 from .util import new_restful_api, get_model_changes, pagination_parser
 from .file import add_new_file, delete_file
@@ -194,18 +194,23 @@ class AnswerRootAPI(Resource):
             return {"error": "Only instructors and teaching assistants can submit an answer on behalf of another user."}, 400
 
         answer.user_id = user_id if user_id else current_user.id
-
         user_course = UserCourse.query \
             .filter_by(
                 course_id=course_id,
                 user_id=answer.user_id
             ) \
-            .first_or_404()
+            .one_or_none()
 
         # we allow instructor and TA to submit multiple answers for their own,
         # but not for student. Each student can only have one answer.
         instructors_and_tas = [CourseRole.instructor.value, CourseRole.teaching_assistant.value]
-        if user_course.course_role.value not in instructors_and_tas:
+        if user_course == None:
+            # only system admin can add answers for themselves to a class without being enrolled in it
+            # required for managing comparison examples as system admin
+            if current_user.id != answer.user_id or current_user.system_role != SystemRole.sys_admin:
+                return {"error": "You are not enrolled in the course."}, 400
+
+        elif user_course.course_role.value not in instructors_and_tas:
             # check if there is a previous answer submitted for the student
             prev_answer = Answer.query. \
                 filter_by(

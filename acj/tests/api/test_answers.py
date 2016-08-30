@@ -378,6 +378,29 @@ class AnswersAPITests(ACJAPITestCase):
             actual_answer = Answer.query.get(rv['id'])
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
+        # test create successful for system admin
+        with self.login('root', 'password'):
+            response = self.client.post(
+                self.base_url,
+                data=json.dumps(expected_answer),
+                content_type='application/json')
+            self.assert200(response)
+
+            # retrieve again and verify
+            rv = json.loads(response.data.decode('utf-8'))
+            actual_answer = Answer.query.get(rv['id'])
+            self.assertEqual(expected_answer['content'], actual_answer.content)
+
+            # test system admin could submit multiple answers for his/her own
+            response = self.client.post(
+                self.base_url,
+                data=json.dumps(expected_answer),
+                content_type='application/json')
+            self.assert200(response)
+            rv = json.loads(response.data.decode('utf-8'))
+            actual_answer = Answer.query.get(rv['id'])
+            self.assertEqual(expected_answer['content'], actual_answer.content)
+
     def test_get_answer(self):
         assignment_id = self.fixtures.assignments[0].id
         answer = self.fixtures.answers[0]
