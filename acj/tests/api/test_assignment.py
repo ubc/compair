@@ -275,6 +275,100 @@ class AssignmentAPITests(ACJAPITestCase):
         self.assertEqual(expected.pairing_algorithm.value, actual['pairing_algorithm'])
         self.assertEqual(expected.rank_display_limit, actual['rank_display_limit'])
 
+
+
+class AssignmentEditComparedAPITests(ACJAPITestCase):
+    def setUp(self):
+        super(AssignmentEditComparedAPITests, self).setUp()
+        self.data = ComparisonTestData()
+        self.url = '/api/courses/' + str(self.data.get_course().id) + '/assignments'
+        self.assignment = self.data.get_assignments()[0]
+
+    def _submit_all_possible_comparisons_for_user(self, user_id):
+        submit_count = 0
+
+        for comparison_example in self.data.comparisons_examples:
+            if comparison_example.assignment_id == self.assignment.id:
+                comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id)
+                self.assertEqual(comparisons[0].answer1_id, comparison_example.answer1_id)
+                self.assertEqual(comparisons[0].answer2_id, comparison_example.answer2_id)
+                for comparison in comparisons:
+                    comparison.completed = True
+                    comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
+                    db.session.add(comparison)
+                submit_count += 1
+                db.session.commit()
+
+        # self.login(username)
+        # calculate number of comparisons to do before user has compared all the pairs it can
+        num_eligible_answers = 0  # need to minus one to exclude the logged in user's own answer
+        for answer in self.data.get_student_answers():
+            if answer.assignment_id == self.assignment.id and answer.user_id != user_id:
+                num_eligible_answers += 1
+        # n - 1 possible pairs before all answers have been compared
+        num_possible_comparisons = num_eligible_answers - 1
+        for i in range(num_possible_comparisons):
+            comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id)
+            for comparison in comparisons:
+                comparison.completed = True
+                comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
+                db.session.add(comparison)
+            submit_count += 1
+            db.session.commit()
+
+            Comparison.calculate_scores(self.assignment.id)
+        return submit_count
+
+    def test_edit_compared_assignment(self):
+        url = self.url + '/' + str(self.assignment.id)
+        expected = {
+            'id': self.assignment.id,
+            'name': 'This is the new name.',
+            'description': 'new_description',
+            'answer_start': self.assignment.answer_start.isoformat() + 'Z',
+            'answer_end': self.assignment.answer_end.isoformat() + 'Z',
+            'number_of_comparisons': self.assignment.number_of_comparisons,
+            'students_can_reply': self.assignment.students_can_reply,
+            'enable_self_evaluation': self.assignment.enable_self_evaluation,
+            'criteria': [
+                { 'id': self.data.get_default_criterion().id }
+            ],
+            'pairing_algorithm': self.assignment.pairing_algorithm.value,
+            'rank_display_limit': 10
+        }
+        compare_count_result = self._submit_all_possible_comparisons_for_user(
+            self.data.get_authorized_student().id)
+
+        # test edit compared assignment
+        with self.login(self.data.get_authorized_instructor().username):
+            # test cannot change pairing_algorithm
+            chaged_pairing = expected.copy()
+            chaged_pairing['pairing_algorithm'] = PairingAlgorithm.adaptive.value
+            rv = self.client.post(url, data=json.dumps(chaged_pairing), content_type='application/json')
+            self.assert403(rv)
+            self.assertEqual(rv.json['error'],
+                'The pair selection algorithm cannot be changed in the assignment ' + \
+                'because it has already been used in an evaluation.')
+
+            # test cannot change criteria
+            change_criteria = expected.copy()
+            change_criteria['criteria'] = [
+                { 'id': self.data.create_criterion(self.data.get_authorized_instructor()).id }
+            ]
+            rv = self.client.post(url, data=json.dumps(change_criteria), content_type='application/json')
+            self.assert403(rv)
+            self.assertEqual(rv.json['error'],
+                'The criteria cannot be changed in the assignment ' + \
+                'because they have already been used in an evaluation.')
+
+            # can otherwise edit compared assignments
+            rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(expected['name'], rv.json['name'])
+            self.assertEqual(expected['description'], rv.json['description'])
+            self.assertEqual(expected['pairing_algorithm'], rv.json['pairing_algorithm'])
+            self.assertEqual(expected['rank_display_limit'], rv.json['rank_display_limit'])
+
 class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
     def setUp(self):
         super(AssignmentStatusComparisonsAPITests, self).setUp()

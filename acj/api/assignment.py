@@ -117,7 +117,13 @@ class AssignmentIdAPI(Resource):
 
         pairing_algorithm = params.get("pairing_algorithm")
         check_valid_pairing_algorithm(pairing_algorithm)
-        assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
+        if not assignment.compared:
+            assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
+        elif assignment.pairing_algorithm != PairingAlgorithm(pairing_algorithm):
+            msg = 'The pair selection algorithm cannot be changed in the assignment ' + \
+                    'because it has already been used in an evaluation.'
+            return {"error": msg}, 403
+
         assignment.rank_display_limit = params.get("rank_display_limit", None)
         if assignment.rank_display_limit != None and assignment.rank_display_limit <= 0:
             assignment.rank_display_limit = None

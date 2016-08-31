@@ -256,7 +256,8 @@
                     <div class="form-check col-md-1"></div>
                     <div class="form-check col-md-5">
                         <label class="form-check-label">
-                            <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm" value="{{PairingAlgorithm.random}}">
+                            <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm"
+                                   value="{{PairingAlgorithm.random}}" ng-disabled="assignment.compared">
                             &nbsp;Randomly select answers for comparison (no scores/rank):
                         </label>
                         <ul>
@@ -268,7 +269,8 @@
                     <div class="form-check col-md-1"></div>
                     <div class="form-check col-md-5">
                         <label class="form-check-label">
-                            <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm" value="{{PairingAlgorithm.adaptive}}">
+                            <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm"
+                                   value="{{PairingAlgorithm.adaptive}}" ng-disabled="assignment.compared">
                             &nbsp;Adaptively select answers for comparison (add scores/rank):
                         </label>
                         <ul>
