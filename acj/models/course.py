@@ -4,6 +4,7 @@ import pytz
 
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.orm import column_property
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -25,7 +26,14 @@ class Course(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     user_courses = db.relationship("UserCourse", back_populates="course", lazy="dynamic")
     assignments = db.relationship("Assignment", backref="course", lazy="dynamic")
 
+    # lti
+    lti_contexts = db.relationship("LTIContext", backref="acj_course", lazy='dynamic')
+
     # hyprid and other functions
+    @hybrid_property
+    def lti_linked(self):
+        return self.lti_context_count > 0
+
     @hybrid_property
     def available(self):
         now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
@@ -42,4 +50,12 @@ class Course(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
 
     @classmethod
     def __declare_last__(cls):
+        from .lti import LTIContext
         super(cls, cls).__declare_last__()
+
+        cls.lti_context_count = column_property(
+            select([func.count(LTIContext.id)]).
+            where(LTIContext.acj_course_id == cls.id),
+            deferred=True,
+            group="counts"
+        )

@@ -16,12 +16,13 @@ var viewHomeStepDefinitionsWrapper = function () {
     });
 
     this.When("I filter home page courses by '$filter'", function (filter) {
-        return element(by.css("form.search-courses input")).sendKeys(filter);
+        element(by.css("form.search-courses input")).sendKeys(filter);
+        // force blur
+        return element(by.css("body")).click();
     });
 
     this.Then("I should see '$numberString' courses", function (numberString) {
         var count = parseInt(numberString);
-
         return expect(element.all(by.css(".course-list a h3")).count()).to.eventually.equal(count);
     });
 

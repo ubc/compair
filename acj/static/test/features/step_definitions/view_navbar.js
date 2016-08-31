@@ -8,23 +8,19 @@ var expect = chai.expect;
 
 var viewNavbarStepDefinitionsWrapper = function () {
     this.Then("I should see the brand home link", function () {
-        return expect(element(by.cssContainingText(".navbar-header a.navbar-brand", "ComPAIR")).isPresent())
-            .to.eventually.equal(true);
+        return expect(element(by.cssContainingText(".navbar-header a.navbar-brand", "ComPAIR")).isPresent()).to.eventually.equal(true);
     });
 
     this.Then("I should see the admin navigation items", function () {
-        return expect(element.all(by.css("#logged-in-nav-options li a")).getText())
-            .to.eventually.eql(["Download Reports", "Add Course", "Create User"]);
+        return expect(element.all(by.css("#logged-in-nav-options li a")).getText()).to.eventually.eql(["Download Reports", "Add Course", "Create Account"]);
     });
 
     this.Then("I should see the instructor navigation items", function () {
-        return expect(element.all(by.css("#logged-in-nav-options li a")).getText())
-            .to.eventually.eql(["Download Reports", "Add Course", "Create User"]);
+        return expect(element.all(by.css("#logged-in-nav-options li a")).getText()).to.eventually.eql(["Download Reports", "Add Course"]);
     });
 
     this.Then("I should see the student navigation items", function () {
-        return expect(element.all(by.css("#logged-in-nav-options li a")).getText())
-            .to.eventually.eql([]);
+        return expect(element.all(by.css("#logged-in-nav-options li a")).getText()).to.eventually.eql([]);
     });
 
     this.Then("I should see the profile and logout links", function () {
@@ -35,7 +31,6 @@ var viewNavbarStepDefinitionsWrapper = function () {
         expect(element(by.css("#own-profile-link")).isPresent()).to.eventually.equal(true);
         return expect(element(by.css("#logout-link")).isPresent()).to.eventually.equal(true);
     });
-
 };
 
 module.exports = viewNavbarStepDefinitionsWrapper;

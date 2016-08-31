@@ -132,7 +132,6 @@ describe('course-module', function () {
                     $rootScope.course = angular.copy(course);
                     $rootScope.course.id = undefined;
                     $httpBackend.expectPOST('/api/courses', $rootScope.course).respond(angular.merge({}, course, {id: 2}));
-                    $httpBackend.expectGET('/api/session/permission').respond(mockSession['permissions']);
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();
@@ -184,7 +183,6 @@ describe('course-module', function () {
                     editedCourse.term = "Summer";
                     $rootScope.course = editedCourse;
                     $httpBackend.expectPOST('/api/courses/2', $rootScope.course).respond(editedCourse);
-                    $httpBackend.expectGET('/api/session/permission').respond(mockSession['permissions']);
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();

@@ -7,8 +7,12 @@
 (function() {
 
 var module = angular.module('ubc.ctlt.acj.user', [
-    'ngResource', 'ngRoute', 'ng-breadcrumbs', 'ubc.ctlt.acj.session',
-    'ubc.ctlt.acj.authorization', 'ubc.ctlt.acj.toaster'
+    'ngResource',
+    'ngRoute',
+    'ng-breadcrumbs',
+    'ubc.ctlt.acj.session',
+    'ubc.ctlt.acj.authorization',
+    'ubc.ctlt.acj.toaster'
 ]);
 
 /***** Providers *****/
@@ -42,8 +46,11 @@ module.constant('CourseRole', {
 });
 
 /***** Controllers *****/
-module.controller("UserController", ['$scope', '$log', '$route', '$routeParams', '$location', 'breadcrumbs', 'Session', 'UserResource', 'Authorize', 'SystemRole', 'Toaster',
-    function($scope, $log, $route, $routeParams, $location, breadcrumbs, Session, UserResource, Authorize, SystemRole, Toaster) {
+module.controller("UserController",
+    ['$scope', '$log', '$route', '$routeParams', '$location', 'breadcrumbs', 'Session',
+     'UserResource', 'Authorize', 'SystemRole', 'Toaster',
+    function($scope, $log, $route, $routeParams, $location, breadcrumbs, Session,
+             UserResource, Authorize, SystemRole, Toaster) {
         var userId;
         var self = this;
         var messages = {
@@ -53,12 +60,14 @@ module.controller("UserController", ['$scope', '$log', '$route', '$routeParams',
         $scope.user = {};
         $scope.method = 'new';
         $scope.password = {};
+        $scope.SystemRole = SystemRole;
         $scope.system_roles = [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin]
         Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
             $scope.canManageUsers = result;
         });
         Session.getUser().then(function(user) {
             $scope.ownProfile = userId == user.id;
+            $scope.loggedInUserIsInstructor = user.system_role == SystemRole.instructor;
 
             // remove system admin from system roles if current_user is not an admin
             if (user.system_role != SystemRole.sys_admin) {
@@ -82,6 +91,10 @@ module.controller("UserController", ['$scope', '$log', '$route', '$routeParams',
             });
         };
 
+        self['new'] = function() {
+            $scope.user.system_role = SystemRole.student;
+        };
+
         self.edit = function() {
             userId = $routeParams.userId;
             $scope.user = UserResource.get({'id':userId}, function (ret) {
@@ -91,9 +104,6 @@ module.controller("UserController", ['$scope', '$log', '$route', '$routeParams',
 
         self.view = function() {
             self.edit();
-            Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function(result) {
-                $scope.canCreateUser = result;
-            });
             $scope.showEditButton = UserResource.getEditButton({"id":userId});
         };
 
@@ -112,10 +122,6 @@ module.controller("UserController", ['$scope', '$log', '$route', '$routeParams',
             $scope.method = $route.current.method;
             if (self.hasOwnProperty($route.current.method)) {
                 self[$scope.method]();
-            }
-
-            if ($scope.method == 'new') {
-                $scope.user.system_role = SystemRole.student;
             }
         }
     }]

@@ -12,6 +12,8 @@ var module = angular.module('ubc.ctlt.acj.assignment',
     [
         'angularFileUpload',
         'ngResource',
+        'ngclipboard',
+        'ui.bootstrap',
         'ubc.ctlt.acj.answer',
         'ubc.ctlt.acj.authentication',
         'ubc.ctlt.acj.authorization',
@@ -25,8 +27,7 @@ var module = angular.module('ubc.ctlt.acj.assignment',
         'ubc.ctlt.acj.group',
         'ubc.ctlt.acj.comparison',
         'ubc.ctlt.acj.toaster',
-        'ubc.ctlt.acj.session',
-        'ui.bootstrap'
+        'ubc.ctlt.acj.session'
     ]
 );
 
@@ -102,7 +103,7 @@ module.directive('comparisonPreview', function() {
     return {
         /* this template is our simple text with button to launch the preview */
         templateUrl: 'modules/assignment/preview-inline-template.html',
-        controller: function ($scope, $modal) {
+        controller: ["$scope", "$modal", function ($scope, $modal) {
             /* need to pass to comparison template all expected properties to complete the preview */
             $scope.previewPopup = function() {
                 /* set current round #, answer #s, and total round # for preview */
@@ -143,7 +144,7 @@ module.directive('comparisonPreview', function() {
                     scope: $scope
                 });
             }
-        }
+        }]
     };
 });
 

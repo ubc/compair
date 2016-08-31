@@ -1,5 +1,3 @@
-import datetime
-
 import dateutil.parser
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask import Blueprint, abort

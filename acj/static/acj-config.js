@@ -23,9 +23,11 @@ var myApp = angular.module('myApp', [
     'ubc.ctlt.acj.home',
     'ubc.ctlt.acj.comparison',
     'ubc.ctlt.acj.login',
+    'ubc.ctlt.acj.lti',
     'ubc.ctlt.acj.navbar',
     'ubc.ctlt.acj.assignment',
-    'ubc.ctlt.acj.report'
+    'ubc.ctlt.acj.report',
+    'ubc.ctlt.acj.oauth'
 ]);
 
 myApp.factory('defaultErrorHandlerInterceptor', ['$q', '$log', 'Toaster', function($q, $log, Toaster) {
@@ -70,6 +72,13 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
             {
                 templateUrl: 'modules/home/home-partial.html',
                 label: "Home" // breadcrumb label
+            })
+        .when ('/oauth/create',
+            {
+                templateUrl: 'modules/oauth/oauth-partial.html',
+                label: "Create account", // breadcrumb label
+                controller: 'OAuthController',
+                method: 'new'
             })
         .when ('/course/new',
             {
@@ -203,7 +212,7 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
         .when('/user/create',
             {
                 templateUrl: 'modules/user/user-create-partial.html',
-                label: "Create User",
+                label: "Create Account",
                 controller: 'UserController',
                 method: 'new'
             })
@@ -220,6 +229,12 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
                 label: "User Profile",
                 controller: 'UserController',
                 method: 'view'
+            })
+        .when('/lti',
+            {
+                templateUrl: 'modules/lti/lti-setup-partial.html',
+                label: "ComPAIR Setup",
+                controller: 'LTIController'
             })
         .otherwise({redirectTo: '/'});
 

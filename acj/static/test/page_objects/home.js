@@ -7,7 +7,7 @@ var HomePage = function() {
         switch (button) {
             case "Add Course":
                 return element(by.css('#create-course-btn')).click();
-            case "Create User":
+            case "Create Account":
                 return element(by.css('#create-user-btn')).click();
             case "Profile":
                 element(by.css('#menu-dropdown')).click();

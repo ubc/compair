@@ -2,7 +2,7 @@
 
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
-	
+
 function combineDateTime(datetime) {
     var date = new Date(datetime.date);
     var time = new Date(datetime.time);
@@ -66,20 +66,20 @@ module.controller(
         $scope.count = {};
         $scope.filters = [];
         Authorize.can(Authorize.CREATE, AssignmentResource.MODEL, courseId).then(function(result) {
-                $scope.canCreateAssignments = result;
+            $scope.canCreateAssignments = result;
         });
         Authorize.can(Authorize.EDIT, CourseResource.MODEL, courseId).then(function(result) {
-                $scope.canEditCourse = result;
+            $scope.canEditCourse = result;
         });
         Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, courseId).then(function(result) {
-                $scope.canManageAssignment = result;
-                $scope.filters.push('All course assignments');
-                if ($scope.canManageAssignment) {
-                    $scope.filters.push('Assignments being answered', 'Assignments being compared', 'Upcoming assignments');
-                } else {
-                    $scope.filters.push('My pending assignments');
-                }
-                $scope.filter = $scope.filters[0];
+            $scope.canManageAssignment = result;
+            $scope.filters.push('All course assignments');
+            if ($scope.canManageAssignment) {
+                $scope.filters.push('Assignments being answered', 'Assignments being compared', 'Upcoming assignments');
+            } else {
+                $scope.filters.push('My pending assignments');
+            }
+            $scope.filter = $scope.filters[0];
         });
         CourseResource.get({'id': courseId}).$promise.then(
             function (ret) {
@@ -171,6 +171,130 @@ module.controller(
 ]);
 
 module.controller(
+    'CourseSelectModalController',
+    ["$rootScope", "$scope", "$modalInstance",
+     "Session", "Authorize", "CourseResource", "Toaster", "UserResource", "LTI",
+    function ($rootScope, $scope, $modalInstance,
+              Session, Authorize, CourseResource, Toaster, UserResource, LTI) {
+
+        $scope.loggedInUserId = null;
+        $scope.submitted = false;
+        $scope.totalNumCourses = 0;
+        $scope.courseFilters = {
+            page: 1,
+            perPage: 10
+        };
+        $scope.courses = [];
+
+        $scope.showDuplicateForm = false;
+        $scope.course = {
+            year: new Date().getFullYear(),
+            name: LTI.getCourseName()
+        };
+        $scope.format = 'dd-MMMM-yyyy';
+        $scope.date = {
+            'course_start': {'date': null, 'time': new Date().setHours(0, 0, 0, 0)},
+            'course_end': {'date': null, 'time': new Date().setHours(23, 59, 0, 0)},
+        };
+        $scope.originalCourse = {};
+        $scope.duplicateCourse = {};
+
+        Session.getUser().then(function(user) {
+            $scope.loggedInUserId = user.id;
+            $scope.updateCourseList();
+            $scope.$watchCollection('courseFilters', filterWatcher);
+        });
+
+        $scope.selectCourse = function(course) {
+            $modalInstance.close(course.id);
+        };
+
+        $scope.selectDuplicateCourse = function(course) {
+            $scope.showDuplicateForm = true;
+            $scope.originalCourse = course;
+            $scope.duplicateCourse = {
+                year: new Date().getFullYear()
+            };
+        };
+
+        $scope.cancelSelectDuplicateCourse = function() {
+            $scope.showDuplicateForm = false;
+        };
+
+        $scope.duplicate = function() {
+            $scope.submitted = true;
+            CourseResource.createDuplicate({id: $scope.originalCourse.id}, $scope.duplicateCourse, function (ret) {
+                Toaster.success("Course Duplicated", 'The course was successfully duplicated');
+                // refresh permissions
+                Session.expirePermissions();
+                $scope.selectCourse(ret);
+            }).$promise.finally(function() {
+                $scope.submitted = false;
+            });
+        };
+
+        $scope.date.course_start.open = function($event) {
+            $event.preventDefault();
+            $event.stopPropagation();
+            $scope.date.course_start.opened = true;
+        };
+        $scope.date.course_end.open = function($event) {
+            $event.preventDefault();
+            $event.stopPropagation();
+            $scope.date.course_end.opened = true;
+        };
+
+        $scope.save = function() {
+            $scope.submitted = true;
+            if ($scope.date.course_start.date != null) {
+                $scope.course.start_date = combineDateTime($scope.date.course_start);
+            } else {
+                $scope.course.start_date = null;
+            }
+            if ($scope.date.course_end.date != null) {
+                $scope.course.end_date = combineDateTime($scope.date.course_end);
+            } else {
+                $scope.course.end_date = null;
+            }
+            if ($scope.course.start_date != null && $scope.course.end_date != null && $scope.course.start_date > $scope.course.end_date) {
+                Toaster.error('Course Period Conflict', 'Course end date/time must be after course start date/time.');
+                $scope.submitted = false;
+                return;
+            }
+
+            CourseResource.save({}, $scope.course, function (ret) {
+                Toaster.success("Course Created", 'The course was created successfully');
+                // refresh permissions
+                Session.expirePermissions();
+                $scope.selectCourse(ret);
+            }).$promise.finally(function() {
+                $scope.submitted = false;
+            });
+        };
+
+        $scope.updateCourseList = function() {
+            var params = angular.merge({id: $scope.loggedInUserId}, $scope.courseFilters);
+
+            UserResource.getUserCourses(params).$promise.then(
+                function(ret) {
+                    $scope.courses = ret.objects;
+                    $scope.totalNumCourses = ret.total;
+                    angular.forEach($scope.courses, function(event){ event.start_date = new Date(event.start_date); });
+                },
+                function (ret) {
+                    Toaster.reqerror("Unable to retrieve your courses.", ret);
+                }
+            );
+        };
+
+        var filterWatcher = function(newValue, oldValue) {
+            if (angular.equals(newValue, oldValue)) return;
+            $scope.updateCourseList();
+        };
+    }
+]);
+
+module.controller(
     'CourseController',
     ['$scope', '$log', '$route', '$routeParams', '$location', 'Session', 'Authorize',
      'CourseResource', 'Toaster', 'EditorOptions',
@@ -250,7 +374,7 @@ module.controller(
             CourseResource.save({id: $scope.course.id}, $scope.course, function (ret) {
                 Toaster.success(messages[$scope.method].title, messages[$scope.method].msg);
                 // refresh permissions
-                Session.refreshPermissions();
+                Session.expirePermissions();
                 $location.path('/course/' + ret.id);
             }).$promise.finally(function() {
                 $scope.submitted = false;

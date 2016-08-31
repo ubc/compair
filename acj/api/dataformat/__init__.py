@@ -70,6 +70,7 @@ def get_course(include_details=True):
         'start_date': fields.DateTime,
         'end_date': fields.DateTime,
         'available': fields.Boolean,
+        'lti_linked': fields.Boolean,
         'modified': fields.DateTime,
         'created': fields.DateTime
     }
@@ -115,6 +116,8 @@ def get_assignment(restrict_user=True):
         'rank_display_limit': fields.Integer(default=None),
 
         'compared': fields.Boolean,
+
+        'lti_linkable': fields.Boolean,
 
         'answer_period': fields.Boolean,
         'compare_period': fields.Boolean,

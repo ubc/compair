@@ -10,9 +10,8 @@ from flask.ext.restful.reqparse import RequestParser
 from sqlalchemy import or_, and_
 
 from . import dataformat
-from acj.core import db
+from acj.core import db, event
 from acj.authorization import require, allow
-from acj.core import event
 from acj.models import Answer, Score, Comparison, Course, \
     Assignment, UserCourse, CourseRole, AssignmentCriterion
 from .util import new_restful_api

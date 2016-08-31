@@ -3,6 +3,8 @@
 <html ng-app = "myApp" auth-login>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- add empty favicon.ico to prevent broswer errors -->
+        <link rel="icon" href="data:;base64,iVBORw0KGgo=">
         <title>ComPAIR</title>
 
         <!-- needed when ckeditor is minified or when running unit tests -->
@@ -35,17 +37,19 @@
         <script src='lib/angular-loading-bar/build/loading-bar.js'></script>
         <script src='lib/AngularJS-Toaster/toaster.js'></script>
         <script src='lib/moment/moment.js'></script>
-        <script src='lib/momentjs/moment.js'></script>
         <script src='lib/angular-moment/angular-moment.js'></script>
         <script src='lib/angular-file-upload/angular-file-upload.min.js'></script>
         <script src='lib/angular-mocks/angular-mocks.js'></script>
         <script src='lib/angular-bootstrap/ui-bootstrap-tpls.js'></script>
+        <script src='lib/momentjs/moment.js'></script>
         <script src='lib/humanize-duration/humanize-duration.js'></script>
         <script src='lib/angular-timer/dist/angular-timer.js'></script>
         <script src='lib/lodash/lodash.js'></script>
         <script src='lib/blob-polyfill/Blob.js'></script>
         <script src='lib/file-saver.js/FileSaver.js'></script>
         <script src='lib/angular-file-saver/dist/angular-file-saver.js'></script>
+        <script src='lib/clipboard/dist/clipboard.js'></script>
+        <script src='lib/ngclipboard/dist/ngclipboard.js'></script>
         <!-- endbower -->
         <!-- endbuild -->
 
@@ -98,10 +102,13 @@
         <script src="modules/comment/comment-module.js"></script>
         <script src="modules/comparison/comparison-module.js"></script>
         <script src="modules/login/login-module.js"></script>
+        <script src="modules/login/login-create-user-form-directive.js"></script>
+        <script src="modules/lti/lti-module.js"></script>
         <script src="modules/navbar/navbar-module.js"></script>
         <script src="modules/assignment/assignment-module.js"></script>
         <script src="modules/group/group-module.js"></script>
         <script src="modules/report/report-module.js"></script>
+        <script src="modules/oauth/oauth-module.js"></script>
         <!-- endbuild -->
 
         <!-- Google Analytics -->

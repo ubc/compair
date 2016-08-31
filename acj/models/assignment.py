@@ -51,11 +51,15 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     comparison_examples = db.relationship("ComparisonExample", backref="assignment", lazy="dynamic")
     scores = db.relationship("Score", backref="assignment", lazy="dynamic")
 
+    # lti
+    lti_resource_links = db.relationship("LTIResourceLink", backref="acj_assignment", lazy='dynamic')
+
     # hyprid and other functions
     user_avatar = association_proxy('user', 'avatar')
     user_displayname = association_proxy('user', 'displayname')
     user_fullname = association_proxy('user', 'fullname')
     user_system_role = association_proxy('user', 'system_role')
+    lti_linkable = association_proxy('course', 'lti_linked')
 
     @hybrid_property
     def criteria(self):

@@ -65,6 +65,14 @@ class User(DefaultTableMixin, WriteTrackingMixin, UserMixin):
     comparisons = db.relationship("Comparison",
         foreign_keys='Comparison.user_id',
         backref="user", lazy='dynamic')
+    third_party_auths = db.relationship("ThirdPartyUser",
+        foreign_keys='ThirdPartyUser.user_id',
+        backref="user", lazy='dynamic')
+
+    # third party authentification
+    lti_user_links = db.relationship("LTIUser",
+        foreign_keys='LTIUser.acj_user_id',
+        backref="acj_user", lazy='dynamic')
 
     # hyprid and other functions
 
