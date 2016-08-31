@@ -247,7 +247,7 @@ class ClasslistRootAPI(Resource):
             tmp_name = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
             uploaded_file.save(tmp_name)
             current_app.logger.debug("Importing for course " + str(course_id) + " with " + filename)
-            with open(tmp_name, 'rU') as csvfile:
+            with open(tmp_name, 'rt') as csvfile:
                 spamreader = csv.reader(csvfile)
                 users = []
                 for row in spamreader:

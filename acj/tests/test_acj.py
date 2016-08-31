@@ -144,6 +144,3 @@ class RecordableClient(FlaskClient):
                 json.dump(data, f, indent=4)
 
         return response
-
-if __name__ == '__main__':
-    unittest.main()

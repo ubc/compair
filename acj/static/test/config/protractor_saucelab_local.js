@@ -2,8 +2,9 @@ var env = require('../env.js');
 var backEndMocks = require('../factories/http_backend_mocks.js');
 
 exports.config = {
-    //seleniumAddress: 'http://localhost:4444/wd/hub',
-    //seleniumServerJar: '../../../../node_modules/protractor/selenium/selenium-server-standalone-2.47.1.jar',
+    sauceSeleniumAddress: 'localhost:4445/wd/hub',
+    sauceUser: process.env.SAUCE_USERNAME,
+    sauceKey: process.env.SAUCE_ACCESS_KEY,
     specs: ['../features/**/*.feature'],
     framework: 'custom',
     frameworkPath: require.resolve('protractor-cucumber-framework'),
@@ -17,8 +18,7 @@ exports.config = {
         'version': '52',
         'chromedriverVersion': '2.22',
         'selenium-version': '2.53.1',
-        'shardTestFiles': false,
-        'maxInstances': 1,
+        'maxDuration': 3600 // 1 hour
     },
     onPrepare: function() {
         // disable angular and css animations so tests run faster
@@ -44,7 +44,9 @@ exports.config = {
         browser.addMockModule('disableNgAnimate', disableNgAnimate);
         browser.addMockModule('disableCssAnimate', disableCssAnimate);
         backEndMocks.build(browser);
-        return browser.get(env.baseUrl);
+        return browser.get(env.baseUrl, 20000);
     },
-    baseUrl: env.baseUrl
+    baseUrl: env.baseUrl,
+    allScriptsTimeout: 20000,
+    getPageTimeout: 15000
 };

@@ -11,7 +11,7 @@ class DbUtilTests(ACJTestCase):
 
         db.session.commit()
 
-        self.assertEqual(get_model_changes(assignment), None, 'should return None on no change model')
+        self.assertEqual(get_model_changes(assignment), None, 'shoul return None on no change model')
 
         oldname = assignment.name
         assignment.name = 'new name'

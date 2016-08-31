@@ -16,14 +16,18 @@ class DefaultFixture(object):
 
     def __init__(self):
         DefaultFixture.ROOT_USER = UserFactory(
-            username='root', password='password', displayname='root',
-            system_role=SystemRole.sys_admin)
+            username='root',
+            password='password',
+            displayname='root',
+            system_role=SystemRole.sys_admin
+        )
 
-        name = "Which is better?"
-        description = "<p>Choose the response that you think is the better of the two.</p>"
-        public = True
-        DefaultFixture.DEFAULT_CRITERION = CriterionFactory(name=name, description=description, public=public,
-                                                          user=DefaultFixture.ROOT_USER)
+        DefaultFixture.DEFAULT_CRITERION = CriterionFactory(
+            name="Which is better?",
+            description="<p>Choose the response that you think is the better of the two.</p>",
+            public=True,
+            user=DefaultFixture.ROOT_USER
+        )
 
 
 class SampleDataFixture(object):

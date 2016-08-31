@@ -109,8 +109,7 @@ module.controller(
     [ "$rootScope", "$scope", "$location", "$log", "$route",
       "LoginResource", "AuthenticationService",
     function LoginController($rootScope, $scope, $location, $log, $route,
-                             LoginResource,
-                             AuthenticationService)
+                             LoginResource, AuthenticationService)
     {
         $scope.submitted = false;
 
@@ -130,9 +129,7 @@ module.controller(
                         $scope.submitted = false;
                         $route.reload();
                     }, function() {
-                        $log.error(
-                                "Failed to retrieve logged in user's data: " +
-                                JSON.stringify(ret));
+                        $log.error("Failed to retrieve logged in user's data: " + JSON.stringify(ret));
                         $scope.login_err = "Unable to retrieve user information, server problem?";
                         $scope.submitted = false;
                     });
@@ -140,12 +137,10 @@ module.controller(
                 function(ret) {
                     // login failed
                     $log.debug("Login authentication failed.");
-                    if (ret.data.error)
-                    {
+                    if (ret.data.error) {
                         $scope.login_err = ret.data.error;
                     }
-                    else
-                    {
+                    else {
                         $scope.login_err = "Server error during authentication.";
                     }
                     $scope.submitted = false;

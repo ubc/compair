@@ -336,7 +336,7 @@ for pairing_package_name in pairing_packages:
                         opponents.setdefault(comparison.key1, 0)
                         opponents[comparison.key1] += 1
 
-                results.append(["key: "+str(answer.key)] + [str(opponent)+ "= "+str(count) for opponent, count in opponents.iteritems()])
+                results.append(["key: "+str(answer.key)] + [str(opponent)+ "= "+str(count) for opponent, count in opponents.items()])
             """
 
         with open(CURRENT_FOLDER+"/out_"+pairing_package_name+"_"+scoring_package_name+".csv", "w+") as csvfile:

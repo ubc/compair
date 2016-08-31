@@ -13,40 +13,28 @@ var setupInstructorStepDefinitionsWrapper = function () {
     var pageFactory = new PageFactory();
     var loginDialog = pageFactory.createPage('login');
 
-    this.Given("I'm an Instructor", function (done) {
-        var fixture  = require('../../fixtures/instructor/default_fixture.js');
-        backEndMocks.build(browser, fixture);
-
-        loginDialog.get('/');
-        loginDialog.login(fixture.loginDetails);
-        done();
+    this.Given("I'm an Instructor", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'instructor/default_fixture';
+        backEndMocks.setStorageFixture(browser, fixtureName);
+        return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
     });
 
-    this.Given("I'm an Instructor with students", function (done) {
-        var fixture  = require('../../fixtures/instructor/has_students_fixture.js');
-        backEndMocks.build(browser, fixture);
-
-        loginDialog.get('/');
-        loginDialog.login(fixture.loginDetails);
-        done();
+    this.Given("I'm an Instructor with students", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'instructor/has_students_fixture';
+        backEndMocks.setStorageFixture(browser, fixtureName);
+        return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
     });
 
-    this.Given("I'm an Instructor with courses", function (done) {
-        var fixture  = require('../../fixtures/instructor/has_courses_fixture.js');
-        backEndMocks.build(browser, fixture);
-
-        loginDialog.get('/');
-        loginDialog.login(fixture.loginDetails);
-        done();
+    this.Given("I'm an Instructor with courses", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'instructor/has_courses_fixture';
+        backEndMocks.setStorageFixture(browser, fixtureName);
+        return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
     });
 
-    this.Given("I'm an Instructor with assignments", function (done) {
-        var fixture  = require('../../fixtures/instructor/has_assignments_fixture.js');
-        backEndMocks.build(browser, fixture);
-
-        loginDialog.get('/');
-        loginDialog.login(fixture.loginDetails);
-        done();
+    this.Given("I'm an Instructor with assignments", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'instructor/has_assignments_fixture';
+        backEndMocks.setStorageFixture(browser, fixtureName);
+        return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
     });
 };
 

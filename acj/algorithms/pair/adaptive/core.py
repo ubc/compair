@@ -1,4 +1,4 @@
-from pair_generator import AdaptivePairGenerator
+from .pair_generator import AdaptivePairGenerator
 
 def generate_pair(scored_objects=[], comparison_pairs=[], log=None):
     pair_algorithm = AdaptivePairGenerator()

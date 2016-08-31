@@ -93,7 +93,7 @@ def create(course_id):
 
 
 def write_csv(filename, headers, data):
-    with open(filename, 'wb') as csvfile:
+    with open(filename, 'wt') as csvfile:
         report_writer = csv.writer(
             csvfile, delimiter=',',
             quotechar='"', quoting=csv.QUOTE_MINIMAL

@@ -7,24 +7,22 @@ chai.use(chaiAsPromised);
 var expect = chai.expect;
 
 var viewHomeStepDefinitionsWrapper = function () {
-    this.Then(/^I should see my courses with names:$/, function (data, done) {
+    this.Then("I should see my courses with names:", function (data) {
         var list = data.hashes().map(function(item) {
             return item.name + " ("+item.year+" "+item.term+")";
         });
 
-        expect(element.all(by.css(".course-list a h3")).getText()).to.eventually.eql(list).and.notify(done);
+        return expect(element.all(by.css(".course-list a h3")).getText()).to.eventually.eql(list);
     });
 
-    this.When(/^I filter home page courses by "([^"]*)"$/, function (filter, done) {
-        element(by.css("form.search-courses input")).sendKeys(filter);
-
-        done();
+    this.When("I filter home page courses by '$filter'", function (filter) {
+        return element(by.css("form.search-courses input")).sendKeys(filter);
     });
 
-    this.Then(/^I should see "([^"]*)" courses$/, function (numberString, done) {
+    this.Then("I should see '$numberString' courses", function (numberString) {
         var count = parseInt(numberString);
 
-        expect(element.all(by.css(".course-list a h3")).count()).to.eventually.equal(count).and.notify(done);
+        return expect(element.all(by.css(".course-list a h3")).count()).to.eventually.equal(count);
     });
 
 };

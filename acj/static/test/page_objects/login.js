@@ -1,35 +1,24 @@
-var env = require('../env.js');
-
 var LoginDialog = function() {
-};
+    this.login = function(user) {
+        return browser.setLocation('/').then(function() {
+            browser.wait(browser.isElementPresent(element(by.id('app-login-toggle'))), 2000);
+            element(by.id('app-login-toggle')).click();
+            element(by.model('username')).sendKeys(user.username);
+            element(by.model('password')).sendKeys(user.password);
 
-LoginDialog.prototype.get = function() {
-    return browser.get(env.baseUrl);
-};
+            browser.wait(browser.isElementPresent(element(by.css('input[value="Log In"]'))), 2000);
+            element(by.css('input[value="Log In"]')).click();
 
-LoginDialog.prototype.login = function(user) {
-    var internalLoginTextElm = element(by.id('app-login-toggle'));
-    var usernameElm =  element(by.model('username'));
-    var passwordElm =  element(by.model('password'));
-    var loginButtonElm = element(by.css('input[value="Log In"]'));
+            // wait until login window is hidden
+            browser.wait(browser.isElementPresent(element(by.binding('loggedInUser.displayname'))), 2000);
+            return element(by.css('body')).click();
+        });
+    };
 
-    browser.wait(internalLoginTextElm.isPresent(), 1000);
-    internalLoginTextElm.click();
-    usernameElm.sendKeys(user.username);
-    passwordElm.sendKeys(user.password);
-
-    loginButtonElm.click();
-
-    return browser.wait(browser.isElementPresent(element(by.binding('loggedInUser.displayname'))), 5000);
-};
-
-LoginDialog.prototype.logout = function() {
-    var displayNameElm = element(by.binding('loggedInUser.displayname'));
-    var logoutButtonElm = element(by.css('li[ng-controller=LogoutController] a'));
-
-    displayNameElm.click();
-
-    return logoutButtonElm.click();
+    this.logout = function() {
+        element(by.binding('loggedInUser.displayname')).click();
+        return element(by.css('li[ng-controller=LogoutController] a')).click();
+    };
 };
 
 module.exports = LoginDialog;

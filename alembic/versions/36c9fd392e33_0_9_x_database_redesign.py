@@ -1438,8 +1438,8 @@ def downgrade():
             )
         )
 
-    for course_id, group_dictionary in course_groups.iteritems():
-        for group_name, user_set in group_dictionary.iteritems():
+    for course_id, group_dictionary in course_groups.items():
+        for group_name, user_set in group_dictionary.items():
             result = connection.execute(
                 old_group_table.insert().values(
                     name=group_name, active=True, courses_id=course_id,
@@ -1520,7 +1520,7 @@ def downgrade():
             )
         )
 
-    for course_id, criteria_set in course_criteria.iteritems():
+    for course_id, criteria_set in course_criteria.items():
         for criterion_id in criteria_set:
             connection.execute(
                 old_course_criteria_table.insert().values(

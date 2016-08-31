@@ -396,7 +396,3 @@ class TestScoreComparitiveJudgement(unittest.TestCase):
         self.assertEqual(key2_results_1.opponents, key2_results_2.opponents)
         self.assertEqual(key2_results_1.wins, key2_results_2.wins)
         self.assertEqual(key2_results_1.loses, key2_results_2.loses)
-
-
-if __name__ == '__main__':
-    unittest.main()

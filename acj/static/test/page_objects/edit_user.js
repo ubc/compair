@@ -1,8 +1,6 @@
-var env = require('../env.js');
-
 var EditUserPage = function() {
-    this.get = function(userId) {
-        return browser.get(env.baseUrl + '#/user/' + userId + '/edit');
+    this.getLocation = function(userId) {
+        return 'user/' + userId + '/edit';
     };
 };
 

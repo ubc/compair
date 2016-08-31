@@ -29,7 +29,7 @@ def upgrade():
                                   table_args=(UniqueConstraint('name'))) as batch_op:
             batch_op.drop_constraint('name', type_='unique')
     except ValueError:
-        logging.warn('Drop unique constraint is not support for SQLite, dropping uq_Critiera_name ignored!')
+        logging.warning('Drop unique constraint is not support for SQLite, dropping uq_Critiera_name ignored!')
 
     # set existing criteria's active attribute to True using server_default
     op.add_column('CriteriaAndCourses',

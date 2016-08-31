@@ -1,4 +1,4 @@
-from score_algorithm import EloAlgorithmWrapper
+from .score_algorithm import EloAlgorithmWrapper
 
 def calculate_score(comparison_pairs=[], log=None):
     score_algorithm = EloAlgorithmWrapper()
