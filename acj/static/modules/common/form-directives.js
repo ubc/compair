@@ -53,7 +53,6 @@ module.directive('confirmFormExit', function(){
             }
             //change URL
             scope.$on('$locationChangeStart', function(event, next, current) {
-                console.log(formController, formController.$dirty)
                 if (attrs.formType == 'answer' && (scope.answer.content || scope.uploader.queue.length) && scope.preventExit && formController.$dirty) {
                     if (!confirm("Are you sure you want to leave this page? Any unsaved changes you've made will be lost.")) {
                         event.preventDefault();

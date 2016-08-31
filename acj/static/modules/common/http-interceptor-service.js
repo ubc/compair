@@ -5,6 +5,8 @@
 var module = angular.module('ubc.ctlt.acj.common.interceptor', []);
 
 module.service('Interceptors', ['$q', '$cacheFactory', 'AnswerResource', function($q, $cacheFactory, AnswerResource) {
+    var temporaryGroupStore = {};
+
     this.cache = {
         response: function(response) {
             var cache = $cacheFactory.get('$http');
@@ -25,6 +27,25 @@ module.service('Interceptors', ['$q', '$cacheFactory', 'AnswerResource', functio
                 var url = response.config.url.match(/\/api\/courses\/\d+/g);
                 cache.remove(url[0] + '/users');
             }
+            return response.data;
+        }
+    };
+
+    this.groupSessionInterceptor = {
+        response: function(response) {
+            // store all course group names until javascript memory wiped (page refreshed,closed,etc)
+            // helps in case instructors make mistakes while editing groups on class list screen
+            var courseId = response.config.url.match(/\d+/g)[0];
+            if (temporaryGroupStore[courseId] == undefined) {
+                temporaryGroupStore[courseId] = [];
+            }
+            temporaryGroupStore[courseId] = _.sortBy(
+                _.union(temporaryGroupStore[courseId], response.data.objects),
+                function(value) { return value; }
+            );
+
+            response.data.objects = temporaryGroupStore[courseId];
+
             return response.data;
         }
     };

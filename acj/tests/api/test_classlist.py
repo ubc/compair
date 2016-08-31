@@ -386,7 +386,7 @@ class ClassListAPITest(ACJAPITestCase):
     def test_update_course_role_miltiple(self):
         url = self.url + '/roles'
 
-        user_ids = [self.data.authorized_student.id, self.data.authorized_ta.id]
+        user_ids = [self.data.authorized_instructor.id, self.data.authorized_student.id, self.data.authorized_ta.id]
         params = {
             'ids': user_ids,
             'course_role': CourseRole.instructor.value
@@ -433,6 +433,17 @@ class ClassListAPITest(ACJAPITestCase):
                 content_type='application/json')
             self.assert400(rv)
 
+            # cannot change current_user's course role
+            params_self = {
+                'ids': [self.data.get_authorized_instructor().id],
+                'course_role': CourseRole.teaching_assistant.value
+            }
+            rv = self.client.post(
+                url,
+                data=json.dumps(params_self),
+                content_type='application/json')
+            self.assert400(rv)
+
             # test changing role instructor
             rv = self.client.post(
                 url,
@@ -442,7 +453,11 @@ class ClassListAPITest(ACJAPITestCase):
             self.assertEqual(rv.json['course_role'], CourseRole.instructor.value)
 
             for user_course in self.data.get_course().user_courses:
-                if user_course.user_id in user_ids:
+                # ingore changes for current_user
+                if user_course.user_id == self.data.get_authorized_instructor().id:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+                # other users should have course role updated
+                elif user_course.user_id in user_ids:
                     self.assertEqual(user_course.course_role, CourseRole.instructor)
 
             # test changing teaching assistant
@@ -456,7 +471,11 @@ class ClassListAPITest(ACJAPITestCase):
             self.assertEqual(rv.json['course_role'], CourseRole.teaching_assistant.value)
 
             for user_course in self.data.get_course().user_courses:
-                if user_course.user_id in user_ids:
+                # ingore changes for current_user
+                if user_course.user_id == self.data.get_authorized_instructor().id:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+                # other users should have course role updated
+                elif user_course.user_id in user_ids:
                     self.assertEqual(user_course.course_role, CourseRole.teaching_assistant)
 
             # test changing role student
@@ -470,7 +489,11 @@ class ClassListAPITest(ACJAPITestCase):
             self.assertEqual(rv.json['course_role'], CourseRole.student.value)
 
             for user_course in self.data.get_course().user_courses:
-                if user_course.user_id in user_ids:
+                # ingore changes for current_user
+                if user_course.user_id == self.data.get_authorized_instructor().id:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+                # other users should have course role updated
+                elif user_course.user_id in user_ids:
                     self.assertEqual(user_course.course_role, CourseRole.student)
 
             # test changing dropped
@@ -483,7 +506,11 @@ class ClassListAPITest(ACJAPITestCase):
             self.assertEqual(rv.json['course_role'], CourseRole.dropped.value)
 
             for user_course in self.data.get_course().user_courses:
-                if user_course.user_id in user_ids:
+                # ingore changes for current_user
+                if user_course.user_id == self.data.get_authorized_instructor().id:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+                # other users should have course role updated
+                elif user_course.user_id in user_ids:
                     self.assertEqual(user_course.course_role, CourseRole.dropped)
 
 

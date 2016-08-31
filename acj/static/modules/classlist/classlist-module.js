@@ -104,7 +104,7 @@ module.controller(
                 Toaster.reqerror("No Users Found For Course ID "+courseId, ret);
             }
         );
-        GroupResource.get({'courseId':courseId},
+        GroupResource.getAllFromSession({'courseId':courseId},
             function (ret) {
                 $scope.groups = ret.objects;
             },

@@ -465,7 +465,17 @@ class UserCourseRoleAPI(Resource):
         if len(params.get('ids')) != len(user_courses):
             return {"error": "One or more users are not enrolled in the course"}, 400
 
+        if len(user_courses) == 1 and user_courses[0].user_id == current_user.id:
+            if course_role == CourseRole.dropped:
+                return {"error": "You cannot drop yourself from the course. Please select other users"}, 400
+            else:
+                return {"error": "You cannot change your own course role. Please select other users"}, 400
+
         for user_course in user_courses:
+            # skip current user
+            if user_course.user_id == current_user.id:
+                continue
+            # update user's role'
             user_course.course_role = course_role
 
         db.session.commit()
