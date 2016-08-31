@@ -4,6 +4,7 @@ import operator
 import datetime
 
 from data.fixtures.test_data import ComparisonTestData
+from data.factories import AssignmentCriterionFactory
 from acj.models import Answer, Comparison
 from acj.tests.test_acj import ACJAPITestCase
 from acj.core import db
@@ -18,6 +19,10 @@ class ComparisonAPITests(ACJAPITestCase):
         self.assignment = self.data.get_assignments()[0]
         self.base_url = self._build_url(self.course.id, self.assignment.id)
 
+        secondary_criterion = self.data.create_criterion(self.data.authorized_instructor)
+        AssignmentCriterionFactory(criterion=secondary_criterion, assignment=self.assignment)
+        db.session.commit()
+
     def _build_url(self, course_id, assignment_id, tail=""):
         url = \
             '/api/courses/' + str(course_id) + '/assignments/' + str(assignment_id) + '/comparisons' + \
@@ -29,6 +34,11 @@ class ComparisonAPITests(ACJAPITestCase):
             'comparisons': [
                 {
                     'criterion_id': self.assignment.criteria[0].id,
+                    'winner_id': winner_id,
+                    'draft': draft
+                },
+                {
+                    'criterion_id': self.assignment.criteria[1].id,
                     'winner_id': winner_id,
                     'draft': draft
                 }
