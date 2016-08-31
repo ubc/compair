@@ -61,10 +61,12 @@ module.run(
     // for creating new account via 3rd-party authentication
     $rootScope.displayCreateUser = function() {
         modalScope.showCreateUserForm = true;
+        modalScope.showACJAccountFieldsCreateUserForm = false;
     };
 
     $rootScope.showLoginWithCreateUser = function() {
         modalScope.allowCreateUser = true;
+        modalScope.showACJAccountFieldsCreateUserForm = true;
         $rootScope.showLogin();
     };
 
@@ -137,10 +139,12 @@ module.controller(
         // update allowCreateUser if needed
         $rootScope.$on(AuthenticationService.LTI_LOGIN_REQUIRED_EVENT, function() {
             $scope.allowCreateUser = true;
+            $scope.showACJAccountFieldsCreateUserForm = true;
         });
 
-        $rootScope.$on(AuthenticationService.AUTH_REQUIRED_EVENT, function() {
+        $rootScope.$on(AuthenticationService.AUTH_LOGIN_REQUIRED_EVENT, function() {
             $scope.showCreateUserForm = true;
+            $scope.showACJAccountFieldsCreateUserForm = false;
         });
 
         $scope.submit = function() {

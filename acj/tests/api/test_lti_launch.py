@@ -886,31 +886,6 @@ class LTILaunchAPITests(ACJAPITestCase):
             lti_user_resource_link = self.lti_data.create_user_resource_link(
                 lti_user, lti_resource_link, CourseRole.instructor)
 
-            # un-linked third party user
-            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
-                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
-                self.assert200(rv)
-
-            third_party_user = auth_data.create_third_party_user()
-            mocked_cas_username.return_value = third_party_user.unique_identifier
-
-            with self.client.get(url, data={}, content_type='application/json', follow_redirects=False) as rv:
-                self.assertRedirects(rv, '/static/index.html#/oauth/create')
-
-            # check session
-            with self.client.session_transaction() as sess:
-                self.assertTrue(sess.get('LTI'))
-
-                # first request for user, oauth_create_user_link should be True
-                self.assertTrue(sess.get('oauth_create_user_link'))
-
-                # check that user is not logged in
-                self.assertIsNone(sess.get('user_id'))
-
-                self.assertTrue(sess.get('CAS_CREATE'))
-                self.assertEqual(third_party_user.unique_identifier, sess.get('CAS_UNIQUE_IDENTIFIER'))
-
-
             # linked third party user (no context id)
             with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
                     user_id=lti_user.user_id, context_id=None, roles=lti_role) as rv:
@@ -938,8 +913,6 @@ class LTILaunchAPITests(ACJAPITestCase):
 
             # check that lti_user is now linked
             self.assertEqual(lti_user.acj_user_id, user.id)
-
-
 
             # create fresh lti_user
             lti_user = self.lti_data.create_user(lti_consumer, system_role)

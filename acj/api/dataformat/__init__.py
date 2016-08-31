@@ -46,7 +46,8 @@ def get_user(restrict_user=True):
         'email': fields.String,
         'fullname': fields.String,
         'modified': fields.DateTime,
-        'system_role': UnwrapSystemRole(attribute='system_role')
+        'system_role': UnwrapSystemRole(attribute='system_role'),
+        'uses_acj_login': fields.Boolean
     }
     unrestricted.update(restricted)
     return unrestricted

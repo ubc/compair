@@ -13,7 +13,8 @@ var userTempalte = {
     "created": "Sat, 27 Dec 2014 20:13:11 -0000",
     "modified": "Sun, 11 Jan 2015 02:55:59 -0000",
     "last_online": "Sun, 11 Jan 2015 02:55:59 -0000",
-    "system_role": null
+    "system_role": null,
+    "uses_acj_login": true
 }
 
 function UserFactory() {};

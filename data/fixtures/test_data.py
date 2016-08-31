@@ -194,6 +194,20 @@ class ThirdPartyAuthTestData:
     def __init__(self):
         self.third_party_users = []
 
+    def create_cas_user_auth(self, type):
+        student_number = None
+        if type == SystemRole.student:
+            student_number = factory.fuzzy.FuzzyText(length=4)
+        user = UserFactory(
+            system_role=type,
+            student_number=student_number,
+            username=None,
+            password=None
+        )
+        third_party_user = self.create_third_party_user(user=user)
+        db.session.commit()
+        return third_party_user
+
     def create_third_party_user(self, **kwargs):
         third_party_user = ThirdPartyUserFactory(
             **kwargs

@@ -11,10 +11,14 @@ module.exports.build = function(browser) {
         'admin/default_fixture': module.exports.buildStorageFixture(require('../fixtures/admin/default_fixture.js')),
         'admin/has_courses_fixture': module.exports.buildStorageFixture(require('../fixtures/admin/has_courses_fixture.js')),
         'admin/has_assignments_fixture': module.exports.buildStorageFixture(require('../fixtures/admin/has_assignments_fixture.js')),
+
+        'instructor/cwl_has_students_fixture': module.exports.buildStorageFixture(require('../fixtures/instructor/cwl_has_students_fixture.js')),
         'instructor/default_fixture': module.exports.buildStorageFixture(require('../fixtures/instructor/default_fixture.js')),
         'instructor/has_students_fixture': module.exports.buildStorageFixture(require('../fixtures/instructor/has_students_fixture.js')),
         'instructor/has_courses_fixture': module.exports.buildStorageFixture(require('../fixtures/instructor/has_courses_fixture.js')),
         'instructor/has_assignments_fixture': module.exports.buildStorageFixture(require('../fixtures/instructor/has_assignments_fixture.js')),
+
+        'student/cwl_default_fixture': module.exports.buildStorageFixture(require('../fixtures/student/cwl_default_fixture.js')),
         'student/default_fixture': module.exports.buildStorageFixture(require('../fixtures/student/default_fixture.js')),
         'student/has_courses_fixture': module.exports.buildStorageFixture(require('../fixtures/student/has_courses_fixture.js')),
         'student/has_assignments_fixture': module.exports.buildStorageFixture(require('../fixtures/student/has_assignments_fixture.js')),
@@ -159,7 +163,8 @@ angular.module('MyApp.services.mock', [])
                 "created": "Sat, 27 Dec 2014 20:13:11 -0000",
                 "modified": "Sun, 11 Jan 2015 02:55:59 -0000",
                 "last_online": "Sun, 11 Jan 2015 02:55:59 -0000",
-                "system_role": null
+                "system_role": null,
+                "uses_acj_login": true
             };
 
             newUser = angular.merge({}, newUser, data);

@@ -15,6 +15,22 @@ var LoginDialog = function() {
         });
     };
 
+    this.skipLogin = function() {
+        return browser.setLocation('/').then(function() {
+            return browser.executeScript(function(fixtureName) {
+                var injector = angular.element(document).injector()
+
+                var storageFixture = injector.get('storageFixture');
+                var AuthenticationService = injector.get('AuthenticationService');
+                var $route = injector.get('$route');
+
+                storageFixture.storage().authenticated = true;
+                AuthenticationService.login();
+                $route.reload();
+            });
+        });
+    };
+
     this.logout = function() {
         element(by.binding('loggedInUser.displayname')).click();
         return element(by.css('li[ng-controller=LogoutController] a')).click();

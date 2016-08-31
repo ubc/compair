@@ -87,7 +87,10 @@ describe('user-module', function () {
                 });
 
                 it('should be correctly initialized', function () {
-                    expect($rootScope.user).toEqual({ 'system_role': 'Student'});
+                    expect($rootScope.user).toEqual({
+                        'uses_acj_login': true,
+                        'system_role': 'Student'
+                    });
                 });
 
                 it('should be able to save new user', function () {

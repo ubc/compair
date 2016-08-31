@@ -92,6 +92,7 @@ module.controller("UserController",
         };
 
         self['new'] = function() {
+            $scope.user.uses_acj_login = true;
             $scope.user.system_role = SystemRole.student;
         };
 

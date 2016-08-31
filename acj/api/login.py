@@ -91,7 +91,7 @@ def auth_cas():
                 unique_identifier=username,
                 third_party_type=ThirdPartyType.cwl
             ) \
-            .first()
+            .one_or_none()
         msg = None
 
         if not thirdpartyuser or not thirdpartyuser.user:
@@ -131,5 +131,8 @@ def authenticate(user):
     # "remember me" functionality is available, do we want to implement?
     user.update_last_online()
     login_user(user) # flask-login store user info
-    current_app.logger.debug("Login successful for: " + user.username)
+    if user.username != None:
+        current_app.logger.debug("Login successful for: " + user.username)
+    else:
+        current_app.logger.debug("Login successful for: user_id = " + str(user.id))
     return get_logged_in_user_permissions()

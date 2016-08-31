@@ -22,7 +22,7 @@ class ThirdPartyUser(DefaultTableMixin, WriteTrackingMixin):
     # table columns
     third_party_type = db.Column(EnumType(ThirdPartyType, name="third_party_type"), nullable=False)
     unique_identifier = db.Column(db.String(255), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
 
     # relationships
     # user via User Model
