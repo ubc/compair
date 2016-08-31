@@ -94,7 +94,13 @@ class LTIAuthAPI(Resource):
                 # set angular route to home page by default
                 angular_route = "/"
 
-            return redirect("/static/index.html#"+angular_route)
+            # clear cookies in case they exist from previous user
+            response = current_app.make_response(redirect("/static/index.html#"+angular_route))
+            response.set_cookie('current.permissions', value='', path='/static')
+            response.set_cookie('current.lti.status', value='', path='/static')
+            response.set_cookie('current.user', value='', path='/static')
+
+            return response
         else:
             display_message = "Invalid Request"
 
