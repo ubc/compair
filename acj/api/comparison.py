@@ -176,8 +176,6 @@ class CompareRootAPI(Resource):
                 comparison.winner_id = comparison_to_update['winner_id']
                 comparison.content = comparison_to_update['content']
 
-            db.session.add(comparison)
-
         db.session.commit()
 
         # update answer scores

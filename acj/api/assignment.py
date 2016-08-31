@@ -15,7 +15,7 @@ from acj.authorization import allow, require
 from acj.models import Assignment, Course, AssignmentCriterion, Answer, Comparison, \
     AnswerComment, AnswerCommentType, PairingAlgorithm
 from .util import new_restful_api, get_model_changes
-from .file import add_new_file, delete_file
+from .file import add_new_file
 
 
 assignment_api = Blueprint('assignment_api', __name__)
@@ -117,7 +117,13 @@ class AssignmentIdAPI(Resource):
 
         pairing_algorithm = params.get("pairing_algorithm")
         check_valid_pairing_algorithm(pairing_algorithm)
-        assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
+        if not assignment.compared:
+            assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
+        elif assignment.pairing_algorithm != PairingAlgorithm(pairing_algorithm):
+            msg = 'The pair selection algorithm cannot be changed in the assignment ' + \
+                    'because it has already been used in an evaluation.'
+            return {"error": msg}, 403
+
         assignment.rank_display_limit = params.get("rank_display_limit", None)
         if assignment.rank_display_limit != None and assignment.rank_display_limit <= 0:
             assignment.rank_display_limit = None
@@ -169,10 +175,9 @@ class AssignmentIdAPI(Resource):
         require(DELETE, assignment)
         formatted_assignment = marshal(assignment, dataformat.get_assignment(False))
         # delete file when assignment is deleted
-        delete_file(assignment.file_id)
         assignment.active = False
-        assignment.file_id = None
-        db.session.add(assignment)
+        if assignment.file:
+            assignment.file.active = False
         db.session.commit()
 
         on_assignment_delete.send(

@@ -107,8 +107,11 @@ def define_authorization(user, they):
 def get_logged_in_user_permissions():
     user = User.query.get(current_user.id)
     require(READ, user)
-    courses = UserCourse.query.filter_by(user_id=current_user.id) \
-        .filter(UserCourse.course_role != CourseRole.dropped).all()
+    courses = UserCourse.query \
+        .filter_by(user_id=current_user.id) \
+        .filter(UserCourse.course_role != CourseRole.dropped) \
+        .all()
+
     admin = user.system_role == SystemRole.sys_admin
     permissions = {}
     models = {

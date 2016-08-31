@@ -258,19 +258,20 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         new_scores = []
         for comparison in comparisons:
             score1 = next((score for score in scores
-                if score.answer_id == answer1_id and
-                score.criterion_id == comparison.criterion_id),
-                None)
+                if score.answer_id == answer1_id and score.criterion_id == comparison.criterion_id),
+                None
+            )
             key1_scored_object = score1.convert_to_scored_object() if score1 != None else ScoredObject(
-                key=answer1_id, score= None, variable1=None, variable2=None,
+                key=answer1_id, score=None, variable1=None, variable2=None,
                 rounds=0, wins=0, opponents=0, loses=0,
             )
 
             score2 = next((score for score in scores
                 if score.answer_id == answer2_id and score.criterion_id == comparison.criterion_id),
-                None)
+                None
+            )
             key2_scored_object = score2.convert_to_scored_object() if score2 != None else ScoredObject(
-                key=answer2_id, score= None, variable1=None, variable2=None,
+                key=answer2_id, score=None, variable1=None, variable2=None,
                 rounds=0, wins=0, opponents=0, loses=0,
             )
 
@@ -279,7 +280,7 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
                 key1_scored_object=key1_scored_object,
                 key2_scored_object=key2_scored_object,
                 winning_key=comparison.winner_id,
-                other_comparison_pairs=[comparison.convert_to_comparison_pair() for comparison in other_comparisons],
+                other_comparison_pairs=[c.convert_to_comparison_pair() for c in other_comparisons],
                 log=current_app.logger
             )
 
