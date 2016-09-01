@@ -270,6 +270,8 @@ module.controller(
                 Session.getUser().then(function(user) {
                     $scope.answer.user_id = user.id
                 });
+                // There isn't a need to submit drafts on behalf of students
+                $scope.answer.draft = false;
             }
         });
 
