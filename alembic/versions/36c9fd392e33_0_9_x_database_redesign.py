@@ -739,21 +739,21 @@ def upgrade():
                 modified=datetime.utcnow(), created=datetime.utcnow()
             )
         )
-    op.rename_table('Activities', 'activity_log')
-
 
     try:
         # expected foreign key to follow naming convensions
-        with op.batch_alter_table('activity_log', naming_convention=convention) as batch_op:
+        with op.batch_alter_table('Activities', naming_convention=convention) as batch_op:
             # drop the fk before altering the column
             batch_op.drop_constraint('fk_activity_log_users_id_Users', 'foreignkey')
             batch_op.drop_constraint('fk_activity_log_courses_id_Courses', 'foreignkey')
     except exc.InternalError:
         # if not, it is likely this name
-        with op.batch_alter_table('activity_log') as batch_op:
+        with op.batch_alter_table('Activities') as batch_op:
             # drop the fk before altering the column
             batch_op.drop_constraint('Activities_ibfk_1', 'foreignkey')
             batch_op.drop_constraint('Activities_ibfk_2', 'foreignkey')
+
+    op.rename_table('Activities', 'activity_log')
 
     # STEP 3: Handle activilty log
     with op.batch_alter_table('activity_log', naming_convention=convention) as batch_op:
