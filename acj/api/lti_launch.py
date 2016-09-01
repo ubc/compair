@@ -110,7 +110,7 @@ class LTIAuthAPI(Resource):
             tool_provider.lti_errormsg = display_message
             return_url = tool_provider.build_return_url()
             if return_url:
-                redirect(return_url)
+                return redirect(return_url)
             else:
                 return display_message, 400
 
