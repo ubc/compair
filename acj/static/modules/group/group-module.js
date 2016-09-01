@@ -99,7 +99,7 @@ module.controller(
         $scope.group = {};
 
         $scope.cancel = function (ret) {
-            $modalInstance.close();
+            $modalInstance.dismiss();
         }
 
         $scope.groupSubmit = function () {
