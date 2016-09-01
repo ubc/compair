@@ -133,7 +133,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-class="{'success': user.selected}" ng-repeat="user in classlist | orderBy:predicate:reverse">
+                <tr ng-class="{'success': user.selected}" ng-repeat="user in classlist | orderBy:predicate:reverse | emptyToEnd:predicate">
                     <td>
                         <a href="#/user/{{user.id}}/edit" target="_blank">
                             Edit
