@@ -752,8 +752,8 @@ def upgrade():
         # if not, it is likely this name
         with op.batch_alter_table('activity_log') as batch_op:
             # drop the fk before altering the column
-            batch_op.drop_constraint('activity_log_ibfk_1', 'foreignkey')
-            batch_op.drop_constraint('activity_log_ibfk_2', 'foreignkey')
+            batch_op.drop_constraint('Activities_ibfk_1', 'foreignkey')
+            batch_op.drop_constraint('Activities_ibfk_2', 'foreignkey')
 
     # STEP 3: Handle activilty log
     with op.batch_alter_table('activity_log', naming_convention=convention) as batch_op:
