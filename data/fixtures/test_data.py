@@ -613,6 +613,10 @@ class TestFixture:
             for student in students:
                 self.enrol_user(student, self.course, CourseRole.student)
 
+        # add dropped student in group
+        dropped_student = UserFactory(system_role=SystemRole.student)
+        self.enrol_user(dropped_student, self.course, CourseRole.dropped, "Group Dropped")
+
         return self
 
     def enrol_user(self, user, course, type, group_name=None):

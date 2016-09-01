@@ -124,6 +124,7 @@ class GroupRootAPI(Resource):
             .distinct() \
             .filter(and_(
                 UserCourse.course_id == course.id,
+                UserCourse.course_role != CourseRole.dropped,
                 UserCourse.group_name != None
             )) \
             .order_by(UserCourse.group_name) \
