@@ -57,7 +57,7 @@ api.add_resource(FileAPI, '')
 class FileIdAPI(Resource):
     @login_required
     def get(self, file_id):
-        uploaded_file = File.query.get_active_or_404(file_id)
+        uploaded_file = File.get_active_or_404(file_id)
 
         on_file_get.send(
             self,
