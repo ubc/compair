@@ -26,7 +26,9 @@
     </p>
     <p class="intro-text" ng-if="!lti_membership_enabled">
         Drop or enrol users&mdash;who are already in the application&mdash;and assign them to groups <strong>below</strong>.
-        To make significant changes to <em>all</em> users in a course at the same time, click <strong>Import Users</strong> above and follow the directions on the next screen.
+        <span ng-if="canManageUsers">
+            To make significant changes to <em>all</em> users in a course at the same time, click <strong>Import Users</strong> above and follow the directions on the next screen.
+        </span>
     </p>
     <h2 >Enrolled in {{course_name}}</h2>
     <hr />
@@ -131,7 +133,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-class="{'success': user.selected}" ng-repeat="user in classlist | orderBy:predicate:reverse">
+                <tr ng-class="{'success': user.selected}" ng-repeat="user in classlist | orderBy:predicate:reverse | emptyToEnd:predicate">
                     <td>
                         <a href="#/user/{{user.id}}/edit" target="_blank">
                             Edit

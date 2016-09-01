@@ -57,6 +57,7 @@ gulp.task('prod_minify_js', function() {
     return gulp.src([
         './acj/static/acj-config.js',
         './acj/static/modules/**/*-module.js',
+        './acj/static/modules/**/*-directive.js',
         './acj/static/modules/**/*-directives.js',
         './acj/static/modules/**/*-service.js',
         './acj/static/modules/common/pdf.js',
