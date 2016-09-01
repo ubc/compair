@@ -739,13 +739,13 @@ def upgrade():
                 modified=datetime.utcnow(), created=datetime.utcnow()
             )
         )
-
+    # STEP 3: Handle activilty log
     try:
         # expected foreign key to follow naming convensions
         with op.batch_alter_table('Activities', naming_convention=convention) as batch_op:
             # drop the fk before altering the column
-            batch_op.drop_constraint('fk_activity_log_users_id_Users', 'foreignkey')
-            batch_op.drop_constraint('fk_activity_log_courses_id_Courses', 'foreignkey')
+            batch_op.drop_constraint('fk_Activities_users_id_Users', 'foreignkey')
+            batch_op.drop_constraint('fk_Activities_courses_id_Courses', 'foreignkey')
     except exc.InternalError:
         # if not, it is likely this name
         with op.batch_alter_table('Activities') as batch_op:
@@ -755,7 +755,6 @@ def upgrade():
 
     op.rename_table('Activities', 'activity_log')
 
-    # STEP 3: Handle activilty log
     with op.batch_alter_table('activity_log', naming_convention=convention) as batch_op:
         # alter columns
         batch_op.alter_column('users_id', new_column_name='user_id', nullable=True, existing_type=sa.Integer)
@@ -766,7 +765,7 @@ def upgrade():
         batch_op.create_foreign_key('fk_activity_log_user_id_user', 'user', ['user_id'], ['id'], ondelete="SET NULL")
         batch_op.create_foreign_key('fk_activity_log_course_id_course', 'course', ['course_id'], ['id'], ondelete="SET NULL")
 
-    # STEP 3: Drop old tables
+    # STEP 4: Drop old tables
     op.drop_table('CriteriaAndCourses')
     op.drop_table('LTIInfo')
     op.drop_table('AnswersAndComments')
