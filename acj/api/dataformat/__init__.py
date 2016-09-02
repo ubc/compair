@@ -33,8 +33,8 @@ def get_user(restrict_user=True):
         'id': fields.Integer,
         'displayname': fields.String,
         'avatar': fields.String,
-        'last_online': fields.DateTime,
-        'created': fields.DateTime
+        'last_online': fields.DateTime(dt_format='iso8601'),
+        'created': fields.DateTime(dt_format='iso8601')
     }
     if restrict_user:
         return restricted
@@ -45,7 +45,7 @@ def get_user(restrict_user=True):
         'lastname': fields.String,
         'email': fields.String,
         'fullname': fields.String,
-        'modified': fields.DateTime,
+        'modified': fields.DateTime(dt_format='iso8601'),
         'system_role': UnwrapSystemRole(attribute='system_role'),
         'uses_acj_login': fields.Boolean
     }
@@ -68,12 +68,12 @@ def get_course(include_details=True):
         'year': fields.Integer,
         'term': fields.String,
         'description': fields.String,
-        'start_date': fields.DateTime,
-        'end_date': fields.DateTime,
+        'start_date': fields.DateTime(dt_format='iso8601'),
+        'end_date': fields.DateTime(dt_format='iso8601'),
         'available': fields.Boolean,
         'lti_linked': fields.Boolean,
-        'modified': fields.DateTime,
-        'created': fields.DateTime
+        'modified': fields.DateTime(dt_format='iso8601'),
+        'created': fields.DateTime(dt_format='iso8601')
     }
 
 def get_criterion():
@@ -84,8 +84,8 @@ def get_criterion():
         'user_id': fields.Integer,
         'default': fields.Boolean,
         'compared': fields.Boolean,
-        'modified': fields.DateTime,
-        'created': fields.DateTime
+        'modified': fields.DateTime(dt_format='iso8601'),
+        'created': fields.DateTime(dt_format='iso8601')
     }
     return data_format
 
@@ -105,10 +105,10 @@ def get_assignment(restrict_user=True):
         'criteria': fields.List(fields.Nested(get_criterion())),
         'file': fields.Nested(get_file(), allow_null=True),
 
-        'answer_start': fields.DateTime,
-        'answer_end': fields.DateTime,
-        'compare_start': fields.DateTime,
-        'compare_end': fields.DateTime,
+        'answer_start': fields.DateTime(dt_format='iso8601'),
+        'answer_end': fields.DateTime(dt_format='iso8601'),
+        'compare_start': fields.DateTime(dt_format='iso8601'),
+        'compare_end': fields.DateTime(dt_format='iso8601'),
         'available': fields.Boolean,
 
         'students_can_reply': fields.Boolean,
@@ -130,8 +130,8 @@ def get_assignment(restrict_user=True):
 
         'user': get_partial_user(restrict_user),
 
-        'modified': fields.DateTime,
-        'created': fields.DateTime
+        'modified': fields.DateTime(dt_format='iso8601'),
+        'created': fields.DateTime(dt_format='iso8601')
     }
 
     return ret
@@ -156,7 +156,7 @@ def get_answer(restrict_user=True):
         'public_comment_count': fields.Integer,
 
         'user': get_partial_user(restrict_user),
-        'created': fields.DateTime
+        'created': fields.DateTime(dt_format='iso8601')
     }
 
     return ret
@@ -171,7 +171,7 @@ def get_assignment_comment(restrict_user=True):
         'content': fields.String,
 
         'user': get_partial_user(restrict_user),
-        'created': fields.DateTime,
+        'created': fields.DateTime(dt_format='iso8601'),
     }
 
     return ret
@@ -189,7 +189,7 @@ def get_answer_comment(restrict_user=True):
         'draft': fields.Boolean,
 
         'user': get_partial_user(restrict_user),
-        'created': fields.DateTime,
+        'created': fields.DateTime(dt_format='iso8601'),
     }
 
     return ret
@@ -217,7 +217,7 @@ def get_comparison(restrict_user=True, with_answers=True):
         'criterion': fields.Nested(get_criterion()),
 
         'user': get_partial_user(restrict_user),
-        'created': fields.DateTime
+        'created': fields.DateTime(dt_format='iso8601')
     }
 
     if with_answers:
@@ -235,8 +235,8 @@ def get_comparison_example(with_answers=True):
         'assignment_id': fields.Integer,
         'answer1_id': fields.Integer,
         'answer2_id': fields.Integer,
-        'modified': fields.DateTime,
-        'created': fields.DateTime
+        'modified': fields.DateTime(dt_format='iso8601'),
+        'created': fields.DateTime(dt_format='iso8601')
     }
 
     if with_answers:
@@ -267,7 +267,7 @@ def get_comparison_set(restrict_user=True):
         'answer1_feedback': fields.List(fields.Nested(get_answer_comment(restrict_user))),
         'answer2_feedback': fields.List(fields.Nested(get_answer_comment(restrict_user))),
         'self_evaluation': fields.List(fields.Nested(get_answer_comment(restrict_user))),
-        'created': fields.DateTime
+        'created': fields.DateTime(dt_format='iso8601')
     }
 
     return ret
