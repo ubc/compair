@@ -335,6 +335,7 @@ module.controller(
 
         $scope.enrolSubmit = function() {
             $scope.submitted = true;
+            $scope.user.course_role = $scope.course_role;
             ClassListResource.enrol({'courseId': courseId, 'userId': $scope.user.id}, $scope.user,
                 function (ret) {
                     $scope.submitted = false;
