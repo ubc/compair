@@ -55,12 +55,16 @@ class GradebookAPI(Resource):
         student_ids = [student.id for student in students]
 
         # get students comparisons counts for this assignment
-        comparisons = User.query. \
-            with_entities(User.id, func.count(Comparison.id).label('compare_count')). \
-            join("comparisons"). \
-            filter(Comparison.assignment_id == assignment_id).\
-            filter(User.id.in_(student_ids)).\
-            group_by(User.id).all()
+        comparisons = User.query \
+            .with_entities(User.id, func.count(Comparison.id).label('compare_count')) \
+            .join("comparisons") \
+            .filter(and_(
+                Comparison.assignment_id == assignment_id,
+                Comparison.completed == True,
+                User.id.in_(student_ids)
+            )) \
+            .group_by(User.id) \
+            .all()
 
         # we want only the count for comparisons by current students in the course
         num_comparisons_per_student = {user_id: int(compare_count/assignment.criteria_count)
