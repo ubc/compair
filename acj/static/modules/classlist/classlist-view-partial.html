@@ -1,104 +1,172 @@
 <div ng-controller="ClassViewController" class="manage-screen">
-	
-	<div class="row">	
-		<header class="col-md-6">
-			<h1><i class="fa fa-users"></i> Manage Users</h1>
-		</header>
-		<div class="col-md-6 sub-nav">
-			<a ng-href="#/course/{{courseId}}/user/import" class="btn btn-primary">
-				<i class="fa fa-upload"></i>
-				Import Users
-			</a>
-            <a href="" class="btn btn-primary" ng-click="export()">
-                <i class="fa fa-download"></i>
-                Export Users
-            </a>
-			<a ng-href="#/course/{{courseId}}/user/group/import" class="btn btn-primary">
-				<i class="fa fa-list-ul"></i>
-				Assign Groups
-			</a>
-			<!-- TO DO: button should compile the CSV file -->
-			<!-- <a href="" class="btn btn-primary">
-				<i class="fa fa-download"></i>
-				Export Users
-			</a> -->
-		</div>
-	</div>
-	
-	<p class="intro-text">Drop or enrol individual users&mdash;who are already in the application&mdash;and assign groups to individual users below. To create, drop, or enrol multiple users in a course at the same time, click Import Users above. To assign groups to multiple users in a course at the same time, click Assign Groups above.</p>
-	
-	<h2 >Enrolled in {{course_name}}</h2>
-	<hr />
 
-	<div class="row">
-		<h3 class="col-md-2">{{ classlist.length }} Users</h3>
-		<div class="col-md-10">
-			<ng-include src="'modules/classlist/classlist-enrol-partial.html'"></ng-include>
-		</div>
-	</div>
+    <div class="row">
+        <header class="col-md-6">
+            <h1><i class="fa fa-users"></i> Manage Users</h1>
+        </header>
+        <div class="col-md-6 sub-nav">
+            <span ng-show="canManageUsers">
+                <a ng-href="#/course/{{courseId}}/user/import" class="btn btn-primary">
+                    <i class="fa fa-download"></i>
+                    Import Users
+                </a>
+                <a href="" class="btn btn-primary" ng-click="export()">
+                    <i class="fa fa-upload"></i>
+                    Export Users
+                </a>
+                <!-- <a ng-href="#/course/{{courseId}}/user/group/import" class="btn btn-primary">
+                    <i class="fa fa-list-ul"></i>
+                    Assign Groups
+                </a> -->
+            </span>
+        </div>
+    </div>
+    <p class="intro-text" ng-if="lti_membership_enabled">
+        Your class list is managed externally. To update the list automatically, click <strong>Refresh List</strong> below.
+    </p>
+    <p class="intro-text" ng-if="!lti_membership_enabled">
+        Drop or enrol users&mdash;who are already in the application&mdash;and assign them to groups <strong>below</strong>.
+        <span ng-if="canManageUsers">
+            To make significant changes to <em>all</em> users in a course at the same time, click <strong>Import Users</strong> above and follow the directions on the next screen.
+        </span>
+    </p>
+    <h2 >Enrolled in {{course_name}}</h2>
+    <hr />
 
-	<div class="table-responsive">
-		<table class="table table-striped">
-			<thead>
-				<tr class>
-					<th>Actions</th>
-					<th>
-						<a href="" ng-click="reverse = predicate == 'user.firstname' && !reverse; predicate = 'user.firstname'">
-							First Name</a>
-					</th>
-					<th>
-						<a href="" ng-click="reverse = predicate == 'user.lastname' && !reverse; predicate = 'user.lastname'">
-							Last Name</a>
-					</th>
-					<th>
-						<a href="" ng-click="reverse = predicate == 'user.student_no' && ! reverse; predicate = 'user.student_no'">
-							Student Number</a>
-					</th>
-					<th>
-						<a href="" ng-click="reverse = predicate == 'user.displayname' && !reverse; predicate = 'user.displayname'">
-							Display Name</a>
-					</th>
-					<th>
-						<a href="" ng-click="reverse = predicate == 'user.email' && !reverse; predicate = 'user.email'">
-							Email</a>
-					</th>
-					<th>
-						<a href="" ng-click="reverse = predicate == 'course_role' && !reverse; predicate = 'course_role'">
-							Course Role</a>
-					</th>
-					<th ng-if="groups.length > 0">Group</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr ng-repeat="user in classlist | orderBy:predicate:reverse">
+    <div class="row">
+        <h3 class="col-md-2">{{ classlist.length + lti_membership_pending }} Users</h3>
+        <div class="col-md-10">
+            <div ng-show="lti_membership_enabled" class="text-right">
+                <a id="lti_refresh_btn" ng-click="updateLTIMembership()" class="btn btn-success" ng-disabled="submitted">
+                    Refresh List
+                </a>
+            </div>
+            <div ng-show="!lti_membership_enabled">
+                <ng-include src="'modules/classlist/classlist-enrol-partial.html'"></ng-include>
+            </div>
+        </div>
+    </div>
+    <p class="alert alert-info" ng-show="lti_membership_pending > 0">
+        <i class="glyphicon glyphicon-info-sign"></i> Currently, <strong>{{lti_membership_pending}} user<span ng-show="lti_membership_pending != 1">s</span></strong> are pending registration (registered in your external course but not yet in ComPAIR).
+    </p>
+
+    <hr />
+
+    <div class="row" ng-show="classlist.length > 0">
+	    <div class="col-sm-3 form-group">
+			<select class="form-control" ng-model="bulkActions" ng-init="bulkActions = 'none'">
+				<option value="none">- select bulk action -</option>
+				<option value="add">Add Selected Users to a Group</option>
+				<option value="drop">Drop Selected Users</option>
+				<option value="update">Update Role for Selected Users</option>
+			</select>
+	    </div>
+	    <div class="col-sm-9" ng-show="bulkActions == 'add'">
+			<div class="col-sm-3">
+				<button id="add-new-group" href="" class="btn btn-small btn-default" ng-click="addUsersToNewGroup()">Create New</button>
+			</div>
+			<div class="col-sm-2">
+				OR
+			</div>
+			<div class="form-group col-sm-4">
+				<select id="select-group" class="form-control" ng-model="selectedGroup"
+					ng-options="g as g for g in groups" ng-disabled="!groups.length">
+					<option value="">- select existing group -</option>
+				</select>
+			</div>
+			<div class="col-sm-3">
+				<button id="add-select-group" class="btn btn-small btn-success" ng-click="addUsersToGroup(selectedGroup)"
+					ng-disabled="!selectedGroup">Apply</button>
+			</div>
+	    </div>
+	    <div class="col-sm-9" ng-show="bulkActions == 'drop'">
+			<div class="col-sm-2">
+				<button id="drop-users" href="" class="btn btn-small btn-success" ng-click="updateUsers()" confirmation-needed keyword="group of users">Apply</button>
+			</div>
+	    </div>
+	    <div class="col-sm-9" ng-show="bulkActions == 'update'">
+			<div class="form-group col-sm-6">
+				<select id="select-group" class="form-control" ng-model="selectedCourseRole"
+					ng-options="course_role as course_role for course_role in course_roles">
+				    <option value="">- select new role -</option>
+				</select>
+			</div>
+			<div class="col-sm-3">
+				<button id="add-select-group" class="btn btn-small btn-success" ng-click="updateUsers(selectedCourseRole)"
+				      ng-disabled="!selectedCourseRole">Apply</button>
+			</div>
+	    </div>
+    </div>
+
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Actions</th>
+                    <th><input type="checkbox" ng-model="selectedAll" ng-click="selectAll()" /></th>
+                    <th>
+                        <a href="" ng-click="reverse = predicate == 'firstname' && !reverse; predicate = 'firstname'">
+                            First Name</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="reverse = predicate == 'lastname' && !reverse; predicate = 'lastname'">
+                            Last Name</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="reverse = predicate == 'student_number' && ! reverse; predicate = 'student_number'">
+                            Student Number</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="reverse = predicate == 'displayname' && !reverse; predicate = 'displayname'">
+                            Display Name</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="reverse = predicate == 'email' && !reverse; predicate = 'email'">
+                            Email</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="reverse = predicate == 'course_role' && !reverse; predicate = 'course_role'">
+                            Course Role</a>
+                    </th>
+                    <th ng-if="groups.length > 0">Group</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-class="{'success': user.selected}" ng-repeat="user in classlist | orderBy:[predicate, 'firstname', 'lastname'] | emptyToEnd:predicate | orderBy:'':reverse">
+                    <td>
+                        <a href="#/user/{{user.id}}/edit" target="_blank">
+                            Edit
+                        </a>
+                        &nbsp;|&nbsp;
+                        <a href="" confirmation-needed ng-click="unenrol(user.id)" keyword="user" ng-if="loggedInUserId != user.id">
+                            Drop
+                        </a>
+                        <span ng-if="loggedInUserId == user.id" class="text-muted">&mdash;  &nbsp; &nbsp;</span>
+						<span>&nbsp;|&nbsp;</span>
+					</td>
 					<td>
-						<a href="#/user/{{user.id}}/edit" target="_blank">
-							Edit
-						</a>
-						&nbsp;|&nbsp;
-						<a href="" confirmation-needed ng-click="unenrol(user.id)" keyword="user">
-							Drop
-						</a>
-					</td>
-					<td>{{user.firstname}}</td>
-					<td>{{user.lastname}}</td>
-					<td>{{user.student_no}}</td>
-					<td><a ng-href="#/user/{{user.id}}">{{user.displayname}}</a></td>
-					<td>{{user.email}}</td>
-					<td>
-						<select ng-if="loggedInUserId != user.id" ng-model="user.course_role" ng-options="r.name as r.name for r in roles"
-								ng-change="enrol(user, user.course_role)"></select>
-						<span ng-if="loggedInUserId == user.id">{{ user.course_role }}</span>
-					</td>
-					<td ng-if="groups.length > 0">
-						<select ng-model="user.group_id" ng-options="g.id as g.name for g in groups"
-								ng-change="update(user.id, user.group_id)">
-							<option value="">- None -</option>
-						</select>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-	</div>
-	
+                        <input ng-click="user.selected = !user.selected; checkIfAllSelected()" type="checkbox" ng-checked="user.selected">
+                    </td>
+                    <td>{{user.firstname}}</td>
+                    <td>{{user.lastname}}</td>
+                    <td>{{user.student_number}}</td>
+                    <td><a ng-href="#/user/{{user.id}}">{{user.displayname}}</a></td>
+                    <td>{{user.email}}</td>
+                    <td>
+                        <select ng-if="loggedInUserId != user.id" ng-model="user.course_role"
+                                ng-options="course_role as course_role for course_role in course_roles"
+                                ng-change="enrol(user)"></select>
+                        <span ng-if="loggedInUserId == user.id">{{ user.course_role }}</span>
+                    </td>
+                    <td ng-if="groups.length > 0">
+                        <select ng-model="user.group_name" ng-options="g as g for g in groups"
+                                ng-change="update(user.id, user.group_name)">
+                            <option value="">- None -</option>
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>

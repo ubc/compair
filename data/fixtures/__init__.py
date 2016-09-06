@@ -4,47 +4,30 @@
 from datetime import datetime, timedelta
 import random
 
-from acj.models import UserTypesForCourse, UserTypesForSystem, SelfEvaluationTypes, Criteria
-from data.factories import UsersFactory, UserTypesForCourseFactory, UserTypesForSystemFactory, CriteriaFactory, \
-    CoursesFactory, CoursesAndUsersFactory, PostsFactory, PostsForQuestionsFactory, PostsForAnswersFactory, \
-    CriteriaAndCoursesFactory, CriteriaAndPostsForQuestionsFactory, \
-    SelfEvaluationTypesFactory
+from acj.models import SystemRole, CourseRole, Criterion
+from data.factories import UserFactory, CriterionFactory, \
+    CourseFactory, UserCourseFactory, AssignmentFactory, AnswerFactory, \
+    AssignmentCriterionFactory
 
 
 class DefaultFixture(object):
-    COURSE_ROLE_DROP = None
-    COURSE_ROLE_INSTRUCTOR = None
-    COURSE_ROLE_TA = None
-    COURSE_ROLE_STUDENT = None
-
-    SYS_ROLE_NORMAL = None
-    SYS_ROLE_INSTRUCTOR = None
-    SYS_ROLE_ADMIN = None
     ROOT_USER = None
-
-    DEFAULT_CRITERIA = None
-    TYPE_COMPARE_NO = None
+    DEFAULT_CRITERION = None
 
     def __init__(self):
-        DefaultFixture.COURSE_ROLE_DROP = UserTypesForCourseFactory(name=UserTypesForCourse.TYPE_DROPPED)
-        DefaultFixture.COURSE_ROLE_INSTRUCTOR = UserTypesForCourseFactory(name=UserTypesForCourse.TYPE_INSTRUCTOR)
-        DefaultFixture.COURSE_ROLE_TA = UserTypesForCourseFactory(name=UserTypesForCourse.TYPE_TA)
-        DefaultFixture.COURSE_ROLE_STUDENT = UserTypesForCourseFactory(name=UserTypesForCourse.TYPE_STUDENT)
+        DefaultFixture.ROOT_USER = UserFactory(
+            username='root',
+            password='password',
+            displayname='root',
+            system_role=SystemRole.sys_admin
+        )
 
-        DefaultFixture.SYS_ROLE_NORMAL = UserTypesForSystemFactory(name=UserTypesForSystem.TYPE_NORMAL)
-        DefaultFixture.SYS_ROLE_INSTRUCTOR = UserTypesForSystemFactory(name=UserTypesForSystem.TYPE_INSTRUCTOR)
-        DefaultFixture.SYS_ROLE_ADMIN = UserTypesForSystemFactory(name=UserTypesForSystem.TYPE_SYSADMIN)
-        DefaultFixture.ROOT_USER = UsersFactory(
-            username='root', password='password', displayname='root',
-            usertypeforsystem=DefaultFixture.SYS_ROLE_ADMIN)
-
-        name = "Which is better?"
-        description = "<p>Choose the response that you think is the better of the two.</p>"
-        public = True
-        DefaultFixture.DEFAULT_CRITERIA = CriteriaFactory(name=name, description=description, public=public,
-                                                          user=DefaultFixture.ROOT_USER)
-
-        DefaultFixture.TYPE_COMPARE_NO = SelfEvaluationTypesFactory(name=SelfEvaluationTypes.TYPE_COMPARE_NO)
+        DefaultFixture.DEFAULT_CRITERION = CriterionFactory(
+            name="Which is better?",
+            description="<p>Choose the response that you think is the better of the two.</p>",
+            public=True,
+            user=DefaultFixture.ROOT_USER
+        )
 
 
 class SampleDataFixture(object):
@@ -55,68 +38,56 @@ class SampleDataFixture(object):
 
     def __init__(self):
         # initialize with default values in cases of DefaultFixture being unavailable
-        DEFAULT_CRITERIA = DefaultFixture.DEFAULT_CRITERIA if DefaultFixture.DEFAULT_CRITERIA else \
-            Criteria.query.filter_by(name="Which is better?").first()
-
-        SYS_ROLE_INSTRUCTOR = DefaultFixture.SYS_ROLE_INSTRUCTOR if DefaultFixture.SYS_ROLE_INSTRUCTOR else \
-            UserTypesForSystem.query.filter_by(name=UserTypesForSystem.TYPE_INSTRUCTOR).first()
-        SYS_ROLE_NORMAL = DefaultFixture.SYS_ROLE_NORMAL if DefaultFixture.SYS_ROLE_NORMAL else \
-            UserTypesForSystem.query.filter_by(name=UserTypesForSystem.TYPE_NORMAL).first()
-
-        COURSE_ROLE_INSTRUCTOR = DefaultFixture.COURSE_ROLE_INSTRUCTOR if DefaultFixture.COURSE_ROLE_INSTRUCTOR else \
-            UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_INSTRUCTOR).first()
-        COURSE_ROLE_STUDENT = DefaultFixture.COURSE_ROLE_STUDENT if DefaultFixture.COURSE_ROLE_STUDENT else \
-            UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_STUDENT).first()
+        DEFAULT_CRITERION = DefaultFixture.DEFAULT_CRITERION if DefaultFixture.DEFAULT_CRITERION else \
+            Criterion.query.filter_by(name="Which is better?").first()
 
         # create courses
         self.courses = []
         for course_name in self.COURSE_NAMES:
-            course = CoursesFactory(name=course_name, description=course_name + " Course Description")
+            course = CourseFactory(name=course_name, description=course_name + " Course Description")
             self.courses.append(course)
-        # insert default criteria into each course
-        for course in self.courses:
-            CriteriaAndCoursesFactory(criterion=DEFAULT_CRITERIA, course=course)
         # create instructors
         for instructor_name in self.INSTRUCTOR_NAMES:
-            self.instructor = UsersFactory(username=instructor_name,
-                                           usertypeforsystem=SYS_ROLE_INSTRUCTOR)
+            self.instructor = UserFactory(username=instructor_name,
+                                           system_role=SystemRole.instructor)
         # create students
         self.students = []
         for student_name in self.STUDENT_NAMES:
-            student = UsersFactory(username=student_name,
-                                   usertypeforsystem=SYS_ROLE_NORMAL)
+            student = UserFactory(username=student_name,
+                                   system_role=SystemRole.student)
             self.students.append(student)
-        # enrol students and instructor in half of the courses, also create questions and answers
+        # enrol students and instructor in half of the courses, also create assignments and answers
         skip = True
         generator = TechnobabbleGenerator()
-        content = "This is some place holder content for this question. Yay!"
+        content = "This is some place holder content for this assignment. Yay!"
         for course in self.courses:
             skip = not skip
             if skip:
                 continue
             # enrol instructor
-            CoursesAndUsersFactory(user=self.instructor, course=course,
-                                   usertypeforcourse=COURSE_ROLE_INSTRUCTOR)
+            UserCourseFactory(user=self.instructor, course=course,
+                              course_role=CourseRole.instructor)
             # enrol students
             for student in self.students:
-                CoursesAndUsersFactory(user=student, course=course,
-                                       usertypeforcourse=COURSE_ROLE_STUDENT)
-            # create 5 questions by the instructor
+                UserCourseFactory(user=student, course=course,
+                                  course_role=CourseRole.student)
+
+            # create 5 assignments by the instructor
             for i in range(5):
                 minutes = random.randint(0, 59)
                 created = datetime.utcnow() - timedelta(days=1, minutes=minutes)
-                post = PostsFactory(course=course, user=self.instructor,
-                                    content=content, created=created)
-                postforquestion = PostsForQuestionsFactory(post=post, title=generator.get_question())
-                # insert default criteria into question
-                CriteriaAndPostsForQuestionsFactory(criterion=DEFAULT_CRITERIA, question=postforquestion)
-                # create answers by each student for this question
+                assignment = AssignmentFactory(course=course,
+                    user=self.instructor, content=content, created=created,
+                    name=generator.get_assignment())
+                # insert default criterion into assignment
+                AssignmentCriterionFactory(criterion=DEFAULT_CRITERION, assignment=assignment)
+                # create answers by each student for this assignment
                 for student in self.students:
                     minutes = random.randint(0, 59)
                     created = datetime.utcnow() - timedelta(minutes=minutes)
-                    post = PostsFactory(course=course, user=student, content=generator.get_answer(),
-                                        created=created)
-                    PostsForAnswersFactory(post=post, question=postforquestion)
+                    AnswerFactory(course=course,
+                        user=student, content=generator.get_answer(),
+                        created=created, assignment=assignment)
 
 
 class TechnobabbleGenerator:
@@ -139,9 +110,9 @@ class TechnobabbleGenerator:
                'distortion', 'collectors', 'dampeners', 'conduit', 'event horizon',
                'singularity']
 
-    # Questions take the form of:
+    # assignments take the form of:
     # adverb, auxiliary verb, subject, main verb, adjective, object
-    def get_question(self):
+    def get_assignment(self):
         sentence = random.choice(self.ADVERBS) + " " + random.choice(self.AUXVERBS) + " " + \
                    random.choice(self.SUBJECTS) + " " + random.choice(self.MAINVERBS) + " the " + \
                    random.choice(self.ADJECTIVES) + " " + random.choice(self.OBJECTS) + "?"

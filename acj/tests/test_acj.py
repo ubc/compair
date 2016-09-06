@@ -2,6 +2,7 @@ from contextlib import contextmanager
 import copy
 import json
 import unittest
+import mock
 
 from flask.ext.testing import TestCase
 from os.path import dirname
@@ -12,7 +13,8 @@ from acj import create_app
 from acj.manage.database import populate
 from acj.core import db
 from acj.tests import test_app_settings
-
+from lti import ToolConsumer
+from lti.utils import parse_qs
 
 # Tests Checklist
 # - Unauthenticated users refused access with 401
@@ -65,6 +67,7 @@ class ACJTestCase(TestCase):
     def create_app(self):
         app = create_app(settings_override=test_app_settings)
         app.test_client_class = RecordableClient
+        app.config['LTI_ENFORCE_SSL'] = False
         return app
 
     def setUp(self):
@@ -90,6 +93,38 @@ class ACJAPITestCase(ACJTestCase):
         self.assert200(rv)
         yield rv
         self.client.delete('/api/logout', follow_redirects=True)
+
+    @contextmanager
+    def cas_login(self, cas_username):
+        with mock.patch('flask.ext.cas.CAS.username', new_callable=mock.PropertyMock) as mocked_cas_username:
+            mocked_cas_username.return_value = cas_username
+            rv = self.client.get('/api/auth/cas', data={}, content_type='application/json', follow_redirects=True)
+            self.assert200(rv)
+            yield rv
+            self.client.delete('/api/logout', follow_redirects=True)
+
+    @contextmanager
+    def lti_launch(self, lti_consumer, lti_resource_link_id,
+                         assignment_id=None, nonce=None, timestamp=None, follow_redirects=True,
+                         **kwargs):
+        launch_params = kwargs.copy()
+        launch_params['resource_link_id'] = lti_resource_link_id
+        if assignment_id:
+            launch_params['custom_assignment'] = assignment_id
+
+        tool_consumer = ToolConsumer(
+            lti_consumer.oauth_consumer_key,
+            lti_consumer.oauth_consumer_secret,
+            params=launch_params,
+            #launch_url not actually used. Just needed for validation
+            launch_url='http://localhost/api/lti/auth'
+        )
+
+        launch_request = tool_consumer.generate_launch_request(nonce=nonce, timestamp=timestamp)
+        lauch_data = parse_qs(launch_request.body.decode('utf-8'))
+        rv = self.client.post('/api/lti/auth', data=lauch_data, follow_redirects=follow_redirects)
+        yield rv
+        rv.close()
 
     def get_url(self, **values):
         return self.api.url_for(self.resource, **values)
@@ -144,6 +179,3 @@ class RecordableClient(FlaskClient):
                 json.dump(data, f, indent=4)
 
         return response
-
-if __name__ == '__main__':
-    unittest.main()

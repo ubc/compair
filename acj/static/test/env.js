@@ -1,9 +1,10 @@
- // Common configuration files with defaults plus overrides from environment vars
+// Common configuration files with defaults plus overrides from environment vars
+var webServerDefaultHost = 'localhost';
 var webServerDefaultPort = 8080;
 
 module.exports = {
   // The address of a running selenium server.
-  seleniumAddress: 
+  seleniumAddress:
     (process.env.SELENIUM_URL || 'http://localhost:4444/wd/hub'),
 
   // Capabilities to be passed to the webdriver instance.
@@ -19,7 +20,7 @@ module.exports = {
 
   // A base URL for your application under test.
   baseUrl:
-    'http://' + (process.env.HTTP_HOST || 'localhost') +
+    'http://' + (process.env.HTTP_HOST || webServerDefaultHost) +
           ':' + (process.env.HTTP_PORT || webServerDefaultPort)
 
 };

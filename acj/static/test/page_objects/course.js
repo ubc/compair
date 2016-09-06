@@ -1,15 +1,18 @@
-var env = require('../env.js');
-
 var CoursePage = function() {
-	var addAssignmentButton = element(by.css('#add-question-btn'));
+    this.getLocation = function(courseId) {
+        return 'course/' + courseId;
+    };
 
-	this.get = function(courseId) {
-		return browser.get(env.baseUrl + '#/course/' + courseId);
-	};
-
-	this.addAssignment = function() {
-		return addAssignmentButton.click();
-	};
+    this.clickButton = function(button) {
+        switch (button) {
+            case "Add Assignment":
+                return element(by.css('#add-assignment-btn')).click();
+            case "Edit Course":
+                return element(by.css('#edit-course-btn')).click();
+            case "Manage Users":
+                return element(by.css('#manage-users-btn')).click();
+        }
+    }
 };
 
 module.exports = CoursePage;

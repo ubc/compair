@@ -1,16 +1,25 @@
 (function() {
 
-    var module = angular.module('ubc.ctlt.acj.session', ['ngResource', 'ngCookies', 'ubc.ctlt.acj.user']);
+    var module = angular.module('ubc.ctlt.acj.session', [
+        'ngResource',
+        'ngCookies',
+        'ubc.ctlt.acj.user'
+    ]);
 
     /**
      * Session Service manages the session data for the frontend
      * It retrieves the user information and permissions from backend if they are not
      * available. Otherwise, provides the information from local cached values.
      */
-    module.factory('Session', function ($http, $q, $cookies, $log, UserResource) {
+    module.factory('Session',
+            ["$rootScope",  "$http", "$q", "$cookies", "$log", "UserResource",
+            function ($rootScope, $http, $q, $cookies, $log, UserResource) {
+        var PERMISSION_REFRESHED_EVENT = "event:Session-refreshPermissions";
+
         return {
             _user: new UserResource,
             _permissions: null,
+            PERMISSION_REFRESHED_EVENT: PERMISSION_REFRESHED_EVENT,
             /**
              * Get user object from Session. The user is loaded from local cache if
              * it's already received from remote. Otherwise, it issues API calls.
@@ -78,6 +87,7 @@
                     .then(function (result) {
                         scope._permissions = result.data;
                         $cookies.putObject('current.permissions', scope._permissions);
+                        $rootScope.$broadcast(PERMISSION_REFRESHED_EVENT);
                         return scope._permissions;
                     });
             },
@@ -98,17 +108,30 @@
                 this._permissions = null;
                 $cookies.remove('current.user');
                 $cookies.remove('current.permissions');
+                $cookies.remove('current.lti.status');
             },
-			refresh: function() {
-				var scope = this;
-				return $http.get('/api/session/permission')
-                    .then(function (result) {
-						scope._permissions = result.data;
-						$cookies.putObject('current.permissions', result.data);
-						return true;
+            refresh: function() {
+                var scope = this;
+                var deferred = $q.defer();
+                return $http.get('/api/session', { cache:true }).then(function (result) {
+                    // retrieve logged in user's information
+                    // return a promise for chaining
+                    var u = UserResource.get({"id": result.data.id}, function(user) {
+                        $cookies.putObject('current.user', user);
+                        angular.extend(scope._user, user);
+                        deferred.resolve(scope._user);
                     });
-			}
+                    angular.extend(scope._user, u);
+                    scope._permissions = result.data.permissions;
+                    $cookies.putObject('current.permissions', scope._permissions);
+                    return deferred.promise;
+                });
+            },
+            expirePermissions: function() {
+                this._permissions = null;
+                $cookies.remove('current.permissions');
+            }
         };
-    });
+    }]);
 
 })();

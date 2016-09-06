@@ -7,104 +7,125 @@
 (function() {
 
 var module = angular.module('ubc.ctlt.acj.user', [
-	'ngResource', 'ngRoute', 'ng-breadcrumbs', 'ubc.ctlt.acj.session',
-	'ubc.ctlt.acj.authorization', 'ubc.ctlt.acj.toaster'
+    'ngResource',
+    'ngRoute',
+    'ng-breadcrumbs',
+    'ubc.ctlt.acj.session',
+    'ubc.ctlt.acj.authorization',
+    'ubc.ctlt.acj.toaster'
 ]);
 
 /***** Providers *****/
 module.factory('UserResource', ['$resource', function($resource) {
-	var User = $resource('/api/users/:id', {id: '@id'}, {
-		'getUserCourses': {url: '/api/users/:id/courses'},
-		'getTeachingUserCourses': {url: '/api/users/courses/teaching'},
-		'getEditButton': {url: '/api/users/:id/edit'},
-		'password': {method: 'POST', url: '/api/users/:id/password'}
-	});
-	User.MODEL = "Users";
+    var User = $resource('/api/users/:id', {id: '@id'}, {
+        'getUserCourses': {url: '/api/users/:id/courses'},
+        'getTeachingUserCourses': {url: '/api/users/courses/teaching'},
+        'getEditButton': {url: '/api/users/:id/edit'},
+        'password': {method: 'POST', url: '/api/users/:id/password'}
+    });
+    User.MODEL = "User";
 
-	User.prototype.isLoggedIn = function() {
-		return this.hasOwnProperty('id');
-	};
+    User.prototype.isLoggedIn = function() {
+        return this.hasOwnProperty('id');
+    };
 
-	return User;
+    return User;
 }]);
-module.factory('UserTypeResource', ['$resource', function($resource) {
-	var ret = $resource('/api/usertypes/:id', {id: '@id'});
-	ret.MODEL = "UserTypesForSystem";
-	return ret;
-}]);
-module.factory('CourseRoleResource', ['$resource', function($resource){
-	var ret = $resource('/api/courseroles');
-	ret.MODEL = "UserTypesForCourse";
-	return ret;
-}]);
+
+module.constant('SystemRole', {
+    student: "Student",
+    instructor: "Instructor",
+    sys_admin: "System Administrator"
+});
+
+module.constant('CourseRole', {
+    dropped: "Dropped",
+    instructor: "Instructor",
+    teaching_assistant: "Teaching Assistant",
+    student: "Student"
+});
 
 /***** Controllers *****/
-module.controller("UserController", ['$scope', '$log', '$route', '$routeParams', '$location', 'breadcrumbs', 'Session', 'UserResource', 'Authorize', 'UserTypeResource', 'Toaster',
-	function($scope, $log, $route, $routeParams, $location, breadcrumbs, Session, UserResource, Authorize, UserTypeResource, Toaster) {
-		var userId;
-		var self = this;
-		var messages = {
-			new: {title: 'New User Created', msg: 'User should now have access.'},
-			edit: {title: 'User Successfully Updated', msg: 'Your changes were saved.'}
-		};
-		$scope.user = {};
-		$scope.method = 'new';
-		$scope.password = {};
-		Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
-			$scope.canManageUsers = result;
-		});
-		Session.getUser().then(function(user) {
-			$scope.ownProfile = userId == user.id;
-		});
-		$scope.usertypes = UserTypeResource.query(function(ret) {
-			if ($scope.method == 'new') {
-				$scope.user.usertypesforsystem_id = ret[0].id;
-			}
-		});
+module.controller("UserController",
+    ['$scope', '$log', '$route', '$routeParams', '$location', 'breadcrumbs', 'Session',
+     'UserResource', 'Authorize', 'SystemRole', 'Toaster',
+    function($scope, $log, $route, $routeParams, $location, breadcrumbs, Session,
+             UserResource, Authorize, SystemRole, Toaster) {
+        var userId;
+        var self = this;
+        var messages = {
+            new: {title: 'New User Created', msg: 'User should now have access.'},
+            edit: {title: 'User Successfully Updated', msg: 'Your changes were saved.'}
+        };
+        $scope.user = {};
+        $scope.method = 'new';
+        $scope.password = {};
+        $scope.SystemRole = SystemRole;
+        $scope.system_roles = [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin]
+        Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
+            $scope.canManageUsers = result;
+        });
+        Session.getUser().then(function(user) {
+            $scope.ownProfile = userId == user.id;
+            $scope.loggedInUserIsInstructor = user.system_role == SystemRole.instructor;
 
-		$scope.save = function() {
-			$scope.submitted = true;
-			UserResource.save({'id': userId}, $scope.user, function(ret) {
-				Toaster.success(messages[$scope.method].title, messages[$scope.method].msg);
-				$location.path('/user/' + ret.id);
-			}).$promise.finally(function() {
-				$scope.submitted = false;
-			});
-		};
+            // remove system admin from system roles if current_user is not an admin
+            if (user.system_role != SystemRole.sys_admin) {
+                $scope.system_roles.pop()
+            }
+        });
 
-		self.edit = function() {
-			userId = $routeParams.userId;
-			$scope.user = UserResource.get({'id':userId}, function (ret) {
-				breadcrumbs.options = {'User Profile': "{0}'s Profile".format(ret.displayname)};
-			});
-		};
+        $scope.save = function() {
+            $scope.submitted = true;
+            UserResource.save({'id': userId}, $scope.user, function(ret) {
+                Toaster.success(messages[$scope.method].title, messages[$scope.method].msg);
+                Session.getUser().then(function(user) {
+                    // refresh User's info on editing own profile and displaynmae changed
+                    if (userId == user.id && $scope.user.displayname != user.displayname) {
+                        Session.refresh();
+                    }
+                });
+                $location.path('/user/' + ret.id);
+            }).$promise.finally(function() {
+                $scope.submitted = false;
+            });
+        };
 
-		self.view = function() {
-			self.edit();
-			Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function(result) {
-				$scope.canCreateUser = result;
-			});
-			$scope.showEditButton = UserResource.getEditButton({"id":userId});
-		};
+        self['new'] = function() {
+            $scope.user.uses_acj_login = true;
+            $scope.user.system_role = SystemRole.student;
+        };
 
-		$scope.changePassword = function() {
-			$scope.submitted = true;
-			UserResource.password({'id': $scope.user.id}, $scope.password, function (ret) {
-				Toaster.success("Password Successfully Updated", "Your password has been changed.");
-				$location.path('/user/' + ret.id);
-			}).$promise.finally(function() {
-				$scope.submitted = false;
-			});
-		};
+        self.edit = function() {
+            userId = $routeParams.userId;
+            $scope.user = UserResource.get({'id':userId}, function (ret) {
+                breadcrumbs.options = {'User Profile': "{0}'s Profile".format(ret.displayname)};
+            });
+        };
 
-		//  Calling routeParam method
-		if ($route.current !== undefined && $route.current.method !== undefined) {
-			$scope.method = $route.current.method;
-			if (self.hasOwnProperty($route.current.method)) {
-				self[$scope.method]();
-			}
-		}
-	}]
+        self.view = function() {
+            self.edit();
+            $scope.showEditButton = UserResource.getEditButton({"id":userId});
+        };
+
+        $scope.changePassword = function() {
+            $scope.submitted = true;
+            UserResource.password({'id': $scope.user.id}, $scope.password, function (ret) {
+                Toaster.success("Password Successfully Updated", "Your password has been changed.");
+                $location.path('/user/' + ret.id);
+            }).$promise.finally(function() {
+                $scope.submitted = false;
+            });
+        };
+
+        //  Calling routeParam method
+        if ($route.current !== undefined && $route.current.method !== undefined) {
+            $scope.method = $route.current.method;
+            if (self.hasOwnProperty($route.current.method)) {
+                self[$scope.method]();
+            }
+        }
+    }]
 );
 // End anonymous function
 })();

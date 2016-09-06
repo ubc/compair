@@ -7,8 +7,8 @@ from flask.ext.script import Manager
 from sqlalchemy import and_
 from sqlalchemy.orm import aliased
 
-from acj.models import Scores, PostsForAnswers, CriteriaAndPostsForQuestions, Criteria, Posts, Judgements, \
-    AnswerPairings, Courses, Users, CoursesAndUsers
+from acj.models import Score, Answer, Criterion, Comparison, \
+    Course, User, UserCourse
 
 manager = Manager(usage="Generate Reports")
 
@@ -18,67 +18,68 @@ def create(course_id):
     """Creates report"""
     course_name = ''
     if course_id:
-        course_name = Courses.query.with_entities(Courses.name).filter_by(id=course_id).scalar()
+        course_name = Course.query.with_entities(Course.name).filter_by(id=course_id).scalar()
         if not course_name:
             raise RuntimeError("Course with ID {} is not found.".format(course_id))
         course_name = course_name.replace('"', '')
         course_name += '_'
 
-    query = Scores.query. \
-        with_entities(Posts.users_id, CriteriaAndPostsForQuestions.questions_id,
-                      PostsForAnswers.id, CriteriaAndPostsForQuestions.id, Criteria.name, Scores.score). \
-        join(Scores.answer). \
-        join(PostsForAnswers.post). \
-        join(Scores.question_criterion).join(CriteriaAndPostsForQuestions.criterion). \
-        order_by(CriteriaAndPostsForQuestions.questions_id, CriteriaAndPostsForQuestions.id, Posts.users_id)
+    query = Score.query. \
+        with_entities(Answer.user_id, Answer.assignment_id, Answer.id,
+                      Criterion.id, Criterion.name, Score.score). \
+        join(Score.answer). \
+        join(Answer). \
+        join(Score.criterion). \
+        filter(Answer.draft == False). \
+        filter(Answer.practice == False). \
+        order_by(Answer.assignment_id, Criterion.id, Answer.user_id)
 
     if course_id:
-        query = query.filter(Posts.courses_id == course_id)
+        query = query.filter(Answer.course_id == course_id)
 
     scores = query.all()
 
     write_csv(
         course_name + 'scores.csv',
-        ['User Id', 'Question Id', 'Answer Id', 'Criterion Id', 'Criterion', 'Score'],
+        ['User Id', 'Assignment Id', 'Answer Id', 'Criterion Id', 'Criterion', 'Score'],
         scores
     )
 
-    scores2 = aliased(Scores)
-    query = Judgements.query. \
-        with_entities(Judgements.users_id, CriteriaAndPostsForQuestions.questions_id,
-                      CriteriaAndPostsForQuestions.id, Criteria.name,
-                      AnswerPairings.answers_id1, Scores.score, AnswerPairings.answers_id2,
-                      scores2.score, Judgements.answers_id_winner). \
-        join(Judgements.question_criterion).join(CriteriaAndPostsForQuestions.criterion). \
-        join(Judgements.answerpairing). \
-        join(Scores, and_(Scores.answers_id == AnswerPairings.answers_id1,
-                          Scores.criteriaandquestions_id == Judgements.criteriaandquestions_id)). \
-        join(scores2, and_(scores2.answers_id == AnswerPairings.answers_id2,
-                           scores2.criteriaandquestions_id == Judgements.criteriaandquestions_id)). \
-        order_by(CriteriaAndPostsForQuestions.questions_id, CriteriaAndPostsForQuestions.id, Judgements.users_id)
+    score2 = aliased(Score)
+    query = Comparison.query. \
+        with_entities(Comparison.user_id, Comparison.assignment_id,
+                      Comparison.criterion_id, Criterion.name,
+                      Comparison.answer1_id, Score.score, Comparison.answer2_id,
+                      score2.score, Comparison.winner_id). \
+        join(Comparison.criterion). \
+        join(Score, and_(Score.answer_id == Comparison.answer1_id,
+                          Score.criterion_id == Comparison.criterion_id)). \
+        join(score2, and_(score2.answer_id == Comparison.answer2_id,
+                           score2.criterion_id == Comparison.criterion_id)). \
+        order_by(Comparison.assignment_id, Comparison.criterion_id, Comparison.user_id)
 
     if course_id:
         query = query. \
-            join(Judgements.answer_winner).join(PostsForAnswers.post). \
-            filter(Posts.courses_id == course_id)
+            join(Comparison.answer_winner).join(Answer). \
+            filter(Answer.course_id == course_id)
 
     comparisons = query.all()
 
     write_csv(
         course_name + 'comparisons.csv',
-        ['User Id', 'Question Id', 'Criterion Id', 'Criterion', 'Answer 1', 'Score 1', 'Answer 2', 'Score 2', 'Winner'],
+        ['User Id', 'Assignment Id', 'Criterion Id', 'Criterion', 'Answer 1', 'Score 1', 'Answer 2', 'Score 2', 'Winner'],
         comparisons
     )
 
 
-    query = Users.query. \
-        with_entities(Users.id, Users.student_no). \
-        order_by(Users.id)
+    query = User.query. \
+        with_entities(User.id, User.student_number). \
+        order_by(User.id)
 
     if course_id:
         query = query. \
-            join(Users.coursesandusers). \
-            filter(CoursesAndUsers.courses_id == course_id)
+            join(User.UserCourse). \
+            filter(UserCourse.course_id == course_id)
 
     users = query.all()
 
@@ -92,7 +93,7 @@ def create(course_id):
 
 
 def write_csv(filename, headers, data):
-    with open(filename, 'wb') as csvfile:
+    with open(filename, 'wt') as csvfile:
         report_writer = csv.writer(
             csvfile, delimiter=',',
             quotechar='"', quoting=csv.QUOTE_MINIMAL

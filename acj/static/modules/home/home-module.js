@@ -5,14 +5,14 @@
 (function() {
 
 var module = angular.module('ubc.ctlt.acj.home',
-	[
-		'ngSanitize',
-		'ubc.ctlt.acj.authentication',
-		'ubc.ctlt.acj.authorization',
-		'ubc.ctlt.acj.course',
-		'ubc.ctlt.acj.toaster',
-		'ubc.ctlt.acj.user'
-	]
+    [
+        'ngSanitize',
+        'ubc.ctlt.acj.authentication',
+        'ubc.ctlt.acj.authorization',
+        'ubc.ctlt.acj.course',
+        'ubc.ctlt.acj.toaster',
+        'ubc.ctlt.acj.user'
+    ]
 );
 
 /***** Providers *****/
@@ -20,32 +20,58 @@ var module = angular.module('ubc.ctlt.acj.home',
 
 /***** Controllers *****/
 module.controller(
-	'HomeController',
-	function HomeController($rootScope, $scope, $location, $log,
-                            Session,
-							AuthenticationService,
-							Authorize,
-							CourseResource,
-							Toaster,
-							UserResource) {
+    'HomeController',
+    ["$rootScope", "$scope", "$location", "Session", "AuthenticationService",
+     "Authorize", "CourseResource", "Toaster", "UserResource",
+    function ($rootScope, $scope, $location, Session, AuthenticationService,
+              Authorize, CourseResource, Toaster, UserResource) {
+
+        $scope.loggedInUserId = null;
+        $scope.totalNumCourses = 0;
+        $scope.courseFilters = {
+            page: 1,
+            perPage: 10,
+            search: null
+        };
+
         Authorize.can(Authorize.CREATE, CourseResource.MODEL).then(function(canAddCourse){
             $scope.canAddCourse = canAddCourse;
         });
+
         Session.getUser().then(function(user) {
-            //TODO: why do we need a LOGIN_EVENT here?
-            $rootScope.$broadcast(AuthenticationService.LOGIN_EVENT);
-            UserResource.getUserCourses(
-                {id: user.id}).$promise.then(
+            $scope.loggedInUserId = user.id;
+            $scope.updateCourseList();
+
+            // register watcher here so that we start watching when all filter values are set
+            $scope.$watchCollection('courseFilters', filterWatcher);
+        });
+
+        $scope.updateCourseList = function() {
+            var params = angular.merge({id: $scope.loggedInUserId}, $scope.courseFilters);
+
+            UserResource.getUserCourses(params).$promise.then(
                 function(ret) {
                     $scope.courses = ret.objects;
+                    $scope.totalNumCourses = ret.total;
+                    angular.forEach($scope.courses, function(event){ event.start_date = new Date(event.start_date); });
                 },
                 function (ret) {
                     Toaster.reqerror("Unable to retrieve your courses.", ret);
-                    $log.error("Failed to retrieve the user's courses.");
                 }
             );
-        });
-	}
-);
+        };
+
+        var filterWatcher = function(newValue, oldValue) {
+            if (angular.equals(newValue, oldValue)) return;
+            if (oldValue.search != newValue.search) {
+                $scope.courseFilters.page = 1;
+            }
+            if(newValue.search === "") {
+                $scope.courseFilters.search = null;
+            }
+            $scope.updateCourseList();
+        };
+    }
+]);
 // End anonymous function
 })();

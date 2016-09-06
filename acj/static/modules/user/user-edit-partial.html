@@ -1,33 +1,34 @@
 <div>
-	<h1>Edit User</h1>
-	<ng-include src="'modules/user/user-form-partial.html'"></ng-include>
-	<hr ng-if="ownProfile || canManageUsers" />
-	<h1 ng-if="ownProfile || canManageUsers">Update Password</h1>
-	<div ng-if="ownProfile || canManageUsers">
-		<form name="changePasswordForm" class="form" ng-submit="changePassword()" novalidate>
-			<fieldset>
-				<legend>Password</legend>
-				<acj-field-with-feedback form-control="changePasswordForm.oldpassword" ng-if="!canManageUsers">
-					<label for="oldpassword" class="required-star">Old Password</label>
-					<input class="form-control" id="oldpassword" type="password"
-						name="oldpassword" ng-model="password.oldpassword"
-						required />
-				</acj-field-with-feedback>
-				<acj-field-with-feedback form-control="changePasswordForm.newpassword">
-					<label for="newpassword" class="required-star">New Password</label>
-					<input class="form-control" id="newpassword" type="password"
-						name="newpassword" ng-model="password.newpassword"
-						required />
-				</acj-field-with-feedback>
-				<acj-field-with-feedback form-control="changePasswordForm.verifypassword">
-					<label for="verifypassword" class="required-star">Verify Password</label>
-					<input class="form-control" id="verifypassword" type="password"
-						name="verifypassword" ng-model="password.verifypassword"
-						required pw-match="newpassword" />
-				</acj-field-with-feedback>
-			</fieldset>
-			<input type="submit" class="btn btn-success center-block btn-lg" value="Update"
-				ng-disabled="changePasswordForm.$invalid || submitted">
-		</form>
-	</div>
+    <h1>Edit User</h1>
+    <ng-include src="'modules/user/user-form-partial.html'"></ng-include>
+
+    <div ng-if="(ownProfile || canManageUsers) && user.uses_acj_login">
+        <hr />
+        <h1>Update Password</h1>
+        <form name="changePasswordForm" class="form" ng-submit="changePassword()" novalidate>
+            <fieldset>
+                <legend>Password</legend>
+                <acj-field-with-feedback form-control="changePasswordForm.oldpassword" ng-if="ownProfile || !canManageUsers">
+                    <label for="oldpassword" class="required-star">Old Password</label>
+                    <input class="form-control" id="oldpassword" type="password"
+                        name="oldpassword" ng-model="password.oldpassword"
+                        required />
+                </acj-field-with-feedback>
+                <acj-field-with-feedback form-control="changePasswordForm.newpassword">
+                    <label for="newpassword" class="required-star">New Password</label>
+                    <input class="form-control" id="newpassword" type="password"
+                        name="newpassword" ng-model="password.newpassword"
+                        required />
+                </acj-field-with-feedback>
+                <acj-field-with-feedback form-control="changePasswordForm.verifypassword">
+                    <label for="verifypassword" class="required-star">Verify Password</label>
+                    <input class="form-control" id="verifypassword" type="password"
+                        name="verifypassword" ng-model="password.verifypassword"
+                        required pw-match="newpassword" />
+                </acj-field-with-feedback>
+            </fieldset>
+            <input type="submit" class="btn btn-success center-block btn-lg" value="Update"
+                ng-disabled="changePasswordForm.$invalid || submitted">
+        </form>
+    </div>
 </div>

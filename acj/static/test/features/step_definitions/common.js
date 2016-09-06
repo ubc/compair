@@ -7,43 +7,116 @@ chai.use(chaiAsPromised);
 var expect = chai.expect;
 
 var PageFactory  = require('../../factories/page_factory.js');
-var UserFactory  = require('../../factories/user_factory.js');
-var backEndMocks = require('../../factories/http_backend_mocks.js');
+
+module.exports = function() {
+    this.setDefaultTimeout(10 * 1000);
+};
 
 var commonStepDefinitionsWrapper = function() {
-	var pageFactory = new PageFactory();
-	var userFactory = new UserFactory();
-	var mocks = [
-		backEndMocks.session,
-		backEndMocks.user,
-		backEndMocks.course,
-		backEndMocks.question
-	];
+    var pageFactory = new PageFactory();
+    var page;
 
-	// login and setup mock backend
-	this.Given(/^I'm "([^"]*)"$/, function (username, done) {
-		backEndMocks.build(browser, mocks);
-		var loginDialog = pageFactory.createPage('login');
-		loginDialog.get('/');
-		loginDialog.login(userFactory.getUser(username)).then(function() {
-			// wait for displayname is populated before we reload the page
-			browser.wait(browser.isElementPresent(element(by.binding('loggedInUser.displayname'))), 5000);
-			done();
-		});
-	});
+    // check title of page
+    this.Then("'$content_title' page should load", function (content_title) {
+        return expect($("#view-title").getText()).to.eventually.equal(content_title);
+    });
 
-	// check title of page
-	this.Then(/^"([^"]*)" page should load$/, function (content_title, done) {
-		expect($("#view-title").getText()).to.eventually.equal(content_title).and.notify(done);
-	});
+    // fill in form
+    this.When("I fill form item '$item' in with '$content'", function (item, content) {
+        return element(by.model(item)).getTagName().then(function(tagName) {
+            // clear inputs and textareas then send keys
+            if (tagName == 'input' || tagName == 'textarea') {
+                return element(by.model(item)).clear().then(function() {
+                    return element(by.model(item)).sendKeys(content);
+                });
+            } else if (tagName == 'select') {
+                if (browser.browserName == "firefox") {
+                    element(by.model(item)).click();
+                }
+                element(by.model(item)).sendKeys(content);
 
-	// fill in form
-	this.Given(/^I fill in:$/, function (data, done) {
-		var list = data.hashes();
-		for (var i = 0; i < list.length; i++) {
-			element(by.model(list[i].element)).sendKeys(list[i].content);
-		}
-		done();
-	});
+                // force blur
+                return element(by.css("body")).click();
+            } else {
+                return element(by.model(item)).sendKeys(content);
+            }
+        });
+    });
+
+    this.When("I toggle the '$label' checkbox", function (label) {
+        return element(by.cssContainingText('label', label)).click();
+    });
+
+    // generate page factory
+    this.Given("I'm on '$pageName' page", function (pageName) {
+        page = pageFactory.createPage(pageName);
+        return browser.setLocation(page.getLocation());
+    });
+
+    this.Given("I'm on '$pageName' page for course with id '$id'", function (pageName, id) {
+        page = pageFactory.createPage(pageName);
+        return browser.setLocation(page.getLocation(id));
+    });
+
+    this.Given("I'm on '$pageName' page for assignment with id '$assignmentId' and course id '$courseId'", function (pageName, assignmentId, courseId) {
+        page = pageFactory.createPage(pageName);
+        return browser.setLocation(page.getLocation(courseId, assignmentId));
+    });
+
+    this.Given("I'm on '$pageName' page for user with id '$id'", function (pageName, id) {
+        page = pageFactory.createPage(pageName);
+        return browser.setLocation(page.getLocation(id));
+    });
+
+    // click button on page factory
+    this.When("I select '$button' button", function (button) {
+        return page.clickButton(button);
+    });
+
+    //submit form button
+    this.When("I submit form with '$button' button", function (button) {
+        return element(by.css('input[type=submit][value="'+button+'"]')).click();
+    });
+
+    //submit modal form button
+    this.When("I submit modal form with '$button' button", function (button) {
+        return element(by.css('.modal input[type=button][value="'+button+'"]')).click();
+    });
+
+    // page verification
+    this.Then("I should be on the '$page' page", function (page) {
+        var page_regex = {
+            'course': /.*\/course\/\d+$/,
+            'manage users': /.*\/course\/\d+\/user$/,
+            'edit assignment': /.*\/course\/\d+\/assignment\/\d+\/edit$/,
+            'edit course': /.*\/course\/\d+\/configure$/,
+            'profile': /.*\/user\/\d+$/,
+            'create user': /.*\/user\/create$/,
+            'edit profile': /.*\/user\/\d+\/edit$/
+        };
+        return expect(browser.getCurrentUrl()).to.eventually.match(page_regex[page]);
+    });
+
+    // verify content on page
+    this.Then("I should see '$text' in '$locator' on the page", function (text, locator) {
+        return expect(element(by.css(locator)).getText()).to.eventually.equal(text);
+    });
+
+    this.Then("I should not see '$locator' on the page", function (locator) {
+        return expect(element(by.css(locator)).isPresent()).to.eventually.equal(false);
+    });
+
+    this.Then("I should see a success message", function () {
+        return expect(element(by.css("#toast-container .toast.toast-success")).isPresent()).to.eventually.equal(true);
+    });
+
+    this.Then("I should see a failure message", function () {
+        return expect(element(by.css("#toast-container .toast.toast-error")).isPresent()).to.eventually.equal(true);
+    });
+
+    // pause test (helpful for debugging)
+    this.Then("pause", function () {
+        browser.pause();
+    });
 };
 module.exports = commonStepDefinitionsWrapper;

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_HTMLorMML&delayStartupUntil=configured"></script>
+    <script type="text/javascript">
+    MathJax.Hub.Config({
+        skipStartupTypeset: true,
+        showMathMenu: false,
+        messageStyle: "none"
+    });
+    </script>
+</head>
+<body style="padding:0;margin:0;background:transparent;overflow:hidden">
+    <p id="math" style="text-align:center; padding:0; margin: 0;"></p>
+    <script>
+    var queryDict = {}
+    location.search.substr(1).split("&").forEach(function(item) {queryDict[item.split("=")[0]] = item.split("=")[1]})
+    var mathDiv = document.getElementById('math');
+    var mathexp = decodeURIComponent(queryDict['mathexp']);
+    mathDiv.textContent = mathexp;
+    MathJax.Hub.Configured();
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, 'math']);
+    var iframe = window.frameElement;
+    // resize iframe to match math expression size, need to wait for mathjax to
+    // be rendered
+    var resizeFrame = function() {
+        iframe.style.height = document.body.scrollHeight + "px";
+        iframe.style.width = document.body.scrollWidth + "px";
+    };
+    MathJax.Hub.Queue(resizeFrame);
+    </script>
+</body>
+</html>

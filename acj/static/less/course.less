@@ -3,9 +3,9 @@
 /***** COURSE SCREEN *****/
 
 .course-screen {
-  
+
   margin-bottom: 3em;
-  
+
   ::-webkit-scrollbar {
     -webkit-appearance: none;
     width: 7px;
@@ -16,88 +16,100 @@
     background-color: rgba(0,0,0,.5);
     -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
   }
-  
+
   /* search box */
   .searchCourse {
     margin-top: 1.5em;
   }
-  
-  /* class for div surrounding each question */
-  .each-question {
-    
+
+  /* class for div surrounding each assignment */
+  .each-assignment {
+
     padding: 1.5em 0;
     .gray-box();
     border-top: none;
-    
-    /* h3 header (question title) to be underlined for improved clickability */
+
+    /* h3 header (assignment name) to be underlined for improved clickability */
     a h3 {
-      
+
       text-decoration: underline;
-      
+
       i {
         margin-right: .3em;
       }
-      
+
     }//closes a
-    
+
     /* alternating rows */
     &:nth-child(odd) {
       background: #fff;
     }
-    
+
     /* action buttons need to stack */
     .btn {
       margin-bottom: 1em;
     }
-    
-    /* class for p tag displaying additional text below question buttons */
+
+    /* class for p tag displaying additional text below assignment buttons */
     .below-button-text {
       margin-top: 1em;
       color: @breadcrumb-gray;
       font-style: italic;
     }
-    
-    /* limit how much of the question description appears on course page */
-    .question-desc {
+
+    /* limit how much of the assignment description appears on course page */
+    .assignment-desc {
       max-height: 9em;
-      overflow-y: scroll;
+      overflow-y: auto;
       padding-right: 0.5em;
     }
-    
+
     /* ul for metadata */
-    .question-metadata-list {
-      
+    .assignment-metadata-list {
+
       margin-bottom: .5em;
       padding-top: .5em;
       color: @breadcrumb-gray;
       border-top: 2px dotted @border-gray;
-    
+
       /* each piece of data */
       li {
-        
+
         margin-bottom: .3em;
         padding: .2em .5em;
         border-right: 1px solid @border-gray;
-        
+
         &:last-child {
           border-right: none;
         }
-          
+
       }//closes li
-      
+
      /* label is applied to li when evaluations are needed */
       .label {
         font-size: 100%;
       }
-    
-    }//closes question-metadata-list
-    
-  }//closes each-question
-  
-  /* add border to first question */
+
+    }//closes assignment-metadata-list
+
+  }//closes each-assignment
+
+  /* add border to first assignment */
   .first-child {
     border-top: 1px solid @border-gray;
   }
-  
+
 }//closes course-screen
 
+.course-select-screen {
+    .course-select-list {
+        margin-top: 4.1em;
+    }
+}
+
+.manage-screen {
+    #lti_refresh_btn {
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+}

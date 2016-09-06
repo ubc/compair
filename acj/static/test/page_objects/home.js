@@ -1,18 +1,19 @@
-var env = require('../env.js');
-
-
 var HomePage = function() {
-    var addCourseButton = element(by.css('#create-course-btn')),
-        downloadReportButton =  element(by.css('#download-report-btn')),
-        createUserButton =  element(by.css('#create-user-btn'));
-
-    this.get = function() {
-        return browser.get(env.baseUrl);
+    this.getLocation = function() {
+        return '/';
     };
 
-    this.addCourse = function() {
-        return addCourseButton.click();
-    };
+    this.clickButton = function(button) {
+        switch (button) {
+            case "Add Course":
+                return element(by.css('#create-course-btn')).click();
+            case "Create Account":
+                return element(by.css('#create-user-btn')).click();
+            case "Profile":
+                element(by.css('#menu-dropdown')).click();
+                return element(by.css('#own-profile-link')).click();
+        }
+    }
 };
 
 module.exports = HomePage;

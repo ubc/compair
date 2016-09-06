@@ -30,7 +30,7 @@ def downgrade():
             # it seems alembic couldn't drop unique constraint for sqlite
             batch_op.drop_constraint('uq_Users_student_no', type_='unique')
     except ValueError:
-        logging.warn('Drop unique constraint is not support for SQLite, dropping uq_Users_student_no ignored!')
+        logging.warning('Drop unique constraint is not support for SQLite, dropping uq_Users_student_no ignored!')
 
     with op.batch_alter_table('Users', naming_convention=convention) as batch_op:
         batch_op.drop_column('student_no')

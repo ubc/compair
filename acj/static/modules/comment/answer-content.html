@@ -1,14 +1,17 @@
 <div class="col-md-6">
     <div class="answer-choice clearfix">
-        <h4 class="text-center">{{ title }}
+        <h4 class="text-center">{{ name }}
             <span ng-show="isChosen">(Chosen)</span>
-            <span class="label label-warning pull-right score-display" ng-if="answer && showScore">
-                Score: {{ answer.scores[criteriaAndQuestions] }}%</span>
+            <span ng-repeat="score in answer.scores">
+                <span class="label label-warning pull-right score-display"
+                    ng-if="answer && showScore && score.criterion_id == criterion">
+                    Score: {{ score.normalized_score }}%
+                </span>
+            </span>
         </h4>
-        <div mathjax="answer.content" ng-if="answer"
-             ng-bind-html="answer.content"></div>
+        <div mathjax hljs ng-if="answer" ng-bind-html="answer.content"></div>
         <div ng-if="!answer"><i>(This answer has been deleted.)</i></div>
         <!-- Attachments -->
-        <acj-pdf-inline label="See details:" pdfs="answer.files"></acj-pdf-inline>
+        <acj-pdf-inline label="See details:" pdf="answer.file"></acj-pdf-inline>
     </div>
 </div>

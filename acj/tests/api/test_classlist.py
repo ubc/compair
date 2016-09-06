@@ -4,7 +4,7 @@ import io
 
 from data.fixtures.test_data import BasicTestData
 from acj.tests.test_acj import ACJAPITestCase
-from acj.models import UserTypesForCourse
+from acj.models import CourseRole
 
 
 class ClassListAPITest(ACJAPITestCase):
@@ -42,11 +42,11 @@ class ClassListAPITest(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual('text/csv', rv.content_type)
             reader = csv.reader(rv.data.decode(encoding='UTF-8').splitlines(), delimiter=',')
-            self.assertEqual(['username', 'student_no', 'firstname', 'lastname', 'email', 'displayname'], next(reader))
+            self.assertEqual(['username', 'student_number', 'firstname', 'lastname', 'email', 'displayname'], next(reader))
 
             for key, user in enumerate(expected):
                 self.assertEqual(
-                    [user.username, user.student_no or '', user.firstname, user.lastname, user.email, user.displayname],
+                    [user.username, user.student_number or '', user.firstname, user.lastname, user.email, user.displayname],
                     next(reader)
                 )
 
@@ -114,36 +114,36 @@ class ClassListAPITest(ACJAPITestCase):
             # test success - instructor
             rv = self.client.get(url)
             self.assert200(rv)
-            students = rv.json['students']
+            students = rv.json['objects']
             expected = {
                 'id': self.data.get_authorized_student().id,
                 'name': self.data.get_authorized_student().fullname
             }
-            self.assertEqual(students[0]['user']['id'], expected['id'])
-            self.assertEqual(students[0]['user']['name'], expected['name'])
+            self.assertEqual(students[0]['id'], expected['id'])
+            self.assertEqual(students[0]['name'], expected['name'])
 
         with self.login(self.data.get_authorized_ta().username):
             rv = self.client.get(url)
             self.assert200(rv)
-            students = rv.json['students']
+            students = rv.json['objects']
             expected = {
                 'id': self.data.get_authorized_student().id,
                 'name': self.data.get_authorized_student().fullname
             }
-            self.assertEqual(students[0]['user']['id'], expected['id'])
-            self.assertEqual(students[0]['user']['name'], expected['name'])
+            self.assertEqual(students[0]['id'], expected['id'])
+            self.assertEqual(students[0]['name'], expected['name'])
 
         # test success - student
         with self.login(self.data.get_authorized_student().username):
             rv = self.client.get(url)
             self.assert200(rv)
-            students = rv.json['students']
+            students = rv.json['objects']
             expected = {
                 'id': self.data.get_authorized_student().id,
                 'name': self.data.get_authorized_student().displayname
             }
-            self.assertEqual(students[0]['user']['id'], expected['id'])
-            self.assertEqual(students[0]['user']['name'], expected['name'] + ' (You)')
+            self.assertEqual(students[0]['id'], expected['id'])
+            self.assertEqual(students[0]['name'], expected['name'] + ' (You)')
 
     def test_enrol_instructor(self):
         url = self._create_enrol_url(self.url, self.data.get_dropped_instructor().id)
@@ -166,7 +166,7 @@ class ClassListAPITest(ACJAPITestCase):
 
         # test invalid course id
         with self.login(self.data.get_authorized_instructor().username):
-            invalid_url = '/api/courses/999/users/instructors/' + str(self.data.get_dropped_instructor().id) + '/enrol'
+            invalid_url = '/api/courses/999/users/' + str(self.data.get_dropped_instructor().id)
             rv = self.client.post(
                 invalid_url,
                 data=json.dumps(role),
@@ -185,7 +185,7 @@ class ClassListAPITest(ACJAPITestCase):
             expected = {
                 'user_id': self.data.get_dropped_instructor().id,
                 'fullname': self.data.get_dropped_instructor().fullname,
-                'course_role': UserTypesForCourse.TYPE_INSTRUCTOR
+                'course_role': CourseRole.instructor.value
             }
             rv = self.client.post(
                 url,
@@ -199,7 +199,7 @@ class ClassListAPITest(ACJAPITestCase):
             expected = {
                 'user_id': self.data.get_unauthorized_instructor().id,
                 'fullname': self.data.get_unauthorized_instructor().fullname,
-                'course_role': UserTypesForCourse.TYPE_INSTRUCTOR
+                'course_role': CourseRole.instructor.value
             }
             rv = self.client.post(
                 url,
@@ -209,12 +209,11 @@ class ClassListAPITest(ACJAPITestCase):
             self.assertEqual(expected, rv.json)
 
             # test enrolling a different role - eg. Student
-            ta_role_id = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_TA).first().id
-            role = {'course_role_id': str(ta_role_id)}
+            role = {'course_role': CourseRole.teaching_assistant.value }
             expected = {
                 'user_id': self.data.get_unauthorized_instructor().id,
                 'fullname': self.data.get_unauthorized_instructor().fullname,
-                'course_role': UserTypesForCourse.TYPE_TA
+                'course_role': CourseRole.teaching_assistant.value
             }
             rv = self.client.post(
                 url,
@@ -225,7 +224,6 @@ class ClassListAPITest(ACJAPITestCase):
 
     def test_unenrol_instructor(self):
         url = self._create_enrol_url(self.url, self.data.get_authorized_instructor().id)
-        dropped_role_id = UserTypesForCourse.query.filter_by(name=UserTypesForCourse.TYPE_DROPPED).first().id
 
         # test login required
         rv = self.client.delete(url)
@@ -237,7 +235,7 @@ class ClassListAPITest(ACJAPITestCase):
             self.assert403(rv)
 
         # test invalid course id
-        invalid_url = '/api/courses/999/users/instructors/' + str(self.data.get_authorized_instructor().id) + '/enrol'
+        invalid_url = '/api/courses/999/users/' + str(self.data.get_authorized_instructor().id)
         with self.login(self.data.get_authorized_instructor().username):
             rv = self.client.delete(invalid_url)
             self.assert404(rv)
@@ -254,14 +252,9 @@ class ClassListAPITest(ACJAPITestCase):
 
             # test success
             expected = {
-                'user': {
-                    'id': self.data.get_authorized_instructor().id,
-                    'fullname': self.data.get_authorized_instructor().fullname
-                },
-                'usertypesforcourse': {
-                    'id': dropped_role_id,
-                    'name': UserTypesForCourse.TYPE_DROPPED
-                }
+                'user_id': self.data.get_authorized_instructor().id,
+                'fullname': self.data.get_authorized_instructor().fullname,
+                'course_role': CourseRole.dropped.value
             }
             rv = self.client.delete(url)
             self.assert200(rv)
@@ -313,7 +306,7 @@ class ClassListAPITest(ACJAPITestCase):
             self.assert400(rv)
 
             # test no username provided
-            content = "".join([",\n", auth_student.username, ",", auth_student.student_no])
+            content = "".join([",\n", auth_student.username, ",", auth_student.student_number])
             uploaded_file = io.BytesIO(content.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
@@ -337,7 +330,7 @@ class ClassListAPITest(ACJAPITestCase):
             uploaded_file.close()
 
             # test duplicate student number in system
-            content = "".join(['username1,', auth_student.student_no, "\n", auth_student.username])
+            content = "".join(['username1,', auth_student.student_number, "\n", auth_student.username])
             uploaded_file = io.BytesIO(content.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
@@ -350,8 +343,8 @@ class ClassListAPITest(ACJAPITestCase):
 
             # test duplicate student number in file
             content = "".join([
-                auth_student.username, ",", auth_student.student_no, "\n",
-                "username1,", auth_student.student_no])
+                auth_student.username, ",", auth_student.student_number, "\n",
+                "username1,", auth_student.student_number])
             uploaded_file = io.BytesIO(content.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
@@ -389,6 +382,137 @@ class ClassListAPITest(ACJAPITestCase):
             self.assertEqual(1, result['success'])
             self.assertEqual(0, len(result['invalids']))
             uploaded_file.close()
+
+    def test_update_course_role_miltiple(self):
+        url = self.url + '/roles'
+
+        user_ids = [self.data.authorized_instructor.id, self.data.authorized_student.id, self.data.authorized_ta.id]
+        params = {
+            'ids': user_ids,
+            'course_role': CourseRole.instructor.value
+        }
+
+        # test login required
+        rv = self.client.post(
+            url,
+            data=json.dumps(params),
+            content_type='application/json')
+        self.assert401(rv)
+
+        # test unauthorized user
+        with self.login(self.data.get_unauthorized_instructor().username):
+            rv = self.client.post(
+                url,
+                data=json.dumps(params),
+                content_type='application/json')
+            self.assert403(rv)
+
+        with self.login(self.data.get_authorized_instructor().username):
+            # test invalid course id
+            rv = self.client.post(
+                '/api/courses/999/users/roles',
+                data=json.dumps(params),
+                content_type='application/json')
+            self.assert404(rv)
+
+            # test missing user ids
+            missing_ids = params.copy()
+            missing_ids['ids'] = []
+            rv = self.client.post(
+                url,
+                data=json.dumps(missing_ids),
+                content_type='application/json')
+            self.assert400(rv)
+
+            # test invalid user ids
+            invalid_ids = params.copy()
+            invalid_ids['ids'] = [self.data.unauthorized_student.id]
+            rv = self.client.post(
+                url,
+                data=json.dumps(invalid_ids),
+                content_type='application/json')
+            self.assert400(rv)
+
+            # cannot change current_user's course role
+            params_self = {
+                'ids': [self.data.get_authorized_instructor().id],
+                'course_role': CourseRole.teaching_assistant.value
+            }
+            rv = self.client.post(
+                url,
+                data=json.dumps(params_self),
+                content_type='application/json')
+            self.assert400(rv)
+
+            # test changing role instructor
+            rv = self.client.post(
+                url,
+                data=json.dumps(params),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(rv.json['course_role'], CourseRole.instructor.value)
+
+            for user_course in self.data.get_course().user_courses:
+                # ingore changes for current_user
+                if user_course.user_id == self.data.get_authorized_instructor().id:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+                # other users should have course role updated
+                elif user_course.user_id in user_ids:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+
+            # test changing teaching assistant
+            params_ta = params.copy()
+            params_ta['course_role'] = CourseRole.teaching_assistant.value
+            rv = self.client.post(
+                url,
+                data=json.dumps(params_ta),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(rv.json['course_role'], CourseRole.teaching_assistant.value)
+
+            for user_course in self.data.get_course().user_courses:
+                # ingore changes for current_user
+                if user_course.user_id == self.data.get_authorized_instructor().id:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+                # other users should have course role updated
+                elif user_course.user_id in user_ids:
+                    self.assertEqual(user_course.course_role, CourseRole.teaching_assistant)
+
+            # test changing role student
+            params_student = params.copy()
+            params_student['course_role'] = CourseRole.student.value
+            rv = self.client.post(
+                url,
+                data=json.dumps(params_student),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(rv.json['course_role'], CourseRole.student.value)
+
+            for user_course in self.data.get_course().user_courses:
+                # ingore changes for current_user
+                if user_course.user_id == self.data.get_authorized_instructor().id:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+                # other users should have course role updated
+                elif user_course.user_id in user_ids:
+                    self.assertEqual(user_course.course_role, CourseRole.student)
+
+            # test changing dropped
+            params_dropped = { 'ids': user_ids }
+            rv = self.client.post(
+                url,
+                data=json.dumps(params_dropped),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(rv.json['course_role'], CourseRole.dropped.value)
+
+            for user_course in self.data.get_course().user_courses:
+                # ingore changes for current_user
+                if user_course.user_id == self.data.get_authorized_instructor().id:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+                # other users should have course role updated
+                elif user_course.user_id in user_ids:
+                    self.assertEqual(user_course.course_role, CourseRole.dropped)
+
 
     def _create_enrol_url(self, url, user_id):
         return url + '/' + str(user_id)

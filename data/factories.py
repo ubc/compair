@@ -3,178 +3,226 @@ import datetime
 import factory
 import factory.fuzzy
 
-from factory.alchemy import SQLAlchemyModelFactory
-
 from acj.core import db
-from acj.models import Courses, Users, UserTypesForCourse, UserTypesForSystem, Criteria, CoursesAndUsers, Posts, \
-    PostsForQuestions, PostsForAnswers, PostsForComments, \
-    PostsForQuestionsAndPostsForComments, PostsForAnswersAndPostsForComments, CriteriaAndCourses, AnswerPairings, \
-    Judgements, PostsForJudgements, Groups, GroupsAndUsers, CriteriaAndPostsForQuestions, SelfEvaluationTypes, Scores
+from acj.models import Course, User, CourseRole, SystemRole, Criterion, \
+    UserCourse, AssignmentCriterion, Assignment, Score, Answer, AssignmentComment, \
+    AnswerComment, Comparison, AnswerCommentType, ComparisonExample, \
+    LTIConsumer, LTIContext, LTIResourceLink, LTIMembership, LTIUser, LTIUserResourceLink, \
+    ThirdPartyUser, ThirdPartyType
+
+from oauthlib.common import generate_token
 
 
-class UsersFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = Users
-    FACTORY_SESSION = db.session
+class UserFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = User
+        sqlalchemy_session = db.session
 
     username = factory.Sequence(lambda n: u'user%d' % n)
     firstname = factory.fuzzy.FuzzyText(length=4)
     lastname = factory.fuzzy.FuzzyText(length=4)
     displayname = factory.fuzzy.FuzzyText(length=8)
     email = factory.fuzzy.FuzzyText(length=8)
-    student_no = factory.fuzzy.FuzzyText(length=8)
+    student_number = factory.fuzzy.FuzzyText(length=8)
     password = 'password'
-    usertypesforsystem_id = 2
+    system_role = SystemRole.instructor
 
 
-class UserTypesForCourseFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = UserTypesForCourse
-    FACTORY_SESSION = db.session
-
-    name = factory.Iterator([
-        UserTypesForCourse.TYPE_DROPPED,
-        UserTypesForCourse.TYPE_INSTRUCTOR,
-        UserTypesForCourse.TYPE_TA,
-        UserTypesForCourse.TYPE_STUDENT
-    ])
-
-
-class UserTypesForSystemFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = UserTypesForSystem
-    FACTORY_SESSION = db.session
-
-    name = factory.Iterator([
-        UserTypesForSystem.TYPE_NORMAL,
-        UserTypesForSystem.TYPE_INSTRUCTOR,
-        UserTypesForSystem.TYPE_SYSADMIN,
-    ])
-
-
-class CoursesFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = Courses
-    FACTORY_SESSION = db.session
+class CourseFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = Course
+        sqlalchemy_session = db.session
 
     name = factory.Sequence(lambda n: u'TestCourse%d' % n)
+    year = 2015
+    term = "Winter"
     description = factory.fuzzy.FuzzyText(length=36)
-    available = True
+    #start_date = datetime.datetime.now() - datetime.timedelta(days=7)
+    #end_date = datetime.datetime.now() + datetime.timedelta(days=7)
 
 
-class CoursesAndUsersFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = CoursesAndUsers
-    FACTORY_SESSION = db.session
+class UserCourseFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = UserCourse
+        sqlalchemy_session = db.session
 
-    courses_id = 1
-    users_id = 1
-    usertypesforcourse_id = 2
-
-
-class CriteriaFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = Criteria
-    FACTORY_SESSION = db.session
-    name = factory.Sequence(lambda n: u'criteria %d' % n)
-    description = factory.Sequence(lambda n: u'This is criteria %d' % n)
+    course = factory.SubFactory(CourseFactory)
+    user = factory.SubFactory(UserFactory)
+    course_role = CourseRole.instructor
+    group_name = None
 
 
-class CriteriaAndCoursesFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = CriteriaAndCourses
-    FACTORY_SESSION = db.session
+class CriterionFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = Criterion
+        sqlalchemy_session = db.session
+
+    name = factory.Sequence(lambda n: u'criterion %d' % n)
+    description = factory.Sequence(lambda n: u'This is criterion %d' % n)
+    default = True
 
 
-class CriteriaAndPostsForQuestionsFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = CriteriaAndPostsForQuestions
-    FACTORY_SESSION = db.session
+class AssignmentFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = Assignment
+        sqlalchemy_session = db.session
+
+    user = factory.SubFactory(UserFactory)
+    course = factory.SubFactory(CourseFactory)
+    name = factory.Sequence(lambda n: u'this is a name for assignment %d' % n)
+    description = factory.Sequence(lambda n: u'this is some content for post %d' % n)
+    answer_start = datetime.datetime.now() - datetime.timedelta(days=7)
+    answer_end = datetime.datetime.now() + datetime.timedelta(days=7)
+    compare_start = None
+    compare_end = None
+    number_of_comparisons = 3
+    rank_display_limit = 10
+    # Make sure created dates are unique.
+    created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
+
+class AssignmentCriterionFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = AssignmentCriterion
+        sqlalchemy_session = db.session
+
+    criterion = factory.SubFactory(CriterionFactory)
+    assignment = factory.SubFactory(AssignmentFactory)
     active = True
 
 
-class PostsFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = Posts
-    FACTORY_SESSION = db.session
-    courses_id = 1
-    users_id = 1
+class AnswerFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = Answer
+        sqlalchemy_session = db.session
+
+    assignment = factory.SubFactory(AssignmentFactory)
+    user = factory.SubFactory(UserFactory)
     content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
-    # Make sure created dates are unique. Created dates are used to sort posts, if we rely on
-    # current time as the created date, most posts will be created at the same moment.
+    draft = False
+    # Make sure created dates are unique.
+    created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
+
+class ScoreFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = Score
+        sqlalchemy_session = db.session
+
+    score = 5
+
+    assignment = factory.SubFactory(AssignmentFactory)
+    answer = factory.SubFactory(AnswerFactory)
+    criterion = factory.SubFactory(CriterionFactory)
+
+
+class AssignmentCommentFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = AssignmentComment
+        sqlalchemy_session = db.session
+
+    assignment = factory.SubFactory(AssignmentFactory)
+    user = factory.SubFactory(UserFactory)
+    content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
+    # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 
 
-class PostsForQuestionsFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = PostsForQuestions
-    FACTORY_SESSION = db.session
-    posts_id = 1
-    title = factory.Sequence(lambda n: u'this is a title for question %d' % n)
-    answer_start = datetime.datetime.now() - datetime.timedelta(days=7)
-    answer_end = datetime.datetime.now() + datetime.timedelta(days=7)
-    num_judgement_req = 3
+class AnswerCommentFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = AnswerComment
+        sqlalchemy_session = db.session
+
+    answer = factory.SubFactory(AnswerFactory)
+    user = factory.SubFactory(UserFactory)
+    comment_type = AnswerCommentType.private
+    content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
+    draft = False
+    # Make sure created dates are unique.
+    created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 
 
-class ScoreFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = Scores
-    FACTORY_SESSION = db.session
-    score = 5
+class ComparisonFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = Comparison
+        sqlalchemy_session = db.session
 
+    assignment = factory.SubFactory(AssignmentFactory)
+    criterion = factory.SubFactory(CriterionFactory)
+    course = factory.SubFactory(CourseFactory)
+    user = factory.SubFactory(UserFactory)
+    content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
+    # Make sure created dates are unique.
+    created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 
-class PostsForAnswersFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = PostsForAnswers
-    FACTORY_SESSION = db.session
-    posts_id = 1
-    questions_id = 1
+class ComparisonExampleFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = ComparisonExample
+        sqlalchemy_session = db.session
 
+    assignment = factory.SubFactory(AssignmentFactory)
+    # Make sure created dates are unique.
+    created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 
-class PostsForCommentsFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = PostsForComments
-    FACTORY_SESSION = db.session
-    posts_id = 1
+class LTIConsumerFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = LTIConsumer
+        sqlalchemy_session = db.session
 
+    oauth_consumer_key = generate_token()
+    oauth_consumer_secret = generate_token()
 
-class PostsForQuestionsAndPostsForCommentsFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = PostsForQuestionsAndPostsForComments
-    FACTORY_SESSION = db.session
-    questions_id = 1
-    comments_id = 1
+    lti_version = "LTI-1p0"
 
+class LTIContextFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = LTIContext
+        sqlalchemy_session = db.session
 
-class PostsForAnswersAndPostsForCommentsFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = PostsForAnswersAndPostsForComments
-    FACTORY_SESSION = db.session
-    answers_id = 1
-    comments_id = 1
+    lti_consumer_id = 1
+    context_id = factory.Sequence(lambda n: u'course-v1:LTI%d' % n)
 
+class LTIResourceLinkFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = LTIResourceLink
+        sqlalchemy_session = db.session
 
-class AnswerPairingsFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = AnswerPairings
-    FACTORY_SESSION = db.session
+    lti_consumer_id = 1
+    resource_link_id = factory.Sequence(lambda n: u'unique_resourse_link_id_%d' % n)
 
+class LTIUserFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = LTIUser
+        sqlalchemy_session = db.session
 
-class JudgementsFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = Judgements
-    FACTORY_SESSION = db.session
+    lti_consumer_id = 1
+    user_id = factory.Sequence(lambda n: u'unique_user_id_%d' % n)
+    system_role = SystemRole.student
 
+class LTIMembershipFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = LTIMembership
+        sqlalchemy_session = db.session
 
-class PostsForJudgementsFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = PostsForJudgements
-    FACTORY_SESSION = db.session
+    lti_context_id = 1
+    lti_user_id = 1
+    roles = "Student"
+    course_role = CourseRole.student
 
+class LTIUserResourceLinkFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = LTIUserResourceLink
+        sqlalchemy_session = db.session
 
-class GroupsFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = Groups
-    FACTORY_SESSION = db.session
-    name = factory.fuzzy.FuzzyText(length=6)
+    lti_resource_link_id = 1
+    lti_user_id = 1
+    roles = "Student"
+    course_role = CourseRole.student
 
+class ThirdPartyUserFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = ThirdPartyUser
+        sqlalchemy_session = db.session
 
-class GroupsAndUsersFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = GroupsAndUsers
-    FACTORY_SESSION = db.session
+    user = factory.SubFactory(UserFactory)
 
-
-class SelfEvaluationTypesFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = SelfEvaluationTypes
-    FACTORY_SESSION = db.session
-
-
-class AnswerCommentFactory(object):
-    def __init__(self, **kwargs):
-        user, course, answer = (kwargs.pop(key) for key in ['user', 'course', 'answer'])
-        post = PostsFactory(user=user, course=course)
-        comment = PostsForCommentsFactory(post=post)
-        self.answer_comment = PostsForAnswersAndPostsForCommentsFactory(
-            postsforanswers=answer, postsforcomments=comment, **kwargs
-        )
+    unique_identifier = factory.Sequence(lambda n: u'unique_identifier_%d' % n)
+    third_party_type = ThirdPartyType.cwl

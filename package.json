@@ -18,16 +18,17 @@
     "gulp-uglify": "latest",
     "main-bower-files": "latest",
     "gulp-html-replace": "latest",
-    "gulp-minify-css": "latest",
-    "gulp-inject": "latest",
+    "gulp-clean-css": "latest",
+    "gulp-inject": "~3.0",
     "gulp-connect": "latest",
     "proxy-middleware": "latest"
   },
   "devDependencies": {
-    "chai": "~3.2",
-    "chai-as-promised": "~5.1",
-    "cucumber": "0.6.0",
-    "gulp-protractor": "~1.0",
+    "sauce-connect-launcher": "~0.15",
+    "chai": "~3.5",
+    "chai-as-promised": "~5.3",
+    "cucumber": "1.2.2",
+    "gulp-protractor": "~3.0.0",
     "gulp-rev": "^6.0.1",
     "jasmine-core": "latest",
     "karma": "~0.13",
@@ -36,7 +37,9 @@
     "karma-junit-reporter": "^0.3.3",
     "karma-ng-html2js-preprocessor": "~0.1",
     "karma-phantomjs-launcher": "~0.2",
+    "phantomjs": "~2.1",
     "lodash": "^3.10",
-    "protractor": "~2.5.1"
+    "protractor-cucumber-framework": "~0.6.0",
+    "object-assign": "~4.1"
   }
 }

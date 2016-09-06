@@ -1,0 +1,24 @@
+<form name="duplicateCourseForm" class="form" ng-submit="duplicate()" novalidate>
+
+    <h2 class="text-center">Duplicate: {{originalCourse.name}}</h2>
+    <br />
+    <p class="intro-text">Please provide the required fields below to duplicate your course.</p>
+
+    <fieldset>
+        <legend>Course Details</legend>
+        <acj-field-with-feedback form-control="duplicateCourseForm.courseYear">
+            <label for="courseYear" class="required-star">Year</label>
+            <input id="courseYear" name="courseYear" ng-model="duplicateCourse.year"
+                    type="number" class="form-control" required min="1900" />
+        </acj-field-with-feedback>
+
+        <acj-field-with-feedback form-control="duplicateCourseForm.courseTerm">
+            <label for="courseTerm" class="required-star">Term/Semester</label>
+            <input id="courseTerm" name="courseTerm" ng-model="duplicateCourse.term"
+                    type="text" class="form-control" required maxlength="255" />
+        </acj-field-with-feedback>
+    </fieldset>
+
+    <input type="submit" class="btn btn-success btn-lg center-block" value="Duplicate Course"
+            ng-disabled="duplicateCourseForm.$invalid || submitted" />
+</form>

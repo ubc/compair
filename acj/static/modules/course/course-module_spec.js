@@ -1,280 +1,204 @@
 describe('course-module', function () {
-	var $httpBackend, sessionRequestHandler;
-	var id = 1;
-	var mockSession = {
-		"id": id,
-		"permissions": {
-			"Courses": {
-				"create": true,
-				"delete": true,
-				"edit": true,
-				"manage": true,
-				"read": true
-			},
-			"PostsForQuestions": {
-				"create": true,
-				"delete": true,
-				"edit": true,
-				"manage": true,
-				"read": true
-			},
-			"Users": {
-				"create": true,
-				"delete": true,
-				"edit": true,
-				"manage": true,
-				"read": true
-			}
-		}
-	};
-	var mockUser = {
-		avatar: "63a9f0ea7bb98050796b649e85481845",
-		created: "Tue, 27 May 2014 00:02:38 -0000",
-		displayname: "root",
-		email: null,
-		firstname: "John",
-		fullname: "John Smith",
-		id: id,
-		lastname: "Smith",
-		lastonline: "Tue, 12 Aug 2014 20:53:31 -0000",
-		modified: "Tue, 12 Aug 2014 20:53:31 -0000",
-		username: "root",
-		usertypeforsystem: {
-			id: 3,
-			name: "System Administrator"
-		},
-		usertypesforsystem_id: 3
-	};
-	var mockCourse = {
-		"available": true,
-		"created": "Fri, 09 Jan 2015 17:23:59 -0000",
-		"description": null,
-		"enable_student_create_questions": false,
-		"enable_student_create_tags": false,
-		"id": 1,
-		"modified": "Fri, 09 Jan 2015 17:23:59 -0000",
-		"name": "Test Course"
-	};
-	beforeEach(module('ubc.ctlt.acj.course'));
-	beforeEach(inject(function ($injector) {
-		$httpBackend = $injector.get('$httpBackend');
-		sessionRequestHandler = $httpBackend.when('GET', '/api/session').respond(mockSession);
-		$httpBackend.when('GET', '/api/users/' + id).respond(mockUser);
-	}));
+    var $httpBackend, sessionRequestHandler;
+    var id = 1;
+    var mockSession = {
+        "id": id,
+        "permissions": {
+            "Course": {
+                "create": true,
+                "delete": true,
+                "edit": true,
+                "manage": true,
+                "read": true
+            },
+            "Assignment": {
+                "create": true,
+                "delete": true,
+                "edit": true,
+                "manage": true,
+                "read": true
+            },
+            "User": {
+                "create": true,
+                "delete": true,
+                "edit": true,
+                "manage": true,
+                "read": true
+            }
+        }
+    };
+    var mockUser = {
+        avatar: "63a9f0ea7bb98050796b649e85481845",
+        created: "Tue, 27 May 2014 00:02:38 -0000",
+        displayname: "root",
+        email: null,
+        firstname: "John",
+        fullname: "John Smith",
+        id: id,
+        lastname: "Smith",
+        last_online: "Tue, 12 Aug 2014 20:53:31 -0000",
+        modified: "Tue, 12 Aug 2014 20:53:31 -0000",
+        username: "root",
+        system_role: "System Administrator"
+    };
+    var mockCourse = {
+        "available": true,
+        "start_date": null,
+        "end_date": null,
+        "created": "Fri, 09 Jan 2015 17:23:59 -0000",
+        "description": null,
+        "id": 1,
+        "modified": "Fri, 09 Jan 2015 17:23:59 -0000",
+        "name": "Test Course",
+        "year": 2015,
+        "term": "Winter"
+    };
+    beforeEach(module('ubc.ctlt.acj.course'));
+    beforeEach(inject(function ($injector) {
+        $httpBackend = $injector.get('$httpBackend');
+        sessionRequestHandler = $httpBackend.when('GET', '/api/session').respond(mockSession);
+        $httpBackend.when('GET', '/api/users/' + id).respond(mockUser);
+    }));
 
-	afterEach(function () {
-		$httpBackend.verifyNoOutstandingExpectation();
-		$httpBackend.verifyNoOutstandingRequest();
-	});
+    afterEach(function () {
+        $httpBackend.verifyNoOutstandingExpectation();
+        $httpBackend.verifyNoOutstandingRequest();
+    });
 
-	describe('CourseController', function () {
-		var $rootScope, createController, $location, $modal, $q;
-		var mockCritiera = {
-			"criteria": [{
-				"created": "Sat, 06 Sep 2014 02:13:07 -0000",
-				"default": true,
-				"description": "<p>Choose the response that you think is the better of the two.</p>",
-				"id": 1,
-				"judged": true,
-				"modified": "Sat, 06 Sep 2014 02:13:07 -0000",
-				"name": "Which is better?",
-				"users_id": 1
-			}, {
-				"created": "Fri, 09 Jan 2015 18:35:58 -0000",
-				"default": false,
-				"description": "<p>Explaining what a better idea was</p>\n",
-				"id": 2,
-				"judged": false,
-				"modified": "Fri, 09 Jan 2015 18:35:58 -0000",
-				"name": "Which answer has the better idea?",
-				"users_id": 46
-			}]
-		};
+    describe('CourseController', function () {
+        var $rootScope, createController, $location, $modal, $q;
 
-		beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_) {
-			$rootScope = _$rootScope_;
-			$location = _$location_;
-			$modal = _$modal_;
-			$q = _$q_;
-			createController = function (route, params) {
-				return $controller('CourseController', {
-					$scope: $rootScope,
-					$routeParams: params || {},
-					$route: route || {}
-				});
-			}
-		}));
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_) {
+            $rootScope = _$rootScope_;
+            $location = _$location_;
+            $modal = _$modal_;
+            $q = _$q_;
+            createController = function (route, params) {
+                return $controller('CourseController', {
+                    $scope: $rootScope,
+                    $routeParams: params || {},
+                    $route: route || {}
+                });
+            }
+        }));
 
-		it('should have correct initial states', function () {
-			$httpBackend.expectGET('/api/criteria').respond(mockCritiera);
-			var controller = createController();
-			expect($rootScope.course).toEqual({criteria: []});
-			expect($rootScope.availableCriteria).toEqual([]);
-			$httpBackend.flush();
+        it('should have correct initial states', function () {
+            //double check nothing to initialize
+        });
 
-			expect($rootScope.loggedInUserId).toBe(mockUser.id);
-			expect($rootScope.canManageCriteriaCourses).toBe(true);
-		});
+        describe('view:', function () {
+            var controller;
+            describe('new', function () {
+                var toaster;
+                var course = {
+                    "name": "Test111",
+                    "year": 2015,
+                    "term": "Winter",
+                    "start_date": null,
+                    "end_date": null,
+                    "descriptionCheck": true,
+                    "description": "<p>Description</p>\n"
+                };
+                beforeEach(inject(function (_Toaster_) {
+                    toaster = _Toaster_;
+                    spyOn(toaster, 'error');
+                }));
 
-		describe('view:', function () {
-			var controller;
-			beforeEach(function () {
-				$httpBackend.whenGET('/api/criteria').respond(mockCritiera);
-			});
-			describe('new', function () {
-				beforeEach(function () {
-					controller = createController({current: {method: 'new'}});
-				});
+                beforeEach(function () {
+                    controller = createController({current: {method: 'new'}});
+                });
 
-				it('should be correctly initialized', function () {
-					$httpBackend.flush();
-				});
+                it('should be correctly initialized', function () {
+                    //double check nothing to initialize
+                });
 
-				it('should be able to save new user', function () {
-					var course = {
-						"name": "Test111", "descriptionCheck": true, "description": "<p>Description</p>\n",
-						"criteria": [{"id": 1}]
-					};
-					$rootScope.course = angular.copy(course);
-					$rootScope.course.id = undefined;
-					$httpBackend.expectPOST('/api/courses', $rootScope.course).respond(angular.merge({}, course, {id: 2}));
-					$httpBackend.expectGET('/api/session/permission').respond(mockSession['permissions']);
-					$rootScope.save();
-					expect($rootScope.submitted).toBe(true);
-					$httpBackend.flush();
-					expect($location.path()).toEqual('/course/2');
-					expect($rootScope.submitted).toBe(false);
-				})
-			});
+                it('should error when start date is not before end date', function () {
+                    $rootScope.course = angular.copy(course);
+                    $rootScope.course.id = undefined;
+                    $rootScope.date.course_start.date = new Date();
+                    $rootScope.date.course_start.time = new Date();
+                    $rootScope.date.course_end.date = new Date();
+                    $rootScope.date.course_end.time = new Date();
+                    $rootScope.date.course_end.date.setDate($rootScope.date.course_end.date.getDate()-1);
+                    var currentPath = $location.path();
 
-			describe('edit', function () {
-				var editCourse;
-				var courseCriteria = {
-					"objects": [
-						{
-							"active": true,
-							"course_id": 1,
-							"created": "Sat, 06 Sep 2014 02:13:07 -0000",
-							"default": true,
-							"description": "<p>Choose the response that you think is the better of the two.</p>",
-							"id": 1,
-							"in_question": false,
-							"judged": true,
-							"modified": "Sat, 06 Sep 2014 02:13:07 -0000",
-							"name": "Which is better?",
-							"users_id": 1
-						}
-					]
-				};
+                    $rootScope.save();
+                    expect($rootScope.submitted).toBe(false);
+                    expect(toaster.error).toHaveBeenCalledWith('Course Period Conflict', 'Course end date/time must be after course start date/time.');
+                    expect($location.path()).toEqual(currentPath);
+                });
 
-				beforeEach(function () {
-					editCourse = angular.copy(mockCourse);
-					editCourse.id = 2;
-					controller = createController({current: {method: 'edit'}}, {courseId: 2});
-					$httpBackend.expectGET('/api/courses/2').respond(editCourse);
-					$httpBackend.expectGET('/api/courses/2/criteria').respond(courseCriteria);
-					$httpBackend.flush();
-				});
+                it('should be able to save new course', function () {
+                    $rootScope.course = angular.copy(course);
+                    $rootScope.course.id = undefined;
+                    $httpBackend.expectPOST('/api/courses', $rootScope.course).respond(angular.merge({}, course, {id: 2}));
+                    $rootScope.save();
+                    expect($rootScope.submitted).toBe(true);
+                    $httpBackend.flush();
+                    expect($location.path()).toEqual('/course/2');
+                    expect($rootScope.submitted).toBe(false);
+                });
+            });
 
-				it('should be correctly initialized', function () {
-					expect($rootScope.course).toEqualData(_.merge(editCourse, {criteria: courseCriteria.objects}));
-					expect($rootScope.availableCriteria).toEqualData([mockCritiera.criteria[1]]);
-				});
+            describe('edit', function () {
+                var editCourse;
+                var toaster;
+                beforeEach(inject(function (_Toaster_) {
+                    toaster = _Toaster_;
+                    spyOn(toaster, 'error');
+                }));
 
-				it('should be able to save edited course', function () {
-					var editedCourse = angular.copy(editCourse);
-					editedCourse.name = 'new name';
-					$rootScope.course = editedCourse;
-					$httpBackend.expectPOST('/api/courses/2', $rootScope.course).respond(editedCourse);
-					$httpBackend.expectGET('/api/session/permission').respond(mockSession['permissions']);
-					$rootScope.save();
-					expect($rootScope.submitted).toBe(true);
-					$httpBackend.flush();
-					expect($location.path()).toEqual('/course/2');
-					expect($rootScope.submitted).toBe(false);
-				});
+                beforeEach(function () {
+                    editCourse = angular.copy(mockCourse);
+                    editCourse.id = 2;
+                    controller = createController({current: {method: 'edit'}}, {courseId: 2});
+                    $httpBackend.expectGET('/api/courses/2').respond(editCourse);
+                    $httpBackend.flush();
+                });
 
-				it('should be able to remove course criteria', function() {
-					$rootScope.availableCriteria = [{id: 1}, {id: 2}];
-					$rootScope.course.criteria = [{id: 1}, {id:3}];
-					controller.removeCourseCriteria();
-					expect($rootScope.availableCriteria).toEqual([{id: 2}]);
-				});
+                it('should be correctly initialized', function () {
+                    expect($rootScope.course).toEqualData(_.merge(editCourse));
+                });
 
-				it('should add criteria to course from available criteria when add is called', function() {
-					$rootScope.course.criteria = [];
-					$rootScope.availableCriteria = [{id: 1}, {id: 2}];
-					$rootScope.add(0);
-					expect($rootScope.course.criteria).toEqual([{id: 1}]);
-					expect($rootScope.availableCriteria).toEqual([{id: 2}]);
-				});
+                it('should error when start date is not before end date', function () {
+                    var editedCourse = angular.copy(editCourse);
+                    $rootScope.course = editedCourse;
+                    $rootScope.date.course_start.date = new Date();
+                    $rootScope.date.course_start.time = new Date();
+                    $rootScope.date.course_end.date = new Date();
+                    $rootScope.date.course_end.time = new Date();
+                    $rootScope.date.course_end.date.setDate($rootScope.date.course_end.date.getDate()-1);
+                    var currentPath = $location.path();
 
-				it('should remove criteria from course criteria when remove is called', function() {
-					$rootScope.course.criteria = [{id: 1, default: true}, {id: 2, default: false}];
-					$rootScope.availableCriteria = [];
-					$rootScope.remove(0);
-					// add to available list when default == true
-					expect($rootScope.course.criteria).toEqual([{id: 2, default: false}]);
-					expect($rootScope.availableCriteria).toEqual([{id: 1, default: true}]);
+                    $rootScope.save();
+                    expect($rootScope.submitted).toBe(false);
+                    expect(toaster.error).toHaveBeenCalledWith('Course Period Conflict', 'Course end date/time must be after course start date/time.');
+                    expect($location.path()).toEqual(currentPath);
+                });
 
-					$rootScope.remove(0);
-					// don't add to available list when default == false
-					expect($rootScope.course.criteria).toEqual([]);
-					expect($rootScope.availableCriteria).toEqual([{id: 1, default: true}]);
-				});
+                it('should be able to save edited course', function () {
+                    var editedCourse = angular.copy(editCourse);
+                    editedCourse.name = 'new name';
+                    editedCourse.year = 2016;
+                    editedCourse.term = "Summer";
+                    $rootScope.course = editedCourse;
+                    $httpBackend.expectPOST('/api/courses/2', $rootScope.course).respond(editedCourse);
+                    $rootScope.save();
+                    expect($rootScope.submitted).toBe(true);
+                    $httpBackend.flush();
+                    expect($location.path()).toEqual('/course/2');
+                    expect($rootScope.submitted).toBe(false);
+                });
 
-				it('should enable save button even if save failed', function() {
-					$rootScope.course = angular.copy(editCourse);
-					$httpBackend.expectPOST('/api/courses/2', $rootScope.course).respond(400, '');
-					$rootScope.save();
-					expect($rootScope.submitted).toBe(true);
-					$httpBackend.flush();
-					expect($rootScope.submitted).toBe(false);
-				});
-
-				describe('when changeCriterion is called', function() {
-					var deferred;
-					var criterion;
-					var closeFunc;
-					beforeEach(function() {
-						criterion = {id: 1, name: 'test'};
-						deferred = $q.defer();
-						closeFunc = jasmine.createSpy('close');
-						spyOn($modal, 'open').and.returnValue({result: deferred.promise, close: closeFunc});
-						$rootScope.changeCriterion(criterion);
-					});
-
-					it('should open a modal dialog', function() {
-						expect($modal.open).toHaveBeenCalledWith({
-							animation: true,
-							template: '<criteria-form criterion=criterion></criteria-form>',
-							scope: jasmine.any(Object)
-						})
-					});
-
-					it('should listen on CRITERIA_UPDATED event and close dialog', function() {
-						var updated = {id: 1, name: 'test1'};
-						$rootScope.$broadcast("CRITERIA_UPDATED", {criterion: updated});
-						expect(criterion).toEqual(updated);
-						expect(closeFunc).toHaveBeenCalled();
-					});
-					
-					it('should listen to CRITERIA_ADDED event and close dialog', function() {
-						$rootScope.course.criteria = [];
-						var criteria = {id: 1};
-						$rootScope.$broadcast("CRITERIA_ADDED", criteria);
-						expect($rootScope.course.criteria).toEqual([criteria]);
-						expect(closeFunc).toHaveBeenCalled();
-					});
-
-					it('should un-register listener when dialog is closed', function() {
-						deferred.resolve();
-						$rootScope.$digest();
-						$rootScope.$broadcast('CRITERIA_UPDATED');
-						expect(closeFunc).not.toHaveBeenCalled();
-					});
-				});
-			});
-		});
-	});
+                it('should enable save button even if save failed', function() {
+                    $rootScope.course = angular.copy(editCourse);
+                    $httpBackend.expectPOST('/api/courses/2', $rootScope.course).respond(400, '');
+                    $rootScope.save();
+                    expect($rootScope.submitted).toBe(true);
+                    $httpBackend.flush();
+                    expect($rootScope.submitted).toBe(false);
+                });
+            });
+        });
+    });
 });

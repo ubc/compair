@@ -5,7 +5,7 @@
   "authors": [
     "UBC CTLT"
   ],
-  "description": "Student learning tool where instructors and students may post and respond to questions. A method called Adaptive Comparative Judgement is used to give a ranking to the question responses.",
+  "description": "Student learning tool where instructors and students may respond and comment on assignments. A method called Adaptive Comparative Judgement is used to give a ranking to the assignment responses.",
   "main": "acj/static/acj.css",
   "license": "GPLv3",
   "private": true,
@@ -26,17 +26,20 @@
     "angular-route": "~1.4.7",
     "angular-sanitize": "~1.4.7",
     "angular-http-auth": "~1.2.2",
-    "angular-ckeditor": "~0.2.0",
-    "ng-breadcrumbs": "~0.4.1",
+    "ckeditor": "~4.5.10",
+    "highlightjs": "~9.0.0",
+    "angular-ckeditor": "~1.0.3",
+    "es-breadcrumbs": "~0.4.1",
     "angular-loading-bar": "~0.8.0",
     "AngularJS-Toaster": "~0.4.15",
-    "angular-moment": "~0.10.2",
+    "angular-moment": "~0.10.3",
     "angular-file-upload": "~1.1.5",
     "angular-mocks": "~1.4.7",
     "angular-bootstrap": "~0.13.3",
-    "angular-timer": "1.3.3",
+    "angular-timer": "1.3.4",
     "lodash": "~3.10.1",
-    "angular-file-saver": "0.1.4"
+    "angular-file-saver": "0.1.4",
+    "ngclipboard": "~1.1.1"
   },
   "resolutions": {
     "angular": "1.4.7"
@@ -51,6 +54,12 @@
     "bootstrap": {
       "main": [
         "dist/css/bootstrap.css"
+      ]
+    },
+    "highlightjs": {
+      "main": [
+          "highlight.pack.js",
+          "styles/foundation.css"
       ]
     }
   }

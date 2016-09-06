@@ -1,0 +1,221 @@
+
+
+/***** ASSIGNMENT SCREEN *****/
+
+.assignment-screen {
+
+  /* ul for metadata in assignment box */
+  .assignment-metadata-list {
+
+    margin: 2em 0;
+    padding-top: .5em;
+    color: @breadcrumb-gray;
+    border-top: 2px dotted @green-blue;
+
+    /* each piece of data */
+    li {
+
+      margin-top: .3em;
+      padding: .2em .5em;
+      border-right: 1px solid @green-blue;
+
+      &:first-child {
+        padding-left: 0;
+      }
+      &:last-child {
+        border-right: none;
+      }
+
+    }//closes li
+
+  }//closes assignment-metadata-list
+
+  /* class for ul creating tab navigation */
+  .nav-tabs {
+    border-color: @border-gray;
+  }
+
+    /* tab color to match alternating answer/comment color */
+    .nav-tabs > .active > a,
+    .nav > li > a:hover,
+    .nav > .active > a:focus {
+      background: @bkgrd-gray;
+    }
+
+  /* class on div wrapping all tab content */
+  .tab-content {
+
+    margin-bottom: 2em;
+
+    /* class on div wrapping tab header */
+    .tab-header {
+      margin: 0;
+      padding: 1em;
+      background: @bkgrd-gray;
+    }
+
+    /* class for divs that contain multiple filters */
+    .multi-filters {
+
+      margin-bottom: .5em;
+
+      /* each filter */
+      .filter {
+        margin: 0 0 .5em 0;
+      }
+
+    }//closes multi-filters
+
+    /* labels to be bigger than default */
+    .label {
+      font-size: 90%;
+      font-weight: normal;
+    }
+
+    /* add spacing to instructor labels */
+    .label-info {
+      margin-top: .4em;
+      display: inline-block;
+    }
+
+    /* manager-actions is class for action buttons div */
+    .manager-actions a {
+
+      margin-left: 1.2em;
+      padding-left: 1.2em;
+      display: inline-block;
+      font-weight: bold;
+      border-left: 1px solid @border-gray;
+
+      &:first-child {
+        border-left: none;
+      }
+
+    }//closes manager-actions a
+
+    /* class for answer, comment divs */
+    .each-answer,
+    .each-comment {
+
+      padding: 1em 1em 2em 1em;
+      color: @breadcrumb-gray;
+      border-bottom: 1px solid @border-gray;
+
+      /* limit how much of answer/comment content is shown */
+      > .content {
+        max-height: 200px;
+        overflow: hidden;
+      }
+      /* but not for instructors! */
+      > .content.instructor-answer {
+        max-height: none;
+      }
+
+    }//closes each-answer, each-comment
+
+    /* alternating answer/comment color to match tab color */
+    .all-answers > .each-answer:nth-child(odd),
+    .each-comment:nth-child(even){
+        background: @bkgrd-gray;
+    }
+
+    /* score help (?) icon */
+    .score-display i {
+      font-size: 1.2em;
+    }
+
+    /* read-more is style for p tag shown when content is cut off */
+    .read-more {
+
+      margin: 0 1em 1.5em 1em;
+      text-align: center;
+      border-top: 1px dashed @border-gray;
+
+      /* actual "read more" button */
+      .btn {
+        margin-top: -.8em;
+      }
+
+    }//closes read-more
+
+    /* h3 reply heading (conditionally displayed) */
+    .reply-heading {
+      margin: 0 0 2em 0;
+      font-size: 1.1em;
+      display: inline-block;
+      line-height: 1.3em;
+    }
+
+    /* class for reply divs */
+    .each-reply {
+
+      margin-left: 4em;
+      font-size: .85em;
+
+      /* hr divides answer from reply and replies from each other */
+      hr {
+        margin: 1.5em 0;
+        border: none;
+        border-bottom: 2px dotted @border-gray;
+      }
+
+      /* smaller actions here */
+      .manager-actions {
+        font-size: 1.15em;
+      }
+
+    }//closes each-reply
+
+    /* class  used on ALL main content divs (answers, replies, comments, comparisons) */
+    .content {
+      margin: 1em 0 1.5em 0;
+      color: #333;
+      font-size: 1.15em;
+    }
+
+    /* each evaluation matches look of each answer/comment/etc. elsewhere */
+    .each-evaluation {
+
+      padding: 1em 1em 2em 1em;
+      border-bottom: 1px solid @border-gray;
+
+      /* headings for comparison/feedback/self-evaluation inside each evaluation */
+      h5 {
+        padding-bottom: .3em;
+        color: #888;
+        font-size: 1em;
+        border-bottom: 2px solid @border-gray;
+      }
+
+    }//closes each-evaluation
+
+      .each-evaluation:nth-child(even){
+        background: @bkgrd-gray;
+      }
+
+  }//closes tab-content
+
+}//closes assignment-screen
+
+
+/***** ADD/EDIT assignment SCREEN *****/
+
+/* assignment form dates */
+.assignment-date {
+  display: inline-block;
+  width: 40%;
+  vertical-align: middle;
+
+  > span {
+    margin-right: 0;
+  }
+
+}//closes assignment-date
+
+.lti-param-copy {
+    display: inline-block;
+    margin-top: -2em;
+    font-size: 0.9em;
+    color: #888;
+}
+

@@ -3,24 +3,24 @@
 /***** PRINT *****/
 
 @media print {
-    
+
     /* set page margins */
     @page {
         margin: .5in .5in .8in .5in;
     }
-    
+
     /* use black font */
     * {
         color: #000 !important;
     }
-    
+
     /* for readability */
     body {
         font-family:  'Clarendon Std', 'Century Old Style Std', 'Century Schoolbook', Georgia, serif;
         line-height: 1.3;
         background: #fff;
     }
-    
+
     /* hide elements */
     .navbar,
     .breadcrumb-trail,
@@ -39,7 +39,7 @@
     .each-header img {
         display: none;
     }
-    
+
     /* shrink titles */
     h1,
     h2 {
@@ -52,7 +52,7 @@
     h5 {
         font-size: 120%;
     }
-    
+
     /* change blue backgrounds to gray */
     .btn-primary,
     .btn-primary[disabled],
@@ -60,32 +60,32 @@
         background: #fff;
         border: 1px solid @border-gray;
     }
-    
+
     /* restrain images */
     img {
         max-width: 100%;
     }
-    
+
     /* overwrite Bootstrap default for URLs */
     a[href]:after {
         content: none !important;
     }
-    
+
     /* metadata headers for answers and comparisons */
     .each-header {
         padding: .5em;
         font-weight: bold;
         border: 1px solid #000;
     }
-    
+
     /* soften labels */
     .label {
         background: transparent !important;
         border: 1px solid @border-gray;
     }
-    
+
     /* more blue to black */
-    .standalone-question,
+    .standalone-assignment,
     fieldset {
         background: #fff;
         border: 2px solid #000;
@@ -93,11 +93,11 @@
         fieldset .instructional-text {
             border-color: #000;
         }
-    .question-screen .question-metadata-list,
-    .question-screen .question-metadata-list > li {
+    .assignment-screen .assignment-metadata-list,
+    .assignment-screen .assignment-metadata-list > li {
         border-color: #000;
     }
-    
+
     /* for PDF viewer buttons */
     .pdfInline a {
         background: transparent;
@@ -106,10 +106,10 @@
         .pdfInline a:after {
             content: ' [Log in to the application to see and download this file]';
         }
-    
+
     /* add space for writing next to answers */
-    .question-screen .tab-content .each-answer > .content,
-    .question-screen .tab-content .each-comment > .content,
+    .assignment-screen .tab-content .each-answer > .content,
+    .assignment-screen .tab-content .each-comment > .content,
     .evaluations-screen .each-evaluation .content {
         max-height: none;
         width: 80%;

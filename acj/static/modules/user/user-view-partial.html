@@ -1,50 +1,52 @@
 <div>
-	<div class="pull-right" ng-if="canManageUser || showEditButton.available || ownProfile">
-		<a ng-href="#/user/{{user.id}}/edit" class="btn btn-primary">
-			<i class="fa fa-edit"></i> Edit
-		</a>
-	</div>
-	<h1><i class="fa fa-user"></i> {{user.displayname}}'s Profile</h1>
-	<p ng-if="!canCreateUser && ownProfile" class="intro-text">Instructors can always see your profile information if you are enrolled in their course. Students can only see your display name, icon, and the last time you logged in. To make yourself anonymous to other students, click the "Edit" button and change what appears in the "Display Name" field. (If your icon below is personalized, you can either remove your email address or log in to <a href="https://en.gravatar.com/">Gravatar</a> to change the icon.)</p>
-	<p ng-if="canCreateUser" class="intro-text">Instructors can always see student profile information if the student enrolls in the course that instructor is teaching. Students can only see each other's display name, icon, and the last time a student logged in. To ensure student anonymity, have your students check what appears as their icon and display name. To edit student information yourself, use the "Manage Users" option found inside an individual course.</p>
-	<hr>
-	<div class="col-md-4 gravatar-img">
-		<a href="https://en.gravatar.com/" title="Add or edit your user image with Gravatar">
-		   <img class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
-		</a>
-	</div>
-	<div class="col-md-8 user-details">
-		<div class="row" ng-if="canCreateUser || ownProfile">
-			<strong class="col-md-3">Application Role:</strong>
-			<div class="col-md-9">{{ user.system_role }}</div>
-		</div>
-		<div class="row" ng-if="canCreateUser || ownProfile">
-			<strong class="col-md-3">Username:</strong>
-			<div class="col-md-9">{{ user.username }}</div>
-		</div>
-		<div class="row" ng-if="canCreateUser || ownProfile">
-			<strong class="col-md-3">Student Number:</strong>
-			<div class="col-md-9">{{ user.student_no }}</div>
-		</div>
-		<div class="row" ng-if="canCreateUser || ownProfile">
-			<strong class="col-md-3">Name:</strong>
-			<div class="col-md-9">{{ user.fullname }}</div>
-		</div>
-		<div class="row">
-			<strong class="col-md-3">Display Name:</strong>
-			<div class="col-md-9">{{ user.displayname }}</div>
-		</div>
-		<div class="row" ng-if="canCreateUser || ownProfile">
-			<strong class="col-md-3">Email:</strong>
-			<div class="col-md-9">{{ user.email }}</div>
-		</div>
-		<div class="row">
-			<strong class="col-md-3">Last Online:</strong>
-            <div ng-show="user.lastonline" class="col-md-9">{{ user.lastonline | amDateFormat: 'MMM Do, YYYY @ h:mm a' }}</div>
-		</div>
-		<!-- <div class="row">
-			<strong class="col-md-3">Created On:</strong>
-			<div class="col-md-9">{{user.created}}</div>
-		</div> -->
-	</div>
+    <div class="pull-right" ng-if="canManageUser || showEditButton.available || ownProfile">
+        <a id="edit-profile-btn" ng-href="#/user/{{user.id}}/edit" class="btn btn-primary">
+            <i class="fa fa-edit"></i> Edit
+        </a>
+    </div>
+    <h1><i class="fa fa-user"></i> {{user.displayname}}'s Profile</h1>
+    <p ng-if="!(canManageUsers || loggedInUserIsInstructor) && ownProfile" class="intro-text">Instructors can always see your complete profile information, if you are enrolled in their course. Students can only see your display name, anonymous icon, and the last time you logged in. To make yourself fully anonymous to other students, click the "Edit" button and change what appears in the "Display Name" field.</p>
+    <p ng-if="canManageUsers || loggedInUserIsInstructor" class="intro-text">Instructors can always see complete student profile information, if the student enrolls in a course that instructor is teaching. Students can only see each other's display name, anonymous icon, and the last time a student logged in. To ensure student anonymity, have your students check what appears as their display name. (To edit student information in bulk, use the "Manage Users" option found on the course page.)</p>
+    <p ng-if="(canManageUsers || loggedInUserIsInstructor) && ownProfile" class="intro-text">Instructors may use personalized icons, which can be added and managed through <a href="https://en.gravatar.com/">Gravatar</a>.</p>
+    <hr>
+    <div class="col-md-4 gravatar-img">
+        <a ng-if="canManageUsers || loggedInUserIsInstructor" href="https://en.gravatar.com/" title="Add or edit your user image with Gravatar">
+           <img id="user_avatar" class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
+        </a>
+        <img ng-if="!(canManageUsers || loggedInUserIsInstructor)" id="user_avatar" class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
+    </div>
+    <div class="col-md-8 user-details">
+        <div class="row">
+            <strong class="col-md-3">Display Name:</strong>
+            <div id="user_displayname" class="col-md-9">{{ user.displayname }}</div>
+        </div>
+	<div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
+            <strong class="col-md-3">Name:</strong>
+            <div id="user_fullname" class="col-md-9">{{ user.fullname }}</div>
+        </div>
+	<div class="row" ng-if="(canManageUsers || loggedInUserIsInstructor || ownProfile) && user.system_role == SystemRole.student">
+            <strong class="col-md-3">Student Number:</strong>
+            <div id="user_student_number"  class="col-md-9">{{ user.student_number }}</div>
+        </div>
+        <div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
+            <strong class="col-md-3">Email:</strong>
+            <div id="user_email"  class="col-md-9">{{ user.email }}</div>
+        </div>
+	<div class="row" ng-if="(canManageUsers || loggedInUserIsInstructor || ownProfile) && user.uses_acj_login">
+            <strong class="col-md-3">Username:</strong>
+            <div id="user_username" class="col-md-9">{{ user.username }}</div>
+        </div>
+	<div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
+            <strong class="col-md-3">Application Role:</strong>
+            <div id="user_system_role" class="col-md-9">{{ user.system_role }}</div>
+        </div>
+        <div class="row">
+            <strong class="col-md-3">Last Online:</strong>
+            <div id="user_last_online" ng-show="user.last_online" class="col-md-9">{{ user.last_online | amDateFormat: 'MMM Do, YYYY @ h:mm a' }}</div>
+        </div>
+        <!-- <div class="row">
+            <strong class="col-md-3">Created On:</strong>
+            <div class="col-md-9">{{user.created}}</div>
+        </div> -->
+    </div>
 </div>

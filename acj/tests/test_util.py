@@ -1,32 +1,33 @@
-from data.fixtures import PostsFactory, PostsForQuestionsFactory
+from data.fixtures import AssignmentFactory
 
 from acj.core import db
-from acj.util import get_model_changes
+from acj.api.util import get_model_changes
 from acj.tests.test_acj import ACJTestCase
 
 
 class DbUtilTests(ACJTestCase):
     def test_get_model_changes(self):
-        post = PostsFactory()
-        question = PostsForQuestionsFactory()
-        question.post = post
+        assignment = AssignmentFactory()
 
         db.session.commit()
 
-        self.assertEqual(get_model_changes(question), None, 'should return None on no change model')
+        self.assertEqual(get_model_changes(assignment), None, 'shoul return None on no change model')
 
-        oldname = question.title
-        question.title = 'new title'
+        oldname = assignment.name
+        assignment.name = 'new name'
 
         self.assertDictEqual(
-            get_model_changes(question), {'title': {'before': oldname, 'after': 'new title'}},
+            get_model_changes(assignment), {
+                'name': {'before': oldname, 'after': 'new name'}
+            },
             'should find the change when attribute changes')
 
-        oldcontent = question.post.content
-        question.post.content = "new content"
+        olddescription = assignment.description
+        assignment.description = "new description"
 
         self.assertDictEqual(
-            get_model_changes(question), {
-                'title': {'before': oldname, 'after': 'new title'},
-                'post': {'content': {'before': oldcontent, 'after': 'new content'}}},
+            get_model_changes(assignment), {
+                'name': {'before': oldname, 'after': 'new name'},
+                'description': {'before': olddescription, 'after': 'new description'}
+            },
             'should find the change when attribute changes')
