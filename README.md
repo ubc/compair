@@ -18,14 +18,14 @@ The frontend is purely written in Javascript, using [AngularJS](http://angularjs
 The backend uses the python web application framework [Flask](http://flask.pocoo.org/) with [Flask SQLAlchemy](http://pythonhosted.org/Flask-SQLAlchemy/) for database persistence.
 [Alembic] (http://alembic.readthedocs.org/) is used to maintain database updates.
 
-Developer Installation
-----------------------
+Developer Installation - VM
+---------------------------
 
 ### Install Dependencies
 
 ### Vagrant up the VM
 
-	git clone git@github.com:ubc/acj-versus.git acj
+	git clone git@github.com:ubc/acj-versus.git compair
 	cd acj && vagrant up
 
 ### Start Up the ACJ server
@@ -47,6 +47,48 @@ The default password is `acjacj`
 If you already have a MySQL server running on your host, you may need to use the following command:
 
 	mysql -u acj --protocol=TCP -P 3306 -p acj
+
+Developer Installation - Docker
+-------------------------------
+
+### Prerequisites
+
+* [Docker Engine](https://docs.docker.com/engine/installation/)
+* [Docker Compose](https://docs.docker.com/compose/install/)
+
+### Clone Repo and Start Server
+
+    git clone git@github.com:ubc/acj-versus.git compair
+    docker-compose up -d
+
+After initialization is finished, run the following command if it is the first time:
+
+    docker exec -it compair_app python manage.py database create
+
+ComPAIR is accessible at
+
+    http://localhost:8080/
+
+### Stop Server
+
+    docker-compose stop
+
+### Stop Server and Clean Up
+
+    docker-compose down
+    rm -rf .data
+
+### Access Database
+
+    docker exec -it compair_app_1 mysql
+
+### Run Management Command
+
+    docker exec -it compair_app_1 python manage.py COMMAND
+
+### Build Docker Image Locally
+
+    docker build -t ubcctlt/compair-app -f deploy/docker/Dockerfile-dev .
 
 Generate Production Release
 ---------------------------
