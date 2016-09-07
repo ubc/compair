@@ -15,6 +15,7 @@ var module = angular.module('ubc.ctlt.acj.classlist',
         'ubc.ctlt.acj.user',
         'ubc.ctlt.acj.lti',
         'ubc.ctlt.acj.authorization',
+        'ubc.ctlt.acj.oauth',
         'ui.bootstrap',
         'fileSaver'
     ]
@@ -124,7 +125,7 @@ module.controller(
 				return user.selected == true
 			})
 		};
-	
+
         $scope.resetSelected = function() {
             angular.forEach($scope.classlist, function(user) {
                 user.selected = false;
@@ -286,8 +287,10 @@ module.controller(
 
 module.controller(
     'ClassImportController',
-    ["$scope", "$log", "$location", "$routeParams", "ClassListResource", "CourseResource", "Toaster", "importService",
-    function($scope, $log, $location, $routeParams, ClassListResource, CourseResource, Toaster, importService)
+    ["$scope", "$log", "$location", "$routeParams", "ClassListResource", "CourseResource",
+        "Toaster", "importService", "ThirdPartyAuthType",
+    function($scope, $log, $location, $routeParams, ClassListResource, CourseResource,
+             Toaster, importService, ThirdPartyAuthType)
     {
         $scope.course = {};
         var courseId = $routeParams['courseId'];
@@ -299,10 +302,21 @@ module.controller(
                 Toaster.reqerror("No Course Found For ID "+courseId, ret);
             }
         );
+        $scope.ThirdPartyAuthType = ThirdPartyAuthType;
+        $scope.importTypes = [
+            {'value': null, 'name': 'ComPAIR username'},
+            {'value': ThirdPartyAuthType.cwl, 'name': 'CWL username'}
+        ];
+        // default value
+        $scope.importType = ThirdPartyAuthType.cwl;
+
         $scope.uploader = importService.getUploader(courseId, 'users');
         $scope.uploader.onCompleteItem = function(fileItem, response, status, headers) {
             $scope.submitted = false;
             importService.onComplete(courseId, response);
+        };
+        $scope.uploader.onBeforeUploadItem = function(fileItem) {
+            fileItem.formData.push({ 'import_type': $scope.importType });
         };
         $scope.uploader.onErrorItem = importService.onError();
 
