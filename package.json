@@ -37,7 +37,7 @@
     "karma-junit-reporter": "^0.3.3",
     "karma-ng-html2js-preprocessor": "~0.1",
     "karma-phantomjs-launcher": "~0.2",
-    "phantomjs": "~2.1",
+    "phantomjs-prebuilt": "~2.1",
     "lodash": "^3.10",
     "protractor-cucumber-framework": "~0.6.0",
     "object-assign": "~4.1"

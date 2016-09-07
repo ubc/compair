@@ -13,6 +13,7 @@ services:
     image: ubcctlt/compair-app
     environment:
       - DATABASE_URI=mysql+pymysql://compair:compair@db:3306/compair
+      - DEV=1
     volumes:
       - .:/code
     depends_on:
