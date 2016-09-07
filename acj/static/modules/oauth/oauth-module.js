@@ -14,6 +14,10 @@ var module = angular.module('ubc.ctlt.acj.oauth', [
     'ubc.ctlt.acj.authorization'
 ]);
 
+module.constant('ThirdPartyAuthType', {
+    cwl: "CWL"
+});
+
 /***** Controllers *****/
 module.controller("OAuthController",
     ['$rootScope', '$scope', '$route', '$location', 'breadcrumbs', 'Session', 'LTI', 'AuthenticationService',

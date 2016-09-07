@@ -9,6 +9,7 @@ from flask.ext.login import login_required, current_user
 from flask.ext.restful import Resource, marshal, abort
 from six import StringIO
 from sqlalchemy import and_
+from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 
 from flask.ext.restful.reqparse import RequestParser
@@ -16,7 +17,8 @@ from flask.ext.restful.reqparse import RequestParser
 from . import dataformat
 from acj.core import db, event
 from acj.authorization import allow, require, USER_IDENTITY
-from acj.models import UserCourse, Course, User, SystemRole, CourseRole
+from acj.models import UserCourse, Course, User, SystemRole, CourseRole, \
+    ThirdPartyType, ThirdPartyUser
 from .util import new_restful_api
 from .file import random_generator, allowed_file
 
@@ -29,6 +31,10 @@ new_course_user_parser.add_argument('course_role', type=str)
 update_users_course_role_parser = RequestParser()
 update_users_course_role_parser.add_argument('ids', type=list, required=True, default=[], location='json')
 update_users_course_role_parser.add_argument('course_role', default=CourseRole.dropped.value, type=str)
+
+
+import_classlist_parser = RequestParser()
+import_classlist_parser.add_argument('import_type', default=None, type=str, required=False)
 
 # upload file column name to index number
 USERNAME = 0
@@ -53,27 +59,57 @@ on_classlist_update_users_course_roles = event.signal('CLASSLIST_UPDATE_USERS_CO
 def display_name_generator(role="student"):
     return "".join([role, '_', random_generator(8, string.digits)])
 
+def _get_existing_users_by_identifier(import_type, users):
+    usernames = [u[USERNAME] for u in users if len(u) > USERNAME]
+    if len(usernames) == 0:
+        return {}
 
-def import_users(course_id, users):
+    if import_type == ThirdPartyType.cwl.value:
+        # CWL login
+        third_party_users = ThirdPartyUser.query \
+            .options(joinedload('user')) \
+            .filter(ThirdPartyUser.unique_identifier.in_(usernames)) \
+            .all()
+        return {
+            third_party_user.unique_identifier: third_party_user.user for third_party_user in third_party_users
+        }
+    else:
+        # ComPAIR login
+        users = User.query \
+            .filter(User.username.in_(usernames)) \
+            .all()
+        return {
+            u.username: u for u in users
+        }
+
+def _get_existing_users_by_student_number(users):
+    student_number = [u[STUDENTNO] for u in users if len(u) > STUDENTNO]
+    if len(student_number) == 0:
+        return {}
+
+    users = User.query \
+        .filter(User.student_number.in_(student_number)) \
+        .all()
+    return {
+        u.student_number: u for u in users
+    }
+
+def import_users(import_type, course_id, users):
     invalids = []  # invalid entries - eg. invalid # of columns
-    # store unique user identifiers - eg. student number - throws error if duplicate in file
-    exist_usernames = []
-    exist_studentnos = []
     count = 0  # store number of successful enrolments
+
+    imported_users = []
+
+    # store unique user identifiers - eg. student number - throws error if duplicate in file
+    import_unique_identifiers = []
+    import_student_numbers = []
+
+    # store unique user identifiers - eg. student number - throws error if duplicate in file
+    existing_system_unique_identifiers = _get_existing_users_by_identifier(import_type, users)
+    existing_system_student_numbers = _get_existing_users_by_student_number(users)
 
     # constants
     letters_digits = string.ascii_letters + string.digits
-
-    usernames = [u[USERNAME] for u in users if len(u) > USERNAME]
-    usernames_system = User.query.filter(User.username.in_(usernames)).all()
-    usernames_system = {u.username: u for u in usernames_system}
-
-    student_number = [u[STUDENTNO] for u in users if len(u) > STUDENTNO]
-    if len(student_number) > 0:
-        studentno_system = User.query.filter(User.student_number.in_(student_number)).all()
-        studentno_system = {u.student_number: u.username for u in studentno_system}
-    else:
-        studentno_system = {}
 
     # create / update users in file
     for user in users:
@@ -81,44 +117,59 @@ def import_users(course_id, users):
         if length < 1:
             continue  # skip empty row
 
-        # TEMP USER
-        temp = User()
-        temp.username = user[USERNAME].lower() if length > USERNAME and user[USERNAME] else None
+        # validate unique identifier
+        unique_identifier = user[USERNAME].lower() if length > USERNAME and user[USERNAME] else None
 
-        # VALIDATION
-        # validate username
-        if not temp.username:
-            invalids.append({'user': temp, 'message': 'The username is required.'})
+        if not unique_identifier:
+            invalids.append({'user': User(username=unique_identifier), 'message': 'The username is required.'})
             continue
-        elif temp.username in exist_usernames:
-            invalids.append({'user': temp, 'message': 'This username already exists in the file.'})
+        elif unique_identifier in import_unique_identifiers:
+            invalids.append({'user': User(username=unique_identifier), 'message': 'This username already exists in the file.'})
             continue
 
-        u = usernames_system.get(temp.username, None)
+        u = existing_system_unique_identifiers.get(unique_identifier, None)
         if not u:
-            u = temp
+            u = User()
+            if import_type == ThirdPartyType.cwl.value:
+                # CWL login
+                third_party_user = ThirdPartyUser(
+                    unique_identifier=unique_identifier,
+                    third_party_type=ThirdPartyType.cwl
+                )
+                u.username = None
+                u.third_party_auths.append(third_party_user)
+            else:
+                # ComPAIR login
+                u.username = unique_identifier
         else:
             # user exists in the system, skip user creation
-            exist_usernames.append(u.username)
-            usernames_system.setdefault(u.username, u)
-            exist_studentnos.append(u.student_number)
-            studentno_system.setdefault(u.student_number, u.username)
+            import_unique_identifiers.append(unique_identifier)
+            import_student_numbers.append(u.student_number)
+            imported_users.append(u)
             continue
 
         u.student_number = user[STUDENTNO] if length > STUDENTNO and user[STUDENTNO] else None
         u.firstname = user[FIRSTNAME] if length > FIRSTNAME and user[FIRSTNAME] else None
         u.lastname = user[LASTNAME] if length > LASTNAME and user[LASTNAME] else None
         u.email = user[EMAIL] if length > EMAIL and user[EMAIL] else None
-        u.password = user[PASSWORD] if length > PASSWORD and user[PASSWORD] else random_generator(16, letters_digits)
+
+        if import_type == ThirdPartyType.cwl.value:
+            # CWL login
+            u.password = None
+        else:
+            # ComPAIR login
+            u.password = user[PASSWORD] if length > PASSWORD and user[PASSWORD] else random_generator(16, letters_digits)
 
         # validate student number (if not None)
         if u.student_number:
             # invalid if already showed up in file
-            if u.student_number in exist_studentnos:
+            if u.student_number in import_student_numbers:
+                u.username = unique_identifier
                 invalids.append({'user': u, 'message': 'This student number already exists in the file.'})
                 continue
             # invalid if student number already exists in the system
-            elif u.student_number in studentno_system:
+            elif u.student_number in existing_system_student_numbers:
+                u.username = unique_identifier
                 invalids.append({'user': u, 'message': 'This student number already exists in the system.'})
                 continue
 
@@ -126,15 +177,18 @@ def import_users(course_id, users):
         displayname = user[DISPLAYNAME] if length > DISPLAYNAME and user[DISPLAYNAME] else None
         u.displayname = displayname if displayname else display_name_generator()
 
-        exist_usernames.append(u.username)
-        usernames_system.setdefault(u.username, u)
-        exist_studentnos.append(u.student_number)
-        studentno_system.setdefault(u.student_number, u.username)
+        import_unique_identifiers.append(unique_identifier)
+        import_student_numbers.append(u.student_number)
         db.session.add(u)
+        imported_users.append(u)
     db.session.commit()
 
-    enroled = UserCourse.query.filter_by(course_id=course_id).all()
+    enroled = UserCourse.query \
+        .filter_by(course_id=course_id) \
+        .all()
+
     enroled = {e.user_id: e for e in enroled}
+
     students = UserCourse.query \
         .filter_by(
             course_id=course_id,
@@ -144,8 +198,7 @@ def import_users(course_id, users):
     students = {s.user_id: s for s in students}
 
     # enrol valid users in file
-    to_enrol = User.query.filter(User.username.in_(exist_usernames)).all()
-    for user in to_enrol:
+    for user in imported_users:
         enrol = enroled.get(user.id, UserCourse(course_id=course_id, user_id=user.id))
         enrol.course_role = CourseRole.student
         db.session.add(enrol)
@@ -239,6 +292,9 @@ class ClasslistRootAPI(Resource):
         user_course = UserCourse(course_id=course_id)
         require(EDIT, user_course)
 
+        params = import_classlist_parser.parse_args()
+        import_type = params.get('import_type')
+
         uploaded_file = request.files['file']
         results = {'success': 0, 'invalids': []}
         if uploaded_file and allowed_file(uploaded_file.filename, current_app.config['UPLOAD_ALLOWED_EXTENSIONS']):
@@ -253,8 +309,10 @@ class ClasslistRootAPI(Resource):
                 for row in spamreader:
                     if row:
                         users.append(row)
+
                 if len(users) > 0:
-                    results = import_users(course_id, users)
+                    results = import_users(import_type, course_id, users)
+
                 on_classlist_upload.send(
                     self,
                     event_name=on_classlist_upload.name,
