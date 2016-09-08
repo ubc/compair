@@ -5,6 +5,7 @@ MAINTAINER Pan Luo <pan.luo@ubc.ca>
 ENV PYTHONUNBUFFERED 1
 ENV NPM_CONFIG_LOGLEVEL info
 ENV NODE_VERSION 4.5.0
+ENV PYTHONPATH=/code
 ENV DEV 0
 
 # install node (copied from nodejs dockerfile)

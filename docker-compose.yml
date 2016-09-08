@@ -9,6 +9,9 @@ services:
       - MYSQL_PASSWORD=compair
     volumes:
       - ./.data:/var/lib/mysql
+    # uncomment to forward ports to host
+    #ports:
+    #  - "13306:3306"
   app:
     image: ubcctlt/compair-app
     environment:

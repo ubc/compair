@@ -69,6 +69,15 @@ ComPAIR is accessible at
 
     http://localhost:8080/
 
+### Check Logs
+
+    # app
+    docker log -f compair_app_1
+    # nginx
+    docker log -f compair_web_1
+    # db
+    docker log -f compair_db_1
+
 ### Stop Server
 
     docker-compose stop
@@ -81,6 +90,10 @@ ComPAIR is accessible at
 ### Access Database
 
     docker exec -it compair_app_1 mysql
+
+### Upgrade Database
+
+    docker exec -it compair_app_1 alembic upgrade head
 
 ### Run Management Command
 
