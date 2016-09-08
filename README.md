@@ -107,7 +107,7 @@ ComPAIR is accessible at
 
 ### Build Docker Image Locally
 
-    docker build -t ubcctlt/compair-app -f deploy/docker/Dockerfile-dev .
+    docker build -t ubcctlt/compair-app .
 
 Generate Production Release
 ---------------------------
