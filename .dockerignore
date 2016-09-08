@@ -1,0 +1,11 @@
+.git
+acj/static/pdf/*
+acj/static/report/*
+
+node_modules
+bower_components
+
+.vagrant
+Vagrantfile
+
+.data

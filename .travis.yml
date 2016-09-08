@@ -1,5 +1,13 @@
 language: python
 
+dist: trusty
+
+sudo: required
+
+services:
+  - docker
+  - mysql
+
 cache: pip
 
 before_cache:
@@ -23,26 +31,37 @@ matrix:
       env: INTEGRATION_TEST=true TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=52 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
     - python: "3.4"
       env: INTEGRATION_TEST=true TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=44 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
+    - python: "3.4"
+      env: DOCKER=true
   allow_failures:
-      - env: INTEGRATION_TEST=true TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=52 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
-      - env: INTEGRATION_TEST=true TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=44 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
+    - env: INTEGRATION_TEST=true TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=52 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
+    - env: INTEGRATION_TEST=true TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=44 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
 
 addons:
   sauce_connect: true
 
 before_script:
-  - sh -c "if [ '$DB' = 'mysql' ]; then mysql -e 'create database IF NOT EXISTS acj;'; fi"
+  - if [ '$DB' = 'mysql' ]; then mysql -e 'create database IF NOT EXISTS acj;'; fi
   - if [ "$INTEGRATION_TEST" = "true" ]; then gulp prod; fi
 
 before_install:
- - nvm install 6.4
- - if [ "$INTEGRATION_TEST" != "true" ]; then unset SAUCE_USERNAME && unset SAUCE_ACCESS_KEY; fi
+  - nvm install 6.4
+  - if [ "$INTEGRATION_TEST" != "true" ]; then unset SAUCE_USERNAME && unset SAUCE_ACCESS_KEY; fi
+  # workaround for issue https://github.com/travis-ci/travis-ci/issues/4870
+  - if [ "$DB" = "mysql" ]; then sudo apt-get install mariadb-server; fi
+  - if [ "$DOCKER" = "true" ]; then docker build -t ubcctlt/compair-app -f deploy/docker/Dockerfile-dev .; fi
 
 # command to install dependencies
 install:
   - "make deps"
+  - if [ "$DOCKER" = "true" ]; then docker-compose up -d; sleep 10; fi
 
-script: ./scripts/travis_script.sh
+script:
+  - ./scripts/travis_script.sh
+  - if [ "$DOCKER" = "true" ]; then curl -sSf http://localhost:8080 > /dev/null && curl -sSf http://localhost:8080/api/healthz > /dev/null; fi
+
+after_failure:
+  - if [ "$DOCKER" = "true" ]; then timeout 3s docker-compose logs app db web; fi
 
 notifications:
   slack: ubcctlt:cyfS7OeXqRjqhyrpIMHJ0SRd

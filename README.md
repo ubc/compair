@@ -18,14 +18,14 @@ The frontend is purely written in Javascript, using [AngularJS](http://angularjs
 The backend uses the python web application framework [Flask](http://flask.pocoo.org/) with [Flask SQLAlchemy](http://pythonhosted.org/Flask-SQLAlchemy/) for database persistence.
 [Alembic] (http://alembic.readthedocs.org/) is used to maintain database updates.
 
-Developer Installation
-----------------------
+Developer Installation - VM
+---------------------------
 
 ### Install Dependencies
 
 ### Vagrant up the VM
 
-	git clone git@github.com:ubc/acj-versus.git acj
+	git clone git@github.com:ubc/acj-versus.git compair
 	cd acj && vagrant up
 
 ### Start Up the ACJ server
@@ -48,18 +48,72 @@ If you already have a MySQL server running on your host, you may need to use the
 
 	mysql -u acj --protocol=TCP -P 3306 -p acj
 
+### Upgrade Database
+
+    vagrant ssh # only for developer installation
+    cd /vagrant
+    PYTHONPATH=. alembic upgrade head
+
+Developer Installation - Docker
+-------------------------------
+
+### Prerequisites
+
+* [Docker Engine](https://docs.docker.com/engine/installation/)
+* [Docker Compose](https://docs.docker.com/compose/install/)
+
+### Clone Repo and Start Server
+
+    git clone git@github.com:ubc/acj-versus.git compair
+    docker-compose up -d
+
+After initialization is finished, run the following command if it is the first time:
+
+    docker exec -it compair_app_1 python manage.py database create
+
+ComPAIR is accessible at
+
+    http://localhost:8080/
+
+### Check Logs
+
+    # app
+    docker logs -f compair_app_1
+    # nginx
+    docker logs -f compair_web_1
+    # db
+    docker logs -f compair_db_1
+
+### Stop Server
+
+    docker-compose stop
+
+### Stop Server and Clean Up
+
+    docker-compose down
+    rm -rf .data
+
+### Access Database
+
+    docker exec -it compair_app_1 mysql
+
+### Upgrade Database
+
+    docker exec -it compair_app_1 alembic upgrade head
+
+### Run Management Command
+
+    docker exec -it compair_app_1 python manage.py COMMAND
+
+### Build Docker Image Locally
+
+    docker build -t ubcctlt/compair-app -f deploy/docker/Dockerfile-dev .
+
 Generate Production Release
 ---------------------------
 Run `gulp prod` to generate the production version. This currently just does two things:
 1. Combine all Bower managed javascript libraries into a single minified file.
 2. Compile and minify the less files into a single css file.
-
-Database Upgrade
-----------------
-
-    vagrant ssh # only for developer installation
-    cd /vagrant
-    PYTHONPATH=. alembic upgrade head
 
 Google Analytics Web Tracking
 -----------------------------

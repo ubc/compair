@@ -1,0 +1,32 @@
+version: '2'
+services:
+  db:
+    image: mariadb:10.1
+    environment:
+      - MYSQL_ROOT_PASSWORD=randompassword
+      - MYSQL_DATABASE=compair
+      - MYSQL_USER=compair
+      - MYSQL_PASSWORD=compair
+    volumes:
+      - ./.data:/var/lib/mysql
+    # uncomment to forward ports to host
+    ports:
+      - "13306:3306"
+  app:
+    image: ubcctlt/compair-app
+    environment:
+      - DATABASE_URI=mysql+pymysql://compair:compair@db:3306/compair
+      - DEV=1
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+  web:
+    image: nginx:1.11
+    volumes:
+      - ./deploy/docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./acj/static:/static:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - app

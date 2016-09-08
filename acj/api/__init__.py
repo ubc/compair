@@ -93,6 +93,9 @@ def register_api_blueprints(app):
         timer_api,
         url_prefix='/api/timer')
 
+    from .healthz import healthz_api
+    app.register_blueprint(healthz_api)
+
     @app.route('/')
     def route_root():
         return redirect('/static/index.html#/')

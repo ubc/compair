@@ -54,6 +54,7 @@ node_modules
 .vagrant
 
 .env
+.python-version
 
 # uploaded files
 acj/static/pdf/*
@@ -61,3 +62,6 @@ acj/static/report/*
 
 # google analytics file
 acj/static/tracking.js
+
+# docker generated data
+.data
