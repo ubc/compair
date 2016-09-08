@@ -48,6 +48,12 @@ If you already have a MySQL server running on your host, you may need to use the
 
 	mysql -u acj --protocol=TCP -P 3306 -p acj
 
+### Upgrade Database
+
+    vagrant ssh # only for developer installation
+    cd /vagrant
+    PYTHONPATH=. alembic upgrade head
+
 Developer Installation - Docker
 -------------------------------
 
@@ -63,7 +69,7 @@ Developer Installation - Docker
 
 After initialization is finished, run the following command if it is the first time:
 
-    docker exec -it compair_app python manage.py database create
+    docker exec -it compair_app_1 python manage.py database create
 
 ComPAIR is accessible at
 
@@ -72,11 +78,11 @@ ComPAIR is accessible at
 ### Check Logs
 
     # app
-    docker log -f compair_app_1
+    docker logs -f compair_app_1
     # nginx
-    docker log -f compair_web_1
+    docker logs -f compair_web_1
     # db
-    docker log -f compair_db_1
+    docker logs -f compair_db_1
 
 ### Stop Server
 
@@ -108,13 +114,6 @@ Generate Production Release
 Run `gulp prod` to generate the production version. This currently just does two things:
 1. Combine all Bower managed javascript libraries into a single minified file.
 2. Compile and minify the less files into a single css file.
-
-Database Upgrade
-----------------
-
-    vagrant ssh # only for developer installation
-    cd /vagrant
-    PYTHONPATH=. alembic upgrade head
 
 Google Analytics Web Tracking
 -----------------------------
