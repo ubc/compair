@@ -55,7 +55,8 @@ env_overridables = [
     'CAS_LOGIN_ROUTE', 'CAS_LOGOUT_ROUTE',
     'CAS_LOGOUT_RETURN_URL', 'CAS_VERSION',
     'CAS_VALIDATE_ROUTE',
-    'SECRET_KEY', 'UPLOAD_FOLDER', 'ATTACHMENT_UPLOAD_FOLDER']
+    'SECRET_KEY', 'UPLOAD_FOLDER', 'ATTACHMENT_UPLOAD_FOLDER',
+    'ASSET_LOCATION', 'ASSET_CLOUD_URI_PREFIX']
 
 for env in env_overridables:
     if os.environ.get(env):

@@ -57,7 +57,9 @@ myApp.factory('defaultErrorHandlerInterceptor', ['$q', '$log', 'Toaster', functi
     }
 }]);
 
-myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($routeProvider, $logProvider, $httpProvider) {
+myApp.config(['$routeProvider', '$logProvider', '$httpProvider', '$locationProvider',
+    function ($routeProvider, $logProvider, $httpProvider, $locationProvider) {
+
     var debugMode = false;
 
     if (!$httpProvider.defaults.headers.common) {
@@ -66,6 +68,10 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
     $httpProvider.defaults.headers.common['If-Modified-Since'] = '0';
     $httpProvider.defaults.headers.common.Accept = 'application/json';
     $httpProvider.interceptors.push('defaultErrorHandlerInterceptor');
+
+    // doesn't work for now. URLs are encoded in address bar
+    // $locationProvider.html5Mode(true);
+    // $locationProvider.hashPrefix('!');
 
     $routeProvider
         .when ('/',

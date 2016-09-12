@@ -1,4 +1,6 @@
 from flask import redirect
+from flask import render_template
+
 
 def register_api_blueprints(app):
     # Initialize rest of the api modules
@@ -96,9 +98,30 @@ def register_api_blueprints(app):
     from .healthz import healthz_api
     app.register_blueprint(healthz_api)
 
+    @app.route('/app/')
+    def route_app():
+        if app.debug:
+            return render_template('index-dev.html')
+
+        # running in prod mode, figure out asset location
+        assets = app.config['ASSETS']
+        prefix = ''
+        if app.config['ASSET_LOCATION'] == 'cloud':
+            prefix = app.config['ASSET_CLOUD_URI_PREFIX']
+        elif app.config['ASSET_LOCATION'] == 'local':
+            prefix = app.static_url_path + '/dist/'
+        else:
+            app.logger.error('Invalid ASSET_LOCATION value ' + app.config['ASSET_LOCATION'] + '.')
+
+        return render_template(
+            'index.html',
+            bower_js_libs=prefix + assets['bowerJsLibs.js'],
+            acj_js=prefix + assets['acj.js'],
+            acj_css=prefix + assets['acj.css'])
+
     @app.route('/')
     def route_root():
-        return redirect('/static/index.html#/')
+        return redirect("/app/")
 
     return app
 

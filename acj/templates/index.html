@@ -2,6 +2,7 @@
 <!--[if IE 9]><html ng-app = "myApp" auth-login class="ie9"><![endif]-->
 <html ng-app = "myApp" auth-login>
     <head>
+        <base href="/app/">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <!-- add empty favicon.ico to prevent broswer errors -->
@@ -9,27 +10,27 @@
         <title>ComPAIR</title>
 
         <!-- needed when ckeditor is minified or when running unit tests -->
-        <script src="lib_extension/ckeditor/basepath.js"></script>
+        <script src="{{ url_for('static', filename='lib_extension/ckeditor/basepath.js') }}"></script>
 
         <!-- Bower Installed Libs, automatically inserted using gulp modules -->
         <!-- bower:css -->
-        <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.css" />
-        <link rel="stylesheet" href="lib/fontawesome/css/font-awesome.css" />
-        <link rel="stylesheet" href="lib/highlightjs/styles/foundation.css" />
-        <link rel="stylesheet" href="lib/angular-loading-bar/build/loading-bar.css" />
-        <link rel="stylesheet" href="lib/AngularJS-Toaster/toaster.css" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='lib/bootstrap/dist/css/bootstrap.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='lib/fontawesome/css/font-awesome.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='lib/highlightjs/styles/foundation.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='lib/angular-loading-bar/build/loading-bar.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='lib/AngularJS-Toaster/toaster.css') }}" />
         <!-- endbower -->
 
         <!-- Javascript Libraries -->
         <!-- build:prod_minify_js_libs -->
-        <script src="dist/bowerJsLibs-cb918ae4cb.js"></script>
+        <script src="{{ bower_js_libs }}"></script>
         <!-- endbuild -->
 
         <!-- Non-Bower Managed Includes -->
 
         <!-- ACJ Stylesheet -->
         <!-- build:prod_compile_minify_css -->
-        <link rel="stylesheet" href="dist/acj-c2cc877678.css">
+        <link rel="stylesheet" href="{{ acj_css }}">
         <!-- endbuild -->
 
         <!-- MathJax, should figure out how to bower manage this -->
@@ -43,7 +44,7 @@
         </script>
 
         <!-- build:prod_minify_js -->
-        <script src="dist/acj-5bffb926fb.js"></script>
+        <script src="{{ acj_js }}"></script>
         <!-- endbuild -->
 
         <!-- Google Analytics -->

@@ -35,3 +35,8 @@ PASSLIB_CONTEXT = 'default'
 
 # make the session valid for a day
 PERMANENT_SESSION_LIFETIME = 3600 * 24
+
+# where to retrieve assets, possible values 'cloud', 'local'
+ASSET_LOCATION = 'cloud'
+# compair-asset s3 location
+ASSET_CLOUD_URI_PREFIX = 'https://d1flf4q1u9z72v.cloudfront.net/'
