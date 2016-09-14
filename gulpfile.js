@@ -15,7 +15,8 @@ var gulp = require('gulp'),
     webdriver_update = require('gulp-protractor').webdriver_update,
     exec = require('child_process').exec,
     connect = require('gulp-connect'),
-    sauceConnectLauncher = require('sauce-connect-launcher');
+    sauceConnectLauncher = require('sauce-connect-launcher'),
+    templateCache = require('gulp-angular-templatecache');
 
 var cssFilename = 'acj.css',
     jsLibsFilename = 'bowerJsLibs.js',
@@ -53,7 +54,14 @@ gulp.task('prod_minify_js_libs', function() {
         .pipe(uglify())
         .pipe(gulp.dest('./acj/static/build'));
 });
-gulp.task('prod_minify_js', function() {
+gulp.task('prod_templatecache', function () {
+  return gulp.src('./acj/static/modules/**/*.html')
+    .pipe(templateCache({
+        root: 'modules/'
+    }))
+    .pipe(gulp.dest('./acj/static/build'));
+});
+gulp.task('prod_minify_js', ['prod_templatecache'], function() {
     return gulp.src([
         './acj/static/acj-config.js',
         './acj/static/modules/**/*-module.js',
@@ -61,6 +69,7 @@ gulp.task('prod_minify_js', function() {
         './acj/static/modules/**/*-directives.js',
         './acj/static/modules/**/*-service.js',
         './acj/static/modules/common/pdf.js',
+        './acj/static/build/templates.js'
     ])
         .pipe(concat(jsFilename))
         .pipe(uglify())

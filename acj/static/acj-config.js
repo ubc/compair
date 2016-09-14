@@ -27,7 +27,8 @@ var myApp = angular.module('myApp', [
     'ubc.ctlt.acj.navbar',
     'ubc.ctlt.acj.assignment',
     'ubc.ctlt.acj.report',
-    'ubc.ctlt.acj.oauth'
+    'ubc.ctlt.acj.oauth',
+    'templates'
 ]);
 
 myApp.factory('defaultErrorHandlerInterceptor', ['$q', '$log', 'Toaster', function($q, $log, Toaster) {
@@ -245,4 +246,9 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', '$locationProvi
         .otherwise({redirectTo: '/'});
 
     $logProvider.debugEnabled(debugMode);
+}]);
+
+// placeholder for templates module to store templates into cache
+// gulp prod will generate the actual templates module and put contents into cache
+angular.module('templates', []).run(['$templateCache', function ($templateCache){
 }]);

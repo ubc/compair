@@ -10,6 +10,7 @@
     "gulp": "latest",
     "bower": "latest",
     "gulp-bower": "latest",
+    "gulp-angular-templatecache": "^2.0.0",
     "wiredep": "latest",
     "less": "latest",
     "gulp-less": "latest",
