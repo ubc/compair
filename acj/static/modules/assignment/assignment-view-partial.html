@@ -147,7 +147,7 @@
                                     <option value="">All answers</option>
                                 </select>
                             </span><br />
-                            <span class="filter" ng-if="rankLimit && assignment.pairing_algorithm != PairingAlgorithm.random">
+                            <span class="filter" ng-if="(canManageAssignment || rankLimit) && assignment.pairing_algorithm != PairingAlgorithm.random">
                                 <label>Order by: &nbsp;</label>
                                 <select ng-model="answerFilters.orderBy"
                                         ng-options="c.id as c.name for c in criteria">
@@ -282,7 +282,7 @@
                             Students Ranked: <strong>{{score.rank}} <span ng-if="rankCount[score.rank] > 1">(tied)</span></strong>
                         </em>
                         <em ng-if="score.rank > 0 && score.rank > rankLimit">
-                            Students Ranked: <strong>N/A</strong> 
+                            Students Ranked: <strong>N/A</strong>
                             <a href="" tooltip="Answers that are ranked outside the top {{rankLimit}} do not receive a rank number for this assignment." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
                                 <i class="fa fa-question-circle"></i>
                             </a>
