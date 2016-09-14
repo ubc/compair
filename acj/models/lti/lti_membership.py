@@ -4,6 +4,7 @@ from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_enum34 import EnumType
 from flask.ext.login import current_user
+from flask import current_app
 
 from . import *
 
@@ -216,7 +217,8 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
 
     @classmethod
     def _send_membership_request(cls, memberships_url, params):
-        return requests.post(memberships_url, data=params).text
+        verify = current_app.config.get('LTI_ENFORCE_SSL', True)
+        return requests.post(memberships_url, data=params, verify=verify).text
 
     @classmethod
     def __declare_last__(cls):
