@@ -263,7 +263,7 @@ module.controller(
                     ClassListResource.get({'courseId':courseId},
                         function (ret) {
                             Toaster.success("Enrolment Refreshed", "Successfully updated enrolment for the course.");
-                            $scope.classlist = ret.objects;
+                            $route.reload();
                         },
                         function (ret) {
                             Toaster.reqerror("No Users Found For Course ID "+courseId, ret);

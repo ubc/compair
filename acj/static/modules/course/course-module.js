@@ -273,9 +273,7 @@ module.controller(
         };
 
         $scope.updateCourseList = function() {
-            var params = angular.merge({id: $scope.loggedInUserId}, $scope.courseFilters);
-
-            UserResource.getUserCourses(params).$promise.then(
+            UserResource.getUserCourses($scope.courseFilters).$promise.then(
                 function(ret) {
                     $scope.courses = ret.objects;
                     $scope.totalNumCourses = ret.total;

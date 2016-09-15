@@ -163,7 +163,7 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
                 // removing the suffix of some of the actions - eg. flagged
                 var url = response.config.url.replace(/\/(flagged)/g, "");
                 cache.remove(url);
-                url = url.replace(/\/\d+$/g, "");
+                url = url.replace(/\/[A-Za-z0-9_-]{22}$/g, "");
 
                 invalidListCache(url);
 
@@ -182,7 +182,7 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
         var cacheKeyInterceptor = {
             response: function(response) {
                 var url = buildUrl(response.config.url, response.config.paramSerializer(response.config.params));
-                if (url.match(/\/api\/courses\/\d+\/assignments\/\d+\/answers\?.*/)) {
+                if (url.match(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}\/answers\?.*/)) {
                     listCacheKeys.push(url);
                 }
 
