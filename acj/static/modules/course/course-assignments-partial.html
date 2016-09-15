@@ -52,7 +52,7 @@
 
     <!-- Assignments List -->
     <div class="row each-assignment" ng-class="{'first-child': $first}"
-        ng-repeat="(key, assignment) in assignments | filter:assignmentFilter(filter) as results">
+        ng-repeat="assignment in assignments | filter:assignmentFilter(filter) as results">
 
         <!-- Assignment Display -->
         <div class="col-sm-9 media">
@@ -126,7 +126,7 @@
                         <span ng-if="!assignment.answer_period">Students answer<span ng-if="assignment.available">ed</span> {{assignment.answer_start | amDateFormat: 'MMM D'}}-{{assignment.answer_end | amDateFormat: 'MMM D'}}</span>
                     </li>
                     <li ng-if="canManageAssignment || assignment.user_id == loggedInUserId">
-                        <a confirmation-needed="deleteAssignment(key, course.id, assignment.id)" keyword="assignment" title="Delete" href="">
+                        <a confirmation-needed="deleteAssignment(course.id, assignment.id)" keyword="assignment" title="Delete" href="">
                             <i class="fa fa-trash-o"></i>
                         </a>
                     </li>
@@ -141,13 +141,13 @@
 
             <!-- BUTTON when user does not have an answer draft AND (user is admin OR (user has not answered AND the answer period is active) -->
             <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/create" class="btn btn-success" title="Answer Assignment"
-            ng-show="!assignment.status.answers.has_draft && (canManageAssignment || (!assignment.status.answers.answered && assignment.answer_period))">
+               ng-show="!assignment.status.answers.has_draft && (canManageAssignment || (!assignment.status.answers.answered && assignment.answer_period))">
                 Answer
             </a>
 
             <!-- BUTTON when user has an answer draft AND (user is admin OR (user has not answered AND the answer period is active) -->
             <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{assignment.status.answers.draft_ids[0]}}/edit" class="btn btn-success" title="Answer Assignment"
-            ng-show="assignment.status.answers.has_draft && (canManageAssignment || (!assignment.status.answers.answered && assignment.answer_period))">
+               ng-show="assignment.status.answers.has_draft && (canManageAssignment || (!assignment.status.answers.answered && assignment.answer_period))">
                 Finish Answer
             </a>
 
@@ -165,6 +165,12 @@
                  enabled only when user has answered assignment -->
             <a class="btn" ng-class="{'btn-success': assignment.status.answers.answered, 'btn-default': !assignment.status.answers.answered}" title="Compare Answers" ng-href="#/course/{{ course.id }}/assignment/{{ assignment.id }}/self_evaluation"
                ng-show="!canManageAssignment && assignment.compare_period && !assignment.comparisons_left > 0 && assignment.self_evaluation_needed && ((assignment.answer_period && assignment.status.answers.answered) || (!assignment.answer_period))" ng-disabled="!assignment.status.answers.answered">
+                Compare Answers
+            </a>
+
+            <!-- BUTTON when user is an admin AND (the comparison period is active) -->
+            <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Answers" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
+               ng-show="canManageAssignment && assignment.compare_period">
                 Compare Answers
             </a>
 

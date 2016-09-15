@@ -87,6 +87,12 @@
             Compare Answers
         </a>
 
+        <!-- BUTTON when user is an admin AND (the comparison period is active) -->
+        <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Answers" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
+           ng-show="canManageAssignment && assignment.compare_period">
+            Compare Answers
+        </a>
+
         <!-- BUTTON when user is an admin AND (the comparison period is active OR is complete) -->
         <a class="btn btn-success" title="Comparisons" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/comparisons"
            ng-show="canManageAssignment && (assignment.compare_period || assignment.after_comparing)">

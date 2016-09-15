@@ -164,7 +164,7 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         return comparison_pair
 
     @classmethod
-    def create_new_comparison_set(cls, assignment_id, user_id):
+    def create_new_comparison_set(cls, assignment_id, user_id, skip_comparison_examples):
         from . import Assignment, UserCourse, CourseRole, Answer, Score, ComparisonExample
 
         # get all comparisons for the user
@@ -188,26 +188,27 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         if pairing_algorithm == None:
             pairing_algorithm = PairingAlgorithm.random
 
-        # check comparison examples first
-        comparison_examples = ComparisonExample.query \
-            .filter_by(
-                assignment_id=assignment_id,
-                active=True
-            ) \
-            .all()
+        if not skip_comparison_examples:
+            # check comparison examples first
+            comparison_examples = ComparisonExample.query \
+                .filter_by(
+                    assignment_id=assignment_id,
+                    active=True
+                ) \
+                .all()
 
-        # check if user has not completed all comparison examples
-        for comparison_example in comparison_examples:
-            comparison = next(
-                (c for c in comparisons if c.comparison_example_id == comparison_example.id),
-                None
-            )
-            if comparison == None:
-                is_comparison_example_set = True
-                answer1 = comparison_example.answer1
-                answer2 = comparison_example.answer2
-                comparison_example_id = comparison_example.id
-                break
+            # check if user has not completed all comparison examples
+            for comparison_example in comparison_examples:
+                comparison = next(
+                    (c for c in comparisons if c.comparison_example_id == comparison_example.id),
+                    None
+                )
+                if comparison == None:
+                    is_comparison_example_set = True
+                    answer1 = comparison_example.answer1
+                    answer2 = comparison_example.answer2
+                    comparison_example_id = comparison_example.id
+                    break
 
         if not is_comparison_example_set:
             comparison_pair = Comparison._get_new_comparison_pair(assignment.course_id,
