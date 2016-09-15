@@ -13,7 +13,7 @@ class ReportAPITest(ACJAPITestCase):
         super(ReportAPITest, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=30, num_assignments=2, num_groups=2, num_answers=25,
             with_draft_student=True)
-        self.url = "/api/courses/" + str(self.fixtures.course.id) + "/report"
+        self.url = "/api/courses/" + self.fixtures.course.uuid + "/report"
         self.files_to_cleanup = []
 
     def tearDown(self):
@@ -66,7 +66,7 @@ class ReportAPITest(ACJAPITestCase):
 
             # test invalid assignment id
             invalid_input = input.copy()
-            invalid_input['assignment'] = 999
+            invalid_input['assignment'] = "999"
             rv = self.client.post(self.url, data=json.dumps(invalid_input), content_type='application/json')
             self.assert404(rv)
 
@@ -106,7 +106,7 @@ class ReportAPITest(ACJAPITestCase):
 
             # test authorized user one assignment
             single_assignment_input = input.copy()
-            single_assignment_input['assignment'] = self.fixtures.assignments[0].id
+            single_assignment_input['assignment'] = self.fixtures.assignments[0].uuid
             rv = self.client.post(self.url, data=json.dumps(single_assignment_input), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
@@ -153,7 +153,7 @@ class ReportAPITest(ACJAPITestCase):
 
             # test authorized single assignment with group name filter
             group_name_input = input.copy()
-            group_name_input['assignment'] = self.fixtures.assignments[0].id
+            group_name_input['assignment'] = self.fixtures.assignments[0].uuid
             group_name_input['group_name'] = self.fixtures.groups[0]
             rv = self.client.post(self.url, data=json.dumps(group_name_input), content_type='application/json')
             self.assert200(rv)
@@ -214,7 +214,7 @@ class ReportAPITest(ACJAPITestCase):
 
             # test authorized user one assignment
             single_assignment_input = input.copy()
-            single_assignment_input['assignment'] = self.fixtures.assignments[0].id
+            single_assignment_input['assignment'] = self.fixtures.assignments[0].uuid
             rv = self.client.post(self.url, data=json.dumps(single_assignment_input), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
@@ -270,7 +270,7 @@ class ReportAPITest(ACJAPITestCase):
             # test authorized user one assignment
             group_name_input = input.copy()
             group_name_input['group_name'] = self.fixtures.groups[0]
-            group_name_input['assignment'] = self.fixtures.assignments[0].id
+            group_name_input['assignment'] = self.fixtures.assignments[0].uuid
             rv = self.client.post(self.url, data=json.dumps(group_name_input), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
@@ -295,7 +295,7 @@ class ReportAPITest(ACJAPITestCase):
 
 
     def _check_participation_stat_report_heading_rows(self, heading):
-            expected_heading = ['Assignment', 'Username', 'Last Name', 'First Name',
+            expected_heading = ['Assignment', 'User UUID', 'Last Name', 'First Name',
                 'Answer Submitted', 'Answer ID', 'Evaluations Submitted', 'Evaluations Required',
                 'Evaluation Requirements Met', 'Replies Submitted']
 
@@ -315,7 +315,7 @@ class ReportAPITest(ACJAPITestCase):
             user_stats = overall_stats[student.id]
 
             excepted_row.append("(Overall in Course)")
-            excepted_row.append(str(student.id))
+            excepted_row.append(student.uuid)
             excepted_row.append(student.lastname)
             excepted_row.append(student.firstname)
             excepted_row.append(str(user_stats["answers_submitted"]))
@@ -342,22 +342,23 @@ class ReportAPITest(ACJAPITestCase):
             user_stats = overall_stats[student.id]
 
             excepted_row.append(assignment.name)
-            excepted_row.append(student.username)
+            excepted_row.append(student.uuid)
             excepted_row.append(student.lastname)
             excepted_row.append(student.firstname)
 
             answer = Answer.query \
-                .filter(
-                    Answer.user_id == student.id,
-                    Answer.assignment_id == assignment.id,
-                    Answer.draft == False
+                .filter_by(
+                    user_id=student.id,
+                    assignment_id=assignment.id,
+                    draft=False,
+                    practice=False
                 ) \
                 .first()
 
             if answer:
                 user_stats["answers_submitted"] += 1
                 excepted_row.append("1")
-                excepted_row.append(str(answer.id))
+                excepted_row.append(answer.uuid)
             else:
                 excepted_row.append("0")
                 excepted_row.append("N/A")

@@ -11,11 +11,11 @@ class AssignmentAPITests(ACJAPITestCase):
     def setUp(self):
         super(AssignmentAPITests, self).setUp()
         self.data = SimpleAssignmentTestData()
-        self.url = '/api/courses/' + str(self.data.get_course().id) + '/assignments'
+        self.url = '/api/courses/' + self.data.get_course().uuid + '/assignments'
 
     def test_get_single_assignment(self):
         assignment_expected = self.data.get_assignments()[0]
-        assignment_api_url = self.url + '/' + str(assignment_expected.id)
+        assignment_api_url = self.url + '/' + assignment_expected.uuid
         # Test login required
         rv = self.client.get(assignment_api_url)
         self.assert401(rv)
@@ -71,7 +71,7 @@ class AssignmentAPITests(ACJAPITestCase):
             'students_can_reply': False,
             'enable_self_evaluation': False,
             'criteria': [
-                { 'id': self.data.get_default_criterion().id }
+                { 'id': self.data.get_default_criterion().uuid }
             ],
             'pairing_algorithm': PairingAlgorithm.random.value,
             'rank_display_limit': 20
@@ -150,9 +150,9 @@ class AssignmentAPITests(ACJAPITestCase):
 
     def test_edit_assignment(self):
         assignment = self.data.get_assignments()[0]
-        url = self.url + '/' + str(assignment.id)
+        url = self.url + '/' + assignment.uuid
         expected = {
-            'id': assignment.id,
+            'id': assignment.uuid,
             'name': 'This is the new name.',
             'description': 'new_description',
             'answer_start': assignment.answer_start.isoformat() + 'Z',
@@ -161,7 +161,7 @@ class AssignmentAPITests(ACJAPITestCase):
             'students_can_reply': assignment.students_can_reply,
             'enable_self_evaluation': assignment.enable_self_evaluation,
             'criteria': [
-                { 'id': self.data.get_default_criterion().id }
+                { 'id': self.data.get_default_criterion().uuid }
             ],
             'pairing_algorithm': PairingAlgorithm.adaptive.value,
             'rank_display_limit': 10
@@ -179,7 +179,7 @@ class AssignmentAPITests(ACJAPITestCase):
 
         with self.login(self.data.get_authorized_instructor().username):
             # test invalid course id
-            invalid_url = '/api/courses/999/assignments/' + str(assignment.id)
+            invalid_url = '/api/courses/999/assignments/' + assignment.uuid
             rv = self.client.post(invalid_url, data=json.dumps(expected), content_type='application/json')
             self.assert404(rv)
 
@@ -215,7 +215,7 @@ class AssignmentAPITests(ACJAPITestCase):
             # test edit by author add & remove criteria
             new_criterion = self.data.create_criterion(self.data.get_authorized_instructor())
             add_criteria = expected.copy()
-            add_criteria['criteria'] = [{ 'id': new_criterion.id }]
+            add_criteria['criteria'] = [{ 'id': new_criterion.uuid }]
             rv = self.client.post(url, data=json.dumps(add_criteria), content_type='application/json')
             self.assert200(rv)
             self._verify_assignment(assignment, rv.json)
@@ -223,7 +223,7 @@ class AssignmentAPITests(ACJAPITestCase):
         with self.login(self.data.get_authorized_ta().username):
             # test edit by user who can manage posts (TA)
             ta_expected = {
-                'id': assignment.id,
+                'id': assignment.uuid,
                 'name': 'Another name',
                 'description': 'new_description',
                 'answer_start': assignment.answer_start.isoformat() + 'Z',
@@ -232,7 +232,7 @@ class AssignmentAPITests(ACJAPITestCase):
                 'students_can_reply': assignment.students_can_reply,
                 'enable_self_evaluation': assignment.enable_self_evaluation,
                 'criteria': [
-                    { 'id': self.data.get_default_criterion().id }
+                    { 'id': self.data.get_default_criterion().uuid }
                 ],
                 'pairing_algorithm': PairingAlgorithm.random.value,
                 'rank_display_limit': 20
@@ -247,31 +247,31 @@ class AssignmentAPITests(ACJAPITestCase):
             # test edit by TA add & remove criteria
             ta_new_criterion = self.data.create_criterion(self.data.get_authorized_ta())
             ta_add_criteria = ta_expected.copy()
-            ta_add_criteria['criteria'] = [{ 'id': ta_new_criterion.id }]
+            ta_add_criteria['criteria'] = [{ 'id': ta_new_criterion.uuid }]
             rv = self.client.post(url, data=json.dumps(ta_add_criteria), content_type='application/json')
             self.assert200(rv)
             self._verify_assignment(assignment, rv.json)
 
     def test_delete_assignment(self):
         # Test deleting the assignment
-        assignment_id = Assignment.query.first().id
-        expected_ret = {'id': assignment_id}
+        assignment = Assignment.query.first()
+        expected_ret = {'id': assignment.uuid}
         with self.login(self.data.get_authorized_student().username):
-            rv = self.client.delete(self.url + '/' + str(assignment_id))
+            rv = self.client.delete(self.url + '/' + assignment.uuid)
             self.assert403(rv)
             self.assertEqual(
-                '<p>' + self.data.get_authorized_student().username + ' does not have delete access to assignment 1</p>',
+                '<p>' + self.data.get_authorized_student().username + ' does not have delete access to assignment '+assignment.uuid+'</p>',
                 rv.json['message'])
 
         with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.delete(self.url + '/' + str(assignment_id))
+            rv = self.client.delete(self.url + '/' + assignment.uuid)
             self.assert200(rv)
             self.assertEqual(expected_ret['id'], rv.json['id'], "assignment " + str(rv.json['id']) + " deleted successfully")
 
     def _verify_assignment(self, expected, actual):
         self.assertEqual(expected.name, actual['name'])
         self.assertEqual(expected.description, actual['description'])
-        self.assertEqual(expected.user_id, actual['user_id'])
+        self.assertEqual(expected.user_uuid, actual['user_id'])
         self.assertEqual(expected.pairing_algorithm.value, actual['pairing_algorithm'])
         self.assertEqual(expected.rank_display_limit, actual['rank_display_limit'])
 
@@ -281,7 +281,7 @@ class AssignmentEditComparedAPITests(ACJAPITestCase):
     def setUp(self):
         super(AssignmentEditComparedAPITests, self).setUp()
         self.data = ComparisonTestData()
-        self.url = '/api/courses/' + str(self.data.get_course().id) + '/assignments'
+        self.url = '/api/courses/' + self.data.get_course().uuid + '/assignments'
         self.assignment = self.data.get_assignments()[0]
 
     def _submit_all_possible_comparisons_for_user(self, user_id):
@@ -320,9 +320,9 @@ class AssignmentEditComparedAPITests(ACJAPITestCase):
         return submit_count
 
     def test_edit_compared_assignment(self):
-        url = self.url + '/' + str(self.assignment.id)
+        url = self.url + '/' + self.assignment.uuid
         expected = {
-            'id': self.assignment.id,
+            'id': self.assignment.uuid,
             'name': 'This is the new name.',
             'description': 'new_description',
             'answer_start': self.assignment.answer_start.isoformat() + 'Z',
@@ -331,7 +331,7 @@ class AssignmentEditComparedAPITests(ACJAPITestCase):
             'students_can_reply': self.assignment.students_can_reply,
             'enable_self_evaluation': self.assignment.enable_self_evaluation,
             'criteria': [
-                { 'id': self.data.get_default_criterion().id }
+                { 'id': self.data.get_default_criterion().uuid }
             ],
             'pairing_algorithm': self.assignment.pairing_algorithm.value,
             'rank_display_limit': 10
@@ -353,7 +353,7 @@ class AssignmentEditComparedAPITests(ACJAPITestCase):
             # test cannot change criteria
             change_criteria = expected.copy()
             change_criteria['criteria'] = [
-                { 'id': self.data.create_criterion(self.data.get_authorized_instructor()).id }
+                { 'id': self.data.create_criterion(self.data.get_authorized_instructor()).uuid }
             ]
             rv = self.client.post(url, data=json.dumps(change_criteria), content_type='application/json')
             self.assert403(rv)
@@ -373,7 +373,7 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
     def setUp(self):
         super(AssignmentStatusComparisonsAPITests, self).setUp()
         self.data = ComparisonTestData()
-        self.url = '/api/courses/' + str(self.data.get_course().id) + '/assignments'
+        self.url = '/api/courses/' + self.data.get_course().uuid + '/assignments'
         self.assignment = self.data.get_assignments()[0]
 
     def _submit_all_possible_comparisons_for_user(self, user_id):
@@ -437,8 +437,8 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
             self.assert200(rv)
 
             for assignment in assignments:
-                self.assertTrue(str(assignment.id) in rv.json['statuses'])
-                status = rv.json['statuses'][str(assignment.id)]
+                self.assertTrue(assignment.uuid in rv.json['statuses'])
+                status = rv.json['statuses'][assignment.uuid]
                 if assignments[0].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
@@ -463,8 +463,8 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
             rv = self.client.get(url)
             self.assert200(rv)
             for assignment in assignments:
-                self.assertTrue(str(assignment.id) in rv.json['statuses'])
-                status = rv.json['statuses'][str(assignment.id)]
+                self.assertTrue(assignment.uuid in rv.json['statuses'])
+                status = rv.json['statuses'][assignment.uuid]
                 if assignments[0].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
@@ -490,8 +490,8 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
             rv = self.client.get(url)
             self.assert200(rv)
             for assignment in assignments:
-                self.assertTrue(str(assignment.id) in rv.json['statuses'])
-                status = rv.json['statuses'][str(assignment.id)]
+                self.assertTrue(assignment.uuid in rv.json['statuses'])
+                status = rv.json['statuses'][assignment.uuid]
                 if assignments[0].id == assignment.id:
                     self.assertFalse(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], compare_count_result)
@@ -518,7 +518,7 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
             db.session.commit()
 
     def test_get_status(self):
-        url = self.url + '/' + str(self.assignment.id) + '/status'
+        url = self.url + '/' + self.assignment.uuid + '/status'
 
         # test login required
         rv = self.client.get(url)
@@ -531,12 +531,12 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
 
         # test invalid course id
         with self.login(self.data.get_authorized_student().username):
-            invalid_url = '/api/courses/999/assignments/'+str(self.assignment.id)+'/status'
+            invalid_url = '/api/courses/999/assignments/'+self.assignment.uuid+'/status'
             rv = self.client.get(invalid_url)
             self.assert404(rv)
 
             # test invalid assignment id
-            invalid_url = '/api/courses/'+str(self.data.get_course().id)+'/assignments/999/status'
+            invalid_url = '/api/courses/'+self.data.get_course().uuid+'/assignments/999/status'
             rv = self.client.get(invalid_url)
             self.assert404(rv)
 
@@ -579,7 +579,7 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
     def setUp(self):
         super(AssignmentStatusAnswersAPITests, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=30, num_assignments=2, num_groups=2)
-        self.url = '/api/courses/' + str(self.fixtures.course.id) + '/assignments'
+        self.url = '/api/courses/' + self.fixtures.course.uuid + '/assignments'
 
     def test_get_all_status(self):
         url = self.url + '/status'
@@ -607,8 +607,8 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
             self.assert200(rv)
 
             for assignment in assignments:
-                self.assertTrue(str(assignment.id) in rv.json['statuses'])
-                status = rv.json['statuses'][str(assignment.id)]
+                self.assertTrue(assignment.uuid in rv.json['statuses'])
+                status = rv.json['statuses'][assignment.uuid]
                 if assignments[0].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
@@ -631,8 +631,8 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
             self.assert200(rv)
 
             for assignment in assignments:
-                self.assertTrue(str(assignment.id) in rv.json['statuses'])
-                status = rv.json['statuses'][str(assignment.id)]
+                self.assertTrue(assignment.uuid in rv.json['statuses'])
+                status = rv.json['statuses'][assignment.uuid]
                 if assignments[0].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
@@ -652,8 +652,8 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
             rv = self.client.get(url)
             self.assert200(rv)
             for assignment in assignments:
-                self.assertTrue(str(assignment.id) in rv.json['statuses'])
-                status = rv.json['statuses'][str(assignment.id)]
+                self.assertTrue(assignment.uuid in rv.json['statuses'])
+                status = rv.json['statuses'][assignment.uuid]
                 if assignments[0].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
@@ -673,8 +673,8 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
             rv = self.client.get(url)
             self.assert200(rv)
             for assignment in assignments:
-                self.assertTrue(str(assignment.id) in rv.json['statuses'])
-                status = rv.json['statuses'][str(assignment.id)]
+                self.assertTrue(assignment.uuid in rv.json['statuses'])
+                status = rv.json['statuses'][assignment.uuid]
                 if assignments[0].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
@@ -689,7 +689,7 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
                     self.assertEqual(status['answers']['count'], 0)
 
     def test_get_status(self):
-        url = self.url + '/' + str(self.fixtures.assignment.id) + '/status'
+        url = self.url + '/' + self.fixtures.assignment.uuid + '/status'
 
         # test login required
         rv = self.client.get(url)
@@ -702,12 +702,12 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
 
         # test invalid course id
         with self.login(self.fixtures.students[0].username):
-            invalid_url = '/api/courses/999/assignments/'+str(self.fixtures.assignment.id)+'/status'
+            invalid_url = '/api/courses/999/assignments/'+self.fixtures.assignment.uuid+'/status'
             rv = self.client.get(invalid_url)
             self.assert404(rv)
 
             # test invalid assignment id
-            invalid_url = '/api/courses/'+str(self.fixtures.course.id)+'/assignments/999/status'
+            invalid_url = '/api/courses/'+self.fixtures.course.uuid+'/assignments/999/status'
             rv = self.client.get(invalid_url)
             self.assert404(rv)
 

@@ -12,10 +12,10 @@ class AnswersAPITests(ACJAPITestCase):
     def setUp(self):
         super(AnswersAPITests, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=30, num_groups=2, with_draft_student=True)
-        self.base_url = self._build_url(self.fixtures.course.id, self.fixtures.assignment.id)
+        self.base_url = self._build_url(self.fixtures.course.uuid, self.fixtures.assignment.uuid)
 
-    def _build_url(self, course_id, assignment_id, tail=""):
-        url = '/api/courses/' + str(course_id) + '/assignments/' + str(assignment_id) + '/answers' + tail
+    def _build_url(self, course_uuid, assignment_uuid, tail=""):
+        url = '/api/courses/' + course_uuid + '/assignments/' + assignment_uuid + '/answers' + tail
         return url
 
     def test_get_all_answers(self):
@@ -33,7 +33,7 @@ class AnswersAPITests(ACJAPITestCase):
 
         with self.login(self.fixtures.students[0].username):
             # test non-existent entry
-            rv = self.client.get(self._build_url(self.fixtures.course.id, 4903409))
+            rv = self.client.get(self._build_url(self.fixtures.course.uuid, "4903409"))
             self.assert404(rv)
 
             # test data retrieve is correct
@@ -83,7 +83,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.fixtures.assignment.rank_display_limit = 10
             db.session.commit()
             rv = self.client.get(
-                self.base_url + '?orderBy={}'.format(self.fixtures.assignment.criteria[0].id)
+                self.base_url + '?orderBy={}'.format(self.fixtures.assignment.criteria[0].uuid)
             )
             self.assert200(rv)
             result = rv.json['objects']
@@ -92,7 +92,7 @@ class AnswersAPITests(ACJAPITestCase):
                 [answer for answer in self.fixtures.answers if len(answer.scores)],
                 key=lambda ans: (ans.scores[0].score, ans.created),
                 reverse=True)[:10]
-            self.assertEqual([a.id for a in expected], [a['id'] for a in result])
+            self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
             self.assertEqual(1, rv.json['page'])
             self.assertEqual(1, rv.json['pages'])
             self.assertEqual(20, rv.json['per_page'])
@@ -102,7 +102,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.fixtures.assignment.rank_display_limit = 20
             db.session.commit()
             rv = self.client.get(
-                self.base_url + '?orderBy={}'.format(self.fixtures.assignment.criteria[0].id)
+                self.base_url + '?orderBy={}'.format(self.fixtures.assignment.criteria[0].uuid)
             )
             self.assert200(rv)
             result = rv.json['objects']
@@ -111,7 +111,7 @@ class AnswersAPITests(ACJAPITestCase):
                 [answer for answer in self.fixtures.answers if len(answer.scores)],
                 key=lambda ans: (ans.scores[0].score, ans.created),
                 reverse=True)[:20]
-            self.assertEqual([a.id for a in expected], [a['id'] for a in result])
+            self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
             self.assertEqual(1, rv.json['page'])
             self.assertEqual(1, rv.json['pages'])
             self.assertEqual(20, rv.json['per_page'])
@@ -121,7 +121,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.fixtures.assignment.rank_display_limit = None
             db.session.commit()
             rv = self.client.get(
-                self.base_url + '?orderBy={}'.format(self.fixtures.assignment.criteria[0].id)
+                self.base_url + '?orderBy={}'.format(self.fixtures.assignment.criteria[0].uuid)
             )
             self.assert200(rv)
             result = rv.json['objects']
@@ -130,18 +130,18 @@ class AnswersAPITests(ACJAPITestCase):
                 [answer for answer in self.fixtures.answers if len(answer.scores)],
                 key=lambda ans: (ans.scores[0].score, ans.created),
                 reverse=True)[:20]
-            self.assertEqual([a.id for a in expected], [a['id'] for a in result])
+            self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
             self.assertEqual(1, rv.json['page'])
             self.assertEqual(1, rv.json['pages'])
             self.assertEqual(20, rv.json['per_page'])
             self.assertEqual(len(expected), rv.json['total'])
 
             # test author filter
-            rv = self.client.get(self.base_url + '?author={}'.format(self.fixtures.students[0].id))
+            rv = self.client.get(self.base_url + '?author={}'.format(self.fixtures.students[0].uuid))
             self.assert200(rv)
             result = rv.json['objects']
             self.assertEqual(len(result), 1)
-            self.assertEqual(result[0]['user_id'], self.fixtures.students[0].id)
+            self.assertEqual(result[0]['user_id'], self.fixtures.students[0].uuid)
 
             # test group filter
             rv = self.client.get(self.base_url + '?group={}'.format(self.fixtures.groups[0]))
@@ -150,7 +150,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(len(result), len(self.fixtures.answers) / len(self.fixtures.groups))
 
             # test ids filter
-            ids = {str(a.id) for a in self.fixtures.answers[:3]}
+            ids = {a.uuid for a in self.fixtures.answers[:3]}
             rv = self.client.get(self.base_url + '?ids={}'.format(','.join(ids)))
             self.assert200(rv)
             result = rv.json['objects']
@@ -159,7 +159,7 @@ class AnswersAPITests(ACJAPITestCase):
             # test combined filter
             rv = self.client.get(
                 self.base_url + '?orderBy={}&group={}'.format(
-                    self.fixtures.assignment.criteria[0].id,
+                    self.fixtures.assignment.criteria[0].uuid,
                     self.fixtures.groups[0]
                 )
             )
@@ -170,20 +170,20 @@ class AnswersAPITests(ACJAPITestCase):
                 self.fixtures.groups) else 0
             answers = self.fixtures.answers[:answers_per_group]
             expected = sorted(answers, key=lambda ans: ans.scores[0].score, reverse=True)
-            self.assertEqual([a.id for a in expected], [a['id'] for a in result])
+            self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
 
             # all filters
             rv = self.client.get(
                 self.base_url + '?orderBy={}&group={}&author={}&page=1&perPage=20'.format(
-                    self.fixtures.assignment.criteria[0].id,
+                    self.fixtures.assignment.criteria[0].uuid,
                     self.fixtures.groups[0],
-                    self.fixtures.students[0].id
+                    self.fixtures.students[0].uuid
                 )
             )
             self.assert200(rv)
             result = rv.json['objects']
             self.assertEqual(len(result), 1)
-            self.assertEqual(result[0]['user_id'], self.fixtures.students[0].id)
+            self.assertEqual(result[0]['user_id'], self.fixtures.students[0].uuid)
 
             # add instructor answer
             answer = AnswerFactory(
@@ -197,7 +197,7 @@ class AnswersAPITests(ACJAPITestCase):
             result = rv.json['objects']
             self.assertEqual(len(self.fixtures.answers), rv.json['total'])
             # first answer should be instructor answer
-            self.assertEqual(self.fixtures.instructor.id, result[0]['user_id'])
+            self.assertEqual(self.fixtures.instructor.uuid, result[0]['user_id'])
 
             # test data retrieve before answer period ended with non-privileged user
             self.fixtures.assignment.answer_end = datetime.datetime.now() + datetime.timedelta(days=2)
@@ -252,13 +252,13 @@ class AnswersAPITests(ACJAPITestCase):
             self.assert400(response)
             # test invalid assignment
             response = self.client.post(
-                self._build_url(self.fixtures.course.id, 9392402),
+                self._build_url(self.fixtures.course.uuid, "9392402"),
                 data=json.dumps(expected_answer),
                 content_type='application/json')
             self.assert404(response)
             # test invalid course
             response = self.client.post(
-                self._build_url(9392402, self.fixtures.assignment.id),
+                self._build_url("9392402", self.fixtures.assignment.uuid),
                 data=json.dumps(expected_answer), content_type='application/json')
             self.assert404(response)
 
@@ -271,7 +271,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.assert200(response)
             # retrieve again and verify
             rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.get(rv['id'])
+            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
             # test instructor could submit multiple answers for his/her own
@@ -281,34 +281,34 @@ class AnswersAPITests(ACJAPITestCase):
                 content_type='application/json')
             self.assert200(response)
             rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.get(rv['id'])
+            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
             # test instructor could submit multiple answers for his/her own
-            expected_answer.update({'user_id': self.fixtures.instructor.id})
+            expected_answer.update({'user_id': self.fixtures.instructor.uuid})
             response = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
                 content_type='application/json')
             self.assert200(response)
             rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.get(rv['id'])
+            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
             # test instructor could submit on behave of a student
             self.fixtures.add_students(1)
-            expected_answer.update({'user_id': self.fixtures.students[-1].id})
+            expected_answer.update({'user_id': self.fixtures.students[-1].uuid})
             response = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
                 content_type='application/json')
             self.assert200(response)
             rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.get(rv['id'])
+            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
             # test instructor can not submit additional answers for a student
-            expected_answer.update({'user_id': self.fixtures.students[0].id})
+            expected_answer.update({'user_id': self.fixtures.students[0].uuid})
             response = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
@@ -327,7 +327,7 @@ class AnswersAPITests(ACJAPITestCase):
                 content_type='application/json')
             self.assert200(response)
             rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.get(rv['id'])
+            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
             self.assertEqual(expected_answer['draft'], actual_answer.draft)
 
@@ -338,14 +338,14 @@ class AnswersAPITests(ACJAPITestCase):
             db.session.commit()
 
             self.fixtures.add_students(1)
-            expected_answer.update({'user_id': self.fixtures.students[-1].id})
+            expected_answer.update({'user_id': self.fixtures.students[-1].uuid})
             response = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
                 content_type='application/json')
             self.assert200(response)
             rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.get(rv['id'])
+            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
         # test create successful
@@ -375,7 +375,7 @@ class AnswersAPITests(ACJAPITestCase):
                 content_type='application/json')
             self.assert200(response)
             rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.get(rv['id'])
+            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
         # test create successful for system admin
@@ -388,7 +388,7 @@ class AnswersAPITests(ACJAPITestCase):
 
             # retrieve again and verify
             rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.get(rv['id'])
+            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
             # test system admin could submit multiple answers for his/her own
@@ -398,41 +398,41 @@ class AnswersAPITests(ACJAPITestCase):
                 content_type='application/json')
             self.assert200(response)
             rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.get(rv['id'])
+            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
     def test_get_answer(self):
-        assignment_id = self.fixtures.assignments[0].id
+        assignment_uuid = self.fixtures.assignments[0].uuid
         answer = self.fixtures.answers[0]
         draft_answer = self.fixtures.draft_answers[0]
 
         # test login required
-        rv = self.client.get(self.base_url + '/' + str(answer.id))
+        rv = self.client.get(self.base_url + '/' + answer.uuid)
         self.assert401(rv)
 
         # test unauthorized user
         with self.login(self.fixtures.unauthorized_instructor.username):
-            rv = self.client.get(self.base_url + '/' + str(answer.id))
+            rv = self.client.get(self.base_url + '/' + answer.uuid)
             self.assert403(rv)
 
         # test invalid course id
         with self.login(self.fixtures.students[0].username):
-            rv = self.client.get(self._build_url(999, assignment_id, '/' + str(answer.id)))
+            rv = self.client.get(self._build_url("999", assignment_uuid, '/' + answer.uuid))
             self.assert404(rv)
 
             # test invalid answer id
-            rv = self.client.get(self._build_url(self.fixtures.course.id, assignment_id, '/' + str(999)))
+            rv = self.client.get(self._build_url(self.fixtures.course.uuid, assignment_uuid, '/' + "999"))
             self.assert404(rv)
 
             # test invalid get another user's draft answer
-            rv = self.client.get(self.base_url + '/' + str(draft_answer.id))
+            rv = self.client.get(self.base_url + '/' + draft_answer.uuid)
             self.assert403(rv)
 
             # test authorized student
-            rv = self.client.get(self.base_url + '/' + str(answer.id))
+            rv = self.client.get(self.base_url + '/' + answer.uuid)
             self.assert200(rv)
-            self.assertEqual(assignment_id, rv.json['assignment_id'])
-            self.assertEqual(answer.user_id, rv.json['user_id'])
+            self.assertEqual(assignment_uuid, rv.json['assignment_id'])
+            self.assertEqual(answer.user_uuid, rv.json['user_id'])
             self.assertEqual(answer.content, rv.json['content'])
             self.assertFalse(rv.json['draft'])
             self.assertEqual(len(answer.scores), len(rv.json['scores']))
@@ -442,19 +442,19 @@ class AnswersAPITests(ACJAPITestCase):
 
         # test authorized student draft answer
         with self.login(self.fixtures.draft_student.username):
-            rv = self.client.get(self.base_url + '/' + str(draft_answer.id))
+            rv = self.client.get(self.base_url + '/' + draft_answer.uuid)
             self.assert200(rv)
-            self.assertEqual(assignment_id, rv.json['assignment_id'])
-            self.assertEqual(draft_answer.user_id, rv.json['user_id'])
+            self.assertEqual(assignment_uuid, rv.json['assignment_id'])
+            self.assertEqual(draft_answer.user_uuid, rv.json['user_id'])
             self.assertEqual(draft_answer.content, rv.json['content'])
             self.assertTrue(rv.json['draft'])
 
         # test authorized teaching assistant
         with self.login(self.fixtures.ta.username):
-            rv = self.client.get(self.base_url + '/' + str(answer.id))
+            rv = self.client.get(self.base_url + '/' + answer.uuid)
             self.assert200(rv)
-            self.assertEqual(assignment_id, rv.json['assignment_id'])
-            self.assertEqual(answer.user_id, rv.json['user_id'])
+            self.assertEqual(assignment_uuid, rv.json['assignment_id'])
+            self.assertEqual(answer.user_uuid, rv.json['user_id'])
             self.assertEqual(answer.content, rv.json['content'])
             self.assertEqual(len(answer.scores), len(rv.json['scores']))
             for index, score in enumerate(answer.scores):
@@ -463,10 +463,10 @@ class AnswersAPITests(ACJAPITestCase):
 
         # test authorized instructor
         with self.login(self.fixtures.instructor.username):
-            rv = self.client.get(self.base_url + '/' + str(answer.id))
+            rv = self.client.get(self.base_url + '/' + answer.uuid)
             self.assert200(rv)
-            self.assertEqual(assignment_id, rv.json['assignment_id'])
-            self.assertEqual(answer.user_id, rv.json['user_id'])
+            self.assertEqual(assignment_uuid, rv.json['assignment_id'])
+            self.assertEqual(answer.user_uuid, rv.json['user_id'])
             self.assertEqual(answer.content, rv.json['content'])
             self.assertEqual(len(answer.scores), len(rv.json['scores']))
             for index, score in enumerate(answer.scores):
@@ -474,15 +474,15 @@ class AnswersAPITests(ACJAPITestCase):
                 self.assertEqual(int(score.normalized_score), rv.json['scores'][index]['normalized_score'])
 
     def test_edit_answer(self):
-        assignment_id = self.fixtures.assignments[0].id
+        assignment_uuid = self.fixtures.assignments[0].uuid
         answer = self.fixtures.answers[0]
-        expected = {'id': str(answer.id), 'content': 'This is an edit'}
+        expected = {'id': answer.uuid, 'content': 'This is an edit'}
         draft_answer = self.fixtures.draft_answers[0]
-        draft_expected = {'id': str(draft_answer.id), 'content': 'This is an edit', 'draft': True}
+        draft_expected = {'id': draft_answer.uuid, 'content': 'This is an edit', 'draft': True}
 
         # test login required
         rv = self.client.post(
-            self.base_url + '/' + str(answer.id),
+            self.base_url + '/' + answer.uuid,
             data=json.dumps(expected),
             content_type='application/json')
         self.assert401(rv)
@@ -490,7 +490,7 @@ class AnswersAPITests(ACJAPITestCase):
         # test unauthorized user
         with self.login(self.fixtures.students[1].username):
             rv = self.client.post(
-                self.base_url + '/' + str(answer.id),
+                self.base_url + '/' + answer.uuid,
                 data=json.dumps(expected),
                 content_type='application/json')
             self.assert403(rv)
@@ -498,14 +498,14 @@ class AnswersAPITests(ACJAPITestCase):
         # test invalid course id
         with self.login(self.fixtures.students[0].username):
             rv = self.client.post(
-                self._build_url(999, assignment_id, '/' + str(answer.id)),
+                self._build_url("999", assignment_uuid, '/' + answer.uuid),
                 data=json.dumps(expected),
                 content_type='application/json')
             self.assert404(rv)
 
             # test invalid assignment id
             rv = self.client.post(
-                self._build_url(self.fixtures.course.id, 999, '/' + str(answer.id)),
+                self._build_url(self.fixtures.course.uuid, "999", '/' + answer.uuid),
                 data=json.dumps(expected),
                 content_type='application/json')
             self.assert404(rv)
@@ -520,7 +520,7 @@ class AnswersAPITests(ACJAPITestCase):
         # test unmatched answer id
         with self.login(self.fixtures.students[1].username):
             rv = self.client.post(
-                self.base_url + '/' + str(self.fixtures.answers[1].id),
+                self.base_url + '/' + self.fixtures.answers[1].uuid,
                 data=json.dumps(expected),
                 content_type='application/json')
             self.assert400(rv)
@@ -528,11 +528,11 @@ class AnswersAPITests(ACJAPITestCase):
         # test edit draft by author
         with self.login(self.fixtures.draft_student.username):
             rv = self.client.post(
-                self.base_url + '/' + str(draft_answer.id),
+                self.base_url + '/' + draft_answer.uuid,
                 data=json.dumps(draft_expected),
                 content_type='application/json')
             self.assert200(rv)
-            self.assertEqual(draft_answer.id, rv.json['id'])
+            self.assertEqual(draft_answer.uuid, rv.json['id'])
             self.assertEqual('This is an edit', rv.json['content'])
             self.assertEqual(draft_answer.draft, rv.json['draft'])
             self.assertTrue(rv.json['draft'])
@@ -541,22 +541,22 @@ class AnswersAPITests(ACJAPITestCase):
             draft_expected_copy = draft_expected.copy()
             draft_expected_copy['draft'] = False
             rv = self.client.post(
-                self.base_url + '/' + str(draft_answer.id),
+                self.base_url + '/' + draft_answer.uuid,
                 data=json.dumps(draft_expected_copy),
                 content_type='application/json')
             self.assert200(rv)
-            self.assertEqual(draft_answer.id, rv.json['id'])
+            self.assertEqual(draft_answer.uuid, rv.json['id'])
             self.assertEqual('This is an edit', rv.json['content'])
             self.assertEqual(draft_answer.draft, rv.json['draft'])
             self.assertFalse(rv.json['draft'])
 
             # setting draft to true when false should not work
             rv = self.client.post(
-                self.base_url + '/' + str(draft_answer.id),
+                self.base_url + '/' + draft_answer.uuid,
                 data=json.dumps(draft_expected),
                 content_type='application/json')
             self.assert200(rv)
-            self.assertEqual(draft_answer.id, rv.json['id'])
+            self.assertEqual(draft_answer.uuid, rv.json['id'])
             self.assertEqual('This is an edit', rv.json['content'])
             self.assertEqual(draft_answer.draft, rv.json['draft'])
             self.assertFalse(rv.json['draft'])
@@ -564,25 +564,25 @@ class AnswersAPITests(ACJAPITestCase):
         # test edit by author
         with self.login(self.fixtures.students[0].username):
             rv = self.client.post(
-                self.base_url + '/' + str(answer.id),
+                self.base_url + '/' + answer.uuid,
                 data=json.dumps(expected),
                 content_type='application/json')
             self.assert200(rv)
-            self.assertEqual(answer.id, rv.json['id'])
+            self.assertEqual(answer.uuid, rv.json['id'])
             self.assertEqual('This is an edit', rv.json['content'])
 
         # test edit by user that can manage posts
         manage_expected = {
-            'id': str(answer.id),
+            'id': answer.uuid,
             'content': 'This is another edit'
         }
         with self.login(self.fixtures.instructor.username):
             rv = self.client.post(
-                self.base_url + '/' + str(answer.id),
+                self.base_url + '/' + answer.uuid,
                 data=json.dumps(manage_expected),
                 content_type='application/json')
             self.assert200(rv)
-            self.assertEqual(answer.id, rv.json['id'])
+            self.assertEqual(answer.uuid, rv.json['id'])
             self.assertEqual('This is another edit', rv.json['content'])
 
         # test edit by author
@@ -593,7 +593,7 @@ class AnswersAPITests(ACJAPITestCase):
             db.session.commit()
 
             rv = self.client.post(
-                self.base_url + '/' + str(answer.id),
+                self.base_url + '/' + answer.uuid,
                 data=json.dumps(expected),
                 content_type='application/json')
             self.assert403(rv)
@@ -605,23 +605,23 @@ class AnswersAPITests(ACJAPITestCase):
             db.session.commit()
 
             rv = self.client.post(
-                self.base_url + '/' + str(answer.id),
+                self.base_url + '/' + answer.uuid,
                 data=json.dumps(expected),
                 content_type='application/json')
             self.assert200(rv)
-            self.assertEqual(answer.id, rv.json['id'])
+            self.assertEqual(answer.uuid, rv.json['id'])
             self.assertEqual('This is an edit', rv.json['content'])
 
     def test_delete_answer(self):
-        answer_id = self.fixtures.answers[0].id
+        answer_uuid = self.fixtures.answers[0].uuid
 
         # test login required
-        rv = self.client.delete(self.base_url + '/' + str(answer_id))
+        rv = self.client.delete(self.base_url + '/' + answer_uuid)
         self.assert401(rv)
 
         # test unauthorized users
         with self.login(self.fixtures.students[1].username):
-            rv = self.client.delete(self.base_url + '/' + str(answer_id))
+            rv = self.client.delete(self.base_url + '/' + answer_uuid)
             self.assert403(rv)
 
         # test invalid answer id
@@ -630,22 +630,22 @@ class AnswersAPITests(ACJAPITestCase):
             self.assert404(rv)
 
             # test deletion by author
-            rv = self.client.delete(self.base_url + '/' + str(answer_id))
+            rv = self.client.delete(self.base_url + '/' + answer_uuid)
             self.assert200(rv)
-            self.assertEqual(answer_id, rv.json['id'])
+            self.assertEqual(answer_uuid, rv.json['id'])
 
         # test deletion by user that can manage posts
         with self.login(self.fixtures.instructor.username):
-            answer_id2 = self.fixtures.answers[1].id
-            rv = self.client.delete(self.base_url + '/' + str(answer_id2))
+            answer_uuid2 = self.fixtures.answers[1].uuid
+            rv = self.client.delete(self.base_url + '/' + answer_uuid2)
             self.assert200(rv)
-            self.assertEqual(answer_id2, rv.json['id'])
+            self.assertEqual(answer_uuid2, rv.json['id'])
 
     def test_get_user_answers(self):
-        assignment_id = self.fixtures.assignments[0].id
+        assignment = self.fixtures.assignments[0]
         answer = self.fixtures.answers[0]
         draft_answer = self.fixtures.draft_answers[0]
-        url = self._build_url(self.fixtures.course.id, assignment_id, '/user')
+        url = self._build_url(self.fixtures.course.uuid, assignment.uuid, '/user')
 
         # test login required
         rv = self.client.get(url)
@@ -653,18 +653,18 @@ class AnswersAPITests(ACJAPITestCase):
 
         # test invalid course
         with self.login(self.fixtures.students[0].username):
-            rv = self.client.get(self._build_url(999, assignment_id, '/user'))
+            rv = self.client.get(self._build_url("999", assignment.uuid, '/user'))
             self.assert404(rv)
 
             # test invalid assignment
-            rv = self.client.get(self._build_url(self.fixtures.course.id, 999, '/user'))
+            rv = self.client.get(self._build_url(self.fixtures.course.uuid, "999", '/user'))
             self.assert404(rv)
 
             # test successful queries
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(1, len(rv.json['objects']))
-            self.assertEqual(answer.id, rv.json['objects'][0]['id'])
+            self.assertEqual(answer.uuid, rv.json['objects'][0]['id'])
             self.assertEqual(answer.content, rv.json['objects'][0]['content'])
             self.assertEqual(answer.draft, rv.json['objects'][0]['draft'])
 
@@ -673,7 +673,7 @@ class AnswersAPITests(ACJAPITestCase):
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(1, len(rv.json['objects']))
-            self.assertEqual(draft_answer.id, rv.json['objects'][0]['id'])
+            self.assertEqual(draft_answer.uuid, rv.json['objects'][0]['id'])
             self.assertEqual(draft_answer.content, rv.json['objects'][0]['content'])
             self.assertEqual(draft_answer.draft, rv.json['objects'][0]['draft'])
 
@@ -684,7 +684,7 @@ class AnswersAPITests(ACJAPITestCase):
 
     def test_flag_answer(self):
         answer = self.fixtures.answers[0]
-        flag_url = self.base_url + "/" + str(answer.id) + "/flagged"
+        flag_url = self.base_url + "/" + answer.uuid + "/flagged"
         # test login required
         expected_flag_on = {'flagged': True}
         expected_flag_off = {'flagged': False}
@@ -759,7 +759,7 @@ class AnswerComparisonAPITests(ACJAPITestCase):
     def setUp(self):
         super(AnswerComparisonAPITests, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=10, num_groups=2, with_comparisons=True)
-        self.base_url = self._build_url(self.fixtures.course.id, self.fixtures.assignment.id)
+        self.base_url = self._build_url(self.fixtures.course.uuid, self.fixtures.assignment.uuid)
 
     def _build_url(self, course_id, assignment_id, tail=""):
         url = '/api/courses/' + str(course_id) + '/assignments/' + str(assignment_id) + '/answers/comparisons' + tail
@@ -783,11 +783,11 @@ class AnswerComparisonAPITests(ACJAPITestCase):
         # authorized instructor
         with self.login(self.fixtures.instructor.username):
             # test invalid course id
-            rv = self.client.get('/api/courses/999/assignments/'+str(self.fixtures.assignment.id)+'/answers/comparisons', data=json.dumps({}), content_type='application/json')
+            rv = self.client.get('/api/courses/999/assignments/'+str(self.fixtures.assignment.uuid)+'/answers/comparisons', data=json.dumps({}), content_type='application/json')
             self.assert404(rv)
 
             # test invalid assignment id
-            rv = self.client.get('/api/courses/'+str(self.fixtures.course.id)+'/assignments/999/answers/comparisons', data=json.dumps({}), content_type='application/json')
+            rv = self.client.get('/api/courses/'+str(self.fixtures.course.uuid)+'/assignments/999/answers/comparisons', data=json.dumps({}), content_type='application/json')
             self.assert404(rv)
 
             # get pagninated list of all comparisons in assignment
@@ -808,12 +808,12 @@ class AnswerComparisonAPITests(ACJAPITestCase):
             self.assertEqual(rv.json['total'], total_comparisons_for_group)
 
             # get pagninated list of all comparisons in assignment for a user
-            author_filter = { 'author': self.fixtures.students[0].id }
+            author_filter = { 'author': self.fixtures.students[0].uuid }
             rv = self.client.get(answer_comparisons_url, data=json.dumps(author_filter), content_type='application/json')
             self.assert200(rv)
 
             self.assertEqual(rv.json['page'], 1)
-            self.assertEqual(rv.json['objects'][0]['user_id'], self.fixtures.students[0].id)
+            self.assertEqual(rv.json['objects'][0]['user_id'], self.fixtures.students[0].uuid)
             self.assertEqual(rv.json['total'], self.fixtures.assignment.total_comparisons_required)
 
 
@@ -837,12 +837,12 @@ class AnswerComparisonAPITests(ACJAPITestCase):
             self.assertEqual(rv.json['total'], total_comparisons_for_group)
 
             # get pagninated list of all comparisons in assignment for a user
-            author_filter = { 'author': self.fixtures.students[0].id }
+            author_filter = { 'author': self.fixtures.students[0].uuid }
             rv = self.client.get(answer_comparisons_url, data=json.dumps(author_filter), content_type='application/json')
             self.assert200(rv)
 
             self.assertEqual(rv.json['page'], 1)
-            self.assertEqual(rv.json['objects'][0]['user_id'], self.fixtures.students[0].id)
+            self.assertEqual(rv.json['objects'][0]['user_id'], self.fixtures.students[0].uuid)
             self.assertEqual(rv.json['total'], self.fixtures.assignment.total_comparisons_required)
 
         # authorized student
@@ -852,7 +852,7 @@ class AnswerComparisonAPITests(ACJAPITestCase):
             self.assert200(rv)
 
             self.assertEqual(rv.json['page'], 1)
-            self.assertEqual(rv.json['objects'][0]['user_id'], self.fixtures.students[1].id)
+            self.assertEqual(rv.json['objects'][0]['user_id'], self.fixtures.students[1].uuid)
             self.assertEqual(rv.json['total'], self.fixtures.assignment.total_comparisons_required)
 
             # student should always see their own comparisons only regardless of author/group filters
@@ -861,13 +861,13 @@ class AnswerComparisonAPITests(ACJAPITestCase):
             self.assert200(rv)
 
             self.assertEqual(rv.json['page'], 1)
-            self.assertEqual(rv.json['objects'][0]['user_id'], self.fixtures.students[1].id)
+            self.assertEqual(rv.json['objects'][0]['user_id'], self.fixtures.students[1].uuid)
             self.assertEqual(rv.json['total'], self.fixtures.assignment.total_comparisons_required)
 
-            author_filter = { 'author': self.fixtures.students[0].id }
+            author_filter = { 'author': self.fixtures.students[0].uuid }
             rv = self.client.get(answer_comparisons_url, data=json.dumps({}), content_type='application/json')
             self.assert200(rv)
 
             self.assertEqual(rv.json['page'], 1)
-            self.assertEqual(rv.json['objects'][0]['user_id'], self.fixtures.students[1].id)
+            self.assertEqual(rv.json['objects'][0]['user_id'], self.fixtures.students[1].uuid)
             self.assertEqual(rv.json['total'], self.fixtures.assignment.total_comparisons_required)

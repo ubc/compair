@@ -17,29 +17,28 @@ class ComparisonAPITests(ACJAPITestCase):
         self.data = ComparisonTestData()
         self.course = self.data.get_course()
         self.assignment = self.data.get_assignments()[0]
-        self.base_url = self._build_url(self.course.id, self.assignment.id)
+        self.base_url = self._build_url(self.course.uuid, self.assignment.uuid)
 
         secondary_criterion = self.data.create_criterion(self.data.authorized_instructor)
         AssignmentCriterionFactory(criterion=secondary_criterion, assignment=self.assignment)
         db.session.commit()
 
-    def _build_url(self, course_id, assignment_id, tail=""):
+    def _build_url(self, course_uuid, assignment_uuid, tail=""):
         url = \
-            '/api/courses/' + str(course_id) + '/assignments/' + str(assignment_id) + '/comparisons' + \
-            tail
+            '/api/courses/' + course_uuid + '/assignments/' + assignment_uuid + '/comparisons' + tail
         return url
 
-    def _build_comparison_submit(self, winner_id, draft=False):
+    def _build_comparison_submit(self, winner_uuid, draft=False):
         submit = {
             'comparisons': [
                 {
-                    'criterion_id': self.assignment.criteria[0].id,
-                    'winner_id': winner_id,
+                    'criterion_id': self.assignment.criteria[0].uuid,
+                    'winner_id': winner_uuid,
                     'draft': draft
                 },
                 {
-                    'criterion_id': self.assignment.criteria[1].id,
-                    'winner_id': winner_id,
+                    'criterion_id': self.assignment.criteria[1].uuid,
+                    'winner_id': winner_uuid,
                     'draft': draft
                 }
             ]
@@ -62,14 +61,14 @@ class ComparisonAPITests(ACJAPITestCase):
         # enroled user from this point on
         with self.login(self.data.get_authorized_student().username):
             # test non-existent course
-            rv = self.client.get(self._build_url(9993929, self.assignment.id))
+            rv = self.client.get(self._build_url("9993929", self.assignment.uuid))
             self.assert404(rv)
             # test non-existent assignment
-            rv = self.client.get(self._build_url(self.course.id, 23902390))
+            rv = self.client.get(self._build_url(self.course.uuid, "23902390"))
             self.assert404(rv)
             # no comparisons has been entered yet, assignment is not in comparing period
             rv = self.client.get(self._build_url(
-                self.course.id, self.data.get_assignment_in_answer_period().id))
+                self.course.uuid, self.data.get_assignment_in_answer_period().uuid))
             self.assert403(rv)
 
     def test_get_answer_pair_basic(self):
@@ -80,12 +79,12 @@ class ComparisonAPITests(ACJAPITestCase):
             actual_answer_pair = rv.json
             actual_answer1 = actual_answer_pair['objects'][0]['answer1']
             actual_answer2 = actual_answer_pair['objects'][0]['answer2']
-            expected_answer_ids = [answer.id for answer in self.data.get_student_answers()]
+            expected_answer_uuids = [answer.uuid for answer in self.data.get_student_answers()]
             for ce in self.data.comparisons_examples:
-                expected_answer_ids += [ce.answer1_id, ce.answer2_id]
+                expected_answer_uuids += [ce.answer1_uuid, ce.answer2_uuid]
             # make sure that we actually got answers for the assignment we're targetting
-            self.assertIn(actual_answer1['id'], expected_answer_ids)
-            self.assertIn(actual_answer2['id'], expected_answer_ids)
+            self.assertIn(actual_answer1['id'], expected_answer_uuids)
+            self.assertIn(actual_answer2['id'], expected_answer_uuids)
 
     def test_get_answer_pair_answer_exclusions_for_answers_with_no_scores(self):
         """
@@ -116,14 +115,14 @@ class ComparisonAPITests(ACJAPITestCase):
                 actual_answer1 = actual_answer_pair['objects'][0]['answer1']
                 actual_answer2 = actual_answer_pair['objects'][0]['answer2']
                 # exclude student's own answer
-                self.assertNotEqual(actual_answer1['id'], excluded_student_answer.id)
-                self.assertNotEqual(actual_answer2['id'], excluded_student_answer.id)
+                self.assertNotEqual(actual_answer1['id'], excluded_student_answer.uuid)
+                self.assertNotEqual(actual_answer2['id'], excluded_student_answer.uuid)
                 # exclude instructor answer
-                self.assertNotEqual(actual_answer1['id'], excluded_instructor_answer.id)
-                self.assertNotEqual(actual_answer2['id'], excluded_instructor_answer.id)
+                self.assertNotEqual(actual_answer1['id'], excluded_instructor_answer.uuid)
+                self.assertNotEqual(actual_answer2['id'], excluded_instructor_answer.uuid)
                 # exclude ta answer
-                self.assertNotEqual(actual_answer1['id'], excluded_ta_answer.id)
-                self.assertNotEqual(actual_answer2['id'], excluded_ta_answer.id)
+                self.assertNotEqual(actual_answer1['id'], excluded_ta_answer.uuid)
+                self.assertNotEqual(actual_answer2['id'], excluded_ta_answer.uuid)
 
         # need a user with no answers submitted, otherwise pairs with the same answers
         # won't be generated since we have too few answers
@@ -176,13 +175,13 @@ class ComparisonAPITests(ACJAPITestCase):
         with self.login(self.data.get_authorized_student().username):
             # test non-existent course
             rv = self.client.post(
-                self._build_url(9999999, self.assignment.id),
+                self._build_url("9999999", self.assignment.uuid),
                 data=json.dumps(comparison_submit),
                 content_type='application/json')
             self.assert404(rv)
             # test non-existent assignment
             rv = self.client.post(
-                self._build_url(self.course.id, 9999999),
+                self._build_url(self.course.uuid, "9999999"),
                 data=json.dumps(comparison_submit),
                 content_type='application/json')
             self.assert404(rv)
@@ -502,5 +501,9 @@ class ComparisonAPITests(ACJAPITestCase):
         with self.login(self.data.get_authorized_student_with_no_answers().username):
             rv = self.client.get(self.base_url)
             self.assert200(rv)
-            self.assertIn(rv.json['objects'][0]['answer1_id'], possible_answer_ids)
-            self.assertIn(rv.json['objects'][0]['answer2_id'], possible_answer_ids)
+            answer1 = Answer.query.filter_by(uuid=rv.json['objects'][0]['answer1_id']).first()
+            answer2 = Answer.query.filter_by(uuid=rv.json['objects'][0]['answer2_id']).first()
+            self.assertIsNotNone(answer1)
+            self.assertIsNotNone(answer2)
+            self.assertIn(answer1.id, possible_answer_ids)
+            self.assertIn(answer2.id, possible_answer_ids)
