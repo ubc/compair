@@ -19,7 +19,7 @@ new_criterion_parser.add_argument('description', type=str)
 new_criterion_parser.add_argument('default', type=bool, default=True)
 
 existing_criterion_parser = reqparse.RequestParser()
-existing_criterion_parser.add_argument('id', type=int, required=True)
+existing_criterion_parser.add_argument('id', type=str, required=True)
 existing_criterion_parser.add_argument('name', type=str, required=True)
 existing_criterion_parser.add_argument('description', type=str)
 existing_criterion_parser.add_argument('default', type=bool, default=True)
@@ -87,11 +87,11 @@ class CriteriaAPI(Resource):
 api.add_resource(CriteriaAPI, '')
 
 
-# /criteria/:id
+# /criteria/:criterion_uuid
 class CriteriaIdAPI(Resource):
     @login_required
-    def get(self, criterion_id):
-        criterion = Criterion.get_active_or_404(criterion_id)
+    def get(self, criterion_uuid):
+        criterion = Criterion.get_active_by_uuid_or_404(criterion_uuid)
         require(READ, criterion)
 
         criterion_get.send(
@@ -103,15 +103,16 @@ class CriteriaIdAPI(Resource):
         return marshal(criterion, dataformat.get_criterion())
 
     @login_required
-    def post(self, criterion_id):
-        criterion = Criterion.get_active_or_404(criterion_id)
+    def post(self, criterion_uuid):
+        criterion = Criterion.get_active_by_uuid_or_404(criterion_uuid)
         require(EDIT, criterion)
 
         params = existing_criterion_parser.parse_args()
+
         criterion.name = params.get('name', criterion.name)
         criterion.description = params.get('description', criterion.description)
         criterion.default = params.get('default', criterion.default)
-        db.session.add(criterion)
+
         db.session.commit()
 
         criterion_update.send(
@@ -123,4 +124,4 @@ class CriteriaIdAPI(Resource):
         return marshal(criterion, dataformat.get_criterion())
 
 
-api.add_resource(CriteriaIdAPI, '/<int:criterion_id>')
+api.add_resource(CriteriaIdAPI, '/<criterion_uuid>')

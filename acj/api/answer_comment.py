@@ -8,20 +8,21 @@ from sqlalchemy import and_, or_
 from . import dataformat
 from acj.core import db, event
 from acj.authorization import require, allow, USER_IDENTITY
-from acj.models import Answer, Assignment, Course, AnswerComment, CourseRole, SystemRole, AnswerCommentType
+from acj.models import User, Answer, Assignment, Course, AnswerComment, \
+    CourseRole, SystemRole, AnswerCommentType
 from .util import new_restful_api, get_model_changes, pagination_parser
 
 answer_comment_api = Blueprint('answer_comment_api', __name__)
 api = new_restful_api(answer_comment_api)
 
 new_answer_comment_parser = RequestParser()
-new_answer_comment_parser.add_argument('user_id', type=int, default=None)
+new_answer_comment_parser.add_argument('user_id', type=str, default=None)
 new_answer_comment_parser.add_argument('content', type=str)
 new_answer_comment_parser.add_argument('comment_type', type=str, required=True)
 new_answer_comment_parser.add_argument('draft', type=bool, default=False)
 
 existing_answer_comment_parser = RequestParser()
-existing_answer_comment_parser.add_argument('id', type=int, required=True, help="Comment id is required.")
+existing_answer_comment_parser.add_argument('id', type=str, required=True, help="Comment id is required.")
 existing_answer_comment_parser.add_argument('content', type=str)
 existing_answer_comment_parser.add_argument('comment_type', type=str, required=True)
 existing_answer_comment_parser.add_argument('draft', type=bool, default=False)
@@ -32,7 +33,7 @@ answer_comment_list_parser.add_argument('evaluation', type=str, required=False, 
 answer_comment_list_parser.add_argument('draft', type=str, required=False, default='false')
 answer_comment_list_parser.add_argument('ids', type=str, required=False, default=None)
 answer_comment_list_parser.add_argument('answer_ids', type=str, required=False, default=None)
-answer_comment_list_parser.add_argument('assignment_id', type=int, required=False, default=None)
+answer_comment_list_parser.add_argument('assignment_id', type=str, required=False, default=None)
 answer_comment_list_parser.add_argument('user_ids', type=str, required=False, default=None)
 
 # events
@@ -79,10 +80,10 @@ class AnswerCommentListAPI(Resource):
                 'course_id': 1,
             }]
 
-        :query string ids: a comma separated comment IDs to query
-        :query string answer_ids: a comma separated answer IDs for answer filter
-        :query int assignment_id: filter the answer comments with a assignment
-        :query string user_ids: a comma separated user IDs that own the comments
+        :query string ids: a comma separated comment uuids to query
+        :query string answer_ids: a comma separated answer uuids for answer filter
+        :query string assignment_id: filter the answer comments with a assignment uuid
+        :query string user_ids: a comma separated user uuids that own the comments
         :query string self_evaluation: indicate whether the result should include self-evaluation comments or self-evaluation only.
                 Possible values: true, false or only. Default true.
         :query string evaluation: indicate whether the result should include evaluation comments or evaluation only.
@@ -96,22 +97,25 @@ class AnswerCommentListAPI(Resource):
 
         """
         params = answer_comment_list_parser.parse_args()
-        answer_ids = []
-        if 'answer_id' in kwargs:
-            answer_ids.append(kwargs['answer_id'])
+        answer_uuids = []
+        if 'answer_uuid' in kwargs:
+            answer_uuids.append(kwargs['answer_uuid'])
         elif 'answer_ids' in params and params['answer_ids']:
-            answer_ids.extend(params['answer_ids'].split(','))
+            answer_uuids.extend(params['answer_ids'].split(','))
 
-        if not answer_ids and not params['ids'] and not params['assignment_id'] and not params['user_ids']:
+        if not answer_uuids and not params['ids'] and not params['assignment_id'] and not params['user_ids']:
             abort(404)
 
         conditions = []
 
-        answers = Answer.query. \
-            filter_by(active=True). \
-            filter_by(draft=False). \
-            filter(Answer.id.in_(answer_ids)).all() if answer_ids else []
-        if answer_ids and not answers:
+        answers = Answer.query \
+            .filter(
+                Answer.active == True,
+                Answer.draft == False,
+                Answer.uuid.in_(answer_uuids)
+            ) \
+            .all() if answer_uuids else []
+        if answer_uuids and not answers:
             # non-existing answer ids. we return empty result
             abort(404)
 
@@ -137,7 +141,7 @@ class AnswerCommentListAPI(Resource):
             filter(or_(*conditions))
 
         if params['ids']:
-            query = query.filter(AnswerComment.id.in_(params['ids'].split(',')))
+            query = query.filter(AnswerComment.uuid.in_(params['ids'].split(',')))
 
         if params['self_evaluation'] == 'false':
             # do not include self-evaluation
@@ -174,11 +178,13 @@ class AnswerCommentListAPI(Resource):
 
         if params['assignment_id']:
             query = query.join(AnswerComment.answer). \
-                filter_by(assignment_id=params['assignment_id'])
+                filter_by(assignment_uuid=params['assignment_id'])
 
         if params['user_ids']:
             user_ids = params['user_ids'].split(',')
-            query = query.filter(AnswerComment.user_id.in_(user_ids))
+            query = query \
+                .join(User, AnswerComment.user_id == User.id) \
+                .filter(User.uuid.in_(user_ids))
 
         answer_comments = query.order_by(AnswerComment.created.desc()).all()
 
@@ -190,21 +196,21 @@ class AnswerCommentListAPI(Resource):
             self,
             event_name=on_answer_comment_list_get.name,
             user=current_user,
-            data={'answer_ids': ','.join([str(answer_id) for answer_id in answer_ids])})
+            data={'answer_ids': ','.join([str(answer.id) for answer in answers])})
 
         return marshal(answer_comments, dataformat.get_answer_comment(not allow(READ, USER_IDENTITY)))
 
     @login_required
-    def post(self, course_id, assignment_id, answer_id):
+    def post(self, course_uuid, assignment_uuid, answer_uuid):
         """
         Create comment for an answer
         """
-        Course.get_active_or_404(course_id)
-        Assignment.get_active_or_404(assignment_id)
-        Answer.get_active_or_404(answer_id)
-        require(CREATE, AnswerComment(course_id=course_id))
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+        answer = Answer.get_active_by_uuid_or_404(answer_uuid)
+        require(CREATE, AnswerComment(course_id=course.id))
 
-        answer_comment = AnswerComment(answer_id=answer_id)
+        answer_comment = AnswerComment(answer_id=answer.id)
 
         params = new_answer_comment_parser.parse_args()
         answer_comment.draft = params.get('draft')
@@ -214,7 +220,8 @@ class AnswerCommentListAPI(Resource):
             return {"error": "The comment content is empty!"}, 400
 
         if params.get('user_id') and current_user.system_role == SystemRole.sys_admin:
-            answer_comment.user_id = params.get('user_id')
+            user = User.get_by_uuid_or_404(params.get('user_id'))
+            answer_comment.user_id = user.id
         else:
             answer_comment.user_id = current_user.id
 
@@ -237,54 +244,52 @@ class AnswerCommentListAPI(Resource):
             self,
             event_name=on_answer_comment_create.name,
             user=current_user,
-            course_id=course_id,
+            course_id=course.id,
             data=marshal(answer_comment, dataformat.get_answer_comment(False)))
 
         return marshal(answer_comment, dataformat.get_answer_comment())
 
 api.add_resource(
     AnswerCommentListAPI,
-    '/answers/<int:answer_id>/comments', '/answer_comments',
+    '/answers/<answer_uuid>/comments', '/answer_comments',
     endpoint='answer_comments')
 
 
 class AnswerCommentAPI(Resource):
     @login_required
-    def get(self, course_id, assignment_id, answer_id, answer_comment_id):
+    def get(self, course_uuid, assignment_uuid, answer_uuid, answer_comment_uuid):
         """
         Get an answer comment
         """
-        Course.get_active_or_404(course_id)
-        Assignment.get_active_or_404(assignment_id)
-        Answer.get_active_or_404(answer_id)
-
-        answer_comment = AnswerComment.get_active_or_404(answer_comment_id)
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+        answer = Answer.get_active_by_uuid_or_404(answer_uuid)
+        answer_comment = AnswerComment.get_active_by_uuid_or_404(answer_comment_uuid)
         require(READ, answer_comment)
 
         on_answer_comment_get.send(
             self,
             event_name=on_answer_comment_get.name,
             user=current_user,
-            course_id=course_id,
-            data={'assignment_id': assignment_id, 'answer_id': answer_id, 'answer_comment_id': answer_comment_id})
+            course_id=course.id,
+            data={'assignment_id': assignment.id, 'answer_id': answer.id, 'answer_comment_id': answer_comment.id})
 
         return marshal(answer_comment, dataformat.get_answer_comment())
 
     @login_required
-    def post(self, course_id, assignment_id, answer_id, answer_comment_id):
+    def post(self, course_uuid, assignment_uuid, answer_uuid, answer_comment_uuid):
         """
         Create an answer comment
         """
-        Course.get_active_or_404(course_id)
-        Assignment.get_active_or_404(assignment_id)
-        Answer.get_active_or_404(answer_id)
-
-        answer_comment = AnswerComment.get_active_or_404(answer_comment_id)
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+        answer = Answer.get_active_by_uuid_or_404(answer_uuid)
+        answer_comment = AnswerComment.get_active_by_uuid_or_404(answer_comment_uuid)
         require(EDIT, answer_comment)
 
         params = existing_answer_comment_parser.parse_args()
         # make sure the answer comment id in the url and the id matches
-        if params['id'] != answer_comment_id:
+        if params['id'] != answer_comment_uuid:
             return {"error": "Comment id does not match URL."}, 400
 
         # modify answer comment according to new values, preserve original values if values not passed
@@ -316,18 +321,19 @@ class AnswerCommentAPI(Resource):
             self,
             event_name=on_answer_comment_modified.name,
             user=current_user,
-            course_id=course_id,
+            course_id=course.id,
             data=get_model_changes(answer_comment))
 
         db.session.commit()
         return marshal(answer_comment, dataformat.get_answer_comment())
 
     @login_required
-    def delete(self, course_id, assignment_id, answer_id, answer_comment_id):
+    def delete(self, course_uuid, assignment_uuid, answer_uuid, answer_comment_uuid):
         """
         Delete an answer comment
         """
-        answer_comment = AnswerComment.get_active_or_404(answer_comment_id)
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        answer_comment = AnswerComment.get_active_by_uuid_or_404(answer_comment_uuid)
         require(DELETE, answer_comment)
 
         data = marshal(answer_comment, dataformat.get_answer_comment(False))
@@ -338,9 +344,9 @@ class AnswerCommentAPI(Resource):
             self,
             event_name=on_answer_comment_delete.name,
             user=current_user,
-            course_id=course_id,
+            course_id=course.id,
             data=data)
 
-        return {'id': answer_comment.id}
+        return {'id': answer_comment.uuid}
 
-api.add_resource(AnswerCommentAPI, '/answers/<int:answer_id>/comments/<int:answer_comment_id>')
+api.add_resource(AnswerCommentAPI, '/answers/<answer_uuid>/comments/<answer_comment_uuid>')

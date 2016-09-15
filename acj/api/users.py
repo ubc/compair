@@ -33,7 +33,7 @@ new_user_parser.add_argument('email', type=str)
 new_user_parser.add_argument('password', type=str, required=False)
 
 existing_user_parser = RequestParser()
-existing_user_parser.add_argument('id', type=int, required=True)
+existing_user_parser.add_argument('id', type=str, required=True)
 existing_user_parser.add_argument('username', type=str, required=False)
 existing_user_parser.add_argument('student_number', type=non_blank_str)
 existing_user_parser.add_argument('system_role', type=str, required=True)
@@ -73,27 +73,31 @@ def check_valid_system_role(system_role):
     if system_role not in system_roles:
         abort(400)
 
-# /user_id
+# /user_uuid
 class UserAPI(Resource):
     @login_required
-    def get(self, user_id):
-        user = User.query.get_or_404(user_id)
+    def get(self, user_uuid):
+        user = User.get_by_uuid_or_404(user_uuid)
+
         on_user_get.send(
             self,
             event_name=on_user_get.name,
             user=current_user,
-            data={'id': user_id}
+            data={'id': user.id}
         )
         return marshal(user, dataformat.get_user(is_user_access_restricted(user)))
 
     @login_required
-    def post(self, user_id):
-        user = User.query.get_or_404(user_id)
+    def post(self, user_uuid):
+        user = User.get_by_uuid_or_404(user_uuid)
+
         if is_user_access_restricted(user):
             return {'error': "Sorry, you don't have permission for this action."}, 403
+
         params = existing_user_parser.parse_args()
+
         # make sure the user id in the url and the id matches
-        if params['id'] != user_id:
+        if params['id'] != user_uuid:
             return {"error": "User id does not match URL."}, 400
 
         # only update username if user uses acj login method
@@ -140,13 +144,13 @@ class UserAPI(Resource):
                 self,
                 event_name=on_user_modified.name,
                 user=current_user,
-                data={'id': user_id, 'changes': changes})
+                data={'id': user.id, 'changes': changes})
         except exc.IntegrityError:
             db.session.rollback()
             current_app.logger.error("Failed to edit user. Duplicate.")
             return {'error': 'A user with the same identifier already exists.'}, 409
-        return marshal(user, dataformat.get_user(restrict_user))
 
+        return marshal(user, dataformat.get_user(restrict_user))
 
 # /
 class UserListAPI(Resource):
@@ -278,12 +282,10 @@ class UserListAPI(Resource):
         return marshal(user, dataformat.get_user())
 
 
-# /user_id/courses
+# /courses
 class UserCourseListAPI(Resource):
     @login_required
-    def get(self, user_id):
-        User.query.get_or_404(user_id)
-
+    def get(self):
         params = user_course_list_parser.parse_args()
 
         # Note, start and end dates are optional so default sort is by start_date, end_date, then name
@@ -295,7 +297,7 @@ class UserCourseListAPI(Resource):
         if not allow(MANAGE, Course):
             query = query.join(UserCourse) \
                 .filter(and_(
-                    UserCourse.user_id == user_id,
+                    UserCourse.user_id == current_user.id,
                     UserCourse.course_role != CourseRole.dropped
                 ))
 
@@ -316,8 +318,7 @@ class UserCourseListAPI(Resource):
         on_user_course_get.send(
             self,
             event_name=on_user_course_get.name,
-            user=current_user,
-            data={'userid': user_id})
+            user=current_user)
 
         return {"objects": marshal(page.items, dataformat.get_course()),
                 "page": page.page, "pages": page.pages,
@@ -329,11 +330,15 @@ class TeachingUserCourseListAPI(Resource):
     def get(self):
         if allow(MANAGE, Course()):
             courses = Course.query.all()
-            course_list = [{'id': c.id, 'name': c.name} for c in courses]
+            course_list = [{'id': c.uuid, 'name': c.name} for c in courses]
         else:
-            course_list = [ {'id': user_course.course_id, 'name': user_course.course.name}
-                for user_course in current_user.user_courses
-                if allow(MANAGE, Assignment(course_id=user_course.course_id))]
+            course_list = []
+            for user_course in current_user.user_courses:
+                if allow(MANAGE, Assignment(course_id=user_course.course_id)):
+                    course_list.append({
+                        'id': user_course.course_uuid,
+                        'name': user_course.course.name
+                    })
 
         on_teaching_course_get.send(
             self,
@@ -343,25 +348,26 @@ class TeachingUserCourseListAPI(Resource):
 
         return {'courses': course_list}
 
-# /user_id/edit
+# /user_uuid/edit
 class UserEditButtonAPI(Resource):
     @login_required
-    def get(self, user_id):
-        user = User.query.get_or_404(user_id)
+    def get(self, user_uuid):
+        user = User.get_by_uuid_or_404(user_uuid)
         available = allow(EDIT, user)
+
         on_user_edit_button_get.send(
             self,
             event_name=on_user_edit_button_get.name,
             user=current_user,
-            data={'userId': user.id, 'available': available})
+            data={'user_id': user.id, 'available': available})
 
         return {'available': available}
 
 # /password
 class UserUpdatePasswordAPI(Resource):
     @login_required
-    def post(self, user_id):
-        user = User.query.get_or_404(user_id)
+    def post(self, user_uuid):
+        user = User.get_by_uuid_or_404(user_uuid)
         # anyone who passes checking below should be an instructor or admin
         require(EDIT, user)
 
@@ -370,9 +376,8 @@ class UserUpdatePasswordAPI(Resource):
             oldpassword = params.get('oldpassword')
             # if it is not current user changing own password, it must be an instructor or admin
             # because of above check
-            if current_user.id != user_id or (oldpassword and user.verify_password(oldpassword)):
+            if current_user.id != user.id or (oldpassword and user.verify_password(oldpassword)):
                 user.password = params.get('newpassword')
-                db.session.add(user)
                 db.session.commit()
                 on_user_password_update.send(
                     self,
@@ -386,9 +391,9 @@ class UserUpdatePasswordAPI(Resource):
 
 
 api = new_restful_api(user_api)
-api.add_resource(UserAPI, '/<int:user_id>')
+api.add_resource(UserAPI, '/<user_uuid>')
 api.add_resource(UserListAPI, '')
-api.add_resource(UserCourseListAPI, '/<int:user_id>/courses')
+api.add_resource(UserCourseListAPI, '/courses')
 api.add_resource(TeachingUserCourseListAPI, '/courses/teaching')
-api.add_resource(UserEditButtonAPI, '/<int:user_id>/edit')
-api.add_resource(UserUpdatePasswordAPI, '/<int:user_id>/password')
+api.add_resource(UserEditButtonAPI, '/<user_uuid>/edit')
+api.add_resource(UserUpdatePasswordAPI, '/<user_uuid>/password')

@@ -13,7 +13,7 @@ from . import dataformat
 from acj.core import db, event
 from acj.authorization import allow, require
 from acj.models import Assignment, Course, AssignmentCriterion, Answer, Comparison, \
-    AnswerComment, AnswerCommentType, PairingAlgorithm
+    AnswerComment, AnswerCommentType, PairingAlgorithm, Criterion
 from .util import new_restful_api, get_model_changes
 from .file import add_new_file
 
@@ -39,7 +39,7 @@ new_assignment_parser.add_argument('rank_display_limit', type=int, default=None)
 new_assignment_parser.add_argument('criteria', type=list, default=[], location='json')
 
 existing_assignment_parser = new_assignment_parser.copy()
-existing_assignment_parser.add_argument('id', type=int, required=True, help="Assignment id is required.")
+existing_assignment_parser.add_argument('id', type=str, required=True, help="Assignment id is required.")
 
 # events
 on_assignment_modified = event.signal('ASSIGNMENT_MODIFIED')
@@ -61,10 +61,11 @@ def check_valid_pairing_algorithm(pairing_algorithm):
 # /id
 class AssignmentIdAPI(Resource):
     @login_required
-    def get(self, course_id, assignment_id):
-        Course.get_active_or_404(course_id)
-        assignment = Assignment.get_active_or_404(assignment_id)
+    def get(self, course_uuid, assignment_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(READ, assignment)
+
         now = datetime.datetime.utcnow()
         if assignment.answer_start and not allow(MANAGE, assignment) and not (assignment.answer_start <= now):
             return {"error": "The assignment is unavailable!"}, 403
@@ -74,21 +75,23 @@ class AssignmentIdAPI(Resource):
             self,
             event_name=on_assignment_get.name,
             user=current_user,
-            course_id=course_id,
-            data={'id': assignment_id})
+            course_id=course.id,
+            data={'id': assignment.id})
 
         return marshal(assignment, dataformat.get_assignment(restrict_user))
 
     @login_required
-    def post(self, course_id, assignment_id):
-        Course.get_active_or_404(course_id)
-        assignment = Assignment.get_active_or_404(assignment_id)
+    def post(self, course_uuid, assignment_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(EDIT, assignment)
+
         params = existing_assignment_parser.parse_args()
 
         # make sure the assignment id in the url and the id matches
-        if params['id'] != assignment_id:
+        if params['id'] != assignment_uuid:
             return {"error": "Assignment id does not match URL."}, 400
+
         # modify assignment according to new values, preserve original values if values not passed
         assignment.name = params.get("name", assignment.name)
         assignment.description = params.get("description", assignment.description)
@@ -128,34 +131,46 @@ class AssignmentIdAPI(Resource):
         if assignment.rank_display_limit != None and assignment.rank_display_limit <= 0:
             assignment.rank_display_limit = None
 
-        criterion_ids = [c['id'] for c in params.criteria]
+        criterion_uuids = [c['id'] for c in params.criteria]
         if assignment.compared:
-            active_ids = [c.id for c in assignment.criteria]
-            if set(criterion_ids) != set(active_ids):
+            active_uuids = [c.uuid for c in assignment.criteria]
+            if set(criterion_uuids) != set(active_uuids):
                 msg = 'The criteria cannot be changed in the assignment ' + \
                       'because they have already been used in an evaluation.'
                 return {"error": msg}, 403
         else:
-            existing_ids = [c.criterion_id for c in assignment.assignment_criteria]
             # assignment not comapred yet, can change criteria
-            if len(criterion_ids) == 0:
+            if len(criterion_uuids) == 0:
                 msg = 'You must add at least one criterion to the assignment '
                 return {"error": msg}, 403
+
+            existing_uuids = [c.criterion_uuid for c in assignment.assignment_criteria]
             # disable old ones
             for c in assignment.assignment_criteria:
-                c.active = c.criterion_id in criterion_ids
+                c.active = c.criterion_uuid in criterion_uuids
+
             # add the new ones
-            for criterion_id in criterion_ids:
-                if criterion_id not in existing_ids:
+            new_uuids = []
+            for criterion_uuid in criterion_uuids:
+                if criterion_uuid not in existing_uuids:
+                    new_uuids.append(criterion_uuid)
+
+            if len(new_uuids) > 0:
+                new_criteria = Criterion.query \
+                    .filter(Criterion.uuid.in_(new_uuids)) \
+                    .all()
+                for criterion in new_criteria:
                     assignment_criterion = AssignmentCriterion(
-                        assignment_id=assignment_id, criterion_id=criterion_id)
+                        assignment_id=assignment.id,
+                        criterion_id=criterion.id
+                    )
                     assignment.assignment_criteria.append(assignment_criterion)
 
         on_assignment_modified.send(
             self,
             event_name=on_assignment_modified.name,
             user=current_user,
-            course_id=course_id,
+            course_id=course.id,
             data=get_model_changes(assignment))
 
         db.session.commit()
@@ -170,9 +185,11 @@ class AssignmentIdAPI(Resource):
         return marshal(assignment, dataformat.get_assignment())
 
     @login_required
-    def delete(self, course_id, assignment_id):
-        assignment = Assignment.get_active_or_404(assignment_id)
+    def delete(self, course_uuid, assignment_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(DELETE, assignment)
+
         formatted_assignment = marshal(assignment, dataformat.get_assignment(False))
         # delete file when assignment is deleted
         assignment.active = False
@@ -184,35 +201,36 @@ class AssignmentIdAPI(Resource):
             self,
             event_name=on_assignment_delete.name,
             user=current_user,
-            course_id=course_id,
+            course_id=course.id,
             data=formatted_assignment)
 
-        return {'id': assignment.id}
+        return {'id': assignment.uuid}
 
-api.add_resource(AssignmentIdAPI, '/<int:assignment_id>')
+api.add_resource(AssignmentIdAPI, '/<assignment_uuid>')
 
 
 # /
 class AssignmentRootAPI(Resource):
     # TODO Pagination
     @login_required
-    def get(self, course_id):
-        course = Course.get_active_or_404(course_id)
+    def get(self, course_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
         require(READ, course)
+
+        assignment = Assignment(course_id=course.id)
+        restrict_user = not allow(MANAGE, assignment)
+
         # Get all assignments for this course, default order is most recent first
-        assignment = Assignment(course_id=course_id)
         base_query = Assignment.query \
             .options(joinedload("assignment_criteria").joinedload("criterion")) \
             .options(undefer_group('counts')) \
             .filter(
-                Assignment.course_id == course_id,
+                Assignment.course_id == course.id,
                 Assignment.active == True
             ) \
             .order_by(desc(Assignment.created))
 
-        if allow(MANAGE, assignment):
-            assignments = base_query.all()
-        else:
+        if restrict_user:
             now = datetime.datetime.utcnow()
             assignments = base_query \
                 .filter(or_(
@@ -220,25 +238,26 @@ class AssignmentRootAPI(Resource):
                     now >= Assignment.answer_start
                 ))\
                 .all()
-
-        restrict_user = not allow(MANAGE, assignment)
+        else:
+            assignments = base_query.all()
 
         on_assignment_list_get.send(
             self,
             event_name=on_assignment_list_get.name,
             user=current_user,
-            course_id=course_id)
+            course_id=course.id)
 
         return {
             "objects": marshal(assignments, dataformat.get_assignment(restrict_user))
         }
 
     @login_required
-    def post(self, course_id):
-        Course.get_active_or_404(course_id)
+    def post(self, course_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
         # check permission first before reading parser arguments
-        new_assignment = Assignment(course_id=course_id)
+        new_assignment = Assignment(course_id=course.id)
         require(CREATE, new_assignment)
+
         params = new_assignment_parser.parse_args()
 
         new_assignment.user_id = current_user.id
@@ -266,12 +285,20 @@ class AssignmentRootAPI(Resource):
         check_valid_pairing_algorithm(pairing_algorithm)
         new_assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
 
-        criterion_ids = [c['id'] for c in params.criteria]
-        if len(criterion_ids) == 0:
+        criterion_uuids = [c['id'] for c in params.criteria]
+        if len(criterion_uuids) == 0:
             msg = 'You must add at least one criterion to the assignment '
             return {"error": msg}, 403
-        for c in criterion_ids:
-            assignment_criterion = AssignmentCriterion(assignment=new_assignment, criterion_id=c)
+
+        new_criteria = Criterion.query \
+            .filter(Criterion.uuid.in_(criterion_uuids)) \
+            .all()
+
+        for criterion in new_criteria:
+            assignment_criterion = AssignmentCriterion(
+                assignment=new_assignment,
+                criterion_id=criterion.id
+            )
             db.session.add(assignment_criterion)
 
         db.session.add(new_assignment)
@@ -289,7 +316,7 @@ class AssignmentRootAPI(Resource):
             self,
             event_name=on_assignment_create.name,
             user=current_user,
-            course_id=course_id,
+            course_id=course.id,
             data=marshal(new_assignment, dataformat.get_assignment(False)))
 
         return marshal(new_assignment, dataformat.get_assignment())
@@ -300,15 +327,15 @@ api.add_resource(AssignmentRootAPI, '')
 # /id/status
 class AssignmentIdStatusAPI(Resource):
     @login_required
-    def get(self, course_id, assignment_id):
-        Course.get_active_or_404(course_id)
-        assignment = Assignment.get_active_or_404(assignment_id)
+    def get(self, course_uuid, assignment_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(READ, assignment)
 
         answer_count = Answer.query \
             .filter_by(
                 user_id=current_user.id,
-                assignment_id=assignment_id,
+                assignment_id=assignment.id,
                 active=True,
                 practice=False,
                 draft=False
@@ -319,7 +346,7 @@ class AssignmentIdStatusAPI(Resource):
             .options(load_only('id')) \
             .filter_by(
                 user_id=current_user.id,
-                assignment_id=assignment_id,
+                assignment_id=assignment.id,
                 active=True,
                 practice=False,
                 draft=True
@@ -327,14 +354,14 @@ class AssignmentIdStatusAPI(Resource):
             .all()
 
         comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
-        comparison_availble = Comparison.comparison_avialble_for_user(course_id, assignment_id, current_user.id)
+        comparison_availble = Comparison.comparison_avialble_for_user(course.id, assignment.id, current_user.id)
 
         status = {
             'answers': {
                 'answered': answer_count > 0,
                 'count': answer_count,
                 'has_draft': len(drafts) > 0,
-                'draft_ids': [draft.id for draft in drafts]
+                'draft_ids': [draft.uuid for draft in drafts]
             },
             'comparisons': {
                 'available': comparison_availble,
@@ -351,7 +378,7 @@ class AssignmentIdStatusAPI(Resource):
                     AnswerComment.active == True,
                     AnswerComment.comment_type == AnswerCommentType.self_evaluation,
                     AnswerComment.draft == False,
-                    Answer.assignment_id == assignment_id,
+                    Answer.assignment_id == assignment.id,
                     Answer.active == True,
                     Answer.practice == False,
                     Answer.draft == False
@@ -363,20 +390,20 @@ class AssignmentIdStatusAPI(Resource):
             self,
             event_name=on_assignment_get.name,
             user=current_user,
-            course_id=course_id,
+            course_id=course.id,
             data=status)
 
         return {"status": status}
 
-api.add_resource(AssignmentIdStatusAPI, '/<int:assignment_id>/status')
+api.add_resource(AssignmentIdStatusAPI, '/<assignment_uuid>/status')
 
 
 
 # /status
 class AssignmentRootStatusAPI(Resource):
     @login_required
-    def get(self, course_id):
-        course = Course.get_active_or_404(course_id)
+    def get(self, course_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
         require(READ, course)
 
         assignments = course.assignments \
@@ -437,14 +464,14 @@ class AssignmentRootStatusAPI(Resource):
             )
             assignment_drafts = [draft for draft in drafts if draft.assignment_id == assignment.id]
             comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
-            comparison_availble = Comparison.comparison_avialble_for_user(course_id, assignment.id, current_user.id)
+            comparison_availble = Comparison.comparison_avialble_for_user(course.id, assignment.id, current_user.id)
 
-            statuses[assignment.id] = {
+            statuses[assignment.uuid] = {
                 'answers': {
                     'answered': answer_count > 0,
                     'count': answer_count,
                     'has_draft': len(assignment_drafts) > 0,
-                    'draft_ids': [draft.id for draft in assignment_drafts]
+                    'draft_ids': [draft.uuid for draft in assignment_drafts]
                 },
                 'comparisons': {
                     'available': comparison_availble,
@@ -458,13 +485,13 @@ class AssignmentRootStatusAPI(Resource):
                     (result.self_evaluation_count for result in self_evaluations if result.assignment_id == assignment.id),
                     0
                 )
-                statuses[assignment.id]['comparisons']['self_evaluation_completed'] = self_evaluation_count > 0
+                statuses[assignment.uuid]['comparisons']['self_evaluation_completed'] = self_evaluation_count > 0
 
         on_assignment_list_get_status.send(
             self,
             event_name=on_assignment_get.name,
             user=current_user,
-            course_id=course_id,
+            course_id=course.id,
             data=statuses)
 
         return {"statuses": statuses}

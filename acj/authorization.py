@@ -145,13 +145,13 @@ def get_logged_in_user_permissions():
         permissions['Course'].setdefault(operation, {})
         permissions['Course'][operation]['global'] = admin
         for course in courses:
-            course_id = str(course.course_id)
+            course_uuid = course.course_uuid
             try:
                 ensure(operation, Course(id=course.course_id))
-                permissions['Course'][operation][course_id] = True
+                permissions['Course'][operation][course_uuid] = True
                 permissions['Course'][operation]['global'] = True
             except Unauthorized:
-                permissions['Course'][operation][course_id] = False
+                permissions['Course'][operation][course_uuid] = False
 
     # assignment model
     # model_name / operation / courseId OR global
@@ -161,13 +161,13 @@ def get_logged_in_user_permissions():
         permissions['Assignment'].setdefault(operation, {})
         permissions['Assignment'][operation]['global'] = admin
         for course in courses:
-            course_id = str(course.course_id)
+            course_uuid = course.course_uuid
             try:
                 ensure(operation, Assignment(course_id=course.course_id))
-                permissions['Assignment'][operation][course_id] = True
+                permissions['Assignment'][operation][course_uuid] = True
                 permissions['Assignment'][operation]['global'] = True
             except Unauthorized:
-                permissions['Assignment'][operation][course_id] = False
+                permissions['Assignment'][operation][course_uuid] = False
 
     return permissions
 

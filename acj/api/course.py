@@ -27,7 +27,7 @@ new_course_parser.add_argument('start_date', type=str, default=None)
 new_course_parser.add_argument('end_date', type=str, default=None)
 
 existing_course_parser = new_course_parser.copy()
-existing_course_parser.add_argument('id', type=int, required=True, help='Course id is required.')
+existing_course_parser.add_argument('id', type=str, required=True, help='Course id is required.')
 
 
 duplicate_course_parser = reqparse.RequestParser()
@@ -43,20 +43,6 @@ on_course_duplicate = event.signal('COURSE_DUPLICATE')
 
 
 class CourseListAPI(Resource):
-    @login_required
-    @pagination(Course)
-    @marshal_with(dataformat.get_course())
-    def get(self, objects):
-        """
-        Get a list of courses
-        """
-        require(MANAGE, Course)
-        on_course_list_get.send(
-            self,
-            event_name=on_course_list_get.name,
-            user=current_user)
-        return objects
-
     @login_required
     def post(self):
         """
@@ -77,6 +63,7 @@ class CourseListAPI(Resource):
             new_course.start_date = datetime.datetime.strptime(
                 new_course.start_date,
                 '%Y-%m-%dT%H:%M:%S.%fZ')
+
         if new_course.end_date is not None:
             new_course.end_date = datetime.datetime.strptime(
                 new_course.end_date,
@@ -113,33 +100,28 @@ api.add_resource(CourseListAPI, '')
 
 class CourseAPI(Resource):
     @login_required
-    def get(self, course_id):
-        """
-        Get a course by course id
-        """
-        course = Course.get_active_or_404(course_id)
+    def get(self, course_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
         require(READ, course)
+
         on_course_get.send(
             self,
             event_name=on_course_get.name,
             user=current_user,
-            data={'id': course_id})
+            data={'id': course.id})
         return marshal(course, dataformat.get_course())
 
     @login_required
-    def post(self, course_id):
-        """
-        Update a course
-
-        :param course_id:
-        :return:
-        """
-        course = Course.get_active_or_404(course_id)
+    def post(self, course_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
         require(EDIT, course)
+
         params = existing_course_parser.parse_args()
+
         # make sure the course id in the url and the course id in the params match
-        if params['id'] != course_id:
+        if params['id'] != course_uuid:
             return {"error": "Course id does not match URL."}, 400
+
         # modify course according to new values, preserve original values if values not passed
         course.name = params.get("name", course.name)
         course.year = params.get("year", course.year)
@@ -168,20 +150,21 @@ class CourseAPI(Resource):
 
         return marshal(course, dataformat.get_course())
 
-api.add_resource(CourseAPI, '/<int:course_id>')
+api.add_resource(CourseAPI, '/<course_uuid>')
 
-# /course/:id/duplicate
+# /course/:course_uuid/duplicate
 class CourseDuplicateAPI(Resource):
     @login_required
-    def post(self, course_id):
+    def post(self, course_uuid):
         """
         Duplicate a course
         """
-        course = Course.get_active_or_404(course_id)
+        course = Course.get_active_by_uuid_or_404(course_uuid)
         require(EDIT, course)
-        assignments = course.assignments
 
         params = duplicate_course_parser.parse_args()
+
+        assignments = course.assignments
 
         # duplicate course
         duplicate_course = Course(
@@ -285,13 +268,13 @@ class CourseDuplicateAPI(Resource):
         db.session.commit()
 
         for (file, duplicate_assignment) in assignment_files_to_duplicate:
-            duplicate_assignment.file_id = duplicate_file(
+            duplicate_assignment.file = duplicate_file(
                 file, Assignment.__name__, duplicate_assignment.id)
 
             db.session.commit()
 
         for (file, duplicate_answer) in answer_files_to_duplicate:
-            duplicate_answer.file_id = duplicate_file(
+            duplicate_answer.file = duplicate_file(
                 file, Answer.__name__, duplicate_answer.id)
 
             db.session.commit()
@@ -304,4 +287,4 @@ class CourseDuplicateAPI(Resource):
 
         return marshal(duplicate_course, dataformat.get_course())
 
-api.add_resource(CourseDuplicateAPI, '/<int:course_id>/duplicate')
+api.add_resource(CourseDuplicateAPI, '/<course_uuid>/duplicate')

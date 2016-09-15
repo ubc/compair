@@ -94,7 +94,7 @@ def _get_existing_users_by_student_number(users):
         u.student_number: u for u in users
     }
 
-def import_users(import_type, course_id, users):
+def import_users(import_type, course, users):
     invalids = []  # invalid entries - eg. invalid # of columns
     count = 0  # store number of successful enrolments
 
@@ -184,14 +184,14 @@ def import_users(import_type, course_id, users):
     db.session.commit()
 
     enroled = UserCourse.query \
-        .filter_by(course_id=course_id) \
+        .filter_by(course_id=course.id) \
         .all()
 
     enroled = {e.user_id: e for e in enroled}
 
     students = UserCourse.query \
         .filter_by(
-            course_id=course_id,
+            course_id=course.id,
             course_role=CourseRole.student
         ) \
         .all()
@@ -199,7 +199,7 @@ def import_users(import_type, course_id, users):
 
     # enrol valid users in file
     for user in imported_users:
-        enrol = enroled.get(user.id, UserCourse(course_id=course_id, user_id=user.id))
+        enrol = enroled.get(user.id, UserCourse(course_id=course.id, user_id=user.id))
         enrol.course_role = CourseRole.student
         db.session.add(enrol)
         if user.id in students:
@@ -221,7 +221,7 @@ def import_users(import_type, course_id, users):
         current_app._get_current_object(),
         event_name=on_classlist_upload.name,
         user=current_user,
-        course_id=course_id
+        course_id=course.id
     )
 
     return {
@@ -251,8 +251,9 @@ def output_csv(data, code, headers=None):
 class ClasslistRootAPI(Resource):
     # TODO Pagination
     @login_required
-    def get(self, course_id):
-        require(READ, UserCourse(course_id=course_id))
+    def get(self, course_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        require(READ, UserCourse(course_id=course.id))
         restrict_user = not allow(READ, USER_IDENTITY)
 
         # expire current_user from the session. When loading classlist from database, if the
@@ -266,7 +267,7 @@ class ClasslistRootAPI(Resource):
             .join(UserCourse, UserCourse.user_id == User.id) \
             .add_columns(UserCourse.course_role, UserCourse.group_name) \
             .filter(and_(
-                UserCourse.course_id == course_id,
+                UserCourse.course_id == course.id,
                 UserCourse.course_role != CourseRole.dropped
             )) \
             .order_by(User.firstname) \
@@ -282,14 +283,14 @@ class ClasslistRootAPI(Resource):
             self,
             event_name=on_classlist_get.name,
             user=current_user,
-            course_id=course_id)
+            course_id=course.id)
 
         return {'objects': marshal(class_list, dataformat.get_users_in_course(restrict_user=restrict_user))}
 
     @login_required
-    def post(self, course_id):
-        Course.get_active_or_404(course_id)
-        user_course = UserCourse(course_id=course_id)
+    def post(self, course_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        user_course = UserCourse(course_id=course.id)
         require(EDIT, user_course)
 
         params = import_classlist_parser.parse_args()
@@ -302,7 +303,7 @@ class ClasslistRootAPI(Resource):
             filename = unique + secure_filename(uploaded_file.filename)
             tmp_name = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
             uploaded_file.save(tmp_name)
-            current_app.logger.debug("Importing for course " + str(course_id) + " with " + filename)
+            current_app.logger.debug("Importing for course " + str(course.id) + " with " + filename)
             with open(tmp_name, 'rt') as csvfile:
                 spamreader = csv.reader(csvfile)
                 users = []
@@ -311,15 +312,15 @@ class ClasslistRootAPI(Resource):
                         users.append(row)
 
                 if len(users) > 0:
-                    results = import_users(import_type, course_id, users)
+                    results = import_users(import_type, course, users)
 
                 on_classlist_upload.send(
                     self,
                     event_name=on_classlist_upload.name,
                     user=current_user,
-                    course_id=course_id)
+                    course_id=course.id)
             os.remove(tmp_name)
-            current_app.logger.debug("Class Import for course " + str(course_id) + " is successful. Removed file.")
+            current_app.logger.debug("Class Import for course " + str(course.id) + " is successful. Removed file.")
             return results
         else:
             return {'error': 'Wrong file type'}, 400
@@ -328,26 +329,36 @@ class ClasslistRootAPI(Resource):
 api.add_resource(ClasslistRootAPI, '')
 
 
-# /:userId
+# /user_uuid
 class EnrolAPI(Resource):
     @login_required
-    def post(self, course_id, user_id):
+    def post(self, course_uuid, user_uuid):
         """
         Enrol or update a user enrolment in the course
 
         The payload for the request has to contain course_role. e.g.
         {"couse_role":"Student"}
 
-        :param course_id:
-        :param user_id:
+        :param course_uuid:
+        :param user_uuid:
         :return:
         """
-        course = Course.get_active_or_404(course_id)
-        user = User.query.get_or_404(user_id)
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        user = User.get_by_uuid_or_404(user_uuid)
 
-        user_course = UserCourse.query.filter_by(user_id=user.id, course_id=course.id).first()
+        user_course = UserCourse.query \
+            .filter_by(
+                user_id=user.id,
+                course_id=course.id
+            ) \
+            .first()
+
         if not user_course:
-            user_course = UserCourse(course_id=course.id)
+            user_course = UserCourse(
+                user_id=user.id,
+                course_id=course.id
+            )
+
         require(EDIT, user_course)
 
         params = new_course_user_parser.parse_args()
@@ -361,16 +372,14 @@ class EnrolAPI(Resource):
         ]
         if role_name not in course_roles:
             abort(404)
-
         course_role = CourseRole(role_name)
         if user_course.course_role != course_role:
-            user_course.user_id = user.id
             user_course.course_role = course_role
             db.session.add(user_course)
             db.session.commit()
 
         result = {
-            'user_id': user.id,
+            'user_id': user.uuid,
             'fullname': user.fullname,
             'course_role': course_role.value
         }
@@ -379,21 +388,26 @@ class EnrolAPI(Resource):
             self,
             event_name=on_classlist_enrol.name,
             user=current_user,
-            course_id=course_id,
-            data={'user_id': user_id})
+            course_id=course.id,
+            data={'user_id': user.id})
 
         return result
 
     @login_required
-    def delete(self, course_id, user_id):
-        course = Course.get_active_or_404(course_id)
-        user = User.query.get_or_404(user_id)
-        user_course = UserCourse.query.filter_by(user_id=user.id, course_id=course.id).first_or_404()
+    def delete(self, course_uuid, user_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        user = User.get_by_uuid_or_404(user_uuid)
+        user_course = UserCourse.query \
+            .filter_by(
+                user_id=user.id,
+                course_id=course.id
+            ) \
+            .first_or_404()
         require(EDIT, user_course)
 
         user_course.course_role = CourseRole.dropped
         result = {
-            'user_id': user.id,
+            'user_id': user.uuid,
             'fullname': user.fullname,
             'course_role': CourseRole.dropped.value
         }
@@ -404,37 +418,38 @@ class EnrolAPI(Resource):
             self,
             event_name=on_classlist_unenrol.name,
             user=current_user,
-            course_id=course_id,
-            data={'user_id': user_id})
+            course_id=course.id,
+            data={'user_id': user.id})
 
         db.session.commit()
         return result
 
 
-api.add_resource(EnrolAPI, '/<int:user_id>')
+api.add_resource(EnrolAPI, '/<user_uuid>')
 
 
 # /instructors/labels - return list of TAs and Instructors labels
 class TeachersAPI(Resource):
     @login_required
-    def get(self, course_id):
-        course = Course.get_active_or_404(course_id)
+    def get(self, course_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
         require(READ, course)
+
         instructors = UserCourse.query \
             .filter(and_(
-                UserCourse.course_id==course_id,
+                UserCourse.course_id==course.id,
                 UserCourse.course_role.in_([CourseRole.teaching_assistant, CourseRole.instructor])
             )) \
             .all()
-        instructor_ids = {u.user_id: u.course_role.value for u in instructors}
+        instructor_uuids = {u.user_uuid: u.course_role.value for u in instructors}
 
         on_classlist_instructor_label.send(
             self,
             event_name=on_classlist_instructor_label.name,
             user=current_user,
-            course_id=course_id)
+            course_id=course.id)
 
-        return {'instructors': instructor_ids}
+        return {'instructors': instructor_uuids}
 
 
 api.add_resource(TeachersAPI, '/instructors/labels')
@@ -443,8 +458,8 @@ api.add_resource(TeachersAPI, '/instructors/labels')
 # /students - return list of Students in the course
 class StudentsAPI(Resource):
     @login_required
-    def get(self, course_id):
-        course = Course.get_active_or_404(course_id)
+    def get(self, course_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
         require(READ, course)
         restrict_user = not allow(MANAGE, course)
 
@@ -452,17 +467,17 @@ class StudentsAPI(Resource):
             .with_entities(User, UserCourse.group_name) \
             .join(UserCourse, UserCourse.user_id == User.id) \
             .filter(
-                UserCourse.course_id == course_id,
+                UserCourse.course_id == course.id,
                 UserCourse.course_role == CourseRole.student
             ) \
             .all()
 
         users = []
-        user_course = UserCourse(course_id=course_id)
+        user_course = UserCourse(course_id=course.id)
         for u in students:
             if allow(READ, user_course):
                 users.append({
-                    'id': u.User.id,
+                    'id': u.User.uuid,
                     'name': u.User.fullname if u.User.fullname else u.User.displayname,
                     'group_name': u.group_name
                 })
@@ -471,7 +486,7 @@ class StudentsAPI(Resource):
                 if u.User.id == current_user.id:
                     name += ' (You)'
                 users.append({
-                    'id': u.User.id,
+                    'id': u.User.uuid,
                     'name': name,
                     'group_name': u.group_name
                 })
@@ -480,7 +495,7 @@ class StudentsAPI(Resource):
             self,
             event_name=on_classlist_student.name,
             user=current_user,
-            course_id=course_id
+            course_id=course.id
         )
 
         return { 'objects': users }
@@ -492,9 +507,9 @@ api.add_resource(StudentsAPI, '/students')
 # /roles - set course role for multi users at once
 class UserCourseRoleAPI(Resource):
     @login_required
-    def post(self, course_id):
-        Course.get_active_or_404(course_id)
-        require(EDIT, UserCourse(course_id=course_id))
+    def post(self, course_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        require(EDIT, UserCourse(course_id=course.id))
 
         params = update_users_course_role_parser.parse_args()
 
@@ -513,9 +528,10 @@ class UserCourseRoleAPI(Resource):
             return {"error": "Please select at least one user below"}, 400
 
         user_courses = UserCourse.query \
+            .join(User, UserCourse.user_id == User.id) \
             .filter(and_(
-                UserCourse.course_id == course_id,
-                UserCourse.user_id.in_(params.get('ids')),
+                UserCourse.course_id == course.id,
+                User.uuid.in_(params.get('ids')),
                 UserCourse.course_role != CourseRole.dropped
             )) \
             .all()
@@ -542,8 +558,8 @@ class UserCourseRoleAPI(Resource):
             current_app._get_current_object(),
             event_name=on_classlist_update_users_course_roles.name,
             user=current_user,
-            course_id=course_id,
-            data={'user_ids': params.get('ids'), 'course_role': role_name})
+            course_id=course.id,
+            data={'user_uuids': params.get('ids'), 'course_role': role_name})
 
         return {'course_role': role_name}
 

@@ -28,7 +28,7 @@ report_parser = reqparse.RequestParser()
 report_parser.add_argument('group_name', type=str)
 # may change 'type' to int
 report_parser.add_argument('type', type=str, required=True)
-report_parser.add_argument('assignment', type=int)
+report_parser.add_argument('assignment', type=str)
 
 # events
 on_export_report = event.signal('EXPORT_REPORT')
@@ -46,8 +46,8 @@ def name_generator(course, report_name, group_name, file_type="csv"):
 
 class ReportRootAPI(Resource):
     @login_required
-    def post(self, course_id):
-        course = Course.get_active_or_404(course_id)
+    def post(self, course_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment(course_id=course.id)
         require(MANAGE, assignment)
 
@@ -56,14 +56,14 @@ class ReportRootAPI(Resource):
         report_type = params.get('type')
 
         assignments = []
-        assignment_id = params.get('assignment', None)
-        if assignment_id:
-            assignment = Assignment.get_active_or_404(assignment_id)
+        assignment_uuid = params.get('assignment', None)
+        if assignment_uuid:
+            assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
             assignments = [assignment]
         else:
             assignments = Assignment.query \
                 .filter_by(
-                    course_id=course_id,
+                    course_id=course.id,
                     active=True
                 ) \
                 .all()
@@ -73,7 +73,7 @@ class ReportRootAPI(Resource):
             group_exists = UserCourse.query \
                 .filter(
                     UserCourse.group_name == group_name,
-                    UserCourse.course_id == course_id,
+                    UserCourse.course_id == course.id,
                     UserCourse.course_role != CourseRole.dropped
                 ) \
                 .first()
@@ -81,17 +81,17 @@ class ReportRootAPI(Resource):
                 abort(404)
 
         if report_type == "participation_stat":
-            data = participation_stat_report(course_id, assignments, group_name, assignment_id is None)
+            data = participation_stat_report(course, assignments, group_name, assignment_uuid is None)
 
             title = [
-                'Assignment', 'Username', 'Last Name', 'First Name', 'Answer Submitted', 'Answer ID',
+                'Assignment', 'User UUID', 'Last Name', 'First Name', 'Answer Submitted', 'Answer ID',
                 'Evaluations Submitted', 'Evaluations Required', 'Evaluation Requirements Met',
                 'Replies Submitted']
             titles = [title]
 
         elif report_type == "participation":
             user_titles = ['Last Name', 'First Name', 'Student No']
-            data = participation_report(course_id, assignments, group_name)
+            data = participation_report(course, assignments, group_name)
 
             title_row1 = [""] * len(user_titles)
             title_row2 = user_titles
@@ -131,7 +131,7 @@ class ReportRootAPI(Resource):
             self,
             event_name=on_export_report.name,
             user=current_user,
-            course_id=course_id,
+            course_id=course.id,
             data={'type': report_type, 'filename': name})
 
         return {'file': 'report/' + name}
@@ -140,12 +140,12 @@ class ReportRootAPI(Resource):
 api.add_resource(ReportRootAPI, '')
 
 
-def participation_stat_report(course_id, assignments, group_name, overall):
+def participation_stat_report(course, assignments, group_name, overall):
     report = []
 
     user_course_students = UserCourse.query \
         .filter_by(
-            course_id=course_id,
+            course_id=course.id,
             course_role=CourseRole.student
         )
     if group_name:
@@ -165,7 +165,7 @@ def participation_stat_report(course_id, assignments, group_name, overall):
                 practice=False
             ) \
             .all()
-        answers = {a.user_id: a.id for a in answers}
+        answers = {a.user_id: a.uuid for a in answers}
 
         # EVALUATIONS
         evaluations = Comparison.query \
@@ -190,7 +190,7 @@ def participation_stat_report(course_id, assignments, group_name, overall):
 
         for user_course_student in user_course_students:
             user = user_course_student.user
-            temp = [assignment.name, user.username, user.lastname, user.firstname]
+            temp = [assignment.name, user.uuid, user.lastname, user.firstname]
 
             # OVERALL
             total.setdefault(user.id, {
@@ -200,9 +200,9 @@ def participation_stat_report(course_id, assignments, group_name, overall):
             })
 
             submitted = 1 if user.id in answers else 0
-            answer_id = answers[user.id] if submitted else 'N/A'
+            answer_uuid = answers[user.id] if submitted else 'N/A'
             total[user.id]['total_answers'] += submitted
-            temp.extend([submitted, answer_id])
+            temp.extend([submitted, answer_uuid])
 
             evaluation_submitted = evaluations[user.id] if user.id in evaluations else 0
             evaluation_submitted = int(evaluation_submitted / criteria_count) if criteria_count else 0
@@ -227,7 +227,7 @@ def participation_stat_report(course_id, assignments, group_name, overall):
             # assume a user can only at most do the required number
             req_met = 'Yes' if sum_submission['total_evaluations'] >= total_req else 'No'
             temp = [
-                '(Overall in Course)', user.id, user.lastname, user.firstname,
+                '(Overall in Course)', user.uuid, user.lastname, user.firstname,
                 sum_submission['total_answers'], '(Overall in Course)',
                 sum_submission['total_evaluations'], total_req, req_met,
                 sum_submission['total_comments']]
@@ -235,12 +235,12 @@ def participation_stat_report(course_id, assignments, group_name, overall):
     return report
 
 
-def participation_report(course_id, assignments, group_name):
+def participation_report(course, assignments, group_name):
     report = []
 
     classlist = UserCourse.query \
         .filter_by(
-            course_id=course_id,
+            course_id=course.id,
             course_role=CourseRole.student
         )
     if group_name:

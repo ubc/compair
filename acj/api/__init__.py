@@ -10,17 +10,17 @@ def register_api_blueprints(app):
     from .classlist import classlist_api
     app.register_blueprint(
         classlist_api,
-        url_prefix='/api/courses/<int:course_id>/users')
+        url_prefix='/api/courses/<course_uuid>/users')
 
     from .course_group import course_group_api
     app.register_blueprint(
         course_group_api,
-        url_prefix='/api/courses/<int:course_id>/groups')
+        url_prefix='/api/courses/<course_uuid>/groups')
 
     from .course_group_user import course_group_user_api
     app.register_blueprint(
         course_group_user_api,
-        url_prefix='/api/courses/<int:course_id>/users')
+        url_prefix='/api/courses/<course_uuid>/users')
 
     from .login import login_api
     app.register_blueprint(login_api)
@@ -36,12 +36,12 @@ def register_api_blueprints(app):
     from .assignment import assignment_api
     app.register_blueprint(
         assignment_api,
-        url_prefix='/api/courses/<int:course_id>/assignments')
+        url_prefix='/api/courses/<course_uuid>/assignments')
 
     from .answer import answers_api
     app.register_blueprint(
         answers_api,
-        url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>/answers')
+        url_prefix='/api/courses/<course_uuid>/assignments/<assignment_uuid>/answers')
 
     from .file import file_api
     app.register_blueprint(
@@ -51,12 +51,12 @@ def register_api_blueprints(app):
     from .assignment_comment import assignment_comment_api
     app.register_blueprint(
         assignment_comment_api,
-        url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>/comments')
+        url_prefix='/api/courses/<course_uuid>/assignments/<assignment_uuid>/comments')
 
     from .answer_comment import answer_comment_api
     app.register_blueprint(
         answer_comment_api,
-        url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>')
+        url_prefix='/api/courses/<course_uuid>/assignments/<assignment_uuid>')
 
     from .criterion import criterion_api
     app.register_blueprint(
@@ -66,27 +66,27 @@ def register_api_blueprints(app):
     from .assignment_criterion import assignment_criterion_api
     app.register_blueprint(
         assignment_criterion_api,
-        url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>/criteria')
+        url_prefix='/api/courses/<course_uuid>/assignments/<assignment_uuid>/criteria')
 
     from .comparison import comparison_api
     app.register_blueprint(
         comparison_api,
-        url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>/comparisons')
+        url_prefix='/api/courses/<course_uuid>/assignments/<assignment_uuid>/comparisons')
 
     from .comparison_example import comparison_example_api
     app.register_blueprint(
         comparison_example_api,
-        url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>/comparisons/examples')
+        url_prefix='/api/courses/<course_uuid>/assignments/<assignment_uuid>/comparisons/examples')
 
     from .report import report_api
     app.register_blueprint(
         report_api,
-        url_prefix='/api/courses/<int:course_id>/report')
+        url_prefix='/api/courses/<course_uuid>/report')
 
     from .gradebook import gradebook_api
     app.register_blueprint(
         gradebook_api,
-        url_prefix='/api/courses/<int:course_id>/assignments/<int:assignment_id>/gradebook')
+        url_prefix='/api/courses/<course_uuid>/assignments/<assignment_uuid>/gradebook')
 
     from .common import timer_api
     app.register_blueprint(
@@ -174,10 +174,7 @@ def log_events(log):
     criterion_create.connect(log)
 
     # assignment criterion events
-    from .assignment_criterion import on_assignment_criterion_create, on_assignment_criterion_delete, \
-        on_assignment_criterion_get
-    on_assignment_criterion_create.connect(log)
-    on_assignment_criterion_delete.connect(log)
+    from .assignment_criterion import on_assignment_criterion_get
     on_assignment_criterion_get.connect(log)
 
     # comparison events

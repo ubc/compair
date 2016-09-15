@@ -80,9 +80,9 @@ class LTIAuthAPI(Resource):
                 angular_route = "/"
             elif lti_context.is_linked_to_course():
                 # redirect to course page or assignment page if available
-                angular_route = "/course/"+str(lti_context.acj_course_id)
+                angular_route = "/course/"+lti_context.acj_course_uuid
                 if lti_resource_link.is_linked_to_assignment():
-                    angular_route += "/assignment/"+str(lti_resource_link.acj_assignment_id)
+                    angular_route += "/assignment/"+lti_resource_link.acj_assignment_uuid
             else:
                 # instructors can select course, students will recieve a warning message
                 setup_required = True
@@ -135,12 +135,12 @@ class LTIStatusAPI(Resource):
         status = {
             'valid' : True,
             'assignment': {
-                'id': lti_resource_link.acj_assignment_id if lti_resource_link else None,
+                'id': lti_resource_link.acj_assignment_uuid if lti_resource_link.acj_assignment_id != None else None,
                 'exists': lti_resource_link.acj_assignment_id != None
             },
             'course': {
-                'name': lti_context.context_title if lti_context else None,
-                'id': lti_context.acj_course_id if lti_context and lti_context.acj_course_id else None,
+                'name': lti_context.context_title if lti_context and lti_context.acj_course_id else None,
+                'id': lti_context.acj_course_uuid if lti_context and lti_context.acj_course_id else None,
                 'exists': lti_context and lti_context.acj_course_id != None,
                 'course_role': lti_user_resource_link.course_role.value if lti_user_resource_link else None
             },
@@ -158,14 +158,14 @@ class LTIStatusAPI(Resource):
 
 api.add_resource(LTIStatusAPI, '/lti/status')
 
-# /lti/course/:course_id/link
+# /lti/course/:course_uuid/link
 class LTICourseLinkAPI(Resource):
     @login_required
-    def post(self, course_id):
+    def post(self, course_uuid):
         """
         link current session's lti context with a course
         """
-        course = Course.get_active_or_404(course_id)
+        course = Course.get_active_by_uuid_or_404(course_uuid)
         require(EDIT, course)
 
         if not sess.get('LTI'):
@@ -191,23 +191,23 @@ class LTICourseLinkAPI(Resource):
             self,
             event_name=on_lti_course_link.name,
             user=current_user,
-            data={ "course_id": course.id, "lti_context_id": lti_context.id })
+            data={ 'course_id': course.id, 'lti_context_id': lti_context.id })
 
         if membership_warning:
             return { 'warning': 'LTI membership import failed' }
         else:
             return { 'success': True }
 
-api.add_resource(LTICourseLinkAPI, '/lti/course/<int:course_id>/link')
+api.add_resource(LTICourseLinkAPI, '/lti/course/<course_uuid>/link')
 
-# /lti/course/:course_id/membership
+# /lti/course/:course_uuid/membership
 class LTICourseMembershipAPI(Resource):
     @login_required
-    def post(self, course_id):
+    def post(self, course_uuid):
         """
         refresh the course membership if able
         """
-        course = Course.get_active_or_404(course_id)
+        course = Course.get_active_by_uuid_or_404(course_uuid)
         require(EDIT, course)
 
         if not course.lti_linked:
@@ -226,21 +226,21 @@ class LTICourseMembershipAPI(Resource):
             self,
             event_name=on_lti_course_membership_update.name,
             user=current_user,
-            data={ "course_id": course.id })
+            data={ 'course_id': course.id })
 
         return { 'imported': True }
 
-api.add_resource(LTICourseMembershipAPI, '/lti/course/<int:course_id>/membership')
+api.add_resource(LTICourseMembershipAPI, '/lti/course/<course_uuid>/membership')
 
 
-# /lti/course/:course_id/membership/status
+# /lti/course/:course_uuid/membership/status
 class LTICourseMembershipStatusAPI(Resource):
     @login_required
-    def get(self, course_id):
+    def get(self, course_uuid):
         """
         refresh the course membership if able
         """
-        course = Course.get_active_or_404(course_id)
+        course = Course.get_active_by_uuid_or_404(course_uuid)
         require(EDIT, course)
 
         if not course.lti_linked:
@@ -273,11 +273,11 @@ class LTICourseMembershipStatusAPI(Resource):
             self,
             event_name=on_lti_course_membership_status_get.name,
             user=current_user,
-            data={ "course_id": course.id })
+            data={ 'course_id': course.id })
 
         return { 'status': status }
 
-api.add_resource(LTICourseMembershipStatusAPI, '/lti/course/<int:course_id>/membership/status')
+api.add_resource(LTICourseMembershipStatusAPI, '/lti/course/<course_uuid>/membership/status')
 
 
 class ACJRequestValidator(RequestValidator):

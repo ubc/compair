@@ -25,17 +25,17 @@ on_course_group_user_list_create = event.signal('COURSE_GROUP_USER_LIST_CREATE')
 on_course_group_user_delete = event.signal('COURSE_GROUP_USER_DELETE')
 on_course_group_user_list_delete = event.signal('COURSE_GROUP_USER_LIST_CREATE')
 
-# /:user_id/groups/:group_name
+# /:user_uuid/groups/:group_name
 class GroupUserIdAPI(Resource):
     @login_required
-    def post(self, course_id, user_id, group_name):
-        Course.get_active_or_404(course_id)
-        User.query.get_or_404(user_id)
+    def post(self, course_uuid, user_uuid, group_name):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        user = User.get_by_uuid_or_404(user_uuid)
 
         user_course = UserCourse.query \
             .filter(and_(
-                UserCourse.course_id == course_id,
-                UserCourse.user_id == user_id,
+                UserCourse.course_id == course.id,
+                UserCourse.user_id == user.id,
                 UserCourse.course_role != CourseRole.dropped
             )) \
             .first_or_404()
@@ -43,54 +43,52 @@ class GroupUserIdAPI(Resource):
         require(EDIT, user_course)
 
         user_course.group_name = group_name
-        db.session.add(user_course)
         db.session.commit()
 
         on_course_group_user_create.send(
             current_app._get_current_object(),
             event_name=on_course_group_user_create.name,
             user=current_user,
-            course_id=course_id,
-            data={'user_id': user_id})
+            course_id=course.id,
+            data={'user_id': user.id})
 
         return {'group_name': group_name}
-api.add_resource(GroupUserIdAPI, '/<int:user_id>/groups/<group_name>')
+api.add_resource(GroupUserIdAPI, '/<user_uuid>/groups/<group_name>')
 
-# /:user_id/groups
+# /:user_uuid/groups
 class GroupUserAPI(Resource):
     @login_required
-    def delete(self, course_id, user_id):
-        Course.get_active_or_404(course_id)
-        User.query.get_or_404(user_id)
+    def delete(self, course_uuid, user_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        user = User.get_by_uuid_or_404(user_uuid)
         user_course = UserCourse.query \
             .filter_by(
-                course_id=course_id,
-                user_id=user_id
+                course_id=course.id,
+                user_id=user.id
             ) \
             .first_or_404()
-
         require(EDIT, user_course)
+
         user_course.group_name = None
-        db.session.add(user_course)
         db.session.commit()
 
         on_course_group_user_delete.send(
             current_app._get_current_object(),
             event_name=on_course_group_user_delete.name,
             user=current_user,
-            course_id=course_id,
-            data={'user_id': user_id})
+            course_id=course.id,
+            data={'user_id': user.id})
 
-        return {'user_id': user_id, 'course_id': course_id}
-api.add_resource(GroupUserAPI, '/<int:user_id>/groups')
+        return {'user_id': user.uuid, 'course_id': course.uuid}
+api.add_resource(GroupUserAPI, '/<user_uuid>/groups')
 
 
 # /groups/:group_name
 class GroupUserListGroupNameAPI(Resource):
     @login_required
-    def post(self, course_id, group_name):
-        Course.get_active_or_404(course_id)
-        require(EDIT, UserCourse(course_id=course_id))
+    def post(self, course_uuid, group_name):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        require(EDIT, UserCourse(course_id=course.id))
 
         params = user_list_parser.parse_args()
 
@@ -98,9 +96,10 @@ class GroupUserListGroupNameAPI(Resource):
             return {"error": "Please select at least one user below"}, 400
 
         user_courses = UserCourse.query \
+            .join(User, UserCourse.user_id == User.id) \
             .filter(and_(
-                UserCourse.course_id == course_id,
-                UserCourse.user_id.in_(params.get('ids')),
+                UserCourse.course_id == course.id,
+                User.uuid.in_(params.get('ids')),
                 UserCourse.course_role != CourseRole.dropped
             )) \
             .all()
@@ -117,8 +116,8 @@ class GroupUserListGroupNameAPI(Resource):
             current_app._get_current_object(),
             event_name=on_course_group_user_list_create.name,
             user=current_user,
-            course_id=course_id,
-            data={'user_ids': params.get('ids')})
+            course_id=course.id,
+            data={'user_uuids': params.get('ids')})
 
         return {'group_name': group_name}
 
@@ -126,9 +125,9 @@ api.add_resource(GroupUserListGroupNameAPI, '/groups/<group_name>')
 
 class GroupUserListAPI(Resource):
     @login_required
-    def post(self, course_id):
-        Course.get_active_or_404(course_id)
-        require(EDIT, UserCourse(course_id=course_id))
+    def post(self, course_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        require(EDIT, UserCourse(course_id=course.id))
 
         params = user_list_parser.parse_args()
 
@@ -136,9 +135,10 @@ class GroupUserListAPI(Resource):
             return {"error": "Please select at least one user below"}, 400
 
         user_courses = UserCourse.query \
+            .join(User, UserCourse.user_id == User.id) \
             .filter(and_(
-                UserCourse.course_id == course_id,
-                UserCourse.user_id.in_(params.get('ids')),
+                UserCourse.course_id == course.id,
+                User.uuid.in_(params.get('ids')),
                 UserCourse.course_role != CourseRole.dropped
             )) \
             .all()
@@ -155,9 +155,9 @@ class GroupUserListAPI(Resource):
             current_app._get_current_object(),
             event_name=on_course_group_user_list_delete.name,
             user=current_user,
-            course_id=course_id,
-            data={'user_ids': params.get('ids')})
+            course_id=course.id,
+            data={'user_uuids': params.get('ids')})
 
-        return {'course_id': course_id}
+        return {'course_id': course.uuid}
 
 api.add_resource(GroupUserListAPI, '/groups')

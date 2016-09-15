@@ -34,7 +34,7 @@ on_course_group_get = event.signal('COURSE_GROUP_GET')
 on_course_group_import = event.signal('COURSE_GROUP_IMPORT')
 on_course_group_members_get = event.signal('COURSE_GROUP_MEMBERS_GET')
 
-def import_members(course_id, identifier, members):
+def import_members(course, identifier, members):
     # initialize list of users and their statuses
     invalids = []  #invalid entry - eg. no group name
     user_infile = [] # for catching duplicate users
@@ -49,7 +49,7 @@ def import_members(course_id, identifier, members):
 
 
     # make set all group names to None initially
-    user_courses = UserCourse.query.filter_by(course_id=course_id).all()
+    user_courses = UserCourse.query.filter_by(course_id=course.id).all()
     for user_course in user_courses:
         user_course.group_name = None
         db.session.add(user_course)
@@ -57,7 +57,7 @@ def import_members(course_id, identifier, members):
 
     enroled = UserCourse.query \
         .filter(and_(
-            UserCourse.course_id == course_id,
+            UserCourse.course_id == course.id,
             UserCourse.course_role != CourseRole.dropped
         )) \
         .all()
@@ -96,7 +96,7 @@ def import_members(course_id, identifier, members):
 
         if user.id in enroled:
             # get the user_course instance
-            user_course = next(user_course for user_course in user.user_courses if user_course.course_id == course_id)
+            user_course = next(user_course for user_course in user.user_courses if user_course.course_id == course.id)
             user_course.group_name = member[GROUP_NAME]
             db.session.add(user_course)
             user_infile.append(member[USER_IDENTIFIER])
@@ -114,9 +114,9 @@ def import_members(course_id, identifier, members):
 # /
 class GroupRootAPI(Resource):
     @login_required
-    def get(self, course_id):
-        course = Course.get_active_or_404(course_id)
-        user_course = UserCourse(course_id=course_id)
+    def get(self, course_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        user_course = UserCourse(course_id=course.id)
         require(READ, user_course)
 
         group_names = UserCourse.query \
@@ -134,15 +134,15 @@ class GroupRootAPI(Resource):
             current_app._get_current_object(),
             event_name=on_course_group_get.name,
             user=current_user,
-            course_id=course_id
+            course_id=course.id
         )
 
         return {'objects': [group.group_name for group in group_names] }
 
     @login_required
-    def post(self, course_id):
-        Course.get_active_or_404(course_id)
-        user_course = UserCourse(course_id=course_id)
+    def post(self, course_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        user_course = UserCourse(course_id=course.id)
         require(EDIT, user_course)
 
         params = import_parser.parse_args()
@@ -153,25 +153,25 @@ class GroupRootAPI(Resource):
             filename = unique + secure_filename(file.filename)
             tmpName = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
             file.save(tmpName)
-            current_app.logger.debug("Import groups for course "+str(course_id)+" with "+ filename)
+            current_app.logger.debug("Import groups for course "+str(course.id)+" with "+ filename)
             with open(tmpName, 'rt') as csvfile:
                 spamreader = csv.reader(csvfile)
                 members = []
                 for row in spamreader:
                     if row:
                         members.append(row)
-                results = import_members(course_id, identifier, members)
+                results = import_members(course, identifier, members)
             os.remove(tmpName)
 
             on_course_group_import.send(
                 current_app._get_current_object(),
                 event_name=on_course_group_import.name,
                 user=current_user,
-                course_id=course_id,
+                course_id=course.id,
                 data={'filename': tmpName}
             )
 
-            current_app.logger.debug("Group Import for course " + str(course_id) + " is successful. Removed file.")
+            current_app.logger.debug("Group Import for course " + str(course.id) + " is successful. Removed file.")
             return results
         else:
             return {'error': 'Wrong file type'}, 400
@@ -180,15 +180,15 @@ api.add_resource(GroupRootAPI, '')
 # /:group_name
 class GroupNameAPI(Resource):
     @login_required
-    def get(self, course_id, group_name):
-        Course.get_active_or_404(course_id)
-        user_course = UserCourse(course_id=course_id)
+    def get(self, course_uuid, group_name):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        user_course = UserCourse(course_id=course.id)
         require(READ, user_course)
 
         members = User.query \
             .join(UserCourse, UserCourse.user_id == User.id) \
             .filter(and_(
-                UserCourse.course_id == course_id,
+                UserCourse.course_id == course.id,
                 UserCourse.course_role != CourseRole.dropped,
                 UserCourse.group_name == group_name
             )) \
@@ -201,9 +201,9 @@ class GroupNameAPI(Resource):
             current_app._get_current_object(),
             event_name=on_course_group_members_get.name,
             user=current_user,
-            course_id=course_id,
+            course_id=course.id,
             data={'group_name': group_name})
 
-        return {'students': [{'id': u.id, 'name': u.fullname} for u in members]}
+        return {'students': [{'id': u.uuid, 'name': u.fullname} for u in members]}
 
 api.add_resource(GroupNameAPI, '/<group_name>')
