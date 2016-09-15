@@ -86,13 +86,13 @@ var commonStepDefinitionsWrapper = function() {
     // page verification
     this.Then("I should be on the '$page' page", function (page) {
         var page_regex = {
-            'course': /.*\/course\/\d+$/,
-            'manage users': /.*\/course\/\d+\/user$/,
-            'edit assignment': /.*\/course\/\d+\/assignment\/\d+\/edit$/,
-            'edit course': /.*\/course\/\d+\/configure$/,
-            'profile': /.*\/user\/\d+$/,
+            'course': /.*\/course\/[A-Za-z0-9_-]{22}$/,
+            'manage users': /.*\/course\/[A-Za-z0-9_-]{22}\/user$/,
+            'edit assignment': /.*\/course\/[A-Za-z0-9_-]{22}\/assignment\/[A-Za-z0-9_-]{22}\/edit$/,
+            'edit course': /.*\/course\/[A-Za-z0-9_-]{22}\/configure$/,
+            'profile': /.*\/user\/[A-Za-z0-9_-]{22}$/,
             'create user': /.*\/user\/create$/,
-            'edit profile': /.*\/user\/\d+\/edit$/
+            'edit profile': /.*\/user\/[A-Za-z0-9_-]{22}\/edit$/
         };
         return expect(browser.getCurrentUrl()).to.eventually.match(page_regex[page]);
     });

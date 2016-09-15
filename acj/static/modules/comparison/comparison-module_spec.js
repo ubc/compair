@@ -1,6 +1,6 @@
 describe('comparison-module', function () {
     var $httpBackend, sessionRequestHandler;
-    var id = 1;
+    var id = "1abcABC123-abcABC123_Z";
     var mockSession = {
         "id": id,
         "permissions": {
@@ -47,7 +47,7 @@ describe('comparison-module', function () {
         "end_date": null,
         "created": "Fri, 09 Jan 2015 17:23:59 -0000",
         "description": null,
-        "id": 1,
+        "id": "1abcABC123-abcABC123_Z",
         "modified": "Fri, 09 Jan 2015 17:23:59 -0000",
         "name": "Test Course",
         "year": 2015,
@@ -73,25 +73,27 @@ describe('comparison-module', function () {
             "criteria": [{
                 "created": "Sat, 06 Sep 2014 02:13:07 -0000",
                 "default": true,
+                "public": true,
                 "description": "<p>Choose the response that you think is the better of the two.</p>",
-                "id": 1,
+                "id": "1abcABC123-abcABC123_Z",
                 "compared": true,
                 "modified": "Sat, 06 Sep 2014 02:13:07 -0000",
                 "name": "Which is better?",
-                "user_id": 1
+                "user_id": "1abcABC123-abcABC123_Z"
             }, {
                 "created": "Fri, 09 Jan 2015 18:35:58 -0000",
                 "default": false,
+                "public": false,
                 "description": "<p>Explaining what a better idea was</p>\n",
-                "id": 2,
+                "id": "2abcABC123-abcABC123_Z",
                 "compared": false,
                 "modified": "Fri, 09 Jan 2015 18:35:58 -0000",
                 "name": "Which answer has the better idea?",
-                "user_id": 46
+                "user_id": "46bcABC123-abcABC123_Z",
             }]
         };
         var mockAssignment = {
-            'course_id': 1,
+            'course_id': "1abcABC123-abcABC123_Z",
             "after_comparing": false,
             "answer_end": "Mon, 14 Sep 2015 04:00:00 -0000",
             "answer_period": false,
@@ -105,30 +107,32 @@ describe('comparison-module', function () {
                 "criterion": {
                     "created": "Fri, 09 Jan 2015 22:47:02 -0000",
                     "default": true,
+                    "public": false,
                     "description": "criterionn 1",
-                    "id": 4,
+                    "id": "4abcABC123-abcABC123_Z",
                     "compared": true,
                     "modified": "Fri, 09 Jan 2015 22:47:02 -0000",
                     "name": "Which answer has the better critical idea?",
-                    "user_id": 50
+                    "user_id": "50bcABC123-abcABC123_Z"
                 },
-                "id": 12
+                "id": "12bcABC123-abcABC123_Z"
             }, {
                 "active": true,
                 "criterion": {
                     "created": "Fri, 09 Jan 2015 22:50:06 -0000",
                     "default": true,
+                    "public": false,
                     "description": "criterion 2",
-                    "id": 5,
+                    "id": "5abcABC123-abcABC123_Z",
                     "compared": true,
                     "modified": "Fri, 09 Jan 2015 22:50:06 -0000",
                     "name": "Which answer is more effectively articulated? Explain the reason for your preference.",
-                    "user_id": 50
+                    "user_id": "50bcABC123-abcABC123_Z"
                 },
-                "id": 13
+                "id": "13bcABC123-abcABC123_Z"
             }],
             "evaluation_count": 252,
-            "id": 9,
+            "id": "9abcABC123-abcABC123_Z",
             "compare_end": "Thu, 15 Sep 2016 16:00:00 -0000",
             "compare_start": "Tue, 15 Sep 2015 04:00:00 -0000",
             "compared": true,
@@ -142,7 +146,7 @@ describe('comparison-module', function () {
             "user": {
                 "avatar": "b893bcb68fbeef6738437fa1deca0a28",
                 "displayname": "Tiffany Potter",
-                "id": 50
+                "id": "50bcABC123-abcABC123_Z"
             },
             "enable_self_evaluation": true,
             "pairing_algorithm": "random",
@@ -156,24 +160,24 @@ describe('comparison-module', function () {
             "created": "Sat, 29 Aug 2015 08:00:19 -0000",
             "file": [],
             "flagged": false,
-            "id": 407,
+            "id": "407cABC123-abcABC123_Z",
             "private_comment_count": 3,
             "public_comment_count": 0,
-            "assignment_id": 9,
+            "assignment_id": "9abcABC123-abcABC123_Z",
             "scores": [
                 {
-                    "answer_id": 407,
-                    "criterion_id": 12,
-                    "id": 645,
+                    "answer_id": "407cABC123-abcABC123_Z",
+                    "criterion_id": "12bcABC123-abcABC123_Z",
+                    "id": "645cABC123-abcABC123_Z",
                     "normalized_score": 75,
                     "rounds": 6,
                     "score": 2.19318,
                     "wins": 3
                 },
                 {
-                    "answer_id": 407,
-                    "criterion_id": 13,
-                    "id": 646,
+                    "answer_id": "407cABC123-abcABC123_Z",
+                    "criterion_id": "13bcABC123-abcABC123_Z",
+                    "id": "646cABC123-abcABC123_Z",
                     "normalized_score": 0,
                     "rounds": 6,
                     "score": 0.0,
@@ -181,11 +185,11 @@ describe('comparison-module', function () {
                 }
             ],
             "user": {
-                "id": 1,
+                "id": "1abcABC123-abcABC123_Z",
                 "avatar": "63a9f0ea7bb98050796b649e85481845",
                 "displayname": "root"
             },
-            "user_id": 1
+            "user_id": "1abcABC123-abcABC123_Z"
         };
 
         var mockAnswer2 = {
@@ -194,24 +198,24 @@ describe('comparison-module', function () {
             "created": "Tue, 24 Feb 2015 04:09:28 -0000",
             "file": [],
             "flagged": false,
-            "id": 279,
+            "id": "279cABC123-abcABC123_Z",
             "private_comment_count": 4,
             "public_comment_count": 0,
-            "assignment_id": 9,
+            "assignment_id": "9abcABC123-abcABC123_Z",
             "scores": [
                 {
-                    "answer_id": 279,
-                    "criterion_id": 12,
-                    "id": 445,
+                    "answer_id": "279cABC123-abcABC123_Z",
+                    "criterion_id": "12bcABC123-abcABC123_Z",
+                    "id": "445cABC123-abcABC123_Z",
                     "normalized_score": 75,
                     "rounds": 8,
                     "score": 2.19318,
                     "wins": 3
                 },
                 {
-                    "answer_id": 279,
-                    "criterion_id": 13,
-                    "id": 446,
+                    "answer_id": "279cABC123-abcABC123_Z",
+                    "criterion_id": "13bcABC123-abcABC123_Z",
+                    "id": "446cABC123-abcABC123_Z",
                     "normalized_score": 40,
                     "rounds": 8,
                     "score": 1.46212,
@@ -219,22 +223,22 @@ describe('comparison-module', function () {
                 }
             ],
             "user": {
-                "id": 162,
+                "id": "162cABC123-abcABC123_Z",
                 "avatar": "25242646dab1876796ab95f036a8fc82",
                 "displayname": "student_95322345"
             },
-            "user_id": 162
+            "user_id": "162cABC123-abcABC123_Z"
         };
 
         var mockComparisons = [
             {
-                'id': 1,
-                'course_id': 1,
-                'assignment_id': 9,
-                'criterion_id': 4,
+                'id': "1abcABC123-abcABC123_Z",
+                'course_id': "1abcABC123-abcABC123_Z",
+                'assignment_id': "9abcABC123-abcABC123_Z",
+                'criterion_id': "4abcABC123-abcABC123_Z",
                 'user_id': id,
-                'answer1_id': 407,
-                'answer2_id': 279,
+                'answer1_id': "407cABC123-abcABC123_Z",
+                'answer2_id': "279cABC123-abcABC123_Z",
                 'answer1': angular.copy(mockAnswer1),
                 'answer2': angular.copy(mockAnswer2),
                 'winner_id': null,
@@ -243,12 +247,13 @@ describe('comparison-module', function () {
                 'criterion': {
                     "created": "Fri, 09 Jan 2015 22:47:02 -0000",
                     "default": true,
+                    "public": false,
                     "description": "criterionn 1",
-                    "id": 4,
+                    "id": "4abcABC123-abcABC123_Z",
                     "compared": true,
                     "modified": "Fri, 09 Jan 2015 22:47:02 -0000",
                     "name": "Which answer has the better critical idea?",
-                    "user_id": 50
+                    "user_id": "50bcABC123-abcABC123_Z",
                 },
 
                 'user': {
@@ -259,13 +264,13 @@ describe('comparison-module', function () {
                 },
                 'created': "Fri, 09 Jan 2015 18:35:58 -0000",
             }, {
-                'id': 2,
-                'course_id': 1,
-                'assignment_id': 9,
-                'criterion_id': 5,
+                'id': "2abcABC123-abcABC123_Z",
+                'course_id': "1abcABC123-abcABC123_Z",
+                'assignment_id': "9abcABC123-abcABC123_Z",
+                'criterion_id': "5abcABC123-abcABC123_Z",
                 'user_id': id,
-                'answer1_id': 407,
-                'answer2_id': 279,
+                'answer1_id': "407cABC123-abcABC123_Z",
+                'answer2_id': "279cABC123-abcABC123_Z",
                 'answer1': angular.copy(mockAnswer1),
                 'answer2': angular.copy(mockAnswer2),
                 'winner_id': null,
@@ -274,12 +279,13 @@ describe('comparison-module', function () {
                 'criterion': {
                     "created": "Fri, 09 Jan 2015 22:50:06 -0000",
                     "default": true,
+                    "public": false,
                     "description": "criterion 2",
-                    "id": 5,
+                    "id": "5abcABC123-abcABC123_Z",
                     "compared": true,
                     "modified": "Fri, 09 Jan 2015 22:50:06 -0000",
                     "name": "Which answer is more effectively articulated? Explain the reason for your preference.",
-                    "user_id": 50
+                    "user_id": "50bcABC123-abcABC123_Z"
                 },
 
                 'user': {
@@ -293,19 +299,19 @@ describe('comparison-module', function () {
         ];
 
         var mockComments = [{
-            "answer_id": 279,
+            "answer_id": "279cABC123-abcABC123_Z",
             "content": "<p>test123213t4453123123</p>\n",
-            "course_id": 3,
+            "course_id": "3abcABC123-abcABC123_Z",
             "created": "Thu, 24 Sep 2015 00:22:34 -0000",
-            "id": 3703,
+            "id": "3703ABC123-abcABC123_Z",
             "comment_type": 'Evaluation',
             "draft": false,
             "user": {
-                "id": 1,
+                "id": "1abcABC123-abcABC123_Z",
                 "avatar": "63a9f0ea7bb98050796b649e85481845",
                 "displayname": "root"
             },
-            "user_id": 1
+            "user_id": "1abcABC123-abcABC123_Z"
         }];
 
         var mockTimer = {
@@ -327,8 +333,8 @@ describe('comparison-module', function () {
         }));
 
         it('should have correct initial states', function () {
-            $httpBackend.expectGET('/api/courses/3/assignments/9').respond(mockAssignment);
-            $httpBackend.expectGET('/api/courses/3/assignments/9/status').respond({
+            $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z').respond(mockAssignment);
+            $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/status').respond({
                 "status": {
                     "answers": {
                         "answered": true,
@@ -343,13 +349,13 @@ describe('comparison-module', function () {
                     }
                 }
             });
-            $httpBackend.expectGET('/api/courses/3/assignments/9/comparisons').respond({
+            $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/comparisons').respond({
                 'objects':mockComparisons
             });
             $httpBackend.expectGET('/api/timer').respond(mockTimer);
 
-            $httpBackend.expectGET('/api/courses/3/assignments/9/answer_comments?answer_ids=279,407&draft=true&evaluation=only&user_ids=1').respond(mockComments);
-            createController({}, {courseId:3, assignmentId:9});
+            $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answer_comments?answer_ids=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z&draft=true&evaluation=only&user_ids=1abcABC123-abcABC123_Z').respond(mockComments);
+            createController({}, {courseId: "3abcABC123-abcABC123_Z", assignmentId: "9abcABC123-abcABC123_Z"});
             expect($rootScope.assignment).toEqual({});
             expect($rootScope.current).toBe(undefined);
             $httpBackend.flush();
@@ -371,14 +377,14 @@ describe('comparison-module', function () {
             var mockComparisonResponse = {
                 "objects": angular.copy(mockComparisons)
             };
-            mockComparisonResponse.objects[0].winner_id = 407;
+            mockComparisonResponse.objects[0].winner_id = "407cABC123-abcABC123_Z";
             mockComparisonResponse.objects[0].content = 'criterion comment 1';
-            mockComparisonResponse.objects[1].winner_id = 279;
+            mockComparisonResponse.objects[1].winner_id = "279cABC123-abcABC123_Z";
             mockComparisonResponse.objects[1].content = 'criterion comment 2';
 
             beforeEach(function() {
-                $httpBackend.whenGET('/api/courses/3/assignments/9').respond(mockAssignment);
-                $httpBackend.expectGET('/api/courses/3/assignments/9/status').respond({
+                $httpBackend.whenGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z').respond(mockAssignment);
+                $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/status').respond({
                     "status": {
                         "answers": {
                             "answered": true,
@@ -393,13 +399,13 @@ describe('comparison-module', function () {
                         }
                     }
                 });
-                $httpBackend.expectGET('/api/courses/3/assignments/9/comparisons').respond({
+                $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/comparisons').respond({
                     'objects':mockComparisons
                 });
                 $httpBackend.expectGET('/api/timer').respond(mockTimer);
-                $httpBackend.whenGET('/api/courses/3/assignments/9/answer_comments?answer_ids=279,407&draft=true&evaluation=only&user_ids=1').respond(mockComments);
+                $httpBackend.whenGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answer_comments?answer_ids=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z&draft=true&evaluation=only&user_ids=1abcABC123-abcABC123_Z').respond(mockComments);
                 $mockRoute = jasmine.createSpyObj('route', ['reload']);
-                controller = createController($mockRoute, {courseId:3, assignmentId:9});
+                controller = createController($mockRoute, {courseId: "3abcABC123-abcABC123_Z", assignmentId: "9abcABC123-abcABC123_Z"});
                 $httpBackend.flush();
             });
 
@@ -407,18 +413,18 @@ describe('comparison-module', function () {
                 expect($rootScope.answer2.comment).toEqualData(mockComments[0]);
             });
 
-            it('should submit comparison when comparisonSubmit is called', function() {
+            it('should submit comparisons when comparisonSubmit is called', function() {
                 var expectedComparison = {
                     "comparisons":[
                         {
-                            criterion_id: 4,
+                            criterion_id: "4abcABC123-abcABC123_Z",
                             content: 'criterion comment 1',
-                            winner_id: 407,
+                            winner_id: "407cABC123-abcABC123_Z",
                             draft: false
                         }, {
-                            criterion_id: 5,
+                            criterion_id: "5abcABC123-abcABC123_Z",
                             content: 'criterion comment 2',
-                            winner_id: 279,
+                            winner_id: "279cABC123-abcABC123_Z",
                             draft: false
                         }
                     ]
@@ -433,10 +439,10 @@ describe('comparison-module', function () {
                 $rootScope.comparisons[0].content = 'criterion comment 1';
                 $rootScope.comparisons[1].winner_id = mockComparisons[0].answer2_id;
                 $rootScope.comparisons[1].content = 'criterion comment 2';
-                $httpBackend.expectPOST('/api/courses/3/assignments/9/answers/407/comments', expectedAnswerComment1).respond({});
-                $httpBackend.expectPOST('/api/courses/3/assignments/9/answers/279/comments/3703', expectedAnswerComment2).respond({});
-                $httpBackend.expectPOST('/api/courses/3/assignments/9/comparisons', expectedComparison).respond(mockComparisonResponse);
-                $httpBackend.expectGET('/api/courses/3/assignments/9/status').respond({
+                $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments', expectedAnswerComment1).respond({});
+                $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/279cABC123-abcABC123_Z/comments/3703ABC123-abcABC123_Z', expectedAnswerComment2).respond({});
+                $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/comparisons', expectedComparison).respond(mockComparisonResponse);
+                $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/status').respond({
                     "status": {
                         "answers": {
                             "answered": true,
@@ -470,12 +476,12 @@ describe('comparison-module', function () {
             };
             mockComparisonResponse.objects[0].winner_id = null;
             mockComparisonResponse.objects[0].content = 'criterion comment 1';
-            mockComparisonResponse.objects[1].winner_id = 279;
+            mockComparisonResponse.objects[1].winner_id = "279cABC123-abcABC123_Z";
             mockComparisonResponse.objects[1].content = 'criterion comment 2';
 
             beforeEach(function() {
-                $httpBackend.whenGET('/api/courses/3/assignments/9').respond(mockAssignment);
-                $httpBackend.expectGET('/api/courses/3/assignments/9/status').respond({
+                $httpBackend.whenGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z').respond(mockAssignment);
+                $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/status').respond({
                     "status": {
                         "answers": {
                             "answered": true,
@@ -490,13 +496,13 @@ describe('comparison-module', function () {
                         }
                     }
                 });
-                $httpBackend.expectGET('/api/courses/3/assignments/9/comparisons').respond({
+                $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/comparisons').respond({
                     'objects':mockComparisons
                 });
                 $httpBackend.expectGET('/api/timer').respond(mockTimer);
-                $httpBackend.whenGET('/api/courses/3/assignments/9/answer_comments?answer_ids=279,407&draft=true&evaluation=only&user_ids=1').respond(mockComments);
+                $httpBackend.whenGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answer_comments?answer_ids=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z&draft=true&evaluation=only&user_ids=1abcABC123-abcABC123_Z').respond(mockComments);
                 $mockRoute = jasmine.createSpyObj('route', ['reload']);
-                controller = createController($mockRoute, {courseId:3, assignmentId:9});
+                controller = createController($mockRoute, {courseId: "3abcABC123-abcABC123_Z", assignmentId: "9abcABC123-abcABC123_Z"});
                 $rootScope.isDraft = true;
                 $httpBackend.flush();
             });
@@ -505,14 +511,14 @@ describe('comparison-module', function () {
                 var expectedComparison = {
                     "comparisons":[
                         {
-                            criterion_id: 4,
+                            criterion_id: "4abcABC123-abcABC123_Z",
                             content: 'criterion comment 1',
-                            winner_id: 407,
+                            winner_id: "407cABC123-abcABC123_Z",
                             draft: true
                         }, {
-                            criterion_id: 5,
+                            criterion_id: "5abcABC123-abcABC123_Z",
                             content: 'criterion comment 2',
-                            winner_id: 279,
+                            winner_id: "279cABC123-abcABC123_Z",
                             draft: true
                         }
                     ]
@@ -527,9 +533,9 @@ describe('comparison-module', function () {
                 $rootScope.comparisons[0].content = 'criterion comment 1';
                 $rootScope.comparisons[1].winner_id = mockComparisons[0].answer2_id;
                 $rootScope.comparisons[1].content = 'criterion comment 2';
-                $httpBackend.expectPOST('/api/courses/3/assignments/9/answers/407/comments', expectedAnswerComment1).respond({});
-                $httpBackend.expectPOST('/api/courses/3/assignments/9/answers/279/comments/3703', expectedAnswerComment2).respond({});
-                $httpBackend.expectPOST('/api/courses/3/assignments/9/comparisons', expectedComparison).respond(mockComparisonResponse);
+                $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments', expectedAnswerComment1).respond({});
+                $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/279cABC123-abcABC123_Z/comments/3703ABC123-abcABC123_Z', expectedAnswerComment2).respond({});
+                $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/comparisons', expectedComparison).respond(mockComparisonResponse);
 
                 expect($rootScope.preventExit).toBe(true);
                 $rootScope.comparisonSubmit();

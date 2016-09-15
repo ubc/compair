@@ -1,6 +1,6 @@
 describe('course-module', function () {
     var $httpBackend, sessionRequestHandler;
-    var id = 1;
+    var id = "1abcABC123-abcABC123_Z";
     var mockSession = {
         "id": id,
         "permissions": {
@@ -47,7 +47,7 @@ describe('course-module', function () {
         "end_date": null,
         "created": "Fri, 09 Jan 2015 17:23:59 -0000",
         "description": null,
-        "id": 1,
+        "id": "1abcABC123-abcABC123_Z",
         "modified": "Fri, 09 Jan 2015 17:23:59 -0000",
         "name": "Test Course",
         "year": 2015,
@@ -131,11 +131,11 @@ describe('course-module', function () {
                 it('should be able to save new course', function () {
                     $rootScope.course = angular.copy(course);
                     $rootScope.course.id = undefined;
-                    $httpBackend.expectPOST('/api/courses', $rootScope.course).respond(angular.merge({}, course, {id: 2}));
+                    $httpBackend.expectPOST('/api/courses', $rootScope.course).respond(angular.merge({}, course, {id: "2abcABC123-abcABC123_Z",}));
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();
-                    expect($location.path()).toEqual('/course/2');
+                    expect($location.path()).toEqual('/course/2abcABC123-abcABC123_Z');
                     expect($rootScope.submitted).toBe(false);
                 });
             });
@@ -150,9 +150,9 @@ describe('course-module', function () {
 
                 beforeEach(function () {
                     editCourse = angular.copy(mockCourse);
-                    editCourse.id = 2;
-                    controller = createController({current: {method: 'edit'}}, {courseId: 2});
-                    $httpBackend.expectGET('/api/courses/2').respond(editCourse);
+                    editCourse.id = "2abcABC123-abcABC123_Z";
+                    controller = createController({current: {method: 'edit'}}, {courseId: "2abcABC123-abcABC123_Z"});
+                    $httpBackend.expectGET('/api/courses/2abcABC123-abcABC123_Z').respond(editCourse);
                     $httpBackend.flush();
                 });
 
@@ -182,17 +182,17 @@ describe('course-module', function () {
                     editedCourse.year = 2016;
                     editedCourse.term = "Summer";
                     $rootScope.course = editedCourse;
-                    $httpBackend.expectPOST('/api/courses/2', $rootScope.course).respond(editedCourse);
+                    $httpBackend.expectPOST('/api/courses/2abcABC123-abcABC123_Z', $rootScope.course).respond(editedCourse);
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();
-                    expect($location.path()).toEqual('/course/2');
+                    expect($location.path()).toEqual('/course/2abcABC123-abcABC123_Z');
                     expect($rootScope.submitted).toBe(false);
                 });
 
                 it('should enable save button even if save failed', function() {
                     $rootScope.course = angular.copy(editCourse);
-                    $httpBackend.expectPOST('/api/courses/2', $rootScope.course).respond(400, '');
+                    $httpBackend.expectPOST('/api/courses/2abcABC123-abcABC123_Z', $rootScope.course).respond(400, '');
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();

@@ -1,6 +1,6 @@
 describe('Service: Session', function() {
     var sessionService, $httpBackend, $cookies;
-    var id = 1;
+    var id = "1abcABC123-abcABC123_Z";
     var expectedSession = {
         "id": id,
         "permissions": {

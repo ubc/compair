@@ -52,14 +52,14 @@ describe('criterion-module', function () {
             it('should emit CRITERION_UPDATED event when click on submit', function() {
                 spyOn(directiveScope, '$emit');
                 var response = {
-                    id: 1,
+                    id: "1abcABC123-abcABC123_Z",
                     name: 'Test',
                     description: 'description'
                 };
                 scope.$apply(function() {
                     angular.copy(response, scope.criterion)
                 });
-                $httpBackend.expectPOST('/api/criteria/1', directiveScope.criterion).respond(response);
+                $httpBackend.expectPOST('/api/criteria/1abcABC123-abcABC123_Z', directiveScope.criterion).respond(response);
 
                 directiveScope.criterionSubmit();
                 $httpBackend.flush();
@@ -104,7 +104,7 @@ describe('criterion-module', function () {
                 it('should enabled submit button and be able to submit', function() {
                     expect(element.find('input[type=button]').eq(0)).not.toHaveAttr('disabled', 'disabled');
 
-                    var response = angular.merge({}, directiveScope.criterion, {id: 2});
+                    var response = angular.merge({}, directiveScope.criterion, {id: "2abcABC123-abcABC123_Z"});
                     $httpBackend.expectPOST('/api/criteria', directiveScope.criterion).respond(response);
 
                     directiveScope.criterionSubmit();

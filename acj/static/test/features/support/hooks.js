@@ -28,7 +28,8 @@ var hooks = function () {
                 // (ckeditor doesn't always clean it self up fast enough with the tests current speed)
                 if (log.level.value > 900 && !log.message.match(/lib\/ckeditor\/ckeditor\.js/g) &&
                         log.message.indexOf("Uncaught TypeError: Cannot read property 'on' of undefined") == -1 &&
-                        log.message.indexOf("Uncaught TypeError: Cannot read property 'unselectable' of null") == -1) {
+                        log.message.indexOf("Uncaught TypeError: Cannot read property 'unselectable' of null") == -1 &&
+                        log.message.indexOf("window.parent is null") == -1) {
                     browserErrorLogs.push(log)
                 }
             });
