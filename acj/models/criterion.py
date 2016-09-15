@@ -8,7 +8,7 @@ from . import *
 
 from acj.core import db
 
-class Criterion(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
+class Criterion(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     # table columns
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"),
         nullable=False)
@@ -23,6 +23,8 @@ class Criterion(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     # user via User Model
 
     # assignment many-to-many criterion with association assignment_criteria
+    user_uuid = association_proxy('user', 'uuid')
+
     assignment_criteria = db.relationship("AssignmentCriterion",
         back_populates="criterion", lazy='dynamic')
 

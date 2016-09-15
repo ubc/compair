@@ -28,6 +28,9 @@ class UserCourse(DefaultTableMixin, WriteTrackingMixin):
     course = db.relationship("Course", back_populates="user_courses")
 
     # hyprid and other functions
+    user_uuid = association_proxy('user', 'uuid')
+    course_uuid = association_proxy('course', 'uuid')
+
     @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()

@@ -29,6 +29,8 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
     lti_user_resource_links = db.relationship("LTIUserResourceLink", backref="lti_resource_link", lazy="dynamic")
 
     # hyprid and other functions
+    acj_assignment_uuid = association_proxy('acj_assignment', 'uuid')
+
     def is_linked_to_assignment(self):
         return self.acj_assignment_id != None
 
@@ -36,21 +38,16 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
         from acj.models import Assignment
 
         if self.custom_param_assignment_id:
-            assignment_id = None
-            try:
-                assignment_id = int(self.custom_param_assignment_id)
-            except ValueError:
-                return self
-                # do nothing
-            # check if int conversion worked
-            if assignment_id:
-                # check if assignment exists
-                assignment = Assignment.query.get(assignment_id)
-                if assignment:
-                    self.acj_assignment_id = assignment.id
-                    return self
+            # check if assignment exists
+            assignment = Assignment.query \
+                .filter_by(uuid=self.custom_param_assignment_id) \
+                .one_or_none()
 
-        self.acj_assignment_id = None
+            if assignment:
+                self.acj_assignment = assignment
+                return self
+
+        self.acj_assignment = None
         return self
 
     @classmethod

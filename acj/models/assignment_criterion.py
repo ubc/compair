@@ -21,8 +21,15 @@ class AssignmentCriterion(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     assignment = db.relationship("Assignment", back_populates="assignment_criteria")
     criterion = db.relationship("Criterion", back_populates="assignment_criteria", lazy='immediate')
 
+    # hyprid and other functions
     course_id = association_proxy('assignment', 'course_id', creator=lambda course_id:
         import_module('acj.models.assignment').Assignment(course_id=course_id))
+    course_uuid = association_proxy('assignment', 'course_uuid')
+
+    assignment_uuid = association_proxy('assignment', 'uuid')
+
+    criterion_uuid = association_proxy('criterion', 'uuid')
+
     __table_args__ = (
         # prevent duplicate criteria in assignment
         db.UniqueConstraint('assignment_id', 'criterion_id', name='_unique_assignment_and_criterion'),

@@ -28,6 +28,8 @@ class LTIContext(DefaultTableMixin, WriteTrackingMixin):
     lti_resource_links = db.relationship("LTIResourceLink", backref="lti_context")
 
     # hyprid and other functions
+    acj_course_uuid = association_proxy('acj_course', 'uuid')
+
     def is_linked_to_course(self):
         return self.acj_course_id != None
 

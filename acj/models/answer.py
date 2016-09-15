@@ -9,7 +9,7 @@ from importlib import import_module
 
 from acj.core import db
 
-class Answer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
+class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     # table columns
     assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id', ondelete="CASCADE"),
         nullable=False)
@@ -36,7 +36,12 @@ class Answer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     # hyprid and other functions
     course_id = association_proxy('assignment', 'course_id', creator=lambda course_id:
         import_module('acj.models.assignment').Assignment(course_id=course_id))
+    course_uuid = association_proxy('assignment', 'course_uuid')
+
+    assignment_uuid = association_proxy('assignment', 'uuid')
+
     user_avatar = association_proxy('user', 'avatar')
+    user_uuid = association_proxy('user', 'uuid')
     user_displayname = association_proxy('user', 'displayname')
     user_fullname = association_proxy('user', 'fullname')
     user_system_role = association_proxy('user', 'system_role')

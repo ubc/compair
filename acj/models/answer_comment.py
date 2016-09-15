@@ -9,7 +9,7 @@ from importlib import import_module
 
 from acj.core import db
 
-class AnswerComment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
+class AnswerComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     __tablename__ = 'answer_comment'
 
     # table columns
@@ -31,8 +31,15 @@ class AnswerComment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     # hyprid and other functionsx
     course_id = association_proxy('answer', 'course_id', creator=lambda course_id:
         import_module('acj.models.answer').Answer(course_id=course_id))
+    course_uuid = association_proxy('answer', 'course_uuid')
+
     assignment_id = association_proxy('answer', 'assignment_id')
+    assignment_uuid = association_proxy('answer', 'assignment_uuid')
+
+    answer_uuid = association_proxy('answer', 'uuid')
+
     user_avatar = association_proxy('user', 'avatar')
+    user_uuid = association_proxy('user', 'uuid')
     user_displayname = association_proxy('user', 'displayname')
     user_fullname = association_proxy('user', 'fullname')
     user_system_role = association_proxy('user', 'system_role')

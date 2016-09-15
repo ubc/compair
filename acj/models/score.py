@@ -53,6 +53,8 @@ class Score(DefaultTableMixin, WriteTrackingMixin):
     # criterion via Criterion Model
 
     # hyprid and other functions
+    criterion_uuid = association_proxy('criterion', 'uuid')
+
     def convert_to_scored_object(self):
         return ScoredObject(
             key=self.answer_id,
