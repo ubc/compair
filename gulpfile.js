@@ -23,6 +23,7 @@ var gulp = require('gulp'),
     exec = require('child_process').exec,
     connect = require('gulp-connect'),
     sauceConnectLauncher = require('sauce-connect-launcher'),
+    del = require('del').sync, // use sync method, gulp doesn't seem to wait for async del
     templateCache = require('gulp-angular-templatecache');
 
 var cssFilenames = [
@@ -100,7 +101,7 @@ gulp.task('prod_minify_js', ['prod_templatecache'], function() {
         './acj/static/lib_extension/ckeditor/plugins/combinedmath/dialogs/combinedmath.js',
         './bower_components/ckeditor/plugins/widget/plugin.js',
         './bower_components/ckeditor/plugins/widget/lang/en.js',
-        './bower_components/ckeditor/plugins/lineutils/plugin.js',
+        './bower_components/ckeditor/plugins/lineutils/plugin.js'
     ])
         .pipe(concat(jsFilename))
         .pipe(uglify())
@@ -148,8 +149,9 @@ gulp.task('tdd', function (done) {
 gulp.task('bdd', ['webdriver_update'], function (done) {
     gulp.src(["acj/static/test/features/*.feature"])
         .pipe(protractor({
-            configFile: "acj/static/test/config/protractor_cucumber.js",
-            args: ['--baseUrl', 'http://127.0.0.1:8080']
+            configFile: "acj/static/test/config/protractor_cucumber.js"
+            // baseUrl is set through environment variable
+            //args: ['--baseUrl', 'http://127.0.0.1:8080/app']
         }))
         .on('error', function (e) {
             throw e
@@ -167,6 +169,27 @@ gulp.task('test:unit', function (done) {
     }, done).start();
 });
 
+/**
+ * Generate index.html
+ */
+gulp.task('generate_index', function() {
+    var proc = exec('PYTHONUNBUFFERED=1 python manage.py util generate_index');
+    proc.stderr.on('data', function (data) {
+        process.stderr.write(data);
+    });
+    proc.stdout.on('data', function (data) {
+        process.stdout.write(data);
+    });
+});
+
+/**
+ * Delete generated index.html
+ */
+gulp.task('delete_index', function() {
+    return del([
+        './acj/static/index.html'
+    ]);
+});
 
 /**
  * Run acceptance tests
@@ -181,8 +204,9 @@ gulp.task('test:acceptance', ['server:frontend', 'bdd'], function() {
 gulp.task('test:ci', ['server:frontend'], function (done) {
     gulp.src(["acj/static/test/features/*.feature"])
         .pipe(protractor({
-            configFile: "acj/static/test/config/protractor_saucelab.js",
-            args: ['--baseUrl', 'http://127.0.0.1:8000']
+            configFile: "acj/static/test/config/protractor_saucelab.js"
+            // baseUrl is set through environment variable
+            //args: ['--baseUrl', 'http://127.0.0.1:8000']
         }))
         .on('error', function (e) {
             throw e
@@ -222,40 +246,47 @@ gulp.task('server:backend', function() {
         process.stderr.write(data);
     });
     proc.stdout.on('data', function (data) {
-        process.stdio.write(data);
+        process.stdout.write(data);
     });
 });
 
 /**
  * Run frontend server
  */
-gulp.task('server:frontend', function() {
-    connect.server({
+gulp.task('server:frontend', ['generate_index'], function(done) {
+    app = connect.server({
         root: 'acj/static',
         livereload: false, // set to false, otherwise gulp will not exit
         middleware: function(connect, o) {
-            return [ (function() {  // proxy api calls
-                var url = require('url');
-                var proxy = require('proxy-middleware');
+            var url = require('url');
+            var proxy = require('proxy-middleware');
+            return [ (function() {  // rewrite all requests against /app to /
+                // because generated index.html has a base /app
+                var options = url.parse('http://localhost:8080/');
+                options.route = '/app';
+                return proxy(options);
+            })(),
+            (function() {  // proxy api calls
                 var options = url.parse('http://localhost:8081/api');
                 options.route = '/api';
                 return proxy(options);
             })(),
             (function() { // proxy CAS login
-                var url = require('url');
-                var proxy = require('proxy-middleware');
                 var options = url.parse('http://localhost:8081/login');
                 options.route = '/login';
                 return proxy(options);
             })(),
             (function() { // proxy CAS logout
-                var url = require('url');
-                var proxy = require('proxy-middleware');
                 var options = url.parse('http://localhost:8081/logout');
                 options.route = '/logout';
                 return proxy(options);
             })()];
         }
+    });
+	// clean up after server close
+    app.server.on('close', function() {
+        gulp.start('delete_index');
+        done();
     });
 });
 
@@ -267,7 +298,7 @@ gulp.task('sauce:connect', function(done) {
     sauceConnectLauncher({
         username: process.env.SAUCE_USERNAME,
         accessKey: process.env.SAUCE_ACCESS_KEY,
-        verbose: true,
+        verbose: true
     }, function (err, sauceConnectProcess) {
         if (err) {
             console.error(err.message);

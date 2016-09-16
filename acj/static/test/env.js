@@ -21,6 +21,6 @@ module.exports = {
   // A base URL for your application under test.
   baseUrl:
     'http://' + (process.env.HTTP_HOST || webServerDefaultHost) +
-          ':' + (process.env.HTTP_PORT || webServerDefaultPort)
+          ':' + (process.env.HTTP_PORT || webServerDefaultPort) + '/app/'
 
 };

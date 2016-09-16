@@ -45,10 +45,11 @@ tmpUpload/*
 *.db
 config.py
 
-# compiled files
+# compiled and generated files
 acj/static/acj.css
 bower_components
 node_modules
+acj/static/index.html
 
 #vagrant files
 .vagrant

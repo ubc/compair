@@ -29,7 +29,7 @@ module.exports.build = function(browser) {
 
 module.exports.setStorageFixture = function(browser, fixtureName) {
     return browser.executeScript(function(fixtureName) {
-        var injector = angular.element(document).injector()
+        var injector = angular.element(document).injector();
         var storageFixture = injector.get('storageFixture');
         storageFixture.setCurrentFixture(fixtureName);
     }, fixtureName);
@@ -79,7 +79,7 @@ module.exports.buildStorageFixture = function(storageFixture) {
             "per_page":20,
             "total":0
         }
-    }
+    };
 
     // add fixture data to storage
     if (storageFixture) {
@@ -95,7 +95,7 @@ module.exports.buildStorageFixture = function(storageFixture) {
 };
 
 module.exports.httpbackendMock = function(storageFixtures) {
-angular.module('MyApp.services.mock', [])
+    angular.module('MyApp.services.mock', []);
     angular.module('httpBackEndMock', ['ngMockE2E'])
     .factory('storageFixture', function() {
         var fixtures = storageFixtures;

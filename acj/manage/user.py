@@ -22,4 +22,4 @@ def password(username, password):
     db.session.add(user)
     db.session.commit()
 
-    print "Password has been updated."
+    print("Password has been updated.")
