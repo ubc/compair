@@ -7,6 +7,8 @@ from . import *
 from acj.core import db
 
 class File(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
+    __tablename__ = 'file'
+
     # table columns
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"),
         nullable=False)

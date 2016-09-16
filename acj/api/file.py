@@ -6,8 +6,8 @@ import string
 import errno
 
 from flask import Blueprint, request, current_app
-from flask.ext.login import login_required, current_user
-from flask.ext.restful import Resource, marshal
+from flask_login import login_required, current_user
+from flask_restful import Resource, marshal
 
 from . import dataformat
 from acj.core import db, event

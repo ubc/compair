@@ -1,7 +1,7 @@
 from flask import Blueprint
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
-from flask.ext.login import login_required, current_user
-from flask.ext.restful import Resource, marshal, reqparse, marshal_with
+from flask_login import login_required, current_user
+from flask_restful import Resource, marshal, reqparse, marshal_with
 from sqlalchemy import or_, and_
 
 from . import dataformat

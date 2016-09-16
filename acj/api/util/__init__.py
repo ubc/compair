@@ -2,12 +2,12 @@ import cProfile
 import contextlib
 from functools import wraps
 import pstats
-from flask.ext.restful.reqparse import RequestParser
+from flask_restful.reqparse import RequestParser
 
 from six import StringIO
 from flask import request, jsonify
-from flask.ext.restful import Api
-from flask.ext.sqlalchemy import Model
+from flask_restful import Api
+from flask_sqlalchemy import Model
 from sqlalchemy import inspect
 
 from acj.core import db

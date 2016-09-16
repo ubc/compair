@@ -12,6 +12,8 @@ from . import *
 from acj.core import db
 
 class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
+    __tablename__ = 'course'
+
     # table columns
     name = db.Column(db.String(255), nullable=False)
     year = db.Column(db.Integer, nullable=False)

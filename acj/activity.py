@@ -4,8 +4,9 @@ from enum import Enum
 from hashlib import md5
 
 from flask import session as sess
-from flask.ext.login import user_logged_in, user_logged_out
-from flask.ext.sqlalchemy import Model
+from flask_login import user_logged_in, user_logged_out
+from flask_sqlalchemy import Model
+from flask_login import UserMixin
 
 from .models import ActivityLog
 from .core import db
@@ -13,7 +14,7 @@ from .core import db
 
 def log(sender, event_name='UNKNOWN', **extra):
     params = dict({'event': event_name})
-    if 'user' in extra:
+    if 'user' in extra and isinstance(extra['user'], UserMixin):
         params['user_id'] = extra['user'].id
     elif 'user_id' in extra:
         params['user_id'] = extra['user_id']

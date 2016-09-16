@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from flask.ext.script import Manager, Server
+from flask_script import Manager, Server
 
 from acj.manage.database import manager as database_manager
 from acj.manage.report import manager as report_generator

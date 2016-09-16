@@ -5,14 +5,14 @@ import string
 
 from bouncer.constants import EDIT, READ, MANAGE
 from flask import Blueprint, request, current_app, make_response
-from flask.ext.login import login_required, current_user
-from flask.ext.restful import Resource, marshal, abort
+from flask_login import login_required, current_user
+from flask_restful import Resource, marshal, abort
 from six import StringIO
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 
-from flask.ext.restful.reqparse import RequestParser
+from flask_restful.reqparse import RequestParser
 
 from . import dataformat
 from acj.core import db, event

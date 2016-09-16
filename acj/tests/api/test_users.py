@@ -1,7 +1,7 @@
 import json
 
-from flask.ext.bouncer import ensure
-from flask.ext.login import login_user, logout_user
+from flask_bouncer import ensure
+from flask_login import login_user, logout_user
 from werkzeug.exceptions import Unauthorized
 
 from data.fixtures import DefaultFixture, UserFactory

@@ -1,5 +1,5 @@
 # Specify what columns should be sent out by the API
-from flask.ext.restful import fields
+from flask_restful import fields
 
 class UnwrapSystemRole(fields.Raw):
     def format(self, system_role):

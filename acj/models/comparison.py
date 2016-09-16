@@ -16,6 +16,8 @@ from acj.algorithms.score import calculate_score, calculate_score_1vs1
 
 
 class Comparison(DefaultTableMixin, WriteTrackingMixin):
+    __tablename__ = 'comparison'
+
     # table columns
     assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id', ondelete="CASCADE"),
         nullable=False)

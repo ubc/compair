@@ -1,5 +1,5 @@
 from flask import Flask, redirect, session as sess, abort, jsonify
-from flask.ext.login import current_user
+from flask_login import current_user
 from sqlalchemy.orm import joinedload
 
 from .authorization import define_authorization

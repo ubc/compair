@@ -3,7 +3,7 @@
 """
 import csv
 
-from flask.ext.script import Manager
+from flask_script import Manager
 from sqlalchemy import and_
 from sqlalchemy.orm import aliased
 

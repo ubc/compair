@@ -10,6 +10,8 @@ from importlib import import_module
 from acj.core import db
 
 class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
+    __tablename__ = 'answer'
+
     # table columns
     assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id', ondelete="CASCADE"),
         nullable=False)

@@ -4,9 +4,9 @@ import random
 
 from bouncer.constants import READ, CREATE, MANAGE
 from flask import Blueprint, current_app
-from flask.ext.login import login_required, current_user
-from flask.ext.restful import Resource, marshal
-from flask.ext.restful.reqparse import RequestParser
+from flask_login import login_required, current_user
+from flask_restful import Resource, marshal
+from flask_restful.reqparse import RequestParser
 from sqlalchemy import or_, and_
 
 from . import dataformat

@@ -9,7 +9,7 @@ from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_enum34 import EnumType
 
-from flask.ext.login import UserMixin
+from flask_login import UserMixin
 from . import *
 
 from acj.core import db
@@ -26,6 +26,8 @@ def hash_password(password, is_admin=False):
 # Flask-Login requires the user class to have some methods, the easiest way
 # to get those methods is to inherit from the UserMixin class.
 class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
+    __tablename__ = 'user'
+
     # table columns
     username = db.Column(db.String(255), unique=True, nullable=True)
     _password = db.Column(db.String(255), unique=False, nullable=True)

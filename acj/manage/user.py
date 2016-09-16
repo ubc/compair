@@ -2,7 +2,7 @@
     User Management
 """
 
-from flask.ext.script import Manager
+from flask_script import Manager
 
 from acj.core import db
 from acj.models import User

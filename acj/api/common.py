@@ -1,7 +1,7 @@
 import time
 
 from flask import Blueprint
-from flask.ext.restful import Resource
+from flask_restful import Resource
 from flask_login import login_required
 
 from .util import new_restful_api

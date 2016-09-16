@@ -1,8 +1,8 @@
 from bouncer.constants import CREATE, READ, EDIT, DELETE, MANAGE
 from flask import Blueprint
-from flask.ext.login import login_required, current_user
-from flask.ext.restful import Resource, marshal, abort
-from flask.ext.restful.reqparse import RequestParser
+from flask_login import login_required, current_user
+from flask_restful import Resource, marshal, abort
+from flask_restful.reqparse import RequestParser
 from sqlalchemy import and_, or_
 
 from . import dataformat

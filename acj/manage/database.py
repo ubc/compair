@@ -2,7 +2,7 @@
     Database Manager, manipulate the database from commandline
 """
 from alembic.config import Config
-from flask.ext.script import Manager, prompt_bool
+from flask_script import Manager, prompt_bool
 
 from alembic import command
 from acj.core import db
