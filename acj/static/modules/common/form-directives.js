@@ -70,8 +70,45 @@ module.directive('confirmFormExit', function(){
 
 /***** Providers *****/
 module.service('EditorOptions', function() {
+    // For complete reference see:
+    // http://docs.ckeditor.com/#!/api/CKEDITOR.config
     this.basic = {
-        customConfig: '../../lib_extension/ckeditor/config.js'
+        // do not load external custom config file
+        customConfig: '',
+        // The toolbar groups arrangement, optimized for two toolbar rows.
+        toolbarGroups: [
+            { name: 'clipboard',   groups: [ 'clipboard', 'undo' ] },
+            //{ name: 'editing',     groups: [ 'find', 'selection', 'spellchecker' ] },
+            { name: 'insert' },
+            { name: 'links' },
+            { name: 'forms' },
+            //{ name: 'tools' },
+            //{ name: 'document',	   groups: [ 'mode', 'document', 'doctools' ] },
+            { name: 'others' },
+            '/',
+            { name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
+            { name: 'paragraph',   groups: [ 'list', 'indent', 'blocks', 'align', 'bidi' ] },
+            //{ name: 'styles' },
+            { name: 'colors' }
+            //{ name: 'about' }
+        ],
+        // Remove some buttons provided by the standard plugins, which are
+        // not needed in the Standard(s) toolbar.
+        removeButtons: 'Cut,Copy,Paste,PasteText,PasteFromWord,Font,Anchor',
+
+        // Set the most common block elements.
+        format_tags: 'p;h1;h2;h3;pre',
+
+        // Simplify the dialog windows.
+        removeDialogTabs: 'image:advanced;link:advanced',
+
+        // change Code Snippet's theme
+        codeSnippet_theme: 'foundation',
+
+        height: "150px",
+
+        // enable custom plugin that combines ASCIIMath and LaTeX math input and code highlighting
+        extraPlugins: 'codesnippet,combinedmath'
     };
 });
 

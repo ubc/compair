@@ -5,23 +5,15 @@
         <base href="/app/">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- add empty favicon.ico to prevent broswer errors -->
+        <!-- add empty favicon.ico to prevent browser errors -->
         <link rel="icon" href="data:;base64,iVBORw0KGgo=">
         <title>ComPAIR</title>
 
-        <!-- needed when ckeditor is minified or when running unit tests -->
-        <script src="{{ url_for('static', filename='lib_extension/ckeditor/basepath.js') }}"></script>
-
-        <!-- Bower Installed Libs, automatically inserted using gulp modules -->
-        <!-- bower:css -->
-        <link rel="stylesheet" href="{{ url_for('static', filename='lib/bootstrap/dist/css/bootstrap.css') }}" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='lib/fontawesome/css/font-awesome.css') }}" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='lib/highlightjs/styles/foundation.css') }}" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='lib/angular-loading-bar/build/loading-bar.css') }}" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='lib/AngularJS-Toaster/toaster.css') }}" />
-        <!-- endbower -->
-
         <!-- Javascript Libraries -->
+        <!-- font awesome CDN -->
+        <script src="https://use.fontawesome.com/5896577a49.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.11/ckeditor.js"></script>
+
         <!-- build:prod_minify_js_libs -->
         <script src="{{ bower_js_libs }}"></script>
         <!-- endbuild -->
@@ -40,7 +32,7 @@
           skipStartupTypeset: true
         });
         MathJax.Hub.Configured();
-        CKEDITOR.plugins.addExternal( 'combinedmath', '../../lib_extension/ckeditor/plugins/combinedmath/' );
+        CKEDITOR.plugins.addExternal( 'combinedmath', '/app/lib_extension/ckeditor/plugins/combinedmath/' );
         </script>
 
         <!-- build:prod_minify_js -->

@@ -1,3 +1,10 @@
+/**
+ * Note:
+ *   gulp prod: is trying to build a minimal number of assets and they can
+ *              be uploaded to a CDN. If a resource (css/js) has any dependencies,
+ *              they should be uploaded to CDN as well. E.g. bootstrap is loading
+ *              a font, which needs to be uploaded.
+ */
 var gulp = require('gulp'),
     bower = require('gulp-bower'),
     wiredep = require('wiredep').stream,
@@ -18,7 +25,15 @@ var gulp = require('gulp'),
     sauceConnectLauncher = require('sauce-connect-launcher'),
     templateCache = require('gulp-angular-templatecache');
 
-var cssFilename = 'acj.css',
+var cssFilenames = [
+        './acj/static/lib/bootstrap/dist/css/bootstrap.css',
+        './acj/static/lib/fontawesome/css/font-awesome.css',
+        './acj/static/lib/highlightjs/styles/foundation.css',
+        './acj/static/lib/angular-loading-bar/build/loading-bar.css',
+        './acj/static/lib/AngularJS-Toaster/toaster.css',
+        './acj/static/build/acj.css'
+    ],
+    targetCssFilename = 'acj.css',
     jsLibsFilename = 'bowerJsLibs.js',
     jsFilename = 'acj.js',
     karmaCommonConf = 'acj/static/test/config/karma.conf.js';
@@ -44,8 +59,9 @@ gulp.task('less', function () {
 });
 
 gulp.task('prod_compile_minify_css', ['less'], function() {
-    return gulp.src('./acj/static/build/' + cssFilename)
+    return gulp.src(cssFilenames)
         .pipe(cleanCss())
+        .pipe(concat(targetCssFilename))
         .pipe(gulp.dest('./acj/static/build'));
 });
 gulp.task('prod_minify_js_libs', function() {
@@ -55,11 +71,17 @@ gulp.task('prod_minify_js_libs', function() {
         .pipe(gulp.dest('./acj/static/build'));
 });
 gulp.task('prod_templatecache', function () {
-  return gulp.src('./acj/static/modules/**/*.html')
-    .pipe(templateCache({
-        root: 'modules/'
-    }))
-    .pipe(gulp.dest('./acj/static/build'));
+    return gulp.src('./acj/static/modules/**/*.html')
+        .pipe(templateCache({
+            root: 'modules/'
+        }))
+        .pipe(gulp.dest('./acj/static/build'));
+});
+gulp.task('prod_copy_fonts', function () {
+	// bootstrap fonts is loaded by bootstrap.css and default location is
+    // ../fonts/
+    return gulp.src('bower_components/bootstrap/fonts/*.*')
+        .pipe(gulp.dest('acj/static/fonts/'));
 });
 gulp.task('prod_minify_js', ['prod_templatecache'], function() {
     return gulp.src([
@@ -69,14 +91,23 @@ gulp.task('prod_minify_js', ['prod_templatecache'], function() {
         './acj/static/modules/**/*-directives.js',
         './acj/static/modules/**/*-service.js',
         './acj/static/modules/common/pdf.js',
-        './acj/static/build/templates.js'
+        './acj/static/build/templates.js',
+        // ckeditor plugins
+        './bower_components/ckeditor/plugins/codesnippet/plugin.js',
+        './bower_components/ckeditor/plugins/codesnippet/dialogs/codesnippet.js',
+        './bower_components/ckeditor/plugins/codesnippet/lang/en.js',
+        './acj/static/lib_extension/ckeditor/plugins/combinedmath/plugin.js',
+        './acj/static/lib_extension/ckeditor/plugins/combinedmath/dialogs/combinedmath.js',
+        './bower_components/ckeditor/plugins/widget/plugin.js',
+        './bower_components/ckeditor/plugins/widget/lang/en.js',
+        './bower_components/ckeditor/plugins/lineutils/plugin.js',
     ])
         .pipe(concat(jsFilename))
         .pipe(uglify())
         .pipe(gulp.dest('./acj/static/build'));
 });
-gulp.task('revision', ['prod_minify_js_libs', 'prod_compile_minify_css', 'prod_minify_js'], function() {
-    return gulp.src(['./acj/static/build/*.css', './acj/static/build/*.js'])
+gulp.task('revision', ['prod_minify_js_libs', 'prod_compile_minify_css', 'prod_minify_js', 'prod_copy_fonts'], function() {
+    return gulp.src(['./acj/static/build/*.css', './acj/static/build/*.js', '!acj/static/build/templates.js'])
         .pipe(rev())
         .pipe(gulp.dest('./acj/static/dist'))
         .pipe(rev.manifest())
@@ -90,7 +121,7 @@ gulp.task('prod', ['revision'], function(){
             {
                 prod_minify_js_libs: 'dist/' + manifest[jsLibsFilename],
                 prod_minify_js: 'dist/' + manifest[jsFilename],
-                prod_compile_minify_css: 'dist/' + manifest[cssFilename]
+                prod_compile_minify_css: 'dist/' + manifest[targetCssFilename]
             },
             {keepBlockTags: true}))
         .pipe(gulp.dest('./acj/static/'));

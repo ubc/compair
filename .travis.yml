@@ -59,7 +59,7 @@ before_install:
 
 # command to install dependencies
 install:
-  - if [ "$DOCKER" != "true" ]; then make deps; fi
+  - if [ "$DOCKER" != "true" ]; then make deps;node_modules/.bin/gulp prod; fi
   - if [ "$DOCKER" = "true" ]; then docker-compose up -d; sleep 10; fi
 
 script:
@@ -70,6 +70,16 @@ after_success:
 
 after_failure:
   - if [ "$DOCKER" = "true" ]; then timeout 3s docker-compose logs app db web; fi
+
+deploy:
+  provider: s3
+  access_key_id:
+    secure: t5Z/xE/swbrwQE6NfzDt1W2Xd65yW14Nc0q+sg3YVOKpkBwAQawuHW1qekueA9RyqRRzDUIv73Cq9wGPY9QyNCun/Er7iL1x7VoxCNS1apgHWvQGHLYQSPCFoybnRuFdpmpcjdqt8lOqGIEpGZ5JAtVOm0IKLFQLS6DrEbFoCPY=
+  secret_access_key:
+    secure: NVwyasIminW4Uo9Mi5HdK8pFyrMyMt8/D8ya04R1enCNP5/IacXEASSwU+F6qURLUgO+VYI/EMn0g2VrK9mQjvNQpZX1dGiIu1dJMRjG1uRed6f+ZjQfouQfrXNDvMQFAGz58wE/+HdVQy0HSb0tOS1krCmFkfwfi+MGLfTTdr4=
+  bucket: "compair-assets"
+  skip_cleanup: true
+  local_dir: acj/static/dist
 
 notifications:
   slack: ubcctlt:cyfS7OeXqRjqhyrpIMHJ0SRd

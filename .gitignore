@@ -56,6 +56,9 @@ node_modules
 .env
 .python-version
 
+# copied fonts
+acj/static/fonts
+
 # uploaded files
 acj/static/pdf/*
 acj/static/report/*

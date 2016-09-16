@@ -1,5 +1,5 @@
 describe('ACJ testsuite - Teacher', function() {
-    var rootURL = "/static/index.html#";
+    var rootURL = "/app/#";
     var reset = false;
 
     beforeEach(function() {
