@@ -9,35 +9,35 @@ var courseFactory = new CourseFactory();
 
 var storage = {
     session: {},
-    users: [],
-    courses: [],
-    user_courses: []
+    users: {},
+    courses: {},
+    user_courses: {}
 }
 
-var admin = userFactory.generateUser(1, "System Administrator", {
+var admin = userFactory.generateUser("1abcABC123-abcABC123_Z", "System Administrator", {
     username: "root",
     displayname: "root",
     firstname: "JaNy",
     lastname: "bwsV",
     fullname: "JaNy bwsV",
 });
-storage.users.push(admin);
+storage.users[admin.id] = admin;
 
-var course1 = courseFactory.generateCourse(1, {
+var course1 = courseFactory.generateCourse("1abcABC123-abcABC123_Z", {
     name: "CHEM 111",
     year: 2015,
     term: "Winter",
     description: "<p>CHEM 111 description<p>",
 });
-storage.courses.push(course1);
+storage.courses[course1.id] = course1;
 
-var course2 = courseFactory.generateCourse(2, {
+var course2 = courseFactory.generateCourse("2abcABC123-abcABC123_Z", {
     name: "PHYS 101",
     year: 2015,
     term: "Winter",
     description: "<p>PHYS 101  description<p>",
 });
-storage.courses.push(course2);
+storage.courses[course2.id] = course2;
 
 // user_courses
 storage.user_courses[admin.id] = [

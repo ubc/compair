@@ -15,6 +15,7 @@ def login():
     param = request.json
     if param is None:
         return jsonify({"error": 'Invalid login data format. Expecting json.'}), 400
+
     username = param['username']
     password = param['password']
     # grab the user from the username
@@ -37,7 +38,7 @@ def login():
             lti_context.update_enrolment(user.id, lti_user_resource_link.course_role)
 
         db.session.commit()
-        return jsonify({"userid": user.id, "permissions": permissions})
+        return jsonify({'user_id': user.uuid, 'permissions': permissions})
 
     # login unsuccessful
     return jsonify({"error": 'Sorry, unrecognized username or password.'}), 400
@@ -67,7 +68,7 @@ def logout():
 @login_api.route('/session', methods=['GET'])
 @login_required
 def session():
-    return jsonify({"id": current_user.id, "permissions": get_logged_in_user_permissions()})
+    return jsonify({'id': current_user.uuid, 'permissions': get_logged_in_user_permissions()})
 
 
 @login_api.route('/session/permission', methods=['GET'])

@@ -11,7 +11,7 @@ from acj.core import db
 from acj.algorithms import ComparisonPair
 
 
-class ComparisonExample(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
+class ComparisonExample(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     __tablename__ = 'comparison_example'
 
     # table columns
@@ -31,6 +31,12 @@ class ComparisonExample(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     # hyprid and other functions
     course_id = association_proxy('assignment', 'course_id', creator=lambda course_id:
         import_module('acj.models.assignment').Assignment(course_id=course_id))
+    course_uuid = association_proxy('assignment', 'course_uuid')
+
+    assignment_uuid = association_proxy('assignment', 'uuid')
+
+    answer1_uuid = association_proxy('answer1', 'uuid')
+    answer2_uuid = association_proxy('answer2', 'uuid')
 
     @classmethod
     def __declare_last__(cls):

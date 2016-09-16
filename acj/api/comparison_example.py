@@ -17,11 +17,11 @@ comparison_example_api = Blueprint('comparison_example_api', __name__)
 api = new_restful_api(comparison_example_api)
 
 new_comparison_example_parser = RequestParser()
-new_comparison_example_parser.add_argument('answer1_id', type=int, required=True)
-new_comparison_example_parser.add_argument('answer2_id', type=int, required=True)
+new_comparison_example_parser.add_argument('answer1_id', type=str, required=True)
+new_comparison_example_parser.add_argument('answer2_id', type=str, required=True)
 
 existing_comparison_example_parser = new_comparison_example_parser.copy()
-existing_comparison_example_parser.add_argument('id', type=int, required=True)
+existing_comparison_example_parser.add_argument('id', type=str, required=True)
 
 # events
 on_comparison_example_modified = event.signal('ASSIGNMENT_MODIFIED')
@@ -32,27 +32,27 @@ on_comparison_example_delete = event.signal('ASSIGNMENT_DELETE')
 # /id
 class ComparisonExampleIdAPI(Resource):
     @login_required
-    def post(self, course_id, assignment_id, comparison_example_id):
-        Course.get_active_or_404(course_id)
-        assignment = Assignment.get_active_or_404(assignment_id)
-        comparison_example = ComparisonExample.get_active_or_404(comparison_example_id)
+    def post(self, course_uuid, assignment_uuid, comparison_example_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+        comparison_example = ComparisonExample.get_active_by_uuid_or_404(comparison_example_uuid)
         require(EDIT, comparison_example)
 
         params = existing_comparison_example_parser.parse_args()
-        answer1_id = params.get("answer1_id", comparison_example.answer1_id)
-        answer2_id = params.get("answer2_id", comparison_example.answer2_id)
+        answer1_uuid = params.get("answer1_id")
+        answer2_uuid = params.get("answer2_id")
 
-        if answer1_id:
-            answer1 = Answer.get_active_or_404(answer1_id)
+        if answer1_uuid:
+            answer1 = Answer.get_active_by_uuid_or_404(answer1_uuid)
             answer1.practice = True
-            comparison_example.answer1_id = answer1_id
+            comparison_example.answer1 = answer1
         else:
             return {"error": "Comparison examples must have 2 answers"}, 400
 
-        if answer2_id:
-            answer2 = Answer.get_active_or_404(answer2_id)
+        if answer2_uuid:
+            answer2 = Answer.get_active_by_uuid_or_404(answer2_uuid)
             answer2.practice = True
-            comparison_example.answer2_id = answer2_id
+            comparison_example.answer2 = answer2
         else:
             return {"error": "Comparison examples must have 2 answers"}, 400
 
@@ -60,7 +60,7 @@ class ComparisonExampleIdAPI(Resource):
             self,
             event_name=on_comparison_example_modified.name,
             user=current_user,
-            course_id=course_id,
+            course_id=course.id,
             data=get_model_changes(comparison_example))
 
         db.session.add(comparison_example)
@@ -69,11 +69,12 @@ class ComparisonExampleIdAPI(Resource):
         return marshal(comparison_example, dataformat.get_comparison_example())
 
     @login_required
-    def delete(self, course_id, assignment_id, comparison_example_id):
-        Course.get_active_or_404(course_id)
-        Assignment.get_active_or_404(assignment_id)
-        comparison_example = ComparisonExample.get_active_or_404(comparison_example_id)
+    def delete(self, course_uuid, assignment_uuid, comparison_example_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+        comparison_example = ComparisonExample.get_active_by_uuid_or_404(comparison_example_uuid)
         require(DELETE, comparison_example)
+
         formatted_comparison_example = marshal(comparison_example,
             dataformat.get_comparison_example(with_answers=False))
 
@@ -85,27 +86,27 @@ class ComparisonExampleIdAPI(Resource):
             self,
             event_name=on_comparison_example_delete.name,
             user=current_user,
-            course_id=course_id,
+            course_id=course.id,
             data=formatted_comparison_example)
 
-        return {'id': comparison_example.id}
+        return {'id': comparison_example.uuid}
 
-api.add_resource(ComparisonExampleIdAPI, '/<int:comparison_example_id>')
+api.add_resource(ComparisonExampleIdAPI, '/<comparison_example_uuid>')
 
 
 # /
 class ComparisonExampleRootAPI(Resource):
     @login_required
-    def get(self, course_id, assignment_id):
-        Course.get_active_or_404(course_id)
-        Assignment.get_active_or_404(assignment_id)
-        require(READ, ComparisonExample(course_id=course_id))
+    def get(self, course_uuid, assignment_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+        require(READ, ComparisonExample(course_id=course.id))
 
         # Get all comparison examples for this assignment
         comparison_examples = ComparisonExample.query \
             .filter_by(
                 active=True,
-                assignment_id=assignment_id
+                assignment_id=assignment.id
             ) \
             .all()
 
@@ -113,36 +114,34 @@ class ComparisonExampleRootAPI(Resource):
             self,
             event_name=on_comparison_example_list_get.name,
             user=current_user,
-            course_id=course_id,
-            data={'assignment_id': assignment_id})
+            course_id=course.id,
+            data={'assignment_id': assignment.id})
 
-        return {
-            "objects": marshal(comparison_examples, dataformat.get_comparison_example())
-        }
+        return { "objects": marshal(comparison_examples, dataformat.get_comparison_example()) }
 
     @login_required
-    def post(self, course_id, assignment_id):
-        Course.get_active_or_404(course_id)
-        Assignment.get_active_or_404(assignment_id)
-        require(CREATE, ComparisonExample(assignment=Assignment(course_id=course_id)))
+    def post(self, course_uuid, assignment_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+        require(CREATE, ComparisonExample(assignment=Assignment(course_id=course.id)))
 
-        new_comparison_example = ComparisonExample(assignment_id=assignment_id)
+        new_comparison_example = ComparisonExample(assignment_id=assignment.id)
 
         params = new_comparison_example_parser.parse_args()
-        answer1_id = params.get("answer1_id")
-        answer2_id = params.get("answer2_id")
+        answer1_uuid = params.get("answer1_id")
+        answer2_uuid = params.get("answer2_id")
 
-        if answer1_id:
-            answer1 = Answer.get_active_or_404(answer1_id)
+        if answer1_uuid:
+            answer1 = Answer.get_active_by_uuid_or_404(answer1_uuid)
             answer1.practice = True
-            new_comparison_example.answer1_id = answer1_id
+            new_comparison_example.answer1 = answer1
         else:
             return {"error": "Comparison examples must have 2 answers"}, 400
 
-        if answer2_id:
-            answer2 = Answer.get_active_or_404(answer2_id)
+        if answer2_uuid:
+            answer2 = Answer.get_active_by_uuid_or_404(answer2_uuid)
             answer2.practice = True
-            new_comparison_example.answer2_id = answer2_id
+            new_comparison_example.answer2 = answer2
         else:
             return {"error": "Comparison examples must have 2 answers"}, 400
 
@@ -150,7 +149,7 @@ class ComparisonExampleRootAPI(Resource):
             self,
             event_name=on_comparison_example_create.name,
             user=current_user,
-            course_id=course_id,
+            course_id=course.id,
             data=marshal(new_comparison_example, dataformat.get_comparison_example(with_answers=False)))
 
         db.session.add(new_comparison_example)

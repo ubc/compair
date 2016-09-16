@@ -1,6 +1,6 @@
 describe('user-module', function () {
     var $httpBackend, sessionRequestHandler;
-    var id = 1;
+    var id = "1abcABC123-abcABC123_Z";
     var mockSession = {
         "id": id,
         "permissions": {
@@ -83,7 +83,7 @@ describe('user-module', function () {
             var controller;
             describe('new', function () {
                 beforeEach(function () {
-                    controller = createController({current: {method: 'new'}}, {userId: 2});
+                    controller = createController({current: {method: 'new'}}, {userId: "2abcABC123-abcABC123_Z",});
                 });
 
                 it('should be correctly initialized', function () {
@@ -96,11 +96,11 @@ describe('user-module', function () {
                 it('should be able to save new user', function () {
                     $rootScope.user = angular.copy(mockUser);
                     $rootScope.user.id = undefined;
-                    $httpBackend.expectPOST('/api/users', $rootScope.user).respond(angular.merge(mockUser, {id: 2}));
+                    $httpBackend.expectPOST('/api/users', $rootScope.user).respond(angular.merge(mockUser, {id: "2abcABC123-abcABC123_Z"}));
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();
-                    expect($location.path()).toEqual('/user/2');
+                    expect($location.path()).toEqual('/user/2abcABC123-abcABC123_Z');
                     expect($rootScope.submitted).toBe(false);
                 })
             });
@@ -110,9 +110,9 @@ describe('user-module', function () {
 
                 beforeEach(function () {
                     editUser = angular.copy(mockUser);
-                    editUser.id = 2;
-                    controller = createController({current: {method: 'edit'}}, {userId: 2});
-                    $httpBackend.expectGET('/api/users/2').respond(editUser);
+                    editUser.id = "2abcABC123-abcABC123_Z";
+                    controller = createController({current: {method: 'edit'}}, {userId: "2abcABC123-abcABC123_Z"});
+                    $httpBackend.expectGET('/api/users/2abcABC123-abcABC123_Z').respond(editUser);
                     $httpBackend.flush();
                 });
 
@@ -124,11 +124,11 @@ describe('user-module', function () {
                     var editedUser = angular.copy(editUser);
                     editedUser.username = 'new name';
                     $rootScope.user = editedUser;
-                    $httpBackend.expectPOST('/api/users/2', $rootScope.user).respond(editedUser);
+                    $httpBackend.expectPOST('/api/users/2abcABC123-abcABC123_Z', $rootScope.user).respond(editedUser);
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();
-                    expect($location.path()).toEqual('/user/2');
+                    expect($location.path()).toEqual('/user/2abcABC123-abcABC123_Z');
                     expect($rootScope.submitted).toBe(false);
                 });
 
@@ -144,7 +144,7 @@ describe('user-module', function () {
 
                 it('should enable save button even if save failed', function() {
                     $rootScope.user = angular.copy(editUser);
-                    $httpBackend.expectPOST('/api/users/2', $rootScope.user).respond(400, '');
+                    $httpBackend.expectPOST('/api/users/2abcABC123-abcABC123_Z', $rootScope.user).respond(400, '');
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();
@@ -156,10 +156,10 @@ describe('user-module', function () {
                 var viewUser;
                 beforeEach(function () {
                     viewUser = angular.copy(mockUser);
-                    viewUser.id = 2;
-                    controller = createController({current: {method: 'view'}}, {userId: 2});
-                    $httpBackend.expectGET('/api/users/2').respond(viewUser);
-                    $httpBackend.expectGET('/api/users/2/edit').respond({available: 'true'});
+                    viewUser.id = "2abcABC123-abcABC123_Z";
+                    controller = createController({current: {method: 'view'}}, {userId: "2abcABC123-abcABC123_Z"});
+                    $httpBackend.expectGET('/api/users/2abcABC123-abcABC123_Z').respond(viewUser);
+                    $httpBackend.expectGET('/api/users/2abcABC123-abcABC123_Z/edit').respond({available: 'true'});
                     $httpBackend.flush();
                 });
 

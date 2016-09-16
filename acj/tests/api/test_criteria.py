@@ -58,7 +58,7 @@ class CriterionAPITests(ACJAPITestCase):
             self.assert403(rv)
 
     def test_get_criterion(self):
-        criterion_api_url = '/api/criteria/' + str(self.data.get_criterion().id)
+        criterion_api_url = '/api/criteria/' + self.data.get_criterion().uuid
 
         # Test login required
         rv = self.client.get(criterion_api_url)
@@ -86,9 +86,9 @@ class CriterionAPITests(ACJAPITestCase):
             self.assert404(rv)
 
     def test_edit_criterion(self):
-        criterion_api_url = '/api/criteria/' + str(self.data.get_criterion().id)
+        criterion_api_url = '/api/criteria/' + self.data.get_criterion().uuid
         criterion_expected = {
-            'id': self.data.get_criterion().id,
+            'id': self.data.get_criterion().uuid,
             'name': 'Which is more correct?',
             'description': 'Please answer more honestly.'
         }
@@ -128,7 +128,7 @@ class CriterionAPITests(ACJAPITestCase):
         # Test admin access
         # admin_criterion_expected = self.data.get_criterion()
         admin_criterion_expected = {
-            'id': self.data.get_criterion().id,
+            'id': self.data.get_criterion().uuid,
             'name': 'Which one uses the correct formula?',
             'description': 'Hint: Law of Physics.'
         }

@@ -44,12 +44,12 @@ comparison_deadline_message = 'Assignment comparison deadline has passed.'
 # /
 class CompareRootAPI(Resource):
     @login_required
-    def get(self, course_id, assignment_id):
+    def get(self, course_uuid, assignment_uuid):
         """
         Get (or create if needed) a comparison set for assignment.
         """
-        course = Course.get_active_or_404(course_id)
-        assignment = Assignment.get_active_or_404(assignment_id)
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(READ, assignment)
         restrict_user = not allow(MANAGE, assignment)
 
@@ -59,7 +59,7 @@ class CompareRootAPI(Resource):
         # check if user has comparisons they have not completed yet
         comparisons = Comparison.query \
             .filter_by(
-                assignment_id=assignment_id,
+                assignment_id=assignment.id,
                 user_id=current_user.id,
                 completed=False
             ) \
@@ -70,18 +70,18 @@ class CompareRootAPI(Resource):
                 self,
                 event_name=on_comparison_get.name,
                 user=current_user,
-                course_id=course_id,
+                course_id=course.id,
                 data=marshal(comparisons, dataformat.get_comparison(restrict_user)))
         else:
             # if there aren't incomplete comparisons, assign a new one
             try:
-                comparisons = Comparison.create_new_comparison_set(assignment_id, current_user.id)
+                comparisons = Comparison.create_new_comparison_set(assignment.id, current_user.id)
 
                 on_comparison_create.send(
                     self,
                     event_name=on_comparison_create.name,
                     user=current_user,
-                    course_id=course_id,
+                    course_id=course.id,
                     data=marshal(comparisons, dataformat.get_comparison(restrict_user)))
             except InsufficientObjectsForPairException:
                 return {"error": "Not enough answers are available for an evaluation."}, 400
@@ -95,12 +95,12 @@ class CompareRootAPI(Resource):
         return {'objects': marshal(comparisons, dataformat.get_comparison(restrict_user))}
 
     @login_required
-    def post(self, course_id, assignment_id):
+    def post(self, course_uuid, assignment_uuid):
         """
         Stores comparison set into the database.
         """
-        Course.get_active_or_404(course_id)
-        assignment = Assignment.get_active_or_404(assignment_id)
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
         if not assignment.compare_grace:
             return {'error': comparison_deadline_message}, 403
@@ -111,7 +111,7 @@ class CompareRootAPI(Resource):
 
         comparisons = Comparison.query \
             .filter_by(
-                assignment_id=assignment_id,
+                assignment_id=assignment.id,
                 user_id=current_user.id,
                 completed=False
             ) \
@@ -142,25 +142,24 @@ class CompareRootAPI(Resource):
 
             # set default values for cotnent and winner
             comparison_to_update.setdefault('content', None)
-            winner_id = comparison_to_update.setdefault('winner_id', None)
+            winner_uuid = comparison_to_update.setdefault('winner_id', None)
 
             # if winner isn't set for any comparisons, then the comparison set isn't complete yet
-            if winner_id == None:
+            if winner_uuid == None:
                 completed = False
 
             # check that we're using criteria that were assigned to the course and that we didn't
             # get duplicate criteria in comparisons
             known_criterion = False
             for comparison in comparisons:
-                if comparison_to_update['criterion_id'] == comparison.criterion_id:
+                if comparison_to_update['criterion_id'] == comparison.criterion_uuid:
                     known_criterion = True
 
                     # check that the winner id matches one of the answer pairs
-                    if winner_id not in [comparison.answer1_id, comparison.answer2_id, None]:
+                    if winner_uuid not in [comparison.answer1_uuid, comparison.answer2_uuid, None]:
                         return {"error": "Selected answer does not match the available answers in comparison."}, 400
 
                     break
-
             if not known_criterion:
                 return {"error": "Unknown criterion submitted!"}, 400
 
@@ -170,10 +169,15 @@ class CompareRootAPI(Resource):
             comparison.completed = completed
 
             for comparison_to_update in params['comparisons']:
-                if comparison_to_update['criterion_id'] != comparison.criterion_id:
+                if comparison_to_update['criterion_id'] != comparison.criterion_uuid:
                     continue
 
-                comparison.winner_id = comparison_to_update['winner_id']
+                if comparison_to_update['winner_id'] == comparison.answer1_uuid:
+                    comparison.winner_id = comparison.answer1_id
+                elif comparison_to_update['winner_id'] == comparison.answer2_uuid:
+                    comparison.winner_id = comparison.answer2_id
+                else:
+                    comparison.winner_id = None
                 comparison.content = comparison_to_update['content']
 
         db.session.commit()
@@ -182,13 +186,13 @@ class CompareRootAPI(Resource):
         if completed and not is_comparison_example:
             current_app.logger.debug("Doing scoring")
             Comparison.update_scores_1vs1(comparisons)
-            #Comparison.calculate_scores(assignment_id)
+            #Comparison.calculate_scores(assignment.id)
 
         on_comparison_update.send(
             self,
             event_name=on_comparison_update.name,
             user=current_user,
-            course_id=course_id,
+            course_id=course.id,
             data=marshal(comparisons, dataformat.get_comparison(restrict_user)))
 
         return {'objects': marshal(comparisons, dataformat.get_comparison(restrict_user))}

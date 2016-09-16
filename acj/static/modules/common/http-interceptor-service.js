@@ -14,7 +14,7 @@ module.service('Interceptors', ['$q', '$cacheFactory', 'AnswerResource', functio
             // removing the suffix of some of the actions - eg. flagged
             var url = response.config.url.replace(/\/(flagged)/g, "");
             cache.remove(url);
-            url = url.replace(/\/\d+$/g, "");
+            url = url.replace(/\/[A-Za-z0-9_-]{22}$/g, "");
             cache.remove(url);	// remove root GET responses - eg. groups
             return response.data;
         }
@@ -24,7 +24,7 @@ module.service('Interceptors', ['$q', '$cacheFactory', 'AnswerResource', functio
         response: function(response) {
             var cache = $cacheFactory.get('classlist');
             if(cache) {
-                var url = response.config.url.match(/\/api\/courses\/\d+/g);
+                var url = response.config.url.match(/\/api\/courses\/[A-Za-z0-9_-]{22}/g);
                 cache.remove(url[0] + '/users');
             }
             return response.data;
@@ -35,7 +35,7 @@ module.service('Interceptors', ['$q', '$cacheFactory', 'AnswerResource', functio
         response: function(response) {
             // store all course group names until javascript memory wiped (page refreshed,closed,etc)
             // helps in case instructors make mistakes while editing groups on class list screen
-            var courseId = response.config.url.match(/\d+/g)[0];
+            var courseId = response.config.url.match(/[A-Za-z0-9_-]{22}/g)[0];
             if (temporaryGroupStore[courseId] == undefined) {
                 temporaryGroupStore[courseId] = [];
             }
@@ -54,9 +54,9 @@ module.service('Interceptors', ['$q', '$cacheFactory', 'AnswerResource', functio
         response: function(response) {
             var cache = $cacheFactory.get('$http');
             // match both object endpoint and list endpoint
-            var url = response.config.url.match(/\/api\/courses\/\d+\/assignments\/\d+\/answers\/\d+\/comments(\/\d+)?/g);
+            var url = response.config.url.match(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}\/answers\/[A-Za-z0-9_-]{22}\/comments(\/[A-Za-z0-9_-]{22})?/g);
             cache.remove(url[0]);
-            var listUrl = url[0].replace(/\/\d+$/g, "");
+            var listUrl = url[0].replace(/\/[A-Za-z0-9_-]{22}$/g, "");
             if (listUrl != url[0]) {
                 cache.remove(listUrl);
             }

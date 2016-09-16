@@ -13,7 +13,7 @@ class CourseGroupsAPITests(ACJAPITestCase):
         self.fixtures = TestFixture().add_course(num_students=30, num_groups=3)
 
     def test_get_active_groups(self):
-        url = '/api/courses/'+str(self.fixtures.course.id)+'/groups'
+        url = '/api/courses/'+self.fixtures.course.uuid+'/groups'
 
         # test login required
         rv = self.client.get(url)
@@ -45,9 +45,9 @@ class CourseGroupsAPITests(ACJAPITestCase):
             self.assertEqual(actual[0], self.fixtures.groups[0])
 
     def test_get_group_members(self):
-        course_id = self.fixtures.course.id
+        course = self.fixtures.course
         group_name = self.fixtures.groups[0]
-        url = '/api/courses/'+str(course_id)+'/groups/'+group_name
+        url = '/api/courses/'+course.uuid+'/groups/'+group_name
 
         # test login required
         rv = self.client.get(url)
@@ -64,21 +64,21 @@ class CourseGroupsAPITests(ACJAPITestCase):
             self.assert404(rv)
 
             # test invalid group id
-            rv = self.client.get('/api/courses/'+str(course_id)+'/groups/asdasdasdasd')
+            rv = self.client.get('/api/courses/'+course.uuid+'/groups/asdasdasdasd')
             self.assert404(rv)
 
             # test authorized instructor
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(10, len(rv.json['students']))
-            self.assertEqual(self.fixtures.students[0].id, rv.json['students'][0]['id'])
+            self.assertEqual(self.fixtures.students[0].uuid, rv.json['students'][0]['id'])
 
         # test authorized teaching assistant
         with self.login(self.fixtures.ta.username):
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(10, len(rv.json['students']))
-            self.assertEqual(self.fixtures.students[0].id, rv.json['students'][0]['id'])
+            self.assertEqual(self.fixtures.students[0].uuid, rv.json['students'][0]['id'])
 
     def test_group_enrolment(self):
         # frequently used objects
@@ -126,12 +126,12 @@ class CourseGroupsAPITests(ACJAPITestCase):
             self.assert404(rv)
 
             # test invalid course id
-            url = '/api/courses/999/users/'+str(self.fixtures.students[0].id)+'/groups/'+group_name
+            url = '/api/courses/999/users/'+self.fixtures.students[0].uuid+'/groups/'+group_name
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert404(rv)
 
             # test invalid user id
-            url = '/api/courses/'+str(course.id)+'/users/999/groups/'+group_name
+            url = '/api/courses/'+course.uuid+'/users/999/groups/'+group_name
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert404(rv)
 
@@ -154,8 +154,8 @@ class CourseGroupsAPITests(ACJAPITestCase):
             url = self._create_group_user_url(course, self.fixtures.students[0])
             rv = self.client.delete(url)
             self.assert200(rv)
-            self.assertEqual(rv.json['user_id'], self.fixtures.students[0].id)
-            self.assertEqual(rv.json['course_id'], course.id)
+            self.assertEqual(rv.json['user_id'], self.fixtures.students[0].uuid)
+            self.assertEqual(rv.json['course_id'], course.uuid)
 
             # test user not in course
             url = self._create_group_user_url(course, self.fixtures.unauthorized_student)
@@ -163,17 +163,17 @@ class CourseGroupsAPITests(ACJAPITestCase):
             self.assert404(rv)
 
             # test invalid course id
-            url = '/api/courses/999/users/'+str(self.fixtures.students[0].id)+'/groups'
+            url = '/api/courses/999/users/'+self.fixtures.students[0].uuid+'/groups'
             rv = self.client.delete(url)
             self.assert404(rv)
 
             # test invalid user id
-            url = '/api/courses/'+str(course.id)+'/users/999/groups'
+            url = '/api/courses/'+course.uuid+'/users/999/groups'
             rv = self.client.delete(url)
             self.assert404(rv)
 
     def test_import_groups(self):
-        url = '/api/courses/' + str(self.fixtures.course.id) + '/groups'
+        url = '/api/courses/' + self.fixtures.course.uuid + '/groups'
 
         content = self.fixtures.students[0].username + "," + self.fixtures.groups[0]
         encoded_content = content.encode()
@@ -344,7 +344,7 @@ class CourseGroupsAPITests(ACJAPITestCase):
         course = self.fixtures.course
         group_name = self.fixtures.groups[0]
         group_name_2 = self.fixtures.groups[1]
-        student_ids = [self.fixtures.students[0].id, self.fixtures.students[1].id]
+        student_ids = [self.fixtures.students[0].uuid, self.fixtures.students[1].uuid]
         url = self._create_group_users_url(course, group_name)
 
         params = { 'ids': student_ids }
@@ -377,7 +377,7 @@ class CourseGroupsAPITests(ACJAPITestCase):
 
             # test invalid ids
             rv = self.client.post(url,
-                data=json.dumps({'ids': [self.fixtures.unauthorized_student.id]}),
+                data=json.dumps({'ids': [self.fixtures.unauthorized_student.uuid]}),
                 content_type='application/json')
             self.assert400(rv)
 
@@ -408,7 +408,7 @@ class CourseGroupsAPITests(ACJAPITestCase):
         course = self.fixtures.course
         url = self._create_group_users_url(course)
 
-        student_ids = [self.fixtures.students[0].id, self.fixtures.students[1].id]
+        student_ids = [self.fixtures.students[0].uuid, self.fixtures.students[1].uuid]
         params = { 'ids': student_ids }
 
         # test login required
@@ -439,7 +439,7 @@ class CourseGroupsAPITests(ACJAPITestCase):
 
             # test invalid ids
             rv = self.client.post(url,
-                data=json.dumps({ 'ids': [self.fixtures.unauthorized_student.id] }),
+                data=json.dumps({ 'ids': [self.fixtures.unauthorized_student.uuid] }),
                 content_type='application/json')
             self.assert400(rv)
 
@@ -448,20 +448,20 @@ class CourseGroupsAPITests(ACJAPITestCase):
                 data=json.dumps(params),
                 content_type='application/json')
             self.assert200(rv)
-            self.assertEqual(rv.json['course_id'], course.id)
+            self.assertEqual(rv.json['course_id'], course.uuid)
 
             for user_course in course.user_courses:
                 if user_course.user_id in student_ids:
                     self.assertEqual(user_course.group_name, None)
 
     def _create_group_user_url(self, course, user, group_name=None):
-        url = '/api/courses/'+str(course.id)+'/users/'+str(user.id)+'/groups'
+        url = '/api/courses/'+course.uuid+'/users/'+user.uuid+'/groups'
         if group_name:
             url = url+'/'+group_name
         return url
 
     def _create_group_users_url(self, course, group_name=None):
-        url = '/api/courses/'+str(course.id)+'/users/groups'
+        url = '/api/courses/'+course.uuid+'/users/groups'
         if group_name:
             url = url+'/'+group_name
         return url

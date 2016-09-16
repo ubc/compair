@@ -125,7 +125,7 @@ class LTILaunchAPITests(ACJAPITestCase):
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
                     follow_redirects=False) as rv:
-                self.assertRedirects(rv, '/static/index.html#/course/'+str(course.id))
+                self.assertRedirects(rv, '/static/index.html#/course/'+course.uuid)
 
             # check session
             with self.client.session_transaction() as sess:
@@ -155,8 +155,8 @@ class LTILaunchAPITests(ACJAPITestCase):
             # valid request - user with account and course linked (assignment doesn't exist in db)
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
-                    assignment_id=999, follow_redirects=False) as rv:
-                self.assertRedirects(rv, '/static/index.html#/course/'+str(course.id))
+                    assignment_uuid="999", follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/static/index.html#/course/'+course.uuid)
 
             # check session
             with self.client.session_transaction() as sess:
@@ -182,8 +182,8 @@ class LTILaunchAPITests(ACJAPITestCase):
             # valid request - user with account and course linked (with assignment)
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
-                    assignment_id=assignment.id, follow_redirects=False) as rv:
-                self.assertRedirects(rv, '/static/index.html#/course/'+str(course.id)+'/assignment/'+str(assignment.id))
+                    assignment_uuid=assignment.uuid, follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/static/index.html#/course/'+course.uuid+'/assignment/'+assignment.uuid)
 
             # check session
             with self.client.session_transaction() as sess:
@@ -208,13 +208,13 @@ class LTILaunchAPITests(ACJAPITestCase):
             timestamp = generate_timestamp()
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
-                    assignment_id=assignment.id, follow_redirects=False,
+                    assignment_uuid=assignment.uuid, follow_redirects=False,
                     nonce=nonce, timestamp=timestamp) as rv:
-                self.assertRedirects(rv, '/static/index.html#/course/'+str(course.id)+'/assignment/'+str(assignment.id))
+                self.assertRedirects(rv, '/static/index.html#/course/'+course.uuid+'/assignment/'+assignment.uuid)
 
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
-                    assignment_id=assignment.id, follow_redirects=False,
+                    assignment_uuid=assignment.uuid, follow_redirects=False,
                     nonce=nonce, timestamp=timestamp) as rv:
                 self.assert400(rv)
 
@@ -336,7 +336,7 @@ class LTILaunchAPITests(ACJAPITestCase):
             self.assertTrue(status['valid'])
 
             self.assertTrue(status['course']['exists'])
-            self.assertEqual(status['course']['id'], course.id)
+            self.assertEqual(status['course']['id'], course.uuid)
             self.assertEqual(status['course']['name'], lti_context.context_title)
             self.assertEqual(status['course']['course_role'], course_role.value)
 
@@ -351,7 +351,7 @@ class LTILaunchAPITests(ACJAPITestCase):
             self.assertTrue(status['valid'])
 
             self.assertTrue(status['course']['exists'])
-            self.assertEqual(status['course']['id'], course.id)
+            self.assertEqual(status['course']['id'], course.uuid)
             self.assertEqual(status['course']['name'], lti_context.context_title)
             self.assertEqual(status['course']['course_role'], course_role.value)
 
@@ -371,7 +371,7 @@ class LTILaunchAPITests(ACJAPITestCase):
             # with custom assignment param that doesn't exist
             with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
                     user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role,
-                    assignment_id=999) as rv:
+                    assignment_uuid="999") as rv:
                 self.assert200(rv)
 
             rv = self.client.get(url, data={}, content_type='application/json')
@@ -389,7 +389,7 @@ class LTILaunchAPITests(ACJAPITestCase):
 
             with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
                     user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role,
-                    assignment_id=assignment.id) as rv:
+                    assignment_uuid=assignment.uuid) as rv:
                 self.assert200(rv)
 
             rv = self.client.get(url, data={}, content_type='application/json')
@@ -398,12 +398,12 @@ class LTILaunchAPITests(ACJAPITestCase):
             self.assertTrue(status['valid'])
 
             self.assertTrue(status['assignment']['exists'])
-            self.assertEqual(status['assignment']['id'], assignment.id)
+            self.assertEqual(status['assignment']['id'], assignment.uuid)
 
     def test_lti_course_link(self):
         instructor = self.data.get_authorized_instructor()
         course = self.data.get_course()
-        url = '/api/lti/course/'+str(course.id)+'/link'
+        url = '/api/lti/course/'+course.uuid+'/link'
 
         lti_consumer = self.lti_data.lti_consumer
         lti_context = self.lti_data.create_context(lti_consumer)
@@ -458,7 +458,7 @@ class LTILaunchAPITests(ACJAPITestCase):
         course = self.data.get_course()
         current_user_ids = [user_course.user_id for user_course in course.user_courses]
 
-        url = '/api/lti/course/'+str(course.id)+'/link'
+        url = '/api/lti/course/'+course.uuid+'/link'
 
         lti_consumer = self.lti_data.lti_consumer
         lti_context = self.lti_data.create_context(lti_consumer)
@@ -595,7 +595,7 @@ class LTILaunchAPITests(ACJAPITestCase):
 
         current_user_ids = [user_course.user_id for user_course in course.user_courses]
 
-        url = '/api/lti/course/'+str(course.id)+'/membership'
+        url = '/api/lti/course/'+course.uuid+'/membership'
 
         lti_consumer = self.lti_data.lti_consumer
         lti_context = self.lti_data.create_context(
@@ -854,7 +854,7 @@ class LTILaunchAPITests(ACJAPITestCase):
 
         with self.login(self.data.get_unauthorized_instructor().username):
             course_2 = self.data.secondary_course
-            url_2 = '/api/lti/course/'+str(course_2.id)+'/membership'
+            url_2 = '/api/lti/course/'+course_2.uuid+'/membership'
 
             # requires course linked to at least one lti context
             rv = self.client.post(url_2, data={}, content_type='application/json')

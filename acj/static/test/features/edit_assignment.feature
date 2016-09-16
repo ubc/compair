@@ -3,19 +3,19 @@ Feature: Edit Assignment
 
   Scenario: Loading edit assignment page as admin
     Given I'm a System Administrator with assignments
-    And I'm on 'assignment' page for assignment with id '1' and course id '1'
+    And I'm on 'assignment' page for assignment with id '1abcABC123-abcABC123_Z' and course id '1abcABC123-abcABC123_Z'
     When I select 'Edit Assignment' button
     Then I should be on the 'edit assignment' page
 
   Scenario: Loading edit assignment page as instructor
     Given I'm an Instructor with assignments
-    And I'm on 'assignment' page for assignment with id '1' and course id '1'
+    And I'm on 'assignment' page for assignment with id '1abcABC123-abcABC123_Z' and course id '1abcABC123-abcABC123_Z'
     When I select 'Edit Assignment' button
     Then I should be on the 'edit assignment' page
 
   Scenario: Editing an assignment as instructor
     Given I'm an Instructor with assignments
-    And I'm on 'edit assignment' page for assignment with id '3' and course id '1'
+    And I'm on 'edit assignment' page for assignment with id '3abcABC123-abcABC123_Z' and course id '1abcABC123-abcABC123_Z'
     When I fill form item 'assignment.name' in with 'New Name'
     And I fill in the assignment description with 'This is the new description'
     And I drop the first criterion
@@ -26,7 +26,7 @@ Feature: Edit Assignment
 
   Scenario: Editing a assignment's criterion as instructor before comparisons
     Given I'm an Instructor with assignments
-    And I'm on 'edit assignment' page for assignment with id '3' and course id '1'
+    And I'm on 'edit assignment' page for assignment with id '3abcABC123-abcABC123_Z' and course id '1abcABC123-abcABC123_Z'
     When I edit the second criterion
     And I fill form item 'criterion.name' in with 'Choose the best one'
     And I fill in the criterion description with 'Choose the best one.'
@@ -41,12 +41,12 @@ Feature: Edit Assignment
 
   Scenario: Editing assignment's criterion as instructor after the criterion has been compared
     Given I'm an Instructor with assignments
-    And I'm on 'edit assignment' page for assignment with id '1' and course id '1'
+    And I'm on 'edit assignment' page for assignment with id '1abcABC123-abcABC123_Z' and course id '1abcABC123-abcABC123_Z'
     When I edit the second criterion
     Then I should see a warning message in the edit criterion modal
 
   Scenario: Cannot add or remove an assignment's criterion as instructor after its been compared
     Given I'm an Instructor with assignments
-    And I'm on 'edit assignment' page for assignment with id '1' and course id '1'
+    And I'm on 'edit assignment' page for assignment with id '1abcABC123-abcABC123_Z' and course id '1abcABC123-abcABC123_Z'
     Then I should not be able to add criteria
     And I should not be able to remove criteria

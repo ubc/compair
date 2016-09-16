@@ -11,7 +11,7 @@ from operator import attrgetter
 from . import dataformat
 from acj.core import db, event
 from acj.authorization import require, allow, is_user_access_restricted
-from acj.models import Answer, Assignment, Course, User, Comparison, \
+from acj.models import Answer, Assignment, Course, User, Comparison, Criterion, \
     Score, UserCourse, SystemRole, CourseRole, AnswerComment, AnswerCommentType
 
 from .util import new_restful_api, get_model_changes, pagination_parser
@@ -21,25 +21,25 @@ answers_api = Blueprint('answers_api', __name__)
 api = new_restful_api(answers_api)
 
 new_answer_parser = RequestParser()
-new_answer_parser.add_argument('user_id', type=int, default=None)
+new_answer_parser.add_argument('user_id', type=str, default=None)
 new_answer_parser.add_argument('content', type=str, default=None)
 new_answer_parser.add_argument('file_name', type=str, default=None)
 new_answer_parser.add_argument('file_alias', type=str, default=None)
 new_answer_parser.add_argument('draft', type=bool, default=False)
 
 existing_answer_parser = new_answer_parser.copy()
-existing_answer_parser.add_argument('id', type=int, required=True, help="Answer id is required.")
+existing_answer_parser.add_argument('id', type=str, required=True, help="Answer id is required.")
 existing_answer_parser.add_argument('uploadedFile', type=bool, default=False)
 
 answer_list_parser = pagination_parser.copy()
 answer_list_parser.add_argument('group', type=str, required=False, default=None)
-answer_list_parser.add_argument('author', type=int, required=False, default=None)
+answer_list_parser.add_argument('author', type=str, required=False, default=None)
 answer_list_parser.add_argument('orderBy', type=str, required=False, default=None)
 answer_list_parser.add_argument('ids', type=str, required=False, default=None)
 
 answer_comparison_list_parser = pagination_parser.copy()
 answer_comparison_list_parser.add_argument('group', type=str, required=False, default=None)
-answer_comparison_list_parser.add_argument('author', type=int, required=False, default=None)
+answer_comparison_list_parser.add_argument('author', type=str, required=False, default=None)
 
 flag_parser = RequestParser()
 flag_parser.add_argument(
@@ -64,18 +64,19 @@ answer_deadline_message = 'Answer deadline has passed.'
 # /
 class AnswerRootAPI(Resource):
     @login_required
-    def get(self, course_id, assignment_id):
+    def get(self, course_uuid, assignment_uuid):
         """
         Return a list of answers for a assignment based on search criteria. The
         list of the answers are paginated. If there is any answers from instructor
         or TA, their answers will be on top of the list.
 
-        :param course_id: course id
-        :param assignment_id: assignment id
+        :param course_uuid: course uuid
+        :param assignment_uuid: assignment uuid
         :return: list of answers
         """
-        Course.get_active_or_404(course_id)
-        assignment = Assignment.get_active_or_404(assignment_id)
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+
         require(READ, assignment)
         restrict_user = not allow(MANAGE, assignment)
 
@@ -83,7 +84,7 @@ class AnswerRootAPI(Resource):
 
         if restrict_user and not assignment.after_comparing:
             # only the answer from student himself/herself should be returned
-            params['author'] = current_user.id
+            params['author'] = current_user.uuid
 
         # this query could be further optimized by reduction the selected columns
         query = Answer.query \
@@ -92,7 +93,7 @@ class AnswerRootAPI(Resource):
             .options(joinedload('scores')) \
             .options(undefer_group('counts')) \
             .filter_by(
-                assignment_id=assignment_id,
+                assignment_id=assignment.id,
                 active=True,
                 practice=False,
                 draft=False
@@ -100,49 +101,52 @@ class AnswerRootAPI(Resource):
 
         user_ids = []
         if params['author']:
-            query = query.filter(Answer.user_id == params['author'])
-            user_ids.append(params['author'])
+            user = User.get_by_uuid_or_404(params['author'])
+            query = query.filter(Answer.user_id == user.id)
+            user_ids.append(user.id)
         elif params['group']:
             # get all user ids in the group
             user_courses = UserCourse.query. \
                 filter_by(
-                    course_id=course_id,
+                    course_id=course.id,
                     group_name=params['group']
                 ). \
                 all()
             user_ids = [x.user_id for x in user_courses]
 
         if params['ids']:
-            query = query.filter(Answer.id.in_(params['ids'].split(',')))
+            query = query.filter(Answer.uuid.in_(params['ids'].split(',')))
 
         # place instructor and TA's answer at the top of the list
         inst_subquery = Answer.query \
             .with_entities(Answer.id.label('inst_answer')) \
             .join(UserCourse, Answer.user_id == UserCourse.user_id) \
             .filter(and_(
-                UserCourse.course_id == course_id,
+                UserCourse.course_id == course.id,
                 UserCourse.course_role == CourseRole.instructor
             ))
         ta_subquery = Answer.query \
             .with_entities(Answer.id.label('ta_answer')) \
             .join(UserCourse, Answer.user_id == UserCourse.user_id) \
             .filter(and_(
-                UserCourse.course_id == course_id,
+                UserCourse.course_id == course.id,
                 UserCourse.course_role == CourseRole.teaching_assistant
             ))
         query = query.order_by(Answer.id.in_(inst_subquery).desc(), Answer.id.in_(ta_subquery).desc())
 
         if params['orderBy'] and len(user_ids) != 1:
+            criterion = Criterion.get_active_by_uuid_or_404(params['orderBy'])
+
             # order answer ids by one criterion and pagination, in case there are multiple criteria in assignment
             # does not include answers without a score (Note: ta and instructor never have a score)
             query = query.join(Score) \
-                .filter(Score.criterion_id == params['orderBy'])
+                .filter(Score.criterion_id == criterion.id)
             query = query.order_by(Score.score.desc(), Answer.created.desc())
 
             # limit answers up to rank if rank_display_limit is set and current_user is restricted (student)
             if assignment.rank_display_limit and restrict_user:
                 score_for_rank = Score.get_score_for_rank(
-                    assignment_id, params['orderBy'], assignment.rank_display_limit)
+                    assignment.id, criterion.id, assignment.rank_display_limit)
 
                 # display answers with score >= score_for_rank
                 if score_for_rank != None:
@@ -162,23 +166,25 @@ class AnswerRootAPI(Resource):
             self,
             event_name=on_answer_list_get.name,
             user=current_user,
-            course_id=course_id,
-            data={'assignment_id': assignment_id})
+            course_id=course.id,
+            data={'assignment_id': assignment.id})
 
         return {"objects": marshal(page.items, dataformat.get_answer(restrict_user)),
                 "page": page.page, "pages": page.pages,
                 "total": page.total, "per_page": page.per_page}
 
     @login_required
-    def post(self, course_id, assignment_id):
-        Course.get_active_or_404(course_id)
-        assignment = Assignment.get_active_or_404(assignment_id)
+    def post(self, course_uuid, assignment_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+
         if not assignment.answer_grace and not allow(MANAGE, assignment):
             return {'error': answer_deadline_message}, 403
-        require(CREATE, Answer(course_id=course_id))
+
+        require(CREATE, Answer(course_id=course.id))
         restrict_user = not allow(MANAGE, assignment)
 
-        answer = Answer(assignment_id=assignment_id)
+        answer = Answer(assignment_id=assignment.id)
 
         params = new_answer_parser.parse_args()
         answer.content = params.get("content")
@@ -188,15 +194,20 @@ class AnswerRootAPI(Resource):
         if not (answer.content or file_name):
             return {"error": "The answer content is empty!"}, 400
 
-        user_id = params.get("user_id")
+        user_uuid = params.get("user_id")
         # we allow instructor and TA to submit multiple answers for other users in the class
-        if user_id and not allow(MANAGE, Answer(course_id=course_id)):
+        if user_uuid and not allow(MANAGE, Answer(course_id=course.id)):
             return {"error": "Only instructors and teaching assistants can submit an answer on behalf of another user."}, 400
 
-        answer.user_id = user_id if user_id else current_user.id
+        if user_uuid:
+            user = User.get_by_uuid_or_404(user_uuid)
+            answer.user_id = user.id
+        else:
+            answer.user_id = current_user.id
+
         user_course = UserCourse.query \
             .filter_by(
-                course_id=course_id,
+                course_id=course.id,
                 user_id=answer.user_id
             ) \
             .one_or_none()
@@ -214,7 +225,7 @@ class AnswerRootAPI(Resource):
             # check if there is a previous answer submitted for the student
             prev_answer = Answer.query. \
                 filter_by(
-                    assignment_id=assignment_id,
+                    assignment_id=assignment.id,
                     user_id=answer.user_id,
                     active=True
                 ). \
@@ -229,7 +240,7 @@ class AnswerRootAPI(Resource):
             self,
             event_name=on_answer_create.name,
             user=current_user,
-            course_id=course_id,
+            course_id=course.id,
             data=marshal(answer, dataformat.get_answer(restrict_user)))
 
         if file_name:
@@ -247,12 +258,12 @@ api.add_resource(AnswerRootAPI, '')
 # /id
 class AnswerIdAPI(Resource):
     @login_required
-    def get(self, course_id, assignment_id, answer_id):
-        Course.get_active_or_404(course_id)
-        assignment = Assignment.get_active_or_404(assignment_id)
+    def get(self, course_uuid, assignment_uuid, answer_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
-        answer = Answer.get_active_or_404(
-            answer_id,
+        answer = Answer.get_active_by_uuid_or_404(
+            answer_uuid,
             joinedloads=['file', 'user', 'scores']
         )
         require(READ, answer)
@@ -262,24 +273,26 @@ class AnswerIdAPI(Resource):
             self,
             event_name=on_answer_get.name,
             user=current_user,
-            course_id=course_id,
-            data={'assignment_id': assignment_id, 'answer_id': answer_id})
+            course_id=course.id,
+            data={'assignment_id': assignment.id, 'answer_id': answer.id})
 
         return marshal(answer, dataformat.get_answer(restrict_user))
 
     @login_required
-    def post(self, course_id, assignment_id, answer_id):
-        Course.get_active_or_404(course_id)
-        assignment = Assignment.get_active_or_404(assignment_id)
+    def post(self, course_uuid, assignment_uuid, answer_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+
         if not assignment.answer_grace and not allow(MANAGE, assignment):
             return {'error': answer_deadline_message}, 403
-        answer = Answer.get_active_or_404(answer_id)
+
+        answer = Answer.get_active_by_uuid_or_404(answer_uuid)
         require(EDIT, answer)
         restrict_user = not allow(MANAGE, assignment)
 
         params = existing_answer_parser.parse_args()
         # make sure the answer id in the url and the id matches
-        if params['id'] != answer_id:
+        if params['id'] != answer_uuid:
             return {"error": "Answer id does not match the URL."}, 400
 
         # modify answer according to new values, preserve original values if values not passed
@@ -299,7 +312,7 @@ class AnswerIdAPI(Resource):
             self,
             event_name=on_answer_modified.name,
             user=current_user,
-            course_id=course_id,
+            course_id=course.id,
             data=get_model_changes(answer))
 
         if file_name:
@@ -311,10 +324,10 @@ class AnswerIdAPI(Resource):
         return marshal(answer, dataformat.get_answer(restrict_user))
 
     @login_required
-    def delete(self, course_id, assignment_id, answer_id):
-        Course.get_active_or_404(course_id)
-        Assignment.get_active_or_404(assignment_id)
-        answer = Answer.get_active_or_404(answer_id)
+    def delete(self, course_uuid, assignment_uuid, answer_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+        answer = Answer.get_active_by_uuid_or_404(answer_uuid)
         require(DELETE, answer)
 
         answer.active = False
@@ -326,24 +339,24 @@ class AnswerIdAPI(Resource):
             self,
             event_name=on_answer_delete.name,
             user=current_user,
-            course_id=course_id,
-            data={'assignment_id': assignment_id, 'answer_id': answer_id})
+            course_id=course.id,
+            data={'assignment_id': assignment.id, 'answer_id': answer.id})
 
-        return {'id': answer.id}
+        return {'id': answer.uuid}
 
 
-api.add_resource(AnswerIdAPI, '/<int:answer_id>')
+api.add_resource(AnswerIdAPI, '/<answer_uuid>')
 
 
 # /comparisons
 class AnswerComparisonsAPI(Resource):
     @login_required
-    def get(self, course_id, assignment_id):
-        Course.get_active_or_404(course_id)
-        assignment = Assignment.get_active_or_404(assignment_id)
+    def get(self, course_uuid, assignment_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(READ, assignment)
 
-        can_read = allow(READ, Comparison(course_id=course_id))
+        can_read = allow(READ, Comparison(course_id=course.id))
         restrict_user = is_user_access_restricted(current_user)
 
         params = answer_comparison_list_parser.parse_args()
@@ -351,13 +364,13 @@ class AnswerComparisonsAPI(Resource):
         # each pagination entry would be one comparison set by a user for the assignment
         comparison_sets = Comparison.query \
             .with_entities(Comparison.user_id, Comparison.answer1_id, Comparison.answer2_id) \
-            .filter_by(assignment_id=assignment_id, completed=True) \
+            .filter_by(assignment_id=assignment.id, completed=True) \
             .group_by(Comparison.user_id, Comparison.answer1_id, Comparison.answer2_id)
 
         if not can_read:
             comparison_sets = comparison_sets.filter_by(user_id=current_user.id)
         elif params['author']:
-            comparison_sets = comparison_sets.filter_by(user_id=params['author'])
+            comparison_sets = comparison_sets.filter_by(user_uuid=params['author'])
         elif params['group']:
             subquery = User.query \
                 .with_entities(User.id) \
@@ -406,7 +419,7 @@ class AnswerComparisonsAPI(Resource):
                 conditions.append(and_(
                     AnswerComment.comment_type == AnswerCommentType.self_evaluation,
                     AnswerComment.user_id == user_id,
-                    AnswerComment.assignment_id == assignment_id
+                    AnswerComment.assignment_id == assignment.id
                 ))
 
             answer_comments = AnswerComment.query \
@@ -419,13 +432,13 @@ class AnswerComparisonsAPI(Resource):
                 default = group[0]
 
                 comparison_set = {
-                    'course_id': default.course_id,
-                    'assignment_id': default.assignment_id,
-                    'user_id': default.user_id,
+                    'course_uuid': default.course_uuid,
+                    'assignment_uuid': default.assignment_uuid,
+                    'user_uuid': default.user_uuid,
 
                     'comparisons': [comparison for comparison in group],
-                    'answer1_id': default.answer1_id,
-                    'answer2_id': default.answer2_id,
+                    'answer1_uuid': default.answer1_uuid,
+                    'answer2_uuid': default.answer2_uuid,
                     'answer1': default.answer1,
                     'answer2': default.answer2,
 
@@ -457,8 +470,8 @@ class AnswerComparisonsAPI(Resource):
             self,
             event_name=on_answer_comparisons_get.name,
             user=current_user,
-            course_id=course_id,
-            data={'assignment_id': assignment_id}
+            course_id=course.id,
+            data={'assignment_id': assignment.id}
         )
 
         return {'objects': marshal(results, dataformat.get_comparison_set(restrict_user)), "page": page.page,
@@ -471,16 +484,17 @@ api.add_resource(AnswerComparisonsAPI, '/comparisons')
 # /user
 class AnswerUserIdAPI(Resource):
     @login_required
-    def get(self, course_id, assignment_id):
+    def get(self, course_uuid, assignment_uuid):
         """
         Get answers submitted to the assignment submitted by current user
 
-        :param course_id:
-        :param assignment_id:
+        :param course_uuid:
+        :param assignment_uuid:
         :return: answers
         """
-        Course.get_active_or_404(course_id)
-        assignment = Assignment.get_active_or_404(assignment_id)
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+
         require(READ, Answer(user_id=current_user.id))
         restrict_user = not allow(MANAGE, assignment)
 
@@ -491,8 +505,8 @@ class AnswerUserIdAPI(Resource):
             options(joinedload('scores')). \
             filter_by(
                 active=True,
-                assignment_id=assignment_id,
-                course_id=course_id,
+                assignment_id=assignment.id,
+                course_id=course.id,
                 user_id=current_user.id
             ). \
             all()
@@ -501,8 +515,8 @@ class AnswerUserIdAPI(Resource):
             self,
             event_name=on_user_answer_get.name,
             user=current_user,
-            course_id=course_id,
-            data={'assignment_id': assignment_id})
+            course_id=course.id,
+            data={'assignment_id': assignment.id})
 
         return {"objects": marshal( answers, dataformat.get_answer(restrict_user))}
 
@@ -512,17 +526,18 @@ api.add_resource(AnswerUserIdAPI, '/user')
 # /flag
 class AnswerFlagAPI(Resource):
     @login_required
-    def post(self, course_id, assignment_id, answer_id):
+    def post(self, course_uuid, assignment_uuid, answer_uuid):
         """
         Mark an answer as inappropriate or incomplete to instructors
-        :param course_id:
-        :param assignment_id:
-        :param answer_id:
+        :param course_uuid:
+        :param assignment_uuid:
+        :param answer_uuid:
         :return: marked answer
         """
-        Course.get_active_or_404(course_id)
-        assignment = Assignment.get_active_or_404(assignment_id)
-        answer = Answer.get_active_or_404(answer_id)
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+        answer = Answer.get_active_by_uuid_or_404(answer_uuid)
+
         require(READ, answer)
         restrict_user = not allow(MANAGE, assignment)
 
@@ -541,11 +556,11 @@ class AnswerFlagAPI(Resource):
             self,
             event_name=on_answer_flag.name,
             user=current_user,
-            course_id=course_id,
-            assignment_id=assignment_id,
-            data={'answer_id': answer_id, 'flag': answer.flagged})
+            course_id=course.id,
+            assignment_id=assignment.id,
+            data={'answer_id': answer.id, 'flag': answer.flagged})
 
         db.session.commit()
         return marshal(answer, dataformat.get_answer(restrict_user))
 
-api.add_resource(AnswerFlagAPI, '/<int:answer_id>/flagged')
+api.add_resource(AnswerFlagAPI, '/<answer_uuid>/flagged')

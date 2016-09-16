@@ -3,7 +3,6 @@ import datetime
 import pytz
 
 # sqlalchemy
-from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import column_property
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -12,7 +11,7 @@ from . import *
 
 from acj.core import db
 
-class Course(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
+class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     # table columns
     name = db.Column(db.String(255), nullable=False)
     year = db.Column(db.Integer, nullable=False)

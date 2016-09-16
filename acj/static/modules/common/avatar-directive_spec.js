@@ -10,7 +10,7 @@ describe('avatar-directive', function () {
 
     it('should replace the element with the appropriate content', function() {
         $rootScope.$apply(function() {
-            $rootScope.userId = 1;
+            $rootScope.userId = "1abcABC123-abcABC123_Z";
             $rootScope.avatar = 'avatar-string';
             $rootScope.displayName = 'Optimus Prime';
         });
@@ -23,14 +23,14 @@ describe('avatar-directive', function () {
         expect(element.find('img').length).toBe(1);
         expect(element.find('img').attr('src')).toEqual('//www.gravatar.com/avatar/avatar-string?s=32&d=retro');
         expect(element.find('a').length).toBe(2);
-        expect(element.find('a').attr('href')).toEqual('#/user/1');
+        expect(element.find('a').attr('href')).toEqual('#/user/1abcABC123-abcABC123_Z');
         expect(element.find('span').length).toBe(0);
         expect(element.html()).toContain('Optimus Prime');
     });
 
     it('should show "(You)" if me is true', function() {
         $rootScope.$apply(function() {
-            $rootScope.userId = 1;
+            $rootScope.userId = "1abcABC123-abcABC123_Z";
             $rootScope.avatar = 'avatar-string';
             $rootScope.displayName = 'Optimus Prime';
         });
@@ -47,7 +47,7 @@ describe('avatar-directive', function () {
 
     it('should show "You" if me is true and no display name', function() {
         $rootScope.$apply(function() {
-            $rootScope.userId = 1;
+            $rootScope.userId = "1abcABC123-abcABC123_Z";
             $rootScope.avatar = 'avatar-string';
         });
         element = angular.element(
@@ -62,7 +62,7 @@ describe('avatar-directive', function () {
 
     it('should show full name when provided', function() {
         $rootScope.$apply(function() {
-            $rootScope.userId = 1;
+            $rootScope.userId = "1abcABC123-abcABC123_Z";
             $rootScope.avatar = 'avatar-string';
             $rootScope.displayName = 'Optimus Prime';
             $rootScope.fullName = 'John Smith';
@@ -79,7 +79,7 @@ describe('avatar-directive', function () {
 
     it('should not show full name if undefined', function() {
         $rootScope.$apply(function() {
-            $rootScope.userId = 1;
+            $rootScope.userId = "1abcABC123-abcABC123_Z";
             $rootScope.avatar = 'avatar-string';
             $rootScope.displayName = 'Optimus Prime';
         });

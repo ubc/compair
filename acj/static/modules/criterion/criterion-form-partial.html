@@ -1,5 +1,5 @@
 <p class="pull-right"><a href="" ng-click="cancel()">Cancel</a></p>
-<h1><span ng-hide="{{ criterion && criterion.id }}">Add</span><span ng-show="{{ criterion && criterion.id }}">Edit</span> Criterion</h1>
+<h1><span ng-hide="{{ criterion && criterion.id != null }}">Add</span><span ng-show="{{ criterion && criterion.id != null }}">Edit</span> Criterion</h1>
 <br />
 <ng-form name="criterionForm" class="form">
     <p ng-if="criterion.compared" class="intro-text bg-warning text-warning alert">

@@ -4,7 +4,6 @@ from datetime import datetime
 import time
 
 # sqlalchemy
-from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import synonym
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -26,7 +25,7 @@ def hash_password(password, is_admin=False):
 
 # Flask-Login requires the user class to have some methods, the easiest way
 # to get those methods is to inherit from the UserMixin class.
-class User(DefaultTableMixin, WriteTrackingMixin, UserMixin):
+class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     # table columns
     username = db.Column(db.String(255), unique=True, nullable=True)
     _password = db.Column(db.String(255), unique=False, nullable=True)

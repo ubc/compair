@@ -4,7 +4,6 @@ from datetime import datetime
 import time
 
 # sqlalchemy
-from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import synonym
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property

@@ -1,5 +1,4 @@
 # sqlalchemy
-from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -7,7 +6,7 @@ from . import *
 
 from acj.core import db
 
-class File(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
+class File(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     # table columns
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"),
         nullable=False)

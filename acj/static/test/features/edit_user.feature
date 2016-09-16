@@ -3,7 +3,7 @@ Feature: Edit Profile
 
   Scenario: Loading edit own profile as admin
     Given I'm a System Administrator
-    And I'm on 'user' page for user with id '1'
+    And I'm on 'user' page for user with id '1abcABC123-abcABC123_Z'
     When I select 'Edit' button
     Then I should be on the 'edit profile' page
     And I should not see the student number in the Account Details section
@@ -14,7 +14,7 @@ Feature: Edit Profile
 
   Scenario: Loading edit instructor's profile as admin
     Given I'm a System Administrator
-    And I'm on 'user' page for user with id '2'
+    And I'm on 'user' page for user with id '2abcABC123-abcABC123_Z'
     When I select 'Edit' button
     Then I should be on the 'edit profile' page
     And I should not see the student number in the Account Details section
@@ -25,7 +25,7 @@ Feature: Edit Profile
 
   Scenario: Loading edit own profile as instructor
     Given I'm an Instructor
-    And I'm on 'user' page for user with id '2'
+    And I'm on 'user' page for user with id '2abcABC123-abcABC123_Z'
     When I select 'Edit' button
     Then I should be on the 'edit profile' page
     And I should not see the student number in the Account Details section
@@ -36,7 +36,7 @@ Feature: Edit Profile
 
   Scenario: Edit own profile as instructor
     Given I'm an Instructor
-    And I'm on 'edit user' page for user with id '2'
+    And I'm on 'edit user' page for user with id '2abcABC123-abcABC123_Z'
     When I fill form item 'user.displayname' in with 'instructor123'
     And I fill form item 'user.firstname' in with 'instructor'
     And I fill form item 'user.lastname' in with '123'
@@ -48,7 +48,7 @@ Feature: Edit Profile
 
   Scenario: Change own password as instructor
     Given I'm an Instructor
-    And I'm on 'edit user' page for user with id '2'
+    And I'm on 'edit user' page for user with id '2abcABC123-abcABC123_Z'
     When I fill form item 'password.oldpassword' in with 'password'
     And I fill form item 'password.newpassword' in with 'password2'
     And I fill form item 'password.verifypassword' in with 'password2'
@@ -58,7 +58,7 @@ Feature: Edit Profile
 
   Scenario: Loading edit another user's profile as instructor
     Given I'm an Instructor with students
-    And I'm on 'user' page for user with id '3'
+    And I'm on 'user' page for user with id '3abcABC123-abcABC123_Z'
     When I select 'Edit' button
     Then I should be on the 'edit profile' page
     And I should see the student number in the Account Details section
@@ -69,7 +69,7 @@ Feature: Edit Profile
 
   Scenario: Edit another user's profile as instructor
     Given I'm an Instructor with students
-    And I'm on 'edit user' page for user with id '3'
+    And I'm on 'edit user' page for user with id '3abcABC123-abcABC123_Z'
     When I fill form item 'user.displayname' in with 'student123'
     And I fill form item 'user.firstname' in with 'student'
     And I fill form item 'user.lastname' in with '123'
@@ -82,7 +82,7 @@ Feature: Edit Profile
 
   Scenario: Loading edit own profile as student
     Given I'm a Student
-    And I'm on 'user' page for user with id '3'
+    And I'm on 'user' page for user with id '3abcABC123-abcABC123_Z'
     When I select 'Edit' button
     Then I should be on the 'edit profile' page
     And I should see the student number in the Account Details section
@@ -93,7 +93,7 @@ Feature: Edit Profile
 
   Scenario: Edit own profile as student
     Given I'm a Student
-    And I'm on 'edit user' page for user with id '3'
+    And I'm on 'edit user' page for user with id '3abcABC123-abcABC123_Z'
     When I fill form item 'user.displayname' in with 'student123'
     And I fill form item 'user.firstname' in with 'student'
     And I fill form item 'user.lastname' in with '123'
@@ -106,7 +106,7 @@ Feature: Edit Profile
 
   Scenario: Change own password as student
     Given I'm a Student
-    And I'm on 'edit user' page for user with id '3'
+    And I'm on 'edit user' page for user with id '3abcABC123-abcABC123_Z'
     When I fill form item 'password.oldpassword' in with 'password'
     And I fill form item 'password.newpassword' in with 'password2'
     And I fill form item 'password.verifypassword' in with 'password2'
@@ -116,7 +116,7 @@ Feature: Edit Profile
 
   Scenario: Loading edit own profile as CWL instructor
     Given I'm a CWL Instructor with students
-    And I'm on 'user' page for user with id '2'
+    And I'm on 'user' page for user with id '2abcABC123-abcABC123_Z'
     When I select 'Edit' button
     Then I should be on the 'edit profile' page
     And I should not see the student number in the Account Details section
@@ -127,7 +127,7 @@ Feature: Edit Profile
 
   Scenario: Edit own profile as CWL instructor
     Given I'm a CWL Instructor with students
-    And I'm on 'edit user' page for user with id '2'
+    And I'm on 'edit user' page for user with id '2abcABC123-abcABC123_Z'
     When I fill form item 'user.displayname' in with 'instructor123'
     And I fill form item 'user.firstname' in with 'instructor'
     And I fill form item 'user.lastname' in with '123'
@@ -138,7 +138,7 @@ Feature: Edit Profile
 
   Scenario: Loading edit another user's profile as CWL instructor
     Given I'm a CWL Instructor with students
-    And I'm on 'user' page for user with id '3'
+    And I'm on 'user' page for user with id '3abcABC123-abcABC123_Z'
     When I select 'Edit' button
     Then I should be on the 'edit profile' page
     And I should see the student number in the Account Details section
@@ -149,7 +149,7 @@ Feature: Edit Profile
 
   Scenario: Edit another user's profile as CWL instructor
     Given I'm a CWL Instructor with students
-    And I'm on 'edit user' page for user with id '3'
+    And I'm on 'edit user' page for user with id '3abcABC123-abcABC123_Z'
     When I fill form item 'user.displayname' in with 'student123'
     And I fill form item 'user.firstname' in with 'student'
     And I fill form item 'user.lastname' in with '123'

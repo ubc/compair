@@ -6,19 +6,19 @@ var sessionFactory = new SessionFactory();
 
 var storage = {
     session: {},
-    users: []
+    users: {}
 }
 
-var admin = userFactory.generateUser(1, "System Administrator", {
+var admin = userFactory.generateUser("1abcABC123-abcABC123_Z", "System Administrator", {
     username: "root",
     displayname: "root",
     firstname: "JaNy",
     lastname: "bwsV",
     fullname: "JaNy bwsV",
 });
-storage.users.push(admin);
+storage.users[admin.id] = admin;
 
-var instructor = userFactory.generateUser(2, "Instructor", {
+var instructor = userFactory.generateUser("2abcABC123-abcABC123_Z", "Instructor", {
     username: "instructor1",
     displayname: "First Instructor",
     firstname: "First",
@@ -26,7 +26,7 @@ var instructor = userFactory.generateUser(2, "Instructor", {
     fullname: "First Instructor",
     email: "first.instructor@exmple.com"
 });
-storage.users.push(instructor);
+storage.users[instructor.id] = instructor;
 
 
 

@@ -13,7 +13,7 @@ from . import *
 
 from acj.core import db
 
-class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
+class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     # table columns
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"),
         nullable=False)
@@ -55,10 +55,14 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     lti_resource_links = db.relationship("LTIResourceLink", backref="acj_assignment", lazy='dynamic')
 
     # hyprid and other functions
+    course_uuid = association_proxy('course', 'uuid')
+
     user_avatar = association_proxy('user', 'avatar')
+    user_uuid = association_proxy('user', 'uuid')
     user_displayname = association_proxy('user', 'displayname')
     user_fullname = association_proxy('user', 'fullname')
     user_system_role = association_proxy('user', 'system_role')
+
     lti_linkable = association_proxy('course', 'lti_linked')
 
     @hybrid_property
@@ -154,7 +158,7 @@ class Assignment(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
 
     def __repr__(self):
         if self.id:
-            return "assignment " + str(self.id)
+            return "assignment " + self.uuid
         else:
             return "assignment"
 

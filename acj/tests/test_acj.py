@@ -12,6 +12,7 @@ from six import wraps
 from acj import create_app
 from acj.manage.database import populate
 from acj.core import db
+from acj.models import User
 from acj.tests import test_app_settings
 from lti import ToolConsumer
 from lti.utils import parse_qs
@@ -105,12 +106,12 @@ class ACJAPITestCase(ACJTestCase):
 
     @contextmanager
     def lti_launch(self, lti_consumer, lti_resource_link_id,
-                         assignment_id=None, nonce=None, timestamp=None, follow_redirects=True,
+                         assignment_uuid=None, nonce=None, timestamp=None, follow_redirects=True,
                          **kwargs):
         launch_params = kwargs.copy()
         launch_params['resource_link_id'] = lti_resource_link_id
-        if assignment_id:
-            launch_params['custom_assignment'] = assignment_id
+        if assignment_uuid:
+            launch_params['custom_assignment'] = assignment_uuid
 
         tool_consumer = ToolConsumer(
             lti_consumer.oauth_consumer_key,
@@ -136,7 +137,8 @@ class SessionTests(ACJAPITestCase):
             rv = self.client.get('/api/session')
             self.assert200(rv)
             root = rv.json
-            self.assertEqual(root['id'], 1)
+            root_user = User.query.filter_by(username="root").first()
+            self.assertEqual(root['id'], root_user.uuid)
 
     def test_non_loggedin_user_session(self):
         rv = self.client.get('/api/session')

@@ -17,7 +17,7 @@ class CoursesAPITests(ACJAPITestCase):
             course_expected.name, course_actual['name'],
             "Expected course name does not match actual.")
         self.assertEqual(
-            course_expected.id, course_actual['id'],
+            course_expected.uuid, course_actual['id'],
             "Expected course id does not match actual.")
         self.assertEqual(
             course_expected.description, course_actual['description'],
@@ -33,7 +33,7 @@ class CoursesAPITests(ACJAPITestCase):
             "Expected course availability does not match actual.")
 
     def test_get_single_course(self):
-        course_api_url = '/api/courses/' + str(self.data.get_course().id)
+        course_api_url = '/api/courses/' + self.data.get_course().uuid
 
         # Test login required
         rv = self.client.get(course_api_url)
@@ -69,27 +69,6 @@ class CoursesAPITests(ACJAPITestCase):
         with self.login("root"):
             rv = self.client.get('/api/courses/38940450')
             self.assert404(rv)
-
-    def test_get_all_courses(self):
-        course_api_url = '/api/courses'
-
-        # Test login required
-        rv = self.client.get(course_api_url)
-        self.assert401(rv)
-
-        # Test only root can get a list of all courses
-        with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.get(course_api_url)
-            self.assert403(rv)
-
-        with self.login(self.data.get_authorized_student().username):
-            rv = self.client.get(course_api_url)
-            self.assert403(rv)
-
-        with self.login("root"):
-            rv = self.client.get(course_api_url)
-            self.assert200(rv)
-            self._verify_course_info(self.data.get_course(), rv.json['objects'][0])
 
     def test_create_course(self):
         course_expected = {
@@ -127,7 +106,7 @@ class CoursesAPITests(ACJAPITestCase):
             self.assertTrue(course_actual['available'])
 
             # Verify the course is created in db
-            course_in_db = Course.query.get(course_actual['id'])
+            course_in_db = Course.query.filter_by(uuid=course_actual['id']).first()
             self.assertEqual(course_in_db.name, course_actual['name'])
             self.assertEqual(course_in_db.year, course_actual['year'])
             self.assertEqual(course_in_db.term, course_actual['term'])
@@ -138,7 +117,7 @@ class CoursesAPITests(ACJAPITestCase):
             user_course = UserCourse.query \
                 .filter_by(
                     user_id=self.data.get_authorized_instructor().id,
-                    course_id=course_actual['id']
+                    course_uuid=course_actual['id']
                 ) \
                 .one_or_none()
             self.assertIsNotNone(user_course)
@@ -174,7 +153,7 @@ class CoursesAPITests(ACJAPITestCase):
 
     def test_edit_course(self):
         expected = {
-            'id': self.data.get_course().id,
+            'id': self.data.get_course().uuid,
             'name': 'ExpectedCourse',
             'year': 2015,
             'term': 'Winter',
@@ -182,7 +161,7 @@ class CoursesAPITests(ACJAPITestCase):
             'end_date': None,
             'description': 'Test Description'
         }
-        url = '/api/courses/' + str(self.data.get_course().id)
+        url = '/api/courses/' + self.data.get_course().uuid
 
         # test login required
         rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
@@ -195,7 +174,7 @@ class CoursesAPITests(ACJAPITestCase):
 
             # test unmatched course id
             rv = self.client.post(
-                '/api/courses/' + str(self.data.get_secondary_course().id),
+                '/api/courses/' + self.data.get_secondary_course().uuid,
                 data=json.dumps(expected), content_type='application/json')
             self.assert400(rv)
 
@@ -236,7 +215,7 @@ class CoursesAPITests(ACJAPITestCase):
             self.assertTrue(rv.json['available'])
 
     def test_duplicate_course_simple(self):
-        url = '/api/courses/' + str(self.data.get_course().id) + '/duplicate'
+        url = '/api/courses/' + self.data.get_course().uuid + '/duplicate'
         expected = {
             'year': 2015,
             'term': 'Winter',
@@ -275,7 +254,7 @@ class CoursesAPITests(ACJAPITestCase):
             self.assert200(rv)
 
             # verify course duplicated correctly
-            self.assertNotEqual(original_course.id, rv.json['id'])
+            self.assertNotEqual(original_course.uuid, rv.json['id'])
             self.assertEqual(original_course.name, rv.json['name'])
             self.assertEqual(expected['year'], rv.json['year'])
             self.assertEqual(expected['term'], rv.json['term'])
@@ -285,7 +264,7 @@ class CoursesAPITests(ACJAPITestCase):
             user_course = UserCourse.query \
                 .filter_by(
                     user_id=self.data.get_authorized_instructor().id,
-                    course_id=rv.json['id']
+                    course_uuid=rv.json['id']
                 ) \
                 .one_or_none()
             self.assertIsNotNone(user_course)
@@ -294,7 +273,7 @@ class CoursesDuplicateComplexAPITests(ACJAPITestCase):
     def setUp(self):
         super(CoursesDuplicateComplexAPITests, self).setUp()
         self.data = ComparisonTestData()
-        self.url = '/api/courses/' + str(self.data.get_course().id) + '/duplicate'
+        self.url = '/api/courses/' + self.data.get_course().uuid + '/duplicate'
         self.expected = {
             'year': 2015,
             'term': 'Winter',
@@ -308,11 +287,12 @@ class CoursesDuplicateComplexAPITests(ACJAPITestCase):
             rv = self.client.post(self.url, data=json.dumps(self.expected), content_type='application/json')
             self.assert200(rv)
 
-            duplicate_course = Course.query.get(rv.json['id'])
+            duplicate_course = Course.query.filter_by(uuid=rv.json['id']).first()
             self.assertIsNotNone(duplicate_course)
 
             # verify course duplicated correctly
             self.assertNotEqual(original_course.id, duplicate_course.id)
+            self.assertNotEqual(original_course.uuid, duplicate_course.uuid)
             self.assertEqual(original_course.name, duplicate_course.name)
             self.assertEqual(self.expected['year'], duplicate_course.year)
             self.assertEqual(self.expected['term'], duplicate_course.term)
@@ -322,7 +302,7 @@ class CoursesDuplicateComplexAPITests(ACJAPITestCase):
             user_course = UserCourse.query \
                 .filter_by(
                     user_id=self.data.get_authorized_instructor().id,
-                    course_id=rv.json['id']
+                    course_uuid=rv.json['id']
                 ) \
                 .one_or_none()
             self.assertIsNotNone(user_course)
@@ -337,6 +317,7 @@ class CoursesDuplicateComplexAPITests(ACJAPITestCase):
                 duplicate_assignment = duplicate_assignments[index]
 
                 self.assertNotEqual(original_assignment.id, duplicate_assignment.id)
+                self.assertNotEqual(original_assignment.uuid, duplicate_assignment.uuid)
                 self.assertEqual(duplicate_course.id, duplicate_assignment.course_id)
                 self.assertEqual(original_assignment.name, duplicate_assignment.name)
                 self.assertEqual(original_assignment.description, duplicate_assignment.description)

@@ -792,7 +792,7 @@ module.controller("AssignmentWriteController",
             $scope.availableCriteria = ret.objects;
             if (!$scope.assignment.criteria.length) {
                 // if we don't have any criterion, e.g. new assignment, add a default one automatically
-                $scope.assignment.criteria.push(_.find($scope.availableCriteria, {id: 1}));
+                $scope.assignment.criteria.push(_.find($scope.availableCriteria, {public: true}));
             }
             // we need to remove the existing assignment criteria from available list
             $scope.availableCriteria = _.filter($scope.availableCriteria, function(c) {

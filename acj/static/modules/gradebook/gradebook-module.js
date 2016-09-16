@@ -112,7 +112,7 @@ module.controller("GradebookController",
 
         $scope.groupFilter = function() {
             return function (entry) {
-                return entry.userid in userIds;
+                return entry.user_id in userIds;
             }
         };
 

@@ -6,6 +6,7 @@ var criterionTemplate = {
     "name": null,
     "description": null,
     "default": true,
+    "public": false,
     "compared": false,
     "created": "Mon, 18 Apr 2016 17:38:23 -0000",
     "modified": "Mon, 18 Apr 2016 17:38:23 -0000",
@@ -23,11 +24,12 @@ CriterionFactory.prototype.generateCriterion = function (id, user_id, parameters
 
 CriterionFactory.prototype.getDefaultCriterion = function () {
     return {
-        "id": 1,
-        "user_id": 1,
+        "id": "abcABC123-abcABC123_Z",
+        "user_id": "abcABC123-abcABC123_Z",
         "name": "Which is better?",
         "description": "<p>Choose the response that you think is the better of the two.</p>",
         "default": true,
+        "public": true,
         "compared": false,
         "created": "Mon, 18 Apr 2016 17:38:23 -0000",
         "modified": "Mon, 18 Apr 2016 17:38:23 -0000",

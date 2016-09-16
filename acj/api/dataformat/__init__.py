@@ -19,7 +19,7 @@ class UnwrapPairingAlgorithm(fields.Raw):
 
 def get_partial_user(restrict_user=True):
     ret = {
-        'id': fields.Integer(attribute="user_id"),
+        'id': fields.String(attribute="user_uuid"),
         'displayname': fields.String(attribute="user_displayname"),
         'avatar': fields.String(attribute="user_avatar"),
     }
@@ -30,7 +30,7 @@ def get_partial_user(restrict_user=True):
 
 def get_user(restrict_user=True):
     restricted = {
-        'id': fields.Integer,
+        'id': fields.String(attribute="uuid"),
         'displayname': fields.String,
         'avatar': fields.String,
         'last_online': fields.DateTime(dt_format='iso8601'),
@@ -63,7 +63,7 @@ def get_users_in_course(restrict_user=True):
 
 def get_course(include_details=True):
     return {
-        'id': fields.Integer,
+        'id': fields.String(attribute="uuid"),
         'name': fields.String,
         'year': fields.Integer,
         'term': fields.String,
@@ -78,10 +78,11 @@ def get_course(include_details=True):
 
 def get_criterion():
     data_format = {
-        'id': fields.Integer,
+        'id': fields.String(attribute="uuid"),
         'name': fields.String,
         'description': fields.String,
-        'user_id': fields.Integer,
+        'user_id': fields.String(attribute="user_uuid"),
+        'public': fields.Boolean,
         'default': fields.Boolean,
         'compared': fields.Boolean,
         'modified': fields.DateTime(dt_format='iso8601'),
@@ -92,9 +93,9 @@ def get_criterion():
 
 def get_assignment(restrict_user=True):
     ret = {
-        'id': fields.Integer,
-        'course_id': fields.Integer,
-        'user_id': fields.Integer,
+        'id': fields.String(attribute="uuid"),
+        'course_id': fields.String(attribute="course_uuid"),
+        'user_id': fields.String(attribute="user_uuid"),
 
         'name': fields.String,
         'description': fields.String,
@@ -138,10 +139,10 @@ def get_assignment(restrict_user=True):
 
 def get_answer(restrict_user=True):
     ret = {
-        'id': fields.Integer,
-        'course_id': fields.Integer,
-        'assignment_id': fields.Integer,
-        'user_id': fields.Integer,
+        'id': fields.String(attribute="uuid"),
+        'course_id': fields.String(attribute="course_uuid"),
+        'assignment_id': fields.String(attribute="assignment_uuid"),
+        'user_id': fields.String(attribute="user_uuid"),
 
         'content': fields.String,
         'file': fields.Nested(get_file(), allow_null=True),
@@ -164,10 +165,10 @@ def get_answer(restrict_user=True):
 
 def get_assignment_comment(restrict_user=True):
     ret = {
-        'id': fields.Integer,
-        'course_id': fields.Integer,
-        'assignment_id': fields.Integer,
-        'user_id': fields.Integer,
+        'id': fields.String(attribute="uuid"),
+        'course_id': fields.String(attribute="course_uuid"),
+        'assignment_id': fields.String(attribute="assignment_uuid"),
+        'user_id': fields.String(attribute="user_uuid"),
         'content': fields.String,
 
         'user': get_partial_user(restrict_user),
@@ -179,11 +180,11 @@ def get_assignment_comment(restrict_user=True):
 
 def get_answer_comment(restrict_user=True):
     ret = {
-        'id': fields.Integer,
-        'course_id': fields.Integer,
-        'assignment_id': fields.Integer,
-        'answer_id': fields.Integer,
-        'user_id': fields.Integer,
+        'id': fields.String(attribute="uuid"),
+        'course_id': fields.String(attribute="course_uuid"),
+        'assignment_id': fields.String(attribute="assignment_uuid"),
+        'answer_id': fields.String(attribute="answer_uuid"),
+        'user_id': fields.String(attribute="user_uuid"),
         'content': fields.String,
         'comment_type': UnwrapAnswerCommentType(attribute='comment_type'),
         'draft': fields.Boolean,
@@ -197,7 +198,7 @@ def get_answer_comment(restrict_user=True):
 
 def get_file():
     return {
-        'id': fields.Integer,
+        'id': fields.String(attribute="uuid"),
         'name': fields.String,
         'alias': fields.String
     }
@@ -205,13 +206,13 @@ def get_file():
 
 def get_comparison(restrict_user=True, with_answers=True):
     ret = {
-        'course_id': fields.Integer,
-        'assignment_id': fields.Integer,
-        'criterion_id': fields.Integer,
-        'user_id': fields.Integer,
-        'answer1_id': fields.Integer,
-        'answer2_id': fields.Integer,
-        'winner_id': fields.Integer(default=None),
+        'course_id': fields.String(attribute="course_uuid"),
+        'assignment_id': fields.String(attribute="assignment_uuid"),
+        'criterion_id': fields.String(attribute="criterion_uuid"),
+        'answer1_id': fields.String(attribute="answer1_uuid"),
+        'answer2_id': fields.String(attribute="answer2_uuid"),
+        'user_id': fields.String(attribute="user_uuid"),
+        'winner_id': fields.String(attribute="winner_uuid", default=None),
 
         'content': fields.String,
         'criterion': fields.Nested(get_criterion()),
@@ -230,11 +231,11 @@ def get_comparison(restrict_user=True, with_answers=True):
 
 def get_comparison_example(with_answers=True):
     ret = {
-        'id': fields.Integer,
-        'course_id': fields.Integer,
-        'assignment_id': fields.Integer,
-        'answer1_id': fields.Integer,
-        'answer2_id': fields.Integer,
+        'id': fields.String(attribute="uuid"),
+        'course_id': fields.String(attribute="course_uuid"),
+        'assignment_id': fields.String(attribute="assignment_uuid"),
+        'answer1_id': fields.String(attribute="answer1_uuid"),
+        'answer2_id': fields.String(attribute="answer2_uuid"),
         'modified': fields.DateTime(dt_format='iso8601'),
         'created': fields.DateTime(dt_format='iso8601')
     }
@@ -249,16 +250,16 @@ def get_comparison_example(with_answers=True):
 
 def get_comparison_set(restrict_user=True):
     ret = {
-        'course_id': fields.Integer,
-        'assignment_id': fields.Integer,
-        'user_id': fields.Integer,
+        'course_id': fields.String(attribute="course_uuid"),
+        'assignment_id': fields.String(attribute="assignment_uuid"),
+        'user_id': fields.String(attribute="user_uuid"),
 
         'comparisons': fields.List(fields.Nested(get_comparison(
             restrict_user=restrict_user, with_answers=False
         ))),
 
-        'answer1_id': fields.Integer,
-        'answer2_id': fields.Integer,
+        'answer1_id': fields.String(attribute="answer1_uuid"),
+        'answer2_id': fields.String(attribute="answer2_uuid"),
         'answer1': fields.Nested(get_answer()),
         'answer2': fields.Nested(get_answer()),
 
@@ -273,16 +274,15 @@ def get_comparison_set(restrict_user=True):
     return ret
 
 def get_import_users_results(restrict_user=True):
-    user = get_user(restrict_user)
     return {
-        'user': fields.Nested(user),
+        'user': fields.Nested(get_user(restrict_user)),
         'message': fields.String
     }
 
 
 def get_score(restrict_user=True):
     ret = {
-        'criterion_id': fields.Integer,
+        'criterion_id': fields.String(attribute="criterion_uuid"),
         'rank': fields.Integer
     }
     if not restrict_user:

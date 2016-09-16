@@ -12,14 +12,14 @@ class AssignmentCommentsAPITests(ACJAPITestCase):
         self.assignment1 = self.data.get_assignments()[0]
         self.assignment2 = self.data.get_assignments()[1]
 
-    def _build_url(self, course_id, assignment_id, comment_id=None):
-        url = '/api/courses/' + str(course_id) + '/assignments/' + str(assignment_id) + '/comments'
-        if comment_id:
-            url += '/' + str(comment_id)
+    def _build_url(self, course_uuid, assignment_uuid, comment_uuid=None):
+        url = '/api/courses/' + course_uuid + '/assignments/' + assignment_uuid + '/comments'
+        if comment_uuid:
+            url += '/' + comment_uuid
         return url
 
     def test_get_all_assignment_comment(self):
-        url = self._build_url(self.course.id, self.assignment2.id)
+        url = self._build_url(self.course.uuid, self.assignment2.uuid)
 
         # test login required
         rv = self.client.get(url)
@@ -32,11 +32,11 @@ class AssignmentCommentsAPITests(ACJAPITestCase):
 
         # test invalid course id
         with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.get(self._build_url(999, self.assignment2.id))
+            rv = self.client.get(self._build_url("999", self.assignment2.uuid))
             self.assert404(rv)
 
             # test invalid assignment id
-            rv = self.client.get(self._build_url(self.course.id, 999))
+            rv = self.client.get(self._build_url(self.course.uuid, "999"))
             self.assert404(rv)
 
             # test authorized user
@@ -44,11 +44,11 @@ class AssignmentCommentsAPITests(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual(1, len(rv.json['objects']))
             comment = self.data.get_instructor_assignment_comment()
-            self.assertEqual(comment.id, rv.json['objects'][0]['id'])
+            self.assertEqual(comment.uuid, rv.json['objects'][0]['id'])
             self.assertEqual(comment.content, rv.json['objects'][0]['content'])
 
     def test_create_assignment_comment(self):
-        url = self._build_url(self.course.id, self.assignment1.id)
+        url = self._build_url(self.course.uuid, self.assignment1.uuid)
         content = {
             'content': 'This is some text.'
         }
@@ -65,14 +65,14 @@ class AssignmentCommentsAPITests(ACJAPITestCase):
         # test invalid course id
         with self.login(self.data.get_authorized_student().username):
             rv = self.client.post(
-                self._build_url(999, self.assignment1.id),
+                self._build_url("999", self.assignment1.uuid),
                 data=json.dumps(content),
                 content_type='application/json')
             self.assert404(rv)
 
             # test invalid assignment id
             rv = self.client.post(
-                self._build_url(self.course.id, 999),
+                self._build_url(self.course.uuid, "999"),
                 data=json.dumps(content),
                 content_type='application/json')
             self.assert404(rv)
@@ -89,7 +89,7 @@ class AssignmentCommentsAPITests(ACJAPITestCase):
 
     def test_get_single_assignment_comment(self):
         comment = self.data.get_student_assignment_comment()
-        url = self._build_url(self.course.id, self.assignment2.id, comment.id)
+        url = self._build_url(self.course.uuid, self.assignment2.uuid, comment.uuid)
 
         # test login required
         rv = self.client.get(url)
@@ -102,15 +102,15 @@ class AssignmentCommentsAPITests(ACJAPITestCase):
 
         # test invalid course id
         with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.get(self._build_url(999, self.assignment2.id, comment.id))
+            rv = self.client.get(self._build_url("999", self.assignment2.uuid, comment.uuid))
             self.assert404(rv)
 
             # test invalid assignment id
-            rv = self.client.get(self._build_url(self.course.id, 999, comment.id))
+            rv = self.client.get(self._build_url(self.course.uuid, "999", comment.uuid))
             self.assert404(rv)
 
             # test invalid comment id
-            rv = self.client.get(self._build_url(self.course.id, self.assignment2.id, 999))
+            rv = self.client.get(self._build_url(self.course.uuid, self.assignment2.uuid, "999"))
             self.assert404(rv)
 
             # test authorized instructor
@@ -132,9 +132,9 @@ class AssignmentCommentsAPITests(ACJAPITestCase):
 
     def test_edit_assignment_comment(self):
         comment = self.data.get_student_assignment_comment()
-        url = self._build_url(self.course.id, self.assignment2.id, comment.id)
+        url = self._build_url(self.course.uuid, self.assignment2.uuid, comment.uuid)
         content = {
-            'id': comment.id,
+            'id': comment.uuid,
             'content': 'new comment'
         }
 
@@ -150,28 +150,28 @@ class AssignmentCommentsAPITests(ACJAPITestCase):
         # test unmatched comment id
         with self.login(self.data.get_authorized_instructor().username):
             invalid = content.copy()
-            invalid['id'] = self.data.get_instructor_assignment_comment().id
+            invalid['id'] = self.data.get_instructor_assignment_comment().uuid
             rv = self.client.post(url, data=json.dumps(invalid), content_type='application/json')
             self.assert400(rv)
             self.assertEqual("Comment id does not match URL.", rv.json['error'])
 
             # test invalid course id
             rv = self.client.post(
-                self._build_url(999, self.assignment2.id, comment.id),
+                self._build_url("999", self.assignment2.uuid, comment.uuid),
                 data=json.dumps(content),
                 content_type='application/json')
             self.assert404(rv)
 
             # test invalid assignment id
             rv = self.client.post(
-                self._build_url(self.course.id, 999, comment.id),
+                self._build_url(self.course.uuid, "999", comment.uuid),
                 data=json.dumps(content),
                 content_type='application/json')
             self.assert404(rv)
 
             # test invalid comment id
             rv = self.client.post(
-                self._build_url(self.course.id, self.assignment2.id, 999),
+                self._build_url(self.course.uuid, self.assignment2.uuid, "999"),
                 data=json.dumps(content),
                 content_type='application/json')
             self.assert404(rv)
@@ -197,7 +197,7 @@ class AssignmentCommentsAPITests(ACJAPITestCase):
 
     def test_delete_assignment_comment(self):
         comment = self.data.get_instructor_assignment_comment()
-        url = self._build_url(self.course.id, self.assignment2.id, comment.id)
+        url = self._build_url(self.course.uuid, self.assignment2.uuid, comment.uuid)
 
         # test login required
         rv = self.client.delete(url)
@@ -210,17 +210,17 @@ class AssignmentCommentsAPITests(ACJAPITestCase):
 
         # test invalid comment id
         with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.delete(self._build_url(self.course.id, self.assignment2.id, 999))
+            rv = self.client.delete(self._build_url(self.course.uuid, self.assignment2.uuid, "999"))
             self.assert404(rv)
 
             # test author
             rv = self.client.delete(url)
             self.assert200(rv)
-            self.assertEqual(comment.id, rv.json['id'])
+            self.assertEqual(comment.uuid, rv.json['id'])
 
             # test authorized instructor
             comment = self.data.get_student_assignment_comment()
-            url = self._build_url(self.course.id, self.assignment1.id, comment.id)
+            url = self._build_url(self.course.uuid, self.assignment1.uuid, comment.uuid)
             rv = self.client.delete(url)
             self.assert200(rv)
-            self.assertEqual(comment.id, rv.json['id'])
+            self.assertEqual(comment.uuid, rv.json['id'])

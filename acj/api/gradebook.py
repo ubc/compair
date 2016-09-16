@@ -34,24 +34,23 @@ def normalize_score(score, max_score, ndigits=0):
 # /
 class GradebookAPI(Resource):
     @login_required
-    def get(self, course_id, assignment_id):
-        Course.get_active_or_404(course_id)
-
-        assignment = Assignment.get_active_or_404(
-            assignment_id,
+    def get(self, course_uuid, assignment_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(
+            assignment_uuid,
             joinedloads=['assignment_criteria']
         )
         require(MANAGE, assignment)
 
         # get all students in this course
-        students = User.query. \
-            with_entities(User.id, User.displayname, User.firstname, User.lastname). \
-            join(UserCourse, UserCourse.user_id == User.id). \
-            filter(
-                UserCourse.course_id == course_id,
-                UserCourse.course_role == CourseRole.student,
-            ). \
-            all()
+        students = User.query \
+            .with_entities(User.id, User.uuid, User.displayname, User.firstname, User.lastname) \
+            .join(UserCourse, UserCourse.user_id == User.id) \
+            .filter_by(
+                course_id=course.id,
+                course_role=CourseRole.student
+            ) \
+            .all()
         student_ids = [student.id for student in students]
 
         # get students comparisons counts for this assignment
@@ -59,7 +58,7 @@ class GradebookAPI(Resource):
             .with_entities(User.id, func.count(Comparison.id).label('compare_count')) \
             .join("comparisons") \
             .filter(and_(
-                Comparison.assignment_id == assignment_id,
+                Comparison.assignment_id == assignment.id,
                 Comparison.completed == True,
                 User.id.in_(student_ids)
             )) \
@@ -79,7 +78,7 @@ class GradebookAPI(Resource):
                 Answer.id == Score.answer_id,
                 Score.criterion_id.in_(criterion_ids))). \
             filter(and_(
-                Answer.assignment_id == assignment_id,
+                Answer.assignment_id == assignment.id,
                 Answer.draft == False,
                 Answer.practice == False
             )). \
@@ -101,7 +100,7 @@ class GradebookAPI(Resource):
             if score[1] is not None:
                 flagged_by_user_id[score[0]] = 'Yes' if score[1] else 'No'
                 num_answers_per_student[score[0]] = 1
-                if score[2] is not None:
+                if score[2] is not None and score[3] is not None:
                     scores_by_user_id[score[0]][score[2]] = round(score[3], 3)
             else:
                 # no answer from the student
@@ -118,7 +117,7 @@ class GradebookAPI(Resource):
                 .filter_by(draft=False) \
                 .join(Answer, and_(
                     Answer.id == AnswerComment.answer_id,
-                    Answer.assignment_id == assignment_id)) \
+                    Answer.assignment_id == assignment.id)) \
                 .group_by(AnswerComment.user_id) \
                 .subquery()
 
@@ -138,13 +137,16 @@ class GradebookAPI(Resource):
         no_answer = {criterion.id: 'No Answer' for criterion in assignment.criteria}
         for student in students:
             entry = {
-                'userid': student.id,
+                'user_id': student.uuid,
                 'displayname': student.displayname,
                 'firstname': student.firstname,
                 'lastname': student.lastname,
                 'num_answers': num_answers_per_student.get(student.id, 0),
                 'num_comparisons': num_comparisons_per_student.get(student.id, 0),
-                'scores': scores_by_user_id.get(student.id, no_answer),
+                'scores': {
+                    criterion.uuid: scores_by_user_id.get(student.id, no_answer).get(criterion.id)
+                        for criterion in assignment.criteria
+                },
                 'flagged': flagged_by_user_id.get(student.id, 'No Answer')
             }
             if include_self_evaluation:
@@ -161,8 +163,8 @@ class GradebookAPI(Resource):
             self,
             event_name=on_gradebook_get.name,
             user=current_user,
-            course_id=course_id,
-            data={'assignment_id': assignment_id})
+            course_id=course.id,
+            data={'assignment_id': assignment.id})
 
         return jsonify(ret)
 

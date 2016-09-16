@@ -11,7 +11,7 @@ class ClassListAPITest(ACJAPITestCase):
     def setUp(self):
         super(ClassListAPITest, self).setUp()
         self.data = BasicTestData()
-        self.url = "/api/courses/" + str(self.data.get_course().id) + "/users"
+        self.url = "/api/courses/" + self.data.get_course().uuid + "/users"
 
     def test_get_classlist(self):
         # test login required
@@ -35,7 +35,7 @@ class ClassListAPITest(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual(len(expected), len(rv.json['objects']))
             for key, user in enumerate(expected):
-                self.assertEqual(user.id, rv.json['objects'][key]['id'])
+                self.assertEqual(user.uuid, rv.json['objects'][key]['id'])
 
             # test export csv
             rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
@@ -55,7 +55,7 @@ class ClassListAPITest(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual(len(expected), len(rv.json['objects']))
             for key, user in enumerate(expected):
-                self.assertEqual(user.id, rv.json['objects'][key]['id'])
+                self.assertEqual(user.uuid, rv.json['objects'][key]['id'])
 
     def test_get_instructor_labels(self):
         url = self.url + "/instructors/labels"
@@ -84,8 +84,8 @@ class ClassListAPITest(ACJAPITestCase):
             self.assert200(rv)
             labels = rv.json['instructors']
             expected = {
-                str(self.data.get_authorized_ta().id): 'Teaching Assistant',
-                str(self.data.get_authorized_instructor().id): 'Instructor'
+                self.data.get_authorized_ta().uuid: 'Teaching Assistant',
+                self.data.get_authorized_instructor().uuid: 'Instructor'
             }
             self.assertEqual(labels, expected)
 
@@ -116,7 +116,7 @@ class ClassListAPITest(ACJAPITestCase):
             self.assert200(rv)
             students = rv.json['objects']
             expected = {
-                'id': self.data.get_authorized_student().id,
+                'id': self.data.get_authorized_student().uuid,
                 'name': self.data.get_authorized_student().fullname
             }
             self.assertEqual(students[0]['id'], expected['id'])
@@ -127,7 +127,7 @@ class ClassListAPITest(ACJAPITestCase):
             self.assert200(rv)
             students = rv.json['objects']
             expected = {
-                'id': self.data.get_authorized_student().id,
+                'id': self.data.get_authorized_student().uuid,
                 'name': self.data.get_authorized_student().fullname
             }
             self.assertEqual(students[0]['id'], expected['id'])
@@ -139,14 +139,14 @@ class ClassListAPITest(ACJAPITestCase):
             self.assert200(rv)
             students = rv.json['objects']
             expected = {
-                'id': self.data.get_authorized_student().id,
+                'id': self.data.get_authorized_student().uuid,
                 'name': self.data.get_authorized_student().displayname
             }
             self.assertEqual(students[0]['id'], expected['id'])
             self.assertEqual(students[0]['name'], expected['name'] + ' (You)')
 
     def test_enrol_instructor(self):
-        url = self._create_enrol_url(self.url, self.data.get_dropped_instructor().id)
+        url = self._create_enrol_url(self.url, self.data.get_dropped_instructor().uuid)
         role = {'course_role': 'Instructor'}  # defaults to Instructor
 
         # test login required
@@ -166,7 +166,7 @@ class ClassListAPITest(ACJAPITestCase):
 
         # test invalid course id
         with self.login(self.data.get_authorized_instructor().username):
-            invalid_url = '/api/courses/999/users/' + str(self.data.get_dropped_instructor().id)
+            invalid_url = '/api/courses/999/users/' + self.data.get_dropped_instructor().uuid
             rv = self.client.post(
                 invalid_url,
                 data=json.dumps(role),
@@ -183,7 +183,7 @@ class ClassListAPITest(ACJAPITestCase):
 
             # test enrolling dropped instructor
             expected = {
-                'user_id': self.data.get_dropped_instructor().id,
+                'user_id': self.data.get_dropped_instructor().uuid,
                 'fullname': self.data.get_dropped_instructor().fullname,
                 'course_role': CourseRole.instructor.value
             }
@@ -195,9 +195,9 @@ class ClassListAPITest(ACJAPITestCase):
             self.assertEqual(expected, rv.json)
 
             # test enrolling new instructor
-            url = self._create_enrol_url(self.url, self.data.get_unauthorized_instructor().id)
+            url = self._create_enrol_url(self.url, self.data.get_unauthorized_instructor().uuid)
             expected = {
-                'user_id': self.data.get_unauthorized_instructor().id,
+                'user_id': self.data.get_unauthorized_instructor().uuid,
                 'fullname': self.data.get_unauthorized_instructor().fullname,
                 'course_role': CourseRole.instructor.value
             }
@@ -211,7 +211,7 @@ class ClassListAPITest(ACJAPITestCase):
             # test enrolling a different role - eg. Student
             role = {'course_role': CourseRole.teaching_assistant.value }
             expected = {
-                'user_id': self.data.get_unauthorized_instructor().id,
+                'user_id': self.data.get_unauthorized_instructor().uuid,
                 'fullname': self.data.get_unauthorized_instructor().fullname,
                 'course_role': CourseRole.teaching_assistant.value
             }
@@ -223,7 +223,7 @@ class ClassListAPITest(ACJAPITestCase):
             self.assertEqual(expected, rv.json)
 
     def test_unenrol_instructor(self):
-        url = self._create_enrol_url(self.url, self.data.get_authorized_instructor().id)
+        url = self._create_enrol_url(self.url, self.data.get_authorized_instructor().uuid)
 
         # test login required
         rv = self.client.delete(url)
@@ -235,7 +235,7 @@ class ClassListAPITest(ACJAPITestCase):
             self.assert403(rv)
 
         # test invalid course id
-        invalid_url = '/api/courses/999/users/' + str(self.data.get_authorized_instructor().id)
+        invalid_url = '/api/courses/999/users/' + self.data.get_authorized_instructor().uuid
         with self.login(self.data.get_authorized_instructor().username):
             rv = self.client.delete(invalid_url)
             self.assert404(rv)
@@ -246,13 +246,13 @@ class ClassListAPITest(ACJAPITestCase):
             self.assert404(rv)
 
             # test existing user not in existing course
-            invalid_url = self._create_enrol_url(self.url, self.data.get_unauthorized_instructor().id)
+            invalid_url = self._create_enrol_url(self.url, self.data.get_unauthorized_instructor().uuid)
             rv = self.client.delete(invalid_url)
             self.assert404(rv)
 
             # test success
             expected = {
-                'user_id': self.data.get_authorized_instructor().id,
+                'user_id': self.data.get_authorized_instructor().uuid,
                 'fullname': self.data.get_authorized_instructor().fullname,
                 'course_role': CourseRole.dropped.value
             }
@@ -261,7 +261,7 @@ class ClassListAPITest(ACJAPITestCase):
             self.assertEqual(expected, rv.json)
 
     def test_import_classlist(self):
-        url = '/api/courses/' + str(self.data.get_course().id) + '/users'
+        url = '/api/courses/' + self.data.get_course().uuid + '/users'
         auth_student = self.data.get_authorized_student()
         filename = "classlist.csv"
 
@@ -386,7 +386,7 @@ class ClassListAPITest(ACJAPITestCase):
     def test_update_course_role_miltiple(self):
         url = self.url + '/roles'
 
-        user_ids = [self.data.authorized_instructor.id, self.data.authorized_student.id, self.data.authorized_ta.id]
+        user_ids = [self.data.authorized_instructor.uuid, self.data.authorized_student.uuid, self.data.authorized_ta.uuid]
         params = {
             'ids': user_ids,
             'course_role': CourseRole.instructor.value
@@ -426,7 +426,7 @@ class ClassListAPITest(ACJAPITestCase):
 
             # test invalid user ids
             invalid_ids = params.copy()
-            invalid_ids['ids'] = [self.data.unauthorized_student.id]
+            invalid_ids['ids'] = [self.data.unauthorized_student.uuid]
             rv = self.client.post(
                 url,
                 data=json.dumps(invalid_ids),
@@ -435,7 +435,7 @@ class ClassListAPITest(ACJAPITestCase):
 
             # cannot change current_user's course role
             params_self = {
-                'ids': [self.data.get_authorized_instructor().id],
+                'ids': [self.data.get_authorized_instructor().uuid],
                 'course_role': CourseRole.teaching_assistant.value
             }
             rv = self.client.post(

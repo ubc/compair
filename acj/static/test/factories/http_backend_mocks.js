@@ -43,25 +43,26 @@ module.exports.buildStorageFixture = function(storageFixture) {
     var storage = {
         authenticated: false,
         default_criterion: {
-            "id": 1,
-            "user_id": 1,
+            "id": "1abcABC123-abcABC123_Z",
+            "user_id": "1abcABC123-abcABC123_Z",
             "name": "Which is better?",
             "description": "<p>Choose the response that you think is the better of the two.</p>",
             "default": true,
+            "public": true,
             "compared": false,
             "created": "Sun, 11 Jan 2015 07:45:31 -0000",
             "modified": "Sun, 11 Jan 2015 07:45:31 -0000"
         },
         loginDetails: { id: null, username: null, password: null },
         session: {},
-        users: [],
-        courses: [],
+        users: {},
+        courses: {},
         // userId -> [ { courseId, courseRole, groupName} ]
         user_courses: {},
-        assignments: [],
+        assignments: {},
         // courseId -> [assignmentId]
         course_assignments: {},
-        answers: [],
+        answers: {},
         // courseId -> [answerId]
         course_answers: {},
         // assignmentId -> [answerId]
@@ -69,7 +70,7 @@ module.exports.buildStorageFixture = function(storageFixture) {
         comparison_examples: [],
         // assignmentId -> [comparisonExampleId]
         assignment_comparison_examples: {},
-        criteria: [],
+        criteria: {},
         groups: [],
         user_search_results: {
             "objects": [],
@@ -87,7 +88,7 @@ module.exports.buildStorageFixture = function(storageFixture) {
 
     // add default criterion is storage criterion is empty
     if (storage.criteria.length == 0) {
-        storage.criteria.push(storage.default_criterion);
+        storage.criteria[storage.default_criterion.id] = storage.default_criterion;
     }
 
     return storage;
@@ -110,6 +111,10 @@ angular.module('MyApp.services.mock', [])
         }
     })
     .run(function($httpBackend, storageFixture) {
+        var generateNewId = function(num) {
+            var id = ""+num;
+            return id + "zabcABC123-abcABC123_Z".substr(id.length);
+        };
 
         // Start Session
 
@@ -126,7 +131,7 @@ angular.module('MyApp.services.mock', [])
         // login
         $httpBackend.whenPOST('/api/login').respond(function(method, url, data, headers) {
             storageFixture.storage().authenticated = true;
-            var currentUser = angular.copy(storageFixture.storage().users[storageFixture.storage().loginDetails.id-1]);
+            var currentUser = angular.copy(storageFixture.storage().users[storageFixture.storage().loginDetails.id]);
             return [200, currentUser, {}];
         });
 
@@ -142,16 +147,16 @@ angular.module('MyApp.services.mock', [])
         // Start User
 
         // get user by id
-        $httpBackend.whenGET(/\/api\/users\/\d+$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenGET(/\/api\/users\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
             var id = url.split('/').pop();
-            return [200, storageFixture.storage().users[id-1], {}];
+            return [200, storageFixture.storage().users[id], {}];
         });
 
         // create user
         $httpBackend.whenPOST('/api/users').respond(function(method, url, data, headers) {
             data = JSON.parse(data);
             var newUser = {
-                "id": storageFixture.storage().users.length + 1,
+                "id": generateNewId(_.keys(storageFixture.storage().users).length + 1),
                 "username": null,
                 "displayname": null,
                 "email": null,
@@ -170,7 +175,7 @@ angular.module('MyApp.services.mock', [])
             newUser = angular.merge({}, newUser, data);
             newUser.fullname = newUser.firstname + " " + newUser.lastname;
 
-            storageFixture.storage().users.push(newUser);
+            storageFixture.storage().users[newUser.id] = newUser;
 
             var returnData = {
                 id: newUser.id,
@@ -189,9 +194,9 @@ angular.module('MyApp.services.mock', [])
         });
 
         // get edit button availability
-        $httpBackend.whenGET(/\/api\/users\/\d+\/edit$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenGET(/\/api\/users\/[A-Za-z0-9_-]{22}\/edit$/).respond(function(method, url, data, headers) {
             var editId = url.replace('/edit', '').split('/').pop();
-            var currentUser = angular.copy(storageFixture.storage().users[storageFixture.storage().loginDetails.id-1]);
+            var currentUser = angular.copy(storageFixture.storage().users[storageFixture.storage().loginDetails.id]);
 
             var available = false;
             // admins can edit anyone
@@ -229,18 +234,18 @@ angular.module('MyApp.services.mock', [])
         });
 
         // update user details
-        $httpBackend.whenPOST(/\/api\/users\/\d+$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/users\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
             var data = JSON.parse(data);
             var editId = url.split('/').pop();
-            storageFixture.storage().users[editId-1] = data;
+            storageFixture.storage().users[editId] = data;
             return [200, data, {}];
         });
 
         // update user password
-        $httpBackend.whenPOST(/\/api\/users\/\d+\/password$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/users\/[A-Za-z0-9_-]{22}\/password$/).respond(function(method, url, data, headers) {
             var editId = url.split('/')[3];
             //no need to actually change the password
-            return [200, storageFixture.storage().users[editId-1], {}];
+            return [200, storageFixture.storage().users[editId], {}];
         });
 
 
@@ -250,8 +255,14 @@ angular.module('MyApp.services.mock', [])
         // Start Courses
 
         // get current user courses (fake search)
-        $httpBackend.whenGET(/\/api\/users\/\d+\/courses\?.*search=CHEM.*$/).respond(function(method, url, data, headers) {
-            var courses = [storageFixture.storage().courses[0]]
+        $httpBackend.whenGET(/\/api\/users\/courses\?.*search=CHEM.*$/).respond(function(method, url, data, headers) {
+            var courses = [];
+
+            angular.forEach(_.values(storageFixture.storage().courses), function(course) {
+                if (course.name.indexOf("CHEM") !== -1) {
+                    courses.push(course)
+                }
+            });
 
             return [200, {
                 "objects": courses,
@@ -263,12 +274,12 @@ angular.module('MyApp.services.mock', [])
         });
 
         // get current user courses
-        $httpBackend.whenGET(/\/api\/users\/\d+\/courses\?.*$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenGET(/\/api\/users\/courses\?.*$/).respond(function(method, url, data, headers) {
             return [200, {
-                "objects": storageFixture.storage().courses,
+                "objects": _.values(storageFixture.storage().courses),
                 "page": 1,
                 "pages": 1,
-                "total": storageFixture.storage().courses.length,
+                "total": _.keys(storageFixture.storage().courses).length,
                 "per_page": 20
             }, {}]
         });
@@ -277,10 +288,8 @@ angular.module('MyApp.services.mock', [])
         $httpBackend.whenPOST('/api/courses').respond(function(method, url, data, headers) {
             data = JSON.parse(data);
 
-            var id = storageFixture.storage().courses.length + 1;
-
             var newCourse = {
-                "id": id,
+                "id": generateNewId(_.keys(storageFixture.storage().courses).length + 1),
                 "name": data.name,
                 "year": data.year,
                 "term": data.term,
@@ -292,30 +301,30 @@ angular.module('MyApp.services.mock', [])
                 "created": "Sun, 11 Jan 2015 08:44:46 -0000"
             }
 
-            storageFixture.storage().courses.push(newCourse);
+            storageFixture.storage().courses[newCourse.id] = newCourse;
 
             return [200, newCourse, {}];
         });
 
         // get course by id
-        $httpBackend.whenGET(/\/api\/courses\/\d+$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
             var id = url.split('/').pop();
-            return [200, storageFixture.storage().courses[id-1], {}];
+            return [200, storageFixture.storage().courses[id], {}];
         });
 
         // edit course by id
-        $httpBackend.whenPOST(/\/api\/courses\/\d+$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/courses\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
             data = JSON.parse(data);
 
             var id = url.split('/').pop();
-            storageFixture.storage().courses[id-1] = angular.merge(storageFixture.storage().courses[id-1], data);
+            storageFixture.storage().courses[id] = angular.merge(storageFixture.storage().courses[id], data);
 
-            return [200, storageFixture.storage().courses[id-1], {}];
+            return [200, storageFixture.storage().courses[id], {}];
         });
 
 
         // get course users by course id
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/users$/).respond(function(method, url, data, headers){
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/users$/).respond(function(method, url, data, headers){
             var courseId = url.replace('/users', '').split('/').pop();
 
             var userList = [];
@@ -339,7 +348,7 @@ angular.module('MyApp.services.mock', [])
         });
 
         // get course students by course id
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/users\/students$/).respond(function(method, url, data, headers){
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/users\/students$/).respond(function(method, url, data, headers){
             var courseId = url.replace('/users', '').split('/').pop();
 
             var userList = [];
@@ -362,7 +371,7 @@ angular.module('MyApp.services.mock', [])
         });
 
         // get course instructor labels
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/users\/instructors\/labels$/).respond(function(method, url, data, headers){
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/users\/instructors\/labels$/).respond(function(method, url, data, headers){
             var courseId = url.replace('/users', '').split('/').pop();
 
             var userList = {};
@@ -385,12 +394,12 @@ angular.module('MyApp.services.mock', [])
         });
 
         // get course groups by course id
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/groups$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/groups$/).respond(function(method, url, data, headers) {
             return [200, { 'objects': storageFixture.storage().groups }, {}];
         });
 
         // update user role in course
-        $httpBackend.whenPOST(/\/api\/courses\/\d+\/users\/\d+$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/courses\/[A-Za-z0-9_-]{22}\/users\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
             data = JSON.parse(data);
             var courseId = url.split('/')[3];
             var userId = url.split('/').pop();
@@ -413,7 +422,7 @@ angular.module('MyApp.services.mock', [])
 
             var returnData = {
                 course_role: courseRole,
-                fullname: storageFixture.storage().users[userId-1].fullname,
+                fullname: storageFixture.storage().users[userId].fullname,
                 user_id: userId
             }
 
@@ -421,13 +430,13 @@ angular.module('MyApp.services.mock', [])
         });
 
         // drop user from coruse
-        $httpBackend.whenDELETE(/\/api\/courses\/\d+\/users\/\d+$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenDELETE(/\/api\/courses\/[A-Za-z0-9_-]{22}\/users\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
             var userId = url.split('/').pop();
 
             storageFixture.storage().user_courses[userId] = [];
 
             var returnData = {
-                fullname: storageFixture.storage().users[userId-1].fullname,
+                fullname: storageFixture.storage().users[userId].fullname,
                 user_id: userId,
                 course_role: "Dropped"
             }
@@ -436,7 +445,7 @@ angular.module('MyApp.services.mock', [])
         });
 
         // update user group in course
-        $httpBackend.whenPOST(/\/api\/courses\/\d+\/users\/\d+\/groups\/.+$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/courses\/[A-Za-z0-9_-]{22}\/users\/[A-Za-z0-9_-]{22}\/groups\/.+$/).respond(function(method, url, data, headers) {
             var courseId = url.split('/')[3];
             var userId = url.split('/')[5];
             var groupName = url.split('/').pop();
@@ -455,7 +464,7 @@ angular.module('MyApp.services.mock', [])
         });
 
         // remove user from group in course
-        $httpBackend.whenDELETE(/\/api\/courses\/\d+\/users\/\d+\/groups$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenDELETE(/\/api\/courses\/[A-Za-z0-9_-]{22}\/users\/[A-Za-z0-9_-]{22}\/groups$/).respond(function(method, url, data, headers) {
             var courseId = url.split('/')[3];
             var userId = url.split('/')[5];
 
@@ -474,9 +483,9 @@ angular.module('MyApp.services.mock', [])
         });
 
         // get all assignment status in course for current user
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/status$/).respond(function(method, url, data, headers){
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/status$/).respond(function(method, url, data, headers){
             var courseId = url.split('/')[3];
-            var currentUser = angular.copy(storageFixture.storage().users[storageFixture.storage().loginDetails.id-1]);
+            var currentUser = angular.copy(storageFixture.storage().users[storageFixture.storage().loginDetails.id]);
 
             statuses = {}
 
@@ -502,7 +511,7 @@ angular.module('MyApp.services.mock', [])
             // get all answers in course
             if (storageFixture.storage().course_answers[courseId]) {
                 angular.forEach(storageFixture.storage().course_answers[courseId], function(answerId) {
-                    var answer = storageFixture.storage().answers[answerId-1];
+                    var answer = storageFixture.storage().answers[answerId];
 
                     // if answer is by current user, set answered to true for assignment
                     if (answer.user_id == currentUser.id) {
@@ -524,33 +533,32 @@ angular.module('MyApp.services.mock', [])
         $httpBackend.whenPOST('/api/criteria').respond(function(method, url, data, headers) {
             data = JSON.parse(data);
 
-            var id = storageFixture.storage().criteria.length + 1;
-            var currentUser = angular.copy(storageFixture.storage().users[storageFixture.storage().loginDetails.id-1]);
-
+            var currentUser = angular.copy(storageFixture.storage().users[storageFixture.storage().loginDetails.id]);
             var newCriterion = {
-                "id": id,
+                "id": generateNewId(_.keys(storageFixture.storage().criteria).length + 1),
                 "user_id": currentUser.id,
                 "name": data.name,
                 "description": data.description,
                 "default": data.default,
+                "public": false,
                 "compared": false,
                 "created": "Mon, 18 Apr 2016 17:38:23 -0000",
                 "modified": "Mon, 18 Apr 2016 17:38:23 -0000"
             };
 
-            storageFixture.storage().criteria.push(newCriterion);
+            storageFixture.storage().criteria[newCriterion.id] = newCriterion;
 
             return [200, newCriterion, {}];
         });
 
         // update criterion by id
-        $httpBackend.whenPOST(/\/api\/criteria\/\d+$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/criteria\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
             data = JSON.parse(data);
             var id = url.split('/').pop();
 
-            storageFixture.storage().criteria[id-1] = angular.merge(storageFixture.storage().criteria[id-1], data);
+            storageFixture.storage().criteria[id] = angular.merge(storageFixture.storage().criteria[id], data);
 
-            return [200, storageFixture.storage().criteria[id-1], {}];
+            return [200, storageFixture.storage().criteria[id], {}];
         });
 
         // End Courses
@@ -559,25 +567,25 @@ angular.module('MyApp.services.mock', [])
 
         // Start Assignments
 
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments$/).respond(function(method, url, data, headers) {
             var id = url.replace('/assignments', '').split('/').pop();
 
             var assignmentList = [];
 
             if (storageFixture.storage().course_assignments[id]) {
                 angular.forEach(storageFixture.storage().course_assignments[id], function(assignmentId) {
-                    assignmentList.push(storageFixture.storage().assignments[assignmentId-1]);
+                    assignmentList.push(storageFixture.storage().assignments[assignmentId]);
                 });
             }
 
             return [200, { 'objects': assignmentList }, {}]
         });
 
-        $httpBackend.whenPOST(/\/api\/courses\/\d+\/assignments$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments$/).respond(function(method, url, data, headers) {
             data = JSON.parse(data);
 
             var courseId = url.replace('/assignments', '').split('/').pop();
-            var currentUser = angular.copy(storageFixture.storage().users[storageFixture.storage().loginDetails.id-1]);
+            var currentUser = angular.copy(storageFixture.storage().users[storageFixture.storage().loginDetails.id]);
 
             var newAssignment = {
                 "id": null,
@@ -608,12 +616,12 @@ angular.module('MyApp.services.mock', [])
                 "rank_display_limit": null
             }
             newAssignment = angular.merge(newAssignment, data);
-            newAssignment.id = storageFixture.storage().assignments.length + 1;
+            newAssignment.id = generateNewId(_.keys(storageFixture.storage().assignments).length + 1);
             newAssignment.total_comparisons_required = newAssignment.number_of_comparisons;
             newAssignment.total_steps_required = newAssignment.total_comparisons_required +
                 (newAssignment.enable_self_evaluation ? 1 : 0);
 
-            storageFixture.storage().assignments.push(newAssignment);
+            storageFixture.storage().assignments[newAssignment.id] = newAssignment;
 
             if (!storageFixture.storage().course_assignments[courseId]) {
                 storageFixture.storage().course_assignments[courseId] = [];
@@ -623,18 +631,18 @@ angular.module('MyApp.services.mock', [])
             return [200, newAssignment, {}]
         });
 
-        $httpBackend.whenPOST(/\/api\/courses\/\d+\/assignments\/\d+$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
             data = JSON.parse(data);
 
             var courseId = url.split('/')[3];
             var assignmentId = url.split('/')[5];
 
-            storageFixture.storage().assignments[assignmentId-1] = angular.merge(storageFixture.storage().assignments[assignmentId-1], data);
+            storageFixture.storage().assignments[assignmentId] = angular.merge(storageFixture.storage().assignments[assignmentId], data);
 
-            return [200, storageFixture.storage().assignments[assignmentId-1], {}]
+            return [200, storageFixture.storage().assignments[assignmentId], {}]
         });
 
-        $httpBackend.whenPOST(/\/api\/courses\/\d+\/assignments\/\d+\/criteria\/\d+$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}\/criteria\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
             return [200, {
                 'active': true,
                 'criterion': storageFixture.storage().default_criterion
@@ -642,15 +650,15 @@ angular.module('MyApp.services.mock', [])
         });
 
         // get assignment by course id and assignment id
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
             var courseId = url.split('/')[3];
             var assignmentId = url.split('/')[5];
 
-            return [200, storageFixture.storage().assignments[assignmentId-1], {}]
+            return [200, storageFixture.storage().assignments[assignmentId], {}]
         });
 
         // get assignment comments
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+\/comments$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}\/comments$/).respond(function(method, url, data, headers) {
             var courseId = url.split('/')[3];
             var assignmentId = url.split('/')[5];
 
@@ -658,9 +666,9 @@ angular.module('MyApp.services.mock', [])
         });
 
         // get assignment status for current user
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+\/status$/).respond(function(method, url, data, headers){
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}\/status$/).respond(function(method, url, data, headers){
             var courseId = url.split('/')[3];
-            var currentUser = angular.copy(storageFixture.storage().users[storageFixture.storage().loginDetails.id-1]);
+            var currentUser = angular.copy(storageFixture.storage().users[storageFixture.storage().loginDetails.id]);
             var assignmentId = url.split('/')[5];
 
             // setup default data
@@ -681,7 +689,7 @@ angular.module('MyApp.services.mock', [])
             // get all answers in course
             if (storageFixture.storage().course_answers[courseId]) {
                 angular.forEach(storageFixture.storage().course_answers[courseId], function(answerId) {
-                    var answer = storageFixture.storage().answers[answerId-1];
+                    var answer = storageFixture.storage().answers[answerId];
 
                     // if answer is by current user for assignment, set answered to true for assignment
                     if (answer.assignment_id == assignmentId && answer.user_id == currentUser.id) {
@@ -695,7 +703,7 @@ angular.module('MyApp.services.mock', [])
         });
 
         // get assignment answer comments
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+\/answer_comments\?.*$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}\/answer_comments\?.*$/).respond(function(method, url, data, headers) {
             var courseId = url.split('/')[3];
             var assignmentId = url.split('/')[5];
 
@@ -703,7 +711,7 @@ angular.module('MyApp.services.mock', [])
         });
 
         // get assignment answers
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+\/answers\?.*$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}\/answers\?.*$/).respond(function(method, url, data, headers) {
             var courseId = url.split('/')[3];
             var assignmentId = url.split('/')[5];
 
@@ -717,7 +725,7 @@ angular.module('MyApp.services.mock', [])
         });
 
         // get assignment comparison examples
-        $httpBackend.whenGET(/\/api\/courses\/\d+\/assignments\/\d+\/comparisons\/examples$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}\/comparisons\/examples$/).respond(function(method, url, data, headers) {
             var courseId = url.split('/')[3];
             var assignmentId = url.split('/')[5];
 
@@ -725,7 +733,7 @@ angular.module('MyApp.services.mock', [])
 
             if (storageFixture.storage().assignment_comparison_examples[assignmentId]) {
                 angular.forEach(storageFixture.storage().assignment_comparison_examples[assignmentId], function(exampleId) {
-                    exampleList.push(storageFixture.storage().comparison_examples[exampleId-1]);
+                    exampleList.push(storageFixture.storage().comparison_examples[exampleId]);
                 });
             }
 
@@ -733,15 +741,13 @@ angular.module('MyApp.services.mock', [])
         });
 
         // create new comparison examples
-        $httpBackend.whenPOST(/\/api\/courses\/\d+\/assignments\/\d+\/comparisons\/examples$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}\/comparisons\/examples$/).respond(function(method, url, data, headers) {
             var courseId = url.split('/')[3];
             var assignmentId = url.split('/')[5];
             data = JSON.parse(data);
 
-            var id = storageFixture.storage().comparison_examples.length + 1;
-
             var newComparisonExample = {
-                "id": id,
+                "id": generateNewId(_.keys(storageFixture.storage().assignments).length + 1),
                 "answer1_id": data.answer1.id,
                 "answer1": data.answer1,
                 "answer2_id": data.answer2.id,
@@ -759,25 +765,25 @@ angular.module('MyApp.services.mock', [])
         });
 
         // edit assignment comparison examples
-        $httpBackend.whenPOST(/\/api\/courses\/\d+\/assignments\/\d+\/comparisons\/examples\/\d+$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}\/comparisons\/examples\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
             var courseId = url.split('/')[3];
             var assignmentId = url.split('/')[5];
 
             data = JSON.parse(data);
 
             var id = url.split('/').pop();
-            storageFixture.storage().comparison_examples[id-1] = angular.merge(storageFixture.storage().comparison_examples[id-1], data);
+            storageFixture.storage().comparison_examples[id] = angular.merge(storageFixture.storage().comparison_examples[id], data);
 
-            return [200, storageFixture.storage().courses[id-1], {}];
+            return [200, storageFixture.storage().courses[id], {}];
         });
 
         // delete assignment comparison examples
-        $httpBackend.whenDELETE(/\/api\/courses\/\d+\/assignments\/\d+\/comparisons\/examples\/\d+$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenDELETE(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}\/comparisons\/examples\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
             var courseId = url.split('/')[3];
             var assignmentId = url.split('/')[5];
 
             var id = url.split('/').pop();
-            storageFixture.storage().comparison_examples[id-1] = null;
+            storageFixture.storage().comparison_examples[id] = null;
 
             // remove comparison example from assignment's data
             for(var i = storageFixture.storage().assignment_comparison_examples[assignmentId].length - 1; i >= 0; i--) {

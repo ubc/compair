@@ -29,3 +29,17 @@ class ActiveMixin(db.Model):
         if not model.active:
             abort(404)
         return model
+
+    @classmethod
+    def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[]):
+        query = cls.query
+        # load relationships if needed
+        for load_string in joinedloads:
+            query.options(joinedload(load_string))
+
+        model = query.filter_by(uuid=model_uuid).one_or_none()
+        if model is None:
+            abort(404)
+        if not model.active:
+            abort(404)
+        return model

@@ -9,23 +9,23 @@ var courseFactory = new CourseFactory();
 
 var storage = {
     session: {},
-    users: [],
-    courses: [],
-    user_courses: [],
+    users: {},
+    courses: {},
+    user_courses: {},
     groups: [],
     user_search_results: {}
 }
 
-var admin = userFactory.generateUser(1, "System Administrator", {
+var admin = userFactory.generateUser("1abcABC123-abcABC123_Z", "System Administrator", {
     username: "root",
     displayname: "root",
     firstname: "JaNy",
     lastname: "bwsV",
     fullname: "JaNy bwsV",
 });
-storage.users.push(admin);
+storage.users[admin.id] = admin;
 
-var instructor = userFactory.generateUser(2, "Instructor", {
+var instructor = userFactory.generateUser("2abcABC123-abcABC123_Z", "Instructor", {
     username: "instructor1",
     displayname: "First Instructor",
     firstname: "First",
@@ -33,9 +33,9 @@ var instructor = userFactory.generateUser(2, "Instructor", {
     fullname: "First Instructor",
     email: "first.instructor@exmple.com"
 });
-storage.users.push(instructor);
+storage.users[instructor.id] = instructor;
 
-var student1 = userFactory.generateUser(3, "Student", {
+var student1 = userFactory.generateUser("3abcABC123-abcABC123_Z", "Student", {
     username: "student1",
     displayname: "First Student",
     firstname: "First",
@@ -43,9 +43,9 @@ var student1 = userFactory.generateUser(3, "Student", {
     fullname: "First Student",
     email: "first.student@exmple.com"
 });
-storage.users.push(student1);
+storage.users[student1.id] = student1;
 
-var student2 = userFactory.generateUser(4, "Student", {
+var student2 = userFactory.generateUser("4abcABC123-abcABC123_Z", "Student", {
     username: "student2",
     displayname: "Second Student",
     firstname: "Second",
@@ -53,16 +53,16 @@ var student2 = userFactory.generateUser(4, "Student", {
     fullname: "Second Student",
     email: "second.student@exmple.com"
 });
-storage.users.push(student2);
+storage.users[student2.id] = student2;
 
 
-var course = courseFactory.generateCourse(1, {
+var course = courseFactory.generateCourse("1abcABC123-abcABC123_Z", {
     name: "CHEM 111",
     year: 2015,
     term: "Winter",
     description: "<p>CHEM 111 description<p>",
 });
-storage.courses.push(course);
+storage.courses[course.id] = course;
 
 var group1 = "First Group";
 storage.groups.push(group1);
@@ -89,10 +89,10 @@ storage.user_search_results.total = 1;
 storage.loginDetails = { id: instructor.id, username: instructor.username, password: "password" };
 storage.session = sessionFactory.generateSession(instructor.id, instructor.system_role, {
     "Course": {
-        "delete": {'1': false},
-        "edit": {'1': true},
-        "manage": {'1': false},
-        "read": {'1': true}
+        "delete": {'1abcABC123-abcABC123_Z': false},
+        "edit": {'1abcABC123-abcABC123_Z': true},
+        "manage": {'1abcABC123-abcABC123_Z': false},
+        "read": {'1abcABC123-abcABC123_Z': true}
     }
 });
 

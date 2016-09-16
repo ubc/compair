@@ -50,42 +50,47 @@ class FileAPI(Resource):
             uploaded_file.save(tmp_name)
             current_app.logger.debug("Temporarily saved tmpUpload/" + name)
             return {'name': name}
+
         return False
 api.add_resource(FileAPI, '')
 
-# /file_id
+# /file_uuid
 class FileIdAPI(Resource):
     @login_required
-    def get(self, file_id):
-        uploaded_file = File.get_active_or_404(file_id)
+    def get(self, file_uuid):
+        uploaded_file = File.get_active_by_uuid_or_404(file_uuid)
 
         on_file_get.send(
             self,
             event_name=on_file_get.name,
             user=current_user,
-            data={'file_id': file_id})
+            data={'file_id': uploaded_file.id})
 
         return {'file': marshal(uploaded_file, dataformat.get_file())}
 
     @login_required
-    def delete(self, file_id):
-        uploaded_file = File.query.get_or_404(file_id)
+    def delete(self, file_uuid):
+        uploaded_file = File.get_by_uuid_or_404(file_uuid)
 
         on_file_delete.send(
             self,
             event_name=on_file_delete.name,
             user=current_user,
-            data={'file_id': file_id})
+            data={'file_id': uploaded_file.id})
 
         if uploaded_file:
             tmp_name = os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], uploaded_file.name)
             os.remove(tmp_name)
 
-            assignments = Assignment.query.filter_by(file_id=file_id).all()
+            assignments = Assignment.query \
+                .filter_by(file_id=uploaded_file.id) \
+                .all()
             for assignment in assignments:
                 assignment.file_id = None
 
-            answers = Answer.query.filter_by(file_id=file_id).all()
+            answers = Answer.query \
+                .filter_by(file_id=uploaded_file.id) \
+                .all()
             for answer in answers:
                 answer.file_id = None
 
@@ -93,7 +98,7 @@ class FileIdAPI(Resource):
             db.session.commit()
             current_app.logger.debug("SuccessFully deleted " + uploaded_file.name)
 
-api.add_resource(FileIdAPI, '/<int:file_id>')
+api.add_resource(FileIdAPI, '/<file_uuid>')
 
 
 
@@ -132,7 +137,7 @@ def duplicate_file(file, new_model_name, new_model_id):
         "copied file id:" + str(file.id) + " from " + os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], file.name) +
         " to " + os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], tmp_name))
 
-    return uploaded_file.id
+    return uploaded_file
 
 
 # delete file
