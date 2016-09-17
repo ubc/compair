@@ -128,12 +128,6 @@ gulp.task('prod', ['revision'], function(){
         .pipe(gulp.dest('./acj/static/'));
 });
 
-gulp.task('tracking', function() {
-   return gulp.src('./acj/static/index.html')
-       .pipe(inject(gulp.src(['./acj/static/tracking.js']), {read: false, relative: true}))
-       .pipe(gulp.dest('./acj/static/'));
-});
-
 /**
  * Watch for file changes and re-run tests on each change
  */
@@ -323,4 +317,4 @@ gulp.task('webdriver_update', webdriver_update);
 gulp.task('webdriver_standalone', webdriver_standalone);
 
 
-gulp.task("default", ['bowerInstall', 'bowerWiredep', 'tracking'], function(){});
+gulp.task("default", ['bowerInstall', 'bowerWiredep'], function(){});

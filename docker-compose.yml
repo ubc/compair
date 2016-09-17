@@ -16,6 +16,7 @@ services:
     environment:
       - DATABASE_URI=mysql+pymysql://compair:compair@db:3306/compair
       - DEV=1
+      - GA_TRACKING_ID=12345
     volumes:
       - .:/code
     depends_on:

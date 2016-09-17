@@ -1,6 +1,8 @@
 """
     Utility Commands
 """
+from io import open
+
 from flask import current_app
 from flask import render_template
 from flask.ext.script import Manager
@@ -18,7 +20,7 @@ def generate_index():
     current_app.static_url_path = '/'
     index = render_template('index-dev.html')
 
-    with open("acj/static/index.html", "wb") as f:
+    with open("acj/static/index.html", 'wt', encoding='utf-8') as f:
         f.write(index)
 
-    print "acj/static/index.html is generated."
+    print("acj/static/index.html is generated.")

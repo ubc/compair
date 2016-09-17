@@ -101,7 +101,9 @@ def register_api_blueprints(app):
     @app.route('/app/')
     def route_app():
         if app.debug:
-            return render_template('index-dev.html')
+            return render_template(
+                'index-dev.html',
+                ga_tracking_id=app.config['GA_TRACKING_ID'])
 
         # running in prod mode, figure out asset location
         assets = app.config['ASSETS']
@@ -117,7 +119,8 @@ def register_api_blueprints(app):
             'index.html',
             bower_js_libs=prefix + assets['bowerJsLibs.js'],
             acj_js=prefix + assets['acj.js'],
-            acj_css=prefix + assets['acj.css'])
+            acj_css=prefix + assets['acj.css'],
+            ga_tracking_id=app.config['GA_TRACKING_ID'])
 
     @app.route('/')
     def route_root():
