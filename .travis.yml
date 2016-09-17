@@ -20,8 +20,14 @@ python:
 
 env:
   global:
-    - secure: imeWytgo5kReh6HgPqhaWlsK+oWN8TObyYlrrsA6CASmeJT6GEOpghXimJ8avNpGmcNHji+3GfWKuirUBew9RxAaiYkdjrFZ6nPibmt1HJJfiL1hQMHhp9rCnMBdxevH4/8Wl86bN5/YIwglXhqDplVEmrWqiHzKfw9BBRfOrVc=
-    - secure: D5aySdfAWW2Z5aJN3PSW4FBDKSGEbCSPgDUBEoAkwXbmpvZA29RqUP4O2P6wMC7CeVUI4A7+bAalsgIgYt3YLsT1QJE3IV679axHPDdEIP45oZy4+S7KkI4cCfI+R6lnwU7Lp/eW42lc+mugKLZ2hDs0mcx6+tHAoazGgIRyRzA=
+    # SAUCE_USERNAME
+    - secure: "imeWytgo5kReh6HgPqhaWlsK+oWN8TObyYlrrsA6CASmeJT6GEOpghXimJ8avNpGmcNHji+3GfWKuirUBew9RxAaiYkdjrFZ6nPibmt1HJJfiL1hQMHhp9rCnMBdxevH4/8Wl86bN5/YIwglXhqDplVEmrWqiHzKfw9BBRfOrVc="
+    # SAUCE_ACCESS_KEY
+    - secure: "D5aySdfAWW2Z5aJN3PSW4FBDKSGEbCSPgDUBEoAkwXbmpvZA29RqUP4O2P6wMC7CeVUI4A7+bAalsgIgYt3YLsT1QJE3IV679axHPDdEIP45oZy4+S7KkI4cCfI+R6lnwU7Lp/eW42lc+mugKLZ2hDs0mcx6+tHAoazGgIRyRzA="
+    # DOCKER_USER
+    - secure: "W1l1V7Sa0tpYfz+fU0NObz+FcaA3wIUjovuMWhQU7+sqMHAmhPM2ajsRb0bgUoCBN1SW4KAi3lo06fFkmQjxR2D/U1iSUY5ahIFG+W3E8V5zWNLg/mdywDM2acWByhMCMjiBHGPFdGkXXf3pLmc/6XLs3WnPuV2o84xte67zMEo="
+    # DOCKER_PASS
+    - secure: "f4Z8sNwOpoSm2R0TyEsowL+edxEixCJT3qdS7s2G9zVlRTBzU33VrvBTpfgIJuFdMlGKNV16iHL7iWiLtyGcq07HlgffJc1KKWZGG8JuhykB+GKSOh/lNX/AgIrIUDtmLEpi1/MSXmiFbISf60C4GYstxtMfHeC7/WsVsGyfk7A="
   matrix:
     - DB=sqlite DATABASE_URI="sqlite:///:memory:"
     - DB=mysql DATABASE_URI="mysql+pymysql://root@localhost/acj"
@@ -45,20 +51,22 @@ before_script:
   - if [ "$INTEGRATION_TEST" = "true" ]; then gulp prod; fi
 
 before_install:
-  - nvm install 6.4
+  - if [ "$DOCKER" != "true" ]; then nvm install 6.4; fi
   - if [ "$INTEGRATION_TEST" != "true" ]; then unset SAUCE_USERNAME && unset SAUCE_ACCESS_KEY; fi
   # workaround for issue https://github.com/travis-ci/travis-ci/issues/4870
   - if [ "$DB" = "mysql" ]; then sudo apt-get install mariadb-server; fi
-  - if [ "$DOCKER" = "true" ]; then docker build -t ubcctlt/compair-app .; fi
+  - if [ "$DOCKER" = "true" ]; then make docker-image; fi
 
 # command to install dependencies
 install:
-  - "make deps"
+  - if [ "$DOCKER" != "true" ]; then make deps; fi
   - if [ "$DOCKER" = "true" ]; then docker-compose up -d; sleep 10; fi
 
 script:
   - ./scripts/travis_script.sh
-  - if [ "$DOCKER" = "true" ]; then curl -sSf http://localhost:8080 > /dev/null && curl -sSf http://localhost:8080/api/healthz > /dev/null; fi
+
+after_success:
+  - if [ "$DOCKER" = "true" ]; then scripts/deploy_docker.sh; fi
 
 after_failure:
   - if [ "$DOCKER" = "true" ]; then timeout 3s docker-compose logs app db web; fi
