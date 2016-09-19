@@ -1,11 +1,11 @@
 from bouncer.constants import EDIT, READ, CREATE, DELETE
 from flask import Blueprint, current_app, request
-from flask.ext.restful import Resource, marshal
+from flask_restful import Resource, marshal
 from flask_login import login_required
 from werkzeug.utils import secure_filename
-from flask.ext.restful.reqparse import RequestParser
+from flask_restful.reqparse import RequestParser
 
-from flask.ext.login import current_user
+from flask_login import current_user
 from sqlalchemy import and_, or_
 
 from . import dataformat

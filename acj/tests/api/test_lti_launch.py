@@ -867,7 +867,7 @@ class LTILaunchAPITests(ACJAPITestCase):
             self.assert400(rv)
             self.assertEqual(rv.json['error'], "LTI membership service is not supported for this course")
 
-    @mock.patch('flask.ext.cas.CAS.username', new_callable= mock.PropertyMock)
+    @mock.patch('flask_cas.CAS.username', new_callable= mock.PropertyMock)
     def test_cas_auth_via_lti_launch(self, mocked_cas_username):
         url = '/api/auth/cas'
         auth_data = ThirdPartyAuthTestData()

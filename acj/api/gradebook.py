@@ -4,8 +4,8 @@ import copy
 
 from bouncer.constants import MANAGE
 from flask import Blueprint, jsonify
-from flask.ext.login import login_required, current_user
-from flask.ext.restful import Resource
+from flask_login import login_required, current_user
+from flask_restful import Resource
 from sqlalchemy import func, and_
 from sqlalchemy.orm import undefer, joinedload
 

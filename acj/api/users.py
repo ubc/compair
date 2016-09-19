@@ -1,7 +1,7 @@
 from flask import Blueprint, current_app, abort, session as sess
 from bouncer.constants import MANAGE, EDIT, CREATE, READ
-from flask.ext.restful import Resource, marshal
-from flask.ext.restful.reqparse import RequestParser
+from flask_restful import Resource, marshal
+from flask_restful.reqparse import RequestParser
 from flask_login import login_required, current_user
 from sqlalchemy.orm import load_only
 from sqlalchemy import exc, asc, or_, and_
@@ -178,7 +178,7 @@ class UserListAPI(Resource):
         # login_required when oauth_create_user_link not set
         if not sess.get('oauth_create_user_link'):
             if not current_app.login_manager._login_disabled and \
-                    not current_user.is_authenticated():
+                    not current_user.is_authenticated:
                 return current_app.login_manager.unauthorized()
 
         user = User()
@@ -252,7 +252,7 @@ class UserListAPI(Resource):
         try:
             db.session.add(user)
             db.session.commit()
-            if current_user.is_authenticated():
+            if current_user.is_authenticated:
                 on_user_create.send(
                     self,
                     event_name=on_user_create.name,

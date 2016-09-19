@@ -12,6 +12,8 @@ from . import *
 from acj.core import db
 
 class Score(DefaultTableMixin, WriteTrackingMixin):
+    __tablename__ = 'score'
+
     # table columns
     assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id', ondelete="CASCADE"),
         nullable=False)

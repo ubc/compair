@@ -14,7 +14,7 @@ def define_authorization(user, they):
     """
     Sets up user permissions for Flask-Bouncer
     """
-    if not user.is_authenticated():
+    if not user.is_authenticated:
         return  # user isn't logged in
 
     def if_my_student(student):

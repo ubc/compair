@@ -9,6 +9,8 @@ from . import *
 from acj.core import db
 
 class Criterion(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
+    __tablename__ = 'criterion'
+
     # table columns
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"),
         nullable=False)

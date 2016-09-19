@@ -21,6 +21,10 @@ CAS_AFTER_LOGIN = 'login_api.auth_cas'
 
 REPORT_FOLDER = os.getcwd() + '/acj/static/report'
 
+# save some system resources, (will be false by default in Flask-SQLAlchemy in a future release)
+# we currently use SQLAlchemy event sytem directly
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+
 # for uploads
 UPLOAD_FOLDER = os.getcwd() + '/tmpUpload'
 ATTACHMENT_UPLOAD_FOLDER = os.getcwd() + '/acj/static/pdf'

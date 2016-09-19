@@ -3,7 +3,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_enum34 import EnumType
-from flask.ext.login import current_user
+from flask_login import current_user
 from flask import current_app
 
 from . import *
@@ -164,7 +164,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         # set user_course to dropped role if missing from membership results and not current user
         for user_course in user_courses:
             # never unenrol current_user
-            if current_user.is_authenticated() and user_course.user_id == current_user.id:
+            if current_user.is_authenticated and user_course.user_id == current_user.id:
                 continue
 
             lti_member = next(

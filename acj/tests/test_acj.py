@@ -4,7 +4,7 @@ import json
 import unittest
 import mock
 
-from flask.ext.testing import TestCase
+from flask_testing import TestCase
 from os.path import dirname
 from flask.testing import FlaskClient
 from six import wraps
@@ -97,7 +97,7 @@ class ACJAPITestCase(ACJTestCase):
 
     @contextmanager
     def cas_login(self, cas_username):
-        with mock.patch('flask.ext.cas.CAS.username', new_callable=mock.PropertyMock) as mocked_cas_username:
+        with mock.patch('flask_cas.CAS.username', new_callable=mock.PropertyMock) as mocked_cas_username:
             mocked_cas_username.return_value = cas_username
             rv = self.client.get('/api/auth/cas', data={}, content_type='application/json', follow_redirects=True)
             self.assert200(rv)

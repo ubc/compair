@@ -3,11 +3,11 @@
 """
 from blinker import Namespace
 from flask import session as sess
-from flask.ext.bouncer import Bouncer
-from flask.ext.cas import CAS
+from flask_bouncer import Bouncer
+from flask_cas import CAS
 
-from flask.ext.login import LoginManager, user_logged_in
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, user_logged_in
+from flask_sqlalchemy import SQLAlchemy
 
 
 # initialize database

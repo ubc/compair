@@ -14,6 +14,8 @@ from . import *
 from acj.core import db
 
 class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
+    __tablename__ = 'assignment'
+
     # table columns
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"),
         nullable=False)
