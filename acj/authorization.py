@@ -74,7 +74,7 @@ def define_authorization(user, they):
         they.can((EDIT, DELETE, READ), AnswerComment, user_id=user.id)
         # instructors can modify the course and enrolment
         if entry.course_role == CourseRole.instructor:
-            they.can(EDIT, Course, id=entry.course_id)
+            they.can((EDIT, DELETE), Course, id=entry.course_id)
             they.can(EDIT, UserCourse, course_id=entry.course_id)
         # instructors and ta can do anything they want to assignments
         if entry.course_role == CourseRole.instructor or \
