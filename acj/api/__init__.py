@@ -118,9 +118,10 @@ def log_events(log):
 
     # course events
     from .course import on_course_modified, on_course_get, on_course_list_get, on_course_create, \
-        on_course_duplicate
+        on_course_delete, on_course_duplicate
     on_course_modified.connect(log)
     on_course_get.connect(log)
+    on_course_delete.connect(log)
     on_course_list_get.connect(log)
     on_course_create.connect(log)
     on_course_duplicate.connect(log)

@@ -214,6 +214,55 @@ class CoursesAPITests(ACJAPITestCase):
             self.assert200(rv)
             self.assertTrue(rv.json['available'])
 
+    def test_delete_course(self):
+        course_uuid = self.data.get_course().uuid
+        url = '/api/courses/' + course_uuid
+
+        # test login required
+        rv = self.client.delete(url)
+        self.assert401(rv)
+
+        # test unauthorized users
+        with self.login(self.data.get_unauthorized_instructor().username):
+            rv = self.client.delete(url)
+            self.assert403(rv)
+
+        with self.login(self.data.get_authorized_student().username):
+            rv = self.client.delete(url)
+            self.assert403(rv)
+
+        with self.login(self.data.get_authorized_ta().username):
+            rv = self.client.delete(url)
+            self.assert403(rv)
+
+        with self.login(self.data.get_authorized_instructor().username):
+            # test invalid course id
+            rv = self.client.delete('/api/courses/999')
+            self.assert404(rv)
+
+            # test deletion by authorized insturctor
+            rv = self.client.delete(url)
+            self.assert200(rv)
+            self.assertEqual(course_uuid, rv.json['id'])
+
+            # test course is deleted
+            rv = self.client.delete(url)
+            self.assert404(rv)
+
+        course2 = self.data.create_course()
+        url = '/api/courses/' + course2.uuid
+
+        with self.login('root'):
+            # test deletion by system admin
+            rv = self.client.delete(url)
+            self.assert200(rv)
+            self.assertEqual(course2.uuid, rv.json['id'])
+
+            # test course is deleted
+            rv = self.client.delete(url)
+            self.assert404(rv)
+
+
     def test_duplicate_course_simple(self):
         url = '/api/courses/' + self.data.get_course().uuid + '/duplicate'
         expected = {

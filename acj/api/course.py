@@ -1,7 +1,7 @@
 import datetime
 
 import dateutil.parser
-from bouncer.constants import MANAGE, READ, CREATE, EDIT
+from bouncer.constants import MANAGE, READ, CREATE, EDIT, DELETE
 from flask import Blueprint, current_app
 from flask_restful import Resource, marshal_with, marshal, reqparse
 from flask_login import login_required, current_user
@@ -37,6 +37,7 @@ duplicate_course_parser.add_argument('term', type=str, required=True, help='Cour
 # events
 on_course_modified = event.signal('COURSE_MODIFIED')
 on_course_get = event.signal('COURSE_GET')
+on_course_delete = event.signal('COURSE_DELETE')
 on_course_list_get = event.signal('COURSE_LIST_GET')
 on_course_create = event.signal('COURSE_CREATE')
 on_course_duplicate = event.signal('COURSE_DUPLICATE')
@@ -98,6 +99,7 @@ class CourseListAPI(Resource):
 api.add_resource(CourseListAPI, '')
 
 
+#/course_uuid
 class CourseAPI(Resource):
     @login_required
     def get(self, course_uuid):
@@ -149,6 +151,22 @@ class CourseAPI(Resource):
             data=get_model_changes(course))
 
         return marshal(course, dataformat.get_course())
+
+    @login_required
+    def delete(self, course_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        require(DELETE, course)
+
+        course.active = False
+        db.session.commit()
+
+        on_course_delete.send(
+            self,
+            event_name=on_course_delete.name,
+            user=current_user,
+            data={'id': course.id})
+
+        return {'id': course.uuid}
 
 api.add_resource(CourseAPI, '/<course_uuid>')
 
