@@ -326,10 +326,10 @@ module.filter("notScoredEnd", function () {
 module.controller("AssignmentViewController",
     ["$scope", "$routeParams", "$location", "AnswerResource", "Authorize", "AssignmentResource", "AssignmentCommentResource",
              "AttachmentResource", "ComparisonResource", "CourseResource", "required_rounds", "Session", "Toaster", "AnswerCommentResource",
-             "GroupResource", "AnswerCommentType", "PairingAlgorithm",
+             "GroupResource", "AnswerCommentType", "PairingAlgorithm", "$modal",
     function($scope, $routeParams, $location, AnswerResource, Authorize, AssignmentResource, AssignmentCommentResource,
              AttachmentResource, ComparisonResource, CourseResource, required_rounds, Session, Toaster, AnswerCommentResource,
-             GroupResource, AnswerCommentType, PairingAlgorithm)
+             GroupResource, AnswerCommentType, PairingAlgorithm, $modal)
     {
         $scope.courseId = $routeParams['courseId'];
         $scope.AnswerCommentType = AnswerCommentType;
@@ -534,6 +534,132 @@ module.controller("AssignmentViewController",
             );
         };
 
+        $scope.editAnswer = function(answer) {
+            var modalScope = $scope.$new();
+            modalScope.courseId = $scope.courseId;
+            modalScope.assignmentId = $scope.assignmentId;
+            modalScope.answer = angular.copy(answer);
+
+            $scope.modalInstance = $modal.open({
+                animation: true,
+                controller: "AnswerModalController",
+                templateUrl: 'modules/answer/answer-modal-partial.html',
+                scope: modalScope
+            });
+
+            $scope.modalInstance.result.then(function (answerUpdated) {
+                _.each($scope.answers.objects, function(answer, index) {
+                    if (answer.id == answerUpdated.id) {
+                        // copy answer comments over to updated answer before
+                        // overwriting answer with update
+                        answerUpdated.comments = answer.comments;
+                        $scope.answers.objects[index] = answerUpdated;
+                    }
+                });
+            });
+        };
+
+        $scope.createAnswerComment = function(answer) {
+            var modalScope = $scope.$new();
+            modalScope.courseId = $scope.courseId;
+            modalScope.assignmentId = $scope.assignment.id;
+            modalScope.answerId = answer.id;
+
+            $scope.modalInstance = $modal.open({
+                animation: true,
+                controller: "AnswerCommentModalController",
+                templateUrl: 'modules/comment/comment-answer-modal-partial.html',
+                scope: modalScope
+            });
+
+            $scope.modalInstance.result.then(function (newComment) {
+                answer.comments = typeof(answer.comments) != 'undefined' ? answer.comments : [];
+                answer.comments.unshift(newComment)
+                if (newComment.comment_type == AnswerCommentType.public) {
+                    answer.public_comment_count++;
+                } else {
+                    answer.private_comment_count++;
+                }
+                answer.comment_count++;
+            });
+        };
+
+        $scope.editAnswerComment = function(answer, comment) {
+            var modalScope = $scope.$new();
+            modalScope.courseId = $scope.courseId;
+            modalScope.assignmentId = $scope.assignment.id;
+            modalScope.answerId = answer.id;
+            modalScope.comment = angular.copy(comment);
+
+            $scope.modalInstance = $modal.open({
+                animation: true,
+                controller: "AnswerCommentModalController",
+                templateUrl: 'modules/comment/comment-answer-modal-partial.html',
+                scope: modalScope
+            });
+
+            $scope.modalInstance.result.then(function (updatedComment) {
+                // update comment counts
+                if (comment.comment_type == AnswerCommentType.public) {
+                    answer.public_comment_count--;
+                } else {
+                    answer.private_comment_count--;
+                }
+                if (updatedComment.comment_type == AnswerCommentType.public) {
+                    answer.public_comment_count++;
+                } else {
+                    answer.private_comment_count++;
+                }
+
+                // update comment
+                _.each(answer.comments, function(comment, index) {
+                    if (comment.id == updatedComment.id) {
+                        answer.comments[index] = updatedComment;
+                    }
+                });
+            });
+        };
+
+        $scope.createAssignmentComment = function() {
+            var modalScope = $scope.$new();
+            modalScope.courseId = $scope.courseId;
+            modalScope.assignmentId = $scope.assignment.id;
+
+            $scope.modalInstance = $modal.open({
+                animation: true,
+                controller: "AssignmentCommentModalController",
+                templateUrl: 'modules/comment/comment-assignment-modal-partial.html',
+                scope: modalScope
+            });
+
+            $scope.modalInstance.result.then(function (newComment) {
+                $scope.comments.objects.push(newComment)
+            });
+        };
+
+        $scope.editAssignmentComment = function(comment) {
+            var modalScope = $scope.$new();
+            modalScope.courseId = $scope.courseId;
+            modalScope.assignmentId = $scope.assignment.id;
+            modalScope.comment = angular.copy(comment);
+
+            $scope.modalInstance = $modal.open({
+                animation: true,
+                controller: "AssignmentCommentModalController",
+                templateUrl: 'modules/comment/comment-assignment-modal-partial.html',
+                scope: modalScope
+            });
+
+            $scope.modalInstance.result.then(function (updatedComment) {
+                // update comment
+                _.each($scope.comments.objects, function(comment, index) {
+                    if (comment.id == updatedComment.id) {
+                        $scope.comments.objects[index] = updatedComment;
+                    }
+                });
+            });
+        };
+
         $scope.loadComments = function(answer) {
             answer.comments = AnswerCommentResource.query(
                 {courseId: $scope.courseId, assignmentId: assignmentId, answer_ids: answer.id})
@@ -557,7 +683,7 @@ module.controller("AssignmentViewController",
                 function (ret) {
                     Toaster.success("Reply Delete Successful", "Successfully deleted reply.");
                     var comment = answer['comments'].splice(commentKey, 1)[0];
-                    if (comment.public) {
+                    if (comment.comment_type == AnswerCommentType.public) {
                         answer.public_comment_count--;
                     } else {
                         answer.private_comment_count--;
@@ -858,8 +984,8 @@ module.controller("AssignmentWriteController",
 
             $scope.modalInstance = $modal.open({
                 animation: true,
-                controller: "AnswerExampleModalController",
-                templateUrl: 'modules/answer/answer-form-partial.html',
+                controller: "AnswerModalController",
+                templateUrl: 'modules/answer/answer-modal-partial.html',
                 scope: modalScope
             });
 

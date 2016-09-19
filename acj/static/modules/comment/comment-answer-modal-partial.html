@@ -1,0 +1,4 @@
+<modal-cancel-button modal-instance="modalInstance" ng-show="modalInstance !== undefined"></modal-cancel-button>
+<h1 ng-if="method == 'new'">Reply <span ng-show="comment.comment_type == 'Private'">Privately</span><span ng-show="comment.comment_type == 'Public'">Publicly</span> to {{ parent.user.displayname }}</h1>
+<h1 ng-if="method == 'edit'">Edit <span ng-show="comment.comment_type == 'Private'">Private</span> Reply to {{ parent.user.displayname }}</h1>
+<ng-include src="'modules/comment/comment-form-partial.html'"></ng-include>

@@ -1139,8 +1139,8 @@ describe('course-module', function () {
                 it('should open a modal dialog', function() {
                     expect($modal.open).toHaveBeenCalledWith({
                         animation: true,
-                        controller: "AnswerExampleModalController",
-                        templateUrl: 'modules/answer/answer-form-partial.html',
+                        controller: "AnswerModalController",
+                        templateUrl: 'modules/answer/answer-modal-partial.html',
                         scope: jasmine.any(Object)
                     })
                 });
@@ -1402,8 +1402,8 @@ describe('course-module', function () {
                 it('should open a modal dialog', function() {
                     expect($modal.open).toHaveBeenCalledWith({
                         animation: true,
-                        controller: "AnswerExampleModalController",
-                        templateUrl: 'modules/answer/answer-form-partial.html',
+                        controller: "AnswerModalController",
+                        templateUrl: 'modules/answer/answer-modal-partial.html',
                         scope: jasmine.any(Object)
                     })
                 });

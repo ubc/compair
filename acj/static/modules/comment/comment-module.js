@@ -86,169 +86,140 @@ module.directive('acjAnswerContent', function() {
 
 /***** Controllers *****/
 module.controller(
-    "AssignmentCommentCreateController",
-    ['$scope', '$log', '$location', '$routeParams', 'AssignmentCommentResource', 'AssignmentResource', 'Toaster',
-     'EditorOptions',
-    function ($scope, $log, $location, $routeParams, AssignmentCommentResource, AssignmentResource, Toaster,
-              EditorOptions)
+    "AssignmentCommentModalController",
+    ['$scope', 'AssignmentCommentResource', 'AssignmentResource', 'Toaster',
+     'EditorOptions', "$modalInstance",
+    function ($scope, AssignmentCommentResource, AssignmentResource, Toaster,
+              EditorOptions, $modalInstance)
     {
-        var courseId = $scope.courseId = $routeParams['courseId'];
-        var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
-
+        //$scope.courseId
+        //$scope.assignmentId
+        $scope.comment = typeof($scope.comment) != 'undefined' ? $scope.comment : {};
+        $scope.method = $scope.comment.id ? 'edit' : 'new';
+        $scope.modalInstance = $modalInstance;
         $scope.editorOptions = EditorOptions.basic;
 
-        $scope.comment = {};
-        AssignmentResource.get({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
-            function(ret) {
-                $scope.parent = ret;
-            },
-            function (ret) {
-                Toaster.reqerror("Unable to retrieve the assignment "+assignmentId, ret);
-            }
-        );
+        $scope.parent = AssignmentResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId});
+
+        if ($scope.method == 'edit') {
+            AssignmentCommentResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId, 'commentId': $scope.comment.id}).$promise.then(
+                function(ret) {
+                    $scope.comment = ret;
+                },
+                function (ret) {
+                    Toaster.reqerror("Unable to retrieve comment "+$scope.comment.id, ret);
+                }
+            );
+        }
         $scope.commentSubmit = function () {
             $scope.submitted = true;
-            AssignmentCommentResource.save({'courseId': courseId, 'assignmentId': assignmentId},
-                $scope.comment).$promise.then(
-                    function (ret)
-                    {
-                        $scope.submitted = false;
-                        Toaster.success("New comment posted!");
-                        $location.path('/course/'+courseId+'/assignment/'+assignmentId);
-                    },
-                    function (ret)
-                    {
-                        $scope.submitted = false;
-                        Toaster.reqerror("Unable to post new comment.", ret);
+
+            AssignmentCommentResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.comment)
+            .$promise.then(
+                function (ret) {
+                    $scope.comment = ret;
+                    $scope.submitted = false;
+
+                    if ($scope.method == 'new') {
+                        Toaster.success("New Comment Created!");
+                    } else {
+                        Toaster.success("Comment Updated!");
                     }
-                );
-        };
-    }]
-);
 
-module.controller(
-    "AssignmentCommentEditController",
-    ['$scope', '$log', '$location', '$routeParams', 'AssignmentCommentResource', 'AssignmentResource', 'Toaster',
-     'EditorOptions',
-    function ($scope, $log, $location, $routeParams, AssignmentCommentResource, AssignmentResource, Toaster,
-              EditorOptions)
-    {
-        var courseId = $scope.courseId = $routeParams['courseId'];
-        var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
-        var commentId = $routeParams['commentId'];
-
-        $scope.editorOptions = EditorOptions.basic;
-
-        $scope.comment = {};
-        $scope.parent = {}; // assignment
-        AssignmentCommentResource.get({'courseId': courseId, 'assignmentId': assignmentId, 'commentId': commentId}).$promise.then(
-            function(ret) {
-                $scope.comment = ret;
-            },
-            function (ret) {
-                Toaster.reqerror("Unable to retrieve comment "+commentId, ret);
-            }
-        );
-        AssignmentResource.get({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
-            function(ret) {
-                $scope.parent = ret;
-            },
-            function (ret) {
-                Toaster.reqerror("Unable to retrieve the assignment "+assignmentId, ret);
-            }
-        );
-        $scope.commentSubmit = function () {
-            AssignmentCommentResource.save({'courseId': courseId, 'assignmentId': assignmentId}, $scope.comment).$promise.then(
-                function() {
-                    Toaster.success("Comment Updated!");
-                    $location.path('/course/' + courseId + '/assignment/' +assignmentId);
+                    $modalInstance.close($scope.comment);
                 },
-                function(ret) { Toaster.reqerror("Comment Save Failed.", ret);}
+                function (ret)
+                {
+                    $scope.submitted = false;
+                    Toaster.reqerror("Comment Save Failed.", ret);
+                }
             );
         };
     }]
 );
 
 module.controller(
-    "AnswerCommentCreateController",
-    ['$scope', '$log', '$location', '$routeParams', 'AnswerCommentResource', 'AnswerResource',
-        'AssignmentResource', 'Authorize', 'Toaster', 'AnswerCommentType', 'EditorOptions',
-    function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource,
-              AssignmentResource, Authorize, Toaster, AnswerCommentType, EditorOptions)
+    "AnswerCommentModalController",
+    ['$scope', 'AnswerCommentResource', 'AnswerResource', 'Toaster', 'Authorize',
+     'AnswerCommentType', 'AssignmentResource', 'EditorOptions', "$modalInstance",
+    function ($scope, AnswerCommentResource, AnswerResource, Toaster, Authorize,
+              AnswerCommentType, AssignmentResource, EditorOptions, $modalInstance)
     {
-        var courseId = $scope.courseId = $routeParams['courseId'];
-        var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
-        var answerId = $routeParams['answerId'];
+        //$scope.courseId
+        //$scope.assignmentId
+        //$scope.answerId
+        $scope.comment = typeof($scope.comment) != 'undefined' ? $scope.comment : {};
+        $scope.method = $scope.comment.id ? 'edit' : 'new';
+        $scope.modalInstance = $modalInstance;
 
         $scope.editorOptions = EditorOptions.basic;
-
-        $scope.AnswerCommentType = AnswerCommentType;
         $scope.answerComment = true;
-        $scope.canManageAssignment =
-            Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, courseId);
-        $scope.comment = {
-            'comment_type': AnswerCommentType.private
-        };
+        $scope.AnswerCommentType = AnswerCommentType;
 
-        $scope.parent = AnswerResource.get({'courseId': courseId, 'assignmentId': assignmentId, 'answerId': answerId});
-
-        // only need to do this query if the user cannot manage users
-        AssignmentResource.get({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
-            function (ret) {
-                if (!$scope.canManageAssignment && !ret.students_can_reply) {
-                    Toaster.error("No replies can be made for answers in this assignment.");
-                    $location.path('/course/' + courseId + '/assignment/' + assignmentId);
-                }
-            },
-            function (ret) {
-                Toaster.reqerror("Unable to retrieve the assignment.", ret);
-            });
-        $scope.commentSubmit = function () {
-            $scope.submitted = true;
-            AnswerCommentResource.save({'courseId': courseId, 'assignmentId': assignmentId, 'answerId': answerId},
-                $scope.comment).$promise.then(
-                    function (ret)
-                    {
-                        $scope.submitted = false;
-                        Toaster.success("New reply posted!");
-                        $location.path('/course/'+courseId+'/assignment/'+assignmentId);
+        if ($scope.method == 'new') {
+            $scope.comment = {
+                'comment_type': AnswerCommentType.private
+            }
+            $scope.canManageAssignment = Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, $scope.courseId);
+            // only need to do this query if the user cannot manage users
+            if (!$scope.canManageAssignment) {
+                AssignmentResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId})
+                .$promise.then(
+                    function (ret) {
+                        if (!ret.students_can_reply) {
+                            Toaster.error("No replies can be made for answers in this assignment.");
+                            $modalInstance.dismiss();
+                        }
                     },
-                    function (ret)
-                    {
-                        $scope.submitted = false;
-                        Toaster.reqerror("Unable to post new reply.", ret);
+                    function (ret) {
+                        Toaster.reqerror("Unable to retrieve the assignment.", ret);
                     }
                 );
-        };
-    }]
-);
+            }
+        } else if($scope.method == 'edit') {
+            // refresh the answer if already exists
+            $scope.comment = AnswerCommentResource.get({
+                'courseId': $scope.courseId,
+                'assignmentId': $scope.assignmentId,
+                'answerId': $scope.answerId,
+                'commentId': $scope.comment.id
+            });
+        }
+        $scope.parent = AnswerResource.get({
+            'courseId': $scope.courseId,
+            'assignmentId': $scope.assignmentId,
+            'answerId': $scope.answerId
+        });
 
-module.controller(
-    "AnswerCommentEditController",
-    ['$scope', '$log', '$location', '$routeParams', 'AnswerCommentResource', 'AnswerResource', 'Toaster',
-     'AnswerCommentType', 'EditorOptions',
-    function ($scope, $log, $location, $routeParams, AnswerCommentResource, AnswerResource, Toaster, AnswerCommentType,
-              EditorOptions)
-    {
-        var courseId = $scope.courseId = $routeParams['courseId'];
-        var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
-        var answerId = $routeParams['answerId'];
-        var commentId = $routeParams['commentId'];
-
-        $scope.editorOptions = EditorOptions.basic;
-
-        $scope.answerComment = true;
-        $scope.AnswerCommentType = AnswerCommentType;
-
-        $scope.comment = AnswerCommentResource.get({'courseId': courseId, 'assignmentId': assignmentId, 'answerId': answerId, 'commentId': commentId});
-        $scope.parent = AnswerResource.get({'courseId': courseId, 'assignmentId': assignmentId, 'answerId': answerId});
         $scope.commentSubmit = function () {
-            AnswerCommentResource.save({'courseId': courseId, 'assignmentId': assignmentId, 'answerId': answerId, 'commentId': commentId}, $scope.comment).$promise.then(
-                function() {
-                    Toaster.success("Reply Updated!");
-                    $location.path('/course/' + courseId + '/assignment/' +assignmentId);
+            $scope.submitted = true;
+
+            AnswerCommentResource.save({
+                'courseId': $scope.courseId,
+                'assignmentId': $scope.assignmentId,
+                'answerId': $scope.answerId,
+                'commentId': $scope.comment.id
+            }, $scope.comment).$promise.then(
+                function(ret) {
+                    $scope.comment = ret;
+                    $scope.submitted = false;
+
+                    if ($scope.method == 'new') {
+                        Toaster.success("Reply Created!");
+                    } else {
+                        Toaster.success("Reply Updated!");
+                    }
+
+                    $modalInstance.close($scope.comment);
                 },
-                function(ret) { Toaster.reqerror("Reply Not Updated", ret);}
+                function(ret) {
+                    $scope.submitted = false;
+                    if ($scope.method == 'new') {
+                        Toaster.reqerror("Reply Not Created", ret);
+                    } else {
+                        Toaster.reqerror("Reply Not Updated", ret);
+                    }
+                }
             );
         };
     }]
