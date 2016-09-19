@@ -24,6 +24,7 @@ var gulp = require('gulp'),
     connect = require('gulp-connect'),
     sauceConnectLauncher = require('sauce-connect-launcher'),
     del = require('del').sync, // use sync method, gulp doesn't seem to wait for async del
+    sort = require('gulp-sort'), // gulp.src with wildcard doesn't give us a stable file order
     templateCache = require('gulp-angular-templatecache');
 
 var cssFilenames = [
@@ -67,12 +68,15 @@ gulp.task('prod_compile_minify_css', ['less'], function() {
 });
 gulp.task('prod_minify_js_libs', function() {
     return gulp.src(mainBowerFiles({"filter": /.*\.js/}))
+        .pipe(sort())
         .pipe(concat(jsLibsFilename))
         .pipe(uglify())
         .pipe(gulp.dest('./acj/static/build'));
 });
 gulp.task('prod_templatecache', function () {
     return gulp.src('./acj/static/modules/**/*.html')
+        // we need a stable order to get the stable hash
+        .pipe(sort())
         .pipe(templateCache({
             root: 'modules/'
         }))
@@ -103,6 +107,8 @@ gulp.task('prod_minify_js', ['prod_templatecache'], function() {
         './bower_components/ckeditor/plugins/widget/lang/en.js',
         './bower_components/ckeditor/plugins/lineutils/plugin.js'
     ])
+        // we need to sort to generate a stable order so that we have a stable hash
+        .pipe(sort())
         .pipe(concat(jsFilename))
         .pipe(uglify())
         .pipe(gulp.dest('./acj/static/build'));
