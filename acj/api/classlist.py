@@ -158,7 +158,7 @@ def import_users(import_type, course, users):
             u.password = None
         else:
             # ComPAIR login
-            u.password = user[PASSWORD] if length > PASSWORD and user[PASSWORD] else random_generator(16, letters_digits)
+            u.password = user[PASSWORD] if length > PASSWORD and user[PASSWORD] else None
 
         # validate student number (if not None)
         if u.student_number:

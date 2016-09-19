@@ -118,8 +118,8 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
 
     @hybrid_property
     def uses_acj_login(self):
-        # third party auth users may have their username and password not set
-        return self.username != None and self.password != None
+        # third party auth users may have their username not set
+        return self.username != None
 
     def verify_password(self, password):
         if self.password == None:
