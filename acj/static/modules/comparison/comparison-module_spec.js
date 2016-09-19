@@ -442,6 +442,8 @@ describe('comparison-module', function () {
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments', expectedAnswerComment1).respond({});
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/279cABC123-abcABC123_Z/comments/3703ABC123-abcABC123_Z', expectedAnswerComment2).respond({});
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/comparisons', expectedComparison).respond(mockComparisonResponse);
+				// users with management permissions do not reload the assignment status at this point anymore
+                /*
                 $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/status').respond({
                     "status": {
                         "answers": {
@@ -457,6 +459,7 @@ describe('comparison-module', function () {
                         }
                     }
                 });
+                */
 
                 expect($rootScope.preventExit).toBe(true);
 

@@ -131,11 +131,13 @@ module.controller(
             }
         );
 
-        $scope.deleteAssignment = function(key, course_id, assignment_id) {
+        $scope.deleteAssignment = function(course_id, assignment_id) {
             AssignmentResource.delete({'courseId': course_id, 'assignmentId': assignment_id}).$promise.then(
                 function (ret) {
-                    $scope.assignments.splice(key, 1);
                     Toaster.success("Successfully deleted assignment " + ret.id);
+                    $scope.assignments = _.filter($scope.assignments, function(assignment) {
+                        return assignment.id != assignment_id;
+                    });
                 },
                 function (ret) {
                     Toaster.reqerror("Assignment deletion failed", ret);

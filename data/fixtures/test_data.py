@@ -536,7 +536,7 @@ class TestFixture:
         for assignment in self.assignments:
             for student in self.students:
                 for i in range(assignment.total_comparisons_required):
-                    comparisons = Comparison.create_new_comparison_set(assignment.id, student.id)
+                    comparisons = Comparison.create_new_comparison_set(assignment.id, student.id, False)
                     for comparison in comparisons:
                         comparison.completed = True
                         comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])

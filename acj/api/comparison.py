@@ -51,6 +51,7 @@ class CompareRootAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(READ, assignment)
+        require(CREATE, Comparison)
         restrict_user = not allow(MANAGE, assignment)
 
         if not assignment.compare_grace:
@@ -75,7 +76,8 @@ class CompareRootAPI(Resource):
         else:
             # if there aren't incomplete comparisons, assign a new one
             try:
-                comparisons = Comparison.create_new_comparison_set(assignment.id, current_user.id)
+                comparisons = Comparison.create_new_comparison_set(assignment.id, current_user.id,
+                    skip_comparison_examples=allow(MANAGE, assignment))
 
                 on_comparison_create.send(
                     self,
@@ -83,14 +85,13 @@ class CompareRootAPI(Resource):
                     user=current_user,
                     course_id=course.id,
                     data=marshal(comparisons, dataformat.get_comparison(restrict_user)))
+
             except InsufficientObjectsForPairException:
                 return {"error": "Not enough answers are available for an evaluation."}, 400
             except UserComparedAllObjectsException:
                 return {"error": "You have compared all the currently available answers."}, 400
             except UnknownPairGeneratorException:
                 return {"error": "Generating scored pairs failed, this really shouldn't happen."}, 500
-
-
 
         return {'objects': marshal(comparisons, dataformat.get_comparison(restrict_user))}
 

@@ -72,6 +72,8 @@ def define_authorization(user, they):
         they.can(CREATE, AnswerComment, course_id=entry.course_id)
         # owner of the answer comment
         they.can((EDIT, DELETE, READ), AnswerComment, user_id=user.id)
+        # students, instructor and ta can submit comparisons
+        they.can(CREATE, Comparison, course_id=entry.course_id)
         # instructors can modify the course and enrolment
         if entry.course_role == CourseRole.instructor:
             they.can(EDIT, Course, id=entry.course_id)
@@ -90,9 +92,6 @@ def define_authorization(user, they):
             they.can(READ, USER_IDENTITY)
             # TA can create criteria
             they.can(CREATE, Criterion)
-        # only students can submit comparisons for now
-        if entry.course_role == CourseRole.student:
-            they.can(CREATE, Comparison, course_id=entry.course_id)
 
 
 # Tell the client side about a user's permissions.

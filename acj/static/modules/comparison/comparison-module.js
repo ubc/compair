@@ -6,6 +6,7 @@
 var module = angular.module('ubc.ctlt.acj.comparison',
     [
         'ubc.ctlt.acj.answer',
+        'ubc.ctlt.acj.authentication',
         'ubc.ctlt.acj.comment',
         'ubc.ctlt.acj.criterion',
         'ubc.ctlt.acj.assignment',
@@ -38,10 +39,10 @@ module.controller(
     'ComparisonController',
     ['$log', '$location', '$route', '$scope', '$timeout', '$routeParams', '$anchorScroll', 'AssignmentResource', 'AnswerResource',
         'ComparisonResource', 'AnswerCommentResource', 'Session', 'Toaster', 'AnswerCommentType', "TimerResource",
-        'EditorOptions',
+        'EditorOptions', "Authorize",
     function($log, $location, $route, $scope, $timeout, $routeParams, $anchorScroll, AssignmentResource, AnswerResource,
         ComparisonResource, AnswerCommentResource, Session, Toaster, AnswerCommentType, TimerResource,
-        EditorOptions)
+        EditorOptions, Authorize)
     {
         var courseId = $scope.courseId = $routeParams['courseId'];
         var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
@@ -55,6 +56,11 @@ module.controller(
         var countDown = function() {
             $scope.showCountDown = true;
         };
+
+
+        Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, $scope.courseId).then(function(result) {
+            $scope.canManageAssignment = result;
+        });
 
         $scope.assignment = {};
         AssignmentResource.get({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
@@ -130,6 +136,7 @@ module.controller(
                 }, function (ret) {
                     $scope.comparisonsError = true;
                     Toaster.info("You've compared the available answers!", "Please check back later for more answers.");
+                    $scope.preventExit = false; //no work done. its safe to exit
                 }
             );
         });
@@ -180,32 +187,39 @@ module.controller(
                 function(ret) {
                     $scope.submitted = false;
                     if (!$scope.isDraft) {
-                        AssignmentResource.getCurrentUserStatus({'id': $scope.courseId, 'assignmentId': assignmentId},
-                            function(ret) {
-                                var comparisons_count = ret.status.comparisons.count;
+                        if(!$scope.canManageAssignment) {
+                            AssignmentResource.getCurrentUserStatus({'id': $scope.courseId, 'assignmentId': assignmentId},
+                                function(ret) {
+                                    var comparisons_count = ret.status.comparisons.count;
 
-                                if ($scope.assignment.total_comparisons_required > comparisons_count) {
-                                    Toaster.success("Your Comparison Saved Successfully", "The next answer pair is now being loaded. Good luck on the next round!");
-                                    $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
-                                    $route.reload();
-                                    window.scrollTo(0, 0);
-                                // self-evaluation
-                                } else if ($scope.assignment.enable_self_evaluation && ret.status.answers.answered) {
-                                    Toaster.success("Your Comparison Saved Successfully", "Write a self-evaluation, and your assignment will be complete!");
-                                    $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
-                                    $location.path('/course/'+courseId+'/assignment/'+assignmentId+'/self_evaluation');
-                                } else {
-                                    Toaster.success("Your Comparison Saved Successfully", "Your assignment is now complete. Good work!");
+                                    if ($scope.assignment.total_comparisons_required > comparisons_count) {
+                                        Toaster.success("Your Comparison Saved Successfully", "The next answer pair is now being loaded. Good luck on the next round!");
+                                        $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
+                                        $route.reload();
+                                        window.scrollTo(0, 0);
+                                    // self-evaluation
+                                    } else if ($scope.assignment.enable_self_evaluation && ret.status.answers.answered) {
+                                        Toaster.success("Your Comparison Saved Successfully", "Write a self-evaluation, and your assignment will be complete!");
+                                        $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
+                                        $location.path('/course/'+courseId+'/assignment/'+assignmentId+'/self_evaluation');
+                                    } else {
+                                        Toaster.success("Your Comparison Saved Successfully", "Your assignment is now complete. Good work!");
+                                        $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
+                                        $location.path('/course/' + courseId);
+                                    }
+                                },
+                                function(ret) {
+                                    Toaster.success("Your Comparison Saved Successfully");
                                     $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
                                     $location.path('/course/' + courseId);
                                 }
-                            },
-                            function(ret) {
-                                Toaster.success("Your Comparison Saved Successfully");
-                                $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
-                                $location.path('/course/' + courseId);
-                            }
-                        );
+                            );
+                        } else {
+                            Toaster.success("Your Comparison Saved Successfully", "The next answer pair is now being loaded.");
+                            $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
+                            $route.reload();
+                            window.scrollTo(0, 0);
+                        }
                     } else {
                         if (comparisonForm) {
                             comparisonForm.$setPristine();

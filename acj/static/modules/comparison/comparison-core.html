@@ -36,7 +36,9 @@
         </div>
 
         <h2 class="col-md-6">Answer Pair</h2>
-        <h2 class="col-md-6 text-right rounds"><span ng-hide="comparisonsError" class="label label-warning">Round {{current}} / {{total}}</span></h2>
+        <h2 class="col-md-6 text-right rounds"><span ng-hide="comparisonsError" class="label label-warning">
+            Round {{current}} <span ng-if="!canManageAssignment">/ {{total}}</span>
+        </h2>
 
         <div ng-show="comparisonsError" class="alert alert-info" role="alert">
             <p><strong>Break time!</strong> You've compared the currently available answer pairs. Please check back later to compare new pairs after more answers have been submitted.</p>

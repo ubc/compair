@@ -289,7 +289,7 @@ class AssignmentEditComparedAPITests(ACJAPITestCase):
 
         for comparison_example in self.data.comparisons_examples:
             if comparison_example.assignment_id == self.assignment.id:
-                comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id)
+                comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id, False)
                 self.assertEqual(comparisons[0].answer1_id, comparison_example.answer1_id)
                 self.assertEqual(comparisons[0].answer2_id, comparison_example.answer2_id)
                 for comparison in comparisons:
@@ -308,7 +308,7 @@ class AssignmentEditComparedAPITests(ACJAPITestCase):
         # n - 1 possible pairs before all answers have been compared
         num_possible_comparisons = num_eligible_answers - 1
         for i in range(num_possible_comparisons):
-            comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id)
+            comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id, False)
             for comparison in comparisons:
                 comparison.completed = True
                 comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
@@ -381,7 +381,7 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
 
         for comparison_example in self.data.comparisons_examples:
             if comparison_example.assignment_id == self.assignment.id:
-                comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id)
+                comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id, False)
                 self.assertEqual(comparisons[0].answer1_id, comparison_example.answer1_id)
                 self.assertEqual(comparisons[0].answer2_id, comparison_example.answer2_id)
                 for comparison in comparisons:
@@ -400,7 +400,7 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
         # n - 1 possible pairs before all answers have been compared
         num_possible_comparisons = num_eligible_answers - 1
         for i in range(num_possible_comparisons):
-            comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id)
+            comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id, False)
             for comparison in comparisons:
                 comparison.completed = True
                 comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
