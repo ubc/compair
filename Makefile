@@ -18,9 +18,9 @@ env:
 	make deps
 
 deps:
-	pip install -r requirements.txt
-	npm install
-	node_modules/gulp/bin/gulp.js
+	$(DOCKERRUN_PY) pip install -r requirements.txt
+	$(DOCKERRUN_NODE) npm install
+	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js
 
 clean:
 	find . -name '*.pyc' -exec rm -f {} \;
@@ -33,28 +33,34 @@ lint:
 	flake8 --exclude=env .
 
 testa:
-	node_modules/gulp/bin/gulp.js test:acceptance
+	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js test:acceptance
 
 testf:
-	node_modules/gulp/bin/gulp.js test:unit
+	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js test:unit
 
 testb:
-	python -m unittest discover -s acj/tests/
+	$(DOCKERRUN_PY) python -m unittest discover -s acj/tests/
 
 tdd:
-	node_modules/karma/bin/karma start acj/static/test/config/karma.conf.js
+	$(DOCKERRUN_NODE) node_modules/karma/bin/karma start acj/static/test/config/karma.conf.js
 
 test: testf testb
 
 testci:
-	node_modules/karma/bin/karma start acj/static/test/config/karma.conf.js --single-run --browsers PhantomJS
-	python -m unittest discover -s acj/tests/
+	$(DOCKERRUN_NODE) node_modules/karma/bin/karma start acj/static/test/config/karma.conf.js --single-run --browsers PhantomJS
+	$(DOCKERRUN_PY) python -m unittest discover -s acj/tests/
 
 testsauce:
-	node_modules/.bin/gulp test:acceptance:sauce
+	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js  test:acceptance:sauce
 
 run:
-	python manage.py runserver -h 0.0.0.0
+	$(DOCKERRUN_PY) python manage.py runserver -h 0.0.0.0
 
 rundev:
-	python manage.py runserver -h 0.0.0.0 -dr
+	$(DOCKERRUN_PY) python manage.py runserver -h 0.0.0.0 -dr
+
+docker-image:
+	docker run -it --rm -v "$(PWD)":/app -w /app node npm install
+	docker run -it --rm -v "$(PWD)":/app -w /app node node_modules/gulp/bin/gulp.js
+	docker run -it --rm -v "$(PWD)":/app -w /app node node_modules/gulp/bin/gulp.js prod
+	docker build -t ubcctlt/compair-app .
