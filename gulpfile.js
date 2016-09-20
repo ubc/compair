@@ -201,7 +201,8 @@ gulp.task('test:acceptance', ['server:frontend', 'bdd'], function() {
 /**
  * Run tests on ci
  */
-gulp.task('test:ci', ['server:frontend'], function (done) {
+gulp.task('test:ci', ['server:frontend', '_test:ci']);
+gulp.task('_test:ci', function (done) {
     gulp.src(["acj/static/test/features/*.feature"])
         .pipe(protractor({
             configFile: "acj/static/test/config/protractor_saucelab.js"
@@ -221,7 +222,8 @@ gulp.task('test:ci', ['server:frontend'], function (done) {
 /**
  * Run acceptance tests
  */
-gulp.task('test:acceptance:sauce', ['server:frontend', 'sauce:connect'], function(done) {
+gulp.task('test:acceptance:sauce', ['server:frontend', '_test:acceptance:sauce']);
+gulp.task('_test:acceptance:sauce', ['sauce:connect'], function(done) {
     gulp.src(["acj/static/test/features/*.feature"])
         .pipe(protractor({
             configFile: "acj/static/test/config/protractor_saucelab_local.js",
