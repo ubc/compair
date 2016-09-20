@@ -18,7 +18,12 @@ def generate_index():
     :return: None
     """
     current_app.static_url_path = '/'
-    index = render_template('index-dev.html')
+    index = render_template(
+        'index-dev.html',
+        app_login_enabled=current_app.config['APP_LOGIN_ENABLED'],
+        cas_login_enabled=current_app.config['CAS_LOGIN_ENABLED'],
+        lti_login_enabled=current_app.config['LTI_LOGIN_ENABLED']
+    )
 
     with open("acj/static/index.html", 'wt', encoding='utf-8') as f:
         f.write(index)

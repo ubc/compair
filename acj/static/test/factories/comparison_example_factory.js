@@ -1,4 +1,5 @@
 var objectAssign = require('object-assign');
+var deepcopy = require('deepcopy');
 
 var comparisonExampleTemplate = {
     "id": null,
@@ -20,9 +21,9 @@ ComparisonExampleFactory.prototype.generateComparisonExample = function (id, cou
     newComparisonExample.course_id = course_id;
     newComparisonExample.assignment_id = assignment_id;
     newComparisonExample.answer1_id = answer1.id;
-    newComparisonExample.answer1 = objectAssign({}, answer1);
+    newComparisonExample.answer1 = deepcopy(answer1);
     newComparisonExample.answer2_id = answer2.id;
-    newComparisonExample.answer2 = objectAssign({}, answer2);
+    newComparisonExample.answer2 = deepcopy(answer2);
 
     return newComparisonExample;
 };

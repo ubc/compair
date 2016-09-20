@@ -9,18 +9,18 @@ var expect = chai.expect;
 var editCourseUserStepDefinitionsWrapper = function () {
 
     this.Then("I should see '$count' users listed for the course", function (count) {
-        count = parseInt(count);
-        return expect(element.all(by.repeater("user in classlist | orderBy:[predicate, 'firstname', 'lastname'] | emptyToEnd:predicate | orderBy:'':reverse"))
-            .count()).to.eventually.eql(count);
+        browser.waitForAngular();
+        return expect(element.all(by.exactRepeater("user in classlist"))
+            .count()).to.eventually.eql(parseInt(count));
     });
 
     this.Then("I should see course users with displaynames:", function (data) {
+        browser.waitForAngular();
         var list = data.hashes().map(function(item) {
-            // add the " »" that is displayed on the page
             return item.displayname;
         });
 
-        return expect(element.all(by.repeater("user in classlist | orderBy:[predicate, 'firstname', 'lastname'] | emptyToEnd:predicate | orderBy:'':reverse")
+        return expect(element.all(by.exactRepeater("user in classlist")
             .column('user.displayname')).getText()).to.eventually.eql(list);
     });
 
@@ -46,7 +46,7 @@ var editCourseUserStepDefinitionsWrapper = function () {
     });
 
     this.When("I set the second user's group to '$groupname'", function (groupname) {
-        var groupSelect = element.all(by.repeater("user in classlist | orderBy:[predicate, 'firstname', 'lastname'] | emptyToEnd:predicate | orderBy:'':reverse"))
+        var groupSelect = element.all(by.exactRepeater("user in classlist"))
             .get(1)
             .element(by.model('user.group_name'));
         if (browser.browserName == "firefox") {
@@ -59,7 +59,7 @@ var editCourseUserStepDefinitionsWrapper = function () {
     });
 
     this.Given("I drop the second user from the course", function () {
-        element.all(by.repeater("user in classlist | orderBy:[predicate, 'firstname', 'lastname'] | emptyToEnd:predicate | orderBy:'':reverse"))
+        element.all(by.exactRepeater("user in classlist"))
             .get(1)
             .element(by.cssContainingText('a', 'Drop'))
             .click();

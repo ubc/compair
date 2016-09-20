@@ -24,18 +24,18 @@ Feature: View Profile
     And I should see the edit profile button
 
   Scenario: Loading other user's profile as instructor with edit permissions
-    Given I'm an Instructor with students
+    Given I'm an Instructor
     And I'm on 'user' page for user with id '3abcABC123-abcABC123_Z'
     Then I should see First Student's profile
     And I should see the edit profile button
 
   Scenario: Loading other user's profile as instructor without edit permissions
-    Given I'm an Instructor with students
+    Given I'm an Instructor
     And I'm on 'user' page for user with id '4abcABC123-abcABC123_Z'
     And I should not see the edit profile button
 
   Scenario: Loading own profile as CWL instructor
-    Given I'm a CWL Instructor with students
+    Given I'm a CWL Instructor
     And I'm on 'home' page
     When I select 'Profile' button
     Then I should be on the 'profile' page
@@ -43,7 +43,7 @@ Feature: View Profile
     And I should see the edit profile button
 
   Scenario: Loading other user's profile as CWL instructor with edit permissions
-    Given I'm a CWL Instructor with students
+    Given I'm a CWL Instructor
     And I'm on 'user' page for user with id '3abcABC123-abcABC123_Z'
     Then I should see First Student's CWL profile
     And I should see the edit profile button

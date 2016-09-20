@@ -2,7 +2,7 @@ Feature: View Course
   As user, I want to view a course
 
   Scenario: Loading course page as admin
-    Given I'm a System Administrator with assignments
+    Given I'm a System Administrator
     And I'm on 'home' page
     When I select the course named 'CHEM 111'
     Then I should be on the 'course' page
@@ -15,7 +15,7 @@ Feature: View Course
       | Assignment Upcoming       |
 
   Scenario: Loading course page as instructor
-    Given I'm an Instructor with assignments
+    Given I'm an Instructor
     And I'm on 'home' page
     When I select the course named 'CHEM 111'
     Then I should be on the 'course' page
@@ -28,7 +28,7 @@ Feature: View Course
       | Assignment Upcoming       |
 
   Scenario: Filtering assignments on course page as instructor
-    Given I'm an Instructor with assignments
+    Given I'm an Instructor
     And I'm on 'course' page for course with id '1abcABC123-abcABC123_Z'
     When I filter course page assignments by 'Assignments being answered'
     Then I should see '1' assignments
@@ -37,7 +37,7 @@ Feature: View Course
       | Assignment Being Answered |
 
   Scenario: Filtering assignments on course page as instructor
-    Given I'm an Instructor with assignments
+    Given I'm an Instructor
     And I'm on 'course' page for course with id '1abcABC123-abcABC123_Z'
     When I filter course page assignments by 'Assignments being compared'
     Then I should see '1' assignments
@@ -46,7 +46,7 @@ Feature: View Course
       | Assignment Being Compared |
 
   Scenario: Filtering assignments on course page as instructor
-    Given I'm an Instructor with assignments
+    Given I'm an Instructor
     And I'm on 'course' page for course with id '1abcABC123-abcABC123_Z'
     When I filter course page assignments by 'Upcoming assignments'
     Then I should see '1' assignments
@@ -56,7 +56,7 @@ Feature: View Course
 
 
   Scenario: Loading course page as student
-    Given I'm a Student with assignments
+    Given I'm a Student
     And I'm on 'home' page
     When I select the course named 'CHEM 111'
     Then I should be on the 'course' page
@@ -68,7 +68,7 @@ Feature: View Course
       | Assignment Being Answered |
 
   Scenario: Filtering assignments on course page as student
-    Given I'm a Student with assignments
+    Given I'm a Student
     And I'm on 'course' page for course with id '1abcABC123-abcABC123_Z'
     When I filter course page assignments by 'My pending assignments'
     Then I should see '2' assignments

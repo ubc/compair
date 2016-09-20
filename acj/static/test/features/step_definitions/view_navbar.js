@@ -29,7 +29,8 @@ var viewNavbarStepDefinitionsWrapper = function () {
         element(by.css("#menu-dropdown")).click();
 
         expect(element(by.css("#own-profile-link")).isPresent()).to.eventually.equal(true);
-        return expect(element(by.css("#logout-link")).isPresent()).to.eventually.equal(true);
+        expect(element(by.css("#logout-link")).isPresent()).to.eventually.equal(true);
+        return element(by.css("body")).click();
     });
 };
 
