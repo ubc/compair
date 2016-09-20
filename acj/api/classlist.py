@@ -200,11 +200,13 @@ def import_users(import_type, course, users):
     # enrol valid users in file
     for user in imported_users:
         enrol = enroled.get(user.id, UserCourse(course_id=course.id, user_id=user.id))
-        enrol.course_role = CourseRole.student
-        db.session.add(enrol)
-        if user.id in students:
-            del students[user.id]
-        count += 1
+        # do not overwrite instructor or teaching assistant roles
+        if enrol.course_role not in [CourseRole.instructor, CourseRole.teaching_assistant]:
+            enrol.course_role = CourseRole.student
+            db.session.add(enrol)
+            if user.id in students:
+                del students[user.id]
+            count += 1
     db.session.commit()
 
     # unenrol users not in file anymore
