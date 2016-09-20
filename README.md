@@ -115,6 +115,35 @@ Run `gulp prod` to generate the production version. This currently just does two
 1. Combine all Bower managed javascript libraries into a single minified file.
 2. Compile and minify the less files into a single css file.
 
+User Authentication Settings
+---------------------------
+
+### APP Login Settings
+
+`APP_LOGIN_ENABLED`: Enable login via username & password (default: True)
+
+Restart server after making any changes to settings
+
+### CAS Login Settings
+
+`CAS_LOGIN_ENABLED`: Enable login via CAS server (default: True)
+
+See [Flask-CAS](https://github.com/cameronbwhite/Flask-CAS) for other CAS settings
+
+Restart server after making any changes to settings
+
+### LTI Settings
+
+`LTI_LOGIN_ENABLED`: Enable login via LTI consumer (default: True)
+`LTI_ENFORCE_SSL`: Enforce https on all LTI requests received (default: True)
+
+In additional, you must manually insert a new LTI consumer record into the lti_consumer table with:
+- a unique and valid `oauth_consumer_key` (view the ACJRequestValidator for constraints)
+- a valid `oauth_consumer_secret` (view the ACJRequestValidator for constraints)
+- `active` set to True
+
+Restart server after making any changes to settings
+
 Google Analytics Web Tracking
 -----------------------------
 1. Register for a Google Analytics web property ID at http://www.google.ca/analytics/.

@@ -19,7 +19,7 @@ from acj.api.classlist import display_name_generator
 from lti.contrib.flask import FlaskToolProvider
 from oauthlib.oauth1 import RequestValidator
 
-lti_api = Blueprint("lti_api", __name__, url_prefix='/api')
+lti_api = Blueprint("lti_api", __name__)
 api = new_restful_api(lti_api)
 
 # events
@@ -27,12 +27,15 @@ on_lti_course_link = event.signal('LTI_CONTEXT_COURSE_LINKED')
 on_lti_course_membership_update = event.signal('LTI_CONTEXT_COURSE_MEMBERSHIP_UPDATE')
 on_lti_course_membership_status_get = event.signal('LTI_CONTEXT_COURSE_MEMBERSHIP_STATUS_GET')
 
-# /lti/auth
+# /auth
 class LTIAuthAPI(Resource):
     def post(self):
         """
         Kickstarts the LTI integration flow.
         """
+        if not current_app.config.get('LTI_LOGIN_ENABLED'):
+            return abort(403)
+
         tool_provider = FlaskToolProvider.from_flask_request(request=request)
         validator = ACJRequestValidator()
         ok = tool_provider.is_valid_request(validator)
@@ -114,9 +117,9 @@ class LTIAuthAPI(Resource):
             else:
                 return display_message, 400
 
-api.add_resource(LTIAuthAPI, '/lti/auth')
+api.add_resource(LTIAuthAPI, '/auth')
 
-# /lti/status
+# /status
 class LTIStatusAPI(Resource):
     def get(self):
         """
@@ -156,9 +159,9 @@ class LTIStatusAPI(Resource):
 
         return { "status" : status }
 
-api.add_resource(LTIStatusAPI, '/lti/status')
+api.add_resource(LTIStatusAPI, '/status')
 
-# /lti/course/:course_uuid/link
+# /course/:course_uuid/link
 class LTICourseLinkAPI(Resource):
     @login_required
     def post(self, course_uuid):
@@ -198,9 +201,9 @@ class LTICourseLinkAPI(Resource):
         else:
             return { 'success': True }
 
-api.add_resource(LTICourseLinkAPI, '/lti/course/<course_uuid>/link')
+api.add_resource(LTICourseLinkAPI, '/course/<course_uuid>/link')
 
-# /lti/course/:course_uuid/membership
+# /course/:course_uuid/membership
 class LTICourseMembershipAPI(Resource):
     @login_required
     def post(self, course_uuid):
@@ -230,10 +233,10 @@ class LTICourseMembershipAPI(Resource):
 
         return { 'imported': True }
 
-api.add_resource(LTICourseMembershipAPI, '/lti/course/<course_uuid>/membership')
+api.add_resource(LTICourseMembershipAPI, '/course/<course_uuid>/membership')
 
 
-# /lti/course/:course_uuid/membership/status
+# /course/:course_uuid/membership/status
 class LTICourseMembershipStatusAPI(Resource):
     @login_required
     def get(self, course_uuid):
@@ -277,7 +280,7 @@ class LTICourseMembershipStatusAPI(Resource):
 
         return { 'status': status }
 
-api.add_resource(LTICourseMembershipStatusAPI, '/lti/course/<course_uuid>/membership/status')
+api.add_resource(LTICourseMembershipStatusAPI, '/course/<course_uuid>/membership/status')
 
 
 class ACJRequestValidator(RequestValidator):

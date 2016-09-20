@@ -298,6 +298,13 @@ class ClasslistRootAPI(Resource):
         params = import_classlist_parser.parse_args()
         import_type = params.get('import_type')
 
+        if import_type not in [ThirdPartyType.cwl.value, None]:
+            return {'error': 'Invalid import type'}, 400
+        elif import_type == ThirdPartyType.cwl.value and not current_app.config.get('CAS_LOGIN_ENABLED'):
+            return {'error': 'Invalid import type: CWL auth not enabled'}, 400
+        elif import_type is None and not current_app.config.get('APP_LOGIN_ENABLED'):
+            return {'error': 'Invalid import type: App auth not enabled'}, 400
+
         uploaded_file = request.files['file']
         results = {'success': 0, 'invalids': []}
         if uploaded_file and allowed_file(uploaded_file.filename, current_app.config['UPLOAD_ALLOWED_EXTENSIONS']):

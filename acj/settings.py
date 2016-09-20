@@ -43,3 +43,13 @@ ASSET_CLOUD_URI_PREFIX = 'https://d1flf4q1u9z72v.cloudfront.net/dist/'
 
 # Google Analytic Tracking ID, setting this will enable tracking
 GA_TRACKING_ID = None
+
+# Login & Authentification methods
+# Login via ComPAIR username & Password
+APP_LOGIN_ENABLED = True
+# Login via CAS
+# if true requires additonal CAS settings
+CAS_LOGIN_ENABLED = True
+# Login via LTI consumer
+# if true requires record with oauth_consumer_key and oauth_consumer_secret in lti_consumer table
+LTI_LOGIN_ENABLED = True

@@ -10,6 +10,7 @@ var module = angular.module('ubc.ctlt.acj.group',
         'ubc.ctlt.acj.common.form',
         'ubc.ctlt.acj.common.interceptor',
         'ubc.ctlt.acj.toaster',
+        'ubc.ctlt.acj.oauth',
         'ui.bootstrap'
     ]
 );
@@ -40,8 +41,10 @@ module.factory(
 /***** Controllers *****/
 module.controller(
     'GroupImportController',
-    ["$scope", "$log", "$location", "$routeParams", "CourseResource", "Toaster", "importService",
-    function($scope, $log, $location, $routeParams, CourseResource, Toaster, importService)
+    ["$scope", "$log", "$location", "$routeParams", "CourseResource", "Toaster",
+     "importService", "ThirdPartyAuthType",
+    function($scope, $log, $location, $routeParams, CourseResource, Toaster,
+             importService, ThirdPartyAuthType)
     {
         $scope.course = {};
         var courseId = $routeParams['courseId'];
@@ -55,7 +58,7 @@ module.controller(
         );
 
         $scope.userIdentifiers = [
-            {'key': 'cwl', 'label': 'CWL Username'},
+            {'key': ThirdPartyAuthType.cwl, 'label': 'CWL Username'},
             {'key': 'username', 'label': 'ComPAIR Username'},
             {'key': 'student_number', 'label': 'Student Number'}
         ];

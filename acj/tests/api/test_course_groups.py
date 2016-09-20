@@ -4,7 +4,7 @@ import json
 from data.fixtures.test_data import TestFixture, ThirdPartyAuthTestData
 from acj.tests.test_acj import ACJAPITestCase
 
-from acj.models import UserCourse, CourseRole
+from acj.models import UserCourse, CourseRole, ThirdPartyType
 
 
 class CourseGroupsAPITests(ACJAPITestCase):
@@ -298,6 +298,15 @@ class CourseGroupsAPITests(ACJAPITestCase):
             self.assertEqual(0, len(rv.json['invalids']))
             uploaded_file.close()
 
+            # test invalid import with username
+            self.app.config['APP_LOGIN_ENABLED'] = False
+            with_username = self.fixtures.students[0].username + "," + self.fixtures.groups[0]
+            uploaded_file = io.BytesIO(with_username.encode())
+            rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
+            self.assert400(rv)
+            uploaded_file.close()
+            self.app.config['APP_LOGIN_ENABLED'] = True
+
             # test successful import with student number
             with_studentno = self.fixtures.students[0].student_number + "," + self.fixtures.groups[0]
             uploaded_file = io.BytesIO(with_studentno.encode())
@@ -314,11 +323,20 @@ class CourseGroupsAPITests(ACJAPITestCase):
 
             with_cwl_username = cas_auth.unique_identifier + "," + self.fixtures.groups[0]
             uploaded_file = io.BytesIO(with_cwl_username.encode())
-            rv = self.client.post(url, data=dict(userIdentifier="cwl", file=(uploaded_file, filename)))
+            rv = self.client.post(url, data=dict(userIdentifier=ThirdPartyType.cwl.value, file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(1, rv.json['success'])
             self.assertEqual(0, len(rv.json['invalids']))
             uploaded_file.close()
+
+            # test invalid import with cwl username
+            self.app.config['CAS_LOGIN_ENABLED'] = False
+            with_cwl_username = cas_auth.unique_identifier + "," + self.fixtures.groups[0]
+            uploaded_file = io.BytesIO(with_cwl_username.encode())
+            rv = self.client.post(url, data=dict(userIdentifier=ThirdPartyType.cwl.value, file=(uploaded_file, filename)))
+            self.assert400(rv)
+            uploaded_file.close()
+            self.app.config['CAS_LOGIN_ENABLED'] = True
 
             # test import user not in course
             unauthorized_student = self.fixtures.unauthorized_student.username + "," + self.fixtures.groups[0]

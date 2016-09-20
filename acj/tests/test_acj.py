@@ -74,6 +74,10 @@ class ACJTestCase(TestCase):
     def setUp(self):
         db.create_all()
         populate(default_data=True)
+        # reset login settings in case tests fail
+        self.app.config['APP_LOGIN_ENABLED'] = True
+        self.app.config['CAS_LOGIN_ENABLED'] = True
+        self.app.config['LTI_LOGIN_ENABLED'] = True
 
     def tearDown(self):
         db.session.remove()

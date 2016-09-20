@@ -28,7 +28,9 @@ def register_api_blueprints(app):
     app.register_blueprint(login_api)
 
     from .lti_launch import lti_api
-    app.register_blueprint(lti_api)
+    app.register_blueprint(
+        lti_api,
+        url_prefix='/api/lti')
 
     from .users import user_api
     app.register_blueprint(
