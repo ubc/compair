@@ -55,7 +55,8 @@ module.controller(
         );
 
         $scope.userIdentifiers = [
-            {'key': 'username', 'label': 'Username'},
+            {'key': 'cwl', 'label': 'CWL Username'},
+            {'key': 'username', 'label': 'ComPAIR Username'},
             {'key': 'student_number', 'label': 'Student Number'}
         ];
         $scope.userIdentifier = $scope.userIdentifiers[0].key;

@@ -16,7 +16,8 @@ from sqlalchemy import and_, or_
 from . import dataformat
 from acj.authorization import require
 from acj.core import db, event
-from acj.models import UserCourse, User, Course, CourseRole
+from acj.models import UserCourse, User, Course, CourseRole, \
+    ThirdPartyUser, ThirdPartyType
 from .util import new_restful_api
 from .file import allowed_file
 
@@ -42,8 +43,9 @@ def import_members(course, identifier, members):
 
     # require all rows to have two columns if there are a minimum of one entry
     if len(members) > 0 and len(members[0]) != 2:
-        return {'success': count}
-    elif identifier not in ['username', 'student_number']:
+        invalids.append({'member': {}, 'message': 'Only user identifier and group name fields should be in the file.'})
+        return {'success': count, 'invalids': invalids}
+    elif identifier not in ['cwl', 'username', 'student_number']:
         invalids.append({'member': {}, 'message': 'A valid user identifier is not given.'})
         return {'success': count, 'invalids': invalids}
 
@@ -83,9 +85,18 @@ def import_members(course, identifier, members):
             invalids.append({'member': json.dumps(member), 'message': message})
             continue
 
-        if identifier == 'username':
+        if identifier == 'cwl':
+            third_party_user = ThirdPartyUser.query \
+                .filter_by(
+                    third_party_type=ThirdPartyType.cwl,
+                    unique_identifier=member[USER_IDENTIFIER]
+                ) \
+                .first()
+            user = third_party_user.user if third_party_user else None
+            value = 'CWL username'
+        elif identifier == 'username':
             user = User.query.filter_by(username=member[USER_IDENTIFIER]).first()
-            value = identifier
+            value = 'ComPAIR username'
         else:
             user = User.query.filter_by(student_number=member[USER_IDENTIFIER]).first()
             value = 'student number'
