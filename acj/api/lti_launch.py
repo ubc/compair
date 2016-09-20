@@ -95,7 +95,7 @@ class LTIAuthAPI(Resource):
                 angular_route = "/"
 
             # clear cookies in case they exist from previous user
-            response = current_app.make_response(redirect("/static/index.html#"+angular_route))
+            response = current_app.make_response(redirect("/app/#"+angular_route))
             response.set_cookie('current.permissions', value='', path='/static')
             response.set_cookie('current.lti.status', value='', path='/static')
             response.set_cookie('current.user', value='', path='/static')

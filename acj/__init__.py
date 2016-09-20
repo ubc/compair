@@ -1,3 +1,6 @@
+import json
+import os
+
 from flask import Flask, redirect, session as sess, abort, jsonify
 from flask_login import current_user
 from sqlalchemy.orm import joinedload
@@ -9,16 +12,32 @@ from .models import User
 from .activity import log
 from .api import register_api_blueprints, log_events
 
+
+def get_asset_names(app):
+    manifest_path = app.static_folder + '/build/rev-manifest.json'
+    if not os.path.exists(manifest_path):
+        raise RuntimeError('Could not find ' + manifest_path + '. Run gulp prod first.')
+
+    with open(manifest_path, 'r') as f:
+        assets = json.load(f)
+
+    return {'ASSETS': assets}
+
+
 def create_app(conf=config, settings_override=None):
     """Return a :class:`Flask` application instance
 
+    :param conf: Flask config object
     :param settings_override: override the default settings or settings in the configuration file
     """
     if settings_override is None:
         settings_override = {}
-    app = Flask(__name__)
+    app = Flask(__name__, static_url_path='/app')
     app.config.update(conf)
     app.config.update(settings_override)
+
+    assets = get_asset_names(app)
+    app.config.update(assets)
 
     app.logger.debug("Application Configuration: " + str(app.config))
 

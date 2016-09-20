@@ -16,6 +16,7 @@ services:
     environment:
       - DATABASE_URI=mysql+pymysql://compair:compair@db:3306/compair
       - DEV=1
+      - GA_TRACKING_ID=12345
     volumes:
       - .:/code
     depends_on:
@@ -24,7 +25,7 @@ services:
     image: nginx:1.11
     volumes:
       - ./deploy/docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./acj/static:/static:ro
+      - ./acj/static:/compair/app:ro
     ports:
       - "8080:80"
     depends_on:

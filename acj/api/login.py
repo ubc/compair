@@ -84,7 +84,7 @@ def auth_cas():
     set message in session so that frontend can get the message through /session call
     """
     username = cas.username
-    url = "/static/index.html#/lti" if sess.get('LTI') else "/"
+    url = "/app/#/lti" if sess.get('LTI') else "/"
 
     if username is not None:
         thirdpartyuser = ThirdPartyUser.query. \
@@ -99,7 +99,7 @@ def auth_cas():
             if sess.get('LTI') and sess.get('oauth_create_user_link'):
                 sess['CAS_CREATE'] = True
                 sess['CAS_UNIQUE_IDENTIFIER'] = cas.username
-                url = '/static/index.html#/oauth/create'
+                url = '/app/#/oauth/create'
             else:
                 current_app.logger.debug("Login failed, invalid username for: " + username)
                 msg = 'You don\'t have access to this application.'

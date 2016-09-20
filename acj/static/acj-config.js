@@ -27,7 +27,8 @@ var myApp = angular.module('myApp', [
     'ubc.ctlt.acj.navbar',
     'ubc.ctlt.acj.assignment',
     'ubc.ctlt.acj.report',
-    'ubc.ctlt.acj.oauth'
+    'ubc.ctlt.acj.oauth',
+    'templates'
 ]);
 
 myApp.factory('defaultErrorHandlerInterceptor', ['$q', '$log', 'Toaster', function($q, $log, Toaster) {
@@ -57,7 +58,9 @@ myApp.factory('defaultErrorHandlerInterceptor', ['$q', '$log', 'Toaster', functi
     }
 }]);
 
-myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($routeProvider, $logProvider, $httpProvider) {
+myApp.config(['$routeProvider', '$logProvider', '$httpProvider', '$locationProvider',
+    function ($routeProvider, $logProvider, $httpProvider, $locationProvider) {
+
     var debugMode = false;
 
     if (!$httpProvider.defaults.headers.common) {
@@ -66,6 +69,10 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
     $httpProvider.defaults.headers.common['If-Modified-Since'] = '0';
     $httpProvider.defaults.headers.common.Accept = 'application/json';
     $httpProvider.interceptors.push('defaultErrorHandlerInterceptor');
+
+    // doesn't work for now. URLs are encoded in address bar
+    // $locationProvider.html5Mode(true);
+    // $locationProvider.hashPrefix('!');
 
     $routeProvider
         .when ('/',
@@ -239,4 +246,9 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', function ($rout
         .otherwise({redirectTo: '/'});
 
     $logProvider.debugEnabled(debugMode);
+}]);
+
+// placeholder for templates module to store templates into cache
+// gulp prod will generate the actual templates module and put contents into cache
+angular.module('templates', []).run(['$templateCache', function ($templateCache){
 }]);

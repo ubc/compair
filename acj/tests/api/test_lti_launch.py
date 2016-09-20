@@ -46,7 +46,7 @@ class LTILaunchAPITests(ACJAPITestCase):
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
                     follow_redirects=False) as rv:
-                self.assertRedirects(rv, '/static/index.html#/lti')
+                self.assertRedirects(rv, '/app/#/lti')
 
             lti_resource_link = LTIResourceLink.query.all()[-1]
             lti_user = LTIUser.query.all()[-1]
@@ -77,7 +77,7 @@ class LTILaunchAPITests(ACJAPITestCase):
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=None, roles=lti_role,
                     follow_redirects=False) as rv:
-                self.assertRedirects(rv, '/static/index.html#/')
+                self.assertRedirects(rv, '/app/#/')
 
             # check session
             with self.client.session_transaction() as sess:
@@ -99,7 +99,7 @@ class LTILaunchAPITests(ACJAPITestCase):
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
                     follow_redirects=False) as rv:
-                self.assertRedirects(rv, '/static/index.html#/lti')
+                self.assertRedirects(rv, '/app/#/lti')
 
             # check session
             with self.client.session_transaction() as sess:
@@ -125,7 +125,7 @@ class LTILaunchAPITests(ACJAPITestCase):
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
                     follow_redirects=False) as rv:
-                self.assertRedirects(rv, '/static/index.html#/course/'+course.uuid)
+                self.assertRedirects(rv, '/app/#/course/'+course.uuid)
 
             # check session
             with self.client.session_transaction() as sess:
@@ -156,7 +156,7 @@ class LTILaunchAPITests(ACJAPITestCase):
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
                     assignment_uuid="999", follow_redirects=False) as rv:
-                self.assertRedirects(rv, '/static/index.html#/course/'+course.uuid)
+                self.assertRedirects(rv, '/app/#/course/'+course.uuid)
 
             # check session
             with self.client.session_transaction() as sess:
@@ -183,7 +183,7 @@ class LTILaunchAPITests(ACJAPITestCase):
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
                     assignment_uuid=assignment.uuid, follow_redirects=False) as rv:
-                self.assertRedirects(rv, '/static/index.html#/course/'+course.uuid+'/assignment/'+assignment.uuid)
+                self.assertRedirects(rv, '/app/#/course/'+course.uuid+'/assignment/'+assignment.uuid)
 
             # check session
             with self.client.session_transaction() as sess:
@@ -210,7 +210,7 @@ class LTILaunchAPITests(ACJAPITestCase):
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
                     assignment_uuid=assignment.uuid, follow_redirects=False,
                     nonce=nonce, timestamp=timestamp) as rv:
-                self.assertRedirects(rv, '/static/index.html#/course/'+course.uuid+'/assignment/'+assignment.uuid)
+                self.assertRedirects(rv, '/app/#/course/'+course.uuid+'/assignment/'+assignment.uuid)
 
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
@@ -896,7 +896,7 @@ class LTILaunchAPITests(ACJAPITestCase):
             mocked_cas_username.return_value = third_party_user.unique_identifier
 
             with self.client.get(url, data={}, content_type='application/json', follow_redirects=False) as rv:
-                self.assertRedirects(rv, '/static/index.html#/lti')
+                self.assertRedirects(rv, '/app/#/lti')
 
             # check session
             with self.client.session_transaction() as sess:
@@ -931,7 +931,7 @@ class LTILaunchAPITests(ACJAPITestCase):
             mocked_cas_username.return_value = third_party_user.unique_identifier
 
             with self.client.get(url, data={}, content_type='application/json', follow_redirects=False) as rv:
-                self.assertRedirects(rv, '/static/index.html#/lti')
+                self.assertRedirects(rv, '/app/#/lti')
 
             # check session
             with self.client.session_transaction() as sess:

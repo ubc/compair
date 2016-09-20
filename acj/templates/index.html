@@ -2,34 +2,27 @@
 <!--[if IE 9]><html ng-app = "myApp" auth-login class="ie9"><![endif]-->
 <html ng-app = "myApp" auth-login>
     <head>
+        <base href="/app/">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- add empty favicon.ico to prevent broswer errors -->
+        <!-- add empty favicon.ico to prevent browser errors -->
         <link rel="icon" href="data:;base64,iVBORw0KGgo=">
         <title>ComPAIR</title>
 
-        <!-- needed when ckeditor is minified or when running unit tests -->
-        <script src="lib_extension/ckeditor/basepath.js"></script>
-
-        <!-- Bower Installed Libs, automatically inserted using gulp modules -->
-        <!-- bower:css -->
-        <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.css" />
-        <link rel="stylesheet" href="lib/fontawesome/css/font-awesome.css" />
-        <link rel="stylesheet" href="lib/highlightjs/styles/foundation.css" />
-        <link rel="stylesheet" href="lib/angular-loading-bar/build/loading-bar.css" />
-        <link rel="stylesheet" href="lib/AngularJS-Toaster/toaster.css" />
-        <!-- endbower -->
-
         <!-- Javascript Libraries -->
+        <!-- font awesome CDN -->
+        <script src="https://use.fontawesome.com/5896577a49.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.11/ckeditor.js"></script>
+
         <!-- build:prod_minify_js_libs -->
-        <script src="dist/bowerJsLibs-cb918ae4cb.js"></script>
+        <script src="{{ bower_js_libs }}"></script>
         <!-- endbuild -->
 
         <!-- Non-Bower Managed Includes -->
 
         <!-- ACJ Stylesheet -->
         <!-- build:prod_compile_minify_css -->
-        <link rel="stylesheet" href="dist/acj-c2cc877678.css">
+        <link rel="stylesheet" href="{{ acj_css }}">
         <!-- endbuild -->
 
         <!-- MathJax, should figure out how to bower manage this -->
@@ -39,17 +32,25 @@
           skipStartupTypeset: true
         });
         MathJax.Hub.Configured();
-        CKEDITOR.plugins.addExternal( 'combinedmath', '../../lib_extension/ckeditor/plugins/combinedmath/' );
+        CKEDITOR.plugins.addExternal( 'combinedmath', '/app/lib_extension/ckeditor/plugins/combinedmath/' );
         </script>
 
         <!-- build:prod_minify_js -->
-        <script src="dist/acj-5bffb926fb.js"></script>
+        <script src="{{ acj_js }}"></script>
         <!-- endbuild -->
 
-        <!-- Google Analytics -->
-        <script async src='//www.google-analytics.com/analytics.js'></script>
-        <!-- inject:js -->
-        <!-- endinject -->
+        {% if GA_TRACKING_ID %}
+            <!-- Google Analytics -->
+            <script type="text/javascript">
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+                ga('create', '{{ GA_TRACKING_ID }}', 'auto');
+                ga('send', 'pageview');
+            </script>
+        {% endif %}
     </head>
     <body>
 
