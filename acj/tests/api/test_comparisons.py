@@ -87,7 +87,17 @@ class ComparisonAPITests(ACJAPITestCase):
             self.assertIn(actual_answer1['id'], expected_answer_uuids)
             self.assertIn(actual_answer2['id'], expected_answer_uuids)
 
+        self.assignment.educators_can_compare = False
+        db.session.commit()
+
         with self.login(self.data.get_authorized_instructor().username):
+            # cannot compare answers unless educators_can_compare is set for assignment
+            rv = self.client.get(self.base_url)
+            self.assert403(rv)
+
+            self.assignment.educators_can_compare = True
+            db.session.commit()
+
             # no comparisons has been entered yet
             rv = self.client.get(self.base_url)
             self.assert200(rv)
@@ -99,7 +109,17 @@ class ComparisonAPITests(ACJAPITestCase):
             self.assertIn(actual_answer1['id'], expected_answer_uuids)
             self.assertIn(actual_answer2['id'], expected_answer_uuids)
 
+        self.assignment.educators_can_compare = False
+        db.session.commit()
+
         with self.login(self.data.get_authorized_ta().username):
+            # cannot compare answers unless educators_can_compare is set for assignment
+            rv = self.client.get(self.base_url)
+            self.assert403(rv)
+
+            self.assignment.educators_can_compare = True
+            db.session.commit()
+
             # no comparisons has been entered yet
             rv = self.client.get(self.base_url)
             self.assert200(rv)
@@ -260,8 +280,17 @@ class ComparisonAPITests(ACJAPITestCase):
                 content_type='application/json')
             self.assert200(rv)
 
+        self.assignment.educators_can_compare = False
+        db.session.commit()
+
         # instructors can access
-        with self.login(self.data.get_authorized_student().username):
+        with self.login(self.data.get_authorized_instructor().username):
+            rv = self.client.get(self.base_url)
+            self.assert403(rv)
+
+            self.assignment.educators_can_compare = True
+            db.session.commit()
+
             rv = self.client.get(self.base_url)
             self.assert200(rv)
             # expected_comparisons = rv.json
@@ -274,8 +303,17 @@ class ComparisonAPITests(ACJAPITestCase):
                 content_type='application/json')
             self.assert200(rv)
 
+        self.assignment.educators_can_compare = False
+        db.session.commit()
+
         # ta can access
         with self.login(self.data.get_authorized_ta().username):
+            rv = self.client.get(self.base_url)
+            self.assert403(rv)
+
+            self.assignment.educators_can_compare = True
+            db.session.commit()
+
             rv = self.client.get(self.base_url)
             self.assert200(rv)
             # expected_comparisons = rv.json
@@ -295,6 +333,9 @@ class ComparisonAPITests(ACJAPITestCase):
             (self.data.get_authorized_instructor(), True),
             (self.data.get_authorized_ta(), True)
         ]
+
+        self.assignment.educators_can_compare = True
+        db.session.commit()
 
         for (user, has_manage_role) in users:
             compared_answer_uuids = set()

@@ -77,7 +77,7 @@ def get_course(include_details=True):
     }
 
 def get_criterion():
-    data_format = {
+    return {
         'id': fields.String(attribute="uuid"),
         'name': fields.String,
         'description': fields.String,
@@ -88,11 +88,10 @@ def get_criterion():
         'modified': fields.DateTime(dt_format='iso8601'),
         'created': fields.DateTime(dt_format='iso8601')
     }
-    return data_format
 
 
 def get_assignment(restrict_user=True):
-    ret = {
+    return {
         'id': fields.String(attribute="uuid"),
         'course_id': fields.String(attribute="course_uuid"),
         'user_id': fields.String(attribute="user_uuid"),
@@ -115,6 +114,7 @@ def get_assignment(restrict_user=True):
         'students_can_reply': fields.Boolean,
         'enable_self_evaluation': fields.Boolean,
         'pairing_algorithm': UnwrapPairingAlgorithm(attribute='pairing_algorithm'),
+        'educators_can_compare': fields.Boolean,
         'rank_display_limit': fields.Integer(default=None),
 
         'compared': fields.Boolean,
@@ -135,10 +135,8 @@ def get_assignment(restrict_user=True):
         'created': fields.DateTime(dt_format='iso8601')
     }
 
-    return ret
-
 def get_answer(restrict_user=True):
-    ret = {
+    return {
         'id': fields.String(attribute="uuid"),
         'course_id': fields.String(attribute="course_uuid"),
         'assignment_id': fields.String(attribute="assignment_uuid"),
@@ -160,11 +158,9 @@ def get_answer(restrict_user=True):
         'created': fields.DateTime(dt_format='iso8601')
     }
 
-    return ret
-
 
 def get_assignment_comment(restrict_user=True):
-    ret = {
+    return {
         'id': fields.String(attribute="uuid"),
         'course_id': fields.String(attribute="course_uuid"),
         'assignment_id': fields.String(attribute="assignment_uuid"),
@@ -175,11 +171,9 @@ def get_assignment_comment(restrict_user=True):
         'created': fields.DateTime(dt_format='iso8601'),
     }
 
-    return ret
-
 
 def get_answer_comment(restrict_user=True):
-    ret = {
+    return {
         'id': fields.String(attribute="uuid"),
         'course_id': fields.String(attribute="course_uuid"),
         'assignment_id': fields.String(attribute="assignment_uuid"),
@@ -192,8 +186,6 @@ def get_answer_comment(restrict_user=True):
         'user': get_partial_user(restrict_user),
         'created': fields.DateTime(dt_format='iso8601'),
     }
-
-    return ret
 
 
 def get_file():
@@ -249,7 +241,7 @@ def get_comparison_example(with_answers=True):
     return ret
 
 def get_comparison_set(restrict_user=True):
-    ret = {
+    return {
         'course_id': fields.String(attribute="course_uuid"),
         'assignment_id': fields.String(attribute="assignment_uuid"),
         'user_id': fields.String(attribute="user_uuid"),
@@ -270,8 +262,6 @@ def get_comparison_set(restrict_user=True):
         'self_evaluation': fields.List(fields.Nested(get_answer_comment(restrict_user))),
         'created': fields.DateTime(dt_format='iso8601')
     }
-
-    return ret
 
 def get_import_users_results(restrict_user=True):
     return {

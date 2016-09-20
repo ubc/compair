@@ -613,6 +613,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "file": [],
                 "user": angular.copy(currentUser),
                 "pairing_algorithm": null,
+                "educators_can_compare": null,
                 "rank_display_limit": null
             }
             newAssignment = angular.merge(newAssignment, data);

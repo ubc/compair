@@ -40,6 +40,7 @@ on_comparison_update = event.signal('COMPARISON_UPDATE')
 
 #messages
 comparison_deadline_message = 'Assignment comparison deadline has passed.'
+educators_can_not_compare_message = 'Only students can compare answers in this assignment.'
 
 # /
 class CompareRootAPI(Resource):
@@ -56,6 +57,8 @@ class CompareRootAPI(Resource):
 
         if not assignment.compare_grace:
             return {'error': comparison_deadline_message}, 403
+        elif not restrict_user and not assignment.educators_can_compare:
+            return {'error': educators_can_not_compare_message}, 403
 
         # check if user has comparisons they have not completed yet
         comparisons = Comparison.query \
@@ -87,7 +90,7 @@ class CompareRootAPI(Resource):
                     data=marshal(comparisons, dataformat.get_comparison(restrict_user)))
 
             except InsufficientObjectsForPairException:
-                return {"error": "Not enough answers are available for an evaluation."}, 400
+                return {"error": "Not enough answers are available for a comparison."}, 400
             except UserComparedAllObjectsException:
                 return {"error": "You have compared all the currently available answers."}, 400
             except UnknownPairGeneratorException:
@@ -102,13 +105,14 @@ class CompareRootAPI(Resource):
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
-
-        if not assignment.compare_grace:
-            return {'error': comparison_deadline_message}, 403
-
         require(READ, assignment)
         require(CREATE, Comparison)
         restrict_user = not allow(MANAGE, assignment)
+
+        if not assignment.compare_grace:
+            return {'error': comparison_deadline_message}, 403
+        elif not restrict_user and not assignment.educators_can_compare:
+            return {'error': educators_can_not_compare_message}, 403
 
         comparisons = Comparison.query \
             .filter_by(

@@ -135,7 +135,13 @@ module.controller(
                     );
                 }, function (ret) {
                     $scope.comparisonsError = true;
-                    Toaster.info("You've compared the available answers!", "Please check back later for more answers.");
+                    if (ret.status == 403 && ret.data && ret.data.error) {
+                        Toaster.info(ret.data.error);
+                    } else if (ret.status == 400 && ret.data && ret.data.error)  {
+                        Toaster.info("You have compared all the currently available answers.", "Please check back later for more answers.");
+                    } else {
+                        Toaster.reqerror("Cannot Compare Answers", ret);
+                    }
                     $scope.preventExit = false; //no work done. its safe to exit
                 }
             );

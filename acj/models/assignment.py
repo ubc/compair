@@ -37,6 +37,8 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     pairing_algorithm = db.Column(EnumType(PairingAlgorithm, name="pairing_algorithm"),
         nullable=True, default=PairingAlgorithm.random)
     rank_display_limit = db.Column(db.Integer, nullable=True)
+    educators_can_compare = db.Column(db.Boolean(name='educators_can_compare'),
+        default=False, nullable=False)
 
     # relationships
     # user via User Model
