@@ -4,7 +4,7 @@ import io
 
 from data.fixtures.test_data import BasicTestData
 from acj.tests.test_acj import ACJAPITestCase
-from acj.models import CourseRole
+from acj.models import CourseRole, UserCourse
 
 
 class ClassListAPITest(ACJAPITestCase):
@@ -382,6 +382,42 @@ class ClassListAPITest(ACJAPITestCase):
             self.assertEqual(1, result['success'])
             self.assertEqual(0, len(result['invalids']))
             uploaded_file.close()
+
+            # test authorized instructor - existing instructor
+            uploaded_file = io.BytesIO(self.data.get_authorized_instructor().username.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(0, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            instructor_enrollment = UserCourse.query \
+                .filter_by(
+                    course_id=self.data.get_course().id,
+                    user_id=self.data.get_authorized_instructor().id,
+                    course_role=CourseRole.instructor
+                ) \
+                .one_or_none()
+            self.assertIsNotNone(instructor_enrollment)
+
+            # test authorized instructor - existing teaching assistant
+            uploaded_file = io.BytesIO(self.data.get_authorized_ta().username.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(0, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            ta_enrollment = UserCourse.query \
+                .filter_by(
+                    course_id=self.data.get_course().id,
+                    user_id=self.data.get_authorized_ta().id,
+                    course_role=CourseRole.teaching_assistant
+                ) \
+                .one_or_none()
+            self.assertIsNotNone(ta_enrollment)
 
     def test_update_course_role_miltiple(self):
         url = self.url + '/roles'
