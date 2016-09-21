@@ -218,7 +218,7 @@
                             <a href="" confirmation-needed="deleteAnswer(answer, courseId, assignment.id, answer.id)" keyword="instructor answer">
                                 <i class="fa fa-trash-o"></i>
                             </a>
-                            <a href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{answer.id}}/edit">
+                            <a href="" ng-click="editAnswer(answer)">
                                 Edit
                             </a>
                         </div>
@@ -257,7 +257,7 @@
                             <a href="" confirmation-needed="deleteAnswer(answer, courseId, assignment.id, answer.id)" keyword="answer">
                                 <i class="fa fa-trash-o"></i>
                             </a>
-                            <a href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{answer.id}}/edit">
+                            <a href="" ng-click="editAnswer(answer)">
                                 Edit
                             </a>
                         </div>
@@ -336,7 +336,7 @@
                                     <a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="reply">
                                         <i class="fa fa-trash-o"></i>
                                     </a>
-                                    <a href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
+                                    <a href="" ng-click="editAnswerComment(answer, comment)">
                                         Edit
                                     </a>
                                 </div>
@@ -349,9 +349,11 @@
 
                     </div><!-- closes toggle div -->
 
-                    <p><a ng-if="assignment.students_can_reply || canManageAssignment" href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{answer.id}}/comment/create" class="btn btn-sm btn-primary btn-reply">
-                        Reply
-                    </a></p>
+                    <p>
+                        <a ng-if="assignment.students_can_reply || canManageAssignment" href="" ng-click="createAnswerComment(answer)" class="btn btn-sm btn-primary btn-reply">
+                            Reply
+                        </a>
+                    </p>
 
                 </div><!-- closes each-answer (student) -->
 
@@ -399,7 +401,7 @@
                         <a href="" confirmation-needed="deleteAnswer(answer, courseId, assignment.id, answer.id)" keyword="answer">
                             <i class="fa fa-trash-o"></i>
                         </a>
-                        <a href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{answer.id}}/edit">
+                        <a href="" ng-click="editAnswer(answer)">
                             Edit
                         </a>
                     </div>
@@ -447,7 +449,7 @@
                                 <a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="reply">
                                     <i class="fa fa-trash-o"></i>
                                 </a>
-                                <a href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
+                                <a href="" ng-click="editAnswerComment(answer, comment)">
                                     Edit
                                 </a>
                             </div>
@@ -550,7 +552,7 @@
                         <p class="intro-text less-margin">Ask or answer a question about the assignment by adding a comment here.</p>
                     </div>
                     <div class="col-sm-3 text-right comment-btn">
-                        <a href="#/course/{{courseId}}/assignment/{{assignment.id}}/comment/create" class="btn btn-primary">
+                        <a href="" ng-click="createAssignmentComment()">
                             Comment
                         </a>
                     </div>
@@ -584,7 +586,7 @@
                         <a confirmation-needed="deleteComment(commentKey, courseId, assignment.id, comment.id)" keyword="comment" href="">
                             <i class="fa fa-trash-o"></i>
                         </a>
-                        <a href="#/course/{{courseId}}/assignment/{{assignment.id}}/comment/{{comment.id}}/edit">
+                        <a href="" ng-click="editAssignmentComment(comment)">
                             Edit
                         </a>
                     </div>

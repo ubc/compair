@@ -7,6 +7,7 @@ var module = angular.module('ubc.ctlt.acj.answer',
     [
         'ngResource',
         'timer',
+        'ui.bootstrap',
         'ubc.ctlt.acj.classlist',
         'ubc.ctlt.acj.common.form',
         'ubc.ctlt.acj.common.interceptor',
@@ -361,10 +362,8 @@ module.controller(
 ]);
 
 
-
-/***** Controllers *****/
 module.controller(
-    "AnswerExampleModalController",
+    "AnswerModalController",
     ["$scope", "AnswerResource", "Toaster",
         "answerAttachService", "AttachmentResource", "EditorOptions", "$modalInstance",
     function ($scope, AnswerResource, Toaster,
@@ -372,28 +371,14 @@ module.controller(
     {
         //$scope.courseId
         //$scope.assignmentId
-        //$scope.answer
+        $scope.answer = typeof($scope.answer) != 'undefined' ? $scope.answer : {};
+        $scope.method = $scope.answer.id ? 'edit' : 'new';
         $scope.editorOptions = EditorOptions.basic;
-        var method = $scope.assignmentId ? 'edit' : 'new';
         $scope.uploader = answerAttachService.getUploader();
         $scope.resetName = answerAttachService.resetName();
+        $scope.modalInstance = $modalInstance;
 
-        if (method == 'edit') {
-            // refresh the answer if already exists
-            AnswerResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId, 'answerId': $scope.answer.id})
-            .$promise.then(
-                function (ret) {
-                    $scope.answer = ret;
-
-                    if (ret.file) {
-                        $scope.answer.uploadedFile = ret.file
-                    }
-                },
-                function (ret) {
-                    Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
-                }
-            );
-        } else {
+        if ($scope.method == 'new') {
             // if answer is new, prepopulate the file upload area if needed
             if ($scope.answer.fileRef) {
                 $scope.uploader = answerAttachService.getUploader({
@@ -402,11 +387,21 @@ module.controller(
                     'fileRef': $scope.answer.fileRef
                 });
             }
+        } else if($scope.method == 'edit') {
+            // refresh the answer if already exists
+            AnswerResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId, 'answerId': $scope.answer.id})
+            .$promise.then(
+                function (ret) {
+                    $scope.answer = ret;
+                    if (ret.file) {
+                        $scope.answer.uploadedFile = ret.file
+                    }
+                },
+                function (ret) {
+                    Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
+                }
+            );
         }
-
-        $scope.cancel = function() {
-            $modalInstance.dismiss();
-        };
 
         $scope.deleteFile = function(file_id) {
             AttachmentResource.delete({'fileId': file_id}).$promise.then(
@@ -427,26 +422,37 @@ module.controller(
             $scope.answer.file_name = answerAttachService.getName();
             $scope.answer.file_alias = answerAttachService.getAlias();
 
-            // if assignment already exists, save answer immediately
-            if (method == 'edit') {
+            if ($scope.example == true && $scope.method == 'new') {
+                // save the uploaded file info in case modal is reopened
+                $scope.answer.fileRef = answerAttachService.getFile();
+                $modalInstance.close($scope.answer);
+            } else {
+                // save the answer
                 AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answer).$promise.then(
                     function (ret) {
                         $scope.answer = ret;
                         $scope.submitted = false;
-                        Toaster.success("Practice Answer Updated!");
+
+                        if ($scope.example == true) {
+                            Toaster.success("Practice Answer Updated!");
+                        } else {
+                            if ($scope.method == 'new') {
+                                Toaster.success("Answer Created!");
+                            } else {
+                                Toaster.success("Answer Updated!");
+                            }
+                        }
                         $modalInstance.close($scope.answer);
                     },
                     function (ret) {
                         $scope.submitted = false;
-                        Toaster.reqerror("Practice Answer Save Failed.", ret);
+                        if ($scope.example == true) {
+                            Toaster.reqerror("Practice Answer Save Failed.", ret);
+                        } else {
+                            Toaster.reqerror("Answer Save Failed.", ret);
+                        }
                     }
                 );
-            // else return the answer to be saved after new assignment is saved
-            } else {
-                // save the uploaded file info in case modal is reopened
-                $scope.answer.fileRef = answerAttachService.getFile();
-
-                $modalInstance.close($scope.answer);
             }
         };
     }

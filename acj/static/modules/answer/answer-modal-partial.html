@@ -1,0 +1,10 @@
+<modal-cancel-button modal-instance="modalInstance" ng-show="modalInstance !== undefined"></modal-cancel-button>
+<div ng-show="example">
+    <h1>{{answerName}}</h1>
+    <p class="intro-text">This is one answer in the pair students will review as the first comparison for this assignment.</p>
+</div>
+<div ng-show="!example">
+    <h1 ng-if="method == 'new'">Answer</h1>
+    <h1 ng-if="method == 'edit'">Edit Answer</h1>
+</div>
+<ng-include src="'modules/answer/answer-form-partial.html'"></ng-include>
