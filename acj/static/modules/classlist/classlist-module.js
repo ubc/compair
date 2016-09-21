@@ -13,6 +13,7 @@ var module = angular.module('ubc.ctlt.acj.classlist',
         'ubc.ctlt.acj.group',
         'ubc.ctlt.acj.toaster',
         'ubc.ctlt.acj.user',
+        'ubc.ctlt.acj.login',
         'ubc.ctlt.acj.lti',
         'ubc.ctlt.acj.authorization',
         'ubc.ctlt.acj.oauth',
@@ -288,9 +289,9 @@ module.controller(
 module.controller(
     'ClassImportController',
     ["$scope", "$log", "$location", "$routeParams", "ClassListResource", "CourseResource",
-        "Toaster", "importService", "ThirdPartyAuthType",
+        "Toaster", "importService", "ThirdPartyAuthType", "AuthTypesEnabled",
     function($scope, $log, $location, $routeParams, ClassListResource, CourseResource,
-             Toaster, importService, ThirdPartyAuthType)
+             Toaster, importService, ThirdPartyAuthType, AuthTypesEnabled)
     {
         $scope.course = {};
         var courseId = $routeParams['courseId'];
@@ -303,12 +304,16 @@ module.controller(
             }
         );
         $scope.ThirdPartyAuthType = ThirdPartyAuthType;
-        $scope.importTypes = [
-            {'value': null, 'name': 'ComPAIR username'},
-            {'value': ThirdPartyAuthType.cwl, 'name': 'CWL username'}
-        ];
+        $scope.importTypes = [];
+        if (AuthTypesEnabled.cas) {
+            $scope.importTypes.push({'value': ThirdPartyAuthType.cwl, 'name': 'CWL username'})
+        }
+        if (AuthTypesEnabled.app) {
+            $scope.importTypes.push({'value': null, 'name': 'ComPAIR username'})
+        }
+
         // default value
-        $scope.importType = ThirdPartyAuthType.cwl;
+        $scope.importType = $scope.importTypes[0].value;
 
         $scope.uploader = importService.getUploader(courseId, 'users');
         $scope.uploader.onCompleteItem = function(fileItem, response, status, headers) {
