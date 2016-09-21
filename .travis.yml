@@ -80,6 +80,9 @@ deploy:
   bucket: "compair-assets"
   skip_cleanup: true
   local_dir: acj/static/dist
+  on:
+    all_branches: true
+    condition: "$DOCKER = true"
 
 notifications:
   slack: ubcctlt:cyfS7OeXqRjqhyrpIMHJ0SRd
