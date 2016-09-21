@@ -140,6 +140,7 @@ describe('course-module', function () {
         },
         "user_id": "1abcABC123-abcABC123_Z",
         "pairing_algorithm": "random",
+        "educators_can_compare": false,
         "rank_display_limit": 10
     };
 
@@ -1032,6 +1033,7 @@ describe('course-module', function () {
                 expect($rootScope.assignment).toEqual({
                     criteria: [defaultCriteria],
                     students_can_reply: false,
+                    educators_can_compare: false,
                     number_of_comparisons: 3,
                     pairing_algorithm: 'random',
                     rank_display_limit: '0'

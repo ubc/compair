@@ -150,6 +150,7 @@ describe('comparison-module', function () {
             },
             "enable_self_evaluation": true,
             "pairing_algorithm": "random",
+            "educators_can_compare": false,
             "rank_display_limit": 10,
             "name": "Read the poem below, and make notes on syntax, figurative language, patterns of diction and imagery, and form. Then, imagining that you are writing a 1200-word essay, write a critical premise of 20-60 words as we have discussed in class."
         };

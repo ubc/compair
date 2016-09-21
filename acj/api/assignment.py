@@ -35,6 +35,7 @@ new_assignment_parser.add_argument('number_of_comparisons', type=int, required=T
 new_assignment_parser.add_argument('enable_self_evaluation', type=int, default=None)
 new_assignment_parser.add_argument('pairing_algorithm', type=str, default=None)
 new_assignment_parser.add_argument('rank_display_limit', type=int, default=None)
+new_assignment_parser.add_argument('educators_can_compare', type=bool, default=False)
 # has to add location parameter, otherwise MultiDict will screw up the list
 new_assignment_parser.add_argument('criteria', type=list, default=[], location='json')
 
@@ -126,6 +127,8 @@ class AssignmentIdAPI(Resource):
             msg = 'The pair selection algorithm cannot be changed in the assignment ' + \
                     'because it has already been used in an evaluation.'
             return {"error": msg}, 403
+
+        assignment.educators_can_compare = params.get("educators_can_compare")
 
         assignment.rank_display_limit = params.get("rank_display_limit", None)
         if assignment.rank_display_limit != None and assignment.rank_display_limit <= 0:
@@ -265,9 +268,11 @@ class AssignmentRootAPI(Resource):
         new_assignment.description = params.get("description")
         new_assignment.answer_start = dateutil.parser.parse(params.get('answer_start'))
         new_assignment.answer_end = dateutil.parser.parse(params.get('answer_end'))
+        new_assignment.educators_can_compare = params.get("educators_can_compare")
         new_assignment.rank_display_limit = params.get("rank_display_limit", None)
         if new_assignment.rank_display_limit != None and new_assignment.rank_display_limit <= 0:
             new_assignment.rank_display_limit = None
+
 
         new_assignment.compare_start = params.get('compare_start', None)
         if new_assignment.compare_start is not None:
