@@ -1,10 +1,10 @@
 import io
 import json
 
-from data.fixtures.test_data import TestFixture
+from data.fixtures.test_data import TestFixture, ThirdPartyAuthTestData
 from acj.tests.test_acj import ACJAPITestCase
 
-from acj.models import UserCourse
+from acj.models import UserCourse, CourseRole
 
 
 class CourseGroupsAPITests(ACJAPITestCase):
@@ -173,6 +173,7 @@ class CourseGroupsAPITests(ACJAPITestCase):
             self.assert404(rv)
 
     def test_import_groups(self):
+        auth_data = ThirdPartyAuthTestData()
         url = '/api/courses/' + self.fixtures.course.uuid + '/groups'
 
         content = self.fixtures.students[0].username + "," + self.fixtures.groups[0]
@@ -259,7 +260,7 @@ class CourseGroupsAPITests(ACJAPITestCase):
             invalid = rv.json['invalids'][0]
             member = ['["", "', self.fixtures.groups[0], '"]']
             self.assertEqual("".join(member), invalid['member'])
-            self.assertEqual("No user with this username exists.", invalid['message'])
+            self.assertEqual("No user with this ComPAIR username exists.", invalid['message'])
             uploaded_file.close()
 
             # test missing group name
@@ -285,7 +286,7 @@ class CourseGroupsAPITests(ACJAPITestCase):
             invalid = rv.json['invalids'][0]
             member = ['["username9999", "', self.fixtures.groups[0], '"]']
             self.assertEqual("".join(member), invalid['member'])
-            self.assertEqual("No user with this username exists.", invalid['message'])
+            self.assertEqual("No user with this ComPAIR username exists.", invalid['message'])
             uploaded_file.close()
 
             # test successful import with username
@@ -301,6 +302,19 @@ class CourseGroupsAPITests(ACJAPITestCase):
             with_studentno = self.fixtures.students[0].student_number + "," + self.fixtures.groups[0]
             uploaded_file = io.BytesIO(with_studentno.encode())
             rv = self.client.post(url, data=dict(userIdentifier="student_number", file=(uploaded_file, filename)))
+            self.assert200(rv)
+            self.assertEqual(1, rv.json['success'])
+            self.assertEqual(0, len(rv.json['invalids']))
+            uploaded_file.close()
+
+            # test successful import with cwl username
+            cas_auth = auth_data.create_cas_user_auth(CourseRole.student)
+            cas_user = cas_auth.user
+            self.fixtures.enrol_user(cas_user, self.fixtures.course, CourseRole.student)
+
+            with_cwl_username = cas_auth.unique_identifier + "," + self.fixtures.groups[0]
+            uploaded_file = io.BytesIO(with_cwl_username.encode())
+            rv = self.client.post(url, data=dict(userIdentifier="cwl", file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(1, rv.json['success'])
             self.assertEqual(0, len(rv.json['invalids']))
