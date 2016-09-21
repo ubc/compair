@@ -15,11 +15,14 @@ RUN	easy_install distribute \
 COPY deploy/docker/uwsgi.ini /etc/uwsgi/
 
 WORKDIR /code
-ADD . /code/
+
+ADD requirements.txt /code/
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY deploy/docker/docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]
+
+ADD . /code/
 
 EXPOSE 3031
 
