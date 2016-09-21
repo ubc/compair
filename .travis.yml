@@ -80,6 +80,7 @@ deploy:
   bucket: "compair-assets"
   skip_cleanup: true
   local_dir: acj/static/dist
+  upload-dir: dist
   on:
     all_branches: true
     condition: "$DOCKER = true"
