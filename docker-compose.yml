@@ -14,7 +14,12 @@ services:
   app:
     image: ubcctlt/compair-app
     environment:
-      - DATABASE_URI=mysql+pymysql://compair:compair@db:3306/compair
+      - DB_DRIVER=mysql+pymysql
+      - DB_USERNAME=compair
+      - DB_PASSWORD=compair
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=compair
       - DEV=1
       #- GA_TRACKING_ID=12345
     volumes:

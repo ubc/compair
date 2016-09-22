@@ -31,14 +31,24 @@ config.from_object('acj.settings')
 config.from_pyfile(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../config.py'), silent=True)
 
 if os.environ.get('OPENSHIFT_MYSQL_DB_HOST'):
-    config['SQLALCHEMY_DATABASE_URI'] = URL({
-        'drivername': 'mysql',
-        'host': os.environ.get('OPENSHIFT_MYSQL_DB_HOST'),
-        'port': os.environ.get('OPENSHIFT_MYSQL_DB_PORT'),
-        'username': os.environ.get('OPENSHIFT_MYSQL_DB_USERNAME'),
-        'password': os.environ.get('OPENSHIFT_MYSQL_DB_PASSWORD'),
-        'database': os.environ.get('OPENSHIFT_GEAR_NAME'),
-    })
+    config['SQLALCHEMY_DATABASE_URI'] = URL(
+        'mysql+pymysql',
+        host=os.getenv('OPENSHIFT_MYSQL_DB_HOST', 'localhost'),
+        port=os.getenv('OPENSHIFT_MYSQL_DB_PORT', '3306'),
+        username=os.getenv('OPENSHIFT_MYSQL_DB_USERNAME', 'compair'),
+        password=os.getenv('OPENSHIFT_MYSQL_DB_PASSWORD', 'compair'),
+        database=os.getenv('OPENSHIFT_GEAR_NAME', 'compair'),
+    )
+elif os.environ.get('DB_HOST') or os.environ.get('DB_PORT') or os.environ.get('DB_USERNAME') \
+        or os.environ.get('DB_PASSWORD') or os.environ.get('DB_NAME'):
+    config['SQLALCHEMY_DATABASE_URI'] = URL(
+        os.getenv('DB_DRIVER', 'mysql+pymysql'),
+        host=os.getenv('DB_HOST', 'localhost'),
+        port=os.getenv('DB_PORT', '3306'),
+        username=os.getenv('DB_USERNAME', 'compair'),
+        password=os.getenv('DB_PASSWORD', 'compair'),
+        database=os.getenv('DB_NAME', 'compair'),
+    )
 elif os.environ.get('DATABASE_URI'):
     config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
 elif "DATABASE" in config and 'DATABASE_URI' not in config:
