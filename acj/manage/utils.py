@@ -5,7 +5,7 @@ from io import open
 
 from flask import current_app
 from flask import render_template
-from flask.ext.script import Manager
+from flask_script import Manager
 
 manager = Manager(usage="Utility Commands")
 
