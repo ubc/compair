@@ -28,6 +28,12 @@ module.factory('LoginResource', ["$resource", function($resource) {
     );
 }]);
 
+module.constant('AuthTypesEnabled', {
+    app: true,
+    cas: true,
+    lti: true
+});
+
 /***** Directives *****/
 // TODO this might be useful elsewhere, if we need to autofocus something
 // html5 property autofocus behaves differently on Firefox than in Chrome, in Firefox
@@ -129,9 +135,9 @@ module.run(
 /***** Controllers *****/
 module.controller(
     "LoginController",
-    [ "$rootScope", "$scope", "$location", "$log", "$route",
+    [ "$rootScope", "$scope", "$location", "$log", "$route", "AuthTypesEnabled",
       "LoginResource", "AuthenticationService", "LTI", "LTIResource",
-    function ($rootScope, $scope, $location, $log, $route,
+    function ($rootScope, $scope, $location, $log, $route, AuthTypesEnabled,
               LoginResource, AuthenticationService, LTI, LTIResource)
     {
         $scope.submitted = false;
@@ -146,6 +152,12 @@ module.controller(
             $scope.showCreateUserForm = true;
             $scope.showACJAccountFieldsCreateUserForm = false;
         });
+
+        $scope.authTypesEnabled = AuthTypesEnabled;
+        // open account login automatically if cas is disabled
+        if (!$scope.authTypesEnabled.cas && $scope.authTypesEnabled.app) {
+            $scope.showAppLogin = true;
+        }
 
         $scope.submit = function() {
             $scope.submitted = true;

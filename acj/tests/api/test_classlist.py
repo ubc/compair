@@ -383,6 +383,14 @@ class ClassListAPITest(ACJAPITestCase):
             self.assertEqual(0, len(result['invalids']))
             uploaded_file.close()
 
+            # test invalid import type app login disabled
+            self.app.config['APP_LOGIN_ENABLED'] = False
+            uploaded_file = io.BytesIO(auth_student.username.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+            self.assert400(rv)
+            uploaded_file.close()
+            self.app.config['APP_LOGIN_ENABLED'] = True
+
             # test authorized instructor - existing instructor
             uploaded_file = io.BytesIO(self.data.get_authorized_instructor().username.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))

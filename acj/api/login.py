@@ -11,6 +11,9 @@ login_api = Blueprint("login_api", __name__, url_prefix='/api')
 
 @login_api.route('/login', methods=['POST'])
 def login():
+    if not current_app.config.get('APP_LOGIN_ENABLED'):
+        return "", 403
+
     # expecting login params to be in json format
     param = request.json
     if param is None:
@@ -83,6 +86,9 @@ def auth_cas():
     CAS Authentication Endpoint. Authenticate user through CAS. If user doesn't exists,
     set message in session so that frontend can get the message through /session call
     """
+    if not current_app.config.get('CAS_LOGIN_ENABLED'):
+        return "", 403
+
     username = cas.username
     url = "/app/#/lti" if sess.get('LTI') else "/"
 

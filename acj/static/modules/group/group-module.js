@@ -9,7 +9,9 @@ var module = angular.module('ubc.ctlt.acj.group',
         'ubc.ctlt.acj.attachment',
         'ubc.ctlt.acj.common.form',
         'ubc.ctlt.acj.common.interceptor',
+        'ubc.ctlt.acj.login',
         'ubc.ctlt.acj.toaster',
+        'ubc.ctlt.acj.oauth',
         'ui.bootstrap'
     ]
 );
@@ -40,8 +42,10 @@ module.factory(
 /***** Controllers *****/
 module.controller(
     'GroupImportController',
-    ["$scope", "$log", "$location", "$routeParams", "CourseResource", "Toaster", "importService",
-    function($scope, $log, $location, $routeParams, CourseResource, Toaster, importService)
+    ["$scope", "$log", "$location", "$routeParams", "CourseResource", "Toaster",
+     "importService", "ThirdPartyAuthType", "AuthTypesEnabled",
+    function($scope, $log, $location, $routeParams, CourseResource, Toaster,
+             importService, ThirdPartyAuthType, AuthTypesEnabled)
     {
         $scope.course = {};
         var courseId = $routeParams['courseId'];
@@ -54,11 +58,16 @@ module.controller(
             }
         );
 
-        $scope.userIdentifiers = [
-            {'key': 'cwl', 'label': 'CWL Username'},
-            {'key': 'username', 'label': 'ComPAIR Username'},
-            {'key': 'student_number', 'label': 'Student Number'}
-        ];
+        $scope.userIdentifiers = [];
+
+        if (AuthTypesEnabled.cas) {
+            $scope.userIdentifiers.push({'key': ThirdPartyAuthType.cwl, 'label': 'CWL Username'});
+        }
+        if (AuthTypesEnabled.app) {
+            $scope.userIdentifiers.push({'key': 'username', 'label': 'ComPAIR Username'});
+        }
+        $scope.userIdentifiers.push({'key': 'student_number', 'label': 'Student Number'});
+
         $scope.userIdentifier = $scope.userIdentifiers[0].key;
 
         $scope.uploader = importService.getUploader(courseId, 'groups');

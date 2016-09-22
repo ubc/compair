@@ -119,10 +119,10 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     @hybrid_property
     def uses_acj_login(self):
         # third party auth users may have their username not set
-        return self.username != None
+        return self.username != None and current_app.config['APP_LOGIN_ENABLED']
 
     def verify_password(self, password):
-        if self.password == None:
+        if self.password == None or not current_app.config['APP_LOGIN_ENABLED']:
             return False
         pwd_context = getattr(security, current_app.config['PASSLIB_CONTEXT'])
         return pwd_context.verify(password, self.password)

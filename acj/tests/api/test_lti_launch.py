@@ -42,6 +42,14 @@ class LTILaunchAPITests(ACJAPITestCase):
                     user_id=None, context_id=lti_context_id, roles=lti_role) as rv:
                 self.assert400(rv)
 
+            # test LTI auth disabled
+            self.app.config['LTI_LOGIN_ENABLED'] = False
+            with self.lti_launch(lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
+                    follow_redirects=False) as rv:
+                self.assert403(rv)
+            self.app.config['LTI_LOGIN_ENABLED'] = True
+
             # valid request - user without account
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,

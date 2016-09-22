@@ -115,6 +115,16 @@
         <script src="{{ url_for('static', filename='modules/oauth/oauth-module.js') }}"></script>
         <!-- endbuild -->
 
+        <script type="text/javascript">
+            (function() {
+                angular.module('ubc.ctlt.acj.login')
+                .run( ['AuthTypesEnabled', function(AuthTypesEnabled) {
+                    AuthTypesEnabled.app = {{ 'true' if app_login_enabled else 'false' }};
+                    AuthTypesEnabled.cas = {{ 'true' if cas_login_enabled else 'false' }};
+                    AuthTypesEnabled.lti = {{ 'true' if lti_login_enabled else 'false' }};
+                }]);
+            })();
+        </script>
         {% if ga_tracking_id %}
             <!-- Google Analytics -->
             <script type="text/javascript">
