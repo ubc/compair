@@ -20,4 +20,3 @@ module.directive('mathjax', function() {
 
 // End anonymous function
 })();
-

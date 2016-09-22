@@ -25,6 +25,7 @@ var gulp = require('gulp'),
     sauceConnectLauncher = require('sauce-connect-launcher'),
     del = require('del').sync, // use sync method, gulp doesn't seem to wait for async del
     sort = require('gulp-sort'), // gulp.src with wildcard doesn't give us a stable file order
+    streamqueue = require('streamqueue'); // queued streams one by one
     templateCache = require('gulp-angular-templatecache');
 
 var cssFilenames = [
@@ -66,9 +67,9 @@ gulp.task('prod_compile_minify_css', ['less'], function() {
         .pipe(concat(targetCssFilename))
         .pipe(gulp.dest('./acj/static/build'));
 });
+// don't sort bower files as bower handles order and dependency
 gulp.task('prod_minify_js_libs', function() {
     return gulp.src(mainBowerFiles({"filter": /.*\.js/}))
-        .pipe(sort())
         .pipe(concat(jsLibsFilename))
         .pipe(uglify())
         .pipe(gulp.dest('./acj/static/build'));
@@ -89,12 +90,8 @@ gulp.task('prod_copy_fonts', function () {
         .pipe(gulp.dest('acj/static/fonts/'));
 });
 gulp.task('prod_minify_js', ['prod_templatecache'], function() {
-    return gulp.src([
+    var libs = gulp.src([
         './acj/static/acj-config.js',
-        './acj/static/modules/**/*-module.js',
-        './acj/static/modules/**/*-directive.js',
-        './acj/static/modules/**/*-directives.js',
-        './acj/static/modules/**/*-service.js',
         './acj/static/modules/common/pdf.js',
         './acj/static/build/templates.js',
         // ckeditor plugins
@@ -106,9 +103,19 @@ gulp.task('prod_minify_js', ['prod_templatecache'], function() {
         './bower_components/ckeditor/plugins/widget/plugin.js',
         './bower_components/ckeditor/plugins/widget/lang/en.js',
         './bower_components/ckeditor/plugins/lineutils/plugin.js'
-    ])
-        // we need to sort to generate a stable order so that we have a stable hash
-        .pipe(sort())
+    ]);
+    // we need to sort to generate a stable order so that we have a stable hash
+    var modules = gulp.src('./acj/static/modules/**/*-module.js');
+    var directives = gulp.src('./acj/static/modules/**/*-directive.js');
+    var services = gulp.src('./acj/static/modules/**/*-service.js');
+
+    return streamqueue(
+        { objectMode: true },
+        libs,
+        modules.pipe(sort()),
+        directives.pipe(sort()),
+        services.pipe(sort())
+    )
         .pipe(concat(jsFilename))
         .pipe(uglify())
         .pipe(gulp.dest('./acj/static/build'));
