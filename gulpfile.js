@@ -34,6 +34,8 @@ var cssFilenames = [
         './acj/static/lib/highlightjs/styles/foundation.css',
         './acj/static/lib/angular-loading-bar/build/loading-bar.css',
         './acj/static/lib/AngularJS-Toaster/toaster.css',
+        './acj/static/lib/chosen/chosen.css',
+        './acj/static/lib/chosen-bootstrap-theme/dist/chosen-bootstrap-theme.min.css',
         './acj/static/build/acj.css'
     ],
     targetCssFilename = 'acj.css',

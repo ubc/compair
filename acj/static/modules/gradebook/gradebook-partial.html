@@ -9,11 +9,11 @@
             <div class="col-sm-6 text-right multi-filters">
                 <span class="filter" ng-if="canManageAssignment">
                     <label>Show: &nbsp;</label>
-                    <select ng-if="groups.length > 0" ng-model="gb.group" class="nullable"
+                    <select ng-if="groups.length > 0" ng-model="gb.group" class="nullable" chosen
                             ng-options="g as g for g in groups | orderBy: 'toString()'" ng-change="groupChange()">
                         <option value="">All groups</option>
                     </select>
-                    <select ng-model="gb.student" class="nullable"
+                    <select ng-model="gb.student" class="nullable" chosen
                             ng-options="u as u.name for u in users | orderBy: 'name'" ng-change="userChange()">
                         <option value="">All students</option>
                     </select>
@@ -22,7 +22,7 @@
                 <span class="filter" ng-if="canManageAssignment">
                     <label>Display scores <a href="" tooltip="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
                             <i class="fa fa-question-circle"></i></a> below for: &nbsp;</label>
-                    <select ng-model="gb.sortby"
+                    <select ng-model="gb.sortby" chosen
                             ng-options="c.id as c.name for c in criteria" ng-change="criteriaChange()">
                     </select>
                 </span>

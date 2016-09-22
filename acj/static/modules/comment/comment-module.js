@@ -5,6 +5,7 @@
 var module = angular.module('ubc.ctlt.acj.comment',
     [
         'ngResource',
+        'localytics.directives',
         'ubc.ctlt.acj.answer',
         'ubc.ctlt.acj.classlist',
         'ubc.ctlt.acj.common.form',
@@ -273,7 +274,7 @@ module.controller(
             }
         );
 
-        GroupResource.get({'courseId': courseId},
+        $scope.groups = GroupResource.get({'courseId': courseId},
             function (ret) {
                 $scope.groups = ret.objects
             },

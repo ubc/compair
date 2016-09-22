@@ -30,6 +30,8 @@
     "es-breadcrumbs": "~0.4.1",
     "angular-loading-bar": "~0.8.0",
     "AngularJS-Toaster": "~0.4.15",
+    "angular-chosen-localytics": "~1.5",
+    "chosen-bootstrap-theme":  "~1.0.4",
     "angular-moment": "~0.10.3",
     "angular-file-upload": "~1.1.5",
     "angular-mocks": "~1.4.7",
