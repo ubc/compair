@@ -26,6 +26,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     # user many-to-many course with association user_course
     user_courses = db.relationship("UserCourse", back_populates="course", lazy="dynamic")
     assignments = db.relationship("Assignment", backref="course", lazy="dynamic")
+    grades = db.relationship("CourseGrade", backref="course", lazy='dynamic')
 
     # lti
     lti_contexts = db.relationship("LTIContext", backref="acj_course", lazy='dynamic')
@@ -49,9 +50,17 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
         return True
 
+    def calculate_grade(self, user):
+        from . import CourseGrade
+        CourseGrade.calculate_grade(self, user)
+
+    def calculate_grades(self):
+        from . import CourseGrade
+        CourseGrade.calculate_grades(self)
+
     @classmethod
     def __declare_last__(cls):
-        from .lti import LTIContext
+        from .lti_models import LTIContext
         super(cls, cls).__declare_last__()
 
         cls.lti_context_count = column_property(

@@ -193,6 +193,11 @@ class CompareRootAPI(Resource):
             Comparison.update_scores_1vs1(comparisons)
             #Comparison.calculate_scores(assignment.id)
 
+        # update course & assignment grade for user if comparison is completed
+        if completed:
+            assignment.calculate_grade(current_user)
+            course.calculate_grade(current_user)
+
         on_comparison_update.send(
             self,
             event_name=on_comparison_update.name,

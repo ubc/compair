@@ -90,9 +90,3 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             deferred=True,
             group='counts'
         )
-
-
-
-
-
-

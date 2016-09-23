@@ -249,6 +249,11 @@ class AnswerRootAPI(Resource):
 
             db.session.commit()
 
+        # update course & assignment grade for user if answer is fully submitted
+        if not answer.draft:
+            assignment.calculate_grade(answer.user)
+            course.calculate_grade(answer.user)
+
         return marshal(answer, dataformat.get_answer(restrict_user))
 
 
@@ -321,6 +326,11 @@ class AnswerIdAPI(Resource):
 
             db.session.commit()
 
+        # update course & assignment grade for user if answer is fully submitted
+        if not answer.draft:
+            assignment.calculate_grade(answer.user)
+            course.calculate_grade(answer.user)
+
         return marshal(answer, dataformat.get_answer(restrict_user))
 
     @login_required
@@ -334,6 +344,11 @@ class AnswerIdAPI(Resource):
         if answer.file:
             answer.file.active = False
         db.session.commit()
+
+        # update course & assignment grade for user if answer was fully submitted
+        if not answer.draft:
+            assignment.calculate_grade(answer.user)
+            course.calculate_grade(answer.user)
 
         on_answer_delete.send(
             self,

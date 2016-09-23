@@ -11,7 +11,7 @@ from acj.authorization import require, allow
 from .login import authenticate
 from acj.models import User, Course, LTIConsumer, LTIContext, LTIMembership, \
     LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce
-from acj.models.lti import MembershipNoValidContextsException, \
+from acj.models.lti_models import MembershipNoValidContextsException, \
     MembershipNoResultsException, MembershipInvalidRequestException
 from .util import new_restful_api, get_model_changes, pagination_parser
 
