@@ -5,6 +5,7 @@
 
 var module = angular.module('ubc.ctlt.acj.comparison',
     [
+        'localytics.directives',
         'ubc.ctlt.acj.answer',
         'ubc.ctlt.acj.authentication',
         'ubc.ctlt.acj.comment',

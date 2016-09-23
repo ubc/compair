@@ -7,6 +7,7 @@ var module = angular.module('ubc.ctlt.acj.gradebook',
     [
         'ngResource',
         'ngRoute',
+        'localytics.directives',
         'ubc.ctlt.acj.course',
         'ubc.ctlt.acj.group',
         'ubc.ctlt.acj.toaster'

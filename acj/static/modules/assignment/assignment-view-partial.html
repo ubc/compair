@@ -144,18 +144,18 @@
                         <div ng-if="assignment.answer_count && (canManageAssignment || see_answers)">
                             <span class="filter">
                                 <label>Show: &nbsp;</label>
-                                <select ng-if="groups.length > 0 && canManageAssignment" ng-model="answerFilters.group" class="nullable"
+                                <select ng-if="groups.length > 0 && canManageAssignment" ng-model="answerFilters.group" class="nullable" chosen
                                         ng-options="group as group for group in groups | orderBy: 'toString()'">
                                     <option value="">All groups</option>
                                 </select>
-                                <select ng-model="answerFilters.author" class="nullable"
+                                <select ng-model="answerFilters.author" class="nullable" chosen
                                         ng-options="u as u.name for u in students | orderBy: 'name'">
                                     <option value="">All answers</option>
                                 </select>
                             </span><br />
                             <span class="filter" ng-if="(canManageAssignment || rankLimit) && assignment.pairing_algorithm != PairingAlgorithm.random">
                                 <label>Order by: &nbsp;</label>
-                                <select ng-model="answerFilters.orderBy"
+                                <select ng-model="answerFilters.orderBy" chosen
                                         ng-options="c.id as c.name for c in criteria">
                                     <option value="">Date answer submitted</option>
                                 </select>

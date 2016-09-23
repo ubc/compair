@@ -5,16 +5,17 @@
     <p class="intro-text">Filter by a group (if available) and student evaluator's name, or select "any" for these options to see the full list of available comparisons.</p>
 
     <div class="form-group row">
-        <div ng-show="groups.length" class="col-sm-2">
+        <div ng-if="groups.length" class="col-sm-2">
             <label>Group</label>
-            <select class="form-control" ng-model="listFilters.group" ng-options="g as g for g in groups | orderBy: 'toString()'">
+            <select class="form-control" ng-model="listFilters.group" chosen width="'100%'"
+                    ng-options="g as g for g in groups | orderBy: 'toString()'">
                 <option value="">Any Group</option>
             </select>
             <br />
         </div>
         <div ng-class="{'col-sm-4': groups.length, 'col-sm-6': !groups.length}">
             <label>Student Evaluator</label>
-            <select class="form-control" ng-model="listFilters.author"
+            <select class="form-control" ng-model="listFilters.author" chosen width="'100%'"
                     ng-options="s.id as s.name for s in students.objects | filter:{group_name:listFilters.group || undefined } | orderBy: 'name'">
                 <option value="">Any Student</option>
             </select>
@@ -59,10 +60,10 @@
                     <acj-avatar user-id="comparison_set.user_id" avatar="comparison_set.user.avatar" display-name="comparison_set.user.displayname"></acj-avatar>
                     <strong>submitted</strong> on {{ comparison_set.created | amDateFormat: 'MMM D @ h:mm a'}}:
                 </div>
-                
+
                 <!-- Answers -->
                 <h5 class="content">Answer Pair</h5>
-                
+
                 <p class="show-answers content"><a href="" ng-click="showAnswers = !showAnswers;">
                     <i ng-show="showAnswers" class="fa fa-chevron-down"></i>
                     <i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
@@ -73,7 +74,7 @@
                     <acj-answer-content answer="comparison_set.answer1" is-chosen="comparison.winner_id == comparison_set.answer1_id" name="Odd-Numbered Answer" criterion="comparison.criterion_id" show-score="true"></acj-answer-content>
                     <acj-answer-content answer="comparison_set.answer2" is-chosen="comparison.winner_id == comparison_set.answer2_id" name="Even-Numbered Answer" criterion="comparison.criterion_id" show-score="true"></acj-answer-content>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-md-6">
                         <h5 class="content">Feedback for Odd-Numbered Answer</h5>
@@ -90,11 +91,11 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <h5 class="content">Comparisons</h5>
 
                 <div ng-repeat="comparison in comparison_set.comparisons">
-                    
+
                 <p class="content">"{{comparison.criterion.name}}"<br />
                     <span class="glyphicon glyphicon-ok-circle"></span>
                     <span ng-if="comparison.winner_id == comparison_set.answer1_id"><strong>Odd-numbered answer</strong></span>
