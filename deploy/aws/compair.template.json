@@ -1,0 +1,474 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "AWS CloudFormation Template for deploying ComPAIR",
+  "Parameters" : {
+    "KeyName": {
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "Description": "Name of an existing EC2 KeyPair to enable SSH access to the ECS instances."
+    },
+    "SubnetID": {
+      "Type": "List<AWS::EC2::Subnet::Id>",
+      "Description": "Select a default subnet ID."
+    },
+    "DesiredCapacity": {
+      "Type": "Number",
+      "Default" : "1",
+      "Description": "Number of instances to launch in your ECS cluster."
+    },
+    "MaxSize": {
+      "Type": "Number",
+      "Default" : "1",
+      "Description": "Maximum number of instances that can be launched in your ECS cluster."
+    },
+    "InstanceType" : {
+      "Description" : "The EC2 instance type",
+      "Type" : "String",
+      "Default" : "t2.micro",
+      "AllowedValues" : [ "t2.micro" ],
+      "ConstraintDescription" : "You can specify only t2.mirco."
+    },
+    "SSHLocation" : {
+      "Description" : " The IP address range that can be used to SSH to the EC2 instances.",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "0.0.0.0/0",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+    "DBClass" : {
+      "Description" : "Database instance class",
+      "Type" : "String",
+      "Default" : "db.t2.small",
+      "AllowedValues" : [ "db.t1.micro", "db.m1.small", "db.m1.medium", "db.m1.large", "db.m1.xlarge", "db.m2.xlarge", "db.m2.2xlarge", "db.m2.4xlarge", "db.m3.medium", "db.m3.large", "db.m3.xlarge", "db.m3.2xlarge", "db.m4.large", "db.m4.xlarge", "db.m4.2xlarge", "db.m4.4xlarge", "db.m4.10xlarge", "db.r3.large", "db.r3.xlarge", "db.r3.2xlarge", "db.r3.4xlarge", "db.r3.8xlarge", "db.m2.xlarge", "db.m2.2xlarge", "db.m2.4xlarge", "db.cr1.8xlarge", "db.t2.micro", "db.t2.small", "db.t2.medium", "db.t2.large"]
+,
+      "ConstraintDescription" : "must select a valid database instance type."
+    },
+    "DBName" : {
+      "Default": "compair",
+      "Description" : "The ComPAIR database name",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "64",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription" : "must begin with a letter and contain only alphanumeric characters."
+    },
+    "DBUser" : {
+      "Default": "compair",
+      "NoEcho": "true",
+      "Description" : "The ComPAIR database admin account username",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "16",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription" : "must begin with a letter and contain only alphanumeric characters."
+    },
+    "DBPassword" : {
+      "Default": "randompassword",
+      "NoEcho": "true",
+      "Description" : "The ComPAIR database admin account password",
+      "Type": "String",
+      "MinLength": "8",
+      "MaxLength": "41",
+      "AllowedPattern" : "[a-zA-Z0-9]*",
+      "ConstraintDescription" : "must contain only alphanumeric characters."
+    },
+    "MultiAZDatabase": {
+      "Default": "false",
+      "Description" : "Create a Multi-AZ MySQL Amazon RDS database instance",
+      "Type": "String",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must be either true or false."
+    },
+    "DBAllocatedStorage" : {
+      "Default": "5",
+      "Description" : "The size of the database (Gb)",
+      "Type": "Number",
+      "MinValue": "5",
+      "MaxValue": "1024",
+      "ConstraintDescription" : "must be between 5 and 1024Gb."
+    },
+    "AppServerPort" : {
+      "Default": "3031",
+      "Description" : "Application Port",
+      "Type": "Number",
+      "MinValue": "1",
+      "MaxValue": "65535",
+      "ConstraintDescription" : "must be between 1 and 65535."
+    }
+  },
+
+  "Mappings" : {
+    "AWSRegionToAMI" : {
+      "us-east-1"      : { "AMIID" : "ami-55870742" },
+      "us-west-1"      : { "AMIID" : "ami-07713767" },
+      "us-west-2"      : { "AMIID" : "ami-241bd844" },
+      "eu-west-1"      : { "AMIID" : "ami-c74127b4" },
+      "eu-central-1"   : { "AMIID" : "ami-3b54be54" },
+      "ap-northeast-1" : { "AMIID" : "ami-2b08f44a" },
+      "ap-southeast-1" : { "AMIID" : "ami-6b61bc08" },
+      "ap-southeast-2" : { "AMIID" : "ami-d5b59eb6" }
+    }
+  },
+
+  "Conditions" : {
+    "Is-EC2-VPC"     : { "Fn::Or" : [ {"Fn::Equals" : [{"Ref" : "AWS::Region"}, "eu-central-1" ]},
+                                      {"Fn::Equals" : [{"Ref" : "AWS::Region"}, "cn-north-1" ]}]},
+    "Is-EC2-Classic" : { "Fn::Not" : [{ "Condition" : "Is-EC2-VPC"}]}
+  },
+
+  "Resources" : {
+    "ECSCluster": {
+      "Type": "AWS::ECS::Cluster"
+    },
+    "TaskDefinition": {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Properties" : {
+        "ContainerDefinitions": [ {
+          "Name": "compair-app",
+          "Image": "ubcctlt/compair-app",
+          "Essential": true,
+          "Memory": 128,
+          "PortMappings": [
+            {
+              "HostPort": {"Ref" : "AppServerPort"},
+              "ContainerPort": {"Ref" : "AppServerPort"}
+            }
+          ],
+          "Environment": [
+            {
+                "Name": "DB_HOST",
+                "Value": { "Fn::GetAtt" : [ "DBInstance", "Endpoint.Address" ] }
+            },
+            {
+                "Name": "DB_USER",
+                "Value": { "Ref" : "DBUser" }
+            },
+            {
+                "Name": "DB_PASSWORD",
+                "Value": { "Ref" : "DBPassword" }
+            },
+            {
+                "Name": "DB_NAME",
+                "Value": { "Ref" : "DBName" }
+            }
+          ]
+        }]
+      }
+    },
+
+    "DBSecurityGroup": {
+      "Type": "AWS::RDS::DBSecurityGroup",
+      "Condition" : "Is-EC2-Classic",
+      "Properties": {
+        "DBSecurityGroupIngress": {
+          "EC2SecurityGroupName": { "Ref": "WebServerSecurityGroup" }
+        },
+        "GroupDescription": "database access"
+      }
+    },
+
+    "DBEC2SecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Condition" : "Is-EC2-VPC",
+      "Properties" : {
+        "GroupDescription": "Open database for access",
+        "SecurityGroupIngress" : [{
+          "IpProtocol" : "tcp",
+          "FromPort" : "3306",
+          "ToPort" : "3306",
+          "SourceSecurityGroupName" : { "Ref" : "WebServerSecurityGroup" }
+        }]
+      }
+    },
+
+    "DBInstance" : {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "DBName"            : { "Ref" : "DBName" },
+        "Engine"            : "MySQL",
+        "MultiAZ"           : { "Ref": "MultiAZDatabase" },
+        "MasterUsername"    : { "Ref" : "DBUser" },
+        "MasterUserPassword": { "Ref" : "DBPassword" },
+        "DBInstanceClass"   : { "Ref" : "DBClass" },
+        "AllocatedStorage"  : { "Ref" : "DBAllocatedStorage" },
+        "VPCSecurityGroups": { "Fn::If" : [ "Is-EC2-VPC", [ { "Fn::GetAtt": [ "DBEC2SecurityGroup", "GroupId" ] } ], { "Ref" : "AWS::NoValue"}]},
+        "DBSecurityGroups": { "Fn::If" : [ "Is-EC2-Classic", [ { "Ref": "DBSecurityGroup" } ], { "Ref" : "AWS::NoValue"}]}
+      }
+    },
+
+    "LoadBalancerSecurityGroup": {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription": "Security associated to the ComPAIR load balancer",
+        "SecurityGroupIngress": [ {
+          "FromPort": 80,
+          "ToPort": 80,
+          "IpProtocol": "tcp",
+          "CidrIp": "0.0.0.0/0"
+        } ],
+        "Tags": [
+          {"Key": "Name", "Value": "compair-loadbalancer-sg"}
+        ]
+      }
+    },
+
+    "EcsElasticLoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+        "Subnets" : { "Ref" : "SubnetID" },
+        "Listeners" : [ {
+          "LoadBalancerPort" : "80",
+          "InstancePort" : {"Ref" : "AppServerPort"},
+          "InstanceProtocol": "HTTP",
+          "Protocol" : "HTTP"
+        } ],
+        "HealthCheck" : {
+          "Target" : {
+            "Fn::Join" : [ "", [ "HTTP:", { "Ref" : "AppServerPort"  }, "/api/healthz"  ]  ]
+          },
+          "HealthyThreshold" : "2",
+          "UnhealthyThreshold" : "10",
+          "Interval" : "30",
+          "Timeout" : "5"
+        },
+        "SecurityGroups": [
+          { "Fn::GetAtt": [ "LoadBalancerSecurityGroup", "GroupId" ] }
+        ]
+      }
+    },
+
+    "ECSAutoScalingGroup" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "Properties" : {
+        "VPCZoneIdentifier" : { "Ref" : "SubnetID" },
+        "LaunchConfigurationName" : { "Ref" : "ContainerInstances" },
+        "MinSize" : "1",
+        "MaxSize" : { "Ref" : "MaxSize" },
+        "DesiredCapacity" : { "Ref" : "DesiredCapacity" }
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : "PT15M"
+        }
+      },
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "MinInstancesInService": "1",
+          "MaxBatchSize": "1",
+          "PauseTime" : "PT15M",
+          "WaitOnResourceSignals": "true"
+        }
+      }
+    },
+
+    "WebServerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable HTTP access via app server port locked down to the load balancer + SSH access",
+        "SecurityGroupIngress" : [
+          {"IpProtocol" : "tcp", "FromPort" : {"Ref" : "AppServerPort"}, "ToPort" : {"Ref" : "AppServerPort"}, "SourceSecurityGroupOwnerId" : {"Fn::GetAtt" : ["EcsElasticLoadBalancer", "SourceSecurityGroup.OwnerAlias"]},"SourceSecurityGroupName" : {"Fn::GetAtt" : ["EcsElasticLoadBalancer", "SourceSecurityGroup.GroupName"]}},
+          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "SSHLocation"}}
+        ]
+      }
+    },
+
+    "ContainerInstances": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "commands" : {
+              "01_add_instance_to_cluster" : {
+                "command" : { "Fn::Join": [ "", [ "#!/bin/bash\n", "echo ECS_CLUSTER=", { "Ref": "ECSCluster" }, " >> /etc/ecs/ecs.config" ] ] }
+              }
+            },
+            "files" : {
+              "/etc/cfn/cfn-hup.conf" : {
+                "content" : { "Fn::Join" : ["", [
+                  "[main]\n",
+                  "stack=", { "Ref" : "AWS::StackId" }, "\n",
+                  "region=", { "Ref" : "AWS::Region" }, "\n"
+                ]]},
+                "mode"    : "000400",
+                "owner"   : "root",
+                "group"   : "root"
+              },
+              "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
+                "content": { "Fn::Join" : ["", [
+                  "[cfn-auto-reloader-hook]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.ContainerInstances.Metadata.AWS::CloudFormation::Init\n",
+                  "action=/opt/aws/bin/cfn-init -v ",
+                  "         --stack ", { "Ref" : "AWS::StackName" },
+                  "         --resource ContainerInstances ",
+                  "         --region ", { "Ref" : "AWS::Region" }, "\n",
+                  "runas=root\n"
+                ]]}
+              }
+            },
+
+            "services" : {
+              "sysvinit" : {
+                "cfn-hup" : { "enabled" : "true", "ensureRunning" : "true", "files" : ["/etc/cfn/cfn-hup.conf", "/etc/cfn/hooks.d/cfn-auto-reloader.conf"] }
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionToAMI", { "Ref" : "AWS::Region" }, "AMIID" ] },
+        "InstanceType"   : { "Ref" : "InstanceType" },
+        "IamInstanceProfile": { "Ref": "EC2InstanceProfile" },
+        "KeyName"        : { "Ref" : "KeyName" },
+        "SecurityGroups": [
+          { "Fn::GetAtt": [ "WebServerSecurityGroup", "GroupId" ] }
+        ],
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+             "#!/bin/bash -xe\n",
+             "yum install -y aws-cfn-bootstrap\n",
+
+             "/opt/aws/bin/cfn-init -v ",
+             "         --stack ", { "Ref" : "AWS::StackName" },
+             "         --resource ContainerInstances ",
+             "         --region ", { "Ref" : "AWS::Region" }, "\n",
+
+             "/opt/aws/bin/cfn-signal -e $? ",
+             "         --stack ", { "Ref" : "AWS::StackName" },
+             "         --resource ECSAutoScalingGroup ",
+             "         --region ", { "Ref" : "AWS::Region" }, "\n"
+        ]]}}
+      }
+    },
+    "service": {
+      "Type": "AWS::ECS::Service",
+      "DependsOn": ["ECSAutoScalingGroup"],
+      "Properties" : {
+        "Cluster": {"Ref": "ECSCluster"},
+        "DesiredCount": "1",
+        "LoadBalancers": [
+          {
+            "ContainerName": "compair-app",
+            "ContainerPort": {"Ref" : "AppServerPort"},
+            "LoadBalancerName" : { "Ref" : "EcsElasticLoadBalancer" }
+          }
+        ],
+        "Role" : {"Ref":"ECSServiceRole"},
+        "TaskDefinition" : {"Ref":"TaskDefinition"}
+      }
+    },
+
+    "ECSServiceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ecs.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "ecs-service",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "elasticloadbalancing:Describe*",
+                    "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+                    "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+                    "ec2:Describe*",
+                    "ec2:AuthorizeSecurityGroupIngress"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "EC2Role": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "ecs-service",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ecs:CreateCluster",
+                    "ecs:DeregisterContainerInstance",
+                    "ecs:DiscoverPollEndpoint",
+                    "ecs:Poll",
+                    "ecs:RegisterContainerInstance",
+                    "ecs:StartTelemetrySession",
+                    "ecs:Submit*",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "EC2InstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "EC2Role"
+          }
+        ]
+      }
+    }
+  },
+  "Outputs" : {
+    "ecsservice" : {
+      "Value" : { "Ref" : "service" }
+    },
+    "ecscluster" : {
+      "Value" : { "Ref" : "ECSCluster" }
+    },
+    "taskdef" : {
+      "Value" : { "Ref" : "TaskDefinition" }
+    },
+    "WebsiteURL" : {
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "EcsElasticLoadBalancer", "DNSName" ]}, "/" ]]},
+      "Description" : "ComPAIR Website URL"
+    }
+  }
+}
