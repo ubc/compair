@@ -24,6 +24,30 @@ def get_asset_names(app):
     return {'ASSETS': assets}
 
 
+def create_persistent_dirs(conf, logger):
+    """
+    creating persistent directories
+    :param conf: Flask config object
+    :param logger: Logging instance
+    :return: None
+    """
+    for dir_name in ['REPORT_FOLDER', 'UPLOAD_FOLDER', 'ATTACHMENT_UPLOAD_FOLDER']:
+        directory = conf[dir_name]
+        logger.debug('checking directory {}'.format(directory))
+        if not directory:
+            logger.warning('{} is not defined.'.format(directory))
+            continue
+        if not os.path.exists(directory):
+            try:
+                os.makedirs(directory)
+            except OSError:
+                logger.warning('Failed to create directory {}.'.format(directory))
+        elif not os.path.isdir(directory):
+            logger.warning('{} is not a directory.'.format(directory))
+        else:
+            logger.debug('{} exists'.format(directory))
+
+
 def create_app(conf=config, settings_override=None):
     """Return a :class:`Flask` application instance
 
@@ -40,6 +64,8 @@ def create_app(conf=config, settings_override=None):
     app.config.update(assets)
 
     app.logger.debug("Application Configuration: " + str(app.config))
+
+    create_persistent_dirs(app.config, app.logger)
 
     db.init_app(app)
 
