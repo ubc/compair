@@ -48,11 +48,12 @@ class FileAPI(Resource):
             name = str(uuid.uuid4()) + '.pdf'
             tmp_name = os.path.join(current_app.config['UPLOAD_FOLDER'], name)
             uploaded_file.save(tmp_name)
-            current_app.logger.debug("Temporarily saved tmpUpload/" + name)
+            current_app.logger.debug("Temporarily saved {}/{}".format(current_app.config['UPLOAD_FOLDER'], name))
             return {'name': name}
 
         return False
 api.add_resource(FileAPI, '')
+
 
 # /file_uuid
 class FileIdAPI(Resource):
@@ -98,7 +99,7 @@ class FileIdAPI(Resource):
             db.session.commit()
             current_app.logger.debug("SuccessFully deleted " + uploaded_file.name)
 
-api.add_resource(FileIdAPI, '/<file_uuid>')
+api.add_resource(FileIdAPI, '/<uuid:file_uuid>')
 
 
 
@@ -137,7 +138,7 @@ def duplicate_file(file, new_model_name, new_model_id):
         "copied file id:" + str(file.id) + " from " + os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], file.name) +
         " to " + os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], tmp_name))
 
-    return uploaded_file
+    return duplicated_file
 
 
 # delete file

@@ -126,8 +126,8 @@ class ACJAPITestCase(ACJTestCase):
         )
 
         launch_request = tool_consumer.generate_launch_request(nonce=nonce, timestamp=timestamp)
-        lauch_data = parse_qs(launch_request.body.decode('utf-8'))
-        rv = self.client.post('/api/lti/auth', data=lauch_data, follow_redirects=follow_redirects)
+        launch_data = parse_qs(launch_request.body.decode('utf-8'))
+        rv = self.client.post('/api/lti/auth', data=launch_data, follow_redirects=follow_redirects)
         yield rv
         rv.close()
 
