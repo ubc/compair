@@ -48,15 +48,30 @@ Note: Billing needs to be enabled and container engine needs to be initialized b
 Deploying ComPAIR
 ---------------
 
-### Creating Persistent Disk for Database (GCE only)
+### Setup Auto Persistent Volume Provisioning (GCE and Kube 1.4+ only)
+Administrator needs to run the following to enable provisioning for kube 1.4+:
 ```bash
-gcloud compute disks create --size=10GB compair-db-1
+kubectl create -f gce-pd-storageclass.yaml
 ```
-If you are using your own Kubernetes instance, you may want to provision a persistent disk for your database instead of using host path.
 
-### Creating GCE Volume (GCE only)
+### Creating Persistent Disk and Volumes
+If you are using your own Kubernetes instance, you may want to provision a persistent disk for your database and persistent directory instead of using host path. You might be able to take advantage of auto [persistent volume provisioning](https://github.com/kubernetes/kubernetes/blob/release-1.3/examples/experimental/persistent-volume-provisioning/README.md) if you are using one of the supported storage.
+
+For the cluster on GCE, deployment file used GCE auto provisioning. No need to create disks and volumes manually.
+
+### Creating NFS server and NFS persistent volume(GCE only)
+Create NFS server deployment:
 ```bash
-kubectl create -f gce-volumes.yaml
+kubectl create -f nfs-deployment.yaml
+```
+
+Get NFS service IP, listed under `IP` field:
+```
+kubectl describe services compair-nfs-server
+```
+Update the NFS service IP in `nfs-pv.yaml` and then create persistent volume:
+```
+kubectl create -f nfs-pv.yaml
 ```
 
 ### Setting Up Database Password
@@ -102,7 +117,7 @@ Removing ComPAIR From Cluster
 kubectl delete deployment,service -l app=compair
 kubectl delete secret mysql-pass
 kubectl delete pvc -l app=compair
-kubectl delete pv compair-pv-1
+kubectl delete pv nfs-pv
 ```
 
 Tearing Down Cluster
@@ -110,5 +125,4 @@ Tearing Down Cluster
 
 ```bash
 gcloud container clusters delete cluster-compair
-gcloud compute disks delete compair-db-1
 ```
