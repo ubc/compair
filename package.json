@@ -31,6 +31,7 @@
     "chai": "~3.5",
     "chai-as-promised": "~5.3",
     "cucumber": "1.2.2",
+    "deepcopy": "~0.6.3",
     "del": "^2.2.2",
     "gulp-protractor": "~3.0.0",
     "gulp-rev": "^6.0.1",

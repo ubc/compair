@@ -9,6 +9,7 @@ var expect = chai.expect;
 var editAssignmentStepDefinitionsWrapper = function () {
     this.Given("I fill in the criterion description with '$text'", function(text) {
         //load the ckeditor iframe
+        browser.sleep(1000);
         browser.wait(browser.isElementPresent(element(by.css("#cke_criterionDescription iframe"))), 1000);
         browser.driver.switchTo().frame(element(by.css("#cke_criterionDescription iframe")).getWebElement());
         // clear the content
@@ -51,7 +52,7 @@ var editAssignmentStepDefinitionsWrapper = function () {
     });
 
     this.Then("I should see the assignment with the new name and description", function() {
-        var item = element.all(by.repeater("assignment in assignments | filter:assignmentFilter(filter) as results")).get(2)
+        var item = element.all(by.exactRepeater("assignment in assignments")).get(2)
 
         expect(item.element(by.css(".media-heading")).getText()).to.eventually.equal("New Name »");
         return expect(item.element(by.css(".assignment-desc p")).getText()).to.eventually.equal("This is the new description");

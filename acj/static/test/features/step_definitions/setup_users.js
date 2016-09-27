@@ -19,16 +19,28 @@ var setupAdminStepDefinitionsWrapper = function () {
         return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
     });
 
-    this.Given("I'm a System Administrator with courses", {timeout: 20 * 1000}, function () {
-        var fixtureName = 'admin/has_courses_fixture';
+    this.Given("I'm an Instructor", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'instructor/default_fixture';
         backEndMocks.setStorageFixture(browser, fixtureName);
         return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
     });
 
-    this.Given("I'm a System Administrator with assignments", {timeout: 20 * 1000}, function () {
-        var fixtureName = 'admin/has_assignments_fixture';
+    this.Given("I'm a CWL Instructor", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'instructor/cwl_fixture';
+        backEndMocks.setStorageFixture(browser, fixtureName);
+        return loginDialog.skipLogin();
+    });
+
+    this.Given("I'm a Student", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'student/default_fixture';
         backEndMocks.setStorageFixture(browser, fixtureName);
         return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
+    });
+
+    this.Given("I'm a CWL Student", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'student/cwl_fixture';
+        backEndMocks.setStorageFixture(browser, fixtureName);
+        return loginDialog.skipLogin();
     });
 };
 

@@ -165,7 +165,10 @@ gulp.task('bdd', ['webdriver_update'], function (done) {
         .on('error', function (e) {
             throw e
         })
-        .on('end', done);
+        .on('end', function() {
+            connect.serverClose();
+            done();
+        });
 });
 
 /**
@@ -204,7 +207,7 @@ gulp.task('delete_index', function() {
  * Run acceptance tests
  */
 gulp.task('test:acceptance', ['server:frontend', 'bdd'], function() {
-    connect.serverClose();
+
 });
 
 /**

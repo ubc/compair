@@ -1,4 +1,5 @@
 var objectAssign = require('object-assign');
+var deepcopy = require('deepcopy');
 
 var assignmentTemplate = {
     "id": null,
@@ -47,7 +48,7 @@ AssignmentFactory.prototype.generateAssignment = function (id, user, criteria, p
     newAssignment.criteria = [];
 
     for(var index = 0; index < criteria.length; index++) {
-        newAssignment.criteria.push(objectAssign({}, criteria[index]));
+        newAssignment.criteria.push(deepcopy(criteria[index]));
     }
 
     return newAssignment;

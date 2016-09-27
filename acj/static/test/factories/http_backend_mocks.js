@@ -9,19 +9,12 @@ module.exports.build = function(browser) {
 
     storageFixtures = {
         'admin/default_fixture': module.exports.buildStorageFixture(require('../fixtures/admin/default_fixture.js')),
-        'admin/has_courses_fixture': module.exports.buildStorageFixture(require('../fixtures/admin/has_courses_fixture.js')),
-        'admin/has_assignments_fixture': module.exports.buildStorageFixture(require('../fixtures/admin/has_assignments_fixture.js')),
 
-        'instructor/cwl_has_students_fixture': module.exports.buildStorageFixture(require('../fixtures/instructor/cwl_has_students_fixture.js')),
         'instructor/default_fixture': module.exports.buildStorageFixture(require('../fixtures/instructor/default_fixture.js')),
-        'instructor/has_students_fixture': module.exports.buildStorageFixture(require('../fixtures/instructor/has_students_fixture.js')),
-        'instructor/has_courses_fixture': module.exports.buildStorageFixture(require('../fixtures/instructor/has_courses_fixture.js')),
-        'instructor/has_assignments_fixture': module.exports.buildStorageFixture(require('../fixtures/instructor/has_assignments_fixture.js')),
+        'instructor/cwl_fixture': module.exports.buildStorageFixture(require('../fixtures/instructor/cwl_fixture.js')),
 
-        'student/cwl_default_fixture': module.exports.buildStorageFixture(require('../fixtures/student/cwl_default_fixture.js')),
         'student/default_fixture': module.exports.buildStorageFixture(require('../fixtures/student/default_fixture.js')),
-        'student/has_courses_fixture': module.exports.buildStorageFixture(require('../fixtures/student/has_courses_fixture.js')),
-        'student/has_assignments_fixture': module.exports.buildStorageFixture(require('../fixtures/student/has_assignments_fixture.js')),
+        'student/cwl_fixture': module.exports.buildStorageFixture(require('../fixtures/student/cwl_fixture.js'))
     };
 
     browser.addMockModule('httpBackEndMock', module.exports.httpbackendMock, storageFixtures);
@@ -263,6 +256,9 @@ module.exports.httpbackendMock = function(storageFixtures) {
                     courses.push(course)
                 }
             });
+            courses = _.sortBy(courses, function(course) {
+                return course.name;
+            });
 
             return [200, {
                 "objects": courses,
@@ -275,8 +271,13 @@ module.exports.httpbackendMock = function(storageFixtures) {
 
         // get current user courses
         $httpBackend.whenGET(/\/api\/users\/courses\?.*$/).respond(function(method, url, data, headers) {
+            var courses = _.values(storageFixture.storage().courses);
+
+            courses = _.sortBy(courses, function(course) {
+                return course.name;
+            });
             return [200, {
-                "objects": _.values(storageFixture.storage().courses),
+                "objects": courses,
                 "page": 1,
                 "pages": 1,
                 "total": _.keys(storageFixture.storage().courses).length,
@@ -343,14 +344,16 @@ module.exports.httpbackendMock = function(storageFixtures) {
                     });
                 }
             });
+            userList = _.sortBy(userList, function(user) {
+                return user.displayname;
+            });
 
             return [200, { 'objects': userList }, {}];
         });
 
         // get course students by course id
         $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/users\/students$/).respond(function(method, url, data, headers){
-            var courseId = url.replace('/users', '').split('/').pop();
-
+            var courseId = url.split('/')[3];
             var userList = [];
 
             angular.forEach(storageFixture.storage().users, function(user) {

@@ -57,7 +57,7 @@ Feature: Edit Profile
     And I should see 'First Instructor's Profile' in 'h1' on the page
 
   Scenario: Loading edit another user's profile as instructor
-    Given I'm an Instructor with students
+    Given I'm an Instructor
     And I'm on 'user' page for user with id '3abcABC123-abcABC123_Z'
     When I select 'Edit' button
     Then I should be on the 'edit profile' page
@@ -68,7 +68,7 @@ Feature: Edit Profile
     And I should not see the Password section
 
   Scenario: Edit another user's profile as instructor
-    Given I'm an Instructor with students
+    Given I'm an Instructor
     And I'm on 'edit user' page for user with id '3abcABC123-abcABC123_Z'
     When I fill form item 'user.displayname' in with 'student123'
     And I fill form item 'user.firstname' in with 'student'
@@ -115,7 +115,7 @@ Feature: Edit Profile
     And I should see 'First Student's Profile' in 'h1' on the page
 
   Scenario: Loading edit own profile as CWL instructor
-    Given I'm a CWL Instructor with students
+    Given I'm a CWL Instructor
     And I'm on 'user' page for user with id '2abcABC123-abcABC123_Z'
     When I select 'Edit' button
     Then I should be on the 'edit profile' page
@@ -126,7 +126,7 @@ Feature: Edit Profile
     And I should not see the Password section
 
   Scenario: Edit own profile as CWL instructor
-    Given I'm a CWL Instructor with students
+    Given I'm a CWL Instructor
     And I'm on 'edit user' page for user with id '2abcABC123-abcABC123_Z'
     When I fill form item 'user.displayname' in with 'instructor123'
     And I fill form item 'user.firstname' in with 'instructor'
@@ -137,7 +137,7 @@ Feature: Edit Profile
     And I should see 'instructor123's Profile' in 'h1' on the page
 
   Scenario: Loading edit another user's profile as CWL instructor
-    Given I'm a CWL Instructor with students
+    Given I'm a CWL Instructor
     And I'm on 'user' page for user with id '3abcABC123-abcABC123_Z'
     When I select 'Edit' button
     Then I should be on the 'edit profile' page
@@ -148,7 +148,7 @@ Feature: Edit Profile
     And I should not see the Password section
 
   Scenario: Edit another user's profile as CWL instructor
-    Given I'm a CWL Instructor with students
+    Given I'm a CWL Instructor
     And I'm on 'edit user' page for user with id '3abcABC123-abcABC123_Z'
     When I fill form item 'user.displayname' in with 'student123'
     And I fill form item 'user.firstname' in with 'student'
