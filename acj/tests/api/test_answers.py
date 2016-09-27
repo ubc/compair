@@ -4,7 +4,7 @@ import datetime
 from acj import db
 from data.fixtures import AnswerFactory
 from data.fixtures.test_data import TestFixture
-from acj.models import Answer
+from acj.models import Answer, CourseGrade, AssignmentGrade
 from acj.tests.test_acj import ACJAPITestCase
 
 
@@ -242,6 +242,7 @@ class AnswersAPITests(ACJAPITestCase):
                 data=json.dumps(expected_answer),
                 content_type='application/json')
             self.assert403(response)
+
         # test invalid format
         with self.login(self.fixtures.students[0].username):
             invalid_answer = {'post': {'blah': 'blah'}}
@@ -317,10 +318,17 @@ class AnswersAPITests(ACJAPITestCase):
             rv = json.loads(response.data.decode('utf-8'))
             self.assertEqual({"error": "An answer has already been submitted."}, rv)
 
-        # test create draft successful
         self.fixtures.add_students(1)
+        self.fixtures.course.calculate_grade(self.fixtures.students[-1])
+        self.fixtures.assignment.calculate_grade(self.fixtures.students[-1])
         expected_answer = {'content': 'this is some answer content', 'draft': True}
         with self.login(self.fixtures.students[-1].username):
+            course_grade = CourseGrade.get_user_course_grade(
+                self.fixtures.course, self.fixtures.students[-1]).grade
+            assignment_grade = AssignmentGrade.get_user_assignment_grade(
+                self.fixtures.assignments[0], self.fixtures.students[-1]).grade
+
+            # test create draft successful
             response = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
@@ -330,6 +338,15 @@ class AnswersAPITests(ACJAPITestCase):
             actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
             self.assertEqual(expected_answer['draft'], actual_answer.draft)
+
+            # grades should not change
+            new_course_grade = CourseGrade.get_user_course_grade(
+                self.fixtures.course, self.fixtures.draft_student).grade
+            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(
+                self.fixtures.assignments[0], self.fixtures.draft_student).grade
+            self.assertEqual(new_course_grade, course_grade)
+            self.assertEqual(new_assignment_grade, assignment_grade)
+
 
         with self.login(self.fixtures.instructor.username):
             # test instructor can submit outside of grace period
@@ -350,6 +367,8 @@ class AnswersAPITests(ACJAPITestCase):
 
         # test create successful
         self.fixtures.add_students(1)
+        self.fixtures.course.calculate_grade(self.fixtures.students[-1])
+        self.fixtures.assignment.calculate_grade(self.fixtures.students[-1])
         expected_answer = {'content': 'this is some answer content'}
         with self.login(self.fixtures.students[-1].username):
             # test student can not submit answers after answer grace period
@@ -369,6 +388,11 @@ class AnswersAPITests(ACJAPITestCase):
             db.session.add(self.fixtures.assignment)
             db.session.commit()
 
+            course_grade = CourseGrade.get_user_course_grade(
+                self.fixtures.course, self.fixtures.students[-1]).grade
+            assignment_grade = AssignmentGrade.get_user_assignment_grade(
+                self.fixtures.assignment, self.fixtures.students[-1]).grade
+
             response = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
@@ -377,6 +401,14 @@ class AnswersAPITests(ACJAPITestCase):
             rv = json.loads(response.data.decode('utf-8'))
             actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
+
+            # grades should increase
+            new_course_grade = CourseGrade.get_user_course_grade(
+                self.fixtures.course, self.fixtures.students[-1]).grade
+            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(
+                self.fixtures.assignment, self.fixtures.students[-1]).grade
+            self.assertGreater(new_course_grade, course_grade)
+            self.assertGreater(new_assignment_grade, assignment_grade)
 
         # test create successful for system admin
         with self.login('root'):
@@ -525,8 +557,13 @@ class AnswersAPITests(ACJAPITestCase):
                 content_type='application/json')
             self.assert400(rv)
 
-        # test edit draft by author
         with self.login(self.fixtures.draft_student.username):
+            course_grade = CourseGrade.get_user_course_grade(
+                self.fixtures.course, self.fixtures.draft_student).grade
+            assignment_grade = AssignmentGrade.get_user_assignment_grade(
+                self.fixtures.assignments[0], self.fixtures.draft_student).grade
+
+            # test edit draft by author
             rv = self.client.post(
                 self.base_url + '/' + draft_answer.uuid,
                 data=json.dumps(draft_expected),
@@ -536,6 +573,14 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual('This is an edit', rv.json['content'])
             self.assertEqual(draft_answer.draft, rv.json['draft'])
             self.assertTrue(rv.json['draft'])
+
+            # grades should not change
+            new_course_grade = CourseGrade.get_user_course_grade(
+                self.fixtures.course, self.fixtures.draft_student).grade
+            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(
+                self.fixtures.assignments[0], self.fixtures.draft_student).grade
+            self.assertEqual(new_course_grade, course_grade)
+            self.assertEqual(new_assignment_grade, assignment_grade)
 
             # set draft to false
             draft_expected_copy = draft_expected.copy()
@@ -549,6 +594,14 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual('This is an edit', rv.json['content'])
             self.assertEqual(draft_answer.draft, rv.json['draft'])
             self.assertFalse(rv.json['draft'])
+
+            # grades should increase
+            new_course_grade = CourseGrade.get_user_course_grade(
+                self.fixtures.course, self.fixtures.draft_student).grade
+            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(
+                self.fixtures.assignments[0], self.fixtures.draft_student).grade
+            self.assertGreater(new_course_grade, course_grade)
+            self.assertGreater(new_assignment_grade, assignment_grade)
 
             # setting draft to true when false should not work
             rv = self.client.post(
@@ -629,10 +682,23 @@ class AnswersAPITests(ACJAPITestCase):
             rv = self.client.delete(self.base_url + '/999')
             self.assert404(rv)
 
+            course_grade = CourseGrade.get_user_course_grade(
+                self.fixtures.course, self.fixtures.students[0]).grade
+            assignment_grade = AssignmentGrade.get_user_assignment_grade(
+                self.fixtures.assignments[0], self.fixtures.students[0]).grade
+
             # test deletion by author
             rv = self.client.delete(self.base_url + '/' + answer_uuid)
             self.assert200(rv)
             self.assertEqual(answer_uuid, rv.json['id'])
+
+            # grades should decrease
+            new_course_grade = CourseGrade.get_user_course_grade(
+                self.fixtures.course, self.fixtures.draft_student).grade
+            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(
+                self.fixtures.assignments[0], self.fixtures.draft_student).grade
+            self.assertLess(new_course_grade, course_grade)
+            self.assertLess(new_assignment_grade, assignment_grade)
 
         # test deletion by user that can manage posts
         with self.login(self.fixtures.instructor.username):

@@ -310,6 +310,10 @@ class SimpleAnswersTestData(SimpleAssignmentTestData):
             self.draft_answers += draft_answers_for_assignment
         db.session.commit()
 
+        for assignment in self.get_assignments():
+            assignment.calculate_grades()
+        self.get_course().calculate_grades()
+
     def create_answer(self, assignment, author, draft=False):
         answer = AnswerFactory(
             assignment=assignment,
@@ -422,6 +426,7 @@ class ComparisonTestData(CriterionTestData):
             self.answers.append(answer)
             comparison_example = self.create_comparison_example(assignment, answer1, answer2)
             self.comparisons_examples.append(comparison_example)
+
         self.answer_period_assignment = self.create_assignment_in_answer_period(
             self.get_course(), self.get_authorized_ta())
         self.assignments.append(self.answer_period_assignment)
@@ -502,6 +507,10 @@ class TestFixture:
             self.add_students(1)
             self.draft_student = self.students[-1]
             self.add_draft_answers([self.draft_student])
+
+        for assignment in self.course.assignments:
+            assignment.calculate_grades()
+        self.course.calculate_grades()
 
         return self
 

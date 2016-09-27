@@ -5,7 +5,7 @@ import datetime
 
 from data.fixtures.test_data import ComparisonTestData
 from data.factories import AssignmentCriterionFactory
-from acj.models import Answer, Comparison
+from acj.models import Answer, Comparison, CourseGrade, AssignmentGrade
 from acj.tests.test_acj import ACJAPITestCase
 from acj.core import db
 
@@ -24,8 +24,7 @@ class ComparisonAPITests(ACJAPITestCase):
         db.session.commit()
 
     def _build_url(self, course_uuid, assignment_uuid, tail=""):
-        url = \
-            '/api/courses/' + course_uuid + '/assignments/' + assignment_uuid + '/comparisons' + tail
+        url = '/api/courses/' + course_uuid + '/assignments/' + assignment_uuid + '/comparisons' + tail
         return url
 
     def _build_comparison_submit(self, winner_uuid, draft=False):
@@ -346,6 +345,10 @@ class ComparisonAPITests(ACJAPITestCase):
 
             with self.login(user.username):
                 while len(valid_answer_uuids - compared_answer_uuids) > 0:
+                    if user.id == self.data.get_authorized_student().id:
+                        course_grade = CourseGrade.get_user_course_grade(self.course, user).grade
+                        assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, user).grade
+
                     # establish expected data by first getting an answer pair
                     rv = self.client.get(self.base_url)
                     self.assert200(rv)
@@ -382,6 +385,13 @@ class ComparisonAPITests(ACJAPITestCase):
                     compared_answer_uuids.add(actual_comparisons[0]['answer1_id'])
                     compared_answer_uuids.add(actual_comparisons[0]['answer2_id'])
                     self._validate_comparison_submit(comparison_submit, actual_comparisons, expected_comparisons)
+
+                    # grades should increase for every comparison
+                    if user.id == self.data.get_authorized_student().id:
+                        new_course_grade = CourseGrade.get_user_course_grade(self.course, user).grade
+                        new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, user).grade
+                        self.assertGreater(new_course_grade, course_grade)
+                        self.assertGreater(new_assignment_grade, assignment_grade)
 
                     # Resubmit of same comparison should fail
                     rv = self.client.post(
