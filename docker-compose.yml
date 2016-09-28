@@ -38,7 +38,7 @@ services:
       - redis
   worker:
     <<: *app
-    command: celery worker -A celery_worker.celery --autoreload
+    command: celery worker -A celery_worker.celery --loglevel=DEBUG
     environment:
       - DB_DRIVER=mysql+pymysql
       - DB_USERNAME=compair

@@ -1,4 +1,5 @@
 # sqlalchemy
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_enum34 import EnumType
@@ -25,6 +26,8 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
     # lti_resource_link via LTIResourceLink Model
 
     # hyprid and other functions
+    acj_user_id = association_proxy('lti_user', 'acj_user_id')
+
     @classmethod
     def get_by_lti_resource_link_id_and_lti_user_id(cls, lti_resource_link_id, lti_user_id):
         return LTIUserResourceLink.query \

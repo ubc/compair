@@ -26,7 +26,7 @@ from .third_party_user import ThirdPartyUser
 
 # LTI models
 from .lti_models import LTIConsumer, LTIContext, LTIMembership, \
-    LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce
+    LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce, LTIOutcome
 
 from acj.core import db
 convention = {

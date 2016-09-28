@@ -1,5 +1,4 @@
 from acj.core import celery, db
-
 from acj.models import User
 
 @celery.task(ignore_result=True)

@@ -51,7 +51,7 @@ class CourseGrade(DefaultTableMixin, WriteTrackingMixin):
 
     @classmethod
     def calculate_grade(cls, course, user):
-        from . import AssignmentGrade
+        from . import AssignmentGrade, LTIOutcome
 
         assignment_ids = [assignment.id
             for assignment in course.assignments
@@ -62,6 +62,7 @@ class CourseGrade(DefaultTableMixin, WriteTrackingMixin):
             CourseGrade.query \
                 .filter_by(user_id=user.id, course_id=course.id) \
                 .delete()
+            LTIOutcome.update_user_course_grade(course, user)
             return
 
         assignment_grades = AssignmentGrade.query \
@@ -91,9 +92,11 @@ class CourseGrade(DefaultTableMixin, WriteTrackingMixin):
         db.session.add(course_grade)
         db.session.commit()
 
+        LTIOutcome.update_user_course_grade(course, user)
+
     @classmethod
     def calculate_grades(cls, course):
-        from . import CourseRole, AssignmentGrade
+        from . import CourseRole, AssignmentGrade, LTIOutcome
 
         student_ids = [course_user.user_id
             for course_user in course.user_courses
@@ -108,6 +111,7 @@ class CourseGrade(DefaultTableMixin, WriteTrackingMixin):
             CourseGrade.query \
                 .filter_by(course_id=course.id) \
                 .delete()
+            LTIOutcome.update_course_grades(course)
             return
 
         assignment_grades = AssignmentGrade.query \
@@ -143,6 +147,8 @@ class CourseGrade(DefaultTableMixin, WriteTrackingMixin):
 
         db.session.add_all(course_grades + new_course_grades)
         db.session.commit()
+
+        LTIOutcome.update_course_grades(course)
 
 def _calculate_course_grade(course, assignment_grades):
     grade = 0.0
