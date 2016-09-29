@@ -16,7 +16,7 @@ class WriteTrackingMixin(ModifyTrackingMixin, CreateTrackingMixin):
             target.created = datetime.utcnow()
             target.modified = datetime.utcnow()
 
-            if current_user.is_authenticated:
+            if current_user and current_user.is_authenticated:
                 target.created_user_id = current_user.id
                 target.modified_user_id = current_user.id
 
@@ -28,5 +28,5 @@ class WriteTrackingMixin(ModifyTrackingMixin, CreateTrackingMixin):
                     is_modified(target, include_collections=False):
                 target.modified = datetime.utcnow()
 
-                if current_user.is_authenticated:
+                if current_user and current_user.is_authenticated:
                     target.modified_user_id = current_user.id

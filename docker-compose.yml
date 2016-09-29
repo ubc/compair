@@ -11,7 +11,14 @@ services:
       - ./.data/mysql:/var/lib/mysql
     ports:
       - "13306:3306"
-  app:
+  redis:
+    image: redis:3.2.4
+    command: redis-server --appendonly yes
+    volumes:
+      - ./.data/redis:/data
+    ports:
+      - "16379:6379"
+  app: &app
     image: ubcctlt/compair-app
     environment:
       - DB_DRIVER=mysql+pymysql
@@ -21,12 +28,27 @@ services:
       - DB_PORT=3306
       - DB_NAME=compair
       - DEV=1
+      - CELERY_BROKER_URL=redis://redis:6379
       #- GA_TRACKING_ID=12345
     volumes:
       - .:/code
       - ./.data/persistent:/code/persistent
     depends_on:
       - db
+      - redis
+  worker:
+    <<: *app
+    command: celery worker -A celery_worker.celery --autoreload
+    environment:
+      - DB_DRIVER=mysql+pymysql
+      - DB_USERNAME=compair
+      - DB_PASSWORD=compair
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=compair
+      - DEV=1
+      - CELERY_BROKER_URL=redis://redis:6379
+      - C_FORCE_ROOT=1
   web:
     image: nginx:1.11
     volumes:

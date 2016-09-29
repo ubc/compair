@@ -22,3 +22,5 @@ mock==2.0.0
 elo==0.1
 trueskill==0.4.4
 lti==0.8.4
+Celery==3.1.23
+redis==2.10.5

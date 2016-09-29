@@ -164,7 +164,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         # set user_course to dropped role if missing from membership results and not current user
         for user_course in user_courses:
             # never unenrol current_user
-            if current_user.is_authenticated and user_course.user_id == current_user.id:
+            if current_user and current_user.is_authenticated and user_course.user_id == current_user.id:
                 continue
 
             lti_member = next(

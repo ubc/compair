@@ -115,6 +115,23 @@ Run `gulp prod` to generate the production version. This currently just does two
 1. Combine all Bower managed javascript libraries into a single minified file.
 2. Compile and minify the less files into a single css file.
 
+
+(Optional) Setting up Background Tasks
+---------------------------
+
+### Settings
+
+`CELERY_ALWAYS_EAGER`: Set to 1 to disable background tasks (off by default)
+
+`CELERY_BROKER_URL`: Set the url for the broker tool to be used (ex: redis or rabbitmq instance url)
+
+`CELERY_RESULT_BACKEND`: Set the backend to store results (disabled by default)
+
+Workers will need to be restarted after any changes to them unless the --autoreload option is set (for development only)
+
+if `CELERY_ALWAYS_EAGER` is on, then all background task calls will run locally and block until completed (effectively disabling background tasks).
+See the [Celery CELERY_ALWAYS_EAGER docs](http://docs.celeryproject.org/en/latest/configuration.html?highlight=CELERY_BROKER_URL#celery-always-eager).
+
 User Authentication Settings
 ---------------------------
 
@@ -135,6 +152,7 @@ Restart server after making any changes to settings
 ### LTI Settings
 
 `LTI_LOGIN_ENABLED`: Enable login via LTI consumer (default: True)
+
 `LTI_ENFORCE_SSL`: Enforce https on all LTI requests received (default: True)
 
 In additional, you must manually insert a new LTI consumer record into the lti_consumer table with:

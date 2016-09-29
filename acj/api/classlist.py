@@ -19,6 +19,7 @@ from acj.core import db, event
 from acj.authorization import allow, require, USER_IDENTITY
 from acj.models import UserCourse, Course, User, SystemRole, CourseRole, \
     ThirdPartyType, ThirdPartyUser
+from acj.tasks.user_password import set_passwords
 from .util import new_restful_api
 from .file import random_generator, allowed_file
 
@@ -99,6 +100,7 @@ def import_users(import_type, course, users):
     count = 0  # store number of successful enrolments
 
     imported_users = []
+    set_user_passwords = []
 
     # store unique user identifiers - eg. student number - throws error if duplicate in file
     import_unique_identifiers = []
@@ -152,13 +154,13 @@ def import_users(import_type, course, users):
         u.firstname = user[FIRSTNAME] if length > FIRSTNAME and user[FIRSTNAME] else None
         u.lastname = user[LASTNAME] if length > LASTNAME and user[LASTNAME] else None
         u.email = user[EMAIL] if length > EMAIL and user[EMAIL] else None
+        u.password = None
 
-        if import_type == ThirdPartyType.cwl.value:
-            # CWL login
-            u.password = None
-        else:
-            # ComPAIR login
-            u.password = user[PASSWORD] if length > PASSWORD and user[PASSWORD] else None
+        # ComPAIR login only
+        if import_type == None:
+            password = user[PASSWORD] if length > PASSWORD and user[PASSWORD] else None
+            if password:
+                set_user_passwords.append((u, password))
 
         # validate student number (if not None)
         if u.student_number:
@@ -218,6 +220,15 @@ def import_users(import_type, course, users):
         enrolment.course_role = CourseRole.dropped
         db.session.add(enrolment)
     db.session.commit()
+
+    # wait until user ids are generated before starting background jobs
+    # perform password update in chunks of 100
+    chunk_size = 100
+    chunks = [set_user_passwords[index:index + chunk_size] for index in range(0, len(set_user_passwords), chunk_size)]
+    for chunk in chunks:
+        set_passwords.delay({
+            user.id: password for (user, password) in chunk
+        })
 
     on_classlist_upload.send(
         current_app._get_current_object(),

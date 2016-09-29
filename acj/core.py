@@ -5,10 +5,12 @@ from blinker import Namespace
 from flask import session as sess
 from flask_bouncer import Bouncer
 from flask_cas import CAS
+from celery import Celery
 
 from flask_login import LoginManager, user_logged_in
 from flask_sqlalchemy import SQLAlchemy
 
+from .configuration import config
 
 # initialize database
 db = SQLAlchemy(session_options={
@@ -24,9 +26,14 @@ login_manager = LoginManager()
 # initialize CAS
 cas = CAS()
 
+# initialize celery
+celery = Celery(
+    broker=config.get("CELERY_RESULT_BACKEND"),
+    backend=config.get("CELERY_BROKER_URL")
+)
+
 # create custom namespace for signals
 event = Namespace()
-
 
 # subscribe user_logged_in signal to generate auth token
 @user_logged_in.connect
