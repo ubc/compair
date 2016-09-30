@@ -321,7 +321,9 @@ module.controller(
             importService.onComplete(courseId, response);
         };
         $scope.uploader.onBeforeUploadItem = function(fileItem) {
-            fileItem.formData.push({ 'import_type': $scope.importType });
+            if ($scope.importType == ThirdPartyAuthType.cwl) {
+                fileItem.formData.push({ 'import_type': $scope.importType });
+            }
         };
         $scope.uploader.onErrorItem = importService.onError();
 

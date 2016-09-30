@@ -35,6 +35,16 @@ PASSLIB_CONTEXT = 'default'
 # make the session valid for a day
 PERMANENT_SESSION_LIFETIME = 3600 * 24
 
+# set celery tasks
+CELERY_RESULT_BACKEND = None
+CELERY_BROKER_URL = None
+CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'msgpack', 'yaml']
+CELERY_IMPORTS = ('acj.tasks')
+BROKER_TRANSPORT_OPTIONS = {
+    'fanout_prefix': True,
+    'fanout_patterns': True
+}
+
 # where to retrieve assets, possible values 'cloud', 'local'
 ASSET_LOCATION = 'cloud'
 # compair-asset s3 location
