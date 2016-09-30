@@ -2,8 +2,11 @@ import json
 import os
 
 from flask import Flask, redirect, session as sess, abort, jsonify
-from flask_login import current_user
+from flask import make_response
+from flask import send_file
+from flask_login import current_user, login_required
 from sqlalchemy.orm import joinedload
+from werkzeug.routing import BaseConverter
 
 from .authorization import define_authorization
 from .core import login_manager, bouncer, db, cas
@@ -11,6 +14,12 @@ from .configuration import config
 from .models import User
 from .activity import log
 from .api import register_api_blueprints, log_events
+
+
+class RegexConverter(BaseConverter):
+    def __init__(self, url_map, *items):
+        super(RegexConverter, self).__init__(url_map)
+        self.regex = items[0]
 
 
 def get_asset_names(app):
@@ -22,6 +31,28 @@ def get_asset_names(app):
         assets = json.load(f)
 
     return {'ASSETS': assets}
+
+
+def create_persistent_dirs(conf, logger):
+    """
+    creating persistent directories
+    :param conf: Flask config object
+    :param logger: Logging instance
+    :return: None
+    """
+    for dir_name in ['REPORT_FOLDER', 'UPLOAD_FOLDER', 'ATTACHMENT_UPLOAD_FOLDER']:
+        directory = conf[dir_name]
+        logger.debug('checking directory {}'.format(directory))
+        if not directory:
+            logger.warning('{} is not defined.'.format(directory))
+            continue
+        if not os.path.exists(directory):
+            try:
+                os.makedirs(directory)
+            except OSError:
+                logger.warning('Failed to create directory {}.'.format(directory))
+        elif not os.path.isdir(directory):
+            logger.warning('{} is not a directory.'.format(directory))
 
 
 def create_app(conf=config, settings_override=None):
@@ -40,6 +71,8 @@ def create_app(conf=config, settings_override=None):
     app.config.update(assets)
 
     app.logger.debug("Application Configuration: " + str(app.config))
+
+    create_persistent_dirs(app.config, app.logger)
 
     db.init_app(app)
 
@@ -80,7 +113,28 @@ def create_app(conf=config, settings_override=None):
     def bouncer_user_loader():
         return current_user
 
+    # register regex route converter
+    app.url_map.converters['regex'] = RegexConverter
+
     app = register_api_blueprints(app)
+
+    @app.route('/app/<regex("pdf|report"):file_type>/<file_name>')
+    @login_required
+    def file_retrieve(file_type, file_name):
+        mimetypes = {
+            'pdf': 'application/pdf',
+            'report': 'text/csv'
+        }
+        file_dirs = {
+            'pdf': app.config['ATTACHMENT_UPLOAD_FOLDER'],
+            'report': app.config['REPORT_FOLDER']
+        }
+        file_path = '{}/{}'.format(file_dirs[file_type], file_name)
+
+        if not os.path.exists(file_path):
+            return make_response('invalid file name', 404)
+
+        return send_file(file_path, mimetype=mimetypes[file_type])
 
     return app
 

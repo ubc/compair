@@ -3,7 +3,7 @@ import os
 import time
 
 from bouncer.constants import MANAGE
-from flask import Blueprint, Flask, current_app, abort
+from flask import Blueprint, current_app, abort
 from flask_login import login_required, current_user
 
 from flask_restful import Resource, reqparse
@@ -18,11 +18,6 @@ from .util import new_restful_api
 
 report_api = Blueprint('report_api', __name__)
 api = new_restful_api(report_api)
-
-# TODO put in config file
-UPLOAD_FOLDER = os.getcwd() + '/acj/static/report'
-app = Flask(__name__)
-app.config['PERMANENT_REPORT_UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 report_parser = reqparse.RequestParser()
 report_parser.add_argument('group_name', type=str)

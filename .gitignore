@@ -60,9 +60,10 @@ acj/static/index.html
 # copied fonts
 acj/static/fonts
 
-# uploaded files
-acj/static/pdf/*
-acj/static/report/*
+# uploaded and generated report files
+persistent/pdf/*
+persistent/report/*
+persistent/tmp/*
 
 # google analytics file
 acj/static/tracking.js

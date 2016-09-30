@@ -24,6 +24,8 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 
 ADD . /code/
 
+VOLUME ["/code/persistent"]
+
 EXPOSE 3031
 
 CMD ["uwsgi", "--ini", "/etc/uwsgi/uwsgi.ini"]

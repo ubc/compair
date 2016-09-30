@@ -28,7 +28,7 @@ module.directive('acjPdfInline', function() {
                     $scope.pdfvisible = true;
                     $scope.pdfname = name;
                     $scope.pdfurl = $sce.trustAsResourceUrl(
-                        "/static/lib/pdfjs/web/viewer.html#../../../pdf/" +
+                        "/app/lib_extension/pdfjs/web/viewer.html#/app/pdf/" +
                         $scope.pdfname);
                 }
                 else {
@@ -36,7 +36,7 @@ module.directive('acjPdfInline', function() {
                 }
             };
             $scope.openPDF = function (name) {
-                $scope.file = 'pdf/' + name;
+                $scope.file = '/app/pdf/' + name;
                 $scope.name = 'Attached PDF: Use + and - to zoom';
                 $modal.open({
                     templateUrl: 'modules/common/pdf-overlaid-template.html',

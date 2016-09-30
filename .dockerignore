@@ -1,7 +1,8 @@
 .git
-acj/static/pdf/*
-acj/static/report/*
 acj/static/lib
+persistent/pdf/*
+persistent/report/*
+persistent/tmp/*
 
 node_modules
 bower_components

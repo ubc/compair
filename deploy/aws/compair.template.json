@@ -6,10 +6,6 @@
       "Type": "AWS::EC2::KeyPair::KeyName",
       "Description": "Name of an existing EC2 KeyPair to enable SSH access to the ECS instances."
     },
-    "SubnetID": {
-      "Type": "List<AWS::EC2::Subnet::Id>",
-      "Description": "Select a default subnet ID."
-    },
     "DesiredCapacity": {
       "Type": "Number",
       "Default" : "1",
@@ -95,6 +91,12 @@
       "MinValue": "1",
       "MaxValue": "65535",
       "ConstraintDescription" : "must be between 1 and 65535."
+    },
+    "MountPoint" : {
+      "Description" : "The Linux mount point for the EFS volume",
+      "Type": "String",
+      "MinLength": "1",
+      "Default": "efs"
     }
   },
 
@@ -118,6 +120,112 @@
   },
 
   "Resources" : {
+    "VPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "EnableDnsSupport" : "true",
+        "EnableDnsHostnames" : "true",
+        "CidrBlock": "10.0.0.0/16",
+        "Tags": [ {"Key": "Application", "Value": { "Ref": "AWS::StackId"} } ]
+      }
+    },
+    "InternetGateway" : {
+      "Type" : "AWS::EC2::InternetGateway",
+      "Properties" : {
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackName" } },
+          { "Key" : "Network", "Value" : "Public" }
+        ]
+      }
+    },
+    "GatewayToInternet" : {
+      "Type" : "AWS::EC2::VPCGatewayAttachment",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "InternetGatewayId" : { "Ref" : "InternetGateway" }
+      }
+    },
+    "RouteTable":{
+      "Type":"AWS::EC2::RouteTable",
+      "Properties":{
+        "VpcId": {"Ref":"VPC"},
+        "Tags" : [ {"Key" : "Application", "Value" : { "Ref" : "AWS::StackId"} } ]
+      }
+    },
+    "SubnetRouteTableAssoc": {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : {"Ref":"RouteTable"},
+        "SubnetId" : {"Ref":"Subnet"}
+      }
+    },
+    "SubnetRouteTableAssoc1": {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : {"Ref":"RouteTable"},
+        "SubnetId" : {"Ref":"Subnet1"}
+      }
+    },
+    "InternetGatewayRoute": {
+      "Type":"AWS::EC2::Route",
+      "DependsOn" : "GatewayToInternet",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "RouteTableId": { "Ref": "RouteTable" },
+        "GatewayId": { "Ref": "InternetGateway" }
+      }
+    },
+    "Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": { "Ref": "VPC" },
+        "CidrBlock": "10.0.0.0/24",
+        "AvailabilityZone": "us-west-2a",
+        "Tags": [ { "Key": "Application", "Value": { "Ref": "AWS::StackId" } } ]
+      }
+    },
+    "Subnet1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": { "Ref": "VPC" },
+        "CidrBlock": "10.0.1.0/24",
+        "AvailabilityZone": "us-west-2b",
+        "Tags": [ { "Key": "Application", "Value": { "Ref": "AWS::StackId" } } ]
+      }
+    },
+    "MountTargetSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription": "Open EFS for access",
+        "VpcId" : { "Ref" : "VPC" },
+        "SecurityGroupIngress" : [{
+          "IpProtocol" : "tcp",
+          "FromPort" : "2049",
+          "ToPort" : "2049",
+          "SourceSecurityGroupId" : { "Ref" : "WebServerSecurityGroup" }
+        }]
+      }
+    },
+
+    "CompairPVEFS": {
+      "Type" : "AWS::EFS::FileSystem",
+      "Properties" : {
+        "FileSystemTags" : [ {
+          "Key": "Name",
+          "Value": "CompairAppPV"
+        } ],
+        "PerformanceMode": "generalPurpose"
+      }
+    },
+    "CompairEFSMount": {
+      "Type": "AWS::EFS::MountTarget",
+      "Properties": {
+        "FileSystemId": { "Ref": "CompairPVEFS" },
+        "SubnetId" : {"Ref":"Subnet"},
+        "SecurityGroups": [ { "Ref": "MountTargetSecurityGroup" } ]
+      }
+    },
+
     "ECSCluster": {
       "Type": "AWS::ECS::Cluster"
     },
@@ -152,8 +260,23 @@
                 "Name": "DB_NAME",
                 "Value": { "Ref" : "DBName" }
             }
+          ],
+          "MountPoints": [
+            {
+              "SourceVolume": "compair-app-pv",
+              "ContainerPath": "/code/persistent",
+              "ReadOnly": false
+            }
           ]
-        }]
+        }],
+        "Volumes": [
+          {
+            "Name": "compair-app-pv",
+            "Host": {
+              "SourcePath": "/efs"
+            }
+          }
+        ]
       }
     },
 
@@ -161,8 +284,9 @@
       "Type": "AWS::RDS::DBSecurityGroup",
       "Condition" : "Is-EC2-Classic",
       "Properties": {
+        "EC2VpcId" : { "Ref" : "VPC" },
         "DBSecurityGroupIngress": {
-          "EC2SecurityGroupName": { "Ref": "WebServerSecurityGroup" }
+          "EC2SecurityGroupId": { "Ref": "WebServerSecurityGroup" }
         },
         "GroupDescription": "database access"
       }
@@ -173,12 +297,21 @@
       "Condition" : "Is-EC2-VPC",
       "Properties" : {
         "GroupDescription": "Open database for access",
+        "VpcId" : { "Ref" : "VPC" },
         "SecurityGroupIngress" : [{
           "IpProtocol" : "tcp",
           "FromPort" : "3306",
           "ToPort" : "3306",
-          "SourceSecurityGroupName" : { "Ref" : "WebServerSecurityGroup" }
+          "SourceSecurityGroupId" : { "Ref" : "WebServerSecurityGroup" }
         }]
+      }
+    },
+
+    "DBSubnetGroup": {
+      "Type" : "AWS::RDS::DBSubnetGroup",
+      "Properties" : {
+        "DBSubnetGroupDescription" : "Database Subnet",
+        "SubnetIds" : [ { "Ref": "Subnet" }, { "Ref": "Subnet1" } ]
       }
     },
 
@@ -193,7 +326,8 @@
         "DBInstanceClass"   : { "Ref" : "DBClass" },
         "AllocatedStorage"  : { "Ref" : "DBAllocatedStorage" },
         "VPCSecurityGroups": { "Fn::If" : [ "Is-EC2-VPC", [ { "Fn::GetAtt": [ "DBEC2SecurityGroup", "GroupId" ] } ], { "Ref" : "AWS::NoValue"}]},
-        "DBSecurityGroups": { "Fn::If" : [ "Is-EC2-Classic", [ { "Ref": "DBSecurityGroup" } ], { "Ref" : "AWS::NoValue"}]}
+        "DBSecurityGroups": { "Fn::If" : [ "Is-EC2-Classic", [ { "Ref": "DBSecurityGroup" } ], { "Ref" : "AWS::NoValue"}]},
+		"DBSubnetGroupName": { "Ref": "DBSubnetGroup" }
       }
     },
 
@@ -201,6 +335,7 @@
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
         "GroupDescription": "Security associated to the ComPAIR load balancer",
+        "VpcId" : { "Ref" : "VPC" },
         "SecurityGroupIngress": [ {
           "FromPort": 80,
           "ToPort": 80,
@@ -216,7 +351,7 @@
     "EcsElasticLoadBalancer" : {
       "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
       "Properties" : {
-        "Subnets" : { "Ref" : "SubnetID" },
+        "Subnets" : [ { "Ref" : "Subnet" } ],
         "Listeners" : [ {
           "LoadBalancerPort" : "80",
           "InstancePort" : {"Ref" : "AppServerPort"},
@@ -233,7 +368,7 @@
           "Timeout" : "5"
         },
         "SecurityGroups": [
-          { "Fn::GetAtt": [ "LoadBalancerSecurityGroup", "GroupId" ] }
+          { "Ref": "LoadBalancerSecurityGroup" }
         ]
       }
     },
@@ -241,7 +376,7 @@
     "ECSAutoScalingGroup" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
-        "VPCZoneIdentifier" : { "Ref" : "SubnetID" },
+        "VPCZoneIdentifier" : [ { "Ref" : "Subnet" } ],
         "LaunchConfigurationName" : { "Ref" : "ContainerInstances" },
         "MinSize" : "1",
         "MaxSize" : { "Ref" : "MaxSize" },
@@ -266,8 +401,15 @@
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
         "GroupDescription" : "Enable HTTP access via app server port locked down to the load balancer + SSH access",
+        "VpcId" : { "Ref" : "VPC" },
         "SecurityGroupIngress" : [
-          {"IpProtocol" : "tcp", "FromPort" : {"Ref" : "AppServerPort"}, "ToPort" : {"Ref" : "AppServerPort"}, "SourceSecurityGroupOwnerId" : {"Fn::GetAtt" : ["EcsElasticLoadBalancer", "SourceSecurityGroup.OwnerAlias"]},"SourceSecurityGroupName" : {"Fn::GetAtt" : ["EcsElasticLoadBalancer", "SourceSecurityGroup.GroupName"]}},
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : {"Ref" : "AppServerPort"},
+            "ToPort" : {"Ref" : "AppServerPort"},
+            "SourceSecurityGroupOwnerId" : {"Fn::GetAtt" : ["EcsElasticLoadBalancer", "SourceSecurityGroup.OwnerAlias"]},
+            "SourceSecurityGroupId" : { "Ref": "LoadBalancerSecurityGroup" }
+          },
           {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "SSHLocation"}}
         ]
       }
@@ -277,6 +419,9 @@
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "MountConfig" : [ "config", "setup", "mount" ]
+          },
           "config" : {
             "commands" : {
               "01_add_instance_to_cluster" : {
@@ -302,6 +447,7 @@
                   "action=/opt/aws/bin/cfn-init -v ",
                   "         --stack ", { "Ref" : "AWS::StackName" },
                   "         --resource ContainerInstances ",
+                  "         --configsets MountConfig ",
                   "         --region ", { "Ref" : "AWS::Region" }, "\n",
                   "runas=root\n"
                 ]]}
@@ -313,10 +459,114 @@
                 "cfn-hup" : { "enabled" : "true", "ensureRunning" : "true", "files" : ["/etc/cfn/cfn-hup.conf", "/etc/cfn/hooks.d/cfn-auto-reloader.conf"] }
               }
             }
+          },
+		  "setup" : {
+            "packages" : {
+              "yum" : {
+                "nfs-utils" : []
+              }
+            },
+            "files" : {
+              "/home/ec2-user/post_nfsstat" : {
+                "content" : { "Fn::Join" : [ "", [
+                      "#!/bin/bash\n",
+                      "\n",
+                      "INPUT=\"$(cat)\"\n",
+                      "CW_JSON_OPEN='{ \"Namespace\": \"EFS\", \"MetricData\": [ '\n",
+                      "CW_JSON_CLOSE=' ] }'\n",
+                      "CW_JSON_METRIC=''\n",
+                      "METRIC_COUNTER=0\n",
+                      "\n",
+                      "for COL in 1 2 3 4 5 6; do\n",
+                      "\n",
+                      " COUNTER=0\n",
+                      " METRIC_FIELD=$COL\n",
+                      " DATA_FIELD=$(($COL+($COL-1)))\n",
+                      "\n",
+                      " while read line; do\n",
+                      "   if [[ COUNTER -gt 0 ]]; then\n",
+                      "\n",
+                      "     LINE=`echo $line | tr -s ' ' `\n",
+                      "     AWS_COMMAND=\"aws cloudwatch put-metric-data --region ", { "Ref": "AWS::Region" }, "\"\n",
+                      "     MOD=$(( $COUNTER % 2))\n",
+                      "\n",
+                      "     if [ $MOD -eq 1 ]; then\n",
+                      "       METRIC_NAME=`echo $LINE | cut -d ' ' -f $METRIC_FIELD`\n",
+                      "     else\n",
+                      "       METRIC_VALUE=`echo $LINE | cut -d ' ' -f $DATA_FIELD`\n",
+                      "     fi\n",
+                      "\n",
+                      "     if [[ -n \"$METRIC_NAME\" && -n \"$METRIC_VALUE\" ]]; then\n",
+                      "       INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)\n",
+                      "       CW_JSON_METRIC=\"$CW_JSON_METRIC { \\\"MetricName\\\": \\\"$METRIC_NAME\\\", \\\"Dimensions\\\": [{\\\"Name\\\": \\\"InstanceId\\\", \\\"Value\\\": \\\"$INSTANCE_ID\\\"} ], \\\"Value\\\": $METRIC_VALUE },\"\n",
+                      "       unset METRIC_NAME\n",
+                      "       unset METRIC_VALUE\n",
+                      "\n",
+                      "       METRIC_COUNTER=$((METRIC_COUNTER+1))\n",
+                      "       if [ $METRIC_COUNTER -eq 20 ]; then\n",
+                      "         # 20 is max metric collection size, so we have to submit here\n",
+                      "         aws cloudwatch put-metric-data --region ", { "Ref": "AWS::Region" }, " --cli-input-json \"`echo $CW_JSON_OPEN ${CW_JSON_METRIC%?} $CW_JSON_CLOSE`\"\n",
+                      "\n",
+                      "         # reset\n",
+                      "         METRIC_COUNTER=0\n",
+                      "         CW_JSON_METRIC=''\n",
+                      "       fi\n",
+                      "     fi  \n",
+                      "\n",
+                      "\n",
+                      "\n",
+                      "     COUNTER=$((COUNTER+1))\n",
+                      "   fi\n",
+                      "\n",
+                      "   if [[ \"$line\" == \"Client nfs v4:\" ]]; then\n",
+                      "     # the next line is the good stuff \n",
+                      "     COUNTER=$((COUNTER+1))\n",
+                      "   fi\n",
+                      " done <<< \"$INPUT\"\n",
+                      "done\n",
+                      "\n",
+                      "# submit whatever is left\n",
+                      "aws cloudwatch put-metric-data --region ", { "Ref": "AWS::Region" }, " --cli-input-json \"`echo $CW_JSON_OPEN ${CW_JSON_METRIC%?} $CW_JSON_CLOSE`\""
+                    ] ] },
+                "mode": "000755",
+                "owner": "ec2-user",
+                "group": "ec2-user"
+              },
+              "/home/ec2-user/crontab" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "* * * * * /usr/sbin/nfsstat | /home/ec2-user/post_nfsstat\n"
+                ] ] },
+                "owner": "ec2-user",
+                "group": "ec2-user"
+              }
+            },
+            "commands" : {
+              "01_createdir" : {
+                "command" : {"Fn::Join" : [ "", [ "mkdir /", { "Ref" : "MountPoint" }]]}
+              }
+            }
+          },
+          "mount" : {
+            "commands" : {
+              "01_mount" : {
+                "command" : { "Fn::Join": [ "", [
+                  "mount -t nfs4 -o nfsvers=4.1 $(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone).",
+                  { "Ref": "CompairPVEFS" },
+                  ".efs.",
+                  { "Ref": "AWS::Region" },
+                  ".amazonaws.com:/ /",
+                  {"Ref" : "MountPoint" }
+                ] ] }
+              },
+              "02_permissions" : {
+                "command" : {"Fn::Join" : [ "", [ "chown ec2-user:ec2-user /", { "Ref" : "MountPoint" }]]}
+              }
+            }
           }
         }
       },
       "Properties": {
+		"AssociatePublicIpAddress" : "true",
         "ImageId" : { "Fn::FindInMap" : [ "AWSRegionToAMI", { "Ref" : "AWS::Region" }, "AMIID" ] },
         "InstanceType"   : { "Ref" : "InstanceType" },
         "IamInstanceProfile": { "Ref": "EC2InstanceProfile" },
@@ -331,7 +581,10 @@
              "/opt/aws/bin/cfn-init -v ",
              "         --stack ", { "Ref" : "AWS::StackName" },
              "         --resource ContainerInstances ",
+             "         --configsets MountConfig ",
              "         --region ", { "Ref" : "AWS::Region" }, "\n",
+
+             "crontab /home/ec2-user/crontab\n",
 
              "/opt/aws/bin/cfn-signal -e $? ",
              "         --stack ", { "Ref" : "AWS::StackName" },

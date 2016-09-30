@@ -8,7 +8,7 @@ services:
       - MYSQL_USER=compair
       - MYSQL_PASSWORD=compair
     volumes:
-      - ./.data:/var/lib/mysql
+      - ./.data/mysql:/var/lib/mysql
     ports:
       - "13306:3306"
   app:
@@ -24,6 +24,7 @@ services:
       #- GA_TRACKING_ID=12345
     volumes:
       - .:/code
+      - ./.data/persistent:/code/persistent
     depends_on:
       - db
   web:
