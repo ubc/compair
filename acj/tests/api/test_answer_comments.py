@@ -1,8 +1,9 @@
 import json
 import six
+import mock
 
 from acj import db
-from data.fixtures.test_data import AnswerCommentsTestData
+from data.fixtures.test_data import AnswerCommentsTestData, LTITestData
 from acj.tests.test_acj import ACJAPITestCase
 from acj.api.answer_comment import api, AnswerCommentListAPI, AnswerCommentAPI
 from acj.models import AnswerCommentType, AnswerComment, \
@@ -23,6 +24,7 @@ class AnswerCommentListAPITests(ACJAPITestCase):
         self.assignment.enable_self_evaluation = True
         db.session.commit()
         self.assignment.calculate_grades()
+        self.lti_data = LTITestData()
 
     def test_get_all_answer_comments(self):
         url = self.get_url(
@@ -197,7 +199,9 @@ class AnswerCommentListAPITests(ACJAPITestCase):
             self.assertEqual(4, len(rv.json))
             self.assertEqual(draft_comment.uuid, rv.json[0]['id'])
 
-    def test_create_answer_comment(self):
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    def test_create_answer_comment(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         url = self.get_url(
             course_uuid=self.course.uuid, assignment_uuid=self.assignment.uuid,
             answer_uuid=self.answers[self.assignment.id][0].uuid)
@@ -271,6 +275,10 @@ class AnswerCommentListAPITests(ACJAPITestCase):
             self.assertTrue(rv.json['draft'])
 
         with self.login(self.data.get_authorized_student().username):
+            lti_consumer = self.lti_data.lti_consumer
+            (lti_user_resource_link1, lti_user_resource_link2) = self.lti_data.setup_student_user_resource_links(
+                self.data.get_authorized_student(), self.course, self.assignment)
+
             course_grade = CourseGrade.get_user_course_grade(self.course, self.data.get_authorized_student()).grade
             assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, self.data.get_authorized_student()).grade
 
@@ -283,10 +291,22 @@ class AnswerCommentListAPITests(ACJAPITestCase):
             self.assert200(rv)
 
             # grades should increase
-            new_course_grade = CourseGrade.get_user_course_grade(self.course, self.data.get_authorized_student()).grade
-            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, self.data.get_authorized_student()).grade
-            self.assertGreater(new_course_grade, course_grade)
-            self.assertGreater(new_assignment_grade, assignment_grade)
+            new_course_grade = CourseGrade.get_user_course_grade(self.course, self.data.get_authorized_student())
+            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, self.data.get_authorized_student())
+            self.assertGreater(new_course_grade.grade, course_grade)
+            self.assertGreater(new_assignment_grade.grade, assignment_grade)
+
+            mocked_update_assignment_grades_run.assert_called_once_with(
+                lti_consumer.id,
+                [(lti_user_resource_link2.lis_result_sourcedid, new_assignment_grade.id)]
+            )
+            mocked_update_assignment_grades_run.reset_mock()
+
+            mocked_update_course_grades_run.assert_called_once_with(
+                lti_consumer.id,
+                [(lti_user_resource_link1.lis_result_sourcedid, new_course_grade.id)]
+            )
+            mocked_update_assignment_grades_run.reset_mock()
 
 
 class AnswerCommentAPITests(ACJAPITestCase):
@@ -304,6 +324,7 @@ class AnswerCommentAPITests(ACJAPITestCase):
         self.assignment.enable_self_evaluation = True
         db.session.commit()
         self.assignment.calculate_grades()
+        self.lti_data = LTITestData()
 
     def test_get_single_answer_comment(self):
         comment = self.data.get_answer_comments_by_assignment(self.assignment)[0]
@@ -376,7 +397,9 @@ class AnswerCommentAPITests(ACJAPITestCase):
             self.assertTrue(rv.json['draft'])
 
 
-    def test_edit_answer_comment(self):
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    def test_edit_answer_comment(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         comment = self.data.get_answer_comments_by_assignment(self.assignment)[0]
         url = self.get_url(
             course_uuid=self.course.uuid, assignment_uuid=self.assignment.uuid,
@@ -493,6 +516,10 @@ class AnswerCommentAPITests(ACJAPITestCase):
             answer_uuid=answer.uuid, answer_comment_uuid=self_evaluation.uuid)
 
         with self.login(answer.user.username):
+            lti_consumer = self.lti_data.lti_consumer
+            (lti_user_resource_link1, lti_user_resource_link2) = self.lti_data.setup_student_user_resource_links(
+                answer.user, self.course, self.assignment)
+
             course_grade = CourseGrade.get_user_course_grade(self.course, answer.user).grade
             assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, answer.user).grade
             content = {
@@ -520,13 +547,27 @@ class AnswerCommentAPITests(ACJAPITestCase):
             self.assertFalse(rv.json['draft'])
 
             # grades should increase
-            new_course_grade = CourseGrade.get_user_course_grade(self.course, answer.user).grade
-            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, answer.user).grade
-            self.assertGreater(new_course_grade, course_grade)
-            self.assertGreater(new_assignment_grade, assignment_grade)
+            new_course_grade = CourseGrade.get_user_course_grade(self.course, answer.user)
+            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, answer.user)
+            self.assertGreater(new_course_grade.grade, course_grade)
+            self.assertGreater(new_assignment_grade.grade, assignment_grade)
+
+            mocked_update_assignment_grades_run.assert_called_once_with(
+                lti_consumer.id,
+                [(lti_user_resource_link2.lis_result_sourcedid, new_assignment_grade.id)]
+            )
+            mocked_update_assignment_grades_run.reset_mock()
+
+            mocked_update_course_grades_run.assert_called_once_with(
+                lti_consumer.id,
+                [(lti_user_resource_link1.lis_result_sourcedid, new_course_grade.id)]
+            )
+            mocked_update_course_grades_run.reset_mock()
 
 
-    def test_delete_answer_comment(self):
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    def test_delete_answer_comment(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         comment = self.data.get_answer_comments_by_assignment(self.assignment)[0]
         url = self.get_url(
             course_uuid=self.course.uuid, assignment_uuid=self.assignment.uuid,
@@ -570,6 +611,10 @@ class AnswerCommentAPITests(ACJAPITestCase):
         self.assignment.calculate_grade(answer.user)
         self.course.calculate_grade(answer.user)
 
+        lti_consumer = self.lti_data.lti_consumer
+        (lti_user_resource_link1, lti_user_resource_link2) = self.lti_data.setup_student_user_resource_links(
+            answer.user, self.course, self.assignment)
+
         with self.login(self.data.get_authorized_instructor().username):
             course_grade = CourseGrade.get_user_course_grade(self.course, answer.user).grade
             assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, answer.user).grade
@@ -582,7 +627,19 @@ class AnswerCommentAPITests(ACJAPITestCase):
             self.assertEqual(self_evaluation.uuid, rv.json['id'])
 
             # grades should decrease
-            new_course_grade = CourseGrade.get_user_course_grade(self.course, answer.user).grade
-            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, answer.user).grade
-            self.assertLess(new_course_grade, course_grade)
-            self.assertLess(new_assignment_grade, assignment_grade)
+            new_course_grade = CourseGrade.get_user_course_grade(self.course, answer.user)
+            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, answer.user)
+            self.assertLess(new_course_grade.grade, course_grade)
+            self.assertLess(new_assignment_grade.grade, assignment_grade)
+
+            mocked_update_assignment_grades_run.assert_called_once_with(
+                lti_consumer.id,
+                [(lti_user_resource_link2.lis_result_sourcedid, new_assignment_grade.id)]
+            )
+            mocked_update_assignment_grades_run.reset_mock()
+
+            mocked_update_course_grades_run.assert_called_once_with(
+                lti_consumer.id,
+                [(lti_user_resource_link1.lis_result_sourcedid, new_course_grade.id)]
+            )
+            mocked_update_course_grades_run.reset_mock()

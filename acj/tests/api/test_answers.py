@@ -1,10 +1,12 @@
 import json
 import datetime
+import mock
 
 from acj import db
 from data.fixtures import AnswerFactory
-from data.fixtures.test_data import TestFixture
-from acj.models import Answer, CourseGrade, AssignmentGrade
+from data.fixtures.test_data import TestFixture, LTITestData
+from acj.models import Answer, CourseGrade, AssignmentGrade, \
+    CourseRole, SystemRole
 from acj.tests.test_acj import ACJAPITestCase
 
 
@@ -13,6 +15,7 @@ class AnswersAPITests(ACJAPITestCase):
         super(AnswersAPITests, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=30, num_groups=2, with_draft_student=True)
         self.base_url = self._build_url(self.fixtures.course.uuid, self.fixtures.assignment.uuid)
+        self.lti_data = LTITestData()
 
     def _build_url(self, course_uuid, assignment_uuid, tail=""):
         url = '/api/courses/' + course_uuid + '/assignments/' + assignment_uuid + '/answers' + tail
@@ -223,7 +226,9 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(20, rv.json['per_page'])
             self.assertEqual(len(self.fixtures.answers), rv.json['total'])
 
-    def test_create_answer(self):
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    def test_create_answer(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         # test login required
         expected_answer = {'content': 'this is some answer content'}
         response = self.client.post(
@@ -347,6 +352,8 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(new_course_grade, course_grade)
             self.assertEqual(new_assignment_grade, assignment_grade)
 
+            mocked_update_assignment_grades_run.assert_not_called()
+            mocked_update_course_grades_run.assert_not_called()
 
         with self.login(self.fixtures.instructor.username):
             # test instructor can submit outside of grace period
@@ -393,6 +400,11 @@ class AnswersAPITests(ACJAPITestCase):
             assignment_grade = AssignmentGrade.get_user_assignment_grade(
                 self.fixtures.assignment, self.fixtures.students[-1]).grade
 
+            lti_consumer = self.lti_data.lti_consumer
+            student = self.fixtures.students[-1]
+            (lti_user_resource_link1, lti_user_resource_link2) = self.lti_data.setup_student_user_resource_links(
+                student, self.fixtures.course, self.fixtures.assignment)
+
             response = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
@@ -404,11 +416,23 @@ class AnswersAPITests(ACJAPITestCase):
 
             # grades should increase
             new_course_grade = CourseGrade.get_user_course_grade(
-                self.fixtures.course, self.fixtures.students[-1]).grade
+                self.fixtures.course, self.fixtures.students[-1])
             new_assignment_grade = AssignmentGrade.get_user_assignment_grade(
-                self.fixtures.assignment, self.fixtures.students[-1]).grade
-            self.assertGreater(new_course_grade, course_grade)
-            self.assertGreater(new_assignment_grade, assignment_grade)
+                self.fixtures.assignment, self.fixtures.students[-1])
+            self.assertGreater(new_course_grade.grade, course_grade)
+            self.assertGreater(new_assignment_grade.grade, assignment_grade)
+
+            mocked_update_assignment_grades_run.assert_called_once_with(
+                lti_consumer.id,
+                [(lti_user_resource_link2.lis_result_sourcedid, new_assignment_grade.id)]
+            )
+            mocked_update_assignment_grades_run.reset_mock()
+
+            mocked_update_course_grades_run.assert_called_once_with(
+                lti_consumer.id,
+                [(lti_user_resource_link1.lis_result_sourcedid, new_course_grade.id)]
+            )
+            mocked_update_course_grades_run.reset_mock()
 
         # test create successful for system admin
         with self.login('root'):
@@ -505,7 +529,9 @@ class AnswersAPITests(ACJAPITestCase):
                 self.assertEqual(score.rank, rv.json['scores'][index]['rank'])
                 self.assertEqual(int(score.normalized_score), rv.json['scores'][index]['normalized_score'])
 
-    def test_edit_answer(self):
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    def test_edit_answer(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         assignment_uuid = self.fixtures.assignments[0].uuid
         answer = self.fixtures.answers[0]
         expected = {'id': answer.uuid, 'content': 'This is an edit'}
@@ -563,6 +589,11 @@ class AnswersAPITests(ACJAPITestCase):
             assignment_grade = AssignmentGrade.get_user_assignment_grade(
                 self.fixtures.assignments[0], self.fixtures.draft_student).grade
 
+            lti_consumer = self.lti_data.lti_consumer
+            student = self.fixtures.draft_student
+            (lti_user_resource_link1, lti_user_resource_link2) = self.lti_data.setup_student_user_resource_links(
+                student, self.fixtures.course, self.fixtures.assignment)
+
             # test edit draft by author
             rv = self.client.post(
                 self.base_url + '/' + draft_answer.uuid,
@@ -582,6 +613,9 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(new_course_grade, course_grade)
             self.assertEqual(new_assignment_grade, assignment_grade)
 
+            mocked_update_assignment_grades_run.assert_not_called()
+            mocked_update_course_grades_run.assert_not_called()
+
             # set draft to false
             draft_expected_copy = draft_expected.copy()
             draft_expected_copy['draft'] = False
@@ -597,11 +631,23 @@ class AnswersAPITests(ACJAPITestCase):
 
             # grades should increase
             new_course_grade = CourseGrade.get_user_course_grade(
-                self.fixtures.course, self.fixtures.draft_student).grade
+                self.fixtures.course, self.fixtures.draft_student)
             new_assignment_grade = AssignmentGrade.get_user_assignment_grade(
-                self.fixtures.assignments[0], self.fixtures.draft_student).grade
-            self.assertGreater(new_course_grade, course_grade)
-            self.assertGreater(new_assignment_grade, assignment_grade)
+                self.fixtures.assignments[0], self.fixtures.draft_student)
+            self.assertGreater(new_course_grade.grade, course_grade)
+            self.assertGreater(new_assignment_grade.grade, assignment_grade)
+
+            mocked_update_assignment_grades_run.assert_called_once_with(
+                lti_consumer.id,
+                [(lti_user_resource_link2.lis_result_sourcedid, new_assignment_grade.id)]
+            )
+            mocked_update_assignment_grades_run.reset_mock()
+
+            mocked_update_course_grades_run.assert_called_once_with(
+                lti_consumer.id,
+                [(lti_user_resource_link1.lis_result_sourcedid, new_course_grade.id)]
+            )
+            mocked_update_course_grades_run.reset_mock()
 
             # setting draft to true when false should not work
             rv = self.client.post(
@@ -665,7 +711,9 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(answer.uuid, rv.json['id'])
             self.assertEqual('This is an edit', rv.json['content'])
 
-    def test_delete_answer(self):
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    def test_delete_answer(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         answer_uuid = self.fixtures.answers[0].uuid
 
         # test login required
@@ -682,6 +730,11 @@ class AnswersAPITests(ACJAPITestCase):
             rv = self.client.delete(self.base_url + '/999')
             self.assert404(rv)
 
+            lti_consumer = self.lti_data.lti_consumer
+            student = self.fixtures.students[0]
+            (lti_user_resource_link1, lti_user_resource_link2) = self.lti_data.setup_student_user_resource_links(
+                student, self.fixtures.course, self.fixtures.assignment)
+
             course_grade = CourseGrade.get_user_course_grade(
                 self.fixtures.course, self.fixtures.students[0]).grade
             assignment_grade = AssignmentGrade.get_user_assignment_grade(
@@ -694,11 +747,23 @@ class AnswersAPITests(ACJAPITestCase):
 
             # grades should decrease
             new_course_grade = CourseGrade.get_user_course_grade(
-                self.fixtures.course, self.fixtures.draft_student).grade
+                self.fixtures.course, self.fixtures.students[0])
             new_assignment_grade = AssignmentGrade.get_user_assignment_grade(
-                self.fixtures.assignments[0], self.fixtures.draft_student).grade
-            self.assertLess(new_course_grade, course_grade)
-            self.assertLess(new_assignment_grade, assignment_grade)
+                self.fixtures.assignments[0], self.fixtures.students[0])
+            self.assertLess(new_course_grade.grade, course_grade)
+            self.assertLess(new_assignment_grade.grade, assignment_grade)
+
+            mocked_update_assignment_grades_run.assert_called_once_with(
+                lti_consumer.id,
+                [(lti_user_resource_link2.lis_result_sourcedid, new_assignment_grade.id)]
+            )
+            mocked_update_assignment_grades_run.reset_mock()
+
+            mocked_update_course_grades_run.assert_called_once_with(
+                lti_consumer.id,
+                [(lti_user_resource_link1.lis_result_sourcedid, new_course_grade.id)]
+            )
+            mocked_update_course_grades_run.reset_mock()
 
         # test deletion by user that can manage posts
         with self.login(self.fixtures.instructor.username):

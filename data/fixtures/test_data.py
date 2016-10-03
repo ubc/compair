@@ -114,6 +114,30 @@ class LTITestData:
 
         db.session.commit()
 
+    def setup_student_user_resource_links(self, student, course, assignment=None):
+        self.lti_consumer.lis_outcome_service_url = "TestUrl.com"
+        lti_context = self.create_context(
+            self.lti_consumer,
+            acj_course_id=course.id
+        )
+        lti_user_student = self.create_user(self.lti_consumer, SystemRole.student, student)
+
+        lti_resource_link1 = self.create_resource_link(self.lti_consumer, lti_context=lti_context)
+        lti_user_resource_link1 = self.create_user_resource_link(lti_user_student, lti_resource_link1, CourseRole.student)
+        lti_user_resource_link1.lis_result_sourcedid = "SomeUniqueSourcedId" + str(len(self.lti_user_resource_links))
+
+        if assignment:
+            lti_resource_link2 = self.create_resource_link(self.lti_consumer, lti_context=lti_context, acj_assignment=assignment)
+            lti_user_resource_link2 = self.create_user_resource_link(lti_user_student, lti_resource_link2, CourseRole.student)
+            lti_user_resource_link2.lis_result_sourcedid = "SomeUniqueSourcedId" + str(len(self.lti_user_resource_links))
+
+        db.session.commit()
+
+        if assignment:
+            return (lti_user_resource_link1, lti_user_resource_link2)
+        else:
+            return lti_user_resource_link1
+
     def get_consumer(self):
         return self.lti_consumer
 

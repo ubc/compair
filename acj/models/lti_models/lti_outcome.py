@@ -214,9 +214,10 @@ class LTIOutcome(object):
         grade must be in range: [0.0, 1.0]
         """
 
-        if not lti_consumer.lis_outcome_service_url or not lis_result_sourcedid:
+        if not lti_consumer.lis_outcome_service_url or not lis_result_sourcedid or \
+                grade < 0.0 or grade > 1.0:
             # cannot send grade if no lis_outcome_service_url or lis_outcome_service_url
-            return
+            return False
 
         # build outcome request
         request = ACJOutcomeRequest({
@@ -231,6 +232,8 @@ class LTIOutcome(object):
             current_app.logger.debug("Successfully grade update for lis_result_sourcedid: " + lis_result_sourcedid + " with grade: "+str(grade))
         else:
             current_app.logger.error("Failed grade update for lis_result_sourcedid: " + lis_result_sourcedid + " with grade: "+str(grade))
+
+        return request.was_outcome_post_successful()
 
 class ACJOutcomeRequest(OutcomeRequest):
     # override post_outcome_request in order to use LTI_ENFORCE_SSL

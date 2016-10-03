@@ -3,7 +3,7 @@ import copy
 import operator
 import datetime
 
-from data.fixtures.test_data import ComparisonTestData
+from data.fixtures.test_data import ComparisonTestData, LTITestData
 from data.factories import AssignmentCriterionFactory
 from acj.models import Answer, Comparison, CourseGrade, AssignmentGrade
 from acj.tests.test_acj import ACJAPITestCase
@@ -18,6 +18,7 @@ class ComparisonAPITests(ACJAPITestCase):
         self.course = self.data.get_course()
         self.assignment = self.data.get_assignments()[0]
         self.base_url = self._build_url(self.course.uuid, self.assignment.uuid)
+        self.lti_data = LTITestData()
 
         secondary_criterion = self.data.create_criterion(self.data.authorized_instructor)
         AssignmentCriterionFactory(criterion=secondary_criterion, assignment=self.assignment)
@@ -326,7 +327,9 @@ class ComparisonAPITests(ACJAPITestCase):
             self.assert200(rv)
 
 
-    def test_submit_comparison_basic(self):
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    def test_submit_comparison_basic(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         users = [
             (self.data.get_authorized_student(), False),
             (self.data.get_authorized_instructor(), True),
@@ -335,6 +338,10 @@ class ComparisonAPITests(ACJAPITestCase):
 
         self.assignment.educators_can_compare = True
         db.session.commit()
+
+        lti_consumer = self.lti_data.lti_consumer
+        (lti_user_resource_link1, lti_user_resource_link2) = self.lti_data.setup_student_user_resource_links(
+            self.data.get_authorized_student(), self.course, self.assignment)
 
         for (user, has_manage_role) in users:
             compared_answer_uuids = set()
@@ -388,10 +395,26 @@ class ComparisonAPITests(ACJAPITestCase):
 
                     # grades should increase for every comparison
                     if user.id == self.data.get_authorized_student().id:
-                        new_course_grade = CourseGrade.get_user_course_grade(self.course, user).grade
-                        new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, user).grade
-                        self.assertGreater(new_course_grade, course_grade)
-                        self.assertGreater(new_assignment_grade, assignment_grade)
+                        new_course_grade = CourseGrade.get_user_course_grade(self.course, user)
+                        new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, user)
+                        self.assertGreater(new_course_grade.grade, course_grade)
+                        self.assertGreater(new_assignment_grade.grade, assignment_grade)
+
+
+                        mocked_update_course_grades_run.assert_called_once_with(
+                            lti_consumer.id,
+                            [(lti_user_resource_link1.lis_result_sourcedid, new_course_grade.id)]
+                        )
+                        mocked_update_course_grades_run.reset_mock()
+
+                        mocked_update_assignment_grades_run.assert_called_once_with(
+                            lti_consumer.id,
+                            [(lti_user_resource_link2.lis_result_sourcedid, new_assignment_grade.id)]
+                        )
+                        mocked_update_assignment_grades_run.reset_mock()
+                    else:
+                        mocked_update_assignment_grades_run.assert_not_called()
+                        mocked_update_course_grades_run.assert_not_called()
 
                     # Resubmit of same comparison should fail
                     rv = self.client.post(

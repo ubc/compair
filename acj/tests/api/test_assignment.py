@@ -1,10 +1,12 @@
 import datetime
 import json
+import mock
 
-from data.fixtures.test_data import SimpleAssignmentTestData, ComparisonTestData, TestFixture
+from data.fixtures.test_data import SimpleAssignmentTestData, ComparisonTestData, \
+    TestFixture, LTITestData
 from data.factories import AssignmentFactory
 from acj.models import Assignment, Comparison, PairingAlgorithm, \
-    CourseGrade, AssignmentGrade
+    CourseGrade, AssignmentGrade, SystemRole, CourseRole, LTIOutcome
 from acj.tests.test_acj import ACJAPITestCase
 from acj.core import db
 
@@ -778,8 +780,11 @@ class AssignmentCourseGradeUpdateAPITests(ACJAPITestCase):
         super(AssignmentCourseGradeUpdateAPITests, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=30, num_assignments=2, num_groups=2)
         self.url = '/api/courses/' + self.fixtures.course.uuid + '/assignments'
+        self.lti_data = LTITestData()
 
-    def test_create(self):
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    def test_create(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         url = self.url
 
         course_grades = {
@@ -822,7 +827,36 @@ class AssignmentCourseGradeUpdateAPITests(ACJAPITestCase):
                 self.assertIsNotNone(grade)
                 self.assertLess(new_course_grade.grade, grade)
 
-    def test_edit(self):
+        # test lti grade post
+        lti_consumer = self.lti_data.lti_consumer
+        student = self.fixtures.students[0]
+        lti_user_resource_link = self.lti_data.setup_student_user_resource_links(
+            student, self.fixtures.course)
+
+        with self.login(self.fixtures.instructor.username):
+            rv = self.client.post(
+                self.url,
+                data=json.dumps(assignment_expected),
+                content_type='application/json')
+            self.assert200(rv)
+
+            new_course_grades = CourseGrade.get_course_grades(self.fixtures.course)
+            student_grade_id = next((new_course_grade.id \
+                for new_course_grade in new_course_grades  \
+                if new_course_grade.user_id == student.id)
+            )
+
+            mocked_update_assignment_grades_run.assert_not_called()
+
+            mocked_update_course_grades_run.assert_called_once_with(
+                lti_consumer.id,
+                [(lti_user_resource_link.lis_result_sourcedid, student_grade_id)]
+            )
+            mocked_update_course_grades_run.reset_mock()
+
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    def test_edit(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         assignment = self.fixtures.assignment
         url = self.url + '/' + assignment.uuid
 
@@ -855,6 +889,11 @@ class AssignmentCourseGradeUpdateAPITests(ACJAPITestCase):
                 for assignment_grade in AssignmentGrade.get_assignment_grades(assignment)
         }
 
+        lti_consumer = self.lti_data.lti_consumer
+        student = self.fixtures.students[0]
+        (lti_user_resource_link1, lti_user_resource_link2) = self.lti_data.setup_student_user_resource_links(
+            student, self.fixtures.course, self.fixtures.assignment)
+
         with self.login(self.fixtures.instructor.username):
             # grades shouldn't change if weight don't change
             rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
@@ -873,6 +912,9 @@ class AssignmentCourseGradeUpdateAPITests(ACJAPITestCase):
                 grade = assignment_grades.get(new_assignment_grade.user_id)
                 self.assertIsNotNone(grade)
                 self.assertAlmostEqual(new_assignment_grade.grade, grade)
+
+            mocked_update_assignment_grades_run.assert_not_called()
+            mocked_update_course_grades_run.assert_not_called()
 
             # grades should change if weights change
             for weight in ['answer_grade_weight', 'comparison_grade_weight', 'self_evaluation_grade_weight']:
@@ -898,8 +940,30 @@ class AssignmentCourseGradeUpdateAPITests(ACJAPITestCase):
                     self.assertIsNotNone(grade)
                     self.assertNotEqual(new_assignment_grade.grade, grade)
 
+                student_assignment_grade_id = next((new_assignment_grade.id \
+                    for new_assignment_grade in new_assignment_grades  \
+                    if new_assignment_grade.user_id == student.id)
+                )
+                mocked_update_assignment_grades_run.assert_called_once_with(
+                    lti_consumer.id,
+                    [(lti_user_resource_link2.lis_result_sourcedid, student_assignment_grade_id)]
+                )
+                mocked_update_assignment_grades_run.reset_mock()
 
-    def test_delete(self):
+                student_course_grade_id = next((new_course_grade.id \
+                    for new_course_grade in new_course_grades  \
+                    if new_course_grade.user_id == student.id)
+                )
+                mocked_update_course_grades_run.assert_called_once_with(
+                    lti_consumer.id,
+                    [(lti_user_resource_link1.lis_result_sourcedid, student_course_grade_id)]
+                )
+                mocked_update_course_grades_run.reset_mock()
+
+
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    def test_delete(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         # add dumby Assignment
         self.fixtures.add_assignments(num_assignments=1)
         assignment = self.fixtures.assignments.pop()
@@ -910,6 +974,11 @@ class AssignmentCourseGradeUpdateAPITests(ACJAPITestCase):
             course_grade.user_id: course_grade.grade \
                 for course_grade in CourseGrade.get_course_grades(self.fixtures.course)
         }
+
+        lti_consumer = self.lti_data.lti_consumer
+        student = self.fixtures.students[0]
+        (lti_user_resource_link1, lti_user_resource_link2) = self.lti_data.setup_student_user_resource_links(
+            student, self.fixtures.course, self.fixtures.assignment)
 
         with self.login(self.fixtures.instructor.username):
             rv = self.client.delete(url)
@@ -923,6 +992,18 @@ class AssignmentCourseGradeUpdateAPITests(ACJAPITestCase):
                 grade = course_grades.get(new_course_grade.user_id)
                 self.assertIsNotNone(grade)
                 self.assertGreater(new_course_grade.grade, grade)
+
+            mocked_update_assignment_grades_run.assert_not_called()
+
+            student_course_grade_id = next((new_course_grade.id \
+                for new_course_grade in new_course_grades  \
+                if new_course_grade.user_id == student.id)
+            )
+            mocked_update_course_grades_run.assert_called_once_with(
+                lti_consumer.id,
+                [(lti_user_resource_link1.lis_result_sourcedid, student_course_grade_id)]
+            )
+            mocked_update_course_grades_run.reset_mock()
 
             # there shouldn't been any more course grades after removing all assignments
             for assignment in self.fixtures.course.assignments:
