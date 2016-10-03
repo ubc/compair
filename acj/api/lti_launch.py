@@ -14,6 +14,7 @@ from acj.models import User, Course, LTIConsumer, LTIContext, LTIMembership, \
 from acj.models.lti import MembershipNoValidContextsException, \
     MembershipNoResultsException, MembershipInvalidRequestException
 from .util import new_restful_api, get_model_changes, pagination_parser
+from acj.tasks.lti_membership import update_lti_course_membership
 
 from acj.api.classlist import display_name_generator
 from lti.contrib.flask import FlaskToolProvider
@@ -181,14 +182,9 @@ class LTICourseLinkAPI(Resource):
         lti_context.acj_course_id = course.id
         db.session.commit()
 
-        membership_warning = False
-
         # automatically fetch membership if enabled for context
         if lti_context.ext_ims_lis_memberships_url and lti_context.ext_ims_lis_memberships_id:
-            try:
-                LTIMembership.update_membership_for_course(course)
-            except:
-                membership_warning = True
+            update_lti_course_membership.delay(course.id)
 
         on_lti_course_link.send(
             self,
@@ -196,10 +192,7 @@ class LTICourseLinkAPI(Resource):
             user=current_user,
             data={ 'course_id': course.id, 'lti_context_id': lti_context.id })
 
-        if membership_warning:
-            return { 'warning': 'LTI membership import failed' }
-        else:
-            return { 'success': True }
+        return { 'success': True }
 
 api.add_resource(LTICourseLinkAPI, '/course/<course_uuid>/link')
 
