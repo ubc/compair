@@ -21,15 +21,15 @@ var module = angular.module('ubc.ctlt.acj.lti', [
 
 /***** Providers *****/
 module.factory('LTIResource',
-    ["$resource",
-    function($resource)
+    ["$resource", "Interceptors",
+    function($resource, Interceptors)
 {
     var ret = $resource('/api/lti', {},
         {
             'getStatus': {url: '/api/lti/status'},
-            'linkCourse': {method: 'POST', url: '/api/lti/course/:id/link'},
+            'linkCourse': {method: 'POST', url: '/api/lti/course/:id/link', interceptor: Interceptors.enrolCacheLTI},
             'getMembershipStatus': {method: 'GET', url: '/api/lti/course/:id/membership/status'},
-            'updateMembership': {method: 'POST', url: '/api/lti/course/:id/membership'}
+            'updateMembership': {method: 'POST', url: '/api/lti/course/:id/membership', interceptor: Interceptors.enrolCacheLTI}
         }
     );
     return ret;

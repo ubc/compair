@@ -81,7 +81,7 @@
 	    </div>
 	    <div class="col-sm-9" ng-show="bulkActions == 'drop'">
 			<div class="col-sm-2">
-				<button id="drop-users" href="" class="btn btn-small btn-success" ng-click="updateUsers()" confirmation-needed keyword="group of users">Apply</button>
+				<button id="drop-users" href="" class="btn btn-small btn-success" confirmation-needed="updateUsers()" keyword="group of users">Apply</button>
 			</div>
 	    </div>
 	    <div class="col-sm-9" ng-show="bulkActions == 'update'">
@@ -139,7 +139,7 @@
                             Edit
                         </a>
                         &nbsp;|&nbsp;
-                        <a href="" confirmation-needed ng-click="unenrol(user.id)" keyword="user" ng-if="loggedInUserId != user.id">
+                        <a href="" confirmation-needed="unenrol(user.id)" keyword="user" ng-if="loggedInUserId != user.id">
                             Drop
                         </a>
                         <span ng-if="loggedInUserId == user.id" class="text-muted">&mdash;  &nbsp; &nbsp;</span>

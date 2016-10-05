@@ -31,6 +31,17 @@ module.service('Interceptors', ['$q', '$cacheFactory', 'AnswerResource', functio
         }
     };
 
+    this.enrolCacheLTI = {
+        response: function(response) {
+            var cache = $cacheFactory.get('classlist');
+            if(cache) {
+                var courseId = response.config.url.match(/[A-Za-z0-9_-]{22}/g)[0];
+                cache.remove('/api/courses/' + courseId + '/users');
+            }
+            return response.data;
+        }
+    };
+
     this.groupSessionInterceptor = {
         response: function(response) {
             // store all course group names until javascript memory wiped (page refreshed,closed,etc)
