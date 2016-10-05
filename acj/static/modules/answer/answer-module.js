@@ -25,8 +25,7 @@ var module = angular.module('ubc.ctlt.acj.answer',
 module.service('answerAttachService',
         ["FileUploader", "$location", "Toaster",
         function(FileUploader, $location, Toaster) {
-    var filename = '';
-    var alias = '';
+    var file = null;
     var fileItemRef = null;
 
     var getUploader = function(initParams) {
@@ -39,16 +38,12 @@ module.service('answerAttachService',
             }
         });
 
-        filename = '';
-        alias = '';
+        file = null;
         fileItemRef = null;
 
         if (initParams) {
-            if (initParams.filename) {
-                filename = initParams.filename;
-            }
-            if (initParams.alias) {
-                alias = initParams.alias;
+            if (initParams.file) {
+                file = initParams.file;
             }
             if (initParams.fileRef) {
                 var dummy = new FileUploader.FileItem(uploader, initParams.fileRef);
@@ -59,8 +54,6 @@ module.service('answerAttachService',
                 fileItemRef = dummy;
             }
         }
-
-
 
         uploader.onCompleteItem = onComplete();
         uploader.onErrorItem = onError();
@@ -95,8 +88,7 @@ module.service('answerAttachService',
     var onComplete = function() {
         return function(fileItem, response) {
             if (response) {
-                filename = response['name'];
-                alias = fileItem.file.name;
+                file = response['file'];
                 fileItemRef = fileItem;
             }
         };
@@ -112,32 +104,26 @@ module.service('answerAttachService',
         };
     };
 
-    var resetName = function() {
+    var reset = function() {
         return function() {
-            filename = '';
-            alias = '';
+            file = null;
             fileItemRef = null;
         };
     };
 
-    var getName = function() {
-        return filename;
-    };
-
-    var getAlias = function() {
-        return alias;
-    };
-
     var getFile = function() {
+        return file;
+    };
+
+    var getFileRef = function() {
         return fileItemRef ? fileItemRef.file : null;
     };
 
     return {
         getUploader: getUploader,
-        getName: getName,
-        getAlias: getAlias,
         getFile: getFile,
-        resetName: resetName
+        getFileRef: getFileRef,
+        reset: reset
     };
 }]);
 
@@ -250,7 +236,7 @@ module.controller(
         }
 
         $scope.uploader = answerAttachService.getUploader();
-        $scope.resetName = answerAttachService.resetName();
+        $scope.resetFileUploader = answerAttachService.reset();
 
         var countDown = function() {
             $scope.showCountDown = true;
@@ -277,10 +263,11 @@ module.controller(
             }
         });
 
-        $scope.deleteFile = function(file_id) {
-            AttachmentResource.delete({'fileId': file_id}).$promise.then(
+        $scope.deleteFile = function(file) {
+            AttachmentResource.delete({'fileId': file.id}).$promise.then(
                 function (ret) {
                     Toaster.success('Attachment deleted successfully');
+                    $scope.answer.file = null;
                     $scope.answer.uploadedFile = false;
                 },
                 function (ret) {
@@ -313,32 +300,30 @@ module.controller(
             }
         );
 
-        $scope.answerSubmit = function (answerForm) {
+        $scope.answerSubmit = function () {
             $scope.submitted = true;
-            $scope.answer.file_name = answerAttachService.getName();
-            $scope.answer.file_alias = answerAttachService.getAlias();
             var wasDraft = $scope.answer.draft;
+
+            var file = answerAttachService.getFile();
+            if (file) {
+                $scope.answer.file = file;
+                $scope.answer.file_id = file.id
+            } else if ($scope.answer.file) {
+                $scope.answer.file_id = $scope.answer.file.id;
+            } else {
+                $scope.answer.file_id = null;
+            }
 
             AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': assignmentId}, $scope.answer).$promise.then(
                 function (ret) {
                     $scope.submitted = false;
+                    $scope.preventExit = false; //user has saved answer, does not need warning when leaving page
 
                     if (ret.draft) {
-                        $scope.answer = ret;
-                        if (ret.file) {
-                            $scope.answer.uploadedFile = ret.file;
-                            $scope.uploader.clearQueue();
-                            $scope.resetName();
-                        }
-                        if (answerForm) {
-                            answerForm.$setPristine();
-                        }
-
                         Toaster.success("Saved Draft Successfully!", "Remember to submit your answer before the deadline.");
-                        $scope.preventExit = false; //user has saved answer, does not need warning when leaving page
+                         //user has saved answer, does not need warning when leaving page
                         $location.path('/course/' + $scope.courseId + '/assignment/' + assignmentId + '/answer/' + $scope.answer.id + '/edit');
                     } else {
-                        $scope.preventExit = false; //user has saved answer, does not need warning when leaving page
                         // if was a draft, show new success message
                         if (wasDraft) {
                             Toaster.success("New Answer Posted!");
@@ -376,15 +361,14 @@ module.controller(
         $scope.method = $scope.answer.id ? 'edit' : 'new';
         $scope.editorOptions = EditorOptions.basic;
         $scope.uploader = answerAttachService.getUploader();
-        $scope.resetName = answerAttachService.resetName();
+        $scope.resetFileUploader = answerAttachService.reset();
         $scope.modalInstance = $modalInstance;
 
         if ($scope.method == 'new') {
             // if answer is new, prepopulate the file upload area if needed
             if ($scope.answer.fileRef) {
                 $scope.uploader = answerAttachService.getUploader({
-                    'filename': $scope.answer.file_name,
-                    'alias': $scope.answer.file_alias,
+                    'file': $scope.answer.file,
                     'fileRef': $scope.answer.fileRef
                 });
             }
@@ -404,8 +388,8 @@ module.controller(
             );
         }
 
-        $scope.deleteFile = function(file_id) {
-            AttachmentResource.delete({'fileId': file_id}).$promise.then(
+        $scope.deleteFile = function(file) {
+            AttachmentResource.delete({'fileId': file.id}).$promise.then(
                 function (ret) {
                     Toaster.success('Attachment deleted successfully');
                     $scope.answer.file = null;
@@ -420,12 +404,20 @@ module.controller(
 
         $scope.answerSubmit = function () {
             $scope.submitted = true;
-            $scope.answer.file_name = answerAttachService.getName();
-            $scope.answer.file_alias = answerAttachService.getAlias();
+
+            var file = answerAttachService.getFile();
+            if (file) {
+                $scope.answer.file = file;
+                $scope.answer.file_id = file.id
+            } else if ($scope.answer.file) {
+                $scope.answer.file_id = $scope.answer.file.id;
+            } else {
+                $scope.answer.file_id = null;
+            }
 
             if ($scope.example == true && $scope.method == 'new') {
                 // save the uploaded file info in case modal is reopened
-                $scope.answer.fileRef = answerAttachService.getFile();
+                $scope.answer.fileRef = answerAttachService.getFileRef();
                 $modalInstance.close($scope.answer);
             } else {
                 // save the answer

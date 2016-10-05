@@ -4,8 +4,9 @@ from flask_login import current_user
 from werkzeug.exceptions import Unauthorized, Forbidden
 from sqlalchemy import and_
 
-from .models import Course, User, UserCourse, CourseRole, SystemRole, Assignment, Answer, \
-    AnswerComment, Comparison, Criterion, AssignmentComment, AssignmentCriterion, ComparisonExample
+from .models import Course, User, UserCourse, CourseRole, SystemRole, \
+    Assignment, Answer, AnswerComment, Comparison, Criterion, \
+    AssignmentComment, AssignmentCriterion, ComparisonExample, File
 
 USER_IDENTITY = 'permission_user_identity'
 
@@ -36,6 +37,17 @@ def define_authorization(user, they):
             .count()
         return bool(exists)
 
+    def if_can_delete_attachment_reference(file):
+        for assignment in file.assignments.all():
+            if allow(DELETE, assignment):
+                return True
+
+        for answer in file.answers.all():
+            if allow(DELETE, answer):
+                return True
+
+        return False
+
     # Assign permissions based on system roles
     if user.system_role == SystemRole.sys_admin:
         # sysadmin can do anything
@@ -54,6 +66,9 @@ def define_authorization(user, they):
     # they can read and edit their own criteria
     they.can((READ, EDIT), Criterion, user_id=user.id)
 
+    # they can delete their own attachments
+    they.can(DELETE, File, user_id=user.id)
+
     # Assign permissions based on course roles
     # give access to courses the user is enroled in
     for entry in user.user_courses:
@@ -67,6 +82,7 @@ def define_authorization(user, they):
         they.can((EDIT, DELETE, READ), Answer, user_id=user.id)
         they.can((READ, CREATE), AssignmentComment, course_id=entry.course_id)
         they.can((EDIT, DELETE), AssignmentComment, user_id=user.id)
+        they.can(DELETE, File, if_can_delete_attachment_reference)
         # only owner/Instructors/TAs can read answer comment drafts
         they.can(READ, AnswerComment, course_id=entry.course_id, draft=False)
         they.can(CREATE, AnswerComment, course_id=entry.course_id)

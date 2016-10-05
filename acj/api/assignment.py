@@ -13,10 +13,8 @@ from . import dataformat
 from acj.core import db, event
 from acj.authorization import allow, require
 from acj.models import Assignment, Course, AssignmentCriterion, Answer, Comparison, \
-    AnswerComment, AnswerCommentType, PairingAlgorithm, Criterion
+    AnswerComment, AnswerCommentType, PairingAlgorithm, Criterion, File
 from .util import new_restful_api, get_model_changes
-from .file import add_new_file
-
 
 assignment_api = Blueprint('assignment_api', __name__)
 api = new_restful_api(assignment_api)
@@ -28,8 +26,7 @@ new_assignment_parser.add_argument('answer_start', type=str, required=True)
 new_assignment_parser.add_argument('answer_end', type=str, required=True)
 new_assignment_parser.add_argument('compare_start', type=str, default=None)
 new_assignment_parser.add_argument('compare_end', type=str, default=None)
-new_assignment_parser.add_argument('file_name', type=str, default=None)
-new_assignment_parser.add_argument('file_alias', type=str, default=None)
+new_assignment_parser.add_argument('file_id', type=str, default=None)
 new_assignment_parser.add_argument('students_can_reply', type=bool, default=False)
 new_assignment_parser.add_argument('number_of_comparisons', type=int, required=True)
 new_assignment_parser.add_argument('enable_self_evaluation', type=int, default=None)
@@ -95,6 +92,14 @@ class AssignmentIdAPI(Resource):
         # make sure the assignment id in the url and the id matches
         if params['id'] != assignment_uuid:
             return {"error": "Assignment id does not match URL."}, 400
+
+        # make sure that file attachment exists
+        file_uuid = params.get('file_id')
+        if file_uuid:
+            uploaded_file = File.get_by_uuid_or_404(file_uuid)
+            assignment.file_id = uploaded_file.id
+        else:
+            assignment.file_id = None
 
         # modify assignment according to new values, preserve original values if values not passed
         assignment.name = params.get("name", assignment.name)
@@ -189,13 +194,6 @@ class AssignmentIdAPI(Resource):
             data=model_changes)
 
         db.session.commit()
-
-        file_name = params.get("file_name")
-        if file_name:
-            assignment.file = add_new_file(params.get('file_alias'), file_name,
-                Assignment.__name__, assignment.id)
-
-            db.session.commit()
 
         # update assignment and course grades if needed
         if model_changes and (model_changes.get('answer_grade_weight') or
@@ -296,6 +294,13 @@ class AssignmentRootAPI(Resource):
         if new_assignment.rank_display_limit != None and new_assignment.rank_display_limit <= 0:
             new_assignment.rank_display_limit = None
 
+        # make sure that file attachment exists
+        file_uuid = params.get('file_id')
+        if file_uuid:
+            uploaded_file = File.get_by_uuid_or_404(file_uuid)
+            new_assignment.file_id = uploaded_file.id
+        else:
+            new_assignment.file_id = None
 
         new_assignment.compare_start = params.get('compare_start', None)
         if new_assignment.compare_start is not None:
@@ -335,14 +340,6 @@ class AssignmentRootAPI(Resource):
 
         db.session.add(new_assignment)
         db.session.commit()
-
-        file_name = params.get("file_name")
-        if file_name:
-            new_assignment.file = add_new_file(params.get('file_alias'), file_name,
-                Assignment.__name__, new_assignment.id)
-
-            db.session.add(new_assignment)
-            db.session.commit()
 
         # update course grades
         course.calculate_grades()

@@ -8,7 +8,7 @@ from acj import db
 from six.moves import range
 from acj.models import SystemRole, CourseRole, Criterion, Course, Comparison, ThirdPartyType
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
-    AnswerFactory, CriterionFactory, ComparisonFactory, AssignmentCriterionFactory, \
+    AnswerFactory, CriterionFactory, ComparisonFactory, AssignmentCriterionFactory, FileFactory, \
     AssignmentCommentFactory, AnswerCommentFactory, ScoreFactory, ComparisonExampleFactory, \
     LTIConsumerFactory, LTIContextFactory, LTIResourceLinkFactory, \
     LTIUserFactory, LTIUserResourceLinkFactory, ThirdPartyUserFactory
@@ -42,6 +42,11 @@ class BasicTestData:
         citeria = CriterionFactory(user=user)
         db.session.commit()
         return citeria
+
+    def create_file(self, user):
+        db_file = FileFactory(user=user)
+        db.session.commit()
+        return db_file
 
     def create_instructor(self):
         return self.create_user(SystemRole.instructor)
@@ -657,3 +662,8 @@ class TestFixture:
                                             course_role=type, group_name=group_name)
         db.session.commit()
         return user_courses
+
+    def add_file(self, user):
+        db_file = FileFactory(user=user)
+        db.session.commit()
+        return db_file

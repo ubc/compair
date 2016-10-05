@@ -138,6 +138,8 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
             if not os.path.exists(file_path):
                 return make_response('invalid file name', 404)
 
+            # TODO: add bouncer
+
             return send_file(file_path, mimetype=mimetypes[file_type])
 
     return app

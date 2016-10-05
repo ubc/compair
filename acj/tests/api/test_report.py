@@ -23,7 +23,7 @@ class ReportAPITest(ACJAPITestCase):
             file_path = os.path.join(folder, file_name)
             try:
                 if os.path.isfile(file_path):
-                    os.unlink(file_path)
+                    os.remove(file_path)
             except Exception as e:
                 print(e)
 

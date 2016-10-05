@@ -12,10 +12,9 @@ from . import dataformat
 from acj.core import db, event
 from acj.authorization import require, allow, is_user_access_restricted
 from acj.models import Answer, Assignment, Course, User, Comparison, Criterion, \
-    Score, UserCourse, SystemRole, CourseRole, AnswerComment, AnswerCommentType
+    Score, UserCourse, SystemRole, CourseRole, AnswerComment, AnswerCommentType, File
 
 from .util import new_restful_api, get_model_changes, pagination_parser
-from .file import add_new_file
 
 answers_api = Blueprint('answers_api', __name__)
 api = new_restful_api(answers_api)
@@ -23,13 +22,11 @@ api = new_restful_api(answers_api)
 new_answer_parser = RequestParser()
 new_answer_parser.add_argument('user_id', type=str, default=None)
 new_answer_parser.add_argument('content', type=str, default=None)
-new_answer_parser.add_argument('file_name', type=str, default=None)
-new_answer_parser.add_argument('file_alias', type=str, default=None)
+new_answer_parser.add_argument('file_id', type=str, default=None)
 new_answer_parser.add_argument('draft', type=bool, default=False)
 
 existing_answer_parser = new_answer_parser.copy()
 existing_answer_parser.add_argument('id', type=str, required=True, help="Answer id is required.")
-existing_answer_parser.add_argument('uploadedFile', type=bool, default=False)
 
 answer_list_parser = pagination_parser.copy()
 answer_list_parser.add_argument('group', type=str, required=False, default=None)
@@ -190,8 +187,14 @@ class AnswerRootAPI(Resource):
         answer.content = params.get("content")
         answer.draft = params.get("draft")
 
-        file_name = params.get('file_name')
-        if not (answer.content or file_name):
+        file_uuid = params.get('file_id')
+        if file_uuid:
+            uploaded_file = File.get_by_uuid_or_404(file_uuid)
+            answer.file_id = uploaded_file.id
+        else:
+            answer.file_id = None
+
+        if not (answer.content or file_uuid):
             return {"error": "The answer content is empty!"}, 400
 
         user_uuid = params.get("user_id")
@@ -243,11 +246,10 @@ class AnswerRootAPI(Resource):
             course_id=course.id,
             data=marshal(answer, dataformat.get_answer(restrict_user)))
 
-        if file_name:
-            answer.file = add_new_file(params.get('file_alias'), file_name,
-                Answer.__name__, answer.id)
-
-            db.session.commit()
+        # update course & assignment grade for user if answer is fully submitted
+        if not answer.draft:
+            assignment.calculate_grade(answer.user)
+            course.calculate_grade(answer.user)
 
         # update course & assignment grade for user if answer is fully submitted
         if not answer.draft:
@@ -306,8 +308,15 @@ class AnswerIdAPI(Resource):
         if answer.draft:
             answer.draft = params.get("draft")
         uploaded = params.get('uploadFile')
-        file_name = params.get('file_name')
-        if not (answer.content or uploaded or file_name):
+
+        file_uuid = params.get('file_id')
+        if file_uuid:
+            uploaded_file = File.get_by_uuid_or_404(file_uuid)
+            answer.file_id = uploaded_file.id
+        else:
+            answer.file_id = None
+
+        if not (answer.content or uploaded or file_uuid):
             return {"error": "The answer content is empty!"}, 400
 
         db.session.add(answer)
@@ -319,12 +328,6 @@ class AnswerIdAPI(Resource):
             user=current_user,
             course_id=course.id,
             data=get_model_changes(answer))
-
-        if file_name:
-            answer.file = add_new_file(params.get('file_alias'), file_name,
-                Answer.__name__, answer.id)
-
-            db.session.commit()
 
         # update course & assignment grade for user if answer is fully submitted
         if not answer.draft:
