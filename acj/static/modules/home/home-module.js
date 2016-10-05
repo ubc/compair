@@ -51,7 +51,6 @@ module.controller(
                 function(ret) {
                     $scope.courses = ret.objects;
                     $scope.totalNumCourses = ret.total;
-                    angular.forEach($scope.courses, function(event){ event.start_date = new Date(event.start_date); });
                 },
                 function (ret) {
                     Toaster.reqerror("Unable to retrieve your courses.", ret);

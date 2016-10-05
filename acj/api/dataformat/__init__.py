@@ -107,8 +107,8 @@ def get_assignment(restrict_user=True):
 
         'answer_start': fields.DateTime(dt_format='iso8601'),
         'answer_end': fields.DateTime(dt_format='iso8601'),
-        'compare_start': fields.DateTime(dt_format='iso8601'),
-        'compare_end': fields.DateTime(dt_format='iso8601'),
+        'compare_start': fields.DateTime(dt_format='iso8601', default=None),
+        'compare_end': fields.DateTime(dt_format='iso8601', default=None),
         'available': fields.Boolean,
 
         'students_can_reply': fields.Boolean,

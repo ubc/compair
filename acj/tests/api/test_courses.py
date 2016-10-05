@@ -268,6 +268,8 @@ class CoursesAPITests(ACJAPITestCase):
         expected = {
             'year': 2015,
             'term': 'Winter',
+            'start_date': None,
+            'end_date': None
         }
         # test login required
         rv = self.client.post(url, content_type='application/json')
@@ -307,6 +309,8 @@ class CoursesAPITests(ACJAPITestCase):
             self.assertEqual(original_course.name, rv.json['name'])
             self.assertEqual(expected['year'], rv.json['year'])
             self.assertEqual(expected['term'], rv.json['term'])
+            self.assertEqual(expected['start_date'], rv.json['start_date'])
+            self.assertEqual(expected['end_date'], rv.json['end_date'])
             self.assertEqual(original_course.description, rv.json['description'])
 
             # verify instructor added to duplicate course
@@ -322,11 +326,41 @@ class CoursesDuplicateComplexAPITests(ACJAPITestCase):
     def setUp(self):
         super(CoursesDuplicateComplexAPITests, self).setUp()
         self.data = ComparisonTestData()
-        self.url = '/api/courses/' + self.data.get_course().uuid + '/duplicate'
+        self.course = self.data.get_course()
+
+        # add start_date
+        self.course.start_date = datetime.datetime.utcnow()
+        self.course.end_date = datetime.datetime.utcnow() + datetime.timedelta(days=90)
+        db.session.commit()
+
+        self.url = '/api/courses/' + self.course.uuid + '/duplicate'
+
+        self.date_delta = datetime.timedelta(days=180)
         self.expected = {
             'year': 2015,
             'term': 'Winter',
+            'start_date': (self.course.start_date + self.date_delta).isoformat() + 'Z',
+            'end_date': (self.course.end_date + self.date_delta).isoformat() + 'Z',
+            'assignments': []
         }
+
+        for assignment in self.course.assignments:
+            if not assignment.active:
+                continue
+
+            assignment_data = {
+                'id': assignment.uuid,
+                'answer_start': (assignment.answer_start + self.date_delta).isoformat() + 'Z',
+                'answer_end': (assignment.answer_end + self.date_delta).isoformat() + 'Z'
+            }
+
+            if assignment.compare_start != None:
+                assignment_data['compare_start'] = (assignment.compare_start + self.date_delta).isoformat() + 'Z'
+
+            if assignment.compare_end != None:
+                assignment_data['compare_end'] = (assignment.compare_end + self.date_delta).isoformat() + 'Z'
+
+            self.expected['assignments'].append(assignment_data)
 
     def test_duplicate_course_complex(self):
         original_course = self.data.get_course()
@@ -345,6 +379,8 @@ class CoursesDuplicateComplexAPITests(ACJAPITestCase):
             self.assertEqual(original_course.name, duplicate_course.name)
             self.assertEqual(self.expected['year'], duplicate_course.year)
             self.assertEqual(self.expected['term'], duplicate_course.term)
+            self.assertEqual(self.expected['start_date'], rv.json['start_date']+'Z')
+            self.assertEqual(self.expected['end_date'], rv.json['end_date']+'Z')
             self.assertEqual(original_course.description, duplicate_course.description)
 
             # verify instructor added to duplicate course
@@ -374,6 +410,23 @@ class CoursesDuplicateComplexAPITests(ACJAPITestCase):
                 self.assertEqual(original_assignment.students_can_reply, duplicate_assignment.students_can_reply)
                 self.assertEqual(original_assignment.enable_self_evaluation, duplicate_assignment.enable_self_evaluation)
                 self.assertEqual(original_assignment.pairing_algorithm, duplicate_assignment.pairing_algorithm)
+
+                self.assertEqual(original_assignment.answer_start,
+                    (duplicate_assignment.answer_start - self.date_delta))
+                self.assertEqual(original_assignment.answer_end,
+                    (duplicate_assignment.answer_end - self.date_delta))
+
+                if original_assignment.compare_start != None:
+                    self.assertEqual(original_assignment.compare_start,
+                        (duplicate_assignment.compare_start - self.date_delta))
+                else:
+                    self.assertIsNone(duplicate_assignment.compare_start)
+
+                if original_assignment.compare_end != None:
+                    self.assertEqual(original_assignment.compare_end,
+                        (duplicate_assignment.compare_end - self.date_delta))
+                else:
+                    self.assertIsNone(duplicate_assignment.compare_end)
 
                 self.assertEqual(len(original_assignment.criteria), 1)
                 self.assertEqual(len(original_assignment.criteria), len(duplicate_assignment.criteria))
