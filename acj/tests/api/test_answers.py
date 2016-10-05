@@ -19,6 +19,12 @@ class AnswersAPITests(ACJAPITestCase):
         return url
 
     def test_get_all_answers(self):
+        # add some answers to top answers
+        top_answers = self.fixtures.answers[:5]
+        for answer in top_answers:
+            answer.top_answer = True
+        db.session.commit()
+
         # Test login required
         rv = self.client.get(self.base_url)
         self.assert401(rv)
@@ -156,6 +162,13 @@ class AnswersAPITests(ACJAPITestCase):
             result = rv.json['objects']
             self.assertEqual(ids, {str(a['id']) for a in result})
 
+            # test top_answer filter
+            top_answer_ids = {a.uuid for a in top_answers}
+            rv = self.client.get(self.base_url + '?top=true')
+            self.assert200(rv)
+            result = rv.json['objects']
+            self.assertEqual(top_answer_ids, {a['id'] for a in result})
+
             # test combined filter
             rv = self.client.get(
                 self.base_url + '?orderBy={}&group={}'.format(
@@ -174,7 +187,7 @@ class AnswersAPITests(ACJAPITestCase):
 
             # all filters
             rv = self.client.get(
-                self.base_url + '?orderBy={}&group={}&author={}&page=1&perPage=20'.format(
+                self.base_url + '?orderBy={}&group={}&author={}&top=true&page=1&perPage=20'.format(
                     self.fixtures.assignment.criteria[0].uuid,
                     self.fixtures.groups[0],
                     self.fixtures.students[0].uuid
@@ -754,6 +767,66 @@ class AnswersAPITests(ACJAPITestCase):
                 expected_flag_off['flagged'],
                 rv.json['flagged'],
                 "Expected answer to be flagged.")
+
+    def test_top_answer(self):
+        answer = self.fixtures.answers[0]
+        top_answer_url = self.base_url + "/" + answer.uuid + "/top"
+        expected_top_on = {'top_answer': True}
+        expected_top_off = {'top_answer': False}
+
+        # test login required
+        rv = self.client.post(
+            top_answer_url,
+            data=json.dumps(expected_top_on),
+            content_type='application/json')
+        self.assert401(rv)
+
+        # test unauthorized users
+        with self.login(self.fixtures.unauthorized_student.username):
+            rv = self.client.post(
+                top_answer_url,
+                data=json.dumps(expected_top_on),
+                content_type='application/json')
+            self.assert403(rv)
+
+        with self.login(self.fixtures.students[0].username):
+            rv = self.client.post(
+                top_answer_url,
+                data=json.dumps(expected_top_on),
+                content_type='application/json')
+            self.assert403(rv)
+
+        # test allow setting top_answer by instructor
+        with self.login(self.fixtures.instructor.username):
+            rv = self.client.post(
+                top_answer_url,
+                data=json.dumps(expected_top_on),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertTrue(rv.json['top_answer'])
+
+            rv = self.client.post(
+                top_answer_url,
+                data=json.dumps(expected_top_off),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertFalse(rv.json['top_answer'])
+
+        # test allow setting top_answer by teaching assistant
+        with self.login(self.fixtures.ta.username):
+            rv = self.client.post(
+                top_answer_url,
+                data=json.dumps(expected_top_on),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertTrue(rv.json['top_answer'])
+
+            rv = self.client.post(
+                top_answer_url,
+                data=json.dumps(expected_top_off),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertFalse(rv.json['top_answer'])
 
 class AnswerComparisonAPITests(ACJAPITestCase):
     def setUp(self):

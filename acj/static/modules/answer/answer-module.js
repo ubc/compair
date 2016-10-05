@@ -163,7 +163,7 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
             response: function(response) {
                 cache.remove(response.config.url);	// remove cached GET response
                 // removing the suffix of some of the actions - eg. flagged
-                var url = response.config.url.replace(/\/(flagged)/g, "");
+                var url = response.config.url.replace(/\/(flagged|top)/g, "");
                 cache.remove(url);
                 url = url.replace(/\/[A-Za-z0-9_-]{22}$/g, "");
 
@@ -201,6 +201,11 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
                 flagged: {
                     method: 'POST',
                     url: '/api/courses/:courseId/assignments/:assignmentId/answers/:answerId/flagged',
+                    interceptor: cacheInterceptor
+                },
+                topAnswer: {
+                    method: 'POST',
+                    url: '/api/courses/:courseId/assignments/:assignmentId/answers/:answerId/top',
                     interceptor: cacheInterceptor
                 },
                 comparisons: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/comparisons'},

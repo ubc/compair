@@ -17,6 +17,7 @@ var assignmentTemplate = {
     "comment_count": 0,
     "evaluation_count": 0,
     "answer_count": 0,
+    "top_answer_count": 0,
     "self_evaluation_count": 0,
     "answer_period": false,
     "answer_end": "Thu, 28 Apr 2016 06:59:00 -0000",
