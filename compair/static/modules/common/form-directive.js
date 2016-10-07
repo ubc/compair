@@ -35,7 +35,7 @@ module.directive('pwMatch', function(){
     }
 });
 
-/* prompt user when leaving page with unsaved work (applied only to forms for creating answer, creating comparison) */
+/* prompt user when leaving page with unsaved work (applied only to forms for answers, comparisons, and self-evaulations) */
 module.directive('confirmFormExit', function(){
     return {
         require: 'form',
@@ -50,17 +50,40 @@ module.directive('confirmFormExit', function(){
                 if (attrs.formType == 'compare' && scope.preventExit && formController.$dirty) {
                     return "Are you sure you want to refresh this page? Any unsaved work you've done for this round will be lost.";
                 }
+                //when confirmation is for comment AND the user has not pressed submit
+                if (attrs.formType == 'comment' && scope.preventExit && formController.$dirty) {
+                    return "Are you sure you want to refresh this page? Any unsaved changed you've made will be lost.";
+                }
             }
             //change URL
             scope.$on('$locationChangeStart', function(event, next, current) {
-                if (attrs.formType == 'answer' && (scope.answer.content || scope.uploader.queue.length) && scope.preventExit && formController.$dirty) {
-                    if (!confirm("Are you sure you want to leave this page? Any unsaved changes you've made will be lost.")) {
-                        event.preventDefault();
+                if (attrs.formType == 'answer' && scope.preventExit) {
+                    if ((scope.answer.content || scope.uploader.queue.length) && formController.$dirty) {
+                        if (!confirm("Are you sure you want to leave this page? Any unsaved changes you've made will be lost.")) {
+                            event.preventDefault();
+                            return;
+                        }
                     }
+                    scope.trackExited();
                 }
-                if (attrs.formType == 'compare' && scope.preventExit && formController.$dirty) {
-                    if (!confirm("Are you sure you want to leave this page? Any unsaved work you've done for this round will be lost.")) {
-                        event.preventDefault();
+                if (attrs.formType == 'compare' && scope.preventExit) {
+                    if (formController.$dirty) {
+                        if (!confirm("Are you sure you want to leave this page? Any unsaved work you've done for this round will be lost.")) {
+                            event.preventDefault();
+                            return;
+                        }
+                    }
+                    scope.trackExited();
+                }
+                if (attrs.formType == 'comment' && scope.preventExit) {
+                    if (formController.$dirty) {
+                        if (!confirm("Are you sure you want to leave this page? Any unsaved changes you've made will be lost.")) {
+                            event.preventDefault();
+                            return;
+                        }
+                    }
+                    if (scope.trackExited && typeof scope.trackExited === "function") {
+                        scope.trackExited();
                     }
                 }
             });

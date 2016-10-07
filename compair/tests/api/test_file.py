@@ -54,8 +54,8 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             self.assert404(rv)
             self.assertEqual('invalid file name', str(rv.get_data(as_text=True)))
 
-            with mock.patch('compair.os.path.exists', return_value=True):
-                with mock.patch('compair.send_file', return_value=make_response("OK")) as mock_send_file:
+            with mock.patch('compair.api.os.path.exists', return_value=True):
+                with mock.patch('compair.api.send_file', return_value=make_response("OK")) as mock_send_file:
                     self.client.get(url)
                     mock_send_file.assert_called_once_with(
                         '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),

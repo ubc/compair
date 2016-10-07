@@ -7,6 +7,7 @@
 var module = angular.module('ubc.ctlt.compair.home',
     [
         'ngSanitize',
+        'ubc.ctlt.compair.common.xapi',
         'ubc.ctlt.compair.authentication',
         'ubc.ctlt.compair.authorization',
         'ubc.ctlt.compair.course',
@@ -23,9 +24,9 @@ var module = angular.module('ubc.ctlt.compair.home',
 module.controller(
     'HomeController',
     ["$rootScope", "$scope", "$location", "Session", "AuthenticationService",
-     "Authorize", "CourseResource", "Toaster", "UserResource", "$modal",
+     "Authorize", "CourseResource", "Toaster", "UserResource", "$modal", "xAPIStatementHelper",
     function ($rootScope, $scope, $location, Session, AuthenticationService,
-              Authorize, CourseResource, Toaster, UserResource, $modal) {
+              Authorize, CourseResource, Toaster, UserResource, $modal, xAPIStatementHelper) {
 
         $scope.loggedInUserId = null;
         $scope.totalNumCourses = 0;
@@ -93,15 +94,23 @@ module.controller(
             var modalScope = $scope.$new();
             modalScope.originalCourse = course;
 
-            $modal.open({
+            $scope.modalInstance = $modal.open({
                 animation: true,
                 controller: "CourseDuplicateModalController",
                 templateUrl: 'modules/course/course-duplicate-partial.html',
                 scope: modalScope
-            }).result.then(function (courseId) {
+            });
+
+            $scope.modalInstance.opened.then(function() {
+                xAPIStatementHelper.opened_modal("Duplicate Course");
+            });
+
+            $scope.modalInstance.result.then(function (courseId) {
                 $location.path('/course/' + courseId);
+                xAPIStatementHelper.closed_modal("Duplicate Course");
             }, function () {
                 //cancelled, do nothing
+                xAPIStatementHelper.closed_modal("Duplicate Course");
             });
         };
 
@@ -113,6 +122,7 @@ module.controller(
             if(newValue.search === "") {
                 $scope.courseFilters.search = null;
             }
+            xAPIStatementHelper.filtered_page($scope.courseFilters);
             $scope.updateCourseList();
         };
     }

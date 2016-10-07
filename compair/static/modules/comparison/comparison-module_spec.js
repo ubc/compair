@@ -62,6 +62,9 @@ describe('comparison-module', function () {
         $httpBackend = $injector.get('$httpBackend');
         sessionRequestHandler = $httpBackend.when('GET', '/api/session').respond(mockSession);
         $httpBackend.when('GET', '/api/users/' + id).respond(mockUser);
+        $httpBackend.whenPOST(/\/api\/statements$/).respond(function(method, url, data, headers) {
+            return [200, { 'success':true }, {}];
+        });
     }));
 
     afterEach(function () {
@@ -70,7 +73,7 @@ describe('comparison-module', function () {
     });
 
     describe('ComparisonController', function () {
-        var $rootScope, createController, $location, $modal, $q;
+        var $rootScope, createController, $location, $modal, $q, xAPI, xAPISettings;
         var mockCritiera = {
             "criteria": [{
                 "created": "Sat, 06 Sep 2014 02:13:07 -0000",
@@ -320,47 +323,74 @@ describe('comparison-module', function () {
             "user_id": "1abcABC123-abcABC123_Z"
         }];
 
+        var mockNewComment = {
+            "answer_id": "407cABC123-abcABC123_Z",
+            "content": "",
+            "course_id": "3abcABC123-abcABC123_Z",
+            "created": "Thu, 24 Sep 2015 00:22:34 -0000",
+            "id": "3713ABC123-abcABC123_Z",
+            "comment_type": 'Evaluation',
+            "draft": true,
+            "user": {
+                "id": "1abcABC123-abcABC123_Z",
+                "avatar": "63a9f0ea7bb98050796b649e85481845",
+                "displayname": "root"
+            },
+            "user_id": "1abcABC123-abcABC123_Z"
+        };
+
         var mockTimer = {
             "date": 1467325647825
-        }
+        };
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_) {
+        var expectedNewComment = {
+            "draft": true,
+            "comment_type": "Evaluation"
+        };
+
+        var mockTracking = {
+            getRegistration: function() { return "caece01c-ea5c-472d-9f9c-be864a3442d5"; },
+            getDuration: function() { return "PT0.007S"; },
+            toParams: function(params) {
+                return angular.merge({
+                    "registration": "caece01c-ea5c-472d-9f9c-be864a3442d5",
+                    "duration": "PT0.007S"
+                }, params);
+            }
+        };
+
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_, _xAPI_, _xAPISettings_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
             $modal = _$modal_;
             $q = _$q_;
+            xAPI = _xAPI_;
             createController = function (route, params) {
                 return $controller('ComparisonController', {
                     $scope: $rootScope,
                     $route: route || {},
                     $routeParams: params || {}
                 });
-            }
+            };
+            xAPI.generateTracking = function() {
+                return mockTracking;
+            };
+            xAPISettings = _xAPISettings_;
+            xAPISettings.enabled = true;
+            xAPISettings.baseUrl = "https://localhost:8888/";
         }));
 
         it('should have correct initial states', function () {
-            $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z').respond(mockAssignment);
-            $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/status').respond({
-                "status": {
-                    "answers": {
-                        "answered": true,
-                        "count": 1,
-                        "draft_ids": [],
-                        "has_draft": true
-                    },
-                    "comparisons": {
-                        "available": true,
-                        "count": 0,
-                        "left": 3
-                    }
-                }
-            });
             $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/comparisons').respond({
-                'objects':mockComparisons
+                'objects':mockComparisons,
+                'new_pair': true,
+                'current': 1
             });
-            $httpBackend.expectGET('/api/timer').respond(mockTimer);
-
             $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answer_comments?answer_ids=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z&draft=true&evaluation=only&user_ids=1abcABC123-abcABC123_Z').respond(mockComments);
+            $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z').respond(mockAssignment);
+            $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments', expectedNewComment).respond(mockNewComment);
+
+            $httpBackend.expectGET('/api/timer').respond(mockTimer);
             createController({}, {courseId: "3abcABC123-abcABC123_Z", assignmentId: "9abcABC123-abcABC123_Z"});
             expect($rootScope.assignment).toEqual({});
             expect($rootScope.current).toBe(undefined);
@@ -369,10 +399,11 @@ describe('comparison-module', function () {
             expect($rootScope.assignment).toEqualData(mockAssignment);
             expect($rootScope.comparisons).toEqualData(mockComparisons);
             expect($rootScope.current).toEqual(1);
+            expect($rootScope.tracking).toEqualData(mockTracking);
 
             answer1 = angular.copy(mockComparisons[0]).answer1;
             answer2 = angular.copy(mockComparisons[0]).answer2;
-            answer1.comment = {};
+            answer1.comment = mockNewComment;
             answer2.comment = mockComments[0];
             expect($rootScope.answer1).toEqualData(answer1);
             expect($rootScope.answer2).toEqualData(answer2);
@@ -389,27 +420,15 @@ describe('comparison-module', function () {
             mockComparisonResponse.objects[1].content = 'criterion comment 2';
 
             beforeEach(function() {
-                $httpBackend.whenGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z').respond(mockAssignment);
-                $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/status').respond({
-                    "status": {
-                        "answers": {
-                            "answered": true,
-                            "count": 1,
-                            "draft_ids": [],
-                            "has_draft": true
-                        },
-                        "comparisons": {
-                            "available": true,
-                            "count": 0,
-                            "left": 3
-                        }
-                    }
-                });
                 $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/comparisons').respond({
-                    'objects':mockComparisons
+                    'objects':mockComparisons,
+                    'new_pair': true,
+                    'current': 1
                 });
-                $httpBackend.expectGET('/api/timer').respond(mockTimer);
                 $httpBackend.whenGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answer_comments?answer_ids=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z&draft=true&evaluation=only&user_ids=1abcABC123-abcABC123_Z').respond(mockComments);
+                $httpBackend.whenGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z').respond(mockAssignment);
+                $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments', expectedNewComment).respond(mockNewComment);
+                $httpBackend.expectGET('/api/timer').respond(mockTimer);
                 $mockRoute = jasmine.createSpyObj('route', ['reload']);
                 controller = createController($mockRoute, {courseId: "3abcABC123-abcABC123_Z", assignmentId: "9abcABC123-abcABC123_Z"});
                 $httpBackend.flush();
@@ -433,11 +452,13 @@ describe('comparison-module', function () {
                             winner_id: "279cABC123-abcABC123_Z",
                             draft: false
                         }
-                    ]
+                    ],
+                    "tracking":  mockTracking.toParams()
                 };
+                var mockTrackingComment = mockTracking.toParams({"answer1_id":"407cABC123-abcABC123_Z","answer2_id":"279cABC123-abcABC123_Z"});
                 // save answer feedback/comments
-                var expectedAnswerComment1 = {"content":"Feedback 1", "comment_type":'Evaluation', "draft": false};
-                var expectedAnswerComment2 = angular.extend({}, mockComments[0], {"content":"Feedback 2", "comment_type":'Evaluation', "draft": false});
+                var expectedAnswerComment1 = angular.extend({}, mockNewComment, {"content":"Feedback 1", "comment_type":'Evaluation', "draft": false, "tracking": mockTrackingComment});
+                var expectedAnswerComment2 = angular.extend({}, mockComments[0], {"content":"Feedback 2", "comment_type":'Evaluation', "draft": false, "tracking": mockTrackingComment});
                 $rootScope.answer1.comment.content = 'Feedback 1';
                 $rootScope.answer2.comment.content = 'Feedback 2';
                 // save comparison selection and comments
@@ -445,28 +466,9 @@ describe('comparison-module', function () {
                 $rootScope.comparisons[0].content = 'criterion comment 1';
                 $rootScope.comparisons[1].winner_id = mockComparisons[0].answer2_id;
                 $rootScope.comparisons[1].content = 'criterion comment 2';
-                $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments', expectedAnswerComment1).respond({});
+                $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments/3713ABC123-abcABC123_Z', expectedAnswerComment1).respond({});
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/279cABC123-abcABC123_Z/comments/3703ABC123-abcABC123_Z', expectedAnswerComment2).respond({});
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/comparisons', expectedComparison).respond(mockComparisonResponse);
-				// users with management permissions do not reload the assignment status at this point anymore
-                /*
-                $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/status').respond({
-                    "status": {
-                        "answers": {
-                            "answered": true,
-                            "count": 1,
-                            "draft_ids": [],
-                            "has_draft": true
-                        },
-                        "comparisons": {
-                            "available": true,
-                            "count": 1,
-                            "left": 2
-                        }
-                    }
-                });
-                */
-
                 expect($rootScope.preventExit).toBe(true);
 
                 $rootScope.comparisonSubmit();
@@ -489,27 +491,15 @@ describe('comparison-module', function () {
             mockComparisonResponse.objects[1].content = 'criterion comment 2';
 
             beforeEach(function() {
-                $httpBackend.whenGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z').respond(mockAssignment);
-                $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/status').respond({
-                    "status": {
-                        "answers": {
-                            "answered": true,
-                            "count": 1,
-                            "draft_ids": [],
-                            "has_draft": true
-                        },
-                        "comparisons": {
-                            "available": true,
-                            "count": 0,
-                            "left": 3
-                        }
-                    }
-                });
                 $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/comparisons').respond({
-                    'objects':mockComparisons
+                    'objects':mockComparisons,
+                    'new_pair': true,
+                    'current': 1
                 });
-                $httpBackend.expectGET('/api/timer').respond(mockTimer);
                 $httpBackend.whenGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answer_comments?answer_ids=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z&draft=true&evaluation=only&user_ids=1abcABC123-abcABC123_Z').respond(mockComments);
+                $httpBackend.whenGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z').respond(mockAssignment);
+                $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments', expectedNewComment).respond(mockNewComment);
+                $httpBackend.expectGET('/api/timer').respond(mockTimer);
                 $mockRoute = jasmine.createSpyObj('route', ['reload']);
                 controller = createController($mockRoute, {courseId: "3abcABC123-abcABC123_Z", assignmentId: "9abcABC123-abcABC123_Z"});
                 $rootScope.isDraft = true;
@@ -530,11 +520,13 @@ describe('comparison-module', function () {
                             winner_id: "279cABC123-abcABC123_Z",
                             draft: true
                         }
-                    ]
+                    ],
+                    "tracking":  mockTracking.toParams()
                 };
+                var mockTrackingComment = mockTracking.toParams({"answer1_id":"407cABC123-abcABC123_Z","answer2_id":"279cABC123-abcABC123_Z"});
                 // save answer feedback/comments
-                var expectedAnswerComment1 = {"content":"Feedback 1", "comment_type":'Evaluation', "draft": true};
-                var expectedAnswerComment2 = angular.extend({}, mockComments[0], {"content":"Feedback 2", "comment_type":'Evaluation', "draft": true});
+                var expectedAnswerComment1 = angular.extend({}, mockNewComment, {"content":"Feedback 1", "comment_type":'Evaluation', "draft": true, "tracking": mockTrackingComment});
+                var expectedAnswerComment2 = angular.extend({}, mockComments[0], {"content":"Feedback 2", "comment_type":'Evaluation', "draft": true, "tracking": mockTrackingComment});
                 $rootScope.answer1.comment.content = 'Feedback 1';
                 $rootScope.answer2.comment.content = 'Feedback 2';
                 // save comparison selection and comments
@@ -542,7 +534,7 @@ describe('comparison-module', function () {
                 $rootScope.comparisons[0].content = 'criterion comment 1';
                 $rootScope.comparisons[1].winner_id = mockComparisons[0].answer2_id;
                 $rootScope.comparisons[1].content = 'criterion comment 2';
-                $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments', expectedAnswerComment1).respond({});
+                $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments/3713ABC123-abcABC123_Z', expectedAnswerComment1).respond({});
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/279cABC123-abcABC123_Z/comments/3703ABC123-abcABC123_Z', expectedAnswerComment2).respond({});
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/comparisons', expectedComparison).respond(mockComparisonResponse);
 

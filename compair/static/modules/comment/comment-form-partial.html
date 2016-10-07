@@ -1,4 +1,4 @@
-<form name="commentForm" class="form" ng-submit="commentSubmit()" novalidate>
+<form name="commentForm" class="form" ng-submit="commentSubmit()" confirm-form-exit novalidate form-type="comment">
     <fieldset>
         <h2 ng-if="parent.name"><i class="fa fa-comments"></i> {{parent.name}}</h2>
         <i class="fa fa-quote-left pull-left" ng-if="!parent.name && parent.content"></i>

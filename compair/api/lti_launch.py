@@ -69,7 +69,7 @@ class LTIAuthAPI(Resource):
 
             # if user linked
             if lti_user.is_linked_to_user():
-                authenticate(lti_user.compair_user)
+                authenticate(lti_user.compair_user, login_method='LTI')
 
                 # create/update enrollment if context exists
                 if lti_context and lti_context.is_linked_to_course():

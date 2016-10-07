@@ -15,7 +15,7 @@ from compair.algorithms.pair import generate_pair
 from compair.algorithms.score import calculate_score, calculate_score_1vs1
 
 
-class Comparison(DefaultTableMixin, WriteTrackingMixin):
+class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     __tablename__ = 'comparison'
 
     # table columns
@@ -269,12 +269,13 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
             .filter( Score.answer_id.in_([answer1_id, answer2_id]) ) \
             .all()
 
-        new_scores = []
+        updated_scores = []
         for comparison in comparisons:
             score1 = next((score for score in scores
                 if score.answer_id == answer1_id and score.criterion_id == comparison.criterion_id),
-                None
+                Score(assignment_id=assignment_id, answer_id=answer1_id, criterion_id=comparison.criterion_id)
             )
+            updated_scores.append(score1)
             key1_scored_object = score1.convert_to_scored_object() if score1 != None else ScoredObject(
                 key=answer1_id, score=None, variable1=None, variable2=None,
                 rounds=0, wins=0, opponents=0, loses=0,
@@ -282,8 +283,9 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
 
             score2 = next((score for score in scores
                 if score.answer_id == answer2_id and score.criterion_id == comparison.criterion_id),
-                None
+                Score(assignment_id=assignment_id, answer_id=answer2_id, criterion_id=comparison.criterion_id)
             )
+            updated_scores.append(score2)
             key2_scored_object = score2.convert_to_scored_object() if score2 != None else ScoredObject(
                 key=answer2_id, score=None, variable1=None, variable2=None,
                 rounds=0, wins=0, opponents=0, loses=0,
@@ -298,14 +300,7 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
                 log=current_app.logger
             )
 
-            for answer_id, score, result in [(answer1_id, score1, result_1), (answer2_id, score2, result_2)]:
-                if score == None:
-                    score = Score(
-                        assignment_id=assignment_id,
-                        answer_id=answer_id,
-                        criterion_id=comparison.criterion_id
-                    )
-                    new_scores.append(score)
+            for score, result in [(score1, result_1), (score2, result_2)]:
                 score.score = result.score
                 score.variable1 = result.variable1
                 score.variable2 = result.variable2
@@ -314,17 +309,18 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
                 score.loses = result.loses
                 score.opponents = result.opponents
 
-        updated_scores = scores + new_scores
         db.session.add_all(updated_scores)
         db.session.commit()
+
+        return updated_scores
 
     @classmethod
     def calculate_scores(cls, assignment_id):
         from . import Score, AssignmentCriterion, ScoringAlgorithm
         # get all comparisons for this assignment and only load the data we need
-        comparisons = Comparison.query . \
-            options(load_only('winner_id', 'criterion_id', 'answer1_id', 'answer2_id')) . \
-            filter(Comparison.assignment_id == assignment_id) \
+        comparisons = Comparison.query \
+            .options(load_only('winner_id', 'criterion_id', 'answer1_id', 'answer2_id')) \
+            .filter(Comparison.assignment_id == assignment_id) \
             .all()
 
         assignment_criteria = AssignmentCriterion.query \
@@ -358,24 +354,20 @@ class Comparison(DefaultTableMixin, WriteTrackingMixin):
         db.session.add_all(updated_scores)
         db.session.commit()
 
+        return updated_scores
+
 
 def update_scores(scores, assignment_id, criterion_comparison_results):
     from . import Score
 
-    new_scores = []
+    updated_scores = []
     for criterion_id, criterion_comparison_result in criterion_comparison_results.items():
         for answer_id, comparison_results in criterion_comparison_result.items():
-            score = None
-            for s in scores:
-                if s.answer_id == answer_id and s.criterion_id == criterion_id:
-                    score = s
-            if not score:
-                score = Score(
-                    assignment_id=assignment_id,
-                    answer_id=answer_id,
-                    criterion_id=criterion_id
-                )
-                new_scores.append(score)
+            score = next((score for score in scores
+                if score.answer_id == answer_id and score.criterion_id == criterion_id),
+                Score(assignment_id=assignment_id, answer_id=answer_id, criterion_id=criterion_id)
+            )
+            updated_scores.append(score)
 
             score.score = comparison_results.score
             score.variable1 = comparison_results.variable1
@@ -385,4 +377,4 @@ def update_scores(scores, assignment_id, criterion_comparison_results):
             score.loses = comparison_results.loses
             score.opponents = comparison_results.opponents
 
-    return scores + new_scores
+    return updated_scores

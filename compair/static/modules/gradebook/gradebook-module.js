@@ -8,6 +8,7 @@ var module = angular.module('ubc.ctlt.compair.gradebook',
         'ngResource',
         'ngRoute',
         'localytics.directives',
+        'ubc.ctlt.compair.common.xapi',
         'ubc.ctlt.compair.course',
         'ubc.ctlt.compair.group',
         'ubc.ctlt.compair.toaster'
@@ -29,11 +30,17 @@ module.factory(
 module.controller("GradebookController",
     ["$scope", "$log", "$routeParams", "CourseResource", "GradebookResource",
         "GroupResource", "AssignmentResource", "Authorize", "Toaster", "AssignmentCriterionResource",
+        "xAPIStatementHelper",
     function($scope, $log, $routeParams, CourseResource, GradebookResource,
-        GroupResource, AssignmentResource, Authorize, Toaster, AssignmentCriterionResource)
+        GroupResource, AssignmentResource, Authorize, Toaster, AssignmentCriterionResource,
+        xAPIStatementHelper)
     {
         $scope.users = [];
-        $scope.gb = {};
+        $scope.gradebookFilters = {
+            student: null,
+            group: null,
+            sortby: null
+        };
         var userIds = {};
 
         CourseResource.getStudents({'id': $scope.courseId}).$promise.then(
@@ -46,6 +53,7 @@ module.controller("GradebookController",
                 Toaster.reqerror("Class list retrieval failed", ret);
             }
         );
+
         GradebookResource.get({'courseId': $scope.courseId,'assignmentId': $scope.assignmentId}).$promise.then(
             function(ret)
             {
@@ -74,43 +82,16 @@ module.controller("GradebookController",
             }
         });
 
-        AssignmentCriterionResource.get(
-            {'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
+        AssignmentCriterionResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
             function (ret) {
                 $scope.criteria = ret['objects'];
-                $scope.gb['sortby'] = ret['objects'][0]['id'];
+                $scope.gradebookFilters.sortby = ret['objects'][0]['id'];
+                $scope.$watchCollection('gradebookFilters', filterWatcher);
             },
             function (ret) {
                 Toaster.reqerror("Unable to retrieve the criteria.", ret);
             }
         );
-
-        $scope.groupChange = function() {
-            $scope.gb.student = null;
-            if ($scope.gb.group == null) {
-                userIds = $scope.getUserIds($scope.allStudents);
-                $scope.users = $scope.allStudents;
-            } else {
-                GroupResource.get({'courseId': $scope.courseId, 'groupName': $scope.gb.group}).$promise.then(
-                    function (ret) {
-                        $scope.users = ret.students;
-                        userIds = $scope.getUserIds(ret.students);
-                    },
-                    function (ret) {
-                        Toaster.reqerror("Unable to retrieve the group members", ret);
-                    }
-                );
-            }
-        };
-
-        $scope.userChange = function() {
-            userIds = {};
-            if ($scope.gb.student == null) {
-                userIds = $scope.getUserIds($scope.users);
-            } else {
-                userIds[$scope.gb.student.id] = 1;
-            }
-        };
 
         $scope.groupFilter = function() {
             return function (entry) {
@@ -118,10 +99,45 @@ module.controller("GradebookController",
             }
         };
 
-        $scope.sortScore = function() {
-            $scope.predicate = 'scores['+$scope.gb.sortby+']';
-        }
+        var filterWatcher = function(newValue, oldValue) {
+            if (angular.equals(newValue, oldValue)) return;
 
+            if (oldValue.group != newValue.group) {
+                $scope.gradebookFilters.student = null;
+                if ($scope.gradebookFilters.group == null) {
+                    userIds = $scope.getUserIds($scope.allStudents);
+                    $scope.users = $scope.allStudents;
+                } else {
+                    GroupResource.get({'courseId': $scope.courseId, 'groupName': $scope.gradebookFilters.group}).$promise.then(
+                        function (ret) {
+                            $scope.users = ret.students;
+                            userIds = $scope.getUserIds(ret.students);
+                        },
+                        function (ret) {
+                            Toaster.reqerror("Unable to retrieve the group members", ret);
+                        }
+                    );
+                }
+            }
+            if (oldValue.student != newValue.student) {
+                userIds = {};
+                if ($scope.gradebookFilters.student == null) {
+                    userIds = $scope.getUserIds($scope.users);
+                } else {
+                    userIds[$scope.gradebookFilters.student.id] = 1;
+                }
+            }
+            xAPIStatementHelper.filtered_page_section("participation tab", $scope.gradebookFilters);
+
+            $scope.updateAnswerList();
+        };
+
+        $scope.updateTableOrderBy = function(predicate) {
+            $scope.reverse = $scope.predicate == predicate && !$scope.reverse;
+            $scope.predicate = predicate;
+            var orderBy = $scope.predicate + " " + ($scope.reverse ? "desc" : "asc");
+            xAPIStatementHelper.sorted_page_section("participation tab", orderBy);
+        }
     }
 ]);
 

@@ -26,9 +26,9 @@ existing_criterion_parser.add_argument('default', type=bool, default=True)
 
 # events
 on_criterion_list_get = event.signal('CRITERION_LIST_GET')
-criterion_get = event.signal('CRITERION_GET')
-criterion_update = event.signal('CRITERION_EDIT')
-criterion_create = event.signal('CRITERION_CREATE')
+on_criterion_get = event.signal('CRITERION_GET')
+on_criterion_update = event.signal('CRITERION_EDIT')
+on_criterion_create = event.signal('CRITERION_CREATE')
 
 # /criteria - public + authored/default
 # default = want criterion available to all of the author's assignments
@@ -74,10 +74,11 @@ class CriteriaAPI(Resource):
         db.session.add(criterion)
         db.session.commit()
 
-        criterion_create.send(
+        on_criterion_create.send(
             self,
-            event_name=criterion_create.name,
+            event_name=on_criterion_create.name,
             user=current_user,
+            criterion=criterion,
             data={'criterion': marshal(criterion, dataformat.get_criterion())}
         )
 
@@ -94,9 +95,9 @@ class CriteriaIdAPI(Resource):
         criterion = Criterion.get_active_by_uuid_or_404(criterion_uuid)
         require(READ, criterion)
 
-        criterion_get.send(
+        on_criterion_get.send(
             self,
-            event_name=criterion_get.name,
+            event_name=on_criterion_get.name,
             user=current_user
         )
 
@@ -115,10 +116,11 @@ class CriteriaIdAPI(Resource):
 
         db.session.commit()
 
-        criterion_update.send(
+        on_criterion_update.send(
             self,
-            event_name=criterion_update.name,
-            user=current_user
+            event_name=on_criterion_update.name,
+            user=current_user,
+            criterion=criterion
         )
 
         return marshal(criterion, dataformat.get_criterion())

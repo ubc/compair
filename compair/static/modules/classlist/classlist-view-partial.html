@@ -103,28 +103,22 @@
                     <th>Actions</th>
                     <th><input type="checkbox" ng-model="selectedAll" ng-click="selectAll()" /></th>
                     <th>
-                        <a href="" ng-click="reverse = predicate == 'firstname' && !reverse; predicate = 'firstname'">
-                            First Name</a>
+                        <a href="" ng-click="updateTableOrderBy('firstname')">First Name</a>
                     </th>
                     <th>
-                        <a href="" ng-click="reverse = predicate == 'lastname' && !reverse; predicate = 'lastname'">
-                            Last Name</a>
+                        <a href="" ng-click="updateTableOrderBy('lastname')">Last Name</a>
                     </th>
                     <th>
-                        <a href="" ng-click="reverse = predicate == 'student_number' && ! reverse; predicate = 'student_number'">
-                            Student Number</a>
+                        <a href="" ng-click="updateTableOrderBy('student_number')">Student Number</a>
                     </th>
                     <th>
-                        <a href="" ng-click="reverse = predicate == 'displayname' && !reverse; predicate = 'displayname'">
-                            Display Name</a>
+                        <a href="" ng-click="updateTableOrderBy('displayname')">Display Name</a>
                     </th>
                     <th>
-                        <a href="" ng-click="reverse = predicate == 'email' && !reverse; predicate = 'email'">
-                            Email</a>
+                        <a href="" ng-click="updateTableOrderBy('email')">Email</a>
                     </th>
                     <th>
-                        <a href="" ng-click="reverse = predicate == 'course_role' && !reverse; predicate = 'course_role'">
-                            Course Role</a>
+                        <a href="" ng-click="updateTableOrderBy('course_role')">Course Role</a>
                     </th>
                     <th ng-if="groups.length > 0">Group</th>
                 </tr>

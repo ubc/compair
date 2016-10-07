@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from requests.utils import unquote
 
 from flask_script import Manager, Server
 
@@ -26,7 +27,7 @@ def list_routes():
     output = []
     for rule in manager.app.url_map.iter_rules():
         methods = ','.join(rule.methods)
-        line = urllib.unquote("{:50s} {:20s} {}".format(rule.endpoint, methods, rule))
+        line = unquote("{:50s} {:20s} {}".format(rule.endpoint, methods, rule))
         output.append(line)
 
     for line in sorted(output):

@@ -92,7 +92,7 @@
            ng-show="canManageAssignment && (assignment.compare_period || assignment.after_comparing)">
             See Comparisons
         </a>
-        
+
         <!-- BUTTON when user is an admin AND the comparison period is active AND admins can compare -->
         <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Answers" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
            ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">
@@ -315,7 +315,7 @@
 
 
                     <!-- Student Answer Replies Section -->
-                    <a href="" ng-click="showReplies = !showReplies; showReplies && loadComments(answer)">
+                    <a href="" ng-click="showReplies = !showReplies; toggleReplies(showReplies, answer)">
                         <h3 class="reply-heading" ng-if="(answer.comment_count && (answer.user_id == loggedInUserId || canManageAssignment)) || (answer.public_comment_count && see_answers)">
                             <i class="fa fa-chevron-down" ng-show="showReplies"></i>
                             <i class="fa fa-chevron-right" ng-hide="showReplies"></i>
@@ -430,7 +430,7 @@
                 </div>
 
                 <!-- Student Answer Replies Section -->
-                <a href="" ng-click="showReplies = !showReplies; showReplies && loadComments(answer)">
+                <a href="" ng-click="showReplies = !showReplies; toggleReplies(showReplies, answer)">
                     <h3 class="reply-heading" ng-if="answer.comment_count">
                         <i class="fa fa-chevron-down" ng-show="showReplies"></i>
                         <i class="fa fa-chevron-right" ng-hide="showReplies"></i>

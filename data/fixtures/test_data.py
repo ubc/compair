@@ -551,8 +551,8 @@ class TestFixture:
                 "Number of answers({}) must be equal or smaller than number of students({}) "
                 "multiple by number of assignments({})".format(num_answers, len(self.students), len(self.assignments))
             )
-        for i in range(num_answers):
-            for assignment in self.assignments:
+        for assignment in self.assignments:
+            for i in range(num_answers):
                 answer = AnswerFactory(
                     assignment=assignment,
                     user=self.students[i % len(self.students)]
@@ -565,8 +565,8 @@ class TestFixture:
                         criterion=assignment.criteria[0],
                         score=random.random() * 5
                     )
-                db.session.commit()
                 self.answers.append(answer)
+        db.session.commit()
 
         return self
 

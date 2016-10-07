@@ -1,5 +1,12 @@
-from flask import redirect
-from flask import render_template
+import os
+
+from flask import redirect, render_template
+from flask_login import login_required, current_user, current_app
+from flask import make_response
+from flask import send_file
+
+from compair.core import event
+on_get_file = event.signal('GET_FILE')
 
 
 def register_api_blueprints(app):
@@ -97,6 +104,12 @@ def register_api_blueprints(app):
         timer_api,
         url_prefix='/api/timer')
 
+
+    from .statements import statement_api
+    app.register_blueprint(
+        statement_api,
+        url_prefix='/api/statements')
+
     from .healthz import healthz_api
     app.register_blueprint(healthz_api)
 
@@ -108,7 +121,9 @@ def register_api_blueprints(app):
                 ga_tracking_id=app.config['GA_TRACKING_ID'],
                 app_login_enabled=app.config['APP_LOGIN_ENABLED'],
                 cas_login_enabled=app.config['CAS_LOGIN_ENABLED'],
-                lti_login_enabled=app.config['LTI_LOGIN_ENABLED']
+                lti_login_enabled=app.config['LTI_LOGIN_ENABLED'],
+                xapi_enabled=app.config['XAPI_ENABLED'],
+                xapi_app_base_url=app.config.get('XAPI_APP_BASE_URL')
             )
 
         # running in prod mode, figure out asset location
@@ -129,12 +144,42 @@ def register_api_blueprints(app):
             ga_tracking_id=app.config['GA_TRACKING_ID'],
             app_login_enabled=app.config['APP_LOGIN_ENABLED'],
             cas_login_enabled=app.config['CAS_LOGIN_ENABLED'],
-            lti_login_enabled=app.config['LTI_LOGIN_ENABLED']
+            lti_login_enabled=app.config['LTI_LOGIN_ENABLED'],
+            xapi_enabled=app.config['XAPI_ENABLED'],
+            xapi_app_base_url=app.config.get('XAPI_APP_BASE_URL')
         )
 
     @app.route('/')
     def route_root():
         return redirect("/app/")
+
+    @app.route('/app/<regex("pdf|report"):file_type>/<file_name>')
+    @login_required
+    def file_retrieve(file_type, file_name):
+        mimetypes = {
+            'pdf': 'application/pdf',
+            'report': 'text/csv'
+        }
+        file_dirs = {
+            'pdf': app.config['ATTACHMENT_UPLOAD_FOLDER'],
+            'report': app.config['REPORT_FOLDER']
+        }
+        file_path = '{}/{}'.format(file_dirs[file_type], file_name)
+
+        if not os.path.exists(file_path):
+            return make_response('invalid file name', 404)
+
+        # TODO: add bouncer
+
+        on_get_file.send(
+            current_app._get_current_object(),
+            event_name=on_get_file.name,
+            user=current_user,
+            file_type=file_type,
+            file_name=file_name,
+            data={'file_path': file_path, 'mimetype': mimetypes[file_type]})
+
+        return send_file(file_path, mimetype=mimetypes[file_type])
 
     return app
 
@@ -205,11 +250,11 @@ def log_events(log):
     on_answer_comment_delete.connect(log)
 
     # criterion events
-    from .criterion import criterion_get, criterion_update, on_criterion_list_get, criterion_create
-    criterion_get.connect(log)
-    criterion_update.connect(log)
+    from .criterion import on_criterion_get, on_criterion_update, on_criterion_list_get, on_criterion_create
+    on_criterion_get.connect(log)
+    on_criterion_update.connect(log)
     on_criterion_list_get.connect(log)
-    criterion_create.connect(log)
+    on_criterion_create.connect(log)
 
     # assignment criterion events
     from .assignment_criterion import on_assignment_criterion_get
@@ -275,3 +320,6 @@ def log_events(log):
     on_lti_course_link.connect(log)
     on_lti_course_membership_update.connect(log)
     on_lti_course_membership_status_get.connect(log)
+
+    # misc
+    on_get_file.connect(log)

@@ -191,6 +191,7 @@ class AssignmentIdAPI(Resource):
             event_name=on_assignment_modified.name,
             user=current_user,
             course_id=course.id,
+            assignment=assignment,
             data=model_changes)
 
         db.session.commit()
@@ -226,6 +227,7 @@ class AssignmentIdAPI(Resource):
             event_name=on_assignment_delete.name,
             user=current_user,
             course_id=course.id,
+            assignment=assignment,
             data=formatted_assignment)
 
         return {'id': assignment.uuid}
@@ -349,6 +351,7 @@ class AssignmentRootAPI(Resource):
             event_name=on_assignment_create.name,
             user=current_user,
             course_id=course.id,
+            assignment=new_assignment,
             data=marshal(new_assignment, dataformat.get_assignment(False)))
 
         return marshal(new_assignment, dataformat.get_assignment())

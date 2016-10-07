@@ -14,5 +14,8 @@ test_app_settings = {
     'CSRF_ENABLED': False,
     'PASSLIB_CONTEXT': 'plaintext',
     'ENFORCE_SSL': False,
-    'CELERY_ALWAYS_EAGER': True
+    'CELERY_ALWAYS_EAGER': True,
+    'XAPI_ENABLED': True,
+    'XAPI_APP_BASE_URL': 'https://localhost:8888/',
+    'LRS_STATEMENT_ENDPOINT': 'local'
 }

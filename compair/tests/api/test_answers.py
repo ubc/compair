@@ -817,8 +817,8 @@ class AnswersAPITests(ComPAIRAPITestCase):
         rv = self.client.get(url)
         self.assert401(rv)
 
-        # test invalid course
         with self.login(self.fixtures.students[0].username):
+            # test invalid course
             rv = self.client.get(self._build_url("999", assignment.uuid, '/user'))
             self.assert404(rv)
 
@@ -826,7 +826,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
             rv = self.client.get(self._build_url(self.fixtures.course.uuid, "999", '/user'))
             self.assert404(rv)
 
-            # test successful queries
+            # test successful query
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(1, len(rv.json['objects']))
@@ -834,9 +834,19 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(answer.content, rv.json['objects'][0]['content'])
             self.assertEqual(answer.draft, rv.json['objects'][0]['draft'])
 
-        # test successful draft queries
+            # test successful draft query
+            rv = self.client.get(url, query_string={'draft': True})
+            self.assert200(rv)
+            self.assertEqual(0, len(rv.json['objects']))
+
         with self.login(self.fixtures.draft_student.username):
+             # test successful query
             rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(0, len(rv.json['objects']))
+
+            # test successful draft query
+            rv = self.client.get(url, query_string={'draft': True})
             self.assert200(rv)
             self.assertEqual(1, len(rv.json['objects']))
             self.assertEqual(draft_answer.uuid, rv.json['objects'][0]['id'])
@@ -845,6 +855,10 @@ class AnswersAPITests(ComPAIRAPITestCase):
 
         with self.login(self.fixtures.instructor.username):
             rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(0, len(rv.json['objects']))
+
+            rv = self.client.get(url, query_string={'draft': True})
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['objects']))
 

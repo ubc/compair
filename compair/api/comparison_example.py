@@ -24,10 +24,10 @@ existing_comparison_example_parser = new_comparison_example_parser.copy()
 existing_comparison_example_parser.add_argument('id', type=str, required=True)
 
 # events
-on_comparison_example_modified = event.signal('ASSIGNMENT_MODIFIED')
-on_comparison_example_list_get = event.signal('ASSIGNMENT_LIST_GET')
-on_comparison_example_create = event.signal('ASSIGNMENT_CREATE')
-on_comparison_example_delete = event.signal('ASSIGNMENT_DELETE')
+on_comparison_example_modified = event.signal('COMPARISON_EXAMPLE_MODIFIED')
+on_comparison_example_list_get = event.signal('COMPARISON_EXAMPLE_LIST_GET')
+on_comparison_example_create = event.signal('COMPARISON_EXAMPLE_CREATE')
+on_comparison_example_delete = event.signal('COMPARISON_EXAMPLE_DELETE')
 
 # /id
 class ComparisonExampleIdAPI(Resource):

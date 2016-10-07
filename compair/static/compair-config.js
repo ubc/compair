@@ -12,6 +12,7 @@ var myApp = angular.module('myApp', [
     'ng-breadcrumbs',
     'angular-loading-bar',
     'ubc.ctlt.compair.common',
+    'ubc.ctlt.compair.common.xapi',
     'ubc.ctlt.compair.answer',
     'ubc.ctlt.compair.attachment',
     'ubc.ctlt.compair.classlist',

@@ -67,7 +67,6 @@ def json_recorder(filename, key=None):
 class ComPAIRTestCase(TestCase):
     def create_app(self):
         app = create_app(settings_override=test_app_settings)
-        app.test_client_class = RecordableClient
         app.config['ENFORCE_SSL'] = False
         return app
 
@@ -90,10 +89,10 @@ class ComPAIRAPITestCase(ComPAIRTestCase):
 
     @contextmanager
     def login(self, username, password="password"):
-        payload = json.dumps(dict(
-            username=username,
-            password=password
-        ))
+        payload = json.dumps({
+            'username': username,
+            'password': password
+        })
         rv = self.client.post('/api/login', data=payload, content_type='application/json', follow_redirects=True)
         self.assert200(rv)
         yield rv
@@ -147,41 +146,3 @@ class SessionTests(ComPAIRAPITestCase):
     def test_non_loggedin_user_session(self):
         rv = self.client.get('/api/session')
         self.assert401(rv)
-
-
-class RecordableClient(FlaskClient):
-    file_name = ''
-
-    def open(self, *args, **kwargs):
-        request_data = request_method = ''
-        record = kwargs.pop('record', False)
-        if record and self.file_name:
-            request_data = kwargs['data']
-            request_method = kwargs['method']
-
-        response = super(FlaskClient, self).open(*args, **kwargs)
-
-        if record and self.file_name:
-            file_path_name = '{}/../../data/fixtures/{}'.format(dirname(__file__), self.file_name)
-            with open(file_path_name, 'a+') as f:
-                f.seek(0)
-                try:
-                    data = json.load(f)
-                except ValueError:
-                    data = {}
-
-            data[record] = {
-                'request': {
-                    'method': request_method,
-                    'body': request_data
-                },
-                'response': {
-                    'body': response.json,
-                    'status_code': response.status_code
-                }
-            }
-
-            with open(file_path_name, 'w') as f:
-                json.dump(data, f, indent=4)
-
-        return response

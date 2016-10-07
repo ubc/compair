@@ -72,15 +72,16 @@ class AssignmentCommentRootAPI(Resource):
         new_assignment_comment.user_id = current_user.id
 
         db.session.add(new_assignment_comment)
+        db.session.commit()
 
         on_assignment_comment_create.send(
             self,
             event_name=on_assignment_comment_create.name,
             user=current_user,
             course_id=course.id,
+            assignment_comment=new_assignment_comment,
             data=marshal(new_assignment_comment, dataformat.get_assignment_comment(False)))
 
-        db.session.commit()
         return marshal(new_assignment_comment, dataformat.get_assignment_comment())
 
 api.add_resource(AssignmentCommentRootAPI, '')
@@ -129,6 +130,7 @@ class AssignmentCommentIdAPI(Resource):
             event_name=on_assignment_comment_modified.name,
             user=current_user,
             course_id=course.id,
+            assignment_comment=assignment_comment,
             data=get_model_changes(assignment_comment))
 
         db.session.commit()
@@ -150,6 +152,7 @@ class AssignmentCommentIdAPI(Resource):
             event_name=on_assignment_comment_delete.name,
             user=current_user,
             course_id=course.id,
+            assignment_comment=assignment_comment,
             data=data)
 
         return {'id': assignment_comment.uuid}

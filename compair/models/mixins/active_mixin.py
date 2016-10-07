@@ -24,9 +24,7 @@ class ActiveMixin(db.Model):
             query.options(joinedload(load_string))
 
         model = query.get_or_404(model_id)
-        if model is None:
-            abort(404)
-        if not model.active:
+        if model is None or not model.active:
             abort(404)
         return model
 
@@ -38,8 +36,6 @@ class ActiveMixin(db.Model):
             query.options(joinedload(load_string))
 
         model = query.filter_by(uuid=model_uuid).one_or_none()
-        if model is None:
-            abort(404)
-        if not model.active:
+        if model is None or not model.active:
             abort(404)
         return model

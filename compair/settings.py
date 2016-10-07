@@ -42,11 +42,24 @@ PERMANENT_SESSION_LIFETIME = 3600 * 24
 CELERY_RESULT_BACKEND = None
 CELERY_BROKER_URL = None
 CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'msgpack', 'yaml']
-CELERY_IMPORTS = ('compair.tasks.user_password', 'compair.tasks.lti_outcomes')
+CELERY_IMPORTS = ('compair.tasks.user_password', 'compair.tasks.lti_outcomes', 'compair.tasks.xapi_statement')
 BROKER_TRANSPORT_OPTIONS = {
     'fanout_prefix': True,
     'fanout_patterns': True
 }
+
+# xAPI & Learning Record Stores (LRS)
+XAPI_ENABLED = False
+XAPI_APP_BASE_URL = None
+
+LRS_STATEMENT_ENDPOINT = 'local' #url for LRS xAPI statements
+LRS_AUTH = None
+LRS_USERNAME = None
+LRS_PASSWORD = None
+
+LRS_ACTOR_ACCOUNT_USE_CAS = False # set to True to use CAS account information if available
+LRS_ACTOR_ACCOUNT_CAS_IDENTIFIER = None # set to a param field value to use or None to use unique_identifier
+LRS_ACTOR_ACCOUNT_CAS_HOMEPAGE = None # set to the url for the CAS account homepage
 
 # where to retrieve assets, possible values 'cloud', 'local'
 ASSET_LOCATION = 'cloud'

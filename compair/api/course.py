@@ -87,16 +87,18 @@ class CourseListAPI(Resource):
 
             db.session.commit()
 
-            on_course_create.send(
-                self,
-                event_name=on_course_create.name,
-                user=current_user,
-                data=marshal(new_course, dataformat.get_course()))
-
         except exc.SQLAlchemyError as e:
             db.session.rollback()
             current_app.logger.error("Failed to add new course. " + str(e))
             raise
+
+        on_course_create.send(
+            self,
+            event_name=on_course_create.name,
+            user=current_user,
+            course=new_course,
+            data=marshal(new_course, dataformat.get_course()))
+
         return marshal(new_course, dataformat.get_course())
 
 
@@ -152,6 +154,7 @@ class CourseAPI(Resource):
             self,
             event_name=on_course_modified.name,
             user=current_user,
+            course=course,
             data=get_model_changes(course))
 
         return marshal(course, dataformat.get_course())
@@ -168,6 +171,7 @@ class CourseAPI(Resource):
             self,
             event_name=on_course_delete.name,
             user=current_user,
+            course=course,
             data={'id': course.id})
 
         return {'id': course.uuid}
@@ -351,6 +355,7 @@ class CourseDuplicateAPI(Resource):
             self,
             event_name=on_course_duplicate.name,
             user=current_user,
+            course=duplicate_course,
             data=marshal(course, dataformat.get_course()))
 
         return marshal(duplicate_course, dataformat.get_course())

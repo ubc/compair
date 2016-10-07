@@ -19,6 +19,7 @@ var module = angular.module('ubc.ctlt.compair.assignment',
         'ubc.ctlt.compair.authentication',
         'ubc.ctlt.compair.authorization',
         'ubc.ctlt.compair.comment',
+        'ubc.ctlt.compair.common.xapi',
         'ubc.ctlt.compair.common.form',
         'ubc.ctlt.compair.common.interceptor',
         'ubc.ctlt.compair.common.mathjax',
@@ -104,7 +105,9 @@ module.directive('comparisonPreview', function() {
     return {
         /* this template is our simple text with button to launch the preview */
         templateUrl: 'modules/assignment/preview-inline-template.html',
-        controller: ["$scope", "$modal", function ($scope, $modal) {
+        controller:
+                ["$scope", "$modal", "xAPIStatementHelper",
+                function ($scope, $modal, xAPIStatementHelper) {
             /* need to pass to comparison template all expected properties to complete the preview */
             $scope.previewPopup = function() {
                 /* set current round #, answer #s, and total round # for preview */
@@ -143,6 +146,12 @@ module.directive('comparisonPreview', function() {
                 $scope.thePreview = $modal.open({
                     templateUrl: 'modules/comparison/comparison-core.html',
                     scope: $scope
+                });
+                $scope.thePreview.opened.then(function() {
+                    xAPIStatementHelper.opened_modal("Preview Comparison");
+                });
+                $scope.thePreview.result.finally(function() {
+                    xAPIStatementHelper.closed_modal("Preview Comparison");
                 });
             }
         }]
@@ -318,10 +327,10 @@ module.filter("notScoredEnd", function () {
 module.controller("AssignmentViewController",
     ["$scope", "$routeParams", "$location", "AnswerResource", "Authorize", "AssignmentResource", "AssignmentCommentResource",
              "ComparisonResource", "CourseResource", "required_rounds", "Session", "Toaster", "AnswerCommentResource",
-             "GroupResource", "AnswerCommentType", "PairingAlgorithm", "$modal",
+             "GroupResource", "AnswerCommentType", "PairingAlgorithm", "$modal", "xAPIStatementHelper",
     function($scope, $routeParams, $location, AnswerResource, Authorize, AssignmentResource, AssignmentCommentResource,
              ComparisonResource, CourseResource, required_rounds, Session, Toaster, AnswerCommentResource,
-             GroupResource, AnswerCommentType, PairingAlgorithm, $modal)
+             GroupResource, AnswerCommentType, PairingAlgorithm, $modal, xAPIStatementHelper)
     {
         $scope.courseId = $routeParams['courseId'];
         $scope.AnswerCommentType = AnswerCommentType;
@@ -356,7 +365,6 @@ module.controller("AssignmentViewController",
                     $scope.assignment = ret;
 
                     $scope.criteria = ret.criteria;
-                    $scope.reverse = true;
 
                     if (ret.rank_display_limit) {
                         $scope.rankLimit = ret.rank_display_limit;
@@ -460,12 +468,15 @@ module.controller("AssignmentViewController",
         var tab = 'answers';
         // tabs: answers, help, participation, comparisons
         $scope.setTab = function(name) {
+            var oldTab = tab;
             tab = name;
             if (name == "comparisons") {
                 $scope.comparisons = AnswerResource.comparisons(params);
 				var answer_params = angular.extend({}, params, {author: $scope.loggedInUserId});
 				$scope.user_answers = AnswerResource.get(answer_params);
             }
+            xAPIStatementHelper.closed_page_section(oldTab + " tab");
+            xAPIStatementHelper.opened_page_section(tab + " tab");
         };
         $scope.showTab = function(name) {
             return tab == name;
@@ -549,15 +560,18 @@ module.controller("AssignmentViewController",
             var modalScope = $scope.$new();
             modalScope.courseId = $scope.courseId;
             modalScope.assignmentId = $scope.assignmentId;
+            modalScope.assignment = angular.copy($scope.assignment);
             modalScope.answer = angular.copy(answer);
 
             $scope.modalInstance = $modal.open({
                 animation: true,
-                controller: "AnswerModalController",
+                controller: "AnswerEditModalController",
                 templateUrl: 'modules/answer/answer-modal-partial.html',
                 scope: modalScope
             });
-
+            $scope.modalInstance.opened.then(function() {
+                xAPIStatementHelper.opened_modal("Edit Answer");
+            });
             $scope.modalInstance.result.then(function (answerUpdated) {
                 _.each($scope.answers.objects, function(answer, index) {
                     if (answer.id == answerUpdated.id) {
@@ -567,6 +581,9 @@ module.controller("AssignmentViewController",
                         $scope.answers.objects[index] = answerUpdated;
                     }
                 });
+                xAPIStatementHelper.closed_modal("Edit Answer");
+            }, function() {
+                xAPIStatementHelper.closed_modal("Edit Answer");
             });
         };
 
@@ -582,7 +599,9 @@ module.controller("AssignmentViewController",
                 templateUrl: 'modules/comment/comment-answer-modal-partial.html',
                 scope: modalScope
             });
-
+            $scope.modalInstance.opened.then(function() {
+                xAPIStatementHelper.opened_modal("Create Answer Comment");
+            });
             $scope.modalInstance.result.then(function (newComment) {
                 answer.comments = typeof(answer.comments) != 'undefined' ? answer.comments : [];
                 answer.comments.unshift(newComment)
@@ -592,6 +611,9 @@ module.controller("AssignmentViewController",
                     answer.private_comment_count++;
                 }
                 answer.comment_count++;
+                xAPIStatementHelper.closed_modal("Create Answer Comment");
+            }, function() {
+                xAPIStatementHelper.closed_modal("Create Answer Comment");
             });
         };
 
@@ -608,7 +630,9 @@ module.controller("AssignmentViewController",
                 templateUrl: 'modules/comment/comment-answer-modal-partial.html',
                 scope: modalScope
             });
-
+            $scope.modalInstance.opened.then(function() {
+                xAPIStatementHelper.opened_modal("Edit Answer Comment");
+            });
             $scope.modalInstance.result.then(function (updatedComment) {
                 // update comment counts
                 if (comment.comment_type == AnswerCommentType.public) {
@@ -628,6 +652,9 @@ module.controller("AssignmentViewController",
                         answer.comments[index] = updatedComment;
                     }
                 });
+                xAPIStatementHelper.closed_modal("Edit Answer Comment");
+            }, function() {
+                xAPIStatementHelper.closed_modal("Edit Answer Comment");
             });
         };
 
@@ -642,9 +669,14 @@ module.controller("AssignmentViewController",
                 templateUrl: 'modules/comment/comment-assignment-modal-partial.html',
                 scope: modalScope
             });
-
+            $scope.modalInstance.opened.then(function() {
+                xAPIStatementHelper.opened_modal("Create Assignment Comment");
+            });
             $scope.modalInstance.result.then(function (newComment) {
-                $scope.comments.objects.push(newComment)
+                $scope.comments.objects.push(newComment);
+                xAPIStatementHelper.closed_modal("Create Assignment Comment");
+            }, function() {
+                xAPIStatementHelper.closed_modal("Create Assignment Comment");
             });
         };
 
@@ -660,7 +692,9 @@ module.controller("AssignmentViewController",
                 templateUrl: 'modules/comment/comment-assignment-modal-partial.html',
                 scope: modalScope
             });
-
+            $scope.modalInstance.opened.then(function() {
+                xAPIStatementHelper.opened_modal("Edit Assignment Comment");
+            });
             $scope.modalInstance.result.then(function (updatedComment) {
                 // update comment
                 _.each($scope.comments.objects, function(comment, index) {
@@ -668,12 +702,27 @@ module.controller("AssignmentViewController",
                         $scope.comments.objects[index] = updatedComment;
                     }
                 });
+                xAPIStatementHelper.closed_modal("Edit Assignment Comment");
+            }, function() {
+                xAPIStatementHelper.closed_modal("Edit Assignment Comment");
             });
         };
 
+        $scope.toggleReplies = function(showReplies, answer) {
+            if (showReplies) {
+                $scope.loadComments(answer);
+                xAPIStatementHelper.opened_answer_replies_section(answer);
+            } else {
+                xAPIStatementHelper.closed_answer_replies_section(answer);
+            }
+        };
+
         $scope.loadComments = function(answer) {
-            answer.comments = AnswerCommentResource.query(
-                {courseId: $scope.courseId, assignmentId: assignmentId, answer_ids: answer.id})
+            answer.comments = AnswerCommentResource.query({
+                courseId: $scope.courseId,
+                assignmentId: assignmentId,
+                answer_ids: answer.id
+            });
         };
 
         $scope.deleteComment = function(key, course_id, assignment_id, comment_id) {
@@ -760,6 +809,7 @@ module.controller("AssignmentViewController",
             if (oldValue.top != newValue.top) {
                 $scope.answerFilters.page = 1;
             }
+            xAPIStatementHelper.filtered_page_section(tab+" tab", $scope.answerFilters);
 
             $scope.updateAnswerList();
         };
@@ -769,11 +819,11 @@ module.controller("AssignmentWriteController",
     [ "$scope", "$q", "$location", "$routeParams", "$route", "AssignmentResource", "$modal", "Authorize",
              "AssignmentCriterionResource", "CriterionResource", "required_rounds", "Toaster", "attachService",
              "AttachmentResource", "Session", "EditorOptions", "PairingAlgorithm", "ComparisonExampleResource",
-             "AnswerResource",
+             "AnswerResource", "xAPIStatementHelper",
     function($scope, $q, $location, $routeParams, $route, AssignmentResource, $modal, Authorize,
              AssignmentCriterionResource, CriterionResource, required_rounds, Toaster, attachService,
              AttachmentResource, Session, EditorOptions, PairingAlgorithm, ComparisonExampleResource,
-             AnswerResource)
+             AnswerResource, xAPIStatementHelper)
     {
         var courseId = $routeParams['courseId'];
         //initialize assignment so this scope can access data from included form
@@ -959,6 +1009,7 @@ module.controller("AssignmentWriteController",
             modalScope.criterion = angular.copy(criterion);
             modalScope.editorOptions = EditorOptions.basic;
             var modalInstance;
+
             var criterionUpdateListener = $scope.$on('CRITERION_UPDATED', function(event, c) {
                 angular.copy(c, criterion);
                 modalInstance.close();
@@ -975,29 +1026,36 @@ module.controller("AssignmentWriteController",
                 template: '<criterion-form criterion=criterion editor-options=editorOptions></criterion-form>',
                 scope: modalScope
             });
+            modalInstance.opened.then(function() {
+                xAPIStatementHelper.opened_modal("Edit Criterion");
+            });
             // we need to remove the listener, otherwise on multiple click, multiple listeners will be registered
             modalInstance.result.finally(function(){
                 criterionUpdateListener();
                 criterionAddListener();
                 criterionCancelListener();
+                xAPIStatementHelper.closed_modal("Edit Criterion");
             });
         };
 
         $scope.changeAnswer = function(answer, isAnswer1) {
             var modalScope = $scope.$new();
-            modalScope.example = true;
             modalScope.answerName = isAnswer1 ? 'Answer A' : 'Answer B';
             modalScope.courseId = courseId;
             modalScope.assignmentId = $scope.assignment.id;
             modalScope.answer = angular.copy(answer);
+            var modalName = modalScope.answer.id ?
+                'Edit Comparison Example' : 'Create Comparison Example';
 
             $scope.modalInstance = $modal.open({
                 animation: true,
-                controller: "AnswerModalController",
+                controller: "ComparisonExampleModalController",
                 templateUrl: 'modules/answer/answer-modal-partial.html',
                 scope: modalScope
             });
-
+            $scope.modalInstance.opened.then(function() {
+                xAPIStatementHelper.opened_modal(modalName);
+            });
             $scope.modalInstance.result.then(function (answer) {
                 if (isAnswer1) {
                     $scope.comparison_example.answer1 = answer;
@@ -1010,6 +1068,9 @@ module.controller("AssignmentWriteController",
                         $scope.comparison_example.answer2_id = answer.id
                     }
                 }
+                xAPIStatementHelper.closed_modal(modalName);
+            }, function() {
+                xAPIStatementHelper.closed_modal(modalName);
             });
         };
 
