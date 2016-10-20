@@ -99,7 +99,7 @@ class FileIdAPI(Resource):
             db.session.commit()
             current_app.logger.debug("SuccessFully deleted " + uploaded_file.name)
 
-api.add_resource(FileIdAPI, '/<uuid:file_uuid>')
+api.add_resource(FileIdAPI, '/<file_uuid>')
 
 
 
