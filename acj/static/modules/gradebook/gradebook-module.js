@@ -51,6 +51,7 @@ module.controller("GradebookController",
             {
                 $scope.gradebook = ret['gradebook'];
                 $scope.totalComparisonsRequired=ret['total_comparisons_required'];
+                $scope.includeScores = ret['include_scores'];
                 $scope.includeSelfEval = ret['include_self_evaluation'];
             },
             function (ret)
