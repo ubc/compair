@@ -74,8 +74,9 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
     celery.conf.update(app.config)
 
     if not skip_assets:
-        assets = get_asset_names(app)
-        app.config.update(assets)
+        if not app.debug:
+            assets = get_asset_names(app)
+            app.config.update(assets)
 
         create_persistent_dirs(app.config, app.logger)
 
