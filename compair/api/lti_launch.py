@@ -279,7 +279,7 @@ api.add_resource(LTICourseMembershipStatusAPI, '/course/<course_uuid>/membership
 class ComPAIRRequestValidator(RequestValidator):
     @property
     def enforce_ssl(self):
-        return current_app.config.get('LTI_ENFORCE_SSL', True)
+        return current_app.config.get('ENFORCE_SSL', True)
 
     @property
     def client_key_length(self):

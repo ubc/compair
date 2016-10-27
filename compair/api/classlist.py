@@ -65,8 +65,8 @@ def _get_existing_users_by_identifier(import_type, users):
     if len(usernames) == 0:
         return {}
 
-    if import_type == ThirdPartyType.cwl.value:
-        # CWL login
+    if import_type == ThirdPartyType.cas.value:
+        # cas login
         third_party_users = ThirdPartyUser.query \
             .options(joinedload('user')) \
             .filter(ThirdPartyUser.unique_identifier.in_(usernames)) \
@@ -132,11 +132,11 @@ def import_users(import_type, course, users):
         u = existing_system_unique_identifiers.get(unique_identifier, None)
         if not u:
             u = User()
-            if import_type == ThirdPartyType.cwl.value:
-                # CWL login
+            if import_type == ThirdPartyType.cas.value:
+                # cas login
                 third_party_user = ThirdPartyUser(
                     unique_identifier=unique_identifier,
-                    third_party_type=ThirdPartyType.cwl
+                    third_party_type=ThirdPartyType.cas
                 )
                 u.username = None
                 u.third_party_auths.append(third_party_user)
@@ -309,9 +309,9 @@ class ClasslistRootAPI(Resource):
         params = import_classlist_parser.parse_args()
         import_type = params.get('import_type')
 
-        if import_type not in [ThirdPartyType.cwl.value, None]:
+        if import_type not in [ThirdPartyType.cas.value, None]:
             return {'error': 'Invalid import type'}, 400
-        elif import_type == ThirdPartyType.cwl.value and not current_app.config.get('CAS_LOGIN_ENABLED'):
+        elif import_type == ThirdPartyType.cas.value and not current_app.config.get('CAS_LOGIN_ENABLED'):
             return {'error': 'Invalid import type: CWL auth not enabled'}, 400
         elif import_type is None and not current_app.config.get('APP_LOGIN_ENABLED'):
             return {'error': 'Invalid import type: App auth not enabled'}, 400

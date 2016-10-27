@@ -39,6 +39,7 @@ matrix:
       env: INTEGRATION_TEST=true TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=44 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
     - python: "3.4"
       env: DOCKER=true
+  fast_finish: true
   allow_failures:
     - env: INTEGRATION_TEST=true TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=52 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
     - env: INTEGRATION_TEST=true TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=44 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"

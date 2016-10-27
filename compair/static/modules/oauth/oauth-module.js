@@ -15,7 +15,7 @@ var module = angular.module('ubc.ctlt.compair.oauth', [
 ]);
 
 module.constant('ThirdPartyAuthType', {
-    cwl: "CWL"
+    cas: "CAS"
 });
 
 /***** Controllers *****/

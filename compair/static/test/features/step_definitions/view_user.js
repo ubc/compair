@@ -38,7 +38,7 @@ var viewUserStepDefinitionsWrapper = function () {
         return expect(element(by.css("#user_email")).getText()).to.eventually.equal("first.instructor@exmple.com");
     });
 
-    this.Then("I should see First Instructor's CWL profile", {timeout: 10 * 1000}, function () {
+    this.Then("I should see First Instructor's CAS profile", {timeout: 10 * 1000}, function () {
         expect(element(by.css("#user_username")).isPresent()).to.eventually.equal(false);
         expect(element(by.css("#user_student_number")).isPresent()).to.eventually.equal(false);
 
@@ -70,7 +70,7 @@ var viewUserStepDefinitionsWrapper = function () {
         return expect(element(by.css("#user_email")).getText()).to.eventually.equal("first.student@exmple.com");
     });
 
-    this.Then("I should see First Student's CWL profile", {timeout: 10 * 1000}, function () {
+    this.Then("I should see First Student's CAS profile", {timeout: 10 * 1000}, function () {
         expect(element(by.css("#user_username")).isPresent()).to.eventually.equal(false);
 
         expect(element(by.css("h1")).getText()).to.eventually.equal("First Student's Profile");

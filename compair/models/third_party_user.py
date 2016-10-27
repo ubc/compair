@@ -1,4 +1,6 @@
 import hashlib
+import json
+
 from flask import current_app
 from datetime import datetime
 import time
@@ -22,11 +24,21 @@ class ThirdPartyUser(DefaultTableMixin, WriteTrackingMixin):
     third_party_type = db.Column(EnumType(ThirdPartyType, name="third_party_type"), nullable=False)
     unique_identifier = db.Column(db.String(255), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    _params = db.Column(db.Text)
 
     # relationships
     # user via User Model
 
     # hyprid and other functions
+
+    @property
+    def params(self):
+        return json.loads(self._params)
+
+    @params.setter
+    def params(self, params):
+        self._params = json.dumps(params)
+
     @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()

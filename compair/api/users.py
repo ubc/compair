@@ -189,7 +189,7 @@ class UserListAPI(Resource):
         user.lastname = params.get("lastname")
         user.displayname = params.get("displayname")
 
-        # if creating a CWL user, do not set username or password
+        # if creating a cas user, do not set username or password
         if sess.get('oauth_create_user_link') and sess.get('LTI') and sess.get('CAS_CREATE'):
             user.username = None
             user.password = None
@@ -233,8 +233,9 @@ class UserListAPI(Resource):
 
                 if sess.get('CAS_CREATE'):
                     thirdpartyuser = ThirdPartyUser(
-                        third_party_type=ThirdPartyType.cwl,
+                        third_party_type=ThirdPartyType.cas,
                         unique_identifier=sess.get('CAS_UNIQUE_IDENTIFIER'),
+                        params=sess.get('CAS_ADDITIONAL_PARAMS'),
                         user=user
                     )
                     db.session.add(thirdpartyuser)

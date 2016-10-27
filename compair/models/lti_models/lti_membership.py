@@ -217,7 +217,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
 
     @classmethod
     def _send_membership_request(cls, memberships_url, params):
-        verify = current_app.config.get('LTI_ENFORCE_SSL', True)
+        verify = current_app.config.get('ENFORCE_SSL', True)
         return requests.post(memberships_url, data=params, verify=verify).text
 
     @classmethod

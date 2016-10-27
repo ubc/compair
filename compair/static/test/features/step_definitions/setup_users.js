@@ -25,8 +25,8 @@ var setupAdminStepDefinitionsWrapper = function () {
         return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
     });
 
-    this.Given("I'm a CWL Instructor", {timeout: 20 * 1000}, function () {
-        var fixtureName = 'instructor/cwl_fixture';
+    this.Given("I'm a CAS Instructor", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'instructor/cas_fixture';
         backEndMocks.setStorageFixture(browser, fixtureName);
         return loginDialog.skipLogin();
     });
@@ -37,8 +37,8 @@ var setupAdminStepDefinitionsWrapper = function () {
         return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
     });
 
-    this.Given("I'm a CWL Student", {timeout: 20 * 1000}, function () {
-        var fixtureName = 'student/cwl_fixture';
+    this.Given("I'm a CAS Student", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'student/cas_fixture';
         backEndMocks.setStorageFixture(browser, fixtureName);
         return loginDialog.skipLogin();
     });

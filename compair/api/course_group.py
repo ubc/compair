@@ -45,7 +45,7 @@ def import_members(course, identifier, members):
     if len(members) > 0 and len(members[0]) != 2:
         invalids.append({'member': {}, 'message': 'Only user identifier and group name fields should be in the file.'})
         return {'success': count, 'invalids': invalids}
-    elif identifier not in [ThirdPartyType.cwl.value, 'username', 'student_number']:
+    elif identifier not in [ThirdPartyType.cas.value, 'username', 'student_number']:
         invalids.append({'member': {}, 'message': 'A valid user identifier is not given.'})
         return {'success': count, 'invalids': invalids}
 
@@ -85,10 +85,10 @@ def import_members(course, identifier, members):
             invalids.append({'member': json.dumps(member), 'message': message})
             continue
 
-        if identifier == ThirdPartyType.cwl.value:
+        if identifier == ThirdPartyType.cas.value:
             third_party_user = ThirdPartyUser.query \
                 .filter_by(
-                    third_party_type=ThirdPartyType.cwl,
+                    third_party_type=ThirdPartyType.cas,
                     unique_identifier=member[USER_IDENTIFIER]
                 ) \
                 .first()
@@ -159,7 +159,7 @@ class GroupRootAPI(Resource):
         params = import_parser.parse_args()
         identifier = params.get('userIdentifier')
 
-        if identifier == ThirdPartyType.cwl.value and not current_app.config.get('CAS_LOGIN_ENABLED'):
+        if identifier == ThirdPartyType.cas.value and not current_app.config.get('CAS_LOGIN_ENABLED'):
             return {'error': 'Invalid import type: CWL auth not enabled'}, 400
         elif identifier == 'username' and not current_app.config.get('APP_LOGIN_ENABLED'):
             return {'error': 'Invalid import type: App auth not enabled'}, 400

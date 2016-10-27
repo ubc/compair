@@ -316,24 +316,24 @@ class CourseGroupsAPITests(ComPAIRAPITestCase):
             self.assertEqual(0, len(rv.json['invalids']))
             uploaded_file.close()
 
-            # test successful import with cwl username
+            # test successful import with cas username
             cas_auth = auth_data.create_cas_user_auth(CourseRole.student)
             cas_user = cas_auth.user
             self.fixtures.enrol_user(cas_user, self.fixtures.course, CourseRole.student)
 
-            with_cwl_username = cas_auth.unique_identifier + "," + self.fixtures.groups[0]
-            uploaded_file = io.BytesIO(with_cwl_username.encode())
-            rv = self.client.post(url, data=dict(userIdentifier=ThirdPartyType.cwl.value, file=(uploaded_file, filename)))
+            with_cas_username = cas_auth.unique_identifier + "," + self.fixtures.groups[0]
+            uploaded_file = io.BytesIO(with_cas_username.encode())
+            rv = self.client.post(url, data=dict(userIdentifier=ThirdPartyType.cas.value, file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(1, rv.json['success'])
             self.assertEqual(0, len(rv.json['invalids']))
             uploaded_file.close()
 
-            # test invalid import with cwl username
+            # test invalid import with cas username
             self.app.config['CAS_LOGIN_ENABLED'] = False
-            with_cwl_username = cas_auth.unique_identifier + "," + self.fixtures.groups[0]
-            uploaded_file = io.BytesIO(with_cwl_username.encode())
-            rv = self.client.post(url, data=dict(userIdentifier=ThirdPartyType.cwl.value, file=(uploaded_file, filename)))
+            with_cas_username = cas_auth.unique_identifier + "," + self.fixtures.groups[0]
+            uploaded_file = io.BytesIO(with_cas_username.encode())
+            rv = self.client.post(url, data=dict(userIdentifier=ThirdPartyType.cas.value, file=(uploaded_file, filename)))
             self.assert400(rv)
             uploaded_file.close()
             self.app.config['CAS_LOGIN_ENABLED'] = True
