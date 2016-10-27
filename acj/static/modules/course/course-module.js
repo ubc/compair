@@ -10,6 +10,20 @@ function combineDateTime(datetime) {
     return date;
 }
 
+function getWeeksDelta(firstDate, secondDate) {
+    firstDate = firstDate || moment();
+    secondDate = secondDate || moment();
+    // By default, moment#diff will return a number rounded towards zero (down for positive, up for negative).
+    // we instead want to always Math.floor for both positive and negative numbers
+    return Math.floor(moment(firstDate).diff(moment(secondDate), 'weeks', true));
+}
+
+function getNewDuplicateDate(originalDate, weekDelta) {
+    originalDate = originalDate || moment();
+    weekDelta = weekDelta || 0;
+    return moment(originalDate).add(weekDelta, 'weeks')
+}
+
 var module = angular.module('ubc.ctlt.acj.course',
     [
         'angularMoment',
@@ -174,9 +188,9 @@ module.controller(
 
 module.controller(
     'CourseSelectModalController',
-    ["$rootScope", "$scope", "$modalInstance",
+    ["$rootScope", "$scope", "$modalInstance", "AssignmentResource", "moment",
      "Session", "Authorize", "CourseResource", "Toaster", "UserResource", "LTI",
-    function ($rootScope, $scope, $modalInstance,
+    function ($rootScope, $scope, $modalInstance, AssignmentResource, moment,
               Session, Authorize, CourseResource, Toaster, UserResource, LTI) {
 
         $scope.loggedInUserId = null;
@@ -211,12 +225,130 @@ module.controller(
             $modalInstance.close(course.id);
         };
 
+        $scope.adjustDuplicateAssignmentDates = function(skipConfirm) {
+            if (!skipConfirm) {
+                if(!confirm("All assignment answer and comparison dates you manually changed will be lost. Are you sure you?")) {
+                    return;
+                }
+            }
+            // startPoint is original course start_date if set
+            // if not set, then it is the earliest assignment answer start date
+            // duplicated assignment dates will moved around based on this date and the original assignments dates
+            var startPoint = null;
+            if ($scope.originalCourse.start_date) {
+                startPoint = moment($scope.originalCourse.start_date).startOf('isoWeek');
+            } else if($scope.originalAssignments.length > 0) {
+                startPoint = moment($scope.originalAssignments[0].answer_start).startOf('isoWeek');
+                angular.forEach($scope.originalAssignments, function(assignment) {
+                    var answerStartPoint = moment(assignment.answer_start).startOf('isoWeek');
+                    if (answerStartPoint < startPoint) {
+                        startPoint = answerStartPoint;
+                    }
+                });
+            }
+            var weekDelta = getWeeksDelta($scope.duplicateCourse.date.course_start.date, startPoint);
+
+            $scope.duplicateAssignments = [];
+            angular.forEach($scope.originalAssignments, function(assignment) {
+                var duplicate_assignment = {
+                    id: assignment.id,
+                    name: assignment.name,
+                    date: {
+                        astart: {date: null, time: new Date().setHours(0, 0, 0, 0)},
+                        aend: {date: null, time: new Date().setHours(23, 59, 0, 0)},
+                        cstart: {date: null, time: new Date().setHours(0, 0, 0, 0)},
+                        cend: {date: null, time: new Date().setHours(23, 59, 0, 0)}
+                    }
+                }
+
+                duplicate_assignment.date.astart.date = getNewDuplicateDate(assignment.answer_start, weekDelta).toDate();
+                duplicate_assignment.date.astart.time = moment(assignment.answer_start).toDate();
+
+                duplicate_assignment.date.aend.date = getNewDuplicateDate(assignment.answer_end, weekDelta).toDate();
+                duplicate_assignment.date.aend.time = moment(assignment.answer_end).toDate();
+
+                if (assignment.compare_start) {
+                    duplicate_assignment.date.cstart.date = getNewDuplicateDate(assignment.compare_start, weekDelta).toDate();
+                    duplicate_assignment.date.cstart.time = moment(assignment.compare_start).toDate();
+                }
+
+                if (assignment.compare_end) {
+                    duplicate_assignment.date.cend.date = getNewDuplicateDate(assignment.compare_end, weekDelta).toDate();
+                    duplicate_assignment.date.cend.time = moment(assignment.compare_end).toDate();
+                }
+
+                if (assignment.compare_start && assignment.compare_end) {
+                    duplicate_assignment.availableCheck = true;
+                }
+
+                duplicate_assignment.date.astart.open = function($event) {
+                    $event.preventDefault();
+                    $event.stopPropagation();
+                    duplicate_assignment.date.astart.opened = true;
+                };
+                duplicate_assignment.date.aend.open = function($event) {
+                    $event.preventDefault();
+                    $event.stopPropagation();
+                    duplicate_assignment.date.aend.opened = true;
+                };
+                duplicate_assignment.date.cstart.open = function($event) {
+                    $event.preventDefault();
+                    $event.stopPropagation();
+                    duplicate_assignment.date.cstart.opened = true;
+                };
+                duplicate_assignment.date.cend.open = function($event) {
+                    $event.preventDefault();
+                    $event.stopPropagation();
+                    duplicate_assignment.date.cend.opened = true;
+                };
+
+                $scope.duplicateAssignments.push(duplicate_assignment);
+            });
+        };
+
         $scope.selectDuplicateCourse = function(course) {
             $scope.showDuplicateForm = true;
             $scope.originalCourse = course;
             $scope.duplicateCourse = {
-                year: new Date().getFullYear()
+                year: new Date().getFullYear(),
+                term: $scope.originalCourse.term,
+                date: {
+                    course_start: {date: null, time: new Date().setHours(0, 0, 0, 0)},
+                    course_end: {date: null, time: new Date().setHours(23, 59, 0, 0)}
+                }
             };
+
+            if ($scope.originalCourse.start_date) {
+                var weekDelta = getWeeksDelta(moment(), $scope.originalCourse.start_date);
+                $scope.duplicateCourse.date.course_start.date = getNewDuplicateDate($scope.originalCourse.start_date, weekDelta).toDate();
+
+                if ($scope.originalCourse.end_date) {
+                    $scope.duplicateCourse.date.course_end.date = getNewDuplicateDate($scope.originalCourse.end_date, weekDelta).toDate();
+                }
+            }
+
+            $scope.duplicateCourse.date.course_start.open = function($event) {
+                $event.preventDefault();
+                $event.stopPropagation();
+                $scope.duplicateCourse.date.course_start.opened = true;
+            };
+            $scope.duplicateCourse.date.course_end.open = function($event) {
+                $event.preventDefault();
+                $event.stopPropagation();
+                $scope.duplicateCourse.date.course_end.opened = true;
+            };
+
+            $scope.originalAssignments = [];
+            $scope.duplicateAssignments = [];
+            AssignmentResource.get({'courseId': $scope.originalCourse.id}).$promise.then(
+                function (ret) {
+                    $scope.originalAssignments = ret.objects;
+                    $scope.adjustDuplicateAssignmentDates(true);
+                },
+                function (ret) {
+                    Toaster.reqerror("Unable to retrieve course assignments: " + course.id, ret);
+                }
+            );
         };
 
         $scope.cancelSelectDuplicateCourse = function() {
@@ -225,6 +357,59 @@ module.controller(
 
         $scope.duplicate = function() {
             $scope.submitted = true;
+            $scope.duplicateCourse.assignments = [];
+
+            if ($scope.duplicateCourse.date.course_start.date != null) {
+                $scope.duplicateCourse.start_date = combineDateTime($scope.duplicateCourse.date.course_start);
+            } else {
+                $scope.duplicateCourse.start_date = null;
+            }
+            if ($scope.duplicateCourse.date.course_end.date != null) {
+                $scope.duplicateCourse.end_date = combineDateTime($scope.duplicateCourse.date.course_end);
+            } else {
+                $scope.duplicateCourse.end_date = null;
+            }
+            if ($scope.duplicateCourse.start_date != null && $scope.duplicateCourse.end_date != null && $scope.duplicateCourse.start_date > $scope.duplicateCourse.end_date) {
+                Toaster.error('Course Period Conflict', 'Course end date/time must be after course start date/time.');
+                $scope.submitted = false;
+                return;
+            }
+
+            for (var index = 0; index < $scope.duplicateAssignments.length; index++) {
+                var assignment = $scope.duplicateAssignments[index];
+
+                var assignment_submit = {
+                    id: assignment.id,
+                    answer_start: combineDateTime(assignment.date.astart),
+                    answer_end: combineDateTime(assignment.date.aend),
+                    compare_start: combineDateTime(assignment.date.cstart),
+                    compare_end: combineDateTime(assignment.date.cend),
+                }
+
+                // answer end datetime has to be after answer start datetime
+                if (assignment_submit.answer_start >= assignment_submit.answer_end) {
+                    Toaster.error('Answer Period Error for '+assignment.name, 'Answer end time must be after answer start time.');
+                    $scope.submitted = false;
+                    return;
+                } else if (assignment.availableCheck && assignment_submit.answer_start > assignment_submit.compare_start) {
+                    Toaster.error("Time Period Error for "+assignment.name, 'Please double-check the answer and comparison period start and end times.');
+                    $scope.submitted = false;
+                    return;
+                } else if (assignment.availableCheck && assignment_submit.compare_start >= assignment_submit.compare_end) {
+                    Toaster.error("Time Period Error for "+assignment.name, 'comparison end time must be after comparison start time.');
+                    $scope.submitted = false;
+                    return;
+                }
+
+                // if option is not checked; make sure no compare dates are saved.
+                if (!assignment.availableCheck) {
+                    assignment_submit.compare_start = null;
+                    assignment_submit.compare_end = null;
+                }
+
+                $scope.duplicateCourse.assignments.push(assignment_submit);
+            }
+
             CourseResource.createDuplicate({id: $scope.originalCourse.id}, $scope.duplicateCourse, function (ret) {
                 Toaster.success("Course Duplicated", 'The course was successfully duplicated');
                 // refresh permissions
@@ -278,8 +463,7 @@ module.controller(
             UserResource.getUserCourses($scope.courseFilters).$promise.then(
                 function(ret) {
                     $scope.courses = ret.objects;
-                    $scope.totalNumCourses = ret.total;
-                    angular.forEach($scope.courses, function(event){ event.start_date = new Date(event.start_date); });
+                    $scope.totalNumCourses =  ret.total;
                 },
                 function (ret) {
                     Toaster.reqerror("Unable to retrieve your courses.", ret);

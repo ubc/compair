@@ -76,7 +76,7 @@ module.factory('LTI',
         },
         getCourseName: function() {
             this._check_cookies();
-            return this._lti_status.course.name
+            return this._lti_status ? this._lti_status.course.name : "";
         }
     };
 }]);
@@ -107,9 +107,6 @@ module.controller("LTIController",
             } else if (!status.course.exists) {
                 if (status.course.course_role == CourseRole.instructor) {
                     var modalScope = $scope.$new();
-                    modalScope.course = {
-                        name: status.course.name,
-                    };
                     var modalInstance = $modal.open({
                         animation: true,
                         backdrop: 'static',

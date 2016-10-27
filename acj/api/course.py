@@ -33,6 +33,10 @@ existing_course_parser.add_argument('id', type=str, required=True, help='Course 
 duplicate_course_parser = reqparse.RequestParser()
 duplicate_course_parser.add_argument('year', type=int, required=True, help='Course year is required.')
 duplicate_course_parser.add_argument('term', type=str, required=True, help='Course term/semester is required.')
+duplicate_course_parser.add_argument('start_date', type=str, default=None)
+duplicate_course_parser.add_argument('end_date', type=str, default=None)
+# has to add location parameter, otherwise MultiDict will screw up the list
+duplicate_course_parser.add_argument('assignments', type=list, default=[], location='json') #only ids and dates
 
 # events
 on_course_modified = event.signal('COURSE_MODIFIED')
@@ -182,7 +186,39 @@ class CourseDuplicateAPI(Resource):
 
         params = duplicate_course_parser.parse_args()
 
-        assignments = course.assignments
+        assignments = [assignment for assignment in course.assignments if assignment.active]
+        assignments_copy_data = params.get("assignments")
+
+        if len(assignments) != len(assignments_copy_data):
+            return {"error": "Not enough assignment data provided to duplication course"}, 400
+
+        for assignment_copy_data in assignments_copy_data:
+            if not assignment_copy_data.get('answer_start'):
+                return {"error": "No answer start date provided for assignment "+assignment_copy_data.id}, 400
+
+            if not assignment_copy_data.get('answer_end'):
+                return {"error": "No answer end date provided for assignment "+assignment_copy_data.id}, 400
+
+            assignment_copy_data['answer_start'] = datetime.datetime.strptime(
+                assignment_copy_data.get('answer_start'), '%Y-%m-%dT%H:%M:%S.%fZ')
+            assignment_copy_data['answer_end'] = datetime.datetime.strptime(
+                assignment_copy_data.get('answer_end'), '%Y-%m-%dT%H:%M:%S.%fZ')
+
+            if assignment_copy_data.get('compare_start'):
+                assignment_copy_data['compare_start'] = datetime.datetime.strptime(
+                    assignment_copy_data.get('compare_start'), '%Y-%m-%dT%H:%M:%S.%fZ')
+
+            if assignment_copy_data.get('compare_end'):
+                assignment_copy_data['compare_end'] = datetime.datetime.strptime(
+                    assignment_copy_data.get('compare_end'), '%Y-%m-%dT%H:%M:%S.%fZ')
+
+        start_date = datetime.datetime.strptime(
+            params.get("start_date"), '%Y-%m-%dT%H:%M:%S.%fZ'
+        ) if params.get("start_date") else None
+
+        end_date = datetime.datetime.strptime(
+            params.get("end_date"), '%Y-%m-%dT%H:%M:%S.%fZ'
+        ) if params.get("end_date") else None
 
         # duplicate course
         duplicate_course = Course(
@@ -190,8 +226,8 @@ class CourseDuplicateAPI(Resource):
             year=params.get("year"),
             term=params.get("term"),
             description=course.description,
-            #start_date=course.start_date,
-            #end_date=course.end_date,
+            start_date=start_date,
+            end_date=end_date
         )
         db.session.add(duplicate_course)
 
@@ -208,18 +244,32 @@ class CourseDuplicateAPI(Resource):
 
         # duplicate assignments
         for assignment in assignments:
-            if not assignment.active:
-                continue
+            # this should never be null due
+            assignment_copy_data = next((assignment_copy_data
+                for assignment_copy_data in assignments_copy_data
+                if assignment_copy_data.get('id') == assignment.uuid),
+                None
+            )
+
+            if not assignment_copy_data:
+                return {"error": "No assignment data provided for assignment "+assignment.uuid}, 400
 
             duplicate_assignment = Assignment(
                 course=duplicate_course,
                 user_id=current_user.id,
                 name=assignment.name,
                 description=assignment.description,
-                #answer_start=assignment.answer_start,
-                #answer_end=assignment.answer_end,
-                #compare_start=assignment.compare_start,
-                #compare_end=assignment.compare_end,
+
+                answer_start=assignment_copy_data.get('answer_start'),
+                answer_end=assignment_copy_data.get('answer_end'),
+                compare_start=assignment_copy_data.get('compare_start'),
+                compare_end=assignment_copy_data.get('compare_end'),
+
+                #TODO: uncomment when grade pull request is accepted
+                #answer_grade_weight=assignment.answer_grade_weight,
+                #comparison_grade_weight=assignment.comparison_grade_weight,
+                #self_evaluation_grade_weight=assignment.self_evaluation_grade_weight,
+
                 number_of_comparisons=assignment.number_of_comparisons,
                 students_can_reply=assignment.students_can_reply,
                 enable_self_evaluation=assignment.enable_self_evaluation,

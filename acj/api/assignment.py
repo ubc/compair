@@ -246,7 +246,7 @@ class AssignmentRootAPI(Resource):
         assignment = Assignment(course_id=course.id)
         restrict_user = not allow(MANAGE, assignment)
 
-        # Get all assignments for this course, default order is most recent first
+        # Get all assignments for this course, order by answer_start date
         base_query = Assignment.query \
             .options(joinedload("assignment_criteria").joinedload("criterion")) \
             .options(undefer_group('counts')) \
@@ -254,7 +254,7 @@ class AssignmentRootAPI(Resource):
                 Assignment.course_id == course.id,
                 Assignment.active == True
             ) \
-            .order_by(desc(Assignment.created))
+            .order_by(desc(Assignment.answer_start))
 
         if restrict_user:
             now = datetime.datetime.utcnow()
