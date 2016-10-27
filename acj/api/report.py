@@ -35,7 +35,6 @@ def name_generator(course, report_name, group_name, file_type="csv"):
     group_name_output = ""
     if group_name:
         group_name_output = group_name + '-'
-    # return report_name + "_" + course.name + "_" + random_generator(4) + "." + file_type
     return course.name + "-" + group_name_output + report_name + "--" + date + "." + file_type
 
 

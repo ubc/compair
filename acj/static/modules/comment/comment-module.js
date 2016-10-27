@@ -229,9 +229,9 @@ module.controller(
 module.controller(
     "ComparisonCommentController",
     ['$scope', '$log', '$routeParams', 'breadcrumbs', 'CourseResource', 'AssignmentResource',
-        'AnswerResource', 'AnswerCommentResource', 'AttachmentResource', 'GroupResource', 'Toaster',
+        'AnswerResource', 'AnswerCommentResource', 'GroupResource', 'Toaster',
     function ($scope, $log, $routeParams, breadcrumbs, CourseResource, AssignmentResource,
-        AnswerResource, AnswerCommentResource, AttachmentResource, GroupResource, Toaster)
+        AnswerResource, AnswerCommentResource, GroupResource, Toaster)
     {
         var courseId = $routeParams['courseId'];
         var assignmentId = $routeParams['assignmentId'];

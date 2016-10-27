@@ -33,7 +33,7 @@
                 <div class="col-md-2" ng-if="item.progress == 100 && !item.isSuccess"><strong>Storing file...</strong></div>
                 <div class="col-md-2" ng-if="item.progress == 100 && item.isSuccess"><strong>Attached</strong></div>
                 <div class="col-md-2">
-                    <a class="btn btn-danger btn-xs" ng-click="item.cancel();item.remove();resetName();">
+                    <a class="btn btn-danger btn-xs" ng-click="item.cancel();item.remove();resetFileUploader();">
                         <i class="fa fa-trash-o"></i> Remove
                     </a>
                 </div>
@@ -46,7 +46,7 @@
                     <i class="fa fa-paperclip"></i> Attached File: <strong>{{assignment.file.alias}}</strong>
                 </div>
                 <div class="col-md-1">
-                    <a ng-click="deleteFile(assignment.file.id)" class="btn btn-danger btn-xs">
+                    <a ng-click="deleteFile(assignment.file)" class="btn btn-danger btn-xs">
                         <i class="fa fa-trash-o"></i> Remove
                     </a>
                 </div>

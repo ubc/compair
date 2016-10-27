@@ -261,8 +261,8 @@ def log_events(log):
     on_export_report.connect(log)
 
     # file attachment event
-    from .file import on_save_tmp_file, on_file_get, on_file_delete
-    on_save_tmp_file.connect(log)
+    from .file import on_save_file, on_file_get, on_file_delete
+    on_save_file.connect(log)
     on_file_get.connect(log)
     on_file_delete.connect(log)
 

@@ -6,7 +6,7 @@ import factory.fuzzy
 from acj.core import db
 from acj.models import Course, User, CourseRole, SystemRole, Criterion, \
     UserCourse, AssignmentCriterion, Assignment, Score, Answer, AssignmentComment, \
-    AnswerComment, Comparison, AnswerCommentType, ComparisonExample, \
+    AnswerComment, Comparison, AnswerCommentType, ComparisonExample, File, \
     LTIConsumer, LTIContext, LTIResourceLink, LTIMembership, LTIUser, LTIUserResourceLink, \
     ThirdPartyUser, ThirdPartyType
 
@@ -161,6 +161,17 @@ class ComparisonExampleFactory(factory.alchemy.SQLAlchemyModelFactory):
     assignment = factory.SubFactory(AssignmentFactory)
     # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
+
+
+class FileFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = File
+        sqlalchemy_session = db.session
+
+    user = factory.SubFactory(UserFactory)
+
+    alias = factory.Sequence(lambda n: u'file %d' % n)
+    name = factory.Sequence(lambda n: u'file%d.pdf' % n)
 
 class LTIConsumerFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:

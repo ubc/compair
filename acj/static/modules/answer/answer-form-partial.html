@@ -1,6 +1,6 @@
 <p class="intro-text" ng-hide="example">Please note <strong>answers are not automatically saved</strong> as you type. However, you may manually save a draft of your answer below.</p>
 
-<form class="form" name="answerForm" ng-submit="answerSubmit(answerForm)" novalidate confirm-form-exit form-type="answer">
+<form class="form" name="answerForm" ng-submit="answerSubmit()" novalidate confirm-form-exit form-type="answer">
     <fieldset>
         <h2 ng-hide="example"><i class="fa fa-comments"></i> {{assignment.name}}</h2>
         <div class="assignment-desc" mathjax hljs ng-bind-html="assignment.description" ng-hide="example"></div>
@@ -40,7 +40,7 @@
                 <div class="col-md-2" ng-if="item.progress == 100 && !item.isSuccess"><strong>Storing file...</strong></div>
                 <div class="col-md-2" ng-if="item.progress == 100 && item.isSuccess"><strong>Attached</strong></div>
                 <div class="col-md-2">
-                    <a class="btn btn-danger btn-xs" ng-click="item.cancel();item.remove();resetName();">
+                    <a class="btn btn-danger btn-xs" ng-click="item.cancel();item.remove();resetFileUploader();">
                         <i class="fa fa-trash-o"></i> Remove
                     </a>
                 </div>
@@ -53,7 +53,7 @@
                     <i class="fa fa-paperclip"></i> Attached File: <strong>{{answer.file.alias}}</strong>
                 </div>
                 <div class="col-md-1">
-                    <a ng-click="deleteFile(answer.file.id)" class="btn btn-danger btn-xs">
+                    <a ng-click="deleteFile(answer.file)" class="btn btn-danger btn-xs">
                         <i class="fa fa-trash-o"></i> Remove
                     </a>
                 </div>

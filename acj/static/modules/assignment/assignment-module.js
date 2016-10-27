@@ -205,8 +205,7 @@ module.factory(
 module.service('attachService',
         ["FileUploader", "$location", "Toaster",
         function(FileUploader, $location, Toaster) {
-    var filename = '';
-    var alias = '';
+    var file = null;
 
     var getUploader = function() {
         var uploader = new FileUploader({
@@ -218,8 +217,7 @@ module.service('attachService',
             }
         });
 
-        filename = '';
-        alias = '';
+        file = null;
 
         uploader.onCompleteItem = onComplete();
         uploader.onErrorItem = onError();
@@ -254,8 +252,7 @@ module.service('attachService',
     var onComplete = function() {
         return function(fileItem, response) {
             if (response) {
-                filename = response['name'];
-                alias = fileItem.file.name;
+                file = response['file'];
             }
         };
     };
@@ -270,26 +267,20 @@ module.service('attachService',
         };
     };
 
-    var resetName = function() {
+    var reset = function() {
         return function() {
-            filename = '';
-            alias = '';
+            file = null;
         }
     };
 
-    var getName = function() {
-        return filename;
-    };
-
-    var getAlias = function() {
-        return alias;
+    var getFile = function() {
+        return file;
     };
 
     return {
         getUploader: getUploader,
-        getName: getName,
-        getAlias: getAlias,
-        resetName: resetName
+        getFile: getFile,
+        reset: reset
     };
 }]);
 
@@ -326,10 +317,10 @@ module.filter("notScoredEnd", function () {
 /***** Controllers *****/
 module.controller("AssignmentViewController",
     ["$scope", "$routeParams", "$location", "AnswerResource", "Authorize", "AssignmentResource", "AssignmentCommentResource",
-             "AttachmentResource", "ComparisonResource", "CourseResource", "required_rounds", "Session", "Toaster", "AnswerCommentResource",
+             "ComparisonResource", "CourseResource", "required_rounds", "Session", "Toaster", "AnswerCommentResource",
              "GroupResource", "AnswerCommentType", "PairingAlgorithm", "$modal",
     function($scope, $routeParams, $location, AnswerResource, Authorize, AssignmentResource, AssignmentCommentResource,
-             AttachmentResource, ComparisonResource, CourseResource, required_rounds, Session, Toaster, AnswerCommentResource,
+             ComparisonResource, CourseResource, required_rounds, Session, Toaster, AnswerCommentResource,
              GroupResource, AnswerCommentType, PairingAlgorithm, $modal)
     {
         $scope.courseId = $routeParams['courseId'];
@@ -792,7 +783,7 @@ module.controller("AssignmentWriteController",
         $scope.PairingAlgorithm = PairingAlgorithm;
 
         $scope.uploader = attachService.getUploader();
-        $scope.resetName = attachService.resetName();
+        $scope.resetFileUploader = attachService.reset();
         $scope.recommended_comparisons = Math.floor(required_rounds / 2);
         $scope.comparison_example = {
             answer1: {},
@@ -868,15 +859,7 @@ module.controller("AssignmentWriteController",
                         $scope.assignment.pairing_algorithm = PairingAlgorithm.random;
                     }
                     if (ret.file) {
-                        AttachmentResource.get({'fileId': ret.file.id}).$promise.then(
-                            function (ret) {
-                                $scope.assignment.uploadedFile = ret.file;
-
-                            },
-                            function (ret) {
-                                Toaster.reqerror("Attachment Not Found", ret);
-                            }
-                        );
+                        $scope.assignment.uploadedFile = ret.file;
                     }
 
                     ComparisonExampleResource.get({'courseId': courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
@@ -922,10 +905,11 @@ module.controller("AssignmentWriteController",
             $scope.date.cend.opened = true;
         };
 
-        $scope.deleteFile = function(file_id) {
-            AttachmentResource.delete({'fileId': file_id}).$promise.then(
+        $scope.deleteFile = function(file) {
+            AttachmentResource.delete({'fileId': file.id}).$promise.then(
                 function () {
                     Toaster.success('Attachment Delete Successful', "This attachment was successfully deleted.");
+                    $scope.assignment.file = null;
                     $scope.assignment.uploadedFile = false;
                 },
                 function (ret) {
@@ -1077,8 +1061,15 @@ module.controller("AssignmentWriteController",
                 $scope.assignment.compare_start = null;
                 $scope.assignment.compare_end = null;
             }
-            $scope.assignment.file_name = attachService.getName();
-            $scope.assignment.file_alias = attachService.getAlias();
+            var file = attachService.getFile();
+            if (file) {
+                $scope.assignment.file = file;
+                $scope.assignment.file_id = file.id
+            } else if ($scope.assignment.file) {
+                $scope.assignment.file_id = $scope.assignment.file.id;
+            } else {
+                $scope.assignment.file_id = null;
+            }
             AssignmentResource.save({'courseId': courseId}, $scope.assignment)
                 .$promise.then(function (ret) {
                     var assignmentId = ret.id;
