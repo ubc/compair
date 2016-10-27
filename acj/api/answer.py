@@ -35,6 +35,7 @@ answer_list_parser = pagination_parser.copy()
 answer_list_parser.add_argument('group', type=str, required=False, default=None)
 answer_list_parser.add_argument('author', type=str, required=False, default=None)
 answer_list_parser.add_argument('orderBy', type=str, required=False, default=None)
+answer_list_parser.add_argument('top', type=bool, required=False, default=None)
 answer_list_parser.add_argument('ids', type=str, required=False, default=None)
 
 answer_comparison_list_parser = pagination_parser.copy()
@@ -47,6 +48,12 @@ flag_parser.add_argument(
     help="Expected boolean value 'flagged' is missing."
 )
 
+top_answer_parser = RequestParser()
+top_answer_parser.add_argument(
+    'top_answer', type=bool, required=True,
+    help="Expected boolean value 'top_answer' is missing."
+)
+
 
 # events
 on_answer_modified = event.signal('ANSWER_MODIFIED')
@@ -55,6 +62,7 @@ on_answer_list_get = event.signal('ANSWER_LIST_GET')
 on_answer_create = event.signal('ANSWER_CREATE')
 on_answer_delete = event.signal('ANSWER_DELETE')
 on_answer_flag = event.signal('ANSWER_FLAG')
+on_set_top_answer = event.signal('SET_TOP_ANSWER')
 on_user_answer_get = event.signal('USER_ANSWER_GET')
 on_answer_comparisons_get = event.signal('ANSWER_COMPARISONS_GET')
 
@@ -116,6 +124,9 @@ class AnswerRootAPI(Resource):
 
         if params['ids']:
             query = query.filter(Answer.uuid.in_(params['ids'].split(',')))
+
+        if params['top']:
+            query = query.filter(Answer.top_answer == True)
 
         # place instructor and TA's answer at the top of the list
         inst_subquery = Answer.query \
@@ -554,7 +565,7 @@ class AnswerFlagAPI(Resource):
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
 
         require(READ, answer)
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not allow(MANAGE, answer)
 
         # anyone can flag an answer, but only the original flagger or someone who can manage
         # the answer can unflag it
@@ -579,3 +590,37 @@ class AnswerFlagAPI(Resource):
         return marshal(answer, dataformat.get_answer(restrict_user))
 
 api.add_resource(AnswerFlagAPI, '/<answer_uuid>/flagged')
+
+# /top
+class TopAnswerAPI(Resource):
+    @login_required
+    def post(self, course_uuid, assignment_uuid, answer_uuid):
+        """
+        Mark an answer as being a top answer
+        :param course_uuid:
+        :param assignment_uuid:
+        :param answer_uuid:
+        :return: marked answer
+        """
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+        answer = Answer.get_active_by_uuid_or_404(answer_uuid)
+
+        require(MANAGE, answer)
+
+        params = top_answer_parser.parse_args()
+        answer.top_answer = params.get('top_answer')
+        db.session.add(answer)
+
+        on_set_top_answer.send(
+            self,
+            event_name=on_set_top_answer.name,
+            user=current_user,
+            course_id=course.id,
+            assignment_id=assignment.id,
+            data={'answer_id': answer.id, 'top_answer': answer.top_answer})
+
+        db.session.commit()
+        return marshal(answer, dataformat.get_answer(restrict_user=False))
+
+api.add_resource(TopAnswerAPI, '/<answer_uuid>/top')

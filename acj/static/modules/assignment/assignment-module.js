@@ -348,6 +348,7 @@ module.controller("AssignmentViewController",
             perPage: 20,
             group_name: null,
             author: null,
+            top: null,
             orderBy: null
         };
         $scope.self_evaluation_needed = false;
@@ -523,14 +524,31 @@ module.controller("AssignmentViewController",
         // unflag a flagged answer
         $scope.unflagAnswer = function(answer, course_id, assignment_id, answer_id) {
             var params = {'flagged': false};
-            var resultMsg = "Answer Successfully Unflagged";
             AnswerResource.flagged({'courseId':course_id, 'assignmentId':assignment_id, 'answerId':answer_id}, params).$promise.then(
                 function () {
                     answer['flagged'] = false;
-                    Toaster.success(resultMsg);
+                    Toaster.success("Answer Successfully Unflagged");
                 },
                 function (ret) {
                     Toaster.reqerror("Unable To Change Flag", ret);
+                }
+            );
+        };
+
+        // toggle top_answer state for answer
+        $scope.setTopAnswer = function(answer, topAnswer) {
+            var params = {'top_answer': topAnswer};
+            AnswerResource.topAnswer({'courseId':answer.course_id, 'assignmentId':answer.assignment_id, 'answerId':answer.id}, params).$promise.then(
+                function () {
+                    answer.top_answer = topAnswer;
+                    if (topAnswer) {
+                        Toaster.success("Answer Successfully Added to Top Answers");
+                    } else {
+                        Toaster.success("Answer Successfully Removed from Top Answers");
+                    }
+                },
+                function (ret) {
+                    Toaster.reqerror("Unable To Change Top Answer", ret);
                 }
             );
         };
@@ -747,6 +765,9 @@ module.controller("AssignmentViewController",
                 } else {
                     userIds[$scope.answerFilters.author.id] = 1;
                 }
+                $scope.answerFilters.page = 1;
+            }
+            if (oldValue.top != newValue.top) {
                 $scope.answerFilters.page = 1;
             }
             $scope.updateAnswerList();

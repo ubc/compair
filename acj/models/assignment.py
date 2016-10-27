@@ -194,6 +194,19 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             group="counts"
         )
 
+        cls.top_answer_count = column_property(
+            select([func.count(Answer.id)]).
+            where(and_(
+                Answer.assignment_id == cls.id,
+                Answer.active == True,
+                Answer.draft == False,
+                Answer.practice == False,
+                Answer.top_answer == True
+            )),
+            deferred=True,
+            group="counts"
+        )
+
         cls.comment_count = column_property(
             select([func.count(AssignmentComment.id)]).
             where(and_(

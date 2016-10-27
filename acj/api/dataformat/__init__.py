@@ -127,6 +127,7 @@ def get_assignment(restrict_user=True):
         'evaluation_count': fields.Integer,
         'comment_count': fields.Integer,
         'answer_count': fields.Integer,
+        'top_answer_count': fields.Integer,
         'self_evaluation_count': fields.Integer,
 
         'user': get_partial_user(restrict_user),
@@ -146,6 +147,7 @@ def get_answer(restrict_user=True):
         'file': fields.Nested(get_file(), allow_null=True),
         'flagged': fields.Boolean,
         'draft': fields.Boolean,
+        'top_answer': fields.Boolean,
 
         'scores': fields.List(fields.Nested(get_score(
             restrict_user=restrict_user

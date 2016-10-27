@@ -85,6 +85,7 @@ describe('course-module', function () {
     var mockAssignment = {
         "after_comparing": false,
         "answer_count": 12,
+        "top_answer_count": 0,
         "answer_end": "Wed, 15 Jun 2016 06:59:00 -0000",
         "answer_period": true,
         "answer_start": "Thu, 02 Jun 2016 07:00:00 -0000",
@@ -260,6 +261,7 @@ describe('course-module', function () {
                 "created": "Mon, 06 Jun 2016 21:07:57 -0000",
                 "file": null,
                 "flagged": true,
+                "top_answer": false,
                 "id": "12bcABC123-abcABC123_Z",
                 "private_comment_count": 0,
                 "public_comment_count": 0,
@@ -280,6 +282,7 @@ describe('course-module', function () {
                 "created": "Mon, 06 Jun 2016 21:07:57 -0000",
                 "file": null,
                 "flagged": true,
+                "top_answer": false,
                 "id": "100cABC123-abcABC123_Z",
                 "private_comment_count": 0,
                 "public_comment_count": 0,
@@ -300,6 +303,7 @@ describe('course-module', function () {
                 "created": "Mon, 06 Jun 2016 21:07:57 -0000",
                 "file": null,
                 "flagged": true,
+                "top_answer": false,
                 "id": "101cABC123-abcABC123_Z",
                 "private_comment_count": 0,
                 "public_comment_count": 0,
@@ -320,6 +324,7 @@ describe('course-module', function () {
                 "created": "Mon, 06 Jun 2016 20:40:39 -0000",
                 "file": null,
                 "flagged": false,
+                "top_answer": false,
                 "id": "11bcABC123-abcABC123_Z",
                 "private_comment_count": 0,
                 "public_comment_count": 0,
@@ -340,6 +345,7 @@ describe('course-module', function () {
                 "created": "Mon, 06 Jun 2016 20:38:50 -0000",
                 "file": null,
                 "flagged": false,
+                "top_answer": false,
                 "id": "6abcABC123-abcABC123_Z",
                 "private_comment_count": 2,
                 "public_comment_count": 0,
@@ -373,6 +379,7 @@ describe('course-module', function () {
                 "created": "Mon, 06 Jun 2016 20:38:22 -0000",
                 "file": null,
                 "flagged": false,
+                "top_answer": false,
                 "id": "4abcABC123-abcABC123_Z",
                 "private_comment_count": 2,
                 "public_comment_count": 0,
@@ -406,6 +413,7 @@ describe('course-module', function () {
                 "created": "Mon, 06 Jun 2016 20:38:12 -0000",
                 "file": null,
                 "flagged": false,
+                "top_answer": false,
                 "id": "3abcABC123-abcABC123_Z",
                 "private_comment_count": 2,
                 "public_comment_count": 0,
@@ -439,6 +447,7 @@ describe('course-module', function () {
                 "created": "Mon, 06 Jun 2016 20:40:07 -0000",
                 "file": null,
                 "flagged": false,
+                "top_answer": false,
                 "id": "9abcABC123-abcABC123_Z",
                 "private_comment_count": 2,
                 "public_comment_count": 0,
@@ -472,6 +481,7 @@ describe('course-module', function () {
                 "created": "Mon, 06 Jun 2016 20:39:01 -0000",
                 "file": null,
                 "flagged": false,
+                "top_answer": false,
                 "id": "7abcABC123-abcABC123_Z",
                 "private_comment_count": 2,
                 "public_comment_count": 0,
@@ -505,6 +515,7 @@ describe('course-module', function () {
                 "created": "Mon, 06 Jun 2016 20:38:32 -0000",
                 "file": null,
                 "flagged": false,
+                "top_answer": false,
                 "id": "5abcABC123-abcABC123_Z",
                 "private_comment_count": 2,
                 "public_comment_count": 0,
@@ -538,6 +549,7 @@ describe('course-module', function () {
                 "created": "Mon, 06 Jun 2016 20:37:52 -0000",
                 "file": null,
                 "flagged": false,
+                "top_answer": false,
                 "id": "2abcABC123-abcABC123_Z",
                 "private_comment_count": 2,
                 "public_comment_count": 0,
@@ -571,6 +583,7 @@ describe('course-module', function () {
                 "created": "Mon, 06 Jun 2016 20:40:22 -0000",
                 "file": null,
                 "flagged": false,
+                "top_answer": false,
                 "id": "10bcABC123-abcABC123_Z",
                 "private_comment_count": 2,
                 "public_comment_count": 0,
@@ -604,6 +617,7 @@ describe('course-module', function () {
                 "created": "Mon, 06 Jun 2016 20:39:22 -0000",
                 "file": null,
                 "flagged": false,
+                "top_answer": false,
                 "id": "8abcABC123-abcABC123_Z",
                 "private_comment_count": 3,
                 "public_comment_count": 0,
@@ -637,6 +651,7 @@ describe('course-module', function () {
                 "created": "Mon, 06 Jun 2016 20:35:29 -0000",
                 "file": null,
                 "flagged": false,
+                "top_answer": false,
                 "id": "1abcABC123-abcABC123_Z",
                 "private_comment_count": 3,
                 "public_comment_count": 0,
@@ -711,6 +726,7 @@ describe('course-module', function () {
                     "created": "Mon, 06 Jun 2016 21:07:57 -0000",
                     "file": null,
                     "flagged": true,
+                    "top_answer": false,
                     "id": "100cABC123-abcABC123_Z",
                     "private_comment_count": 0,
                     "public_comment_count": 0,
@@ -732,6 +748,7 @@ describe('course-module', function () {
                     "created": "Mon, 06 Jun 2016 21:07:57 -0000",
                     "file": null,
                     "flagged": true,
+                    "top_answer": false,
                     "id": "101cABC123-abcABC123_Z",
                     "private_comment_count": 0,
                     "public_comment_count": 0,
@@ -830,6 +847,7 @@ describe('course-module', function () {
                     perPage: 20,
                     group_name: null,
                     author: null,
+                    top: null,
                     orderBy: null
                 });
                 expect($rootScope.reverse).toBe(true);
@@ -938,6 +956,26 @@ describe('course-module', function () {
 
                 expect(answer.flagged).toBe(false);
             });
+
+
+            it('should be able to toggle top answer state', function () {
+                answer = mockAnswers.objects[0];
+
+                expect(answer.top_answer).toBe(false);
+
+                $rootScope.setTopAnswer(answer, true);
+                $httpBackend.expectPOST('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers/'+answer.id+'/top').respond({});
+                $httpBackend.flush();
+
+                expect(answer.top_answer).toBe(true);
+
+                $rootScope.setTopAnswer(answer, false);
+                $httpBackend.expectPOST('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers/'+answer.id+'/top').respond({});
+                $httpBackend.flush();
+
+                expect(answer.top_answer).toBe(false);
+            });
+
 
             it('should be able to load answer comments', function () {
                 answer = mockAnswers.objects[2];
