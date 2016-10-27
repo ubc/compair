@@ -28,7 +28,6 @@ def create(course_id):
         with_entities(Answer.user_id, Answer.assignment_id, Answer.id,
                       Criterion.id, Criterion.name, Score.score). \
         join(Score.answer). \
-        join(Answer). \
         join(Score.criterion). \
         filter(Answer.draft == False). \
         filter(Answer.practice == False). \
@@ -60,7 +59,7 @@ def create(course_id):
 
     if course_id:
         query = query. \
-            join(Comparison.answer_winner).join(Answer). \
+            join(Comparison.winning_answer). \
             filter(Answer.course_id == course_id)
 
     comparisons = query.all()
@@ -78,7 +77,7 @@ def create(course_id):
 
     if course_id:
         query = query. \
-            join(User.UserCourse). \
+            join(User.user_courses). \
             filter(UserCourse.course_id == course_id)
 
     users = query.all()

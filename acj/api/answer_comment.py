@@ -240,6 +240,11 @@ class AnswerCommentListAPI(Resource):
         db.session.add(answer_comment)
         db.session.commit()
 
+        # update course & assignment grade for user if self-evaluation is completed
+        if not answer_comment.draft and answer_comment.comment_type == AnswerCommentType.self_evaluation:
+            assignment.calculate_grade(answer_comment.user)
+            course.calculate_grade(answer_comment.user)
+
         on_answer_comment_create.send(
             self,
             event_name=on_answer_comment_create.name,
@@ -325,6 +330,12 @@ class AnswerCommentAPI(Resource):
             data=get_model_changes(answer_comment))
 
         db.session.commit()
+
+        # update course & assignment grade for user if self-evaluation is completed
+        if not answer_comment.draft and answer_comment.comment_type == AnswerCommentType.self_evaluation:
+            assignment.calculate_grade(answer_comment.user)
+            course.calculate_grade(answer_comment.user)
+
         return marshal(answer_comment, dataformat.get_answer_comment())
 
     @login_required
@@ -333,12 +344,18 @@ class AnswerCommentAPI(Resource):
         Delete an answer comment
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer_comment = AnswerComment.get_active_by_uuid_or_404(answer_comment_uuid)
         require(DELETE, answer_comment)
 
         data = marshal(answer_comment, dataformat.get_answer_comment(False))
         answer_comment.active = False
         db.session.commit()
+
+        # update course & assignment grade for user if self-evaluation is completed
+        if not answer_comment.draft and answer_comment.comment_type == AnswerCommentType.self_evaluation:
+            assignment.calculate_grade(answer_comment.user)
+            course.calculate_grade(answer_comment.user)
 
         on_answer_comment_delete.send(
             self,

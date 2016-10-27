@@ -13,7 +13,9 @@ from .assignment_criterion import AssignmentCriterion
 from .assignment_comment import AssignmentComment
 from .comparison import Comparison
 from .comparison_example import ComparisonExample
+from .assignment_grade import AssignmentGrade
 from .assignment import Assignment
+from .course_grade import CourseGrade
 from .course import Course
 from .criterion import Criterion
 from .file import File
@@ -23,8 +25,8 @@ from .user_course import UserCourse
 from .third_party_user import ThirdPartyUser
 
 # LTI models
-from .lti import LTIConsumer, LTIContext, LTIMembership, \
-    LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce
+from .lti_models import LTIConsumer, LTIContext, LTIMembership, \
+    LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce, LTIOutcome
 
 from acj.core import db
 convention = {

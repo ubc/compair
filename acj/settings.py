@@ -39,7 +39,7 @@ PERMANENT_SESSION_LIFETIME = 3600 * 24
 CELERY_RESULT_BACKEND = None
 CELERY_BROKER_URL = None
 CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'msgpack', 'yaml']
-CELERY_IMPORTS = ('acj.tasks')
+CELERY_IMPORTS = ('acj.tasks.user_password', 'acj.tasks.lti_outcomes')
 BROKER_TRANSPORT_OPTIONS = {
     'fanout_prefix': True,
     'fanout_patterns': True

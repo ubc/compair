@@ -39,6 +39,9 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     rank_display_limit = db.Column(db.Integer, nullable=True)
     educators_can_compare = db.Column(db.Boolean(name='educators_can_compare'),
         default=False, nullable=False)
+    answer_grade_weight = db.Column(db.Integer, default=1, nullable=False)
+    comparison_grade_weight = db.Column(db.Integer, default=1, nullable=False)
+    self_evaluation_grade_weight = db.Column(db.Integer, default=1, nullable=False)
 
     # relationships
     # user via User Model
@@ -54,6 +57,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     comparisons = db.relationship("Comparison", backref="assignment", lazy="dynamic")
     comparison_examples = db.relationship("ComparisonExample", backref="assignment", lazy="dynamic")
     scores = db.relationship("Score", backref="assignment", lazy="dynamic")
+    grades = db.relationship("AssignmentGrade", backref="assignment", lazy='dynamic')
 
     # lti
     lti_resource_links = db.relationship("LTIResourceLink", backref="acj_assignment", lazy='dynamic')
@@ -165,6 +169,14 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             return "assignment " + self.uuid
         else:
             return "assignment"
+
+    def calculate_grade(self, user):
+        from . import AssignmentGrade
+        AssignmentGrade.calculate_grade(self, user)
+
+    def calculate_grades(self):
+        from . import AssignmentGrade
+        AssignmentGrade.calculate_grades(self)
 
     @classmethod
     def __declare_last__(cls):

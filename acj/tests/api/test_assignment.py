@@ -1,8 +1,12 @@
 import datetime
 import json
+import mock
 
-from data.fixtures.test_data import SimpleAssignmentTestData, ComparisonTestData, TestFixture
-from acj.models import Assignment, Comparison, PairingAlgorithm
+from data.fixtures.test_data import SimpleAssignmentTestData, ComparisonTestData, \
+    TestFixture, LTITestData
+from data.factories import AssignmentFactory
+from acj.models import Assignment, Comparison, PairingAlgorithm, \
+    CourseGrade, AssignmentGrade, SystemRole, CourseRole, LTIOutcome
 from acj.tests.test_acj import ACJAPITestCase
 from acj.core import db
 
@@ -74,7 +78,10 @@ class AssignmentAPITests(ACJAPITestCase):
                 { 'id': self.data.get_default_criterion().uuid }
             ],
             'pairing_algorithm': PairingAlgorithm.random.value,
-            'rank_display_limit': 20
+            'rank_display_limit': 20,
+            'answer_grade_weight': 1,
+            'comparison_grade_weight': 1,
+            'self_evaluation_grade_weight': 1
         }
         # Test login required
         rv = self.client.post(
@@ -164,7 +171,10 @@ class AssignmentAPITests(ACJAPITestCase):
                 { 'id': self.data.get_default_criterion().uuid }
             ],
             'pairing_algorithm': PairingAlgorithm.adaptive.value,
-            'rank_display_limit': 10
+            'rank_display_limit': 10,
+            'answer_grade_weight': 2,
+            'comparison_grade_weight': 2,
+            'self_evaluation_grade_weight': 2
         }
 
         # test login required
@@ -235,7 +245,10 @@ class AssignmentAPITests(ACJAPITestCase):
                     { 'id': self.data.get_default_criterion().uuid }
                 ],
                 'pairing_algorithm': PairingAlgorithm.random.value,
-                'rank_display_limit': 20
+                'rank_display_limit': 20,
+                'answer_grade_weight': 2,
+                'comparison_grade_weight': 2,
+                'self_evaluation_grade_weight': 2
             }
             rv = self.client.post(url, data=json.dumps(ta_expected), content_type='application/json')
             self.assert200(rv)
@@ -759,3 +772,245 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
             self.assertEqual(status['comparisons']['left'], self.fixtures.assignment.total_comparisons_required)
             self.assertTrue(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 1)
+
+
+
+class AssignmentCourseGradeUpdateAPITests(ACJAPITestCase):
+    def setUp(self):
+        super(AssignmentCourseGradeUpdateAPITests, self).setUp()
+        self.fixtures = TestFixture().add_course(num_students=30, num_assignments=2, num_groups=2)
+        self.url = '/api/courses/' + self.fixtures.course.uuid + '/assignments'
+        self.lti_data = LTITestData()
+
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    def test_create(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
+        url = self.url
+
+        course_grades = {
+            course_grade.user_id: course_grade.grade \
+                for course_grade in CourseGrade.get_course_grades(self.fixtures.course)
+        }
+
+        now = datetime.datetime.utcnow()
+        assignment_expected = {
+            'name': 'this is a new assignment\'s name',
+            'description': 'this is the new assignment\'s description.',
+            'answer_start': now.isoformat() + 'Z',
+            'answer_end': (now + datetime.timedelta(days=7)).isoformat() + 'Z',
+            'number_of_comparisons': 3,
+            'students_can_reply': False,
+            'enable_self_evaluation': False,
+            'criteria': [
+                { 'id': self.fixtures.default_criterion.uuid }
+            ],
+            'pairing_algorithm': PairingAlgorithm.random.value,
+            'rank_display_limit': 20,
+            'answer_grade_weight': 1,
+            'comparison_grade_weight': 1,
+            'self_evaluation_grade_weight': 1
+        }
+
+        with self.login(self.fixtures.instructor.username):
+            rv = self.client.post(
+                self.url,
+                data=json.dumps(assignment_expected),
+                content_type='application/json')
+            self.assert200(rv)
+
+            new_course_grades = CourseGrade.get_course_grades(self.fixtures.course)
+            self.assertEqual(len(course_grades.items()), len(new_course_grades))
+
+            # adding an assignment should lower all grades for course
+            for new_course_grade in new_course_grades:
+                grade = course_grades.get(new_course_grade.user_id)
+                self.assertIsNotNone(grade)
+                self.assertLess(new_course_grade.grade, grade)
+
+        # test lti grade post
+        lti_consumer = self.lti_data.lti_consumer
+        student = self.fixtures.students[0]
+        lti_user_resource_link = self.lti_data.setup_student_user_resource_links(
+            student, self.fixtures.course)
+
+        with self.login(self.fixtures.instructor.username):
+            rv = self.client.post(
+                self.url,
+                data=json.dumps(assignment_expected),
+                content_type='application/json')
+            self.assert200(rv)
+
+            new_course_grades = CourseGrade.get_course_grades(self.fixtures.course)
+            student_grade_id = next((new_course_grade.id \
+                for new_course_grade in new_course_grades  \
+                if new_course_grade.user_id == student.id)
+            )
+
+            mocked_update_assignment_grades_run.assert_not_called()
+
+            mocked_update_course_grades_run.assert_called_once_with(
+                lti_consumer.id,
+                [(lti_user_resource_link.lis_result_sourcedid, student_grade_id)]
+            )
+            mocked_update_course_grades_run.reset_mock()
+
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    def test_edit(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
+        assignment = self.fixtures.assignment
+        url = self.url + '/' + assignment.uuid
+
+        expected = {
+            'id': assignment.uuid,
+            'name': 'This is the new name.',
+            'description': 'new_description',
+            'answer_start': assignment.answer_start.isoformat() + 'Z',
+            'answer_end': assignment.answer_end.isoformat() + 'Z',
+            'number_of_comparisons': assignment.number_of_comparisons,
+            'students_can_reply': assignment.students_can_reply,
+            'enable_self_evaluation': assignment.enable_self_evaluation,
+            'criteria': [
+                { 'id': self.fixtures.default_criterion.uuid }
+            ],
+            'pairing_algorithm': PairingAlgorithm.adaptive.value,
+            'rank_display_limit': 10,
+            'answer_grade_weight': assignment.answer_grade_weight,
+            'comparison_grade_weight': assignment.answer_grade_weight,
+            'self_evaluation_grade_weight': assignment.self_evaluation_grade_weight,
+        }
+
+        course_grades = {
+            course_grade.user_id: course_grade.grade \
+                for course_grade in CourseGrade.get_course_grades(self.fixtures.course)
+        }
+
+        assignment_grades = {
+            assignment_grade.user_id: assignment_grade.grade \
+                for assignment_grade in AssignmentGrade.get_assignment_grades(assignment)
+        }
+
+        lti_consumer = self.lti_data.lti_consumer
+        student = self.fixtures.students[0]
+        (lti_user_resource_link1, lti_user_resource_link2) = self.lti_data.setup_student_user_resource_links(
+            student, self.fixtures.course, self.fixtures.assignment)
+
+        with self.login(self.fixtures.instructor.username):
+            # grades shouldn't change if weight don't change
+            rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+            self.assert200(rv)
+
+            new_course_grades = CourseGrade.get_course_grades(self.fixtures.course)
+            self.assertEqual(len(course_grades.items()), len(new_course_grades))
+            for new_course_grade in new_course_grades:
+                grade = course_grades.get(new_course_grade.user_id)
+                self.assertIsNotNone(grade)
+                self.assertAlmostEqual(new_course_grade.grade, grade)
+
+            new_assignment_grades = AssignmentGrade.get_assignment_grades(assignment)
+            self.assertEqual(len(assignment_grades.items()), len(new_assignment_grades))
+            for new_assignment_grade in new_assignment_grades:
+                grade = assignment_grades.get(new_assignment_grade.user_id)
+                self.assertIsNotNone(grade)
+                self.assertAlmostEqual(new_assignment_grade.grade, grade)
+
+            mocked_update_assignment_grades_run.assert_not_called()
+            mocked_update_course_grades_run.assert_not_called()
+
+            # grades should change if weights change
+            for weight in ['answer_grade_weight', 'comparison_grade_weight', 'self_evaluation_grade_weight']:
+                modified_expected = expected.copy()
+                modified_expected[weight] += 1
+                if weight == 'self_evaluation_grade_weight':
+                    modified_expected['enable_self_evaluation'] = True
+
+                rv = self.client.post(url, data=json.dumps(modified_expected), content_type='application/json')
+                self.assert200(rv)
+
+                new_course_grades = CourseGrade.get_course_grades(self.fixtures.course)
+                self.assertEqual(len(course_grades.items()), len(new_course_grades))
+                for new_course_grade in new_course_grades:
+                    grade = course_grades.get(new_course_grade.user_id)
+                    self.assertIsNotNone(grade)
+                    self.assertNotEqual(new_course_grade.grade, grade)
+
+                new_assignment_grades = AssignmentGrade.get_assignment_grades(assignment)
+                self.assertEqual(len(assignment_grades.items()), len(new_assignment_grades))
+                for new_assignment_grade in new_assignment_grades:
+                    grade = assignment_grades.get(new_assignment_grade.user_id)
+                    self.assertIsNotNone(grade)
+                    self.assertNotEqual(new_assignment_grade.grade, grade)
+
+                student_assignment_grade_id = next((new_assignment_grade.id \
+                    for new_assignment_grade in new_assignment_grades  \
+                    if new_assignment_grade.user_id == student.id)
+                )
+                mocked_update_assignment_grades_run.assert_called_once_with(
+                    lti_consumer.id,
+                    [(lti_user_resource_link2.lis_result_sourcedid, student_assignment_grade_id)]
+                )
+                mocked_update_assignment_grades_run.reset_mock()
+
+                student_course_grade_id = next((new_course_grade.id \
+                    for new_course_grade in new_course_grades  \
+                    if new_course_grade.user_id == student.id)
+                )
+                mocked_update_course_grades_run.assert_called_once_with(
+                    lti_consumer.id,
+                    [(lti_user_resource_link1.lis_result_sourcedid, student_course_grade_id)]
+                )
+                mocked_update_course_grades_run.reset_mock()
+
+
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    def test_delete(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
+        # add dumby Assignment
+        self.fixtures.add_assignments(num_assignments=1)
+        assignment = self.fixtures.assignments.pop()
+        url = self.url + '/' + assignment.uuid
+        self.fixtures.course.calculate_grades()
+
+        course_grades = {
+            course_grade.user_id: course_grade.grade \
+                for course_grade in CourseGrade.get_course_grades(self.fixtures.course)
+        }
+
+        lti_consumer = self.lti_data.lti_consumer
+        student = self.fixtures.students[0]
+        (lti_user_resource_link1, lti_user_resource_link2) = self.lti_data.setup_student_user_resource_links(
+            student, self.fixtures.course, self.fixtures.assignment)
+
+        with self.login(self.fixtures.instructor.username):
+            rv = self.client.delete(url)
+            self.assert200(rv)
+
+            new_course_grades = CourseGrade.get_course_grades(self.fixtures.course)
+
+            self.assertEqual(len(course_grades.items()), len(new_course_grades))
+            # removing an assignment raise all grades for course (since no students completed any of it)
+            for new_course_grade in new_course_grades:
+                grade = course_grades.get(new_course_grade.user_id)
+                self.assertIsNotNone(grade)
+                self.assertGreater(new_course_grade.grade, grade)
+
+            mocked_update_assignment_grades_run.assert_not_called()
+
+            student_course_grade_id = next((new_course_grade.id \
+                for new_course_grade in new_course_grades  \
+                if new_course_grade.user_id == student.id)
+            )
+            mocked_update_course_grades_run.assert_called_once_with(
+                lti_consumer.id,
+                [(lti_user_resource_link1.lis_result_sourcedid, student_course_grade_id)]
+            )
+            mocked_update_course_grades_run.reset_mock()
+
+            # there shouldn't been any more course grades after removing all assignments
+            for assignment in self.fixtures.course.assignments:
+                if assignment.active:
+                    url = self.url + '/' + assignment.uuid
+                    rv = self.client.delete(url)
+                    self.assert200(rv)
+
+            new_course_grades = CourseGrade.get_course_grades(self.fixtures.course)
+            self.assertEqual(0, len(new_course_grades))

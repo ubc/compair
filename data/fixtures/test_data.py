@@ -114,6 +114,30 @@ class LTITestData:
 
         db.session.commit()
 
+    def setup_student_user_resource_links(self, student, course, assignment=None):
+        self.lti_consumer.lis_outcome_service_url = "TestUrl.com"
+        lti_context = self.create_context(
+            self.lti_consumer,
+            acj_course_id=course.id
+        )
+        lti_user_student = self.create_user(self.lti_consumer, SystemRole.student, student)
+
+        lti_resource_link1 = self.create_resource_link(self.lti_consumer, lti_context=lti_context)
+        lti_user_resource_link1 = self.create_user_resource_link(lti_user_student, lti_resource_link1, CourseRole.student)
+        lti_user_resource_link1.lis_result_sourcedid = "SomeUniqueSourcedId" + str(len(self.lti_user_resource_links))
+
+        if assignment:
+            lti_resource_link2 = self.create_resource_link(self.lti_consumer, lti_context=lti_context, acj_assignment=assignment)
+            lti_user_resource_link2 = self.create_user_resource_link(lti_user_student, lti_resource_link2, CourseRole.student)
+            lti_user_resource_link2.lis_result_sourcedid = "SomeUniqueSourcedId" + str(len(self.lti_user_resource_links))
+
+        db.session.commit()
+
+        if assignment:
+            return (lti_user_resource_link1, lti_user_resource_link2)
+        else:
+            return lti_user_resource_link1
+
     def get_consumer(self):
         return self.lti_consumer
 
@@ -310,6 +334,10 @@ class SimpleAnswersTestData(SimpleAssignmentTestData):
             self.draft_answers += draft_answers_for_assignment
         db.session.commit()
 
+        for assignment in self.get_assignments():
+            assignment.calculate_grades()
+        self.get_course().calculate_grades()
+
     def create_answer(self, assignment, author, draft=False):
         answer = AnswerFactory(
             assignment=assignment,
@@ -422,6 +450,7 @@ class ComparisonTestData(CriterionTestData):
             self.answers.append(answer)
             comparison_example = self.create_comparison_example(assignment, answer1, answer2)
             self.comparisons_examples.append(comparison_example)
+
         self.answer_period_assignment = self.create_assignment_in_answer_period(
             self.get_course(), self.get_authorized_ta())
         self.assignments.append(self.answer_period_assignment)
@@ -502,6 +531,10 @@ class TestFixture:
             self.add_students(1)
             self.draft_student = self.students[-1]
             self.add_draft_answers([self.draft_student])
+
+        for assignment in self.course.assignments:
+            assignment.calculate_grades()
+        self.course.calculate_grades()
 
         return self
 

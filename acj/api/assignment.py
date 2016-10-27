@@ -38,6 +38,9 @@ new_assignment_parser.add_argument('rank_display_limit', type=int, default=None)
 new_assignment_parser.add_argument('educators_can_compare', type=bool, default=False)
 # has to add location parameter, otherwise MultiDict will screw up the list
 new_assignment_parser.add_argument('criteria', type=list, default=[], location='json')
+new_assignment_parser.add_argument('answer_grade_weight', type=int, default=1)
+new_assignment_parser.add_argument('comparison_grade_weight', type=int, default=1)
+new_assignment_parser.add_argument('self_evaluation_grade_weight', type=int, default=1)
 
 existing_assignment_parser = new_assignment_parser.copy()
 existing_assignment_parser.add_argument('id', type=str, required=True, help="Assignment id is required.")
@@ -119,6 +122,13 @@ class AssignmentIdAPI(Resource):
         assignment.enable_self_evaluation = params.get(
             'enable_self_evaluation', assignment.enable_self_evaluation)
 
+        assignment.answer_grade_weight = params.get(
+            'answer_grade_weight', assignment.answer_grade_weight)
+        assignment.comparison_grade_weight = params.get(
+            'comparison_grade_weight', assignment.comparison_grade_weight)
+        assignment.self_evaluation_grade_weight = params.get(
+            'self_evaluation_grade_weight', assignment.self_evaluation_grade_weight)
+
         pairing_algorithm = params.get("pairing_algorithm")
         check_valid_pairing_algorithm(pairing_algorithm)
         if not assignment.compared:
@@ -169,12 +179,14 @@ class AssignmentIdAPI(Resource):
                     )
                     assignment.assignment_criteria.append(assignment_criterion)
 
+        model_changes = get_model_changes(assignment)
+
         on_assignment_modified.send(
             self,
             event_name=on_assignment_modified.name,
             user=current_user,
             course_id=course.id,
-            data=get_model_changes(assignment))
+            data=model_changes)
 
         db.session.commit()
 
@@ -184,6 +196,14 @@ class AssignmentIdAPI(Resource):
                 Assignment.__name__, assignment.id)
 
             db.session.commit()
+
+        # update assignment and course grades if needed
+        if model_changes and (model_changes.get('answer_grade_weight') or
+                 model_changes.get('comparison_grade_weight') or
+                 model_changes.get('self_evaluation_grade_weight') or
+                 model_changes.get('enable_self_evaluation')):
+            assignment.calculate_grades()
+            course.calculate_grades()
 
         return marshal(assignment, dataformat.get_assignment())
 
@@ -199,6 +219,9 @@ class AssignmentIdAPI(Resource):
         if assignment.file:
             assignment.file.active = False
         db.session.commit()
+
+        # update course grades
+        course.calculate_grades()
 
         on_assignment_delete.send(
             self,
@@ -286,6 +309,10 @@ class AssignmentRootAPI(Resource):
         new_assignment.number_of_comparisons = params.get('number_of_comparisons')
         new_assignment.enable_self_evaluation = params.get('enable_self_evaluation')
 
+        new_assignment.answer_grade_weight = params.get('answer_grade_weight')
+        new_assignment.comparison_grade_weight = params.get('comparison_grade_weight')
+        new_assignment.self_evaluation_grade_weight = params.get('self_evaluation_grade_weight')
+
         pairing_algorithm = params.get("pairing_algorithm", PairingAlgorithm.random)
         check_valid_pairing_algorithm(pairing_algorithm)
         new_assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
@@ -316,6 +343,9 @@ class AssignmentRootAPI(Resource):
 
             db.session.add(new_assignment)
             db.session.commit()
+
+        # update course grades
+        course.calculate_grades()
 
         on_assignment_create.send(
             self,

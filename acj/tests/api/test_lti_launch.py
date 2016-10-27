@@ -460,7 +460,7 @@ class LTILaunchAPITests(ACJAPITestCase):
         self.assert200(rv)
 
 
-    @mock.patch('acj.models.lti.lti_membership.LTIMembership._send_membership_request')
+    @mock.patch('acj.models.lti_models.lti_membership.LTIMembership._send_membership_request')
     def test_lti_course_link_with_membership(self, mocked_send_membership_request):
         instructor = self.data.get_authorized_instructor()
         course = self.data.get_course()
@@ -593,7 +593,7 @@ class LTILaunchAPITests(ACJAPITestCase):
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1", "compair_student_2",
                     "compair_student_3", "compair_instructor_2"])
 
-    @mock.patch('acj.models.lti.lti_membership.LTIMembership._send_membership_request')
+    @mock.patch('acj.models.lti_models.lti_membership.LTIMembership._send_membership_request')
     def test_lti_course_link_with_membership(self, mocked_send_membership_request):
         course = self.data.get_course()
         instructor = self.data.get_authorized_instructor()
