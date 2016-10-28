@@ -9,7 +9,7 @@ elif [ "${DOCKER}" = "true" ]; then
     curl -sSfL http://localhost:8080 | grep '<title>ComPAIR</title>' > /dev/null && curl -sSf http://localhost:8080/api/healthz > /dev/null
     # test image in prod mode
     docker-compose stop app
-    docker run -d --name compair_app_prod --network acjversus_default -e DATABASE_URI=mysql+pymysql://compair:compair@db:3306/compair ubcctlt/compair-app
+    docker run -d --name compair_app_prod --network compair_default -e DATABASE_URI=mysql+pymysql://compair:compair@db:3306/compair ubcctlt/compair-app
     curl -sSfL http://localhost:8080 | grep '<title>ComPAIR</title>' > /dev/null && curl -sSf http://localhost:8080/api/healthz > /dev/null
 else
     python -m unittest discover -s acj/tests

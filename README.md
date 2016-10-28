@@ -1,4 +1,4 @@
-acj-versus
+ComPAIR
 ==========
 
 [![Join the chat at https://gitter.im/ubc/acj-versus](https://badges.gitter.im/ubc/acj-versus.svg)](https://gitter.im/ubc/acj-versus?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -25,7 +25,7 @@ Developer Installation - VM
 
 ### Vagrant up the VM
 
-	git clone git@github.com:ubc/acj-versus.git compair
+	git clone git@github.com:ubc/compair.git compair
 	cd acj && vagrant up
 
 ### Start Up the ACJ server
@@ -64,7 +64,7 @@ Developer Installation - Docker
 
 ### Clone Repo and Start Server
 
-    git clone git@github.com:ubc/acj-versus.git compair
+    git clone git@github.com:ubc/compair.git compair
     docker-compose up -d
 
 After initialization is finished, run the following command if it is the first time:

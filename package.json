@@ -4,7 +4,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ubc/acj-versus.git"
+    "url": "https://github.com/ubc/compair.git"
   },
   "dependencies": {
     "bower": "latest",
