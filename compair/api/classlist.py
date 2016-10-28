@@ -15,11 +15,11 @@ from werkzeug.utils import secure_filename
 from flask_restful.reqparse import RequestParser
 
 from . import dataformat
-from acj.core import db, event
-from acj.authorization import allow, require, USER_IDENTITY
-from acj.models import UserCourse, Course, User, SystemRole, CourseRole, \
+from compair.core import db, event
+from compair.authorization import allow, require, USER_IDENTITY
+from compair.models import UserCourse, Course, User, SystemRole, CourseRole, \
     ThirdPartyType, ThirdPartyUser
-from acj.tasks.user_password import set_passwords
+from compair.tasks.user_password import set_passwords
 from .util import new_restful_api
 from .file import random_generator, allowed_file
 

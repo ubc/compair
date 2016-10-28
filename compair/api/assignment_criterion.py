@@ -5,9 +5,9 @@ from flask_restful import Resource, marshal, reqparse, marshal_with
 from sqlalchemy import or_, and_
 
 from . import dataformat
-from acj.core import event, db
-from acj.authorization import require, allow
-from acj.models import Course, Criterion, Assignment, AssignmentCriterion, Comparison
+from compair.core import event, db
+from compair.authorization import require, allow
+from compair.models import Course, Criterion, Assignment, AssignmentCriterion, Comparison
 from .util import new_restful_api
 
 assignment_criterion_api = Blueprint('assignment_criterion_api', __name__)

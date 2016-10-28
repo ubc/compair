@@ -1,10 +1,10 @@
 import json
 
 from data.fixtures.test_data import AssignmentCommentsTestData
-from acj.tests.test_acj import ACJAPITestCase
+from compair.tests.test_compair import ComPAIRAPITestCase
 
 
-class AssignmentCommentsAPITests(ACJAPITestCase):
+class AssignmentCommentsAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(AssignmentCommentsAPITests, self).setUp()
         self.data = AssignmentCommentsTestData()

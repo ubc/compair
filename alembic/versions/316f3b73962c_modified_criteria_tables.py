@@ -16,7 +16,7 @@ import sqlalchemy as sa
 from sqlalchemy import UniqueConstraint, exc
 from sqlalchemy.sql import text
 
-from acj.models import convention
+from compair.models import convention
 
 
 def upgrade():

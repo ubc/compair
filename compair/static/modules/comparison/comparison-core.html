@@ -18,8 +18,8 @@
         <h2><i class="fa fa-comments"></i> {{assignment.name}}</h2>
         <div mathjax hljs ng-bind-html="assignment.description"></div>
         <!-- Attachment -->
-        <acj-pdf-inline label="See assignment details:" pdf="assignment.file">
-        </acj-pdf-inline>
+        <compair-pdf-inline label="See assignment details:" pdf="assignment.file">
+        </compair-pdf-inline>
     </div>
 
     <div class="row answer-pair">
@@ -49,9 +49,9 @@
                 <h3 class="text-center">Answer {{firstAnsNum}}</h3>
                 <div mathjax hljs ng-bind-html="answer1.content"></div>
                 <!-- Attachment -->
-                <acj-pdf-inline label="See detail:"
+                <compair-pdf-inline label="See detail:"
                     pdf="answer1.file">
-                </acj-pdf-inline>
+                </compair-pdf-inline>
                 <!-- Flagging -->
                 <a href="" class="btn btn-default btn-xs pull-right"
                     title="Flag as incomplete or inappropriate."
@@ -69,9 +69,9 @@
                 <h3 class="text-center">Answer {{secondAnsNum}}</h3>
                 <div mathjax hljs ng-bind-html="answer2.content"></div>
                 <!-- Attachment -->
-                <acj-pdf-inline label="See detail:"
+                <compair-pdf-inline label="See detail:"
                     pdf="answer2.file">
-                </acj-pdf-inline>
+                </compair-pdf-inline>
                 <!-- Flagging -->
                 <a href="" class="btn btn-default btn-xs pull-right"
                     title="Flag as incomplete or inappropriate."

@@ -21,11 +21,11 @@ import os
 import random
 import math
 
-from acj.algorithms import ComparisonPair, ScoredObject
-from acj.algorithms.score import calculate_score_1vs1
-from acj.algorithms.pair import generate_pair
-from acj.models.pairing_algorithm import PairingAlgorithm
-from acj.models.scoring_algorithm import ScoringAlgorithm
+from compair.algorithms import ComparisonPair, ScoredObject
+from compair.algorithms.score import calculate_score_1vs1
+from compair.algorithms.pair import generate_pair
+from compair.models.pairing_algorithm import PairingAlgorithm
+from compair.models.scoring_algorithm import ScoringAlgorithm
 
 CURRENT_FOLDER = os.getcwd() + '/scripts'
 

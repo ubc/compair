@@ -11,7 +11,7 @@ from sqlalchemy_enum34 import EnumType
 
 from . import *
 
-from acj.core import db
+from compair.core import db
 
 class CourseGrade(DefaultTableMixin, WriteTrackingMixin):
     __tablename__ = 'course_grade'

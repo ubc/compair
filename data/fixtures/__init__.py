@@ -4,7 +4,7 @@
 from datetime import datetime, timedelta
 import random
 
-from acj.models import SystemRole, CourseRole, Criterion
+from compair.models import SystemRole, CourseRole, Criterion
 from data.factories import UserFactory, CriterionFactory, \
     CourseFactory, UserCourseFactory, AssignmentFactory, AnswerFactory, \
     AssignmentCriterionFactory

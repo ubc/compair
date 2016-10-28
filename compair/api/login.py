@@ -1,10 +1,10 @@
 import os
 from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask, render_template
 from flask_login import current_user, login_required, login_user, logout_user
-from acj import cas
-from acj.core import db, event
-from acj.authorization import get_logged_in_user_permissions
-from acj.models import User, LTIUser, LTIResourceLink, LTIUserResourceLink, UserCourse, LTIContext, \
+from compair import cas
+from compair.core import db, event
+from compair.authorization import get_logged_in_user_permissions
+from compair.models import User, LTIUser, LTIResourceLink, LTIUserResourceLink, UserCourse, LTIContext, \
     ThirdPartyUser, ThirdPartyType
 
 login_api = Blueprint("login_api", __name__, url_prefix='/api')
@@ -32,7 +32,7 @@ def login():
 
         if sess.get('LTI') and sess.get('oauth_create_user_link'):
             lti_user = LTIUser.query.get_or_404(sess['lti_user'])
-            lti_user.acj_user_id = user.id
+            lti_user.compair_user_id = user.id
             sess.pop('oauth_create_user_link')
 
         if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
@@ -114,7 +114,7 @@ def auth_cas():
 
             if sess.get('LTI') and sess.get('oauth_create_user_link'):
                 lti_user = LTIUser.query.get_or_404(sess['lti_user'])
-                lti_user.acj_user_id = thirdpartyuser.user_id
+                lti_user.compair_user_id = thirdpartyuser.user_id
                 sess.pop('oauth_create_user_link')
 
             if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):

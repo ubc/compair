@@ -9,9 +9,9 @@ from itertools import groupby
 from operator import attrgetter
 
 from . import dataformat
-from acj.core import db, event
-from acj.authorization import require, allow, is_user_access_restricted
-from acj.models import Answer, Assignment, Course, User, Comparison, Criterion, \
+from compair.core import db, event
+from compair.authorization import require, allow, is_user_access_restricted
+from compair.models import Answer, Assignment, Course, User, Comparison, Criterion, \
     Score, UserCourse, SystemRole, CourseRole, AnswerComment, AnswerCommentType, File
 
 from .util import new_restful_api, get_model_changes, pagination_parser

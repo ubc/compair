@@ -4,8 +4,8 @@
 
 from flask_script import Manager
 
-from acj.core import db
-from acj.models import User
+from compair.core import db
+from compair.models import User
 
 manager = Manager(usage="Manage Users")
 

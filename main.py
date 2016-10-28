@@ -1,5 +1,5 @@
 import os
-from acj import create_app
+from compair import create_app
 
 app = create_app()
 

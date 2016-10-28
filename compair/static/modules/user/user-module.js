@@ -6,13 +6,13 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.user', [
+var module = angular.module('ubc.ctlt.compair.user', [
     'ngResource',
     'ngRoute',
     'ng-breadcrumbs',
-    'ubc.ctlt.acj.session',
-    'ubc.ctlt.acj.authorization',
-    'ubc.ctlt.acj.toaster'
+    'ubc.ctlt.compair.session',
+    'ubc.ctlt.compair.authorization',
+    'ubc.ctlt.compair.toaster'
 ]);
 
 /***** Providers *****/
@@ -92,7 +92,7 @@ module.controller("UserController",
         };
 
         self['new'] = function() {
-            $scope.user.uses_acj_login = true;
+            $scope.user.uses_compair_login = true;
             $scope.user.system_role = SystemRole.student;
         };
 

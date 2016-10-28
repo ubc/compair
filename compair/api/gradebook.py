@@ -9,11 +9,11 @@ from flask_restful import Resource
 from sqlalchemy import func, and_
 from sqlalchemy.orm import undefer, joinedload
 
-from acj.authorization import require
-from acj.models import Course, Assignment, CourseRole, User, UserCourse, Comparison, \
+from compair.authorization import require
+from compair.models import Course, Assignment, CourseRole, User, UserCourse, Comparison, \
     AnswerComment, Answer, Score, AnswerCommentType, PairingAlgorithm
 from .util import new_restful_api
-from acj.core import event
+from compair.core import event
 
 
 

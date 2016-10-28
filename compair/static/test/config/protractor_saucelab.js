@@ -13,7 +13,7 @@ exports.config = {
         format: 'pretty'
     },
     capabilities: {
-        'name': 'acj suite tests',
+        'name': 'ComPAIR suite tests',
         'browserName': process.env.TEST_BROWSER_NAME,
         'version': process.env.TEST_BROWSER_VERSION,
         'tunnel-identifier': process.env.TRAVIS_JOB_NUMBER,

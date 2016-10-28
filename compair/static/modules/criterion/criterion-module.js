@@ -4,11 +4,11 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.criterion', [
+var module = angular.module('ubc.ctlt.compair.criterion', [
     'ngResource',
-    'ubc.ctlt.acj.common.form',
-    'ubc.ctlt.acj.common.mathjax',
-    'ubc.ctlt.acj.common.highlightjs',
+    'ubc.ctlt.compair.common.form',
+    'ubc.ctlt.compair.common.mathjax',
+    'ubc.ctlt.compair.common.highlightjs',
 ]);
 
 module.factory('AssignmentCriterionResource', ['$resource', function($resource) {

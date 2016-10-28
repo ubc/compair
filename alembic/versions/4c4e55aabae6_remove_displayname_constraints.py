@@ -13,7 +13,7 @@ down_revision = 'ac2bd4b2c95'
 from alembic import op
 import sqlalchemy as sa
 
-from acj.models import convention
+from compair.models import convention
 import logging
 from sqlalchemy import UniqueConstraint, exc
 

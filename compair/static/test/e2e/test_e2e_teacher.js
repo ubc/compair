@@ -1,4 +1,4 @@
-describe('ACJ testsuite - Teacher', function() {
+describe('ComPAIR testsuite - Teacher', function() {
     var rootURL = "/app/#";
     var reset = false;
 

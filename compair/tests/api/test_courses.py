@@ -1,13 +1,13 @@
 import datetime
 import json
-from acj import db
+from compair import db
 
 from data.fixtures.test_data import BasicTestData, ComparisonTestData
-from acj.tests.test_acj import ACJAPITestCase
-from acj.models import Course, UserCourse
+from compair.tests.test_compair import ComPAIRAPITestCase
+from compair.models import Course, UserCourse
 
 
-class CoursesAPITests(ACJAPITestCase):
+class CoursesAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(CoursesAPITests, self).setUp()
         self.data = BasicTestData()
@@ -322,7 +322,7 @@ class CoursesAPITests(ACJAPITestCase):
                 .one_or_none()
             self.assertIsNotNone(user_course)
 
-class CoursesDuplicateComplexAPITests(ACJAPITestCase):
+class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(CoursesDuplicateComplexAPITests, self).setUp()
         self.data = ComparisonTestData()

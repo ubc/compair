@@ -3,14 +3,14 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.gradebook',
+var module = angular.module('ubc.ctlt.compair.gradebook',
     [
         'ngResource',
         'ngRoute',
         'localytics.directives',
-        'ubc.ctlt.acj.course',
-        'ubc.ctlt.acj.group',
-        'ubc.ctlt.acj.toaster'
+        'ubc.ctlt.compair.course',
+        'ubc.ctlt.compair.group',
+        'ubc.ctlt.compair.toaster'
     ]
 );
 

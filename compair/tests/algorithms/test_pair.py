@@ -1,7 +1,7 @@
 import unittest
 
-from acj.algorithms import ComparisonPair, ScoredObject
-from acj.algorithms.pair import generate_pair
+from compair.algorithms import ComparisonPair, ScoredObject
+from compair.algorithms.pair import generate_pair
 
 class TestPair(unittest.TestCase):
 

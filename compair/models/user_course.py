@@ -8,7 +8,7 @@ from sqlalchemy_enum34 import EnumType
 
 from . import *
 
-from acj.core import db
+from compair.core import db
 
 class UserCourse(DefaultTableMixin, WriteTrackingMixin):
     __tablename__ = 'user_course'

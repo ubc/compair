@@ -11,7 +11,7 @@ from sqlalchemy_enum34 import EnumType
 
 from . import *
 
-from acj.core import db
+from compair.core import db
 
 # Flask-Login requires the user class to have some methods, the easiest way
 # to get those methods is to inherit from the UserMixin class.

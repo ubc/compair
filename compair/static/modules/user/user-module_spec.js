@@ -41,7 +41,7 @@ describe('user-module', function () {
         username: "root",
         system_role: "System Administrator"
     };
-    beforeEach(module('ubc.ctlt.acj.user'));
+    beforeEach(module('ubc.ctlt.compair.user'));
     beforeEach(inject(function ($injector) {
         $httpBackend = $injector.get('$httpBackend');
         sessionRequestHandler = $httpBackend.when('GET', '/api/session').respond(mockSession);
@@ -88,7 +88,7 @@ describe('user-module', function () {
 
                 it('should be correctly initialized', function () {
                     expect($rootScope.user).toEqual({
-                        'uses_acj_login': true,
+                        'uses_compair_login': true,
                         'system_role': 'Student'
                     });
                 });

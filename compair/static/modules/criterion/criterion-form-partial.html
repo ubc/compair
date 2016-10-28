@@ -6,11 +6,11 @@
         <i class="fa fa-warning"></i>
         This criterion has been used in comparisons by students in a prior assignment. Text updates here will also be reflected in prior assignments.
     </p>
-    <acj-field-with-feedback form-control="criterionForm.criterionName">
+    <compair-field-with-feedback form-control="criterionForm.criterionName">
         <label class="required-star" for="criterionName">Comparison Question</label>
         <input type="text" maxlength="255" placeholder="e.g. Which answer is better?"
                ng-model="criterion.name" id="criterionName" name="criterionName" class="form-control" required/>
-    </acj-field-with-feedback>
+    </compair-field-with-feedback>
     <div class="form-group">
         <label for="criterionDescription">Instructions For Comparing Answers</label>
         <textarea ckeditor="editorOptions" rows="4"

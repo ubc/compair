@@ -6,7 +6,7 @@
 
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.toaster',
+var module = angular.module('ubc.ctlt.compair.toaster',
     [
         'toaster'
     ]

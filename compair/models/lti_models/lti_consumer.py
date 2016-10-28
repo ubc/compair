@@ -4,7 +4,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from . import *
 
-from acj.core import db
+from compair.core import db
 
 class LTIConsumer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     __tablename__ = 'lti_consumer'

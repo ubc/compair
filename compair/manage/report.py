@@ -7,7 +7,7 @@ from flask_script import Manager
 from sqlalchemy import and_
 from sqlalchemy.orm import aliased
 
-from acj.models import Score, Answer, Criterion, Comparison, \
+from compair.models import Score, Answer, Criterion, Comparison, \
     Course, User, UserCourse
 
 manager = Manager(usage="Generate Reports")

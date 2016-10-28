@@ -15,7 +15,7 @@ import sqlalchemy as sa
 from datetime import datetime
 from sqlalchemy_enum34 import EnumType
 from sqlalchemy import exc
-from acj.models import convention, SystemRole, CourseRole, AnswerCommentType
+from compair.models import convention, SystemRole, CourseRole, AnswerCommentType
 
 def upgrade():
     def translate_system_role(usertypesforsystem_id):

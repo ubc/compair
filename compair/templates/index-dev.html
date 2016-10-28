@@ -62,9 +62,9 @@
 
         <!-- Non-Bower Managed Includes -->
 
-        <!-- ACJ Stylesheet -->
+        <!-- ComPAIR Stylesheet -->
         <!-- build:prod_compile_minify_css -->
-        <link rel="stylesheet/less" type="text/css" href="{{ url_for('static', filename='less/acj.less') }}" />
+        <link rel="stylesheet/less" type="text/css" href="{{ url_for('static', filename='less/compair.less') }}" />
         <script src="//cdnjs.cloudflare.com/ajax/libs/less.js/2.5.1/less.min.js">
         </script>
         <!-- endbuild -->
@@ -81,7 +81,7 @@
 
         <!-- build:prod_minify_js -->
         <!-- AngularJS Modules/Controllers/Services/etc -->
-        <script src="{{ url_for('static', filename='acj-config.js') }}" type="text/javascript"></script>
+        <script src="{{ url_for('static', filename='compair-config.js') }}" type="text/javascript"></script>
         <!-- - Shared Modules -->
         <script src="{{ url_for('static', filename='modules/common/common-module.js') }}"></script>
         <script src="{{ url_for('static', filename='modules/common/form-directive.js') }}"></script>
@@ -121,7 +121,7 @@
 
         <script type="text/javascript">
             (function() {
-                angular.module('ubc.ctlt.acj.login')
+                angular.module('ubc.ctlt.compair.login')
                 .run( ['AuthTypesEnabled', function(AuthTypesEnabled) {
                     AuthTypesEnabled.app = {{ 'true' if app_login_enabled else 'false' }};
                     AuthTypesEnabled.cas = {{ 'true' if cas_login_enabled else 'false' }};

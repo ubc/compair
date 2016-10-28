@@ -5,13 +5,13 @@ import datetime
 
 from data.fixtures.test_data import ComparisonTestData, LTITestData
 from data.factories import AssignmentCriterionFactory
-from acj.models import Answer, Comparison, CourseGrade, AssignmentGrade
-from acj.tests.test_acj import ACJAPITestCase
-from acj.core import db
+from compair.models import Answer, Comparison, CourseGrade, AssignmentGrade
+from compair.tests.test_compair import ComPAIRAPITestCase
+from compair.core import db
 
 import mock
 
-class ComparisonAPITests(ACJAPITestCase):
+class ComparisonAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(ComparisonAPITests, self).setUp()
         self.data = ComparisonTestData()
@@ -327,8 +327,8 @@ class ComparisonAPITests(ACJAPITestCase):
             self.assert200(rv)
 
 
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
     def test_submit_comparison_basic(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         users = [
             (self.data.get_authorized_student(), False),

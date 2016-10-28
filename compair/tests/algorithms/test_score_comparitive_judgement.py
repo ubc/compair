@@ -1,7 +1,7 @@
 import unittest
 
-from acj.algorithms.score.comparative_judgement.score_algorithm import ComparativeJudgementScoreAlgorithm
-from acj.algorithms import ComparisonPair, ScoredObject, InvalidWinningKeyException
+from compair.algorithms.score.comparative_judgement.score_algorithm import ComparativeJudgementScoreAlgorithm
+from compair.algorithms import ComparisonPair, ScoredObject, InvalidWinningKeyException
 
 class TestScoreComparitiveJudgement(unittest.TestCase):
     score_algorithm = ComparativeJudgementScoreAlgorithm()

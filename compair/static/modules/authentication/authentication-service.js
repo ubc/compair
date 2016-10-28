@@ -2,7 +2,7 @@
 
 // the module needs a unique name that prevents conflicts with 3rd party modules
 var module = angular.module(
-    'ubc.ctlt.acj.authentication',
+    'ubc.ctlt.compair.authentication',
     [
         'ngResource',
         'http-auth-interceptor'

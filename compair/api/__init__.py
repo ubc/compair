@@ -124,8 +124,8 @@ def register_api_blueprints(app):
         return render_template(
             'index.html',
             bower_js_libs=prefix + assets['bowerJsLibs.js'],
-            acj_js=prefix + assets['acj.js'],
-            acj_css=prefix + assets['acj.css'],
+            compair_js=prefix + assets['compair.js'],
+            compair_css=prefix + assets['compair.css'],
             ga_tracking_id=app.config['GA_TRACKING_ID'],
             app_login_enabled=app.config['APP_LOGIN_ENABLED'],
             cas_login_enabled=app.config['CAS_LOGIN_ENABLED'],

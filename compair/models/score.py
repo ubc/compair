@@ -5,11 +5,11 @@ from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_enum34 import EnumType
 
-from acj.algorithms import ScoredObject
+from compair.algorithms import ScoredObject
 
 from . import *
 
-from acj.core import db
+from compair.core import db
 
 class Score(DefaultTableMixin, WriteTrackingMixin):
     __tablename__ = 'score'

@@ -6,9 +6,9 @@ from flask_restful.reqparse import RequestParser
 from sqlalchemy import and_, or_
 
 from . import dataformat
-from acj.core import db, event
-from acj.authorization import require, allow
-from acj.models import Assignment, Course, AssignmentComment
+from compair.core import db, event
+from compair.authorization import require, allow
+from compair.models import Assignment, Course, AssignmentComment
 from .util import new_restful_api, get_model_changes, pagination_parser
 
 assignment_comment_api = Blueprint('assignment_comment_api', __name__)

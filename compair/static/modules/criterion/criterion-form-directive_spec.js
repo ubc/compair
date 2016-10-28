@@ -1,7 +1,7 @@
 describe('criterion-module', function () {
     var $httpBackend;
 
-    beforeEach(module('ubc.ctlt.acj.criterion'));
+    beforeEach(module('ubc.ctlt.compair.criterion'));
     beforeEach(module('modules/criterion/criterion-form-partial.html',
         'modules/common/form-field-with-feedback-template.html'));
     beforeEach(function () {

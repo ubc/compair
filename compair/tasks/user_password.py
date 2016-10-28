@@ -1,5 +1,5 @@
-from acj.core import celery, db
-from acj.models import User
+from compair.core import celery, db
+from compair.models import User
 
 @celery.task(ignore_result=True)
 def set_passwords(user_passwords):

@@ -12,8 +12,8 @@ from sqlalchemy_enum34 import EnumType
 from flask_login import UserMixin
 from . import *
 
-from acj.core import db
-from acj import security
+from compair.core import db
+from compair import security
 
 def hash_password(password, is_admin=False):
     category = None
@@ -78,8 +78,8 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
         backref="user", lazy='dynamic')
     # lti authentification
     lti_user_links = db.relationship("LTIUser",
-        foreign_keys='LTIUser.acj_user_id',
-        backref="acj_user", lazy='dynamic')
+        foreign_keys='LTIUser.compair_user_id',
+        backref="compair_user", lazy='dynamic')
 
     # hyprid and other functions
 
@@ -123,7 +123,7 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
         return m.hexdigest()
 
     @hybrid_property
-    def uses_acj_login(self):
+    def uses_compair_login(self):
         # third party auth users may have their username not set
         return self.username != None and current_app.config['APP_LOGIN_ENABLED']
 

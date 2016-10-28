@@ -2,14 +2,14 @@ import json
 import mock
 
 from data.fixtures.test_data import SimpleAssignmentTestData, ThirdPartyAuthTestData
-from acj.tests.test_acj import ACJAPITestCase
-from acj.models import User, SystemRole, CourseRole, UserCourse, \
+from compair.tests.test_compair import ComPAIRAPITestCase
+from compair.models import User, SystemRole, CourseRole, UserCourse, \
     LTIConsumer, LTIContext, LTIUser, LTIMembership,  \
     LTIResourceLink, LTIUserResourceLink
-from acj.core import db
+from compair.core import db
 from oauthlib.common import generate_token, generate_nonce, generate_timestamp
 
-class LoginAPITests(ACJAPITestCase):
+class LoginAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(LoginAPITests, self).setUp()
         self.data = SimpleAssignmentTestData()

@@ -2,14 +2,14 @@ import json
 import six
 import mock
 
-from acj import db
+from compair import db
 from data.fixtures.test_data import AnswerCommentsTestData, LTITestData
-from acj.tests.test_acj import ACJAPITestCase
-from acj.api.answer_comment import api, AnswerCommentListAPI, AnswerCommentAPI
-from acj.models import AnswerCommentType, AnswerComment, \
+from compair.tests.test_compair import ComPAIRAPITestCase
+from compair.api.answer_comment import api, AnswerCommentListAPI, AnswerCommentAPI
+from compair.models import AnswerCommentType, AnswerComment, \
     CourseGrade, AssignmentGrade
 
-class AnswerCommentListAPITests(ACJAPITestCase):
+class AnswerCommentListAPITests(ComPAIRAPITestCase):
     """ Tests for answer comment list API """
     resource = AnswerCommentListAPI
     api = api
@@ -199,8 +199,8 @@ class AnswerCommentListAPITests(ACJAPITestCase):
             self.assertEqual(4, len(rv.json))
             self.assertEqual(draft_comment.uuid, rv.json[0]['id'])
 
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
     def test_create_answer_comment(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         url = self.get_url(
             course_uuid=self.course.uuid, assignment_uuid=self.assignment.uuid,
@@ -309,7 +309,7 @@ class AnswerCommentListAPITests(ACJAPITestCase):
             mocked_update_assignment_grades_run.reset_mock()
 
 
-class AnswerCommentAPITests(ACJAPITestCase):
+class AnswerCommentAPITests(ComPAIRAPITestCase):
     """ Tests for answer comment API """
     resource = AnswerCommentAPI
     api = api
@@ -397,8 +397,8 @@ class AnswerCommentAPITests(ACJAPITestCase):
             self.assertTrue(rv.json['draft'])
 
 
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
     def test_edit_answer_comment(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         comment = self.data.get_answer_comments_by_assignment(self.assignment)[0]
         url = self.get_url(
@@ -565,8 +565,8 @@ class AnswerCommentAPITests(ACJAPITestCase):
             mocked_update_course_grades_run.reset_mock()
 
 
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
     def test_delete_answer_comment(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         comment = self.data.get_answer_comments_by_assignment(self.assignment)[0]
         url = self.get_url(

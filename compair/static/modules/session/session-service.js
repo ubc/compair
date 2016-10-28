@@ -1,9 +1,9 @@
 (function() {
 
-    var module = angular.module('ubc.ctlt.acj.session', [
+    var module = angular.module('ubc.ctlt.compair.session', [
         'ngResource',
         'ngCookies',
-        'ubc.ctlt.acj.user'
+        'ubc.ctlt.compair.user'
     ]);
 
     /**

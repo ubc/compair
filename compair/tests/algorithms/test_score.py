@@ -1,7 +1,7 @@
 import unittest
 
-from acj.algorithms import ComparisonPair, ScoredObject
-from acj.algorithms.score import calculate_score, calculate_score_1vs1
+from compair.algorithms import ComparisonPair, ScoredObject
+from compair.algorithms.score import calculate_score, calculate_score_1vs1
 
 class TestScore(unittest.TestCase):
 

@@ -1,7 +1,7 @@
 import uuid
 import base64
 
-from acj.core import db
+from compair.core import db
 from flask import abort
 
 class UUIDMixin(db.Model):

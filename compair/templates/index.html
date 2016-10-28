@@ -20,9 +20,9 @@
 
         <!-- Non-Bower Managed Includes -->
 
-        <!-- ACJ Stylesheet -->
+        <!-- ComPAIR Stylesheet -->
         <!-- build:prod_compile_minify_css -->
-        <link rel="stylesheet" href="{{ acj_css }}">
+        <link rel="stylesheet" href="{{ compair_css }}">
         <!-- endbuild -->
 
         <!-- MathJax, should figure out how to bower manage this -->
@@ -36,12 +36,12 @@
         </script>
 
         <!-- build:prod_minify_js -->
-        <script src="{{ acj_js }}"></script>
+        <script src="{{ compair_js }}"></script>
         <!-- endbuild -->
 
         <script type="text/javascript">
             (function() {
-                angular.module('ubc.ctlt.acj.login')
+                angular.module('ubc.ctlt.compair.login')
                 .run( ['AuthTypesEnabled', function(AuthTypesEnabled) {
                     AuthTypesEnabled.app = {{ 'true' if app_login_enabled else 'false' }};
                     AuthTypesEnabled.cas = {{ 'true' if cas_login_enabled else 'false' }};

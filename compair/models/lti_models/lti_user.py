@@ -5,7 +5,7 @@ from sqlalchemy_enum34 import EnumType
 
 from . import *
 
-from acj.core import db
+from compair.core import db
 
 class LTIUser(DefaultTableMixin, WriteTrackingMixin):
     __tablename__ = 'lti_user'
@@ -18,7 +18,7 @@ class LTIUser(DefaultTableMixin, WriteTrackingMixin):
     lis_person_name_family = db.Column(db.String(255), nullable=True)
     lis_person_name_full = db.Column(db.String(255), nullable=True)
     lis_person_contact_email_primary = db.Column(db.String(255), nullable=True)
-    acj_user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"),
+    compair_user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"),
         nullable=True)
     system_role = db.Column(EnumType(SystemRole, name="system_role"), nullable=False)
 
@@ -30,7 +30,7 @@ class LTIUser(DefaultTableMixin, WriteTrackingMixin):
 
     # hyprid and other functions
     def is_linked_to_user(self):
-        return self.acj_user_id != None
+        return self.compair_user_id != None
 
     @classmethod
     def get_by_lti_consumer_id_and_user_id(cls, lti_consumer_id, user_id):

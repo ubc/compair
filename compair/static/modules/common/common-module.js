@@ -1,6 +1,6 @@
 (function() {
 
-var module =angular.module('ubc.ctlt.acj.common', []);
+var module =angular.module('ubc.ctlt.compair.common', []);
 
 module.filter("emptyToEnd", function () {
     return function (array, key, reversed) {

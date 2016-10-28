@@ -9,11 +9,11 @@ from os.path import dirname
 from flask.testing import FlaskClient
 from six import wraps
 
-from acj import create_app
-from acj.manage.database import populate
-from acj.core import db
-from acj.models import User
-from acj.tests import test_app_settings
+from compair import create_app
+from compair.manage.database import populate
+from compair.core import db
+from compair.models import User
+from compair.tests import test_app_settings
 from lti import ToolConsumer
 from lti.utils import parse_qs
 
@@ -64,7 +64,7 @@ def json_recorder(filename, key=None):
     return _decorator
 
 
-class ACJTestCase(TestCase):
+class ComPAIRTestCase(TestCase):
     def create_app(self):
         app = create_app(settings_override=test_app_settings)
         app.test_client_class = RecordableClient
@@ -83,7 +83,7 @@ class ACJTestCase(TestCase):
         db.drop_all()
 
 
-class ACJAPITestCase(ACJTestCase):
+class ComPAIRAPITestCase(ComPAIRTestCase):
     api = None
     resource = None
 
@@ -134,7 +134,7 @@ class ACJAPITestCase(ACJTestCase):
         return self.api.url_for(self.resource, **values)
 
 
-class SessionTests(ACJAPITestCase):
+class SessionTests(ComPAIRAPITestCase):
     def test_loggedin_user_session(self):
         with self.login('root', 'password'):
             rv = self.client.get('/api/session')

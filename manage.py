@@ -2,12 +2,12 @@
 
 from flask_script import Manager, Server
 
-from acj.manage.database import manager as database_manager
-from acj.manage.report import manager as report_generator
-from acj.manage.grades import manager as grades_generator
-from acj.manage.user import manager as user_manager
-from acj.manage.utils import manager as util_manager
-from acj import create_app
+from compair.manage.database import manager as database_manager
+from compair.manage.report import manager as report_generator
+from compair.manage.grades import manager as grades_generator
+from compair.manage.user import manager as user_manager
+from compair.manage.utils import manager as util_manager
+from compair import create_app
 
 manager = Manager(create_app)
 # register sub-managers

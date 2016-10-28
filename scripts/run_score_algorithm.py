@@ -13,9 +13,9 @@
 import csv
 import os
 
-from acj.algorithms import ComparisonPair, ScoredObject
-from acj.algorithms.score import calculate_score
-from acj.models.score_algorithm import ScoringAlgorithm
+from compair.algorithms import ComparisonPair, ScoredObject
+from compair.algorithms.score import calculate_score
+from compair.models.score_algorithm import ScoringAlgorithm
 
 KEY1 = 0
 KEY2 = 1

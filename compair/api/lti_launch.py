@@ -6,17 +6,17 @@ from flask_restful.reqparse import RequestParser
 from sqlalchemy import and_, or_
 
 from . import dataformat
-from acj.core import event, db
-from acj.authorization import require, allow
+from compair.core import event, db
+from compair.authorization import require, allow
 from .login import authenticate
-from acj.models import User, Course, LTIConsumer, LTIContext, LTIMembership, \
+from compair.models import User, Course, LTIConsumer, LTIContext, LTIMembership, \
     LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce
-from acj.models.lti_models import MembershipNoValidContextsException, \
+from compair.models.lti_models import MembershipNoValidContextsException, \
     MembershipNoResultsException, MembershipInvalidRequestException
 from .util import new_restful_api, get_model_changes, pagination_parser
-from acj.tasks.lti_membership import update_lti_course_membership
+from compair.tasks.lti_membership import update_lti_course_membership
 
-from acj.api.classlist import display_name_generator
+from compair.api.classlist import display_name_generator
 from lti.contrib.flask import FlaskToolProvider
 from oauthlib.oauth1 import RequestValidator
 
@@ -38,7 +38,7 @@ class LTIAuthAPI(Resource):
             return abort(403)
 
         tool_provider = FlaskToolProvider.from_flask_request(request=request)
-        validator = ACJRequestValidator()
+        validator = ComPAIRRequestValidator()
         ok = tool_provider.is_valid_request(validator)
 
         if ok and tool_provider.user_id != None:
@@ -69,11 +69,11 @@ class LTIAuthAPI(Resource):
 
             # if user linked
             if lti_user.is_linked_to_user():
-                authenticate(lti_user.acj_user)
+                authenticate(lti_user.compair_user)
 
                 # create/update enrollment if context exists
                 if lti_context and lti_context.is_linked_to_course():
-                    lti_context.update_enrolment(lti_user.acj_user_id, lti_user_resource_link.course_role)
+                    lti_context.update_enrolment(lti_user.compair_user_id, lti_user_resource_link.course_role)
             else:
                 # need to create user link
                 sess['oauth_create_user_link'] = True
@@ -84,9 +84,9 @@ class LTIAuthAPI(Resource):
                 angular_route = "/"
             elif lti_context.is_linked_to_course():
                 # redirect to course page or assignment page if available
-                angular_route = "/course/"+lti_context.acj_course_uuid
+                angular_route = "/course/"+lti_context.compair_course_uuid
                 if lti_resource_link.is_linked_to_assignment():
-                    angular_route += "/assignment/"+lti_resource_link.acj_assignment_uuid
+                    angular_route += "/assignment/"+lti_resource_link.compair_assignment_uuid
             else:
                 # instructors can select course, students will recieve a warning message
                 setup_required = True
@@ -139,17 +139,17 @@ class LTIStatusAPI(Resource):
         status = {
             'valid' : True,
             'assignment': {
-                'id': lti_resource_link.acj_assignment_uuid if lti_resource_link.acj_assignment_id != None else None,
-                'exists': lti_resource_link.acj_assignment_id != None
+                'id': lti_resource_link.compair_assignment_uuid if lti_resource_link.compair_assignment_id != None else None,
+                'exists': lti_resource_link.compair_assignment_id != None
             },
             'course': {
-                'name': lti_context.context_title if lti_context and lti_context.acj_course_id else None,
-                'id': lti_context.acj_course_uuid if lti_context and lti_context.acj_course_id else None,
-                'exists': lti_context and lti_context.acj_course_id != None,
+                'name': lti_context.context_title if lti_context and lti_context.compair_course_id else None,
+                'id': lti_context.compair_course_uuid if lti_context and lti_context.compair_course_id else None,
+                'exists': lti_context and lti_context.compair_course_id != None,
                 'course_role': lti_user_resource_link.course_role.value if lti_user_resource_link else None
             },
             'user': {
-                'exists': lti_user.acj_user_id != None,
+                'exists': lti_user.compair_user_id != None,
                 'firstname': lti_user.lis_person_name_given,
                 'lastname': lti_user.lis_person_name_family,
                 'displayname': display_name_generator(lti_user.system_role.value),
@@ -179,7 +179,7 @@ class LTICourseLinkAPI(Resource):
             return {'error': "Your LTI session has no context." }, 404
 
         lti_context = LTIContext.query.get_or_404(sess.get('lti_context'))
-        lti_context.acj_course_id = course.id
+        lti_context.compair_course_id = course.id
         db.session.commit()
 
         # automatically fetch membership if enabled for context
@@ -255,7 +255,7 @@ class LTICourseMembershipStatusAPI(Resource):
             pending = LTIMembership.query \
                 .join(LTIUser) \
                 .filter(and_(
-                    LTIUser.acj_user_id == None,
+                    LTIUser.compair_user_id == None,
                     LTIMembership.lti_context_id.in_(lti_context_ids)
                 )) \
                 .count()
@@ -276,7 +276,7 @@ class LTICourseMembershipStatusAPI(Resource):
 api.add_resource(LTICourseMembershipStatusAPI, '/course/<course_uuid>/membership/status')
 
 
-class ACJRequestValidator(RequestValidator):
+class ComPAIRRequestValidator(RequestValidator):
     @property
     def enforce_ssl(self):
         return current_app.config.get('LTI_ENFORCE_SSL', True)

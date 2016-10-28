@@ -13,7 +13,7 @@ manager = Manager(usage="Utility Commands")
 @manager.command
 def generate_index():
     """
-    Generate acj/static/index.html for acceptance testing
+    Generate compair/static/index.html for acceptance testing
 
     :return: None
     """
@@ -25,7 +25,7 @@ def generate_index():
         lti_login_enabled=current_app.config['LTI_LOGIN_ENABLED']
     )
 
-    with open("acj/static/index.html", 'wt', encoding='utf-8') as f:
+    with open("compair/static/index.html", 'wt', encoding='utf-8') as f:
         f.write(index)
 
-    print("acj/static/index.html is generated.")
+    print("compair/static/index.html is generated.")

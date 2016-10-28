@@ -10,9 +10,9 @@ from flask_restful import Resource, reqparse
 
 from sqlalchemy import func
 
-from acj.authorization import require
-from acj.core import event
-from acj.models import CourseRole, Assignment, UserCourse, Course, Answer, \
+from compair.authorization import require
+from compair.core import event
+from compair.models import CourseRole, Assignment, UserCourse, Course, Answer, \
     AnswerComment, AssignmentCriterion, Comparison, AnswerCommentType
 from .util import new_restful_api
 

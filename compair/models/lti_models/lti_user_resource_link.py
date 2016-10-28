@@ -6,7 +6,7 @@ from sqlalchemy_enum34 import EnumType
 
 from . import *
 
-from acj.core import db
+from compair.core import db
 
 class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
     __tablename__ = 'lti_user_resource_link'
@@ -26,7 +26,7 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
     # lti_resource_link via LTIResourceLink Model
 
     # hyprid and other functions
-    acj_user_id = association_proxy('lti_user', 'acj_user_id')
+    compair_user_id = association_proxy('lti_user', 'compair_user_id')
 
     @classmethod
     def get_by_lti_resource_link_id_and_lti_user_id(cls, lti_resource_link_id, lti_user_id):

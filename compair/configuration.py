@@ -3,7 +3,7 @@ This module manages to load the application configuration from various places. (
 
 * Environment variables
 * config.py
-* Default Settings: acj/settings.py
+* Default Settings: compair/settings.py
 
 The configuration will be merged in above order and config variable is available for the final result.
 
@@ -27,7 +27,7 @@ from sqlalchemy.engine.url import URL
 
 
 config = Config('.')
-config.from_object('acj.settings')
+config.from_object('compair.settings')
 config.from_pyfile(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../config.py'), silent=True)
 
 if os.environ.get('OPENSHIFT_MYSQL_DB_HOST'):

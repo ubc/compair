@@ -1,7 +1,7 @@
 describe('avatar-directive', function () {
     var $compile, $rootScope;
 
-    beforeEach(module('ubc.ctlt.acj.common'));
+    beforeEach(module('ubc.ctlt.compair.common'));
 
     beforeEach(inject(function(_$compile_, _$rootScope_){
         $compile = _$compile_;
@@ -15,7 +15,7 @@ describe('avatar-directive', function () {
             $rootScope.displayName = 'Optimus Prime';
         });
         element = angular.element(
-            '<acj-avatar user-id="userId" avatar="avatar" display-name="displayName"></acj-avatar>'
+            '<compair-avatar user-id="userId" avatar="avatar" display-name="displayName"></compair-avatar>'
         );
         $compile(element)($rootScope);
         $rootScope.$digest();
@@ -35,7 +35,7 @@ describe('avatar-directive', function () {
             $rootScope.displayName = 'Optimus Prime';
         });
         element = angular.element(
-            '<acj-avatar user-id="userId" avatar="avatar" display-name="displayName" me="true"></acj-avatar>'
+            '<compair-avatar user-id="userId" avatar="avatar" display-name="displayName" me="true"></compair-avatar>'
         );
         $compile(element)($rootScope);
         $rootScope.$digest();
@@ -51,7 +51,7 @@ describe('avatar-directive', function () {
             $rootScope.avatar = 'avatar-string';
         });
         element = angular.element(
-            '<acj-avatar user-id="userId" avatar="avatar" me="true"></acj-avatar>'
+            '<compair-avatar user-id="userId" avatar="avatar" me="true"></compair-avatar>'
         );
         $compile(element)($rootScope);
         $rootScope.$digest();
@@ -68,7 +68,7 @@ describe('avatar-directive', function () {
             $rootScope.fullName = 'John Smith';
         });
         element = angular.element(
-            '<acj-avatar user-id="userId" avatar="avatar" display-name="displayName" full-name="fullName"></acj-avatar>'
+            '<compair-avatar user-id="userId" avatar="avatar" display-name="displayName" full-name="fullName"></compair-avatar>'
         );
         $compile(element)($rootScope);
         $rootScope.$digest();
@@ -84,7 +84,7 @@ describe('avatar-directive', function () {
             $rootScope.displayName = 'Optimus Prime';
         });
         element = angular.element(
-            '<acj-avatar user-id="userId" avatar="avatar" display-name="displayName" full-name="fullName"></acj-avatar>'
+            '<compair-avatar user-id="userId" avatar="avatar" display-name="displayName" full-name="fullName"></compair-avatar>'
         );
         $compile(element)($rootScope);
         $rootScope.$digest();

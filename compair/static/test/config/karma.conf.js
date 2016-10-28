@@ -12,7 +12,7 @@ module.exports = function (config) {
             'modules/**/*-module.js',
             'modules/**/*.js',
             'modules/**/*.html',
-            'acj-config.js',
+            'compair-config.js',
             'test/helpers/*.js'
         ]),
 

@@ -3,9 +3,9 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.authorization',
+var module = angular.module('ubc.ctlt.compair.authorization',
     [
-        'ubc.ctlt.acj.session'
+        'ubc.ctlt.compair.session'
     ]
 );
 

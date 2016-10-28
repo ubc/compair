@@ -7,8 +7,8 @@ from sqlalchemy_enum34 import EnumType
 from . import *
 from importlib import import_module
 
-from acj.core import db
-from acj.algorithms import ComparisonPair
+from compair.core import db
+from compair.algorithms import ComparisonPair
 
 
 class ComparisonExample(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
@@ -30,7 +30,7 @@ class ComparisonExample(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTracking
 
     # hyprid and other functions
     course_id = association_proxy('assignment', 'course_id', creator=lambda course_id:
-        import_module('acj.models.assignment').Assignment(course_id=course_id))
+        import_module('compair.models.assignment').Assignment(course_id=course_id))
     course_uuid = association_proxy('assignment', 'course_uuid')
 
     assignment_uuid = association_proxy('assignment', 'uuid')

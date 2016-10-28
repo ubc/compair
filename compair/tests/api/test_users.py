@@ -6,12 +6,12 @@ from werkzeug.exceptions import Unauthorized
 
 from data.fixtures import DefaultFixture, UserFactory
 from data.fixtures.test_data import BasicTestData, LTITestData, ThirdPartyAuthTestData
-from acj.tests.test_acj import ACJAPITestCase
-from acj.models import User, SystemRole, CourseRole, LTIContext, ThirdPartyUser, ThirdPartyType
-from acj.core import db
+from compair.tests.test_compair import ComPAIRAPITestCase
+from compair.models import User, SystemRole, CourseRole, LTIContext, ThirdPartyUser, ThirdPartyType
+from compair.core import db
 
 
-class UsersAPITests(ACJAPITestCase):
+class UsersAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(UsersAPITests, self).setUp()
         self.data = BasicTestData()
@@ -197,7 +197,7 @@ class UsersAPITests(ACJAPITestCase):
 
             lti_context = LTIContext.query.all()[-1]
             course = self.data.create_course()
-            lti_context.acj_course_id = course.id
+            lti_context.compair_course_id = course.id
             db.session.commit()
 
             # test create instructor via lti session
@@ -465,7 +465,7 @@ class UsersAPITests(ACJAPITestCase):
             self.assert200(rv)
             self.assertEqual(instructor.system_role.value, rv.json['system_role'])
 
-        # test edit user with no acj login
+        # test edit user with no compair login
         auth_data = ThirdPartyAuthTestData()
         cas_user_auth = auth_data.create_cas_user_auth(SystemRole.student)
         user = cas_user_auth.user
@@ -676,7 +676,7 @@ class UsersAPITests(ACJAPITestCase):
             self.assertEqual(self.data.get_authorized_student().uuid, rv.json['id'])
 
 
-        # test update password of user with no acj login
+        # test update password of user with no compair login
         auth_data = ThirdPartyAuthTestData()
         cas_user_auth = auth_data.create_cas_user_auth(SystemRole.student)
         user = cas_user_auth.user

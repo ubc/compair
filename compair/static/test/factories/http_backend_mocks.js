@@ -162,7 +162,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "modified": "Sun, 11 Jan 2015 02:55:59 -0000",
                 "last_online": "Sun, 11 Jan 2015 02:55:59 -0000",
                 "system_role": null,
-                "uses_acj_login": true
+                "uses_compair_login": true
             };
 
             newUser = angular.merge({}, newUser, data);

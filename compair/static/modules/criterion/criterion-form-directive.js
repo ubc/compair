@@ -2,7 +2,7 @@
     'use strict';
 
     angular
-        .module('ubc.ctlt.acj.criterion')
+        .module('ubc.ctlt.compair.criterion')
 
         .directive('criterionForm', ['CriterionResource', function (CriterionResource) {
             return {

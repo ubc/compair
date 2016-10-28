@@ -3,11 +3,11 @@ import json
 import io
 
 from data.fixtures.test_data import BasicTestData
-from acj.tests.test_acj import ACJAPITestCase
-from acj.models import CourseRole, UserCourse
+from compair.tests.test_compair import ComPAIRAPITestCase
+from compair.models import CourseRole, UserCourse
 
 
-class ClassListAPITest(ACJAPITestCase):
+class ClassListAPITest(ComPAIRAPITestCase):
     def setUp(self):
         super(ClassListAPITest, self).setUp()
         self.data = BasicTestData()

@@ -74,7 +74,7 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
     celery.conf.update(app.config)
 
     if not skip_assets:
-        if not app.debug:
+        if not app.debug and not app.config.get('UNITTEST', False):
             assets = get_asset_names(app)
             app.config.update(assets)
 

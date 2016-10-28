@@ -1,10 +1,10 @@
 import json
 
 from data.fixtures.test_data import CriterionTestData
-from acj.tests.test_acj import ACJAPITestCase
+from compair.tests.test_compair import ComPAIRAPITestCase
 
 
-class CriterionAPITests(ACJAPITestCase):
+class CriterionAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(CriterionAPITests, self).setUp()
         self.data = CriterionTestData()

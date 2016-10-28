@@ -3,12 +3,12 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.report',
+var module = angular.module('ubc.ctlt.compair.report',
     [
         'ngResource',
-        'ubc.ctlt.acj.common.form',
-        'ubc.ctlt.acj.course',
-        'ubc.ctlt.acj.toaster'
+        'ubc.ctlt.compair.common.form',
+        'ubc.ctlt.compair.course',
+        'ubc.ctlt.compair.toaster'
     ]
 );
 

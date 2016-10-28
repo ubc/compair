@@ -10,7 +10,7 @@ from flask_restful import Api
 from flask_sqlalchemy import Model
 from sqlalchemy import inspect
 
-from acj.core import db
+from compair.core import db
 
 
 def pagination(model):

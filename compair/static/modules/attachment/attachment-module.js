@@ -1,11 +1,11 @@
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.attachment',
+var module = angular.module('ubc.ctlt.compair.attachment',
     [
         'angularFileUpload',
         'ngResource',
-        'ubc.ctlt.acj.course',
-        'ubc.ctlt.acj.toaster'
+        'ubc.ctlt.compair.course',
+        'ubc.ctlt.compair.toaster'
     ]
 );
 

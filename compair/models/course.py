@@ -9,7 +9,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from . import *
 
-from acj.core import db
+from compair.core import db
 
 class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     __tablename__ = 'course'
@@ -29,7 +29,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     grades = db.relationship("CourseGrade", backref="course", lazy='dynamic')
 
     # lti
-    lti_contexts = db.relationship("LTIContext", backref="acj_course", lazy='dynamic')
+    lti_contexts = db.relationship("LTIContext", backref="compair_course", lazy='dynamic')
 
     # hyprid and other functions
     @hybrid_property
@@ -65,7 +65,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
         cls.lti_context_count = column_property(
             select([func.count(LTIContext.id)]).
-            where(LTIContext.acj_course_id == cls.id),
+            where(LTIContext.compair_course_id == cls.id),
             deferred=True,
             group="counts"
         )

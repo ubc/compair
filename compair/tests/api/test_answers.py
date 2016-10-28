@@ -2,15 +2,15 @@ import json
 import datetime
 import mock
 
-from acj import db
+from compair import db
 from data.fixtures import AnswerFactory
 from data.fixtures.test_data import TestFixture, LTITestData
-from acj.models import Answer, CourseGrade, AssignmentGrade, \
+from compair.models import Answer, CourseGrade, AssignmentGrade, \
     CourseRole, SystemRole
-from acj.tests.test_acj import ACJAPITestCase
+from compair.tests.test_compair import ComPAIRAPITestCase
 
 
-class AnswersAPITests(ACJAPITestCase):
+class AnswersAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(AnswersAPITests, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=30, num_groups=2, with_draft_student=True)
@@ -239,8 +239,8 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(20, rv.json['per_page'])
             self.assertEqual(len(self.fixtures.answers), rv.json['total'])
 
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
     def test_create_answer(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         # test login required
         expected_answer = {'content': 'this is some answer content'}
@@ -542,8 +542,8 @@ class AnswersAPITests(ACJAPITestCase):
                 self.assertEqual(score.rank, rv.json['scores'][index]['rank'])
                 self.assertEqual(int(score.normalized_score), rv.json['scores'][index]['normalized_score'])
 
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
     def test_edit_answer(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         assignment_uuid = self.fixtures.assignments[0].uuid
         answer = self.fixtures.answers[0]
@@ -724,8 +724,8 @@ class AnswersAPITests(ACJAPITestCase):
             self.assertEqual(answer.uuid, rv.json['id'])
             self.assertEqual('This is an edit', rv.json['content'])
 
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
     def test_delete_answer(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         answer_uuid = self.fixtures.answers[0].uuid
 
@@ -959,7 +959,7 @@ class AnswersAPITests(ACJAPITestCase):
             self.assert200(rv)
             self.assertFalse(rv.json['top_answer'])
 
-class AnswerComparisonAPITests(ACJAPITestCase):
+class AnswerComparisonAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(AnswerComparisonAPITests, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=10, num_groups=2, with_comparisons=True)

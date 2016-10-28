@@ -3,15 +3,15 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.group',
+var module = angular.module('ubc.ctlt.compair.group',
     [
         'ngResource',
-        'ubc.ctlt.acj.attachment',
-        'ubc.ctlt.acj.common.form',
-        'ubc.ctlt.acj.common.interceptor',
-        'ubc.ctlt.acj.login',
-        'ubc.ctlt.acj.toaster',
-        'ubc.ctlt.acj.oauth',
+        'ubc.ctlt.compair.attachment',
+        'ubc.ctlt.compair.common.form',
+        'ubc.ctlt.compair.common.interceptor',
+        'ubc.ctlt.compair.login',
+        'ubc.ctlt.compair.toaster',
+        'ubc.ctlt.compair.oauth',
         'ui.bootstrap'
     ]
 );

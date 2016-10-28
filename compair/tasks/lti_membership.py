@@ -1,5 +1,5 @@
-from acj.core import celery, db
-from acj.models import Course, LTIMembership
+from compair.core import celery, db
+from compair.models import Course, LTIMembership
 from flask import current_app
 
 @celery.task(ignore_result=True)

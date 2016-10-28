@@ -6,12 +6,12 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.oauth', [
+var module = angular.module('ubc.ctlt.compair.oauth', [
     'ngResource',
     'ngRoute',
     'ng-breadcrumbs',
-    'ubc.ctlt.acj.session',
-    'ubc.ctlt.acj.authorization'
+    'ubc.ctlt.compair.session',
+    'ubc.ctlt.compair.authorization'
 ]);
 
 module.constant('ThirdPartyAuthType', {

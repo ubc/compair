@@ -52,12 +52,12 @@
                         <span ng-hide="showMyAnswer">Show</span>
                         Student's Answer
                     </a></p>
-                    <acj-student-answer class="answer" answer="(answers | filter:{user_id:comparison_set.user_id}:true)[0]" ng-show="showMyAnswer"></acj-student-answer>
+                    <compair-student-answer class="answer" answer="(answers | filter:{user_id:comparison_set.user_id}:true)[0]" ng-show="showMyAnswer"></compair-student-answer>
                 </div>
 
                 <!-- Comparison Header -->
                 <div class="each-header">
-                    <acj-avatar user-id="comparison_set.user_id" avatar="comparison_set.user.avatar" display-name="comparison_set.user.displayname"></acj-avatar>
+                    <compair-avatar user-id="comparison_set.user_id" avatar="comparison_set.user.avatar" display-name="comparison_set.user.displayname"></compair-avatar>
                     <strong>submitted</strong> on {{ comparison_set.created | amDateFormat: 'MMM D @ h:mm a'}}:
                 </div>
 
@@ -71,8 +71,8 @@
                 </a></p>
 
                 <div class="row" ng-show="showAnswers">
-                    <acj-answer-content answer="comparison_set.answer1" is-chosen="comparison.winner_id == comparison_set.answer1_id" name="Odd-Numbered Answer" criterion="comparison.criterion_id" show-score="true"></acj-answer-content>
-                    <acj-answer-content answer="comparison_set.answer2" is-chosen="comparison.winner_id == comparison_set.answer2_id" name="Even-Numbered Answer" criterion="comparison.criterion_id" show-score="true"></acj-answer-content>
+                    <compair-answer-content answer="comparison_set.answer1" is-chosen="comparison.winner_id == comparison_set.answer1_id" name="Odd-Numbered Answer" criterion="comparison.criterion_id" show-score="true"></compair-answer-content>
+                    <compair-answer-content answer="comparison_set.answer2" is-chosen="comparison.winner_id == comparison_set.answer2_id" name="Even-Numbered Answer" criterion="comparison.criterion_id" show-score="true"></compair-answer-content>
                 </div>
 
                 <div class="row">
@@ -107,7 +107,7 @@
             <div class="each-evaluation" ng-if="comparisons[0].self_evaluation.length > 0" ng-init="self_evaluations=comparisons[0].self_evaluation">
                 <div ng-repeat="self_evaluation in self_evaluations">
                     <div class="each-header">
-                        <acj-avatar user-id="self_evaluation.user_id" avatar="self_evaluation.user.avatar" display-name="self_evaluation.user.fullname"></acj-avatar>
+                        <compair-avatar user-id="self_evaluation.user_id" avatar="self_evaluation.user.avatar" display-name="self_evaluation.user.fullname"></compair-avatar>
                         <strong>self-evaluated</strong> on {{ self_evaluation.created | amDateFormat: 'MMM D @ h:mm a'}}:
                     </div>
 

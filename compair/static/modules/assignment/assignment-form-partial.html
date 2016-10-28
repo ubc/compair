@@ -13,13 +13,13 @@
             </a>
         </div>
 
-        <acj-field-with-feedback form-control="assignmentForm.assignmentName">
+        <compair-field-with-feedback form-control="assignmentForm.assignmentName">
             <label for="assignmentName" class="required-star">Short Name</label>
             <input class="form-control" id="assignmentName" type="text"
                 name="assignmentName" ng-model="assignment.name" placeholder="short question or title for the assignment"
                 required ng-maxlength="255" auto-focus />
             <span ng-if="assignmentForm.assignmentName.$error.maxlength" class="help-block has-error">Maximum length is 255 characters</span>
-        </acj-field-with-feedback>
+        </compair-field-with-feedback>
 
         <div>
             <label for="importFile">Attach PDF (maximum size 25MB)</label>
@@ -165,10 +165,10 @@
         </div>
 
         <div class="form-group">
-            <acj-field-with-feedback form-control="assignmentForm.number_of_comparisons">
+            <compair-field-with-feedback form-control="assignmentForm.number_of_comparisons">
                 <label class="required-star">Number of peer answer comparisons required from each student</label>
                 <input type="text" id="number_of_comparisons" name="number_of_comparisons" class="form-control" ng-model="assignment.number_of_comparisons" ng-pattern="/^[1-9]\d*$/" required>
-            </acj-field-with-feedback>
+            </compair-field-with-feedback>
         </div>
 
         <hr />
@@ -193,16 +193,16 @@
                     </div>
                     <div>
                         <div mathjax hljs ng-bind-html="comparison_example.answer1.content"></div>
-                        <acj-pdf-inline label="See answer details:"
+                        <compair-pdf-inline label="See answer details:"
                             pdf="comparison_example.answer1.file"
                             ng-click="revealAnswer(comparison_example.answer1_id)"
                             ng-show="!comparison_example.answer1.file_name">
-                        </acj-pdf-inline>
-                        <acj-pdf-inline label="See answer details:"
+                        </compair-pdf-inline>
+                        <compair-pdf-inline label="See answer details:"
                             pdf="{'name': comparison_example.answer1.file_name}"
                             ng-click="revealAnswer(comparison_example.answer1_id)"
                             ng-show="comparison_example.answer1.file_name">
-                        </acj-pdf-inline>
+                        </compair-pdf-inline>
                     </div>
                 </div>
                 <div class="col-md-1">
@@ -220,16 +220,16 @@
                     </div>
                     <div>
                         <div mathjax hljs ng-bind-html="comparison_example.answer2.content"></div>
-                        <acj-pdf-inline label="See answer details:"
+                        <compair-pdf-inline label="See answer details:"
                             pdf="comparison_example.answer2.file"
                             ng-click="revealAnswer(comparison_example.answer2_id)"
                             ng-show="!comparison_example.answer2.file_name">
-                        </acj-pdf-inline>
-                        <acj-pdf-inline label="See answer details:"
+                        </compair-pdf-inline>
+                        <compair-pdf-inline label="See answer details:"
                             pdf="{'name': comparison_example.answer2.file_name}"
                             ng-click="revealAnswer(comparison_example.answer2_id)"
                             ng-show="comparison_example.answer2.file_name">
-                        </acj-pdf-inline>
+                        </compair-pdf-inline>
                     </div>
                 </div>
             </div>

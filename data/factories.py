@@ -3,8 +3,8 @@ import datetime
 import factory
 import factory.fuzzy
 
-from acj.core import db
-from acj.models import Course, User, CourseRole, SystemRole, Criterion, \
+from compair.core import db
+from compair.models import Course, User, CourseRole, SystemRole, Criterion, \
     UserCourse, AssignmentCriterion, Assignment, Score, Answer, AssignmentComment, \
     AnswerComment, Comparison, AnswerCommentType, ComparisonExample, File, \
     LTIConsumer, LTIContext, LTIResourceLink, LTIMembership, LTIUser, LTIUserResourceLink, \

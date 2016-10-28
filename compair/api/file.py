@@ -10,10 +10,10 @@ from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 
-from acj.authorization import allow, require
+from compair.authorization import allow, require
 from . import dataformat
-from acj.core import db, event
-from acj.models import File, Assignment, Answer
+from compair.core import db, event
+from compair.models import File, Assignment, Answer
 from .util import new_restful_api
 
 file_api = Blueprint('file_api', __name__)

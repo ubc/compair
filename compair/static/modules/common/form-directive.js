@@ -3,12 +3,12 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.common.form', ['ckeditor']);
+var module = angular.module('ubc.ctlt.compair.common.form', ['ckeditor']);
 
 /***** Directives *****/
 // add the css and elements required to show bootstrap's validation feedback
 // requires the parameter form-control, which passes in the input being validated
-module.directive('acjFieldWithFeedback', function() {
+module.directive('compairFieldWithFeedback', function() {
     return {
         restrict: 'E',
         scope: {

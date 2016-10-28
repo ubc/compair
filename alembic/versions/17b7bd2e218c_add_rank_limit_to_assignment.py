@@ -13,7 +13,7 @@ down_revision = '3f27a2b13b82'
 from alembic import op
 import sqlalchemy as sa
 
-from acj.models import convention
+from compair.models import convention
 
 def upgrade():
     op.add_column('assignment', sa.Column('rank_display_limit', sa.Integer(), nullable=True))

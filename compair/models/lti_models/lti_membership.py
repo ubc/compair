@@ -8,7 +8,7 @@ from flask import current_app
 
 from . import *
 
-from acj.core import db
+from compair.core import db
 
 from oauthlib.oauth1 import SIGNATURE_TYPE_BODY, SIGNATURE_HMAC
 from requests_oauthlib import OAuth1
@@ -29,8 +29,8 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
     course_role = db.Column(EnumType(CourseRole, name="course_role"),
         nullable=False)
 
-    acj_course_id = association_proxy('lti_context', 'acj_course_id')
-    acj_user_id = association_proxy('lti_user', 'acj_user_id')
+    compair_course_id = association_proxy('lti_context', 'compair_course_id')
+    compair_user_id = association_proxy('lti_user', 'compair_user_id')
 
     # relationships
     # lti_conext via LTIContext Model
@@ -62,7 +62,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
 
     @classmethod
     def _update_membership_for_context(cls, lti_context, members):
-        from acj.models import LTIUser, SystemRole, CourseRole
+        from compair.models import LTIUser, SystemRole, CourseRole
 
         # remove old membership rows
         LTIMembership.query \
@@ -132,7 +132,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
 
     @classmethod
     def _update_enrollment_for_course(cls, course_id, lti_members):
-        from acj.models import UserCourse
+        from compair.models import UserCourse
 
         user_courses = UserCourse.query \
             .filter_by(course_id=course_id) \
@@ -140,16 +140,16 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         new_user_courses = []
 
         for lti_member in lti_members:
-            if lti_member.acj_user_id != None:
+            if lti_member.compair_user_id != None:
                 user_course = next(
-                    (user_course for user_course in user_courses if user_course.user_id == lti_member.acj_user_id),
+                    (user_course for user_course in user_courses if user_course.user_id == lti_member.compair_user_id),
                     None
                 )
                 # add new user_course if doesn't exist
                 if user_course == None:
                     user_course = UserCourse(
                         course_id=course_id,
-                        user_id=lti_member.acj_user_id,
+                        user_id=lti_member.compair_user_id,
                         course_role=lti_member.course_role
                     )
                     new_user_courses.append(user_course)
@@ -168,7 +168,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
                 continue
 
             lti_member = next(
-                (lti_member for lti_member in lti_members if user_course.user_id == lti_member.acj_user_id),
+                (lti_member for lti_member in lti_members if user_course.user_id == lti_member.compair_user_id),
                 None
             )
             if lti_member == None:

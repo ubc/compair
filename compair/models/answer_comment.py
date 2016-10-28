@@ -7,7 +7,7 @@ from sqlalchemy_enum34 import EnumType
 from . import *
 from importlib import import_module
 
-from acj.core import db
+from compair.core import db
 
 class AnswerComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     __tablename__ = 'answer_comment'
@@ -30,7 +30,7 @@ class AnswerComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixi
 
     # hyprid and other functionsx
     course_id = association_proxy('answer', 'course_id', creator=lambda course_id:
-        import_module('acj.models.answer').Answer(course_id=course_id))
+        import_module('compair.models.answer').Answer(course_id=course_id))
     course_uuid = association_proxy('answer', 'course_uuid')
 
     assignment_id = association_proxy('answer', 'assignment_id')

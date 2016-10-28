@@ -4,7 +4,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from . import *
 
-from acj.core import db
+from compair.core import db
 
 class ActivityLog(DefaultTableMixin):
     __tablename__ = 'activity_log'

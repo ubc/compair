@@ -5,7 +5,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from . import *
 
-from acj.core import db
+from compair.core import db
 
 class AssignmentCriterion(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     __tablename__ = 'assignment_criterion'
@@ -23,7 +23,7 @@ class AssignmentCriterion(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
 
     # hyprid and other functions
     course_id = association_proxy('assignment', 'course_id', creator=lambda course_id:
-        import_module('acj.models.assignment').Assignment(course_id=course_id))
+        import_module('compair.models.assignment').Assignment(course_id=course_id))
     course_uuid = association_proxy('assignment', 'course_uuid')
 
     assignment_uuid = association_proxy('assignment', 'uuid')

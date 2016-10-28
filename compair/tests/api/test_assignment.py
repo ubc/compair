@@ -5,13 +5,13 @@ import mock
 from data.fixtures.test_data import SimpleAssignmentTestData, ComparisonTestData, \
     TestFixture, LTITestData
 from data.factories import AssignmentFactory
-from acj.models import Assignment, Comparison, PairingAlgorithm, \
+from compair.models import Assignment, Comparison, PairingAlgorithm, \
     CourseGrade, AssignmentGrade, SystemRole, CourseRole, LTIOutcome
-from acj.tests.test_acj import ACJAPITestCase
-from acj.core import db
+from compair.tests.test_compair import ComPAIRAPITestCase
+from compair.core import db
 
 
-class AssignmentAPITests(ACJAPITestCase):
+class AssignmentAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(AssignmentAPITests, self).setUp()
         self.data = SimpleAssignmentTestData()
@@ -290,7 +290,7 @@ class AssignmentAPITests(ACJAPITestCase):
 
 
 
-class AssignmentEditComparedAPITests(ACJAPITestCase):
+class AssignmentEditComparedAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(AssignmentEditComparedAPITests, self).setUp()
         self.data = ComparisonTestData()
@@ -382,7 +382,7 @@ class AssignmentEditComparedAPITests(ACJAPITestCase):
             self.assertEqual(expected['pairing_algorithm'], rv.json['pairing_algorithm'])
             self.assertEqual(expected['rank_display_limit'], rv.json['rank_display_limit'])
 
-class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
+class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(AssignmentStatusComparisonsAPITests, self).setUp()
         self.data = ComparisonTestData()
@@ -588,7 +588,7 @@ class AssignmentStatusComparisonsAPITests(ACJAPITestCase):
             self.assertTrue(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 1)
 
-class AssignmentStatusAnswersAPITests(ACJAPITestCase):
+class AssignmentStatusAnswersAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(AssignmentStatusAnswersAPITests, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=30, num_assignments=2, num_groups=2)
@@ -775,15 +775,15 @@ class AssignmentStatusAnswersAPITests(ACJAPITestCase):
 
 
 
-class AssignmentCourseGradeUpdateAPITests(ACJAPITestCase):
+class AssignmentCourseGradeUpdateAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(AssignmentCourseGradeUpdateAPITests, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=30, num_assignments=2, num_groups=2)
         self.url = '/api/courses/' + self.fixtures.course.uuid + '/assignments'
         self.lti_data = LTITestData()
 
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
     def test_create(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         url = self.url
 
@@ -854,8 +854,8 @@ class AssignmentCourseGradeUpdateAPITests(ACJAPITestCase):
             )
             mocked_update_course_grades_run.reset_mock()
 
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
     def test_edit(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         assignment = self.fixtures.assignment
         url = self.url + '/' + assignment.uuid
@@ -961,8 +961,8 @@ class AssignmentCourseGradeUpdateAPITests(ACJAPITestCase):
                 mocked_update_course_grades_run.reset_mock()
 
 
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('acj.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
     def test_delete(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         # add dumby Assignment
         self.fixtures.add_assignments(num_assignments=1)

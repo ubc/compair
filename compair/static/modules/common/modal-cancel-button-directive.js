@@ -1,6 +1,6 @@
 (function() {
 
-    angular.module('ubc.ctlt.acj.common').directive('modalCancelButton',
+    angular.module('ubc.ctlt.compair.common').directive('modalCancelButton',
         function () {
         return {
             restrict: 'E',

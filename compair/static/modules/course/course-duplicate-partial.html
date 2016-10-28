@@ -8,18 +8,18 @@
         <legend>Course Details</legend>
         <div class="row">
             <div class="col-md-6 form-group">
-                <acj-field-with-feedback form-control="duplicateCourseForm.courseYear">
+                <compair-field-with-feedback form-control="duplicateCourseForm.courseYear">
                     <label for="courseYear" class="required-star">Year</label>
                     <input id="courseYear" name="courseYear" ng-model="duplicateCourse.year"
                     type="number" class="form-control" required min="1900" />
-                </acj-field-with-feedback>
+                </compair-field-with-feedback>
             </div>
             <div class="col-md-6 form-group">
-                <acj-field-with-feedback form-control="duplicateCourseForm.courseTerm">
+                <compair-field-with-feedback form-control="duplicateCourseForm.courseTerm">
                     <label for="courseTerm" class="required-star">Term/Semester</label>
                     <input id="courseTerm" name="courseTerm" ng-model="duplicateCourse.term"
                     type="text" class="form-control" required maxlength="255" />
-                </acj-field-with-feedback>
+                </compair-field-with-feedback>
             </div>
         </div>
     </fieldset>

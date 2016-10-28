@@ -1,11 +1,11 @@
 from data.fixtures import AssignmentFactory
 
-from acj.core import db
-from acj.api.util import get_model_changes
-from acj.tests.test_acj import ACJTestCase
+from compair.core import db
+from compair.api.util import get_model_changes
+from compair.tests.test_compair import ComPAIRTestCase
 
 
-class DbUtilTests(ACJTestCase):
+class DbUtilTests(ComPAIRTestCase):
     def test_get_model_changes(self):
         assignment = AssignmentFactory()
 

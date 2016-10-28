@@ -29,87 +29,87 @@ var gulp = require('gulp'),
     templateCache = require('gulp-angular-templatecache');
 
 var cssFilenames = [
-        './acj/static/lib/bootstrap/dist/css/bootstrap.css',
-        './acj/static/lib/fontawesome/css/font-awesome.css',
-        './acj/static/lib/highlightjs/styles/foundation.css',
-        './acj/static/lib/angular-loading-bar/build/loading-bar.css',
-        './acj/static/lib/AngularJS-Toaster/toaster.css',
-        './acj/static/lib/chosen/chosen.css',
-        './acj/static/lib/chosen-bootstrap-theme/dist/chosen-bootstrap-theme.min.css',
-        './acj/static/build/acj.css'
+        './compair/static/lib/bootstrap/dist/css/bootstrap.css',
+        './compair/static/lib/fontawesome/css/font-awesome.css',
+        './compair/static/lib/highlightjs/styles/foundation.css',
+        './compair/static/lib/angular-loading-bar/build/loading-bar.css',
+        './compair/static/lib/AngularJS-Toaster/toaster.css',
+        './compair/static/lib/chosen/chosen.css',
+        './compair/static/lib/chosen-bootstrap-theme/dist/chosen-bootstrap-theme.min.css',
+        './compair/static/build/compair.css'
     ],
-    targetCssFilename = 'acj.css',
+    targetCssFilename = 'compair.css',
     jsLibsFilename = 'bowerJsLibs.js',
-    jsFilename = 'acj.js',
-    karmaCommonConf = 'acj/static/test/config/karma.conf.js';
+    jsFilename = 'compair.js',
+    karmaCommonConf = 'compair/static/test/config/karma.conf.js';
 
 // download Bower packages and copy them to the lib directory
 gulp.task('bowerInstall', function() {
     return bower()
-        .pipe(gulp.dest('./acj/static/lib'));
+        .pipe(gulp.dest('./compair/static/lib'));
 });
 
 // insert tags into index.html to include the libs downloaded by bower
 gulp.task('bowerWiredep', ['bowerInstall'], function () {
-    return gulp.src('./acj/static/index.html')
-        .pipe(wiredep({directory: './acj/static/lib'}))
-        .pipe(gulp.dest('./acj/static/'));
+    return gulp.src('./compair/static/index.html')
+        .pipe(wiredep({directory: './compair/static/lib'}))
+        .pipe(gulp.dest('./compair/static/'));
 });
 
 // compile css
 gulp.task('less', function () {
-    return gulp.src('./acj/static/less/acj.less')
+    return gulp.src('./compair/static/less/compair.less')
         .pipe(less())
-        .pipe(gulp.dest('./acj/static/build'));
+        .pipe(gulp.dest('./compair/static/build'));
 });
 
 gulp.task('prod_compile_minify_css', ['less'], function() {
     return gulp.src(cssFilenames)
         .pipe(cleanCss())
         .pipe(concat(targetCssFilename))
-        .pipe(gulp.dest('./acj/static/build'));
+        .pipe(gulp.dest('./compair/static/build'));
 });
 // don't sort bower files as bower handles order and dependency
 gulp.task('prod_minify_js_libs', function() {
     return gulp.src(mainBowerFiles({"filter": /.*\.js/}))
         .pipe(concat(jsLibsFilename))
         .pipe(uglify())
-        .pipe(gulp.dest('./acj/static/build'));
+        .pipe(gulp.dest('./compair/static/build'));
 });
 gulp.task('prod_templatecache', function () {
-    return gulp.src('./acj/static/modules/**/*.html')
+    return gulp.src('./compair/static/modules/**/*.html')
         // we need a stable order to get the stable hash
         .pipe(sort())
         .pipe(templateCache({
             root: 'modules/'
         }))
-        .pipe(gulp.dest('./acj/static/build'));
+        .pipe(gulp.dest('./compair/static/build'));
 });
 gulp.task('prod_copy_fonts', function () {
 	// bootstrap fonts is loaded by bootstrap.css and default location is
     // ../fonts/
     return gulp.src('bower_components/bootstrap/fonts/*.*')
-        .pipe(gulp.dest('acj/static/fonts/'));
+        .pipe(gulp.dest('compair/static/fonts/'));
 });
 gulp.task('prod_minify_js', ['prod_templatecache'], function() {
     var libs = gulp.src([
-        './acj/static/acj-config.js',
-        './acj/static/modules/common/pdf.js',
-        './acj/static/build/templates.js',
+        './compair/static/compair-config.js',
+        './compair/static/modules/common/pdf.js',
+        './compair/static/build/templates.js',
         // ckeditor plugins
         './bower_components/ckeditor/plugins/codesnippet/plugin.js',
         './bower_components/ckeditor/plugins/codesnippet/dialogs/codesnippet.js',
         './bower_components/ckeditor/plugins/codesnippet/lang/en.js',
-        './acj/static/lib_extension/ckeditor/plugins/combinedmath/plugin.js',
-        './acj/static/lib_extension/ckeditor/plugins/combinedmath/dialogs/combinedmath.js',
+        './compair/static/lib_extension/ckeditor/plugins/combinedmath/plugin.js',
+        './compair/static/lib_extension/ckeditor/plugins/combinedmath/dialogs/combinedmath.js',
         './bower_components/ckeditor/plugins/widget/plugin.js',
         './bower_components/ckeditor/plugins/widget/lang/en.js',
         './bower_components/ckeditor/plugins/lineutils/plugin.js'
     ]);
     // we need to sort to generate a stable order so that we have a stable hash
-    var modules = gulp.src('./acj/static/modules/**/*-module.js');
-    var directives = gulp.src('./acj/static/modules/**/*-directive.js');
-    var services = gulp.src('./acj/static/modules/**/*-service.js');
+    var modules = gulp.src('./compair/static/modules/**/*-module.js');
+    var directives = gulp.src('./compair/static/modules/**/*-directive.js');
+    var services = gulp.src('./compair/static/modules/**/*-service.js');
 
     return streamqueue(
         { objectMode: true },
@@ -120,19 +120,19 @@ gulp.task('prod_minify_js', ['prod_templatecache'], function() {
     )
         .pipe(concat(jsFilename))
         .pipe(uglify())
-        .pipe(gulp.dest('./acj/static/build'));
+        .pipe(gulp.dest('./compair/static/build'));
 });
 gulp.task('revision', ['prod_minify_js_libs', 'prod_compile_minify_css', 'prod_minify_js', 'prod_copy_fonts'], function() {
-    return gulp.src(['./acj/static/build/*.css', './acj/static/build/*.js', '!acj/static/build/templates.js'])
+    return gulp.src(['./compair/static/build/*.css', './compair/static/build/*.js', '!compair/static/build/templates.js'])
         .pipe(rev())
-        .pipe(gulp.dest('./acj/static/dist'))
+        .pipe(gulp.dest('./compair/static/dist'))
         .pipe(rev.manifest())
-        .pipe(gulp.dest('./acj/static/build'));
+        .pipe(gulp.dest('./compair/static/build'));
 });
 gulp.task('prod', ['revision'], function(){
-    var manifest = require("./acj/static/build/rev-manifest.json");
+    var manifest = require("./compair/static/build/rev-manifest.json");
     // modify includes to use the minified files
-    return gulp.src('./acj/static/index.html')
+    return gulp.src('./compair/static/index.html')
         .pipe(htmlReplace(
             {
                 prod_minify_js_libs: 'dist/' + manifest[jsLibsFilename],
@@ -140,7 +140,7 @@ gulp.task('prod', ['revision'], function(){
                 prod_compile_minify_css: 'dist/' + manifest[targetCssFilename]
             },
             {keepBlockTags: true}))
-        .pipe(gulp.dest('./acj/static/'));
+        .pipe(gulp.dest('./compair/static/'));
 });
 
 /**
@@ -156,9 +156,9 @@ gulp.task('tdd', function (done) {
  * Behavior driven development. This task runs acceptance tests
  */
 gulp.task('bdd', ['webdriver_update'], function (done) {
-    gulp.src(["acj/static/test/features/*.feature"])
+    gulp.src(["compair/static/test/features/*.feature"])
         .pipe(protractor({
-            configFile: "acj/static/test/config/protractor_cucumber.js"
+            configFile: "compair/static/test/config/protractor_cucumber.js"
             // baseUrl is set through environment variable
             //args: ['--baseUrl', 'http://127.0.0.1:8080/app']
         }))
@@ -199,7 +199,7 @@ gulp.task('generate_index', function() {
  */
 gulp.task('delete_index', function() {
     return del([
-        './acj/static/index.html'
+        './compair/static/index.html'
     ]);
 });
 
@@ -215,9 +215,9 @@ gulp.task('test:acceptance', ['server:frontend', 'bdd'], function() {
  */
 gulp.task('test:ci', ['server:frontend', '_test:ci']);
 gulp.task('_test:ci', function (done) {
-    gulp.src(["acj/static/test/features/*.feature"])
+    gulp.src(["compair/static/test/features/*.feature"])
         .pipe(protractor({
-            configFile: "acj/static/test/config/protractor_saucelab.js"
+            configFile: "compair/static/test/config/protractor_saucelab.js"
             // baseUrl is set through environment variable
             //args: ['--baseUrl', 'http://127.0.0.1:8000']
         }))
@@ -236,9 +236,9 @@ gulp.task('_test:ci', function (done) {
  */
 gulp.task('test:acceptance:sauce', ['server:frontend', '_test:acceptance:sauce']);
 gulp.task('_test:acceptance:sauce', ['sauce:connect'], function(done) {
-    gulp.src(["acj/static/test/features/*.feature"])
+    gulp.src(["compair/static/test/features/*.feature"])
         .pipe(protractor({
-            configFile: "acj/static/test/config/protractor_saucelab_local.js",
+            configFile: "compair/static/test/config/protractor_saucelab_local.js",
             args: ['--baseUrl', 'http://127.0.0.1:8000']
         }))
         .on('error', function (e) {
@@ -269,7 +269,7 @@ gulp.task('server:backend', function() {
  */
 gulp.task('server:frontend', ['generate_index'], function(done) {
     app = connect.server({
-        root: 'acj/static',
+        root: 'compair/static',
         livereload: false, // set to false, otherwise gulp will not exit
         middleware: function(connect, o) {
             var url = require('url');

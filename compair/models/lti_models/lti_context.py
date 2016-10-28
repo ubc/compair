@@ -5,7 +5,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from . import *
 
-from acj.core import db
+from compair.core import db
 
 class LTIContext(DefaultTableMixin, WriteTrackingMixin):
     __tablename__ = 'lti_context'
@@ -18,36 +18,36 @@ class LTIContext(DefaultTableMixin, WriteTrackingMixin):
     context_title = db.Column(db.String(255), nullable=True)
     ext_ims_lis_memberships_id = db.Column(db.String(255), nullable=True)
     ext_ims_lis_memberships_url = db.Column(db.Text, nullable=True)
-    acj_course_id = db.Column(db.Integer, db.ForeignKey("course.id", ondelete="CASCADE"),
+    compair_course_id = db.Column(db.Integer, db.ForeignKey("course.id", ondelete="CASCADE"),
         nullable=True)
 
     # relationships
-    # acj_course via Course Model
+    # compair_course via Course Model
     # lti_consumer via LTIConsumer Model
     lti_memberships = db.relationship("LTIMembership", backref="lti_context", lazy="dynamic")
     lti_resource_links = db.relationship("LTIResourceLink", backref="lti_context")
 
     # hyprid and other functions
-    acj_course_uuid = association_proxy('acj_course', 'uuid')
+    compair_course_uuid = association_proxy('compair_course', 'uuid')
 
     def is_linked_to_course(self):
-        return self.acj_course_id != None
+        return self.compair_course_id != None
 
-    def update_enrolment(self, acj_user_id, course_role):
+    def update_enrolment(self, compair_user_id, course_role):
         from . import UserCourse
         if self.is_linked_to_course():
             user_course = UserCourse.query \
                 .filter_by(
-                    user_id=acj_user_id,
-                    course_id=self.acj_course_id
+                    user_id=compair_user_id,
+                    course_id=self.compair_course_id
                 ) \
                 .one_or_none()
 
             if user_course is None:
                 # create new enrollment
                 new_user_course = UserCourse(
-                    user_id=acj_user_id,
-                    course_id=self.acj_course_id,
+                    user_id=compair_user_id,
+                    course_id=self.compair_course_id,
                     course_role=course_role
                 )
                 db.session.add(new_user_course)

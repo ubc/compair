@@ -2,12 +2,12 @@ import io
 import json
 
 from data.fixtures.test_data import TestFixture, ThirdPartyAuthTestData
-from acj.tests.test_acj import ACJAPITestCase
+from compair.tests.test_compair import ComPAIRAPITestCase
 
-from acj.models import UserCourse, CourseRole, ThirdPartyType
+from compair.models import UserCourse, CourseRole, ThirdPartyType
 
 
-class CourseGroupsAPITests(ACJAPITestCase):
+class CourseGroupsAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(CourseGroupsAPITests, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=30, num_groups=3)

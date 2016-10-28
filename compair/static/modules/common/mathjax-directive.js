@@ -5,7 +5,7 @@
 // Unfortunately, it's not Bower enabled, so have to manually include it
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.common.mathjax', []);
+var module = angular.module('ubc.ctlt.compair.common.mathjax', []);
 
 /***** Directives *****/
 // add the css and elements required to show bootstrap's validation feedback

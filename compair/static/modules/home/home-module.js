@@ -4,14 +4,14 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.home',
+var module = angular.module('ubc.ctlt.compair.home',
     [
         'ngSanitize',
-        'ubc.ctlt.acj.authentication',
-        'ubc.ctlt.acj.authorization',
-        'ubc.ctlt.acj.course',
-        'ubc.ctlt.acj.toaster',
-        'ubc.ctlt.acj.user'
+        'ubc.ctlt.compair.authentication',
+        'ubc.ctlt.compair.authorization',
+        'ubc.ctlt.compair.course',
+        'ubc.ctlt.compair.toaster',
+        'ubc.ctlt.compair.user'
     ]
 );
 

@@ -11,33 +11,33 @@ function combineDateTime(datetime) {
 }
 
 function getWeeksDelta(firstDate, secondDate) {
-    firstDate = firstDate || moment();
-    secondDate = secondDate || moment();
+    firstDate = moment(firstDate) || moment();
+    secondDate = moment(secondDate) || moment();
     // By default, moment#diff will return a number rounded towards zero (down for positive, up for negative).
     // we instead want to always Math.floor for both positive and negative numbers
-    return Math.floor(moment(firstDate).diff(moment(secondDate), 'weeks', true));
+    return Math.floor(firstDate.startOf('day').diff(secondDate.startOf('day'), 'weeks', true));
 }
 
 function getNewDuplicateDate(originalDate, weekDelta) {
-    originalDate = originalDate || moment();
+    originalDate = moment(originalDate) || moment();
     weekDelta = weekDelta || 0;
-    return moment(originalDate).add(weekDelta, 'weeks')
+    return originalDate.add(weekDelta, 'weeks')
 }
 
-var module = angular.module('ubc.ctlt.acj.course',
+var module = angular.module('ubc.ctlt.compair.course',
     [
         'angularMoment',
         'ngResource',
         'ngRoute',
         'ui.bootstrap',
-        'ubc.ctlt.acj.comment',
-        'ubc.ctlt.acj.common.form',
-        'ubc.ctlt.acj.common.interceptor',
-        'ubc.ctlt.acj.comparison',
-        'ubc.ctlt.acj.assignment',
-        'ubc.ctlt.acj.common.highlightjs',
-        'ubc.ctlt.acj.common.pdf',
-        'ubc.ctlt.acj.toaster'
+        'ubc.ctlt.compair.comment',
+        'ubc.ctlt.compair.common.form',
+        'ubc.ctlt.compair.common.interceptor',
+        'ubc.ctlt.compair.comparison',
+        'ubc.ctlt.compair.assignment',
+        'ubc.ctlt.compair.common.highlightjs',
+        'ubc.ctlt.compair.common.pdf',
+        'ubc.ctlt.compair.toaster'
     ]
 );
 

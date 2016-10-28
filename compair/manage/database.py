@@ -5,7 +5,7 @@ from alembic.config import Config
 from flask_script import Manager, prompt_bool
 
 from alembic import command
-from acj.core import db
+from compair.core import db
 
 from sqlalchemy.engine import reflection
 from sqlalchemy import create_engine

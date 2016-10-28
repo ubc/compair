@@ -10,13 +10,13 @@ from flask_restful.reqparse import RequestParser
 from sqlalchemy import or_, and_
 
 from . import dataformat
-from acj.core import db, event
-from acj.authorization import require, allow
-from acj.models import Answer, Score, Comparison, Course, \
+from compair.core import db, event
+from compair.authorization import require, allow
+from compair.models import Answer, Score, Comparison, Course, \
     Assignment, UserCourse, CourseRole, AssignmentCriterion
 from .util import new_restful_api
 
-from acj.algorithms import InsufficientObjectsForPairException, \
+from compair.algorithms import InsufficientObjectsForPairException, \
     UserComparedAllObjectsException, UnknownPairGeneratorException
 
 # First declare a Flask Blueprint for this module

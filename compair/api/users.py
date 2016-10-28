@@ -7,12 +7,12 @@ from sqlalchemy.orm import load_only
 from sqlalchemy import exc, asc, or_, and_
 
 from . import dataformat
-from acj.authorization import is_user_access_restricted, require, allow
-from acj.core import db, event
+from compair.authorization import is_user_access_restricted, require, allow
+from compair.core import db, event
 from .util import new_restful_api, get_model_changes, pagination_parser
-from acj.models import User, SystemRole, Course, UserCourse, CourseRole, \
+from compair.models import User, SystemRole, Course, UserCourse, CourseRole, \
     Assignment, LTIUser, LTIUserResourceLink, LTIContext, ThirdPartyUser, ThirdPartyType
-from acj.api.login import authenticate
+from compair.api.login import authenticate
 
 user_api = Blueprint('user_api', __name__)
 
@@ -100,8 +100,8 @@ class UserAPI(Resource):
         if params['id'] != user_uuid:
             return {"error": "User id does not match URL."}, 400
 
-        # only update username if user uses acj login method
-        if user.uses_acj_login:
+        # only update username if user uses compair login method
+        if user.uses_compair_login:
             username = params.get("username", user.username)
             if username == None:
                 return {"error": "Missing required parameter: username."}, 400
@@ -216,7 +216,7 @@ class UserListAPI(Resource):
         if sess.get('oauth_create_user_link'):
             if sess.get('LTI'):
                 lti_user = LTIUser.query.get_or_404(sess['lti_user'])
-                lti_user.acj_user = user
+                lti_user.compair_user = user
                 user.system_role = lti_user.system_role
 
                 if sess.get('lti_context') and sess.get('lti_user_resource_link'):
@@ -226,7 +226,7 @@ class UserListAPI(Resource):
                         # create new enrollment
                         new_user_course = UserCourse(
                             user=user,
-                            course_id=lti_context.acj_course_id,
+                            course_id=lti_context.compair_course_id,
                             course_role=lti_user_resource_link.course_role
                         )
                         db.session.add(new_user_course)
@@ -371,7 +371,7 @@ class UserUpdatePasswordAPI(Resource):
         # anyone who passes checking below should be an instructor or admin
         require(EDIT, user)
 
-        if user.uses_acj_login:
+        if user.uses_compair_login:
             params = update_password_parser.parse_args()
             oldpassword = params.get('oldpassword')
             # if it is not current user changing own password, it must be an instructor or admin

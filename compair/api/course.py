@@ -8,9 +8,9 @@ from flask_login import login_required, current_user
 from sqlalchemy import exc, func
 
 from . import dataformat
-from acj.authorization import require
-from acj.core import db, event
-from acj.models import Course, CourseRole, UserCourse, Answer, \
+from compair.authorization import require
+from compair.core import db, event
+from compair.models import Course, CourseRole, UserCourse, Answer, \
     Assignment, AssignmentCriterion, File, ComparisonExample
 from .util import pagination, new_restful_api, get_model_changes
 from .file import duplicate_file

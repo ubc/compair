@@ -1,4 +1,4 @@
-from acj.core import db
+from compair.core import db
 from .create_tracking_mixin import CreateTrackingMixin
 from .modify_tracking_mixin import ModifyTrackingMixin
 

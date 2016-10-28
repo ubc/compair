@@ -1,10 +1,10 @@
 import random
 import math
 
-from acj.algorithms.pair.pair_generator import PairGenerator
-from acj.algorithms.comparison_pair import ComparisonPair
-from acj.algorithms.scored_object import ScoredObject
-from acj.algorithms.exceptions import InsufficientObjectsForPairException, \
+from compair.algorithms.pair.pair_generator import PairGenerator
+from compair.algorithms.comparison_pair import ComparisonPair
+from compair.algorithms.scored_object import ScoredObject
+from compair.algorithms.exceptions import InsufficientObjectsForPairException, \
     UserComparedAllObjectsException, UnknownPairGeneratorException
 
 class AdaptivePairGenerator(PairGenerator):

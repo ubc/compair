@@ -1,10 +1,10 @@
 import trueskill
 
-from acj.algorithms.score.score_algorithm_base import ScoreAlgorithmBase
-from acj.algorithms.comparison_pair import ComparisonPair
-from acj.algorithms.scored_object import ScoredObject
+from compair.algorithms.score.score_algorithm_base import ScoreAlgorithmBase
+from compair.algorithms.comparison_pair import ComparisonPair
+from compair.algorithms.scored_object import ScoredObject
 
-from acj.algorithms.exceptions import InvalidWinningKeyException
+from compair.algorithms.exceptions import InvalidWinningKeyException
 
 class TrueSkillAlgorithmWrapper(ScoreAlgorithmBase):
     def __init__(self):

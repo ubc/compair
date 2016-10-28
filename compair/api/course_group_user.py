@@ -9,9 +9,9 @@ from flask_login import current_user
 from sqlalchemy import and_, or_
 
 from . import dataformat
-from acj.authorization import require
-from acj.core import db, event
-from acj.models import UserCourse, User, Course, CourseRole
+from compair.authorization import require
+from compair.core import db, event
+from compair.models import UserCourse, User, Course, CourseRole
 from .util import new_restful_api
 
 user_list_parser = RequestParser()

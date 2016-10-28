@@ -1,6 +1,6 @@
 from sqlalchemy.ext.declarative import declared_attr
 
-from acj.core import db
+from compair.core import db
 
 class DefaultTableMixin(db.Model):
     __abstract__ = True

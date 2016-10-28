@@ -1,6 +1,6 @@
 (function() {
 
-    angular.module('ubc.ctlt.acj.common').directive('acjAvatar', function () {
+    angular.module('ubc.ctlt.compair.common').directive('compairAvatar', function () {
         return {
             restrict: 'E',
             scope: {

@@ -2,7 +2,7 @@
     'use strict';
 
     angular
-        .module('ubc.ctlt.acj.login')
+        .module('ubc.ctlt.compair.login')
 
         .directive('loginCreateUserForm',
             ['$route', '$log', 'Session', 'UserResource', 'SystemRole', 'Toaster',
@@ -12,7 +12,7 @@
             return {
                 restrict: 'E',
                 scope: {
-                    uses_acj_login: '=usesAcjLogin'
+                    uses_compair_login: '=usescompairLogin'
                 },
                 templateUrl: 'modules/user/user-form-partial.html',
                 link: function (scope, element, attrs) {
@@ -27,7 +27,7 @@
                     scope.user = {
                         // required parameter that will be ignored by backend
                         system_role: SystemRole.student,
-                        uses_acj_login: scope.uses_acj_login
+                        uses_compair_login: scope.uses_compair_login
                     }
 
                     LTI.getStatus().then(function(status) {
@@ -35,7 +35,7 @@
                         if (LTI.isLTISession()) {
                             // overwrite user with LTI user info
                             scope.user = LTI.getLTIUser();
-                            scope.user.uses_acj_login = scope.uses_acj_login;
+                            scope.user.uses_compair_login = scope.uses_compair_login;
                         }
                     });
 

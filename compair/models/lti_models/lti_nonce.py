@@ -6,7 +6,7 @@ from datetime import datetime
 
 from . import *
 
-from acj.core import db
+from compair.core import db
 
 class LTINonce(DefaultTableMixin, WriteTrackingMixin):
     __tablename__ = 'lti_nonce'

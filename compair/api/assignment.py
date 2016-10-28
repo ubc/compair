@@ -10,9 +10,9 @@ from sqlalchemy import desc, or_, func, and_
 from sqlalchemy.orm import joinedload, undefer_group, load_only
 
 from . import dataformat
-from acj.core import db, event
-from acj.authorization import allow, require
-from acj.models import Assignment, Course, AssignmentCriterion, Answer, Comparison, \
+from compair.core import db, event
+from compair.authorization import allow, require
+from compair.models import Assignment, Course, AssignmentCriterion, Answer, Comparison, \
     AnswerComment, AnswerCommentType, PairingAlgorithm, Criterion, File
 from .util import new_restful_api, get_model_changes
 

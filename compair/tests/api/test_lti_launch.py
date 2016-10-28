@@ -2,14 +2,14 @@ import json
 import mock
 
 from data.fixtures.test_data import SimpleAssignmentTestData, LTITestData, ThirdPartyAuthTestData
-from acj.tests.test_acj import ACJAPITestCase
-from acj.models import User, SystemRole, CourseRole, UserCourse, \
+from compair.tests.test_compair import ComPAIRAPITestCase
+from compair.models import User, SystemRole, CourseRole, UserCourse, \
     LTIConsumer, LTIContext, LTIUser, LTIMembership,  \
     LTIResourceLink, LTIUserResourceLink
-from acj.core import db
+from compair.core import db
 from oauthlib.common import generate_token, generate_nonce, generate_timestamp
 
-class LTILaunchAPITests(ACJAPITestCase):
+class LTILaunchAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(LTILaunchAPITests, self).setUp()
         self.data = SimpleAssignmentTestData()
@@ -78,7 +78,7 @@ class LTILaunchAPITests(ACJAPITestCase):
 
             # link user account
             user = self.data.create_user(system_role)
-            lti_user.acj_user = user
+            lti_user.compair_user = user
             db.session.commit()
 
             # valid request - user with account and request missing context_id
@@ -126,7 +126,7 @@ class LTILaunchAPITests(ACJAPITestCase):
 
             # link course - user should be auto enrolled into course
             course = self.data.create_course()
-            lti_context.acj_course_id = course.id
+            lti_context.compair_course_id = course.id
             db.session.commit()
 
             # valid request - user with account and course linked (no assignment)
@@ -182,7 +182,7 @@ class LTILaunchAPITests(ACJAPITestCase):
                 self.assertEqual(str(user.id), sess.get('user_id'))
 
             # verify lti_resource_link does not retain the invalid assignment_id
-            self.assertIsNone(lti_resource_link.acj_assignment_id)
+            self.assertIsNone(lti_resource_link.compair_assignment_id)
 
             # create assignment - should be automatically linked when custom_assignment is set
             assignment = self.data.create_assignment_in_answer_period(course, self.data.get_authorized_instructor())
@@ -209,7 +209,7 @@ class LTILaunchAPITests(ACJAPITestCase):
                 self.assertEqual(str(user.id), sess.get('user_id'))
 
             # verify lti_resource_link does not retain the invalid assignment_id
-            self.assertEqual(lti_resource_link.acj_assignment_id, assignment.id)
+            self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
 
             # ensure replay attacks do not work for lti launch requests
             nonce = generate_nonce()
@@ -243,7 +243,7 @@ class LTILaunchAPITests(ACJAPITestCase):
         }
 
         for lti_role, (system_role, course_role) in roles.items():
-            # test new user (no acj user yet)
+            # test new user (no compair user yet)
             lti_context = self.lti_data.create_context(lti_consumer)
             lti_user = self.lti_data.create_user(lti_consumer, system_role)
             lti_resource_link = self.lti_data.create_resource_link(lti_consumer, lti_context)
@@ -308,7 +308,7 @@ class LTILaunchAPITests(ACJAPITestCase):
 
             # setup with existing user
             user = self.data.create_user(system_role)
-            lti_user.acj_user = user
+            lti_user.compair_user = user
             db.session.commit()
 
             # setup lti session with existing user
@@ -330,7 +330,7 @@ class LTILaunchAPITests(ACJAPITestCase):
 
             # setup with existing course
             course = self.data.create_course()
-            lti_context.acj_course_id = course.id
+            lti_context.compair_course_id = course.id
             db.session.commit()
 
             # setup lti session with existing course
@@ -460,7 +460,7 @@ class LTILaunchAPITests(ACJAPITestCase):
         self.assert200(rv)
 
 
-    @mock.patch('acj.models.lti_models.lti_membership.LTIMembership._send_membership_request')
+    @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._send_membership_request')
     def test_lti_course_link_with_membership(self, mocked_send_membership_request):
         instructor = self.data.get_authorized_instructor()
         course = self.data.get_course()
@@ -585,7 +585,7 @@ class LTILaunchAPITests(ACJAPITestCase):
 
             # verify membership table
             lti_memberships = LTIMembership.query \
-                .filter_by(acj_course_id=course.id) \
+                .filter_by(compair_course_id=course.id) \
                 .all()
 
             self.assertEqual(len(lti_memberships), 5)
@@ -593,7 +593,7 @@ class LTILaunchAPITests(ACJAPITestCase):
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1", "compair_student_2",
                     "compair_student_3", "compair_instructor_2"])
 
-    @mock.patch('acj.models.lti_models.lti_membership.LTIMembership._send_membership_request')
+    @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._send_membership_request')
     def test_lti_course_link_with_membership(self, mocked_send_membership_request):
         course = self.data.get_course()
         instructor = self.data.get_authorized_instructor()
@@ -608,7 +608,7 @@ class LTILaunchAPITests(ACJAPITestCase):
         lti_consumer = self.lti_data.lti_consumer
         lti_context = self.lti_data.create_context(
             lti_consumer,
-            acj_course_id=course.id,
+            compair_course_id=course.id,
             ext_ims_lis_memberships_id="123",
             ext_ims_lis_memberships_url="https://mock_membership_url.com"
         )
@@ -749,7 +749,7 @@ class LTILaunchAPITests(ACJAPITestCase):
 
             # verify membership table
             lti_memberships = LTIMembership.query \
-                .filter_by(acj_course_id=course.id) \
+                .filter_by(compair_course_id=course.id) \
                 .all()
 
             self.assertEqual(len(lti_memberships), 5)
@@ -809,7 +809,7 @@ class LTILaunchAPITests(ACJAPITestCase):
 
             # verify membership table
             lti_memberships = LTIMembership.query \
-                .filter_by(acj_course_id=course.id) \
+                .filter_by(compair_course_id=course.id) \
                 .all()
 
             self.assertEqual(len(lti_memberships), 5)
@@ -853,7 +853,7 @@ class LTILaunchAPITests(ACJAPITestCase):
 
             # verify membership table
             lti_memberships = LTIMembership.query \
-                .filter_by(acj_course_id=course.id) \
+                .filter_by(compair_course_id=course.id) \
                 .all()
 
             self.assertEqual(len(lti_memberships), 1)
@@ -870,7 +870,7 @@ class LTILaunchAPITests(ACJAPITestCase):
             self.assertEqual(rv.json['error'], "Course not linked to lti context")
 
             # requires at least one linked lti context to support membership
-            lti_context_2 = self.lti_data.create_context(lti_consumer, acj_course=course_2)
+            lti_context_2 = self.lti_data.create_context(lti_consumer, compair_course=course_2)
             rv = self.client.post(url_2, data={}, content_type='application/json')
             self.assert400(rv)
             self.assertEqual(rv.json['error'], "LTI membership service is not supported for this course")
@@ -920,13 +920,13 @@ class LTILaunchAPITests(ACJAPITestCase):
                 self.assertIsNone(sess.get('CAS_UNIQUE_IDENTIFIER'))
 
             # check that lti_user is now linked
-            self.assertEqual(lti_user.acj_user_id, user.id)
+            self.assertEqual(lti_user.compair_user_id, user.id)
 
             # create fresh lti_user
             lti_user = self.lti_data.create_user(lti_consumer, system_role)
 
             course = self.data.create_course()
-            lti_context.acj_course_id = course.id
+            lti_context.compair_course_id = course.id
             db.session.commit()
 
             # linked third party user (with linked context id)
@@ -955,7 +955,7 @@ class LTILaunchAPITests(ACJAPITestCase):
                 self.assertIsNone(sess.get('CAS_UNIQUE_IDENTIFIER'))
 
             # check that lti_user is now linked
-            self.assertEqual(lti_user.acj_user_id, user.id)
+            self.assertEqual(lti_user.compair_user_id, user.id)
 
             # verify enrollment
             user_course = UserCourse.query \

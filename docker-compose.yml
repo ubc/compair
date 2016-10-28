@@ -53,7 +53,7 @@ services:
     image: nginx:1.11
     volumes:
       - ./deploy/docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./acj/static:/compair/app:ro
+      - ./compair/static:/compair/app:ro
     ports:
       - "8080:80"
     depends_on:

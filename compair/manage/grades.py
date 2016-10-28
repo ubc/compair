@@ -3,7 +3,7 @@
 """
 
 from flask_script import Manager
-from acj.models import Course, Assignment
+from compair.models import Course, Assignment
 
 manager = Manager(usage="Generate Grades")
 

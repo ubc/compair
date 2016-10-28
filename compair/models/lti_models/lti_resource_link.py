@@ -5,7 +5,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from . import *
 
-from acj.core import db
+from compair.core import db
 
 class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
     __tablename__ = 'lti_resource_link'
@@ -19,23 +19,23 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
     resource_link_title = db.Column(db.String(255), nullable=True)
     launch_presentation_return_url = db.Column(db.Text, nullable=True)
     custom_param_assignment_id = db.Column(db.String(255), nullable=True)
-    acj_assignment_id = db.Column(db.Integer, db.ForeignKey("assignment.id", ondelete="CASCADE"),
+    compair_assignment_id = db.Column(db.Integer, db.ForeignKey("assignment.id", ondelete="CASCADE"),
         nullable=True)
 
     # relationships
-    # acj_assignment via Assignment Model
+    # compair_assignment via Assignment Model
     # lti_consumer via LTIConsumer Model
     # lti_context via LTIContext Model
     lti_user_resource_links = db.relationship("LTIUserResourceLink", backref="lti_resource_link", lazy="dynamic")
 
     # hyprid and other functions
-    acj_assignment_uuid = association_proxy('acj_assignment', 'uuid')
+    compair_assignment_uuid = association_proxy('compair_assignment', 'uuid')
 
     def is_linked_to_assignment(self):
-        return self.acj_assignment_id != None
+        return self.compair_assignment_id != None
 
-    def _update_link_to_acj_assignment(self):
-        from acj.models import Assignment
+    def _update_link_to_compair_assignment(self):
+        from compair.models import Assignment
 
         if self.custom_param_assignment_id:
             # check if assignment exists
@@ -44,10 +44,10 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
                 .one_or_none()
 
             if assignment:
-                self.acj_assignment = assignment
+                self.compair_assignment = assignment
                 return self
 
-        self.acj_assignment = None
+        self.compair_assignment = None
         return self
 
     @classmethod
@@ -78,7 +78,7 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
         lti_resource_link.custom_param_assignment_id = tool_provider.custom_assignment
 
         if original_custom_param_assignment_id != tool_provider.custom_assignment:
-            lti_resource_link._update_link_to_acj_assignment()
+            lti_resource_link._update_link_to_compair_assignment()
 
         db.session.commit()
 

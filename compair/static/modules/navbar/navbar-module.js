@@ -3,15 +3,15 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.navbar',
+var module = angular.module('ubc.ctlt.compair.navbar',
     [
         'ng-breadcrumbs',
         'ngRoute',
-        'ubc.ctlt.acj.authentication',
-        'ubc.ctlt.acj.course',
-        'ubc.ctlt.acj.login', // for LogoutController
-        'ubc.ctlt.acj.assignment',
-        'ubc.ctlt.acj.user'
+        'ubc.ctlt.compair.authentication',
+        'ubc.ctlt.compair.course',
+        'ubc.ctlt.compair.login', // for LogoutController
+        'ubc.ctlt.compair.assignment',
+        'ubc.ctlt.compair.user'
     ]
 );
 

@@ -2,7 +2,7 @@ from sqlalchemy.ext.declarative import declared_attr
 from flask import abort
 from sqlalchemy.orm import joinedload
 
-from acj.core import db
+from compair.core import db
 
 class ActiveMixin(db.Model):
     __abstract__ = True

@@ -1,6 +1,6 @@
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.common.timer',
+var module = angular.module('ubc.ctlt.compair.common.timer',
    [
         'ngResource'
    ]

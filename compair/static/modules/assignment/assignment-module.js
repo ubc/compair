@@ -8,27 +8,27 @@ function combineDateTime(datetime) {
     return date;
 }
 
-var module = angular.module('ubc.ctlt.acj.assignment',
+var module = angular.module('ubc.ctlt.compair.assignment',
     [
         'angularFileUpload',
         'ngResource',
         'ngclipboard',
         'ui.bootstrap',
         'localytics.directives',
-        'ubc.ctlt.acj.answer',
-        'ubc.ctlt.acj.authentication',
-        'ubc.ctlt.acj.authorization',
-        'ubc.ctlt.acj.comment',
-        'ubc.ctlt.acj.common.form',
-        'ubc.ctlt.acj.common.interceptor',
-        'ubc.ctlt.acj.common.mathjax',
-        'ubc.ctlt.acj.common.highlightjs',
-        'ubc.ctlt.acj.common.pdf',
-        'ubc.ctlt.acj.criterion',
-        'ubc.ctlt.acj.group',
-        'ubc.ctlt.acj.comparison',
-        'ubc.ctlt.acj.toaster',
-        'ubc.ctlt.acj.session'
+        'ubc.ctlt.compair.answer',
+        'ubc.ctlt.compair.authentication',
+        'ubc.ctlt.compair.authorization',
+        'ubc.ctlt.compair.comment',
+        'ubc.ctlt.compair.common.form',
+        'ubc.ctlt.compair.common.interceptor',
+        'ubc.ctlt.compair.common.mathjax',
+        'ubc.ctlt.compair.common.highlightjs',
+        'ubc.ctlt.compair.common.pdf',
+        'ubc.ctlt.compair.criterion',
+        'ubc.ctlt.compair.group',
+        'ubc.ctlt.compair.comparison',
+        'ubc.ctlt.compair.toaster',
+        'ubc.ctlt.compair.session'
     ]
 );
 

@@ -1,11 +1,11 @@
 # mixins
-from acj.models.mixins import ActiveMixin, DefaultTableMixin, WriteTrackingMixin
+from compair.models.mixins import ActiveMixin, DefaultTableMixin, WriteTrackingMixin
 
 # import models
-from acj.models import UserCourse, Course, Assignment
+from compair.models import UserCourse, Course, Assignment
 
 # import enums
-from acj.models import SystemRole, CourseRole
+from compair.models import SystemRole, CourseRole
 
 # exceptions
 from .exceptions import MembershipNoValidContextsException, \

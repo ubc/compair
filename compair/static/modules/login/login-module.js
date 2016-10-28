@@ -3,16 +3,16 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.login',
+var module = angular.module('ubc.ctlt.compair.login',
     [
         'ngAnimate',
         'ngResource',
         'ngRoute',
         'ui.bootstrap',
-        'ubc.ctlt.acj.authentication',
-        'ubc.ctlt.acj.authorization',
-        'ubc.ctlt.acj.user',
-        'ubc.ctlt.acj.lti'
+        'ubc.ctlt.compair.authentication',
+        'ubc.ctlt.compair.authorization',
+        'ubc.ctlt.compair.user',
+        'ubc.ctlt.compair.lti'
     ]
 );
 
@@ -67,12 +67,12 @@ module.run(
     // for creating new account via 3rd-party authentication
     $rootScope.displayCreateUser = function() {
         modalScope.showCreateUserForm = true;
-        modalScope.showACJAccountFieldsCreateUserForm = false;
+        modalScope.showComPAIRAccountFieldsCreateUserForm = false;
     };
 
     $rootScope.showLoginWithCreateUser = function() {
         modalScope.allowCreateUser = true;
-        modalScope.showACJAccountFieldsCreateUserForm = true;
+        modalScope.showComPAIRAccountFieldsCreateUserForm = true;
         $rootScope.showLogin();
     };
 
@@ -145,12 +145,12 @@ module.controller(
         // update allowCreateUser if needed
         $rootScope.$on(AuthenticationService.LTI_LOGIN_REQUIRED_EVENT, function() {
             $scope.allowCreateUser = true;
-            $scope.showACJAccountFieldsCreateUserForm = true;
+            $scope.showComPAIRAccountFieldsCreateUserForm = true;
         });
 
         $rootScope.$on(AuthenticationService.AUTH_LOGIN_REQUIRED_EVENT, function() {
             $scope.showCreateUserForm = true;
-            $scope.showACJAccountFieldsCreateUserForm = false;
+            $scope.showComPAIRAccountFieldsCreateUserForm = false;
         });
 
         $scope.authTypesEnabled = AuthTypesEnabled;

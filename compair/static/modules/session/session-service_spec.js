@@ -42,7 +42,7 @@ describe('Service: Session', function() {
         system_role: "System Administrator"
     };
 
-    beforeEach(module('ubc.ctlt.acj.session'));
+    beforeEach(module('ubc.ctlt.compair.session'));
 
     beforeEach(inject(function($injector) {
         $httpBackend = $injector.get('$httpBackend');

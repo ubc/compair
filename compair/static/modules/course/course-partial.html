@@ -6,25 +6,25 @@
 
         <fieldset>
             <legend>Course Details</legend>
-            <acj-field-with-feedback form-control="courseForm.courseName">
+            <compair-field-with-feedback form-control="courseForm.courseName">
                 <label for="courseName" class="required-star">Course Name</label>
                 <input id="courseName" name="courseName" ng-model="course.name"
                        type="text" class="form-control" required maxlength="255" placeholder="e.g. BIOL 112 - Biology of the Cell" ng-model="course.name" auto-focus />
-            </acj-field-with-feedback>
+            </compair-field-with-feedback>
             <div class="row">
                 <div class="col-md-6 form-group">
-                    <acj-field-with-feedback form-control="courseForm.courseYear">
+                    <compair-field-with-feedback form-control="courseForm.courseYear">
                         <label for="courseYear" class="required-star">Year</label>
                         <input id="courseYear" name="courseYear" ng-model="course.year"
                         type="number" class="form-control" required min="1900" />
-                    </acj-field-with-feedback>
+                    </compair-field-with-feedback>
                 </div>
                 <div class="col-md-6 form-group">
-                    <acj-field-with-feedback form-control="courseForm.courseTerm">
+                    <compair-field-with-feedback form-control="courseForm.courseTerm">
                         <label for="courseTerm" class="required-star">Term/Semester</label>
                         <input id="courseTerm" name="courseTerm" ng-model="course.term"
                         type="text" class="form-control" required maxlength="255" />
-                    </acj-field-with-feedback>
+                    </compair-field-with-feedback>
                 </div>
             </div>
             <input id="descriptionCheck" type="checkbox" ng-model="course.descriptionCheck" ng-checked="course.descriptionCheck || course.description" ng-disabled="course.description">

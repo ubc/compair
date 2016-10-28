@@ -3,20 +3,20 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.answer',
+var module = angular.module('ubc.ctlt.compair.answer',
     [
         'ngResource',
         'timer',
         'ui.bootstrap',
         'localytics.directives',
-        'ubc.ctlt.acj.classlist',
-        'ubc.ctlt.acj.common.form',
-        'ubc.ctlt.acj.common.interceptor',
-        'ubc.ctlt.acj.common.mathjax',
-        'ubc.ctlt.acj.common.highlightjs',
-        'ubc.ctlt.acj.common.timer',
-        'ubc.ctlt.acj.assignment',
-        'ubc.ctlt.acj.toaster'
+        'ubc.ctlt.compair.classlist',
+        'ubc.ctlt.compair.common.form',
+        'ubc.ctlt.compair.common.interceptor',
+        'ubc.ctlt.compair.common.mathjax',
+        'ubc.ctlt.compair.common.highlightjs',
+        'ubc.ctlt.compair.common.timer',
+        'ubc.ctlt.compair.assignment',
+        'ubc.ctlt.compair.toaster'
     ]
 );
 

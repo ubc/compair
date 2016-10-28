@@ -28,7 +28,7 @@ from .third_party_user import ThirdPartyUser
 from .lti_models import LTIConsumer, LTIContext, LTIMembership, \
     LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce, LTIOutcome
 
-from acj.core import db
+from compair.core import db
 convention = {
     "ix": 'ix_%(column_0_label)s',
     "uq": "uq_%(table_name)s_%(column_0_name)s",

@@ -1,13 +1,13 @@
 import json
 import datetime
 
-from acj import db
+from compair import db
 from data.fixtures import AnswerFactory
 from data.fixtures.test_data import TestFixture
-from acj.models import Answer
-from acj.tests.test_acj import ACJAPITestCase
+from compair.models import Answer
+from compair.tests.test_compair import ComPAIRAPITestCase
 
-class ComparionExampleAPITests(ACJAPITestCase):
+class ComparionExampleAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(ComparionExampleAPITests, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=30, num_groups=2, with_draft_student=True)

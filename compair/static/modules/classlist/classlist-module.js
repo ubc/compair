@@ -3,20 +3,20 @@
 // Isolate this module's creation by putting it in an anonymous function
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.classlist',
+var module = angular.module('ubc.ctlt.compair.classlist',
     [
         'ngResource',
-        'ubc.ctlt.acj.attachment',
-        'ubc.ctlt.acj.common.form',
-        'ubc.ctlt.acj.common.interceptor',
-        'ubc.ctlt.acj.course',
-        'ubc.ctlt.acj.group',
-        'ubc.ctlt.acj.toaster',
-        'ubc.ctlt.acj.user',
-        'ubc.ctlt.acj.login',
-        'ubc.ctlt.acj.lti',
-        'ubc.ctlt.acj.authorization',
-        'ubc.ctlt.acj.oauth',
+        'ubc.ctlt.compair.attachment',
+        'ubc.ctlt.compair.common.form',
+        'ubc.ctlt.compair.common.interceptor',
+        'ubc.ctlt.compair.course',
+        'ubc.ctlt.compair.group',
+        'ubc.ctlt.compair.toaster',
+        'ubc.ctlt.compair.user',
+        'ubc.ctlt.compair.login',
+        'ubc.ctlt.compair.lti',
+        'ubc.ctlt.compair.authorization',
+        'ubc.ctlt.compair.oauth',
         'ui.bootstrap',
         'fileSaver'
     ]

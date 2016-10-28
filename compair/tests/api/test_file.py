@@ -6,11 +6,11 @@ from flask import current_app
 from flask import make_response
 
 from data.fixtures.test_data import TestFixture
-from acj.tests.test_acj import ACJAPITestCase
-from acj.core import db
+from compair.tests.test_compair import ComPAIRAPITestCase
+from compair.core import db
 
 
-class FileRetrieveTests(ACJAPITestCase):
+class FileRetrieveTests(ComPAIRAPITestCase):
     base_url = '/app'
     fixtures = None
 
@@ -54,8 +54,8 @@ class FileRetrieveTests(ACJAPITestCase):
             self.assert404(rv)
             self.assertEqual('invalid file name', str(rv.get_data(as_text=True)))
 
-            with mock.patch('acj.os.path.exists', return_value=True):
-                with mock.patch('acj.send_file', return_value=make_response("OK")) as mock_send_file:
+            with mock.patch('compair.os.path.exists', return_value=True):
+                with mock.patch('compair.send_file', return_value=make_response("OK")) as mock_send_file:
                     self.client.get(url)
                     mock_send_file.assert_called_once_with(
                         '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),

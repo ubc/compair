@@ -1,19 +1,19 @@
 // Directives for viewing PDF directly on a page, requires viewerjs:
 // http://viewerjs.org/
 (function() {
-var module = angular.module('ubc.ctlt.acj.common.pdf', ['ui.bootstrap'])
+var module = angular.module('ubc.ctlt.compair.common.pdf', ['ui.bootstrap'])
     .run([ "$http", "$templateCache", function ($http, $templateCache){
         // load the template into cache - but this breaks the overlay, as the file will not load, so commenting it out
         // $http.get('modules/common/pdf-overlaid-template.html', {cache:$templateCache});
     }]);
 
 // Display a PDF in a viewerjs iframe.
-// Assumes that all PDF files are in the static/pdf directory in ACJ
+// Assumes that all PDF files are in the static/pdf directory in compair
 // Requires 2 parameters:
 // pdfs - a list of PDF files, required to be an array of hashes like:
 //	[{'name':'pdf file name on the server', 'alias':'the pdf file original name'},{...}]
 // label - instruction text shown to user before list of files
-module.directive('acjPdfInline', function() {
+module.directive('compairPdfInline', function() {
     return {
         templateUrl: 'modules/common/pdf-inline-template.html',
         scope: {

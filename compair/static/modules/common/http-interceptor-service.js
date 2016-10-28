@@ -2,7 +2,7 @@
 
 (function() {
 
-var module = angular.module('ubc.ctlt.acj.common.interceptor', []);
+var module = angular.module('ubc.ctlt.compair.common.interceptor', []);
 
 module.service('Interceptors', ['$q', '$cacheFactory', 'AnswerResource', function($q, $cacheFactory, AnswerResource) {
     var temporaryGroupStore = {};

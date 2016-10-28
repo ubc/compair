@@ -1,8 +1,8 @@
 import unittest
 import mock
 
-from acj.algorithms.pair.random.pair_generator import RandomPairGenerator
-from acj.algorithms import ComparisonPair, ScoredObject, InsufficientObjectsForPairException, \
+from compair.algorithms.pair.random.pair_generator import RandomPairGenerator
+from compair.algorithms import ComparisonPair, ScoredObject, InsufficientObjectsForPairException, \
     UserComparedAllObjectsException, UnknownPairGeneratorException
 
 class TestPairAdaptive(unittest.TestCase):

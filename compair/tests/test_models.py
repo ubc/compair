@@ -1,16 +1,16 @@
 import unittest
 import mock
 
-from acj import db
-from acj.models import User, Comparison, Score, \
+from compair import db
+from compair.models import User, Comparison, Score, \
     LTIOutcome
-from acj.models.comparison import update_scores
-from test_acj import ACJTestCase
-from acj.algorithms import ComparisonPair
-from acj.algorithms.score import calculate_score
+from compair.models.comparison import update_scores
+from test_compair import ComPAIRTestCase
+from compair.algorithms import ComparisonPair
+from compair.algorithms.score import calculate_score
 from data.fixtures.test_data import TestFixture, LTITestData
 
-class TestUsersModel(ACJTestCase):
+class TestUsersModel(ComPAIRTestCase):
     user = User()
 
     def setUp(self):
@@ -37,7 +37,7 @@ class TestUsersModel(ACJTestCase):
         self.assertTrue(self.user.verify_password('123456'))
 
 
-class TestUtils(ACJTestCase):
+class TestUtils(ComPAIRTestCase):
     def test_update_scores(self):
 
         criterion_comparison_results = {
@@ -69,7 +69,7 @@ class TestUtils(ACJTestCase):
         scores = update_scores([score], 1, criterion_comparison_results)
         self.assertEqual(len(scores), 4)
 
-class TestLTIOutcome(ACJTestCase):
+class TestLTIOutcome(ComPAIRTestCase):
 
     def setUp(self):
         super(TestLTIOutcome, self).setUp()

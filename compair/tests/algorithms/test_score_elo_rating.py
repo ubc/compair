@@ -1,7 +1,7 @@
 import unittest
 
-from acj.algorithms.score.elo_rating.score_algorithm import EloAlgorithmWrapper
-from acj.algorithms import ComparisonPair, ScoredObject, InvalidWinningKeyException
+from compair.algorithms.score.elo_rating.score_algorithm import EloAlgorithmWrapper
+from compair.algorithms import ComparisonPair, ScoredObject, InvalidWinningKeyException
 
 class TestScoreEloRating(unittest.TestCase):
     score_algorithm = EloAlgorithmWrapper()

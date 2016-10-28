@@ -1,7 +1,7 @@
 import unittest
 
-from acj.algorithms.score.true_skill_rating.score_algorithm import TrueSkillAlgorithmWrapper
-from acj.algorithms import ComparisonPair, ScoredObject, InvalidWinningKeyException
+from compair.algorithms.score.true_skill_rating.score_algorithm import TrueSkillAlgorithmWrapper
+from compair.algorithms import ComparisonPair, ScoredObject, InvalidWinningKeyException
 
 class TestScoreTrueSkillRating(unittest.TestCase):
     score_algorithm = TrueSkillAlgorithmWrapper()

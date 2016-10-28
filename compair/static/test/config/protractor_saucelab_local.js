@@ -13,7 +13,7 @@ exports.config = {
         format: 'pretty'
     },
     capabilities: {
-        'name': 'acj suite tests',
+        'name': 'ComPAIR suite tests',
         'browserName': 'chrome',
         'version': '52',
         'chromedriverVersion': '2.22',
