@@ -262,11 +262,6 @@ class AnswerRootAPI(Resource):
             assignment.calculate_grade(answer.user)
             course.calculate_grade(answer.user)
 
-        # update course & assignment grade for user if answer is fully submitted
-        if not answer.draft:
-            assignment.calculate_grade(answer.user)
-            course.calculate_grade(answer.user)
-
         return marshal(answer, dataformat.get_answer(restrict_user))
 
 

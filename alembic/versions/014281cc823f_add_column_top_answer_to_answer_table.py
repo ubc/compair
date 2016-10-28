@@ -1,14 +1,14 @@
 """Add column notable to answer table
 
 Revision ID: 014281cc823f
-Revises: 2ba873cb8692
+Revises: ad3d3931f78b
 Create Date: 2016-10-05 21:13:52.232095
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '014281cc823f'
-down_revision = '2ba873cb8692'
+down_revision = 'ad3d3931f78b'
 
 from alembic import op
 import sqlalchemy as sa
