@@ -8,7 +8,7 @@
 *.egg-info
 dist
 build
-!acj/static/lib_extension/pdfjs/build
+!compair/static/lib_extension/pdfjs/build
 eggs
 parts
 bin
@@ -47,16 +47,16 @@ tmpUpload/*
 config.py
 
 # compiled and generated files
-acj/static/acj.css
+compair/static/compair.css
 bower_components
 node_modules
-acj/static/index.html
+compair/static/index.html
 
 .env
 .python-version
 
 # copied fonts
-acj/static/fonts
+compair/static/fonts
 
 # uploaded and generated report files
 persistent/pdf/*
@@ -64,7 +64,7 @@ persistent/report/*
 persistent/tmp/*
 
 # google analytics file
-acj/static/tracking.js
+compair/static/tracking.js
 
 # docker generated data
 .data
