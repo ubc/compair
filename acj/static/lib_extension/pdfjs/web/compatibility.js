@@ -14,8 +14,7 @@
  */
 /* globals VBArray, PDFJS */
 
-(function compatibilityWrapper() {
-  'use strict';
+'use strict';
 
 // Initializing PDFJS global object here, it case if we need to change/disable
 // some PDF.js features, e.g. range requests
@@ -592,5 +591,3 @@ if (typeof PDFJS === 'undefined') {
     configurable: true
   });
 })();
-
-}).call((typeof window === 'undefined') ? this : window);
