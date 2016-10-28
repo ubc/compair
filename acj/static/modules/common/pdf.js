@@ -28,7 +28,7 @@ module.directive('acjPdfInline', function() {
                     $scope.pdfvisible = true;
                     $scope.pdfname = name;
                     $scope.pdfurl = $sce.trustAsResourceUrl(
-                        "/app/lib_extension/pdfjs/web/viewer.html#/app/pdf/" +
+                        "/app/lib/pdfjs-dist-viewer-min/build/minified/web/viewer.html#/app/pdf/" +
                         $scope.pdfname);
                 }
                 else {
