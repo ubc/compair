@@ -19,7 +19,7 @@
                     </select>
                 </span>
                 <br />
-                <span class="filter" ng-if="canManageAssignment">
+                <span class="filter" ng-if="canManageAssignment && includeScores">
                     <label>Display scores <a href="" tooltip="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
                             <i class="fa fa-question-circle"></i></a> below for: &nbsp;</label>
                     <select ng-model="gb.sortby" chosen
@@ -47,7 +47,7 @@
                     <th class="text-center"><a href="" ng-click="reverse = predicate == 'num_answers' && !reverse; predicate='num_answers'">
                         Answered</a>
                     </th>
-                    <th class="text-center"><a href="" ng-click="reverse = !reverse; sortScore()">
+                    <th class="text-center" ng-if="includeScores"><a href="" ng-click="reverse = !reverse; sortScore()">
                         Answer Score</a>
                     </th>
                     <th class="text-center"><a href="" ng-click="reverse = predicate == 'flagged' && !reverse; predicate='flagged'">
@@ -56,7 +56,7 @@
                     <th class="text-center"><a href="" ng-click="reverse = predicate == 'num_comparisons' && !reverse; predicate='num_comparisons'">
                         Evaluations</a>
                     </th>
-                    <th class="text-center" ng-show="includeSelfEval"><a href="" ng-click="reverse = predicate == 'num_self_evaluation' && !reverse; predicate='num_self_evaluation'">
+                    <th class="text-center" ng-if="includeSelfEval"><a href="" ng-click="reverse = predicate == 'num_self_evaluation' && !reverse; predicate='num_self_evaluation'">
                         Self-Evaluation</a>
                     </th>
                 </tr>
@@ -72,13 +72,16 @@
                     </td>
                     <td class="text-center text-success" ng-if="entry.num_answers > 0"><strong>Yes</strong></td>
                     <td class="text-center text-danger" ng-if="entry.num_answers == 0"><strong>No</strong></td>
-                    <td class="text-center" ng-class="{
+                    <td class="text-center" ng-if="includeScores"
+                        ng-class="{
                         'text-danger': entry.num_answers == 0,
                         'text-warning': entry.num_answers > 0 && !(entry.scores[gb.sortby] >= 0),
                         'text-success': entry.scores[gb.sortby] >= 0
                         }">
-                        <strong>{{ entry.scores[gb.sortby] }}
-                            <span ng-if="entry.scores[gb.sortby] >= 0">%</span></strong>
+                        <strong>
+                            {{ entry.scores[gb.sortby] }}
+                            <span ng-if="entry.scores[gb.sortby] >= 0">%</span>
+                        </strong>
                     </td>
                     <td class="text-center" ng-class="{
                         'text-success': entry.flagged == 'No' || entry.flagged == 'No Answer',
@@ -94,8 +97,8 @@
                         }">
                         <strong>{{entry.num_comparisons}} / {{ totalComparisonsRequired }}</strong>
                     </td>
-                    <td class="text-center text-success" ng-show="includeSelfEval && entry.num_self_evaluation > 0"><strong>Yes</strong></td>
-                    <td class="text-center text-danger" ng-show="includeSelfEval && entry.num_self_evaluation == 0"><strong>No</strong></td>
+                    <td class="text-center text-success" ng-if="includeSelfEval && entry.num_self_evaluation > 0"><strong>Yes</strong></td>
+                    <td class="text-center text-danger" ng-if="includeSelfEval && entry.num_self_evaluation == 0"><strong>No</strong></td>
                 </tr>
             </tbody>
         </table>

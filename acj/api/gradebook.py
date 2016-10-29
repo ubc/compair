@@ -11,7 +11,7 @@ from sqlalchemy.orm import undefer, joinedload
 
 from acj.authorization import require
 from acj.models import Course, Assignment, CourseRole, User, UserCourse, Comparison, \
-    AnswerComment, Answer, Score, AnswerCommentType
+    AnswerComment, Answer, Score, AnswerCommentType, PairingAlgorithm
 from .util import new_restful_api
 from acj.core import event
 
@@ -24,11 +24,6 @@ api = new_restful_api(gradebook_api)
 
 # events
 on_gradebook_get = event.signal('GRADEBOOK_GET')
-
-
-def normalize_score(score, max_score, ndigits=0):
-    return round(score / max_score, ndigits) if max_score is not 0 else 0
-
 
 # declare an API URL
 # /
@@ -91,6 +86,7 @@ class GradebookAPI(Resource):
             all()
 
         # process the results into dicts
+        include_scores = assignment.pairing_algorithm != PairingAlgorithm.random
         init_scores = {criterion.id: 'Not Evaluated' for criterion in assignment.criteria}
         scores_by_user_id = {student_id: copy.deepcopy(init_scores) for student_id in student_ids}
         flagged_by_user_id = {}
@@ -100,11 +96,13 @@ class GradebookAPI(Resource):
             if score[1] is not None:
                 flagged_by_user_id[score[0]] = 'Yes' if score[1] else 'No'
                 num_answers_per_student[score[0]] = 1
-                if score[2] is not None and score[3] is not None:
-                    scores_by_user_id[score[0]][score[2]] = round(score[3], 3)
+                if include_scores:
+                    if score[2] is not None and score[3] is not None:
+                        scores_by_user_id[score[0]][score[2]] = round(score[3], 3)
             else:
-                # no answer from the student
-                scores_by_user_id[score[0]] = {criterion.id: 'No Answer' for criterion in assignment.criteria}
+                if include_scores:
+                    # no answer from the student
+                    scores_by_user_id[score[0]] = {criterion.id: 'No Answer' for criterion in assignment.criteria}
 
         include_self_evaluation = False
         num_self_evaluation_per_student = {}
@@ -143,12 +141,13 @@ class GradebookAPI(Resource):
                 'lastname': student.lastname,
                 'num_answers': num_answers_per_student.get(student.id, 0),
                 'num_comparisons': num_comparisons_per_student.get(student.id, 0),
-                'scores': {
-                    criterion.uuid: scores_by_user_id.get(student.id, no_answer).get(criterion.id)
-                        for criterion in assignment.criteria
-                },
                 'flagged': flagged_by_user_id.get(student.id, 'No Answer')
             }
+            if include_scores:
+                entry['scores'] = {
+                    criterion.uuid: scores_by_user_id.get(student.id, no_answer).get(criterion.id)
+                        for criterion in assignment.criteria
+                }
             if include_self_evaluation:
                 entry['num_self_evaluation'] = num_self_evaluation_per_student[student.id]
             gradebook.append(entry)
@@ -156,6 +155,7 @@ class GradebookAPI(Resource):
         ret = {
             'gradebook': gradebook,
             'total_comparisons_required': assignment.total_comparisons_required,
+            'include_scores': include_scores,
             'include_self_evaluation': include_self_evaluation
         }
 
