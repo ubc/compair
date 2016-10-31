@@ -1,5 +1,5 @@
 .git
-acj/static/lib
+compair/static/lib
 persistent/pdf/*
 persistent/report/*
 persistent/tmp/*

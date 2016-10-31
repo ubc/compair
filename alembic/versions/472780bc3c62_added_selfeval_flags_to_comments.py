@@ -13,7 +13,7 @@ down_revision = '3b053548b60f'
 from alembic import op
 import sqlalchemy as sa
 
-from acj.models import convention
+from compair.models import convention
 
 
 def upgrade():

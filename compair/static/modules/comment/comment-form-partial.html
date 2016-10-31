@@ -1,0 +1,40 @@
+<form name="commentForm" class="form" ng-submit="commentSubmit()" novalidate>
+    <fieldset>
+        <h2 ng-if="parent.name"><i class="fa fa-comments"></i> {{parent.name}}</h2>
+        <i class="fa fa-quote-left pull-left" ng-if="!parent.name && parent.content"></i>
+        <i class="fa fa-quote-right pull-right" ng-if="!parent.name && parent.content"></i>
+        <div class="assignment-desc" mathjax hljs ng-bind-html="parent.content"></div>
+        <!-- Attachment -->
+        <compair-pdf-inline label="See assignment details:" pdf="parent.file">
+        </compair-pdf-inline>
+
+        <hr />
+        <div class="form-group">
+            <textarea ng-model="comment.content" id="commentContent" class="form-control" rows="8"
+                      ckeditor="editorOptions" required>
+            </textarea>
+        </div>
+        <div class="form-group" ng-if="answerComment && (comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private)">
+            <input id="comment_type" type="checkbox" ng-model="comment.comment_type"
+                   ng-true-value="'{{AnswerCommentType.public}}'" ng-false-value="'{{AnswerCommentType.private}}'">
+            <label for="comment_type">Show this reply to the whole class</label>
+        </div>
+    </fieldset>
+
+    <div class="row" ng-show="comment.draft">
+        <div class="col-md-3 col-md-offset-3 col-xs-6">
+            <input type="submit" class="btn btn-default btn-lg center-block" value="Save Draft"
+                ng-click="comment.draft = true"
+                ng-disabled="submitted" />
+        </div>
+        <div class="col-md-3 col-xs-6">
+            <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
+                ng-click="comment.draft = false"
+                ng-disabled="commentForm.$invalid || submitted" />
+        </div>
+    </div>
+    <div ng-show="!comment.draft">
+        <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
+            ng-disabled="commentForm.$invalid || submitted" />
+    </div>
+</form>

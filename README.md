@@ -18,6 +18,42 @@ The frontend is purely written in Javascript, using [AngularJS](http://angularjs
 The backend uses the python web application framework [Flask](http://flask.pocoo.org/) with [Flask SQLAlchemy](http://pythonhosted.org/Flask-SQLAlchemy/) for database persistence.
 [Alembic] (http://alembic.readthedocs.org/) is used to maintain database updates.
 
+Developer Installation - VM
+---------------------------
+
+### Install Dependencies
+
+### Vagrant up the VM
+
+	git clone git@github.com:ubc/compair.git compair
+	cd compair && vagrant up
+
+### Start Up the ComPAIR server
+
+	vagrant ssh -c "cd /vagrant && make rundev"
+
+Now you should be able to open your browser and access ComPAIR instance using the following address:
+
+	http://localhost:8080/static/index.html#/
+
+### Access Database
+
+A MySQL database is installed and the port 3306 is forwarded to host 3306 (in case there is a conflict, vagrant will pick another port, watch for the information when vagrant starts). From host, database can be connect by:
+
+	mysql -u compair -P 3306 -p compair
+
+The default password is `compaircompair`
+
+If you already have a MySQL server running on your host, you may need to use the following command:
+
+	mysql -u compair --protocol=TCP -P 3306 -p compair
+
+### Upgrade Database
+
+    vagrant ssh # only for developer installation
+    cd /vagrant
+    PYTHONPATH=. alembic upgrade head
+
 Developer Installation - Docker
 -------------------------------
 
@@ -120,8 +156,8 @@ Restart server after making any changes to settings
 `LTI_ENFORCE_SSL`: Enforce https on all LTI requests received (default: True)
 
 In additional, you must manually insert a new LTI consumer record into the lti_consumer table with:
-- a unique and valid `oauth_consumer_key` (view the ACJRequestValidator for constraints)
-- a valid `oauth_consumer_secret` (view the ACJRequestValidator for constraints)
+- a unique and valid `oauth_consumer_key` (view the ComPAIRRequestValidator for constraints)
+- a valid `oauth_consumer_secret` (view the ComPAIRRequestValidator for constraints)
 - `active` set to True
 
 Restart server after making any changes to settings
@@ -129,7 +165,7 @@ Restart server after making any changes to settings
 Google Analytics Web Tracking
 -----------------------------
 1. Register for a Google Analytics web property ID at http://www.google.ca/analytics/.
-2. Create a configuration file under acj/static/tracking.js with the following content:
+2. Create a configuration file under compair/static/tracking.js with the following content:
 
     ```js
     window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
@@ -149,5 +185,5 @@ git clone https://github.com/mozilla/pdf.js.git /tmp
 cd /tmp/pdf.js
 gulp generic
 cd -
-cp -R /tmp/pdf.js/build/generic/* acj/static/lib_extension/pdfjs
+cp -R /tmp/pdf.js/build/generic/* compair/static/lib_extension/pdfjs
 ```

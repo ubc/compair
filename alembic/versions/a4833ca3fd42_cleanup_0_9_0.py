@@ -13,7 +13,7 @@ down_revision = 'e74cf0affe74'
 from alembic import op
 import sqlalchemy as sa
 
-from acj.models import convention
+from compair.models import convention
 
 def upgrade():
     with op.batch_alter_table('score', naming_convention=convention) as batch_op:

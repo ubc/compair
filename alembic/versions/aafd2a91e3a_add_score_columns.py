@@ -14,7 +14,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy_enum34 import EnumType
 
-from acj.models import convention, ScoringAlgorithm
+from compair.models import convention, ScoringAlgorithm
 
 def upgrade():
     op.add_column('score', sa.Column('scoring_algorithm', EnumType(ScoringAlgorithm, name='scoring_algorithm'), nullable=True))

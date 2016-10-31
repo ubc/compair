@@ -15,7 +15,7 @@ import sqlalchemy as sa
 
 from sqlalchemy_enum34 import EnumType
 
-from acj.models import SystemRole, CourseRole
+from compair.models import SystemRole, CourseRole
 
 def upgrade():
     op.create_table('lti_consumer',

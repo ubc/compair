@@ -1,0 +1,172 @@
+<form name="duplicateCourseForm" class="form" ng-submit="duplicate()" novalidate>
+
+    <h2 class="text-center">Duplicate: {{originalCourse.name}}</h2>
+    <br />
+    <p class="intro-text">Please provide the required fields below to duplicate your course.</p>
+
+    <fieldset>
+        <legend>Course Details</legend>
+        <div class="row">
+            <div class="col-md-6 form-group">
+                <compair-field-with-feedback form-control="duplicateCourseForm.courseYear">
+                    <label for="courseYear" class="required-star">Year</label>
+                    <input id="courseYear" name="courseYear" ng-model="duplicateCourse.year"
+                    type="number" class="form-control" required min="1900" />
+                </compair-field-with-feedback>
+            </div>
+            <div class="col-md-6 form-group">
+                <compair-field-with-feedback form-control="duplicateCourseForm.courseTerm">
+                    <label for="courseTerm" class="required-star">Term/Semester</label>
+                    <input id="courseTerm" name="courseTerm" ng-model="duplicateCourse.term"
+                    type="text" class="form-control" required maxlength="255" />
+                </compair-field-with-feedback>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Schedule</legend>
+        <div class="row">
+            <div class="col-md-6 form-group">
+                <label>Course Begins</label><br />
+                <div class="assignment-date">
+                    <span class="input-group">
+                        <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="duplicateCourse.date.course_start.date" is-open="duplicateCourse.date.course_start.opened" />
+                        <span class="input-group-btn">
+                            <button type="button" class="btn btn-default" ng-click="duplicateCourse.date.course_start.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
+                    </span>
+                </div>
+                <div class="assignment-date">
+                    <timepicker ng-model="duplicateCourse.date.course_start.time" minute-step="1" mousewheel="false"></timepicker>
+                </div>
+            </div>
+            <div class="col-md-6 form-group">
+                <label>Course Ends</label><br />
+                <div class="assignment-date">
+                    <span class="input-group">
+                        <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="duplicateCourse.date.course_end.date" is-open="duplicateCourse.date.course_end.opened" />
+                        <span class="input-group-btn">
+                            <button type="button" class="btn btn-default" ng-click="duplicateCourse.date.course_end.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
+                    </span>
+                </div>
+                <div class="assignment-date">
+                    <timepicker ng-model="duplicateCourse.date.course_end.time" minute-step="1" mousewheel="false"></timepicker>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset ng-show="duplicateAssignments.length">
+        <legend>Assignment Schedule ({{duplicateAssignments.length}} Assignments)</legend>
+
+        <div class="form-group">
+            <a class="btn btn-default" ng-click="adjustDuplicateAssignmentDates()">
+                Adjust Assignment Dates
+            </a>
+            <label>Automatically adjust assignment answer and comparison dates based on the new course start date.</label>
+        </div>
+
+        <!-- Assignments List -->
+        <div class="each-assignment" ng-class="{'first-child': $first}"
+            ng-repeat="assignment in duplicateAssignments">
+
+            <hr />
+
+            <h3 class="media-heading">
+                {{assignment.name}}
+            </h3>
+            <div class="form-group">
+                <input id="availableCheck-{{assignment.id}}" type="checkbox" ng-model="assignment.availableCheck">
+                <label for="availableCheck-{{assignment.id}}">Set comparison period</label>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label class="required-star">
+                        Answering Begins
+                        <span ng-if="duplicateCourse.date.course_start.date">
+                            (week #{{assignment.date.astart.date | amDifference : duplicateCourse.date.course_start.date : 'weeks' }})
+                        </span>
+                    </label><br />
+                    <div class="assignment-date">
+                        <span class="input-group">
+                            <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="assignment.date.astart.date" is-open="assignment.date.astart.opened" required />
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" ng-click="assignment.date.astart.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            </span>
+                        </span>
+                    </div>
+                    <div class="assignment-date">
+                        <timepicker ng-model="assignment.date.astart.time" minute-step="1" mousewheel="false"></timepicker>
+                    </div>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label class="required-star">
+                        Answering Ends
+                        <span ng-if="duplicateCourse.date.course_start.date">
+                            (week #{{assignment.date.aend.date | amDifference : duplicateCourse.date.course_start.date : 'weeks' }})
+                        </span>
+                    </label><br />
+                    <div class="assignment-date">
+                        <span class="input-group">
+                            <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="assignment.date.aend.date" is-open="assignment.date.aend.opened" required />
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" ng-click="assignment.date.aend.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            </span>
+                        </span>
+                    </div>
+                    <div class="assignment-date">
+                        <timepicker ng-model="assignment.date.aend.time" minute-step="1" mousewheel="false"></timepicker>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" ng-show="assignment.availableCheck">
+                <div class="col-md-6 form-group">
+                    <label class="required-star">
+                        Comparing Begins
+                        <span ng-if="duplicateCourse.date.course_start.date">
+                            (week #{{assignment.date.cstart.date | amDifference : duplicateCourse.date.course_start.date : 'weeks' }})
+                        </span>
+                    </label><br />
+                    <div class="assignment-date">
+                        <span class="input-group">
+                            <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="assignment.date.cstart.date" is-open="assignment.date.cstart.opened" ng-required="assignment.availableCheck" />
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" ng-click="assignment.date.cstart.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            </span>
+                        </span>
+                    </div>
+                    <div class="assignment-date">
+                        <timepicker ng-model="assignment.date.cstart.time" minute-step="1" mousewheel="false"></timepicker>
+                    </div>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label class="required-star">
+                        Comparing Ends
+                        <span ng-if="duplicateCourse.date.course_start.date">
+                            (week #{{assignment.date.cend.date | amDifference : duplicateCourse.date.course_start.date : 'weeks' }})
+                        </span>
+                    </label><br />
+                    <div class="assignment-date">
+                        <span class="input-group">
+                            <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="assignment.date.cend.date" is-open="assignment.date.cend.opened" ng-required="assignment.availableCheck" />
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" ng-click="assignment.date.cend.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            </span>
+                        </span>
+                    </div>
+                    <div class="assignment-date">
+                        <timepicker ng-model="assignment.date.cend.time" minute-step="1" mousewheel="false"></timepicker>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </fieldset>
+
+    <input type="submit" class="btn btn-success btn-lg center-block" value="Duplicate Course"
+            ng-disabled="duplicateCourseForm.$invalid || submitted" />
+</form>

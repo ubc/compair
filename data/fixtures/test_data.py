@@ -4,9 +4,9 @@ import random
 
 import factory.fuzzy
 
-from acj import db
+from compair import db
 from six.moves import range
-from acj.models import SystemRole, CourseRole, Criterion, Course, Comparison, ThirdPartyType
+from compair.models import SystemRole, CourseRole, Criterion, Course, Comparison, ThirdPartyType
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
     AnswerFactory, CriterionFactory, ComparisonFactory, AssignmentCriterionFactory, FileFactory, \
     AssignmentCommentFactory, AnswerCommentFactory, ScoreFactory, ComparisonExampleFactory, \
@@ -123,7 +123,7 @@ class LTITestData:
         self.lti_consumer.lis_outcome_service_url = "TestUrl.com"
         lti_context = self.create_context(
             self.lti_consumer,
-            acj_course_id=course.id
+            compair_course_id=course.id
         )
         lti_user_student = self.create_user(self.lti_consumer, SystemRole.student, student)
 
@@ -132,7 +132,7 @@ class LTITestData:
         lti_user_resource_link1.lis_result_sourcedid = "SomeUniqueSourcedId" + str(len(self.lti_user_resource_links))
 
         if assignment:
-            lti_resource_link2 = self.create_resource_link(self.lti_consumer, lti_context=lti_context, acj_assignment=assignment)
+            lti_resource_link2 = self.create_resource_link(self.lti_consumer, lti_context=lti_context, compair_assignment=assignment)
             lti_user_resource_link2 = self.create_user_resource_link(lti_user_student, lti_resource_link2, CourseRole.student)
             lti_user_resource_link2.lis_result_sourcedid = "SomeUniqueSourcedId" + str(len(self.lti_user_resource_links))
 
@@ -167,10 +167,10 @@ class LTITestData:
 
         return lti_user.user_id
 
-    def create_resource_link(self, lti_consumer, lti_context=None, resource_link_id=None, acj_assignment=None):
+    def create_resource_link(self, lti_consumer, lti_context=None, resource_link_id=None, compair_assignment=None):
         lti_resource_link = LTIResourceLinkFactory(
             lti_consumer=lti_consumer,
-            acj_assignment=acj_assignment
+            compair_assignment=compair_assignment
         )
         if lti_context:
             lti_resource_link.lti_context = lti_context
@@ -195,11 +195,11 @@ class LTITestData:
 
         return lti_context
 
-    def create_user(self, lti_consumer, system_role=SystemRole.instructor, acj_user=None):
+    def create_user(self, lti_consumer, system_role=SystemRole.instructor, compair_user=None):
         lti_user = LTIUserFactory(
             lti_consumer=lti_consumer,
             system_role=system_role,
-            acj_user=acj_user
+            compair_user=compair_user
         )
         self.lti_users.append(lti_user)
 

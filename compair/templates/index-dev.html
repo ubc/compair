@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<!--[if IE 9]><html ng-app = "myApp" auth-login class="ie9"><![endif]-->
+<html ng-app = "myApp" auth-login>
+    <head>
+        <base href="/app/">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- add empty favicon.ico to prevent browser errors -->
+        <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+        <title>ComPAIR</title>
+
+        <!-- needed when ckeditor is minified or when running unit tests -->
+        {#<script src="{{ url_for('static', filename='lib_extension/ckeditor/basepath.js') }}"></script>#}
+
+        <!-- Bower Installed Libs, automatically inserted using gulp modules -->
+        <!-- bower:css -->
+        <link rel="stylesheet" href="{{ url_for('static', filename='lib/bootstrap/dist/css/bootstrap.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='lib/highlightjs/styles/foundation.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='lib/angular-loading-bar/build/loading-bar.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='lib/AngularJS-Toaster/toaster.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='lib/chosen/chosen.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='lib/chosen-bootstrap-theme/dist/chosen-bootstrap-theme.min.css') }}" />
+        <!-- endbower -->
+
+        <!-- Javascript Libraries -->
+        <!-- build:prod_minify_js_libs -->
+        <!-- bower:js -->
+        <script src="{{ url_for('static', filename='lib/jquery/dist/jquery.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular/angular.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-animate/angular-animate.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-cookies/angular-cookies.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-resource/angular-resource.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-route/angular-route.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-sanitize/angular-sanitize.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-http-auth/src/http-auth-interceptor.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/highlightjs/highlight.pack.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-ckeditor/angular-ckeditor.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/es-breadcrumbs/dist/ng-breadcrumbs.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-loading-bar/build/loading-bar.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/AngularJS-Toaster/toaster.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/chosen/chosen.jquery.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-chosen-localytics/dist/angular-chosen.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/moment/moment.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-moment/angular-moment.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-file-upload/angular-file-upload.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-mocks/angular-mocks.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-bootstrap/ui-bootstrap-tpls.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/humanize-duration/humanize-duration.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-timer/dist/angular-timer.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/lodash/lodash.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/blob-polyfill/Blob.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/file-saver.js/FileSaver.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-file-saver/dist/angular-file-saver.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/clipboard/dist/clipboard.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/ngclipboard/dist/ngclipboard.js') }}"></script>
+        <!-- endbower -->
+        <!-- endbuild -->
+
+        <!-- font awesome CDN -->
+        <script src="https://use.fontawesome.com/5896577a49.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.11/ckeditor.js"></script>
+
+        <!-- Non-Bower Managed Includes -->
+
+        <!-- ComPAIR Stylesheet -->
+        <!-- build:prod_compile_minify_css -->
+        <link rel="stylesheet/less" type="text/css" href="{{ url_for('static', filename='less/compair.less') }}" />
+        <script src="//cdnjs.cloudflare.com/ajax/libs/less.js/2.5.1/less.min.js">
+        </script>
+        <!-- endbuild -->
+
+        <!-- MathJax, should figure out how to bower manage this -->
+        <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_HTMLorMML&delayStartupUntil=configured"></script>
+        <script type="text/javascript">
+        MathJax.Hub.Config({
+          skipStartupTypeset: true
+        });
+        MathJax.Hub.Configured();
+        CKEDITOR.plugins.addExternal( 'combinedmath', '/app/lib_extension/ckeditor/plugins/combinedmath/' );
+        </script>
+
+        <!-- build:prod_minify_js -->
+        <!-- AngularJS Modules/Controllers/Services/etc -->
+        <script src="{{ url_for('static', filename='compair-config.js') }}" type="text/javascript"></script>
+        <!-- - Shared Modules -->
+        <script src="{{ url_for('static', filename='modules/common/common-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/common/form-directive.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/common/modal-cancel-button-directive.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/common/avatar-directive.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/common/http-interceptor-service.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/common/mathjax-directive.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/common/hljs-directive.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/common/timer-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/common/pdf.js') }}"></script>
+        <!-- - Non-Route Modules -->
+        <script src="{{ url_for('static', filename='modules/authentication/authentication-service.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/authorization/authorization-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/session/session-service.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/criterion/criterion-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/criterion/criterion-form-directive.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/toaster/toaster-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/user/user-module.js') }}"></script>
+        <!-- - Individual Route Modules -->
+        <script src="{{ url_for('static', filename='modules/answer/answer-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/attachment/attachment-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/classlist/classlist-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/course/course-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/gradebook/gradebook-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/home/home-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/comment/comment-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/comparison/comparison-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/login/login-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/login/login-directive.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/lti/lti-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/navbar/navbar-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/assignment/assignment-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/group/group-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/report/report-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/oauth/oauth-module.js') }}"></script>
+        <!-- endbuild -->
+
+        <script type="text/javascript">
+            (function() {
+                angular.module('ubc.ctlt.compair.login')
+                .run( ['AuthTypesEnabled', function(AuthTypesEnabled) {
+                    AuthTypesEnabled.app = {{ 'true' if app_login_enabled else 'false' }};
+                    AuthTypesEnabled.cas = {{ 'true' if cas_login_enabled else 'false' }};
+                    AuthTypesEnabled.lti = {{ 'true' if lti_login_enabled else 'false' }};
+                }]);
+            })();
+        </script>
+        {% if ga_tracking_id %}
+            <!-- Google Analytics -->
+            <script type="text/javascript">
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+                ga('create', '{{ ga_tracking_id }}', 'auto');
+                ga('send', 'pageview');
+            </script>
+        {% endif %}
+    </head>
+    <body>
+
+    <!--[if lt IE 9 ]>
+    <div class="alert-warning">
+        <i class="fa fa-warning"></i>
+        This application only supports <strong>Internet Explorer 9 and higher</strong>. Please <a href="http://windows.microsoft.com/en-ca/internet-explorer/download-ie">upgrade your browser</a> or download <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a>, <a href="http://www.google.com/chrome/">Chrome</a>, or <a href="https://www.apple.com/ca/safari/">Safari</a> to use instead. Thank you!
+    </div>
+    <![endif]-->
+
+    <!-- Main Navbar -->
+    <ng-include src="'modules/navbar/navbar-partial.html'"></ng-include>
+
+    <!-- Toast Messages from AngularJS-Toaster -->
+    <toaster-container toaster-options="{'limit': 1, 'position-class': 'toast-top-full-width-opaque'}"></toaster-container>
+
+    <!-- Main Viewport, where all the module partials are shown -->
+    <div class="container">
+        <!-- ngView, should have it's own row and column css organization -->
+        <div ng-view=""></div>
+    </div>
+    </body>
+</html>

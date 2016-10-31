@@ -1,12 +1,12 @@
 {
-  "name": "acj",
+  "name": "compair",
   "version": "0.0.1",
   "homepage": "https://github.com/ubc/compair",
   "authors": [
     "UBC CTLT"
   ],
   "description": "Student learning tool where instructors and students may respond and comment on assignments. A method called Adaptive Comparative Judgement is used to give a ranking to the assignment responses.",
-  "main": "acj/static/acj.css",
+  "main": "compair/static/compair.css",
   "license": "GPLv3",
   "private": true,
   "ignore": [

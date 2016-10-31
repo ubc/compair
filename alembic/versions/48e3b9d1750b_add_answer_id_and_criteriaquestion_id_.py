@@ -12,7 +12,7 @@ import logging
 import sqlalchemy as sa
 from sqlalchemy import UniqueConstraint, exc
 
-from acj.models import convention
+from compair.models import convention
 
 revision = '48e3b9d1750b'
 down_revision = '4f56a1ca6ff7'

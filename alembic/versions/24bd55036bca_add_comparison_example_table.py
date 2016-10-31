@@ -14,7 +14,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy_enum34 import EnumType
 
-from acj.models import convention
+from compair.models import convention
 
 def upgrade():
     op.create_table('comparison_example',

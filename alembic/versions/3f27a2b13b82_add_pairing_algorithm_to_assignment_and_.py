@@ -15,7 +15,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 from sqlalchemy_enum34 import EnumType
 
-from acj.models import convention, PairingAlgorithm
+from compair.models import convention, PairingAlgorithm
 
 def upgrade():
     op.add_column('comparison', sa.Column('pairing_algorithm',

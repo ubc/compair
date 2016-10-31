@@ -27,7 +27,7 @@ clean:
 	find . -name '*.pyo' -exec rm -f {} \;
 	find . -name '*~' -exec rm -f {} \;
 	rm -rf bower_components node_modules
-	rm -rf acj/static/dist acj/static/build
+	rm -rf compair/static/dist compair/static/build
 
 lint:
 	flake8 --exclude=env .
@@ -39,16 +39,16 @@ testf:
 	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js test:unit
 
 testb:
-	$(DOCKERRUN_PY) python -m unittest discover -s acj/tests/
+	$(DOCKERRUN_PY) python -m unittest discover -s compair/tests/
 
 tdd:
-	$(DOCKERRUN_NODE) node_modules/karma/bin/karma start acj/static/test/config/karma.conf.js
+	$(DOCKERRUN_NODE) node_modules/karma/bin/karma start compair/static/test/config/karma.conf.js
 
 test: testf testb
 
 testci:
-	$(DOCKERRUN_NODE) node_modules/karma/bin/karma start acj/static/test/config/karma.conf.js --single-run --browsers PhantomJS
-	$(DOCKERRUN_PY) python -m unittest discover -s acj/tests/
+	$(DOCKERRUN_NODE) node_modules/karma/bin/karma start compair/static/test/config/karma.conf.js --single-run --browsers PhantomJS
+	$(DOCKERRUN_PY) python -m unittest discover -s compair/tests/
 
 testsauce:
 	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js  test:acceptance:sauce

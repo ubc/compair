@@ -1,0 +1,308 @@
+<form name="assignmentForm" class="form" ng-submit="assignmentSubmit()" novalidate>
+
+    <fieldset>
+        <legend>Assignment</legend>
+        <div class="lti-param-copy pull-right" ng-show="assignment.id != null && assignment.lti_linkable">
+            LTI Parameter: "<em>assignment={{assignment.id}}</em>"
+            &nbsp;&nbsp;
+            <!-- TODO: when ui bootstrap is updated change trigger to 'outsideClick' -->
+            <a href="" tooltip="Copied" tooltip-placement="bottom" tooltip-trigger="click"
+                  ngclipboard data-clipboard-text="assignment={{assignment.id}}"
+                  title="Copy the parameter to create a link from an LTI tool">
+                Copy?
+            </a>
+        </div>
+
+        <compair-field-with-feedback form-control="assignmentForm.assignmentName">
+            <label for="assignmentName" class="required-star">Short Name</label>
+            <input class="form-control" id="assignmentName" type="text"
+                name="assignmentName" ng-model="assignment.name" placeholder="short question or title for the assignment"
+                required ng-maxlength="255" auto-focus />
+            <span ng-if="assignmentForm.assignmentName.$error.maxlength" class="help-block has-error">Maximum length is 255 characters</span>
+        </compair-field-with-feedback>
+
+        <div>
+            <label for="importFile">Attach PDF (maximum size 25MB)</label>
+            <p ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)"><em>Tip: Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> or using <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a> or <a href="http://www.google.com/chrome/">Chrome</a> if you have problems uploading.</em></p>
+            <input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)" multiple/>
+            <p class="instructional-text" ng-show="uploader.queue.length">The file below will be attached when you <strong>save this assignment</strong>. You may also remove the file and upload another instead.</p>
+            <div class="row" ng-repeat="item in uploader.queue">
+                <div class="col-md-7"><i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong></div>
+                <div class="col-md-1">{{item.file.size/1024/1024|number:2}} MB</div>
+                <div class="col-md-2" ng-if="item.progress < 100"><strong>{{item.progress}}% uploaded</strong></div>
+                <div class="col-md-2" ng-if="item.progress == 100 && !item.isSuccess"><strong>Storing file...</strong></div>
+                <div class="col-md-2" ng-if="item.progress == 100 && item.isSuccess"><strong>Attached</strong></div>
+                <div class="col-md-2">
+                    <a class="btn btn-danger btn-xs" ng-click="item.cancel();item.remove();resetFileUploader();">
+                        <i class="fa fa-trash-o"></i> Remove
+                    </a>
+                </div>
+            </div>
+        </div>
+        <br>
+        <div ng-show="assignment.file && assignment.uploadedFile">
+            <div class="row">
+                <div class="col-md-4">
+                    <i class="fa fa-paperclip"></i> Attached File: <strong>{{assignment.file.alias}}</strong>
+                </div>
+                <div class="col-md-1">
+                    <a ng-click="deleteFile(assignment.file)" class="btn btn-danger btn-xs">
+                        <i class="fa fa-trash-o"></i> Remove
+                    </a>
+                </div>
+            </div>
+            <br>
+        </div>
+        <div class="form-group">
+            <label for="assignmentDescription">Additional Assignment Details</label>
+            <textarea ckeditor="editorOptions" rows="8"
+                ng-model="assignment.description" class="form-control" id="assignmentDescription">
+            </textarea>
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Schedule</legend>
+        <div class="instructional-text">
+            <p><strong>Students can answer and edit their answers only during the answering dates and times you set below.</strong> Students do not see an assignment in the application until the answering period begins. Students can read all answers only <em>after</em> they have completed the required number of comparisons.</p>
+            <p><strong>By default, students can compare answers after the answer period ends.</strong> You may instead set specific dates and times for the comparison period. Note that if you manually set a comparison period, students can read all answers only <em>after</em> the comparison period ends.</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 form-group">
+                <label class="required-star">Answering Begins</label><br />
+                <div class="assignment-date">
+                    <span class="input-group">
+                        <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.astart.date" is-open="date.astart.opened" required />
+                        <span class="input-group-btn">
+                            <button type="button" class="btn btn-default" ng-click="date.astart.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
+                    </span>
+                </div>
+                <div class="assignment-date">
+                    <timepicker ng-model="date.astart.time" minute-step="1" mousewheel="false"></timepicker>
+                </div>
+            </div>
+            <div class="col-md-6 form-group">
+                <label class="required-star">Answering Ends</label><br />
+                <div class="assignment-date">
+                    <span class="input-group">
+                        <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.aend.date" is-open="date.aend.opened" required />
+                        <span class="input-group-btn">
+                            <button type="button" class="btn btn-default" ng-click="date.aend.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
+                    </span>
+                </div>
+                <div class="assignment-date">
+                    <timepicker ng-model="date.aend.time" minute-step="1" mousewheel="false"></timepicker>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <input id="availableCheck" type="checkbox" ng-model="assignment.availableCheck">
+        <label for="availableCheck">Manually set when students can compare answers for this assignment</label>
+        <br /><br />
+
+        <div ng-show="assignment.availableCheck">
+
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label class="required-star">Comparing Begins</label><br />
+                    <div class="assignment-date">
+                        <span class="input-group">
+                            <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.cstart.date" is-open="date.cstart.opened" ng-required="assignment.availableCheck" />
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" ng-click="date.cstart.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            </span>
+                        </span>
+                    </div>
+                    <div class="assignment-date">
+                        <timepicker ng-model="date.cstart.time" minute-step="1" mousewheel="false"></timepicker>
+                    </div>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label class="required-star">Comparing Ends</label><br />
+                    <div class="assignment-date">
+                        <span class="input-group">
+                            <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.cend.date" is-open="date.cend.opened" ng-required="assignment.availableCheck" />
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" ng-click="date.cend.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            </span>
+                        </span>
+                    </div>
+                    <div class="assignment-date">
+                        <timepicker ng-model="date.cend.time" minute-step="1" mousewheel="false"></timepicker>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Criteria</legend>
+        <div class="instructional-text">
+            <p><strong>The criteria below appear when students compare answers</strong> for this assignment, to guide them in their critical thinking process. For each criterion, students will need to choose a preferred answer from a given pair. Note that criteria are locked in once students start comparing, so you cannot add or remove inidividual criterion after comparing begins.</p>
+            <comparison-preview></comparison-preview>
+        </div>
+        <ng-include src="'modules/criterion/criterion-assignment-partial.html'"></ng-include>
+    </fieldset>
+
+    <fieldset>
+        <legend>Comparisons</legend>
+        <div class="instructional-text">
+            <p>For each comparison, students will need to choose a preferred answer for each criterion you've set above and write separate feedback for each answer in a given pair. For this assignment, students are currently required to submit:
+                <strong ng-show="assignment.number_of_comparisons && !assignment.addPractice">{{assignment.number_of_comparisons}} comparison<span ng-show="assignment.number_of_comparisons > 1">s</span></strong><strong ng-show="assignment.number_of_comparisons && assignment.addPractice">{{assignment.number_of_comparisons*1+1}} comparisons</strong><strong ng-show="!assignment.number_of_comparisons && assignment.addPractice">1 comparison</strong><strong ng-show="!assignment.number_of_comparisons && !assignment.addPractice">0 comparisons</strong><span ng-show="assignment.enable_self_evaluation"> and <strong>1 self-evaluation</strong></span>,
+                which means <strong>students review</strong>
+                <span ng-show="!assignment.enable_self_evaluation">
+                    <strong ng-show="assignment.number_of_comparisons && !assignment.addPractice">{{assignment.number_of_comparisons*2}} answers.</strong><strong ng-show="assignment.number_of_comparisons && assignment.addPractice">{{assignment.number_of_comparisons*2+2}} answers.</strong><strong ng-show="!assignment.number_of_comparisons && assignment.addPractice">2 answers.</strong><strong ng-show="!assignment.number_of_comparisons && !assignment.addPractice">0 answers.</strong></span>
+                <span ng-show="assignment.enable_self_evaluation">
+                    <strong ng-show="assignment.number_of_comparisons && !assignment.addPractice">{{assignment.number_of_comparisons*2+1}} answers</strong><strong ng-show="assignment.number_of_comparisons && assignment.addPractice">{{assignment.number_of_comparisons*2+3}} answers</strong><strong ng-show="!assignment.number_of_comparisons && assignment.addPractice">3 answers</strong><strong ng-show="!assignment.number_of_comparisons && !assignment.addPractice">1 answer</strong>,
+                including their own.</span>
+            </p>
+            <p>By default, <strong>answers are not scored or ranked</strong> during comparisons. However, you may enable this below.</p>
+        </div>
+
+        <div class="form-group">
+            <compair-field-with-feedback form-control="assignmentForm.number_of_comparisons">
+                <label class="required-star">Number of peer answer comparisons required from each student</label>
+                <input type="text" id="number_of_comparisons" name="number_of_comparisons" class="form-control" ng-model="assignment.number_of_comparisons" ng-pattern="/^[1-9]\d*$/" required>
+            </compair-field-with-feedback>
+        </div>
+
+        <hr />
+
+        <p>Add-on comparison options:</p>
+        <input id="add_practice" type="checkbox" name="add_practice" ng-model="assignment.addPractice" ng-disabled="assignment.compared">
+        <label for="add_practice">Start students with instructor-created answer pair for practice (before peer comparisons)</label>
+
+        <div ng-show="assignment.addPractice">
+            <br />
+            <div class="row">
+                <div class="col-md-1"></div>
+                <div class="col-md-5 form-group">
+                    <label class="required-star">Answer A</label>
+                    &nbsp;&mdash;&nbsp;
+                    <span ng-if="!assignment.compared">
+                        <a href="" ng-click="changeAnswer(comparison_example.answer1, true)">Edit</a>
+                    </span>
+                    <span ng-if="assignment.compared" class="text-muted">(not editable)</span>
+                    <div ng-if="!comparison_example.answer1.content && !comparison_example.answer1.file && !comparison_example.answer1.file_name">
+                        <p class="text-muted"><em>Click 'Edit' above to add your example answer here.</em></p>
+                    </div>
+                    <div>
+                        <div mathjax hljs ng-bind-html="comparison_example.answer1.content"></div>
+                        <compair-pdf-inline label="See answer details:"
+                            pdf="comparison_example.answer1.file"
+                            ng-click="revealAnswer(comparison_example.answer1_id)"
+                            ng-show="!comparison_example.answer1.file_name">
+                        </compair-pdf-inline>
+                        <compair-pdf-inline label="See answer details:"
+                            pdf="{'name': comparison_example.answer1.file_name}"
+                            ng-click="revealAnswer(comparison_example.answer1_id)"
+                            ng-show="comparison_example.answer1.file_name">
+                        </compair-pdf-inline>
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <label>vs.</label>
+                </div>
+                <div class="col-md-5 form-group">
+                    <label class="required-star">Answer B</label>
+                    &nbsp;&mdash;&nbsp;
+                    <span ng-if="!assignment.compared">
+                        <a href="" ng-click="changeAnswer(comparison_example.answer2, false)">Edit</a>
+                    </span>
+                    <span ng-if="assignment.compared" class="text-muted">(not editable)</span>
+                    <div ng-if="!comparison_example.answer2.content && !comparison_example.answer2.file && !comparison_example.answer2.file_name">
+                        <p class="text-muted"><em>Click 'Edit' above to add your example answer here.</em></p>
+                    </div>
+                    <div>
+                        <div mathjax hljs ng-bind-html="comparison_example.answer2.content"></div>
+                        <compair-pdf-inline label="See answer details:"
+                            pdf="comparison_example.answer2.file"
+                            ng-click="revealAnswer(comparison_example.answer2_id)"
+                            ng-show="!comparison_example.answer2.file_name">
+                        </compair-pdf-inline>
+                        <compair-pdf-inline label="See answer details:"
+                            pdf="{'name': comparison_example.answer2.file_name}"
+                            ng-click="revealAnswer(comparison_example.answer2_id)"
+                            ng-show="comparison_example.answer2.file_name">
+                        </compair-pdf-inline>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <br />
+
+        <input id="enable_self_evaluation" type="checkbox" name="enable_self_evaluation" ng-model="assignment.enable_self_evaluation">
+        <label for="enable_self_evaluation">Require that students also evaluate their own answer (after peer comparisons)</label>
+
+        <br />
+
+        <input id="educators_can_compare" type="checkbox" name="educators_can_compare" ng-model="assignment.educators_can_compare">
+        <label for="educators_can_compare">Allow instructors and teaching assistants to compare student answer pairs</label>
+
+        <hr />
+
+            <a href="" ng-click="showAdvanced = !showAdvanced">
+                <p>
+                    <i class="fa fa-chevron-down" ng-show="showAdvanced"></i>
+                    <i class="fa fa-chevron-right" ng-hide="showAdvanced"></i>
+                    <span id="app-login-toggle">Set scoring and ranking for comparisons</span>
+                </p>
+            </a>
+            <div ng-show="showAdvanced">
+                <br />
+                <div class="row">
+                    <div class="form-check col-md-1"></div>
+                    <div class="form-check col-md-5">
+                        <label class="form-check-label">
+                            <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm"
+                                   value="{{PairingAlgorithm.random}}" ng-disabled="assignment.compared">
+                            &nbsp;Randomly select answers for comparison (no scores/rank):
+                        </label>
+                        <ul>
+                            <li>Answers chosen at random for review</li>
+                            <li>Pairings based on chance alone</li>
+                            <li>All students experience similar level of difficulty</li>
+                        </ul>
+                    </div>
+                    <div class="form-check col-md-1"></div>
+                    <div class="form-check col-md-5">
+                        <label class="form-check-label">
+                            <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm"
+                                   value="{{PairingAlgorithm.adaptive}}" ng-disabled="assignment.compared">
+                            &nbsp;Adaptively select answers for comparison (add scores/rank):
+                        </label>
+                        <ul>
+                            <li>Answers chosen by how students have ranked them so far</li>
+                            <li>Pairings based on similarity in answer scores</li>
+                            <li>Later students may experience increased level of difficulty</li>
+                        </ul>
+                        <label ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}'">Let students see rank for: &nbsp;</label>
+                        <select ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}'" ng-model="assignment.rank_display_limit">
+                            <option value="0">No answers (ranking hidden)</option>
+                            <option value="10">Answers ranked 10th and higher</option>
+                            <option value="20">Answers ranked 20th and higher</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Discussion</legend>
+        <div class="form-group">
+            <input id="students_can_reply" type="checkbox" ng-model="assignment.students_can_reply">
+            <label for="students_can_reply">Allow students to reply to any answer</label>
+        </div>
+    </fieldset>
+
+    <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
+        ng-disabled="assignmentForm.$invalid || assignment.criteria.length == 0 || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess)" />
+
+</form>

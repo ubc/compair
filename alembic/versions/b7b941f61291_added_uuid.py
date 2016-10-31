@@ -15,7 +15,7 @@ import sqlalchemy as sa
 import uuid
 import base64
 
-from acj.models import convention
+from compair.models import convention
 
 table_names = ['answer', 'answer_comment', 'assignment', 'assignment_comment',
     'comparison_example', 'course', 'criterion', 'file', 'user']

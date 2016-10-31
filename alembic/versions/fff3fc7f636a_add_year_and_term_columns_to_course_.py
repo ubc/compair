@@ -15,7 +15,7 @@ import sqlalchemy as sa
 from sqlalchemy import UniqueConstraint, exc
 from sqlalchemy.dialects import mysql
 
-from acj.models import convention
+from compair.models import convention
 
 def upgrade():
     op.add_column('course', sa.Column('year', sa.Integer(), nullable=False, default='2015', server_default='2015'))

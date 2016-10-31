@@ -13,7 +13,7 @@ down_revision = 'ad3d3931f78b'
 from alembic import op
 import sqlalchemy as sa
 
-from acj.models import convention
+from compair.models import convention
 
 def upgrade():
     op.add_column('answer', sa.Column('top_answer', sa.Boolean(name='top_answer'),

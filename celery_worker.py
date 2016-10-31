@@ -1,5 +1,5 @@
 import os
-from acj import create_app, celery
+from compair import create_app, celery
 
 app = create_app(skip_endpoints=True, skip_assets=True)
 
