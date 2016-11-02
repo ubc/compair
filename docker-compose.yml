@@ -27,6 +27,7 @@ services:
       - DB_HOST=db
       - DB_PORT=3306
       - DB_NAME=compair
+      - SQLALCHEMY_POOL_RECYCLE=299
       - DEV=1
       - CELERY_BROKER_URL=redis://redis:6379
       #- GA_TRACKING_ID=12345
@@ -46,6 +47,7 @@ services:
       - DB_HOST=db
       - DB_PORT=3306
       - DB_NAME=compair
+      - SQLALCHEMY_POOL_RECYCLE=299
       - DEV=1
       - CELERY_BROKER_URL=redis://redis:6379
       - C_FORCE_ROOT=1

@@ -20,6 +20,9 @@ SECRET_KEY = "zfjlkfaweerP* SDF()U@#$haDJ;JKLASDFHUIO"
 # we currently use SQLAlchemy event system directly
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+# recycle connections after ~5 minutes
+SQLALCHEMY_POOL_RECYCLE=299
+
 # persistent directories for uploads and download
 PERSISTENT_BASE = os.getcwd() + '/persistent'
 REPORT_FOLDER = PERSISTENT_BASE + '/report'
