@@ -23,7 +23,7 @@
         <div class="form-group" ng-if="canManageAssignment && showUserList && example !== true">
             <label for="user_id">Submit As</label>
             <select id="user_id" name="user_id" required
-                    ng-model="answer.user_id" class="form-control" chosen wifth="'100%'"
+                    ng-model="answer.user_id" class="form-control" chosen width="'100%'" disable_search_threshold="8"
                     ng-options="u.id as u.fullname for u in classlist">
             </select>
         </div>

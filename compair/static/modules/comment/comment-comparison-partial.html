@@ -7,7 +7,7 @@
     <div class="form-group row">
         <div ng-if="groups.length" class="col-sm-2">
             <label>Group</label>
-            <select class="form-control" ng-model="listFilters.group" chosen width="'100%'"
+            <select class="form-control" ng-model="listFilters.group" chosen disable_search_threshold="8" width="'100%'"
                     ng-options="g as g for g in groups | orderBy: 'toString()'">
                 <option value="">Any Group</option>
             </select>
@@ -15,7 +15,7 @@
         </div>
         <div ng-class="{'col-sm-4': groups.length, 'col-sm-6': !groups.length}">
             <label>Student Evaluator</label>
-            <select class="form-control" ng-model="listFilters.author" chosen width="'100%'"
+            <select class="form-control" ng-model="listFilters.author" chosen disable_search_threshold="8" width="'100%'"
                     ng-options="s.id as s.name for s in students.objects | filter:{group_name:listFilters.group || undefined } | orderBy: 'name'">
                 <option value="">Any Student</option>
             </select>
