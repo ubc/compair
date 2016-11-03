@@ -168,17 +168,17 @@
                 Compare Answers
             </a>
 
-            <!-- BUTTON when user is an admin AND (the comparison period is active) -->
-            <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Answers" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
-               ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">
-                Compare Answers
-            </a>
-
             <!-- BUTTON when user is an admin AND (the comparison period is active OR is complete OR 1+ comparison exists) -->
             <a class="btn btn-success" title="Comparisons" ng-href="#/course/{{course.id}}/assignment/{{assignment.id}}/comparisons"
                ng-show="canManageAssignment && (assignment.compare_period || assignment.after_comparing || assignment.evaluation_count > 0)">
                 See Comparisons
             </a>
+            
+            <!-- BUTTON when user is an admin AND the comparison period is active AND admins can compare -->
++           <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Answers" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
++               ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">
++                Compare Answers
++           </a>
 
             <!-- ADDITIONAL TEXT when user has not answered AND user is not an admin AND answer period is active -->
             <p class="below-button-text"
@@ -192,9 +192,9 @@
                 Not enough answers to compare<br />(Refresh the page to check again)
             </p>
 
-            <!-- ADDITIONAL TEXT when answer pairs are available for comparison AND user is not admin AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active) AND the comparison period has an end date set -->
+            <!-- ADDITIONAL TEXT when answer pairs are available for comparison AND (user is not an admin OR admins can compare) AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active) AND the comparison period has an end date set -->
             <p class="below-button-text"
-                ng-show="assignment.status.comparisons.available && !canManageAssignment && assignment.compare_period && assignment.comparisons_left && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period) && assignment.compare_end">
+                ng-show="assignment.status.comparisons.available && (!canManageAssignment || assignment.educators_can_compare) && assignment.compare_period && assignment.comparisons_left && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period) && assignment.compare_end">
                 Comparisons due {{assignment.compare_end | amDateFormat: 'MMM D'}}
             </p>
 
