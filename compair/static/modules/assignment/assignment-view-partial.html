@@ -94,14 +94,14 @@
         </a>
         
         <!-- BUTTON when user is an admin AND the comparison period is active AND admins can compare -->
-+        <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Answers" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
-+           ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">
-+            Compare Answers
-+        </a>
+        <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Answers" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
+           ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">
+            Compare Answers
+        </a>
 
         <!-- ADDITIONAL TEXT when answer pairs are not available for comparison AND (user is not an admin OR admins can compare) AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active)-->
-+        <p ng-if="!assignment.status.comparisons.available && (!canManageAssignment || assignment.educators_can_compare) && assignment.compare_period && (steps_left > 0) && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)">
-+            <br /><em>Not enough answers to compare (Refresh the page to check again) </em></p>
+        <p ng-if="!assignment.status.comparisons.available && (!canManageAssignment || assignment.educators_can_compare) && assignment.compare_period && (steps_left > 0) && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)">
+            <br /><em>Not enough answers to compare (Refresh the page to check again) </em></p>
 
         <!-- ADDITIONAL TEXT when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has a self-evaluation remaining AND has not answered assignment -->
         <p ng-if="!canManageAssignment && assignment.compare_period && comparisons_left == 0 && self_evaluation_needed && !assignment.status.answers.answered">
@@ -146,11 +146,11 @@
                         <div ng-if="assignment.answer_count && (canManageAssignment || see_answers)">
                             <span class="filter">
                                 <label>Show: &nbsp;</label>
-                                <select ng-if="groups.length > 0 && canManageAssignment" ng-model="answerFilters.group" class="nullable" chosen
+                                <select ng-if="groups.length > 0 && canManageAssignment" ng-model="answerFilters.group" class="nullable" chosen disable_search_threshold="8"
                                         ng-options="group as group for group in groups | orderBy: 'toString()'">
                                     <option value="">All groups</option>
                                 </select>
-                                <select ng-model="answerFilters.author" class="nullable" chosen
+                                <select ng-model="answerFilters.author" class="nullable" chosen disable_search_threshold="8"
                                         ng-options="u as u.name for u in students | orderBy: 'name'">
                                     <option value="">All answers</option>
                                 </select>
@@ -162,9 +162,9 @@
                             </span><br />
                             <span class="filter" ng-if="(canManageAssignment || rankLimit) && assignment.pairing_algorithm != PairingAlgorithm.random">
                                 <label>Order by: &nbsp;</label>
-                                <select ng-model="answerFilters.orderBy" chosen
+                                <select ng-model="answerFilters.orderBy" chosen disable_search_threshold="8"
                                         ng-options="c.id as c.name for c in criteria">
-                                    <option value="">Date answer submitted</option>
+                                    <option value="">Date submitted</option>
                                 </select>
                             </span>
                         </div>
@@ -567,7 +567,7 @@
                         <p class="intro-text less-margin">Ask or answer a question about the assignment by adding a comment here.</p>
                     </div>
                     <div class="col-sm-3 text-right comment-btn">
-                        <a href="" ng-click="createAssignmentComment()">
+                        <a href="" class="btn btn-primary" ng-click="createAssignmentComment()">
                             Comment
                         </a>
                     </div>
