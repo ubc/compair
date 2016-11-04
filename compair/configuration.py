@@ -56,6 +56,9 @@ elif "DATABASE" in config and 'DATABASE_URI' not in config:
 elif "DATABASE_URI" in config:
     config['SQLALCHEMY_DATABASE_URI'] = config['DATABASE_URI']
 
+if os.environ.get('SQLALCHEMY_POOL_RECYCLE'):
+    config['SQLALCHEMY_POOL_RECYCLE'] = int(os.environ.get('SQLALCHEMY_POOL_RECYCLE'))
+
 # clear DATABASE value
 if 'DATABASE' in config:
     del config['DATABASE']
@@ -69,8 +72,7 @@ env_overridables = [
     'SECRET_KEY', 'UPLOAD_FOLDER', 'ATTACHMENT_UPLOAD_FOLDER',
     'ASSET_LOCATION', 'ASSET_CLOUD_URI_PREFIX',
     'CELERY_ALWAYS_EAGER', 'CELERY_RESULT_BACKEND', 'CELERY_BROKER_URL',
-    'GA_TRACKING_ID',
-    'SQLALCHEMY_POOL_RECYCLE']
+    'GA_TRACKING_ID']
 
 for env in env_overridables:
     if os.environ.get(env):
