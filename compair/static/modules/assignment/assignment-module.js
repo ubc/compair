@@ -708,7 +708,7 @@ module.controller("AssignmentViewController",
 
         $scope.updateAnswerList = function() {
             var params = angular.merge({'courseId': $scope.courseId, 'assignmentId': assignmentId}, $scope.answerFilters);
-            if (params.author == null || params.author == "Instructor's Top Picks") {
+            if (params.author == null || params.author == "top-picks") {
                 params.author = "";
             } else {
                 params.author = params.author;
@@ -760,8 +760,9 @@ module.controller("AssignmentViewController",
                 } else {
                     userIds[$scope.answerFilters.author] = 1;
                 }
-                if ($scope.answerFilters.author == "Instructor's Top Picks") {
+                if ($scope.answerFilters.author == "top-picks") {
                     $scope.answerFilters.top = true;
+                    $scope.answerFilters.orderBy = null;
                 }
                 $scope.answerFilters.page = 1;
             }

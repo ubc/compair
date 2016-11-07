@@ -152,14 +152,14 @@
                                 </select>
                                 <select id="answers-filter" ng-model="answerFilters.author" class="nullable" chosen disable_search_threshold="8">
                                     <option value="">All answers</option>
-                                    <option value="Instructor's Top Picks">Instructor's top picks</option>
+                                    <option value="top-picks">Instructor's top picks</option>
                                     <option ng-repeat="u in students | orderBy: 'name'" value="{{u.id}}">{{u.name}}</option>
                                 </select>
                             </span><br />
                             <span class="filter" ng-if="(canManageAssignment || rankLimit) && assignment.pairing_algorithm != PairingAlgorithm.random">
                                 <label>Order by: &nbsp;</label>
                                 <select ng-model="answerFilters.orderBy" chosen disable_search_threshold="8"
-                                        ng-options="c.id as c.name for c in criteria">
+                                        ng-options="c.id as c.name for c in criteria" ng-disabled="answerFilters.author == 'top-picks'">
                                     <option value="">Date submitted</option>
                                 </select>
                             </span>
