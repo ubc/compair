@@ -137,7 +137,7 @@
                     <div class="col-sm-6">
                         <h2>Answers
                             <span ng-show="canManageAssignment && answerFilters.group && !answerFilters.author">for "{{answerFilters.group}}"</span>
-                            <span ng-show="answerFilters.author">for "{{ answerFilters.author.name }}"</span>
+                            <span ng-show="answerFilters.author">for "{{ answerFiltersName }}"</span>
                         </h2>
                         <p ng-if="numPages > 1">(Page {{answerFilters.page}} of {{numPages}})</p>
                     </div>
@@ -150,15 +150,11 @@
                                         ng-options="group as group for group in groups | orderBy: 'toString()'">
                                     <option value="">All groups</option>
                                 </select>
-                                <select ng-model="answerFilters.author" class="nullable" chosen disable_search_threshold="8"
-                                        ng-options="u as u.name for u in students | orderBy: 'name'">
+                                <select id="answers-filter" ng-model="answerFilters.author" class="nullable" chosen disable_search_threshold="8">
                                     <option value="">All answers</option>
+                                    <option value="Instructor's Top Picks">Instructor's top picks</option>
+                                    <option ng-repeat="u in students | orderBy: 'name'" value="{{u.id}}">{{u.name}}</option>
                                 </select>
-                                <span ng-if="assignment.top_answer_count">
-                                    <label for="topAnswerFilter">Top Answers</label>
-                                    <input type="checkbox" ng-model="answerFilters.top" id="topAnswerFilter"
-                                           ng-true-value="true" ng-false-value="null" />
-                                </span>
                             </span><br />
                             <span class="filter" ng-if="(canManageAssignment || rankLimit) && assignment.pairing_algorithm != PairingAlgorithm.random">
                                 <label>Order by: &nbsp;</label>
@@ -254,19 +250,19 @@
                         <compair-avatar user-id="answer.user_id" avatar="answer.user.avatar" display-name="answer.user.displayname" full-name="answer.user.fullname" me="!canManageAssignment && answer.user_id == loggedInUserId"></compair-avatar>
                         <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right" ng-if="canManageAssignment || (answer.user_id == loggedInUserId && assignment.answer_period && !assignment.compare_period)">
-                            <span ng-show="canManageAssignment">
-                                <a href="" ng-show="!answer.top_answer" title="Add to top answers" ng-click="setTopAnswer(answer, true)">
-                                    <i class="fa fa-star-o"></i>
-                                </a>
-                                <a href="" ng-show="answer.top_answer" title="Remove from top answers" ng-click="setTopAnswer(answer, false)">
-                                    <i class="fa fa-star"></i>
-                                </a>
-                            </span>
                             <span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
                                 <i class="fa fa-warning"></i>
                                 Flagged
                                 <a href="" title="Unflag this answer" ng-click="unflagAnswer(answer, courseId, assignment.id, answer.id)">
                                     Unflag?
+                                </a>
+                            </span>
+                            <span ng-show="canManageAssignment">
+                                <a href="" ng-if="!answer.top_answer" title="Add to instructor's top answers" ng-click="setTopAnswer(answer, true)">
+                                    <i class="fa fa-star-o"></i>
+                                </a>
+                                <a href="" ng-if="answer.top_answer" title="Remove from instructor's top answers" ng-click="setTopAnswer(answer, false)">
+                                    <i class="fa fa-star"></i>
                                 </a>
                             </span>
                             <a href="" confirmation-needed="deleteAnswer(answer, courseId, assignment.id, answer.id)" keyword="answer">
