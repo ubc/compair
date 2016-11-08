@@ -708,10 +708,8 @@ module.controller("AssignmentViewController",
 
         $scope.updateAnswerList = function() {
             var params = angular.merge({'courseId': $scope.courseId, 'assignmentId': assignmentId}, $scope.answerFilters);
-            if (params.author == null || params.author == "top-picks") {
-                params.author = "";
-            } else {
-                params.author = params.author;
+            if (params.author == "top-picks") {
+                params.author = null;
             }
             $scope.answerFiltersName = $("#answers-filter option:selected").text();
             $scope.answers = AnswerResource.get(params, function(response) {
