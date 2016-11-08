@@ -61,7 +61,7 @@ module.controller(
         $scope.userIdentifiers = [];
 
         if (AuthTypesEnabled.cas) {
-            $scope.userIdentifiers.push({'key': ThirdPartyAuthType.cwl, 'label': 'CWL Username'});
+            $scope.userIdentifiers.push({'key': ThirdPartyAuthType.cas, 'label': 'CWL Username'});
         }
         if (AuthTypesEnabled.app) {
             $scope.userIdentifiers.push({'key': 'username', 'label': 'ComPAIR Username'});

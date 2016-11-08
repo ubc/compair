@@ -236,4 +236,4 @@ class ThirdPartyUserFactory(factory.alchemy.SQLAlchemyModelFactory):
     user = factory.SubFactory(UserFactory)
 
     unique_identifier = factory.Sequence(lambda n: u'unique_identifier_%d' % n)
-    third_party_type = ThirdPartyType.cwl
+    third_party_type = ThirdPartyType.cas

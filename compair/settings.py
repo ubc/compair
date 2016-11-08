@@ -68,3 +68,7 @@ LTI_LOGIN_ENABLED = True
 
 CAS_SERVER = 'http://localhost:8088'
 CAS_AFTER_LOGIN = 'login_api.auth_cas'
+CAS_AFTER_LOGOUT = None
+
+# enter additional attributes to store in third_party_user table
+CAS_ATTRIBUTES_TO_STORE = []

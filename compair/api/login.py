@@ -1,4 +1,5 @@
 import os
+
 from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask, render_template
 from flask_login import current_user, login_required, login_user, logout_user
 from compair import cas
@@ -96,21 +97,30 @@ def auth_cas():
         thirdpartyuser = ThirdPartyUser.query. \
             filter_by(
                 unique_identifier=username,
-                third_party_type=ThirdPartyType.cwl
+                third_party_type=ThirdPartyType.cas
             ) \
             .one_or_none()
         msg = None
+
+        # store additional CAS attributes if needed
+        additional_params = None
+        if cas.attributes and len(current_app.config.get('CAS_ATTRIBUTES_TO_STORE')) > 0:
+            additional_params = {}
+            for attr_name in current_app.config.get('CAS_ATTRIBUTES_TO_STORE'):
+                additional_params[attr_name] = cas.attributes.get('cas:'+attr_name)
 
         if not thirdpartyuser or not thirdpartyuser.user:
             if sess.get('LTI') and sess.get('oauth_create_user_link'):
                 sess['CAS_CREATE'] = True
                 sess['CAS_UNIQUE_IDENTIFIER'] = cas.username
+                sess['CAS_ADDITIONAL_PARAMS'] = additional_params
                 url = '/app/#/oauth/create'
             else:
                 current_app.logger.debug("Login failed, invalid username for: " + username)
                 msg = 'You don\'t have access to this application.'
         else:
             authenticate(thirdpartyuser.user)
+            thirdpartyuser.params = additional_params
 
             if sess.get('LTI') and sess.get('oauth_create_user_link'):
                 lti_user = LTIUser.query.get_or_404(sess['lti_user'])

@@ -286,7 +286,7 @@ class UsersAPITests(ComPAIRAPITestCase):
 
             third_party_user = ThirdPartyUser.query \
                 .filter_by(
-                    third_party_type=ThirdPartyType.cwl,
+                    third_party_type=ThirdPartyType.cas,
                     unique_identifier="some_unique_identifier",
                     user_id=user.id
                 ) \

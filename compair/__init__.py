@@ -1,7 +1,8 @@
 import json
 import os
+import ssl
 
-from flask import Flask, redirect, session as sess, abort, jsonify
+from flask import Flask, redirect, session as sess, abort, jsonify, url_for
 from flask import make_response
 from flask import send_file
 from flask_login import current_user, login_required
@@ -66,6 +67,9 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
     app = Flask(__name__, static_url_path='/app')
     app.config.update(conf)
     app.config.update(settings_override)
+
+    if not app.config.get('ENFORCE_SSL', True):
+        ssl._create_default_https_context = ssl._create_unverified_context
 
     app.logger.debug("Application Configuration: " + str(app.config))
 

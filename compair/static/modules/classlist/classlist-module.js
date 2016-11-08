@@ -306,7 +306,7 @@ module.controller(
         $scope.ThirdPartyAuthType = ThirdPartyAuthType;
         $scope.importTypes = [];
         if (AuthTypesEnabled.cas) {
-            $scope.importTypes.push({'value': ThirdPartyAuthType.cwl, 'name': 'CWL username'})
+            $scope.importTypes.push({'value': ThirdPartyAuthType.cas, 'name': 'CWL username'})
         }
         if (AuthTypesEnabled.app) {
             $scope.importTypes.push({'value': null, 'name': 'ComPAIR username'})
@@ -321,7 +321,7 @@ module.controller(
             importService.onComplete(courseId, response);
         };
         $scope.uploader.onBeforeUploadItem = function(fileItem) {
-            if ($scope.importType == ThirdPartyAuthType.cwl) {
+            if ($scope.importType == ThirdPartyAuthType.cas) {
                 fileItem.formData.push({ 'import_type': $scope.importType });
             }
         };

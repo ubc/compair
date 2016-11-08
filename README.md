@@ -145,6 +145,8 @@ Restart server after making any changes to settings
 
 `CAS_LOGIN_ENABLED`: Enable login via CAS server (default: True)
 
+`CAS_ATTRIBUTES_TO_STORE`: Array of CAS attributes to store in the third_party_user table's param column. (default: empty)
+
 See [Flask-CAS](https://github.com/cameronbwhite/Flask-CAS) for other CAS settings
 
 Restart server after making any changes to settings
@@ -153,14 +155,20 @@ Restart server after making any changes to settings
 
 `LTI_LOGIN_ENABLED`: Enable login via LTI consumer (default: True)
 
-`LTI_ENFORCE_SSL`: Enforce https on all LTI requests received (default: True)
-
 In additional, you must manually insert a new LTI consumer record into the lti_consumer table with:
 - a unique and valid `oauth_consumer_key` (view the ComPAIRRequestValidator for constraints)
 - a valid `oauth_consumer_secret` (view the ComPAIRRequestValidator for constraints)
 - `active` set to True
 
 Restart server after making any changes to settings
+
+Disable outgoing https requirements
+-----------------------------
+
+`ENFORCE_SSL`: Enforce https on all requests made though LTI and CAS (default: True)
+
+Can be used to disable secure SSL requirements for outgoing and incoming traffic from LTI and CAS.
+This should only be used for development purposes only.
 
 Google Analytics Web Tracking
 -----------------------------

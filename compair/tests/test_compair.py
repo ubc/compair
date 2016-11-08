@@ -68,6 +68,7 @@ class ComPAIRTestCase(TestCase):
     def create_app(self):
         app = create_app(settings_override=test_app_settings)
         app.test_client_class = RecordableClient
+        app.config['ENFORCE_SSL'] = False
         return app
 
     def setUp(self):
