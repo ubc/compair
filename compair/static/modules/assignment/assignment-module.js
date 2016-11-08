@@ -708,9 +708,10 @@ module.controller("AssignmentViewController",
 
         $scope.updateAnswerList = function() {
             var params = angular.merge({'courseId': $scope.courseId, 'assignmentId': assignmentId}, $scope.answerFilters);
-            if (params.author != null) {
-                params.author = params.author.id;
+            if (params.author == "top-picks") {
+                params.author = null;
             }
+            $scope.answerFiltersName = $("#answers-filter option:selected").text();
             $scope.answers = AnswerResource.get(params, function(response) {
                 $scope.totalNumAnswers = response.total;
 
@@ -751,16 +752,22 @@ module.controller("AssignmentViewController",
             }
             if (oldValue.author != newValue.author) {
                 userIds = {};
+                $scope.answerFilters.top = null;
                 if ($scope.answerFilters.author == null) {
                     userIds = $scope.getUserIds($scope.students);
                 } else {
-                    userIds[$scope.answerFilters.author.id] = 1;
+                    userIds[$scope.answerFilters.author] = 1;
+                }
+                if ($scope.answerFilters.author == "top-picks") {
+                    $scope.answerFilters.top = true;
+                    $scope.answerFilters.orderBy = null;
                 }
                 $scope.answerFilters.page = 1;
             }
             if (oldValue.top != newValue.top) {
                 $scope.answerFilters.page = 1;
             }
+
             $scope.updateAnswerList();
         };
     }
