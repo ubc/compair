@@ -332,7 +332,6 @@ module.controller("AssignmentViewController",
             assignmentId: assignmentId
         };
         $scope.allStudents = {};
-        var userIds = {};
         $scope.totalNumAnswers = 0;
         $scope.answerFilters = {
             page: 1,
@@ -418,7 +417,6 @@ module.controller("AssignmentViewController",
         CourseResource.getStudents({'id': $scope.courseId}, function (ret) {
             $scope.allStudents = ret.objects;
             $scope.students = ret.objects;
-            userIds = $scope.getUserIds(ret.objects);
         });
         $scope.assignment = {};
 
@@ -536,6 +534,9 @@ module.controller("AssignmentViewController",
                         Toaster.success("Answer Successfully Added to Top Answers");
                     } else {
                         Toaster.success("Answer Successfully Removed from Top Answers");
+                    }
+                    if ($scope.answerFilters.author == "top-picks") {
+                        $scope.updateAnswerList();
                     }
                 },
                 function (ret) {
@@ -735,13 +736,11 @@ module.controller("AssignmentViewController",
             if (oldValue.group != newValue.group) {
                 $scope.answerFilters.author = null;
                 if ($scope.answerFilters.group == null) {
-                    userIds = $scope.getUserIds($scope.allStudents);
                     $scope.students = $scope.allStudents;
                 } else {
                     GroupResource.get({'courseId': $scope.courseId, 'groupName': $scope.answerFilters.group},
                         function (ret) {
                             $scope.students = ret.students;
-                            userIds = $scope.getUserIds(ret.students);
                         },
                         function (ret) {
                             Toaster.reqerror("Unable to retrieve the group members", ret);
@@ -751,13 +750,7 @@ module.controller("AssignmentViewController",
                 $scope.answerFilters.page = 1;
             }
             if (oldValue.author != newValue.author) {
-                userIds = {};
                 $scope.answerFilters.top = null;
-                if ($scope.answerFilters.author == null) {
-                    userIds = $scope.getUserIds($scope.students);
-                } else {
-                    userIds[$scope.answerFilters.author] = 1;
-                }
                 if ($scope.answerFilters.author == "top-picks") {
                     $scope.answerFilters.top = true;
                     $scope.answerFilters.orderBy = null;

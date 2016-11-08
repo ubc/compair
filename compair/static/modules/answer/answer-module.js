@@ -137,11 +137,12 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
         function invalidListCache(url) {
             // remove list caches. As list query may contain pagination and query parameters
             // we have to invalidate all.
-            _.forEach(listCacheKeys, function(key, index, keys) {
+            _.remove(listCacheKeys, function(key) {
                 if (url == undefined || _.startsWith(key, url)) {
                     cache.remove(key);
-                    keys.splice(index, 1);
+                    return true;
                 }
+                return false;
             });
         }
 
