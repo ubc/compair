@@ -153,7 +153,7 @@ def xapi_on_user_modified(sender, user, **extra):
         user=user,
         verb=XAPIVerb.generate('updated'),
         object=XAPIObject.user_profile(user),
-        result=XAPIResult.basic(changes=changes)
+        result=XAPIResult.basic(changes=changes) if changes else None
     )
     XAPI.send_statement(statement)
 
@@ -186,17 +186,13 @@ def xapi_on_answer_comment_modified(sender, user, **extra):
     if answer_comment.comment_type == AnswerCommentType.evaluation:
         tracking = _get_tracking_params() # only evaluation and self_evaluation
         registration = tracking.get('registration') # only evaluation and self_evaluation
-        answer1_uuid = tracking.get('answer1_id') # only evaluation
-        answer2_uuid = tracking.get('answer2_id') # only evaluation
 
         verb = XAPIVerb.generate('drafted' if answer_comment.draft else 'commented')
         statement = XAPIStatement.generate(
             user=user,
             verb=verb,
             object=XAPIObject.answer_evaluation_comment(answer_comment),
-            context=XAPIContext.answer_evaluation_comment(
-                answer_comment, answer1_uuid, answer2_uuid,
-                registration=registration),
+            context=XAPIContext.answer_comment(answer_comment, registration=registration),
             result=XAPIResult.answer_comment(answer_comment)
         )
         XAPI.send_statement(statement)
@@ -300,7 +296,7 @@ def xapi_on_answer_modified(sender, user, **extra):
     verb = XAPIVerb.generate('suspended' if answer.draft else 'completed')
     statement = XAPIStatement.generate(
         user=user,
-        verb=XAPIVerb.generate('suspended'),
+        verb=verb,
         object=XAPIObject.assignment_question(assignment),
         context=XAPIContext.assignment_question(assignment, registration=registration),
         result=XAPIResult.basic(duration=duration, success=True, completion=not answer.draft)

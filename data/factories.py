@@ -147,7 +147,6 @@ class ComparisonFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     assignment = factory.SubFactory(AssignmentFactory)
     criterion = factory.SubFactory(CriterionFactory)
-    course = factory.SubFactory(CourseFactory)
     user = factory.SubFactory(UserFactory)
     content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
     # Make sure created dates are unique.

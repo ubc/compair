@@ -3,6 +3,7 @@ import copy
 import json
 import unittest
 import mock
+import uuid
 
 from flask_testing import TestCase
 from os.path import dirname
@@ -12,7 +13,7 @@ from six import wraps
 from compair import create_app
 from compair.manage.database import populate
 from compair.core import db
-from compair.models import User
+from compair.models import User, XAPILog
 from compair.tests import test_app_settings
 from lti import ToolConsumer
 from lti.utils import parse_qs
@@ -82,6 +83,65 @@ class ComPAIRTestCase(TestCase):
         db.session.remove()
         db.drop_all()
 
+class ComPAIRXAPITestCase(ComPAIRTestCase):
+    compair_source_category = {
+        'id': 'http://xapi.ubc.ca/category/compair',
+        'definition': {'type': 'http://id.tincanapi.com/activitytype/source'},
+        'objectType': 'Activity'
+    }
+    ubc_profile_category = {
+        'id': 'http://xapi.ubc.ca/',
+        'definition': {'type': 'http://id.tincanapi.com/activitytype/recipe'},
+        'objectType': 'Activity'
+    }
+
+    def generate_tracking(self, with_duration=False, **kargs):
+        tracking = {
+            'registration': str(uuid.uuid4())
+        }
+        if with_duration:
+            tracking['duration'] = "PT02.475S"
+
+        if kargs:
+            tracking.update(kargs)
+
+        return tracking
+
+    def get_and_clear_statement_log(self, has_request=False):
+        statements = []
+        for xapi_log in XAPILog.query.all():
+            statement = json.loads(xapi_log.statement)
+
+            # check categories
+            categories = statement['context']['contextActivities']['category']
+            self.assertIn(self.compair_source_category, categories)
+            categories.remove(self.compair_source_category)
+            self.assertIn(self.ubc_profile_category, categories)
+            categories.remove(self.ubc_profile_category)
+
+            if len(categories) == 0:
+                del statement['context']['contextActivities']['category']
+            if len(statement['context']['contextActivities']) == 0:
+                del statement['context']['contextActivities']
+            if len(statement['context']) == 0:
+                del statement['context']
+
+            # check timestamp
+            self.assertIsNotNone(statement['timestamp'])
+
+            statements.append(statement)
+        XAPILog.query.delete()
+        return statements
+
+    def get_cas_actor(self, user):
+        pass
+
+    def get_compair_actor(self, user):
+        return {
+            'account': {'homePage': 'https://localhost:8888/', 'name': user.uuid },
+            'name': user.fullname,
+            'objectType': 'Agent'
+        }
 
 class ComPAIRAPITestCase(ComPAIRTestCase):
     api = None

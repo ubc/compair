@@ -12,6 +12,6 @@ elif [ "${DOCKER}" = "true" ]; then
     docker run -d --name compair_app_prod --network compair_default -e DATABASE_URI=mysql+pymysql://compair:compair@db:3306/compair ubcctlt/compair-app
     curl -sSfL http://localhost:8080 | grep '<title>ComPAIR</title>' > /dev/null && curl -sSf http://localhost:8080/api/healthz > /dev/null
 else
-    python -m unittest discover -s compair/tests
+    nosetests
     node_modules/karma/bin/karma start compair/static/test/config/karma.conf.js --single-run --browsers PhantomJS
 fi

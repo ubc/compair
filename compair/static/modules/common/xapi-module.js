@@ -166,6 +166,7 @@ module.constant('xAPIActivityType', {
     'page': 'http://activitystrea.ms/schema/1.0/page',
     'comment': 'http://activitystrea.ms/schema/1.0/comment',
 
+    'course': 'http://adlnet.gov/expapi/activities/course',
     'assessment': 'http://adlnet.gov/expapi/activities/assessment',
     'question': 'http://adlnet.gov/expapi/activities/question',
     'solution': 'http://id.tincanapi.com/activitytype/solution',
@@ -423,6 +424,16 @@ module.service('xAPI',
                 }
             },
 
+            answer_evaluation_comment: function(comment) {
+                return {
+                    id: _this._resourceIRI.answer_comment(comment.id),
+                    definition: {
+                        type: _this.activityType.comment,
+                        name: { 'en-US': "Assignment answer evaluation comment" }
+                    }
+                }
+            },
+
             comparison: function(comparison) {
                 return {
                     id: _this._resourceIRI.comparison(comparison.id),
@@ -647,33 +658,6 @@ module.service('xAPI',
                             id: _this._resourceIRI.assignment(comment.assignment_id)
                         }, {
                             id: _this._resourceIRI.answer(comment.answer_id)
-                        }]
-                    }
-                }, _this.context.basic(options));
-
-                return context;
-            },
-
-            answer_evaluation_comment: function(comment, answer1_id, answer2_id, options) {
-                options = options || {};
-
-                var context = angular.merge({
-                    contextActivities: {
-                        // parent is answer
-                        parent: [{
-                            id: _this._resourceIRI.answer(comment.answer_id)
-                        }],
-                        // grouping is course + assignment + assignment question
-                        grouping: [{
-                            id: _this._resourceIRI.course(comment.course_id)
-                        }, {
-                            id: _this._resourceIRI.assignment(comment.assignment_id)
-                        }, {
-                            id: _this._resourceIRI.assignment_question(comment.assignment_id)
-                        }],
-                        // other is assignment comparison
-                        other: [{
-                            id: _this._resourceIRI.comparison_question(comment.assignment_id, answer1_id, answer2_id)
                         }]
                     }
                 }, _this.context.basic(options));
@@ -1272,14 +1256,14 @@ module.service('xAPIStatementHelper',
 
 
         // verb_answer_comment
-        this.interacted_answer_comment = function(comment, answer1_id, answer2_id, registration, duration) {
+        this.interacted_answer_comment = function(comment, registration, duration) {
             // skip if not yet loaded
             if (!comment.id) { return; }
 
             xAPI.generateStatement({
                 verb: xAPI.verb.interacted,
-                object: xAPI.object.answer_comment(comment),
-                context: xAPI.context.answer_evaluation_comment(comment, answer1_id, answer2_id, {
+                object: xAPI.object.answer_evaluation_comment(comment),
+                context: xAPI.context.answer_comment(comment, {
                     registration: registration
                 }),
                 result: xAPI.result.answer_comment(comment, {

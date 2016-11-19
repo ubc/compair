@@ -56,16 +56,10 @@ module.controller(
         $scope.tracking = xAPI.generateTracking();
 
         $scope.editor1Options =  xAPI.ckeditorContentTracking(EditorOptions.basic, function(duration) {
-            xAPIStatementHelper.interacted_answer_comment(
-                $scope.answer1.comment, $scope.answer1.id, $scope.answer2.id,
-                $scope.tracking.getRegistration(), duration
-            );
+            xAPIStatementHelper.interacted_answer_comment($scope.answer1.comment, $scope.tracking.getRegistration(), duration);
         });
         $scope.editor2Options =  xAPI.ckeditorContentTracking(EditorOptions.basic, function(duration) {
-            xAPIStatementHelper.interacted_answer_comment(
-                $scope.answer2.comment, $scope.answer1.id, $scope.answer2.id,
-                $scope.tracking.getRegistration(), duration
-            );
+            xAPIStatementHelper.interacted_answer_comment($scope.answer2.comment, $scope.tracking.getRegistration(), duration);
         });
 
         var countDown = function() {
@@ -205,10 +199,7 @@ module.controller(
                 };
                 answer.comment.comment_type = AnswerCommentType.evaluation;
                 answer.comment.draft = $scope.isDraft;
-                answer.comment.tracking = $scope.tracking.toParams({
-                    answer1_id: $scope.answer1.id,
-                    answer2_id: $scope.answer2.id
-                });
+                answer.comment.tracking = $scope.tracking.toParams();
                 AnswerCommentResource.save(params, answer.comment).$promise.then(
                     function(ret) {
                         // need comment id if saving draft

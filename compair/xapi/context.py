@@ -19,8 +19,9 @@ class XAPIContext(object):
     def login(cls, login_method, **kwargs):
         context = cls.basic(**kwargs)
 
-        context.extensions = Extensions()
-        context.extensions[XAPIExtension.context_extensions.get('login method')] = login_method
+        if login_method:
+            context.extensions = Extensions()
+            context.extensions[XAPIExtension.context_extensions.get('login method')] = login_method
 
         return context
 
@@ -65,7 +66,7 @@ class XAPIContext(object):
             parent=ActivityList([
                 Activity(id=XAPIResourceIRI.assignment(comparison.assignment_uuid)),
                 Activity(id=XAPIResourceIRI.answer(comparison.answer1_uuid)),
-                Activity(id=XAPIResourceIRI.assignment(comparison.answer2_uuid))
+                Activity(id=XAPIResourceIRI.answer(comparison.answer2_uuid))
             ]),
             # grouping is course
             grouping=ActivityList([
@@ -128,9 +129,9 @@ class XAPIContext(object):
             ]),
             # grouping is course + assignment + assignment question
             grouping=ActivityList([
-                Activity(id=XAPIResourceIRI.assignment_question(answer.assignment_uuid)),
                 Activity(id=XAPIResourceIRI.course(answer.course_uuid)),
-                Activity(id=XAPIResourceIRI.assignment(answer.assignment_uuid))
+                Activity(id=XAPIResourceIRI.assignment(answer.assignment_uuid)),
+                Activity(id=XAPIResourceIRI.assignment_question(answer.assignment_uuid))
             ]),
             # other is comparison + comparison question
             other=ActivityList([
@@ -160,17 +161,6 @@ class XAPIContext(object):
         )
 
         return context
-
-    @classmethod
-    def answer_evaluation_comment(cls, answer_comment, answer1_uuid, answer2_uuid, **kwargs):
-        context = cls.answer_comment(answer_comment, **kwargs)
-
-        context.context_activities.other=ActivityList([
-            Activity(id=XAPIResourceIRI.comparison_question(answer_comment.assignment_uuid, answer1_uuid, answer2_uuid))
-        ])
-
-        return context
-
 
     @classmethod
     def assignment_comment(cls, assignment_comment, **kwargs):

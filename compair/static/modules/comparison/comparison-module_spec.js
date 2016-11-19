@@ -455,7 +455,7 @@ describe('comparison-module', function () {
                     ],
                     "tracking":  mockTracking.toParams()
                 };
-                var mockTrackingComment = mockTracking.toParams({"answer1_id":"407cABC123-abcABC123_Z","answer2_id":"279cABC123-abcABC123_Z"});
+                var mockTrackingComment = mockTracking.toParams();
                 // save answer feedback/comments
                 var expectedAnswerComment1 = angular.extend({}, mockNewComment, {"content":"Feedback 1", "comment_type":'Evaluation', "draft": false, "tracking": mockTrackingComment});
                 var expectedAnswerComment2 = angular.extend({}, mockComments[0], {"content":"Feedback 2", "comment_type":'Evaluation', "draft": false, "tracking": mockTrackingComment});
@@ -523,7 +523,7 @@ describe('comparison-module', function () {
                     ],
                     "tracking":  mockTracking.toParams()
                 };
-                var mockTrackingComment = mockTracking.toParams({"answer1_id":"407cABC123-abcABC123_Z","answer2_id":"279cABC123-abcABC123_Z"});
+                var mockTrackingComment = mockTracking.toParams();
                 // save answer feedback/comments
                 var expectedAnswerComment1 = angular.extend({}, mockNewComment, {"content":"Feedback 1", "comment_type":'Evaluation', "draft": true, "tracking": mockTrackingComment});
                 var expectedAnswerComment2 = angular.extend({}, mockComments[0], {"content":"Feedback 2", "comment_type":'Evaluation', "draft": true, "tracking": mockTrackingComment});

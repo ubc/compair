@@ -26,24 +26,27 @@ class XAPIStatement(object):
         if not statement.context.context_activities:
             statement.context.context_activities = ContextActivities()
 
-            if not statement.context.context_activities.category:
-                statement.context.context_activities.category = ActivityList()
+        if not statement.context.context_activities.category:
+            statement.context.context_activities.category = ActivityList()
 
-            statement.context.context_activities.category.append(
-                XAPIActivity.ubc_profile()
-            )
-            statement.context.context_activities.category.append(
-                XAPIActivity.compair_source()
-            )
+        statement.context.context_activities.category.append(
+            XAPIActivity.ubc_profile()
+        )
+        statement.context.context_activities.category.append(
+            XAPIActivity.compair_source()
+        )
 
-        if not statement.context.extensions:
-            statement.context.extensions = Extensions()
+        if request and request.environ.get('HTTP_USER_AGENT'):
+            if not statement.context.extensions:
+                statement.context.extensions = Extensions()
+            browser_info_key = XAPIExtension.context_extensions.get('browser information')
+            statement.context.extensions[browser_info_key] = request.environ.get('HTTP_USER_AGENT')
 
-        browser_info_key = XAPIExtension.context_extensions.get('browser information')
-        referer_key = XAPIExtension.context_extensions.get('referer')
-
-        statement.context.extensions[browser_info_key] = request.environ.get('HTTP_USER_AGENT')
-        statement.context.extensions[referer_key] = request.environ.get('HTTP_REFERER')
+        if request and request.environ.get('HTTP_REFERER'):
+            if not statement.context.extensions:
+                statement.context.extensions = Extensions()
+            referer_key = XAPIExtension.context_extensions.get('referer')
+            statement.context.extensions[referer_key] = request.environ.get('HTTP_REFERER')
 
         return statement
 

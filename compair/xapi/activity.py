@@ -6,6 +6,7 @@ class XAPIActivity(object):
         'page': 'http://activitystrea.ms/schema/1.0/page',
         'comment': 'http://activitystrea.ms/schema/1.0/comment',
 
+        'course': 'http://adlnet.gov/expapi/activities/course',
         'assessment': 'http://adlnet.gov/expapi/activities/assessment',
         'question': 'http://adlnet.gov/expapi/activities/question',
         'solution': 'http://id.tincanapi.com/activitytype/solution',

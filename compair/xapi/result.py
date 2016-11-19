@@ -38,9 +38,7 @@ class XAPIResult(object):
 
     @classmethod
     def basic(cls, **kwargs):
-        result = Result(
-            extensions=Extensions()
-        )
+        result = Result()
 
         if kwargs:
             if kwargs.get('duration') != None:
@@ -50,6 +48,7 @@ class XAPIResult(object):
             if kwargs.get('completion') != None:
                 result.completion = kwargs.get('completion')
             if kwargs.get('changes') != None:
+                result.extensions = Extensions() if not result.extensions else None
                 fields_changed_key = XAPIExtension.result_extensions.get('fields changed')
                 result.extensions[fields_changed_key] = kwargs.get('changes')
 
@@ -60,6 +59,7 @@ class XAPIResult(object):
         result = cls.basic(**kwargs)
 
         result.response = content
+        result.extensions = Extensions() if not result.extensions else None
 
         character_count = cls._character_count(content) if content else 0
         result.extensions[XAPIExtension.result_extensions.get('character count')] = character_count
@@ -75,6 +75,8 @@ class XAPIResult(object):
 
         if kwargs:
             if kwargs.get('includeAttachment') != None and answer.file:
+                result.extensions = Extensions() if not result.extensions else None
+
                 file_iri = XAPIResourceIRI.attachment(answer.file.name)
                 result.extensions[XAPIExtension.result_extensions.get('attachment response')] = file_iri
 
@@ -85,6 +87,7 @@ class XAPIResult(object):
         from compair.models import ScoringAlgorithm
 
         result = cls.basic(**kwargs)
+        result.extensions = Extensions() if not result.extensions else None
 
         result.score = Score(raw=score.score)
 
