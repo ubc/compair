@@ -821,7 +821,7 @@ module.controller("AssignmentWriteController",
             $scope.assignment.educators_can_compare = false;
             // default the setting to the recommended # of comparisons
             $scope.assignment.number_of_comparisons = $scope.recommended_comparisons;
-            $scope.assignment.pairing_algorithm = PairingAlgorithm.random;
+            $scope.assignment.pairing_algorithm = PairingAlgorithm.adaptive;
             $scope.assignment.rank_display_limit = "0";
 
             $scope.date.astart.date.setDate(today.getDate()+1);
