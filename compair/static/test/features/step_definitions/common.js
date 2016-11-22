@@ -99,6 +99,7 @@ var commonStepDefinitionsWrapper = function() {
 
     // verify content on page
     this.Then("I should see '$text' in '$locator' on the page", function (text, locator) {
+        text = text.replace("\\n", "\n");
         return expect(element(by.css(locator)).getText()).to.eventually.equal(text);
     });
 

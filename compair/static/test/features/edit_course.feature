@@ -22,5 +22,5 @@ Feature: Edit Course
     And I fill in the course description with 'This is the new description'
     And I submit form with 'Save' button
     Then I should be on the 'course' page
-    And I should see 'New Name (2020 Winter)' in 'h1' on the page
+    And I should see 'New Name\n(2020 Winter)' in 'h1' on the page
     And I should see 'This is the new description' in 'div.intro-text' on the page

@@ -4,31 +4,102 @@
 
     <p class="intro-text">Welcome to the ComPAIR tool! With this tool,
         <span ng-show="!canAddCourse">you will show your understanding of course content by answering the assignments posted by your instructor and then comparing pairs of your peers' answers and offering constructive feedback on how they can improve.</span>
-        <span ng-show="canAddCourse">you can post assignments for students to answer, see how students compare and offer feedback on pairs of their peers' answers, and give individual feedback to each student or to the class as a whole.</span>
+        <span ng-show="canAddCourse">you can 1) post assignments for students to answer, 2) see how students compare and offer feedback on pairs of their peers' answers, and 3) give individual feedback to each student or to the class as a whole.</span>
     </p>
 
     <div class="row">
 
-        <h2 class="col-sm-8">Select a course</h2>
+        <h2 class="col-sm-8">Your courses</h2>
 
         <form class="col-sm-4 search-courses text-right" role="search" ng-show="canAddCourse && (courses.length || courseFilters.search)">
             <div class="form-group">
                 <input class="form-control" type="text" name="search" placeholder="Filter courses by keyword"
-                       ng-model="courseFilters.search" ng-model-options="{ updateOn: 'blur' }">
+                       ng-model="courseFilters.search">
             </div>
         </form>
     </div>
 
     <!-- Course listing -->
     <div class="course-list" ng-if="courses.length">
-        <a ng-repeat="course in courses"
-            ng-href="#/course/{{course.id}}" class="each-course">
-            <h3 class="clearfix">
-                <i class="fa fa-book"></i>
-                {{course.name}} ({{course.year}} {{course.term}})
-                <i class="fa fa-arrow-right fa-2x pull-right hidden-xs"></i>
-            </h3>
-        </a>
+    
+        <!-- Courses List -->
+        <div class="row each-course" ng-class="{'first-child': $first}"
+            ng-repeat="course in courses">
+    
+            <!-- Course Display -->
+            <div class="col-sm-9 media">
+    
+                <!-- Course Info -->
+                <div class="media-body">
+    
+                    <!-- Name -->
+                    <a ng-href="#/course/{{course.id}}/">
+                        <h3 class="media-heading">
+                            <i class="fa fa-book"></i>{{course.name}} &raquo;
+                        </h3>
+                    </a>
+    
+                    <!-- Metadata -->
+                    <ul class="list-inline course-metadata-list">
+                        <!-- Edit Link (instructors only) -->
+                        <li ng-if="canAddCourse">
+                            <a ng-href="#/course/{{course.id}}/configure" title="Edit">
+                                Edit
+                            </a>
+                        </li>
+                        <!-- Duplicate Link (instructors only) -->
+                         <!-- TO DO: enable duplication -->
+                        <li ng-if="canAddCourse">
+                            <a ng-href="#/course/{{course.id}}/duplicate" title="Duplicate">
+                                Duplicate
+                            </a>
+                        </li>
+                        <!-- Total Assignments (all) -->
+                        <!-- TO DO: grab number of assignments for each course, and display below -->
+                        <li title="{{course.assignment_count}} assignments">
+                                <!--{{course.assignment_count}}--> 2 assignment<span ng-if="course.assignment_count != 1">s</span>
+                        </li>
+                        <!-- Total Unfinished (students only) -->
+                        <!-- TO DO: grab number of unfinished assignments for student user that can still be completed for each course, i.e.,
+                             the student has not answered && the answer period is active ||
+                             the student has not compared/self-eval'ed && the compare/eval period is active,
+                             and display below -->
+                        <li ng-if="!canAddCourse " title="{{course.incomplete_count}} unfinished">
+                            <label class="label label-warning"><!--{{course.incomplete_count}}--> 1 unfinished assignment<span ng-if="course.incomplete_count != 1">s</span></label>
+                        </li>
+                        <!-- Total Users (instructors only) -->
+                        <!-- TO DO: grab number of users for each course, and display below -->
+                        <li ng-if="canAddCourse" title="{{course.user_count}} students">
+                            <!--{{course.user_count}}--> 14 student<span ng-if="course.user_count != 1">s</span>
+                        </li>
+                        <!-- Course Dates (all) -->
+                        <li title="Course year and term">
+                            {{course.year}} {{course.term}}
+                        </li>
+                        <!-- Delete Link -->
+                        <!-- TO DO: enable deletion -->
+                        <li ng-if="canAddCourse">
+                            <a confirmation-needed="deleteCourse(course.id)" keyword="course" title="Delete" href="">
+                                <i class="fa fa-trash-o"></i>
+                            </a>
+                        </li>
+                    </ul>
+    
+                </div>
+    
+            </div>
+
+            <!-- Assignment Actions -->
+            <div class="col-sm-3 text-right action-btns">
+    
+                <a ng-href="#/course/{{course.id}}/" class="btn btn-success" title="View Course">
+                    View Course
+                </a>
+    
+            </div>
+        
+        </div>
+
     </div>
 
     <div class="text-center" ng-if="courses.length">
@@ -41,8 +112,8 @@
     <div ng-if="!courses.length">
         <hr />
         <p ng-if="!courseFilters.search">No courses currently available.</p>
-        <p ng-if="courseFilters.search">No courses found.</p>
-        <p ng-if="canAddCourse">Would you like to <a href="#/course/new">add a course</a>?</p>
+        <p ng-if="courseFilters.search">No courses found for this search. Please try another search term above.</p>
+        <p ng-if="canAddCourse && !courseFilters.search">Would you like to <a href="#/course/new">add a course</a>?</p>
     </div>
 
 </div>

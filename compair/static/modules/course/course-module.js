@@ -91,7 +91,7 @@ module.controller(
             if ($scope.canManageAssignment) {
                 $scope.filters.push('Assignments being answered', 'Assignments being compared', 'Upcoming assignments');
             } else {
-                $scope.filters.push('My pending assignments');
+                $scope.filters.push('My unfinished assignments');
             }
             $scope.filter = $scope.filters[0];
         });
@@ -175,7 +175,7 @@ module.controller(
                     case "Upcoming assignments":
                         return !assignment.available;
                     // STUDENTS: return all assignments that need to be answered or compared
-                    case "My pending assignments":
+                    case "My unfinished assignments":
                         return (assignment.answer_period && !$scope.answered[assignment.id]) ||
                             (assignment.compare_period && assignment.steps_left > 0);
                     default:

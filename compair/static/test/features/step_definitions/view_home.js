@@ -9,7 +9,7 @@ var expect = chai.expect;
 var viewHomeStepDefinitionsWrapper = function () {
     this.Then("I should see my courses with names:", function (data) {
         var list = data.hashes().map(function(item) {
-            return item.name + " ("+item.year+" "+item.term+")";
+            return item.name + " »";
         });
 
         return expect(element.all(by.css(".course-list a h3")).getText()).to.eventually.eql(list);
