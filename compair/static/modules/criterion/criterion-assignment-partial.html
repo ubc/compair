@@ -1,9 +1,9 @@
 
 <div>
-    <label>Comparison Criteria</label>
+    <label class="required-star">Comparison Criteria</label>
 
     <div ng-repeat="(key, criterion) in assignment.criteria" class="row">
-        <div class="col-sm-2" ng-if="assignmentId">
+        <div class="col-sm-2">
             <hr class="visible-xs" />
             <p>
                 <a href=""
@@ -21,6 +21,7 @@
                 <a href="" confirmation-needed="remove(key)" keyword="criterion" ng-if="!assignment.compared">
                     <i class="fa fa-minus-circle"></i> Drop <i class="visible-xs fa fa-arrow-down"></i>
                 </a>
+                <span ng-if="assignment.compared" class="text-muted"><i class="fa fa-minus-circle"></i> (cannot drop)</span>
             </p><!-- disable from assignment / add to dropdown -->
         </div>
         <div class="col-sm-8">
@@ -38,12 +39,12 @@
 
         <!-- dropdown with leftover criteria / Add button-->
         <label>Add Criteria</label>
-
+        
         <br /><br />
 
         <div class="row">
             <div class="col-sm-2">
-                <p><a id="add-new-criteria" href="" class="btn btn-small btn-link" ng-click="changeCriterion()">Add New</a></p>
+                <p><a id="add-new-criteria" href="" class="btn btn-primary btn-sm" ng-click="changeCriterion()">Add New</a></p>
             </div>
             <div class="col-sm-1">
                 <p>OR</p>
@@ -51,12 +52,14 @@
             <div class="form-group col-sm-6">
                 <select id="select-default-criteria" class="form-control" ng-model="selected"
                         ng-options="key as c.name for (key, c) in availableCriteria">
-                    <option value="">- select a default -</option>
+                    <option value="">- select a default criterion -</option>
                 </select>
+                <br />
+                <p class="text-muted"><em>Default criterion are created by checking the default criterion box at the bottom of the form when you add new or edit existing criteria.</em></p>
             </div>
             <div class="col-sm-3">
                 <!-- used length because when list is empty the empty option gets a value of 0 which is valid -->
-                <p><a id="add-default-criteria" class="btn btn-small btn-primary" ng-click="add(selected)" ng-disabled="!selected || !availableCriteria.length">Add Selected</a></p>
+                <p><a id="add-default-criteria" class="btn btn-sm btn-primary" ng-click="add(selected)" ng-disabled="!selected || !availableCriteria.length">Add Selected</a></p>
             </div>
         </div>
     </div>
