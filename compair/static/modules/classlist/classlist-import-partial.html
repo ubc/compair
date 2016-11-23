@@ -1,36 +1,36 @@
 <div ng-controller="ClassImportController">
 
     <h1>Import Users</h1>
-    <p class="intro-text">Create, enrol, or drop multiple users in this course at the same time by importing a CSV file with a list of the course's students.</p>
-    <p>Note the following guidelines:</p>
+    <p class="intro-text"><strong>Create, enrol, or drop multiple users</strong> in this course at the same time by importing a CSV file with a full list of your course's users.</p>
+    <h2>Requirements</h2>
+    <p>Note the following:</p>
     <ul class="li-spacing">
         <li>This application only supports importing a file that uses the <strong>CSV (comma-separated values) format</strong>.</li>
-        <li>Data is expected in this order: <strong>Username, Student Number, First Name, Last Name, Email, Display Name, Password</strong> (examples below).</li>
-        <li><strong>Only usernames are required</strong>. All the other fields are optional.</li>
+        <li>User information is expected in this order: <strong>Username, Student Number, First Name, Last Name, Email, Display Name, Password</strong> (examples below).</li>
+        <li><strong>Only usernames are required</strong>. All the other fields are optional. If a display name is <em>not</em> given, the user is assigned an anonymous display name default, e.g., "Student1234". If a password is <em>not</em> given, the default password is the username. All other empty fields are left blank.</li>
         <li><strong>Usernames and student numbers must be unique</strong> in the application. Duplicates will be altered on import automatically.</li>
-        <li><strong>Each new upload should include the full list of users</strong> you want in the course. Any new users in a newly uploaded file will be enrolled in the course and any deleted users will be dropped from the course.</li>
+        <li><strong>Each new upload should include the full list of users</strong> you want in the course. Any new users in an imported file will be enrolled in the course and any deleted users will be dropped from the course.</li>
     </ul>
     <div class="form-group">
         <fieldset>
             <legend>For {{course_name}}</legend>
             <div class="form-group">
-                <label for="importFile">Choose CSV File</label>
+                <label for="importFile" class="required-star">Choose CSV File</label>
                 <input type="file" nv-file-select uploader="uploader"
                     id="importFile" ng-click="uploader.clearQueue()"/>
             </div>
             <div class="form-group">
-                <label for="importType" class="required-star">Import Type</label>
+                <label for="importType" class="required-star">What will students use to log in?</label>
                 <select class="form-control" ng-model="importType" name="importType"
                         ng-options="type.value as type.name for type in importTypes" required>
                 </select>
                 <br />
+                <p><strong>With this setting:</strong></p>
                 <p ng-if="importType == null">
-                    Students will login using <strong>Username</strong> and <strong>Password</strong> with <strong>ComPAIR's built in login system</strong>.
+                    Students will log in using a username and password specific to ComPAIR. You may specify any usernames in your file.
                 </p>
                 <p ng-if="importType == ThirdPartyAuthType.cas">
-                    <strong>Students will use CWL to login</strong>.
-                    <strong>Username</strong> must be the student's CWL username.
-                    <strong>Password</strong> will be ignored.
+                    Students will log in using their CWL. The usernames in your file must be the students' CWLs. Any passwords in your file will be ignored.
                 </p>
             </div>
         </fieldset>
@@ -53,10 +53,4 @@
         <dt>No First Name or Last Name:</dt>
             <dd>studentuser1, num123, , , jack.smith@student.ca, display0001, password123</dd>
     </dl>
-    <p>Also note that:</p>
-    <ul>
-        <li>If a display name is <em>not</em> given, <strong>the user is assigned an annonymous display name default</strong>, e.g., "Student1234".</li>
-        <li>If a password is <em>not</em> given, <strong>the default password saved for the user is the username</strong>.</li>
-    </ul>
-
 </div>
