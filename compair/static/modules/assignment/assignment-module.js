@@ -823,7 +823,10 @@ module.controller("AssignmentWriteController",
             $scope.assignment.number_of_comparisons = $scope.recommended_comparisons;
             $scope.assignment.pairing_algorithm = PairingAlgorithm.adaptive;
             $scope.assignment.rank_display_limit = "0";
-
+            $scope.assignment.answer_percent = 50;
+            $scope.assignment.compare_percent = 50;
+            $scope.assignment.eval_percent = 0;
+            
             $scope.date.astart.date.setDate(today.getDate()+1);
             $scope.date.aend.date.setDate(today.getDate()+8);
             $scope.date.cstart.date.setDate(today.getDate()+8);

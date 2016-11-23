@@ -22,7 +22,7 @@
         </compair-field-with-feedback>
 
         <div>
-            <label for="importFile">Attach PDF (maximum size 25MB)</label>
+            <label for="importFile">PDF Attachment (maximum size 25MB)</label>
             <p ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)"><em>Tip: Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> or using <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a> or <a href="http://www.google.com/chrome/">Chrome</a> if you have problems uploading.</em></p>
             <input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)" multiple/>
             <p class="instructional-text" ng-show="uploader.queue.length">The file below will be attached when you <strong>save this assignment</strong>. You may also remove the file and upload another instead.</p>
@@ -245,6 +245,11 @@
 
         <input id="educators_can_compare" type="checkbox" name="educators_can_compare" ng-model="assignment.educators_can_compare">
         <label for="educators_can_compare">Allow instructors and teaching assistants to compare student answer pairs</label>
+        
+        <br />
+        
+        <input id="students_can_reply" type="checkbox" ng-model="assignment.students_can_reply">
+        <label for="students_can_reply">Allow students to post additional replies to one another</label>
 
         <hr />
         
@@ -298,10 +303,42 @@
     </fieldset>
 
     <fieldset>
-        <legend>Discussion</legend>
+        <legend>Grade</legend>
+        
+        <div class="instructional-text">
+            <p>Enter the <strong>percentage weight you'd like assigned to each part</strong> of the assignment a student completes, totalling 100%. If you did not select the self-evaluation choice above, this will not be included in the calculation.</p>
+        </div>
+        
+        <!-- TO DO: hook up this part of form to back end,
+             add validation to prevent totals of less than or more than 100% -->s
         <div class="form-group">
-            <input id="students_can_reply" type="checkbox" ng-model="assignment.students_can_reply">
-            <label for="students_can_reply">Allow students to reply to any answer</label>
+            <label>Grade Weights</label>
+            <div class="row text-center">
+                <div class="col-md-2">
+                    <input class="form-control" type="number" min="0" max="100" id="answer_percent" name="answer_percent" ng-model="assignment.answer_percent">
+                    <span class="text-muted">% for answering</span>
+                </div>
+                <div class="col-md-1">
+                    +
+                </div>
+                <div class="col-md-2">
+                    <input class="form-control" type="number" min="0" max="100" id="compare_percent" name="compare_percent" ng-model="assignment.compare_percent">
+                    <span class="text-muted">% for comparing</span>
+                </div>
+                <div class="col-md-1">
+                    +
+                </div>
+                <div class="col-md-3">
+                    <input class="form-control" type="number" min="0" max="100" ng-disabled="!assignment.enable_self_evaluation" id="eval_percent" name="eval_percent" ng-model="assignment.eval_percent">
+                    <span class="text-muted">% for self evaluating (if used)</span>
+                </div>
+                <div class="col-md-1">
+                    =
+                </div>
+                <div class="col-md-2">
+                    <p><strong ng-class="{'text-danger': (assignment.answer_percent + assignment.compare_percent + assignment.eval_percent != 100)}">{{assignment.answer_percent + assignment.compare_percent + assignment.eval_percent}}%</strong></p>
+                </div>
+            </div>
         </div>
     </fieldset>
 
