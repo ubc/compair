@@ -293,6 +293,12 @@ class AnswersAPITests(ComPAIRAPITestCase):
             actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
+            # user should not have grades
+            new_course_grade = CourseGrade.get_user_course_grade( self.fixtures.course, self.fixtures.instructor)
+            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.fixtures.assignment, self.fixtures.instructor)
+            self.assertIsNone(new_course_grade)
+            self.assertIsNone(new_assignment_grade)
+
             # test instructor could submit multiple answers for his/her own
             response = self.client.post(
                 self.base_url,
@@ -302,6 +308,12 @@ class AnswersAPITests(ComPAIRAPITestCase):
             rv = json.loads(response.data.decode('utf-8'))
             actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
+
+            # user should not have grades
+            new_course_grade = CourseGrade.get_user_course_grade( self.fixtures.course, self.fixtures.instructor)
+            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.fixtures.assignment, self.fixtures.instructor)
+            self.assertIsNone(new_course_grade)
+            self.assertIsNone(new_assignment_grade)
 
             # test instructor could submit multiple answers for his/her own
             expected_answer.update({'user_id': self.fixtures.instructor.uuid})
@@ -313,6 +325,12 @@ class AnswersAPITests(ComPAIRAPITestCase):
             rv = json.loads(response.data.decode('utf-8'))
             actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
+
+            # user should not have grades
+            new_course_grade = CourseGrade.get_user_course_grade( self.fixtures.course, self.fixtures.instructor)
+            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.fixtures.assignment, self.fixtures.instructor)
+            self.assertIsNone(new_course_grade)
+            self.assertIsNone(new_assignment_grade)
 
             # test instructor could submit on behave of a student
             self.fixtures.add_students(1)
@@ -326,6 +344,12 @@ class AnswersAPITests(ComPAIRAPITestCase):
             actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
+            # user should have grades
+            new_course_grade = CourseGrade.get_user_course_grade( self.fixtures.course, self.fixtures.students[-1])
+            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.fixtures.assignment, self.fixtures.students[-1])
+            self.assertIsNotNone(new_course_grade)
+            self.assertIsNotNone(new_assignment_grade)
+
             # test instructor can not submit additional answers for a student
             expected_answer.update({'user_id': self.fixtures.students[0].uuid})
             response = self.client.post(
@@ -335,6 +359,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assert400(response)
             rv = json.loads(response.data.decode('utf-8'))
             self.assertEqual({"error": "An answer has already been submitted."}, rv)
+
 
         self.fixtures.add_students(1)
         self.fixtures.course.calculate_grade(self.fixtures.students[-1])
@@ -364,9 +389,6 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 self.fixtures.assignments[0], self.fixtures.draft_student).grade
             self.assertEqual(new_course_grade, course_grade)
             self.assertEqual(new_assignment_grade, assignment_grade)
-
-            mocked_update_assignment_grades_run.assert_not_called()
-            mocked_update_course_grades_run.assert_not_called()
 
         with self.login(self.fixtures.instructor.username):
             # test instructor can submit outside of grace period

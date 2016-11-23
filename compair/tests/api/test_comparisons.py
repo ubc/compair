@@ -400,7 +400,6 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                         self.assertGreater(new_course_grade.grade, course_grade)
                         self.assertGreater(new_assignment_grade.grade, assignment_grade)
 
-
                         mocked_update_course_grades_run.assert_called_once_with(
                             lti_consumer.id,
                             [(lti_user_resource_link1.lis_result_sourcedid, new_course_grade.id)]
@@ -413,6 +412,10 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                         )
                         mocked_update_assignment_grades_run.reset_mock()
                     else:
+                        new_course_grade = CourseGrade.get_user_course_grade(self.course, user)
+                        new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, user)
+                        self.assertIsNone(new_course_grade)
+                        self.assertIsNone(new_assignment_grade)
                         mocked_update_assignment_grades_run.assert_not_called()
                         mocked_update_course_grades_run.assert_not_called()
 

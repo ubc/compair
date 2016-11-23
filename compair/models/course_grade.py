@@ -49,9 +49,19 @@ class CourseGrade(DefaultTableMixin, WriteTrackingMixin):
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()
 
+    __table_args__ = (
+        # prevent duplicate user in course
+        db.UniqueConstraint('course_id', 'user_id', name='_unique_user_and_course'),
+        DefaultTableMixin.default_table_args
+    )
+
     @classmethod
     def calculate_grade(cls, course, user):
-        from . import AssignmentGrade, LTIOutcome
+        from . import AssignmentGrade, LTIOutcome, CourseRole
+
+        student_ids = [course_user.user_id
+            for course_user in course.user_courses
+            if course_user.course_role == CourseRole.student]
 
         assignment_ids = [assignment.id
             for assignment in course.assignments
@@ -63,6 +73,8 @@ class CourseGrade(DefaultTableMixin, WriteTrackingMixin):
                 .filter_by(user_id=user.id, course_id=course.id) \
                 .delete()
             LTIOutcome.update_user_course_grade(course, user)
+            return
+        elif user.id not in student_ids:
             return
 
         assignment_grades = AssignmentGrade.query \
