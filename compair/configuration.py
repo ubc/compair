@@ -72,7 +72,7 @@ env_overridables = [
     'SECRET_KEY', 'REPORT_FOLDER', 'UPLOAD_FOLDER',
     'ATTACHMENT_UPLOAD_FOLDER', 'ASSET_LOCATION', 'ASSET_CLOUD_URI_PREFIX',
     'CELERY_ALWAYS_EAGER', 'CELERY_RESULT_BACKEND', 'CELERY_BROKER_URL',
-    'GA_TRACKING_ID']
+    'GA_TRACKING_ID', 'ENFORCE_SSL']
 
 for env in env_overridables:
     if os.environ.get(env):

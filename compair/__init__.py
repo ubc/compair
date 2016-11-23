@@ -69,7 +69,14 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
     app.config.update(settings_override)
 
     if not app.config.get('ENFORCE_SSL', True):
-        ssl._create_default_https_context = ssl._create_unverified_context
+        try:
+            _create_unverified_https_context = ssl._create_unverified_context
+        except AttributeError:
+            # Legacy Python that doesn't verify HTTPS certificates by default
+            pass
+        else:
+            # Handle target environment that doesn't support HTTPS verification
+            ssl._create_default_https_context = _create_unverified_https_context
 
     app.logger.debug("Application Configuration: " + str(app.config))
 

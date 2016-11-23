@@ -220,7 +220,7 @@ class LTIOutcome(object):
             return False
 
         # build outcome request
-        request = ComPAIROutcomeRequest({
+        request = OutcomeRequest({
             "consumer_key": lti_consumer.oauth_consumer_key,
             "consumer_secret": lti_consumer.oauth_consumer_secret,
             "lis_outcome_service_url": lti_consumer.lis_outcome_service_url,
@@ -234,34 +234,3 @@ class LTIOutcome(object):
             current_app.logger.error("Failed grade update for lis_result_sourcedid: " + lis_result_sourcedid + " with grade: "+str(grade))
 
         return request.was_outcome_post_successful()
-
-class ComPAIROutcomeRequest(OutcomeRequest):
-    # override post_outcome_request in order to use LTI_ENFORCE_SSL
-    def post_outcome_request(self, **kwargs):
-        '''
-        POST an OAuth signed request to the Tool Consumer.
-        '''
-        import requests
-        from requests_oauthlib import OAuth1
-        from requests_oauthlib.oauth1_auth import SIGNATURE_TYPE_AUTH_HEADER
-
-        from lti.outcome_response import OutcomeResponse
-        from lti.utils import InvalidLTIConfigError
-
-        if not self.has_required_attributes():
-            raise InvalidLTIConfigError(
-                'OutcomeRequest does not have all required attributes')
-
-        header_oauth = OAuth1(self.consumer_key, self.consumer_secret,
-                       signature_type=SIGNATURE_TYPE_AUTH_HEADER,
-                       force_include_body=True, **kwargs)
-
-        headers = {'Content-type': 'application/xml'}
-
-        verify = current_app.config.get('LTI_ENFORCE_SSL', True)
-        resp = requests.post(self.lis_outcome_service_url, auth=header_oauth,
-                             data=self.generate_request_xml(),
-                             headers=headers, verify=verify)
-        outcome_resp = OutcomeResponse.from_post_response(resp, resp.content)
-        self.outcome_response = outcome_resp
-        return self.outcome_response

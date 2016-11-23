@@ -14,7 +14,7 @@ from oauthlib.oauth1 import SIGNATURE_TYPE_BODY, SIGNATURE_HMAC
 from requests_oauthlib import OAuth1
 from lti.utils import parse_qs
 import requests
-import xml.etree.ElementTree as ET
+from xml.etree import ElementTree
 
 class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
     __tablename__ = 'lti_membership'
@@ -184,7 +184,6 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             'lti_version': 'LTI-1p0',
             'oauth_callback': 'about:blank'
         }
-
         request = requests.Request('POST', memberships_url, data=params).prepare()
         sign = OAuth1(lti_consumer.oauth_consumer_key, lti_consumer.oauth_consumer_secret,
             signature_type=SIGNATURE_TYPE_BODY, signature_method=SIGNATURE_HMAC)
@@ -192,17 +191,17 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         params = parse_qs(signed_request.body.decode('utf-8'))
 
         xmlString = LTIMembership._send_membership_request(memberships_url, params)
-        root = ET.fromstring(xmlString)
+        root = ElementTree.fromstring(xmlString)
 
-        codemajor = root.find('statusinfo').find('codemajor')
-        if codemajor.text == 'Failure' or codemajor.text == 'Unsupported':
+        codemajor = root.find('statusinfo/codemajor')
+        if codemajor is not None and codemajor.text in ['Failure', 'Unsupported']:
             raise MembershipInvalidRequestException
 
-        if root.find('memberships') == None or len(root.find('memberships').findall('member')) == 0:
+        if root.find('memberships') == None or len(root.findall('memberships/member')) == 0:
             raise MembershipNoResultsException
 
         members = []
-        for member in root.find('memberships').findall('member'):
+        for member in root.findall('memberships/member'):
             roles_text = member.findtext('roles')
 
             members.append({

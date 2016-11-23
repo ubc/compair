@@ -6,6 +6,8 @@ from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.models import User, SystemRole, CourseRole, UserCourse, \
     LTIConsumer, LTIContext, LTIUser, LTIMembership,  \
     LTIResourceLink, LTIUserResourceLink
+from compair.models.lti_models import MembershipInvalidRequestException, MembershipNoResultsException, \
+    MembershipNoValidContextsException
 from compair.core import db
 from oauthlib.common import generate_token, generate_nonce, generate_timestamp
 
@@ -464,7 +466,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
     def test_lti_course_link_with_membership(self, mocked_send_membership_request):
         instructor = self.data.get_authorized_instructor()
         course = self.data.get_course()
-        current_user_ids = [user_course.user_id for user_course in course.user_courses]
+        current_users = [(user_course.user_id, user_course.course_role) for user_course in course.user_courses]
 
         url = '/api/lti/course/'+course.uuid+'/link'
 
@@ -478,7 +480,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
         # test invalid request
         with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
                 user_id=lti_user.user_id, context_id=lti_context.context_id, roles="Instructor",
-                ext_ims_lis_memberships_id="123", ext_ims_lis_memberships_url="https://mock_membership_url.com") as rv:
+                ext_ims_lis_memberships_id="123", ext_ims_lis_memberships_url="https://mockmembershipurl.com") as rv:
             self.assert200(rv)
 
             mocked_send_membership_request.return_value = """
@@ -495,15 +497,15 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             # link course
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert200(rv)
-            self.assertIn('warning', rv.json)
+
             # membership should not change
             for user_course in course.user_courses:
-                self.assertIn(user_course.user_id, current_user_ids)
+                self.assertIn((user_course.user_id, user_course.course_role), current_users)
 
         # test empty membership response
         with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
                 user_id=lti_user.user_id, context_id=lti_context.context_id, roles="Instructor",
-                ext_ims_lis_memberships_id="123", ext_ims_lis_memberships_url="https://mock_membership_url.com") as rv:
+                ext_ims_lis_memberships_id="123", ext_ims_lis_memberships_url="https://mockmembershipurl.com") as rv:
             self.assert200(rv)
 
             mocked_send_membership_request.return_value = """
@@ -523,16 +525,16 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             # link course
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert200(rv)
-            self.assertIn('warning', rv.json)
+
             # membership should not change
             for user_course in course.user_courses:
-                self.assertIn(user_course.user_id, current_user_ids)
+                self.assertIn((user_course.user_id, user_course.course_role), current_users)
 
 
         # test successful membership response (minimual returned data)
         with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
                 user_id=lti_user.user_id, context_id=lti_context.context_id, roles="Instructor",
-                ext_ims_lis_memberships_id="123", ext_ims_lis_memberships_url="https://mock_membership_url.com") as rv:
+                ext_ims_lis_memberships_id="123", ext_ims_lis_memberships_url="https://mockmembershipurl.com") as rv:
             self.assert200(rv)
 
             mocked_send_membership_request.return_value = """
@@ -572,7 +574,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             # link course
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert200(rv)
-            self.assertNotIn('warning', rv.json)
+
             # 5 members in minimal_membership (all old users besides instructor should be dropped)
 
             # verify user course roles
@@ -594,7 +596,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     "compair_student_3", "compair_instructor_2"])
 
     @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._send_membership_request')
-    def test_lti_course_link_with_membership(self, mocked_send_membership_request):
+    def test_lti_membership(self, mocked_send_membership_request):
         course = self.data.get_course()
         instructor = self.data.get_authorized_instructor()
         student_1 = self.data.authorized_student
@@ -610,7 +612,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             lti_consumer,
             compair_course_id=course.id,
             ext_ims_lis_memberships_id="123",
-            ext_ims_lis_memberships_url="https://mock_membership_url.com"
+            ext_ims_lis_memberships_url="https://mockmembershipurl.com"
         )
 
         lti_user_instructor = self.lti_data.create_user(lti_consumer, SystemRole.instructor, instructor)

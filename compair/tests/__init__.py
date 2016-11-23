@@ -13,6 +13,6 @@ test_app_settings = {
     'SQLALCHEMY_ECHO': False,
     'CSRF_ENABLED': False,
     'PASSLIB_CONTEXT': 'plaintext',
-    'LTI_ENFORCE_SSL': False,
+    'ENFORCE_SSL': False,
     'CELERY_ALWAYS_EAGER': True
 }
