@@ -12,7 +12,7 @@
             return {
                 restrict: 'E',
                 scope: {
-                    uses_compair_login: '=usescompairLogin'
+                    uses_compair_login: '=usesCompairLogin'
                 },
                 templateUrl: 'modules/user/user-form-partial.html',
                 link: function (scope, element, attrs) {
