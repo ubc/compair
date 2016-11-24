@@ -1073,7 +1073,7 @@ describe('course-module', function () {
                     students_can_reply: false,
                     educators_can_compare: false,
                     number_of_comparisons: 3,
-                    pairing_algorithm: 'random',
+                    pairing_algorithm: 'adaptive',
                     rank_display_limit: '0'
                 });
                 expect($rootScope.recommended_comparisons).toEqual(3);
