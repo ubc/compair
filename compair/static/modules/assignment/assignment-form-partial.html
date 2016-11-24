@@ -245,9 +245,9 @@
 
         <input id="educators_can_compare" type="checkbox" name="educators_can_compare" ng-model="assignment.educators_can_compare">
         <label for="educators_can_compare">Allow instructors and teaching assistants to compare student answer pairs</label>
-        
+
         <br />
-        
+
         <input id="students_can_reply" type="checkbox" ng-model="assignment.students_can_reply">
         <label for="students_can_reply">Allow students to post additional replies to one another</label>
 
@@ -304,39 +304,37 @@
 
     <fieldset>
         <legend>Grade</legend>
-        
+
         <div class="instructional-text">
-            <p>Enter the <strong>percentage weight you'd like assigned to each part</strong> of the assignment a student completes, totalling 100%. If you did not select the self-evaluation choice above, this will not be included in the calculation.</p>
+            <p>Enter the <strong>relative weight you'd like assigned to each part of the assignment</strong> a student completes, and this will be computed into a percentage, totalling 100% for the whole assignment.</p>
         </div>
-        
-        <!-- TO DO: hook up this part of form to back end,
-             add validation to prevent totals of less than or more than 100% -->s
+
         <div class="form-group">
             <label>Grade Weights</label>
             <div class="row text-center">
                 <div class="col-md-2">
-                    <input class="form-control" type="number" min="0" max="100" id="answer_percent" name="answer_percent" ng-model="assignment.answer_percent">
-                    <span class="text-muted">% for answering</span>
+                    <input class="form-control" type="number" min="0" id="answer_grade_weight" name="answer_grade_weight" ng-model="assignment.answer_grade_weight">
+                    <span class="text-muted">{{getGradeWeightAsPercent(assignment.answer_grade_weight) | number : 2 }}% for answering</span>
                 </div>
                 <div class="col-md-1">
                     +
                 </div>
                 <div class="col-md-2">
-                    <input class="form-control" type="number" min="0" max="100" id="compare_percent" name="compare_percent" ng-model="assignment.compare_percent">
-                    <span class="text-muted">% for comparing</span>
+                    <input class="form-control" type="number" min="0" id="comparison_grade_weight" name="comparison_grade_weight" ng-model="assignment.comparison_grade_weight">
+                    <span class="text-muted">{{getGradeWeightAsPercent(assignment.comparison_grade_weight) | number : 2 }}% for comparing</span>
                 </div>
-                <div class="col-md-1">
+                <div class="col-md-1" ng-show="assignment.enable_self_evaluation">
                     +
                 </div>
-                <div class="col-md-3">
-                    <input class="form-control" type="number" min="0" max="100" ng-disabled="!assignment.enable_self_evaluation" id="eval_percent" name="eval_percent" ng-model="assignment.eval_percent">
-                    <span class="text-muted">% for self evaluating (if used)</span>
+                <div class="col-md-3" ng-show="assignment.enable_self_evaluation">
+                    <input class="form-control" type="number" min="0" id="self_evaluation_grade_weight" name="self_evaluation_grade_weight" ng-model="assignment.self_evaluation_grade_weight">
+                    <span class="text-muted">{{getGradeWeightAsPercent(assignment.self_evaluation_grade_weight) | number : 2 }}% for self evaluating</span>
                 </div>
                 <div class="col-md-1">
                     =
                 </div>
                 <div class="col-md-2">
-                    <p><strong ng-class="{'text-danger': (assignment.answer_percent + assignment.compare_percent + assignment.eval_percent != 100)}">{{assignment.answer_percent + assignment.compare_percent + assignment.eval_percent}}%</strong></p>
+                    <p><strong>100%</strong></p>
                 </div>
             </div>
         </div>

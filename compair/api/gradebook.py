@@ -11,7 +11,7 @@ from sqlalchemy.orm import undefer, joinedload
 
 from compair.authorization import require
 from compair.models import Course, Assignment, CourseRole, User, UserCourse, Comparison, \
-    AnswerComment, Answer, Score, AnswerCommentType, PairingAlgorithm
+    AnswerComment, Answer, Score, AnswerCommentType, PairingAlgorithm, AssignmentGrade
 from .util import new_restful_api
 from compair.core import event
 
@@ -39,12 +39,16 @@ class GradebookAPI(Resource):
 
         # get all students in this course
         students = User.query \
-            .with_entities(User.id, User.uuid, User.displayname, User.firstname, User.lastname) \
+            .with_entities(User.id, User.uuid, User.displayname, User.firstname, User.lastname, AssignmentGrade.grade) \
             .join(UserCourse, UserCourse.user_id == User.id) \
-            .filter_by(
-                course_id=course.id,
-                course_role=CourseRole.student
-            ) \
+            .outerjoin(AssignmentGrade, and_(
+                 AssignmentGrade.user_id == User.id,
+                 AssignmentGrade.assignment_id == assignment.id
+            )) \
+            .filter(and_(
+                UserCourse.course_id == course.id,
+                UserCourse.course_role == CourseRole.student
+            )) \
             .all()
         student_ids = [student.id for student in students]
 
@@ -141,6 +145,7 @@ class GradebookAPI(Resource):
                 'lastname': student.lastname,
                 'num_answers': num_answers_per_student.get(student.id, 0),
                 'num_comparisons': num_comparisons_per_student.get(student.id, 0),
+                'grade': student.grade * 100 if student.grade else 0,
                 'flagged': flagged_by_user_id.get(student.id, 'No Answer')
             }
             if include_scores:

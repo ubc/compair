@@ -132,6 +132,10 @@ def get_assignment(restrict_user=True):
 
         'user': get_partial_user(restrict_user),
 
+        'answer_grade_weight': fields.Integer,
+        'comparison_grade_weight': fields.Integer,
+        'self_evaluation_grade_weight': fields.Integer,
+
         'modified': fields.DateTime(dt_format='iso8601'),
         'created': fields.DateTime(dt_format='iso8601')
     }
