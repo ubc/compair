@@ -25,25 +25,7 @@
   /* class for div surrounding each assignment */
   .each-assignment {
 
-    padding: 1.5em 0;
-    .gray-box();
-    border-top: none;
-
-    /* h3 header (assignment name) to be underlined for improved clickability */
-    a h3 {
-
-      text-decoration: underline;
-
-      i {
-        margin-right: .3em;
-      }
-
-    }//closes a
-
-    /* alternating rows */
-    &:nth-child(odd) {
-      background: #fff;
-    }
+    .item-list();
 
     /* action buttons need to stack */
     .btn {
@@ -67,28 +49,7 @@
     /* ul for metadata */
     .assignment-metadata-list {
 
-      margin-bottom: .5em;
-      padding-top: .5em;
-      color: @breadcrumb-gray;
-      border-top: 2px dotted @border-gray;
-
-      /* each piece of data */
-      li {
-
-        margin-bottom: .3em;
-        padding: .2em .5em;
-        border-right: 1px solid @border-gray;
-
-        &:last-child {
-          border-right: none;
-        }
-
-      }//closes li
-
-     /* label is applied to li when evaluations are needed */
-      .label {
-        font-size: 100%;
-      }
+      .metadata();
 
     }//closes assignment-metadata-list
 

@@ -2,7 +2,7 @@
 
     <div class="row">
         <header class="col-sm-6">
-            <h1><i class="fa fa-book"></i> {{course.name}} ({{course.year}} {{course.term}})</h1>
+            <h1><i class="fa fa-book"></i> {{course.name}} <br />({{course.year}} {{course.term}})</h1>
             <div class="intro-text" mathjax hljs ng-bind-html="course.description">
             </div>
         </header>
@@ -30,7 +30,7 @@
     <div class="row">
 
         <div class="col-sm-8">
-            <h2>{{filter}}</h2>
+            <h2>{{filter}} <span ng-if="results.length != assignments.length">({{results.length}})</span></h2>
         </div>
 
         <div class="col-sm-4 text-right">
@@ -84,13 +84,6 @@
                             Edit
                         </a>
                     </li>
-                    <!-- Time Posted and Author -->
-                    <li>
-                        Posted by
-                        <a ng-href="#/user/{{assignment.user_id}}">
-                            {{assignment.user.displayname}}
-                        </a>
-                    </li>
                     <!-- Total Answers -->
                     <li title="{{assignment.answer_count}} answers">
                         <span ng-if="(!canManageAssignment && assignment.answers_available) || canManageAssignment">
@@ -114,16 +107,19 @@
                         <span ng-if="answered"><strong>answered</strong> <span ng-if="assignment.steps_left == 0">and </span></span>
                         <span ng-if="assignment.steps_left == 0"><strong>compared</strong></span>
                     </li>
-                    <!-- Pending Assignment Feedback (for students) -->
+                    <!-- Assignment Feedback (for students) -->
                     <li ng-if="!canManageAssignment && ((assignment.compare_period && assignment.steps_left > 0) || (assignment.answer_period && !assignment.status.answers.answered))" class="label label-warning">
                         <span ng-if="assignment.answer_period && !assignment.status.answers.answered">1 answer<span ng-if="(assignment.compare_period && assignment.steps_left) > 0">, </span></span>
                         <span ng-if="assignment.compare_period && assignment.steps_left > 0">{{assignment.steps_left}} comparison<span ng-if="(assignment.steps_left) != 1">s</span></span>
                         needed from you
                     </li>
-                    <!-- Answers Active (for instructors) -->
-                    <li ng-class="{'label label-warning': assignment.answer_period}" ng-if="canManageAssignment">
-                        <span ng-if="assignment.answer_period">Students answering until {{assignment.answer_end | amDateFormat: 'MMM D'}}</span>
-                        <span ng-if="!assignment.answer_period">Students answer<span ng-if="assignment.available">ed</span> {{assignment.answer_start | amDateFormat: 'MMM D'}}-{{assignment.answer_end | amDateFormat: 'MMM D'}}</span>
+                    <!-- Assignment Feedback (for instructors) -->
+                    <li ng-if="canManageAssignment">
+                        <span ng-if="!assignment.answer_period && !assignment.compare_period && !assignment.answers_available">Scheduled for {{assignment.answer_start | amDateFormat: 'MMM D'}}</span>
+                        <span ng-if="assignment.answer_period && !assignment.compare_period" class="label label-warning">Answering period</span>
+                        <span ng-if="!assignment.answer_period && assignment.compare_period" class="label label-warning">Comparing period</span>
+                        <span ng-if="assignment.answer_period && assignment.compare_period" class="label label-warning">Answer/compare period</span>
+                        <span ng-if="!assignment.answer_period && !assignment.compare_period && assignment.answers_available">Assignment completed {{assignment.compare_end | amDateFormat: 'MMM D'}}</span>
                     </li>
                     <li ng-if="canManageAssignment || assignment.user_id == loggedInUserId">
                         <a confirmation-needed="deleteAssignment(course.id, assignment.id)" keyword="assignment" title="Delete" href="">

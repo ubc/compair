@@ -10,39 +10,24 @@
 
   /* div surrounding list of courses */
   .course-list {
-
-    .blue-box();
-
+    
     /* class for div surrounding each course */
     .each-course {
 
-      display: block;
-      padding: 1em;
-      text-shadow: 0 -1px 0 #eee;
-      border-bottom: 1px solid @link-blue;
-
-      &:last-child {
-        border-bottom: none;
-      }
-
-      &:hover {
-        color: @link-blue;
-        text-decoration: none;
-        background: #DBEBF9;
+      .item-list();
+      
+      .course-metadata-list {
+        .metadata();
+        margin-top: 2em;
       }
 
     }//closes each-course
 
-    /* course names */
-    h3 {
-      margin-top: .5em;
+    /* add border to first course */
+    .first-child {
+      border-top: 1px solid @border-gray;
     }
-
-    /* right-side arrow icon */
-    .fa-arrow-right {
-      font-size: 1.5em;
-    }
-
+    
   }//closes course-list
 
 }//closes home-screen

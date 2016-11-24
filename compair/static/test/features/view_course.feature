@@ -70,7 +70,7 @@ Feature: View Course
   Scenario: Filtering assignments on course page as student
     Given I'm a Student
     And I'm on 'course' page for course with id '1abcABC123-abcABC123_Z'
-    When I filter course page assignments by 'My pending assignments'
+    When I filter course page assignments by 'My unfinished assignments'
     Then I should see '2' assignments
     And I should see my assignments with names:
       | name                      |
