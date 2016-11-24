@@ -18,9 +18,11 @@ var storage = {
     users: {},
     courses: {},
     user_courses: {},
+    groups: [],
     assignments: {},
     course_assignments: {},
-    criteria: {}
+    criteria: {},
+    user_search_results: {}
 }
 
 var admin = userFactory.generateUser("1abcABC123-abcABC123_Z", "System Administrator", {
@@ -42,6 +44,26 @@ var instructor = userFactory.generateUser("2abcABC123-abcABC123_Z", "Instructor"
 });
 storage.users[instructor.id] = instructor;
 
+var student1 = userFactory.generateUser("3abcABC123-abcABC123_Z", "Student", {
+    username: "student1",
+    displayname: "First Student",
+    firstname: "First",
+    lastname: "Student",
+    fullname: "First Student",
+    email: "first.student@exmple.com"
+});
+storage.users[student1.id] = student1;
+
+var student2 = userFactory.generateUser("4abcABC123-abcABC123_Z", "Student", {
+    username: "student2",
+    displayname: "Second Student",
+    firstname: "Second",
+    lastname: "Student",
+    fullname: "Second Student",
+    email: "second.student@exmple.com"
+});
+storage.users[student2.id] = student2;
+
 var course = courseFactory.generateCourse("1abcABC123-abcABC123_Z",  {
     name: "CHEM 111",
     year: 2015,
@@ -57,6 +79,13 @@ var course2 = courseFactory.generateCourse("2abcABC123-abcABC123_Z", {
     description: "<p>PHYS 101  description<p>",
 });
 storage.courses[course2.id] = course2;
+
+var group1 = "First Group";
+storage.groups.push(group1);
+var group2 = "Second Group";
+storage.groups.push(group2);
+var group3 = "Third Group";
+storage.groups.push(group3);
 
 
 var defaultCriterion = criterionFactory.getDefaultCriterion();
@@ -82,6 +111,10 @@ storage.criteria[criterion3.id] = criterion3;
 storage.user_courses[admin.id] = [
     { courseId: course.id, courseRole: "Instructor", groupName: null },
     { courseId: course2.id, courseRole: "Instructor", groupName: null }
+];
+
+storage.user_courses[student1.id] = [
+    { courseId: course.id, courseRole: "Student", groupName: group1 }
 ];
 
 storage.course_assignments[course.id] = [];
@@ -138,6 +171,9 @@ var assignment_upcoming = assignmentFactory.generateAssignment("4abcABC123-abcAB
 storage.assignments[assignment_upcoming.id] = assignment_upcoming;
 storage.course_assignments[course.id].push(assignment_upcoming.id);
 
+// user_search_results
+storage.user_search_results.objects = [student2];
+storage.user_search_results.total = 1;
 
 storage.loginDetails = { id: admin.id, username: admin.username, password: "password" };
 var session = sessionFactory.generateSession(admin.id, admin.system_role, {});

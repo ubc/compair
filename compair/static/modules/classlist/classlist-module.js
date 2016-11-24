@@ -78,6 +78,9 @@ module.controller(
         Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
             $scope.canManageUsers = result;
         });
+        Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function (result) {
+            $scope.canCreateUsers = result;
+        });
         CourseResource.get({'id':courseId},
             function (ret) {
                 $scope.course_name = ret.name;

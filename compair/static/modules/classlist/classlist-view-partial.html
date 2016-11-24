@@ -15,20 +15,17 @@
                     Export Users
                 </a>
             </span>
-            <a ng-href="#/course/{{courseId}}/user/group/import" class="btn btn-primary">
+            <!-- <a ng-href="#/course/{{courseId}}/user/group/import" class="btn btn-primary" ng-if="canCreateUsers">
                 <i class="fa fa-list-ul"></i>
                 Assign Groups
-            </a>
+            </a> -->
         </div>
     </div>
     <p class="intro-text" ng-if="lti_membership_enabled">
-        Your class list is managed externally. To update the list automatically, click <strong>Refresh List</strong> below.
+        Your class list is managed externally. To update the list manually, click "Refresh List" below.
     </p>
     <p class="intro-text" ng-if="!lti_membership_enabled">
-        Drop or enrol users&mdash;who are already in the application&mdash;and assign them to groups <strong>below</strong>.
-        <span ng-if="canManageUsers">
-            To make significant changes to <em>all</em> users in a course at the same time, click <strong>Import Users</strong> above and follow the directions on the next screen.
-        </span>
+        <strong>Edit, drop, or add course users to groups</strong> below. To make significant changes to the <em>full</em> course user list, click "Import Users" above and follow the directions on the next screen. To generate a file with all the currently enrolled users, click "Export Users" above.
     </p>
     <h2 >Enrolled in {{course_name}}</h2>
     <hr />
@@ -41,7 +38,7 @@
                     Refresh List
                 </a>
             </div>
-            <div ng-show="!lti_membership_enabled">
+            <div ng-show="!lti_membership_enabled && canCreateUsers">
                 <ng-include src="'modules/classlist/classlist-enrol-partial.html'"></ng-include>
             </div>
         </div>
@@ -63,7 +60,7 @@
 	    </div>
 	    <div class="col-sm-9" ng-show="bulkActions == 'add'">
 			<div class="col-sm-3">
-				<button id="add-new-group" href="" class="btn btn-small btn-default" ng-click="addUsersToNewGroup()">Create New</button>
+				<button id="add-new-group" href="" class="btn btn-sm btn-default" ng-click="addUsersToNewGroup()">Create New</button>
 			</div>
 			<div class="col-sm-2">
 				OR
@@ -75,7 +72,7 @@
 				</select>
 			</div>
 			<div class="col-sm-3">
-				<button id="add-select-group" class="btn btn-small btn-success" ng-click="addUsersToGroup(selectedGroup)"
+				<button id="add-select-group" class="btn btn-sm btn-success" ng-click="addUsersToGroup(selectedGroup)"
 					ng-disabled="!selectedGroup">Apply</button>
 			</div>
 	    </div>
@@ -138,14 +135,14 @@
                         <a href="#/user/{{user.id}}/edit" target="_blank">
                             Edit
                         </a>
-                        &nbsp;|&nbsp;
+                        <span>&nbsp;|&nbsp;</span>
                         <a href="" confirmation-needed="unenrol(user.id)" keyword="user" ng-if="loggedInUserId != user.id">
                             Drop
                         </a>
                         <span ng-if="loggedInUserId == user.id" class="text-muted">&mdash;  &nbsp; &nbsp;</span>
-						<span>&nbsp;|&nbsp;</span>
-					</td>
-					<td>
+			<span>&nbsp;|&nbsp;</span>
+		    </td>
+		    <td>
                         <input ng-click="user.selected = !user.selected; checkIfAllSelected()" type="checkbox" ng-checked="user.selected">
                     </td>
                     <td>{{user.firstname}}</td>

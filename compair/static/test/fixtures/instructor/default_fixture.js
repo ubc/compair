@@ -21,8 +21,7 @@ var storage = {
     groups: [],
     assignments: {},
     course_assignments: {},
-    criteria: {},
-    user_search_results: {}
+    criteria: {}
 }
 
 var admin = userFactory.generateUser("1abcABC123-abcABC123_Z", "System Administrator", {
@@ -86,7 +85,6 @@ var group2 = "Second Group";
 storage.groups.push(group2);
 var group3 = "Third Group";
 storage.groups.push(group3);
-
 
 var defaultCriterion = criterionFactory.getDefaultCriterion();
 storage.criteria[defaultCriterion.id] = defaultCriterion;
@@ -170,10 +168,6 @@ var assignment_upcoming = assignmentFactory.generateAssignment("4abcABC123-abcAB
 });
 storage.assignments[assignment_upcoming.id] = assignment_upcoming;
 storage.course_assignments[course.id].push(assignment_upcoming.id);
-
-// user_search_results
-storage.user_search_results.objects = [student2];
-storage.user_search_results.total = 1;
 
 storage.loginDetails = { id: instructor.id, username: instructor.username, password: "password" };
 var session = sessionFactory.generateSession(instructor.id, instructor.system_role, {

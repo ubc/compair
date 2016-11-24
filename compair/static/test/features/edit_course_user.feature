@@ -18,17 +18,8 @@ Feature: Edit Course Users
       | First Instructor      |
       | First Student         |
 
-  Scenario: Sorting course users as instructor
-    Given I'm an Instructor
-    And I'm on 'edit course user' page for course with id '1abcABC123-abcABC123_Z'
-    When I sort by displayname in decending order
-    Then I should see course users with displaynames:
-      | displayname            |
-      | First Student          |
-      | First Instructor       |
-
-  Scenario: Adding user to course as instructor
-    Given I'm an Instructor
+  Scenario: Adding user to course as admin
+    Given I'm a System Administrator
     And I'm on 'edit course user' page for course with id '1abcABC123-abcABC123_Z'
     When I fill form item 'user' in with 'Second'
     And I select the first user search result
@@ -37,9 +28,18 @@ Feature: Edit Course Users
     Then I should see '3' users listed for the course
     And I should see course users with displaynames:
       | displayname            |
-      | First Instructor       |
       | First Student          |
       | Second Student         |
+      | root                   |
+
+  Scenario: Sorting course users as instructor
+    Given I'm an Instructor
+    And I'm on 'edit course user' page for course with id '1abcABC123-abcABC123_Z'
+    When I sort by displayname in decending order
+    Then I should see course users with displaynames:
+      | displayname            |
+      | First Student          |
+      | First Instructor       |
 
   Scenario: Removing user from course as instructor
     Given I'm an Instructor
