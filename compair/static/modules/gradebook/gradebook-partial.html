@@ -44,7 +44,7 @@
                     <th><a href="" ng-click="reverse = predicate == 'displayname' && !reverse; predicate='displayname'">
                         Display Name</a>
                     </th>
-                    <th class="text-center"><a href="" ng-click="reverse = predicate == 'num_answers' && !reverse; predicate='num_answers'">
+                    <th class="text-center" ng-if="!includeScores"><a href="" ng-click="reverse = predicate == 'num_answers' && !reverse; predicate='num_answers'">
                         Answered</a>
                     </th>
                     <th class="text-center" ng-if="includeScores"><a href="" ng-click="reverse = !reverse; sortScore()">
@@ -59,6 +59,9 @@
                     <th class="text-center" ng-if="includeSelfEval"><a href="" ng-click="reverse = predicate == 'num_self_evaluation' && !reverse; predicate='num_self_evaluation'">
                         Self-Evaluation</a>
                     </th>
+                    <th class="text-center"><a href="" ng-click="reverse = predicate == 'grade' && !reverse; predicate='grade'">
+                        Grade</a>
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -70,8 +73,8 @@
                             {{entry.displayname}}
                         </a>
                     </td>
-                    <td class="text-center text-success" ng-if="entry.num_answers > 0"><strong>Yes</strong></td>
-                    <td class="text-center text-danger" ng-if="entry.num_answers == 0"><strong>No</strong></td>
+                    <td class="text-center text-success" ng-if="!includeScores && entry.num_answers > 0"><strong>Yes</strong></td>
+                    <td class="text-center text-danger" ng-if="!includeScores && entry.num_answers == 0"><strong>No</strong></td>
                     <td class="text-center" ng-if="includeScores"
                         ng-class="{
                         'text-danger': entry.num_answers == 0,
@@ -84,10 +87,11 @@
                         </strong>
                     </td>
                     <td class="text-center" ng-class="{
-                        'text-success': entry.flagged == 'No' || entry.flagged == 'No Answer',
+                        'text-success': entry.flagged == 'No',
                         'text-danger': entry.flagged == 'Yes'
                         }">
-                        <strong>{{ entry.flagged }}</strong>
+                        <strong ng-if="entry.flagged != 'No Answer'">{{ entry.flagged }}</strong>
+                        <strong ng-if="entry.flagged == 'No Answer'">n/a</strong>
                     </td>
                     <td class="text-center" ng-class="{
                         'text-danger': entry.num_comparisons == 0,
@@ -99,6 +103,7 @@
                     </td>
                     <td class="text-center text-success" ng-if="includeSelfEval && entry.num_self_evaluation > 0"><strong>Yes</strong></td>
                     <td class="text-center text-danger" ng-if="includeSelfEval && entry.num_self_evaluation == 0"><strong>No</strong></td>
+                    <td><strong>{{entry.grade}} %</strong></td>
                 </tr>
             </tbody>
         </table>

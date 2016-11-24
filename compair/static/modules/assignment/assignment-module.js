@@ -816,6 +816,9 @@ module.controller("AssignmentWriteController",
             $scope.assignment.number_of_comparisons = $scope.recommended_comparisons;
             $scope.assignment.pairing_algorithm = PairingAlgorithm.adaptive;
             $scope.assignment.rank_display_limit = "0";
+            $scope.assignment.answer_grade_weight = 1;
+            $scope.assignment.comparison_grade_weight = 1;
+            $scope.assignment.self_evaluation_grade_weight = 1;
 
             $scope.date.astart.date.setDate(today.getDate()+1);
             $scope.date.aend.date.setDate(today.getDate()+8);
@@ -1008,6 +1011,14 @@ module.controller("AssignmentWriteController",
                     }
                 }
             });
+        };
+
+        $scope.getGradeWeightAsPercent = function(weight) {
+            var total = $scope.assignment.answer_grade_weight + $scope.assignment.comparison_grade_weight;
+            if ($scope.assignment.enable_self_evaluation) {
+                total += $scope.assignment.self_evaluation_grade_weight;
+            }
+            return (weight * 100) / total;
         };
 
         // revealAnswer function shows full answer content for abbreviated answers (determined by getHeight directive)
