@@ -25,7 +25,7 @@
                             <td><strong>{{course.name}}</strong></td>
                             <td>
                                 <div class="text-right action-btns">
-                                    <a class="btn btn-default" ng-click="selectCourse(course)">
+                                    <a class="btn btn-default" ng-click="selectCourse(course.id)">
                                         Use This
                                     </a>
 
@@ -51,9 +51,9 @@
             </div>
         </div>
     </div>
-    <div ng-show="showDuplicateForm">
-        <p class="pull-right"><a href="" ng-click="cancelSelectDuplicateCourse()">Cancel</a></p>
-
-        <ng-include src="'modules/course/course-duplicate-partial.html'"></ng-include>
+    <div ng-if="showDuplicateForm">
+        <div ng-controller="CourseDuplicateModalController">
+            <ng-include src="'modules/course/course-duplicate-partial.html'"></ng-include>
+        </div>
     </div>
 </div>

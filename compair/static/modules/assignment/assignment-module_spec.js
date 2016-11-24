@@ -45,6 +45,8 @@ describe('course-module', function () {
         "available": true,
         "start_date": null,
         "end_date": null,
+        "assignment_count": 0,
+        "student_count": 0,
         "created": "Fri, 09 Jan 2015 17:23:59 -0000",
         "description": null,
         "id": "1abcABC123-abcABC123_Z",

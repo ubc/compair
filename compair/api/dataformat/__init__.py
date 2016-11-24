@@ -72,6 +72,8 @@ def get_course(include_details=True):
         'end_date': fields.DateTime(dt_format='iso8601'),
         'available': fields.Boolean,
         'lti_linked': fields.Boolean,
+        'assignment_count': fields.Integer,
+        'student_count': fields.Integer,
         'modified': fields.DateTime(dt_format='iso8601'),
         'created': fields.DateTime(dt_format='iso8601')
     }

@@ -1,13 +1,15 @@
 import json
+import datetime
 
 from flask_bouncer import ensure
 from flask_login import login_user, logout_user
 from werkzeug.exceptions import Unauthorized
 
 from data.fixtures import DefaultFixture, UserFactory
-from data.fixtures.test_data import BasicTestData, LTITestData, ThirdPartyAuthTestData
+from data.fixtures.test_data import BasicTestData, LTITestData, ThirdPartyAuthTestData, ComparisonTestData
 from compair.tests.test_compair import ComPAIRAPITestCase
-from compair.models import User, SystemRole, CourseRole, LTIContext, ThirdPartyUser, ThirdPartyType
+from compair.models import User, SystemRole, CourseRole, AnswerComment, AnswerCommentType, Comparison, \
+    LTIContext, ThirdPartyUser, ThirdPartyType
 from compair.core import db
 
 
@@ -739,3 +741,174 @@ class UsersAPITests(ComPAIRAPITestCase):
             'id': user.uuid,
             'display': user.fullname + ' (' + user.displayname + ') - ' + user.system_role,
             'name': user.fullname}
+
+
+class UsersCourseStatusAPITests(ComPAIRAPITestCase):
+    def setUp(self):
+        super(UsersCourseStatusAPITests, self).setUp()
+        self.data = ComparisonTestData()
+
+    def _create_enough_answers_for_assignment(self, assignment):
+        course = assignment.course
+
+        for i in range(assignment.number_of_comparisons*2):
+            student = self.data.create_normal_user()
+            self.data.enrol_student(student, course)
+            self.data.create_answer(assignment, student)
+
+
+
+    def _submit_all_comparisons_for_assignment(self, assignment, user_id):
+        submit_count = 0
+
+        for comparison_example in assignment.comparison_examples:
+            comparisons = Comparison.create_new_comparison_set(assignment.id, user_id, False)
+            self.assertEqual(comparisons[0].answer1_id, comparison_example.answer1_id)
+            self.assertEqual(comparisons[0].answer2_id, comparison_example.answer2_id)
+            for comparison in comparisons:
+                comparison.completed = True
+                comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
+                db.session.add(comparison)
+            submit_count += 1
+            db.session.commit()
+
+        for i in range(assignment.number_of_comparisons):
+            comparisons = Comparison.create_new_comparison_set(assignment.id, user_id, False)
+            for comparison in comparisons:
+                comparison.completed = True
+                comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
+                db.session.add(comparison)
+            submit_count += 1
+            db.session.commit()
+
+            Comparison.calculate_scores(assignment.id)
+        return submit_count
+
+    def test_get_course_list(self):
+        # test login required
+        course = self.data.get_course()
+        url = '/api/users/courses/status?ids='+course.uuid
+        rv = self.client.get(url)
+        self.assert401(rv)
+
+        with self.login(self.data.get_authorized_student().username):
+            # ids missing
+            rv = self.client.get('/api/users/courses/status')
+            self.assert400(rv)
+
+            # empty ids
+            rv = self.client.get('/api/users/courses/status?ids=')
+            self.assert400(rv)
+
+            # empty course doesn't exists
+            rv = self.client.get('/api/users/courses/status?ids=999')
+            self.assert400(rv)
+
+            # test authorized student
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['statuses']))
+            self.assertIn(course.uuid, rv.json['statuses'])
+
+            # test course with no assignments
+            course = self.data.create_course()
+            self.data.enrol_student(self.data.get_authorized_student(), course)
+            self.data.enrol_instructor(self.data.get_authorized_instructor(), course)
+            url = '/api/users/courses/status?ids='+course.uuid
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['statuses']))
+            self.assertIn(course.uuid, rv.json['statuses'])
+            self.assertEqual(0, rv.json['statuses'][course.uuid]['incomplete_assignments'])
+
+            # test course with 2 assignment
+            self.data.create_assignment(course, self.data.get_authorized_instructor(),
+                datetime.datetime.now() + datetime.timedelta(days=7), datetime.datetime.now() + datetime.timedelta(days=14))
+            past_assignment = self.data.create_assignment(course, self.data.get_authorized_instructor(),
+                datetime.datetime.now() - datetime.timedelta(days=28), datetime.datetime.now() - datetime.timedelta(days=21))
+            past_assignment.compare_start = datetime.datetime.now() - datetime.timedelta(days=14)
+            past_assignment.compare_end = datetime.datetime.now() - datetime.timedelta(days=7)
+            db.session.commit()
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['statuses']))
+            self.assertEqual(0, rv.json['statuses'][course.uuid]['incomplete_assignments'])
+
+            # test course with 3 assignment
+            # - 1 in answering period
+            answering_assignment = self.data.create_assignment_in_answer_period(course, self.data.get_authorized_instructor())
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['statuses']))
+            self.assertEqual(1, rv.json['statuses'][course.uuid]['incomplete_assignments'])
+
+            # test course with 5 assignment
+            # - 1 in answering period
+            # - 1 in comparison_period
+            # - 1 in comparison_period with self evaluation
+            comparing_assignment = self.data.create_assignment_in_comparison_period(course, self.data.get_authorized_instructor())
+            comparing_assignment_self_eval = self.data.create_assignment_in_comparison_period(course, self.data.get_authorized_instructor())
+            comparing_assignment_self_eval.enable_self_evaluation = True
+            db.session.commit()
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['statuses']))
+            self.assertEqual(3, rv.json['statuses'][course.uuid]['incomplete_assignments'])
+
+            # test course with 5 assignment
+            # - 1 in answering period (answered)
+            # - 1 in comparison_period
+            # - 1 in comparison_period with self evaluation
+            self.data.create_answer(answering_assignment, self.data.get_authorized_student())
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['statuses']))
+            self.assertEqual(2, rv.json['statuses'][course.uuid]['incomplete_assignments'])
+
+            # test course with 5 assignment
+            # - 1 in answering period (answered)
+            # - 1 in comparison_period (fully compared)
+            # - 1 in comparison_period with self evaluation
+            self._create_enough_answers_for_assignment(comparing_assignment)
+            self._submit_all_comparisons_for_assignment(comparing_assignment, self.data.get_authorized_student().id)
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['statuses']))
+            self.assertEqual(1, rv.json['statuses'][course.uuid]['incomplete_assignments'])
+
+            # test course with 5 assignment
+            # - 1 in answering period (answered)
+            # - 1 in comparison_period (fully compared)
+            # - 1 in comparison_period with self evaluation (fully compared, not self-evaulated)
+            self._create_enough_answers_for_assignment(comparing_assignment_self_eval)
+            self._submit_all_comparisons_for_assignment(comparing_assignment_self_eval, self.data.get_authorized_student().id)
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['statuses']))
+            self.assertEqual(1, rv.json['statuses'][course.uuid]['incomplete_assignments'])
+
+            # test course with 5 assignment
+            # - 1 in answering period (answered)
+            # - 1 in comparison_period (fully compared)
+            # - 1 in comparison_period with self evaluation (fully compared and self-evaulated)
+            answer = self.data.create_answer(comparing_assignment_self_eval, self.data.get_authorized_student())
+            answer_comment = AnswerComment(
+                user_id=self.data.get_authorized_student().id,
+                answer_id=answer.id,
+                comment_type=AnswerCommentType.self_evaluation,
+                draft=False
+            )
+            db.session.add(answer_comment)
+            db.session.commit()
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['statuses']))
+            self.assertEqual(0, rv.json['statuses'][course.uuid]['incomplete_assignments'])

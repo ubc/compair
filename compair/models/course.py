@@ -60,12 +60,33 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @classmethod
     def __declare_last__(cls):
-        from .lti_models import LTIContext
+        from .lti_models import LTIContext, Assignment, \
+            UserCourse, CourseRole
         super(cls, cls).__declare_last__()
 
         cls.lti_context_count = column_property(
             select([func.count(LTIContext.id)]).
             where(LTIContext.compair_course_id == cls.id),
+            deferred=True,
+            group="counts"
+        )
+
+        cls.assignment_count = column_property(
+            select([func.count(Assignment.id)]).
+            where(and_(
+                Assignment.course_id == cls.id,
+                Assignment.active == True
+            )),
+            deferred=True,
+            group="counts"
+        )
+
+        cls.student_count = column_property(
+            select([func.count(UserCourse.id)]).
+            where(and_(
+                UserCourse.course_id == cls.id,
+                UserCourse.course_role == CourseRole.student
+            )),
             deferred=True,
             group="counts"
         )

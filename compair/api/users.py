@@ -4,14 +4,15 @@ from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from flask_login import login_required, current_user
 from sqlalchemy.orm import load_only
-from sqlalchemy import exc, asc, or_, and_
+from sqlalchemy import exc, asc, or_, and_, func
 
 from . import dataformat
 from compair.authorization import is_user_access_restricted, require, allow
 from compair.core import db, event
 from .util import new_restful_api, get_model_changes, pagination_parser
 from compair.models import User, SystemRole, Course, UserCourse, CourseRole, \
-    Assignment, LTIUser, LTIUserResourceLink, LTIContext, ThirdPartyUser, ThirdPartyType
+    Assignment, LTIUser, LTIUserResourceLink, LTIContext, ThirdPartyUser, ThirdPartyType, \
+    Answer, Comparison, AnswerComment, AnswerCommentType
 from compair.api.login import authenticate
 
 user_api = Blueprint('user_api', __name__)
@@ -53,6 +54,8 @@ user_list_parser.add_argument('ids', type=str, required=False, default=None)
 user_course_list_parser = pagination_parser.copy()
 user_course_list_parser.add_argument('search', type=str, required=False, default=None)
 
+user_course_status_list_parser = RequestParser()
+user_course_status_list_parser.add_argument('ids', type=str, required=True, default=None)
 
 # events
 on_user_modified = event.signal('USER_MODIFIED')
@@ -60,6 +63,7 @@ on_user_get = event.signal('USER_GET')
 on_user_list_get = event.signal('USER_LIST_GET')
 on_user_create = event.signal('USER_CREATE')
 on_user_course_get = event.signal('USER_COURSE_GET')
+on_user_course_status_get = event.signal('USER_COURSE_STATUS_GET')
 on_teaching_course_get = event.signal('USER_TEACHING_COURSE_GET')
 on_user_edit_button_get = event.signal('USER_EDIT_BUTTON_GET')
 on_user_password_update = event.signal('USER_PASSWORD_UPDATE')
@@ -325,6 +329,110 @@ class UserCourseListAPI(Resource):
                 "page": page.page, "pages": page.pages,
                 "total": page.total, "per_page": page.per_page}
 
+# /courses/status
+class UserCourseStatusListAPI(Resource):
+    @login_required
+    def get(self):
+        params = user_course_status_list_parser.parse_args()
+        course_uuids = params['ids'].split(',')
+
+        if len(course_uuids) == 0:
+            return {"error": "Select at least one course"}, 400
+
+        query = Course.query \
+            .filter(and_(
+                Course.uuid.in_(course_uuids),
+                Course.active == True
+            ))
+        if not allow(MANAGE, Course):
+            query = query.join(UserCourse, and_(
+                UserCourse.user_id == current_user.id,
+                UserCourse.course_role != CourseRole.dropped
+            ))
+        courses = query.all()
+
+        if len(course_uuids) != len(courses):
+            return {"error": "Not enrolled in course"}, 400
+
+        statuses = {}
+
+        for course in courses:
+            incomplete_assignment_ids = set()
+            answer_period_assignments = [assignment for assignment in course.assignments if assignment.active and assignment.answer_period]
+            compare_period_assignments = [assignment for assignment in course.assignments if assignment.active and assignment.compare_period]
+
+            if len(answer_period_assignments) > 0:
+                answer_period_assignment_ids = [assignment.id for assignment in answer_period_assignments]
+                answers = Answer.query \
+                    .filter(and_(
+                        Answer.user_id == current_user.id,
+                        Answer.assignment_id.in_(answer_period_assignment_ids),
+                        Answer.active == True,
+                        Answer.practice == False,
+                        Answer.draft == False
+                    ))
+                for assignment in answer_period_assignments:
+                    answer = next(
+                        (answer for answer in answers if answer.assignment_id == assignment.id),
+                        None
+                    )
+                    if answer is None:
+                        incomplete_assignment_ids.add(assignment.id)
+
+            if len(compare_period_assignments) > 0:
+                compare_period_assignment_ids = [assignment.id for assignment in compare_period_assignments]
+                comparisons = Comparison.query \
+                    .filter(and_(
+                        Comparison.user_id == current_user.id,
+                        Comparison.assignment_id.in_(compare_period_assignment_ids),
+                        Comparison.completed == True
+                    ))
+
+                self_evaluations = AnswerComment.query \
+                    .join("answer") \
+                    .with_entities(
+                        Answer.assignment_id,
+                        func.count(Answer.assignment_id).label('self_evaluation_count')
+                    ) \
+                    .filter(and_(
+                        AnswerComment.user_id == current_user.id,
+                        AnswerComment.active == True,
+                        AnswerComment.comment_type == AnswerCommentType.self_evaluation,
+                        AnswerComment.draft == False,
+                        Answer.active == True,
+                        Answer.practice == False,
+                        Answer.draft == False,
+                        Answer.assignment_id.in_(compare_period_assignment_ids)
+                    )) \
+                    .group_by(Answer.assignment_id) \
+                    .all()
+
+                for assignment in compare_period_assignments:
+                    assignment_comparisons = [comparison for comparison in comparisons if comparison.assignment_id == assignment.id]
+                    comparison_count = len(assignment_comparisons) / assignment.criteria_count if assignment.criteria_count else 0
+                    if comparison_count < assignment.total_comparisons_required:
+                        incomplete_assignment_ids.add(assignment.id)
+
+                    if assignment.enable_self_evaluation:
+                        self_evaluation_count = next(
+                            (result.self_evaluation_count for result in self_evaluations if result.assignment_id == assignment.id),
+                            0
+                        )
+                        if self_evaluation_count == 0:
+                            incomplete_assignment_ids.add(assignment.id)
+
+            statuses[course.uuid] = {
+                'incomplete_assignments': len(incomplete_assignment_ids)
+            }
+
+        on_user_course_status_get.send(
+            self,
+            event_name=on_user_course_status_get.name,
+            user=current_user,
+            data=statuses)
+
+        return {"statuses": statuses}
+
 # courses/teaching
 class TeachingUserCourseListAPI(Resource):
     @login_required
@@ -395,6 +503,7 @@ api = new_restful_api(user_api)
 api.add_resource(UserAPI, '/<user_uuid>')
 api.add_resource(UserListAPI, '')
 api.add_resource(UserCourseListAPI, '/courses')
+api.add_resource(UserCourseStatusListAPI, '/courses/status')
 api.add_resource(TeachingUserCourseListAPI, '/courses/teaching')
 api.add_resource(UserEditButtonAPI, '/<user_uuid>/edit')
 api.add_resource(UserUpdatePasswordAPI, '/<user_uuid>/password')
