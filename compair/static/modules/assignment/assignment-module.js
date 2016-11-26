@@ -345,7 +345,7 @@ module.controller("AssignmentViewController",
         $scope.answerFilters = {
             page: 1,
             perPage: 20,
-            group_name: null,
+            group: null,
             author: null,
             top: null,
             orderBy: null
@@ -483,10 +483,11 @@ module.controller("AssignmentViewController",
         };
 
         // revealAnswer function shows full answer content for abbreviated answers (determined by getHeight directive)
-        $scope.revealAnswer = function(answerId) {
-            var thisClass = '.content.'+answerId;      // class for the answer to show is "content" plus the answer's ID
+        $scope.revealAnswer = function(answer) {
+            var thisClass = '.content.'+answer.id;      // class for the answer to show is "content" plus the answer's ID
             $(thisClass).css({'max-height' : 'none'}); // now remove height restriction for this answer
             this.showReadMore = false;                 // and hide the read more button for this answer
+            xAPIStatementHelper.opened_answer_show_all_section(answer);
         };
 
         // assignment delete function
@@ -1080,13 +1081,6 @@ module.controller("AssignmentWriteController",
                 total += $scope.assignment.self_evaluation_grade_weight;
             }
             return (weight * 100) / total;
-        };
-
-        // revealAnswer function shows full answer content for abbreviated answers (determined by getHeight directive)
-        $scope.revealAnswer = function(answerId) {
-            var thisClass = '.content.'+answerId;      // class for the answer to show is "content" plus the answer's ID
-            $(thisClass).css({'max-height' : 'none'}); // now remove height restriction for this answer
-            this.showReadMore = false;                 // and hide the read more button for this answer
         };
 
         $scope.assignmentSubmit = function () {

@@ -257,6 +257,7 @@ describe('assignment-module', function () {
         "objects": [
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 0,
                 "content": "<p>I&#39;m the instructor</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -278,6 +279,7 @@ describe('assignment-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 0,
                 "content": "<p>I&#39;m the instructor</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -299,6 +301,7 @@ describe('assignment-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 0,
                 "content": "<p>I&#39;m the instructor's second answer</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -320,6 +323,7 @@ describe('assignment-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 0,
                 "content": "<p>TA 1</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -341,6 +345,7 @@ describe('assignment-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 2,
                 "content": "<p>Answer 9</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -375,6 +380,7 @@ describe('assignment-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 2,
                 "content": "<p>Answer 6</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -409,6 +415,7 @@ describe('assignment-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 2,
                 "content": "<p>Answer 10</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -443,6 +450,7 @@ describe('assignment-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 2,
                 "content": "<p>Answer 8</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -477,6 +485,7 @@ describe('assignment-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 2,
                 "content": "<p>Answer 5</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -511,6 +520,7 @@ describe('assignment-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 2,
                 "content": "<p>Answer 2</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -545,6 +555,7 @@ describe('assignment-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 2,
                 "content": "<p>Student 3 Answer</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -579,6 +590,7 @@ describe('assignment-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 2,
                 "content": "<p>Answer 7</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -613,6 +625,7 @@ describe('assignment-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 3,
                 "content": "<p>Answer 1</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -647,6 +660,7 @@ describe('assignment-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 3,
                 "content": "<p>Hi there guys</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -722,6 +736,7 @@ describe('assignment-module', function () {
             {
                 "answer1": {
                     "assignment_id": "1abcABC123-abcABC123_Z",
+                    "course_id": "1abcABC123-abcABC123_Z",
                     "comment_count": 0,
                     "content": "<p>I&#39;m the instructor</p>\n",
                     "course_id": "1abcABC123-abcABC123_Z",
@@ -744,6 +759,7 @@ describe('assignment-module', function () {
                 "answer1_id": "100cABC123-abcABC123_Z",
                 "answer2": {
                     "assignment_id": "1abcABC123-abcABC123_Z",
+                    "course_id": "1abcABC123-abcABC123_Z",
                     "comment_count": 0,
                     "content": "<p>I&#39;m the instructor's second answer</p>\n",
                     "course_id": "1abcABC123-abcABC123_Z",
@@ -854,7 +870,7 @@ describe('assignment-module', function () {
                 expect($rootScope.answerFilters).toEqual({
                     page: 1,
                     perPage: 20,
-                    group_name: null,
+                    group: null,
                     author: null,
                     top: null,
                     orderBy: null

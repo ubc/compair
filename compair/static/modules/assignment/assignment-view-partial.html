@@ -279,11 +279,11 @@
                         <div mathjax hljs ng-bind-html="answer.content"></div>
                         <!-- Student Attachment -->
                         <compair-pdf-inline label="See answer details:"
-                            pdf="answer.file" ng-click="revealAnswer(answer.id)">
+                            pdf="answer.file" ng-click="revealAnswer(answer)">
                         </compair-pdf-inline>
                     </div>
                     <!-- Student Answer Read More Button (not used for instructor answers) -->
-                    <p ng-show="showReadMore" class="read-more" ng-click="revealAnswer(answer.id)"><a href="" class="btn btn-sm btn-default">Read More...</a></p>
+                    <p ng-show="showReadMore" class="read-more" ng-click="revealAnswer(answer)"><a href="" class="btn btn-sm btn-default">Read More...</a></p>
                     <!-- <p ng-show="!showReadMore">No More To Read!!! ({{thisHeight}})</p> -->
 
                     <!-- Student Score (not used for instructor answers) -->
@@ -425,7 +425,7 @@
 
                     <!-- Student Attachment -->
                     <compair-pdf-inline label="See answer details:"
-                        pdf="answer.file" ng-click="revealAnswer(answer.id)">
+                        pdf="answer.file" ng-click="revealAnswer(answer)">
                     </compair-pdf-inline>
                 </div>
 

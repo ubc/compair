@@ -172,6 +172,7 @@ describe('comparison-module', function () {
             "private_comment_count": 3,
             "public_comment_count": 0,
             "assignment_id": "9abcABC123-abcABC123_Z",
+            "course_id": "1abcABC123-abcABC123_Z",
             "scores": [
                 {
                     "answer_id": "407cABC123-abcABC123_Z",
@@ -211,6 +212,7 @@ describe('comparison-module', function () {
             "private_comment_count": 4,
             "public_comment_count": 0,
             "assignment_id": "9abcABC123-abcABC123_Z",
+            "course_id": "1abcABC123-abcABC123_Z",
             "scores": [
                 {
                     "answer_id": "279cABC123-abcABC123_Z",
@@ -311,6 +313,7 @@ describe('comparison-module', function () {
             "answer_id": "279cABC123-abcABC123_Z",
             "content": "<p>test123213t4453123123</p>\n",
             "course_id": "3abcABC123-abcABC123_Z",
+            'assignment_id': "9abcABC123-abcABC123_Z",
             "created": "Thu, 24 Sep 2015 00:22:34 -0000",
             "id": "3703ABC123-abcABC123_Z",
             "comment_type": 'Evaluation',
@@ -327,6 +330,7 @@ describe('comparison-module', function () {
             "answer_id": "407cABC123-abcABC123_Z",
             "content": "",
             "course_id": "3abcABC123-abcABC123_Z",
+            'assignment_id': "9abcABC123-abcABC123_Z",
             "created": "Thu, 24 Sep 2015 00:22:34 -0000",
             "id": "3713ABC123-abcABC123_Z",
             "comment_type": 'Evaluation',

@@ -121,7 +121,7 @@ var assignment_finished = assignmentFactory.generateAssignment("1abcABC123-abcAB
 storage.assignments[assignment_finished.id] = assignment_finished;
 storage.course_assignments[course.id].push(assignment_finished.id);
 
-var assignment_finished_answer = answerFactory.generateAnswer("1abcABC123-abcABC123_Z", assignment_finished.id, student, {
+var assignment_finished_answer = answerFactory.generateAnswer("1abcABC123-abcABC123_Z", course.id, assignment_finished.id, student, {
     "content": "<p>I finished this assignment</p>"
 })
 storage.answers[assignment_finished_answer.id] = assignment_finished_answer;
@@ -142,7 +142,7 @@ var assignment_being_compared = assignmentFactory.generateAssignment("2abcABC123
 storage.assignments[assignment_being_compared.id] = assignment_being_compared;
 storage.course_assignments[course.id].push(assignment_being_compared.id);
 
-var assignment_being_compared_answer = answerFactory.generateAnswer("2abcABC123-abcABC123_Z", assignment_being_compared.id, student, {
+var assignment_being_compared_answer = answerFactory.generateAnswer("2abcABC123-abcABC123_Z", course.id, assignment_being_compared.id, student, {
     "content": "<p>I finished this assignment</p>"
 })
 storage.answers[assignment_being_compared_answer.id] = assignment_being_compared_answer;

@@ -195,12 +195,10 @@
                         <div mathjax hljs ng-bind-html="comparison_example.answer1.content"></div>
                         <compair-pdf-inline label="See answer details:"
                             pdf="comparison_example.answer1.file"
-                            ng-click="revealAnswer(comparison_example.answer1_id)"
                             ng-show="!comparison_example.answer1.file_name">
                         </compair-pdf-inline>
                         <compair-pdf-inline label="See answer details:"
                             pdf="{'name': comparison_example.answer1.file_name}"
-                            ng-click="revealAnswer(comparison_example.answer1_id)"
                             ng-show="comparison_example.answer1.file_name">
                         </compair-pdf-inline>
                     </div>
@@ -222,12 +220,10 @@
                         <div mathjax hljs ng-bind-html="comparison_example.answer2.content"></div>
                         <compair-pdf-inline label="See answer details:"
                             pdf="comparison_example.answer2.file"
-                            ng-click="revealAnswer(comparison_example.answer2_id)"
                             ng-show="!comparison_example.answer2.file_name">
                         </compair-pdf-inline>
                         <compair-pdf-inline label="See answer details:"
                             pdf="{'name': comparison_example.answer2.file_name}"
-                            ng-click="revealAnswer(comparison_example.answer2_id)"
                             ng-show="comparison_example.answer2.file_name">
                         </compair-pdf-inline>
                     </div>
@@ -252,7 +248,7 @@
         <label for="students_can_reply">Allow students to post additional replies to one another</label>
 
         <hr />
-        
+
             <label class="required-star">Answer Selection</label>
             <p ng-if="assignment.pairing_algorithm == 'adaptive'">Answers adaptively selected for comparison (adds answer scores and rank) &ndash; <em>default</em></p>
             <p ng-if="assignment.pairing_algorithm == 'random'">Answers randomly selected for comparison (no answer scores or rank)</p>

@@ -153,7 +153,7 @@ module.constant('xAPIVerb', {
     },
     'filtered': {
         id: 'http://xapi.ubc.ca/verb/filter',
-        display: { 'en-US': 'fitlered' }
+        display: { 'en-US': 'filtered' }
     },
     'sorted': {
         id: 'http://xapi.ubc.ca/verb/sort',
@@ -344,25 +344,35 @@ module.service('xAPI',
 
         this.object = {
             assignment: function(assignment) {
-                return {
+                var object = {
                     id: _this._resourceIRI.assignment(assignment.id),
                     definition: {
                         type: _this.activityType.assessment,
-                        name: { 'en-US': assignment.name },
-                        description: { 'en-US': assignment.description }
+                        name: { 'en-US': assignment.name }
                     }
                 }
+
+                if (assignment.description) {
+                    object.definition.description = { 'en-US': assignment.description }
+                }
+
+                return object;
             },
 
             assignment_question: function(assignment) {
-                return {
+                var object = {
                     id: _this._resourceIRI.assignment_question(assignment.id),
                     definition: {
                         type: _this.activityType.question,
-                        name: { 'en-US': assignment.name },
-                        description: { 'en-US': assignment.description }
+                        name: { 'en-US': assignment.name }
                     }
                 }
+
+                if (assignment.description) {
+                    object.definition.description = { 'en-US': assignment.description }
+                }
+
+                return object;
             },
 
             comparison_question: function(comparisons, comparison_number, pairing_algorithm) {
@@ -488,20 +498,20 @@ module.service('xAPI',
             basic: function(options) {
                 options = options || {};
 
-                var context = {
-                    extensions: {}
-                };
+                var context = {};
 
                 if (options.registration) {
                     context.registration = options.registration;
                 }
 
                 if (options.filters) {
+                    if (!context.extensions) { context.extensions = {}; }
                     context.extensions[_this.extension['filters']] = options.filters;
                 }
 
-                if (options.sortBy) {
-                    context.extensions[_this.extension['sort order']] = options.sortBy;
+                if (options.sortOrder) {
+                    if (!context.extensions) { context.extensions = {}; }
+                    context.extensions[_this.extension['sort order']] = options.sortOrder;
                 }
 
                 return context;
@@ -772,7 +782,7 @@ module.service('xAPI',
                 return context;
             },
 
-            answer_replies_section: function(answer, relativePath, locationUrl, options) {
+            answer_page_section: function(answer, relativePath, locationUrl, options) {
                 var context = _this.context.page_section(relativePath, locationUrl, options);
                 context.contextActivities.other.push({
                     id: _this._resourceIRI.answer(answer.id),
@@ -799,11 +809,11 @@ module.service('xAPI',
                     result.duration = options.duration;
                 }
 
-                if (options.success) {
+                if (options.success != undefined) {
                     result.success = options.success;
                 }
 
-                if (options.completion) {
+                if (options.completion != undefined) {
                     result.completion = options.completion;
                 }
 
@@ -1004,7 +1014,7 @@ module.service('xAPIStatementHelper',
             });
         };
 
-        this.sorted_page = function(sortBy) {
+        this.sorted_page = function(sortOrder) {
             var relativePath = $location.path();
             var pageUrl = $location.absUrl();
 
@@ -1012,7 +1022,7 @@ module.service('xAPIStatementHelper',
                 verb: xAPI.verb.sorted,
                 object: xAPI.object.page(relativePath),
                 context: xAPI.context.page(pageUrl, {
-                    sortBy: sortBy
+                    sortOrder: sortOrder
                 })
             });
         };
@@ -1055,7 +1065,7 @@ module.service('xAPIStatementHelper',
             });
         };
 
-        this.sorted_page_section = function(sectionName, sortBy) {
+        this.sorted_page_section = function(sectionName, sortOrder) {
             var relativePath = $location.path();
             var locationUrl = $location.absUrl();
 
@@ -1063,7 +1073,7 @@ module.service('xAPIStatementHelper',
                 verb: xAPI.verb.sorted,
                 object: xAPI.object.page_section(relativePath, sectionName),
                 context: xAPI.context.page_section(relativePath, locationUrl, {
-                    sortBy: sortBy
+                    sortOrder: sortOrder
                 })
             });
         };
@@ -1105,15 +1115,15 @@ module.service('xAPIStatementHelper',
             });
         };
 
-        this.sorted_modal = function(modalName, sortBy) {
+        this.sorted_modal = function(modalName, sortOrder) {
             var relativePath = $location.path();
             var locationUrl = $location.absUrl();
 
             xAPI.generateStatement({
-                verb: xAPI.verb.filtered,
+                verb: xAPI.verb.sorted,
                 object: xAPI.object.modal(relativePath, modalName),
                 context: xAPI.context.modal(relativePath, locationUrl, {
-                    sortBy: sortBy
+                    sortOrder: sortOrder
                 })
             });
         };
@@ -1171,27 +1181,45 @@ module.service('xAPIStatementHelper',
 
         // verb_answer_replies_section
         this.opened_answer_replies_section = function(answer) {
+            if (!answer.id) { return; }
+
             var relativePath = $location.path();
             var pageUrl = $location.absUrl();
 
             xAPI.generateStatement({
                 verb: xAPI.verb.opened,
                 object: xAPI.object.page_section(relativePath, "Answer replies"),
-                context: xAPI.context.answer_replies_section(answer, relativePath, pageUrl)
+                context: xAPI.context.answer_page_section(answer, relativePath, pageUrl)
             });
         };
 
         this.closed_answer_replies_section = function(answer) {
+            if (!answer.id) { return; }
+
             var relativePath = $location.path();
             var locationUrl = $location.absUrl();
 
             xAPI.generateStatement({
                 verb: xAPI.verb.closed,
                 object: xAPI.object.page_section(relativePath, "Answer replies"),
-                context: xAPI.context.answer_replies_section(answer, relativePath, locationUrl)
+                context: xAPI.context.answer_page_section(answer, relativePath, locationUrl)
             });
         };
 
+
+        // verb_answer_show_all_section
+        this.opened_answer_show_all_section = function(answer) {
+            if (!answer.id) { return; }
+
+            var relativePath = $location.path();
+            var pageUrl = $location.absUrl();
+
+            xAPI.generateStatement({
+                verb: xAPI.verb.opened,
+                object: xAPI.object.page_section(relativePath, "Answer show all"),
+                context: xAPI.context.answer_page_section(answer, relativePath, pageUrl)
+            });
+        };
 
 
         // verb_comparison_question
