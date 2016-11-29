@@ -958,13 +958,18 @@ module.controller("AssignmentWriteController",
             var modalScope = $scope.$new();
             modalScope.criterion = angular.copy(criterion);
             modalScope.editorOptions = EditorOptions.basic;
+            if (criterion && criterion.public) {
+                modalScope.criterion.default = false;
+                modalScope.criterion.compared = false;
+            }
+
             var modalInstance;
             var criterionUpdateListener = $scope.$on('CRITERION_UPDATED', function(event, c) {
                 angular.copy(c, criterion);
                 modalInstance.close();
             });
-            var criterionAddListener = $scope.$on('CRITERION_ADDED', function(event, criterion) {
-                $scope.assignment.criteria.push(criterion);
+            var criterionAddListener = $scope.$on('CRITERION_ADDED', function(event, c) {
+                $scope.assignment.criteria.push(c);
                 modalInstance.close();
             });
             var criterionCancelListener = $scope.$on('CRITERION_CANCEL', function() {
@@ -1050,7 +1055,6 @@ module.controller("AssignmentWriteController",
                 return;
             }
 
-
             if ($scope.assignment.addPractice) {
                 var answer1 = $scope.comparison_example.answer1;
                 var answer2 = $scope.comparison_example.answer2;
@@ -1067,56 +1071,84 @@ module.controller("AssignmentWriteController",
                 }
             }
 
-            // if option is not checked; make sure no compare dates are saved.
-            if (!$scope.assignment.availableCheck) {
-                $scope.assignment.compare_start = null;
-                $scope.assignment.compare_end = null;
-            }
-            var file = attachService.getFile();
-            if (file) {
-                $scope.assignment.file = file;
-                $scope.assignment.file_id = file.id
-            } else if ($scope.assignment.file) {
-                $scope.assignment.file_id = $scope.assignment.file.id;
-            } else {
-                $scope.assignment.file_id = null;
-            }
-            AssignmentResource.save({'courseId': courseId}, $scope.assignment)
-                .$promise.then(function (ret) {
-                    var assignmentId = ret.id;
-                    var promises = [];
+            var promises = [];
+            // save duplicate version of public criteria for new assignments
+            if (!$scope.assignment.id) {
+                _.forEach($scope.assignment.criteria, function(criterion) {
+                    if (criterion.public) {
+                        var criterionDuplicate = angular.copy(criterion);
+                        criterionDuplicate.id = null;
+                        criterionDuplicate.public = false;
+                        criterionDuplicate.default = false;
 
-                    // only save comparison example changes if assignment hasn't been compared yet
-                    if (!$scope.assignment.compared) {
-                        if ($scope.assignment.addPractice) {
-                            promises.push(saveComparisonsExample(assignmentId, $scope.comparison_example));
-                        } else {
-                            promises.push(deleteComparisonsExample(assignmentId, $scope.comparison_example));
-                        }
+                        promises.push($q(function(resolve, reject) {
+                            CriterionResource.save({}, criterionDuplicate).$promise.then(
+                                function (ret) {
+                                    angular.copy(ret, criterion);
+                                    resolve();
+                                },
+                                function (ret) {
+                                    Toaster.reqerror("Criterion Save Failed.", ret);
+                                    reject();
+                                }
+                            );
+                        }));
                     }
+                });
+            }
 
-                    $q.all(promises).then(function() {
+            $q.all(promises).then(function() {
+                // if option is not checked; make sure no compare dates are saved.
+                if (!$scope.assignment.availableCheck) {
+                    $scope.assignment.compare_start = null;
+                    $scope.assignment.compare_end = null;
+                }
+                var file = attachService.getFile();
+                if (file) {
+                    $scope.assignment.file = file;
+                    $scope.assignment.file_id = file.id
+                } else if ($scope.assignment.file) {
+                    $scope.assignment.file_id = $scope.assignment.file.id;
+                } else {
+                    $scope.assignment.file_id = null;
+                }
+                AssignmentResource.save({'courseId': courseId}, $scope.assignment)
+                    .$promise.then(function (ret) {
+                        var assignmentId = ret.id;
+                        var promises = [];
+
+                        // only save comparison example changes if assignment hasn't been compared yet
+                        if (!$scope.assignment.compared) {
+                            if ($scope.assignment.addPractice) {
+                                promises.push(saveComparisonsExample(assignmentId, $scope.comparison_example));
+                            } else {
+                                promises.push(deleteComparisonsExample(assignmentId, $scope.comparison_example));
+                            }
+                        }
+
+                        $q.all(promises).then(function() {
+                            $scope.submitted = false;
+                            if ($route.current.method == "new") {
+                                Toaster.success("New Assignment Created",'"' + ret.name + '" should now be listed.');
+                            } else {
+                                Toaster.success("Assignment Updated");
+                            }
+                            $location.path('/course/' + courseId);
+                        }, function() {
+                            // error message handled elsewhere
+                            $scope.submitted = false;
+                        });
+                    },
+                    function (ret) {
                         $scope.submitted = false;
                         if ($route.current.method == "new") {
-                            Toaster.success("New Assignment Created",'"' + ret.name + '" should now be listed.');
+                            Toaster.reqerror("No New Assignment Created", ret);
                         } else {
-                            Toaster.success("Assignment Updated");
+                            Toaster.reqerror("Assignment Not Updated", ret);
                         }
-                        $location.path('/course/' + courseId);
-                    }, function() {
-                        // error message handled elsewhere
-                        $scope.submitted = false;
-                    });
-                },
-                function (ret) {
-                    $scope.submitted = false;
-                    if ($route.current.method == "new") {
-                        Toaster.reqerror("No New Assignment Created", ret);
-                    } else {
-                        Toaster.reqerror("Assignment Not Updated", ret);
                     }
-                }
-            );
+                );
+            });
         };
 
         var deleteComparisonsExample = function(assignmentId, comparison_example) {

@@ -1197,6 +1197,21 @@ describe('course-module', function () {
                 var toaster;
                 var mockPracticeAnswer1 = {content: "content A"};
                 var mockPracticeAnswer2 = {content: "content B"};
+                var expectedCriterion = angular.copy(mockAssignment.criteria[0]);
+                expectedCriterion.id = null;
+                expectedCriterion.default = false;
+                expectedCriterion.public = false;
+                var mockNewCriterion = {
+                    "compared": false,
+                    "created": "Mon, 06 Jun 2016 19:50:47 -0000",
+                    "default": false,
+                    "public": false,
+                    "description": "<p>Choose the response that you think is the better of the two.</p>",
+                    "id": "1abcABC123-abcABC123_Z",
+                    "modified": "Mon, 06 Jun 2016 19:50:47 -0000",
+                    "name": "Which is better?",
+                    "user_id": "9abcABC123-abcABC123_Z"
+                }
                 beforeEach(inject(function (_Toaster_) {
                     toaster = _Toaster_;
                     spyOn(toaster, 'error');
@@ -1247,6 +1262,7 @@ describe('course-module', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
 
+                    $httpBackend.expectPOST('/api/criteria', expectedCriterion).respond(200, mockNewCriterion);
                     $httpBackend.expectPOST('/api/courses/1abcABC123-abcABC123_Z/assignments', $rootScope.assignment)
                         .respond(400, '');
                     $rootScope.assignmentSubmit();
@@ -1291,6 +1307,7 @@ describe('course-module', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
 
+                    $httpBackend.expectPOST('/api/criteria', expectedCriterion).respond(200, mockNewCriterion);
                     $httpBackend.expectPOST('/api/courses/1abcABC123-abcABC123_Z/assignments', $rootScope.assignment)
                         .respond(angular.merge({}, mockAssignment, {id: "2abcABC123-abcABC123_Z"}));
                     $rootScope.assignmentSubmit();
@@ -1308,6 +1325,7 @@ describe('course-module', function () {
                         answer1: mockPracticeAnswer1,
                         answer2: mockPracticeAnswer2
                     };
+                    $httpBackend.expectPOST('/api/criteria', expectedCriterion).respond(200, mockNewCriterion);
                     $httpBackend.expectPOST('/api/courses/1abcABC123-abcABC123_Z/assignments', $rootScope.assignment)
                         .respond(angular.merge({}, mockAssignment, {id: "2abcABC123-abcABC123_Z"}));
                     $httpBackend.expectPOST('/api/courses/1abcABC123-abcABC123_Z/assignments/2abcABC123-abcABC123_Z/answers', $rootScope.comparison_example.answer1)

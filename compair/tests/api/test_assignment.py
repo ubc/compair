@@ -65,6 +65,7 @@ class AssignmentAPITests(ComPAIRAPITestCase):
                 self._verify_assignment(expected, actual)
 
     def test_create_assignment(self):
+        criterion2 = self.data.create_criterion(self.data.get_authorized_instructor())
         now = datetime.datetime.utcnow()
         assignment_expected = {
             'name': 'this is a new assignment\'s name',
@@ -75,7 +76,8 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             'students_can_reply': False,
             'enable_self_evaluation': False,
             'criteria': [
-                { 'id': self.data.get_default_criterion().uuid }
+                { 'id': self.data.get_default_criterion().uuid },
+                { 'id': criterion2.uuid }
             ],
             'pairing_algorithm': PairingAlgorithm.random.value,
             'rank_display_limit': 20,
@@ -126,7 +128,15 @@ class AssignmentAPITests(ComPAIRAPITestCase):
                 self.url,
                 data=json.dumps(bad_criteria),
                 content_type='application/json')
-            self.assert403(rv)
+            self.assert400(rv)
+            # Test invalid criteria
+            bad_criteria = assignment_expected.copy()
+            bad_criteria['criteria'] = [{'id': '999'}, {'id': '9999'}]
+            rv = self.client.post(
+                self.url,
+                data=json.dumps(bad_criteria),
+                content_type='application/json')
+            self.assert400(rv)
 
             # Test actual creation
             rv = self.client.post(
@@ -142,6 +152,9 @@ class AssignmentAPITests(ComPAIRAPITestCase):
                 "assignment create did not return the same description!")
             self.assertEqual(assignment_expected['pairing_algorithm'], rv.json['pairing_algorithm'])
             self.assertEqual(assignment_expected['rank_display_limit'], rv.json['rank_display_limit'])
+            self.assertEqual(len(rv.json['criteria']), 2)
+            self.assertIn(rv.json['criteria'][0]['id'], [self.data.get_default_criterion().uuid, criterion2.uuid])
+            self.assertIn(rv.json['criteria'][1]['id'], [self.data.get_default_criterion().uuid, criterion2.uuid])
 
             # Test getting the assignment again
             rv = self.client.get(self.url + '/' + str(rv.json['id']))
@@ -154,6 +167,9 @@ class AssignmentAPITests(ComPAIRAPITestCase):
                 "assignment create did not save description properly!")
             self.assertEqual(assignment_expected['pairing_algorithm'], rv.json['pairing_algorithm'])
             self.assertEqual(assignment_expected['rank_display_limit'], rv.json['rank_display_limit'])
+            self.assertEqual(len(rv.json['criteria']), 2)
+            self.assertIn(rv.json['criteria'][0]['id'], [self.data.get_default_criterion().uuid, criterion2.uuid])
+            self.assertIn(rv.json['criteria'][1]['id'], [self.data.get_default_criterion().uuid, criterion2.uuid])
 
     def test_edit_assignment(self):
         assignment = self.data.get_assignments()[0]

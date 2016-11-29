@@ -8,10 +8,10 @@
             <p>
                 <a href=""
                    ng-click="changeCriterion(criterion)"
-                   ng-if="(canManageCriteriaAssignment || criterion.user_id==loggedInUserId) && criterion.public == false">
+                   ng-if="(canManageCriteriaAssignment || criterion.user_id==loggedInUserId) && (criterion.public == false || !assignment.id)">
                 Edit
                 </a>
-                <span ng-if="criterion.public == true" class="text-muted">
+                <span ng-if="criterion.public == true && assignment.id" class="text-muted">
                     (not editable)
                 </span>
             </p>
