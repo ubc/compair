@@ -188,12 +188,11 @@ module.controller(
 
 module.controller(
     'CourseSelectModalController',
-    ["$rootScope", "$scope", "$modalInstance", "AssignmentResource", "moment",
+    ["$rootScope", "$scope", "$modalInstance", "AssignmentResource",
      "Session", "Authorize", "CourseResource", "Toaster", "UserResource", "LTI",
-    function ($rootScope, $scope, $modalInstance, AssignmentResource, moment,
+    function ($rootScope, $scope, $modalInstance, AssignmentResource,
               Session, Authorize, CourseResource, Toaster, UserResource, LTI) {
 
-        $scope.loggedInUserId = null;
         $scope.submitted = false;
         $scope.totalNumCourses = 0;
         $scope.courseFilters = {
@@ -201,6 +200,11 @@ module.controller(
             perPage: 10
         };
         $scope.courses = [];
+        $scope.originalCourse = {};
+
+        $scope.selectCourse = function(courseId) {
+            $modalInstance.close(courseId);
+        };
 
         $scope.showDuplicateForm = false;
         $scope.course = {
@@ -212,17 +216,136 @@ module.controller(
             'course_start': {'date': null, 'time': new Date().setHours(0, 0, 0, 0)},
             'course_end': {'date': null, 'time': new Date().setHours(23, 59, 0, 0)},
         };
-        $scope.originalCourse = {};
-        $scope.duplicateCourse = {};
 
-        Session.getUser().then(function(user) {
-            $scope.loggedInUserId = user.id;
+        $scope.selectDuplicateCourse = function(course) {
+            $scope.showDuplicateForm = true;
+            $scope.originalCourse = angular.copy(course);
+        };
+
+        $scope.date.course_start.open = function($event) {
+            $event.preventDefault();
+            $event.stopPropagation();
+            $scope.date.course_start.opened = true;
+        };
+        $scope.date.course_end.open = function($event) {
+            $event.preventDefault();
+            $event.stopPropagation();
+            $scope.date.course_end.opened = true;
+        };
+
+        $scope.save = function() {
+            $scope.submitted = true;
+            if ($scope.date.course_start.date != null) {
+                $scope.course.start_date = combineDateTime($scope.date.course_start);
+            } else {
+                $scope.course.start_date = null;
+            }
+            if ($scope.date.course_end.date != null) {
+                $scope.course.end_date = combineDateTime($scope.date.course_end);
+            } else {
+                $scope.course.end_date = null;
+            }
+            if ($scope.course.start_date != null && $scope.course.end_date != null && $scope.course.start_date > $scope.course.end_date) {
+                Toaster.error('Course Period Conflict', 'Course end date/time must be after course start date/time.');
+                $scope.submitted = false;
+                return;
+            }
+
+            CourseResource.save({}, $scope.course, function (ret) {
+                Toaster.success("Course Created", 'The course was created successfully');
+                // refresh permissions
+                Session.expirePermissions();
+                $scope.selectCourse(ret.id);
+            }).$promise.finally(function() {
+                $scope.submitted = false;
+            });
+        };
+
+        $scope.closeDuplicate = function(courseId) {
+            $scope.selectCourse(courseId);
+        };
+
+        $scope.dismissDuplicate = function() {
+            $scope.showDuplicateForm = false;
+        };
+
+        $scope.updateCourseList = function() {
+            UserResource.getUserCourses($scope.courseFilters).$promise.then(
+                function(ret) {
+                    $scope.courses = ret.objects;
+                    $scope.totalNumCourses = ret.total;
+                },
+                function (ret) {
+                    Toaster.reqerror("Unable to retrieve your courses.", ret);
+                }
+            );
+        };
+
+        var filterWatcher = function(newValue, oldValue) {
+            if (angular.equals(newValue, oldValue)) return;
             $scope.updateCourseList();
-            $scope.$watchCollection('courseFilters', filterWatcher);
-        });
+        };
+        $scope.$watchCollection('courseFilters', filterWatcher);
+        $scope.updateCourseList();
+    }
+]);
 
-        $scope.selectCourse = function(course) {
-            $modalInstance.close(course.id);
+
+module.controller(
+    'CourseDuplicateModalController',
+    ["$rootScope", "$scope", "AssignmentResource", "moment",
+     "Session", "CourseResource", "Toaster", "UserResource",
+    function ($rootScope, $scope, AssignmentResource, moment,
+              Session, CourseResource, Toaster, UserResource) {
+
+        $scope.submitted = false;
+        $scope.format = 'dd-MMMM-yyyy';
+        $scope.originalCourse = typeof($scope.originalCourse) != 'undefined' ? $scope.originalCourse : {};
+
+        $scope.setupDuplicateCourse = function() {
+            $scope.duplicateCourse = {
+                year: new Date().getFullYear(),
+                term: $scope.originalCourse.term,
+                date: {
+                    course_start: {date: null, time: new Date().setHours(0, 0, 0, 0)},
+                    course_end: {date: null, time: new Date().setHours(23, 59, 0, 0)}
+                }
+            };
+            if (!$scope.originalCourse.id) {
+                return;
+            }
+
+            if ($scope.originalCourse.start_date) {
+                var weekDelta = getWeeksDelta(moment(), $scope.originalCourse.start_date);
+                $scope.duplicateCourse.date.course_start.date = getNewDuplicateDate($scope.originalCourse.start_date, weekDelta).toDate();
+
+                if ($scope.originalCourse.end_date) {
+                    $scope.duplicateCourse.date.course_end.date = getNewDuplicateDate($scope.originalCourse.end_date, weekDelta).toDate();
+                }
+            }
+
+            $scope.duplicateCourse.date.course_start.open = function($event) {
+                $event.preventDefault();
+                $event.stopPropagation();
+                $scope.duplicateCourse.date.course_start.opened = true;
+            };
+            $scope.duplicateCourse.date.course_end.open = function($event) {
+                $event.preventDefault();
+                $event.stopPropagation();
+                $scope.duplicateCourse.date.course_end.opened = true;
+            };
+
+            $scope.originalAssignments = [];
+            $scope.duplicateAssignments = [];
+            AssignmentResource.get({'courseId': $scope.originalCourse.id}).$promise.then(
+                function (ret) {
+                    $scope.originalAssignments = ret.objects;
+                    $scope.adjustDuplicateAssignmentDates(true);
+                },
+                function (ret) {
+                    Toaster.reqerror("Unable to retrieve course assignments: " + $scope.originalCourse.id, ret);
+                }
+            );
         };
 
         $scope.adjustDuplicateAssignmentDates = function(skipConfirm) {
@@ -306,53 +429,12 @@ module.controller(
             });
         };
 
-        $scope.selectDuplicateCourse = function(course) {
-            $scope.showDuplicateForm = true;
-            $scope.originalCourse = course;
-            $scope.duplicateCourse = {
-                year: new Date().getFullYear(),
-                term: $scope.originalCourse.term,
-                date: {
-                    course_start: {date: null, time: new Date().setHours(0, 0, 0, 0)},
-                    course_end: {date: null, time: new Date().setHours(23, 59, 0, 0)}
-                }
-            };
-
-            if ($scope.originalCourse.start_date) {
-                var weekDelta = getWeeksDelta(moment(), $scope.originalCourse.start_date);
-                $scope.duplicateCourse.date.course_start.date = getNewDuplicateDate($scope.originalCourse.start_date, weekDelta).toDate();
-
-                if ($scope.originalCourse.end_date) {
-                    $scope.duplicateCourse.date.course_end.date = getNewDuplicateDate($scope.originalCourse.end_date, weekDelta).toDate();
-                }
+        $scope.cancelDuplicateCourse = function() {
+            if ($scope.dismissDuplicate) {
+                $scope.dismissDuplicate();
+            } else {
+                $scope.$dismiss();
             }
-
-            $scope.duplicateCourse.date.course_start.open = function($event) {
-                $event.preventDefault();
-                $event.stopPropagation();
-                $scope.duplicateCourse.date.course_start.opened = true;
-            };
-            $scope.duplicateCourse.date.course_end.open = function($event) {
-                $event.preventDefault();
-                $event.stopPropagation();
-                $scope.duplicateCourse.date.course_end.opened = true;
-            };
-
-            $scope.originalAssignments = [];
-            $scope.duplicateAssignments = [];
-            AssignmentResource.get({'courseId': $scope.originalCourse.id}).$promise.then(
-                function (ret) {
-                    $scope.originalAssignments = ret.objects;
-                    $scope.adjustDuplicateAssignmentDates(true);
-                },
-                function (ret) {
-                    Toaster.reqerror("Unable to retrieve course assignments: " + course.id, ret);
-                }
-            );
-        };
-
-        $scope.cancelSelectDuplicateCourse = function() {
-            $scope.showDuplicateForm = false;
         };
 
         $scope.duplicate = function() {
@@ -414,67 +496,24 @@ module.controller(
                 Toaster.success("Course Duplicated", 'The course was successfully duplicated');
                 // refresh permissions
                 Session.expirePermissions();
-                $scope.selectCourse(ret);
-            }).$promise.finally(function() {
-                $scope.submitted = false;
-            });
-        };
 
-        $scope.date.course_start.open = function($event) {
-            $event.preventDefault();
-            $event.stopPropagation();
-            $scope.date.course_start.opened = true;
-        };
-        $scope.date.course_end.open = function($event) {
-            $event.preventDefault();
-            $event.stopPropagation();
-            $scope.date.course_end.opened = true;
-        };
-
-        $scope.save = function() {
-            $scope.submitted = true;
-            if ($scope.date.course_start.date != null) {
-                $scope.course.start_date = combineDateTime($scope.date.course_start);
-            } else {
-                $scope.course.start_date = null;
-            }
-            if ($scope.date.course_end.date != null) {
-                $scope.course.end_date = combineDateTime($scope.date.course_end);
-            } else {
-                $scope.course.end_date = null;
-            }
-            if ($scope.course.start_date != null && $scope.course.end_date != null && $scope.course.start_date > $scope.course.end_date) {
-                Toaster.error('Course Period Conflict', 'Course end date/time must be after course start date/time.');
-                $scope.submitted = false;
-                return;
-            }
-
-            CourseResource.save({}, $scope.course, function (ret) {
-                Toaster.success("Course Created", 'The course was created successfully');
-                // refresh permissions
-                Session.expirePermissions();
-                $scope.selectCourse(ret);
-            }).$promise.finally(function() {
-                $scope.submitted = false;
-            });
-        };
-
-        $scope.updateCourseList = function() {
-            UserResource.getUserCourses($scope.courseFilters).$promise.then(
-                function(ret) {
-                    $scope.courses = ret.objects;
-                    $scope.totalNumCourses =  ret.total;
-                },
-                function (ret) {
-                    Toaster.reqerror("Unable to retrieve your courses.", ret);
+                var course = ret;
+                if ($scope.closeDuplicate) {
+                    $scope.closeDuplicate(course.id);
+                } else {
+                    $scope.$close(course.id);
                 }
-            );
+            }).$promise.finally(function() {
+                $scope.submitted = false;
+            });
         };
 
-        var filterWatcher = function(newValue, oldValue) {
+        var originalCourseWatcher = function(newValue, oldValue) {
             if (angular.equals(newValue, oldValue)) return;
-            $scope.updateCourseList();
+            $scope.setupDuplicateCourse();
         };
+        $scope.$watchCollection('originalCourse', originalCourseWatcher);
+        $scope.setupDuplicateCourse();
     }
 ]);
 

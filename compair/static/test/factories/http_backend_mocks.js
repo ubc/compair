@@ -285,6 +285,21 @@ module.exports.httpbackendMock = function(storageFixtures) {
             }, {}]
         });
 
+        // get current user courses
+        $httpBackend.whenGET(/\/api\/users\/courses\/status\?.*$/).respond(function(method, url, data, headers) {
+            var courses = _.values(storageFixture.storage().courses);
+
+            statuses = {}
+
+            angular.forEach(courses, function(coourse) {
+                statuses[coourse.id] = {
+                    "incomplete_assignments": 0
+                }
+            });
+
+            return [200, { "statuses": statuses }, {}]
+        });
+
         // create new course
         $httpBackend.whenPOST('/api/courses').respond(function(method, url, data, headers) {
             data = JSON.parse(data);
@@ -298,6 +313,8 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "available": true,
                 "start_date": data.start_date,
                 "end_date": data.end_date,
+                "assignment_count": 0,
+                "student_count": 0,
                 "modified": "Sun, 11 Jan 2015 08:44:46 -0000",
                 "created": "Sun, 11 Jan 2015 08:44:46 -0000"
             }

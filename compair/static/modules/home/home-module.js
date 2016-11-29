@@ -11,7 +11,8 @@ var module = angular.module('ubc.ctlt.compair.home',
         'ubc.ctlt.compair.authorization',
         'ubc.ctlt.compair.course',
         'ubc.ctlt.compair.toaster',
-        'ubc.ctlt.compair.user'
+        'ubc.ctlt.compair.user',
+        'ui.bootstrap'
     ]
 );
 
@@ -22,9 +23,9 @@ var module = angular.module('ubc.ctlt.compair.home',
 module.controller(
     'HomeController',
     ["$rootScope", "$scope", "$location", "Session", "AuthenticationService",
-     "Authorize", "CourseResource", "Toaster", "UserResource",
+     "Authorize", "CourseResource", "Toaster", "UserResource", "$modal",
     function ($rootScope, $scope, $location, Session, AuthenticationService,
-              Authorize, CourseResource, Toaster, UserResource) {
+              Authorize, CourseResource, Toaster, UserResource, $modal) {
 
         $scope.loggedInUserId = null;
         $scope.totalNumCourses = 0;
@@ -36,14 +37,14 @@ module.controller(
 
         Authorize.can(Authorize.CREATE, CourseResource.MODEL).then(function(canAddCourse){
             $scope.canAddCourse = canAddCourse;
-        });
 
-        Session.getUser().then(function(user) {
-            $scope.loggedInUserId = user.id;
-            $scope.updateCourseList();
+            Session.getUser().then(function(user) {
+                $scope.loggedInUserId = user.id;
+                $scope.updateCourseList();
 
-            // register watcher here so that we start watching when all filter values are set
-            $scope.$watchCollection('courseFilters', filterWatcher);
+                // register watcher here so that we start watching when all filter values are set
+                $scope.$watchCollection('courseFilters', filterWatcher);
+            });
         });
 
         $scope.updateCourseList = function() {
@@ -51,11 +52,57 @@ module.controller(
                 function(ret) {
                     $scope.courses = ret.objects;
                     $scope.totalNumCourses = ret.total;
+
+                    if (!$scope.canAddCourse) {
+                        var courseIds = $scope.courses.map(function(course) {
+                            return course.id;
+                        });
+                        UserResource.getUserCoursesStatus({ ids: courseIds.join(",") }).$promise.then(
+                            function(ret) {
+                                var statuses = ret.statuses;
+                                _.forEach($scope.courses, function(course) {
+                                    course.status = statuses[course.id];
+                                });
+                            },
+                            function (ret) {
+                                Toaster.reqerror("Unable to retrieve your course status.", ret);
+                            }
+                        );
+                    }
                 },
                 function (ret) {
                     Toaster.reqerror("Unable to retrieve your courses.", ret);
                 }
             );
+        };
+
+        $scope.deleteCourse = function(course) {
+            CourseResource.delete({'id': course.id},
+                function (ret) {
+                    Toaster.success('Course deleted successfully');
+                    $scope.updateCourseList();
+                },
+                function (ret) {
+                    Toaster.reqerror('Course deletion failed', ret);
+                }
+            );
+        };
+
+
+        $scope.duplicateCourse = function(course) {
+            var modalScope = $scope.$new();
+            modalScope.originalCourse = course;
+
+            $modal.open({
+                animation: true,
+                controller: "CourseDuplicateModalController",
+                templateUrl: 'modules/course/course-duplicate-partial.html',
+                scope: modalScope
+            }).result.then(function (courseId) {
+                $location.path('/course/' + courseId);
+            }, function () {
+                //cancelled, do nothing
+            });
         };
 
         var filterWatcher = function(newValue, oldValue) {

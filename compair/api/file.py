@@ -113,12 +113,12 @@ def duplicate_file(original_file, new_model_name, new_model_id):
         os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], duplicate_name)
     )
 
-    duplicated_file = File(user_id=current_user.id, name=tmp_name, alias=original_file.alias)
+    duplicated_file = File(user_id=current_user.id, name=duplicate_name, alias=original_file.alias)
 
     db.session.add(duplicated_file)
     db.session.commit()
     current_app.logger.debug(
         "copied file id:" + str(original_file.id) + " from " + os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], original_file.name) +
-        " to " + os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], tmp_name))
+        " to " + os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], duplicate_name))
 
     return duplicated_file

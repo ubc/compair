@@ -19,6 +19,7 @@ var module = angular.module('ubc.ctlt.compair.user', [
 module.factory('UserResource', ['$resource', function($resource) {
     var User = $resource('/api/users/:id', {id: '@id'}, {
         'getUserCourses': {url: '/api/users/courses'},
+        'getUserCoursesStatus': {url: '/api/users/courses/status'},
         'getTeachingUserCourses': {url: '/api/users/courses/teaching'},
         'getEditButton': {url: '/api/users/:id/edit'},
         'password': {method: 'POST', url: '/api/users/:id/password'}

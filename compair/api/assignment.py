@@ -420,7 +420,7 @@ class AssignmentIdStatusAPI(Resource):
 
         on_assignment_get_status.send(
             self,
-            event_name=on_assignment_get.name,
+            event_name=on_assignment_get_status.name,
             user=current_user,
             course_id=course.id,
             data=status)
@@ -521,7 +521,7 @@ class AssignmentRootStatusAPI(Resource):
 
         on_assignment_list_get_status.send(
             self,
-            event_name=on_assignment_get.name,
+            event_name=on_assignment_list_get_status.name,
             user=current_user,
             course_id=course.id,
             data=statuses)
