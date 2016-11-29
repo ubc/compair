@@ -33,11 +33,6 @@ class AssignmentCriterionRootAPI(Resource):
             ) \
             .all()
 
-        assignment_criteria = AssignmentCriterion.query \
-            .filter_by(assignment_id=assignment.id, active=True) \
-            .order_by(AssignmentCriterion.id) \
-            .all()
-
         on_assignment_criterion_get.send(
             self,
             event_name=on_assignment_criterion_get.name,

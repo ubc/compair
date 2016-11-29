@@ -12,7 +12,7 @@ from sqlalchemy.orm import joinedload, undefer_group, load_only
 from . import dataformat
 from compair.core import db, event
 from compair.authorization import allow, require
-from compair.models import Assignment, Course, AssignmentCriterion, Answer, Comparison, \
+from compair.models import Assignment, Course, Criterion, AssignmentCriterion, Answer, Comparison, \
     AnswerComment, AnswerCommentType, PairingAlgorithm, Criterion, File
 from .util import new_restful_api, get_model_changes
 
@@ -324,17 +324,21 @@ class AssignmentRootAPI(Resource):
 
         criterion_uuids = [c['id'] for c in params.criteria]
         if len(criterion_uuids) == 0:
-            msg = 'You must add at least one criterion to the assignment '
-            return {"error": msg}, 403
+            msg = 'You must add at least one criterion to the assignment'
+            return {"error": msg}, 400
 
-        new_criteria = Criterion.query \
+        criteria = Criterion.query \
             .filter(Criterion.uuid.in_(criterion_uuids)) \
             .all()
 
-        for criterion in new_criteria:
+        if len(criterion_uuids) != len(criteria):
+            msg = 'You select an invalid criterion'
+            return {"error": msg}, 400
+
+        for criterion in criteria:
             assignment_criterion = AssignmentCriterion(
                 assignment=new_assignment,
-                criterion_id=criterion.id
+                criterion=criterion
             )
             db.session.add(assignment_criterion)
 

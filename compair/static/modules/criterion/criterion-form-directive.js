@@ -20,7 +20,13 @@
 
                     scope.criterionSubmit = function () {
                         scope.criterionSubmitted = true;
-                        CriterionResource.save({}, scope.criterion, function (ret) {
+                        // never edit a public criterion. Create a new copy of it instead
+                        var criterion = angular.copy(scope.criterion);
+                        if (criterion.public) {
+                            criterion.id = null;
+                            criterion.public = false;
+                        }
+                        CriterionResource.save({}, criterion, function (ret) {
                             if (scope.criterion.id) {
                                 scope.$emit('CRITERION_UPDATED', ret);
                             } else {
