@@ -71,113 +71,6 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                 self.course.uuid, self.data.get_assignment_in_answer_period().uuid))
             self.assert403(rv)
 
-    def test_get_answer_pair_basic(self):
-
-        with self.login(self.data.get_authorized_student().username):
-            # no comparisons has been entered yet
-            rv = self.client.get(self.base_url)
-            self.assert200(rv)
-            actual_answer_pair = rv.json
-            actual_answer1 = actual_answer_pair['objects'][0]['answer1']
-            actual_answer2 = actual_answer_pair['objects'][0]['answer2']
-            expected_answer_uuids = [answer.uuid for answer in self.data.get_student_answers()]
-            for ce in self.data.comparisons_examples:
-                expected_answer_uuids += [ce.answer1_uuid, ce.answer2_uuid]
-            # make sure that we actually got answers for the assignment we're targetting
-            self.assertIn(actual_answer1['id'], expected_answer_uuids)
-            self.assertIn(actual_answer2['id'], expected_answer_uuids)
-
-        self.assignment.educators_can_compare = False
-        db.session.commit()
-
-        with self.login(self.data.get_authorized_instructor().username):
-            # cannot compare answers unless educators_can_compare is set for assignment
-            rv = self.client.get(self.base_url)
-            self.assert403(rv)
-
-            self.assignment.educators_can_compare = True
-            db.session.commit()
-
-            # no comparisons has been entered yet
-            rv = self.client.get(self.base_url)
-            self.assert200(rv)
-            actual_answer_pair = rv.json
-            actual_answer1 = actual_answer_pair['objects'][0]['answer1']
-            actual_answer2 = actual_answer_pair['objects'][0]['answer2']
-            expected_answer_uuids = [answer.uuid for answer in self.data.get_student_answers()]
-            # make sure that we actually got answers for the assignment we're targetting
-            self.assertIn(actual_answer1['id'], expected_answer_uuids)
-            self.assertIn(actual_answer2['id'], expected_answer_uuids)
-
-        self.assignment.educators_can_compare = False
-        db.session.commit()
-
-        with self.login(self.data.get_authorized_ta().username):
-            # cannot compare answers unless educators_can_compare is set for assignment
-            rv = self.client.get(self.base_url)
-            self.assert403(rv)
-
-            self.assignment.educators_can_compare = True
-            db.session.commit()
-
-            # no comparisons has been entered yet
-            rv = self.client.get(self.base_url)
-            self.assert200(rv)
-            actual_answer_pair = rv.json
-            actual_answer1 = actual_answer_pair['objects'][0]['answer1']
-            actual_answer2 = actual_answer_pair['objects'][0]['answer2']
-            expected_answer_uuids = [answer.uuid for answer in self.data.get_student_answers()]
-            # make sure that we actually got answers for the assignment we're targetting
-            self.assertIn(actual_answer1['id'], expected_answer_uuids)
-            self.assertIn(actual_answer2['id'], expected_answer_uuids)
-
-    def test_get_answer_pair_answer_exclusions_for_answers_with_no_scores(self):
-        """
-        The user doing comparisons should not see their own answer in a comparison.
-        Instructor and TA answers should not show up.
-        Answers cannot be paired with itself.
-        For answers that don't have a score yet, which means they're randomly matched up.
-        """
-        with self.login(self.data.get_authorized_student().username):
-            excluded_student_answer = Answer.query.filter(
-                Answer.user_id == self.data.get_authorized_student().id,
-                Answer.assignment_id == self.assignment.id).first()
-            self.assertTrue(excluded_student_answer, "Missing authorized student's answer.")
-            excluded_instructor_answer = Answer.query.filter(
-                Answer.user_id == self.data.get_authorized_instructor().id,
-                Answer.assignment_id == self.assignment.id).first()
-            self.assertTrue(excluded_instructor_answer, "Missing instructor answer")
-            excluded_ta_answer = Answer.query.filter(
-                Answer.user_id == self.data.get_authorized_ta().id,
-                Answer.assignment_id == self.assignment.id).first()
-            self.assertTrue(excluded_ta_answer, "Missing TA answer")
-            # no comparisons has been entered yet, this tests the randomized pairing when no answers has
-            # scores, since it's randomized though, we'll have to run it lots of times to be sure
-            for i in range(50):
-                rv = self.client.get(self.base_url)
-                self.assert200(rv)
-                actual_answer_pair = rv.json
-                actual_answer1 = actual_answer_pair['objects'][0]['answer1']
-                actual_answer2 = actual_answer_pair['objects'][0]['answer2']
-                # exclude student's own answer
-                self.assertNotEqual(actual_answer1['id'], excluded_student_answer.uuid)
-                self.assertNotEqual(actual_answer2['id'], excluded_student_answer.uuid)
-                # exclude instructor answer
-                self.assertNotEqual(actual_answer1['id'], excluded_instructor_answer.uuid)
-                self.assertNotEqual(actual_answer2['id'], excluded_instructor_answer.uuid)
-                # exclude ta answer
-                self.assertNotEqual(actual_answer1['id'], excluded_ta_answer.uuid)
-                self.assertNotEqual(actual_answer2['id'], excluded_ta_answer.uuid)
-
-        # need a user with no answers submitted, otherwise pairs with the same answers
-        # won't be generated since we have too few answers
-        with self.login(self.data.get_authorized_student_with_no_answers().username):
-            for i in range(50):
-                rv = self.client.get(self.base_url)
-                self.assert200(rv)
-                # answer cannot be paired with itself
-                self.assertNotEqual(rv.json['objects'][0]['answer1_id'], rv.json['objects'][0]['answer2_id'])
-
     def test_submit_comparison_access_control(self):
         # test login required
         rv = self.client.post(
@@ -329,29 +222,40 @@ class ComparisonAPITests(ComPAIRAPITestCase):
 
     @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
     @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
-    def test_submit_comparison_basic(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
-        users = [
-            (self.data.get_authorized_student(), False),
-            (self.data.get_authorized_instructor(), True),
-            (self.data.get_authorized_ta(), True)
-        ]
-
-        self.assignment.educators_can_compare = True
-        db.session.commit()
-
+    def test_get_and_submit_comparison(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         lti_consumer = self.lti_data.lti_consumer
         (lti_user_resource_link1, lti_user_resource_link2) = self.lti_data.setup_student_user_resource_links(
             self.data.get_authorized_student(), self.course, self.assignment)
 
-        for (user, has_manage_role) in users:
+        users = [self.data.get_authorized_student(), self.data.get_authorized_instructor(), self.data.get_authorized_ta()]
+        for user in users:
             compared_answer_uuids = set()
             valid_answer_uuids = set()
             for answer in self.data.get_student_answers():
                 if answer.assignment.id == self.assignment.id and answer.user_id != user.id:
                     valid_answer_uuids.add(answer.uuid)
 
+            if user.id == self.data.get_authorized_student().id:
+                for comparison_example in self.data.comparisons_examples:
+                    if comparison_example.assignment_id == self.assignment.id:
+                        valid_answer_uuids.add(comparison_example.answer1_uuid)
+                        valid_answer_uuids.add(comparison_example.answer2_uuid)
+
             with self.login(user.username):
+                if user.id in [self.data.get_authorized_instructor().id, self.data.get_authorized_ta().id]:
+                    self.assignment.educators_can_compare = False
+                    db.session.commit()
+
+                    # cannot compare answers unless educators_can_compare is set for assignment
+                    rv = self.client.get(self.base_url)
+                    self.assert403(rv)
+
+                    self.assignment.educators_can_compare = True
+                    db.session.commit()
+
+                current = 0
                 while len(valid_answer_uuids - compared_answer_uuids) > 0:
+                    current += 1
                     if user.id == self.data.get_authorized_student().id:
                         course_grade = CourseGrade.get_user_course_grade(self.course, user).grade
                         assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, user).grade
@@ -359,7 +263,22 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                     # establish expected data by first getting an answer pair
                     rv = self.client.get(self.base_url)
                     self.assert200(rv)
+                    actual_answer1_uuid = rv.json['objects'][0]['answer1_id']
+                    actual_answer2_uuid = rv.json['objects'][0]['answer2_id']
+                    self.assertIn(actual_answer1_uuid, valid_answer_uuids)
+                    self.assertIn(actual_answer2_uuid, valid_answer_uuids)
+                    self.assertNotEqual(actual_answer1_uuid, actual_answer2_uuid)
+                    self.assertTrue(rv.json['new_pair'])
+                    self.assertEqual(rv.json['current'], current)
+
+                    # fetch again
+                    rv = self.client.get(self.base_url)
+                    self.assert200(rv)
                     expected_comparisons = rv.json
+                    self.assertEqual(actual_answer1_uuid, rv.json['objects'][0]['answer1_id'])
+                    self.assertEqual(actual_answer2_uuid, rv.json['objects'][0]['answer2_id'])
+                    self.assertFalse(rv.json['new_pair'])
+                    self.assertEqual(rv.json['current'], current)
 
                     # test draft post
                     comparison_submit = self._build_comparison_submit(rv.json['objects'][0]['answer1_id'], True)
@@ -456,45 +375,6 @@ class ComparisonAPITests(ComPAIRAPITestCase):
             self.assertTrue(
                 found_comparison,
                 "Actual comparison received contains a comparison that was not sent.")
-
-    def test_get_answer_pair_answer_exclusion_with_scored_answers(self):
-        """
-        The user doing comparisons should not see their own answer in a comparison.
-        Instructor and TA answers should not show up.
-        Answers cannot be paired with itself.
-        Scored answer pairing means answers should be matched up to similar scores.
-        """
-        # Make sure all answers are compared first
-        self._submit_all_possible_comparisons_for_user(
-            self.data.get_authorized_student().id)
-        self._submit_all_possible_comparisons_for_user(
-            self.data.get_secondary_authorized_student().id)
-
-        with self.login(self.data.get_authorized_student_with_no_answers().username):
-            excluded_instructor_answer = Answer.query.filter(
-                Answer.user_id == self.data.get_authorized_instructor().id,
-                Answer.assignment_id == self.assignment.id).first()
-            self.assertTrue(excluded_instructor_answer, "Missing instructor answer")
-            excluded_ta_answer = Answer.query.filter(
-                Answer.user_id == self.data.get_authorized_ta().id,
-                Answer.assignment_id == self.assignment.id).first()
-            self.assertTrue(excluded_ta_answer, "Missing TA answer")
-            # no comparisons has been entered yet, this tests the randomized pairing when no answers has
-            # scores, since it's randomized though, we'll have to run it lots of times to be sure
-            for i in range(50):
-                rv = self.client.get(self.base_url)
-                self.assert200(rv)
-                actual_answer_pair = rv.json
-                actual_answer1 = actual_answer_pair['objects'][0]['answer1']
-                actual_answer2 = actual_answer_pair['objects'][0]['answer2']
-                # exclude instructor answer
-                self.assertNotEqual(actual_answer1['id'], excluded_instructor_answer.id)
-                self.assertNotEqual(actual_answer2['id'], excluded_instructor_answer.id)
-                # exclude ta answer
-                self.assertNotEqual(actual_answer1['id'], excluded_ta_answer.id)
-                self.assertNotEqual(actual_answer2['id'], excluded_ta_answer.id)
-                # answer cannot be paired with itself
-                self.assertNotEqual(actual_answer1['id'], actual_answer2['id'])
 
     def _submit_all_possible_comparisons_for_user(self, user_id):
         example_winner_ids = []

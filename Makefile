@@ -40,7 +40,13 @@ testf:
 	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js test:unit
 
 testb:
-	$(DOCKERRUN_PY) python -m unittest discover -s compair/tests/
+	$(DOCKERRUN_PY) nosetests
+
+testb-coverage:
+	$(DOCKERRUN_PY) nosetests --with-coverage --cover-package=compair --cover-erase
+
+testb-profile:
+	$(DOCKERRUN_PY) nosetests --with-profile
 
 tdd:
 	$(DOCKERRUN_NODE) node_modules/karma/bin/karma start compair/static/test/config/karma.conf.js

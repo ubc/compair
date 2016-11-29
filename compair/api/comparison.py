@@ -24,14 +24,8 @@ from compair.algorithms import InsufficientObjectsForPairException, \
 comparison_api = Blueprint('comparison_api', __name__)
 api = new_restful_api(comparison_api)
 
-def comparisons_type(value):
-    return dict(value)
-
 update_comparison_parser = RequestParser()
-update_comparison_parser.add_argument(
-    'comparisons', type=comparisons_type, required=True,
-    action="append", help="Missing comparisons.")
-
+update_comparison_parser.add_argument('comparisons', type=list, required=True, location='json')
 
 # events
 on_comparison_get = event.signal('COMPARISON_GET')
@@ -69,6 +63,8 @@ class CompareRootAPI(Resource):
             ) \
             .all()
 
+        new_pair = False
+
         if len(comparisons) > 0:
             on_comparison_get.send(
                 self,
@@ -81,6 +77,7 @@ class CompareRootAPI(Resource):
             try:
                 comparisons = Comparison.create_new_comparison_set(assignment.id, current_user.id,
                     skip_comparison_examples=allow(MANAGE, assignment))
+                new_pair = True
 
                 on_comparison_create.send(
                     self,
@@ -96,7 +93,13 @@ class CompareRootAPI(Resource):
             except UnknownPairGeneratorException:
                 return {"error": "Generating scored pairs failed, this really shouldn't happen."}, 500
 
-        return {'objects': marshal(comparisons, dataformat.get_comparison(restrict_user))}
+        comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
+
+        return {
+            'objects': marshal(comparisons, dataformat.get_comparison(restrict_user)),
+            'new_pair': new_pair,
+            'current': comparison_count+1
+        }
 
     @login_required
     def post(self, course_uuid, assignment_uuid):
@@ -203,6 +206,9 @@ class CompareRootAPI(Resource):
             event_name=on_comparison_update.name,
             user=current_user,
             course_id=course.id,
+            assignment=assignment,
+            comparisons=comparisons,
+            is_comparison_example=is_comparison_example,
             data=marshal(comparisons, dataformat.get_comparison(restrict_user)))
 
         return {'objects': marshal(comparisons, dataformat.get_comparison(restrict_user))}

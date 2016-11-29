@@ -250,6 +250,7 @@ class AnswerCommentListAPI(Resource):
             event_name=on_answer_comment_create.name,
             user=current_user,
             course_id=course.id,
+            answer_comment=answer_comment,
             data=marshal(answer_comment, dataformat.get_answer_comment(False)))
 
         return marshal(answer_comment, dataformat.get_answer_comment())
@@ -322,12 +323,22 @@ class AnswerCommentAPI(Resource):
 
         db.session.add(answer_comment)
 
-        on_answer_comment_modified.send(
-            self,
-            event_name=on_answer_comment_modified.name,
-            user=current_user,
-            course_id=course.id,
-            data=get_model_changes(answer_comment))
+        if answer_comment.comment_type == AnswerCommentType.evaluation:
+            on_answer_comment_modified.send(
+                self,
+                event_name=on_answer_comment_modified.name,
+                user=current_user,
+                course_id=course.id,
+                answer_comment=answer_comment,
+                data=get_model_changes(answer_comment))
+        else:
+            on_answer_comment_modified.send(
+                self,
+                event_name=on_answer_comment_modified.name,
+                user=current_user,
+                course_id=course.id,
+                answer_comment=answer_comment,
+                data=get_model_changes(answer_comment))
 
         db.session.commit()
 
@@ -362,6 +373,7 @@ class AnswerCommentAPI(Resource):
             event_name=on_answer_comment_delete.name,
             user=current_user,
             course_id=course.id,
+            answer_comment=answer_comment,
             data=data)
 
         return {'id': answer_comment.uuid}

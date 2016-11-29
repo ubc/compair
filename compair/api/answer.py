@@ -25,8 +25,12 @@ new_answer_parser.add_argument('content', type=str, default=None)
 new_answer_parser.add_argument('file_id', type=str, default=None)
 new_answer_parser.add_argument('draft', type=bool, default=False)
 
-existing_answer_parser = new_answer_parser.copy()
+existing_answer_parser = RequestParser()
 existing_answer_parser.add_argument('id', type=str, required=True, help="Answer id is required.")
+existing_answer_parser.add_argument('user_id', type=str, default=None)
+existing_answer_parser.add_argument('content', type=str, default=None)
+existing_answer_parser.add_argument('file_id', type=str, default=None)
+existing_answer_parser.add_argument('draft', type=bool, default=False)
 
 answer_list_parser = pagination_parser.copy()
 answer_list_parser.add_argument('group', type=str, required=False, default=None)
@@ -35,13 +39,15 @@ answer_list_parser.add_argument('orderBy', type=str, required=False, default=Non
 answer_list_parser.add_argument('top', type=bool, required=False, default=None)
 answer_list_parser.add_argument('ids', type=str, required=False, default=None)
 
+user_answer_list_parser = RequestParser()
+user_answer_list_parser.add_argument('draft', type=bool, required=False, default=False)
+
 answer_comparison_list_parser = pagination_parser.copy()
 answer_comparison_list_parser.add_argument('group', type=str, required=False, default=None)
 answer_comparison_list_parser.add_argument('author', type=str, required=False, default=None)
 
 flag_parser = RequestParser()
-flag_parser.add_argument(
-    'flagged', type=bool, required=True,
+flag_parser.add_argument('flagged', type=bool, required=True,
     help="Expected boolean value 'flagged' is missing."
 )
 
@@ -205,7 +211,8 @@ class AnswerRootAPI(Resource):
         else:
             answer.file_id = None
 
-        if not (answer.content or file_uuid):
+        # non-drafts must have content
+        if not answer.draft and not answer.content and not file_uuid:
             return {"error": "The answer content is empty!"}, 400
 
         user_uuid = params.get("user_id")
@@ -310,6 +317,35 @@ class AnswerIdAPI(Resource):
 
         # modify answer according to new values, preserve original values if values not passed
         answer.content = params.get("content")
+
+        user_uuid = params.get("user_id")
+        # we allow instructor and TA to submit multiple answers for other users in the class
+        if user_uuid and user_uuid != answer.user_uuid:
+            if not allow(MANAGE, answer) or not answer.draft:
+                return {"error": "Only instructors and teaching assistants can submit an answer on behalf of another user."}, 400
+            user = User.get_by_uuid_or_404(user_uuid)
+            answer.user_id = user.id
+
+            user_course = UserCourse.query \
+                .filter_by(
+                    course_id=course.id,
+                    user_id=answer.user_id
+                ) \
+                .one_or_none()
+
+            if user_course.course_role.value not in [CourseRole.instructor.value, CourseRole.teaching_assistant.value]:
+                # check if there is a previous answer submitted for the student
+                prev_answer = Answer.query \
+                    .filter(Answer.id != answer.id) \
+                    .filter_by(
+                        assignment_id=assignment.id,
+                        user_id=answer.user_id,
+                        active=True
+                    ) \
+                    .first()
+                if prev_answer:
+                    return {"error": "An answer has already been submitted."}, 400
+
         # can only change draft status while a draft
         if answer.draft:
             answer.draft = params.get("draft")
@@ -322,7 +358,8 @@ class AnswerIdAPI(Resource):
         else:
             answer.file_id = None
 
-        if not (answer.content or uploaded or file_uuid):
+        # non-drafts must have content
+        if not answer.draft and not answer.content and not file_uuid:
             return {"error": "The answer content is empty!"}, 400
 
         db.session.add(answer)
@@ -333,6 +370,8 @@ class AnswerIdAPI(Resource):
             event_name=on_answer_modified.name,
             user=current_user,
             course_id=course.id,
+            answer=answer,
+            assignment=assignment,
             data=get_model_changes(answer))
 
         # update course & assignment grade for user if answer is fully submitted
@@ -364,6 +403,7 @@ class AnswerIdAPI(Resource):
             event_name=on_answer_delete.name,
             user=current_user,
             course_id=course.id,
+            answer=answer,
             data={'assignment_id': assignment.id, 'answer_id': answer.id})
 
         return {'id': answer.uuid}
@@ -522,18 +562,21 @@ class AnswerUserIdAPI(Resource):
         require(READ, Answer(user_id=current_user.id))
         restrict_user = not allow(MANAGE, assignment)
 
-        answers = Answer.query. \
-            options(joinedload('comments')). \
-            options(joinedload('file')). \
-            options(joinedload('user')). \
-            options(joinedload('scores')). \
-            filter_by(
+        params = user_answer_list_parser.parse_args()
+
+        answers = Answer.query \
+            .options(joinedload('comments')) \
+            .options(joinedload('file')) \
+            .options(joinedload('user')) \
+            .options(joinedload('scores')) \
+            .filter_by(
                 active=True,
                 assignment_id=assignment.id,
                 course_id=course.id,
-                user_id=current_user.id
-            ). \
-            all()
+                user_id=current_user.id,
+                draft=params.get('draft')
+            ) \
+            .all()
 
         on_user_answer_get.send(
             self,
@@ -575,6 +618,7 @@ class AnswerFlagAPI(Resource):
         answer.flagged = params['flagged']
         answer.flagger_user_id = current_user.id
         db.session.add(answer)
+        db.session.commit()
 
         on_answer_flag.send(
             self,
@@ -582,9 +626,9 @@ class AnswerFlagAPI(Resource):
             user=current_user,
             course_id=course.id,
             assignment_id=assignment.id,
+            answer=answer,
             data={'answer_id': answer.id, 'flag': answer.flagged})
 
-        db.session.commit()
         return marshal(answer, dataformat.get_answer(restrict_user))
 
 api.add_resource(AnswerFlagAPI, '/<answer_uuid>/flagged')

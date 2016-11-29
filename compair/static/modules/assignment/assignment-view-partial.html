@@ -92,7 +92,7 @@
            ng-show="canManageAssignment && (assignment.compare_period || assignment.after_comparing)">
             See Comparisons
         </a>
-        
+
         <!-- BUTTON when user is an admin AND the comparison period is active AND admins can compare -->
         <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Answers" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
            ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">
@@ -279,11 +279,11 @@
                         <div mathjax hljs ng-bind-html="answer.content"></div>
                         <!-- Student Attachment -->
                         <compair-pdf-inline label="See answer details:"
-                            pdf="answer.file" ng-click="revealAnswer(answer.id)">
+                            pdf="answer.file" ng-click="revealAnswer(answer)">
                         </compair-pdf-inline>
                     </div>
                     <!-- Student Answer Read More Button (not used for instructor answers) -->
-                    <p ng-show="showReadMore" class="read-more" ng-click="revealAnswer(answer.id)"><a href="" class="btn btn-sm btn-default">Read More...</a></p>
+                    <p ng-show="showReadMore" class="read-more" ng-click="revealAnswer(answer)"><a href="" class="btn btn-sm btn-default">Read More...</a></p>
                     <!-- <p ng-show="!showReadMore">No More To Read!!! ({{thisHeight}})</p> -->
 
                     <!-- Student Score (not used for instructor answers) -->
@@ -315,7 +315,7 @@
 
 
                     <!-- Student Answer Replies Section -->
-                    <a href="" ng-click="showReplies = !showReplies; showReplies && loadComments(answer)">
+                    <a href="" ng-click="showReplies = !showReplies; toggleReplies(showReplies, answer)">
                         <h3 class="reply-heading" ng-if="(answer.comment_count && (answer.user_id == loggedInUserId || canManageAssignment)) || (answer.public_comment_count && see_answers)">
                             <i class="fa fa-chevron-down" ng-show="showReplies"></i>
                             <i class="fa fa-chevron-right" ng-hide="showReplies"></i>
@@ -425,12 +425,12 @@
 
                     <!-- Student Attachment -->
                     <compair-pdf-inline label="See answer details:"
-                        pdf="answer.file" ng-click="revealAnswer(answer.id)">
+                        pdf="answer.file" ng-click="revealAnswer(answer)">
                     </compair-pdf-inline>
                 </div>
 
                 <!-- Student Answer Replies Section -->
-                <a href="" ng-click="showReplies = !showReplies; showReplies && loadComments(answer)">
+                <a href="" ng-click="showReplies = !showReplies; toggleReplies(showReplies, answer)">
                     <h3 class="reply-heading" ng-if="answer.comment_count">
                         <i class="fa fa-chevron-down" ng-show="showReplies"></i>
                         <i class="fa fa-chevron-right" ng-hide="showReplies"></i>

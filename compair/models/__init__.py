@@ -23,6 +23,7 @@ from .score import Score
 from .user import User
 from .user_course import UserCourse
 from .third_party_user import ThirdPartyUser
+from .xapi_log import XAPILog
 
 # LTI models
 from .lti_models import LTIConsumer, LTIContext, LTIMembership, \

@@ -3,19 +3,17 @@ import os
 import ssl
 
 from flask import Flask, redirect, session as sess, abort, jsonify, url_for
-from flask import make_response
-from flask import send_file
-from flask_login import current_user, login_required
+from flask_login import current_user
 from sqlalchemy.orm import joinedload
 from werkzeug.routing import BaseConverter
 
 from .authorization import define_authorization
 from .core import login_manager, bouncer, db, cas, celery
 from .configuration import config
-from .models import User
+from .models import User, File
 from .activity import log
 from .api import register_api_blueprints, log_events
-
+from compair.xapi import capture_xapi_events
 
 class RegexConverter(BaseConverter):
     def __init__(self, url_map, *items):
@@ -134,26 +132,7 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
 
         app = register_api_blueprints(app)
 
-        @app.route('/app/<regex("pdf|report"):file_type>/<file_name>')
-        @login_required
-        def file_retrieve(file_type, file_name):
-            mimetypes = {
-                'pdf': 'application/pdf',
-                'report': 'text/csv'
-            }
-            file_dirs = {
-                'pdf': app.config['ATTACHMENT_UPLOAD_FOLDER'],
-                'report': app.config['REPORT_FOLDER']
-            }
-            file_path = '{}/{}'.format(file_dirs[file_type], file_name)
-
-            if not os.path.exists(file_path):
-                return make_response('invalid file name', 404)
-
-            # TODO: add bouncer
-
-            return send_file(file_path, mimetype=mimetypes[file_type])
-
     return app
 
 log_events(log)
+capture_xapi_events()

@@ -1,4 +1,4 @@
-describe('course-module', function () {
+describe('assignment-module', function () {
     var $httpBackend, sessionRequestHandler;
     var id = "1abcABC123-abcABC123_Z";
     var mockSession = {
@@ -257,6 +257,7 @@ describe('course-module', function () {
         "objects": [
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 0,
                 "content": "<p>I&#39;m the instructor</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -278,6 +279,7 @@ describe('course-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 0,
                 "content": "<p>I&#39;m the instructor</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -299,6 +301,7 @@ describe('course-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 0,
                 "content": "<p>I&#39;m the instructor's second answer</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -320,6 +323,7 @@ describe('course-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 0,
                 "content": "<p>TA 1</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -341,6 +345,7 @@ describe('course-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 2,
                 "content": "<p>Answer 9</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -375,6 +380,7 @@ describe('course-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 2,
                 "content": "<p>Answer 6</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -409,6 +415,7 @@ describe('course-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 2,
                 "content": "<p>Answer 10</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -443,6 +450,7 @@ describe('course-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 2,
                 "content": "<p>Answer 8</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -477,6 +485,7 @@ describe('course-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 2,
                 "content": "<p>Answer 5</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -511,6 +520,7 @@ describe('course-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 2,
                 "content": "<p>Answer 2</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -545,6 +555,7 @@ describe('course-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 2,
                 "content": "<p>Student 3 Answer</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -579,6 +590,7 @@ describe('course-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 2,
                 "content": "<p>Answer 7</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -613,6 +625,7 @@ describe('course-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 3,
                 "content": "<p>Answer 1</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -647,6 +660,7 @@ describe('course-module', function () {
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
+                "course_id": "1abcABC123-abcABC123_Z",
                 "comment_count": 3,
                 "content": "<p>Hi there guys</p>\n",
                 "course_id": "1abcABC123-abcABC123_Z",
@@ -722,6 +736,7 @@ describe('course-module', function () {
             {
                 "answer1": {
                     "assignment_id": "1abcABC123-abcABC123_Z",
+                    "course_id": "1abcABC123-abcABC123_Z",
                     "comment_count": 0,
                     "content": "<p>I&#39;m the instructor</p>\n",
                     "course_id": "1abcABC123-abcABC123_Z",
@@ -744,6 +759,7 @@ describe('course-module', function () {
                 "answer1_id": "100cABC123-abcABC123_Z",
                 "answer2": {
                     "assignment_id": "1abcABC123-abcABC123_Z",
+                    "course_id": "1abcABC123-abcABC123_Z",
                     "comment_count": 0,
                     "content": "<p>I&#39;m the instructor's second answer</p>\n",
                     "course_id": "1abcABC123-abcABC123_Z",
@@ -779,6 +795,9 @@ describe('course-module', function () {
         $httpBackend = $injector.get('$httpBackend');
         sessionRequestHandler = $httpBackend.when('GET', '/api/session').respond(mockSession);
         $httpBackend.when('GET', '/api/users/' + id).respond(mockUser);
+        $httpBackend.whenPOST(/\/api\/statements$/).respond(function(method, url, data, headers) {
+            return [200, { 'success':true }, {}];
+        });
     }));
 
     afterEach(function () {
@@ -790,8 +809,9 @@ describe('course-module', function () {
         var $rootScope, createController, $location, $modal, $q;
         var controller;
         var toaster;
+        var xAPISettings;
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_, _Toaster_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_, _Toaster_, _xAPISettings_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
             $modal = _$modal_;
@@ -804,6 +824,9 @@ describe('course-module', function () {
                     $route: route || {}
                 });
             }
+            xAPISettings = _xAPISettings_;
+            xAPISettings.enabled = true;
+            xAPISettings.baseUrl = "https://localhost:8888/";
         }));
 
         describe('view:', function() {
@@ -847,12 +870,11 @@ describe('course-module', function () {
                 expect($rootScope.answerFilters).toEqual({
                     page: 1,
                     perPage: 20,
-                    group_name: null,
+                    group: null,
                     author: null,
                     top: null,
                     orderBy: null
                 });
-                expect($rootScope.reverse).toBe(true);
 
                 expect($rootScope.self_evaluation_needed).toBe(true);
                 expect($rootScope.loggedInUserId).toEqual(id);
@@ -1122,7 +1144,11 @@ describe('course-module', function () {
                     criterion = {id: "1abcABC123-abcABC123_Z", name: 'test'};
                     deferred = $q.defer();
                     closeFunc = jasmine.createSpy('close');
-                    spyOn($modal, 'open').and.returnValue({result: deferred.promise, close: closeFunc});
+                    spyOn($modal, 'open').and.returnValue({
+                        result: deferred.promise,
+                        close: closeFunc,
+                        opened: deferred.promise
+                    });
                     $rootScope.changeCriterion(criterion);
                 });
 
@@ -1154,11 +1180,11 @@ describe('course-module', function () {
                     $rootScope.$digest();
                     $rootScope.$broadcast('CRITERION_UPDATED');
                     expect(closeFunc).not.toHaveBeenCalled();
+                    $httpBackend.flush();
                 });
             });
 
             describe('when changeAnswer is called', function() {
-                var deferred;
                 var fakeModal = {
                     result: {
                         then: function(confirmCallback, cancelCallback) {
@@ -1171,6 +1197,9 @@ describe('course-module', function () {
                     },
                     dismiss: function( type ) {
                         this.result.cancelCallback( type );
+                    },
+                    opened: {
+                        then: function() { }
                     }
                 };
                 beforeEach(function() {
@@ -1182,7 +1211,7 @@ describe('course-module', function () {
                 it('should open a modal dialog', function() {
                     expect($modal.open).toHaveBeenCalledWith({
                         animation: true,
-                        controller: "AnswerModalController",
+                        controller: "ComparisonExampleModalController",
                         templateUrl: 'modules/answer/answer-modal-partial.html',
                         scope: jasmine.any(Object)
                     })
@@ -1192,6 +1221,7 @@ describe('course-module', function () {
                     var updated = {content: 'test1'};
                     $rootScope.modalInstance.close(updated);
                     expect($rootScope.comparison_example.answer1).toEqual(updated);
+                    $httpBackend.flush();
                 });
             });
 
@@ -1404,7 +1434,11 @@ describe('course-module', function () {
                     criterion = {id: "1abcABC123-abcABC123_Z", name: 'test'};
                     deferred = $q.defer();
                     closeFunc = jasmine.createSpy('close');
-                    spyOn($modal, 'open').and.returnValue({result: deferred.promise, close: closeFunc});
+                    spyOn($modal, 'open').and.returnValue({
+                        result: deferred.promise,
+                        close: closeFunc,
+                        opened: deferred.promise
+                    });
                     $rootScope.changeCriterion(criterion);
                 });
 
@@ -1436,11 +1470,11 @@ describe('course-module', function () {
                     $rootScope.$digest();
                     $rootScope.$broadcast('CRITERION_UPDATED');
                     expect(closeFunc).not.toHaveBeenCalled();
+                    $httpBackend.flush();
                 });
             });
 
             describe('when changeAnswer is called', function() {
-                var deferred;
                 var fakeModal = {
                     result: {
                         then: function(confirmCallback, cancelCallback) {
@@ -1453,6 +1487,9 @@ describe('course-module', function () {
                     },
                     dismiss: function( type ) {
                         this.result.cancelCallback( type );
+                    },
+                    opened: {
+                        then: function() { }
                     }
                 };
                 beforeEach(function() {
@@ -1463,7 +1500,7 @@ describe('course-module', function () {
                 it('should open a modal dialog', function() {
                     expect($modal.open).toHaveBeenCalledWith({
                         animation: true,
-                        controller: "AnswerModalController",
+                        controller: "ComparisonExampleModalController",
                         templateUrl: 'modules/answer/answer-modal-partial.html',
                         scope: jasmine.any(Object)
                     })
@@ -1473,6 +1510,7 @@ describe('course-module', function () {
                     var updated = angular.merge({}, $rootScope.comparison_example.answer1, {content: 'test123'}) ;
                     $rootScope.modalInstance.close(updated);
                     expect($rootScope.comparison_example.answer1).toEqual(updated);
+                    $httpBackend.flush();
                 });
             });
 

@@ -3,18 +3,18 @@
         <div class="row">
             <h2 class="col-sm-6">
                 Participation
-                <span ng-show="gb.group && !gb.student">for "{{gb.group}}"</span>
-                <span ng-show="gb.student">for "{{ gb.student.name }}"</span>
+                <span ng-show="gradebookFilters.group && !gradebookFilters.student">for "{{gradebookFilters.group}}"</span>
+                <span ng-show="gradebookFilters.student">for "{{ gradebookFilters.student.name }}"</span>
             </h2>
             <div class="col-sm-6 text-right multi-filters">
                 <span class="filter" ng-if="canManageAssignment">
                     <label>Show: &nbsp;</label>
-                    <select ng-if="groups.length > 0" ng-model="gb.group" class="nullable" chosen disable_search_threshold="8"
-                            ng-options="g as g for g in groups | orderBy: 'toString()'" ng-change="groupChange()">
+                    <select ng-if="groups.length > 0" ng-model="gradebookFilters.group" class="nullable" chosen disable_search_threshold="8"
+                            ng-options="g as g for g in groups | orderBy: 'toString()'">
                         <option value="">All groups</option>
                     </select>
-                    <select ng-model="gb.student" class="nullable" chosen disable_search_threshold="8"
-                            ng-options="u as u.name for u in users | orderBy: 'name'" ng-change="userChange()">
+                    <select ng-model="gradebookFilters.student" class="nullable" chosen disable_search_threshold="8"
+                            ng-options="u as u.name for u in users | orderBy: 'name'">
                         <option value="">All students</option>
                     </select>
                 </span>
@@ -22,8 +22,8 @@
                 <span class="filter" ng-if="canManageAssignment && includeScores">
                     <label>Display scores <a href="" tooltip="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
                             <i class="fa fa-question-circle"></i></a> below for: &nbsp;</label>
-                    <select ng-model="gb.sortby" chosen disable_search_threshold="8"
-                            ng-options="c.id as c.name for c in criteria" ng-change="criteriaChange()">
+                    <select ng-model="gradebookFilters.sortby" chosen disable_search_threshold="8"
+                            ng-options="c.id as c.name for c in criteria">
                     </select>
                 </span>
             </div>
@@ -35,32 +35,31 @@
             <thead>
                 <tr>
                     <th>
-                        <a href="" ng-click="reverse = predicate == 'firstname' && !reverse; predicate='firstname'">
-                        First Name</a>
+                        <a href="" ng-click="updateTableOrderBy('firstname')">First Name</a>
                     </th>
-                    <th><a href="" ng-click="reverse = predicate == 'lastname' && !reverse; predicate='lastname'">
-                        Last Name</a>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('lastname')">Last Name</a>
                     </th>
-                    <th><a href="" ng-click="reverse = predicate == 'displayname' && !reverse; predicate='displayname'">
-                        Display Name</a>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('displayname')">Display Name</a>
                     </th>
-                    <th class="text-center" ng-if="!includeScores"><a href="" ng-click="reverse = predicate == 'num_answers' && !reverse; predicate='num_answers'">
-                        Answered</a>
+                    <th class="text-center" ng-if="!includeScores">
+                        <a href="" ng-click="updateTableOrderBy('num_answers')">Answered</a>
                     </th>
-                    <th class="text-center" ng-if="includeScores"><a href="" ng-click="reverse = !reverse; sortScore()">
-                        Answer Score</a>
+                    <th class="text-center" ng-if="includeScores">
+                        <a href="" ng-click="updateTableOrderBy('scores['+gradebookFilters.sortby+']')">Answer Score</a>
                     </th>
-                    <th class="text-center"><a href="" ng-click="reverse = predicate == 'flagged' && !reverse; predicate='flagged'">
-                        Flagged</a>
+                    <th class="text-center">
+                        <a href="" ng-click="updateTableOrderBy('flagged')">Flagged</a>
                     </th>
-                    <th class="text-center"><a href="" ng-click="reverse = predicate == 'num_comparisons' && !reverse; predicate='num_comparisons'">
-                        Evaluations</a>
+                    <th class="text-center">
+                        <a href="" ng-click="updateTableOrderBy('num_comparisons')">Evaluations</a>
                     </th>
-                    <th class="text-center" ng-if="includeSelfEval"><a href="" ng-click="reverse = predicate == 'num_self_evaluation' && !reverse; predicate='num_self_evaluation'">
-                        Self-Evaluation</a>
+                    <th class="text-center" ng-if="includeSelfEval">
+                        <a href="" ng-click="updateTableOrderBy('num_self_evaluation')">Self-Evaluation</a>
                     </th>
-                    <th class="text-center"><a href="" ng-click="reverse = predicate == 'grade' && !reverse; predicate='grade'">
-                        Grade</a>
+                    <th class="text-center" ng-if="includeSelfEval">
+                        <a href="" ng-click="updateTableOrderBy('grade')">Grade </a>
                     </th>
                 </tr>
             </thead>
@@ -78,12 +77,12 @@
                     <td class="text-center" ng-if="includeScores"
                         ng-class="{
                         'text-danger': entry.num_answers == 0,
-                        'text-warning': entry.num_answers > 0 && !(entry.scores[gb.sortby] >= 0),
-                        'text-success': entry.scores[gb.sortby] >= 0
+                        'text-warning': entry.num_answers > 0 && !(entry.scores[gradebookFilters.sortby] >= 0),
+                        'text-success': entry.scores[gradebookFilters.sortby] >= 0
                         }">
                         <strong>
-                            {{ entry.scores[gb.sortby] }}
-                            <span ng-if="entry.scores[gb.sortby] >= 0">%</span>
+                            {{ entry.scores[gradebookFilters.sortby] }}
+                            <span ng-if="entry.scores[gradebookFilters.sortby] >= 0">%</span>
                         </strong>
                     </td>
                     <td class="text-center" ng-class="{

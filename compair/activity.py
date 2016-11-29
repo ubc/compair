@@ -8,20 +8,23 @@ from flask_login import user_logged_in, user_logged_out
 from flask_sqlalchemy import Model
 from flask_login import UserMixin
 
-from .models import ActivityLog
+from .models import ActivityLog, User
 from .core import db
 
 
 def log(sender, event_name='UNKNOWN', **extra):
     params = dict({'event': event_name})
-    if 'user' in extra and isinstance(extra['user'], UserMixin):
+
+    if 'user' in extra and hasattr(extra['user'], 'id'):
         params['user_id'] = extra['user'].id
     elif 'user_id' in extra:
         params['user_id'] = extra['user_id']
-    if 'course' in extra:
+
+    if 'course' in extra and hasattr(extra['course'], 'id'):
         params['course_id'] = extra['course'].id
     elif 'course_id' in extra:
         params['course_id'] = extra['course_id']
+
     if 'data' in extra:
         if isinstance(extra['data'], str):
             params['data'] = extra['data']

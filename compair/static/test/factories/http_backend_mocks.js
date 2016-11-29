@@ -824,6 +824,19 @@ module.exports.httpbackendMock = function(storageFixtures) {
 
         // End Assignments
 
+        // Statements
+        $httpBackend.whenPOST(/\/api\/statements$/).respond(function(method, url, data, headers) {
+            return [200, { 'success':true }, {}];
+        });
+
+        // End Statements
+
         $httpBackend.whenGET(/.*/).passThrough();
     });
+
+    angular.module('ubc.ctlt.compair.common.xapi')
+    .run( ['$location', 'xAPISettings', function($location, xAPISettings) {
+        xAPISettings.enabled = true;
+        xAPISettings.baseUrl = 'https://localhost:8888/';
+    }]);
 };

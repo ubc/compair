@@ -218,10 +218,13 @@ class UserListAPI(Resource):
 
         # handle oauth_create_user_link setup for third party logins
         if sess.get('oauth_create_user_link'):
+            login_method = None
+
             if sess.get('LTI'):
                 lti_user = LTIUser.query.get_or_404(sess['lti_user'])
                 lti_user.compair_user = user
                 user.system_role = lti_user.system_role
+                login_method = 'LTI'
 
                 if sess.get('lti_context') and sess.get('lti_user_resource_link'):
                     lti_context = LTIContext.query.get_or_404(sess['lti_context'])
@@ -242,6 +245,7 @@ class UserListAPI(Resource):
                         params=sess.get('CAS_ADDITIONAL_PARAMS'),
                         user=user
                     )
+                    login_method = ThirdPartyType.cas.value
                     db.session.add(thirdpartyuser)
         else:
             system_role = params.get("system_role")
@@ -276,7 +280,7 @@ class UserListAPI(Resource):
 
         # handle oauth_create_user_link teardown for third party logins
         if sess.get('oauth_create_user_link'):
-            authenticate(user)
+            authenticate(user, login_method=login_method)
             sess.pop('oauth_create_user_link')
 
             if sess.get('CAS_CREATE'):
@@ -438,16 +442,14 @@ class TeachingUserCourseListAPI(Resource):
     @login_required
     def get(self):
         if allow(MANAGE, Course()):
-            courses = Course.query.all()
-            course_list = [{'id': c.uuid, 'name': c.name} for c in courses]
+            courses = Course.query.filter_by(active=True).all()
         else:
-            course_list = []
+            courses = []
             for user_course in current_user.user_courses:
-                if allow(MANAGE, Assignment(course_id=user_course.course_id)):
-                    course_list.append({
-                        'id': user_course.course_uuid,
-                        'name': user_course.course.name
-                    })
+                if user_course.course.active and allow(MANAGE, Assignment(course_id=user_course.course_id)):
+                    courses.append(user_course.course)
+
+        course_list = [{'id': c.uuid, 'name': c.name} for c in courses]
 
         on_teaching_course_get.send(
             self,

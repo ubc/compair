@@ -116,6 +116,39 @@ Run `gulp prod` to generate the production version. This currently just does two
 2. Compile and minify the less files into a single css file.
 
 
+Setting up Learning Analytics
+---------------------------
+
+ComPAIR uses the Experience API (xAPI) for collecting learning analytics. xAPI requires a [Learning Record Store (LRS)](http://tincanapi.com/learning-record-store/) to use.
+ComPAIR currently only supports basic OAuth1 authentication connections to the LRS. Authentication can be set with either `LRS_USERNAME`+`LRS_PASSWORD` or `LRS_AUTH`.
+
+For development, you can set `LRS_STATEMENT_ENDPOINT` to either the 'local' setting (to dump statements into the `xapi_log` table) or to an account on [https://lrs.adlnet.gov/](https://lrs.adlnet.gov/) for your LRS.
+Note that [https://lrs.adlnet.gov/](https://lrs.adlnet.gov/) is set up for testing purposes only and they can clear their data at any time (do not use in production).
+
+### Settings
+
+`XAPI_ENABLED`: Set to 1 to enable collecting learning analytics (disabled by default)
+
+`LRS_STATEMENT_ENDPOINT`: Set the url LRS. Use 'local' for dumping statements into `xapi_log` table ('local' by default)
+
+`LRS_USERNAME`: The username for the OAuth1 account.
+
+`LRS_PASSWORD`: The password for the OAuth1 account.
+
+`LRS_AUTH`: Must be in the format `Basic LRS_USERNAME:LRS_PASSWORD` where `LRS_USERNAME:LRS_PASSWORD` has been base64 encoded.
+
+`XAPI_APP_BASE_URL` Optionally set a base url to use for all statements. This is useful to help keep statement urls consistent if the url of your instance changes over time or is accessible though different routes (ex http+https or multiple sub-domains). (Uses base url of request by default)
+
+xAPI statements require an actor (currently logged in user) account information. The ComPAIR account information will be used by default unless the following settings are changed.
+
+`LRS_ACTOR_ACCOUNT_USE_CAS`: Flag indicating if CAS account information should be used by default if available (disabled by default)
+
+`LRS_ACTOR_ACCOUNT_CAS_HOMEPAGE`: Set the homepage of the CAS account
+
+`LRS_ACTOR_ACCOUNT_CAS_IDENTIFIER`: Optionally set a param to set as the actor's unique key for the CAS account. Requires `CAS_ATTRIBUTES_TO_STORE` to be set when not using default setting. (uses CAS username by default)
+
+Restart server after making any changes to settings
+
 (Optional) Setting up Background Tasks
 ---------------------------
 

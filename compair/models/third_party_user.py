@@ -33,11 +33,11 @@ class ThirdPartyUser(DefaultTableMixin, WriteTrackingMixin):
 
     @property
     def params(self):
-        return json.loads(self._params)
+        return json.loads(self._params) if self._params else None
 
     @params.setter
     def params(self, params):
-        self._params = json.dumps(params)
+        self._params = json.dumps(params) if params else None
 
     @classmethod
     def __declare_last__(cls):

@@ -1,17 +1,17 @@
-<p class="intro-text" ng-hide="example">Please note <strong>answers are not automatically saved</strong> as you type. However, you may manually save a draft of your answer below.</p>
+<p class="intro-text" ng-hide="comparison_example">Please note <strong>answers are not automatically saved</strong> as you type. However, you may manually save a draft of your answer below.</p>
 
 <form class="form" name="answerForm" ng-submit="answerSubmit()" novalidate confirm-form-exit form-type="answer">
     <fieldset>
-        <h2 ng-hide="example"><i class="fa fa-comments"></i> {{assignment.name}}</h2>
-        <div class="assignment-desc" mathjax hljs ng-bind-html="assignment.description" ng-hide="example"></div>
+        <h2 ng-hide="comparison_example"><i class="fa fa-comments"></i> {{assignment.name}}</h2>
+        <div class="assignment-desc" mathjax hljs ng-bind-html="assignment.description" ng-hide="comparison_example"></div>
 
         <!-- Attachment -->
-        <compair-pdf-inline label="See assignment details:" pdf="assignment.file" ng-hide="example">
+        <compair-pdf-inline label="See assignment details:" pdf="assignment.file" ng-hide="comparison_example">
         </compair-pdf-inline>
 
-        <hr ng-hide="example" />
+        <hr ng-hide="comparison_example" />
 
-        <div class="h3 text-center" ng-show="!canManageAssignment && showCountDown && example !== true">
+        <div class="h3 text-center" ng-show="!canManageAssignment && showCountDown && comparison_example !== true">
             <timer end-time="assignment.answer_end">
                 <span ng-show="minutes > 0 || seconds > 0" title="Official time remaining until deadline" class="bg-danger alert text-danger"><i class="glyphicon glyphicon-time"></i> {{minutes}} minutes {{seconds}} seconds left</span>
                 <span ng-show="minutes == 0 && seconds == 0" class="bg-danger alert text-danger"><i class="glyphicon glyphicon-time"></i> DEADLINE REACHED</span>
@@ -20,7 +20,7 @@
             <span class="h4">(Answer must be submitted before deadline to be accepted)</span>
         </div>
 
-        <div class="form-group" ng-if="canManageAssignment && showUserList && example !== true">
+        <div class="form-group" ng-if="canManageAssignment && showUserList && comparison_example !== true">
             <label for="user_id">Submit As</label>
             <select id="user_id" name="user_id" required
                     ng-model="answer.user_id" class="form-control" chosen width="'100%'" disable_search_threshold="8"

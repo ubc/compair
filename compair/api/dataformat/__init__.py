@@ -206,6 +206,7 @@ def get_file():
 
 def get_comparison(restrict_user=True, with_answers=True):
     ret = {
+        'id': fields.String(attribute="uuid"),
         'course_id': fields.String(attribute="course_uuid"),
         'assignment_id': fields.String(attribute="assignment_uuid"),
         'criterion_id': fields.String(attribute="criterion_uuid"),

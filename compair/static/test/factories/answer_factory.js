@@ -2,6 +2,7 @@ var objectAssign = require('object-assign');
 
 var answerTemplate = {
     "id": null,
+    "course_id": null,
     "assignment_id": null,
     "user_id": null,
     "content": null,
@@ -22,9 +23,10 @@ var answerTemplate = {
 
 function AnswerFactory() {};
 
-AnswerFactory.prototype.generateAnswer = function (id, assignment_id, user, parameters) {
+AnswerFactory.prototype.generateAnswer = function (id, course_id, assignment_id, user, parameters) {
     var newAnswer = objectAssign({}, answerTemplate, parameters);
     newAnswer.id = id;
+    newAnswer.course_id = course_id;
     newAnswer.assignment_id = assignment_id;
     newAnswer.user_id = user.id;
     newAnswer.user = {

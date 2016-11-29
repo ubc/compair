@@ -60,6 +60,9 @@ describe('course-module', function () {
         $httpBackend = $injector.get('$httpBackend');
         sessionRequestHandler = $httpBackend.when('GET', '/api/session').respond(mockSession);
         $httpBackend.when('GET', '/api/users/' + id).respond(mockUser);
+        $httpBackend.whenPOST(/\/api\/statements$/).respond(function(method, url, data, headers) {
+            return [200, { 'success':true }, {}];
+        });
     }));
 
     afterEach(function () {
@@ -68,9 +71,9 @@ describe('course-module', function () {
     });
 
     describe('CourseController', function () {
-        var $rootScope, createController, $location, $modal, $q;
+        var $rootScope, createController, $location, $modal, $q, xAPISettings;
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_, _xAPISettings_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
             $modal = _$modal_;
@@ -82,6 +85,9 @@ describe('course-module', function () {
                     $route: route || {}
                 });
             }
+            xAPISettings = _xAPISettings_;
+            xAPISettings.enabled = true;
+            xAPISettings.baseUrl = "https://localhost:8888/";
         }));
 
         it('should have correct initial states', function () {

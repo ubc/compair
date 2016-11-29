@@ -10,6 +10,10 @@ from compair.models import User, LTIUser, LTIResourceLink, LTIUserResourceLink, 
 
 login_api = Blueprint("login_api", __name__, url_prefix='/api')
 
+# events
+on_login_with_method = event.signal('USER_LOGGED_IN_WITH_METHOD')
+on_logout = event.signal('USER_LOGGED_OUT')
+
 @login_api.route('/login', methods=['POST'])
 def login():
     if not current_app.config.get('APP_LOGIN_ENABLED'):
@@ -29,7 +33,7 @@ def login():
     elif not user.verify_password(password):
         current_app.logger.debug("Login failed, invalid password for: " + username)
     else:
-        permissions = authenticate(user)
+        permissions = authenticate(user, login_method='ComPAIR Account')
 
         if sess.get('LTI') and sess.get('oauth_create_user_link'):
             lti_user = LTIUser.query.get_or_404(sess['lti_user'])
@@ -50,6 +54,11 @@ def login():
 @login_api.route('/logout', methods=['DELETE'])
 @login_required
 def logout():
+    on_logout.send(
+        current_app._get_current_object(),
+        event=on_logout.name,
+        user=current_user
+    )
     current_user.update_last_online()
     logout_user()  # flask-login delete user info
     url = ""
@@ -65,7 +74,6 @@ def logout():
         url = jsonify({'redirect': url_for('cas.logout')})
 
     sess.clear()
-
     return url
 
 
@@ -119,7 +127,7 @@ def auth_cas():
                 current_app.logger.debug("Login failed, invalid username for: " + username)
                 msg = 'You don\'t have access to this application.'
         else:
-            authenticate(thirdpartyuser.user)
+            authenticate(thirdpartyuser.user, login_method=thirdpartyuser.third_party_type.value)
             thirdpartyuser.params = additional_params
 
             if sess.get('LTI') and sess.get('oauth_create_user_link'):
@@ -143,13 +151,21 @@ def auth_cas():
     return redirect(url)
 
 
-def authenticate(user):
+def authenticate(user, login_method=None):
     # username valid, password valid, login successful
     # "remember me" functionality is available, do we want to implement?
     user.update_last_online()
     login_user(user) # flask-login store user info
+
     if user.username != None:
         current_app.logger.debug("Login successful for: " + user.username)
     else:
         current_app.logger.debug("Login successful for: user_id = " + str(user.id))
+
+    on_login_with_method.send(
+        current_app._get_current_object(),
+        event=on_login_with_method.name,
+        user=user,
+        login_method=login_method
+    )
     return get_logged_in_user_permissions()

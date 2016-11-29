@@ -75,16 +75,9 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @hybrid_property
     def criteria(self):
-        from . import Criterion, AssignmentCriterion
-        return Criterion.query \
-            .with_entities(Criterion) \
-            .join(AssignmentCriterion) \
-            .filter(and_(
-                Criterion.active == True,
-                AssignmentCriterion.active == True,
-                AssignmentCriterion.assignment_id == self.id
-            )) \
-            .all()
+        return [assignment_criterion.criterion \
+            for assignment_criterion in self.assignment_criteria \
+            if assignment_criterion.active and assignment_criterion.criterion.active]
 
     @hybrid_property
     def compared(self):

@@ -290,10 +290,8 @@ class SimpleAssignmentTestData(BasicTestData):
 class AssignmentCommentsTestData(SimpleAssignmentTestData):
     def __init__(self):
         SimpleAssignmentTestData.__init__(self)
-        self.student_ques_comment = self.create_assignment_comment(
-            self.get_authorized_student(), self.get_course(), self.get_assignments()[0])
-        self.instructor_ques_comment = self.create_assignment_comment(
-            self.get_authorized_instructor(), self.get_course(), self.get_assignments()[1])
+        self.student_ques_comment = self.create_assignment_comment(self.get_authorized_student(), self.get_assignments()[0])
+        self.instructor_ques_comment = self.create_assignment_comment(self.get_authorized_instructor(), self.get_assignments()[1])
 
     def get_instructor_assignment_comment(self):
         return self.instructor_ques_comment
@@ -301,7 +299,7 @@ class AssignmentCommentsTestData(SimpleAssignmentTestData):
     def get_student_assignment_comment(self):
         return self.student_ques_comment
 
-    def create_assignment_comment(self, user, course, assignment):
+    def create_assignment_comment(self, user, assignment):
         assignment_comment = AssignmentCommentFactory(
             assignment=assignment,
             user=user
@@ -551,8 +549,8 @@ class TestFixture:
                 "Number of answers({}) must be equal or smaller than number of students({}) "
                 "multiple by number of assignments({})".format(num_answers, len(self.students), len(self.assignments))
             )
-        for i in range(num_answers):
-            for assignment in self.assignments:
+        for assignment in self.assignments:
+            for i in range(num_answers):
                 answer = AnswerFactory(
                     assignment=assignment,
                     user=self.students[i % len(self.students)]
@@ -565,8 +563,8 @@ class TestFixture:
                         criterion=assignment.criteria[0],
                         score=random.random() * 5
                     )
-                db.session.commit()
                 self.answers.append(answer)
+        db.session.commit()
 
         return self
 
@@ -579,7 +577,7 @@ class TestFixture:
                         comparison.completed = True
                         comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
                         db.session.add(comparison)
-                    db.session.commit()
+        db.session.commit()
 
         return self
 

@@ -95,13 +95,13 @@ class UsersAPITests(ComPAIRAPITestCase):
         with self.login(self.data.get_authorized_student().username):
             expected = UserFactory.stub(system_role=SystemRole.student.value)
             rv = self.client.post(
-                url, data=json.dumps(expected.__dict__), content_type='application/json', record='unauthorized')
+                url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assert403(rv)
 
         with self.login(self.data.get_authorized_instructor().username):
             expected = UserFactory.stub(system_role=SystemRole.student.value)
             rv = self.client.post(
-                url, data=json.dumps(expected.__dict__), content_type='application/json', record='unauthorized')
+                url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assert403(rv)
 
         # only system admins can create users
@@ -111,7 +111,7 @@ class UsersAPITests(ComPAIRAPITestCase):
                 system_role=SystemRole.student.value,
                 username=self.data.get_authorized_student().username)
             rv = self.client.post(
-                url, data=json.dumps(expected.__dict__), content_type='application/json', record='duplicate_username')
+                url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assertStatus(rv, 409)
             self.assertEqual("This username already exists. Please pick another.", rv.json['error'])
 
@@ -126,7 +126,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             # test creating student
             expected = UserFactory.stub(system_role=SystemRole.student.value)
             rv = self.client.post(
-                url, data=json.dumps(expected.__dict__), content_type="application/json", record='create_student')
+                url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
 

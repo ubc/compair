@@ -53,6 +53,7 @@
                     pdf="answer1.file">
                 </compair-pdf-inline>
                 <!-- Flagging -->
+                <div ng-repeat="key in $root">{{key}}</div>
                 <a href="" class="btn btn-default btn-xs pull-right"
                     title="Flag as incomplete or inappropriate."
                     ng-class="{'btn-danger': answer1.flagged}"
@@ -119,6 +120,7 @@
                                         <input type="radio" class="hideRadio"
                                             name="answer{{answer1.id}}" required
                                             ng-model="comparison.winner_id"
+                                            ng-change="trackComparisonWinner(comparison)"
                                             ng-value="answer1.id">
                                         Answer {{firstAnsNum}}
                                     </label>
@@ -127,6 +129,7 @@
                                         <input type="radio" class="hideRadio"
                                             name="answer{{answer2.id}}" required
                                             ng-model="comparison.winner_id"
+                                            ng-change="trackComparisonWinner(comparison)"
                                             ng-value="answer2.id">
                                         Answer {{secondAnsNum}}
                                     </label>
@@ -152,7 +155,7 @@
                         <i class="fa fa-arrow-down"></i>
                     </label>
                     <textarea
-                        ng-model="answer1.comment.content" rows="8" ckeditor="editorOptions" required>
+                        ng-model="answer1.comment.content" rows="8" ckeditor="editor1Options" required>
                     </textarea>
                 </div>
                 <div class="col-md-6">
@@ -161,11 +164,10 @@
                         <i class="fa fa-arrow-down"></i>
                     </label>
                     <textarea
-                        ng-model="answer2.comment.content" rows="8" ckeditor="editorOptions" required>
+                        ng-model="answer2.comment.content" rows="8" ckeditor="editor2Options" required>
                     </textarea>
                 </div>
             </div>
-
         </div>
 
         <div class="form-group sub-step text-center">

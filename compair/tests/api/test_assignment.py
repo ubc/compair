@@ -982,6 +982,7 @@ class AssignmentCourseGradeUpdateAPITests(ComPAIRAPITestCase):
     def test_delete(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         # add dumby Assignment
         self.fixtures.add_assignments(num_assignments=1)
+        db.session.commit()
         assignment = self.fixtures.assignments.pop()
         url = self.url + '/' + assignment.uuid
         self.fixtures.course.calculate_grades()

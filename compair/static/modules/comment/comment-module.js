@@ -8,6 +8,7 @@ var module = angular.module('ubc.ctlt.compair.comment',
         'localytics.directives',
         'ubc.ctlt.compair.answer',
         'ubc.ctlt.compair.classlist',
+        'ubc.ctlt.compair.common.xapi',
         'ubc.ctlt.compair.common.form',
         'ubc.ctlt.compair.common.mathjax',
         'ubc.ctlt.compair.common.highlightjs',
@@ -229,9 +230,9 @@ module.controller(
 module.controller(
     "ComparisonCommentController",
     ['$scope', '$log', '$routeParams', 'breadcrumbs', 'CourseResource', 'AssignmentResource',
-        'AnswerResource', 'AnswerCommentResource', 'GroupResource', 'Toaster',
+        'AnswerResource', 'AnswerCommentResource', 'GroupResource', 'Toaster', "xAPIStatementHelper",
     function ($scope, $log, $routeParams, breadcrumbs, CourseResource, AssignmentResource,
-        AnswerResource, AnswerCommentResource, GroupResource, Toaster)
+        AnswerResource, AnswerCommentResource, GroupResource, Toaster, xAPIStatementHelper)
     {
         var courseId = $routeParams['courseId'];
         var assignmentId = $routeParams['assignmentId'];
@@ -300,6 +301,7 @@ module.controller(
             if (oldValue.author != newValue.author) {
                 $scope.listFilters.page = 1;
             }
+            xAPIStatementHelper.filtered_page($scope.listFilters);
             $scope.updateList();
         });
 

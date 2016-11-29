@@ -85,8 +85,10 @@ module.factory('LTI',
 module.controller("LTIController",
     ['$rootScope', '$scope', '$location', '$route', "$modal", 'breadcrumbs','Authorize',
      'CourseRole', 'Toaster', 'AuthenticationService', 'LTI', 'LTIResource', 'Session',
+     'xAPIStatementHelper',
     function($rootScope, $scope, $location, $route, $modal, breadcrumbs, Authorize,
-             CourseRole, Toaster, AuthenticationService, LTI, LTIResource, Session) {
+             CourseRole, Toaster, AuthenticationService, LTI, LTIResource, Session,
+             xAPIStatementHelper) {
         $scope.status = {};
 
         LTI.getStatus().then(function(status) {
@@ -115,7 +117,9 @@ module.controller("LTIController",
                         templateUrl: 'modules/course/course-select-partial.html',
                         scope: modalScope
                     });
-
+                    modalInstance.opened.then(function() {
+                        xAPIStatementHelper.opened_modal("Select Course");
+                    });
                     modalInstance.result.then(function (selectedCourseId) {
                         LTIResource.linkCourse({id: selectedCourseId}, {},
                             function(ret) {
@@ -127,9 +131,11 @@ module.controller("LTIController",
                                 Toaster.reqerror("LTI Course Linking Error", ret);
                             }
                         );
+                        xAPIStatementHelper.closed_modal("Select Course");
                     }, function () {
                         // modal dismissed, reload page to update status
                         $route.reload();
+                        xAPIStatementHelper.closed_modal("Select Course");
                     });
                 } else {
                     // student can't setup course, get out of here

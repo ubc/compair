@@ -5,7 +5,7 @@ from compair import db
 from compair.models import User, Comparison, Score, \
     LTIOutcome
 from compair.models.comparison import update_scores
-from test_compair import ComPAIRTestCase
+from compair.tests.test_compair import ComPAIRTestCase
 from compair.algorithms import ComparisonPair
 from compair.algorithms.score import calculate_score
 from data.fixtures.test_data import TestFixture, LTITestData

@@ -93,7 +93,7 @@
             },
 
             isLoggedIn: function() {
-                if (this._user) {
+                if (this._user && this._user.hasOwnProperty('id')) {
                     return true;
                 }
 

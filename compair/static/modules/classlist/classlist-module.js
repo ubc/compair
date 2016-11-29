@@ -7,6 +7,7 @@ var module = angular.module('ubc.ctlt.compair.classlist',
     [
         'ngResource',
         'ubc.ctlt.compair.attachment',
+        'ubc.ctlt.compair.common.xapi',
         'ubc.ctlt.compair.common.form',
         'ubc.ctlt.compair.common.interceptor',
         'ubc.ctlt.compair.course',
@@ -60,10 +61,10 @@ module.controller(
     'ClassViewController',
     ["$scope", "$log", "$routeParams", "$route", "ClassListResource", "CourseResource",
              "CourseRole", "GroupResource", "Toaster", "Session", "SaveAs", "LTIResource",
-             "UserResource", "Authorize", "$modal",
+             "UserResource", "Authorize", "$modal", "xAPIStatementHelper",
     function($scope, $log, $routeParams, $route, ClassListResource, CourseResource,
              CourseRole, GroupResource, Toaster, Session, SaveAs, LTIResource,
-             UserResource, Authorize, $modal)
+             UserResource, Authorize, $modal, xAPIStatementHelper)
     {
         $scope.course = {};
         $scope.classlist = [];
@@ -139,14 +140,19 @@ module.controller(
         $scope.course_roles = [CourseRole.student, CourseRole.teaching_assistant, CourseRole.instructor];
 
         $scope.addUsersToNewGroup = function() {
-            modalInstance = $modal.open({
+            var modalInstance = $modal.open({
                 animation: true,
                 controller: "AddGroupModalController",
-                templateUrl: 'modules/group/group-form-partial.html',
-            }).result.then(function (groupName) {
+                templateUrl: 'modules/group/group-form-partial.html'
+            })
+            modalInstance.opened.then(function() {
+                xAPIStatementHelper.opened_modal("Edit Group");
+            });
+            modalInstance.result.then(function (groupName) {
                 $scope.addUsersToGroup(groupName);
+                xAPIStatementHelper.closed_modal("Edit Group");
             }, function () {
-                //cancelled, do nothing
+                xAPIStatementHelper.closed_modal("Edit Group");
             });
         };
 
@@ -286,6 +292,13 @@ module.controller(
                 SaveAs.download(ret.content, 'classlist_'+$scope.course_name+'.csv', {type: "text/csv;charset=utf-8"});
             });
         };
+
+        $scope.updateTableOrderBy = function(predicate) {
+            $scope.reverse = $scope.predicate == predicate && !$scope.reverse;
+            $scope.predicate = predicate;
+            var orderBy = $scope.predicate + " " + ($scope.reverse ? "desc" : "asc");
+            xAPIStatementHelper.sorted_page_section("classlist table", orderBy);
+        }
     }
 ]);
 
