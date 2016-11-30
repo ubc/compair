@@ -379,8 +379,8 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             self.assertEqual(original_course.name, duplicate_course.name)
             self.assertEqual(self.expected['year'], duplicate_course.year)
             self.assertEqual(self.expected['term'], duplicate_course.term)
-            self.assertEqual(self.expected['start_date'], rv.json['start_date']+'Z')
-            self.assertEqual(self.expected['end_date'], rv.json['end_date']+'Z')
+            self.assertEqual(self.expected['start_date'].replace('Z', ''), rv.json['start_date'].replace('+00:00', ''))
+            self.assertEqual(self.expected['end_date'].replace('Z', ''), rv.json['end_date'].replace('+00:00', ''))
             self.assertEqual(original_course.description, duplicate_course.description)
 
             # verify instructor added to duplicate course

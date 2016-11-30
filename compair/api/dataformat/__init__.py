@@ -1,5 +1,9 @@
 # Specify what columns should be sent out by the API
 from flask_restful import fields
+import pytz
+
+def replace_tzinfo(datetime):
+    return datetime.replace(tzinfo=pytz.utc) if datetime else None
 
 class UnwrapSystemRole(fields.Raw):
     def format(self, system_role):
@@ -33,8 +37,8 @@ def get_user(restrict_user=True):
         'id': fields.String(attribute="uuid"),
         'displayname': fields.String,
         'avatar': fields.String,
-        'last_online': fields.DateTime(dt_format='iso8601'),
-        'created': fields.DateTime(dt_format='iso8601')
+        'last_online': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.last_online)),
+        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
     if restrict_user:
         return restricted
@@ -45,7 +49,7 @@ def get_user(restrict_user=True):
         'lastname': fields.String,
         'email': fields.String,
         'fullname': fields.String,
-        'modified': fields.DateTime(dt_format='iso8601'),
+        'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
         'system_role': UnwrapSystemRole(attribute='system_role'),
         'uses_compair_login': fields.Boolean
     }
@@ -68,14 +72,14 @@ def get_course(include_details=True):
         'year': fields.Integer,
         'term': fields.String,
         'description': fields.String,
-        'start_date': fields.DateTime(dt_format='iso8601'),
-        'end_date': fields.DateTime(dt_format='iso8601'),
+        'start_date': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.start_date)),
+        'end_date': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.end_date)),
         'available': fields.Boolean,
         'lti_linked': fields.Boolean,
         'assignment_count': fields.Integer,
         'student_count': fields.Integer,
-        'modified': fields.DateTime(dt_format='iso8601'),
-        'created': fields.DateTime(dt_format='iso8601')
+        'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
+        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
 
 def get_criterion():
@@ -87,8 +91,8 @@ def get_criterion():
         'public': fields.Boolean,
         'default': fields.Boolean,
         'compared': fields.Boolean,
-        'modified': fields.DateTime(dt_format='iso8601'),
-        'created': fields.DateTime(dt_format='iso8601')
+        'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
+        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
 
 
@@ -107,10 +111,10 @@ def get_assignment(restrict_user=True):
         'criteria': fields.List(fields.Nested(get_criterion())),
         'file': fields.Nested(get_file(), allow_null=True),
 
-        'answer_start': fields.DateTime(dt_format='iso8601'),
-        'answer_end': fields.DateTime(dt_format='iso8601'),
-        'compare_start': fields.DateTime(dt_format='iso8601', default=None),
-        'compare_end': fields.DateTime(dt_format='iso8601', default=None),
+        'answer_start': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.answer_start)),
+        'answer_end': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.answer_end)),
+        'compare_start': fields.DateTime(dt_format='iso8601', default=None, attribute=lambda x: replace_tzinfo(x.compare_start)),
+        'compare_end': fields.DateTime(dt_format='iso8601', default=None, attribute=lambda x: replace_tzinfo(x.compare_end)),
         'available': fields.Boolean,
 
         'students_can_reply': fields.Boolean,
@@ -138,8 +142,8 @@ def get_assignment(restrict_user=True):
         'comparison_grade_weight': fields.Integer,
         'self_evaluation_grade_weight': fields.Integer,
 
-        'modified': fields.DateTime(dt_format='iso8601'),
-        'created': fields.DateTime(dt_format='iso8601')
+        'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
+        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
 
 def get_answer(restrict_user=True):
@@ -163,7 +167,7 @@ def get_answer(restrict_user=True):
         'public_comment_count': fields.Integer,
 
         'user': get_partial_user(restrict_user),
-        'created': fields.DateTime(dt_format='iso8601')
+        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
 
 
@@ -176,7 +180,7 @@ def get_assignment_comment(restrict_user=True):
         'content': fields.String,
 
         'user': get_partial_user(restrict_user),
-        'created': fields.DateTime(dt_format='iso8601'),
+        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
 
 
@@ -192,7 +196,7 @@ def get_answer_comment(restrict_user=True):
         'draft': fields.Boolean,
 
         'user': get_partial_user(restrict_user),
-        'created': fields.DateTime(dt_format='iso8601'),
+        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
 
 
@@ -219,7 +223,7 @@ def get_comparison(restrict_user=True, with_answers=True):
         'criterion': fields.Nested(get_criterion()),
 
         'user': get_partial_user(restrict_user),
-        'created': fields.DateTime(dt_format='iso8601')
+        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
 
     if with_answers:
@@ -237,8 +241,8 @@ def get_comparison_example(with_answers=True):
         'assignment_id': fields.String(attribute="assignment_uuid"),
         'answer1_id': fields.String(attribute="answer1_uuid"),
         'answer2_id': fields.String(attribute="answer2_uuid"),
-        'modified': fields.DateTime(dt_format='iso8601'),
-        'created': fields.DateTime(dt_format='iso8601')
+        'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
+        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
 
     if with_answers:
@@ -268,8 +272,7 @@ def get_comparison_set(restrict_user=True):
 
         'answer1_feedback': fields.List(fields.Nested(get_answer_comment(restrict_user))),
         'answer2_feedback': fields.List(fields.Nested(get_answer_comment(restrict_user))),
-        'self_evaluation': fields.List(fields.Nested(get_answer_comment(restrict_user))),
-        'created': fields.DateTime(dt_format='iso8601')
+        'self_evaluation': fields.List(fields.Nested(get_answer_comment(restrict_user)))
     }
 
 def get_import_users_results(restrict_user=True):
