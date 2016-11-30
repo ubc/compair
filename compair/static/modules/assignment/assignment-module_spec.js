@@ -873,6 +873,7 @@ describe('assignment-module', function () {
                     group: null,
                     author: null,
                     top: null,
+                    anonymous: null,
                     orderBy: null
                 });
 
