@@ -54,6 +54,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
             actual_answers = rv.json['objects']
             expected_answers = Answer.query \
                 .filter_by(active=True, draft=False, assignment_id=self.fixtures.assignment.id) \
+                .filter(~Answer.id.in_([a.id for a in self.fixtures.dropped_answers])) \
                 .order_by(Answer.created.desc()) \
                 .paginate(1, 20)
             for i, expected in enumerate(expected_answers.items):
@@ -74,6 +75,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
             actual_answers = rv.json['objects']
             expected_answers = Answer.query \
                 .filter_by(active=True, draft=False, assignment_id=self.fixtures.assignment.id) \
+                .filter(~Answer.id.in_([a.id for a in self.fixtures.dropped_answers])) \
                 .order_by(Answer.created.desc()) \
                 .paginate(2, 20)
             for i, expected in enumerate(expected_answers.items):
@@ -211,9 +213,13 @@ class AnswersAPITests(ComPAIRAPITestCase):
             rv = self.client.get(self.base_url)
             self.assert200(rv)
             result = rv.json['objects']
+            user_uuids = [a['user_id'] for a in result]
             self.assertEqual(len(self.fixtures.answers), rv.json['total'])
             # first answer should be instructor answer
             self.assertEqual(self.fixtures.instructor.uuid, result[0]['user_id'])
+            # no dropped student answers should be included
+            for dropped_student in self.fixtures.dropped_students:
+                self.assertNotIn(dropped_student.uuid, user_uuids)
 
             # test data retrieve before answer period ended with non-privileged user
             self.fixtures.assignment.answer_end = datetime.datetime.now() + datetime.timedelta(days=2)

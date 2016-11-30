@@ -3,7 +3,7 @@ from flask import Blueprint, abort
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
-from sqlalchemy import func, or_, and_
+from sqlalchemy import func, or_, and_, desc
 from sqlalchemy.orm import joinedload, undefer_group
 from itertools import groupby
 from operator import attrgetter
@@ -103,27 +103,28 @@ class AnswerRootAPI(Resource):
             .options(joinedload('user')) \
             .options(joinedload('scores')) \
             .options(undefer_group('counts')) \
-            .filter_by(
-                assignment_id=assignment.id,
-                active=True,
-                practice=False,
-                draft=False
-            )
+            .join(UserCourse, and_(
+                Answer.user_id == UserCourse.user_id,
+                UserCourse.course_id == course.id
+            )) \
+            .add_columns(
+                UserCourse.course_role.__eq__(CourseRole.instructor).label("instructor_role"),
+                UserCourse.course_role.__eq__(CourseRole.teaching_assistant).label("ta_role")
+            ) \
+            .filter(and_(
+                Answer.assignment_id == assignment.id,
+                Answer.active == True,
+                Answer.practice == False,
+                Answer.draft == False,
+                UserCourse.course_role != CourseRole.dropped
+            )) \
+            .order_by(desc('instructor_role'), desc('ta_role'))
 
-        user_ids = []
         if params['author']:
             user = User.get_by_uuid_or_404(params['author'])
             query = query.filter(Answer.user_id == user.id)
-            user_ids.append(user.id)
         elif params['group']:
-            # get all user ids in the group
-            user_courses = UserCourse.query. \
-                filter_by(
-                    course_id=course.id,
-                    group_name=params['group']
-                ). \
-                all()
-            user_ids = [x.user_id for x in user_courses]
+            query = query.filter(UserCourse.group_name == params['group'])
 
         if params['ids']:
             query = query.filter(Answer.uuid.in_(params['ids'].split(',')))
@@ -131,31 +132,14 @@ class AnswerRootAPI(Resource):
         if params['top']:
             query = query.filter(Answer.top_answer == True)
 
-        # place instructor and TA's answer at the top of the list
-        inst_subquery = Answer.query \
-            .with_entities(Answer.id.label('inst_answer')) \
-            .join(UserCourse, Answer.user_id == UserCourse.user_id) \
-            .filter(and_(
-                UserCourse.course_id == course.id,
-                UserCourse.course_role == CourseRole.instructor
-            ))
-        ta_subquery = Answer.query \
-            .with_entities(Answer.id.label('ta_answer')) \
-            .join(UserCourse, Answer.user_id == UserCourse.user_id) \
-            .filter(and_(
-                UserCourse.course_id == course.id,
-                UserCourse.course_role == CourseRole.teaching_assistant
-            ))
-        query = query.order_by(Answer.id.in_(inst_subquery).desc(), Answer.id.in_(ta_subquery).desc())
-
-        if params['orderBy'] and len(user_ids) != 1:
+        if params['orderBy']:
             criterion = Criterion.get_active_by_uuid_or_404(params['orderBy'])
 
             # order answer ids by one criterion and pagination, in case there are multiple criteria in assignment
             # does not include answers without a score (Note: ta and instructor never have a score)
             query = query.join(Score) \
-                .filter(Score.criterion_id == criterion.id)
-            query = query.order_by(Score.score.desc(), Answer.created.desc())
+                .filter(Score.criterion_id == criterion.id) \
+                .order_by(Score.score.desc(), Answer.created.desc())
 
             # limit answers up to rank if rank_display_limit is set and current_user is restricted (student)
             if assignment.rank_display_limit and restrict_user:
@@ -164,17 +148,16 @@ class AnswerRootAPI(Resource):
 
                 # display answers with score >= score_for_rank
                 if score_for_rank != None:
-                    # will get all answer with a score greater than or eaqual to the score for a given rank
-                    # the '- 0.00001' fixes floating point presicion problems
+                    # will get all answer with a score greater than or equal to the score for a given rank
+                    # the '- 0.00001' fixes floating point precision problems
                     query = query.filter(Score.score >= score_for_rank - 0.00001)
 
         else:
             query = query.order_by(Answer.created.desc())
 
-        if user_ids:
-            query = query.filter(Answer.user_id.in_(user_ids))
-
         page = query.paginate(params['page'], params['perPage'])
+        # remove label entities from results
+        page.items = [answer for (answer, instructor_role, ta_role) in page.items]
 
         on_answer_list_get.send(
             self,
