@@ -308,12 +308,14 @@ module.controller(
     function ($rootScope, $scope, AssignmentResource, moment,
               Session, CourseResource, Toaster, UserResource) {
 
+        $scope.showAssignments = false;
         $scope.submitted = false;
         $scope.format = 'dd-MMMM-yyyy';
         $scope.originalCourse = typeof($scope.originalCourse) != 'undefined' ? $scope.originalCourse : {};
 
         $scope.setupDuplicateCourse = function() {
             $scope.duplicateCourse = {
+                name: $scope.originalCourse.name,
                 year: new Date().getFullYear(),
                 term: $scope.originalCourse.term,
                 date: {
@@ -360,7 +362,7 @@ module.controller(
 
         $scope.adjustDuplicateAssignmentDates = function(skipConfirm) {
             if (!skipConfirm) {
-                if(!confirm("All assignment answer and comparison dates you manually changed will be lost. Are you sure you?")) {
+                if(!confirm("Any assignment answer and comparison dates you manually changed will be overwritten. Is this okay?")) {
                     return;
                 }
             }
