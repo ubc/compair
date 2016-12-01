@@ -46,6 +46,7 @@ matrix:
 
 addons:
   sauce_connect: true
+  mariadb: '5.5'
 
 before_script:
   - if [ '$DB' = 'mysql' ]; then mysql -e 'create database IF NOT EXISTS compair;'; fi
@@ -54,8 +55,6 @@ before_script:
 before_install:
   - if [ "$DOCKER" != "true" ]; then nvm install 6.4; fi
   - if [ "$INTEGRATION_TEST" != "true" ]; then unset SAUCE_USERNAME && unset SAUCE_ACCESS_KEY; fi
-  # workaround for issue https://github.com/travis-ci/travis-ci/issues/4870
-  - if [ "$DB" = "mysql" ]; then sudo apt-get install mariadb-server; fi
   - if [ "$DOCKER" = "true" ]; then make docker-image; fi
 
 # command to install dependencies
