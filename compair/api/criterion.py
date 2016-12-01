@@ -35,23 +35,16 @@ on_criterion_create = event.signal('CRITERION_CREATE')
 class CriteriaAPI(Resource):
     @login_required
     def get(self):
-        if allow(MANAGE, Criterion):
-            # TODO: revisit at some point (might retrieve to much in the future)
-            criteria = Criterion.query \
-                .filter_by(active=True) \
-                .order_by(Criterion.public.desc(), Criterion.created) \
-                .all()
-        else:
-            criteria = Criterion.query \
-                .filter(or_(
-                    and_(
-                        Criterion.user_id == current_user.id,
-                        Criterion.default == True
-                    ),
-                    Criterion.public == True
-                )) \
-                .order_by(Criterion.public.desc(), Criterion.created) \
-                .all()
+        criteria = Criterion.query \
+            .filter(or_(
+                and_(
+                    Criterion.user_id == current_user.id,
+                    Criterion.default == True
+                ),
+                Criterion.public == True
+            )) \
+            .order_by(Criterion.public.desc(), Criterion.created) \
+            .all()
 
         on_criterion_list_get.send(
             self,

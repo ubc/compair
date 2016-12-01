@@ -172,7 +172,5 @@ class CriterionAPITests(ComPAIRAPITestCase):
             rv = self.client.get(criterion_api_url)
             self.assert200(rv)
             # return all
-            self.assertEqual(len(rv.json['objects']), 4)
+            self.assertEqual(len(rv.json['objects']), 1)
             self._verify_critera(self.data.get_default_criterion(), rv.json['objects'][0])
-            self._verify_critera(self.data.get_criterion(), rv.json['objects'][1])
-            self._verify_critera(self.data.get_secondary_criterion(), rv.json['objects'][2])
