@@ -174,15 +174,20 @@ class AssignmentIdAPI(Resource):
                     new_uuids.append(criterion_uuid)
 
             if len(new_uuids) > 0:
-                new_criteria = Criterion.query \
-                    .filter(Criterion.uuid.in_(new_uuids)) \
-                    .all()
+                new_criteria = Criterion.query.filter(Criterion.uuid.in_(new_uuids)).all()
                 for criterion in new_criteria:
-                    assignment_criterion = AssignmentCriterion(
-                        assignment_id=assignment.id,
-                        criterion_id=criterion.id
-                    )
-                    assignment.assignment_criteria.append(assignment_criterion)
+                    assignment.assignment_criteria.append(AssignmentCriterion(
+                        criterion=criterion
+                    ))
+
+        # ensure criteria are in order
+        for index, criterion_uuid in enumerate(criterion_uuids):
+            assignment_criterion = next(assignment_criterion \
+                for assignment_criterion in assignment.assignment_criteria \
+                if assignment_criterion.criterion_uuid == criterion_uuid)
+
+            assignment.assignment_criteria.remove(assignment_criterion)
+            assignment.assignment_criteria.insert(index, assignment_criterion)
 
         model_changes = get_model_changes(assignment)
 
@@ -195,6 +200,9 @@ class AssignmentIdAPI(Resource):
             data=model_changes)
 
         db.session.commit()
+
+        # need to reorder after update
+        assignment.assignment_criteria.reorder()
 
         # update assignment and course grades if needed
         if model_changes and (model_changes.get('answer_grade_weight') or
@@ -337,15 +345,18 @@ class AssignmentRootAPI(Resource):
             msg = 'You select an invalid criterion'
             return {"error": msg}, 400
 
-        for criterion in criteria:
-            assignment_criterion = AssignmentCriterion(
-                assignment=new_assignment,
+        # add criteria to assignment in order
+        for criterion_uuid in criterion_uuids:
+            criterion = next(criterion for criterion in criteria if criterion.uuid == criterion_uuid)
+            new_assignment.assignment_criteria.append(AssignmentCriterion(
                 criterion=criterion
-            )
-            db.session.add(assignment_criterion)
+            ))
 
         db.session.add(new_assignment)
         db.session.commit()
+
+        # need to reorder after insert
+        new_assignment.assignment_criteria.reorder()
 
         # update course grades
         course.calculate_grades()

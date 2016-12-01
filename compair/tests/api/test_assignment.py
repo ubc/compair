@@ -66,6 +66,13 @@ class AssignmentAPITests(ComPAIRAPITestCase):
 
     def test_create_assignment(self):
         criterion2 = self.data.create_criterion(self.data.get_authorized_instructor())
+        criterion3 = self.data.create_criterion(self.data.get_authorized_instructor())
+        assignment_criteria = [
+            { 'id': self.data.get_default_criterion().uuid },
+            { 'id': criterion2.uuid },
+            { 'id': criterion3.uuid }
+        ]
+
         now = datetime.datetime.utcnow()
         assignment_expected = {
             'name': 'this is a new assignment\'s name',
@@ -75,10 +82,7 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             'number_of_comparisons': 3,
             'students_can_reply': False,
             'enable_self_evaluation': False,
-            'criteria': [
-                { 'id': self.data.get_default_criterion().uuid },
-                { 'id': criterion2.uuid }
-            ],
+            'criteria': assignment_criteria,
             'pairing_algorithm': PairingAlgorithm.random.value,
             'rank_display_limit': 20,
             'answer_grade_weight': 1,
@@ -86,32 +90,20 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             'self_evaluation_grade_weight': 1
         }
         # Test login required
-        rv = self.client.post(
-            self.url,
-            data=json.dumps(assignment_expected),
-            content_type='application/json')
+        rv = self.client.post(self.url, data=json.dumps(assignment_expected), content_type='application/json')
         self.assert401(rv)
 
         # Test unauthorized user
         with self.login(self.data.get_unauthorized_instructor().username):
-            rv = self.client.post(
-                self.url,
-                data=json.dumps(assignment_expected),
-                content_type='application/json')
+            rv = self.client.post(self.url, data=json.dumps(assignment_expected), content_type='application/json')
             self.assert403(rv)
 
         with self.login(self.data.get_unauthorized_student().username):
-            rv = self.client.post(
-                self.url,
-                data=json.dumps(assignment_expected),
-                content_type='application/json')
+            rv = self.client.post(self.url, data=json.dumps(assignment_expected), content_type='application/json')
             self.assert403(rv)
 
         with self.login(self.data.get_authorized_student().username):  # student post assignments not implemented
-            rv = self.client.post(
-                self.url,
-                data=json.dumps(assignment_expected),
-                content_type='application/json')
+            rv = self.client.post(self.url, data=json.dumps(assignment_expected), content_type='application/json')
             self.assert403(rv)
 
         with self.login(self.data.get_authorized_instructor().username):
@@ -139,10 +131,7 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             self.assert400(rv)
 
             # Test actual creation
-            rv = self.client.post(
-                self.url,
-                data=json.dumps(assignment_expected),
-                content_type='application/json')
+            rv = self.client.post(self.url, data=json.dumps(assignment_expected), content_type='application/json')
             self.assert200(rv)
             self.assertEqual(
                 assignment_expected['name'], rv.json['name'],
@@ -152,9 +141,7 @@ class AssignmentAPITests(ComPAIRAPITestCase):
                 "assignment create did not return the same description!")
             self.assertEqual(assignment_expected['pairing_algorithm'], rv.json['pairing_algorithm'])
             self.assertEqual(assignment_expected['rank_display_limit'], rv.json['rank_display_limit'])
-            self.assertEqual(len(rv.json['criteria']), 2)
-            self.assertIn(rv.json['criteria'][0]['id'], [self.data.get_default_criterion().uuid, criterion2.uuid])
-            self.assertIn(rv.json['criteria'][1]['id'], [self.data.get_default_criterion().uuid, criterion2.uuid])
+            self.assertEqual(len(rv.json['criteria']), 3)
 
             # Test getting the assignment again
             rv = self.client.get(self.url + '/' + str(rv.json['id']))
@@ -167,11 +154,38 @@ class AssignmentAPITests(ComPAIRAPITestCase):
                 "assignment create did not save description properly!")
             self.assertEqual(assignment_expected['pairing_algorithm'], rv.json['pairing_algorithm'])
             self.assertEqual(assignment_expected['rank_display_limit'], rv.json['rank_display_limit'])
-            self.assertEqual(len(rv.json['criteria']), 2)
-            self.assertIn(rv.json['criteria'][0]['id'], [self.data.get_default_criterion().uuid, criterion2.uuid])
-            self.assertIn(rv.json['criteria'][1]['id'], [self.data.get_default_criterion().uuid, criterion2.uuid])
+
+            # test criterion order
+            rv = self.client.post(self.url, data=json.dumps(assignment_expected), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(len(assignment_criteria), len(rv.json['criteria']))
+            # ensure assignment criterion are in correct order
+            for index, criterion in enumerate(assignment_criteria):
+                self.assertEqual(criterion['id'], rv.json['criteria'][index]['id'])
+
+            # test reverse order
+            assignment_criteria = [
+                { 'id': criterion3.uuid },
+                { 'id': criterion2.uuid },
+                { 'id': self.data.get_default_criterion().uuid }
+            ]
+            assignment_expected['criteria'] = assignment_criteria
+
+            rv = self.client.post(self.url, data=json.dumps(assignment_expected), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(len(assignment_criteria), len(rv.json['criteria']))
+            for index, criterion in enumerate(assignment_criteria):
+                self.assertEqual(criterion['id'], rv.json['criteria'][index]['id'])
 
     def test_edit_assignment(self):
+        criterion2 = self.data.create_criterion(self.data.get_authorized_instructor())
+        criterion3 = self.data.create_criterion(self.data.get_authorized_instructor())
+        assignment_criteria = [
+            { 'id': self.data.get_default_criterion().uuid },
+            { 'id': criterion2.uuid },
+            { 'id': criterion3.uuid }
+        ]
+
         assignment = self.data.get_assignments()[0]
         url = self.url + '/' + assignment.uuid
         expected = {
@@ -183,9 +197,7 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             'number_of_comparisons': assignment.number_of_comparisons,
             'students_can_reply': assignment.students_can_reply,
             'enable_self_evaluation': assignment.enable_self_evaluation,
-            'criteria': [
-                { 'id': self.data.get_default_criterion().uuid }
-            ],
+            'criteria': assignment_criteria,
             'pairing_algorithm': PairingAlgorithm.adaptive.value,
             'rank_display_limit': 10,
             'answer_grade_weight': 2,
@@ -246,6 +258,28 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self._verify_assignment(assignment, rv.json)
 
+            # test criterion order
+            rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(len(assignment_criteria), len(rv.json['criteria']))
+            for index, criterion in enumerate(assignment_criteria):
+                self.assertEqual(criterion['id'], rv.json['criteria'][index]['id'])
+
+            # test reverse order
+            assignment_criteria = [
+                { 'id': criterion3.uuid },
+                { 'id': criterion2.uuid },
+                { 'id': self.data.get_default_criterion().uuid }
+            ]
+            expected['criteria'] = assignment_criteria
+
+            rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(len(assignment_criteria), len(rv.json['criteria']))
+            for index, criterion in enumerate(assignment_criteria):
+                self.assertEqual(criterion['id'], rv.json['criteria'][index]['id'])
+
+
         with self.login(self.data.get_authorized_ta().username):
             # test edit by user who can manage posts (TA)
             ta_expected = {
@@ -258,7 +292,9 @@ class AssignmentAPITests(ComPAIRAPITestCase):
                 'students_can_reply': assignment.students_can_reply,
                 'enable_self_evaluation': assignment.enable_self_evaluation,
                 'criteria': [
-                    { 'id': self.data.get_default_criterion().uuid }
+                    { 'id': self.data.get_default_criterion().uuid },
+                    { 'id': criterion2.uuid },
+                    { 'id': criterion3.uuid }
                 ],
                 'pairing_algorithm': PairingAlgorithm.random.value,
                 'rank_display_limit': 20,
