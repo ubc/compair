@@ -64,9 +64,9 @@
             </div>
         </div>
     </fieldset>
-    
+
     <div ng-class="{'text-center': !showAssignments}">
-        <a class="btn btn-primary btn-lg" value="Next" ng-click="showAssignments=!showAssignments; adjustDuplicateAssignmentDates(true)"
+        <a class="btn btn-primary btn-lg" value="Next" ng-click="showAssignments=!showAssignments; adjustDuplicateAssignmentDates()"
             ng-disabled="duplicateCourseForm.$invalid" ng-show="!showAssignments">Next &raquo;</a>
         <br ng-show="!showAssignments" /><br ng-show="!showAssignments" />
         <a class="btn btn-default btn-md" value="Next" ng-click="showAssignments=!showAssignments"
@@ -75,13 +75,13 @@
 
     <fieldset ng-show="showAssignments">
         <legend>Assignment Dates</legend>
-        
+
         <div class="instructional-text">
             <p>
                 You are <strong>duplicating {{duplicateAssignments.length}} assignments</strong> with this course. You can update the assignment dates manually in bulk below or update them after duplication by editing each individual assignment.
             </p>
         </div>
-        
+
         <!-- Assignments List -->
         <div ng-show="duplicateAssignments.length" class="each-assignment" ng-class="{'first-child': $first}"
             ng-repeat="assignment in duplicateAssignments | orderBy:'':true">

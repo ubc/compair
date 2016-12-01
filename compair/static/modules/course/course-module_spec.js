@@ -579,7 +579,7 @@ describe('course-module', function () {
                             day.setDate(startOfWeek.getDate() + dayIndex);
 
                             $rootScope.duplicateCourse.date.course_start.date = day;
-                            $rootScope.adjustDuplicateAssignmentDates(true);
+                            $rootScope.adjustDuplicateAssignmentDates();
 
                             // check assignment 0 dates
                             expectedDay = new Date(startOfWeek);

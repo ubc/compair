@@ -266,6 +266,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
     def test_duplicate_course_simple(self):
         url = '/api/courses/' + self.data.get_course().uuid + '/duplicate'
         expected = {
+            'name': 'duplicate course',
             'year': 2015,
             'term': 'Winter',
             'start_date': None,
@@ -306,7 +307,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
 
             # verify course duplicated correctly
             self.assertNotEqual(original_course.uuid, rv.json['id'])
-            self.assertEqual(original_course.name, rv.json['name'])
+            self.assertEqual(expected['name'], rv.json['name'])
             self.assertEqual(expected['year'], rv.json['year'])
             self.assertEqual(expected['term'], rv.json['term'])
             self.assertEqual(expected['start_date'], rv.json['start_date'])
@@ -337,6 +338,7 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
 
         self.date_delta = datetime.timedelta(days=180)
         self.expected = {
+            'name': 'duplicate course',
             'year': 2015,
             'term': 'Winter',
             'start_date': (self.course.start_date + self.date_delta).isoformat() + 'Z',
@@ -376,7 +378,7 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             # verify course duplicated correctly
             self.assertNotEqual(original_course.id, duplicate_course.id)
             self.assertNotEqual(original_course.uuid, duplicate_course.uuid)
-            self.assertEqual(original_course.name, duplicate_course.name)
+            self.assertEqual(self.expected['name'], duplicate_course.name)
             self.assertEqual(self.expected['year'], duplicate_course.year)
             self.assertEqual(self.expected['term'], duplicate_course.term)
             self.assertEqual(self.expected['start_date'], rv.json['start_date']+'Z')

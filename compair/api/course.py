@@ -31,6 +31,7 @@ existing_course_parser.add_argument('id', type=str, required=True, help='Course 
 
 
 duplicate_course_parser = reqparse.RequestParser()
+duplicate_course_parser.add_argument('name', type=str, required=True, help='Course name is required.')
 duplicate_course_parser.add_argument('year', type=int, required=True, help='Course year is required.')
 duplicate_course_parser.add_argument('term', type=str, required=True, help='Course term/semester is required.')
 duplicate_course_parser.add_argument('start_date', type=str, default=None)
@@ -226,7 +227,7 @@ class CourseDuplicateAPI(Resource):
 
         # duplicate course
         duplicate_course = Course(
-            name=course.name,
+            name=params.get("name"),
             year=params.get("year"),
             term=params.get("term"),
             description=course.description,

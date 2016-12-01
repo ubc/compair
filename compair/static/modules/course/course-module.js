@@ -352,7 +352,7 @@ module.controller(
             AssignmentResource.get({'courseId': $scope.originalCourse.id}).$promise.then(
                 function (ret) {
                     $scope.originalAssignments = ret.objects;
-                    $scope.adjustDuplicateAssignmentDates(true);
+                    $scope.adjustDuplicateAssignmentDates();
                 },
                 function (ret) {
                     Toaster.reqerror("Unable to retrieve course assignments: " + $scope.originalCourse.id, ret);
@@ -360,12 +360,7 @@ module.controller(
             );
         };
 
-        $scope.adjustDuplicateAssignmentDates = function(skipConfirm) {
-            if (!skipConfirm) {
-                if(!confirm("Any assignment answer and comparison dates you manually changed will be overwritten. Is this okay?")) {
-                    return;
-                }
-            }
+        $scope.adjustDuplicateAssignmentDates = function() {
             // startPoint is original course start_date if set
             // if not set, then it is the earliest assignment answer start date
             // duplicated assignment dates will moved around based on this date and the original assignments dates
