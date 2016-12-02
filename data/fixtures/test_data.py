@@ -499,9 +499,11 @@ class TestFixture:
         self.course = self.assignment = None
         self.instructor = self.ta = None
         self.students = []
+        self.dropped_students = []
         self.assignments = []
         self.comparison_examples = []
         self.answers = []
+        self.dropped_answers = []
         self.draft_answers = []
         self.groups = []
         self.unauthorized_instructor = UserFactory(system_role=SystemRole.instructor)
@@ -564,6 +566,13 @@ class TestFixture:
                         score=random.random() * 5
                     )
                 self.answers.append(answer)
+
+            for dropped_student in self.dropped_students:
+                answer = AnswerFactory(
+                    assignment=assignment,
+                    user=dropped_student
+                )
+                self.dropped_answers.append(answer)
         db.session.commit()
 
         return self
@@ -652,6 +661,7 @@ class TestFixture:
         # add dropped student in group
         dropped_student = UserFactory(system_role=SystemRole.student)
         self.enrol_user(dropped_student, self.course, CourseRole.dropped, "Group Dropped")
+        self.dropped_students.append(dropped_student)
 
         return self
 

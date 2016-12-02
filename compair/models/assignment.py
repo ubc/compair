@@ -5,7 +5,7 @@ import pytz
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import column_property
-from sqlalchemy import func, select, and_, or_
+from sqlalchemy import func, select, and_, or_, join
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_enum34 import EnumType
 
@@ -173,15 +173,19 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @classmethod
     def __declare_last__(cls):
+        from . import UserCourse, CourseRole
         super(cls, cls).__declare_last__()
 
         cls.answer_count = column_property(
             select([func.count(Answer.id)]).
+            select_from(join(Answer, UserCourse, UserCourse.user_id == Answer.user_id)).
             where(and_(
                 Answer.assignment_id == cls.id,
                 Answer.active == True,
                 Answer.draft == False,
-                Answer.practice == False
+                Answer.practice == False,
+                UserCourse.course_id == cls.course_id,
+                UserCourse.course_role != CourseRole.dropped
             )),
             deferred=True,
             group="counts"
@@ -189,12 +193,15 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
         cls.top_answer_count = column_property(
             select([func.count(Answer.id)]).
+            select_from(join(Answer, UserCourse, UserCourse.user_id == Answer.user_id)).
             where(and_(
                 Answer.assignment_id == cls.id,
                 Answer.active == True,
                 Answer.draft == False,
                 Answer.practice == False,
-                Answer.top_answer == True
+                Answer.top_answer == True,
+                UserCourse.course_id == cls.course_id,
+                UserCourse.course_role != CourseRole.dropped
             )),
             deferred=True,
             group="counts"
