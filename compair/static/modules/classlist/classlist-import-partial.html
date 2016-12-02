@@ -1,24 +1,10 @@
 <div ng-controller="ClassImportController">
 
     <h1>Import Users</h1>
-    <p class="intro-text"><strong>Create, enrol, or drop multiple users</strong> in this course at the same time by importing a CSV file with a full list of your course's users.</p>
-    <h2>Requirements</h2>
-    <p>Note the following:</p>
-    <ul class="li-spacing">
-        <li>This application only supports importing a file that uses the <strong>CSV (comma-separated values) format</strong>.</li>
-        <li>User information is expected in this order: <strong>Username, Student Number, First Name, Last Name, Email, Display Name, Password</strong> (examples below).</li>
-        <li><strong>Only usernames are required</strong>. All the other fields are optional. If a display name is <em>not</em> given, the user is assigned an anonymous display name default, e.g., "Student1234". If a password is <em>not</em> given, the default password is the username. All other empty fields are left blank.</li>
-        <li><strong>Usernames and student numbers must be unique</strong> in the application. Duplicates will be altered on import automatically.</li>
-        <li><strong>Each new upload should include the full list of users</strong> you want in the course. Any new users in an imported file will be enrolled in the course and any deleted users will be dropped from the course.</li>
-    </ul>
+    <p class="intro-text"><strong>Create, update, enrol, or drop multiple users</strong> in this course at the same time by importing a CSV (comma-separated values) file with a full list of your course's users. Any new users in an imported file will be enrolled in the course and any deleted users will be dropped from the course.</p>
     <div class="form-group">
         <fieldset>
             <legend>For {{course_name}}</legend>
-            <div class="form-group">
-                <label for="importFile" class="required-star">Choose CSV File</label>
-                <input type="file" nv-file-select uploader="uploader"
-                    id="importFile" ng-click="uploader.clearQueue()"/>
-            </div>
             <div class="form-group">
                 <label for="importType" class="required-star">What will students use to log in?</label>
                 <select class="form-control" ng-model="importType" name="importType"
@@ -26,12 +12,25 @@
                 </select>
                 <br />
                 <p><strong>With this setting:</strong></p>
-                <p ng-if="importType == null">
-                    Students will log in using a username and password specific to ComPAIR. You may specify any usernames in your file.
-                </p>
-                <p ng-if="importType == ThirdPartyAuthType.cas">
-                    Students will log in using their CWL. The usernames in your file must be the students' CWLs. Any passwords in your file will be ignored.
-                </p>
+                <ul class="li-spacing" ng-if="importType == null">
+                    <li>Students will log in using a new username and password specific to ComPAIR. You must send the username and password to each student.</li>
+                    <li>User information is expected in this order: <strong><span class="required-star">Username</span>, <span class="required-star">Password</span>, Student Number, First Name, Last Name, Email, Display Name, Group</strong></li>
+                    <li>Usernames and passwords are required. All other information is optional. Usernames and student numbers must also be unique in the application.</li>
+                    <li>To skip non-required information, simply leave a blank space between commas, e.g., to leave out first and last name:<br />
+                    "studentuser1, pass1234, 005678, , ,jane.doe@student.ca, display0001, Group 2</li>
+                </ul>
+                <ul class="li-spacing" ng-if="importType == ThirdPartyAuthType.cas">
+                    <li>Students will log in using their CWL. The usernames in your file must match the students' CWLs.</li>
+                    <li>User information is expected in this order: <strong><span class="required-star">Username</span>, Student Number, First Name, Last Name, Email, Display Name, Group</strong></li>
+                    <li>Usernames are required. All other information is optional. Usernames and student numbers must also be unique in the application.</li>
+                    <li>To skip non-required information, simply leave a blank space between commas, e.g., to leave out first and last name:<br />
+                    "studentuser1, 005678, , ,jane.doe@student.ca, display0001, Group 2</li>
+              </ul>
+            </div>
+            <div class="form-group">
+                <label for="importFile" class="required-star">Choose CSV File</label>
+                <input type="file" nv-file-select uploader="uploader"
+                    id="importFile" ng-click="uploader.clearQueue()"/>
             </div>
         </fieldset>
     </div>
@@ -42,15 +41,4 @@
         <i class="fa fa-spin fa-spinner"></i>
         &nbsp; Importing...
     </p>
-    <hr />
-    <h2>Formatting examples</h2>
-    <p>The data examples below show how to exclude non-required fields.</p>
-    <dl>
-        <dt>No Display Name or Password:</dt>
-            <dd>studentuser1, num123, Jack, Smith, jack.smith@student.ca, ,</dd>
-        <dt>No Display Name:</dt>
-            <dd>studentuser1, num123, Jack, Smith, jack.smith@student.ca, , password123</dd>
-        <dt>No First Name or Last Name:</dt>
-            <dd>studentuser1, num123, , , jack.smith@student.ca, display0001, password123</dd>
-    </dl>
 </div>
