@@ -8,6 +8,7 @@ from sqlalchemy.orm import column_property
 from sqlalchemy import func, select, and_, or_, join
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_enum34 import EnumType
+from sqlalchemy.ext.orderinglist import ordering_list
 
 from . import *
 
@@ -49,7 +50,8 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     # file via File Model
 
     # assignment many-to-many criterion with association assignment_criteria
-    assignment_criteria = db.relationship("AssignmentCriterion", back_populates="assignment")
+    assignment_criteria = db.relationship("AssignmentCriterion", back_populates="assignment",
+        order_by=AssignmentCriterion.position.asc(), collection_class=ordering_list('position', count_from=0))
 
     answers = db.relationship("Answer", backref="assignment", lazy="dynamic",
         order_by=Answer.created.desc())
