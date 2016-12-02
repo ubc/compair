@@ -761,7 +761,7 @@ module.controller("AssignmentViewController",
         $scope.updateAnswerList = function() {
             var params = angular.merge({'courseId': $scope.courseId, 'assignmentId': assignmentId}, $scope.answerFilters);
             $scope.answerFiltersName = $("#answers-filter option:selected").text();
-            if (params.author == "top-picks" || params.author == "anonymous") {
+            if (params.author == "top-picks") {
                 delete params.author;
             }
             $scope.answers = AnswerResource.get(params, function(response) {
@@ -784,8 +784,19 @@ module.controller("AssignmentViewController",
 
         var filterWatcher = function(newValue, oldValue) {
             if (angular.equals(newValue, oldValue)) return;
+            if (oldValue.anonymous != newValue.anonymous) {
+                if ($scope.answerFilters.anonymous == true) {
+                    if ($scope.answerFilters.author != "top-picks" && $scope.answerFilters.author != '' && $scope.answerFilters.author != null) {
+                        $('#answers_filter_chosen .chosen-single span').hide();
+                    }
+                }
+                if ($scope.answerFilters.anonymous == false) {
+                    $('#answers_filter_chosen .chosen-single span').show();
+                }
+                return;
+            }
             if (oldValue.group != newValue.group) {
-                if ($scope.answerFilters.author != "top-picks" && $scope.answerFilters.author != "anonymous") {
+                if ($scope.answerFilters.author != "top-picks") {
                     $scope.answerFilters.author = null;
                 }
                 if ($scope.answerFilters.group == null) {
@@ -804,13 +815,8 @@ module.controller("AssignmentViewController",
             }
             if (oldValue.author != newValue.author) {
                 $scope.answerFilters.top = null;
-                $scope.answerFilters.anonymous = null;
                 if ($scope.answerFilters.author == "top-picks") {
                     $scope.answerFilters.top = true;
-                    $scope.answerFilters.orderBy = null;
-                }
-                if ($scope.answerFilters.author == "anonymous") {
-                    $scope.answerFilters.anonymous = true;
                     $scope.answerFilters.orderBy = null;
                 }
                 $scope.answerFilters.page = 1;
@@ -818,9 +824,15 @@ module.controller("AssignmentViewController",
             if (oldValue.top != newValue.top) {
                 $scope.answerFilters.page = 1;
             }
-            if (oldValue.anonymous != newValue.anonymous) {
-                $scope.answerFilters.page = 1;
+            
+            if ($scope.answerFilters.anonymous == true) {
+                if ($scope.answerFilters.author != "top-picks" && $scope.answerFilters.author != '') {
+                    $('#answers_filter_chosen .chosen-single span').hide();
+                } else {
+                    $('#answers_filter_chosen .chosen-single span').show();
+                }
             }
+
             xAPIStatementHelper.filtered_page_section(tab+" tab", $scope.answerFilters);
 
             $scope.updateAnswerList();
