@@ -37,7 +37,7 @@ var module = angular.module('ubc.ctlt.compair.course',
         'ubc.ctlt.compair.comparison',
         'ubc.ctlt.compair.assignment',
         'ubc.ctlt.compair.common.highlightjs',
-        'ubc.ctlt.compair.common.pdf',
+        'ubc.ctlt.compair.common.attachment',
         'ubc.ctlt.compair.toaster'
     ]
 );
@@ -197,9 +197,9 @@ module.controller(
 
 module.controller(
     'CourseSelectModalController',
-    ["$rootScope", "$scope", "$modalInstance", "AssignmentResource",
+    ["$rootScope", "$scope", "$uibModalInstance", "AssignmentResource",
      "Session", "Authorize", "CourseResource", "Toaster", "UserResource", "LTI", "xAPIStatementHelper",
-    function ($rootScope, $scope, $modalInstance, AssignmentResource,
+    function ($rootScope, $scope, $uibModalInstance, AssignmentResource,
               Session, Authorize, CourseResource, Toaster, UserResource, LTI, xAPIStatementHelper) {
 
         $scope.submitted = false;
@@ -212,7 +212,7 @@ module.controller(
         $scope.originalCourse = {};
 
         $scope.selectCourse = function(courseId) {
-            $modalInstance.close(courseId);
+            $uibModalInstance.close(courseId);
         };
 
         $scope.showDuplicateForm = false;

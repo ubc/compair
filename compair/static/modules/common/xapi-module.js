@@ -272,7 +272,7 @@ module.service('xAPI',
                 return xAPISettings.baseUrl + "app/xapi/";
             },
             _attachmentUrl: function() {
-                return xAPISettings.baseUrl + "app/pdf/";
+                return xAPISettings.baseUrl + "app/attachment/";
             },
             criterion: function(criterion_id) {
                 return _this._resourceIRI._appUrl() + "criterion/"+criterion_id;

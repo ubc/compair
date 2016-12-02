@@ -9,8 +9,7 @@
         <div class="assignmentmathjax assignment-desc" mathjax hljs ng-bind-html="assignment.description"></div>
 
         <!-- Assignment Attachment -->
-        <compair-pdf-inline label="See assignment details:" pdf="assignment.file">
-        </compair-pdf-inline>
+        <compair-attachment-inline label="See assignment details:" attachment="assignment.file"></compair-attachment-inline>
 
         <!-- Assignment Answer/Comparison Periods -->
         <div ng-show="canManageAssignment">
@@ -231,9 +230,7 @@
                     <div class="content instructor-answer">
                         <div mathjax hljs ng-bind-html="answer.content"></div>
                         <!-- Instructor Attachment -->
-                        <compair-pdf-inline label="See assignment details:"
-                            pdf="answer.file">
-                        </compair-pdf-inline>
+                        <compair-attachment-inline label="See answer details:" attachment="answer.file"></compair-attachment-inline>
                     </div>
 
                     <p class="pull-right">
@@ -278,9 +275,7 @@
                     <div class="content {{answer.id}}" get-height>
                         <div mathjax hljs ng-bind-html="answer.content"></div>
                         <!-- Student Attachment -->
-                        <compair-pdf-inline label="See answer details:"
-                            pdf="answer.file" ng-click="revealAnswer(answer)">
-                        </compair-pdf-inline>
+                        <compair-attachment-inline label="See answer details:" attachment="answer.file" ng-click="revealAnswer(answer)"></compair-attachment-inline>
                     </div>
                     <!-- Student Answer Read More Button (not used for instructor answers) -->
                     <p ng-show="showReadMore" class="read-more" ng-click="revealAnswer(answer)"><a href="" class="btn btn-sm btn-default">Read More...</a></p>
@@ -424,9 +419,9 @@
                     </div>
 
                     <!-- Student Attachment -->
-                    <compair-pdf-inline label="See answer details:"
-                        pdf="answer.file" ng-click="revealAnswer(answer)">
-                    </compair-pdf-inline>
+                    <compair-attachment-inline label="See answer details:"
+                        attachment="answer.file" ng-click="revealAnswer(answer)">
+                    </compair-attachment-inline>
                 </div>
 
                 <!-- Student Answer Replies Section -->

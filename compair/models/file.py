@@ -1,3 +1,5 @@
+import mimetypes
+
 # sqlalchemy
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -20,6 +22,16 @@ class File(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     assignments = db.relationship("Assignment", backref="file", lazy='dynamic')
     answers = db.relationship("Answer", backref="file", lazy='dynamic')
+
+    # hyprid and other functions
+    @hybrid_property
+    def extension(self):
+        return self.name.rsplit('.', 1)[1] if '.' in self.name else None
+
+    @hybrid_property
+    def mimetype(self):
+        mimetype, encoding = mimetypes.guess_type(self.name)
+        return mimetype
 
     @classmethod
     def __declare_last__(cls):

@@ -16,7 +16,7 @@ var module = angular.module('ubc.ctlt.compair.comparison',
         'ubc.ctlt.compair.common.form',
         'ubc.ctlt.compair.common.mathjax',
         'ubc.ctlt.compair.common.highlightjs',
-        'ubc.ctlt.compair.common.pdf',
+        'ubc.ctlt.compair.common.attachment',
         'ubc.ctlt.compair.session'
     ]
 );
@@ -169,6 +169,18 @@ module.controller(
                         Toaster.reqerror("Cannot Compare Answers", ret);
                     }
                     $scope.preventExit = false; //no work done. its safe to exit
+
+                    AssignmentResource.get({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
+                        function (ret)
+                        {
+                            $scope.assignment = ret;
+                            $scope.total = $scope.assignment.total_steps_required;
+                        },
+                        function (ret)
+                        {
+                            Toaster.reqerror("Assignment Not Loaded", ret);
+                        }
+                    );
                 }
             );
         });

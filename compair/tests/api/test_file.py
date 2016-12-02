@@ -35,7 +35,7 @@ class FileRetrieveTests(ComPAIRAPITestCase):
     def test_view_file(self):
         db_file = self.fixtures.add_file(self.fixtures.instructor)
         filename = db_file.name
-        url = self.base_url + '/pdf/' + filename
+        url = self.base_url + '/attachment/' + filename
 
         # test login required
         rv = self.client.get(url)
@@ -47,41 +47,90 @@ class FileRetrieveTests(ComPAIRAPITestCase):
         #     rv = self.client.get(url)
         #     self.assert403(rv)
 
-        # participation with valid instructor
+        # valid instructor
         with self.login(self.fixtures.instructor.username):
-            # invalid file name
-            rv = self.client.get(self.base_url + '/pdf/'+filename)
+            # invalid file name (db is not actually touched)
+            rv = self.client.get(self.base_url + '/attachment/'+filename)
             self.assert404(rv)
             self.assertEqual('invalid file name', str(rv.get_data(as_text=True)))
 
             with mock.patch('compair.api.os.path.exists', return_value=True):
                 with mock.patch('compair.api.send_file', return_value=make_response("OK")) as mock_send_file:
-                    self.client.get(url)
-                    mock_send_file.assert_called_once_with(
-                        '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                        mimetype='application/pdf'
-                    )
+                    # test all attachment types
+                    for extension in ['pdf','mp3','mp4','jpg','jpeg','png']:
+                        db_file = self.fixtures.add_file(self.fixtures.instructor, name="file_name."+extension)
+                        filename = db_file.name
+                        url = self.base_url + '/attachment/' + filename
+
+                        self.client.get(url)
+                        if extension == 'pdf':
+                            mock_send_file.assert_called_once_with(
+                                '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
+                                mimetype=db_file.mimetype,
+                                attachment_filename=None,
+                                as_attachment=False
+                            )
+                        else:
+                            mock_send_file.assert_called_once_with(
+                                '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
+                                mimetype=db_file.mimetype,
+                                attachment_filename=None,
+                                as_attachment=True
+                            )
+                        mock_send_file.reset_mock()
+
+                        # test overriding attachment filename
+                        override_name = "override."+db_file.extension
+                        self.client.get(url+"?name="+override_name)
+
+                        if extension == 'pdf':
+                            mock_send_file.assert_called_once_with(
+                                '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
+                                mimetype=db_file.mimetype,
+                                attachment_filename=None,
+                                as_attachment=False
+                            )
+                        else:
+                            mock_send_file.assert_called_once_with(
+                                '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
+                                mimetype=db_file.mimetype,
+                                attachment_filename=override_name,
+                                as_attachment=True
+                            )
+                        mock_send_file.reset_mock()
+
 
     def test_create_attachment(self):
         url = '/api/attachment'
-        filename = 'alais.pdf'
+        test_formats = [
+            ('pdf', 'application/pdf'),
+            ('mp3', 'audio/mpeg'),
+            ('mp4', 'video/mp4'),
+            ('jpg', 'image/jpeg'),
+            ('jpeg', 'image/jpeg')
+        ]
 
         # test login required
         uploaded_file = io.BytesIO(b"this is a test")
-        rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+        rv = self.client.post(url, data=dict(file=(uploaded_file, 'alias.pdf')))
         self.assert401(rv)
         uploaded_file.close()
 
         with self.login(self.fixtures.instructor.username):
-            uploaded_file = io.BytesIO(b"this is a test")
-            rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
-            self.assert200(rv)
-            uploaded_file.close()
+            for extension, mimetype in test_formats:
+                filename = 'alias.'+extension
 
-            actual_file = rv.json['file']
-            self.files_to_cleanup.append(actual_file['name'])
-            self.assertEqual(actual_file['id']+".pdf", actual_file['name'])
-            self.assertEqual(filename, actual_file['alias'])
+                uploaded_file = io.BytesIO(b"this is a test")
+                rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+                self.assert200(rv)
+                uploaded_file.close()
+
+                actual_file = rv.json['file']
+                self.files_to_cleanup.append(actual_file['name'])
+                self.assertEqual(actual_file['id']+"."+extension, actual_file['name'])
+                self.assertEqual(filename, actual_file['alias'])
+                self.assertEqual(extension, actual_file['extension'])
+                self.assertEqual(mimetype, actual_file['mimetype'])
 
     def test_delete_attachment(self):
         # test file not attached to answer or assignment

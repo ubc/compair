@@ -336,8 +336,7 @@ class AnswerIdAPI(Resource):
 
         file_uuid = params.get('file_id')
         if file_uuid:
-            uploaded_file = File.get_by_uuid_or_404(file_uuid)
-            answer.file_id = uploaded_file.id
+            answer.file = File.get_by_uuid_or_404(file_uuid)
         else:
             answer.file_id = None
 

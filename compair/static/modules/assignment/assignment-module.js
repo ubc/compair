@@ -18,13 +18,14 @@ var module = angular.module('ubc.ctlt.compair.assignment',
         'ubc.ctlt.compair.answer',
         'ubc.ctlt.compair.authentication',
         'ubc.ctlt.compair.authorization',
+        'ubc.ctlt.compair.attachment',
         'ubc.ctlt.compair.comment',
         'ubc.ctlt.compair.common.xapi',
         'ubc.ctlt.compair.common.form',
         'ubc.ctlt.compair.common.interceptor',
         'ubc.ctlt.compair.common.mathjax',
         'ubc.ctlt.compair.common.highlightjs',
-        'ubc.ctlt.compair.common.pdf',
+        'ubc.ctlt.compair.common.attachment',
         'ubc.ctlt.compair.criterion',
         'ubc.ctlt.compair.group',
         'ubc.ctlt.compair.comparison',
@@ -209,89 +210,6 @@ module.factory(
         return ret;
     }
 ]);
-
-/***** Services *****/
-module.service('attachService',
-        ["FileUploader", "$location", "Toaster",
-        function(FileUploader, $location, Toaster) {
-    var file = null;
-
-    var getUploader = function() {
-        var uploader = new FileUploader({
-            url: '/api/attachment',
-            queueLimit: 1,
-            autoUpload: true,
-            headers: {
-                Accept: 'application/json'
-            }
-        });
-
-        file = null;
-
-        uploader.onCompleteItem = onComplete();
-        uploader.onErrorItem = onError();
-
-        uploader.filters.push({
-            name: 'pdfFilter',
-            fn: function(item) {
-                var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
-                var valid = '|pdf|'.indexOf(type) !== -1;
-                if (!valid) {
-                    Toaster.error("File Type Error", "Only PDF files are accepted.")
-                }
-                return valid;
-            }
-        });
-
-        uploader.filters.push({
-            name: 'sizeFilter',
-            fn: function(item) {
-                var valid = item.size <= 26214400; // 1024 * 1024 * 25 -> max 25MB
-                if (!valid) {
-                    var size = item.size / 1048576; // convert to MB
-                    Toaster.error("File Size Error", "The file size is "+size.toFixed(2)+"MB. The maximum allowed is 25MB.")
-                }
-                return valid;
-            }
-        });
-
-        return uploader;
-    };
-
-    var onComplete = function() {
-        return function(fileItem, response) {
-            if (response) {
-                file = response['file'];
-            }
-        };
-    };
-
-    var onError = function() {
-        return function(fileItem, response, status) {
-            if (response == '413') {
-                Toaster.error("File Size Error", "The file is larger than 25MB. Please upload a smaller file.");
-            } else {
-                Toaster.reqerror("Attachment Fail", status);
-            }
-        };
-    };
-
-    var reset = function() {
-        return function() {
-            file = null;
-        }
-    };
-
-    var getFile = function() {
-        return file;
-    };
-
-    return {
-        getUploader: getUploader,
-        getFile: getFile,
-        reset: reset
-    };
-}]);
 
 /***** Filters *****/
 module.filter("excludeInstr", function() {

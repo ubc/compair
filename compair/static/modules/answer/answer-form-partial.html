@@ -6,8 +6,7 @@
         <div class="assignment-desc" mathjax hljs ng-bind-html="assignment.description" ng-hide="comparison_example"></div>
 
         <!-- Attachment -->
-        <compair-pdf-inline label="See assignment details:" pdf="assignment.file" ng-hide="comparison_example">
-        </compair-pdf-inline>
+        <compair-attachment-inline label="See assignment details:" attachment="assignment.file" ng-hide="comparison_example"></compair-attachment-inline>
 
         <hr ng-hide="comparison_example" />
 

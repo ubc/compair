@@ -17,121 +17,10 @@ var module = angular.module('ubc.ctlt.compair.answer',
         'ubc.ctlt.compair.common.highlightjs',
         'ubc.ctlt.compair.common.timer',
         'ubc.ctlt.compair.assignment',
+        'ubc.ctlt.compair.attachment',
         'ubc.ctlt.compair.toaster'
     ]
 );
-
-
-/***** Services *****/
-module.service('answerAttachService',
-        ["FileUploader", "$location", "Toaster",
-        function(FileUploader, $location, Toaster) {
-    var file = null;
-    var fileItemRef = null;
-
-    var getUploader = function(initParams) {
-        var uploader = new FileUploader({
-            url: '/api/attachment',
-            queueLimit: 1,
-            autoUpload: true,
-            headers: {
-                Accept: 'application/json'
-            }
-        });
-
-        file = null;
-        fileItemRef = null;
-
-        if (initParams) {
-            if (initParams.file) {
-                file = initParams.file;
-            }
-            if (initParams.fileRef) {
-                var dummy = new FileUploader.FileItem(uploader, initParams.fileRef);
-                dummy.progress = 100;
-                dummy.isUploaded = true;
-                dummy.isSuccess = true;
-                uploader.queue.push(dummy);
-                fileItemRef = dummy;
-            }
-        }
-
-        uploader.onCompleteItem = onComplete();
-        uploader.onErrorItem = onError();
-
-        uploader.filters.push({
-            name: 'pdfFilter',
-            fn: function(item) {
-                var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
-                var valid = '|pdf|'.indexOf(type) !== -1;
-                if (!valid) {
-                    Toaster.error("File Type Error", "Only PDF files are accepted.")
-                }
-                return valid;
-            }
-        });
-
-        uploader.filters.push({
-            name: 'sizeFilter',
-            fn: function(item) {
-                var valid = item.size <= 26214400; // 1024 * 1024 * 25 -> max 25MB
-                if (!valid) {
-                    var size = item.size / 1048576; // convert to MB
-                    Toaster.error("File Size Error", "The file size is "+size.toFixed(2)+"MB. The maximum allowed is 25MB.")
-                }
-                return valid;
-            }
-        });
-
-        return uploader;
-    };
-
-    var uploadedCallback = function(fileItem) {};
-    var onComplete = function() {
-        return function(fileItem, response) {
-            if (response) {
-                file = response['file'];
-                fileItemRef = fileItem;
-                uploadedCallback(file);
-            }
-        };
-    };
-
-    var onError = function() {
-        return function(fileItem, response, status) {
-            if (response == '413') {
-                Toaster.error("File Size Error", "The file is larger than 25MB. Please upload a smaller file.");
-            } else {
-                Toaster.reqerror("Attachment Fail", status);
-            }
-        };
-    };
-
-    var reset = function() {
-        return function() {
-            file = null;
-            fileItemRef = null;
-        };
-    };
-
-    var getFile = function() {
-        return file;
-    };
-
-    var getFileRef = function() {
-        return fileItemRef ? fileItemRef.file : null;
-    };
-
-    return {
-        getUploader: getUploader,
-        getFile: getFile,
-        getFileRef: getFileRef,
-        reset: reset,
-        setUploadedCallback: function(callback) {
-            uploadedCallback = callback;
-        }
-    };
-}]);
 
 /***** Providers *****/
 module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resource, $cacheFactory) {
@@ -433,16 +322,16 @@ module.controller(
 module.controller(
     "AnswerEditModalController",
     ["$scope", "AnswerResource", "Toaster", "xAPI", "xAPIStatementHelper",
-        "answerAttachService", "AttachmentResource", "EditorOptions", "$modalInstance",
+        "answerAttachService", "AttachmentResource", "EditorOptions", "$uibModalInstance",
     function ($scope, AnswerResource, Toaster, xAPI, xAPIStatementHelper,
-        answerAttachService, AttachmentResource, EditorOptions, $modalInstance)
+        answerAttachService, AttachmentResource, EditorOptions, $uibModalInstance)
     {
         //$scope.courseId
         //$scope.assignmentId
         $scope.assignment = typeof($scope.assignment) != 'undefined' ? $scope.assignment : {};
         $scope.answer = typeof($scope.answer) != 'undefined' ? $scope.answer : {};
         $scope.method = 'edit';
-        $scope.modalInstance = $modalInstance;
+        $scope.modalInstance = $uibModalInstance;
         $scope.tracking = xAPI.generateTracking();
         $scope.editorOptions =  xAPI.ckeditorContentTracking(EditorOptions.basic, function(duration) {
             xAPIStatementHelper.interacted_answer_solution(
@@ -529,7 +418,7 @@ module.controller(
                     $scope.answer = ret;
                     $scope.submitted = false;
                     Toaster.success("Answer Updated!");
-                    $modalInstance.close($scope.answer);
+                    $uibModalInstance.close($scope.answer);
                 },
                 function (ret) {
                     $scope.submitted = false;
@@ -543,26 +432,23 @@ module.controller(
 module.controller(
     "ComparisonExampleModalController",
     ["$scope", "AnswerResource", "Toaster",
-        "answerAttachService", "AttachmentResource", "EditorOptions", "$modalInstance",
+        "answerAttachService", "AttachmentResource", "EditorOptions", "$uibModalInstance",
     function ($scope, AnswerResource, Toaster,
-        answerAttachService, AttachmentResource, EditorOptions, $modalInstance)
+        answerAttachService, AttachmentResource, EditorOptions, $uibModalInstance)
     {
         //$scope.courseId
         //$scope.assignmentId
         $scope.answer = typeof($scope.answer) != 'undefined' ? $scope.answer : {};
         $scope.method = $scope.answer.id ? 'edit' : 'new';
-        $scope.modalInstance = $modalInstance;
+        $scope.modalInstance = $uibModalInstance;
         $scope.comparison_example = true;
 
         $scope.editorOptions = EditorOptions.basic;
 
         if ($scope.method == 'new') {
             // if answer is new, prepopulate the file upload area if needed
-            if ($scope.answer.fileRef) {
-                $scope.uploader = answerAttachService.getUploader({
-                    'file': $scope.answer.file,
-                    'fileRef': $scope.answer.fileRef
-                });
+            if ($scope.answer.file) {
+                $scope.answer.uploadedFile = $scope.answer.file;
             }
         } else if($scope.method == 'edit') {
             // refresh the answer if already exists
@@ -589,7 +475,6 @@ module.controller(
                     Toaster.success('Attachment deleted successfully');
                     $scope.answer.file = null;
                     $scope.answer.uploadedFile = false;
-                    $scope.answer.fileRef = null;
                 },
                 function (ret) {
                     Toaster.reqerror('Attachment deletion failed', ret);
@@ -612,8 +497,7 @@ module.controller(
 
             if ($scope.method == 'new') {
                 // save the uploaded file info in case modal is reopened
-                $scope.answer.fileRef = answerAttachService.getFileRef();
-                $modalInstance.close($scope.answer);
+                $uibModalInstance.close($scope.answer);
             } else {
                 // save the answer
                 AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answer).$promise.then(
@@ -621,7 +505,7 @@ module.controller(
                         $scope.answer = ret;
                         $scope.submitted = false;
                         Toaster.success("Practice Answer Updated!");
-                        $modalInstance.close($scope.answer);
+                        $uibModalInstance.close($scope.answer);
                     },
                     function (ret) {
                         $scope.submitted = false;

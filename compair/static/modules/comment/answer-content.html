@@ -12,6 +12,6 @@
         <div mathjax hljs ng-if="answer" ng-bind-html="answer.content"></div>
         <div ng-if="!answer"><i>(This answer has been deleted.)</i></div>
         <!-- Attachments -->
-        <compair-pdf-inline label="See details:" pdf="answer.file"></compair-pdf-inline>
+        <compair-attachment-inline label="See details:" attachment="answer.file"></compair-attachment-inline>
     </div>
 </div>

@@ -282,7 +282,9 @@ describe('xapi-module', function () {
         var mockFile = {
             "alias": "2_4_122.pdf",
             "id": "1abcABC123-abcABC123_Z",
-            "name": "1abcABC123-abcABC123_Z.pdf"
+            "name": "1abcABC123-abcABC123_Z.pdf",
+            "extension": "pdf",
+            "mimetype": "application/pdf"
         };
 
         var mockFilters = {
@@ -415,7 +417,7 @@ describe('xapi-module', function () {
                         }
                     },
                     "object":{
-                        "id":"https://localhost:8888/app/pdf/1abcABC123-abcABC123_Z.pdf",
+                        "id":"https://localhost:8888/app/attachment/1abcABC123-abcABC123_Z.pdf",
                         "objectType":"Activity",
                         "definition":{
                             "type":"http://activitystrea.ms/schema/1.0/file",
@@ -470,7 +472,7 @@ describe('xapi-module', function () {
                         }
                     },
                     "object":{
-                        "id":"https://localhost:8888/app/pdf/1abcABC123-abcABC123_Z.pdf",
+                        "id":"https://localhost:8888/app/attachment/1abcABC123-abcABC123_Z.pdf",
                         "objectType":"Activity",
                         "definition":{
                             "type":"http://activitystrea.ms/schema/1.0/file",
@@ -1035,7 +1037,7 @@ describe('xapi-module', function () {
                                 "id": mockLocationAbsUrl,
                                 "objectType":"Activity"
                             },{
-                                "id": "https://localhost:8888/app/pdf/1abcABC123-abcABC123_Z.pdf",
+                                "id": "https://localhost:8888/app/attachment/1abcABC123-abcABC123_Z.pdf",
                                 "objectType":"Activity"
                             }]
                         }
@@ -1074,7 +1076,7 @@ describe('xapi-module', function () {
                                 "id": mockLocationAbsUrl,
                                 "objectType":"Activity"
                             },{
-                                "id": "https://localhost:8888/app/pdf/1abcABC123-abcABC123_Z.pdf",
+                                "id": "https://localhost:8888/app/attachment/1abcABC123-abcABC123_Z.pdf",
                                 "objectType":"Activity"
                             }]
                         }
@@ -1113,7 +1115,7 @@ describe('xapi-module', function () {
                                 "id": mockLocationAbsUrl,
                                 "objectType":"Activity"
                             },{
-                                "id": "https://localhost:8888/app/pdf/1abcABC123-abcABC123_Z.pdf",
+                                "id": "https://localhost:8888/app/attachment/1abcABC123-abcABC123_Z.pdf",
                                 "objectType":"Activity"
                             }]
                         }
@@ -1152,7 +1154,7 @@ describe('xapi-module', function () {
                                 "id": mockLocationAbsUrl,
                                 "objectType":"Activity"
                             },{
-                                "id": "https://localhost:8888/app/pdf/1abcABC123-abcABC123_Z.pdf",
+                                "id": "https://localhost:8888/app/attachment/1abcABC123-abcABC123_Z.pdf",
                                 "objectType":"Activity"
                             }]
                         }

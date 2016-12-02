@@ -71,9 +71,7 @@
                 <div class="assignment-desc">
                     <div mathjax hljs ng-bind-html="assignment.description"></div>
                     <!-- Attachment -->
-                    <compair-pdf-inline label="See assignment details:"
-                        pdf="assignment.file">
-                    </compair-pdf-inline>
+                    <compair-attachment-inline label="See assignment details:" attachment="assignment.file"></compair-attachment-inline>
                 </div>
 
                 <!-- Metadata -->
@@ -169,7 +167,7 @@
                ng-show="canManageAssignment && (assignment.compare_period || assignment.after_comparing || assignment.evaluation_count > 0)">
                 See Comparisons
             </a>
-            
+
             <!-- BUTTON when user is an admin AND the comparison period is active AND admins can compare -->
            <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Answers" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
                ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">

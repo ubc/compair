@@ -42,7 +42,7 @@ module.directive('confirmFormExit', function(){
         link: function(scope, elem, attrs, formController) {
             //refresh
             window.onbeforeunload = function() {
-                //when confirmation is for answer AND an answer has been written or PDF file uploaded AND the user has not pressed submit
+                //when confirmation is for answer AND an answer has been written or file uploaded AND the user has not pressed submit
                 if (attrs.formType == 'answer' && (scope.answer.content || scope.uploader.queue.length) && scope.preventExit && formController.$dirty) {
                     return "Are you sure you want to refresh this page? Any unsaved changed you've made will be lost.";
                 }

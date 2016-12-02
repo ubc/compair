@@ -198,11 +198,6 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', '$locationProvi
                 templateUrl: 'modules/comment/comment-comparison-partial.html',
                 label: "Comparisons"
             })
-        .when('/course/:courseId/assignment/:assignmentId/file/:fileId',
-            {
-                templateUrl: 'modules/attachment/attachment-pdf-partial.html',
-                label: "View Attachment"
-            })
         .when('/course/:courseId/criterion/:criterionId/edit',
             {
                 templateUrl: 'modules/criterion/criterion-configure-partial.html',

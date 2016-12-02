@@ -58,7 +58,7 @@ class FileXAPITests(ComPAIRXAPITestCase):
             current_app._get_current_object(),
             event_name=on_get_file.name,
             user=self.user,
-            file_type="pdf",
+            file_type="attachment",
             file_name="some_file"
         )
 
@@ -71,7 +71,7 @@ class FileXAPITests(ComPAIRXAPITestCase):
             current_app._get_current_object(),
             event_name=on_get_file.name,
             user=self.user,
-            file_type="pdf",
+            file_type="attachment",
             file_name=file_record.name
         )
 
@@ -86,7 +86,7 @@ class FileXAPITests(ComPAIRXAPITestCase):
             current_app._get_current_object(),
             event_name=on_get_file.name,
             user=self.user,
-            file_type="pdf",
+            file_type="attachment",
             file_name=file_record.name
         )
 
@@ -98,7 +98,7 @@ class FileXAPITests(ComPAIRXAPITestCase):
             'display': {'en-US': 'downloaded'}
         })
         self.assertEqual(statements[0]['object'], {
-            'id': 'https://localhost:8888/app/pdf/'+file_record.name,
+            'id': 'https://localhost:8888/app/attachment/'+file_record.name,
             'definition': {'type': 'http://activitystrea.ms/schema/1.0/file', 'name': {'en-US': 'Assignment attachment'}},
             'objectType': 'Activity'
         })
@@ -127,7 +127,7 @@ class FileXAPITests(ComPAIRXAPITestCase):
             current_app._get_current_object(),
             event_name=on_get_file.name,
             user=self.user,
-            file_type="pdf",
+            file_type="attachment",
             file_name=file_record.name
         )
 
@@ -139,7 +139,7 @@ class FileXAPITests(ComPAIRXAPITestCase):
             'display': {'en-US': 'downloaded'}
         })
         self.assertEqual(statements[0]['object'], {
-            'id': 'https://localhost:8888/app/pdf/'+file_record.name,
+            'id': 'https://localhost:8888/app/attachment/'+file_record.name,
             'definition': {'type': 'http://activitystrea.ms/schema/1.0/file', 'name': {'en-US': 'Assignment answer attachment'}},
             'objectType': 'Activity'
         })

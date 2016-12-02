@@ -107,8 +107,8 @@ def xapi_on_logout(sender, user, **extra):
 
 # on_get_file
 # download report (report)
-# download assignment_attachment (pdf with assignment)
-# download answer_attachment (pdf with answer)
+# download assignment_attachment (attachment with assignment)
+# download answer_attachment (attachment with answer)
 def xapi_on_get_file(sender, user, **extra):
     file_type = extra.get('file_type')
     file_name = extra.get('file_name')
@@ -121,7 +121,7 @@ def xapi_on_get_file(sender, user, **extra):
             object=XAPIObject.report(file_name)
         )
         XAPI.send_statement(statement)
-    elif file_type and file_type == 'pdf':
+    elif file_type and file_type == 'attachment':
         file_record = File.query.filter_by(name=file_name).first()
         if file_record:
             assignment = file_record.assignments.first()

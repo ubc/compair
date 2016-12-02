@@ -9,10 +9,25 @@ var module = angular.module('ubc.ctlt.compair.attachment',
     ]
 );
 
+module.constant('FileExtensions', {
+    import: ['csv'],
+    attachment: []
+});
+
+module.constant('FileMimeTypes', {
+    pdf: ['application/pdf'],
+    mp3: ['audio/mpeg3', 'audio/x-mpeg-3', 'audio/mp3', 'audio/mpeg', 'video/x-mpeg'],
+    mp4: ['audio/mp4', 'video/mp4', 'application/mp4'],
+    jpg: ['image/jpeg', 'image/pjpeg'],
+    jpeg: ['image/jpeg', 'image/pjpeg'],
+    png: ['image/png'],
+    csv: ['text/csv']
+});
+
 /***** Services *****/
 module.service('importService',
-        ['FileUploader', '$location', "$cacheFactory", "CourseResource", "Toaster",
-        function(FileUploader, $location, $cacheFactory, CourseResource, Toaster) {
+        ['FileUploader', '$location', "$cacheFactory", "CourseResource", "Toaster", "FileExtensions", "FileMimeTypes",
+        function(FileUploader, $location, $cacheFactory, CourseResource, Toaster, FileExtensions, FileMimeTypes) {
     var results = {};
     var uploader = null;
     var model = '';
@@ -58,10 +73,15 @@ module.service('importService',
         model = type;
 
         uploader.filters.push({
-            name: 'pdfFilter',
+            name: 'importExtensionFilter',
             fn: function(item, options) {
-                var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
-                return '|csv|'.indexOf(type) !== -1;
+                valid = false;
+                _.forEach(FileExtensions.import, function(importExtension) {
+                    if (_.includes(FileMimeTypes[importExtension], item.type)) {
+                        valid = true;
+                    }
+                });
+                return valid;
             }
         });
 
@@ -93,6 +113,185 @@ module.service('importService',
         onComplete: onComplete,
         getResults: getResults,
         onError: onError
+    };
+}]);
+
+module.service('attachService',
+        ["FileUploader", "$location", "Toaster", "FileExtensions", "FileMimeTypes",
+        function(FileUploader, $location, Toaster, FileExtensions, FileMimeTypes) {
+    var file = null;
+
+    var getUploader = function() {
+        var uploader = new FileUploader({
+            url: '/api/attachment',
+            queueLimit: 1,
+            autoUpload: true,
+            headers: {
+                Accept: 'application/json'
+            }
+        });
+
+        file = null;
+
+        uploader.onCompleteItem = onComplete();
+        uploader.onErrorItem = onError();
+
+        uploader.filters.push({
+            name: 'attachmentExtensionFilter',
+            fn: function(item) {
+                valid = false;
+                _.forEach(FileExtensions.attachment, function(attachmentExtension) {
+                    if (_.includes(FileMimeTypes[attachmentExtension], item.type)) {
+                        valid = true;
+                    }
+                });
+                if (!valid) {
+                    var allowedExtensions = FileExtensions.attachment.join(', ').toUpperCase();
+                    Toaster.error("File Type Error", "Only "+allowedExtensions+" files are accepted.")
+                }
+                return valid;
+            }
+        });
+
+        uploader.filters.push({
+            name: 'sizeFilter',
+            fn: function(item) {
+                var valid = item.size <= 26214400; // 1024 * 1024 * 25 -> max 25MB
+                if (!valid) {
+                    var size = item.size / 1048576; // convert to MB
+                    Toaster.error("File Size Error", "The file size is "+size.toFixed(2)+"MB. The maximum allowed is 25MB.")
+                }
+                return valid;
+            }
+        });
+
+        return uploader;
+    };
+
+    var onComplete = function() {
+        return function(fileItem, response) {
+            if (response) {
+                file = response['file'];
+            }
+        };
+    };
+
+    var onError = function() {
+        return function(fileItem, response, status) {
+            if (response == '413') {
+                Toaster.error("File Size Error", "The file is larger than 25MB. Please upload a smaller file.");
+            } else {
+                Toaster.reqerror("Attachment Fail", status);
+            }
+        };
+    };
+
+    var reset = function() {
+        return function() {
+            file = null;
+        }
+    };
+
+    var getFile = function() {
+        return file;
+    };
+
+    return {
+        getUploader: getUploader,
+        getFile: getFile,
+        reset: reset
+    };
+}]);
+
+module.service('answerAttachService',
+        ["FileUploader", "$location", "Toaster", "FileExtensions", "FileMimeTypes",
+        function(FileUploader, $location, Toaster, FileExtensions, FileMimeTypes) {
+    var file = null;
+
+    var getUploader = function(initParams) {
+        var uploader = new FileUploader({
+            url: '/api/attachment',
+            queueLimit: 1,
+            autoUpload: true,
+            headers: {
+                Accept: 'application/json'
+            }
+        });
+
+        file = null;
+
+        uploader.onCompleteItem = onComplete();
+        uploader.onErrorItem = onError();
+
+        uploader.filters.push({
+            name: 'attachmentExtensionFilter',
+            fn: function(item) {
+                valid = false;
+                _.forEach(FileExtensions.attachment, function(attachmentExtension) {
+                    if (_.includes(FileMimeTypes[attachmentExtension], item.type)) {
+                        valid = true;
+                    }
+                });
+                if (!valid) {
+                    var allowedExtensions = FileExtensions.attachment.join(', ').toUpperCase();
+                    Toaster.error("File Type Error", "Only "+allowedExtensions+" files are accepted.")
+                }
+                return valid;
+            }
+        });
+
+        uploader.filters.push({
+            name: 'sizeFilter',
+            fn: function(item) {
+                var valid = item.size <= 26214400; // 1024 * 1024 * 25 -> max 25MB
+                if (!valid) {
+                    var size = item.size / 1048576; // convert to MB
+                    Toaster.error("File Size Error", "The file size is "+size.toFixed(2)+"MB. The maximum allowed is 25MB.")
+                }
+                return valid;
+            }
+        });
+
+        return uploader;
+    };
+
+    var uploadedCallback = function(fileItem) {};
+    var onComplete = function() {
+        return function(fileItem, response) {
+            if (response) {
+                file = response['file'];
+                uploadedCallback(file);
+            }
+        };
+    };
+
+    var onError = function() {
+        return function(fileItem, response, status) {
+            if (response == '413') {
+                Toaster.error("File Size Error", "The file is larger than 25MB. Please upload a smaller file.");
+            } else {
+                Toaster.reqerror("Attachment Fail", status);
+            }
+        };
+    };
+
+    var reset = function() {
+        return function() {
+            file = null;
+        };
+    };
+
+    var getFile = function() {
+        return file;
+    };
+
+    return {
+        getUploader: getUploader,
+        getFile: getFile,
+        reset: reset,
+        setUploadedCallback: function(callback) {
+            uploadedCallback = callback;
+        }
     };
 }]);
 

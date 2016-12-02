@@ -188,19 +188,14 @@
                         <a href="" ng-click="changeAnswer(comparison_example.answer1, true)">Edit</a>
                     </span>
                     <span ng-if="assignment.compared" class="text-muted">(not editable)</span>
-                    <div ng-if="!comparison_example.answer1.content && !comparison_example.answer1.file && !comparison_example.answer1.file_name">
+                    <div ng-if="!comparison_example.answer1.content && !comparison_example.answer1.file">
                         <p class="text-muted"><em>Click 'Edit' above to add your example answer here.</em></p>
                     </div>
                     <div>
                         <div mathjax hljs ng-bind-html="comparison_example.answer1.content"></div>
-                        <compair-pdf-inline label="See answer details:"
-                            pdf="comparison_example.answer1.file"
-                            ng-show="!comparison_example.answer1.file_name">
-                        </compair-pdf-inline>
-                        <compair-pdf-inline label="See answer details:"
-                            pdf="{'name': comparison_example.answer1.file_name}"
-                            ng-show="comparison_example.answer1.file_name">
-                        </compair-pdf-inline>
+                        <compair-attachment-inline label="See answer details:"
+                            attachment="comparison_example.answer1.file">
+                        </compair-attachment-inline>
                     </div>
                 </div>
                 <div class="col-md-1">
@@ -213,19 +208,14 @@
                         <a href="" ng-click="changeAnswer(comparison_example.answer2, false)">Edit</a>
                     </span>
                     <span ng-if="assignment.compared" class="text-muted">(not editable)</span>
-                    <div ng-if="!comparison_example.answer2.content && !comparison_example.answer2.file && !comparison_example.answer2.file_name">
+                    <div ng-if="!comparison_example.answer2.content && !comparison_example.answer2.file">
                         <p class="text-muted"><em>Click 'Edit' above to add your example answer here.</em></p>
                     </div>
                     <div>
                         <div mathjax hljs ng-bind-html="comparison_example.answer2.content"></div>
-                        <compair-pdf-inline label="See answer details:"
-                            pdf="comparison_example.answer2.file"
-                            ng-show="!comparison_example.answer2.file_name">
-                        </compair-pdf-inline>
-                        <compair-pdf-inline label="See answer details:"
-                            pdf="{'name': comparison_example.answer2.file_name}"
-                            ng-show="comparison_example.answer2.file_name">
-                        </compair-pdf-inline>
+                        <compair-attachment-inline label="See answer details:"
+                            attachment="comparison_example.answer2.file">
+                        </compair-attachment-inline>
                     </div>
                 </div>
             </div>

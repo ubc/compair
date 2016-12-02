@@ -59,7 +59,7 @@ compair/static/index.html
 compair/static/fonts
 
 # uploaded and generated report files
-persistent/pdf/*
+persistent/attachment/*
 persistent/report/*
 persistent/tmp/*
 

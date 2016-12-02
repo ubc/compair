@@ -1,13 +1,17 @@
+import mimetypes
 import os
 
 from flask import redirect, render_template
 from flask_login import login_required, current_user, current_app
 from flask import make_response
 from flask import send_file
+from flask_restful.reqparse import RequestParser
 
 from compair.core import event
 on_get_file = event.signal('GET_FILE')
 
+attachment_download_parser = RequestParser()
+attachment_download_parser.add_argument('name', type=str, default=None)
 
 def register_api_blueprints(app):
     # Initialize rest of the api modules
@@ -119,6 +123,7 @@ def register_api_blueprints(app):
             return render_template(
                 'index-dev.html',
                 ga_tracking_id=app.config['GA_TRACKING_ID'],
+                attachment_extensions=list(app.config['ATTACHMENT_ALLOWED_EXTENSIONS']),
                 app_login_enabled=app.config['APP_LOGIN_ENABLED'],
                 cas_login_enabled=app.config['CAS_LOGIN_ENABLED'],
                 lti_login_enabled=app.config['LTI_LOGIN_ENABLED'],
@@ -142,6 +147,7 @@ def register_api_blueprints(app):
             compair_js=prefix + assets['compair.js'],
             compair_css=prefix + assets['compair.css'],
             ga_tracking_id=app.config['GA_TRACKING_ID'],
+            attachment_extensions=list(app.config['ATTACHMENT_ALLOWED_EXTENSIONS']),
             app_login_enabled=app.config['APP_LOGIN_ENABLED'],
             cas_login_enabled=app.config['CAS_LOGIN_ENABLED'],
             lti_login_enabled=app.config['LTI_LOGIN_ENABLED'],
@@ -153,15 +159,11 @@ def register_api_blueprints(app):
     def route_root():
         return redirect("/app/")
 
-    @app.route('/app/<regex("pdf|report"):file_type>/<file_name>')
+    @app.route('/app/<regex("attachment|report"):file_type>/<file_name>')
     @login_required
     def file_retrieve(file_type, file_name):
-        mimetypes = {
-            'pdf': 'application/pdf',
-            'report': 'text/csv'
-        }
         file_dirs = {
-            'pdf': app.config['ATTACHMENT_UPLOAD_FOLDER'],
+            'attachment': app.config['ATTACHMENT_UPLOAD_FOLDER'],
             'report': app.config['REPORT_FOLDER']
         }
         file_path = '{}/{}'.format(file_dirs[file_type], file_name)
@@ -170,6 +172,14 @@ def register_api_blueprints(app):
             return make_response('invalid file name', 404)
 
         # TODO: add bouncer
+        mimetype, encoding = mimetypes.guess_type(file_name)
+        attachment_filename = None
+        as_attachment = False
+
+        if file_type == 'attachment' and mimetype != "application/pdf":
+            params = attachment_download_parser.parse_args()
+            attachment_filename = params.get('name') #optionally set the download file name
+            as_attachment = True
 
         on_get_file.send(
             current_app._get_current_object(),
@@ -177,9 +187,10 @@ def register_api_blueprints(app):
             user=current_user,
             file_type=file_type,
             file_name=file_name,
-            data={'file_path': file_path, 'mimetype': mimetypes[file_type]})
+            data={'file_path': file_path, 'mimetype': mimetype})
 
-        return send_file(file_path, mimetype=mimetypes[file_type])
+        return send_file(file_path, mimetype=mimetype,
+            attachment_filename=attachment_filename, as_attachment=as_attachment)
 
     return app
 
