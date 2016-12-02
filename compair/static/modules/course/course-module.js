@@ -308,12 +308,14 @@ module.controller(
     function ($rootScope, $scope, AssignmentResource, moment,
               Session, CourseResource, Toaster, UserResource) {
 
+        $scope.showAssignments = false;
         $scope.submitted = false;
         $scope.format = 'dd-MMMM-yyyy';
         $scope.originalCourse = typeof($scope.originalCourse) != 'undefined' ? $scope.originalCourse : {};
 
         $scope.setupDuplicateCourse = function() {
             $scope.duplicateCourse = {
+                name: $scope.originalCourse.name,
                 year: new Date().getFullYear(),
                 term: $scope.originalCourse.term,
                 date: {
@@ -350,7 +352,7 @@ module.controller(
             AssignmentResource.get({'courseId': $scope.originalCourse.id}).$promise.then(
                 function (ret) {
                     $scope.originalAssignments = ret.objects;
-                    $scope.adjustDuplicateAssignmentDates(true);
+                    $scope.adjustDuplicateAssignmentDates();
                 },
                 function (ret) {
                     Toaster.reqerror("Unable to retrieve course assignments: " + $scope.originalCourse.id, ret);
@@ -358,12 +360,7 @@ module.controller(
             );
         };
 
-        $scope.adjustDuplicateAssignmentDates = function(skipConfirm) {
-            if (!skipConfirm) {
-                if(!confirm("All assignment answer and comparison dates you manually changed will be lost. Are you sure you?")) {
-                    return;
-                }
-            }
+        $scope.adjustDuplicateAssignmentDates = function() {
             // startPoint is original course start_date if set
             // if not set, then it is the earliest assignment answer start date
             // duplicated assignment dates will moved around based on this date and the original assignments dates

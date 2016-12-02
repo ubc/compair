@@ -4,10 +4,15 @@
 
     <h2 class="text-center">Duplicate: {{originalCourse.name}}</h2>
     <br />
-    <p class="intro-text">Please provide the required fields below to duplicate your course.</p>
+    <p class="intro-text">Please provide the required fields below to duplicate your course and its assignments. All assignments will be editable after duplication. This process will <em>not</em> copy enrolled students, submitted answers, or comparisons.</p>
 
-    <fieldset>
+    <fieldset ng-show="!showAssignments">
         <legend>Course Details</legend>
+        <compair-field-with-feedback form-control="duplicateCourseForm.courseName">
+            <label for="courseName" class="required-star">Course Name</label>
+            <input id="courseName" name="courseName" ng-model="duplicateCourse.name"
+                type="text" class="form-control" required maxlength="255" />
+        </compair-field-with-feedback>
         <div class="row">
             <div class="col-md-6 form-group">
                 <compair-field-with-feedback form-control="duplicateCourseForm.courseYear">
@@ -26,7 +31,7 @@
         </div>
     </fieldset>
 
-    <fieldset>
+    <fieldset ng-show="!showAssignments">
         <legend>Schedule</legend>
         <div class="row">
             <div class="col-md-6 form-group">
@@ -60,28 +65,35 @@
         </div>
     </fieldset>
 
-    <fieldset ng-show="duplicateAssignments.length">
-        <legend>Assignment Schedule ({{duplicateAssignments.length}} Assignments)</legend>
+    <div ng-class="{'text-center': !showAssignments}">
+        <a class="btn btn-primary btn-lg" value="Next" ng-click="showAssignments=!showAssignments; adjustDuplicateAssignmentDates()"
+            ng-disabled="duplicateCourseForm.$invalid" ng-show="!showAssignments">Next &raquo;</a>
+        <br ng-show="!showAssignments" /><br ng-show="!showAssignments" />
+        <a class="btn btn-default btn-md" value="Next" ng-click="showAssignments=!showAssignments"
+            ng-show="showAssignments">&laquo; Back</a>
+    </div>
 
-        <div class="form-group">
-            <a class="btn btn-default" ng-click="adjustDuplicateAssignmentDates()">
-                Adjust Assignment Dates
-            </a>
-            <label>Automatically adjust assignment answer and comparison dates based on the new course start date.</label>
+    <fieldset ng-show="showAssignments">
+        <legend>Assignment Dates</legend>
+
+        <div class="instructional-text">
+            <p>
+                You are <strong>duplicating {{duplicateAssignments.length}} assignments</strong> with this course. You can update the assignment dates manually in bulk below or update them after duplication by editing each individual assignment.
+            </p>
         </div>
 
         <!-- Assignments List -->
-        <div class="each-assignment" ng-class="{'first-child': $first}"
-            ng-repeat="assignment in duplicateAssignments">
+        <div ng-show="duplicateAssignments.length" class="each-assignment" ng-class="{'first-child': $first}"
+            ng-repeat="assignment in duplicateAssignments | orderBy:'':true">
 
             <hr />
 
             <h3 class="media-heading">
-                {{assignment.name}}
+                Assignment: "{{assignment.name}}"
             </h3>
             <div class="form-group">
                 <input id="availableCheck-{{assignment.id}}" type="checkbox" ng-model="assignment.availableCheck">
-                <label for="availableCheck-{{assignment.id}}">Set comparison period</label>
+                <label for="availableCheck-{{assignment.id}}">Set a comparison period for this assignment below</label>
             </div>
 
             <div class="row">
@@ -89,7 +101,7 @@
                     <label class="required-star">
                         Answering Begins
                         <span ng-if="duplicateCourse.date.course_start.date">
-                            (week #{{assignment.date.astart.date | amDifference : duplicateCourse.date.course_start.date : 'weeks' }})
+                            (in course week #{{(assignment.date.astart.date | amDifference : duplicateCourse.date.course_start.date : 'weeks') + 1 }})
                         </span>
                     </label><br />
                     <div class="assignment-date">
@@ -107,9 +119,9 @@
                 <div class="col-md-6 form-group">
                     <label class="required-star">
                         Answering Ends
-                        <span ng-if="duplicateCourse.date.course_start.date">
-                            (week #{{assignment.date.aend.date | amDifference : duplicateCourse.date.course_start.date : 'weeks' }})
-                        </span>
+                        <!-- <span ng-if="duplicateCourse.date.course_start.date">
+                            (Course week #{{assignment.date.aend.date | amDifference : duplicateCourse.date.course_start.date : 'weeks' }})
+                        </span> -->
                     </label><br />
                     <div class="assignment-date">
                         <span class="input-group">
@@ -130,7 +142,7 @@
                     <label class="required-star">
                         Comparing Begins
                         <span ng-if="duplicateCourse.date.course_start.date">
-                            (week #{{assignment.date.cstart.date | amDifference : duplicateCourse.date.course_start.date : 'weeks' }})
+                            (in course week #{{(assignment.date.cstart.date | amDifference : duplicateCourse.date.course_start.date : 'weeks') + 1 }})
                         </span>
                     </label><br />
                     <div class="assignment-date">
@@ -148,9 +160,9 @@
                 <div class="col-md-6 form-group">
                     <label class="required-star">
                         Comparing Ends
-                        <span ng-if="duplicateCourse.date.course_start.date">
-                            (week #{{assignment.date.cend.date | amDifference : duplicateCourse.date.course_start.date : 'weeks' }})
-                        </span>
+                        <!-- <span ng-if="duplicateCourse.date.course_start.date">
+                            (Course week #{{assignment.date.cend.date | amDifference : duplicateCourse.date.course_start.date : 'weeks' }})
+                        </span> -->
                     </label><br />
                     <div class="assignment-date">
                         <span class="input-group">
@@ -169,6 +181,6 @@
         </div>
     </fieldset>
 
-    <input type="submit" class="btn btn-success btn-lg center-block" value="Duplicate Course"
-            ng-disabled="duplicateCourseForm.$invalid || submitted" />
+    <input type="submit" class="btn btn-success btn-lg center-block" value="Duplicate"
+            ng-disabled="duplicateCourseForm.$invalid || submitted" ng-show="showAssignments" />
 </form>
