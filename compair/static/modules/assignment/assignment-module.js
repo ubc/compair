@@ -927,6 +927,7 @@ module.controller("AssignmentWriteController",
                             Toaster.reqerror("Assignment Practice Answers not Found", "No practice answers found for assignment with id "+$scope.assignmentId);
                         }
                     );
+                    removeAssignmentCriteriaFromAvailable();
                 },
                 function () {
                     Toaster.reqerror("Assignment Not Found", "No assignment found for id "+$scope.assignmentId);
@@ -982,11 +983,14 @@ module.controller("AssignmentWriteController",
                 // if we don't have any criterion, e.g. new assignment, add a default one automatically
                 $scope.assignment.criteria.push(_.find($scope.availableCriteria, {public: true}));
             }
+            removeAssignmentCriteriaFromAvailable();
+        });
+        var removeAssignmentCriteriaFromAvailable = function() {
             // we need to remove the existing assignment criteria from available list
             $scope.availableCriteria = _.filter($scope.availableCriteria, function(c) {
                 return !_($scope.assignment.criteria).pluck('id').includes(c.id);
             });
-        });
+        };
 
         $scope.add = function(key) {
             // not proceed if empty option is being added
@@ -1000,7 +1004,7 @@ module.controller("AssignmentWriteController",
         $scope.remove = function(key) {
             var criterion = $scope.assignment.criteria[key];
             $scope.assignment.criteria.splice(key, 1);
-            if (criterion.default == true) {
+            if (criterion.default) {
                 $scope.availableCriteria.push(criterion);
             }
         };
