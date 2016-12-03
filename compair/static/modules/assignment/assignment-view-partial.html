@@ -163,14 +163,15 @@
                                         ng-options="c.id as c.name for c in criteria" ng-disabled="answerFilters.top == true">
                                     <option value="">Date submitted</option>
                                 </select>
-                            </span>
+                            </span><br />
                             <span class="filter" ng-if="canManageAssignment">
-                                <input type="checkbox" ng-model="answerFilters.anonymous" />
-                                <label>Classroom display mode
-                                    <a href="" tooltip="Hide student names, scores, and replies when sharing this screen with students" tooltip-trigger tooltip-animation="false" tooltip-placement="bottom-left">
-                                        <i class="fa fa-question-circle"></i>
-                                    </a>
+                                <label uib-btn-checkbox ng-model="answerFilters.anonymous" activeClass="''"
+                                    class="btn" ng-class="{'btn-primary': answerFilters.anonymous, 'btn-default': !answerFilters.anonymous}">
+                                    Classroom display mode
                                 </label>
+                                <a href="" tooltip="Hide student names, scores, and replies when sharing this screen with students" tooltip-trigger tooltip-animation="false" tooltip-placement="bottom">
+                                    <i class="fa fa-question-circle"></i>
+                                </a>
                             </span>
                         </div>
                     </div>

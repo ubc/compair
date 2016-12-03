@@ -37,7 +37,6 @@ answer_list_parser.add_argument('group', type=str, required=False, default=None)
 answer_list_parser.add_argument('author', type=str, required=False, default=None)
 answer_list_parser.add_argument('orderBy', type=str, required=False, default=None)
 answer_list_parser.add_argument('top', type=bool, required=False, default=None)
-answer_list_parser.add_argument('anonymous', type=bool, required=False, default=None)
 answer_list_parser.add_argument('ids', type=str, required=False, default=None)
 
 user_answer_list_parser = RequestParser()
@@ -132,10 +131,6 @@ class AnswerRootAPI(Resource):
 
         if params['top']:
             query = query.filter(Answer.top_answer == True)
-
-        if params['anonymous']:
-            # anonymous students, filter out instructors and ta answers
-            query = query.filter(UserCourse.course_role == CourseRole.student)
 
         if params['orderBy']:
             criterion = Criterion.get_active_by_uuid_or_404(params['orderBy'])

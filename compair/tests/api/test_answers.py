@@ -192,7 +192,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
 
             # all filters
             rv = self.client.get(
-                self.base_url + '?orderBy={}&group={}&author={}&anonymous=true&top=true&page=1&perPage=20'.format(
+                self.base_url + '?orderBy={}&group={}&author={}&top=true&page=1&perPage=20'.format(
                     self.fixtures.assignment.criteria[0].uuid,
                     self.fixtures.groups[0],
                     self.fixtures.students[0].uuid
@@ -220,12 +220,6 @@ class AnswersAPITests(ComPAIRAPITestCase):
             # no dropped student answers should be included
             for dropped_student in self.fixtures.dropped_students:
                 self.assertNotIn(dropped_student.uuid, user_uuids)
-
-            # test anonymous student filter
-            rv = self.client.get(self.base_url + '?anonymous=true')
-            self.assert200(rv)
-            answer_ids = [a['id'] for a in rv.json['objects']]
-            self.assertNotIn(answer.uuid, answer_ids)
 
             # test data retrieve before answer period ended with non-privileged user
             self.fixtures.assignment.answer_end = datetime.datetime.now() + datetime.timedelta(days=2)
