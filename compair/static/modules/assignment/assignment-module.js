@@ -348,6 +348,7 @@ module.controller("AssignmentViewController",
             group: null,
             author: null,
             top: null,
+            anonymous: null,
             orderBy: null
         };
         $scope.self_evaluation_needed = false;
@@ -759,10 +760,10 @@ module.controller("AssignmentViewController",
 
         $scope.updateAnswerList = function() {
             var params = angular.merge({'courseId': $scope.courseId, 'assignmentId': assignmentId}, $scope.answerFilters);
-            if (params.author == "top-picks") {
-                params.author = null;
-            }
             $scope.answerFiltersName = $("#answers-filter option:selected").text();
+            if (params.author == "top-picks" || params.author == "anonymous") {
+                delete params.author;
+            }
             $scope.answers = AnswerResource.get(params, function(response) {
                 $scope.totalNumAnswers = response.total;
 
@@ -784,7 +785,9 @@ module.controller("AssignmentViewController",
         var filterWatcher = function(newValue, oldValue) {
             if (angular.equals(newValue, oldValue)) return;
             if (oldValue.group != newValue.group) {
-                $scope.answerFilters.author = null;
+                if ($scope.answerFilters.author != "top-picks" && $scope.answerFilters.author != "anonymous") {
+                    $scope.answerFilters.author = null;
+                }
                 if ($scope.answerFilters.group == null) {
                     $scope.students = $scope.allStudents;
                 } else {
@@ -801,13 +804,21 @@ module.controller("AssignmentViewController",
             }
             if (oldValue.author != newValue.author) {
                 $scope.answerFilters.top = null;
+                $scope.answerFilters.anonymous = null;
                 if ($scope.answerFilters.author == "top-picks") {
                     $scope.answerFilters.top = true;
+                    $scope.answerFilters.orderBy = null;
+                }
+                if ($scope.answerFilters.author == "anonymous") {
+                    $scope.answerFilters.anonymous = true;
                     $scope.answerFilters.orderBy = null;
                 }
                 $scope.answerFilters.page = 1;
             }
             if (oldValue.top != newValue.top) {
+                $scope.answerFilters.page = 1;
+            }
+            if (oldValue.anonymous != newValue.anonymous) {
                 $scope.answerFilters.page = 1;
             }
             xAPIStatementHelper.filtered_page_section(tab+" tab", $scope.answerFilters);

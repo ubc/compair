@@ -153,13 +153,14 @@
                                 <select id="answers-filter" ng-model="answerFilters.author" class="nullable" chosen disable_search_threshold="8">
                                     <option value="">All answers</option>
                                     <option value="top-picks">Instructor's top picks</option>
+                                    <option value="anonymous" ng-if="canManageAssignment">Anonymous students</option>
                                     <option ng-repeat="u in students | orderBy: 'name'" value="{{u.id}}">{{u.name}}</option>
                                 </select>
                             </span><br />
                             <span class="filter" ng-if="(canManageAssignment || rankLimit) && assignment.pairing_algorithm != PairingAlgorithm.random">
                                 <label>Order by: &nbsp;</label>
                                 <select ng-model="answerFilters.orderBy" chosen disable_search_threshold="8"
-                                        ng-options="c.id as c.name for c in criteria" ng-disabled="answerFilters.author == 'top-picks'">
+                                        ng-options="c.id as c.name for c in criteria" ng-disabled="answerFilters.top == true || answerFilters.anonymous == true">
                                     <option value="">Date submitted</option>
                                 </select>
                             </span>
@@ -210,7 +211,7 @@
             <div class="all-answers">
 
                 <!-- Instructor Answers Section -->
-                <div class="each-answer clearfix" ng-repeat="answer in answers.objects | filter:adminFilter()" ng-if="instructors[answer.user_id] && (see_answers || canManageAssignment)">
+                <div class="each-answer clearfix" ng-repeat="answer in answers.objects | filter:adminFilter() as adminResults" ng-if="instructors[answer.user_id] && (see_answers || canManageAssignment)">
 
                     <!-- Instructor Answer Metadata Header -->
                     <div class="each-header clearfix">
@@ -246,7 +247,7 @@
                 <div class="each-answer clearfix" ng-repeat="answer in answers.objects | notScoredEnd:answerFilters.orderBy | excludeInstr:instructors as results" ng-if="(see_answers || answer.user_id == loggedInUserId || canManageAssignment)">
                 <!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.user_id] && (see_answers || (answer.user_id == loggedInUserId && assignment.answer_period) || canManageAssignment)"> -->
                     <!-- Student Answer Metadata Header -->
-                    <div class="each-header clearfix">
+                    <div class="each-header clearfix" ng-if="!answerFilters.anonymous">
                         <compair-avatar user-id="answer.user_id" avatar="answer.user.avatar" display-name="answer.user.displayname" full-name="answer.user.fullname" me="!canManageAssignment && answer.user_id == loggedInUserId"></compair-avatar>
                         <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right" ng-if="canManageAssignment || (answer.user_id == loggedInUserId && assignment.answer_period && !assignment.compare_period)">
@@ -287,14 +288,14 @@
                     <!-- <p ng-show="!showReadMore">No More To Read!!! ({{thisHeight}})</p> -->
 
                     <!-- Student Score (not used for instructor answers) -->
-                    <p class="pull-right score-display" ng-if="canManageAssignment && score.criterion_id==answerFilters.orderBy && answer.scores.length > 0" ng-repeat="score in answer.scores">
+                    <p class="pull-right score-display" ng-if="canManageAssignment && !answerFilters.anonymous && score.criterion_id==answerFilters.orderBy && answer.scores.length > 0" ng-repeat="score in answer.scores">
                         <em>Score: {{score.normalized_score}}%</em>
                         <a href="" tooltip="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
                             <i class="fa fa-question-circle"></i>
                         </a>
                     </p>
                     <!-- Student Rank (not used for instructor answers) -->
-                    <p class="pull-right score-display" ng-if="!canManageAssignment && score.criterion_id==answerFilters.orderBy && answer.scores.length > 0" ng-repeat="score in answer.scores">
+                    <p class="pull-right score-display" ng-if="!canManageAssignment && !answerFilters.anonymous && score.criterion_id==answerFilters.orderBy && answer.scores.length > 0" ng-repeat="score in answer.scores">
                         <em ng-if="score.rank <= rankLimit">
                             Students Ranked: <strong>{{score.rank}} <span ng-if="rankCount[score.rank] > 1">(tied)</span></strong>
                         </em>
@@ -306,17 +307,17 @@
                         </em>
                     </p>
                     <!-- No Student Score/Rank -->
-                    <p class="pull-right score-display" ng-if="canManageAssignment && answer.scores.length == 0">
+                    <p class="pull-right score-display" ng-if="canManageAssignment && !answerFilters.anonymous && answer.scores.length == 0">
                         <em>Not Compared</em>
                     </p>
-                    <p class="pull-right score-display" ng-if="!canManageAssignment && score.criterion_id!=answerFilters.orderBy && answer.scores.length == 0">
+                    <p class="pull-right score-display" ng-if="!canManageAssignment && !answerFilters.anonymous && score.criterion_id!=answerFilters.orderBy && answer.scores.length == 0">
                         <em>Not Ranked</em>
                     </p>
 
 
                     <!-- Student Answer Replies Section -->
                     <a href="" ng-click="showReplies = !showReplies; toggleReplies(showReplies, answer)">
-                        <h3 class="reply-heading" ng-if="(answer.comment_count && (answer.user_id == loggedInUserId || canManageAssignment)) || (answer.public_comment_count && see_answers)">
+                        <h3 class="reply-heading" ng-if="!answerFilters.anonymous && ((answer.comment_count && (answer.user_id == loggedInUserId || canManageAssignment)) || (answer.public_comment_count && see_answers))">
                             <i class="fa fa-chevron-down" ng-show="showReplies"></i>
                             <i class="fa fa-chevron-right" ng-hide="showReplies"></i>
                             <ng-pluralize ng-if="answer.public_comment_count && !canManageAssignment && (see_answers && answer.user_id != loggedInUserId)" count="answer.public_comment_count" when="{'1': '{} public reply', 'other': '{} public replies'}"></ng-pluralize>
@@ -326,7 +327,7 @@
                         </h3>
                     </a>
 
-                    <div ng-show="showReplies">
+                    <div ng-show="showReplies" ng-if="!answerFilters.anonymous">
 
                         <div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer)" class="each-reply">
 
@@ -361,7 +362,7 @@
                     </div><!-- closes toggle div -->
 
                     <p>
-                        <a ng-if="assignment.students_can_reply || canManageAssignment" href="" ng-click="createAnswerComment(answer)" class="btn btn-sm btn-primary btn-reply">
+                        <a ng-if="!answerFilters.anonymous && (assignment.students_can_reply || canManageAssignment)" href="" ng-click="createAnswerComment(answer)" class="btn btn-sm btn-primary btn-reply">
                             Reply
                         </a>
                     </p>
@@ -369,7 +370,7 @@
                 </div><!-- closes each-answer (student) -->
 
                 <!-- Anyone sees when there are answers, a filter is set, but no answers show in results (and user has permission to view answers) -->
-                <div class="each-answer clearfix" ng-if="assignment.answer_count > 0 && (answerFilters.group || answerFilters.author || answerFilters.orderBy) && results.length < 1 && (see_answers || canManageAssignment)">
+                <div class="each-answer clearfix" ng-if="assignment.answer_count > 0 && (answerFilters.group || answerFilters.author || answerFilters.orderBy) && (results.length < 1 && adminResults.length < 1) && (see_answers || canManageAssignment)">
                     <p>No answers were found with these filter settings. Try another choice above.</p>
                 </div>
 
