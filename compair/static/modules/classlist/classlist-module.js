@@ -142,6 +142,7 @@ module.controller(
         $scope.addUsersToNewGroup = function() {
             var modalInstance = $modal.open({
                 animation: true,
+                backdrop: 'static',
                 controller: "AddGroupModalController",
                 templateUrl: 'modules/group/group-form-partial.html'
             })

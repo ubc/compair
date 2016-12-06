@@ -1155,6 +1155,7 @@ describe('assignment-module', function () {
                 it('should open a modal dialog', function() {
                     expect($modal.open).toHaveBeenCalledWith({
                         animation: true,
+                        backdrop: 'static',
                         template: '<criterion-form criterion=criterion editor-options=editorOptions></criterion-form>',
                         scope: jasmine.any(Object)
                     })
@@ -1211,6 +1212,7 @@ describe('assignment-module', function () {
                 it('should open a modal dialog', function() {
                     expect($modal.open).toHaveBeenCalledWith({
                         animation: true,
+                        backdrop: 'static',
                         controller: "ComparisonExampleModalController",
                         templateUrl: 'modules/answer/answer-modal-partial.html',
                         scope: jasmine.any(Object)
@@ -1445,6 +1447,7 @@ describe('assignment-module', function () {
                 it('should open a modal dialog', function() {
                     expect($modal.open).toHaveBeenCalledWith({
                         animation: true,
+                        backdrop: 'static',
                         template: '<criterion-form criterion=criterion editor-options=editorOptions></criterion-form>',
                         scope: jasmine.any(Object)
                     })
@@ -1500,6 +1503,7 @@ describe('assignment-module', function () {
                 it('should open a modal dialog', function() {
                     expect($modal.open).toHaveBeenCalledWith({
                         animation: true,
+                        backdrop: 'static',
                         controller: "ComparisonExampleModalController",
                         templateUrl: 'modules/answer/answer-modal-partial.html',
                         scope: jasmine.any(Object)
