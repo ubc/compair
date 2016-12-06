@@ -2,9 +2,10 @@ import csv
 import json
 import io
 
-from data.fixtures.test_data import BasicTestData
+from compair.core import db
+from data.fixtures.test_data import BasicTestData, ThirdPartyUserFactory
 from compair.tests.test_compair import ComPAIRAPITestCase
-from compair.models import CourseRole, UserCourse
+from compair.models import CourseRole, UserCourse, ThirdPartyType
 
 
 class ClassListAPITest(ComPAIRAPITestCase):
@@ -24,17 +25,17 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assert403(rv)
 
         expected = [
-            self.data.get_authorized_instructor(),
-            self.data.get_authorized_ta(),
-            self.data.get_authorized_student()]
-        expected.sort(key=lambda x: x.firstname)
+            (self.data.get_authorized_instructor(), '', ''),
+            (self.data.get_authorized_ta(), '', ''),
+            (self.data.get_authorized_student(), '', '')]
+        expected.sort(key=lambda x: x[0].firstname)
 
         with self.login(self.data.get_authorized_instructor().username):
             # test authorized user
             rv = self.client.get(self.url)
             self.assert200(rv)
             self.assertEqual(len(expected), len(rv.json['objects']))
-            for key, user in enumerate(expected):
+            for key, (user, cas_username, group_name) in enumerate(expected):
                 self.assertEqual(user.uuid, rv.json['objects'][key]['id'])
 
             # test export csv
@@ -42,19 +43,90 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual('text/csv', rv.content_type)
             reader = csv.reader(rv.data.decode(encoding='UTF-8').splitlines(), delimiter=',')
-            self.assertEqual(['username', 'student_number', 'firstname', 'lastname', 'email', 'displayname'], next(reader))
 
-            for key, user in enumerate(expected):
+            self.assertEqual(['username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
+            for user, cas_username, group_name in expected:
                 self.assertEqual(
-                    [user.username, user.student_number or '', user.firstname, user.lastname, user.email, user.displayname],
+                    [user.username, cas_username, user.student_number or '', user.firstname, user.lastname, user.email, user.displayname, group_name],
                     next(reader)
                 )
+
+            # test export csv with group names
+            for user_course in self.data.main_course.user_courses:
+                if user_course.user_id == self.data.get_authorized_instructor().id:
+                    user_course.group_name = "instructor_group"
+                elif user_course.user_id == self.data.get_authorized_ta().id:
+                    user_course.group_name = "ta_group"
+                elif user_course.user_id == self.data.get_authorized_student().id:
+                    user_course.group_name = "student_group"
+            db.session.commit()
+
+            expected = [
+                (self.data.get_authorized_instructor(), '', "instructor_group"),
+                (self.data.get_authorized_ta(), '', "ta_group"),
+                (self.data.get_authorized_student(), '', "student_group")]
+            expected.sort(key=lambda x: x[0].firstname)
+
+            rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
+            self.assert200(rv)
+            self.assertEqual('text/csv', rv.content_type)
+            reader = csv.reader(rv.data.decode(encoding='UTF-8').splitlines(), delimiter=',')
+
+            self.assertEqual(['username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
+            for user, cas_username, group_name in expected:
+                self.assertEqual(
+                    [user.username, cas_username, user.student_number or '', user.firstname, user.lastname, user.email, user.displayname, group_name],
+                    next(reader)
+                )
+
+            # test export csv with cas usernames
+            third_party_student = ThirdPartyUserFactory(user=self.data.get_authorized_student())
+            third_party_instructor = ThirdPartyUserFactory(user=self.data.get_authorized_instructor())
+            third_party_ta = ThirdPartyUserFactory(user=self.data.get_authorized_ta())
+            db.session.commit()
+
+            expected = [
+                (self.data.get_authorized_instructor(), third_party_instructor.unique_identifier, "instructor_group"),
+                (self.data.get_authorized_ta(), third_party_ta.unique_identifier, "ta_group"),
+                (self.data.get_authorized_student(), third_party_student.unique_identifier, "student_group")]
+            expected.sort(key=lambda x: x[0].firstname)
+
+            rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
+            self.assert200(rv)
+            self.assertEqual('text/csv', rv.content_type)
+            reader = csv.reader(rv.data.decode(encoding='UTF-8').splitlines(), delimiter=',')
+
+            self.assertEqual(['username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
+            for user, cas_username, group_name in expected:
+                self.assertEqual(
+                    [user.username, cas_username, user.student_number or '', user.firstname, user.lastname, user.email, user.displayname, group_name],
+                    next(reader)
+                )
+
+            # test export csv with cas usernames (student has multiple cas_usernames). should use first username
+            third_party_student2 = ThirdPartyUserFactory(user=self.data.get_authorized_student())
+            third_party_student3 = ThirdPartyUserFactory(user=self.data.get_authorized_student())
+            third_party_student4 = ThirdPartyUserFactory(user=self.data.get_authorized_student())
+            db.session.commit()
+
+            rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
+            self.assert200(rv)
+            self.assertEqual('text/csv', rv.content_type)
+            reader = csv.reader(rv.data.decode(encoding='UTF-8').splitlines(), delimiter=',')
+
+            self.assertEqual(['username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
+            for user, cas_username, group_name in expected:
+                self.assertEqual(
+                    [user.username, cas_username, user.student_number or '', user.firstname, user.lastname, user.email, user.displayname, group_name],
+                    next(reader)
+                )
+
 
         with self.login(self.data.get_authorized_ta().username):
             rv = self.client.get(self.url)
             self.assert200(rv)
             self.assertEqual(len(expected), len(rv.json['objects']))
-            for key, user in enumerate(expected):
+            for key, (user, cas_username, group_name) in enumerate(expected):
                 self.assertEqual(user.uuid, rv.json['objects'][key]['id'])
 
     def test_get_instructor_labels(self):
@@ -260,32 +332,35 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(expected, rv.json)
 
-    def test_import_classlist(self):
+    def test_import_compair_classlist(self):
         url = '/api/courses/' + self.data.get_course().uuid + '/users'
-        auth_student = self.data.get_authorized_student()
+        student = self.data.get_authorized_student()
+        instructor = self.data.get_authorized_instructor()
+        ta = self.data.get_authorized_ta()
+
         filename = "classlist.csv"
 
         # test login required
-        uploaded_file = io.BytesIO(auth_student.username.encode())
+        uploaded_file = io.BytesIO((student.username+",password").encode())
         rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
         self.assert401(rv)
         uploaded_file.close()
 
         # test unauthorized user
         with self.login(self.data.get_unauthorized_instructor().username):
-            uploaded_file = io.BytesIO(auth_student.username.encode())
+            uploaded_file = io.BytesIO(student.username.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert403(rv)
             uploaded_file.close()
 
         with self.login(self.data.get_authorized_student().username):
-            uploaded_file = io.BytesIO(auth_student.username.encode())
+            uploaded_file = io.BytesIO(student.username.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert403(rv)
             uploaded_file.close()
 
         with self.login(self.data.get_authorized_ta().username):
-            uploaded_file = io.BytesIO(auth_student.username.encode())
+            uploaded_file = io.BytesIO(student.username.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert403(rv)
             uploaded_file.close()
@@ -293,20 +368,20 @@ class ClassListAPITest(ComPAIRAPITestCase):
         with self.login(self.data.get_authorized_instructor().username):
             # test invalid course id
             invalid_url = '/api/courses/999/users'
-            uploaded_file = io.BytesIO(auth_student.username.encode())
+            uploaded_file = io.BytesIO(student.username.encode())
             rv = self.client.post(invalid_url, data=dict(file=(uploaded_file, filename)))
             uploaded_file.close()
             self.assert404(rv)
 
             # test invalid file type
             invalid_filetype = "classlist.png"
-            uploaded_file = io.BytesIO(auth_student.username.encode())
+            uploaded_file = io.BytesIO(student.username.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, invalid_filetype)))
             uploaded_file.close()
             self.assert400(rv)
 
             # test no username provided
-            content = "".join([",\n", auth_student.username, ",", auth_student.student_number])
+            content = "".join([",\n", student.username, ",password,", student.student_number])
             uploaded_file = io.BytesIO(content.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
@@ -317,20 +392,32 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual('The username is required.', result['invalids'][0]['message'])
             uploaded_file.close()
 
+            # test no password provided
+            content = "".join(["nopasswordusername"])
+            uploaded_file = io.BytesIO(content.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(0, result['success'])
+            self.assertEqual(1, len(result['invalids']))
+            self.assertEqual("nopasswordusername", result['invalids'][0]['user']['username'])
+            self.assertEqual('The password is required.', result['invalids'][0]['message'])
+            uploaded_file.close()
+
             # test duplicate usernames in file
-            content = "".join([auth_student.username, "\n", auth_student.username])
+            content = "".join([student.username, ",password\n", student.username, ",password"])
             uploaded_file = io.BytesIO(content.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
             self.assertEqual(1, result['success'])
             self.assertEqual(1, len(result['invalids']))
-            self.assertEqual(auth_student.username, result['invalids'][0]['user']['username'])
+            self.assertEqual(student.username, result['invalids'][0]['user']['username'])
             self.assertEqual('This username already exists in the file.', result['invalids'][0]['message'])
             uploaded_file.close()
 
             # test duplicate student number in system
-            content = "".join(['username1,', auth_student.student_number, "\n", auth_student.username])
+            content = "".join(['username1,password,', student.student_number, "\n", student.username, ',password'])
             uploaded_file = io.BytesIO(content.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
@@ -343,8 +430,8 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test duplicate student number in file
             content = "".join([
-                auth_student.username, ",", auth_student.student_number, "\n",
-                "username1,", auth_student.student_number])
+                student.username, ",password,", student.student_number, "\n",
+                "username1,password,", student.student_number])
             uploaded_file = io.BytesIO(content.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
@@ -356,7 +443,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             uploaded_file.close()
 
             # test existing display
-            content = "username1,,,,," + auth_student.displayname
+            content = "username1,password,,,," + student.displayname
             uploaded_file = io.BytesIO(content.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
@@ -366,7 +453,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             uploaded_file.close()
 
             # test authorized instructor - new user
-            uploaded_file = io.BytesIO(b'username2')
+            uploaded_file = io.BytesIO(b'username2,password')
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
@@ -374,25 +461,54 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual(0, len(result['invalids']))
             uploaded_file.close()
 
-            # test authorized instructor - existing user
-            uploaded_file = io.BytesIO(auth_student.username.encode())
+            # test authorized instructor - existing user (with password)
+            current_password = student.password
+            new_password = 'password123'
+
+            uploaded_file = io.BytesIO((student.username+','+new_password).encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
             self.assertEqual(1, result['success'])
             self.assertEqual(0, len(result['invalids']))
             uploaded_file.close()
+            self.assertEqual(student.password, current_password)
+            self.assertNotEqual(student.password, new_password)
+
+            student.last_online = None
+            db.session.commit()
+
+            uploaded_file = io.BytesIO((student.username+','+new_password).encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+            self.assertNotEqual(student.password, current_password)
+            self.assertEqual(student.password, new_password)
+
+            new_password = 'password1234'
+            for set_password in [new_password, '*', '']:
+                uploaded_file = io.BytesIO((student.username+','+set_password).encode())
+                rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+                self.assert200(rv)
+                result = rv.json
+                self.assertEqual(1, result['success'])
+                self.assertEqual(0, len(result['invalids']))
+                uploaded_file.close()
+                self.assertEqual(student.password, new_password)
 
             # test invalid import type app login disabled
             self.app.config['APP_LOGIN_ENABLED'] = False
-            uploaded_file = io.BytesIO(auth_student.username.encode())
+            uploaded_file = io.BytesIO(student.username.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert400(rv)
             uploaded_file.close()
             self.app.config['APP_LOGIN_ENABLED'] = True
 
             # test authorized instructor - existing instructor
-            uploaded_file = io.BytesIO(self.data.get_authorized_instructor().username.encode())
+            uploaded_file = io.BytesIO(instructor.username.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
@@ -403,14 +519,14 @@ class ClassListAPITest(ComPAIRAPITestCase):
             instructor_enrollment = UserCourse.query \
                 .filter_by(
                     course_id=self.data.get_course().id,
-                    user_id=self.data.get_authorized_instructor().id,
+                    user_id=instructor.id,
                     course_role=CourseRole.instructor
                 ) \
                 .one_or_none()
             self.assertIsNotNone(instructor_enrollment)
 
             # test authorized instructor - existing teaching assistant
-            uploaded_file = io.BytesIO(self.data.get_authorized_ta().username.encode())
+            uploaded_file = io.BytesIO(ta.username.encode())
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
@@ -421,11 +537,300 @@ class ClassListAPITest(ComPAIRAPITestCase):
             ta_enrollment = UserCourse.query \
                 .filter_by(
                     course_id=self.data.get_course().id,
-                    user_id=self.data.get_authorized_ta().id,
+                    user_id=ta.id,
                     course_role=CourseRole.teaching_assistant
                 ) \
                 .one_or_none()
             self.assertIsNotNone(ta_enrollment)
+
+            # test authorized instructor - group enrollment
+            content = "".join([
+                student.username, ",*,,,,,,group_student\n",
+                instructor.username, ",*,,,,,,group_instructor\n",
+                ta.username, ",*,,,,,,group_ta\n",
+            ])
+            uploaded_file = io.BytesIO(content.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            user_courses = UserCourse.query \
+                .filter(
+                    UserCourse.course_id == self.data.get_course().id,
+                    UserCourse.course_role != CourseRole.dropped
+                ) \
+                .all()
+
+            self.assertEqual(len(user_courses), 3)
+            for user_course in user_courses:
+                self.assertIn(user_course.user_id, [student.id, instructor.id, ta.id])
+                if user_course.user_id == student.id:
+                    self.assertEqual(user_course.group_name, 'group_student')
+                elif user_course.user_id == instructor.id:
+                    self.assertEqual(user_course.group_name, 'group_instructor')
+                elif user_course.user_id == ta.id:
+                    self.assertEqual(user_course.group_name, 'group_ta')
+
+            # test authorized instructor - group unenrollment
+            content = "".join([
+                student.username, ",*,,,,,,\n",
+                instructor.username, ",*,,,,,,\n",
+                ta.username, ",*,,,,,,\n",
+            ])
+            uploaded_file = io.BytesIO(content.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            user_courses = UserCourse.query \
+                .filter(
+                    UserCourse.course_id == self.data.get_course().id,
+                    UserCourse.course_role != CourseRole.dropped
+                ) \
+                .all()
+
+            self.assertEqual(len(user_courses), 3)
+            for user_course in user_courses:
+                self.assertIn(user_course.user_id, [student.id, instructor.id, ta.id])
+                self.assertEqual(user_course.group_name, None)
+
+    def test_import_cas_classlist(self):
+        url = '/api/courses/' + self.data.get_course().uuid + '/users'
+        student = self.data.get_authorized_student()
+        third_party_student = ThirdPartyUserFactory(user=student)
+        instructor = self.data.get_authorized_instructor()
+        third_party_instructor = ThirdPartyUserFactory(user=instructor)
+        ta = self.data.get_authorized_ta()
+        third_party_ta = ThirdPartyUserFactory(user=ta)
+        db.session.commit()
+
+        filename = "classlist.csv"
+
+        # test login required
+        uploaded_file = io.BytesIO((third_party_student.unique_identifier).encode())
+        rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+        self.assert401(rv)
+        uploaded_file.close()
+
+        # test unauthorized user
+        with self.login(self.data.get_unauthorized_instructor().username):
+            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert403(rv)
+            uploaded_file.close()
+
+        with self.login(self.data.get_authorized_student().username):
+            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert403(rv)
+            uploaded_file.close()
+
+        with self.login(self.data.get_authorized_ta().username):
+            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert403(rv)
+            uploaded_file.close()
+
+        with self.login(self.data.get_authorized_instructor().username):
+            # test invalid course id
+            invalid_url = '/api/courses/999/users'
+            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode())
+            rv = self.client.post(invalid_url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            uploaded_file.close()
+            self.assert404(rv)
+
+            # test invalid file type
+            invalid_filetype = "classlist.png"
+            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, invalid_filetype), import_type=ThirdPartyType.cas.value))
+            uploaded_file.close()
+            self.assert400(rv)
+
+            # test no username provided
+            content = "".join([",\n", third_party_student.unique_identifier, ",", student.student_number])
+            uploaded_file = io.BytesIO(content.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(1, len(result['invalids']))
+            self.assertEqual(None, result['invalids'][0]['user']['username'])
+            self.assertEqual('The username is required.', result['invalids'][0]['message'])
+            uploaded_file.close()
+
+            # test duplicate usernames in file
+            content = "".join([third_party_student.unique_identifier, "\n", third_party_student.unique_identifier])
+            uploaded_file = io.BytesIO(content.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(1, len(result['invalids']))
+            self.assertEqual(third_party_student.unique_identifier, result['invalids'][0]['user']['username'])
+            self.assertEqual('This username already exists in the file.', result['invalids'][0]['message'])
+            uploaded_file.close()
+
+            # test duplicate student number in system
+            content = "".join(['username1,', student.student_number, "\n", third_party_student.unique_identifier])
+            uploaded_file = io.BytesIO(content.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(1, len(result['invalids']))
+            self.assertEqual("username1", result['invalids'][0]['user']['username'])
+            self.assertEqual('This student number already exists in the system.', result['invalids'][0]['message'])
+            uploaded_file.close()
+
+            # test duplicate student number in file
+            content = "".join([
+                third_party_student.unique_identifier, ",", student.student_number, "\n",
+                "username1,", student.student_number])
+            uploaded_file = io.BytesIO(content.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(1, len(result['invalids']))
+            self.assertEqual("username1", result['invalids'][0]['user']['username'])
+            self.assertEqual('This student number already exists in the file.', result['invalids'][0]['message'])
+            uploaded_file.close()
+
+            # test existing display
+            content = "username1,,,," + student.displayname
+            uploaded_file = io.BytesIO(content.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            # test authorized instructor - new user
+            uploaded_file = io.BytesIO(b'username2')
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            # test authorized instructor - existing user
+            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            # test invalid import type cas login disabled
+            self.app.config['CAS_LOGIN_ENABLED'] = False
+            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert400(rv)
+            uploaded_file.close()
+            self.app.config['CAS_LOGIN_ENABLED'] = True
+
+            # test authorized instructor - existing instructor
+            uploaded_file = io.BytesIO(third_party_instructor.unique_identifier.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(0, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            instructor_enrollment = UserCourse.query \
+                .filter_by(
+                    course_id=self.data.get_course().id,
+                    user_id=instructor.id,
+                    course_role=CourseRole.instructor
+                ) \
+                .one_or_none()
+            self.assertIsNotNone(instructor_enrollment)
+
+            # test authorized instructor - existing teaching assistant
+            uploaded_file = io.BytesIO(third_party_ta.unique_identifier.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(0, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            ta_enrollment = UserCourse.query \
+                .filter_by(
+                    course_id=self.data.get_course().id,
+                    user_id=ta.id,
+                    course_role=CourseRole.teaching_assistant
+                ) \
+                .one_or_none()
+            self.assertIsNotNone(ta_enrollment)
+
+            # test authorized instructor - group enrollment
+            content = "".join([
+                third_party_student.unique_identifier, ",,,,,,group_student\n",
+                third_party_instructor.unique_identifier, ",,,,,,group_instructor\n",
+                third_party_ta.unique_identifier, ",,,,,,group_ta\n",
+            ])
+            uploaded_file = io.BytesIO(content.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            user_courses = UserCourse.query \
+                .filter(
+                    UserCourse.course_id == self.data.get_course().id,
+                    UserCourse.course_role != CourseRole.dropped
+                ) \
+                .all()
+
+            self.assertEqual(len(user_courses), 3)
+            for user_course in user_courses:
+                self.assertIn(user_course.user_id, [student.id, instructor.id, ta.id])
+                if user_course.user_id == student.id:
+                    self.assertEqual(user_course.group_name, 'group_student')
+                elif user_course.user_id == instructor.id:
+                    self.assertEqual(user_course.group_name, 'group_instructor')
+                elif user_course.user_id == ta.id:
+                    self.assertEqual(user_course.group_name, 'group_ta')
+
+            # test authorized instructor - group unenrollment
+            content = "".join([
+                third_party_student.unique_identifier, ",,,,,,\n",
+                third_party_instructor.unique_identifier, ",,,,,,\n",
+                third_party_ta.unique_identifier, ",,,,,,\n",
+            ])
+            uploaded_file = io.BytesIO(content.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            user_courses = UserCourse.query \
+                .filter(
+                    UserCourse.course_id == self.data.get_course().id,
+                    UserCourse.course_role != CourseRole.dropped
+                ) \
+                .all()
+
+            self.assertEqual(len(user_courses), 3)
+            for user_course in user_courses:
+                self.assertIn(user_course.user_id, [student.id, instructor.id, ta.id])
+                self.assertEqual(user_course.group_name, None)
+
 
     def test_update_course_role_miltiple(self):
         url = self.url + '/roles'

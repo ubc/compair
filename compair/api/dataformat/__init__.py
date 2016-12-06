@@ -62,6 +62,7 @@ def get_users_in_course(restrict_user=True):
     users['group_name'] = fields.String
     if not restrict_user:
         users['course_role'] = UnwrapCourseRole(attribute='course_role')
+        users['cas_username'] = fields.String
     return users
 
 

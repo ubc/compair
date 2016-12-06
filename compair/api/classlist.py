@@ -38,13 +38,26 @@ import_classlist_parser = RequestParser()
 import_classlist_parser.add_argument('import_type', default=None, type=str, required=False)
 
 # upload file column name to index number
-USERNAME = 0
-STUDENTNO = 1
-FIRSTNAME = 2
-LASTNAME = 3
-EMAIL = 4
-DISPLAYNAME = 5
-PASSWORD = 6
+COMPAIR_IMPORT = {
+    'username': 0,
+    'password': 1,
+    'student_number': 2,
+    'firstname': 3,
+    'lastname': 4,
+    'email': 5,
+    'displayname': 6,
+    'group_name': 7
+}
+
+CAS_IMPORT = {
+    'username': 0,
+    'student_number': 1,
+    'firstname': 2,
+    'lastname': 3,
+    'email': 4,
+    'displayname': 5,
+    'group_name': 6
+}
 
 # events
 on_classlist_get = event.signal('CLASSLIST_GET')
@@ -60,8 +73,32 @@ on_classlist_update_users_course_roles = event.signal('CLASSLIST_UPDATE_USERS_CO
 def display_name_generator(role="student"):
     return "".join([role, '_', random_generator(8, string.digits)])
 
+def _parse_user_row(import_type, row):
+    length = len(row)
+
+    columns = CAS_IMPORT if import_type == ThirdPartyType.cas.value else COMPAIR_IMPORT
+
+    # get common columns
+    user = {
+        'username': row[columns['username']] if length > columns['username'] and row[columns['username']] else None,
+        'student_number': row[columns['student_number']] if length > columns['student_number'] and row[columns['student_number']] else None,
+        'firstname': row[columns['firstname']] if length > columns['firstname'] and row[columns['firstname']] else None,
+        'lastname': row[columns['lastname']] if length > columns['lastname'] and row[columns['lastname']] else None,
+        'email': row[columns['email']] if length > columns['email'] and row[columns['email']] else None,
+        'displayname': row[columns['displayname']] if length > columns['displayname'] and row[columns['displayname']] else None,
+        'group': row[columns['group_name']] if length > columns['group_name'] and row[columns['group_name']] else None
+    }
+
+    # get import specific columns
+    if import_type == None:
+        user['password'] = row[columns['password']] if length > columns['password'] and row[columns['password']] else None
+
+    return user
+
+
 def _get_existing_users_by_identifier(import_type, users):
-    usernames = [u[USERNAME] for u in users if len(u) > USERNAME]
+    username_index = CAS_IMPORT['username'] if import_type == ThirdPartyType.cas.value else COMPAIR_IMPORT['username']
+    usernames = [u[username_index] for u in users if len(u) > username_index]
     if len(usernames) == 0:
         return {}
 
@@ -69,7 +106,10 @@ def _get_existing_users_by_identifier(import_type, users):
         # cas login
         third_party_users = ThirdPartyUser.query \
             .options(joinedload('user')) \
-            .filter(ThirdPartyUser.unique_identifier.in_(usernames)) \
+            .filter(and_(
+                ThirdPartyUser.unique_identifier.in_(usernames),
+                ThirdPartyUser.third_party_type == ThirdPartyType.cas
+            )) \
             .all()
         return {
             third_party_user.unique_identifier: third_party_user.user for third_party_user in third_party_users
@@ -83,8 +123,9 @@ def _get_existing_users_by_identifier(import_type, users):
             u.username: u for u in users
         }
 
-def _get_existing_users_by_student_number(users):
-    student_number = [u[STUDENTNO] for u in users if len(u) > STUDENTNO]
+def _get_existing_users_by_student_number(import_type, users):
+    student_number_index = CAS_IMPORT['student_number'] if import_type == ThirdPartyType.cas.value else COMPAIR_IMPORT['student_number']
+    student_number = [u[student_number_index] for u in users if len(u) > student_number_index]
     if len(student_number) == 0:
         return {}
 
@@ -103,86 +144,82 @@ def import_users(import_type, course, users):
     set_user_passwords = []
 
     # store unique user identifiers - eg. student number - throws error if duplicate in file
-    import_unique_identifiers = []
+    import_usernames = []
     import_student_numbers = []
 
     # store unique user identifiers - eg. student number - throws error if duplicate in file
-    existing_system_unique_identifiers = _get_existing_users_by_identifier(import_type, users)
-    existing_system_student_numbers = _get_existing_users_by_student_number(users)
-
-    # constants
-    letters_digits = string.ascii_letters + string.digits
+    existing_system_usernames = _get_existing_users_by_identifier(import_type, users)
+    existing_system_student_numbers = _get_existing_users_by_student_number(import_type, users)
 
     # create / update users in file
-    for user in users:
-        length = len(user)
-        if length < 1:
+    for user_row in users:
+        if len(user_row) < 1:
             continue  # skip empty row
+        user = _parse_user_row(import_type, user_row)
 
         # validate unique identifier
-        unique_identifier = user[USERNAME].lower() if length > USERNAME and user[USERNAME] else None
+        username = user.get('username')
+        password = user.get('password') #always None for CAS import, can be None for existing users on ComPAIR import
+        student_number = user.get('student_number')
 
-        if not unique_identifier:
-            invalids.append({'user': User(username=unique_identifier), 'message': 'The username is required.'})
+        u = existing_system_usernames.get(username, None)
+
+        if not username:
+            invalids.append({'user': User(username=username), 'message': 'The username is required.'})
             continue
-        elif unique_identifier in import_unique_identifiers:
-            invalids.append({'user': User(username=unique_identifier), 'message': 'This username already exists in the file.'})
+        elif username in import_usernames:
+            invalids.append({'user': User(username=username), 'message': 'This username already exists in the file.'})
             continue
 
-        u = existing_system_unique_identifiers.get(unique_identifier, None)
-        if not u:
-            u = User()
+        if u:
+            # overwrite password if user has not logged in yet
+            if u.last_online == None and not password in [None, '*']:
+                set_user_passwords.append((u, password))
+        else:
+            u = User(
+                username=None,
+                password=None,
+                student_number=user.get('student_number'),
+                firstname=user.get('firstname'),
+                lastname=user.get('lastname'),
+                email=user.get('email')
+            )
             if import_type == ThirdPartyType.cas.value:
-                # cas login
-                third_party_user = ThirdPartyUser(
-                    unique_identifier=unique_identifier,
+                # CAS login
+                u.third_party_auths.append(ThirdPartyUser(
+                    unique_identifier=username,
                     third_party_type=ThirdPartyType.cas
-                )
-                u.username = None
-                u.third_party_auths.append(third_party_user)
+                ))
             else:
                 # ComPAIR login
-                u.username = unique_identifier
-        else:
-            # user exists in the system, skip user creation
-            import_unique_identifiers.append(unique_identifier)
-            import_student_numbers.append(u.student_number)
-            imported_users.append(u)
-            continue
+                u.username = username
+                if password in [None, '*']:
+                    invalids.append({'user': u, 'message': 'The password is required.'})
+                    continue
+                else:
+                    set_user_passwords.append((u, password))
 
-        u.student_number = user[STUDENTNO] if length > STUDENTNO and user[STUDENTNO] else None
-        u.firstname = user[FIRSTNAME] if length > FIRSTNAME and user[FIRSTNAME] else None
-        u.lastname = user[LASTNAME] if length > LASTNAME and user[LASTNAME] else None
-        u.email = user[EMAIL] if length > EMAIL and user[EMAIL] else None
-        u.password = None
+            # validate student number (if not None)
+            if student_number:
+                # invalid if already showed up in file
+                if student_number in import_student_numbers:
+                    u.username = username
+                    invalids.append({'user': u, 'message': 'This student number already exists in the file.'})
+                    continue
+                # invalid if student number already exists in the system
+                elif student_number in existing_system_student_numbers:
+                    u.username = username
+                    invalids.append({'user': u, 'message': 'This student number already exists in the system.'})
+                    continue
 
-        # ComPAIR login only
-        if import_type == None:
-            password = user[PASSWORD] if length > PASSWORD and user[PASSWORD] else None
-            if password:
-                set_user_passwords.append((u, password))
+            u.system_role = SystemRole.student
+            u.displayname = user.get('displayname') if user.get('displayname') else display_name_generator()
+            db.session.add(u)
 
-        # validate student number (if not None)
-        if u.student_number:
-            # invalid if already showed up in file
-            if u.student_number in import_student_numbers:
-                u.username = unique_identifier
-                invalids.append({'user': u, 'message': 'This student number already exists in the file.'})
-                continue
-            # invalid if student number already exists in the system
-            elif u.student_number in existing_system_student_numbers:
-                u.username = unique_identifier
-                invalids.append({'user': u, 'message': 'This student number already exists in the system.'})
-                continue
-
-        u.system_role = SystemRole.student
-        displayname = user[DISPLAYNAME] if length > DISPLAYNAME and user[DISPLAYNAME] else None
-        u.displayname = displayname if displayname else display_name_generator()
-
-        import_unique_identifiers.append(unique_identifier)
-        import_student_numbers.append(u.student_number)
-        db.session.add(u)
-        imported_users.append(u)
+        import_usernames.append(username)
+        if student_number:
+            import_student_numbers.append(student_number)
+        imported_users.append( (u, user.get('group')) )
     db.session.commit()
 
     enroled = UserCourse.query \
@@ -200,15 +237,17 @@ def import_users(import_type, course, users):
     students = {s.user_id: s for s in students}
 
     # enrol valid users in file
-    for user in imported_users:
+    for user, group in imported_users:
         enrol = enroled.get(user.id, UserCourse(course_id=course.id, user_id=user.id))
+        enrol.group_name = group
         # do not overwrite instructor or teaching assistant roles
         if enrol.course_role not in [CourseRole.instructor, CourseRole.teaching_assistant]:
             enrol.course_role = CourseRole.student
-            db.session.add(enrol)
             if user.id in students:
                 del students[user.id]
             count += 1
+        db.session.add(enrol)
+
     db.session.commit()
 
     # unenrol users not in file anymore
@@ -218,6 +257,7 @@ def import_users(import_type, course, users):
         if enrolment.course_role == CourseRole.dropped:
             continue
         enrolment.course_role = CourseRole.dropped
+        enrolment.group_name = None
         db.session.add(enrolment)
     db.session.commit()
 
@@ -245,15 +285,13 @@ def import_users(import_type, course, users):
 
 @api.representation('text/csv')
 def output_csv(data, code, headers=None):
-    fieldnames = ['username', 'student_number', 'firstname', 'lastname', 'email', 'displayname']
+    fieldnames = ['username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name']
     csv_buffer = StringIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames, extrasaction='ignore')
     writer.writeheader()
 
     if 'objects' in data:
         writer.writerows(data['objects'])
-    elif 'invalids' in data:
-        writer.writerows(data['invalids'])
 
     response = make_response(csv_buffer.getvalue(), code)
     response.headers.extend(headers or {})
@@ -276,7 +314,7 @@ class ClasslistRootAPI(Resource):
         # course_role constrain.
         db.session.expire(current_user)
 
-        class_list = User.query \
+        users = User.query \
             .join(UserCourse, UserCourse.user_id == User.id) \
             .add_columns(UserCourse.course_role, UserCourse.group_name) \
             .filter(and_(
@@ -286,11 +324,28 @@ class ClasslistRootAPI(Resource):
             .order_by(User.firstname) \
             .all()
 
-        for (_user, _course_role, _group_name) in class_list:
+        if not restrict_user:
+            user_ids = [_user.id for (_user, _course_role, _group_name) in users]
+            third_party_auths = ThirdPartyUser.query \
+                .filter(and_(
+                    ThirdPartyUser.user_id.in_(user_ids),
+                    ThirdPartyUser.third_party_type == ThirdPartyType.cas
+                )) \
+                .all()
+
+        class_list = []
+        for (_user, _course_role, _group_name) in users:
             _user.course_role = _course_role
             _user.group_name = _group_name
 
-        class_list = [_user for (_user, _course_role, _group_name) in class_list]
+            if not restrict_user:
+                third_party_auth = next(
+                    (third_party_auth for third_party_auth in third_party_auths if third_party_auth.user_id == _user.id),
+                    None
+                )
+                _user.cas_username = third_party_auth.unique_identifier if third_party_auth else None
+
+            class_list.append(_user)
 
         on_classlist_get.send(
             self,
