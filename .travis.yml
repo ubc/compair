@@ -50,7 +50,7 @@ addons:
 
 before_script:
   - if [ '$DB' = 'mysql' ]; then mysql -e 'create database IF NOT EXISTS compair;'; fi
-  - if [ "$INTEGRATION_TEST" = "true" ]; then gulp prod; fi
+  - if [ "$INTEGRATION_TEST" = "true" ]; then node_modules/gulp/bin/gulp.js prod; fi
 
 before_install:
   - if [ "$DOCKER" != "true" ]; then nvm install 6.4; fi

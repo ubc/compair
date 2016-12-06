@@ -96,6 +96,7 @@ module.controller(
 
             $scope.modalInstance = $modal.open({
                 animation: true,
+                backdrop: 'static',
                 controller: "CourseDuplicateModalController",
                 templateUrl: 'modules/course/course-duplicate-partial.html',
                 scope: modalScope

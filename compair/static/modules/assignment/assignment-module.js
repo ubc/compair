@@ -566,6 +566,7 @@ module.controller("AssignmentViewController",
 
             $scope.modalInstance = $modal.open({
                 animation: true,
+                backdrop: 'static',
                 controller: "AnswerEditModalController",
                 templateUrl: 'modules/answer/answer-modal-partial.html',
                 scope: modalScope
@@ -596,6 +597,7 @@ module.controller("AssignmentViewController",
 
             $scope.modalInstance = $modal.open({
                 animation: true,
+                backdrop: 'static',
                 controller: "AnswerCommentModalController",
                 templateUrl: 'modules/comment/comment-answer-modal-partial.html',
                 scope: modalScope
@@ -627,6 +629,7 @@ module.controller("AssignmentViewController",
 
             $scope.modalInstance = $modal.open({
                 animation: true,
+                backdrop: 'static',
                 controller: "AnswerCommentModalController",
                 templateUrl: 'modules/comment/comment-answer-modal-partial.html',
                 scope: modalScope
@@ -666,6 +669,7 @@ module.controller("AssignmentViewController",
 
             $scope.modalInstance = $modal.open({
                 animation: true,
+                backdrop: 'static',
                 controller: "AssignmentCommentModalController",
                 templateUrl: 'modules/comment/comment-assignment-modal-partial.html',
                 scope: modalScope
@@ -689,6 +693,7 @@ module.controller("AssignmentViewController",
 
             $scope.modalInstance = $modal.open({
                 animation: true,
+                backdrop: 'static',
                 controller: "AssignmentCommentModalController",
                 templateUrl: 'modules/comment/comment-assignment-modal-partial.html',
                 scope: modalScope
@@ -1033,6 +1038,7 @@ module.controller("AssignmentWriteController",
             });
             modalInstance = $modal.open({
                 animation: true,
+                backdrop: 'static',
                 template: '<criterion-form criterion=criterion editor-options=editorOptions></criterion-form>',
                 scope: modalScope
             });
@@ -1059,6 +1065,7 @@ module.controller("AssignmentWriteController",
 
             $scope.modalInstance = $modal.open({
                 animation: true,
+                backdrop: 'static',
                 controller: "ComparisonExampleModalController",
                 templateUrl: 'modules/answer/answer-modal-partial.html',
                 scope: modalScope
