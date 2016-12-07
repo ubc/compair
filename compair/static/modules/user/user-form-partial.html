@@ -43,7 +43,7 @@
         </compair-field-with-feedback>
     </fieldset>
 
-    <fieldset ng-if="user.uses_compair_login">
+    <fieldset ng-if="canManageUsers || user.uses_compair_login">
         <legend>Account Login</legend>
         <p class="instructional-text">
             This information will set the <strong>ComPAIR username <span ng-if="method == 'new'">and password</span></strong> for logging in without an external login (like CWL).
@@ -53,7 +53,7 @@
             <label for="username" class="required-star">ComPAIR Username </label>
             <input class="form-control" id="username" type="text"
                 name="username" ng-model="user.username"
-                required />
+                ng-required="user.uses_compair_login" />
         </compair-field-with-feedback>
         <div ng-if="method == 'new'">
             <compair-field-with-feedback form-control="userForm.password">
