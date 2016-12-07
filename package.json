@@ -9,7 +9,7 @@
   "dependencies": {
     "bower": "latest",
     "gulp": "latest",
-    "gulp-angular-templatecache": "^2.0.0",
+    "gulp-angular-templatecache": "^1.9.1",
     "gulp-bower": "latest",
     "gulp-clean-css": "latest",
     "gulp-concat": "latest",
