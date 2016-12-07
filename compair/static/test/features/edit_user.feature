@@ -158,3 +158,16 @@ Feature: Edit Profile
     And I submit form with 'Save' button
     Then I should be on the 'profile' page
     And I should see 'student123's Profile' in 'h1' on the page
+
+  Scenario: Edit another user's profile as CAS admin
+    Given I'm a CAS System Administrator
+    And I'm on 'edit user' page for user with id '3abcABC123-abcABC123_Z'
+    When I fill form item 'user.displayname' in with 'student123'
+    And I fill form item 'user.firstname' in with 'student'
+    And I fill form item 'user.lastname' in with '123'
+    And I fill form item 'user.student_number' in with '1234567890'
+    And I fill form item 'user.email' in with 'student.123@example.com'
+    And I fill form item 'user.username' in with 'student123'
+    And I submit form with 'Save' button
+    Then I should be on the 'profile' page
+    And I should see 'student123's Profile' in 'h1' on the page

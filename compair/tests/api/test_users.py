@@ -505,6 +505,23 @@ class UsersAPITests(ComPAIRAPITestCase):
             user = User.query.filter_by(uuid=rv.json['id']).one()
             self.assertIsNone(user.username)
 
+        # test updating username as system admin
+        with self.login('root'):
+            # admin can optionally change username
+            valid = expected.copy()
+            valid['username'] = ''
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            user = User.query.filter_by(uuid=rv.json['id']).one()
+            self.assertIsNone(user.username)
+
+            valid = expected.copy()
+            valid['username'] = "valid_username"
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            user = User.query.filter_by(uuid=rv.json['id']).one()
+            self.assertEqual(user.username, "valid_username")
+
 
     def test_get_course_list(self):
         # test login required

@@ -9,6 +9,7 @@ module.exports.build = function(browser) {
 
     storageFixtures = {
         'admin/default_fixture': module.exports.buildStorageFixture(require('../fixtures/admin/default_fixture.js')),
+        'admin/cas_fixture': module.exports.buildStorageFixture(require('../fixtures/admin/cas_fixture.js')),
 
         'instructor/default_fixture': module.exports.buildStorageFixture(require('../fixtures/instructor/default_fixture.js')),
         'instructor/cas_fixture': module.exports.buildStorageFixture(require('../fixtures/instructor/cas_fixture.js')),

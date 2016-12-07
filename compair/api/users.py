@@ -24,7 +24,7 @@ def non_blank_str(value):
         return None if str(value).strip() == "" else str(value)
 
 new_user_parser = RequestParser()
-new_user_parser.add_argument('username', type=str, required=False)
+new_user_parser.add_argument('username', type=non_blank_str, required=False)
 new_user_parser.add_argument('student_number', type=non_blank_str)
 new_user_parser.add_argument('system_role', type=str, required=True)
 new_user_parser.add_argument('firstname', type=str, required=True)
@@ -35,7 +35,7 @@ new_user_parser.add_argument('password', type=str, required=False)
 
 existing_user_parser = RequestParser()
 existing_user_parser.add_argument('id', type=str, required=True)
-existing_user_parser.add_argument('username', type=str, required=False)
+existing_user_parser.add_argument('username', type=non_blank_str, required=False)
 existing_user_parser.add_argument('student_number', type=non_blank_str)
 existing_user_parser.add_argument('system_role', type=str, required=True)
 existing_user_parser.add_argument('firstname', type=str, required=True)
@@ -106,14 +106,22 @@ class UserAPI(Resource):
 
         # only update username if user uses compair login method
         if user.uses_compair_login:
-            username = params.get("username", user.username)
+            username = params.get("username")
             if username == None:
                 return {"error": "Missing required parameter: username."}, 400
             username_exists = User.query.filter_by(username=username).first()
             if username_exists and username_exists.id != user.id:
                 return {"error": "This username already exists. Please pick another."}, 409
-            else:
-                user.username = username
+
+            user.username = username
+        elif allow(MANAGE, user):
+            #admins can optionally set username for users without a username
+            username = params.get("username")
+            if username:
+                username_exists = User.query.filter_by(username=username).first()
+                if username_exists and username_exists.id != user.id:
+                    return {"error": "This username already exists. Please pick another."}, 409
+            user.username = username
         else:
             user.username = None
 
