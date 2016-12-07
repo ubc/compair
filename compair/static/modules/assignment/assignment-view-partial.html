@@ -165,10 +165,10 @@
                                 </select>
                             </span><br />
                             <span class="filter" ng-if="canManageAssignment">
-                                <label uib-btn-checkbox ng-model="answerFilters.anonymous" activeClass="''"
-                                    class="btn" ng-class="{'btn-primary': answerFilters.anonymous, 'btn-default': !answerFilters.anonymous}">
-                                    Classroom display mode
-                                </label>
+                                <button uib-btn-checkbox ng-model="answerFilters.anonymous" activeClass="''"
+                                    class="btn btn-sm" ng-class="{'btn-info': answerFilters.anonymous, 'btn-default': !answerFilters.anonymous}">
+                                    Anonymize<span ng-show="answerFilters.anonymous">d</span> Answers<span ng-show="!answerFilters.anonymous">?</span>
+                                </button>
                                 <a href="" tooltip="Hide student names, scores, and replies when sharing this screen with students" tooltip-trigger tooltip-animation="false" tooltip-placement="bottom">
                                     <i class="fa fa-question-circle"></i>
                                 </a>
