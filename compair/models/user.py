@@ -113,10 +113,10 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
         Defaults to a hash of the user's username if no email is available
         """
         hash_input = None
-        if self.system_role == SystemRole.student:
-            hash_input = str(self.id) + "@compair"
-        else:
-            hash_input = self.email if self.email else self.username
+        if self.system_role != SystemRole.student and self.email:
+            hash_input = self.email
+        elif self.uuid:
+            hash_input = self.uuid + "@compair"
 
         m = hashlib.md5()
         m.update(hash_input.strip().lower().encode('utf-8'))

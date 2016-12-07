@@ -1,9 +1,11 @@
 import unittest
 import mock
+import base64
+import uuid
 
 from compair import db
 from compair.models import User, Comparison, Score, \
-    LTIOutcome
+    LTIOutcome, SystemRole
 from compair.models.comparison import update_scores
 from compair.tests.test_compair import ComPAIRTestCase
 from compair.algorithms import ComparisonPair
@@ -21,16 +23,18 @@ class TestUsersModel(ComPAIRTestCase):
         self.assertEqual(self.user.fullname, "John Smith")
 
     def test_avatar(self):
+        # role != student
         self.user.email = "myemailaddress@example.com"
         self.assertEqual(self.user.avatar, '0bc83cb571cd1c50ba6f3e8a78ef1346')
+
         self.user.email = " myemailaddress@example.com "
-        self.assertEqual(
-            self.user.avatar, '0bc83cb571cd1c50ba6f3e8a78ef1346',
-            'Email with leading and trailing whilespace')
+        self.assertEqual(self.user.avatar, '0bc83cb571cd1c50ba6f3e8a78ef1346', 'Email with leading and trailing whilespace')
         self.user.email = "MyEmailAddress@example.com"
-        self.assertEqual(
-            self.user.avatar, '0bc83cb571cd1c50ba6f3e8a78ef1346',
-            'Email with upper case letters')
+        self.assertEqual(self.user.avatar, '0bc83cb571cd1c50ba6f3e8a78ef1346', 'Email with upper case letters')
+
+        self.user.system_role = SystemRole.student
+        self.user.uuid = str(base64.urlsafe_b64encode(uuid.uuid4().bytes)).replace('=', '')
+        self.assertNotEqual(self.user.avatar, '0bc83cb571cd1c50ba6f3e8a78ef1346', 'Student based on uuid')
 
     def test_set_password(self):
         self.user.password = '123456'
