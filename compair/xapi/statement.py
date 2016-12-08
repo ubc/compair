@@ -30,9 +30,6 @@ class XAPIStatement(object):
             statement.context.context_activities.category = ActivityList()
 
         statement.context.context_activities.category.append(
-            XAPIActivity.ubc_profile()
-        )
-        statement.context.context_activities.category.append(
             XAPIActivity.compair_source()
         )
 

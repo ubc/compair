@@ -89,11 +89,6 @@ class ComPAIRXAPITestCase(ComPAIRTestCase):
         'definition': {'type': 'http://id.tincanapi.com/activitytype/source'},
         'objectType': 'Activity'
     }
-    ubc_profile_category = {
-        'id': 'http://xapi.ubc.ca/',
-        'definition': {'type': 'http://id.tincanapi.com/activitytype/recipe'},
-        'objectType': 'Activity'
-    }
 
     def generate_tracking(self, with_duration=False, **kargs):
         tracking = {
@@ -116,8 +111,6 @@ class ComPAIRXAPITestCase(ComPAIRTestCase):
             categories = statement['context']['contextActivities']['category']
             self.assertIn(self.compair_source_category, categories)
             categories.remove(self.compair_source_category)
-            self.assertIn(self.ubc_profile_category, categories)
-            categories.remove(self.ubc_profile_category)
 
             if len(categories) == 0:
                 del statement['context']['contextActivities']['category']

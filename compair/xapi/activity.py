@@ -26,12 +26,3 @@ class XAPIActivity(object):
                 type='http://id.tincanapi.com/activitytype/source'
             )
         )
-
-    @classmethod
-    def ubc_profile(cls):
-        return Activity(
-            id='http://xapi.ubc.ca/',
-            definition=ActivityDefinition(
-                type='http://id.tincanapi.com/activitytype/recipe'
-            )
-        )
