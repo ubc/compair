@@ -165,6 +165,8 @@ Workers will need to be restarted after any changes to them unless the --autorel
 if `CELERY_ALWAYS_EAGER` is on, then all background task calls will run locally and block until completed (effectively disabling background tasks).
 See the [Celery CELERY_ALWAYS_EAGER docs](http://docs.celeryproject.org/en/latest/configuration.html?highlight=CELERY_BROKER_URL#celery-always-eager).
 
+Restart server after making any changes to settings
+
 User Authentication Settings
 ---------------------------
 
@@ -201,21 +203,14 @@ Disable outgoing https requirements
 `ENFORCE_SSL`: Enforce https on all requests made though LTI and CAS (default: True)
 
 Can be used to disable secure SSL requirements for outgoing and incoming traffic from LTI and CAS.
-This should only be used for development purposes only.
+This should only be used for development or staging purposes.
 
 Google Analytics Web Tracking
 -----------------------------
 1. Register for a Google Analytics web property ID at http://www.google.ca/analytics/.
-2. Create a configuration file under compair/static/tracking.js with the following content:
+2. Set `GA_TRACKING_ID` to your web property id (ex: 'UA-XXXX-Y')
 
-    ```js
-    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-    ga('create', 'UA-XXXX-Y', 'auto');
-    ga('send', 'pageview');
-    ```
-
-3. Replace 'UA-XXXX-Y', on the second line, with your web property id.
-4. Run `gulp tracking` to include the configuration file.
+Restart server after making any changes to settings
 
 Update PDF.js
 -------------

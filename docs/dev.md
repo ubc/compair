@@ -9,7 +9,6 @@ The code should follow [PEP8](https://www.python.org/dev/peps/pep-0008‎) codin
 #### Indentation
 This project uses 4 spaces for the indentation.
 
-
 Testing
 -------
 
@@ -38,21 +37,21 @@ This will start a Karma server, which will monitor the js files. If any file is 
 Dependency Details
 ------------------
 
-We're testing out using Bower for package management and gulp for build system.
+Install all dependencies:
 
-Install the necessary gulp, bower and plugins locally:
-	`npm install`
+    make deps
 
-All the dependencies should now be satisfied, we'll now start the build process, which should download all the front-end packages managed by Bower and include them into `index.html`, run:
-	`node_modules/.bin/gulp`
+Install all the python dependencies (`requirements.txt`):
 
-Note that we're using the latest version of AngularJS beta (1.3.0), which may have conflicts that require user interaction to resolve. If you get an error about not finding a suitable version Angular, run `bower install` alone, which will let you interactively choose the proper 1.3.0 version. Then run `gulp bowerInstall` and `gulp bowerWiredep` in sequence, which should resolve this.
+    pip install -r /path/to/requirements.txt
 
-Partial dependency reference:
-- ng-ckeditor: CKEditor in an Angular directive
-- ng-breadcrumbs: Breadcrumb system meant to work with ngRoutes
-- angular-http-auth: Watch for http 401 errors reissues pending requests on login
-- angular-strap: Bootstrap.js ported from jQuery to Angular
+Install the node dependencies (`package.json`):
+
+	npm install
+
+Install the front-end javascript dependencies (`bower.json`):
+
+	node_modules/.bin/gulp
 
 Running the application
 -----------------------
@@ -83,6 +82,7 @@ For the full list commands for the database management:
     python manage.py database
 
 For any updates to the database model SQLAlchemy Alembic scripts are used. ([detailed information](http://alembic.readthedocs.org/en/latest/))
+
 ###Setting up Alembic
 * Setup the environment: `alembic init alembic`
 * Set the "sqlalchemy.url" in alembic.ini
@@ -93,7 +93,7 @@ For any updates to the database model SQLAlchemy Alembic scripts are used. ([det
 Conventions
 -----------
 
-Each page and route should be in their own modules. The primary Javascript import should be named `<module name>-module.js`. The primary template for the module should be named `<module name>-partial.html`. See `static/modules/example` for an example template that can be used as a base for new modules.
+Each page and route should be in their own modules. The primary Javascript import should be named `<module name>-module.js`. The primary template for the module should be named `<module name>-partial.html`. Directives should be named `<directive name>-directive.js`.
 
 Common code shared across many modules in the application should be abstracted out into it's own module and placed in `static/modules/common`.
 
