@@ -64,8 +64,8 @@
     <fieldset>
         <legend>Schedule</legend>
         <div class="instructional-text">
-            <p><strong>Students can answer and edit their answers only during the answering dates and times you set below.</strong> Students do not see an assignment in the application until the answering period begins. Students can read all answers only <em>after</em> they have completed the required number of comparisons.</p>
-            <p><strong>By default, students can compare answers after the answer period ends.</strong> You may instead set specific dates and times for the comparison period. Note that if you manually set a comparison period, students can read all answers only <em>after</em> the comparison period ends.</p>
+            <p><strong>Students can submit and edit their answers only during the answering dates and times you set below.</strong> Students do not see an assignment in the application until the answering period begins. Students can read all answers only <em>after</em> they have completed the required number of comparisons.</p>
+            <p><strong>By default, students can compare answers after the answering period ends.</strong> You may instead set specific dates and times for the comparison period. Note that if you manually set a comparison period, students can read all answers only <em>after</em> the comparison period ends.</p>
         </div>
 
         <div class="row">
@@ -144,7 +144,6 @@
         <legend>Criteria</legend>
         <div class="instructional-text">
             <p><strong>The criteria below appear when students compare answers</strong> for this assignment, to guide them in their critical-thinking process. For each criterion, students will need to choose a preferred answer from a given pair. Note that the number of criteria is permanently set once students start comparing, so you won't be able to add or drop criteria after comparing begins.</p>
-            <comparison-preview></comparison-preview>
         </div>
         <ng-include src="'modules/criterion/criterion-assignment-partial.html'"></ng-include>
     </fieldset>
@@ -153,17 +152,61 @@
         <legend>Comparisons</legend>
         <div class="instructional-text">
             <p>For each comparison, students will need to choose a preferred answer for each criterion you've set above and write separate feedback for each answer in a given pair. For this assignment, students are currently required to submit:
-                <strong ng-show="assignment.number_of_comparisons && !assignment.addPractice">{{assignment.number_of_comparisons}} comparison<span ng-show="assignment.number_of_comparisons > 1">s</span></strong><strong ng-show="assignment.number_of_comparisons && assignment.addPractice">{{assignment.number_of_comparisons*1+1}} comparisons</strong><strong ng-show="!assignment.number_of_comparisons && assignment.addPractice">1 comparison</strong><strong ng-show="!assignment.number_of_comparisons && !assignment.addPractice">0 comparisons</strong><span ng-show="assignment.enable_self_evaluation"> and <strong>1 self-evaluation</strong></span>,
-                which means <strong>students review</strong>
-                <span ng-show="!assignment.enable_self_evaluation">
-                    <strong ng-show="assignment.number_of_comparisons && !assignment.addPractice">{{assignment.number_of_comparisons*2}} answers.</strong><strong ng-show="assignment.number_of_comparisons && assignment.addPractice">{{assignment.number_of_comparisons*2+2}} answers.</strong><strong ng-show="!assignment.number_of_comparisons && assignment.addPractice">2 answers.</strong><strong ng-show="!assignment.number_of_comparisons && !assignment.addPractice">0 answers.</strong></span>
-                <span ng-show="assignment.enable_self_evaluation">
-                    <strong ng-show="assignment.number_of_comparisons && !assignment.addPractice">{{assignment.number_of_comparisons*2+1}} answers</strong><strong ng-show="assignment.number_of_comparisons && assignment.addPractice">{{assignment.number_of_comparisons*2+3}} answers</strong><strong ng-show="!assignment.number_of_comparisons && assignment.addPractice">3 answers</strong><strong ng-show="!assignment.number_of_comparisons && !assignment.addPractice">1 answer</strong>,
-                including their own.</span>
+                <strong ng-show="assignment.number_of_comparisons && !assignment.addPractice">{{assignment.number_of_comparisons}} comparison<span ng-show="assignment.number_of_comparisons > 1">s</span></strong><strong ng-show="assignment.number_of_comparisons && assignment.addPractice">{{assignment.number_of_comparisons*1+1}} comparisons</strong><strong ng-show="!assignment.number_of_comparisons && assignment.addPractice">1 comparison</strong><strong ng-show="!assignment.number_of_comparisons && !assignment.addPractice">0 comparisons</strong><span ng-show="assignment.enable_self_evaluation"> and <strong>1 self-evaluation</strong></span>.
             </p>
             <p>By default, <strong>answers are scored and ranked</strong> during comparisons. However, you may disable this by changing the answer selection option below.</p>
         </div>
+        
+        <label class="required-star">How answers are selected for comparisons</label>
+        <p ng-if="assignment.pairing_algorithm == 'adaptive'"><em>Adaptively (adds answer scores and rank) &ndash; default</em></p>
+        <p ng-if="assignment.pairing_algorithm == 'random'"><em>Randomly (no answer scores or rank)</em></p>
+        <a href="" ng-click="showAdvanced = !showAdvanced">
+            <p>
+                <i class="fa fa-chevron-down" ng-show="showAdvanced"></i>
+                <i class="fa fa-chevron-right" ng-hide="showAdvanced"></i>
+                <span id="app-login-toggle">Change how answers are selected and scored/ranked?</span>
+            </p>
+        </a>
+        <div ng-show="showAdvanced">
+            <br />
+            <div class="row">
+                <div class="form-check col-md-1"></div>
+                <div class="form-check col-md-5">
+                    <label class="form-check-label">
+                        <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm"
+                               value="{{PairingAlgorithm.adaptive}}" ng-disabled="assignment.compared">
+                        &nbsp;Adaptively select answers for comparison (add scores/rank):
+                    </label>
+                    <ul>
+                        <li>Answers receive scores (only instructors see) based on wins</li>
+                        <li>Answers paired for comparison based on similarity in scores</li>
+                        <li>Later students may experience increased level of difficulty</li>
+                    </ul>
+                    <label ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}'">Let students see rank (but not score) for: &nbsp;</label>
+                    <select ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}'" ng-model="assignment.rank_display_limit">
+                        <option value="0">No answers (ranking hidden)</option>
+                        <option value="10">Answers ranked 10th and higher</option>
+                        <option value="20">Answers ranked 20th and higher</option>
+                    </select>
+                </div>
+                <div class="form-check col-md-1"></div>
+                <div class="form-check col-md-5">
+                    <label class="form-check-label">
+                        <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm"
+                               value="{{PairingAlgorithm.random}}" ng-disabled="assignment.compared">
+                        &nbsp;Randomly select answers for comparison (no scores/rank):
+                    </label>
+                    <ul>
+                        <li>Answers receive no scores (because random pairing used)</li>
+                        <li>Answers paired for comparison based on chance alone</li>
+                        <li>All students theoretically experience similar level of difficulty</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
 
+        <hr />
+        
         <div class="form-group">
             <compair-field-with-feedback form-control="assignmentForm.number_of_comparisons">
                 <label class="required-star">Number of peer answer comparisons required from each student</label>
@@ -173,9 +216,9 @@
 
         <hr />
 
-        <p>Add-on comparison options:</p>
+        <p><strong>Add-on comparison options:</strong></p>
         <input id="add_practice" type="checkbox" name="add_practice" ng-model="assignment.addPractice" ng-disabled="assignment.compared">
-        <label for="add_practice">Start students with instructor-created answer pair for practice (before peer comparisons)</label>
+        <label class="not-bold" for="add_practice">Start students with instructor-created answer pair for practice (before peer comparisons)</label>
 
         <div ng-show="assignment.addPractice">
             <br />
@@ -235,67 +278,27 @@
         <br />
 
         <input id="enable_self_evaluation" type="checkbox" name="enable_self_evaluation" ng-model="assignment.enable_self_evaluation">
-        <label for="enable_self_evaluation">Require that students also evaluate their own answer (after peer comparisons)</label>
+        <label class="not-bold" for="enable_self_evaluation">Require that students also evaluate their own answer (after peer comparisons)</label>
 
         <br />
 
         <input id="educators_can_compare" type="checkbox" name="educators_can_compare" ng-model="assignment.educators_can_compare">
-        <label for="educators_can_compare">Allow instructors and teaching assistants to compare student answer pairs</label>
+        <label class="not-bold" for="educators_can_compare">Allow instructors and teaching assistants to compare student answers</label>
 
         <br />
 
         <input id="students_can_reply" type="checkbox" ng-model="assignment.students_can_reply">
-        <label for="students_can_reply">Allow students to post additional replies to one another</label>
+        <label class="not-bold" for="students_can_reply">Allow students to post additional replies to one another (using their profile's display name)</label>
 
         <hr />
 
-            <label class="required-star">Answer Selection</label>
-            <p ng-if="assignment.pairing_algorithm == 'adaptive'">Answers adaptively selected for comparison (adds answer scores and rank) &ndash; <em>default</em></p>
-            <p ng-if="assignment.pairing_algorithm == 'random'">Answers randomly selected for comparison (no answer scores or rank)</p>
-            <a href="" ng-click="showAdvanced = !showAdvanced">
-                <p>
-                    <i class="fa fa-chevron-down" ng-show="showAdvanced"></i>
-                    <i class="fa fa-chevron-right" ng-hide="showAdvanced"></i>
-                    <span id="app-login-toggle">Change how answers are selected and scored/ranked?</span>
-                </p>
-            </a>
-            <div ng-show="showAdvanced">
-                <br />
-                <div class="row">
-                    <div class="form-check col-md-1"></div>
-                    <div class="form-check col-md-5">
-                        <label class="form-check-label">
-                            <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm"
-                                   value="{{PairingAlgorithm.adaptive}}" ng-disabled="assignment.compared">
-                            &nbsp;Adaptively select answers for comparison (add scores/rank):
-                        </label>
-                        <ul>
-                            <li>Answers receive scores (only instructors see) based on wins</li>
-                            <li>Answers paired for comparison based on similarity in scores</li>
-                            <li>Later students may experience increased level of difficulty</li>
-                        </ul>
-                        <label ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}'">Let students see rank (but not score) for: &nbsp;</label>
-                        <select ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}'" ng-model="assignment.rank_display_limit">
-                            <option value="0">No answers (ranking hidden)</option>
-                            <option value="10">Answers ranked 10th and higher</option>
-                            <option value="20">Answers ranked 20th and higher</option>
-                        </select>
-                    </div>
-                    <div class="form-check col-md-1"></div>
-                    <div class="form-check col-md-5">
-                        <label class="form-check-label">
-                            <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm"
-                                   value="{{PairingAlgorithm.random}}" ng-disabled="assignment.compared">
-                            &nbsp;Randomly select answers for comparison (no scores/rank):
-                        </label>
-                        <ul>
-                            <li>Answers receive no scores (because random pairing used)</li>
-                            <li>Answers paired for comparison based on chance alone</li>
-                            <li>All students theoretically experience similar level of difficulty</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+        <p class="text-center">With these settings, students will review</strong>
+                <span ng-show="!assignment.enable_self_evaluation">
+                    <strong ng-show="assignment.number_of_comparisons && !assignment.addPractice">{{assignment.number_of_comparisons*2}} answers.</strong><strong ng-show="assignment.number_of_comparisons && assignment.addPractice">{{assignment.number_of_comparisons*2+2}} answers.</strong><strong ng-show="!assignment.number_of_comparisons && assignment.addPractice">2 answers.</strong><strong ng-show="!assignment.number_of_comparisons && !assignment.addPractice">0 answers.</strong></span>
+                <span ng-show="assignment.enable_self_evaluation">
+                    <strong ng-show="assignment.number_of_comparisons && !assignment.addPractice">{{assignment.number_of_comparisons*2+1}} answers</strong><strong ng-show="assignment.number_of_comparisons && assignment.addPractice">{{assignment.number_of_comparisons*2+3}} answers</strong><strong ng-show="!assignment.number_of_comparisons && assignment.addPractice">3 answers</strong><strong ng-show="!assignment.number_of_comparisons && !assignment.addPractice">1 answer</strong>,
+                including their own.</span>
+        
     </fieldset>
 
     <fieldset>

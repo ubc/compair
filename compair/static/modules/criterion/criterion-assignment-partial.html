@@ -29,6 +29,8 @@
             <div mathjax hljs ng-bind-html="criterion.description"></div>
         </div>
     </div>
+    
+    <comparison-preview ng-show="assignment.criteria.length > 0"></comparison-preview>
 
     <div ng-show="assignment.criteria.length < 1">
         <p>No criteria added yet for this assignment. Please select or create a new one below.</p>
