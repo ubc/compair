@@ -5,7 +5,7 @@
     <form name="courseForm" class="form" ng-submit="save()" novalidate>
 
         <fieldset>
-            <legend>Course Details</legend>
+            <legend>Course</legend>
             <compair-field-with-feedback form-control="courseForm.courseName">
                 <label for="courseName" class="required-star">Course Name</label>
                 <input id="courseName" name="courseName" ng-model="course.name"
@@ -23,7 +23,7 @@
                     <compair-field-with-feedback form-control="courseForm.courseTerm">
                         <label for="courseTerm" class="required-star">Term/Semester</label>
                         <input id="courseTerm" name="courseTerm" ng-model="course.term"
-                        type="text" class="form-control" required maxlength="255" />
+                        type="text" class="form-control" required maxlength="255" placeholder="e.g. W1" />
                     </compair-field-with-feedback>
                 </div>
             </div>
