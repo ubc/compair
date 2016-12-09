@@ -22,8 +22,13 @@
         </compair-field-with-feedback>
 
         <div>
-            <label for="importFile">PDF Attachment (maximum size 25MB)</label>
-            <p ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)"><em>Tip: Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> or using <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a> or <a href="http://www.google.com/chrome/">Chrome</a> if you have problems uploading.</em></p>
+            <label for="importFile">Attachment (maximum size 25MB)</label>
+            <p ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)">
+                <em>
+                    Tip: Allowed file types include PDFs, MP3s, MP4s, JPGs, and PNGs.
+                    Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> or using <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a> or <a href="http://www.google.com/chrome/">Chrome</a> if you have problems uploading PDFs.
+                </em>
+            </p>
             <input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)" multiple/>
             <p class="instructional-text" ng-show="uploader.queue.length">The file below will be attached when you <strong>save this assignment</strong>. You may also remove the file and upload another instead.</p>
             <div class="row" ng-repeat="item in uploader.queue">
