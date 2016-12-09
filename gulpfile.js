@@ -94,7 +94,6 @@ gulp.task('prod_copy_fonts', function () {
 gulp.task('prod_minify_js', ['prod_templatecache'], function() {
     var libs = gulp.src([
         './compair/static/compair-config.js',
-        './compair/static/modules/common/pdf.js',
         './compair/static/build/templates.js',
         // ckeditor plugins
         './bower_components/ckeditor/plugins/codesnippet/plugin.js',

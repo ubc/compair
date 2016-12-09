@@ -205,7 +205,9 @@ def get_file():
     return {
         'id': fields.String(attribute="uuid"),
         'name': fields.String,
-        'alias': fields.String
+        'alias': fields.String,
+        'extension': fields.String,
+        'mimetype': fields.String
     }
 
 

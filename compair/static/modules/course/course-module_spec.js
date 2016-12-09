@@ -230,7 +230,7 @@ describe('course-module', function () {
             createController = function (route, params) {
                 return $controller('CourseSelectModalController', {
                     $scope: $rootScope,
-                    $modalInstance: modalInstance,
+                    $uibModalInstance: modalInstance,
                     $routeParams: params || {}
                 });
             }
@@ -372,7 +372,7 @@ describe('course-module', function () {
             createController = function (route, params) {
                 return $controller('CourseDuplicateModalController', {
                     $scope: $rootScope,
-                    $modalInstance: modalInstance,
+                    $uibModalInstance: modalInstance,
                     $routeParams: params || {}
                 });
             }

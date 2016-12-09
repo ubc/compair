@@ -9,7 +9,7 @@ class XAPIResourceIRI(object):
 
     @classmethod
     def _get_attachment_url(cls):
-        return XAPI.get_base_url()+'app/pdf/'
+        return XAPI.get_base_url()+'app/attachment/'
 
     @classmethod
     def _get_report_url(cls):

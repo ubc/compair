@@ -671,7 +671,7 @@ class TestFixture:
         db.session.commit()
         return user_courses
 
-    def add_file(self, user):
-        db_file = FileFactory(user=user)
+    def add_file(self, user, **kwargs):
+        db_file = FileFactory(user=user, **kwargs)
         db.session.commit()
         return db_file

@@ -90,15 +90,15 @@ module.directive('compairAnswerContent', function() {
 module.controller(
     "AssignmentCommentModalController",
     ['$scope', 'AssignmentCommentResource', 'AssignmentResource', 'Toaster',
-     'EditorOptions', "$modalInstance",
+     'EditorOptions', "$uibModalInstance",
     function ($scope, AssignmentCommentResource, AssignmentResource, Toaster,
-              EditorOptions, $modalInstance)
+              EditorOptions, $uibModalInstance)
     {
         //$scope.courseId
         //$scope.assignmentId
         $scope.comment = typeof($scope.comment) != 'undefined' ? $scope.comment : {};
         $scope.method = $scope.comment.id ? 'edit' : 'new';
-        $scope.modalInstance = $modalInstance;
+        $scope.modalInstance = $uibModalInstance;
         $scope.editorOptions = EditorOptions.basic;
 
         $scope.parent = AssignmentResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId});
@@ -128,7 +128,7 @@ module.controller(
                         Toaster.success("Comment Updated!");
                     }
 
-                    $modalInstance.close($scope.comment);
+                    $uibModalInstance.close($scope.comment);
                 },
                 function (ret)
                 {
@@ -143,16 +143,16 @@ module.controller(
 module.controller(
     "AnswerCommentModalController",
     ['$scope', 'AnswerCommentResource', 'AnswerResource', 'Toaster', 'Authorize',
-     'AnswerCommentType', 'AssignmentResource', 'EditorOptions', "$modalInstance",
+     'AnswerCommentType', 'AssignmentResource', 'EditorOptions', "$uibModalInstance",
     function ($scope, AnswerCommentResource, AnswerResource, Toaster, Authorize,
-              AnswerCommentType, AssignmentResource, EditorOptions, $modalInstance)
+              AnswerCommentType, AssignmentResource, EditorOptions, $uibModalInstance)
     {
         //$scope.courseId
         //$scope.assignmentId
         //$scope.answerId
         $scope.comment = typeof($scope.comment) != 'undefined' ? $scope.comment : {};
         $scope.method = $scope.comment.id ? 'edit' : 'new';
-        $scope.modalInstance = $modalInstance;
+        $scope.modalInstance = $uibModalInstance;
 
         $scope.editorOptions = EditorOptions.basic;
         $scope.answerComment = true;
@@ -170,7 +170,7 @@ module.controller(
                     function (ret) {
                         if (!ret.students_can_reply) {
                             Toaster.error("No replies can be made for answers in this assignment.");
-                            $modalInstance.dismiss();
+                            $uibModalInstance.dismiss();
                         }
                     },
                     function (ret) {
@@ -212,7 +212,7 @@ module.controller(
                         Toaster.success("Reply Updated!");
                     }
 
-                    $modalInstance.close($scope.comment);
+                    $uibModalInstance.close($scope.comment);
                 },
                 function(ret) {
                     $scope.submitted = false;

@@ -104,16 +104,16 @@ module.controller(
 
 module.controller(
     'AddGroupModalController',
-    ["$rootScope", "$scope", "$modalInstance",
-    function ($rootScope, $scope, $modalInstance) {
+    ["$rootScope", "$scope", "$uibModalInstance",
+    function ($rootScope, $scope, $uibModalInstance) {
         $scope.group = {};
 
         $scope.cancel = function (ret) {
-            $modalInstance.dismiss();
+            $uibModalInstance.dismiss();
         }
 
         $scope.groupSubmit = function () {
-            $modalInstance.close($scope.group.name);
+            $uibModalInstance.close($scope.group.name);
         };
     }
 ]);

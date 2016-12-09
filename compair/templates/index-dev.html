@@ -94,7 +94,7 @@
         <script src="{{ url_for('static', filename='modules/common/hljs-directive.js') }}"></script>
         <script src="{{ url_for('static', filename='modules/common/timer-module.js') }}"></script>
         <script src="{{ url_for('static', filename='modules/common/xapi-module.js') }}"></script>
-        <script src="{{ url_for('static', filename='modules/common/pdf.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/common/attachment-directive.js') }}"></script>
         <!-- - Non-Route Modules -->
         <script src="{{ url_for('static', filename='modules/authentication/authentication-service.js') }}"></script>
         <script src="{{ url_for('static', filename='modules/authorization/authorization-module.js') }}"></script>
@@ -130,14 +130,15 @@
                     AuthTypesEnabled.cas = {{ 'true' if cas_login_enabled else 'false' }};
                     AuthTypesEnabled.lti = {{ 'true' if lti_login_enabled else 'false' }};
                 }]);
-
+                angular.module('ubc.ctlt.compair.attachment')
+                .run( ['FileExtensions', function(FileExtensions) {
+                    FileExtensions.attachment = {{ attachment_extensions|string|safe }};
+                }]);
                 angular.module('ubc.ctlt.compair.common.xapi')
                 .run( ['$location', 'xAPISettings', function($location, xAPISettings) {
                     xAPISettings.enabled = {{ 'true' if xapi_enabled else 'false' }};
                     var baseUrl = '{{xapi_app_base_url if xapi_app_base_url else ''}}';
-                    if (baseUrl == '') {
-                        baseUrl = $location.absUrl().replace("app/#"+$location.url(), "");
-                    }
+                    if (baseUrl == '') { baseUrl = $location.absUrl().replace("app/#"+$location.url(), ""); }
                     xAPISettings.baseUrl = baseUrl;
                 }]);
             })();
