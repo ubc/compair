@@ -5,7 +5,7 @@
             <span ng-repeat="score in answer.scores">
                 <span class="label label-warning pull-right score-display"
                     ng-if="answer && showScore && score.criterion_id == criterion">
-                    Score: {{ score.normalized_score }}%
+                    Score: {{score.normalized_score|number:0}}%
                 </span>
             </span>
         </h4>

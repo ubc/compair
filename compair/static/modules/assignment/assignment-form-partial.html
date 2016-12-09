@@ -156,7 +156,7 @@
             </p>
             <p>By default, <strong>answers are scored and ranked</strong> during comparisons. However, you may disable this by changing the answer selection option below.</p>
         </div>
-        
+
         <label class="required-star">How answers are selected for comparisons</label>
         <p ng-if="assignment.pairing_algorithm == 'adaptive'"><em>Adaptively (adds answer scores and rank) &ndash; default</em></p>
         <p ng-if="assignment.pairing_algorithm == 'random'"><em>Randomly (no answer scores or rank)</em></p>
@@ -206,7 +206,7 @@
         </div>
 
         <hr />
-        
+
         <div class="form-group">
             <compair-field-with-feedback form-control="assignmentForm.number_of_comparisons">
                 <label class="required-star">Number of peer answer comparisons required from each student</label>
@@ -288,7 +288,7 @@
                 <span ng-show="assignment.enable_self_evaluation">
                     <strong ng-show="assignment.number_of_comparisons && !assignment.addPractice">{{assignment.number_of_comparisons*2+1}} answers</strong><strong ng-show="assignment.number_of_comparisons && assignment.addPractice">{{assignment.number_of_comparisons*2+3}} answers</strong><strong ng-show="!assignment.number_of_comparisons && assignment.addPractice">3 answers</strong><strong ng-show="!assignment.number_of_comparisons && !assignment.addPractice">1 answer</strong>,
                 including their own.</span>
-        
+
     </fieldset>
 
     <fieldset>
@@ -303,21 +303,21 @@
             <div class="row text-center">
                 <div class="col-md-2">
                     <input class="form-control" type="number" min="0" id="answer_grade_weight" name="answer_grade_weight" ng-model="assignment.answer_grade_weight">
-                    <span class="text-muted">{{getGradeWeightAsPercent(assignment.answer_grade_weight) | number : 2 }}% for answering</span>
+                    <span class="text-muted">{{getGradeWeightAsPercent(assignment.answer_grade_weight)|number:2}}% for answering</span>
                 </div>
                 <div class="col-md-1">
                     +
                 </div>
                 <div class="col-md-2">
                     <input class="form-control" type="number" min="0" id="comparison_grade_weight" name="comparison_grade_weight" ng-model="assignment.comparison_grade_weight">
-                    <span class="text-muted">{{getGradeWeightAsPercent(assignment.comparison_grade_weight) | number : 2 }}% for comparing</span>
+                    <span class="text-muted">{{getGradeWeightAsPercent(assignment.comparison_grade_weight)|number:2}}% for comparing</span>
                 </div>
                 <div class="col-md-1" ng-show="assignment.enable_self_evaluation">
                     +
                 </div>
                 <div class="col-md-3" ng-show="assignment.enable_self_evaluation">
                     <input class="form-control" type="number" min="0" id="self_evaluation_grade_weight" name="self_evaluation_grade_weight" ng-model="assignment.self_evaluation_grade_weight">
-                    <span class="text-muted">{{getGradeWeightAsPercent(assignment.self_evaluation_grade_weight) | number : 2 }}% for self evaluating</span>
+                    <span class="text-muted">{{getGradeWeightAsPercent(assignment.self_evaluation_grade_weight)|number:2}}% for self evaluating</span>
                 </div>
                 <div class="col-md-1">
                     =
