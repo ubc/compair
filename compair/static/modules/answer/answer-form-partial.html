@@ -65,7 +65,7 @@
                 class="form-control" rows="8" ckeditor="editorOptions" ng-required="!(uploader.queue.length || uploadedFile)">
             </textarea>
         </div>
-	<p ng-if="canManageAssignment" class="text-center">(Note: Answers submitted as an instructor/TA will not be included in comparisons and appear to students after they answer/compare.)</p>
+	<p ng-if="canManageAssignment" class="text-center">(Note: Answers submitted as an instructor/TA will not be included in comparisons and appear to students only after they answer/compare.)</p>
     </fieldset>
     <div class="text-center" ng-show="answer.draft">
         <input type="submit" class="btn btn-default btn-lg" value="Save Draft"
