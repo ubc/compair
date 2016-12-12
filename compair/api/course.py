@@ -308,7 +308,10 @@ class CourseDuplicateAPI(Resource):
                 duplicate_answer1 = Answer(
                     assignment=duplicate_assignment,
                     user_id=current_user.id,
-                    content=answer1.content
+                    content=answer1.content,
+                    practice=answer1.practice,
+                    active=answer1.active,
+                    draft=answer1.draft
                 )
                 # register assignemnt files for later
                 if answer1.file and answer1.file.active:
@@ -321,7 +324,10 @@ class CourseDuplicateAPI(Resource):
                 duplicate_answer2 = Answer(
                     assignment=duplicate_assignment,
                     user_id=current_user.id,
-                    content=answer2.content
+                    content=answer2.content,
+                    practice=answer2.practice,
+                    active=answer2.active,
+                    draft=answer2.draft
                 )
                 # register assignemnt files for later
                 if answer2.file and answer2.file.active:

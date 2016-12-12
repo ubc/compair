@@ -6,10 +6,11 @@
         <div class="col-sm-2">
             <hr class="visible-xs" />
             <p>
+                <!-- Can edit: Public criteria on new assignments (will create duplicate) or Non public criteria if system admin or owner of criterion -->
                 <a href=""
                    ng-click="changeCriterion(criterion)"
-                   ng-if="(canManageCriteriaAssignment || criterion.user_id==loggedInUserId) && (criterion.public == false || !assignment.id)">
-                Edit
+                   ng-if="(criterion.public == true && !assignment.id) || (criterion.public == false && (canManageCriteriaAssignment || criterion.user_id==loggedInUserId))">
+                    Edit
                 </a>
                 <span ng-if="criterion.public == true && assignment.id" class="text-muted">
                     (not editable)
@@ -29,7 +30,7 @@
             <div mathjax hljs ng-bind-html="criterion.description"></div>
         </div>
     </div>
-    
+
     <comparison-preview ng-show="assignment.criteria.length > 0"></comparison-preview>
 
     <div ng-show="assignment.criteria.length < 1">
@@ -41,7 +42,7 @@
 
         <!-- dropdown with leftover criteria / Add button-->
         <label>Add Criteria</label>
-        
+
         <br /><br />
 
         <div class="row">

@@ -30,10 +30,10 @@ module.factory(
 module.controller("GradebookController",
     ["$scope", "$log", "$routeParams", "CourseResource", "GradebookResource",
         "GroupResource", "AssignmentResource", "Authorize", "Toaster", "AssignmentCriterionResource",
-        "xAPIStatementHelper",
+        "xAPIStatementHelper", "$filter",
     function($scope, $log, $routeParams, CourseResource, GradebookResource,
         GroupResource, AssignmentResource, Authorize, Toaster, AssignmentCriterionResource,
-        xAPIStatementHelper)
+        xAPIStatementHelper, $filter)
     {
         $scope.users = [];
         $scope.gradebookFilters = {
@@ -58,6 +58,13 @@ module.controller("GradebookController",
             function(ret)
             {
                 $scope.gradebook = ret['gradebook'];
+                _.forEach($scope.gradebook, function(entry) {
+                    _.forEach(entry.scores, function(score, key) {
+                        if (!isNaN(score)) {
+                            entry.scores[key] = $filter('number')(score,0);
+                        }
+                    });
+                });
                 $scope.totalComparisonsRequired=ret['total_comparisons_required'];
                 $scope.includeScores = ret['include_scores'];
                 $scope.includeSelfEval = ret['include_self_evaluation'];

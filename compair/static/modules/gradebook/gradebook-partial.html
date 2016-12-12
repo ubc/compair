@@ -58,8 +58,8 @@
                     <th class="text-center" ng-if="includeSelfEval">
                         <a href="" ng-click="updateTableOrderBy('num_self_evaluation')">Self-Evaluation</a>
                     </th>
-                    <th class="text-center" ng-if="includeSelfEval">
-                        <a href="" ng-click="updateTableOrderBy('grade')">Grade </a>
+                    <th class="text-center">
+                        <a href="" ng-click="updateTableOrderBy('grade')">Grade</a>
                     </th>
                 </tr>
             </thead>
@@ -81,7 +81,7 @@
                         'text-success': entry.scores[gradebookFilters.sortby] >= 0
                         }">
                         <strong>
-                            {{entry.scores[gradebookFilters.sortby]|number:0}}
+                            {{entry.scores[gradebookFilters.sortby]}}
                             <span ng-if="entry.scores[gradebookFilters.sortby] >= 0">%</span>
                         </strong>
                     </td>

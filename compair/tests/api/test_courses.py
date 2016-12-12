@@ -461,6 +461,9 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
                     self.assertNotEqual(original_answer1.id, duplicate_answer1.id)
                     self.assertEqual(duplicate_assignment.id, duplicate_answer1.assignment_id)
                     self.assertEqual(original_answer1.content, duplicate_answer1.content)
+                    self.assertEqual(original_answer1.practice, duplicate_answer1.practice)
+                    self.assertEqual(original_answer1.active, duplicate_answer1.active)
+                    self.assertEqual(original_answer1.draft, duplicate_answer1.draft)
 
                     original_answer2 = original_comparison_example.answer2
                     duplicate_answer2 = duplicate_comparison_example.answer2
@@ -468,3 +471,6 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
                     self.assertNotEqual(original_answer2.id, duplicate_answer2.id)
                     self.assertEqual(duplicate_assignment.id, duplicate_answer2.assignment_id)
                     self.assertEqual(original_answer2.content, duplicate_answer2.content)
+                    self.assertEqual(original_answer2.practice, original_answer2.practice)
+                    self.assertEqual(original_answer2.active, original_answer2.active)
+                    self.assertEqual(original_answer2.draft, original_answer2.draft)
