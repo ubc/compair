@@ -275,7 +275,8 @@ def get_comparison_set(restrict_user=True):
 
         'answer1_feedback': fields.List(fields.Nested(get_answer_comment(restrict_user))),
         'answer2_feedback': fields.List(fields.Nested(get_answer_comment(restrict_user))),
-        'self_evaluation': fields.List(fields.Nested(get_answer_comment(restrict_user)))
+        'self_evaluation': fields.List(fields.Nested(get_answer_comment(restrict_user))),
+        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.get('created')))
     }
 
 def get_import_users_results(restrict_user=True):

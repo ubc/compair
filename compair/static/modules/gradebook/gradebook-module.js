@@ -42,6 +42,7 @@ module.controller("GradebookController",
             sortby: null
         };
         var userIds = {};
+        $scope.isNumber = angular.isNumber;
 
         CourseResource.getStudents({'id': $scope.courseId}).$promise.then(
             function (ret) {
@@ -58,13 +59,6 @@ module.controller("GradebookController",
             function(ret)
             {
                 $scope.gradebook = ret['gradebook'];
-                _.forEach($scope.gradebook, function(entry) {
-                    _.forEach(entry.scores, function(score, key) {
-                        if (!isNaN(score)) {
-                            entry.scores[key] = $filter('number')(score,0);
-                        }
-                    });
-                });
                 $scope.totalComparisonsRequired=ret['total_comparisons_required'];
                 $scope.includeScores = ret['include_scores'];
                 $scope.includeSelfEval = ret['include_self_evaluation'];

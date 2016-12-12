@@ -58,7 +58,7 @@ before_install:
 
 # command to install dependencies
 install:
-  - if [ "$DOCKER" != "true" ]; then make deps;node_modules/.bin/gulp prod; fi
+  - if [ "$DOCKER" != "true" ]; then make deps; node_modules/gulp/bin/gulp.js prod; fi
   - if [ "$DOCKER" = "true" ]; then docker-compose up -d; sleep 10; fi
 
 script:

@@ -47,7 +47,7 @@
                         <a href="" ng-click="updateTableOrderBy('num_answers')">Answered</a>
                     </th>
                     <th class="text-center" ng-if="includeScores">
-                        <a href="" ng-click="updateTableOrderBy('scores['+gradebookFilters.sortby+']')">Answer Score</a>
+                        <a href="" ng-click="updateTableOrderBy('scores[\''+gradebookFilters.sortby+'\']')">Answer Score</a>
                     </th>
                     <th class="text-center">
                         <a href="" ng-click="updateTableOrderBy('flagged')">Flagged</a>
@@ -77,12 +77,12 @@
                     <td class="text-center" ng-if="includeScores"
                         ng-class="{
                         'text-danger': entry.num_answers == 0,
-                        'text-warning': entry.num_answers > 0 && !(entry.scores[gradebookFilters.sortby] >= 0),
-                        'text-success': entry.scores[gradebookFilters.sortby] >= 0
+                        'text-warning': entry.num_answers > 0 && !isNumber(entry.scores[gradebookFilters.sortby]),
+                        'text-success': isNumber(entry.scores[gradebookFilters.sortby])
                         }">
                         <strong>
-                            {{entry.scores[gradebookFilters.sortby]}}
-                            <span ng-if="entry.scores[gradebookFilters.sortby] >= 0">%</span>
+                            <span ng-if="!isNumber(entry.scores[gradebookFilters.sortby])">{{entry.scores[gradebookFilters.sortby]}}</span>
+                            <span ng-if="isNumber(entry.scores[gradebookFilters.sortby])">{{entry.scores[gradebookFilters.sortby]|number:0}}%</span>
                         </strong>
                     </td>
                     <td class="text-center" ng-class="{
