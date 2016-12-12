@@ -47,12 +47,6 @@
     "angular": "1.4.7"
   },
   "overrides": {
-    "fontawesome": {
-      "main": [
-        "./css/font-awesome.css",
-        "./fonts/*"
-      ]
-    },
     "bootstrap": {
       "main": [
         "dist/css/bootstrap.css"
@@ -62,6 +56,13 @@
       "main": [
           "highlight.pack.js",
           "styles/foundation.css"
+      ]
+    },
+    "chosen": {
+      "main": [
+        "chosen.css",
+        "chosen-sprite.png",
+        "chosen-sprite@2x.png"
       ]
     }
   }

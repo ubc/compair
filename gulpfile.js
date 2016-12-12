@@ -30,7 +30,6 @@ var gulp = require('gulp'),
 
 var cssFilenames = [
         './compair/static/lib/bootstrap/dist/css/bootstrap.css',
-        './compair/static/lib/fontawesome/css/font-awesome.css',
         './compair/static/lib/highlightjs/styles/foundation.css',
         './compair/static/lib/angular-loading-bar/build/loading-bar.css',
         './compair/static/lib/AngularJS-Toaster/toaster.css',
@@ -91,6 +90,12 @@ gulp.task('prod_copy_fonts', function () {
     return gulp.src('bower_components/bootstrap/fonts/*.*')
         .pipe(gulp.dest('compair/static/fonts/'));
 });
+gulp.task('prod_copy_images', function () {
+	// chosen image is loaded by chosen.css and default location is
+    // ./
+    return gulp.src('bower_components/chosen/*.png')
+        .pipe(gulp.dest('compair/static/dist/'));
+});
 gulp.task('prod_minify_js', ['prod_templatecache'], function() {
     var libs = gulp.src([
         './compair/static/compair-config.js',
@@ -121,7 +126,7 @@ gulp.task('prod_minify_js', ['prod_templatecache'], function() {
         .pipe(uglify())
         .pipe(gulp.dest('./compair/static/build'));
 });
-gulp.task('revision', ['prod_minify_js_libs', 'prod_compile_minify_css', 'prod_minify_js', 'prod_copy_fonts'], function() {
+gulp.task('revision', ['prod_minify_js_libs', 'prod_compile_minify_css', 'prod_minify_js', 'prod_copy_fonts', 'prod_copy_images'], function() {
     return gulp.src(['./compair/static/build/*.css', './compair/static/build/*.js', '!compair/static/build/templates.js'])
         .pipe(rev())
         .pipe(gulp.dest('./compair/static/dist'))
