@@ -21,7 +21,7 @@ module.constant('FileMimeTypes', {
     jpg: ['image/jpeg', 'image/pjpeg'],
     jpeg: ['image/jpeg', 'image/pjpeg'],
     png: ['image/png'],
-    csv: ['text/csv', 'application/csv']
+    csv: ['text/csv', 'application/csv', 'text/plain', 'text/comma-separated-values']
 });
 
 /***** Services *****/
