@@ -560,8 +560,6 @@ class AnswerUserIdAPI(Resource):
                 draft=params.get('draft')
             )
 
-        print params.get('unsaved')
-
         if params.get('unsaved'):
             query = query.filter(Answer.modified == Answer.created)
 

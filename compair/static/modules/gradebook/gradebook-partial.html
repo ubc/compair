@@ -29,8 +29,12 @@
             </div>
         </div>
         <p class="intro-text" ng-if="canManageAssignment">To export data reports for participation and other application statistics, go to <a ng-href="#/report">Download Reports</a>.</p>
+        <div ng-if="!gradebook.length">
+            <hr />
+            <p>No students found for this course. Would you like to <a ng-href="#/course/{{courseId}}/user">manage users</a>?</p>
+        </div>
     </div>
-    <div class="table-responsive">
+    <div class="table-responsive" ng-if="gradebook.length">
         <table class="table table-striped table-bordered">
             <thead>
                 <tr>

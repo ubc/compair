@@ -43,6 +43,7 @@ module.controller("GradebookController",
         };
         var userIds = {};
         $scope.isNumber = angular.isNumber;
+        $scope.gradebook = [];
 
         CourseResource.getStudents({'id': $scope.courseId}).$promise.then(
             function (ret) {
