@@ -41,7 +41,7 @@ module.service('importService',
             case 'users':
                 var count = results.success;
                 Toaster.success("Students Added", "Successfully added "+count+" students.");
-                if (results.invalids.length > 0) {
+                if (results.invalids && results.invalids.length > 0) {
                     $location.path('/course/' + courseId + '/user/import/results');
                 } else {
                     $location.path('/course/' + courseId + '/user');
@@ -49,7 +49,7 @@ module.service('importService',
                 break;
             case 'groups':
                 Toaster.success("Groups Added", "Successfully added "+ results.success +" groups.");
-                if (results.invalids.length > 0) {
+                if (results.invalids && results.invalids.length > 0) {
                     $location.path('/course/'+courseId+'/user/group/import/results');
                 } else {
                     $location.path('/course/'+courseId+'/user');
