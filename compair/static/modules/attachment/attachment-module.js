@@ -21,7 +21,7 @@ module.constant('FileMimeTypes', {
     jpg: ['image/jpeg', 'image/pjpeg'],
     jpeg: ['image/jpeg', 'image/pjpeg'],
     png: ['image/png'],
-    csv: ['text/csv']
+    csv: ['text/csv', 'application/csv']
 });
 
 /***** Services *****/
@@ -75,12 +75,17 @@ module.service('importService',
         uploader.filters.push({
             name: 'importExtensionFilter',
             fn: function(item, options) {
+                var type = item.type.slice(item.type.lastIndexOf('/') + 1);
                 valid = false;
                 _.forEach(FileExtensions.import, function(importExtension) {
-                    if (_.includes(FileMimeTypes[importExtension], item.type)) {
+                    if (_.includes(FileMimeTypes[importExtension], item.type) || importExtension == type) {
                         valid = true;
                     }
                 });
+                if (!valid) {
+                    var allowedExtensions = FileExtensions.import.join(', ').toUpperCase();
+                    Toaster.error("File Type Error", "Only "+allowedExtensions+" files are accepted.")
+                }
                 return valid;
             }
         });
@@ -139,9 +144,10 @@ module.service('attachService',
         uploader.filters.push({
             name: 'attachmentExtensionFilter',
             fn: function(item) {
+                var type = item.type.slice(item.type.lastIndexOf('/') + 1);
                 valid = false;
                 _.forEach(FileExtensions.attachment, function(attachmentExtension) {
-                    if (_.includes(FileMimeTypes[attachmentExtension], item.type)) {
+                    if (_.includes(FileMimeTypes[attachmentExtension], item.type) || attachmentExtension == type) {
                         valid = true;
                     }
                 });
@@ -226,9 +232,10 @@ module.service('answerAttachService',
         uploader.filters.push({
             name: 'attachmentExtensionFilter',
             fn: function(item) {
+                var type = item.type.slice(item.type.lastIndexOf('/') + 1);
                 valid = false;
                 _.forEach(FileExtensions.attachment, function(attachmentExtension) {
-                    if (_.includes(FileMimeTypes[attachmentExtension], item.type)) {
+                    if (_.includes(FileMimeTypes[attachmentExtension], item.type) || attachmentExtension == type) {
                         valid = true;
                     }
                 });
