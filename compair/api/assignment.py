@@ -399,7 +399,8 @@ class AssignmentIdStatusAPI(Resource):
                 assignment_id=assignment.id,
                 active=True,
                 practice=False,
-                draft=True
+                draft=True,
+                saved=True
             ) \
             .all()
 
@@ -502,7 +503,8 @@ class AssignmentRootStatusAPI(Resource):
                 user_id=current_user.id,
                 active=True,
                 practice=False,
-                draft=True
+                draft=True,
+                saved=True
             ) \
             .all()
 

@@ -840,10 +840,26 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(answer.content, rv.json['objects'][0]['content'])
             self.assertEqual(answer.draft, rv.json['objects'][0]['draft'])
 
-            # test successful draft query
+            # test draft query
             rv = self.client.get(url, query_string={'draft': True})
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['objects']))
+
+            # test unsaved query
+            rv = self.client.get(url, query_string={'unsaved': True})
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['objects']))
+            self.assertEqual(answer.uuid, rv.json['objects'][0]['id'])
+            self.assertEqual(answer.content, rv.json['objects'][0]['content'])
+            self.assertEqual(answer.draft, rv.json['objects'][0]['draft'])
+
+            answer.content = answer.content+"123"
+            db.session.commit()
+
+            rv = self.client.get(url, query_string={'unsaved': True})
+            self.assert200(rv)
+            self.assertEqual(0, len(rv.json['objects']))
+
 
         with self.login(self.fixtures.draft_student.username):
              # test successful query
@@ -851,7 +867,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['objects']))
 
-            # test successful draft query
+            # test draft query
             rv = self.client.get(url, query_string={'draft': True})
             self.assert200(rv)
             self.assertEqual(1, len(rv.json['objects']))
@@ -859,12 +875,38 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(draft_answer.content, rv.json['objects'][0]['content'])
             self.assertEqual(draft_answer.draft, rv.json['objects'][0]['draft'])
 
+            # test unsaved query
+            rv = self.client.get(url, query_string={'unsaved': True})
+            self.assert200(rv)
+            self.assertEqual(0, len(rv.json['objects']))
+
+            # test draft + unsaved query
+            rv = self.client.get(url, query_string={'draft': True, 'unsaved': True})
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['objects']))
+            self.assertEqual(draft_answer.uuid, rv.json['objects'][0]['id'])
+            self.assertEqual(draft_answer.content, rv.json['objects'][0]['content'])
+            self.assertEqual(draft_answer.draft, rv.json['objects'][0]['draft'])
+
+            draft_answer.content = draft_answer.content+"123"
+            db.session.commit()
+
+            rv = self.client.get(url, query_string={'draft': True, 'unsaved': True})
+            self.assert200(rv)
+            self.assertEqual(0, len(rv.json['objects']))
+
         with self.login(self.fixtures.instructor.username):
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['objects']))
 
+            # test draft query
             rv = self.client.get(url, query_string={'draft': True})
+            self.assert200(rv)
+            self.assertEqual(0, len(rv.json['objects']))
+
+            # test unsaved query
+            rv = self.client.get(url, query_string={'unsaved': True})
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['objects']))
 

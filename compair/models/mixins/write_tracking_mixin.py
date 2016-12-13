@@ -13,8 +13,10 @@ class WriteTrackingMixin(ModifyTrackingMixin, CreateTrackingMixin):
     def __declare_last__(cls):
         @event.listens_for(cls, 'before_insert')
         def receive_before_insert(mapper, conn, target):
-            target.created = datetime.utcnow()
-            target.modified = datetime.utcnow()
+            now = datetime.utcnow()
+
+            target.created = now
+            target.modified = now
 
             if current_user and current_user.is_authenticated:
                 target.created_user_id = current_user.id

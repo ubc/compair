@@ -92,7 +92,7 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
             },
             comparisons: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/comparisons'},
             user: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/user'},
-            userDrafts: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/user', params:{draft: true}, cache: false}
+            userUnsaved: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/user', params:{draft: true, unsaved: true}, cache: false}
         }
     );
     ret.MODEL = "Answer";
@@ -129,7 +129,7 @@ module.controller(
             $scope.answer.course_id = $scope.courseId;
             $scope.answer.assignment_id = assignmentId;
 
-            AnswerResource.userDrafts({'courseId': $scope.courseId, 'assignmentId': assignmentId}).$promise.then(
+            AnswerResource.userUnsaved({'courseId': $scope.courseId, 'assignmentId': assignmentId}).$promise.then(
                 function (ret) {
                     if (!ret.objects.length) {
                         // if no answers found, create a new draft answer

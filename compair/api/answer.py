@@ -41,6 +41,7 @@ answer_list_parser.add_argument('ids', type=str, required=False, default=None)
 
 user_answer_list_parser = RequestParser()
 user_answer_list_parser.add_argument('draft', type=bool, required=False, default=False)
+user_answer_list_parser.add_argument('unsaved', type=bool, required=False, default=False)
 
 answer_comparison_list_parser = pagination_parser.copy()
 answer_comparison_list_parser.add_argument('group', type=str, required=False, default=None)
@@ -546,7 +547,7 @@ class AnswerUserIdAPI(Resource):
 
         params = user_answer_list_parser.parse_args()
 
-        answers = Answer.query \
+        query = Answer.query \
             .options(joinedload('comments')) \
             .options(joinedload('file')) \
             .options(joinedload('user')) \
@@ -557,8 +558,14 @@ class AnswerUserIdAPI(Resource):
                 course_id=course.id,
                 user_id=current_user.id,
                 draft=params.get('draft')
-            ) \
-            .all()
+            )
+
+        print params.get('unsaved')
+
+        if params.get('unsaved'):
+            query = query.filter(Answer.modified == Answer.created)
+
+        answers = query.all()
 
         on_user_answer_get.send(
             self,

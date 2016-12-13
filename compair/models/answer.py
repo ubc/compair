@@ -53,6 +53,14 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     def private_comment_count(self):
         return self.comment_count - self.public_comment_count
 
+    @hybrid_property
+    def saved(self):
+        return self.modified != self.created
+
+    @saved.expression
+    def saved(cls):
+        return cls.modified != cls.created
+
     @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()
