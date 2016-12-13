@@ -20,6 +20,7 @@ def generate_index():
     current_app.static_url_path = '/'
     index = render_template(
         'index-dev.html',
+        attachment_extensions=list(current_app.config['ATTACHMENT_ALLOWED_EXTENSIONS']),
         app_login_enabled=current_app.config['APP_LOGIN_ENABLED'],
         cas_login_enabled=current_app.config['CAS_LOGIN_ENABLED'],
         lti_login_enabled=current_app.config['LTI_LOGIN_ENABLED']

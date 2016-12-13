@@ -49,7 +49,7 @@
                 }]);
                 angular.module('ubc.ctlt.compair.attachment')
                 .run( ['FileExtensions', function(FileExtensions) {
-                    FileExtensions.attachment = {{ attachment_extensions|string|safe }};
+                    FileExtensions.attachment = {{ attachment_extensions|string|safe if attachment_extensions else [] }};
                 }]);
                 angular.module('ubc.ctlt.compair.common.xapi')
                 .run( ['$location', 'xAPISettings', function($location, xAPISettings) {
