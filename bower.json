@@ -60,6 +60,7 @@
     },
     "chosen": {
       "main": [
+        "chosen.jquery.js",
         "chosen.css",
         "chosen-sprite.png",
         "chosen-sprite@2x.png"
