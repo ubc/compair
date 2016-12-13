@@ -67,7 +67,7 @@
         </div>
         <div class="form-group">
             <textarea ng-model="answer.content" id="answerContent"
-                class="form-control" rows="8" ckeditor="editorOptions" ng-required="!(uploader.queue.length || uploadedFile)">
+                class="form-control" rows="8" ckeditor="editorOptions" ng-required="!(uploader.queue.length || uploadedFile || answer.file)">
             </textarea>
         </div>
 	<p ng-if="canManageAssignment" class="text-center">(Note: Answers submitted as an instructor/TA will not be included in comparisons and appear to students only after they answer/compare.)</p>
