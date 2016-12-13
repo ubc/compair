@@ -124,7 +124,6 @@ module.controller(
         });
 
         if ($route.current.method == "new") {
-            $scope.showUserList = true;
             $scope.answer.draft = true;
             $scope.answer.course_id = $scope.courseId;
             $scope.answer.assignment_id = assignmentId;
@@ -176,10 +175,14 @@ module.controller(
             $scope.showCountDown = true;
         };
 
+        Session.getUser().then(function(user) {
+            $scope.loggedInUserId = user.id;
+        });
+
         Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, $scope.courseId).then(function(canManageAssignment){
             $scope.canManageAssignment = canManageAssignment;
 
-            if ($scope.showUserList && $scope.canManageAssignment) {
+            if ($scope.canManageAssignment) {
                 // get list of users in the course
                 ClassListResource.get({'courseId': $scope.courseId}).$promise.then(
                     function (ret) {
@@ -192,8 +195,6 @@ module.controller(
                 Session.getUser().then(function(user) {
                     $scope.answer.user_id = user.id
                 });
-                // There isn't a need to submit drafts on behalf of students
-                $scope.answer.draft = false;
             }
         });
 
