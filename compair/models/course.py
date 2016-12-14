@@ -4,7 +4,7 @@ import pytz
 
 # sqlalchemy
 from sqlalchemy.orm import column_property
-from sqlalchemy import func, select, and_, or_
+from sqlalchemy import func, select, and_, or_, case
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from . import *
@@ -50,6 +50,16 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
         return True
 
+    @hybrid_property
+    def start_date_order(self):
+        return self.start_date if self.start_date else self.min_assignment_answer_start
+
+    @start_date_order.expression
+    def start_date_order(cls):
+        return case([
+            (cls.start_date != None, cls.start_date)
+        ], else_ = cls.min_assignment_answer_start)
+
     def calculate_grade(self, user):
         from . import CourseGrade
         CourseGrade.calculate_grade(self, user)
@@ -63,6 +73,16 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         from .lti_models import LTIContext, Assignment, \
             UserCourse, CourseRole
         super(cls, cls).__declare_last__()
+
+        cls.min_assignment_answer_start = column_property(
+            select([func.min(Assignment.answer_start)]).
+            where(and_(
+                Assignment.course_id == cls.id,
+                Assignment.active == True
+            )),
+            deferred=True,
+            group="min_associates"
+        )
 
         cls.lti_context_count = column_property(
             select([func.count(LTIContext.id)]).

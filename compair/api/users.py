@@ -305,10 +305,10 @@ class UserCourseListAPI(Resource):
     def get(self):
         params = user_course_list_parser.parse_args()
 
-        # Note, start and end dates are optional so default sort is by start_date, end_date, then name
+        # Note, start and end dates are optional so default sort is by start_date (course.start_date or min assignment start date), then name
         query = Course.query \
             .filter_by(active=True) \
-            .order_by(Course.start_date.desc(), Course.end_date.desc(), Course.name) \
+            .order_by(Course.start_date_order.desc(), Course.name) \
 
         # we want to list user linked courses only, so only check the association table
         if not allow(MANAGE, Course):

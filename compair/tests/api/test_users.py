@@ -5,7 +5,7 @@ from flask_bouncer import ensure
 from flask_login import login_user, logout_user
 from werkzeug.exceptions import Unauthorized
 
-from data.fixtures import DefaultFixture, UserFactory
+from data.fixtures import DefaultFixture, UserFactory, AssignmentFactory
 from data.fixtures.test_data import BasicTestData, LTITestData, ThirdPartyAuthTestData, ComparisonTestData
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.models import User, SystemRole, CourseRole, AnswerComment, AnswerCommentType, Comparison, \
@@ -556,6 +556,43 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['objects']))
+
+            # test sort order (when some courses have start_dates and other do not)
+            url = '/api/users/courses'
+
+            self.data.get_course().start_date = None
+
+            course_2 = self.data.create_course()
+            course_2.start_date = datetime.datetime.now()
+            self.data.enrol_instructor(self.data.get_authorized_instructor(), course_2)
+
+            course_3 = self.data.create_course()
+            course_3.start_date = datetime.datetime.now() + datetime.timedelta(days=10)
+            self.data.enrol_instructor(self.data.get_authorized_instructor(), course_3)
+
+            courses = [course_3, course_2, self.data.get_course()]
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(3, len(rv.json['objects']))
+            for index, result in enumerate(rv.json['objects']):
+                self.assertEqual(courses[index].uuid, result['id'])
+
+            # test sort order (when course with no start date has assignment)
+            assignment = AssignmentFactory(
+                user=self.data.get_authorized_instructor(),
+                course=self.data.get_course(),
+                answer_start=(datetime.datetime.now() + datetime.timedelta(days=5))
+            )
+            db.session.commit()
+
+            courses = [course_3, self.data.get_course(), course_2]
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(3, len(rv.json['objects']))
+            for index, result in enumerate(rv.json['objects']):
+                self.assertEqual(courses[index].uuid, result['id'])
 
         # test authorized student
         with self.login(self.data.get_authorized_student().username):
