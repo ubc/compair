@@ -42,31 +42,35 @@
                     <!-- Metadata -->
                     <ul class="list-inline course-metadata-list">
                         <!-- Edit Link (instructors only) -->
-                        <li ng-if="canAddCourse">
+                        <li ng-if="course.canEditCourse">
                             <a ng-href="#/course/{{course.id}}/configure" title="Edit">
                                 Edit
                             </a>
                         </li>
                         <!-- Duplicate Link (instructors only) -->
                          <!-- TO DO: enable duplication -->
-                        <li ng-if="canAddCourse">
+                        <li ng-if="course.canEditCourse">
                             <a ng-click="duplicateCourse(course)" title="Duplicate" href="">
                                 Duplicate
                             </a>
                         </li>
                         <!-- Total Assignments (all) -->
-                        <li title="{{course.assignment_count}} assignments">
+                        <li title="{{course.assignment_count}} assignments" ng-if="course.canManageAssignment">
                                 {{course.assignment_count}} assignment<span ng-if="course.assignment_count != 1">s</span>
+                        </li>
+                        <!-- Student Total Assignments (all) -->
+                        <li title="{{course.student_assignment_count}} assignments" ng-if="!course.canManageAssignment">
+                                {{course.student_assignment_count}} assignment<span ng-if="course.student_assignment_count != 1">s</span>
                         </li>
                         <!-- Total Unfinished (students only) -->
                         <!-- number of unfinished assignments for student user that can still be completed for each course, i.e.,
                              the student has not answered && the answer period is active ||
                              the student has not compared/self-eval'ed && the compare/eval period is active -->
-                        <li ng-if="!canAddCourse && course.status && course.status.incomplete_assignments > 0" title="{{course.status.incomplete_assignments}} unfinished">
+                        <li ng-if="course.status && course.status.incomplete_assignments > 0" title="{{course.status.incomplete_assignments}} unfinished">
                             <label class="label label-warning">{{course.status.incomplete_assignments}} unfinished assignment<span ng-if="course.status.incomplete_assignments != 1">s</span></label>
                         </li>
                         <!-- Total Users (instructors only) -->
-                        <li ng-if="canAddCourse" title="{{course.student_count}} students">
+                        <li ng-if="course.canEditCourse" title="{{course.student_count}} students">
                             {{course.student_count}} student<span ng-if="course.student_count != 1">s</span>
                         </li>
                         <!-- Course Dates (all) -->
@@ -74,7 +78,7 @@
                             {{course.year}} {{course.term}}
                         </li>
                         <!-- Delete Link -->
-                        <li ng-if="canAddCourse">
+                        <li ng-if="course.canDeleteCourse">
                             <a confirmation-needed="deleteCourse(course)" keyword="course and assignments" title="Delete" href="">
                                 <i class="fa fa-trash-o"></i>
                             </a>

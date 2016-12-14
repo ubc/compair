@@ -23,9 +23,9 @@ var module = angular.module('ubc.ctlt.compair.home',
 /***** Controllers *****/
 module.controller(
     'HomeController',
-    ["$rootScope", "$scope", "$location", "Session", "AuthenticationService",
+    ["$rootScope", "$scope", "$location", "Session", "AuthenticationService", "AssignmentResource",
      "Authorize", "CourseResource", "Toaster", "UserResource", "$modal", "xAPIStatementHelper",
-    function ($rootScope, $scope, $location, Session, AuthenticationService,
+    function ($rootScope, $scope, $location, Session, AuthenticationService, AssignmentResource,
               Authorize, CourseResource, Toaster, UserResource, $modal, xAPIStatementHelper) {
 
         $scope.loggedInUserId = null;
@@ -54,22 +54,32 @@ module.controller(
                     $scope.courses = ret.objects;
                     $scope.totalNumCourses = ret.total;
 
-                    if (!$scope.canAddCourse) {
-                        var courseIds = $scope.courses.map(function(course) {
-                            return course.id;
+                    _.forEach($scope.courses, function(course) {
+                        Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, course.id).then(function(result) {
+                            course.canManageAssignment = result;
                         });
-                        UserResource.getUserCoursesStatus({ ids: courseIds.join(",") }).$promise.then(
-                            function(ret) {
-                                var statuses = ret.statuses;
-                                _.forEach($scope.courses, function(course) {
-                                    course.status = statuses[course.id];
-                                });
-                            },
-                            function (ret) {
-                                Toaster.reqerror("Unable to retrieve your course status.", ret);
-                            }
-                        );
-                    }
+                        Authorize.can(Authorize.EDIT, CourseResource.MODEL, course.id).then(function(result) {
+                            course.canEditCourse = result;
+                        });
+                        Authorize.can(Authorize.DELETE, CourseResource.MODEL, course.id).then(function(result) {
+                            course.canDeleteCourse = result;
+                        });
+                    });
+
+                    var courseIds = $scope.courses.map(function(course) {
+                        return course.id;
+                    });
+                    UserResource.getUserCoursesStatus({ ids: courseIds.join(",") }).$promise.then(
+                        function(ret) {
+                            var statuses = ret.statuses;
+                            _.forEach($scope.courses, function(course) {
+                                course.status = statuses[course.id];
+                            });
+                        },
+                        function (ret) {
+                            Toaster.reqerror("Unable to retrieve your course status.", ret);
+                        }
+                    );
                 },
                 function (ret) {
                     Toaster.reqerror("Unable to retrieve your courses.", ret);

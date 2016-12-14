@@ -12,6 +12,7 @@ var courseTemplate = {
     "start_date": null,
     "end_date": null,
     "assignment_count": 0,
+    "student_assignment_count": 0,
     "student_count": 0,
     "modified": "Sun, 11 Jan 2015 08:44:46 -0000",
     "created": "Sun, 11 Jan 2015 08:44:46 -0000",

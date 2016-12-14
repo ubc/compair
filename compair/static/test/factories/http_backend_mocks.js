@@ -315,6 +315,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "start_date": data.start_date,
                 "end_date": data.end_date,
                 "assignment_count": 0,
+                "student_assignment_count": 0,
                 "student_count": 0,
                 "modified": "Sun, 11 Jan 2015 08:44:46 -0000",
                 "created": "Sun, 11 Jan 2015 08:44:46 -0000"

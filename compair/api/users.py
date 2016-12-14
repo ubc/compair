@@ -354,84 +354,96 @@ class UserCourseStatusListAPI(Resource):
         query = Course.query \
             .filter(and_(
                 Course.uuid.in_(course_uuids),
-                Course.active == True
-            ))
+                Course.active == True,
+            )) \
+            .add_columns(UserCourse.course_role) \
+
         if not allow(MANAGE, Course):
             query = query.join(UserCourse, and_(
-                UserCourse.user_id == current_user.id,
-                UserCourse.course_role != CourseRole.dropped
-            ))
-        courses = query.all()
+                    UserCourse.user_id == current_user.id,
+                    UserCourse.course_id == Course.id,
+                    UserCourse.course_role != CourseRole.dropped
+                ))
+        else:
+            query = query.outerjoin(UserCourse, and_(
+                    UserCourse.user_id == current_user.id,
+                    UserCourse.course_id == Course.id
+                ))
 
-        if len(course_uuids) != len(courses):
+        results = query.all()
+
+        if len(course_uuids) != len(results):
             return {"error": "Not enrolled in course"}, 400
 
         statuses = {}
 
-        for course in courses:
+        for course, course_role in results:
+            print(course, course_role)
+
             incomplete_assignment_ids = set()
             answer_period_assignments = [assignment for assignment in course.assignments if assignment.active and assignment.answer_period]
             compare_period_assignments = [assignment for assignment in course.assignments if assignment.active and assignment.compare_period]
 
-            if len(answer_period_assignments) > 0:
-                answer_period_assignment_ids = [assignment.id for assignment in answer_period_assignments]
-                answers = Answer.query \
-                    .filter(and_(
-                        Answer.user_id == current_user.id,
-                        Answer.assignment_id.in_(answer_period_assignment_ids),
-                        Answer.active == True,
-                        Answer.practice == False,
-                        Answer.draft == False
-                    ))
-                for assignment in answer_period_assignments:
-                    answer = next(
-                        (answer for answer in answers if answer.assignment_id == assignment.id),
-                        None
-                    )
-                    if answer is None:
-                        incomplete_assignment_ids.add(assignment.id)
-
-            if len(compare_period_assignments) > 0:
-                compare_period_assignment_ids = [assignment.id for assignment in compare_period_assignments]
-                comparisons = Comparison.query \
-                    .filter(and_(
-                        Comparison.user_id == current_user.id,
-                        Comparison.assignment_id.in_(compare_period_assignment_ids),
-                        Comparison.completed == True
-                    ))
-
-                self_evaluations = AnswerComment.query \
-                    .join("answer") \
-                    .with_entities(
-                        Answer.assignment_id,
-                        func.count(Answer.assignment_id).label('self_evaluation_count')
-                    ) \
-                    .filter(and_(
-                        AnswerComment.user_id == current_user.id,
-                        AnswerComment.active == True,
-                        AnswerComment.comment_type == AnswerCommentType.self_evaluation,
-                        AnswerComment.draft == False,
-                        Answer.active == True,
-                        Answer.practice == False,
-                        Answer.draft == False,
-                        Answer.assignment_id.in_(compare_period_assignment_ids)
-                    )) \
-                    .group_by(Answer.assignment_id) \
-                    .all()
-
-                for assignment in compare_period_assignments:
-                    assignment_comparisons = [comparison for comparison in comparisons if comparison.assignment_id == assignment.id]
-                    comparison_count = len(assignment_comparisons) / assignment.criteria_count if assignment.criteria_count else 0
-                    if comparison_count < assignment.total_comparisons_required:
-                        incomplete_assignment_ids.add(assignment.id)
-
-                    if assignment.enable_self_evaluation:
-                        self_evaluation_count = next(
-                            (result.self_evaluation_count for result in self_evaluations if result.assignment_id == assignment.id),
-                            0
+            if not allow(MANAGE, Course) and course_role == CourseRole.student:
+                if len(answer_period_assignments) > 0:
+                    answer_period_assignment_ids = [assignment.id for assignment in answer_period_assignments]
+                    answers = Answer.query \
+                        .filter(and_(
+                            Answer.user_id == current_user.id,
+                            Answer.assignment_id.in_(answer_period_assignment_ids),
+                            Answer.active == True,
+                            Answer.practice == False,
+                            Answer.draft == False
+                        ))
+                    for assignment in answer_period_assignments:
+                        answer = next(
+                            (answer for answer in answers if answer.assignment_id == assignment.id),
+                            None
                         )
-                        if self_evaluation_count == 0:
+                        if answer is None:
                             incomplete_assignment_ids.add(assignment.id)
+
+                if len(compare_period_assignments) > 0:
+                    compare_period_assignment_ids = [assignment.id for assignment in compare_period_assignments]
+                    comparisons = Comparison.query \
+                        .filter(and_(
+                            Comparison.user_id == current_user.id,
+                            Comparison.assignment_id.in_(compare_period_assignment_ids),
+                            Comparison.completed == True
+                        ))
+
+                    self_evaluations = AnswerComment.query \
+                        .join("answer") \
+                        .with_entities(
+                            Answer.assignment_id,
+                            func.count(Answer.assignment_id).label('self_evaluation_count')
+                        ) \
+                        .filter(and_(
+                            AnswerComment.user_id == current_user.id,
+                            AnswerComment.active == True,
+                            AnswerComment.comment_type == AnswerCommentType.self_evaluation,
+                            AnswerComment.draft == False,
+                            Answer.active == True,
+                            Answer.practice == False,
+                            Answer.draft == False,
+                            Answer.assignment_id.in_(compare_period_assignment_ids)
+                        )) \
+                        .group_by(Answer.assignment_id) \
+                        .all()
+
+                    for assignment in compare_period_assignments:
+                        assignment_comparisons = [comparison for comparison in comparisons if comparison.assignment_id == assignment.id]
+                        comparison_count = len(assignment_comparisons) / assignment.criteria_count if assignment.criteria_count else 0
+                        if comparison_count < assignment.total_comparisons_required:
+                            incomplete_assignment_ids.add(assignment.id)
+
+                        if assignment.enable_self_evaluation:
+                            self_evaluation_count = next(
+                                (result.self_evaluation_count for result in self_evaluations if result.assignment_id == assignment.id),
+                                0
+                            )
+                            if self_evaluation_count == 0:
+                                incomplete_assignment_ids.add(assignment.id)
 
             statuses[course.uuid] = {
                 'incomplete_assignments': len(incomplete_assignment_ids)

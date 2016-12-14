@@ -66,7 +66,7 @@ def get_users_in_course(restrict_user=True):
     return users
 
 
-def get_course(include_details=True):
+def get_course():
     return {
         'id': fields.String(attribute="uuid"),
         'name': fields.String,
@@ -78,6 +78,7 @@ def get_course(include_details=True):
         'available': fields.Boolean,
         'lti_linked': fields.Boolean,
         'assignment_count': fields.Integer,
+        'student_assignment_count': fields.Integer,
         'student_count': fields.Integer,
         'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
         'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))

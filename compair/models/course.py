@@ -101,6 +101,17 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             group="counts"
         )
 
+        cls.student_assignment_count = column_property(
+            select([func.count(Assignment.id)]).
+            where(and_(
+                Assignment.course_id == cls.id,
+                Assignment.active == True,
+                Assignment.answer_start <= datetime.datetime.utcnow()
+            )),
+            deferred=True,
+            group="counts"
+        )
+
         cls.student_count = column_property(
             select([func.count(UserCourse.id)]).
             where(and_(
