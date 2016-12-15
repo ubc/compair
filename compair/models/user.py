@@ -2,6 +2,7 @@ import hashlib
 from flask import current_app
 from datetime import datetime
 import time
+from six import text_type
 
 # sqlalchemy
 from sqlalchemy.orm import synonym
@@ -153,10 +154,7 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     #     return s.dumps({'id': self.id})
 
     def __repr__(self):
-        if self.username:
-            return self.username
-        else:
-            return "User"
+        return "User " + self.uuid if self.uuid else "User"
 
     def get_course_role(self, course_id):
         """ Return user's course role by course id """

@@ -111,7 +111,7 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
             self.assertEqual(comment.uuid, rv.json[0]['id'])
 
             ids = [extra_student2_answer_comment_uuid, comment.uuid]
-            rv = self.client.get(self.get_url(ids=','.join(str(x) for x in ids), **base_params))
+            rv = self.client.get(self.get_url(ids=','.join(ids), **base_params))
             self.assert200(rv)
             # self.assertEqual(2, rv.json['total'])
             self.assertEqual(2, len(rv.json))

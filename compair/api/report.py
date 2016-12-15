@@ -1,6 +1,7 @@
 import csv
 import os
 import time
+import unicodecsv as csv
 
 from bouncer.constants import MANAGE
 from flask import Blueprint, current_app, abort
@@ -20,10 +21,10 @@ report_api = Blueprint('report_api', __name__)
 api = new_restful_api(report_api)
 
 report_parser = reqparse.RequestParser()
-report_parser.add_argument('group_name', type=str)
+report_parser.add_argument('group_name')
 # may change 'type' to int
-report_parser.add_argument('type', type=str, required=True)
-report_parser.add_argument('assignment', type=str)
+report_parser.add_argument('type', required=True)
+report_parser.add_argument('assignment')
 
 # events
 on_export_report = event.signal('EXPORT_REPORT')
@@ -113,13 +114,12 @@ class ReportRootAPI(Resource):
         name = name_generator(course, report_type, group_name)
         tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], name)
 
-        report = open(tmp_name, 'wt')
-        out = csv.writer(report)
-        for t in titles:
-            out.writerow(t)
-        for s in data:
-            out.writerow(s)
-        report.close()
+        with open(tmp_name, 'wb') as report:
+            out = csv.writer(report)
+            for t in titles:
+                out.writerow(t)
+            for s in data:
+                out.writerow(s)
 
         on_export_report.send(
             self,

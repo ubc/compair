@@ -11,7 +11,7 @@ from compair.core import event
 on_get_file = event.signal('GET_FILE')
 
 attachment_download_parser = RequestParser()
-attachment_download_parser.add_argument('name', type=str, default=None)
+attachment_download_parser.add_argument('name', default=None)
 
 def register_api_blueprints(app):
     # Initialize rest of the api modules

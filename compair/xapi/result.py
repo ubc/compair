@@ -1,4 +1,8 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import re
+from six import text_type
 
 from tincan import Result, Extensions, Score
 
@@ -19,7 +23,7 @@ class XAPIResult(object):
 
     @classmethod
     def _strip_html(cls, text):
-        text = re.sub('<[^>]+>', '', str(text))
+        text = re.sub('<[^>]+>', '', text_type(text))
         text = text.replace('&nbsp;', ' ')
         return cls._unescape(text)
 
@@ -33,7 +37,7 @@ class XAPIResult(object):
     def _word_count(cls, text):
         text = cls._strip_html(text)
         text = re.sub('(\r\n|\n|\r)', ' ', text)
-        words = [word for word in re.split("\s+", text) if len(word) > 0]
+        words = [word for word in re.split('\s+', text) if len(word) > 0]
         return len(words)
 
     @classmethod

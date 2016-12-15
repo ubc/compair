@@ -177,7 +177,7 @@ class CourseGroupsAPITests(ComPAIRAPITestCase):
         url = '/api/courses/' + self.fixtures.course.uuid + '/groups'
 
         content = self.fixtures.students[0].username + "," + self.fixtures.groups[0]
-        encoded_content = content.encode()
+        encoded_content = content.encode('utf-8')
         filename = "groups.csv"
 
         # test login required
@@ -237,61 +237,59 @@ class CourseGroupsAPITests(ComPAIRAPITestCase):
 
             # test duplicate users in file
             duplicate = "".join([content, "\n", content])
-            uploaded_file = io.BytesIO(duplicate.encode())
+            uploaded_file = io.BytesIO(duplicate.encode('utf-8'))
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(1, rv.json['success'])
             self.assertEqual(1, len(rv.json['invalids']))
             invalid = rv.json['invalids'][0]
-            member = [
-                '["', self.fixtures.students[0].username, '", "',
-                self.fixtures.groups[0], '"]']
-            self.assertEqual("".join(member), invalid['member'])
+            member = [self.fixtures.students[0].username, self.fixtures.groups[0]]
+            self.assertEqual(member, invalid['member'])
             self.assertEqual("This user already exists in the file.", invalid['message'])
             uploaded_file.close()
 
             # test missing username
             missing_username = "," + self.fixtures.groups[0]
-            uploaded_file = io.BytesIO(missing_username.encode())
+            uploaded_file = io.BytesIO(missing_username.encode('utf-8'))
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(1, rv.json['success'])
             self.assertEqual(1, len(rv.json['invalids']))
             invalid = rv.json['invalids'][0]
-            member = ['["", "', self.fixtures.groups[0], '"]']
-            self.assertEqual("".join(member), invalid['member'])
+            member = ['', self.fixtures.groups[0]]
+            self.assertEqual(member, invalid['member'])
             self.assertEqual("No user with this ComPAIR username exists.", invalid['message'])
             uploaded_file.close()
 
             # test missing group name
             missing_group = self.fixtures.students[0].username + ","
-            uploaded_file = io.BytesIO(missing_group.encode())
+            uploaded_file = io.BytesIO(missing_group.encode('utf-8'))
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(0, rv.json['success'])
             self.assertEqual(1, len(rv.json['invalids']))
             invalid = rv.json['invalids'][0]
-            member = ['["', self.fixtures.students[0].username, '", ""]']
-            self.assertEqual("".join(member), invalid['member'])
+            member = [self.fixtures.students[0].username, '']
+            self.assertEqual(member, invalid['member'])
             self.assertEqual("The group name is invalid.", invalid['message'])
             uploaded_file.close()
 
             # test invalid user
             invalid_user = "username9999," + self.fixtures.groups[0]
-            uploaded_file = io.BytesIO(invalid_user.encode())
+            uploaded_file = io.BytesIO(invalid_user.encode('utf-8'))
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(1, rv.json['success'])
             self.assertEqual(1, len(rv.json['invalids']))
             invalid = rv.json['invalids'][0]
-            member = ['["username9999", "', self.fixtures.groups[0], '"]']
-            self.assertEqual("".join(member), invalid['member'])
+            member = ['username9999', self.fixtures.groups[0]]
+            self.assertEqual(member, invalid['member'])
             self.assertEqual("No user with this ComPAIR username exists.", invalid['message'])
             uploaded_file.close()
 
             # test successful import with username
             with_username = self.fixtures.students[0].username + "," + self.fixtures.groups[0]
-            uploaded_file = io.BytesIO(with_username.encode())
+            uploaded_file = io.BytesIO(with_username.encode('utf-8'))
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(1, rv.json['success'])
@@ -301,7 +299,7 @@ class CourseGroupsAPITests(ComPAIRAPITestCase):
             # test invalid import with username
             self.app.config['APP_LOGIN_ENABLED'] = False
             with_username = self.fixtures.students[0].username + "," + self.fixtures.groups[0]
-            uploaded_file = io.BytesIO(with_username.encode())
+            uploaded_file = io.BytesIO(with_username.encode('utf-8'))
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert400(rv)
             uploaded_file.close()
@@ -309,7 +307,7 @@ class CourseGroupsAPITests(ComPAIRAPITestCase):
 
             # test successful import with student number
             with_studentno = self.fixtures.students[0].student_number + "," + self.fixtures.groups[0]
-            uploaded_file = io.BytesIO(with_studentno.encode())
+            uploaded_file = io.BytesIO(with_studentno.encode('utf-8'))
             rv = self.client.post(url, data=dict(userIdentifier="student_number", file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(1, rv.json['success'])
@@ -322,7 +320,7 @@ class CourseGroupsAPITests(ComPAIRAPITestCase):
             self.fixtures.enrol_user(cas_user, self.fixtures.course, CourseRole.student)
 
             with_cas_username = cas_auth.unique_identifier + "," + self.fixtures.groups[0]
-            uploaded_file = io.BytesIO(with_cas_username.encode())
+            uploaded_file = io.BytesIO(with_cas_username.encode('utf-8'))
             rv = self.client.post(url, data=dict(userIdentifier=ThirdPartyType.cas.value, file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(1, rv.json['success'])
@@ -332,7 +330,7 @@ class CourseGroupsAPITests(ComPAIRAPITestCase):
             # test invalid import with cas username
             self.app.config['CAS_LOGIN_ENABLED'] = False
             with_cas_username = cas_auth.unique_identifier + "," + self.fixtures.groups[0]
-            uploaded_file = io.BytesIO(with_cas_username.encode())
+            uploaded_file = io.BytesIO(with_cas_username.encode('utf-8'))
             rv = self.client.post(url, data=dict(userIdentifier=ThirdPartyType.cas.value, file=(uploaded_file, filename)))
             self.assert400(rv)
             uploaded_file.close()
@@ -340,22 +338,20 @@ class CourseGroupsAPITests(ComPAIRAPITestCase):
 
             # test import user not in course
             unauthorized_student = self.fixtures.unauthorized_student.username + "," + self.fixtures.groups[0]
-            uploaded_file = io.BytesIO(unauthorized_student.encode())
+            uploaded_file = io.BytesIO(unauthorized_student.encode('utf-8'))
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(1, rv.json['success'])
             self.assertEqual(1, len(rv.json['invalids']))
             invalid = rv.json['invalids'][0]
-            member = [
-                '["', self.fixtures.unauthorized_student.username, '", "',
-                self.fixtures.groups[0], '"]']
-            self.assertEqual("".join(member), invalid['member'])
+            member = [self.fixtures.unauthorized_student.username, self.fixtures.groups[0]]
+            self.assertEqual(member, invalid['member'])
             self.assertEqual("The user is not enroled in the course", invalid['message'])
             uploaded_file.close()
 
             # test placing instructor in group
             add_instructor = self.fixtures.instructor.username + "," + self.fixtures.groups[0]
-            uploaded_file = io.BytesIO(add_instructor.encode())
+            uploaded_file = io.BytesIO(add_instructor.encode('utf-8'))
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(1, rv.json['success'])
@@ -364,7 +360,7 @@ class CourseGroupsAPITests(ComPAIRAPITestCase):
 
             # test placing TA in group
             add_ta = self.fixtures.ta.username + "," + self.fixtures.groups[0]
-            uploaded_file = io.BytesIO(add_ta.encode())
+            uploaded_file = io.BytesIO(add_ta.encode('utf-8'))
             rv = self.client.post(url, data=dict(userIdentifier="username", file=(uploaded_file, filename)))
             self.assert200(rv)
             self.assertEqual(1, rv.json['success'])

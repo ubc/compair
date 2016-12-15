@@ -77,7 +77,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertEqual(users['total'], 7)
             self.assertEqual(users['objects'][0]['username'], 'root')
 
-            rv = self.client.get('/api/users?search={}'.format(self.data.get_unauthorized_instructor().firstname))
+            rv = self.client.get('/api/users?search='+self.data.get_unauthorized_instructor().firstname)
             self.assert200(rv)
             users = rv.json
             self.assertEqual(users['total'], 1)
@@ -694,7 +694,7 @@ class UsersAPITests(ComPAIRAPITestCase):
 
         # test instructor update password
         with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.post(url.format(str(999)), data=json.dumps(data), content_type='application/json')
+            rv = self.client.post(url.format("999"), data=json.dumps(data), content_type='application/json')
             self.assert404(rv)
 
             # test instructor changes the password of a student in the course
@@ -718,8 +718,8 @@ class UsersAPITests(ComPAIRAPITestCase):
                 content_type='application/json')
             self.assert403(rv)
             self.assertEqual(
-                '<p>{} does not have edit access to {}</p>'.format(self.data.get_unauthorized_instructor().username,
-                                                                   self.data.get_authorized_student().username),
+                '<p>User {} does not have edit access to User {}</p>'.format(self.data.get_unauthorized_instructor().uuid,
+                                                                   self.data.get_authorized_student().uuid),
                 rv.json['message'])
 
         # test admin update password

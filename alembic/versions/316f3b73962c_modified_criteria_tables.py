@@ -45,7 +45,7 @@ def upgrade():
 def downgrade():
     with op.batch_alter_table('Criteria', naming_convention=convention,
                               table_args=(UniqueConstraint('name'))) as batch_op:
-        batch_op.create_unique_constraint(u'uq_Criteria_name', ['name'])
+        batch_op.create_unique_constraint('uq_Criteria_name', ['name'])
         batch_op.drop_column('public')
     with op.batch_alter_table('CriteriaAndCourses', naming_convention=convention) as batch_op:
         batch_op.drop_column('active')

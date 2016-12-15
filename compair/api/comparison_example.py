@@ -17,11 +17,11 @@ comparison_example_api = Blueprint('comparison_example_api', __name__)
 api = new_restful_api(comparison_example_api)
 
 new_comparison_example_parser = RequestParser()
-new_comparison_example_parser.add_argument('answer1_id', type=str, required=True)
-new_comparison_example_parser.add_argument('answer2_id', type=str, required=True)
+new_comparison_example_parser.add_argument('answer1_id', required=True)
+new_comparison_example_parser.add_argument('answer2_id', required=True)
 
 existing_comparison_example_parser = new_comparison_example_parser.copy()
-existing_comparison_example_parser.add_argument('id', type=str, required=True)
+existing_comparison_example_parser.add_argument('id', required=True)
 
 # events
 on_comparison_example_modified = event.signal('COMPARISON_EXAMPLE_MODIFIED')
