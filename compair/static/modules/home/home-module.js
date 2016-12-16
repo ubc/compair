@@ -69,17 +69,19 @@ module.controller(
                     var courseIds = $scope.courses.map(function(course) {
                         return course.id;
                     });
-                    UserResource.getUserCoursesStatus({ ids: courseIds.join(",") }).$promise.then(
-                        function(ret) {
-                            var statuses = ret.statuses;
-                            _.forEach($scope.courses, function(course) {
-                                course.status = statuses[course.id];
-                            });
-                        },
-                        function (ret) {
-                            Toaster.reqerror("Unable to retrieve your course status.", ret);
-                        }
-                    );
+                    if (courseIds.length > 0) {
+                        UserResource.getUserCoursesStatus({ ids: courseIds.join(",") }).$promise.then(
+                            function(ret) {
+                                var statuses = ret.statuses;
+                                _.forEach($scope.courses, function(course) {
+                                    course.status = statuses[course.id];
+                                });
+                            },
+                            function (ret) {
+                                Toaster.reqerror("Unable to retrieve your course status.", ret);
+                            }
+                        );
+                    }
                 },
                 function (ret) {
                     Toaster.reqerror("Unable to retrieve your courses.", ret);

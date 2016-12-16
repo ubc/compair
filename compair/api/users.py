@@ -348,7 +348,7 @@ class UserCourseStatusListAPI(Resource):
         params = user_course_status_list_parser.parse_args()
         course_uuids = params['ids'].split(',')
 
-        if len(course_uuids) == 0:
+        if params['ids'] == '' or len(course_uuids) == 0:
             return {"error": "Select at least one course"}, 400
 
         query = Course.query \
