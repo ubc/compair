@@ -26,9 +26,9 @@ clean:
 	find . -name '*.pyc' -exec rm -f {} \;
 	find . -name '*.pyo' -exec rm -f {} \;
 	find . -name '*~' -exec rm -f {} \;
-	find . -name '__pycache__' -exec rm -fR {} \;
 	rm -rf bower_components node_modules
 	rm -rf compair/static/dist compair/static/build
+	find . -name '__pycache__' -exec rm -fR {} \;
 
 lint:
 	flake8 --exclude=env .
