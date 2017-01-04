@@ -38,7 +38,7 @@ class AnswerXAPITests(ComPAIRXAPITestCase):
             self.assertEqual(statements[0]['actor'], self.get_compair_actor(self.user))
             if draft:
                 self.assertEqual(statements[0]['verb'], {
-                    'id': 'http://xapi.ubc.ca/verb/draft',
+                    'id': 'http://xapi.analytics.ubc.ca/verb/draft',
                     'display': {'en-US': 'drafted'}
                 })
             else:
@@ -54,16 +54,16 @@ class AnswerXAPITests(ComPAIRXAPITestCase):
             if draft:
                 self.assertEqual(statements[0]['result'], {
                     'extensions': {
-                        'http://xapi.ubc.ca/extension/character-count': len(self.answer.content),
-                        'http://xapi.ubc.ca/extension/word-count': len(self.answer.content.split(" "))
+                        'http://xapi.analytics.ubc.ca/extension/character-count': len(self.answer.content),
+                        'http://xapi.analytics.ubc.ca/extension/word-count': len(self.answer.content.split(" "))
                     },
                     'response': self.answer.content
                 })
             else:
                 self.assertEqual(statements[0]['result'], {
                     'extensions': {
-                        'http://xapi.ubc.ca/extension/character-count': len(self.answer.content),
-                        'http://xapi.ubc.ca/extension/word-count': len(self.answer.content.split(" "))
+                        'http://xapi.analytics.ubc.ca/extension/character-count': len(self.answer.content),
+                        'http://xapi.analytics.ubc.ca/extension/word-count': len(self.answer.content.split(" "))
                     },
                     'response': self.answer.content,
                     'success': True
@@ -242,12 +242,12 @@ class AnswerXAPITests(ComPAIRXAPITestCase):
 
                 if flagged:
                     self.assertEqual(statements[0]['verb'], {
-                        'id': 'http://xapi.ubc.ca/verb/flag',
+                        'id': 'http://xapi.analytics.ubc.ca/verb/flag',
                         'display': {'en-US': 'flagged'}
                     })
                 else:
                     self.assertEqual(statements[0]['verb'], {
-                        'id': 'http://xapi.ubc.ca/verb/unflag',
+                        'id': 'http://xapi.analytics.ubc.ca/verb/unflag',
                         'display': {'en-US': 'unflagged'}
                     })
 

@@ -60,7 +60,7 @@ class AuthenticationXAPITests(ComPAIRXAPITestCase):
         })
         self.assertNotIn('result', statements[0])
         self.assertEqual(statements[0]['context'], {
-            'extensions': {'http://xapi.ubc.ca/extension/login-method': login_method}
+            'extensions': {'http://xapi.analytics.ubc.ca/extension/login-method': login_method}
         })
 
     def test_on_logout(self):

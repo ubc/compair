@@ -140,23 +140,23 @@ module.constant('xAPIVerb', {
         display: { 'en-US': 'closed' }
     },
     'drafted': {
-        id: 'http://xapi.ubc.ca/verb/draft',
+        id: 'http://xapi.analytics.ubc.ca/verb/draft',
         display: { 'en-US': 'drafted' }
     },
     'flagged': {
-        id: 'http://xapi.ubc.ca/verb/flag',
+        id: 'http://xapi.analytics.ubc.ca/verb/flag',
         display: { 'en-US': 'flagged' }
     },
     'unflagged': {
-        id: 'http://xapi.ubc.ca/verb/unflag',
+        id: 'http://xapi.analytics.ubc.ca/verb/unflag',
         display: { 'en-US': 'unflagged' }
     },
     'filtered': {
-        id: 'http://xapi.ubc.ca/verb/filter',
+        id: 'http://xapi.analytics.ubc.ca/verb/filter',
         display: { 'en-US': 'filtered' }
     },
     'sorted': {
-        id: 'http://xapi.ubc.ca/verb/sort',
+        id: 'http://xapi.analytics.ubc.ca/verb/sort',
         display: { 'en-US': 'sorted' }
     }
 });
@@ -173,7 +173,7 @@ module.constant('xAPIActivityType', {
     'file': 'http://activitystrea.ms/schema/1.0/file',
     'review': 'http://activitystrea.ms/schema/1.0/review',
     'section': 'http://id.tincanapi.com/activitytype/section',
-    'modal': 'http://xapi.ubc.ca/activitytype/modal',
+    'modal': 'http://xapi.analytics.ubc.ca/activitytype/modal',
     'user profile': 'http://id.tincanapi.com/activitytype/user-profile',
     'service': 'http://activitystrea.ms/schema/1.0/service'
 });
@@ -182,21 +182,21 @@ module.constant('xAPIExtensions', {
     // context
     'browser information': 'http://id.tincanapi.com/extension/browser-info',
     'referer': 'http://nextsoftwaresolutions.com/xapi/extensions/referer',
-    'filters': 'http://xapi.ubc.ca/extension/filters',
-    'sort order': 'http://xapi.ubc.ca/extension/sort-order',
-    'login method': 'http://xapi.ubc.ca/extension/login-method',
+    'filters': 'http://xapi.analytics.ubc.ca/extension/filters',
+    'sort order': 'http://xapi.analytics.ubc.ca/extension/sort-order',
+    'login method': 'http://xapi.analytics.ubc.ca/extension/login-method',
 
     // object
     'badgeclass': 'http://standard.openbadges.org/xapi/extensions/badgeclass',
-    'comparison': 'http://xapi.ubc.ca/extension/comparison',
-    'pair algorithm': 'http://xapi.ubc.ca/extension/score-algorithm',
+    'comparison': 'http://xapi.analytics.ubc.ca/extension/comparison',
+    'pair algorithm': 'http://xapi.analytics.ubc.ca/extension/score-algorithm',
 
     // result
-    'fields changed': 'http://xapi.ubc.ca/extension/fields-changed',
-    'character count': 'http://xapi.ubc.ca/extension/character-count',
-    'word count': 'http://xapi.ubc.ca/extension/word-count',
-    'attachment response': 'http://xapi.ubc.ca/extension/attachment-response',
-    'score details': 'http://xapi.ubc.ca/extension/score-details'
+    'fields changed': 'http://xapi.analytics.ubc.ca/extension/fields-changed',
+    'character count': 'http://xapi.analytics.ubc.ca/extension/character-count',
+    'word count': 'http://xapi.analytics.ubc.ca/extension/word-count',
+    'attachment response': 'http://xapi.analytics.ubc.ca/extension/attachment-response',
+    'score details': 'http://xapi.analytics.ubc.ca/extension/score-details'
 });
 
 module.service('xAPI',

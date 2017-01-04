@@ -41,8 +41,8 @@ class AssignmentCommentXAPITests(ComPAIRXAPITestCase):
         })
         self.assertEqual(statements[0]['result'], {
             'extensions': {
-                'http://xapi.ubc.ca/extension/character-count': len(self.assignment_comment.content),
-                'http://xapi.ubc.ca/extension/word-count': len(self.assignment_comment.content.split(" "))
+                'http://xapi.analytics.ubc.ca/extension/character-count': len(self.assignment_comment.content),
+                'http://xapi.analytics.ubc.ca/extension/word-count': len(self.assignment_comment.content.split(" "))
             },
             'response': self.assignment_comment.content
         })
@@ -84,8 +84,8 @@ class AssignmentCommentXAPITests(ComPAIRXAPITestCase):
         })
         self.assertEqual(statements[0]['result'], {
             'extensions': {
-                'http://xapi.ubc.ca/extension/character-count': len(self.assignment_comment.content),
-                'http://xapi.ubc.ca/extension/word-count': len(self.assignment_comment.content.split(" "))
+                'http://xapi.analytics.ubc.ca/extension/character-count': len(self.assignment_comment.content),
+                'http://xapi.analytics.ubc.ca/extension/word-count': len(self.assignment_comment.content.split(" "))
             },
             'response': self.assignment_comment.content
         })
