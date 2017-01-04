@@ -92,7 +92,9 @@ var commonStepDefinitionsWrapper = function() {
             'edit course': /.*\/course\/[A-Za-z0-9_-]{22}\/configure$/,
             'profile': /.*\/user\/[A-Za-z0-9_-]{22}$/,
             'create user': /.*\/user\/create$/,
-            'edit profile': /.*\/user\/[A-Za-z0-9_-]{22}\/edit$/
+            'edit profile': /.*\/user\/[A-Za-z0-9_-]{22}\/edit$/,
+            'users': /.*\/users(\?.+)?$/,
+            'user courses': /.*\/users\/[A-Za-z0-9_-]{22}\/course(\?.+)?$/
         };
         return expect(browser.getCurrentUrl()).to.eventually.match(page_regex[page]);
     });

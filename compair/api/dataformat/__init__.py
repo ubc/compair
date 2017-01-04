@@ -84,6 +84,13 @@ def get_course():
         'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
 
+
+def get_user_courses():
+    courses = get_course()
+    courses['group_name'] = fields.String
+    courses['course_role'] = UnwrapCourseRole(attribute='course_role')
+    return courses
+
 def get_criterion():
     return {
         'id': fields.String(attribute="uuid"),

@@ -107,8 +107,6 @@ module.run(
             Toaster.error('Login Failed!', rejection.data.message);
             $rootScope.$broadcast(AuthenticationService.LOGIN_REQUIRED_EVENT);
         }
-        // invalid session cache, looks like we don't need it. I'll just leave it here in case we need it in the future
-        //$cacheFactory.get('$http').removeAll();
     });
     $rootScope.$on(AuthenticationService.LOGOUT_EVENT, function () {
         $cacheFactory.get('$http').removeAll();

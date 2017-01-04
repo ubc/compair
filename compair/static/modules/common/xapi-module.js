@@ -895,8 +895,6 @@ module.service('xAPI',
 module.service('xAPIStatementHelper',
     ["$location", "xAPI",
     function($location, xAPI) {
-
-
         // verb_answer_solution
         this.interacted_answer_solution = function(answer, registration, duration) {
             // skip if not yet loaded

@@ -50,10 +50,15 @@ update_password_parser.add_argument('newpassword', required=True)
 
 user_list_parser = pagination_parser.copy()
 user_list_parser.add_argument('search', required=False, default=None)
+user_list_parser.add_argument('orderBy', required=False, default=None)
 user_list_parser.add_argument('ids', required=False, default=None)
 
 user_course_list_parser = pagination_parser.copy()
 user_course_list_parser.add_argument('search', required=False, default=None)
+
+user_id_course_list_parser = pagination_parser.copy()
+user_id_course_list_parser.add_argument('search', required=False, default=None)
+user_id_course_list_parser.add_argument('orderBy', required=False, default=None)
 
 user_course_status_list_parser = RequestParser()
 user_course_status_list_parser.add_argument('ids', required=True, default=None)
@@ -175,8 +180,20 @@ class UserListAPI(Resource):
 
         query = User.query
         if params['search']:
-            search = '%'+params['search']+'%'
-            query = query.filter(or_(User.firstname.like(search), User.lastname.like(search)))
+            # match each word of search
+            for word in params['search'].strip().split(' '):
+                if word != '':
+                    search = '%'+word+'%'
+                    query = query.filter(or_(
+                        User.firstname.like(search),
+                        User.lastname.like(search),
+                        User.displayname.like(search)
+                    ))
+
+        if params['orderBy']:
+            query = query.order_by(params['orderBy'])
+        query.order_by(User.firstname.asc(), User.lastname.asc())
+
         page = query.paginate(params['page'], params['perPage'])
 
         on_user_list_get.send(
@@ -301,7 +318,7 @@ class UserListAPI(Resource):
 
 
 # /courses
-class UserCourseListAPI(Resource):
+class CurrentUserCourseListAPI(Resource):
     @login_required
     def get(self):
         params = user_course_list_parser.parse_args()
@@ -339,6 +356,59 @@ class UserCourseListAPI(Resource):
             user=current_user)
 
         return {"objects": marshal(page.items, dataformat.get_course()),
+                "page": page.page, "pages": page.pages,
+                "total": page.total, "per_page": page.per_page}
+
+# /id/courses
+class UserCourseListAPI(Resource):
+    @login_required
+    def get(self, user_uuid):
+        user = User.get_by_uuid_or_404(user_uuid)
+
+        require(MANAGE, User)
+
+        params = user_id_course_list_parser.parse_args()
+
+        query = Course.query \
+            .join(UserCourse) \
+            .add_columns(UserCourse.course_role, UserCourse.group_name) \
+            .filter(and_(
+                Course.active == True,
+                UserCourse.user_id == user.id,
+                UserCourse.course_role != CourseRole.dropped
+            ))
+
+        if params['search']:
+            search_terms = params['search'].split()
+            for search_term in search_terms:
+                if search_term != "":
+                    search = '%'+search_term+'%'
+                    query = query.filter(or_(
+                        Course.name.like(search),
+                        Course.year.like(search),
+                        Course.term.like(search)
+                    ))
+
+        if params['orderBy']:
+            query = query.order_by(params['orderBy'])
+        query = query.order_by(Course.start_date_order.desc(), Course.name)
+
+        page = query.paginate(params['page'], params['perPage'])
+
+        # fix results
+        courses = []
+        for (_course, _course_role, _group_name) in page.items:
+            _course.course_role = _course_role
+            _course.group_name = _group_name
+            courses.append(_course)
+        page.items = courses
+
+        on_user_course_get.send(
+            self,
+            event_name=on_user_course_get.name,
+            user=user)
+
+        return {"objects": marshal(page.items, dataformat.get_user_courses()),
                 "page": page.page, "pages": page.pages,
                 "total": page.total, "per_page": page.per_page}
 
@@ -523,7 +593,8 @@ class UserUpdatePasswordAPI(Resource):
 api = new_restful_api(user_api)
 api.add_resource(UserAPI, '/<user_uuid>')
 api.add_resource(UserListAPI, '')
-api.add_resource(UserCourseListAPI, '/courses')
+api.add_resource(UserCourseListAPI, '/<user_uuid>/courses')
+api.add_resource(CurrentUserCourseListAPI, '/courses')
 api.add_resource(UserCourseStatusListAPI, '/courses/status')
 api.add_resource(TeachingUserCourseListAPI, '/courses/teaching')
 api.add_resource(UserEditButtonAPI, '/<user_uuid>/edit')

@@ -524,7 +524,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertEqual(user.username, "valid_username")
 
 
-    def test_get_course_list(self):
+    def test_get_current_user_course_list(self):
         # test login required
         url = '/api/users/courses'
         rv = self.client.get(url)
@@ -617,6 +617,97 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['objects']))
+
+    def test_get_user_course_list(self):
+        # test login required
+        url = '/api/users/'+ self.data.get_authorized_instructor().uuid +'/courses'
+        rv = self.client.get(url)
+        self.assert401(rv)
+
+        with self.login('root'):
+            # test invalid data
+            url = '/api/users/999/courses'
+            rv = self.client.get(url)
+            self.assert404(rv)
+
+            # test admin
+            url = '/api/users/'+ self.data.get_authorized_instructor().uuid +'/courses'
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['objects']))
+            self.assertEqual(self.data.get_course().name, rv.json['objects'][0]['name'])
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['objects']))
+            self.assertEqual(self.data.get_course().name, rv.json['objects'][0]['name'])
+
+            # test search filter
+            url = '/api/users/'+ self.data.get_authorized_instructor().uuid +'/courses?search='+self.data.get_course().name
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['objects']))
+            self.assertEqual(self.data.get_course().name, rv.json['objects'][0]['name'])
+
+            # test search filter
+            url = '/api/users/'+ self.data.get_authorized_instructor().uuid +'/courses?search=notfounds'+self.data.get_course().name
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(0, len(rv.json['objects']))
+
+            # test sort order (when some courses have start_dates and other do not)
+            url = '/api/users/'+ self.data.get_authorized_instructor().uuid +'/courses'
+
+            self.data.get_course().start_date = None
+
+            course_2 = self.data.create_course()
+            course_2.start_date = datetime.datetime.now()
+            self.data.enrol_instructor(self.data.get_authorized_instructor(), course_2)
+
+            course_3 = self.data.create_course()
+            course_3.start_date = datetime.datetime.now() + datetime.timedelta(days=10)
+            self.data.enrol_instructor(self.data.get_authorized_instructor(), course_3)
+
+            courses = [course_3, course_2, self.data.get_course()]
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(3, len(rv.json['objects']))
+            for index, result in enumerate(rv.json['objects']):
+                self.assertEqual(courses[index].uuid, result['id'])
+
+            # test sort order (when course with no start date has assignment)
+            assignment = AssignmentFactory(
+                user=self.data.get_authorized_instructor(),
+                course=self.data.get_course(),
+                answer_start=(datetime.datetime.now() + datetime.timedelta(days=5))
+            )
+            db.session.commit()
+
+            courses = [course_3, self.data.get_course(), course_2]
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(3, len(rv.json['objects']))
+            for index, result in enumerate(rv.json['objects']):
+                self.assertEqual(courses[index].uuid, result['id'])
+
+        # test authorized instructor
+        with self.login(self.data.get_authorized_instructor().username):
+            url = '/api/users/'+ self.data.get_authorized_instructor().uuid +'/courses'
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        # test authorized student
+        with self.login(self.data.get_authorized_student().username):
+            url = '/api/users/'+ self.data.get_authorized_student().uuid +'/courses'
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        # test authorized teaching assistant
+        with self.login(self.data.get_authorized_ta().username):
+            url = '/api/users/'+ self.data.get_authorized_ta().uuid +'/courses'
+            rv = self.client.get(url)
+            self.assert403(rv)
 
     def test_get_teaching_course(self):
         url = '/api/users/courses/teaching'

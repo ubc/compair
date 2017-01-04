@@ -26,7 +26,8 @@ module.factory(
         var unenrolUrl = '/api/courses/:courseId/users/:userId/groups';
         var ret = $resource(url, {groupName: '@groupName'},
             {
-                getAllFromSession: {method: 'GET', url: url, interceptor: Interceptors.groupSessionInterceptor},
+                get: {cache: true, url: url},
+                getAllFromSession: {url: url, interceptor: Interceptors.groupSessionInterceptor},
                 updateUsersGroup: {method: 'POST', url: '/api/courses/:courseId/users/groups/:groupName', interceptor: Interceptors.enrolCache},
                 removeUsersGroup: {method: 'POST', url: '/api/courses/:courseId/users/groups', interceptor: Interceptors.enrolCache},
                 enrol: {method: 'POST', url: unenrolUrl+'/:groupName', interceptor: Interceptors.enrolCache},

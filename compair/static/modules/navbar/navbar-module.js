@@ -34,6 +34,9 @@ module.controller(
             Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function (result) {
                 $scope.canCreateUsers = result;
             });
+            Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function (result) {
+                $scope.canManageUsers = result;
+            });
             Authorize.can(Authorize.CREATE, CourseResource.MODEL).then(function (result) {
                 $scope.canCreateCourses = result;
             });
