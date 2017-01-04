@@ -66,6 +66,6 @@ class UserXAPITests(ComPAIRXAPITestCase):
             'objectType': 'Activity'
         })
         self.assertEqual(statements[0]['result'], {
-            'extensions': {'http://xapi.analytics.ubc.ca/extension/fields-changed': changes}
+            'extensions': {'http://xapi.learninganalytics.ubc.ca/extension/fields-changed': changes}
         })
         self.assertNotIn('context', statements[0])

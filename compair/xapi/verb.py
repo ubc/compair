@@ -31,11 +31,11 @@ class XAPIVerb(object):
         'logged out': 'https://brindlewaye.com/xAPITerms/verbs/loggedout/',
         'opened': 'http://activitystrea.ms/schema/1.0/open',
         'closed': 'http://activitystrea.ms/schema/1.0/close',
-        'drafted': 'http://xapi.analytics.ubc.ca/verb/draft',
-        'flagged': 'http://xapi.analytics.ubc.ca/verb/flag',
-        'unflagged': 'http://xapi.analytics.ubc.ca/verb/unflag',
-        'filtered': 'http://xapi.analytics.ubc.ca/verb/filter',
-        'sorted': 'http://xapi.analytics.ubc.ca/verb/sort'
+        'drafted': 'http://xapi.learninganalytics.ubc.ca/verb/draft',
+        'flagged': 'http://xapi.learninganalytics.ubc.ca/verb/flag',
+        'unflagged': 'http://xapi.learninganalytics.ubc.ca/verb/unflag',
+        'filtered': 'http://xapi.learninganalytics.ubc.ca/verb/filter',
+        'sorted': 'http://xapi.learninganalytics.ubc.ca/verb/sort'
     }
 
     @classmethod

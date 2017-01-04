@@ -85,7 +85,7 @@ class ComPAIRTestCase(TestCase):
 
 class ComPAIRXAPITestCase(ComPAIRTestCase):
     compair_source_category = {
-        'id': 'http://xapi.analytics.ubc.ca/category/compair',
+        'id': 'http://xapi.learninganalytics.ubc.ca/category/compair',
         'definition': {'type': 'http://id.tincanapi.com/activitytype/source'},
         'objectType': 'Activity'
     }

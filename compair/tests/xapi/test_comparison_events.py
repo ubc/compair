@@ -85,7 +85,7 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
                         })
                     else:
                         self.assertEqual(statements[index]['verb'], {
-                            'id': 'http://xapi.analytics.ubc.ca/verb/draft',
+                            'id': 'http://xapi.learninganalytics.ubc.ca/verb/draft',
                             'display': {'en-US': 'drafted'}
                         })
                     self.assertEqual(statements[index]['object'], {
@@ -149,8 +149,8 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
                         'type': 'http://adlnet.gov/expapi/activities/question',
                         'name': {'en-US': 'Assignment comparison #'+str(completed_count+1) },
                         'extensions': {
-                            'http://xapi.analytics.ubc.ca/extension/comparison': completed_count+1,
-                            'http://xapi.analytics.ubc.ca/extension/score-algorithm': PairingAlgorithm.random.value
+                            'http://xapi.learninganalytics.ubc.ca/extension/comparison': completed_count+1,
+                            'http://xapi.learninganalytics.ubc.ca/extension/score-algorithm': PairingAlgorithm.random.value
                         }
                     },
                     'objectType': 'Activity'
@@ -208,7 +208,7 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
                             self.assertEqual(statements[index]['result'], {
                                 'score': { 'raw': float(score.score) },
                                 'extensions': {
-                                    'http://xapi.analytics.ubc.ca/extension/score-details': {
+                                    'http://xapi.learninganalytics.ubc.ca/extension/score-details': {
                                         'algorithm': score.scoring_algorithm.value,
                                         'loses': score.loses,
                                         'opponents': score.opponents,

@@ -74,8 +74,8 @@ class AnswerCommentXAPITests(ComPAIRXAPITestCase):
             })
             self.assertEqual(statements[0]['result'], {
                 'extensions': {
-                    'http://xapi.analytics.ubc.ca/extension/character-count': len(comment.content),
-                    'http://xapi.analytics.ubc.ca/extension/word-count': len(comment.content.split(" "))
+                    'http://xapi.learninganalytics.ubc.ca/extension/character-count': len(comment.content),
+                    'http://xapi.learninganalytics.ubc.ca/extension/word-count': len(comment.content.split(" "))
                 },
                 'response': comment.content
             })
@@ -117,7 +117,7 @@ class AnswerCommentXAPITests(ComPAIRXAPITestCase):
 
             if draft:
                 self.assertEqual(statements[0]['verb'], {
-                    'id': 'http://xapi.analytics.ubc.ca/verb/draft',
+                    'id': 'http://xapi.learninganalytics.ubc.ca/verb/draft',
                     'display': {'en-US': 'drafted'}
                 })
             else:
@@ -134,16 +134,16 @@ class AnswerCommentXAPITests(ComPAIRXAPITestCase):
             if draft:
                 self.assertEqual(statements[0]['result'], {
                     'extensions': {
-                        'http://xapi.analytics.ubc.ca/extension/character-count': len(self.self_evaluation_comment.content),
-                        'http://xapi.analytics.ubc.ca/extension/word-count': len(self.self_evaluation_comment.content.split(" "))
+                        'http://xapi.learninganalytics.ubc.ca/extension/character-count': len(self.self_evaluation_comment.content),
+                        'http://xapi.learninganalytics.ubc.ca/extension/word-count': len(self.self_evaluation_comment.content.split(" "))
                     },
                     'response': self.self_evaluation_comment.content
                 })
             else:
                 self.assertEqual(statements[0]['result'], {
                     'extensions': {
-                        'http://xapi.analytics.ubc.ca/extension/character-count': len(self.self_evaluation_comment.content),
-                        'http://xapi.analytics.ubc.ca/extension/word-count': len(self.self_evaluation_comment.content.split(" "))
+                        'http://xapi.learninganalytics.ubc.ca/extension/character-count': len(self.self_evaluation_comment.content),
+                        'http://xapi.learninganalytics.ubc.ca/extension/word-count': len(self.self_evaluation_comment.content.split(" "))
                     },
                     'response': self.self_evaluation_comment.content,
                     'success': True
@@ -285,7 +285,7 @@ class AnswerCommentXAPITests(ComPAIRXAPITestCase):
             self.assertEqual(statements[0]['actor'], self.get_compair_actor(self.user))
             if draft:
                 self.assertEqual(statements[0]['verb'], {
-                    'id': 'http://xapi.analytics.ubc.ca/verb/draft',
+                    'id': 'http://xapi.learninganalytics.ubc.ca/verb/draft',
                     'display': {'en-US': 'drafted'}
                 })
             else:
@@ -301,8 +301,8 @@ class AnswerCommentXAPITests(ComPAIRXAPITestCase):
             })
             self.assertEqual(statements[0]['result'], {
                 'extensions': {
-                    'http://xapi.analytics.ubc.ca/extension/character-count': len(self.evaluation_comment.content),
-                    'http://xapi.analytics.ubc.ca/extension/word-count': len(self.evaluation_comment.content.split(" "))
+                    'http://xapi.learninganalytics.ubc.ca/extension/character-count': len(self.evaluation_comment.content),
+                    'http://xapi.learninganalytics.ubc.ca/extension/word-count': len(self.evaluation_comment.content.split(" "))
                 },
                 'response': self.evaluation_comment.content
             })
@@ -385,8 +385,8 @@ class AnswerCommentXAPITests(ComPAIRXAPITestCase):
             })
             self.assertEqual(statements[0]['result'], {
                 'extensions': {
-                    'http://xapi.analytics.ubc.ca/extension/character-count': len(comment.content),
-                    'http://xapi.analytics.ubc.ca/extension/word-count': len(comment.content.split(" "))
+                    'http://xapi.learninganalytics.ubc.ca/extension/character-count': len(comment.content),
+                    'http://xapi.learninganalytics.ubc.ca/extension/word-count': len(comment.content.split(" "))
                 },
                 'response': comment.content
             })

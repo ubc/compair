@@ -13,7 +13,7 @@ class XAPIActivity(object):
         'file': 'http://activitystrea.ms/schema/1.0/file',
         'review': 'http://activitystrea.ms/schema/1.0/review',
         'section': 'http://id.tincanapi.com/activitytype/section',
-        'modal': 'http://xapi.analytics.ubc.ca/activitytype/modal',
+        'modal': 'http://xapi.learninganalytics.ubc.ca/activitytype/modal',
         'user profile': 'http://id.tincanapi.com/activitytype/user-profile',
         'service': 'http://activitystrea.ms/schema/1.0/service'
     }
@@ -21,7 +21,7 @@ class XAPIActivity(object):
     @classmethod
     def compair_source(cls):
         return Activity(
-            id='http://xapi.analytics.ubc.ca/category/compair',
+            id='http://xapi.learninganalytics.ubc.ca/category/compair',
             definition=ActivityDefinition(
                 type='http://id.tincanapi.com/activitytype/source'
             )

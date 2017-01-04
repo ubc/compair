@@ -341,8 +341,8 @@ describe('xapi-module', function () {
                         "duration": mockDuration,
                         "response":"This is answer 1",
                         "extensions":{
-                            "http://xapi.analytics.ubc.ca/extension/character-count":16,
-                            "http://xapi.analytics.ubc.ca/extension/word-count":4
+                            "http://xapi.learninganalytics.ubc.ca/extension/character-count":16,
+                            "http://xapi.learninganalytics.ubc.ca/extension/word-count":4
                         }
                     },
                     "context":{
@@ -656,12 +656,12 @@ describe('xapi-module', function () {
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
-                        "id":"http://xapi.analytics.ubc.ca/verb/filter",
+                        "id":"http://xapi.learninganalytics.ubc.ca/verb/filter",
                         "display":{"en-US":"filtered"}
                     },
                     "context":{
                         "extensions": {
-                            "http://xapi.analytics.ubc.ca/extension/filters": mockFilters
+                            "http://xapi.learninganalytics.ubc.ca/extension/filters": mockFilters
                         },
                         "contextActivities":{
                             "other":[{
@@ -690,12 +690,12 @@ describe('xapi-module', function () {
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
-                        "id":"http://xapi.analytics.ubc.ca/verb/sort",
+                        "id":"http://xapi.learninganalytics.ubc.ca/verb/sort",
                         "display":{"en-US":"sorted"}
                     },
                     "context":{
                         "extensions": {
-                            "http://xapi.analytics.ubc.ca/extension/sort-order": mockSortOrder
+                            "http://xapi.learninganalytics.ubc.ca/extension/sort-order": mockSortOrder
                         },
                         "contextActivities":{
                             "other":[{
@@ -796,12 +796,12 @@ describe('xapi-module', function () {
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
-                        "id":"http://xapi.analytics.ubc.ca/verb/filter",
+                        "id":"http://xapi.learninganalytics.ubc.ca/verb/filter",
                         "display":{"en-US":"filtered"}
                     },
                     "context":{
                         "extensions": {
-                            "http://xapi.analytics.ubc.ca/extension/filters": mockFilters
+                            "http://xapi.learninganalytics.ubc.ca/extension/filters": mockFilters
                         },
                         "contextActivities":{
                             "parent":[{
@@ -835,12 +835,12 @@ describe('xapi-module', function () {
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
-                        "id":"http://xapi.analytics.ubc.ca/verb/sort",
+                        "id":"http://xapi.learninganalytics.ubc.ca/verb/sort",
                         "display":{"en-US":"sorted"}
                     },
                     "context":{
                         "extensions": {
-                            "http://xapi.analytics.ubc.ca/extension/sort-order": mockSortOrder
+                            "http://xapi.learninganalytics.ubc.ca/extension/sort-order": mockSortOrder
                         },
                         "contextActivities":{
                             "parent":[{
@@ -893,7 +893,7 @@ describe('xapi-module', function () {
                         "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent(modalName),
                         "objectType":"Activity",
                         "definition":{
-                            "type":"http://xapi.analytics.ubc.ca/activitytype/modal",
+                            "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
                             "name": { "en-US": modalName }
                         }
                     }
@@ -929,7 +929,7 @@ describe('xapi-module', function () {
                         "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent(modalName),
                         "objectType":"Activity",
                         "definition":{
-                            "type":"http://xapi.analytics.ubc.ca/activitytype/modal",
+                            "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
                             "name": { "en-US": modalName }
                         }
                     }
@@ -946,12 +946,12 @@ describe('xapi-module', function () {
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
-                        "id":"http://xapi.analytics.ubc.ca/verb/filter",
+                        "id":"http://xapi.learninganalytics.ubc.ca/verb/filter",
                         "display":{"en-US":"filtered"}
                     },
                     "context":{
                         "extensions": {
-                            "http://xapi.analytics.ubc.ca/extension/filters": mockFilters
+                            "http://xapi.learninganalytics.ubc.ca/extension/filters": mockFilters
                         },
                         "contextActivities":{
                             "parent":[{
@@ -968,7 +968,7 @@ describe('xapi-module', function () {
                         "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent(modalName),
                         "objectType":"Activity",
                         "definition":{
-                            "type":"http://xapi.analytics.ubc.ca/activitytype/modal",
+                            "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
                             "name": { "en-US": modalName }
                         }
                     }
@@ -985,12 +985,12 @@ describe('xapi-module', function () {
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
-                        "id":"http://xapi.analytics.ubc.ca/verb/sort",
+                        "id":"http://xapi.learninganalytics.ubc.ca/verb/sort",
                         "display":{"en-US":"sorted"}
                     },
                     "context":{
                         "extensions": {
-                            "http://xapi.analytics.ubc.ca/extension/sort-order": mockSortOrder
+                            "http://xapi.learninganalytics.ubc.ca/extension/sort-order": mockSortOrder
                         },
                         "contextActivities":{
                             "parent":[{
@@ -1007,7 +1007,7 @@ describe('xapi-module', function () {
                         "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent(modalName),
                         "objectType":"Activity",
                         "definition":{
-                            "type":"http://xapi.analytics.ubc.ca/activitytype/modal",
+                            "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
                             "name": { "en-US": modalName }
                         }
                     }
@@ -1124,7 +1124,7 @@ describe('xapi-module', function () {
                         "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent("View PDF Attachment"),
                         "objectType":"Activity",
                         "definition":{
-                            "type":"http://xapi.analytics.ubc.ca/activitytype/modal",
+                            "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
                             "name": { "en-US": "View PDF Attachment" }
                         }
                     }
@@ -1163,7 +1163,7 @@ describe('xapi-module', function () {
                         "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent("View PDF Attachment"),
                         "objectType":"Activity",
                         "definition":{
-                            "type":"http://xapi.analytics.ubc.ca/activitytype/modal",
+                            "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
                             "name": { "en-US": "View PDF Attachment" }
                         }
                     }
@@ -1356,8 +1356,8 @@ describe('xapi-module', function () {
                             "type":"http://adlnet.gov/expapi/activities/question",
                             "name": { "en-US": "Assignment comparison #"+comparisonNumber },
                             "extensions": {
-                                "http://xapi.analytics.ubc.ca/extension/comparison": comparisonNumber,
-                                "http://xapi.analytics.ubc.ca/extension/score-algorithm": "random"
+                                "http://xapi.learninganalytics.ubc.ca/extension/comparison": comparisonNumber,
+                                "http://xapi.learninganalytics.ubc.ca/extension/score-algorithm": "random"
                             }
                         },
                     }
@@ -1415,8 +1415,8 @@ describe('xapi-module', function () {
                             "type":"http://adlnet.gov/expapi/activities/question",
                             "name": { "en-US": "Assignment comparison #"+comparisonNumber },
                             "extensions": {
-                                "http://xapi.analytics.ubc.ca/extension/comparison": comparisonNumber,
-                                "http://xapi.analytics.ubc.ca/extension/score-algorithm": "random"
+                                "http://xapi.learninganalytics.ubc.ca/extension/comparison": comparisonNumber,
+                                "http://xapi.learninganalytics.ubc.ca/extension/score-algorithm": "random"
                             }
                         },
                     }
@@ -1478,8 +1478,8 @@ describe('xapi-module', function () {
                             "type":"http://adlnet.gov/expapi/activities/question",
                             "name": { "en-US": "Assignment comparison #"+comparisonNumber },
                             "extensions": {
-                                "http://xapi.analytics.ubc.ca/extension/comparison": comparisonNumber,
-                                "http://xapi.analytics.ubc.ca/extension/score-algorithm": "random"
+                                "http://xapi.learninganalytics.ubc.ca/extension/comparison": comparisonNumber,
+                                "http://xapi.learninganalytics.ubc.ca/extension/score-algorithm": "random"
                             }
                         },
                     }
@@ -1634,8 +1634,8 @@ describe('xapi-module', function () {
                         "duration": mockDuration,
                         "response": "<p>test123213t4453123123</p>\n",
                         "extensions": {
-                            "http://xapi.analytics.ubc.ca/extension/character-count": 22,
-                            "http://xapi.analytics.ubc.ca/extension/word-count": 1
+                            "http://xapi.learninganalytics.ubc.ca/extension/character-count": 22,
+                            "http://xapi.learninganalytics.ubc.ca/extension/word-count": 1
                         }
                     },
                     "object":{
@@ -1833,8 +1833,8 @@ describe('xapi-module', function () {
                         "duration": mockDuration,
                         "response": "<p>test123213t4453123123</p>\n",
                         "extensions": {
-                            "http://xapi.analytics.ubc.ca/extension/character-count": 22,
-                            "http://xapi.analytics.ubc.ca/extension/word-count": 1
+                            "http://xapi.learninganalytics.ubc.ca/extension/character-count": 22,
+                            "http://xapi.learninganalytics.ubc.ca/extension/word-count": 1
                         }
                     },
                     "object":{
