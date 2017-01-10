@@ -4,7 +4,7 @@ from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from flask_login import login_required, current_user
 from sqlalchemy.orm import load_only
-from sqlalchemy import exc, asc, or_, and_, func
+from sqlalchemy import exc, asc, or_, and_, func, desc, asc
 from six import text_type
 
 from . import dataformat
@@ -51,6 +51,7 @@ update_password_parser.add_argument('newpassword', required=True)
 user_list_parser = pagination_parser.copy()
 user_list_parser.add_argument('search', required=False, default=None)
 user_list_parser.add_argument('orderBy', required=False, default=None)
+user_list_parser.add_argument('reverse', type=bool, default=False)
 user_list_parser.add_argument('ids', required=False, default=None)
 
 user_course_list_parser = pagination_parser.copy()
@@ -59,6 +60,7 @@ user_course_list_parser.add_argument('search', required=False, default=None)
 user_id_course_list_parser = pagination_parser.copy()
 user_id_course_list_parser.add_argument('search', required=False, default=None)
 user_id_course_list_parser.add_argument('orderBy', required=False, default=None)
+user_id_course_list_parser.add_argument('reverse', type=bool, default=False)
 
 user_course_status_list_parser = RequestParser()
 user_course_status_list_parser.add_argument('ids', required=True, default=None)
@@ -191,7 +193,10 @@ class UserListAPI(Resource):
                     ))
 
         if params['orderBy']:
-            query = query.order_by(params['orderBy'])
+            if params['reverse']:
+                query = query.order_by(desc(params['orderBy']))
+            else:
+                query = query.order_by(asc(params['orderBy']))
         query.order_by(User.firstname.asc(), User.lastname.asc())
 
         page = query.paginate(params['page'], params['perPage'])
@@ -390,7 +395,10 @@ class UserCourseListAPI(Resource):
                     ))
 
         if params['orderBy']:
-            query = query.order_by(params['orderBy'])
+            if params['reverse']:
+                query = query.order_by(desc(params['orderBy']))
+            else:
+                query = query.order_by(asc(params['orderBy']))
         query = query.order_by(Course.start_date_order.desc(), Course.name)
 
         page = query.paginate(params['page'], params['perPage'])

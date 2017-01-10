@@ -59,6 +59,12 @@
                             Create Account
                         </a>
                     </li>
+                    <li ng-if="canManageUsers && AuthTypesEnabled.lti">
+                        <a ng-href="#/lti/consumer" id="manage-lti-consumers-btn">
+                            <i class="fa fa-cogs"></i>
+                            Manage LTI
+                        </a>
+                    </li>
                     <!-- When in a course -->
                     <!-- <li ng-if="inCourse && canEditCourse">
                         <a ng-href="#/course/{{courseId}}/configure">

@@ -167,6 +167,15 @@ class LTITestData:
 
         return lti_user.user_id
 
+    def create_consumer(self, **kwargs):
+        lti_consumer = LTIConsumerFactory(**kwargs)
+
+        self.lti_consumers.append(lti_consumer)
+
+        db.session.commit()
+
+        return lti_consumer
+
     def create_resource_link(self, lti_consumer, lti_context=None, resource_link_id=None, compair_assignment=None):
         lti_resource_link = LTIResourceLinkFactory(
             lti_consumer=lti_consumer,

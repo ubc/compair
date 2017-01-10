@@ -1,0 +1,53 @@
+<div ng-controller="LTIConsumerController" class="lti-consumers-screen">
+    <div class="row">
+        <header class="col-md-6">
+            <h1><i class="fa fa-cogs"></i> Manage LTI Consumers</h1>
+        </header>
+        <div class="col-md-6 sub-nav">
+            <a href="#/lti/consumer/create" class="btn btn-primary" id="create-lti-consumer-btn">
+                <i class="fa fa-plus"></i>
+                Add LTI Consumer
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive" ng-if="consumers.length">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Actions</th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('oauth_consumer_key')">Consumer Key</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('oauth_consumer_secret')">Consumer Secret</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('active')">Status</a>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="consumer in consumers">
+                    <td class="nowrap">
+                        <a href="#/lti/consumer/{{consumer.id}}/edit">Edit</a>
+                    </td>
+                    <td>{{consumer.oauth_consumer_key}}</td>
+                    <td>{{consumer.oauth_consumer_secret}}</td>
+                    <td>
+                        <select ng-model="consumer.active" ng-options="key for (key , value) in {'Active': true, 'Inactive': false}"
+                                ng-change="updateConsumer(consumer)">
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-center" ng-if="consumers.length">
+        <pagination total-items="totalNumConsumers" ng-model="consumerFilters.page"
+                    max-size="10" class="pagination-sm" boundary-links="true"
+                    direction-links="false" items-per-page="consumerFilters.perPage"
+                    num-pages="numPages" ng-hide="numPages == 1"></pagination>
+    </div>
+</div>

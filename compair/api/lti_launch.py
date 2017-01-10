@@ -281,7 +281,7 @@ class ComPAIRRequestValidator(RequestValidator):
 
     @property
     def request_token_length(self):
-        return 10, 50
+        return 10, 255
 
     @property
     def access_token_length(self):
@@ -293,11 +293,11 @@ class ComPAIRRequestValidator(RequestValidator):
 
     @property
     def nonce_length(self):
-        return 10, 50
+        return 10, 255
 
     @property
     def verifier_length(self):
-        return 20, 30
+        return 10, 255
 
     def validate_timestamp_and_nonce(self, client_key, timestamp, nonce,
                                      request, request_token=None, access_token=None):

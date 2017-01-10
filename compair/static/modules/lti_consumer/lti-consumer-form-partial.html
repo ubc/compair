@@ -1,0 +1,22 @@
+<form name="consumerForm" class="form" ng-submit="save()" novalidate>
+    <fieldset>
+        <legend>Consumer Details</legend>
+        <compair-field-with-feedback form-control="consumerForm.oauth_consumer_key">
+            <label for="oauth_consumer_key" class="required-star">Consumer Key</label>
+            <input class="form-control" id="oauth_consumer_key" type="text"
+                name="oauth_consumer_key" ng-model="consumer.oauth_consumer_key"
+                ng-minlength="10" ng-maxlength="255"
+                required />
+        </compair-field-with-feedback>
+        <compair-field-with-feedback form-control="consumerForm.oauth_consumer_secret">
+            <label for="oauth_consumer_secret" class="required-star">Consumer Secret</label>
+            <input class="form-control" id="oauth_consumer_secret" type="text"
+                name="oauth_consumer_secret" ng-model="consumer.oauth_consumer_secret"
+                ng-minlength="10" ng-maxlength="255"
+                required />
+        </compair-field-with-feedback>
+    </fieldset>
+
+    <input type="submit" class="btn btn-success center-block btn-lg" value="Save"
+        ng-disabled="consumerForm.$invalid || submitted" />
+</form>

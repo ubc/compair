@@ -153,5 +153,6 @@ module.controller("LTIController",
         });
     }]
 );
+
 // End anonymous function
 })();
