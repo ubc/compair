@@ -43,7 +43,8 @@
             <div class="each-evaluation" ng-repeat="comparison_set in comparisons">
 
                 <h4 class="text-center evaluator-heading" ng-if="$first">
-                    {{ comparison.name }} <i class="fa fa-arrow-down"></i>
+                    {{ comparison_set.user.fullname }} <br />
+                    <i class="fa fa-arrow-down"></i>
                 </h4>
 
                 <div class="evaluator-answer" ng-if="$first">
@@ -57,7 +58,7 @@
 
                 <!-- Comparison Header -->
                 <div class="each-header">
-                    <compair-avatar user-id="comparison_set.user_id" avatar="comparison_set.user.avatar" display-name="comparison_set.user.displayname"></compair-avatar>
+                    <compair-avatar user-id="comparison_set.user_id" avatar="comparison_set.user.avatar" display-name="comparison_set.user.fullname"></compair-avatar>
                     <strong>submitted</strong> on {{ comparison_set.created | amDateFormat: 'MMM D @ h:mm a'}}:
                 </div>
 
