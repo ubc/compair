@@ -2,6 +2,7 @@ import csv
 import json
 import io
 import os
+import unicodecsv as csv
 
 from data.fixtures.test_data import TestFixture
 from compair.tests.test_compair import ComPAIRAPITestCase
@@ -26,8 +27,6 @@ class ReportAPITest(ComPAIRAPITestCase):
                     os.remove(file_path)
             except Exception as e:
                 print(e)
-
-
 
     def test_generate_report(self):
         # test login required
@@ -92,7 +91,7 @@ class ReportAPITest(ComPAIRAPITestCase):
             self.files_to_cleanup.append(file_name)
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
-            with open(tmp_name, 'rt') as csvfile:
+            with open(tmp_name, 'rb') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
 
                 heading1 = next(reader)
@@ -114,7 +113,7 @@ class ReportAPITest(ComPAIRAPITestCase):
             self.files_to_cleanup.append(file_name)
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
-            with open(tmp_name, 'rt') as csvfile:
+            with open(tmp_name, 'rb') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
 
                 heading1 = next(reader)
@@ -136,7 +135,7 @@ class ReportAPITest(ComPAIRAPITestCase):
             self.files_to_cleanup.append(file_name)
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
-            with open(tmp_name, 'rt') as csvfile:
+            with open(tmp_name, 'rb') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
 
                 heading1 = next(reader)
@@ -162,7 +161,7 @@ class ReportAPITest(ComPAIRAPITestCase):
             self.files_to_cleanup.append(file_name)
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
-            with open(tmp_name, 'rt') as csvfile:
+            with open(tmp_name, 'rb') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
 
                 heading1 = next(reader)
@@ -193,7 +192,7 @@ class ReportAPITest(ComPAIRAPITestCase):
             self.files_to_cleanup.append(file_name)
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
-            with open(tmp_name, 'rt') as csvfile:
+            with open(tmp_name, 'rb') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
 
                 heading = next(reader)
@@ -222,7 +221,7 @@ class ReportAPITest(ComPAIRAPITestCase):
             self.files_to_cleanup.append(file_name)
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
-            with open(tmp_name, 'rt') as csvfile:
+            with open(tmp_name, 'rb') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
 
                 heading = next(reader)
@@ -244,7 +243,7 @@ class ReportAPITest(ComPAIRAPITestCase):
             self.files_to_cleanup.append(file_name)
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
-            with open(tmp_name, 'rt') as csvfile:
+            with open(tmp_name, 'rb') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
 
                 heading = next(reader)
@@ -278,7 +277,7 @@ class ReportAPITest(ComPAIRAPITestCase):
             self.files_to_cleanup.append(file_name)
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
-            with open(tmp_name, 'rt') as csvfile:
+            with open(tmp_name, 'rb') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
 
                 heading = next(reader)

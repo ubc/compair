@@ -2,12 +2,13 @@ import os
 import uuid
 import csv
 import string
+import unicodecsv as csv
 
 from bouncer.constants import EDIT, READ, MANAGE
 from flask import Blueprint, request, current_app, make_response
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal, abort
-from six import StringIO
+from six import BytesIO
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
@@ -27,15 +28,15 @@ classlist_api = Blueprint('classlist_api', __name__)
 api = new_restful_api(classlist_api)
 
 new_course_user_parser = RequestParser()
-new_course_user_parser.add_argument('course_role', type=str)
+new_course_user_parser.add_argument('course_role')
 
 update_users_course_role_parser = RequestParser()
 update_users_course_role_parser.add_argument('ids', type=list, required=True, default=[], location='json')
-update_users_course_role_parser.add_argument('course_role', default=CourseRole.dropped.value, type=str)
+update_users_course_role_parser.add_argument('course_role', default=CourseRole.dropped.value)
 
 
 import_classlist_parser = RequestParser()
-import_classlist_parser.add_argument('import_type', default=None, type=str, required=False)
+import_classlist_parser.add_argument('import_type', default=None, required=False)
 
 # upload file column name to index number
 COMPAIR_IMPORT = {
@@ -286,7 +287,7 @@ def import_users(import_type, course, users):
 @api.representation('text/csv')
 def output_csv(data, code, headers=None):
     fieldnames = ['username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name']
-    csv_buffer = StringIO()
+    csv_buffer = BytesIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames, extrasaction='ignore')
     writer.writeheader()
 
@@ -379,7 +380,7 @@ class ClasslistRootAPI(Resource):
             tmp_name = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
             uploaded_file.save(tmp_name)
             current_app.logger.debug("Importing for course " + str(course.id) + " with " + filename)
-            with open(tmp_name, 'rt') as csvfile:
+            with open(tmp_name, 'rb') as csvfile:
                 spamreader = csv.reader(csvfile)
                 users = []
                 for row in spamreader:

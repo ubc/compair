@@ -1,3 +1,5 @@
+from six import text_type
+
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy import func, select, and_, or_
@@ -116,7 +118,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             lti_membership = LTIMembership(
                 lti_user=lti_user,
                 lti_context=lti_context,
-                roles=str(roles),
+                roles=text_type(roles),
                 lis_result_sourcedid=member.get('lis_result_sourcedid'),
                 course_role=course_role
             )

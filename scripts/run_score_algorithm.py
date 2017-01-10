@@ -16,6 +16,7 @@ import os
 from compair.algorithms import ComparisonPair, ScoredObject
 from compair.algorithms.score import calculate_score
 from compair.models.score_algorithm import ScoringAlgorithm
+import unicodecsv as csv
 
 KEY1 = 0
 KEY2 = 1

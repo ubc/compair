@@ -144,7 +144,7 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(rv.json['criteria']), 3)
 
             # Test getting the assignment again
-            rv = self.client.get(self.url + '/' + str(rv.json['id']))
+            rv = self.client.get(self.url + '/' + rv.json['id'])
             self.assert200(rv)
             self.assertEqual(
                 assignment_expected['name'], rv.json['name'],
@@ -325,13 +325,13 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             rv = self.client.delete(self.url + '/' + assignment.uuid)
             self.assert403(rv)
             self.assertEqual(
-                '<p>' + self.data.get_authorized_student().username + ' does not have delete access to assignment '+assignment.uuid+'</p>',
+                '<p>User ' + self.data.get_authorized_student().uuid + ' does not have delete access to assignment '+assignment.uuid+'</p>',
                 rv.json['message'])
 
         with self.login(self.data.get_authorized_instructor().username):
             rv = self.client.delete(self.url + '/' + assignment.uuid)
             self.assert200(rv)
-            self.assertEqual(expected_ret['id'], rv.json['id'], "assignment " + str(rv.json['id']) + " deleted successfully")
+            self.assertEqual(expected_ret['id'], rv.json['id'], "assignment " + rv.json['id'] + " deleted successfully")
 
     def _verify_assignment(self, expected, actual):
         self.assertEqual(expected.name, actual['name'])

@@ -59,7 +59,7 @@ def upgrade():
 
 def downgrade():
     # insert selfevaltype_id column into Questions table
-    op.add_column(u'Questions', sa.Column('selfevaltype_id', sa.Integer(), nullable=True))
+    op.add_column('Questions', sa.Column('selfevaltype_id', sa.Integer(), nullable=True))
 
     # populate the column - only populate the no comparison self evaluation type
     type = text(

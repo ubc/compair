@@ -25,5 +25,6 @@ trueskill==0.4.4
 lti==0.8.4
 Celery==3.1.23
 redis==2.10.5
-git+git://github.com/zachlowry/TinCanPython.git@python35
+git+git://github.com/andrew-gardener/TinCanPython.git@python35
 nose==1.3.7
+unicodecsv==0.14.1

@@ -4,7 +4,7 @@ from functools import wraps
 import pstats
 from flask_restful.reqparse import RequestParser
 
-from six import StringIO
+from six import BytesIO
 from flask import request, jsonify
 from flask_restful import Api
 from flask_sqlalchemy import Model
@@ -126,7 +126,7 @@ def profiled():
     pr.enable()
     yield
     pr.disable()
-    s = StringIO.StringIO()
+    s = BytesIO.BytesIO()
     ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
     ps.print_stats()
     # uncomment this to see who's calling what

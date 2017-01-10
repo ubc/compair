@@ -2,6 +2,8 @@ import uuid
 import os
 import csv
 import json
+import unicodecsv as csv
+from six import text_type
 
 from bouncer.constants import READ, CREATE, DELETE, EDIT
 from flask import Blueprint, current_app, request, abort
@@ -28,7 +30,7 @@ USER_IDENTIFIER = 0
 GROUP_NAME = 1
 
 import_parser = RequestParser()
-import_parser.add_argument('userIdentifier', type=str, required=True)
+import_parser.add_argument('userIdentifier', required=True)
 
 # events
 on_course_group_get = event.signal('COURSE_GROUP_GET')
@@ -78,11 +80,11 @@ def import_members(course, identifier, members):
     for member in members:
         if member[USER_IDENTIFIER] in user_infile:
             message = 'This user already exists in the file.'
-            invalids.append({'member': json.dumps(member), 'message': message})
+            invalids.append({'member': member, 'message': message})
             continue
         if not member[GROUP_NAME]:
             message = 'The group name is invalid.'
-            invalids.append({'member': json.dumps(member), 'message': message})
+            invalids.append({'member': member, 'message': message})
             continue
 
         if identifier == ThirdPartyType.cas.value:
@@ -102,7 +104,7 @@ def import_members(course, identifier, members):
             value = 'student number'
 
         if not user:
-            invalids.append({'member': json.dumps(member), 'message': 'No user with this '+value+' exists.'})
+            invalids.append({'member': member, 'message': 'No user with this '+value+' exists.'})
             continue
 
         if user.id in enroled:
@@ -113,7 +115,7 @@ def import_members(course, identifier, members):
             user_infile.append(member[USER_IDENTIFIER])
         else:
             message = 'The user is not enroled in the course'
-            invalids.append({'member': json.dumps(member), 'message': message})
+            invalids.append({'member': member, 'message': message})
             continue
     db.session.commit()
 
@@ -171,7 +173,7 @@ class GroupRootAPI(Resource):
             tmpName = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
             file.save(tmpName)
             current_app.logger.debug("Import groups for course "+str(course.id)+" with "+ filename)
-            with open(tmpName, 'rt') as csvfile:
+            with open(tmpName, 'rb') as csvfile:
                 spamreader = csv.reader(csvfile)
                 members = []
                 for row in spamreader:

@@ -1,6 +1,7 @@
 import io
 import os
 import mock
+from six import text_type
 
 from flask import current_app
 from flask import make_response
@@ -52,7 +53,7 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             # invalid file name (db is not actually touched)
             rv = self.client.get(self.base_url + '/attachment/'+filename)
             self.assert404(rv)
-            self.assertEqual('invalid file name', str(rv.get_data(as_text=True)))
+            self.assertEqual('invalid file name', text_type(rv.get_data(as_text=True)))
 
             with mock.patch('compair.api.os.path.exists', return_value=True):
                 with mock.patch('compair.api.send_file', return_value=make_response("OK")) as mock_send_file:

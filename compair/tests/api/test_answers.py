@@ -250,53 +250,52 @@ class AnswersAPITests(ComPAIRAPITestCase):
     def test_create_answer(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         # test login required
         expected_answer = {'content': 'this is some answer content'}
-        response = self.client.post(
+        rv = self.client.post(
             self.base_url,
             data=json.dumps(expected_answer),
             content_type='application/json')
-        self.assert401(response)
+        self.assert401(rv)
         # test unauthorized users
         with self.login(self.fixtures.unauthorized_student.username):
-            response = self.client.post(self.base_url, data=json.dumps(expected_answer),
+            rv = self.client.post(self.base_url, data=json.dumps(expected_answer),
                                         content_type='application/json')
-            self.assert403(response)
+            self.assert403(rv)
         with self.login(self.fixtures.unauthorized_instructor.username):
-            response = self.client.post(
+            rv = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
                 content_type='application/json')
-            self.assert403(response)
+            self.assert403(rv)
 
         # test invalid format
         with self.login(self.fixtures.students[0].username):
             invalid_answer = {'post': {'blah': 'blah'}}
-            response = self.client.post(
+            rv = self.client.post(
                 self.base_url,
                 data=json.dumps(invalid_answer),
                 content_type='application/json')
-            self.assert400(response)
+            self.assert400(rv)
             # test invalid assignment
-            response = self.client.post(
+            rv = self.client.post(
                 self._build_url(self.fixtures.course.uuid, "9392402"),
                 data=json.dumps(expected_answer),
                 content_type='application/json')
-            self.assert404(response)
+            self.assert404(rv)
             # test invalid course
-            response = self.client.post(
+            rv = self.client.post(
                 self._build_url("9392402", self.fixtures.assignment.uuid),
                 data=json.dumps(expected_answer), content_type='application/json')
-            self.assert404(response)
+            self.assert404(rv)
 
         # test create successful
         with self.login(self.fixtures.instructor.username):
-            response = self.client.post(
+            rv = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
                 content_type='application/json')
-            self.assert200(response)
+            self.assert200(rv)
             # retrieve again and verify
-            rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
+            actual_answer = Answer.query.filter_by(uuid=rv.json['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
             # user should not have grades
@@ -306,13 +305,12 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertIsNone(new_assignment_grade)
 
             # test instructor could submit multiple answers for his/her own
-            response = self.client.post(
+            rv = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
                 content_type='application/json')
-            self.assert200(response)
-            rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
+            self.assert200(rv)
+            actual_answer = Answer.query.filter_by(uuid=rv.json['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
             # user should not have grades
@@ -323,13 +321,12 @@ class AnswersAPITests(ComPAIRAPITestCase):
 
             # test instructor could submit multiple answers for his/her own
             expected_answer.update({'user_id': self.fixtures.instructor.uuid})
-            response = self.client.post(
+            rv = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
                 content_type='application/json')
-            self.assert200(response)
-            rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
+            self.assert200(rv)
+            actual_answer = Answer.query.filter_by(uuid=rv.json['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
             # user should not have grades
@@ -341,13 +338,12 @@ class AnswersAPITests(ComPAIRAPITestCase):
             # test instructor could submit on behave of a student
             self.fixtures.add_students(1)
             expected_answer.update({'user_id': self.fixtures.students[-1].uuid})
-            response = self.client.post(
+            rv = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
                 content_type='application/json')
-            self.assert200(response)
-            rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
+            self.assert200(rv)
+            actual_answer = Answer.query.filter_by(uuid=rv.json['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
             # user should have grades
@@ -358,13 +354,12 @@ class AnswersAPITests(ComPAIRAPITestCase):
 
             # test instructor can not submit additional answers for a student
             expected_answer.update({'user_id': self.fixtures.students[0].uuid})
-            response = self.client.post(
+            rv = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
                 content_type='application/json')
-            self.assert400(response)
-            rv = json.loads(response.data.decode('utf-8'))
-            self.assertEqual({"error": "An answer has already been submitted."}, rv)
+            self.assert400(rv)
+            self.assertEqual({"error": "An answer has already been submitted."}, rv.json)
 
 
         self.fixtures.add_students(1)
@@ -378,13 +373,12 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 self.fixtures.assignments[0], self.fixtures.students[-1]).grade
 
             # test create draft successful
-            response = self.client.post(
+            rv = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
                 content_type='application/json')
-            self.assert200(response)
-            rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
+            self.assert200(rv)
+            actual_answer = Answer.query.filter_by(uuid=rv.json['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
             self.assertEqual(expected_answer['draft'], actual_answer.draft)
 
@@ -404,13 +398,12 @@ class AnswersAPITests(ComPAIRAPITestCase):
 
             self.fixtures.add_students(1)
             expected_answer.update({'user_id': self.fixtures.students[-1].uuid})
-            response = self.client.post(
+            rv = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
                 content_type='application/json')
-            self.assert200(response)
-            rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
+            self.assert200(rv)
+            actual_answer = Answer.query.filter_by(uuid=rv.json['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
         # test create successful
@@ -424,12 +417,12 @@ class AnswersAPITests(ComPAIRAPITestCase):
             db.session.add(self.fixtures.assignment)
             db.session.commit()
 
-            response = self.client.post(
+            rv = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
                 content_type='application/json')
-            self.assert403(response)
-            self.assertEqual("Answer deadline has passed.", response.json['error'])
+            self.assert403(rv)
+            self.assertEqual("Answer deadline has passed.", rv.json['error'])
 
             # test student can submit answers within answer grace period
             self.fixtures.assignment.answer_end = datetime.datetime.utcnow() - datetime.timedelta(seconds=15)
@@ -446,13 +439,12 @@ class AnswersAPITests(ComPAIRAPITestCase):
             (lti_user_resource_link1, lti_user_resource_link2) = self.lti_data.setup_student_user_resource_links(
                 student, self.fixtures.course, self.fixtures.assignment)
 
-            response = self.client.post(
+            rv = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
                 content_type='application/json')
-            self.assert200(response)
-            rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
+            self.assert200(rv)
+            actual_answer = Answer.query.filter_by(uuid=rv.json['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
             # grades should increase
@@ -477,25 +469,23 @@ class AnswersAPITests(ComPAIRAPITestCase):
 
         # test create successful for system admin
         with self.login('root'):
-            response = self.client.post(
+            rv = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
                 content_type='application/json')
-            self.assert200(response)
+            self.assert200(rv)
 
             # retrieve again and verify
-            rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
+            actual_answer = Answer.query.filter_by(uuid=rv.json['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
             # test system admin could submit multiple answers for his/her own
-            response = self.client.post(
+            rv = self.client.post(
                 self.base_url,
                 data=json.dumps(expected_answer),
                 content_type='application/json')
-            self.assert200(response)
-            rv = json.loads(response.data.decode('utf-8'))
-            actual_answer = Answer.query.filter_by(uuid=rv['id']).one()
+            self.assert200(rv)
+            actual_answer = Answer.query.filter_by(uuid=rv.json['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
     def test_get_answer(self):
@@ -1049,8 +1039,8 @@ class AnswerComparisonAPITests(ComPAIRAPITestCase):
         self.fixtures = TestFixture().add_course(num_students=10, num_groups=2, with_comparisons=True)
         self.base_url = self._build_url(self.fixtures.course.uuid, self.fixtures.assignment.uuid)
 
-    def _build_url(self, course_id, assignment_id, tail=""):
-        url = '/api/courses/' + str(course_id) + '/assignments/' + str(assignment_id) + '/answers/comparisons' + tail
+    def _build_url(self, course_uuid, assignment_uuid, tail=""):
+        url = '/api/courses/' + course_uuid + '/assignments/' + assignment_uuid + '/answers/comparisons' + tail
         return url
 
     def test_answer_comparisons(self):
@@ -1071,11 +1061,11 @@ class AnswerComparisonAPITests(ComPAIRAPITestCase):
         # authorized instructor
         with self.login(self.fixtures.instructor.username):
             # test invalid course id
-            rv = self.client.get('/api/courses/999/assignments/'+str(self.fixtures.assignment.uuid)+'/answers/comparisons', data=json.dumps({}), content_type='application/json')
+            rv = self.client.get('/api/courses/999/assignments/'+self.fixtures.assignment.uuid+'/answers/comparisons', data=json.dumps({}), content_type='application/json')
             self.assert404(rv)
 
             # test invalid assignment id
-            rv = self.client.get('/api/courses/'+str(self.fixtures.course.uuid)+'/assignments/999/answers/comparisons', data=json.dumps({}), content_type='application/json')
+            rv = self.client.get('/api/courses/'+self.fixtures.course.uuid+'/assignments/999/answers/comparisons', data=json.dumps({}), content_type='application/json')
             self.assert404(rv)
 
             # get pagninated list of all comparisons in assignment

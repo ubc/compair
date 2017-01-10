@@ -54,9 +54,9 @@ def upgrade():
         mysql_engine='InnoDB'
     )
 
-    op.add_column(u'assignment', sa.Column('answer_grade_weight', sa.Integer(), server_default='1', nullable=False))
-    op.add_column(u'assignment', sa.Column('comparison_grade_weight', sa.Integer(), server_default='1', nullable=False))
-    op.add_column(u'assignment', sa.Column('self_evaluation_grade_weight', sa.Integer(), server_default='1', nullable=False))
+    op.add_column('assignment', sa.Column('answer_grade_weight', sa.Integer(), server_default='1', nullable=False))
+    op.add_column('assignment', sa.Column('comparison_grade_weight', sa.Integer(), server_default='1', nullable=False))
+    op.add_column('assignment', sa.Column('self_evaluation_grade_weight', sa.Integer(), server_default='1', nullable=False))
 
 def downgrade():
     with op.batch_alter_table('assignment', naming_convention=convention) as batch_op:

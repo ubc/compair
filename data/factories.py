@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import datetime
 
 import factory
@@ -18,12 +20,12 @@ class UserFactory(factory.alchemy.SQLAlchemyModelFactory):
         model = User
         sqlalchemy_session = db.session
 
-    username = factory.Sequence(lambda n: u'user%d' % n)
-    firstname = factory.fuzzy.FuzzyText(length=4)
-    lastname = factory.fuzzy.FuzzyText(length=4)
-    displayname = factory.fuzzy.FuzzyText(length=8)
-    email = factory.fuzzy.FuzzyText(length=8)
-    student_number = factory.fuzzy.FuzzyText(length=8)
+    username = factory.Sequence(lambda n: 'userü%d' % n)
+    firstname = factory.fuzzy.FuzzyText(length=4, suffix='ü')
+    lastname = factory.fuzzy.FuzzyText(length=4, suffix='ü')
+    displayname = factory.fuzzy.FuzzyText(length=8, suffix='ü')
+    email = factory.fuzzy.FuzzyText(length=8, suffix='ü')
+    student_number = factory.fuzzy.FuzzyText(length=8, suffix='ü')
     password = 'password'
     system_role = SystemRole.instructor
 
@@ -33,10 +35,10 @@ class CourseFactory(factory.alchemy.SQLAlchemyModelFactory):
         model = Course
         sqlalchemy_session = db.session
 
-    name = factory.Sequence(lambda n: u'TestCourse%d' % n)
+    name = factory.Sequence(lambda n: 'TestCourseü%d' % n)
     year = 2015
-    term = "Winter"
-    description = factory.fuzzy.FuzzyText(length=36)
+    term = 'Winterü'
+    description = factory.fuzzy.FuzzyText(length=36, suffix='ü')
     #start_date = datetime.datetime.now() - datetime.timedelta(days=7)
     #end_date = datetime.datetime.now() + datetime.timedelta(days=7)
 
@@ -57,8 +59,8 @@ class CriterionFactory(factory.alchemy.SQLAlchemyModelFactory):
         model = Criterion
         sqlalchemy_session = db.session
 
-    name = factory.Sequence(lambda n: u'criterion %d' % n)
-    description = factory.Sequence(lambda n: u'This is criterion %d' % n)
+    name = factory.Sequence(lambda n: 'criterion ü %d' % n)
+    description = factory.Sequence(lambda n: 'This is criterion ü %d' % n)
     default = True
 
 
@@ -69,8 +71,8 @@ class AssignmentFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     user = factory.SubFactory(UserFactory)
     course = factory.SubFactory(CourseFactory)
-    name = factory.Sequence(lambda n: u'this is a name for assignment %d' % n)
-    description = factory.Sequence(lambda n: u'this is some content for post %d' % n)
+    name = factory.Sequence(lambda n: 'this is a name for assignment ü %d' % n)
+    description = factory.Sequence(lambda n: 'this is some content for post ü %d' % n)
     answer_start = datetime.datetime.now() - datetime.timedelta(days=7)
     answer_end = datetime.datetime.now() + datetime.timedelta(days=7)
     compare_start = None
@@ -97,7 +99,7 @@ class AnswerFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     assignment = factory.SubFactory(AssignmentFactory)
     user = factory.SubFactory(UserFactory)
-    content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
+    content = factory.Sequence(lambda n: 'this is some content for post ü %d' % n)
     draft = False
     # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
@@ -121,7 +123,7 @@ class AssignmentCommentFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     assignment = factory.SubFactory(AssignmentFactory)
     user = factory.SubFactory(UserFactory)
-    content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
+    content = factory.Sequence(lambda n: 'this is some content for post ü %d' % n)
     # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 
@@ -134,7 +136,7 @@ class AnswerCommentFactory(factory.alchemy.SQLAlchemyModelFactory):
     answer = factory.SubFactory(AnswerFactory)
     user = factory.SubFactory(UserFactory)
     comment_type = AnswerCommentType.private
-    content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
+    content = factory.Sequence(lambda n: 'this is some content for post ü %d' % n)
     draft = False
     # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
@@ -148,7 +150,7 @@ class ComparisonFactory(factory.alchemy.SQLAlchemyModelFactory):
     assignment = factory.SubFactory(AssignmentFactory)
     criterion = factory.SubFactory(CriterionFactory)
     user = factory.SubFactory(UserFactory)
-    content = factory.Sequence(lambda n: u'this is some content for post %d' % n)
+    content = factory.Sequence(lambda n: 'this is some content for post ü %d' % n)
     # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 
@@ -169,8 +171,8 @@ class FileFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     user = factory.SubFactory(UserFactory)
 
-    alias = factory.Sequence(lambda n: u'file %d' % n)
-    name = factory.Sequence(lambda n: u'file%d.pdf' % n)
+    alias = factory.Sequence(lambda n: 'file ü %d' % n)
+    name = factory.Sequence(lambda n: 'file_%d.pdf' % n)
 
 class LTIConsumerFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
@@ -188,7 +190,7 @@ class LTIContextFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = db.session
 
     lti_consumer_id = 1
-    context_id = factory.Sequence(lambda n: u'course-v1:LTI%d' % n)
+    context_id = factory.Sequence(lambda n: 'course-v1:LTI_%d' % n)
 
 class LTIResourceLinkFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
@@ -196,7 +198,7 @@ class LTIResourceLinkFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = db.session
 
     lti_consumer_id = 1
-    resource_link_id = factory.Sequence(lambda n: u'unique_resourse_link_id_%d' % n)
+    resource_link_id = factory.Sequence(lambda n: 'unique_resourse_link_id_%d' % n)
 
 class LTIUserFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
@@ -204,7 +206,7 @@ class LTIUserFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = db.session
 
     lti_consumer_id = 1
-    user_id = factory.Sequence(lambda n: u'unique_user_id_%d' % n)
+    user_id = factory.Sequence(lambda n: 'unique_user_id_%d' % n)
     system_role = SystemRole.student
 
 class LTIMembershipFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -214,7 +216,7 @@ class LTIMembershipFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     lti_context_id = 1
     lti_user_id = 1
-    roles = "Student"
+    roles = 'Student'
     course_role = CourseRole.student
 
 class LTIUserResourceLinkFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -224,7 +226,7 @@ class LTIUserResourceLinkFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     lti_resource_link_id = 1
     lti_user_id = 1
-    roles = "Student"
+    roles = 'Student'
     course_role = CourseRole.student
 
 class ThirdPartyUserFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -234,5 +236,5 @@ class ThirdPartyUserFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     user = factory.SubFactory(UserFactory)
 
-    unique_identifier = factory.Sequence(lambda n: u'unique_identifier_%d' % n)
+    unique_identifier = factory.Sequence(lambda n: 'unique_identifier_%d' % n)
     third_party_type = ThirdPartyType.cas

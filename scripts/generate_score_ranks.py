@@ -20,6 +20,7 @@ import csv
 import os
 import random
 import math
+import unicodecsv as csv
 
 from compair.algorithms import ComparisonPair, ScoredObject
 from compair.algorithms.score import calculate_score_1vs1

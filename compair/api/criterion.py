@@ -14,14 +14,14 @@ criterion_api = Blueprint('criterion_api', __name__)
 api = new_restful_api(criterion_api)
 
 new_criterion_parser = reqparse.RequestParser()
-new_criterion_parser.add_argument('name', type=str, required=True)
-new_criterion_parser.add_argument('description', type=str)
+new_criterion_parser.add_argument('name', required=True)
+new_criterion_parser.add_argument('description')
 new_criterion_parser.add_argument('default', type=bool, default=True)
 
 existing_criterion_parser = reqparse.RequestParser()
-existing_criterion_parser.add_argument('id', type=str, required=True)
-existing_criterion_parser.add_argument('name', type=str, required=True)
-existing_criterion_parser.add_argument('description', type=str)
+existing_criterion_parser.add_argument('id', required=True)
+existing_criterion_parser.add_argument('name', required=True)
+existing_criterion_parser.add_argument('description')
 existing_criterion_parser.add_argument('default', type=bool, default=True)
 
 # events

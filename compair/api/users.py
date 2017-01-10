@@ -5,6 +5,7 @@ from flask_restful.reqparse import RequestParser
 from flask_login import login_required, current_user
 from sqlalchemy.orm import load_only
 from sqlalchemy import exc, asc, or_, and_, func
+from six import text_type
 
 from . import dataformat
 from compair.authorization import is_user_access_restricted, require, allow
@@ -17,45 +18,45 @@ from compair.api.login import authenticate
 
 user_api = Blueprint('user_api', __name__)
 
-def non_blank_str(value):
+def non_blank_text(value):
     if value is None:
         return None
     else:
-        return None if str(value).strip() == "" else str(value)
+        return None if text_type(value).strip() == "" else text_type(value)
 
 new_user_parser = RequestParser()
-new_user_parser.add_argument('username', type=non_blank_str, required=False)
-new_user_parser.add_argument('student_number', type=non_blank_str)
-new_user_parser.add_argument('system_role', type=str, required=True)
-new_user_parser.add_argument('firstname', type=str, required=True)
-new_user_parser.add_argument('lastname', type=str, required=True)
-new_user_parser.add_argument('displayname', type=str, required=True)
-new_user_parser.add_argument('email', type=str)
-new_user_parser.add_argument('password', type=str, required=False)
+new_user_parser.add_argument('username', type=non_blank_text, required=False)
+new_user_parser.add_argument('student_number', type=non_blank_text)
+new_user_parser.add_argument('system_role', required=True)
+new_user_parser.add_argument('firstname', required=True)
+new_user_parser.add_argument('lastname', required=True)
+new_user_parser.add_argument('displayname', required=True)
+new_user_parser.add_argument('email')
+new_user_parser.add_argument('password', required=False)
 
 existing_user_parser = RequestParser()
-existing_user_parser.add_argument('id', type=str, required=True)
-existing_user_parser.add_argument('username', type=non_blank_str, required=False)
-existing_user_parser.add_argument('student_number', type=non_blank_str)
-existing_user_parser.add_argument('system_role', type=str, required=True)
-existing_user_parser.add_argument('firstname', type=str, required=True)
-existing_user_parser.add_argument('lastname', type=str, required=True)
-existing_user_parser.add_argument('displayname', type=str, required=True)
-existing_user_parser.add_argument('email', type=str)
+existing_user_parser.add_argument('id', required=True)
+existing_user_parser.add_argument('username', type=non_blank_text, required=False)
+existing_user_parser.add_argument('student_number', type=non_blank_text)
+existing_user_parser.add_argument('system_role', required=True)
+existing_user_parser.add_argument('firstname', required=True)
+existing_user_parser.add_argument('lastname', required=True)
+existing_user_parser.add_argument('displayname', required=True)
+existing_user_parser.add_argument('email')
 
 update_password_parser = RequestParser()
-update_password_parser.add_argument('oldpassword', type=str, required=False)
-update_password_parser.add_argument('newpassword', type=str, required=True)
+update_password_parser.add_argument('oldpassword', required=False)
+update_password_parser.add_argument('newpassword', required=True)
 
 user_list_parser = pagination_parser.copy()
-user_list_parser.add_argument('search', type=str, required=False, default=None)
-user_list_parser.add_argument('ids', type=str, required=False, default=None)
+user_list_parser.add_argument('search', required=False, default=None)
+user_list_parser.add_argument('ids', required=False, default=None)
 
 user_course_list_parser = pagination_parser.copy()
-user_course_list_parser.add_argument('search', type=str, required=False, default=None)
+user_course_list_parser.add_argument('search', required=False, default=None)
 
 user_course_status_list_parser = RequestParser()
-user_course_status_list_parser.add_argument('ids', type=str, required=True, default=None)
+user_course_status_list_parser.add_argument('ids', required=True, default=None)
 
 # events
 on_user_modified = event.signal('USER_MODIFIED')
@@ -174,7 +175,7 @@ class UserListAPI(Resource):
 
         query = User.query
         if params['search']:
-            search = '%{}%'.format(params['search'])
+            search = '%'+params['search']+'%'
             query = query.filter(or_(User.firstname.like(search), User.lastname.like(search)))
         page = query.paginate(params['page'], params['perPage'])
 
@@ -322,7 +323,7 @@ class UserCourseListAPI(Resource):
             search_terms = params['search'].split()
             for search_term in search_terms:
                 if search_term != "":
-                    search = '%{}%'.format(search_term)
+                    search = '%'+search_term+'%'
                     query = query.filter(or_(
                         Course.name.like(search),
                         Course.year.like(search),
@@ -378,8 +379,6 @@ class UserCourseStatusListAPI(Resource):
         statuses = {}
 
         for course, course_role in results:
-            print(course, course_role)
-
             incomplete_assignment_ids = set()
             answer_period_assignments = [assignment for assignment in course.assignments if assignment.active and assignment.answer_period]
             compare_period_assignments = [assignment for assignment in course.assignments if assignment.active and assignment.compare_period]

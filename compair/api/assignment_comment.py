@@ -15,10 +15,10 @@ assignment_comment_api = Blueprint('assignment_comment_api', __name__)
 api = new_restful_api(assignment_comment_api)
 
 new_assignment_comment_parser = RequestParser()
-new_assignment_comment_parser.add_argument('content', type=str, required=True)
+new_assignment_comment_parser.add_argument('content', required=True)
 
 existing_assignment_comment_parser = new_assignment_comment_parser.copy()
-existing_assignment_comment_parser.add_argument('id', type=str, required=True, help="Comment id is required.")
+existing_assignment_comment_parser.add_argument('id', required=True, help="Comment id is required.")
 
 # events
 on_assignment_comment_modified = event.signal('ASSIGNMENT_COMMENT_MODIFIED')

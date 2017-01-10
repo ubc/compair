@@ -1,4 +1,5 @@
 import socket
+from six import text_type
 
 from flask import current_app, request
 from tincan import RemoteLRS
@@ -65,7 +66,7 @@ class XAPI(object):
             lrs_response = lrs.save_statements(statements)
 
             if not lrs_response.success:
-                current_app.logger.error("xAPI Failed with: " + str(lrs_response.data))
+                current_app.logger.error("xAPI Failed with: " + text_type(lrs_response.data))
                 current_app.logger.error("xAPI Request Body: " + lrs_response.request.content)
 
         except socket.error as error:

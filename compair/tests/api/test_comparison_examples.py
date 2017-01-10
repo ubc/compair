@@ -302,29 +302,29 @@ class ComparionExampleAPITests(ComPAIRAPITestCase):
         comparison_example2 = self.fixtures.comparison_examples[1]
 
         # test login required
-        rv = self.client.delete(self.base_url + '/' + str(comparison_example.uuid))
+        rv = self.client.delete(self.base_url + '/' + comparison_example.uuid)
         self.assert401(rv)
 
         # test unauthorized user
         with self.login(self.fixtures.unauthorized_instructor.username):
-            rv = self.client.delete(self.base_url + '/' + str(comparison_example.uuid))
+            rv = self.client.delete(self.base_url + '/' + comparison_example.uuid)
             self.assert403(rv)
 
         with self.login(self.fixtures.unauthorized_student.username):
-            rv = self.client.delete(self.base_url + '/' + str(comparison_example.uuid))
+            rv = self.client.delete(self.base_url + '/' + comparison_example.uuid)
             self.assert403(rv)
 
         with self.login(self.fixtures.students[0].username):
-            rv = self.client.delete(self.base_url + '/' + str(comparison_example.uuid))
+            rv = self.client.delete(self.base_url + '/' + comparison_example.uuid)
             self.assert403(rv)
 
         with self.login(self.fixtures.instructor.username):
              # test invalid assignment id
-            rv = self.client.delete(self._build_url(self.fixtures.course.uuid, "4903409") + '/' + str(comparison_example.uuid))
+            rv = self.client.delete(self._build_url(self.fixtures.course.uuid, "4903409") + '/' + comparison_example.uuid)
             self.assert404(rv)
 
              # test invalid course id
-            rv = self.client.delete(self._build_url("4903409", self.fixtures.assignment.uuid) + '/' + str(comparison_example.uuid))
+            rv = self.client.delete(self._build_url("4903409", self.fixtures.assignment.uuid) + '/' + comparison_example.uuid)
             self.assert404(rv)
 
             # test invalid comparison example id
@@ -332,12 +332,12 @@ class ComparionExampleAPITests(ComPAIRAPITestCase):
             self.assert404(rv)
 
             # test deletion by instructor
-            rv = self.client.delete(self.base_url + '/' + str(comparison_example.uuid))
+            rv = self.client.delete(self.base_url + '/' + comparison_example.uuid)
             self.assert200(rv)
             self.assertEqual(comparison_example.uuid, rv.json['id'])
 
         # test deletion by ta
         with self.login(self.fixtures.instructor.username):
-            rv = self.client.delete(self.base_url + '/' + str(comparison_example2.uuid))
+            rv = self.client.delete(self.base_url + '/' + comparison_example2.uuid)
             self.assert200(rv)
             self.assertEqual(comparison_example2.uuid, rv.json['id'])

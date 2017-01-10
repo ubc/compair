@@ -19,23 +19,23 @@ course_api = Blueprint('course_api', __name__)
 api = new_restful_api(course_api)
 
 new_course_parser = reqparse.RequestParser()
-new_course_parser.add_argument('name', type=str, required=True, help='Course name is required.')
+new_course_parser.add_argument('name', required=True, help='Course name is required.')
 new_course_parser.add_argument('year', type=int, required=True, help='Course year is required.')
-new_course_parser.add_argument('term', type=str, required=True, help='Course term/semester is required.')
-new_course_parser.add_argument('description', type=str)
-new_course_parser.add_argument('start_date', type=str, default=None)
-new_course_parser.add_argument('end_date', type=str, default=None)
+new_course_parser.add_argument('term', required=True, help='Course term/semester is required.')
+new_course_parser.add_argument('description')
+new_course_parser.add_argument('start_date', default=None)
+new_course_parser.add_argument('end_date', default=None)
 
 existing_course_parser = new_course_parser.copy()
-existing_course_parser.add_argument('id', type=str, required=True, help='Course id is required.')
+existing_course_parser.add_argument('id', required=True, help='Course id is required.')
 
 
 duplicate_course_parser = reqparse.RequestParser()
-duplicate_course_parser.add_argument('name', type=str, required=True, help='Course name is required.')
+duplicate_course_parser.add_argument('name', required=True, help='Course name is required.')
 duplicate_course_parser.add_argument('year', type=int, required=True, help='Course year is required.')
-duplicate_course_parser.add_argument('term', type=str, required=True, help='Course term/semester is required.')
-duplicate_course_parser.add_argument('start_date', type=str, default=None)
-duplicate_course_parser.add_argument('end_date', type=str, default=None)
+duplicate_course_parser.add_argument('term', required=True, help='Course term/semester is required.')
+duplicate_course_parser.add_argument('start_date', default=None)
+duplicate_course_parser.add_argument('end_date', default=None)
 # has to add location parameter, otherwise MultiDict will screw up the list
 duplicate_course_parser.add_argument('assignments', type=list, default=[], location='json') #only ids and dates
 
