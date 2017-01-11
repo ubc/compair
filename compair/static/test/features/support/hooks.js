@@ -17,8 +17,10 @@ var hooks = function () {
             }
         });
 
-        // ensure cookies are cleared
+        // ensure cookies and local storage are cleared
         browser.manage().deleteAllCookies();
+        browser.executeScript('window.sessionStorage.clear();');
+        browser.executeScript('window.localStorage.clear();');
 
         // print any js errors
         browser.manage().logs().get('browser').then( function(browserLog) {

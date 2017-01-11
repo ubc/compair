@@ -84,31 +84,13 @@ module.directive(
     }
 ]);
 
-module.directive(
-    'toolTip',
-    function() {
-        return {
-            restrict: 'A',
-            link: function(scope, element) {
-                $(element).hover(function(){
-                    // on mouseenter
-                    $(element).tooltip('show');
-                }, function(){
-                    // on mouseleave
-                    $(element).tooltip('hide');
-                });
-            }
-        };
-    }
-);
-
 module.directive('comparisonPreview', function() {
     return {
         /* this template is our simple text with button to launch the preview */
         templateUrl: 'modules/assignment/preview-inline-template.html',
         controller:
-                ["$scope", "$modal", "xAPIStatementHelper",
-                function ($scope, $modal, xAPIStatementHelper) {
+                ["$scope", "$uibModal", "xAPIStatementHelper",
+                function ($scope, $uibModal, xAPIStatementHelper) {
             /* need to pass to comparison template all expected properties to complete the preview */
             $scope.previewPopup = function() {
                 /* set current round #, answer #s, and total round # for preview */
@@ -144,7 +126,7 @@ module.directive('comparisonPreview', function() {
                     });
                 });
                 /* student view preview is comparison template */
-                $scope.thePreview = $modal.open({
+                $scope.thePreview = $uibModal.open({
                     templateUrl: 'modules/comparison/comparison-core.html',
                     scope: $scope
                 });
@@ -245,10 +227,10 @@ module.filter("notScoredEnd", function () {
 module.controller("AssignmentViewController",
     ["$scope", "$routeParams", "$location", "AnswerResource", "Authorize", "AssignmentResource", "AssignmentCommentResource",
              "ComparisonResource", "CourseResource", "required_rounds", "Session", "Toaster", "AnswerCommentResource",
-             "GroupResource", "AnswerCommentType", "PairingAlgorithm", "$modal", "xAPIStatementHelper",
+             "GroupResource", "AnswerCommentType", "PairingAlgorithm", "$uibModal", "xAPIStatementHelper",
     function($scope, $routeParams, $location, AnswerResource, Authorize, AssignmentResource, AssignmentCommentResource,
              ComparisonResource, CourseResource, required_rounds, Session, Toaster, AnswerCommentResource,
-             GroupResource, AnswerCommentType, PairingAlgorithm, $modal, xAPIStatementHelper)
+             GroupResource, AnswerCommentType, PairingAlgorithm, $uibModal, xAPIStatementHelper)
     {
         $scope.courseId = $routeParams['courseId'];
         $scope.AnswerCommentType = AnswerCommentType;
@@ -483,7 +465,7 @@ module.controller("AssignmentViewController",
             modalScope.assignment = angular.copy($scope.assignment);
             modalScope.answer = angular.copy(answer);
 
-            $scope.modalInstance = $modal.open({
+            $scope.modalInstance = $uibModal.open({
                 animation: true,
                 backdrop: 'static',
                 controller: "AnswerEditModalController",
@@ -514,7 +496,7 @@ module.controller("AssignmentViewController",
             modalScope.assignmentId = $scope.assignment.id;
             modalScope.answerId = answer.id;
 
-            $scope.modalInstance = $modal.open({
+            $scope.modalInstance = $uibModal.open({
                 animation: true,
                 backdrop: 'static',
                 controller: "AnswerCommentModalController",
@@ -546,7 +528,7 @@ module.controller("AssignmentViewController",
             modalScope.answerId = answer.id;
             modalScope.comment = angular.copy(comment);
 
-            $scope.modalInstance = $modal.open({
+            $scope.modalInstance = $uibModal.open({
                 animation: true,
                 backdrop: 'static',
                 controller: "AnswerCommentModalController",
@@ -586,7 +568,7 @@ module.controller("AssignmentViewController",
             modalScope.courseId = $scope.courseId;
             modalScope.assignmentId = $scope.assignment.id;
 
-            $scope.modalInstance = $modal.open({
+            $scope.modalInstance = $uibModal.open({
                 animation: true,
                 backdrop: 'static',
                 controller: "AssignmentCommentModalController",
@@ -610,7 +592,7 @@ module.controller("AssignmentViewController",
             modalScope.assignmentId = $scope.assignment.id;
             modalScope.comment = angular.copy(comment);
 
-            $scope.modalInstance = $modal.open({
+            $scope.modalInstance = $uibModal.open({
                 animation: true,
                 backdrop: 'static',
                 controller: "AssignmentCommentModalController",
@@ -755,11 +737,11 @@ module.controller("AssignmentViewController",
     }
 ]);
 module.controller("AssignmentWriteController",
-    [ "$scope", "$q", "$location", "$routeParams", "$route", "AssignmentResource", "$modal", "Authorize",
+    [ "$scope", "$q", "$location", "$routeParams", "$route", "AssignmentResource", "$uibModal", "Authorize",
              "AssignmentCriterionResource", "CriterionResource", "required_rounds", "Toaster", "attachService",
              "AttachmentResource", "Session", "EditorOptions", "PairingAlgorithm", "ComparisonExampleResource",
              "AnswerResource", "xAPIStatementHelper",
-    function($scope, $q, $location, $routeParams, $route, AssignmentResource, $modal, Authorize,
+    function($scope, $q, $location, $routeParams, $route, AssignmentResource, $uibModal, Authorize,
              AssignmentCriterionResource, CriterionResource, required_rounds, Toaster, attachService,
              AttachmentResource, Session, EditorOptions, PairingAlgorithm, ComparisonExampleResource,
              AnswerResource, xAPIStatementHelper)
@@ -969,7 +951,7 @@ module.controller("AssignmentWriteController",
             var criterionCancelListener = $scope.$on('CRITERION_CANCEL', function() {
                 modalInstance.dismiss('cancel');
             });
-            modalInstance = $modal.open({
+            modalInstance = $uibModal.open({
                 animation: true,
                 backdrop: 'static',
                 template: '<criterion-form criterion=criterion editor-options=editorOptions></criterion-form>',
@@ -996,7 +978,7 @@ module.controller("AssignmentWriteController",
             var modalName = modalScope.answer.id ?
                 'Edit Comparison Example' : 'Create Comparison Example';
 
-            $scope.modalInstance = $modal.open({
+            $scope.modalInstance = $uibModal.open({
                 animation: true,
                 backdrop: 'static',
                 controller: "ComparisonExampleModalController",

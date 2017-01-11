@@ -1,5 +1,5 @@
 describe('Service: Session', function() {
-    var sessionService, $httpBackend, $cookies;
+    var sessionService, $httpBackend, localStorageService;
     var id = "1abcABC123-abcABC123_Z";
     var expectedSession = {
         "id": id,
@@ -46,7 +46,7 @@ describe('Service: Session', function() {
 
     beforeEach(inject(function($injector) {
         $httpBackend = $injector.get('$httpBackend');
-        $cookies = $injector.get('$cookies');
+        localStorageService = $injector.get('localStorageService');
         sessionService = $injector.get('Session');
     }));
 
@@ -81,8 +81,8 @@ describe('Service: Session', function() {
                 expect(user.id).toEqual(expectedUser.id);
             }));
 
-            it('and set cookie', inject(function($cookies) {
-                expect($cookies.getObject('current.user')).toEqual(expectedUser);
+            it('and set local storage', inject(function(localStorageService) {
+                expect(localStorageService.get('user')).toEqual(expectedUser);
             }));
 
             it('and cache user in Session', function() {
@@ -107,8 +107,8 @@ describe('Service: Session', function() {
                 });
             });
 
-            it('should get user from cookie', inject(function($cookies, UserResource) {
-                $cookies.putObject('current.user', expectedUser);
+            it('should get user from local storage', inject(function(localStorageService, UserResource) {
+                localStorageService.set('user', expectedUser);
                 var t = new UserResource;
                 angular.extend(t, expectedUser);
                 sessionService.getUser().then(function(result) {
@@ -139,8 +139,8 @@ describe('Service: Session', function() {
                 expect(permissions).toEqual(expectedSession.permissions);
             });
 
-            it('and set cookie', inject(function($cookies) {
-                expect($cookies.getObject('current.permissions')).toEqual(expectedSession.permissions);
+            it('and set local storage', inject(function(localStorageService) {
+                expect(localStorageService.get('permissions')).toEqual(expectedSession.permissions);
             }));
 
             it('and cache permission in Session', function() {
@@ -164,8 +164,8 @@ describe('Service: Session', function() {
                 })
             });
 
-            it('should get permissions from cookie', inject(function($cookies) {
-                $cookies.putObject('current.permissions', expectedSession.permissions);
+            it('should get permissions from local storage', inject(function(localStorageService) {
+                localStorageService.set('permissions', expectedSession.permissions);
                 expect(sessionService._permissions).toBe(null);
                 sessionService.getPermissions().then(function(result) {
                     expect(result).toEqual(expectedSession.permissions);

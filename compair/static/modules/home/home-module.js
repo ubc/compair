@@ -24,9 +24,9 @@ var module = angular.module('ubc.ctlt.compair.home',
 module.controller(
     'HomeController',
     ["$rootScope", "$scope", "$location", "Session", "AuthenticationService", "AssignmentResource",
-     "Authorize", "CourseResource", "Toaster", "UserResource", "$modal", "xAPIStatementHelper",
+     "Authorize", "CourseResource", "Toaster", "UserResource", "$uibModal", "xAPIStatementHelper",
     function ($rootScope, $scope, $location, Session, AuthenticationService, AssignmentResource,
-              Authorize, CourseResource, Toaster, UserResource, $modal, xAPIStatementHelper) {
+              Authorize, CourseResource, Toaster, UserResource, $uibModal, xAPIStatementHelper) {
 
         $scope.loggedInUserId = null;
         $scope.totalNumCourses = 0;
@@ -106,7 +106,7 @@ module.controller(
             var modalScope = $scope.$new();
             modalScope.originalCourse = course;
 
-            $scope.modalInstance = $modal.open({
+            $scope.modalInstance = $uibModal.open({
                 animation: true,
                 backdrop: 'static',
                 controller: "CourseDuplicateModalController",

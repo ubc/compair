@@ -50,28 +50,28 @@
                     <label>Course Begins</label><br />
                     <div class="assignment-date">
                         <span class="input-group">
-                            <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.course_start.date" is-open="date.course_start.opened" />
+                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.course_start.date" is-open="date.course_start.opened" />
                             <span class="input-group-btn">
                                 <button type="button" class="btn btn-default" ng-click="date.course_start.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
                             </span>
                         </span>
                     </div>
                     <div class="assignment-date">
-                        <timepicker ng-model="date.course_start.time" minute-step="1" mousewheel="false"></timepicker>
+                        <uib-timepicker ng-model="date.course_start.time" minute-step="1" mousewheel="false"></uib-timepicker>
                     </div>
                 </div>
                 <div class="col-md-6 form-group">
                     <label>Course Ends</label><br />
                     <div class="assignment-date">
                         <span class="input-group">
-                            <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.course_end.date" is-open="date.course_end.opened" />
+                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.course_end.date" is-open="date.course_end.opened" />
                             <span class="input-group-btn">
                                 <button type="button" class="btn btn-default" ng-click="date.course_end.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
                             </span>
                         </span>
                     </div>
                     <div class="assignment-date">
-                        <timepicker ng-model="date.course_end.time" minute-step="1" mousewheel="false"></timepicker>
+                        <uib-timepicker ng-model="date.course_end.time" minute-step="1" mousewheel="false"></uib-timepicker>
                     </div>
                 </div>
             </div>

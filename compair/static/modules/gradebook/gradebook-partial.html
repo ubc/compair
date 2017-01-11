@@ -20,7 +20,7 @@
                 </span>
                 <br />
                 <span class="filter" ng-if="canManageAssignment && includeScores">
-                    <label>Display scores <a href="" tooltip="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
+                    <label>Display scores <a href="" uib-tooltip="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
                             <i class="fa fa-question-circle"></i></a> below for: &nbsp;</label>
                     <select ng-model="gradebookFilters.sortby" chosen disable_search_threshold="8"
                             ng-options="c.id as c.name for c in criteria">

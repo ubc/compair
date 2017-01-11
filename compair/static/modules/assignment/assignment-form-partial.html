@@ -6,7 +6,7 @@
             LTI Parameter: "<em>assignment={{assignment.id}}</em>"
             &nbsp;&nbsp;
             <!-- TODO: when ui bootstrap is updated change trigger to 'outsideClick' -->
-            <a href="" tooltip="Copied" tooltip-placement="bottom" tooltip-trigger="click"
+            <a href="" uib-tooltip="Copied" tooltip-placement="bottom" tooltip-trigger="click"
                   ngclipboard data-clipboard-text="assignment={{assignment.id}}"
                   title="Copy the parameter to create a link from an LTI tool">
                 Copy?
@@ -78,28 +78,28 @@
                 <label class="required-star">Answering Begins</label><br />
                 <div class="assignment-date">
                     <span class="input-group">
-                        <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.astart.date" is-open="date.astart.opened" required />
+                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.astart.date" is-open="date.astart.opened" required />
                         <span class="input-group-btn">
                             <button type="button" class="btn btn-default" ng-click="date.astart.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
                     </span>
                 </div>
                 <div class="assignment-date">
-                    <timepicker ng-model="date.astart.time" minute-step="1" mousewheel="false"></timepicker>
+                    <uib-timepicker ng-model="date.astart.time" minute-step="1" mousewheel="false"></uib-timepicker>
                 </div>
             </div>
             <div class="col-md-6 form-group">
                 <label class="required-star">Answering Ends</label><br />
                 <div class="assignment-date">
                     <span class="input-group">
-                        <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.aend.date" is-open="date.aend.opened" required />
+                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.aend.date" is-open="date.aend.opened" required />
                         <span class="input-group-btn">
                             <button type="button" class="btn btn-default" ng-click="date.aend.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
                     </span>
                 </div>
                 <div class="assignment-date">
-                    <timepicker ng-model="date.aend.time" minute-step="1" mousewheel="false"></timepicker>
+                    <uib-timepicker ng-model="date.aend.time" minute-step="1" mousewheel="false"></uib-timepicker>
                 </div>
             </div>
         </div>
@@ -117,28 +117,28 @@
                     <label class="required-star">Comparing Begins</label><br />
                     <div class="assignment-date">
                         <span class="input-group">
-                            <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.cstart.date" is-open="date.cstart.opened" ng-required="assignment.availableCheck" />
+                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.cstart.date" is-open="date.cstart.opened" ng-required="assignment.availableCheck" />
                             <span class="input-group-btn">
                                 <button type="button" class="btn btn-default" ng-click="date.cstart.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
                             </span>
                         </span>
                     </div>
                     <div class="assignment-date">
-                        <timepicker ng-model="date.cstart.time" minute-step="1" mousewheel="false"></timepicker>
+                        <uib-timepicker ng-model="date.cstart.time" minute-step="1" mousewheel="false"></uib-timepicker>
                     </div>
                 </div>
                 <div class="col-md-6 form-group">
                     <label class="required-star">Comparing Ends</label><br />
                     <div class="assignment-date">
                         <span class="input-group">
-                            <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date.cend.date" is-open="date.cend.opened" ng-required="assignment.availableCheck" />
+                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.cend.date" is-open="date.cend.opened" ng-required="assignment.availableCheck" />
                             <span class="input-group-btn">
                                 <button type="button" class="btn btn-default" ng-click="date.cend.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
                             </span>
                         </span>
                     </div>
                     <div class="assignment-date">
-                        <timepicker ng-model="date.cend.time" minute-step="1" mousewheel="false"></timepicker>
+                        <uib-timepicker ng-model="date.cend.time" minute-step="1" mousewheel="false"></uib-timepicker>
                     </div>
                 </div>
             </div>

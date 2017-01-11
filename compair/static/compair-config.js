@@ -8,7 +8,7 @@ String.prototype.format = function() {
 var myApp = angular.module('myApp', [
     'ngRoute',
     'http-auth-interceptor',
-    'ngCookies',
+    'LocalStorageModule',
     'ng-breadcrumbs',
     'angular-loading-bar',
     'ubc.ctlt.compair.common',
@@ -244,7 +244,15 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', '$locationProvi
     $logProvider.debugEnabled(debugMode);
 }]);
 
+myApp.config(['localStorageServiceProvider', function (localStorageServiceProvider) {
+    localStorageServiceProvider
+        .setPrefix('ComPAIR')
+        .setStorageType('sessionStorage') // options [localStorage, sessionStorage]
+        .setStorageCookie(0); // fallback default settings
+}]);
+
 // placeholder for templates module to store templates into cache
 // gulp prod will generate the actual templates module and put contents into cache
-angular.module('templates', []).run(['$templateCache', function ($templateCache){
+angular.module('templates', []).run(['$templateCache', function ($templateCache) {
+
 }]);

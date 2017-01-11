@@ -61,10 +61,10 @@ module.controller(
     'ClassViewController',
     ["$scope", "$log", "$routeParams", "$route", "ClassListResource", "CourseResource",
              "CourseRole", "GroupResource", "Toaster", "Session", "SaveAs", "LTIResource",
-             "UserResource", "Authorize", "$modal", "xAPIStatementHelper",
+             "UserResource", "Authorize", "$uibModal", "xAPIStatementHelper",
     function($scope, $log, $routeParams, $route, ClassListResource, CourseResource,
              CourseRole, GroupResource, Toaster, Session, SaveAs, LTIResource,
-             UserResource, Authorize, $modal, xAPIStatementHelper)
+             UserResource, Authorize, $uibModal, xAPIStatementHelper)
     {
         $scope.course = {};
         $scope.classlist = [];
@@ -140,7 +140,7 @@ module.controller(
         $scope.course_roles = [CourseRole.student, CourseRole.teaching_assistant, CourseRole.instructor];
 
         $scope.addUsersToNewGroup = function() {
-            var modalInstance = $modal.open({
+            var modalInstance = $uibModal.open({
                 animation: true,
                 backdrop: 'static',
                 controller: "AddGroupModalController",

@@ -30,8 +30,8 @@ module.directive('compairAttachmentInline', function() {
             label: '@'
         },
         controller: [
-                "$scope", "$log", "$window", "$sce", "$modal", "xAPIStatementHelper",
-                function ($scope, $log, $window, $sce, $modal, xAPIStatementHelper) {
+                "$scope", "$log", "$window", "$sce", "$uibModal", "xAPIStatementHelper",
+                function ($scope, $log, $window, $sce, $uibModal, xAPIStatementHelper) {
             $scope.inline = null;
             $scope.inlineVisible = false;
             $scope.inlineUrl = null;
@@ -42,7 +42,7 @@ module.directive('compairAttachmentInline', function() {
                     var modalScope = $scope.$new();
                     modalScope.file = filepath;
                     modalScope.name = 'Attached PDF: Use + and - to zoom';
-                    var modalInstance = $modal.open({
+                    var modalInstance = $uibModal.open({
                         templateUrl: 'modules/common/attachment-overlaid-template.html',
                         scope: modalScope
                     });

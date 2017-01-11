@@ -8,10 +8,10 @@
 
 var module = angular.module('ubc.ctlt.compair.lti', [
     'ngResource',
-    'ngCookies',
     'ngRoute',
     'ng-breadcrumbs',
     'ui.bootstrap',
+    'LocalStorageModule',
     'ubc.ctlt.compair.authentication',
     'ubc.ctlt.compair.authorization',
     'ubc.ctlt.compair.toaster',
@@ -36,46 +36,46 @@ module.factory('LTIResource',
 }]);
 
 module.factory('LTI',
-        ["$rootScope", "$q", "$cookies", "LTIResource",
-        function ($rootScope, $q, $cookies, LTIResource) {
+        ["$rootScope", "$q", "localStorageService", "LTIResource",
+        function ($rootScope, $q, localStorageService, LTIResource) {
     return {
         _lti_status: null,
-        _check_cookies: function() {
+        _check_storage: function() {
             if (this._lti_status == null) {
-                var cookie_lti_status = $cookies.getObject('current.lti.status');
+                var stored_lti_status = localStorageService.get('lti_status');
 
-                if (cookie_lti_status) {
-                    this._lti_status = cookie_lti_status;
+                if (stored_lti_status) {
+                    this._lti_status = stored_lti_status;
                 }
             }
         },
         ltiLinkUser: function() {
-            this._check_cookies();
+            this._check_storage();
             return this._lti_status != null && this._lti_status.user &&
                 this._lti_status.user.exists == false;
         },
         clearStatus: function() {
             this._lti_status = null;
-            $cookies.remove('current.lti.status');
+            localStorageService.remove('lti_status');
         },
         getStatus: function() {
             var scope = this;
             return LTIResource.getStatus().$promise.then(function (result) {
                 scope._lti_status = result.status;
-                $cookies.putObject('current.lti.status', scope._lti_status);
+                localStorageService.set('lti_status', scope._lti_status);
                 return scope._lti_status;
             });
         },
         isLTISession: function() {
-            this._check_cookies();
+            this._check_storage();
             return this._lti_status && this._lti_status.valid
         },
         getLTIUser: function() {
-            this._check_cookies();
+            this._check_storage();
             return this.isLTISession() ? this._lti_status.user : {};
         },
         getCourseName: function() {
-            this._check_cookies();
+            this._check_storage();
             return this._lti_status ? this._lti_status.course.name : "";
         }
     };
@@ -83,10 +83,10 @@ module.factory('LTI',
 
 /***** Controllers *****/
 module.controller("LTIController",
-    ['$rootScope', '$scope', '$location', '$route', "$modal", 'breadcrumbs','Authorize',
+    ['$rootScope', '$scope', '$location', '$route', "$uibModal", 'breadcrumbs','Authorize',
      'CourseRole', 'Toaster', 'AuthenticationService', 'LTI', 'LTIResource', 'Session',
      'xAPIStatementHelper',
-    function($rootScope, $scope, $location, $route, $modal, breadcrumbs, Authorize,
+    function($rootScope, $scope, $location, $route, $uibModal, breadcrumbs, Authorize,
              CourseRole, Toaster, AuthenticationService, LTI, LTIResource, Session,
              xAPIStatementHelper) {
         $scope.status = {};
@@ -109,7 +109,7 @@ module.controller("LTIController",
             } else if (!status.course.exists) {
                 if (status.course.course_role == CourseRole.instructor) {
                     var modalScope = $scope.$new();
-                    var modalInstance = $modal.open({
+                    var modalInstance = $uibModal.open({
                         animation: true,
                         backdrop: 'static',
                         keyboard: false,
