@@ -1,7 +1,8 @@
 import json
 import datetime
 
-from flask_bouncer import ensure
+from flask_bouncer import MANAGE, CREATE, EDIT, DELETE, READ
+from compair.authorization import allow
 from flask_login import login_user, logout_user
 from werkzeug.exceptions import Unauthorized
 
@@ -771,22 +772,24 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertTrue(rv.json['available'])
 
     def _verify_permissions(self, user_id, permissions):
+        operations = [MANAGE, CREATE, EDIT, DELETE, READ]
+
         user = User.query.get(user_id)
         with self.app.app_context():
             # can't figure out how to get into logged in app context, so just force a login here
             login_user(user, force=True)
             admin = user.system_role == SystemRole.sys_admin
-            for model_name, operations in permissions.items():
-                for operation, permission in operations.items():
-                    expected = True
-                    try:
-                        ensure(operation, model_name)
-                    except Unauthorized:
-                        expected = False
-                    expected = expected or admin
-                    self.assertEqual(
-                        permission['global'], expected,
-                        "Expected permission " + operation + " on " + model_name + " to be " + str(expected))
+
+            for model_name, permission_scopes in permissions.items():
+                global_permissions = set(permission_scopes['global'])
+
+                expected_operations = set()
+                for operation in operations:
+                    if admin or allow(operation, model_name):
+                        expected_operations.add(operation)
+
+                self.assertEqual(global_permissions, expected_operations)
+
             # undo the forced login earlier
             logout_user()
 

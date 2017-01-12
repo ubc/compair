@@ -16,14 +16,11 @@ module.factory('Authorize',
     ["$log", "$q", "Session",
     function($log, $q, Session)
     {
-        var _allow_operation = function(operation, resource, courseId, permissions) {
+        var _allow_operation = function(operation, resource, resource_scope, permissions) {
             if (resource in permissions)
             {
-                if (operation in permissions[resource])
-                {
-                    if (courseId in permissions[resource][operation]) {
-                        return permissions[resource][operation][courseId];
-                    }
+                if (resource_scope in permissions[resource]) {
+                    return permissions[resource][resource_scope].indexOf(operation) != -1;
                 }
             }
             return false;
@@ -47,8 +44,8 @@ module.factory('Authorize',
                     }
 
                     return Session.getPermissions().then(function(permissions) {
-                        var course_id = courseId || 'global';
-                        return $q.when(_allow_operation(operation, resource, course_id, permissions));
+                        var resource_scope = courseId || 'global';
+                        return $q.when(_allow_operation(operation, resource, resource_scope, permissions));
                     });
                 });
             }

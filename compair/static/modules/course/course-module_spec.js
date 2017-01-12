@@ -5,25 +5,31 @@ describe('course-module', function () {
         "id": id,
         "permissions": {
             "Course": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             },
             "Assignment": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             },
             "User": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             }
         }
     };
@@ -72,12 +78,12 @@ describe('course-module', function () {
     });
 
     describe('CourseController', function () {
-        var $rootScope, createController, $location, $modal, $q, xAPISettings;
+        var $rootScope, createController, $location, $uibModal, $q, xAPISettings;
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_, _xAPISettings_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$uibModal_, _$q_, _xAPISettings_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
-            $modal = _$modal_;
+            $uibModal = _$uibModal_;
             $q = _$q_;
             createController = function (route, params) {
                 return $controller('CourseController', {
@@ -215,12 +221,12 @@ describe('course-module', function () {
     });
 
     describe('CourseSelectModalController', function () {
-        var $rootScope, createController, $location, $modal, $q;
+        var $rootScope, createController, $location, $uibModal, $q;
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$uibModal_, _$q_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
-            $modal = _$modal_;
+            $uibModal = _$uibModal_;
             $q = _$q_;
             modalInstance = {
                 close: jasmine.createSpy('modalInstance.close'),
@@ -360,12 +366,12 @@ describe('course-module', function () {
     });
 
     describe('CourseDuplicateModalController', function () {
-        var $rootScope, createController, $location, $modal, $q;
+        var $rootScope, createController, $location, $uibModal, $q;
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$uibModal_, _$q_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
-            $modal = _$modal_;
+            $uibModal = _$uibModal_;
             $q = _$q_;
             modalInstance = {
                 close: jasmine.createSpy('modalInstance.close'),

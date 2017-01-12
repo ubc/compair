@@ -103,10 +103,10 @@
     </div>
 
     <div class="text-center" ng-if="courses.length">
-        <pagination total-items="totalNumCourses" ng-model="courseFilters.page"
+        <uib-pagination total-items="totalNumCourses" ng-model="courseFilters.page"
                     max-size="10" class="pagination-sm" boundary-links="true"
                     direction-links="false" items-per-page="courseFilters.perPage"
-                    num-pages="numPages" ng-hide="numPages == 1"></pagination>
+                    num-pages="numPages" ng-hide="numPages == 1"></uib-pagination>
     </div>
 
     <div ng-if="!courses.length">

@@ -5,25 +5,31 @@ describe('user-module', function () {
         "id": id,
         "permissions": {
             "Course": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             },
             "Assignment": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             },
             "User": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             }
         }
     };

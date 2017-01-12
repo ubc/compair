@@ -2,7 +2,7 @@
 
     var module = angular.module('ubc.ctlt.compair.session', [
         'ngResource',
-        'ngCookies',
+        'LocalStorageModule',
         'ubc.ctlt.compair.user'
     ]);
 
@@ -12,8 +12,8 @@
      * available. Otherwise, provides the information from local cached values.
      */
     module.factory('Session',
-            ["$rootScope",  "$http", "$q", "$cookies", "$log", "UserResource",
-            function ($rootScope, $http, $q, $cookies, $log, UserResource) {
+            ["$rootScope",  "$http", "$q", "localStorageService", "$log", "UserResource",
+            function ($rootScope, $http, $q, localStorageService, $log, UserResource) {
         var PERMISSION_REFRESHED_EVENT = "event:Session-refreshPermissions";
 
         return {
@@ -38,10 +38,10 @@
                     return $q.when(this._user);
                 }
 
-                var cookie_user = $cookies.getObject('current.user');
-                if (cookie_user)
+                var stored_user = localStorageService.get('user');
+                if (stored_user)
                 {
-                    angular.extend(this._user, cookie_user);
+                    angular.extend(this._user, stored_user);
                     return $q.when(this._user);
                 }
 
@@ -53,13 +53,13 @@
                         // retrieve logged in user's information
                         // return a promise for chaining
                         var u = UserResource.get({"id": result.data.id}, function(user) {
-                            $cookies.putObject('current.user', user);
+                            localStorageService.set('user', user);
                             angular.extend(scope._user, user);
                             deferred.resolve(scope._user);
                         });
                         angular.extend(scope._user, u);
                         scope._permissions = result.data.permissions;
-                        $cookies.putObject('current.permissions', scope._permissions);
+                        localStorageService.set('permissions', scope._permissions);
                         return deferred.promise;
                     });
             },
@@ -74,10 +74,10 @@
                     return $q.when(this._permissions);
                 }
 
-                var cookie_permissions = $cookies.getObject('current.permissions');
-                if (cookie_permissions)
+                var stored_permissions = localStorageService.get('permissions');
+                if (stored_permissions)
                 {
-                    this._permissions = cookie_permissions;
+                    this._permissions = stored_permissions;
                     return $q.when(this._permissions);
                 }
 
@@ -86,7 +86,7 @@
                 return $http.get('/api/session/permission')
                     .then(function (result) {
                         scope._permissions = result.data;
-                        $cookies.putObject('current.permissions', scope._permissions);
+                        localStorageService.set('permissions', scope._permissions);
                         $rootScope.$broadcast(PERMISSION_REFRESHED_EVENT);
                         return scope._permissions;
                     });
@@ -106,9 +106,7 @@
                     delete this._user[prop];
                 }
                 this._permissions = null;
-                $cookies.remove('current.user');
-                $cookies.remove('current.permissions');
-                $cookies.remove('current.lti.status');
+                localStorageService.remove('user', 'permissions', 'lti_status');
             },
             refresh: function() {
                 var scope = this;
@@ -117,19 +115,19 @@
                     // retrieve logged in user's information
                     // return a promise for chaining
                     var u = UserResource.get({"id": result.data.id}, function(user) {
-                        $cookies.putObject('current.user', user);
+                        localStorageService.set('user', user);
                         angular.extend(scope._user, user);
                         deferred.resolve(scope._user);
                     });
                     angular.extend(scope._user, u);
                     scope._permissions = result.data.permissions;
-                    $cookies.putObject('current.permissions', scope._permissions);
+                    localStorageService.set('permissions', scope._permissions);
                     return deferred.promise;
                 });
             },
             expirePermissions: function() {
                 this._permissions = null;
-                $cookies.remove('current.permissions');
+                localStorageService.remove('permissions');
             }
         };
     }]);

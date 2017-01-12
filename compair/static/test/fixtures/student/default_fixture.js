@@ -168,17 +168,20 @@ storage.course_assignments[course.id].push(assignment_being_answered.id);
 storage.loginDetails = { id: student.id, username: student.username, password: "password" };
 var session = sessionFactory.generateSession(student.id, student.system_role, {
     "Course": {
-        "delete": {'1abcABC123-abcABC123_Z': false, '2abcABC123-abcABC123_Z': false},
-        "edit": {'1abcABC123-abcABC123_Z': false, '2abcABC123-abcABC123_Z': false},
-        "manage": {'1abcABC123-abcABC123_Z': false, '2abcABC123-abcABC123_Z': false},
-        "read": {'1abcABC123-abcABC123_Z': true, '2abcABC123-abcABC123_Z': true},
+        "1abcABC123-abcABC123_Z": [
+            "read"
+        ],
+        "2abcABC123-abcABC123_Z": [
+            "read"
+        ]
     },
     "Assignment": {
-        "create": {'1abcABC123-abcABC123_Z': false, '2abcABC123-abcABC123_Z': false, '3abcABC123-abcABC123_Z': false, '4abcABC123-abcABC123_Z': false},
-        "delete": {'1abcABC123-abcABC123_Z': false, '2abcABC123-abcABC123_Z': false, '3abcABC123-abcABC123_Z': false, '4abcABC123-abcABC123_Z': false},
-        "edit": {'1abcABC123-abcABC123_Z': false, '2abcABC123-abcABC123_Z': false, '3abcABC123-abcABC123_Z': false, '4abcABC123-abcABC123_Z': false},
-        "manage": {'1abcABC123-abcABC123_Z': false, '2abcABC123-abcABC123_Z': false, '3abcABC123-abcABC123_Z': false, '4abcABC123-abcABC123_Z': false},
-        "read": {'1abcABC123-abcABC123_Z': true, '2abcABC123-abcABC123_Z': true, '3abcABC123-abcABC123_Z': true, '4abcABC123-abcABC123_Z': true}
+        "1abcABC123-abcABC123_Z": [
+            "read"
+        ],
+        "2abcABC123-abcABC123_Z": [
+            "read"
+        ]
     },
 });
 storage.session = session;

@@ -5,25 +5,31 @@ describe('assignment-module', function () {
         "id": id,
         "permissions": {
             "Course": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             },
             "Assignment": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             },
             "User": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             }
         }
     };
@@ -807,15 +813,15 @@ describe('assignment-module', function () {
     });
 
     describe('AssignmentViewController', function () {
-        var $rootScope, createController, $location, $modal, $q;
+        var $rootScope, createController, $location, $uibModal, $q;
         var controller;
         var toaster;
         var xAPISettings;
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_, _Toaster_, _xAPISettings_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$uibModal_, _$q_, _Toaster_, _xAPISettings_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
-            $modal = _$modal_;
+            $uibModal = _$uibModal_;
             $q = _$q_;
             toaster = _Toaster_;
             createController = function (route, params) {
@@ -1063,15 +1069,15 @@ describe('assignment-module', function () {
     });
 
     describe('AssignmentWriteController', function () {
-        var $rootScope, createController, $location, $modal, $q;
+        var $rootScope, createController, $location, $uibModal, $q;
         var controller;
         var defaultCriteria;
         var otherCriteria;
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$uibModal_, _$q_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
-            $modal = _$modal_;
+            $uibModal = _$uibModal_;
             $q = _$q_;
             createController = function (route, params) {
                 return $controller('AssignmentWriteController', {
@@ -1146,7 +1152,7 @@ describe('assignment-module', function () {
                     criterion = {id: "1abcABC123-abcABC123_Z", name: 'test'};
                     deferred = $q.defer();
                     closeFunc = jasmine.createSpy('close');
-                    spyOn($modal, 'open').and.returnValue({
+                    spyOn($uibModal, 'open').and.returnValue({
                         result: deferred.promise,
                         close: closeFunc,
                         opened: deferred.promise
@@ -1155,7 +1161,7 @@ describe('assignment-module', function () {
                 });
 
                 it('should open a modal dialog', function() {
-                    expect($modal.open).toHaveBeenCalledWith({
+                    expect($uibModal.open).toHaveBeenCalledWith({
                         animation: true,
                         backdrop: 'static',
                         template: '<criterion-form criterion=criterion editor-options=editorOptions></criterion-form>',
@@ -1207,12 +1213,12 @@ describe('assignment-module', function () {
                 };
                 beforeEach(function() {
                     $rootScope.comparison_example.answer1 = {};
-                    spyOn($modal, 'open').and.returnValue(fakeModal);
+                    spyOn($uibModal, 'open').and.returnValue(fakeModal);
                     $rootScope.changeAnswer($rootScope.comparison_example.answer1, true);
                 });
 
                 it('should open a modal dialog', function() {
-                    expect($modal.open).toHaveBeenCalledWith({
+                    expect($uibModal.open).toHaveBeenCalledWith({
                         animation: true,
                         backdrop: 'static',
                         controller: "ComparisonExampleModalController",
@@ -1438,7 +1444,7 @@ describe('assignment-module', function () {
                     criterion = {id: "1abcABC123-abcABC123_Z", name: 'test'};
                     deferred = $q.defer();
                     closeFunc = jasmine.createSpy('close');
-                    spyOn($modal, 'open').and.returnValue({
+                    spyOn($uibModal, 'open').and.returnValue({
                         result: deferred.promise,
                         close: closeFunc,
                         opened: deferred.promise
@@ -1447,7 +1453,7 @@ describe('assignment-module', function () {
                 });
 
                 it('should open a modal dialog', function() {
-                    expect($modal.open).toHaveBeenCalledWith({
+                    expect($uibModal.open).toHaveBeenCalledWith({
                         animation: true,
                         backdrop: 'static',
                         template: '<criterion-form criterion=criterion editor-options=editorOptions></criterion-form>',
@@ -1498,12 +1504,12 @@ describe('assignment-module', function () {
                     }
                 };
                 beforeEach(function() {
-                    spyOn($modal, 'open').and.returnValue(fakeModal);
+                    spyOn($uibModal, 'open').and.returnValue(fakeModal);
                     $rootScope.changeAnswer($rootScope.comparison_example.answer1, true);
                 });
 
                 it('should open a modal dialog', function() {
-                    expect($modal.open).toHaveBeenCalledWith({
+                    expect($uibModal.open).toHaveBeenCalledWith({
                         animation: true,
                         backdrop: 'static',
                         controller: "ComparisonExampleModalController",

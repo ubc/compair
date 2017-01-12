@@ -20,7 +20,6 @@
     "bootstrap": "3.3.5",
     "angular": "1.4.7",
     "angular-animate": "1.4.7",
-    "angular-cookies": "~1.4.7",
     "angular-resource": "~1.4.7",
     "angular-route": "~1.4.7",
     "angular-sanitize": "~1.4.7",
@@ -41,7 +40,8 @@
     "angular-file-saver": "0.1.4",
     "ngclipboard": "~1.1.1",
     "tincan": "~0.50.0",
-    "angular-uuids": "~0.0.4"
+    "angular-uuids": "~0.0.4",
+    "angular-local-storage": "~0.5.2"
   },
   "resolutions": {
     "angular": "1.4.7"

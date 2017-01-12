@@ -168,7 +168,7 @@
                                     class="btn btn-sm" ng-class="{'btn-info': answerFilters.anonymous, 'btn-default': !answerFilters.anonymous}">
                                     Anonymize<span ng-show="answerFilters.anonymous">d</span> Answers<span ng-show="!answerFilters.anonymous">?</span>
                                 </button>
-                                <a href="" tooltip="Hide student names, scores, and replies when sharing this screen with students" tooltip-trigger tooltip-animation="false" tooltip-placement="bottom">
+                                <a href="" uib-tooltip="Hide student names, scores, and replies when sharing this screen with students" tooltip-trigger tooltip-animation="false" tooltip-placement="left">
                                     <i class="fa fa-question-circle"></i>
                                 </a>
                             </span>
@@ -295,7 +295,7 @@
                     <!-- Student Score (not used for instructor answers) -->
                     <p class="pull-right score-display" ng-if="canManageAssignment && !answerFilters.anonymous && score.criterion_id==answerFilters.orderBy && answer.scores.length > 0" ng-repeat="score in answer.scores">
                         <em>Score: {{score.normalized_score}}%</em>
-                        <a href="" tooltip="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
+                        <a href="" uib-tooltip="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
                             <i class="fa fa-question-circle"></i>
                         </a>
                     </p>
@@ -306,7 +306,7 @@
                         </em>
                         <em ng-if="score.rank > 0 && score.rank > rankLimit">
                             Students Ranked: <strong>N/A</strong>
-                            <a href="" tooltip="Answers that are ranked outside the top {{rankLimit}} do not receive a rank number for this assignment." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
+                            <a href="" uib-tooltip="Answers that are ranked outside the top {{rankLimit}} do not receive a rank number for this assignment." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
                                 <i class="fa fa-question-circle"></i>
                             </a>
                         </em>
@@ -382,7 +382,7 @@
             </div><!-- closes answered show-hide div -->
 
             <div class="text-center">
-                <pagination total-items="totalNumAnswers" ng-model="answerFilters.page" max-size="10" class="pagination-sm" boundary-links="true" direction-links="false" items-per-page="answerFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></pagination>
+                <uib-pagination total-items="totalNumAnswers" ng-model="answerFilters.page" max-size="10" class="pagination-sm" boundary-links="true" direction-links="false" items-per-page="answerFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></uib-pagination>
             </div>
 
         </div><!-- closes answers-tab -->
@@ -580,7 +580,7 @@
                 <blockquote>
                     <p>For general technical issues, please try:</p>
                     <ul>
-                        <li>Enabling Java and cookies in your browser settings</li>
+                        <li>Enabling Javascript and cookies in your browser settings</li>
                         <li>Disabling extra plugins and add-ons for your browser</li>
                         <li>Clearing your browser cache</li>
                         <li>Using a different browser (supported browsers include <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a>, <a href="http://www.google.com/chrome/">Chrome</a>, <a href="https://www.apple.com/ca/safari/">Safari</a>, and <a href="http://windows.microsoft.com/en-ca/internet-explorer/download-ie">IE9+</a>)</li>

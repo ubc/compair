@@ -5,25 +5,31 @@ describe('comparison-module', function () {
         "id": id,
         "permissions": {
             "Course": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             },
             "Assignment": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             },
             "User": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             }
         }
     };
@@ -74,7 +80,7 @@ describe('comparison-module', function () {
     });
 
     describe('ComparisonController', function () {
-        var $rootScope, createController, $location, $modal, $q, xAPI, xAPISettings;
+        var $rootScope, createController, $location, $uibModal, $q, xAPI, xAPISettings;
         var mockCritiera = {
             "criteria": [{
                 "created": "Sat, 06 Sep 2014 02:13:07 -0000",
@@ -364,10 +370,10 @@ describe('comparison-module', function () {
             }
         };
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_, _xAPI_, _xAPISettings_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$uibModal_, _$q_, _xAPI_, _xAPISettings_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
-            $modal = _$modal_;
+            $uibModal = _$uibModal_;
             $q = _$q_;
             xAPI = _xAPI_;
             createController = function (route, params) {
