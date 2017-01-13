@@ -83,7 +83,6 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
                 completed=True
             ) \
             .count()
-        comparison_count = comparison_count / assignment.criteria_count if assignment.criteria_count > 0 else 0
 
         self_evaluation_count = AnswerComment.query \
             .join("answer") \
@@ -193,7 +192,6 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
             comparison_count = next((result.comparison_count for result in comparison_counts
                 if result.user_id == student_id
             ), 0)
-            comparison_count = comparison_count / assignment.criteria_count if assignment.criteria_count > 0 else 0
 
             self_evaluation_count = next((result.self_evaluation_count for result in self_evaluation_counts
                 if result.user_id == student_id

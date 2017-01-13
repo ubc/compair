@@ -116,7 +116,8 @@ describe('assignment-module', function () {
                 "id": "1abcABC123-abcABC123_Z",
                 "modified": "Mon, 06 Jun 2016 19:50:47 -0000",
                 "name": "Which is better?",
-                "user_id": "1abcABC123-abcABC123_Z"
+                "user_id": "1abcABC123-abcABC123_Z",
+                "weight": 1
             },
             {
                 "compared": true,
@@ -127,7 +128,8 @@ describe('assignment-module', function () {
                 "id": "3abcABC123-abcABC123_Z",
                 "modified": "Mon, 06 Jun 2016 19:52:23 -0000",
                 "name": "Which sounds better?",
-                "user_id": "1abcABC123-abcABC123_Z"
+                "user_id": "1abcABC123-abcABC123_Z",
+                "weight": 1
             }
         ],
         "description": "<p>This is the description</p>\n",
@@ -867,7 +869,6 @@ describe('assignment-module', function () {
 
             it('should be correctly initialized', function () {
                 expect($rootScope.assignment.id).toEqual(mockAssignment.id);
-                expect($rootScope.criteria).toEqual(mockAssignment.criteria);
                 expect($rootScope.courseId).toEqual(mockCourse.id);
 
                 expect($rootScope.allStudents).toEqual(mockStudents.objects);
@@ -1113,9 +1114,12 @@ describe('assignment-module', function () {
                 $httpBackend.expectGET('/api/criteria').respond(mockCritiera);
                 $httpBackend.flush();
 
-                defaultCriteria = mockCritiera.objects[0];
+                defaultCriteria = angular.merge({}, mockCritiera.objects[0], { weight:1 });
                 otherCriteria = angular.copy(mockCritiera.objects);
                 otherCriteria.shift();
+                otherCriteria.forEach(function(criterion) {
+                    criterion.weight = 1;
+                });
             });
 
             it('should be correctly initialized', function () {
@@ -1138,7 +1142,7 @@ describe('assignment-module', function () {
                     answer2: {}
                 });
 
-                expect($rootScope.canManageCriteriaAssignment).toBe(true);
+                expect($rootScope.canManageAssignment).toBe(true);
             });
 
             it('should add criteria to course from available criteria when add is called', function() {
@@ -1168,7 +1172,7 @@ describe('assignment-module', function () {
                 var criterion;
                 var closeFunc;
                 beforeEach(function() {
-                    criterion = {id: "1abcABC123-abcABC123_Z", name: 'test'};
+                    criterion = {id: "1abcABC123-abcABC123_Z", name: 'test', weight: 10};
                     deferred = $q.defer();
                     closeFunc = jasmine.createSpy('close');
                     spyOn($uibModal, 'open').and.returnValue({
@@ -1190,8 +1194,9 @@ describe('assignment-module', function () {
 
                 it('should listen on CRITERION_UPDATED event and close dialog', function() {
                     var updated = {id: "1abcABC123-abcABC123_Z", name: 'test1'};
+                    var expectedUpdate = angular.merge({}, updated, {weight: 10})
                     $rootScope.$broadcast("CRITERION_UPDATED", updated);
-                    expect(criterion).toEqual(updated);
+                    expect(criterion).toEqual(expectedUpdate);
                     expect(closeFunc).toHaveBeenCalled();
                 });
 
@@ -1412,9 +1417,12 @@ describe('assignment-module', function () {
                 $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/comparisons/examples').respond(mockComparisonExamples);
                 $httpBackend.flush();
 
-                defaultCriteria = mockCritiera.objects[0];
+                defaultCriteria = angular.merge({}, mockCritiera.objects[0], { weight:1 });
                 otherCriteria = angular.copy(mockCritiera.objects);
                 otherCriteria.shift();
+                otherCriteria.forEach(function(criterion) {
+                    criterion.weight = 1;
+                });
             });
 
             it('should be correctly initialized', function () {
@@ -1430,7 +1438,7 @@ describe('assignment-module', function () {
                 expect($rootScope.comparison_example.answer1_id).toEqual(mockComparisonExamples.objects[0].answer1_id);
                 expect($rootScope.comparison_example.answer2_id).toEqual(mockComparisonExamples.objects[0].answer2_id);
 
-                expect($rootScope.canManageCriteriaAssignment).toBe(true);
+                expect($rootScope.canManageAssignment).toBe(true);
             });
 
             it('should add criteria to course from available criteria when add is called', function() {
@@ -1460,7 +1468,7 @@ describe('assignment-module', function () {
                 var criterion;
                 var closeFunc;
                 beforeEach(function() {
-                    criterion = {id: "1abcABC123-abcABC123_Z", name: 'test'};
+                    criterion = {id: "1abcABC123-abcABC123_Z", name: 'test', weight: 10};
                     deferred = $q.defer();
                     closeFunc = jasmine.createSpy('close');
                     spyOn($uibModal, 'open').and.returnValue({
@@ -1482,16 +1490,18 @@ describe('assignment-module', function () {
 
                 it('should listen on CRITERION_UPDATED event and close dialog', function() {
                     var updated = {id: "1abcABC123-abcABC123_Z", name: 'test1'};
+                    var expectedUpdate = angular.merge({}, updated, {weight: 10})
                     $rootScope.$broadcast("CRITERION_UPDATED", updated);
-                    expect(criterion).toEqual(updated);
+                    expect(criterion).toEqual(expectedUpdate);
                     expect(closeFunc).toHaveBeenCalled();
                 });
 
                 it('should listen to CRITERION_ADDED event and close dialog', function() {
                     $rootScope.assignment.criteria = [];
                     var criteria = {id: "1abcABC123-abcABC123_Z"};
+                    var expectedCriteria = angular.merge({}, criteria, {weight: 1})
                     $rootScope.$broadcast("CRITERION_ADDED", criteria);
-                    expect($rootScope.assignment.criteria).toEqual([criteria]);
+                    expect($rootScope.assignment.criteria).toEqual([expectedCriteria]);
                     expect(closeFunc).toHaveBeenCalled();
                 });
 

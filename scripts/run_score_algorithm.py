@@ -3,7 +3,7 @@
 
  Excepts:
  - input file to be named input.csv in scripts folder
- - input file rows to be stuctured: "key1, key2, winning_key"
+ - input file rows to be structure: "key1, key2, winner"
 
  Outputs:
  - for every algorithms: file named 'out'+algorithm name+'.csv' in the scripts folder
@@ -13,14 +13,14 @@
 import csv
 import os
 
-from compair.algorithms import ComparisonPair, ScoredObject
+from compair.algorithms import ComparisonPair, ScoredObject, ComparisonWinner
 from compair.algorithms.score import calculate_score
 from compair.models.score_algorithm import ScoringAlgorithm
 import unicodecsv as csv
 
 KEY1 = 0
 KEY2 = 1
-WINNING_KEY = 2
+WINNER = 2
 
 CURRENT_FOLDER = os.getcwd() + '/scripts'
 
@@ -31,7 +31,7 @@ with open(CURRENT_FOLDER+'/input.csv', 'rU') as csvfile:
     for row in spamreader:
         if row:
             comparisons.append(ComparisonPair(
-                int(row[KEY1]), int(row[KEY2]), int(row[WINNING_KEY])
+                int(row[KEY1]), int(row[KEY2]), ComparisonWinner(row[WINNER])
             ))
 
 packages = [

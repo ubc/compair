@@ -59,7 +59,8 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     comments = db.relationship("AssignmentComment", backref="assignment", lazy="dynamic")
     comparisons = db.relationship("Comparison", backref="assignment", lazy="dynamic")
     comparison_examples = db.relationship("ComparisonExample", backref="assignment", lazy="dynamic")
-    scores = db.relationship("Score", backref="assignment", lazy="dynamic")
+    scores = db.relationship("AnswerScore", backref="assignment", lazy="dynamic")
+    criteria_scores = db.relationship("AnswerCriterionScore", backref="assignment", lazy="dynamic")
     grades = db.relationship("AssignmentGrade", backref="assignment", lazy='dynamic')
 
     # lti
@@ -78,23 +79,25 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @hybrid_property
     def criteria(self):
-        return [assignment_criterion.criterion \
-            for assignment_criterion in self.assignment_criteria \
-            if assignment_criterion.active and assignment_criterion.criterion.active]
+        criteria = []
+        for assignment_criterion in self.assignment_criteria:
+            if assignment_criterion.active and assignment_criterion.criterion.active:
+                criterion = assignment_criterion.criterion
+                criterion.weight = assignment_criterion.weight
+                criteria.append(criterion)
+        return criteria
 
     @hybrid_property
     def compared(self):
         return self.compare_count > 0
 
     def completed_comparison_count_for_user(self, user_id):
-        comparison_count = self.comparisons \
+        return self.comparisons \
             .filter_by(
                 user_id=user_id,
                 completed=True
             ) \
             .count()
-
-        return comparison_count / self.criteria_count if self.criteria_count else 0
 
     @hybrid_property
     def available(self):
@@ -149,7 +152,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @hybrid_property
     def evaluation_count(self):
-        evaluation_count = self.compare_count / self.criteria_count if self.criteria_count else 0
+        evaluation_count = self.compare_count
         return evaluation_count + self.self_evaluation_count
 
     @hybrid_property
@@ -215,16 +218,6 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             where(and_(
                 AssignmentComment.assignment_id == cls.id,
                 AssignmentComment.active == True
-            )),
-            deferred=True,
-            group="counts"
-        )
-
-        cls.criteria_count = column_property(
-            select([func.count(AssignmentCriterion.id)]).
-            where(and_(
-                AssignmentCriterion.assignment_id == cls.id,
-                AssignmentCriterion.active == True
             )),
             deferred=True,
             group="counts"

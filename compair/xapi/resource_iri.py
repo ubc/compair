@@ -45,10 +45,8 @@ class XAPIResourceIRI(object):
         return cls._get_app_url()+'assignment/'+assignment_uuid+"/question"
 
     @classmethod
-    def comparison_question(cls, assignment_uuid, answer1_uuid, answer2_uuid):
-        uuids = [answer1_uuid, answer2_uuid]
-        uuids.sort()
-        return cls._get_app_url()+'assignment/'+assignment_uuid+"/comparison?pair="+uuids[0]+","+uuids[1]
+    def comparison_question(cls, comparison_uuid):
+        return cls._get_app_url()+'comparison/'+comparison_uuid+"/question"
 
     @classmethod
     def self_evaluation_question(cls, assignment_uuid):
@@ -73,6 +71,10 @@ class XAPIResourceIRI(object):
     @classmethod
     def comparison(cls, comparison_uuid):
         return cls._get_app_url()+'comparison/'+comparison_uuid
+
+    @classmethod
+    def comparison_criterion(cls, comparison_criterion_uuid):
+        return cls._get_app_url()+'comparison/criterion/'+comparison_criterion_uuid
 
     @classmethod
     def attachment(cls, file_name):

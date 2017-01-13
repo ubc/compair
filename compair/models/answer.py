@@ -34,7 +34,8 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     # file via File Model
 
     comments = db.relationship("AnswerComment", backref="answer")
-    scores = db.relationship("Score", backref="answer")
+    score = db.relationship("AnswerScore", uselist=False, backref="answer")
+    criteria_scores = db.relationship("AnswerCriterionScore", backref="answer")
 
     # hyprid and other functions
     course_id = association_proxy('assignment', 'course_id', creator=lambda course_id:

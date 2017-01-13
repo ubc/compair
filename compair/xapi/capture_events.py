@@ -428,7 +428,7 @@ def xapi_on_assignment_delete(sender, user, **extra):
 # evaluated answer_evaluation(s) (completed and was not comparison example)
 def xapi_on_comparison_update(sender, user, **extra):
     assignment = extra.get('assignment')
-    comparisons = extra.get('comparisons')
+    comparison = extra.get('comparison')
     is_comparison_example = extra.get('is_comparison_example')
 
     tracking = _get_tracking_params()
@@ -437,18 +437,26 @@ def xapi_on_comparison_update(sender, user, **extra):
 
     comparison_count = assignment.completed_comparison_count_for_user(user.id)
     current_comparison = comparison_count+1
-    completed = comparisons[0].completed
+    completed = comparison.completed
 
     statements = []
 
     verb = XAPIVerb.generate('drafted' if not completed else 'submitted')
-    for comparison in comparisons:
+    statement = XAPIStatement.generate(
+        user=user,
+        verb=verb,
+        object=XAPIObject.comparison(comparison),
+        context=XAPIContext.comparison(comparison, registration=registration),
+        result=XAPIResult.comparison(comparison, success=True if completed else None)
+    )
+    statements.append(statement)
+    for comparison_criterion in comparison.comparison_criteria:
         statement = XAPIStatement.generate(
             user=user,
             verb=verb,
-            object=XAPIObject.comparison(comparison),
-            context=XAPIContext.comparison(comparison, registration=registration),
-            result=XAPIResult.comparison(comparison, success=True if completed else None)
+            object=XAPIObject.comparison_criterion(comparison, comparison_criterion),
+            context=XAPIContext.comparison_criterion(comparison, comparison_criterion, registration=registration),
+            result=XAPIResult.comparison_criterion(comparison, comparison_criterion, success=True if completed else None)
         )
         statements.append(statement)
 
@@ -456,27 +464,38 @@ def xapi_on_comparison_update(sender, user, **extra):
     statement = XAPIStatement.generate(
         user=user,
         verb=verb,
-        object=XAPIObject.comparison_question(comparisons, current_comparison, assignment.pairing_algorithm.value),
-        context=XAPIContext.comparison_question(comparisons, registration=registration),
+        object=XAPIObject.comparison_question(comparison, current_comparison, assignment.pairing_algorithm.value),
+        context=XAPIContext.comparison_question(comparison, registration=registration),
         result=XAPIResult.basic(duration=duration, success=True, completion=completed)
     )
     statements.append(statement)
 
     if not is_comparison_example and completed:
-        for answer in [comparisons[0].answer1, comparisons[0].answer2]:
-            for score in answer.scores:
-                comparison = next(
-                    (comparison for comparison in comparisons if comparison.criterion_id == score.criterion_id),
-                    None
-                )
-                statement = XAPIStatement.generate(
-                    user=user,
-                    verb=XAPIVerb.generate('evaluated'),
-                    object=XAPIObject.answer_evaluation(answer, comparison),
-                    context=XAPIContext.answer_evaluation(answer, comparison, registration=registration),
-                    result=XAPIResult.answer_evaluation(answer, score)
-                )
-                statements.append(statement)
+        for answer in [comparison.answer1, comparison.answer2]:
+            statement = XAPIStatement.generate(
+                user=user,
+                verb=XAPIVerb.generate('evaluated'),
+                object=XAPIObject.answer_evaluation(answer, comparison),
+                context=XAPIContext.answer_evaluation(answer, comparison, registration=registration),
+                result=XAPIResult.answer_evaluation(answer, answer.score)
+            )
+            statements.append(statement)
+
+            for criterion_score in answer.criteria_scores:
+                comparison_criterion = next((
+                    comparison_criterion for comparison_criterion in comparison.comparison_criteria \
+                    if comparison_criterion.criterion_id == criterion_score.criterion_id
+                ), None )
+
+                if comparison_criterion:
+                    statement = XAPIStatement.generate(
+                        user=user,
+                        verb=XAPIVerb.generate('evaluated'),
+                        object=XAPIObject.answer_evaluation_on_criterion(answer, comparison_criterion),
+                        context=XAPIContext.answer_evaluation_on_criterion(answer, comparison_criterion, registration=registration),
+                        result=XAPIResult.answer_evaluation_on_criterion(answer, criterion_score)
+                    )
+                    statements.append(statement)
 
     XAPI.send_statements(statements)
 

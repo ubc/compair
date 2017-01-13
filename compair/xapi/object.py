@@ -69,11 +69,9 @@ class XAPIObject(object):
         return activity
 
     @classmethod
-    def comparison_question(cls, comparisons, comparison_number, pairing_algorithm):
-        comparison = comparisons[0]
+    def comparison_question(cls, comparison, comparison_number, pairing_algorithm):
         activity = Activity(
-            id=XAPIResourceIRI.comparison_question(
-                comparison.assignment_uuid, comparison.answer1_uuid, comparison.answer2_uuid, ),
+            id=XAPIResourceIRI.comparison_question(comparison.uuid),
             definition=ActivityDefinition(
                 type=XAPIActivity.activity_types.get('question'),
                 name=LanguageMap({ 'en-US': "Assignment comparison #"+str(int(comparison_number)) }),
@@ -122,8 +120,12 @@ class XAPIObject(object):
 
     @classmethod
     def answer_evaluation(cls, answer, comparison):
+        return cls.answer(answer)
+
+    @classmethod
+    def answer_evaluation_on_criterion(cls, answer, comparison_criterion):
         return Activity(
-            id=XAPIResourceIRI.answer_criterion(answer.uuid, comparison.criterion_uuid),
+            id=XAPIResourceIRI.answer_criterion(answer.uuid, comparison_criterion.criterion_uuid),
             definition=ActivityDefinition(
                 type=XAPIActivity.activity_types.get('solution'),
                 name=LanguageMap({ 'en-US': "Assignment answer based on criterion" })
@@ -199,6 +201,16 @@ class XAPIObject(object):
             id=XAPIResourceIRI.comparison(comparison.uuid),
             definition=ActivityDefinition(
                 type=XAPIActivity.activity_types.get('solution'),
-                name=LanguageMap({ 'en-US': "Assignment criteria comparison" })
+                name=LanguageMap({ 'en-US': "Assignment comparison" })
+            )
+        )
+
+    @classmethod
+    def comparison_criterion(cls, comparison, comparison_criterion):
+        return Activity(
+            id=XAPIResourceIRI.comparison_criterion(comparison_criterion.uuid),
+            definition=ActivityDefinition(
+                type=XAPIActivity.activity_types.get('solution'),
+                name=LanguageMap({ 'en-US': "Assignment criterion comparison" })
             )
         )

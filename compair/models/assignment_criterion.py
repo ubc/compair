@@ -16,6 +16,7 @@ class AssignmentCriterion(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     criterion_id = db.Column(db.Integer, db.ForeignKey("criterion.id", ondelete="CASCADE"),
         nullable=False)
     position = db.Column(db.Integer)
+    weight = db.Column(db.Integer, default=1, nullable=False)
 
     # relationships
     # assignment many-to-many criterion with association assignment_criteria

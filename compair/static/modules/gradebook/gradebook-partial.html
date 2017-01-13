@@ -18,14 +18,6 @@
                         <option value="">All students</option>
                     </select>
                 </span>
-                <br />
-                <span class="filter" ng-if="canManageAssignment && includeScores">
-                    <label>Display scores <a href="" uib-tooltip="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
-                            <i class="fa fa-question-circle"></i></a> below for: &nbsp;</label>
-                    <select ng-model="gradebookFilters.sortby" chosen disable_search_threshold="8"
-                            ng-options="c.id as c.name for c in criteria">
-                    </select>
-                </span>
             </div>
         </div>
         <p class="intro-text" ng-if="canManageAssignment">To export data reports for participation and other application statistics, go to <a ng-href="#/report">Download Reports</a>.</p>
@@ -51,7 +43,7 @@
                         <a href="" ng-click="updateTableOrderBy('num_answers')">Answered</a>
                     </th>
                     <th class="text-center" ng-if="includeScores">
-                        <a href="" ng-click="updateTableOrderBy('scores[\''+gradebookFilters.sortby+'\']')">Answer Score</a>
+                        <a href="" ng-click="updateTableOrderBy('score')">Answer Score</a>
                     </th>
                     <th class="text-center">
                         <a href="" ng-click="updateTableOrderBy('flagged')">Flagged</a>
@@ -81,12 +73,12 @@
                     <td class="text-center" ng-if="includeScores"
                         ng-class="{
                         'text-danger': entry.num_answers == 0,
-                        'text-warning': entry.num_answers > 0 && !isNumber(entry.scores[gradebookFilters.sortby]),
-                        'text-success': isNumber(entry.scores[gradebookFilters.sortby])
+                        'text-warning': entry.num_answers > 0 && !isNumber(entry.score),
+                        'text-success': isNumber(entry.score)
                         }">
                         <strong>
-                            <span ng-if="!isNumber(entry.scores[gradebookFilters.sortby])">{{entry.scores[gradebookFilters.sortby]}}</span>
-                            <span ng-if="isNumber(entry.scores[gradebookFilters.sortby])">{{entry.scores[gradebookFilters.sortby]|number:0}}%</span>
+                            <span ng-if="!isNumber(entry.score)">{{entry.score}}</span>
+                            <span ng-if="isNumber(entry.score)">{{entry.score|number:0}}%</span>
                         </strong>
                     </td>
                     <td class="text-center" ng-class="{

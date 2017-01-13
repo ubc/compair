@@ -5,7 +5,8 @@ import datetime
 
 from data.fixtures.test_data import ComparisonTestData, LTITestData
 from data.factories import AssignmentCriterionFactory
-from compair.models import Answer, Comparison, CourseGrade, AssignmentGrade
+from compair.models import Answer, Comparison, CourseGrade, AssignmentGrade, \
+    WinningAnswer, SystemRole
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.core import db
 
@@ -28,21 +29,18 @@ class ComparisonAPITests(ComPAIRAPITestCase):
         url = '/api/courses/' + course_uuid + '/assignments/' + assignment_uuid + '/comparisons' + tail
         return url
 
-    def _build_comparison_submit(self, winner_uuid, draft=False):
+    def _build_comparison_submit(self, winner, draft=False):
         submit = {
-            'comparisons': [
-                {
-                    'criterion_id': self.assignment.criteria[0].uuid,
-                    'winner_id': winner_uuid,
-                    'draft': draft
-                },
-                {
-                    'criterion_id': self.assignment.criteria[1].uuid,
-                    'winner_id': winner_uuid,
-                    'draft': draft
-                }
-            ]
+            'comparison_criteria': [],
+            'draft': draft
         }
+
+        for criterion in self.assignment.criteria:
+            submit['comparison_criteria'].append({
+                'criterion_id': criterion.uuid,
+                'winner': winner,
+                'content': None
+            })
         return submit
 
     def test_get_answer_pair_access_control(self):
@@ -84,7 +82,7 @@ class ComparisonAPITests(ComPAIRAPITestCase):
             rv = self.client.get(self.base_url)
             self.assert200(rv)
             # expected_comparisons = rv.json
-            comparison_submit = self._build_comparison_submit(rv.json['objects'][0]['answer1_id'])
+            comparison_submit = self._build_comparison_submit(WinningAnswer.answer1.value)
 
         # test deny access to unenroled users
         with self.login(self.data.get_unauthorized_student().username):
@@ -117,7 +115,7 @@ class ComparisonAPITests(ComPAIRAPITestCase):
             self.assert404(rv)
             # test reject missing criteria
             faulty_comparisons = copy.deepcopy(comparison_submit)
-            faulty_comparisons['comparisons'] = []
+            faulty_comparisons['comparison_criteria'] = []
             rv = self.client.post(
                 self.base_url,
                 data=json.dumps(faulty_comparisons),
@@ -125,7 +123,7 @@ class ComparisonAPITests(ComPAIRAPITestCase):
             self.assert400(rv)
             # test reject missing course criteria id
             faulty_comparisons = copy.deepcopy(comparison_submit)
-            del faulty_comparisons['comparisons'][0]['criterion_id']
+            del faulty_comparisons['comparison_criteria'][0]['criterion_id']
             rv = self.client.post(
                 self.base_url,
                 data=json.dumps(faulty_comparisons),
@@ -133,15 +131,15 @@ class ComparisonAPITests(ComPAIRAPITestCase):
             self.assert400(rv)
             # test invalid criterion id
             faulty_comparisons = copy.deepcopy(comparison_submit)
-            faulty_comparisons['comparisons'][0]['criterion_id'] = 3930230
+            faulty_comparisons['comparison_criteria'][0]['criterion_id'] = 3930230
             rv = self.client.post(
                 self.base_url,
                 data=json.dumps(faulty_comparisons),
                 content_type='application/json')
             self.assert400(rv)
-            # test invalid winner id
+            # test invalid winner
             faulty_comparisons = copy.deepcopy(comparison_submit)
-            faulty_comparisons['comparisons'][0]['winner_id'] = 2382301
+            faulty_comparisons['comparison_criteria'][0]['winner'] = "2382301"
             rv = self.client.post(
                 self.base_url,
                 data=json.dumps(faulty_comparisons),
@@ -187,7 +185,7 @@ class ComparisonAPITests(ComPAIRAPITestCase):
             rv = self.client.get(self.base_url)
             self.assert200(rv)
             # expected_comparisons = rv.json
-            comparison_submit = self._build_comparison_submit(rv.json['objects'][0]['answer1_id'])
+            comparison_submit = self._build_comparison_submit(WinningAnswer.answer1.value)
 
             ok_comparisons = copy.deepcopy(comparison_submit)
             rv = self.client.post(
@@ -210,7 +208,7 @@ class ComparisonAPITests(ComPAIRAPITestCase):
             rv = self.client.get(self.base_url)
             self.assert200(rv)
             # expected_comparisons = rv.json
-            comparison_submit = self._build_comparison_submit(rv.json['objects'][0]['answer1_id'])
+            comparison_submit = self._build_comparison_submit(WinningAnswer.answer1.value)
 
             ok_comparisons = copy.deepcopy(comparison_submit)
             rv = self.client.post(
@@ -263,8 +261,8 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                     # establish expected data by first getting an answer pair
                     rv = self.client.get(self.base_url)
                     self.assert200(rv)
-                    actual_answer1_uuid = rv.json['objects'][0]['answer1_id']
-                    actual_answer2_uuid = rv.json['objects'][0]['answer2_id']
+                    actual_answer1_uuid = rv.json['comparison']['answer1_id']
+                    actual_answer2_uuid = rv.json['comparison']['answer2_id']
                     self.assertIn(actual_answer1_uuid, valid_answer_uuids)
                     self.assertIn(actual_answer2_uuid, valid_answer_uuids)
                     self.assertNotEqual(actual_answer1_uuid, actual_answer2_uuid)
@@ -274,43 +272,43 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                     # fetch again
                     rv = self.client.get(self.base_url)
                     self.assert200(rv)
-                    expected_comparisons = rv.json
-                    self.assertEqual(actual_answer1_uuid, rv.json['objects'][0]['answer1_id'])
-                    self.assertEqual(actual_answer2_uuid, rv.json['objects'][0]['answer2_id'])
+                    expected_comparison = rv.json['comparison']
+                    self.assertEqual(actual_answer1_uuid, rv.json['comparison']['answer1_id'])
+                    self.assertEqual(actual_answer2_uuid, rv.json['comparison']['answer2_id'])
                     self.assertFalse(rv.json['new_pair'])
                     self.assertEqual(rv.json['current'], current)
 
                     # test draft post
-                    comparison_submit = self._build_comparison_submit(rv.json['objects'][0]['answer1_id'], True)
+                    comparison_submit = self._build_comparison_submit(WinningAnswer.answer1.value, True)
                     rv = self.client.post(
                         self.base_url,
                         data=json.dumps(comparison_submit),
                         content_type='application/json')
                     self.assert200(rv)
-                    actual_comparisons = rv.json['objects']
-                    self._validate_comparison_submit(comparison_submit, actual_comparisons, expected_comparisons)
+                    actual_comparison = rv.json['comparison']
+                    self._validate_comparison_submit(comparison_submit, actual_comparison, expected_comparison)
 
-                    # test draft post (no answer id)
+                    # test draft post (no winner)
                     comparison_submit = self._build_comparison_submit(None)
                     rv = self.client.post(
                         self.base_url,
                         data=json.dumps(comparison_submit),
                         content_type='application/json')
                     self.assert200(rv)
-                    actual_comparisons = rv.json['objects']
-                    self._validate_comparison_submit(comparison_submit, actual_comparisons, expected_comparisons)
+                    actual_comparison = rv.json['comparison']
+                    self._validate_comparison_submit(comparison_submit, actual_comparison, expected_comparison)
 
                     # test normal post
-                    comparison_submit = self._build_comparison_submit(rv.json['objects'][0]['answer1_id'])
+                    comparison_submit = self._build_comparison_submit(WinningAnswer.answer1.value)
                     rv = self.client.post(
                         self.base_url,
                         data=json.dumps(comparison_submit),
                         content_type='application/json')
                     self.assert200(rv)
-                    actual_comparisons = rv.json['objects']
-                    compared_answer_uuids.add(actual_comparisons[0]['answer1_id'])
-                    compared_answer_uuids.add(actual_comparisons[0]['answer2_id'])
-                    self._validate_comparison_submit(comparison_submit, actual_comparisons, expected_comparisons)
+                    actual_comparison = rv.json['comparison']
+                    compared_answer_uuids.add(actual_comparison['answer1_id'])
+                    compared_answer_uuids.add(actual_comparison['answer2_id'])
+                    self._validate_comparison_submit(comparison_submit, actual_comparison, expected_comparison)
 
                     # grades should increase for every comparison
                     if user.id == self.data.get_authorized_student().id:
@@ -349,28 +347,29 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                 rv = self.client.get(self.base_url)
                 self.assert400(rv)
 
-    def _validate_comparison_submit(self, comparison_submit, actual_comparisons, expected_comparisons):
+    def _validate_comparison_submit(self, comparison_submit, actual_comparison, expected_comparison):
         self.assertEqual(
-            len(actual_comparisons), len(comparison_submit['comparisons']),
+            len(actual_comparison['comparison_criteria']), len(comparison_submit['comparison_criteria']),
             "The number of comparisons saved does not match the number sent")
-        for actual_comparison in actual_comparisons:
-            self.assertEqual(
-                expected_comparisons['objects'][0]['answer1_id'],
-                actual_comparison['answer1_id'],
-                "Expected and actual comparison answer1 id did not match")
-            self.assertEqual(
-                expected_comparisons['objects'][0]['answer2_id'],
-                actual_comparison['answer2_id'],
-                "Expected and actual comparison answer2 id did not match")
+
+        self.assertEqual(
+            expected_comparison['answer1_id'],
+            actual_comparison['answer1_id'],
+            "Expected and actual comparison answer1 id did not match")
+        self.assertEqual(
+            expected_comparison['answer2_id'],
+            actual_comparison['answer2_id'],
+            "Expected and actual comparison answer2 id did not match")
+
+        for actual_comparison_criterion in actual_comparison['comparison_criteria']:
             found_comparison = False
-            for expected_comparison in comparison_submit['comparisons']:
-                if expected_comparison['criterion_id'] != \
-                        actual_comparison['criterion_id']:
+            for expected_comparison_criterion in comparison_submit['comparison_criteria']:
+                if expected_comparison_criterion['criterion_id'] != actual_comparison_criterion['criterion_id']:
                     continue
                 self.assertEqual(
-                    expected_comparison['winner_id'],
-                    actual_comparison['winner_id'],
-                    "Expected and actual winner answer id did not match.")
+                    expected_comparison_criterion['winner'],
+                    actual_comparison_criterion['winner'],
+                    "Expected and actual winner did not match.")
                 found_comparison = True
             self.assertTrue(
                 found_comparison,
@@ -382,17 +381,20 @@ class ComparisonAPITests(ComPAIRAPITestCase):
 
         for comparison_example in self.data.comparisons_examples:
             if comparison_example.assignment_id == self.assignment.id:
-                comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id, False)
-                self.assertEqual(comparisons[0].answer1_id, comparison_example.answer1_id)
-                self.assertEqual(comparisons[0].answer2_id, comparison_example.answer2_id)
-                min_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
-                max_id = max([comparisons[0].answer1_id, comparisons[0].answer2_id])
+                comparison = Comparison.create_new_comparison(self.assignment.id, user_id, False)
+                self.assertEqual(comparison.answer1_id, comparison_example.answer1_id)
+                self.assertEqual(comparison.answer2_id, comparison_example.answer2_id)
+                min_id = min([comparison.answer1_id, comparison.answer2_id])
+                max_id = max([comparison.answer1_id, comparison.answer2_id])
                 example_winner_ids.append(min_id)
                 example_loser_ids.append(max_id)
-                for comparison in comparisons:
-                    comparison.completed = True
-                    comparison.winner_id = min_id
-                    db.session.add(comparison)
+
+                comparison.completed = True
+                comparison.winner = WinningAnswer.answer1 if comparison.answer1_id < comparison.answer2_id else WinningAnswer.answer2
+                for comparison_criterion in comparison.comparison_criteria:
+                    comparison_criterion.winner = comparison.winner
+                db.session.add(comparison)
+
                 db.session.commit()
 
         # self.login(username)
@@ -406,17 +408,18 @@ class ComparisonAPITests(ComPAIRAPITestCase):
         winner_ids = []
         loser_ids = []
         for i in range(num_possible_comparisons):
-            comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id, False)
-            answer1_id = comparisons[0].answer1_id
-            answer2_id = comparisons[0].answer2_id
-            min_id = min([answer1_id, answer2_id])
-            max_id = max([answer1_id, answer2_id])
+            comparison = Comparison.create_new_comparison(self.assignment.id, user_id, False)
+            min_id = min([comparison.answer1_id, comparison.answer2_id])
+            max_id = max([comparison.answer1_id, comparison.answer2_id])
             winner_ids.append(min_id)
             loser_ids.append(max_id)
-            for comparison in comparisons:
-                comparison.completed = True
-                comparison.winner_id = min_id
-                db.session.add(comparison)
+
+            comparison.completed = True
+            comparison.winner = WinningAnswer.answer1 if comparison.answer1_id < comparison.answer2_id else WinningAnswer.answer2
+            for comparison_criterion in comparison.comparison_criteria:
+                comparison_criterion.winner = comparison.winner
+            db.session.add(comparison)
+
             db.session.commit()
 
             Comparison.calculate_scores(self.assignment.id)
@@ -457,7 +460,7 @@ class ComparisonAPITests(ComPAIRAPITestCase):
         answer_scores = {}
         for answer in answers:
             if answer.assignment.id == self.assignment.id:
-                answer_scores[answer.id] = answer.scores[0].score
+                answer_scores[answer.id] = answer.score.score
 
         # Check that ranking by score and by wins match, this only works for low number of
         # comparisons
@@ -506,9 +509,194 @@ class ComparisonAPITests(ComPAIRAPITestCase):
         with self.login(self.data.get_authorized_student_with_no_answers().username):
             rv = self.client.get(self.base_url)
             self.assert200(rv)
-            answer1 = Answer.query.filter_by(uuid=rv.json['objects'][0]['answer1_id']).first()
-            answer2 = Answer.query.filter_by(uuid=rv.json['objects'][0]['answer2_id']).first()
+            answer1 = Answer.query.filter_by(uuid=rv.json['comparison']['answer1_id']).first()
+            answer2 = Answer.query.filter_by(uuid=rv.json['comparison']['answer2_id']).first()
             self.assertIsNotNone(answer1)
             self.assertIsNotNone(answer2)
             self.assertIn(answer1.id, possible_answer_ids)
             self.assertIn(answer2.id, possible_answer_ids)
+
+    def test_comparison_winners(self):
+        # disable current criteria
+        for assignment_criterion in self.assignment.assignment_criteria:
+            assignment_criterion.active = False
+
+        # test 1 criterion: answer1, answer2 (draw not possible)
+        criterion = self.data.create_criterion(self.data.authorized_instructor)
+        AssignmentCriterionFactory(criterion=criterion, assignment=self.assignment, weight=100)
+        student = self.data.create_user(SystemRole.student)
+        self.data.enrol_student(student, self.course)
+        db.session.commit()
+
+        # test winner = answer1
+        with self.login(student.username):
+            rv = self.client.get(self.base_url)
+            self.assert200(rv)
+
+            comparison_submit = self._build_comparison_submit(WinningAnswer.answer1.value)
+            rv = self.client.post(
+                self.base_url,
+                data=json.dumps(comparison_submit),
+                content_type='application/json')
+            self.assert200(rv)
+
+            actual_comparison = rv.json['comparison']
+            self.assertEqual(actual_comparison['winner'], WinningAnswer.answer1.value)
+            self.assertEqual(len(actual_comparison['comparison_criteria']), 1)
+            self.assertEqual(actual_comparison['comparison_criteria'][0]['winner'], WinningAnswer.answer1.value)
+
+            # test winner = answer2
+            rv = self.client.get(self.base_url)
+            self.assert200(rv)
+
+            comparison_submit = self._build_comparison_submit(WinningAnswer.answer2.value)
+            rv = self.client.post(
+                self.base_url,
+                data=json.dumps(comparison_submit),
+                content_type='application/json')
+            self.assert200(rv)
+
+            actual_comparison = rv.json['comparison']
+            self.assertEqual(actual_comparison['winner'], WinningAnswer.answer2.value)
+            self.assertEqual(len(actual_comparison['comparison_criteria']), 1)
+            self.assertEqual(actual_comparison['comparison_criteria'][0]['winner'], WinningAnswer.answer2.value)
+
+
+        # test 2 criterion: answer1, answer2, draw
+        for assignment_criterion in self.assignment.assignment_criteria:
+            assignment_criterion.active = False
+
+        criterion1 = self.data.create_criterion(self.data.authorized_instructor)
+        criterion2 = self.data.create_criterion(self.data.authorized_instructor)
+        AssignmentCriterionFactory(criterion=criterion1, assignment=self.assignment, weight=100)
+        AssignmentCriterionFactory(criterion=criterion2, assignment=self.assignment, weight=100)
+        student = self.data.create_user(SystemRole.student)
+        self.data.enrol_student(student, self.course)
+        db.session.commit()
+
+        # test winner = answer1
+        with self.login(student.username):
+            rv = self.client.get(self.base_url)
+            self.assert200(rv)
+
+            comparison_submit = self._build_comparison_submit(WinningAnswer.answer1.value)
+            rv = self.client.post(
+                self.base_url,
+                data=json.dumps(comparison_submit),
+                content_type='application/json')
+            self.assert200(rv)
+
+            actual_comparison = rv.json['comparison']
+            self.assertEqual(actual_comparison['winner'], WinningAnswer.answer1.value)
+            self.assertEqual(len(actual_comparison['comparison_criteria']), 2)
+            self.assertEqual(actual_comparison['comparison_criteria'][0]['winner'], WinningAnswer.answer1.value)
+            self.assertEqual(actual_comparison['comparison_criteria'][1]['winner'], WinningAnswer.answer1.value)
+
+            # test winner = answer2
+            rv = self.client.get(self.base_url)
+            self.assert200(rv)
+
+            comparison_submit = self._build_comparison_submit(WinningAnswer.answer2.value)
+            rv = self.client.post(
+                self.base_url,
+                data=json.dumps(comparison_submit),
+                content_type='application/json')
+            self.assert200(rv)
+
+            actual_comparison = rv.json['comparison']
+            self.assertEqual(actual_comparison['winner'], WinningAnswer.answer2.value)
+            self.assertEqual(len(actual_comparison['comparison_criteria']), 2)
+            self.assertEqual(actual_comparison['comparison_criteria'][0]['winner'], WinningAnswer.answer2.value)
+            self.assertEqual(actual_comparison['comparison_criteria'][1]['winner'], WinningAnswer.answer2.value)
+
+            # test winner = draw
+            rv = self.client.get(self.base_url)
+            self.assert200(rv)
+
+            comparison_submit = self._build_comparison_submit(WinningAnswer.answer1.value)
+            comparison_submit['comparison_criteria'][1]['winner'] = WinningAnswer.answer2.value
+            rv = self.client.post(
+                self.base_url,
+                data=json.dumps(comparison_submit),
+                content_type='application/json')
+            self.assert200(rv)
+
+            actual_comparison = rv.json['comparison']
+            self.assertEqual(actual_comparison['winner'], WinningAnswer.draw.value)
+            self.assertEqual(len(actual_comparison['comparison_criteria']), 2)
+            self.assertEqual(actual_comparison['comparison_criteria'][0]['winner'], WinningAnswer.answer1.value)
+            self.assertEqual(actual_comparison['comparison_criteria'][1]['winner'], WinningAnswer.answer2.value)
+
+
+        # test 3 criterion: answer1, answer2, draw (with with different weights)
+        for assignment_criterion in self.assignment.assignment_criteria:
+            assignment_criterion.active = False
+
+        criterion1 = self.data.create_criterion(self.data.authorized_instructor)
+        criterion2 = self.data.create_criterion(self.data.authorized_instructor)
+        criterion3 = self.data.create_criterion(self.data.authorized_instructor)
+        AssignmentCriterionFactory(criterion=criterion1, assignment=self.assignment, weight=200)
+        AssignmentCriterionFactory(criterion=criterion2, assignment=self.assignment, weight=100)
+        AssignmentCriterionFactory(criterion=criterion3, assignment=self.assignment, weight=100)
+        student = self.data.create_user(SystemRole.student)
+        self.data.enrol_student(student, self.course)
+        db.session.commit()
+
+        # test winner = answer1
+        with self.login(student.username):
+            rv = self.client.get(self.base_url)
+            self.assert200(rv)
+
+            comparison_submit = self._build_comparison_submit(WinningAnswer.answer1.value)
+            comparison_submit['comparison_criteria'][1]['winner'] = WinningAnswer.answer2.value
+            rv = self.client.post(
+                self.base_url,
+                data=json.dumps(comparison_submit),
+                content_type='application/json')
+            self.assert200(rv)
+
+            actual_comparison = rv.json['comparison']
+            self.assertEqual(actual_comparison['winner'], WinningAnswer.answer1.value)
+            self.assertEqual(len(actual_comparison['comparison_criteria']), 3)
+            self.assertEqual(actual_comparison['comparison_criteria'][0]['winner'], WinningAnswer.answer1.value)
+            self.assertEqual(actual_comparison['comparison_criteria'][1]['winner'], WinningAnswer.answer2.value)
+            self.assertEqual(actual_comparison['comparison_criteria'][2]['winner'], WinningAnswer.answer1.value)
+
+            # test winner = answer2
+            rv = self.client.get(self.base_url)
+            self.assert200(rv)
+
+            comparison_submit = self._build_comparison_submit(WinningAnswer.answer2.value)
+            comparison_submit['comparison_criteria'][1]['winner'] = WinningAnswer.answer1.value
+            rv = self.client.post(
+                self.base_url,
+                data=json.dumps(comparison_submit),
+                content_type='application/json')
+            self.assert200(rv)
+
+            actual_comparison = rv.json['comparison']
+            self.assertEqual(actual_comparison['winner'], WinningAnswer.answer2.value)
+            self.assertEqual(len(actual_comparison['comparison_criteria']), 3)
+            self.assertEqual(actual_comparison['comparison_criteria'][0]['winner'], WinningAnswer.answer2.value)
+            self.assertEqual(actual_comparison['comparison_criteria'][1]['winner'], WinningAnswer.answer1.value)
+            self.assertEqual(actual_comparison['comparison_criteria'][2]['winner'], WinningAnswer.answer2.value)
+
+            # test winner = draw
+            rv = self.client.get(self.base_url)
+            self.assert200(rv)
+
+            comparison_submit = self._build_comparison_submit(WinningAnswer.answer1.value)
+            comparison_submit['comparison_criteria'][1]['winner'] = WinningAnswer.answer2.value
+            comparison_submit['comparison_criteria'][2]['winner'] = WinningAnswer.answer2.value
+            rv = self.client.post(
+                self.base_url,
+                data=json.dumps(comparison_submit),
+                content_type='application/json')
+            self.assert200(rv)
+
+            actual_comparison = rv.json['comparison']
+            self.assertEqual(actual_comparison['winner'], WinningAnswer.draw.value)
+            self.assertEqual(len(actual_comparison['comparison_criteria']), 3)
+            self.assertEqual(actual_comparison['comparison_criteria'][0]['winner'], WinningAnswer.answer1.value)
+            self.assertEqual(actual_comparison['comparison_criteria'][1]['winner'], WinningAnswer.answer2.value)
+            self.assertEqual(actual_comparison['comparison_criteria'][2]['winner'], WinningAnswer.answer2.value)

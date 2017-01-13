@@ -1,15 +1,15 @@
 import unittest
 
-from compair.algorithms import ComparisonPair, ScoredObject
+from compair.algorithms import ComparisonPair, ScoredObject, ComparisonWinner
 from compair.algorithms.score import calculate_score, calculate_score_1vs1
 
 class TestScore(unittest.TestCase):
 
     def setUp(self):
         self.comparisons = [
-            ComparisonPair(1,2,winning_key=1),
-            ComparisonPair(1,3,winning_key=1),
-            ComparisonPair(2,3,winning_key=2)
+            ComparisonPair(key1=1,key2=2, winner=ComparisonWinner.key1),
+            ComparisonPair(key1=1,key2=3, winner=ComparisonWinner.key1),
+            ComparisonPair(key1=2,key2=3, winner=ComparisonWinner.key1)
         ]
 
     def test_calculate_score(self):
@@ -126,11 +126,11 @@ class TestScore(unittest.TestCase):
 
     def test_calculate_score_1vs1(self):
         self.comparisons = [
-            ComparisonPair(1,2,winning_key=1),
-            ComparisonPair(1,3,winning_key=1)
+            ComparisonPair(key1=1,key2=2, winner=ComparisonWinner.key1),
+            ComparisonPair(key1=1,key2=3, winner=ComparisonWinner.key1)
         ]
 
-        # test comparitive judgement score algorithm
+        # test comparative judgement score algorithm
         self.package_name = "comparative_judgement"
 
         key1_scored_object = ScoredObject(
@@ -141,13 +141,13 @@ class TestScore(unittest.TestCase):
             key=3, score=None, variable1=None, variable2=None,
             rounds=None, wins=None, loses=None, opponents=None
         )
-        winning_key = 2
+        winner = ComparisonWinner.key1
 
         key2_results, key3_results = calculate_score_1vs1(
             package_name=self.package_name,
             key1_scored_object=key1_scored_object,
             key2_scored_object=key2_scored_object,
-            winning_key=winning_key,
+            winner=winner,
             other_comparison_pairs=self.comparisons
         )
 
@@ -180,13 +180,13 @@ class TestScore(unittest.TestCase):
             key=3, score=1396, variable1=1396, variable2=None,
             rounds=None, wins=None, loses=None, opponents=None
         )
-        winning_key = 2
+        winner = ComparisonWinner.key1
 
         key2_results, key3_results = calculate_score_1vs1(
             package_name=self.package_name,
             key1_scored_object=key1_scored_object,
             key2_scored_object=key2_scored_object,
-            winning_key=winning_key,
+            winner=winner,
             other_comparison_pairs=self.comparisons
         )
 
@@ -220,13 +220,13 @@ class TestScore(unittest.TestCase):
             key=3, score=-0.058, variable1=21.542, variable2=7.200,
             rounds=None, wins=None, loses=None, opponents=None
         )
-        winning_key = 2
+        winner = ComparisonWinner.key1
 
         key2_results, key3_results = calculate_score_1vs1(
             package_name=self.package_name,
             key1_scored_object=key1_scored_object,
             key2_scored_object=key2_scored_object,
-            winning_key=winning_key,
+            winner=winner,
             other_comparison_pairs=self.comparisons
         )
 

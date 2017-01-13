@@ -10,7 +10,8 @@ var module = angular.module('ubc.ctlt.compair.common.xapi', [
     'ngResource',
     'angularMoment',
     'angular-uuid',
-    'ubc.ctlt.compair.session'
+    'ubc.ctlt.compair.session',
+    'ubc.ctlt.compair.comparison'
 ]);
 
 /***** Providers *****/
@@ -200,9 +201,9 @@ module.constant('xAPIExtensions', {
 });
 
 module.service('xAPI',
-    [ "uuid", "StatementResource", "Session", "moment",
+    [ "uuid", "StatementResource", "Session", "moment", "WinningAnswer",
       "xAPISettings", "xAPIVerb", "xAPIActivityType", "xAPIExtensions",
-    function(uuid, StatementResource, Session, moment,
+    function(uuid, StatementResource, Session, moment, WinningAnswer,
              xAPISettings, xAPIVerb, xAPIActivityType, xAPIExtensions) {
         var _this = this;
 
@@ -286,9 +287,8 @@ module.service('xAPI',
             assignment_question: function(assignment_id) {
                 return _this._resourceIRI._appUrl() + "assignment/"+assignment_id+"/question";
             },
-            comparison_question: function(assignment_id, answer1_id, answer2_id) {
-                ids = _.sortBy([answer1_id, answer2_id]);
-                return _this._resourceIRI._appUrl() + "assignment/"+assignment_id+"/comparison?pair="+ids[0]+","+ids[1];
+            comparison_question: function(comparison_id) {
+                return _this._resourceIRI._appUrl() + "comparison/"+comparison_id+"/question";
             },
             self_evaluation_question: function(assignment_id) {
                 return _this._resourceIRI._appUrl() + "assignment/"+assignment_id+"/self-evaluation";
@@ -301,6 +301,9 @@ module.service('xAPI',
             },
             comparison: function(comparison_id) {
                 return _this._resourceIRI._appUrl() + "comparison/"+comparison_id;
+            },
+            comparison_criterion: function(comparison_criterion_id) {
+                return _this._resourceIRI._appUrl() + "comparison/criterion/"+comparison_criterion_id;
             },
             attachment: function(fileName) {
                 return _this._resourceIRI._attachmentUrl() + fileName;
@@ -375,12 +378,9 @@ module.service('xAPI',
                 return object;
             },
 
-            comparison_question: function(comparisons, comparison_number, pairing_algorithm) {
-                var comparison = comparisons[0];
-
+            comparison_question: function(comparison, comparison_number, pairing_algorithm) {
                 var object = {
-                    id: _this._resourceIRI.comparison_question(
-                        comparison.assignment_id, comparison.answer1.id, comparison.answer2.id),
+                    id: _this._resourceIRI.comparison_question(comparison.id),
                     definition: {
                         type: _this.activityType.question,
                         name: { 'en-US': "Assignment comparison #"+comparison_number }
@@ -449,7 +449,17 @@ module.service('xAPI',
                     id: _this._resourceIRI.comparison(comparison.id),
                     definition: {
                         type: _this.activityType.solution,
-                        name: { 'en-US': "Assignment criteria comparison" }
+                        name: { 'en-US': "Assignment comparison" }
+                    }
+                }
+            },
+
+            comparison_criterion: function(comparison, comparison_criterion) {
+                return {
+                    id: _this._resourceIRI.comparison_criterion(comparison_criterion.id),
+                    definition: {
+                        type: _this.activityType.solution,
+                        name: { 'en-US': "Assignment criterion comparison" }
                     }
                 }
             },
@@ -551,10 +561,8 @@ module.service('xAPI',
                 return context;
             },
 
-            comparison_question: function(comparisons, options) {
+            comparison_question: function(comparison, options) {
                 options = options || {};
-
-                var comparison = comparisons[0];
 
                 var context = angular.merge({
                     contextActivities: {
@@ -573,9 +581,9 @@ module.service('xAPI',
                     }
                 }, _this.context.basic(options));
 
-                _.forEach(comparisons, function(comparison) {
+                _.forEach(comparison.comparison_criteria, function(comparison_criterion) {
                     context.contextActivities.grouping.push({
-                        id: _this._resourceIRI.criterion(comparison.criterion_id)
+                        id: _this._resourceIRI.criterion(comparison_criterion.criterion_id)
                     })
                 });
 
@@ -631,10 +639,7 @@ module.service('xAPI',
                     contextActivities: {
                         // parent is assignment question
                         parent: [{
-                            id: _this._resourceIRI.comparison_question(
-                                comparison.assignment_id, comparison.answer1.id, comparison.answer2.id)
-                        }, {
-                            id: _this._resourceIRI.criterion(comparison.criterion_id)
+                            id: _this._resourceIRI.comparison_question(comparison.id)
                         }],
                         // grouping is course + assignment
                         grouping: [{
@@ -645,6 +650,35 @@ module.service('xAPI',
                             id: _this._resourceIRI.answer(comparison.answer1.id)
                         }, {
                             id: _this._resourceIRI.answer(comparison.answer2.id)
+                        }]
+                    }
+                }, _this.context.basic(options));
+
+                return context;
+            },
+
+            comparison_criterion: function(comparison, comparison_criterion, options) {
+                options = options || {};
+
+                var context = angular.merge({
+                    contextActivities: {
+                        // parent is assignment question
+                        parent: [{
+                            id: _this._resourceIRI.comparison(comparison.id)
+                        }, {
+                            id: _this._resourceIRI.criterion(comparison_criterion.criterion_id)
+                        }],
+                        // grouping is course + assignment
+                        grouping: [{
+                            id: _this._resourceIRI.course(comparison.course_id)
+                        }, {
+                            id: _this._resourceIRI.assignment(comparison.assignment_id)
+                        }, {
+                            id: _this._resourceIRI.answer(comparison.answer1.id)
+                        }, {
+                            id: _this._resourceIRI.answer(comparison.answer2.id)
+                        }, {
+                            id: _this._resourceIRI.comparison_question(comparison.id)
                         }]
                     }
                 }, _this.context.basic(options));
@@ -863,8 +897,29 @@ module.service('xAPI',
                 options = options || {};
 
                 var response = "Undecided"
-                if (comparison.winner_id) {
-                    response = _this._resourceIRI.answer(comparison.winner_id)
+                if (comparison.winner == WinningAnswer.draw) {
+                    response = "Draw"
+                } else if (comparison.winner == WinningAnswer.answer1) {
+                    response = _this._resourceIRI.answer(comparison.answer1_id)
+                } else if (comparison.winner == WinningAnswer.answer2) {
+                    response = _this._resourceIRI.answer(comparison.answer2_id)
+                }
+
+                var result = angular.merge({
+                    response: response
+                }, _this.result.basic(options));
+
+                return result;
+            },
+
+            comparison_criterion: function(comparison, comparison_criterion, options) {
+                options = options || {};
+
+                var response = "Undecided"
+                if (comparison_criterion.winner == WinningAnswer.answer1) {
+                    response = _this._resourceIRI.answer(comparison.answer1_id)
+                } else if (comparison_criterion.winner == WinningAnswer.answer2) {
+                    response = _this._resourceIRI.answer(comparison.answer2_id)
                 }
 
                 var result = angular.merge({
@@ -1221,40 +1276,40 @@ module.service('xAPIStatementHelper',
 
 
         // verb_comparison_question
-        this.initialize_comparison_question = function(comparisons, comparison_number, pairing_algorithm, registration) {
+        this.initialize_comparison_question = function(comparison, comparison_number, pairing_algorithm, registration) {
             // skip if not yet loaded
-            if (comparisons.length <= 0) { return; }
+            if (!comparison.id) { return; }
 
             xAPI.generateStatement({
                 verb: xAPI.verb.initialized,
-                object: xAPI.object.comparison_question(comparisons, comparison_number, pairing_algorithm),
-                context: xAPI.context.comparison_question(comparisons, {
+                object: xAPI.object.comparison_question(comparison, comparison_number, pairing_algorithm),
+                context: xAPI.context.comparison_question(comparison, {
                     registration: registration
                 })
             });
         };
 
-        this.resume_comparison_question = function(comparisons, comparison_number, pairing_algorithm, registration) {
+        this.resume_comparison_question = function(comparison, comparison_number, pairing_algorithm, registration) {
             // skip if not yet loaded
-            if (comparisons.length <= 0) { return; }
+            if (!comparison.id) { return; }
 
             xAPI.generateStatement({
                 verb: xAPI.verb.resumed,
-                object: xAPI.object.comparison_question(comparisons, comparison_number, pairing_algorithm),
-                context: xAPI.context.comparison_question(comparisons, {
+                object: xAPI.object.comparison_question(comparison, comparison_number, pairing_algorithm),
+                context: xAPI.context.comparison_question(comparison, {
                     registration: registration
                 })
             });
         };
 
-        this.exited_comparison_question = function(comparisons, comparison_number, pairing_algorithm, registration, duration) {
+        this.exited_comparison_question = function(comparison, comparison_number, pairing_algorithm, registration, duration) {
             // skip if not yet loaded
-            if (comparisons.length <= 0) { return; }
+            if (!comparison.id) { return; }
 
             xAPI.generateStatement({
                 verb: xAPI.verb.exited,
-                object: xAPI.object.comparison_question(comparisons, comparison_number, pairing_algorithm),
-                context: xAPI.context.comparison_question(comparisons, {
+                object: xAPI.object.comparison_question(comparison, comparison_number, pairing_algorithm),
+                context: xAPI.context.comparison_question(comparison, {
                     registration: registration
                 }),
                 result: xAPI.result.basic({
@@ -1264,19 +1319,18 @@ module.service('xAPIStatementHelper',
             });
         };
 
-
-        // verb_comparison_solution
-        this.interacted_comparison_solution = function(comparison, registration) {
+        // verb_comparison_criterion_solution
+        this.interacted_comparison_criterion_solution = function(comparison, comparison_criterion, registration) {
             // skip if not yet loaded
-            if (!comparison.id) { return; }
+            if (!comparison.id || !comparison_criterion.id) { return; }
 
             xAPI.generateStatement({
-            verb: xAPI.verb.interacted,
-            object: xAPI.object.comparison(comparison),
-            context: xAPI.context.comparison(comparison, {
+                verb: xAPI.verb.interacted,
+                object: xAPI.object.comparison_criterion(comparison, comparison_criterion),
+                context: xAPI.context.comparison_criterion(comparison, comparison_criterion, {
                     registration: registration
                 }),
-                result: xAPI.result.comparison(comparison)
+                result: xAPI.result.comparison_criterion(comparison, comparison_criterion)
             });
         };
 

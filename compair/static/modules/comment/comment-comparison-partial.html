@@ -38,28 +38,28 @@
 
     <div ng-show="comparisons.objects.length" class="evaluations">
 
-        <div ng-repeat="(user_id, comparisons) in comparisons.grouped">
+        <div ng-repeat="(user_id, comparison_set) in comparisons.grouped">
 
-            <div class="each-evaluation" ng-repeat="comparison_set in comparisons">
+            <div class="each-evaluation" ng-repeat="comparison in comparison_set">
 
                 <h4 class="text-center evaluator-heading" ng-if="$first">
-                    {{ comparison_set.user.fullname }} <br />
+                    {{ comparison.user.fullname }} <br />
                     <i class="fa fa-arrow-down"></i>
                 </h4>
 
                 <div class="evaluator-answer" ng-if="$first">
-                    <p><a class="btn btn-default" href="" ng-click="loadAnswerByAuthor(comparison_set.user_id);showMyAnswer = !showMyAnswer;">
+                    <p><a class="btn btn-default" href="" ng-click="loadAnswerByAuthor(comparison.user_id);showMyAnswer = !showMyAnswer;">
                         <span ng-show="showMyAnswer">Hide</span>
                         <span ng-hide="showMyAnswer">Show</span>
                         Student's Answer
                     </a></p>
-                    <compair-student-answer class="answer" answer="(answers | filter:{user_id:comparison_set.user_id}:true)[0]" ng-show="showMyAnswer"></compair-student-answer>
+                    <compair-student-answer class="answer" answer="(answers | filter:{user_id:comparison.user_id}:true)[0]" ng-show="showMyAnswer"></compair-student-answer>
                 </div>
 
                 <!-- Comparison Header -->
                 <div class="each-header">
-                    <compair-avatar user-id="comparison_set.user_id" avatar="comparison_set.user.avatar" display-name="comparison_set.user.fullname"></compair-avatar>
-                    <strong>submitted</strong> on {{ comparison_set.created | amDateFormat: 'MMM D @ h:mm a'}}:
+                    <compair-avatar user-id="comparison.user_id" avatar="comparison.user.avatar" display-name="comparison.user.fullname"></compair-avatar>
+                    <strong>submitted</strong> on {{ comparison.created | amDateFormat: 'MMM D @ h:mm a'}}:
                 </div>
 
                 <!-- Answers -->
@@ -72,22 +72,22 @@
                 </a></p>
 
                 <div class="row" ng-show="showAnswers">
-                    <compair-answer-content answer="comparison_set.answer1" is-chosen="comparison.winner_id == comparison_set.answer1_id" name="Odd-Numbered Answer" criterion="comparison.criterion_id" show-score="true"></compair-answer-content>
-                    <compair-answer-content answer="comparison_set.answer2" is-chosen="comparison.winner_id == comparison_set.answer2_id" name="Even-Numbered Answer" criterion="comparison.criterion_id" show-score="true"></compair-answer-content>
+                    <compair-answer-content answer="comparison.answer1" is-chosen="comparison.winner == WinningAnswer.answer1" name="Odd-Numbered Answer" show-score="true"></compair-answer-content>
+                    <compair-answer-content answer="comparison.answer2" is-chosen="comparison.winner == WinningAnswer.answer2" name="Even-Numbered Answer" show-score="true"></compair-answer-content>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6">
                         <h5 class="content">Feedback for Odd-Numbered Answer</h5>
                         <!-- feedback for odd-numbered answer -->
-                        <div ng-repeat="feedback in comparison_set.answer1_feedback">
+                        <div ng-repeat="feedback in comparison.answer1_feedback">
                             <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <h5 class="content">Feedback for Even-Numbered Answer</h5>
                         <!-- feedback for even-numbered answer -->
-                        <div ng-repeat="feedback in comparison_set.answer2_feedback">
+                        <div ng-repeat="feedback in comparison.answer2_feedback">
                             <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
                         </div>
                     </div>
@@ -95,18 +95,18 @@
 
                 <h5 class="content">Comparisons</h5>
 
-                <div ng-repeat="comparison in comparison_set.comparisons">
+                <div ng-repeat="comparsion_criterion in comparison.comparison_criteria">
 
-                <p class="content">"{{comparison.criterion.name}}"<br />
-                    <span class="glyphicon glyphicon-ok-circle"></span>
-                    <span ng-if="comparison.winner_id == comparison_set.answer1_id"><strong>Odd-numbered answer</strong></span>
-                    <span ng-if="comparison.winner_id == comparison_set.answer2_id"><strong>Even-numbered answer</strong></span>
-                </p>
+                    <p class="content">"{{comparsion_criterion.criterion.name}}"<br />
+                        <span class="glyphicon glyphicon-ok-circle"></span>
+                        <span ng-if="comparsion_criterion.winner == WinningAnswer.answer1"><strong>Odd-numbered answer</strong></span>
+                        <span ng-if="comparsion_criterion.winner == WinningAnswer.answer2"><strong>Even-numbered answer</strong></span>
+                    </p>
 
                 </div>
             </div>
-            <div class="each-evaluation" ng-if="comparisons[0].self_evaluation.length > 0" ng-init="self_evaluations=comparisons[0].self_evaluation">
-                <div ng-repeat="self_evaluation in self_evaluations">
+            <div class="each-evaluation" ng-if="comparison_set[0].self_evaluation.length > 0">
+                <div ng-repeat="self_evaluation in comparison_set[0].self_evaluation">
                     <div class="each-header">
                         <compair-avatar user-id="self_evaluation.user_id" avatar="self_evaluation.user.avatar" display-name="self_evaluation.user.fullname"></compair-avatar>
                         <strong>self-evaluated</strong> on {{ self_evaluation.created | amDateFormat: 'MMM D @ h:mm a'}}:

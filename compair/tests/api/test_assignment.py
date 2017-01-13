@@ -7,7 +7,7 @@ from data.fixtures.test_data import SimpleAssignmentTestData, ComparisonTestData
 from data.factories import AssignmentFactory
 from compair.models import Assignment, Comparison, PairingAlgorithm, \
     CourseGrade, AssignmentGrade, SystemRole, CourseRole, LTIOutcome, \
-    AnswerCommentType
+    AnswerCommentType, WinningAnswer
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.core import db
 
@@ -69,9 +69,9 @@ class AssignmentAPITests(ComPAIRAPITestCase):
         criterion2 = self.data.create_criterion(self.data.get_authorized_instructor())
         criterion3 = self.data.create_criterion(self.data.get_authorized_instructor())
         assignment_criteria = [
-            { 'id': self.data.get_default_criterion().uuid },
-            { 'id': criterion2.uuid },
-            { 'id': criterion3.uuid }
+            { 'id': self.data.get_default_criterion().uuid, 'weight': 10 },
+            { 'id': criterion2.uuid, 'weight': 20  },
+            { 'id': criterion3.uuid, 'weight': 30  }
         ]
 
         now = datetime.datetime.utcnow()
@@ -124,7 +124,7 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             self.assert400(rv)
             # Test invalid criteria
             bad_criteria = assignment_expected.copy()
-            bad_criteria['criteria'] = [{'id': '999'}, {'id': '9999'}]
+            bad_criteria['criteria'] = [{'id': '999', 'weight': 10 }, {'id': '9999', 'weight': 10 }]
             rv = self.client.post(
                 self.url,
                 data=json.dumps(bad_criteria),
@@ -163,12 +163,13 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             # ensure assignment criterion are in correct order
             for index, criterion in enumerate(assignment_criteria):
                 self.assertEqual(criterion['id'], rv.json['criteria'][index]['id'])
+                self.assertEqual(criterion['weight'], rv.json['criteria'][index]['weight'])
 
             # test reverse order
             assignment_criteria = [
-                { 'id': criterion3.uuid },
-                { 'id': criterion2.uuid },
-                { 'id': self.data.get_default_criterion().uuid }
+                { 'id': criterion3.uuid, 'weight': 30  },
+                { 'id': criterion2.uuid, 'weight': 20  },
+                { 'id': self.data.get_default_criterion().uuid, 'weight': 10 }
             ]
             assignment_expected['criteria'] = assignment_criteria
 
@@ -177,14 +178,15 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(assignment_criteria), len(rv.json['criteria']))
             for index, criterion in enumerate(assignment_criteria):
                 self.assertEqual(criterion['id'], rv.json['criteria'][index]['id'])
+                self.assertEqual(criterion['weight'], rv.json['criteria'][index]['weight'])
 
     def test_edit_assignment(self):
         criterion2 = self.data.create_criterion(self.data.get_authorized_instructor())
         criterion3 = self.data.create_criterion(self.data.get_authorized_instructor())
         assignment_criteria = [
-            { 'id': self.data.get_default_criterion().uuid },
-            { 'id': criterion2.uuid },
-            { 'id': criterion3.uuid }
+            { 'id': self.data.get_default_criterion().uuid, 'weight': 10 },
+            { 'id': criterion2.uuid, 'weight': 20  },
+            { 'id': criterion3.uuid, 'weight': 30  }
         ]
 
         assignment = self.data.get_assignments()[0]
@@ -254,7 +256,7 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             # test edit by author add & remove criteria
             new_criterion = self.data.create_criterion(self.data.get_authorized_instructor())
             add_criteria = expected.copy()
-            add_criteria['criteria'] = [{ 'id': new_criterion.uuid }]
+            add_criteria['criteria'] = [{ 'id': new_criterion.uuid, 'weight': 10 }]
             rv = self.client.post(url, data=json.dumps(add_criteria), content_type='application/json')
             self.assert200(rv)
             self._verify_assignment(assignment, rv.json)
@@ -265,12 +267,13 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(assignment_criteria), len(rv.json['criteria']))
             for index, criterion in enumerate(assignment_criteria):
                 self.assertEqual(criterion['id'], rv.json['criteria'][index]['id'])
+                self.assertEqual(criterion['weight'], rv.json['criteria'][index]['weight'])
 
             # test reverse order
             assignment_criteria = [
-                { 'id': criterion3.uuid },
-                { 'id': criterion2.uuid },
-                { 'id': self.data.get_default_criterion().uuid }
+                { 'id': criterion3.uuid, 'weight': 10 },
+                { 'id': criterion2.uuid, 'weight': 20 },
+                { 'id': self.data.get_default_criterion().uuid, 'weight': 30 }
             ]
             expected['criteria'] = assignment_criteria
 
@@ -279,6 +282,7 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(assignment_criteria), len(rv.json['criteria']))
             for index, criterion in enumerate(assignment_criteria):
                 self.assertEqual(criterion['id'], rv.json['criteria'][index]['id'])
+                self.assertEqual(criterion['weight'], rv.json['criteria'][index]['weight'])
 
 
         with self.login(self.data.get_authorized_ta().username):
@@ -293,9 +297,9 @@ class AssignmentAPITests(ComPAIRAPITestCase):
                 'students_can_reply': assignment.students_can_reply,
                 'enable_self_evaluation': assignment.enable_self_evaluation,
                 'criteria': [
-                    { 'id': self.data.get_default_criterion().uuid },
-                    { 'id': criterion2.uuid },
-                    { 'id': criterion3.uuid }
+                    { 'id': self.data.get_default_criterion().uuid, 'weight': 10 },
+                    { 'id': criterion2.uuid, 'weight': 20 },
+                    { 'id': criterion3.uuid, 'weight': 30 }
                 ],
                 'pairing_algorithm': PairingAlgorithm.random.value,
                 'rank_display_limit': 20,
@@ -313,7 +317,7 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             # test edit by TA add & remove criteria
             ta_new_criterion = self.data.create_criterion(self.data.get_authorized_ta())
             ta_add_criteria = ta_expected.copy()
-            ta_add_criteria['criteria'] = [{ 'id': ta_new_criterion.uuid }]
+            ta_add_criteria['criteria'] = [{ 'id': ta_new_criterion.uuid, 'weight': 1 }]
             rv = self.client.post(url, data=json.dumps(ta_add_criteria), content_type='application/json')
             self.assert200(rv)
             self._verify_assignment(assignment, rv.json)
@@ -355,13 +359,13 @@ class AssignmentEditComparedAPITests(ComPAIRAPITestCase):
 
         for comparison_example in self.data.comparisons_examples:
             if comparison_example.assignment_id == self.assignment.id:
-                comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id, False)
-                self.assertEqual(comparisons[0].answer1_id, comparison_example.answer1_id)
-                self.assertEqual(comparisons[0].answer2_id, comparison_example.answer2_id)
-                for comparison in comparisons:
-                    comparison.completed = True
-                    comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
-                    db.session.add(comparison)
+                comparison = Comparison.create_new_comparison(self.assignment.id, user_id, False)
+                self.assertEqual(comparison.answer1_id, comparison_example.answer1_id)
+                self.assertEqual(comparison.answer2_id, comparison_example.answer2_id)
+                comparison.completed = True
+                comparison.winner = WinningAnswer.answer1 if comparison.answer1_id < comparison.answer2_id else WinningAnswer.answer2
+                for comparison_criterion in comparison.comparison_criteria:
+                    comparison_criterion.winner = comparison.winner
                 submit_count += 1
                 db.session.commit()
 
@@ -374,11 +378,12 @@ class AssignmentEditComparedAPITests(ComPAIRAPITestCase):
         # n - 1 possible pairs before all answers have been compared
         num_possible_comparisons = num_eligible_answers - 1
         for i in range(num_possible_comparisons):
-            comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id, False)
-            for comparison in comparisons:
-                comparison.completed = True
-                comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
-                db.session.add(comparison)
+            comparison = Comparison.create_new_comparison(self.assignment.id, user_id, False)
+            comparison.completed = True
+            comparison.winner = WinningAnswer.answer1 if comparison.answer1_id < comparison.answer2_id else WinningAnswer.answer2
+            for comparison_criterion in comparison.comparison_criteria:
+                comparison_criterion.winner = comparison.winner
+            db.session.add(comparison)
             submit_count += 1
             db.session.commit()
 
@@ -397,7 +402,7 @@ class AssignmentEditComparedAPITests(ComPAIRAPITestCase):
             'students_can_reply': self.assignment.students_can_reply,
             'enable_self_evaluation': self.assignment.enable_self_evaluation,
             'criteria': [
-                { 'id': self.data.get_default_criterion().uuid }
+                { 'id': self.data.get_default_criterion().uuid, 'weight': 1 }
             ],
             'pairing_algorithm': self.assignment.pairing_algorithm.value,
             'rank_display_limit': 10
@@ -419,13 +424,24 @@ class AssignmentEditComparedAPITests(ComPAIRAPITestCase):
             # test cannot change criteria
             change_criteria = expected.copy()
             change_criteria['criteria'] = [
-                { 'id': self.data.create_criterion(self.data.get_authorized_instructor()).uuid }
+                { 'id': self.data.create_criterion(self.data.get_authorized_instructor()).uuid, 'weight': 1 }
             ]
             rv = self.client.post(url, data=json.dumps(change_criteria), content_type='application/json')
             self.assert403(rv)
             self.assertEqual(rv.json['error'],
                 'The criteria cannot be changed in the assignment ' + \
                 'because they have already been used in an evaluation.')
+
+            # test cannot change criteria weight
+            change_criteria = expected.copy()
+            change_criteria['criteria'] = [
+                { 'id': self.data.get_default_criterion().uuid, 'weight': 10 }
+            ]
+            rv = self.client.post(url, data=json.dumps(change_criteria), content_type='application/json')
+            self.assert403(rv)
+            self.assertEqual(rv.json['error'],
+                'The criteria weight cannot be changed in the assignment ' + \
+                'because it has already been used in an evaluation.')
 
             # can otherwise edit compared assignments
             rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
@@ -447,13 +463,15 @@ class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
 
         for comparison_example in self.data.comparisons_examples:
             if comparison_example.assignment_id == self.assignment.id:
-                comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id, False)
-                self.assertEqual(comparisons[0].answer1_id, comparison_example.answer1_id)
-                self.assertEqual(comparisons[0].answer2_id, comparison_example.answer2_id)
-                for comparison in comparisons:
-                    comparison.completed = True
-                    comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
-                    db.session.add(comparison)
+                comparison = Comparison.create_new_comparison(self.assignment.id, user_id, False)
+                self.assertEqual(comparison.answer1_id, comparison_example.answer1_id)
+                self.assertEqual(comparison.answer2_id, comparison_example.answer2_id)
+                comparison.completed = True
+                comparison.winner = WinningAnswer.answer1 if comparison.answer1_id < comparison.answer2_id else WinningAnswer.answer2
+                for comparison_criterion in comparison.comparison_criteria:
+                    comparison_criterion.winner = comparison.winner
+                db.session.add(comparison)
+
                 submit_count += 1
                 db.session.commit()
 
@@ -466,11 +484,13 @@ class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
         # n - 1 possible pairs before all answers have been compared
         num_possible_comparisons = num_eligible_answers - 1
         for i in range(num_possible_comparisons):
-            comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id, False)
-            for comparison in comparisons:
-                comparison.completed = True
-                comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
-                db.session.add(comparison)
+            comparison = Comparison.create_new_comparison(self.assignment.id, user_id, False)
+            comparison.completed = True
+            comparison.winner = WinningAnswer.answer1 if comparison.answer1_id < comparison.answer2_id else WinningAnswer.answer2
+            for comparison_criterion in comparison.comparison_criteria:
+                comparison_criterion.winner = comparison.winner
+            db.session.add(comparison)
+
             submit_count += 1
             db.session.commit()
 

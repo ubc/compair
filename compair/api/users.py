@@ -510,8 +510,7 @@ class UserCourseStatusListAPI(Resource):
 
                     for assignment in compare_period_assignments:
                         assignment_comparisons = [comparison for comparison in comparisons if comparison.assignment_id == assignment.id]
-                        comparison_count = len(assignment_comparisons) / assignment.criteria_count if assignment.criteria_count else 0
-                        if comparison_count < assignment.total_comparisons_required:
+                        if len(assignment_comparisons) < assignment.total_comparisons_required:
                             incomplete_assignment_ids.add(assignment.id)
 
                         if assignment.enable_self_evaluation:

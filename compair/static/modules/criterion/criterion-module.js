@@ -11,12 +11,6 @@ var module = angular.module('ubc.ctlt.compair.criterion', [
     'ubc.ctlt.compair.common.highlightjs',
 ]);
 
-module.factory('AssignmentCriterionResource', ['$resource', function($resource) {
-    var ret = $resource('/api/courses/:courseId/assignments/:assignmentId/criteria/:criterionId', {criterionId: '@id'});
-    ret.MODEL = "AssignmentCriterion";
-    return ret;
-}]);
-
 module.factory('CriterionResource', ['$resource', function($resource) {
     return $resource('/api/criteria/:criterionId', {criterionId: '@id'});
 }]);

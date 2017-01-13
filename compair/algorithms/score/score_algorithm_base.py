@@ -26,5 +26,5 @@ class ScoreAlgorithmBase:
         pass
 
     @abstractmethod
-    def calculate_score_1vs1(self, key1_score_parameters, key2_score_parameters, winning_key, other_comparison_pairs):
+    def calculate_score_1vs1(self, key1_score_parameters, key2_score_parameters, winner, other_comparison_pairs):
         pass

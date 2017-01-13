@@ -83,11 +83,6 @@ def register_api_blueprints(app):
         criterion_api,
         url_prefix='/api/criteria')
 
-    from .assignment_criterion import assignment_criterion_api
-    app.register_blueprint(
-        assignment_criterion_api,
-        url_prefix='/api/courses/<course_uuid>/assignments/<assignment_uuid>/criteria')
-
     from .comparison import comparison_api
     app.register_blueprint(
         comparison_api,
@@ -270,10 +265,6 @@ def log_events(log):
     on_criterion_update.connect(log)
     on_criterion_list_get.connect(log)
     on_criterion_create.connect(log)
-
-    # assignment criterion events
-    from .assignment_criterion import on_assignment_criterion_get
-    on_assignment_criterion_get.connect(log)
 
     # comparison events
     from .comparison import on_comparison_get, on_comparison_create, on_comparison_update

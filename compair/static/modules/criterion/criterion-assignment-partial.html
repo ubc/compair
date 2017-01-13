@@ -1,6 +1,14 @@
 
 <div>
-    <label class="required-star">Comparison Criteria</label>
+    <div class="row">
+        <div class="col-sm-10">
+            <label class="required-star">Comparison Criteria</label>
+        </div>
+        <div class="col-sm-2 text-center">
+            <label ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive && assignment.criteria.length > 1">Criteria Weight</label>
+        </div>
+    </div>
+
 
     <div ng-repeat="(key, criterion) in assignment.criteria" class="row">
         <div class="col-sm-2">
@@ -9,7 +17,7 @@
                 <!-- Can edit: Public criteria on new assignments (will create duplicate) or Non public criteria if system admin or owner of criterion -->
                 <a href=""
                    ng-click="changeCriterion(criterion)"
-                   ng-if="(criterion.public == true && !assignment.id) || (criterion.public == false && (canManageCriteriaAssignment || criterion.user_id==loggedInUserId))">
+                   ng-if="(criterion.public == true && !assignment.id) || (criterion.public == false && (canManageAssignment || criterion.user_id==loggedInUserId))">
                     Edit
                 </a>
                 <span ng-if="criterion.public == true && assignment.id" class="text-muted">
@@ -25,13 +33,28 @@
                 <span ng-if="assignment.compared" class="text-muted"><i class="fa fa-minus-circle"></i> (cannot drop)</span>
             </p><!-- disable from assignment / add to dropdown -->
         </div>
-        <div class="col-sm-8">
+        <div ng-class="{
+                'col-sm-6': assignment.pairing_algorithm == PairingAlgorithm.adaptive && assignment.criteria.length > 1,
+                'col-sm-8': assignment.pairing_algorithm != PairingAlgorithm.adaptive || assignment.criteria.length <= 1
+            }">
             <strong>{{ key + 1 }}. {{ criterion.name }}</strong>
             <div mathjax hljs ng-bind-html="criterion.description"></div>
+        </div>
+        <div class="col-sm-2 text-center" ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive && assignment.criteria.length > 1">
+            <div ng-if="!assignment.compared">
+                <input class="form-control" type="number" min="0" ng-pattern="onlyNumbers" required
+                    name="criterion_weight" ng-model="criterion.weight">
+            </div>
+            <span class="text-muted">{{getCriterionWeightAsPercent(criterion.weight)|number:2}}%</span>
+            <br /><br />
         </div>
     </div>
 
     <comparison-preview ng-show="assignment.criteria.length > 0"></comparison-preview>
+    <p class="bg-warning text-warning alert" ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive && criteriaCanDraw()">
+        <i class="fa fa-warning"></i>
+        It is possible for students to have a draw when comparing asnwers.
+    </p>
 
     <div ng-show="assignment.criteria.length < 1">
         <p>No criteria added yet for this assignment. Please select or create a new one below.</p>

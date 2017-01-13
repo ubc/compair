@@ -397,8 +397,7 @@ class ReportAPITest(ComPAIRAPITestCase):
         comparisons = Comparison.query \
             .filter(
                 Comparison.user_id == student.id,
-                Comparison.assignment_id == assignment.id,
-                Comparison.criterion_id == assignment.criteria[0].id
+                Comparison.assignment_id == assignment.id
             ) \
             .all()
         evaluations_submitted = len(comparisons)
@@ -439,8 +438,9 @@ class ReportAPITest(ComPAIRAPITestCase):
 
         expected_heading2 = ['Last Name', 'First Name', 'Student No']
         for assignment in assignments:
+            expected_heading2.append("Percentage score for answer overall")
             for criterion in assignment.criteria:
-                expected_heading2.append("Percentage Score for \""+criterion.name+"\"")
+                expected_heading2.append("Percentage score for \""+criterion.name+"\"")
             expected_heading2.append("Evaluations Submitted ("+str(assignment.total_comparisons_required)+" required)")
 
         self.assertEqual(expected_heading1, heading1)
@@ -461,26 +461,43 @@ class ReportAPITest(ComPAIRAPITestCase):
                 ) \
                 .first()
 
+            if answer:
+                if answer.score:
+                    self.assertAlmostEqual(float(row[index]), answer.score.normalized_score)
+                else:
+                    self.assertEqual(row[index], "Not Evaluated")
+
+            else:
+                self.assertEqual(row[index], "No Answer")
+            index += 1
+
             for criterion in assignment.criteria:
                 if answer:
-                    score = next((
-                        score for score in answer.scores \
-                        if score.criterion_id == criterion.id
+                    criterion_score = next((
+                        criterion_score for criterion_score in answer.criteria_scores if \
+                        criterion_score.criterion_id == criterion.id
                     ), None)
-                    if score:
-                        self.assertAlmostEqual(float(row[index]), score.normalized_score)
+
+                    if criterion_score:
+                        self.assertAlmostEqual(float(row[index]), criterion_score.normalized_score)
                     else:
                         self.assertEqual(row[index], "Not Evaluated")
                 else:
                     self.assertEqual(row[index], "No Answer")
                 index += 1
 
+            comparisons = Comparison.query \
+                .filter(
+                    Comparison.user_id == student.id,
+                    Comparison.assignment_id == assignment.id
+                ) \
+                .all()
+            evaluations_submitted = len(comparisons)
 
             comparisons = Comparison.query \
                 .filter(
                     Comparison.user_id == student.id,
-                    Comparison.assignment_id == assignment.id,
-                    Comparison.criterion_id == assignment.criteria[0].id
+                    Comparison.assignment_id == assignment.id
                 ) \
                 .all()
             evaluations_submitted = len(comparisons)

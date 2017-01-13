@@ -60,10 +60,11 @@ class AnswersAPITests(ComPAIRAPITestCase):
             for i, expected in enumerate(expected_answers.items):
                 actual = actual_answers[i]
                 self.assertEqual(expected.content, actual['content'])
-                self.assertEqual(len(expected.scores), len(actual['scores']))
-                for index, score in enumerate(expected.scores):
-                    self.assertEqual(score.rank, actual['scores'][index]['rank'])
-                    self.assertFalse('normalized_score' in actual['scores'][index])
+                if expected.score:
+                    self.assertEqual(expected.score.rank, actual['score']['rank'])
+                    self.assertFalse('normalized_score' in actual['score'])
+                else:
+                    self.assertIsNone(actual['score'])
             self.assertEqual(1, rv.json['page'])
             self.assertEqual(2, rv.json['pages'])
             self.assertEqual(20, rv.json['per_page'])
@@ -81,27 +82,26 @@ class AnswersAPITests(ComPAIRAPITestCase):
             for i, expected in enumerate(expected_answers.items):
                 actual = actual_answers[i]
                 self.assertEqual(expected.content, actual['content'])
-                self.assertEqual(len(expected.scores), len(actual['scores']))
-                for index, score in enumerate(expected.scores):
-                    self.assertEqual(score.rank, actual['scores'][index]['rank'])
-                    self.assertFalse('normalized_score' in actual['scores'][index])
+                if expected.score:
+                    self.assertEqual(expected.score.rank, actual['score']['rank'])
+                    self.assertFalse('normalized_score' in actual['score'])
+                else:
+                    self.assertIsNone(actual['score'])
             self.assertEqual(2, rv.json['page'])
             self.assertEqual(2, rv.json['pages'])
             self.assertEqual(20, rv.json['per_page'])
             self.assertEqual(expected_answers.total, rv.json['total'])
 
-            # test sorting by criterion rank (display_rank_limit 10)
+            # test sorting by rank (display_rank_limit 10)
             self.fixtures.assignment.rank_display_limit = 10
             db.session.commit()
-            rv = self.client.get(
-                self.base_url + '?orderBy={}'.format(self.fixtures.assignment.criteria[0].uuid)
-            )
+            rv = self.client.get(self.base_url + '?orderBy=score')
             self.assert200(rv)
             result = rv.json['objects']
             # test the result is paged and sorted
             expected = sorted(
-                [answer for answer in self.fixtures.answers if len(answer.scores)],
-                key=lambda ans: (ans.scores[0].score, ans.created),
+                [answer for answer in self.fixtures.answers if answer.score],
+                key=lambda ans: (ans.score.score, ans.created),
                 reverse=True)[:10]
             self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
             self.assertEqual(1, rv.json['page'])
@@ -109,18 +109,16 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(20, rv.json['per_page'])
             self.assertEqual(len(expected), rv.json['total'])
 
-            # test sorting by criterion rank (display_rank_limit 20)
+            # test sorting by rank (display_rank_limit 20)
             self.fixtures.assignment.rank_display_limit = 20
             db.session.commit()
-            rv = self.client.get(
-                self.base_url + '?orderBy={}'.format(self.fixtures.assignment.criteria[0].uuid)
-            )
+            rv = self.client.get(self.base_url + '?orderBy=score')
             self.assert200(rv)
             result = rv.json['objects']
             # test the result is paged and sorted
             expected = sorted(
-                [answer for answer in self.fixtures.answers if len(answer.scores)],
-                key=lambda ans: (ans.scores[0].score, ans.created),
+                [answer for answer in self.fixtures.answers if answer.score],
+                key=lambda ans: (ans.score.score, ans.created),
                 reverse=True)[:20]
             self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
             self.assertEqual(1, rv.json['page'])
@@ -128,18 +126,16 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(20, rv.json['per_page'])
             self.assertEqual(len(expected), rv.json['total'])
 
-            # test sorting by criterion rank (display_rank_limit None)
+            # test sorting by rank (display_rank_limit None)
             self.fixtures.assignment.rank_display_limit = None
             db.session.commit()
-            rv = self.client.get(
-                self.base_url + '?orderBy={}'.format(self.fixtures.assignment.criteria[0].uuid)
-            )
+            rv = self.client.get(self.base_url + '?orderBy=score')
             self.assert200(rv)
             result = rv.json['objects']
             # test the result is paged and sorted
             expected = sorted(
-                [answer for answer in self.fixtures.answers if len(answer.scores)],
-                key=lambda ans: (ans.scores[0].score, ans.created),
+                [answer for answer in self.fixtures.answers if answer.score],
+                key=lambda ans: (ans.score.score, ans.created),
                 reverse=True)[:20]
             self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
             self.assertEqual(1, rv.json['page'])
@@ -176,8 +172,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
 
             # test combined filter
             rv = self.client.get(
-                self.base_url + '?orderBy={}&group={}'.format(
-                    self.fixtures.assignment.criteria[0].uuid,
+                self.base_url + '?orderBy=score&group={}'.format(
                     self.fixtures.groups[0]
                 )
             )
@@ -187,13 +182,12 @@ class AnswersAPITests(ComPAIRAPITestCase):
             answers_per_group = int(len(self.fixtures.answers) / len(self.fixtures.groups)) if len(
                 self.fixtures.groups) else 0
             answers = self.fixtures.answers[:answers_per_group]
-            expected = sorted(answers, key=lambda ans: ans.scores[0].score, reverse=True)
+            expected = sorted(answers, key=lambda ans: ans.score.score, reverse=True)
             self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
 
             # all filters
             rv = self.client.get(
-                self.base_url + '?orderBy={}&group={}&author={}&top=true&page=1&perPage=20'.format(
-                    self.fixtures.assignment.criteria[0].uuid,
+                self.base_url + '?orderBy=score&group={}&author={}&top=true&page=1&perPage=20'.format(
                     self.fixtures.groups[0],
                     self.fixtures.students[0].uuid
                 )
@@ -522,10 +516,9 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(answer.user_uuid, rv.json['user_id'])
             self.assertEqual(answer.content, rv.json['content'])
             self.assertFalse(rv.json['draft'])
-            self.assertEqual(len(answer.scores), len(rv.json['scores']))
-            for index, score in enumerate(answer.scores):
-                self.assertEqual(score.rank, rv.json['scores'][index]['rank'])
-                self.assertFalse('normalized_score' in rv.json['scores'][index])
+
+            self.assertEqual(answer.score.rank, rv.json['score']['rank'])
+            self.assertFalse('normalized_score' in rv.json['score'])
 
         # test authorized student draft answer
         with self.login(self.fixtures.draft_student.username):
@@ -543,10 +536,9 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(assignment_uuid, rv.json['assignment_id'])
             self.assertEqual(answer.user_uuid, rv.json['user_id'])
             self.assertEqual(answer.content, rv.json['content'])
-            self.assertEqual(len(answer.scores), len(rv.json['scores']))
-            for index, score in enumerate(answer.scores):
-                self.assertEqual(score.rank, rv.json['scores'][index]['rank'])
-                self.assertEqual(int(score.normalized_score), rv.json['scores'][index]['normalized_score'])
+
+            self.assertEqual(answer.score.rank, rv.json['score']['rank'])
+            self.assertEqual(int(answer.score.normalized_score), rv.json['score']['normalized_score'])
 
         # test authorized instructor
         with self.login(self.fixtures.instructor.username):
@@ -555,10 +547,9 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(assignment_uuid, rv.json['assignment_id'])
             self.assertEqual(answer.user_uuid, rv.json['user_id'])
             self.assertEqual(answer.content, rv.json['content'])
-            self.assertEqual(len(answer.scores), len(rv.json['scores']))
-            for index, score in enumerate(answer.scores):
-                self.assertEqual(score.rank, rv.json['scores'][index]['rank'])
-                self.assertEqual(int(score.normalized_score), rv.json['scores'][index]['normalized_score'])
+
+            self.assertEqual(answer.score.rank, rv.json['score']['rank'])
+            self.assertEqual(int(answer.score.normalized_score), rv.json['score']['normalized_score'])
 
     @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
     @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')

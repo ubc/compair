@@ -7,12 +7,13 @@ from sqlalchemy import and_
 from sqlalchemy.orm import aliased
 import unicodecsv as csv
 
-from compair.models import Score, Answer, Criterion, Comparison, \
-    Course, User, UserCourse
+from compair.models import AnswerScore, AnswerCriterionScore, Answer, \
+    Criterion, Comparison, Course, User, UserCourse
 
 manager = Manager(usage="Generate Reports")
 
-
+# TODO: Fix generate report
+"""
 @manager.option('-c', '--course', dest='course_id', help='Specify a course ID to generate report from.')
 def create(course_id):
     """Creates report"""
@@ -39,7 +40,7 @@ def create(course_id):
     scores = query.all()
 
     write_csv(
-        course_name + 'scores.csv',
+        course_name + ' scores.csv',
         ['User Id', 'Assignment Id', 'Answer Id', 'Criterion Id', 'Criterion', 'Score'],
         scores
     )
@@ -100,3 +101,4 @@ def write_csv(filename, headers, data):
         report_writer.writerow(headers)
         for d in data:
             report_writer.writerow(d)
+"""
