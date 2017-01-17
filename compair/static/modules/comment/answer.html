@@ -1,7 +1,7 @@
 <div ng-if="answer">
     <compair-avatar user-id="answer.user_id" avatar="answer.user.avatar" display-name="answer.user.displayname"></compair-avatar>
     <strong>answered</strong> on {{ answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
-    <div class="content" mathjax hljs ng-bind-html="answer.content"></div>
+    <ckeditor-html-content class="content" html-content="answer.content"></ckeditor-html-content>
     <compair-attachment-inline ng-if="answer" label="See details:" attachment="answer.file"></compair-attachment-inline>
 </div>
 <div ng-if="!answer"><p><i>(No answer has been submitted by this student.)</i></p></div>

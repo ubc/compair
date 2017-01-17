@@ -3,7 +3,7 @@
         <h2 ng-if="parent.name"><i class="fa fa-comments"></i> {{parent.name}}</h2>
         <i class="fa fa-quote-left pull-left" ng-if="!parent.name && parent.content"></i>
         <i class="fa fa-quote-right pull-right" ng-if="!parent.name && parent.content"></i>
-        <div class="assignment-desc" mathjax hljs ng-bind-html="parent.content"></div>
+        <ckeditor-html-content class="assignment-desc" html-content="parent.content"></ckeditor-html-content>
         <!-- Attachment -->
         <compair-attachment-inline label="See assignment details:" attachment="parent.file"></compair-attachment-inline>
 
