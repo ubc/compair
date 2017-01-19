@@ -7,6 +7,7 @@ var module = angular.module('ubc.ctlt.compair.navbar',
     [
         'ng-breadcrumbs',
         'ngRoute',
+        'ubc.ctlt.compair.login',
         'ubc.ctlt.compair.authentication',
         'ubc.ctlt.compair.course',
         'ubc.ctlt.compair.login', // for LogoutController
@@ -18,14 +19,16 @@ var module = angular.module('ubc.ctlt.compair.navbar',
 /***** Controllers *****/
 module.controller(
     "NavbarController",
-    ["$scope", "$log", "$route", "breadcrumbs",
+    ["$scope", "$log", "$route", "breadcrumbs", "AuthTypesEnabled",
         "Session", "AuthenticationService", "Authorize", "CourseResource", "UserResource", "AssignmentResource",
-    function NavbarController($scope, $log, $route, breadcrumbs,
+    function NavbarController($scope, $log, $route, breadcrumbs, AuthTypesEnabled,
         Session, AuthenticationService, Authorize, CourseResource, UserResource, AssignmentResource)
     {
         $scope.breadcrumbs = breadcrumbs;
         $scope.isLoggedIn = false;
         $scope.isCollapsed = true;
+
+        $scope.AuthTypesEnabled = AuthTypesEnabled;
 
         // determine if we're in a course so we know whether to show
         // the course settings

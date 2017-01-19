@@ -6,13 +6,13 @@ from . import *
 
 from compair.core import db
 
-class LTIConsumer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
+class LTIConsumer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     __tablename__ = 'lti_consumer'
 
     # table columns
     oauth_consumer_key = db.Column(db.String(255), unique=True, nullable=False)
     oauth_consumer_secret = db.Column(db.String(255), nullable=False)
-    lti_version = db.Column(db.String(20), nullable=False)
+    lti_version = db.Column(db.String(20), nullable=True)
     tool_consumer_instance_guid = db.Column(db.String(255), unique=True, nullable=True)
     tool_consumer_instance_name = db.Column(db.String(255), nullable=True)
     tool_consumer_instance_url = db.Column(db.Text, nullable=True)

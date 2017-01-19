@@ -1,5 +1,5 @@
 # mixins
-from compair.models.mixins import ActiveMixin, DefaultTableMixin, WriteTrackingMixin
+from compair.models.mixins import ActiveMixin, UUIDMixin, DefaultTableMixin, WriteTrackingMixin
 
 # import models
 from compair.models import UserCourse, Course, Assignment

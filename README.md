@@ -154,12 +154,15 @@ Restart server after making any changes to settings
 
 `LTI_LOGIN_ENABLED`: Enable login via LTI consumer (default: True)
 
-In additional, you must manually insert a new LTI consumer record into the lti_consumer table with:
-- a unique and valid `oauth_consumer_key` (view the ComPAIRRequestValidator for constraints)
-- a valid `oauth_consumer_secret` (view the ComPAIRRequestValidator for constraints)
-- `active` set to True
-
 Restart server after making any changes to settings
+
+In addition, you must create a LTI consumer key/secret by:
+- Logging into ComPAIR as a system administrator
+- Clicking on 'Manage LTI' in the header
+- Clicking 'Add LTI Consumer'
+- Entering a unique key and a hard to guess secret and clicking 'Save'
+
+You can enable/disable consumers from the Manage LTI screen as needed
 
 Disable outgoing https requirements
 -----------------------------

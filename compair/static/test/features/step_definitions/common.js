@@ -68,6 +68,11 @@ var commonStepDefinitionsWrapper = function() {
         return browser.setLocation(page.getLocation(id));
     });
 
+    this.Given("I'm on '$pageName' page for consumer with id '$id'", function (pageName, id) {
+        page = pageFactory.createPage(pageName);
+        return browser.setLocation(page.getLocation(id));
+    });
+
     // click button on page factory
     this.When("I select '$button' button", function (button) {
         return page.clickButton(button);
@@ -94,7 +99,10 @@ var commonStepDefinitionsWrapper = function() {
             'create user': /.*\/user\/create$/,
             'edit profile': /.*\/user\/[A-Za-z0-9_-]{22}\/edit$/,
             'users': /.*\/users(\?.+)?$/,
-            'user courses': /.*\/users\/[A-Za-z0-9_-]{22}\/course(\?.+)?$/
+            'user courses': /.*\/users\/[A-Za-z0-9_-]{22}\/course(\?.+)?$/,
+            'manage lti': /.*\/lti\/consumer(\?.+)?$/,
+            'create lti consumer': /.*\/lti\/consumer\/create$/,
+            'edit lti consumer': /.*\/lti\/consumer\/[A-Za-z0-9_-]{22}\/edit?$/,
         };
         return expect(browser.getCurrentUrl()).to.eventually.match(page_regex[page]);
     });

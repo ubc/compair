@@ -43,6 +43,11 @@ def register_api_blueprints(app):
         lti_api,
         url_prefix='/api/lti')
 
+    from .lti_consumers import lti_consumer_api
+    app.register_blueprint(
+        lti_consumer_api,
+        url_prefix='/api/lti/consumers')
+
     from .users import user_api
     app.register_blueprint(
         user_api,
@@ -107,7 +112,6 @@ def register_api_blueprints(app):
     app.register_blueprint(
         timer_api,
         url_prefix='/api/timer')
-
 
     from .statements import statement_api
     app.register_blueprint(
@@ -326,11 +330,20 @@ def log_events(log):
     from .gradebook import on_gradebook_get
     on_gradebook_get.connect(log)
 
+    # lti launch event
     from .lti_launch import on_lti_course_link, on_lti_course_membership_update, \
         on_lti_course_membership_status_get
     on_lti_course_link.connect(log)
     on_lti_course_membership_update.connect(log)
     on_lti_course_membership_status_get.connect(log)
+
+    # lti consumer event
+    from .lti_consumers import on_consumer_create, on_consumer_get, \
+        on_consumer_list_get, on_consumer_update
+    on_consumer_create.connect(log)
+    on_consumer_get.connect(log)
+    on_consumer_list_get.connect(log)
+    on_consumer_update.connect(log)
 
     # misc
     on_get_file.connect(log)

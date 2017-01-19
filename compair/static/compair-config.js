@@ -25,6 +25,7 @@ var myApp = angular.module('myApp', [
     'ubc.ctlt.compair.comparison',
     'ubc.ctlt.compair.login',
     'ubc.ctlt.compair.lti',
+    'ubc.ctlt.compair.lti.consumer',
     'ubc.ctlt.compair.navbar',
     'ubc.ctlt.compair.assignment',
     'ubc.ctlt.compair.report',
@@ -247,7 +248,25 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', '$locationProvi
             {
                 templateUrl: 'modules/lti/lti-setup-partial.html',
                 label: "ComPAIR Setup",
-                controller: 'LTIController'
+                controller: 'LTIController',
+                excludeBreadcrumb: true
+            })
+        .when('/lti/consumer',
+            {
+                templateUrl: 'modules/lti_consumer/lti-consumers-partial.html',
+                label: "Manage LTI"
+            })
+        .when('/lti/consumer/create',
+            {
+                templateUrl: 'modules/lti_consumer/lti-consumer-create-partial.html',
+                label: "Create LTI Consumer",
+                method: 'create'
+            })
+        .when('/lti/consumer/:consumerId/edit',
+            {
+                templateUrl: 'modules/lti_consumer/lti-consumer-edit-partial.html',
+                label: "Edit LTI Consumer",
+                method: 'edit'
             })
         .otherwise({redirectTo: '/'});
 

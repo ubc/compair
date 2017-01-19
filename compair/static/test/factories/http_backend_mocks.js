@@ -66,6 +66,7 @@ module.exports.buildStorageFixture = function(storageFixture) {
         assignment_comparison_examples: {},
         criteria: {},
         groups: [],
+        lti_consumers: {},
         user_search_results: {
             "objects": [],
             "page":1,
@@ -907,6 +908,59 @@ module.exports.httpbackendMock = function(storageFixtures) {
         });
 
         // End Assignments
+
+
+        // LTI Consumers
+
+        // get lti consumers
+        $httpBackend.whenGET(/\/api\/lti\/consumers\?.*$/).respond(function(method, url, data, headers) {
+            var consumers = _.values(storageFixture.storage().lti_consumers);
+
+            return [200, {
+                "objects": consumers,
+                "page": 1,
+                "pages": 1,
+                "total": consumers.length,
+                "per_page": 20
+            }, {}]
+        });
+
+        // create new lti consumer
+        $httpBackend.whenPOST('/api/lti/consumers').respond(function(method, url, data, headers) {
+            data = JSON.parse(data);
+
+            var newConsumer = {
+                "id": generateNewId(_.keys(storageFixture.storage().lti_consumers).length + 1),
+                "oauth_consumer_key": data.oauth_consumer_key,
+                "oauth_consumer_secret": data.oauth_consumer_secret,
+                "active": true,
+                "created": "Mon, 18 Apr 2016 17:38:23 -0000",
+                "modified": "Mon, 18 Apr 2016 17:38:23 -0000"
+            }
+
+            storageFixture.storage().lti_consumers[newConsumer.id] = newConsumer;
+
+            return [200, newConsumer, {}];
+        });
+
+        // get lti consumer by id
+        $httpBackend.whenGET(/\/api\/lti\/consumers\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
+            var id = url.split('/').pop();
+            return [200, storageFixture.storage().lti_consumers[id], {}];
+        });
+
+        // edit lti consumer by id
+        $httpBackend.whenPOST(/\/api\/lti\/consumers\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
+            data = JSON.parse(data);
+
+            var id = url.split('/').pop();
+            storageFixture.storage().lti_consumers[id] = angular.merge(storageFixture.storage().lti_consumers[id], data);
+
+            return [200, storageFixture.storage().lti_consumers[id], {}];
+        });
+
+        // END LTI Consumers
+
 
         // Statements
         $httpBackend.whenPOST(/\/api\/statements$/).respond(function(method, url, data, headers) {

@@ -1,17 +1,20 @@
 var UserFactory = require('../../factories/user_factory.js');
 var userFactory = new UserFactory();
 
-var SessionFactory  = require('../../factories/session_factory.js');
+var SessionFactory = require('../../factories/session_factory.js');
 var sessionFactory = new SessionFactory();
 
-var CourseFactory  = require('../../factories/course_factory.js');
+var CourseFactory = require('../../factories/course_factory.js');
 var courseFactory = new CourseFactory();
 
-var AssignmentFactory  = require('../../factories/assignment_factory.js');
+var AssignmentFactory = require('../../factories/assignment_factory.js');
 var assignmentFactory = new AssignmentFactory();
 
-var CriterionFactory  = require('../../factories/criterion_factory.js');
+var CriterionFactory = require('../../factories/criterion_factory.js');
 var criterionFactory = new CriterionFactory();
+
+var LTIConsumerFactory = require('../../factories/lti_consumer_factory.js');
+var ltiConsumerFactory = new LTIConsumerFactory();
 
 var storage = {
     session: {},
@@ -22,6 +25,7 @@ var storage = {
     assignments: {},
     course_assignments: {},
     criteria: {},
+    lti_consumers: {},
     user_search_results: {}
 }
 
@@ -170,6 +174,16 @@ var assignment_upcoming = assignmentFactory.generateAssignment("4abcABC123-abcAB
 });
 storage.assignments[assignment_upcoming.id] = assignment_upcoming;
 storage.course_assignments[course.id].push(assignment_upcoming.id);
+
+var consumer1 = ltiConsumerFactory.generateConsumer("1abcABC123-abcABC123_Z", "consumer_key_1", "consumer_secret_1");
+var consumer2 = ltiConsumerFactory.generateConsumer("2abcABC123-abcABC123_Z", "consumer_key_2", "consumer_secret_2");
+var consumer3 = ltiConsumerFactory.generateConsumer("3abcABC123-abcABC123_Z", "consumer_key_3", "consumer_secret_3", {
+    "active": false
+});
+
+storage.lti_consumers[consumer1.id] = consumer1;
+storage.lti_consumers[consumer2.id] = consumer2;
+storage.lti_consumers[consumer3.id] = consumer3;
 
 // user_search_results
 storage.user_search_results.objects = [student2];

@@ -303,3 +303,13 @@ def get_score(restrict_user=True):
         ret['normalized_score'] = fields.Integer
 
     return ret
+
+def get_lti_consumer():
+    return {
+        'id': fields.String(attribute="uuid"),
+        'oauth_consumer_key': fields.String,
+        'oauth_consumer_secret': fields.String,
+        'active': fields.Boolean,
+        'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
+        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
+    }

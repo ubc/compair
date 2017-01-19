@@ -145,7 +145,8 @@ module.controller("UserListController",
             page: 1,
             perPage: 20,
             search: null,
-            orderBy: null
+            orderBy: null,
+            reverse: null
         };
         //$scope.SystemRole = SystemRole;
         //$scope.system_roles = [SystemRole.student, SystemRole.instructor]
@@ -181,7 +182,8 @@ module.controller("UserListController",
         $scope.updateTableOrderBy = function(predicate) {
             $scope.reverse = $scope.predicate == predicate && !$scope.reverse;
             $scope.predicate = predicate;
-            $scope.userFilters.orderBy = $scope.predicate + " " + ($scope.reverse ? "desc" : "asc");
+            $scope.userFilters.orderBy = $scope.predicate;
+            $scope.userFilters.reverse = $scope.reverse ? true : null;
         };
 
         $scope.updateUserList = function() {
@@ -225,7 +227,8 @@ module.controller("UserCourseController",
             page: 1,
             perPage: 20,
             search: null,
-            orderBy: null
+            orderBy: null,
+            reverse: null
         };
 
         $scope.course_roles = [CourseRole.student, CourseRole.teaching_assistant, CourseRole.instructor];
@@ -251,7 +254,8 @@ module.controller("UserCourseController",
         $scope.updateTableOrderBy = function(predicate) {
             $scope.reverse = $scope.predicate == predicate && !$scope.reverse;
             $scope.predicate = predicate;
-            $scope.courseFilters.orderBy = $scope.predicate + " " + ($scope.reverse ? "desc" : "asc");
+            $scope.courseFilters.orderBy = $scope.predicate;
+            $scope.courseFilters.reverse = $scope.reverse ? true : null;
         };
 
         $scope.updateCourseList = function() {
