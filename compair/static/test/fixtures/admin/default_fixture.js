@@ -109,7 +109,7 @@ storage.criteria[criterion3.id] = criterion3;
 
 // user_courses
 storage.user_courses[admin.id] = [
-    { courseId: course.id, courseRole: "Instructor", groupName: null },
+    { courseId: course.id, courseRole: "Instructor", groupName: group1 },
     { courseId: course2.id, courseRole: "Instructor", groupName: null }
 ];
 

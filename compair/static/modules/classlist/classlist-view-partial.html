@@ -128,17 +128,13 @@
             <tbody>
                 <tr ng-class="{'success': user.selected}" ng-repeat="user in classlist | orderBy:[predicate, 'firstname', 'lastname'] | emptyToEnd:predicate | orderBy:'':reverse">
                     <td class="nowrap">
-                        <a href="#/user/{{user.id}}/edit" target="_blank">
-                            Edit
-                        </a>
+                        <a href="#/user/{{user.id}}/edit" target="_blank">Edit</a>
                         <span>&nbsp;|&nbsp;</span>
-                        <a href="" confirmation-needed="unenrol(user.id)" keyword="user" ng-if="loggedInUserId != user.id || canManageUsers">
-                            Drop
-                        </a>
+                        <a href="" confirmation-needed="unenrol(user.id)" keyword="user" ng-if="loggedInUserId != user.id || canManageUsers">Drop</a>
                         <span ng-if="loggedInUserId == user.id && !canManageUsers" class="text-muted">&mdash;  &nbsp; &nbsp;</span>
-			<span>&nbsp;|&nbsp;</span>
-		    </td>
-		    <td>
+                        <span>&nbsp;|&nbsp;</span>
+                    </td>
+                    <td>
                         <input ng-click="user.selected = !user.selected; checkIfAllSelected()" type="checkbox" ng-checked="user.selected">
                     </td>
                     <td>{{user.firstname}}</td>

@@ -225,7 +225,7 @@ module.controller(
             if (groupName) {
                 GroupResource.enrol({'courseId': courseId, 'userId': userId, 'groupName': groupName}, {},
                     function (ret) {
-                        Toaster.success("Update Complete", "Successfully enrolled the user into " + ret.group_name);
+                        Toaster.success("Update Complete", "Successfully added the user to group " + ret.group_name);
                     },
                     function (ret) {
                         Toaster.reqerror("Update Not Completed", ret);
@@ -249,7 +249,7 @@ module.controller(
                     Toaster.success("User Added", 'Successfully changed '+ ret.fullname +'\'s course role to ' + ret.course_role);
                 },
                 function (ret) {
-                    Toaster.reqerror("User Add Failed", "Promblem encountered For ID " + user.id, ret);
+                    Toaster.reqerror("User Add Failed", "Problem encountered For ID " + user.id, ret);
                 }
             );
         };

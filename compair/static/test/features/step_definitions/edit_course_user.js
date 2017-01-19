@@ -45,6 +45,19 @@ var editCourseUserStepDefinitionsWrapper = function () {
         return element(by.cssContainingText("table th a", "Display Name")).click().click();
     });
 
+    this.When("I select the Instructor role for the second user", function () {
+        var roleSelect = element.all(by.exactRepeater("user in classlist"))
+            .get(1)
+            .element(by.model('user.course_role'));
+        if (browser.browserName == "firefox") {
+            roleSelect.click();
+        }
+
+        roleSelect.sendKeys('Instructor');
+        // force blur
+        return element(by.css("body")).click();
+    });
+
     this.When("I set the second user's group to '$groupname'", function (groupname) {
         var groupSelect = element.all(by.exactRepeater("user in classlist"))
             .get(1)

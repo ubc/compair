@@ -27,6 +27,11 @@ module.service('Interceptors', ['$q', '$cacheFactory', 'AnswerResource', functio
                 var url = response.config.url.match(/\/api\/courses\/[A-Za-z0-9_-]{22}/g);
                 cache.remove(url[0] + '/users');
             }
+            cache = $cacheFactory.get('$http');
+            if(cache) {
+                var url = response.config.url.match(/\/api\/courses\/[A-Za-z0-9_-]{22}/g);
+                cache.remove(url[0] + '/groups');
+            }
             return response.data;
         }
     };

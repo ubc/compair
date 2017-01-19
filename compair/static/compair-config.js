@@ -222,7 +222,7 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', '$locationProvi
         .when('/user/:userId/edit',
             {
                 templateUrl: 'modules/user/user-edit-partial.html',
-                label: "User Profile",
+                label: "Edit Account",
                 controller: 'UserController',
                 method: 'edit'
             })
@@ -232,6 +232,16 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', '$locationProvi
                 label: "User Profile",
                 controller: 'UserController',
                 method: 'view'
+            })
+        .when('/users',
+            {
+                templateUrl: 'modules/user/user-list-partial.html',
+                label: "Users"
+            })
+        .when('/users/:userId/course',
+            {
+                templateUrl: 'modules/user/user-course-partial.html',
+                label: "Manage User Courses",
             })
         .when('/lti',
             {

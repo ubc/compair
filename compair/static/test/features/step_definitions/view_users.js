@@ -1,0 +1,41 @@
+// Use the external Chai As Promised to deal with resolving promises in
+// expectations
+var chai = require('chai');
+var chaiAsPromised = require('chai-as-promised');
+chai.use(chaiAsPromised);
+
+var expect = chai.expect;
+
+var viewUsersStepDefinitionsWrapper = function () {
+
+    this.Then("I should see '$count' users listed", function (count) {
+        browser.waitForAngular();
+        return expect(element.all(by.exactRepeater("user in users"))
+            .count()).to.eventually.eql(parseInt(count));
+    });
+
+    this.Then("I should users with displaynames:", function (data) {
+        browser.waitForAngular();
+        var list = data.hashes().map(function(item) {
+            return item.displayname;
+        });
+
+        return expect(element.all(by.exactRepeater("user in users")
+            .column('user.displayname')).getText()).to.eventually.eql(list);
+    });
+
+    this.When("I select the root's Manage Courses link", function () {
+        // ignore target="_blank" for link (slows down tests to much)
+        browser.executeScript("$('a').attr('target','_self');");
+        return element.all(by.exactRepeater("user in users")).get(2)
+            .element(by.cssContainingText('a', 'Manage Courses')).click();
+    });
+
+    this.When("I filter users page by '$filter'", function (filter) {
+        element(by.css("form.search-users input")).sendKeys(filter);
+        // force blur
+        return element(by.css("body")).click();
+    });
+};
+
+module.exports = viewUsersStepDefinitionsWrapper;

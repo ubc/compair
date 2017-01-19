@@ -183,8 +183,25 @@ module.exports.httpbackendMock = function(storageFixtures) {
         });
 
         // search for user by text
-        $httpBackend.whenGET(/\/api\/users\?search\=.*$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenGET(/\/api\/users\?.*search\=.*$/).respond(function(method, url, data, headers) {
             return [200, storageFixture.storage().user_search_results, {}];
+        });
+
+        // get users
+        $httpBackend.whenGET(/\/api\/users\?.*$/).respond(function(method, url, data, headers) {
+            var users = _.values(storageFixture.storage().users);
+
+            users = _.sortBy(users, function(user) {
+                return user.firstname;
+            });
+
+            return [200, {
+                "objects": users,
+                "page": 1,
+                "pages": 1,
+                "total": users.length,
+                "per_page": 20
+            }, {}]
         });
 
         // get edit button availability
@@ -286,7 +303,65 @@ module.exports.httpbackendMock = function(storageFixtures) {
             }, {}]
         });
 
-        // get current user courses
+        // get user courses (fake search)
+        $httpBackend.whenGET(/\/api\/users\/[A-Za-z0-9_-]{22}\/courses\?.*search=CHEM.*$/).respond(function(method, url, data, headers) {
+            var userId = url.split('/')[3];
+            var courses = [];
+
+            if (storageFixture.storage().user_courses[userId]) {
+                angular.forEach(storageFixture.storage().user_courses[userId], function(userCourseInfo) {
+
+                    var course_copy = angular.copy(storageFixture.storage().courses[userCourseInfo.courseId]);
+                    course_copy.course_role = userCourseInfo.courseRole;
+                    course_copy.group_name = userCourseInfo.groupName;
+                    if (course_copy.name.indexOf("CHEM") !== -1) {
+                        courses.push(course_copy)
+                    }
+                });
+            }
+
+            courses = _.sortBy(courses, function(course) {
+                return course.name;
+            });
+
+            return [200, {
+                "objects": courses,
+                "page": 1,
+                "pages": 1,
+                "total": courses.length,
+                "per_page": 20
+            }, {}]
+        });
+
+        // get user courses
+        $httpBackend.whenGET(/\/api\/users\/[A-Za-z0-9_-]{22}\/courses\?.*$/).respond(function(method, url, data, headers) {
+            var userId = url.split('/')[3];
+            var courses = [];
+
+            if (storageFixture.storage().user_courses[userId]) {
+                angular.forEach(storageFixture.storage().user_courses[userId], function(userCourseInfo) {
+
+                    var course_copy = angular.copy(storageFixture.storage().courses[userCourseInfo.courseId]);
+                    course_copy.course_role = userCourseInfo.courseRole;
+                    course_copy.group_name = userCourseInfo.groupName;
+                    courses.push(course_copy)
+                });
+            }
+
+            courses = _.sortBy(courses, function(course) {
+                return course.name;
+            });
+
+            return [200, {
+                "objects": courses,
+                "page": 1,
+                "pages": 1,
+                "total": courses.length,
+                "per_page": 20
+            }, {}]
+        });
+
+        // get current user courses status
         $httpBackend.whenGET(/\/api\/users\/courses\/status\?.*$/).respond(function(method, url, data, headers) {
             var courses = _.values(storageFixture.storage().courses);
 
@@ -451,11 +526,18 @@ module.exports.httpbackendMock = function(storageFixtures) {
             return [200, returnData, {}];
         });
 
-        // drop user from coruse
+        // drop user from course
         $httpBackend.whenDELETE(/\/api\/courses\/[A-Za-z0-9_-]{22}\/users\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
             var userId = url.split('/').pop();
 
-            storageFixture.storage().user_courses[userId] = [];
+            if (storageFixture.storage().user_courses[userId]) {
+                angular.forEach(storageFixture.storage().user_courses[userId], function(userCourseInfo, index) {
+                    if (userCourseInfo.courseId == courseId) {
+                        storageFixture.storage().user_courses[userId].splice(index, 1);
+                    }
+                });
+            };
 
             var returnData = {
                 fullname: storageFixture.storage().users[userId].fullname,

@@ -18,11 +18,12 @@ var module = angular.module('ubc.ctlt.compair.user', [
 /***** Providers *****/
 module.factory('UserResource', ['$resource', function($resource) {
     var User = $resource('/api/users/:id', {id: '@id'}, {
-        'getUserCourses': {url: '/api/users/courses'},
-        'getUserCoursesStatus': {url: '/api/users/courses/status'},
-        'getTeachingUserCourses': {url: '/api/users/courses/teaching'},
-        'getEditButton': {url: '/api/users/:id/edit'},
-        'password': {method: 'POST', url: '/api/users/:id/password'}
+        getUserCourses: {url: '/api/users/courses'},
+        getUserCoursesById: {url: '/api/users/:id/courses'},
+        getUserCoursesStatus: {url: '/api/users/courses/status'},
+        getTeachingUserCourses: {url: '/api/users/courses/teaching'},
+        getEditButton: {url: '/api/users/:id/edit'},
+        password: {method: 'POST', url: '/api/users/:id/password'}
     });
     User.MODEL = "User";
 
@@ -128,5 +129,217 @@ module.controller("UserController",
         }
     }]
 );
+
+module.controller("UserListController",
+    ['$scope', '$location', 'UserResource', 'Toaster', 'breadcrumbs', 'Session', 'SystemRole',
+     'Authorize', 'xAPIStatementHelper',
+    function($scope, $location, UserResource, Toaster, breadcrumbs, Session, SystemRole,
+             Authorize, xAPIStatementHelper) {
+
+        $scope.predicate = 'firstname';
+        $scope.reverse = false;
+        $scope.loggedInUserId = null;
+        $scope.users = [];
+        $scope.totalNumUsers = 0;
+        $scope.userFilters = {
+            page: 1,
+            perPage: 20,
+            search: null,
+            orderBy: null
+        };
+        //$scope.SystemRole = SystemRole;
+        //$scope.system_roles = [SystemRole.student, SystemRole.instructor]
+
+        Session.getUser().then(function(user) {
+            $scope.loggedInUserId = user.id;
+        });
+
+        Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
+            $scope.canManageUsers = result;
+
+            if ($scope.canManageUsers) {
+                $scope.updateUserList();
+                // register watcher here so that we start watching when all filter values are set
+                $scope.$watchCollection('userFilters', filterWatcher);
+            } else {
+                $location.path('/');
+            }
+        });
+
+        $scope.updateUser = function(user) {
+            UserResource.save({'id': user.id}, user,
+                function (ret) {
+                    Toaster.success("User Successfully Updated", 'Your changes were saved.');
+                    $route.reload();
+                },
+                function (ret) {
+                    Toaster.reqerror("User Update Failed", ret);
+                }
+            );
+        };
+
+        $scope.updateTableOrderBy = function(predicate) {
+            $scope.reverse = $scope.predicate == predicate && !$scope.reverse;
+            $scope.predicate = predicate;
+            $scope.userFilters.orderBy = $scope.predicate + " " + ($scope.reverse ? "desc" : "asc");
+        };
+
+        $scope.updateUserList = function() {
+            UserResource.get($scope.userFilters).$promise.then(
+                function(ret) {
+                    $scope.users = ret.objects;
+                    $scope.totalNumUsers = ret.total;
+                },
+                function (ret) {
+                    Toaster.reqerror("Unable to retrieve users.", ret);
+                }
+            );
+        };
+        var filterWatcher = function(newValue, oldValue) {
+            if (angular.equals(newValue, oldValue)) return;
+            if (oldValue.search != newValue.search) {
+                $scope.userFilters.page = 1;
+            }
+            if (oldValue.orderBy != newValue.orderBy) {
+                $scope.userFilters.page = 1;
+            }
+            if(newValue.search === "") {
+                $scope.userFilters.search = null;
+            }
+            xAPIStatementHelper.filtered_page($scope.userFilters);
+            $scope.updateUserList();
+        };
+    }]
+);
+
+module.controller("UserCourseController",
+    ['$scope', '$location', '$route', '$routeParams', 'UserResource', 'CourseResource', 'GroupResource', 'ClassListResource',
+     'Toaster', 'breadcrumbs', 'Session', 'CourseRole', 'Authorize', 'xAPIStatementHelper', "moment",
+    function($scope, $location, $route, $routeParams, UserResource, CourseResource, GroupResource, ClassListResource,
+             Toaster, breadcrumbs, Session, CourseRole, Authorize, xAPIStatementHelper, moment) {
+
+        var userId;
+        $scope.user = {};
+        $scope.totalNumCourses = 0;
+        $scope.courseFilters = {
+            page: 1,
+            perPage: 20,
+            search: null,
+            orderBy: null
+        };
+
+        $scope.course_roles = [CourseRole.student, CourseRole.teaching_assistant, CourseRole.instructor];
+
+        Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
+            $scope.canManageUsers = result;
+
+            if ($scope.canManageUsers) {
+                userId = $routeParams.userId;
+                $scope.user = UserResource.get({'id': userId}, function (ret) {
+                    console.log(ret)
+                    breadcrumbs.options = {'Manage User Courses': "Manage {0}'s Courses".format(ret.fullname)};
+                });
+
+                $scope.updateCourseList();
+                // register watcher here so that we start watching when all filter values are set
+                $scope.$watchCollection('courseFilters', filterWatcher);
+            } else {
+                $location.path('/');
+            }
+        });
+
+        $scope.updateTableOrderBy = function(predicate) {
+            $scope.reverse = $scope.predicate == predicate && !$scope.reverse;
+            $scope.predicate = predicate;
+            $scope.courseFilters.orderBy = $scope.predicate + " " + ($scope.reverse ? "desc" : "asc");
+        };
+
+        $scope.updateCourseList = function() {
+            var params = angular.merge({'id': userId}, $scope.courseFilters);
+            UserResource.getUserCoursesById(params).$promise.then(
+                function(ret) {
+                    $scope.courses = ret.objects;
+                    _.forEach($scope.courses, function(course) {
+                        course.completed = course.end_date && moment().isAfter(course.end_date);
+                        course.before_start = course.start_date && moment().isBefore(course.start_date);
+                        course.in_progress = !(course.completed || course.before_start);
+
+                        course.groups = [];
+                        GroupResource.get({'courseId':course.id}).$promise.then(
+                            function (ret) {
+                                course.groups = ret.objects;
+                            }
+                        );
+                    });
+                    $scope.totalNumCourses = ret.total;
+                },
+                function (ret) {
+                    Toaster.reqerror("Unable to retrieve user's courses.", ret);
+                }
+            );
+        };
+
+        $scope.dropCourse = function(course) {
+            ClassListResource.unenrol({'courseId': course.id, 'userId': userId},
+                function (ret) {
+                    Toaster.success("User Removed", "Successfully unenrolled " + ret.fullname + " from the course.");
+                    $route.reload();
+                },
+                function (ret) {
+                    Toaster.reqerror("User Not Removed", ret);
+                }
+            )
+        };
+
+        $scope.updateRole = function(course) {
+            ClassListResource.enrol({'courseId': course.id, 'userId': userId}, course,
+                function (ret) {
+                    Toaster.success("User Added", 'Successfully changed '+ ret.fullname +'\'s course role to ' + ret.course_role);
+                },
+                function (ret) {
+                    Toaster.reqerror("User Add Failed", "Problem encountered with " + course.name, ret);
+                }
+            );
+        };
+
+        $scope.updateGroup = function(course) {
+            if (course.group_name && course.group_name != "") {
+                GroupResource.enrol({'courseId': course.id, 'userId': userId, 'groupName': course.group_name}, {},
+                    function (ret) {
+                        Toaster.success("Update Complete", "Successfully added the user to group " + ret.group_name);
+                    },
+                    function (ret) {
+                        Toaster.reqerror("Update Not Completed", ret);
+                    }
+                );
+            } else {
+                GroupResource.unenrol({'courseId': course.id, 'userId': userId},
+                    function (ret) {
+                        Toaster.success("User Removed", "Successfully removed the user from the group.");
+                    },
+                    function (ret) {
+                        Toaster.reqerror("User Not Removed", ret);
+                    }
+                );
+            }
+        };
+
+        var filterWatcher = function(newValue, oldValue) {
+            if (angular.equals(newValue, oldValue)) return;
+            if (oldValue.search != newValue.search) {
+                $scope.courseFilters.page = 1;
+            }
+            if (oldValue.orderBy != newValue.orderBy) {
+                $scope.courseFilters.page = 1;
+            }
+            if(newValue.search === "") {
+                $scope.courseFilters.search = null;
+            }
+            xAPIStatementHelper.filtered_page($scope.courseFilters);
+            $scope.updateCourseList();
+        };
+    }]
+);
+
 // End anonymous function
 })();

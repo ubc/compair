@@ -1,0 +1,80 @@
+<div ng-controller="UserCourseController" class="user-courses-screen">
+
+    <div class="row">
+        <h1 class="col-sm-8">Manage {{ user.displayname }}'s courses</h1>
+
+        <form class="col-sm-4 search-courses text-right" role="search" ng-show="courses.length || courseFilters.search">
+            <div class="form-group">
+                <input class="form-control" type="text" name="search" placeholder="Filter courses by keyword"
+                       ng-model="courseFilters.search">
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive" ng-if="courses.length">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Actions</th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('name')">Name</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('year')">Year</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('term')">Term</a>
+                    </th>
+                    <th>Course Status</th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('course_role')">Course Role</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('group_name')">Group</a>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="course in courses">
+                    <td class="nowrap">
+                        <a href="" confirmation-needed="dropCourse(course)" keyword="user" ng-if="loggedInUserId != user.id || canManageUsers">Drop</a>
+                    </td>
+                    <td><a ng-href="#/course/{{course.id}}">{{course.name}}</a></td>
+                    <td>{{course.year}}</td>
+                    <td>{{course.term}}</td>
+                    <td>
+                        <span ng-if="course.before_start">Not yet started</span>
+                        <span ng-if="course.completed">Completed</span>
+                        <span ng-if="course.in_progress">Currently in progress</span>
+                    <td>
+                        <select ng-model="course.course_role"
+                                ng-options="course_role as course_role for course_role in course_roles"
+                                ng-change="updateRole(course)"></select>
+                    </td>
+                    <td>
+                        <select ng-model="course.group_name"
+                                ng-options="g as g for g in course.groups"
+                                ng-change="updateGroup(course)"
+                                ng-if="course.groups.length">
+                            <option value="">- None -</option>
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-center" ng-if="courses.length">
+        <pagination total-items="totalNumCourses" ng-model="courseFilters.page"
+                    max-size="10" class="pagination-sm" boundary-links="true"
+                    direction-links="false" items-per-page="courseFilters.perPage"
+                    num-pages="numPages" ng-hide="numPages == 1"></pagination>
+    </div>
+
+    <div ng-if="!courses.length">
+        <hr />
+        <p ng-if="!courseFilters.search">No courses found. Select <a href="#/users">another user</a>.</p>
+        <p ng-if="courseFilters.search">No courses found for this search. Please try another search term above.</p>
+    </div>
+
+</div>

@@ -53,6 +53,12 @@ Feature: Edit Course Users
   Scenario: Changing user's group in course as instructor
     Given I'm an Instructor
     And I'm on 'edit course user' page for course with id '1abcABC123-abcABC123_Z'
+    When I select the Instructor role for the second user
+    Then I should see a success message
+
+  Scenario: Changing user's group in course as instructor
+    Given I'm an Instructor
+    And I'm on 'edit course user' page for course with id '1abcABC123-abcABC123_Z'
     When I set the second user's group to 'Second Group'
     Then I should see a success message
 

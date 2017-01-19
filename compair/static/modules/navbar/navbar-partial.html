@@ -47,6 +47,12 @@
                             Add Course
                         </a>
                     </li>
+                    <li ng-if="canManageUsers">
+                        <a ng-href="#/users" id="view-users-btn">
+                            <i class="fa fa-users"></i>
+                            Manage Users
+                        </a>
+                    </li>
                     <li ng-if="canCreateUsers">
                         <a ng-href="#/user/create" id="create-user-btn">
                             <i class="fa fa-user"></i>
