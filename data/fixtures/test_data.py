@@ -512,7 +512,7 @@ class TestFixture:
         self.draft_student = None
         db.session.commit()
 
-    def add_course(self, num_students=5, num_assignments=1, num_groups=0, num_answers='#', with_draft_student=False, with_comparisons=False):
+    def add_course(self, num_students=5, num_assignments=1, num_additional_criteria=0, num_groups=0, num_answers='#', with_draft_student=False, with_comparisons=False):
         self.course = CourseFactory()
         self.instructor = UserFactory(system_role=SystemRole.instructor)
         self.enrol_user(self.instructor, self.course, CourseRole.instructor)
@@ -523,7 +523,7 @@ class TestFixture:
 
         self.add_students(num_students, num_groups)
 
-        self.add_assignments(num_assignments)
+        self.add_assignments(num_assignments, num_additional_criteria=num_additional_criteria)
         # create a shortcut for first assignment as it is frequently used
         self.assignment = self.assignments[0]
 
@@ -559,12 +559,13 @@ class TestFixture:
                 )
                 # half of the answers have scores
                 if i < num_answers/2:
-                    ScoreFactory(
-                        assignment=assignment,
-                        answer=answer,
-                        criterion=assignment.criteria[0],
-                        score=random.random() * 5
-                    )
+                    for criterion in assignment.criteria:
+                        ScoreFactory(
+                            assignment=assignment,
+                            answer=answer,
+                            criterion=criterion,
+                            score=random.random() * 5
+                        )
                 self.answers.append(answer)
 
             for dropped_student in self.dropped_students:
@@ -612,14 +613,29 @@ class TestFixture:
 
         return self
 
-    def add_assignments(self, num_assignments=1, is_answer_period_end=False):
+    def add_assignments(self, num_assignments=1, num_additional_criteria=0, is_answer_period_end=False):
         for _ in range(num_assignments):
             answer_end = datetime.datetime.now() - datetime.timedelta(
                 days=2) if is_answer_period_end else datetime.datetime.now() + datetime.timedelta(days=7)
             assignment = AssignmentFactory(course=self.course, answer_end=answer_end)
-            AssignmentCriterionFactory(criterion=DefaultFixture.DEFAULT_CRITERION, assignment=assignment)
+
+            # default criterion
+            AssignmentCriterionFactory(criterion=DefaultFixture.DEFAULT_CRITERION, assignment=assignment, position=0)
+
+            # disabled criterion
             disabled_criterion = CriterionFactory(user=self.instructor, default=False, active=False)
-            AssignmentCriterionFactory(criterion=disabled_criterion, assignment=assignment, active=False)
+            AssignmentCriterionFactory(criterion=disabled_criterion, assignment=assignment, active=False, position=1)
+
+            # additional criterion
+            for i in range(num_additional_criteria):
+                criterion = CriterionFactory(user=self.instructor, default=False)
+                AssignmentCriterionFactory(criterion=criterion, assignment=assignment, position=i+2)
+
+            db.session.commit()
+
+            # need to reorder after update
+            assignment.assignment_criteria.reorder()
+
             self.assignments.append(assignment)
         db.session.commit()
 
