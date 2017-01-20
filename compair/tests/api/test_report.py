@@ -7,12 +7,13 @@ import unicodecsv as csv
 from data.fixtures.test_data import TestFixture
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.models import CourseRole, Answer, Comparison, AnswerComment
+from compair.core import db
 from flask import current_app
 
 class ReportAPITest(ComPAIRAPITestCase):
     def setUp(self):
         super(ReportAPITest, self).setUp()
-        self.fixtures = TestFixture().add_course(num_students=30, num_assignments=2, num_groups=2, num_answers=25,
+        self.fixtures = TestFixture().add_course(num_students=30, num_assignments=2, num_additional_criteria=1, num_groups=2, num_answers=25,
             with_draft_student=True)
         self.url = "/api/courses/" + self.fixtures.course.uuid + "/report"
         self.files_to_cleanup = []
@@ -84,6 +85,39 @@ class ReportAPITest(ComPAIRAPITestCase):
             }
 
             # test authorized user entire course
+            rv = self.client.post(self.url, data=json.dumps(input), content_type='application/json')
+            self.assert200(rv)
+            self.assertIsNotNone(rv.json['file'])
+            file_name = rv.json['file'].split("/")[-1]
+            self.files_to_cleanup.append(file_name)
+
+            tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
+            with open(tmp_name, 'rb') as csvfile:
+                reader = csv.reader(csvfile, delimiter=',')
+
+                heading1 = next(reader)
+                heading2 = next(reader)
+                assignments = self.fixtures.assignments
+                self._check_participation_report_heading_rows(assignments, heading1, heading2)
+
+                for student in self.fixtures.students:
+                    next_row = next(reader)
+                    self._check_participation_report_user_row(assignments, student, next_row)
+
+            # test authorized user entire course (reversed criterion order)
+            for assignment in self.fixtures.assignments:
+                assignment_criteria = [assignment_criterion \
+                    for assignment_criterion in assignment.assignment_criteria \
+                    if assignment_criterion.active]
+                assignment_criteria.reverse()
+
+                for index, assignment_criterion in enumerate(assignment_criteria):
+                    assignment.assignment_criteria.remove(assignment_criterion)
+                    assignment.assignment_criteria.insert(index, assignment_criterion)
+
+                db.session.commit()
+                assignment.assignment_criteria.reorder()
+
             rv = self.client.post(self.url, data=json.dumps(input), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
@@ -294,161 +328,162 @@ class ReportAPITest(ComPAIRAPITestCase):
 
 
     def _check_participation_stat_report_heading_rows(self, heading):
-            expected_heading = ['Assignment', 'User UUID', 'Last Name', 'First Name',
-                'Answer Submitted', 'Answer ID', 'Evaluations Submitted', 'Evaluations Required',
-                'Evaluation Requirements Met', 'Replies Submitted']
+        expected_heading = ['Assignment', 'User UUID', 'Last Name', 'First Name',
+            'Answer Submitted', 'Answer ID', 'Evaluations Submitted', 'Evaluations Required',
+            'Evaluation Requirements Met', 'Replies Submitted']
 
-            self.assertEqual(expected_heading, heading)
+        self.assertEqual(expected_heading, heading)
 
     def _check_participation_stat_report_user_overall_row(self, student, row, overall_stats):
-            default_criterion = self.fixtures.default_criterion
-            excepted_row = []
+        excepted_row = []
 
-            overall_stats.setdefault(student.id, {
-                'answers_submitted': 0,
-                'evaluations_submitted': 0,
-                'evaluations_required': 0,
-                'evaluation_requirments_met': True,
-                'replies_submitted': 0
-            })
-            user_stats = overall_stats[student.id]
+        overall_stats.setdefault(student.id, {
+            'answers_submitted': 0,
+            'evaluations_submitted': 0,
+            'evaluations_required': 0,
+            'evaluation_requirements_met': True,
+            'replies_submitted': 0
+        })
+        user_stats = overall_stats[student.id]
 
-            excepted_row.append("(Overall in Course)")
-            excepted_row.append(student.uuid)
-            excepted_row.append(student.lastname)
-            excepted_row.append(student.firstname)
-            excepted_row.append(str(user_stats["answers_submitted"]))
-            excepted_row.append("(Overall in Course)")
-            excepted_row.append(str(user_stats["evaluations_submitted"]))
-            excepted_row.append(str(user_stats["evaluations_required"]))
-            excepted_row.append("Yes" if user_stats["evaluation_requirments_met"] else "No")
-            excepted_row.append(str(user_stats["replies_submitted"]))
+        excepted_row.append("(Overall in Course)")
+        excepted_row.append(student.uuid)
+        excepted_row.append(student.lastname)
+        excepted_row.append(student.firstname)
+        excepted_row.append(str(user_stats["answers_submitted"]))
+        excepted_row.append("(Overall in Course)")
+        excepted_row.append(str(user_stats["evaluations_submitted"]))
+        excepted_row.append(str(user_stats["evaluations_required"]))
+        excepted_row.append("Yes" if user_stats["evaluation_requirements_met"] else "No")
+        excepted_row.append(str(user_stats["replies_submitted"]))
 
-            self.assertEqual(row, excepted_row)
+        self.assertEqual(row, excepted_row)
 
 
     def _check_participation_stat_report_user_row(self, assignment, student, row, overall_stats):
-            default_criterion = self.fixtures.default_criterion
-            excepted_row = []
+        excepted_row = []
 
-            overall_stats.setdefault(student.id, {
-                'answers_submitted': 0,
-                'evaluations_submitted': 0,
-                'evaluations_required': 0,
-                'evaluation_requirments_met': True,
-                'replies_submitted': 0
-            })
-            user_stats = overall_stats[student.id]
+        overall_stats.setdefault(student.id, {
+            'answers_submitted': 0,
+            'evaluations_submitted': 0,
+            'evaluations_required': 0,
+            'evaluation_requirements_met': True,
+            'replies_submitted': 0
+        })
+        user_stats = overall_stats[student.id]
 
-            excepted_row.append(assignment.name)
-            excepted_row.append(student.uuid)
-            excepted_row.append(student.lastname)
-            excepted_row.append(student.firstname)
+        excepted_row.append(assignment.name)
+        excepted_row.append(student.uuid)
+        excepted_row.append(student.lastname)
+        excepted_row.append(student.firstname)
 
-            answer = Answer.query \
-                .filter_by(
-                    user_id=student.id,
-                    assignment_id=assignment.id,
-                    draft=False,
-                    practice=False
-                ) \
-                .first()
+        answer = Answer.query \
+            .filter_by(
+                user_id=student.id,
+                assignment_id=assignment.id,
+                draft=False,
+                practice=False
+            ) \
+            .first()
 
-            if answer:
-                user_stats["answers_submitted"] += 1
-                excepted_row.append("1")
-                excepted_row.append(answer.uuid)
-            else:
-                excepted_row.append("0")
-                excepted_row.append("N/A")
+        if answer:
+            user_stats["answers_submitted"] += 1
+            excepted_row.append("1")
+            excepted_row.append(answer.uuid)
+        else:
+            excepted_row.append("0")
+            excepted_row.append("N/A")
 
-            comparisons = Comparison.query \
-                .filter(
-                    Comparison.user_id == student.id,
-                    Comparison.assignment_id == assignment.id,
-                    Comparison.criterion_id == default_criterion.id
-                ) \
-                .all()
-            evaluations_submitted = len(comparisons)
+        comparisons = Comparison.query \
+            .filter(
+                Comparison.user_id == student.id,
+                Comparison.assignment_id == assignment.id,
+                Comparison.criterion_id == assignment.criteria[0].id
+            ) \
+            .all()
+        evaluations_submitted = len(comparisons)
 
-            user_stats["evaluations_submitted"] += evaluations_submitted
-            excepted_row.append(str(evaluations_submitted))
+        user_stats["evaluations_submitted"] += evaluations_submitted
+        excepted_row.append(str(evaluations_submitted))
 
-            user_stats["evaluations_required"] += assignment.total_comparisons_required
-            excepted_row.append(str(assignment.total_comparisons_required))
+        user_stats["evaluations_required"] += assignment.total_comparisons_required
+        excepted_row.append(str(assignment.total_comparisons_required))
 
-            if assignment.total_comparisons_required > evaluations_submitted:
-                user_stats["evaluation_requirments_met"] = False
-                excepted_row.append("No")
-            else:
-                excepted_row.append("Yes")
+        if assignment.total_comparisons_required > evaluations_submitted:
+            user_stats["evaluation_requirements_met"] = False
+            excepted_row.append("No")
+        else:
+            excepted_row.append("Yes")
 
-            answer_comments = AnswerComment.query \
-                .filter(
-                    AnswerComment.user_id == student.id,
-                    AnswerComment.assignment_id == assignment.id
-                ) \
-                .all()
+        answer_comments = AnswerComment.query \
+            .filter(
+                AnswerComment.user_id == student.id,
+                AnswerComment.assignment_id == assignment.id
+            ) \
+            .all()
 
-            replies_submitted = len(answer_comments)
+        replies_submitted = len(answer_comments)
 
-            user_stats["replies_submitted"] += replies_submitted
-            excepted_row.append(str(replies_submitted))
+        user_stats["replies_submitted"] += replies_submitted
+        excepted_row.append(str(replies_submitted))
 
-            self.assertEqual(row, excepted_row)
+        self.assertEqual(row, excepted_row)
 
 
     def _check_participation_report_heading_rows(self, assignments, heading1, heading2):
-            default_criterion = self.fixtures.default_criterion
-
-            expected_heading1 = ['', '', '']
-            for assignment in assignments:
-                expected_heading1.append(assignment.name)
+        expected_heading1 = ['', '', '']
+        for assignment in assignments:
+            expected_heading1.append(assignment.name)
+            for criterion in assignment.criteria:
                 expected_heading1.append("")
 
-            expected_heading2 = ['Last Name', 'First Name', 'Student No']
-            for assignment in assignments:
-                expected_heading2.append("Percentage Score for \""+default_criterion.name+"\"")
-                expected_heading2.append("Evaluations Submitted ("+str(assignment.total_comparisons_required)+" required)")
+        expected_heading2 = ['Last Name', 'First Name', 'Student No']
+        for assignment in assignments:
+            for criterion in assignment.criteria:
+                expected_heading2.append("Percentage Score for \""+criterion.name+"\"")
+            expected_heading2.append("Evaluations Submitted ("+str(assignment.total_comparisons_required)+" required)")
 
-            self.assertEqual(expected_heading1, heading1)
-            self.assertEqual(expected_heading2, heading2)
+        self.assertEqual(expected_heading1, heading1)
+        self.assertEqual(expected_heading2, heading2)
 
     def _check_participation_report_user_row(self, assignments, student, row):
-            default_criterion = self.fixtures.default_criterion
+        self.assertEqual(row[0], student.lastname)
+        self.assertEqual(row[1], student.firstname)
+        self.assertEqual(row[2], student.student_number)
 
-            self.assertEqual(row[0], student.lastname)
-            self.assertEqual(row[1], student.firstname)
-            self.assertEqual(row[2], student.student_number)
+        index = 3
+        for assignment in assignments:
+            answer = Answer.query \
+                .filter(
+                    Answer.user_id == student.id,
+                    Answer.assignment_id == assignment.id,
+                    Answer.draft == False
+                ) \
+                .first()
 
-            index = 3
-            for assignment in assignments:
-                answer = Answer.query \
-                    .filter(
-                        Answer.user_id == student.id,
-                        Answer.assignment_id == assignment.id,
-                        Answer.draft == False
-                    ) \
-                    .first()
-
+            for criterion in assignment.criteria:
                 if answer:
-                    if len(answer.scores) > 0:
-                        normalized_score = answer.scores[0].normalized_score
-                        self.assertAlmostEqual(float(row[index]), normalized_score)
+                    score = next((
+                        score for score in answer.scores \
+                        if score.criterion_id == criterion.id
+                    ), None)
+                    if score:
+                        self.assertAlmostEqual(float(row[index]), score.normalized_score)
                     else:
                         self.assertEqual(row[index], "Not Evaluated")
                 else:
                     self.assertEqual(row[index], "No Answer")
                 index += 1
 
-                comparisons = Comparison.query \
-                    .filter(
-                        Comparison.user_id == student.id,
-                        Comparison.assignment_id == assignment.id,
-                        Comparison.criterion_id == default_criterion.id
-                    ) \
-                    .all()
-                evaluations_submitted = len(comparisons)
 
-                self.assertEqual(row[index], str(evaluations_submitted))
-                index += 1
+            comparisons = Comparison.query \
+                .filter(
+                    Comparison.user_id == student.id,
+                    Comparison.assignment_id == assignment.id,
+                    Comparison.criterion_id == assignment.criteria[0].id
+                ) \
+                .all()
+            evaluations_submitted = len(comparisons)
+
+            self.assertEqual(row[index], str(evaluations_submitted))
+            index += 1

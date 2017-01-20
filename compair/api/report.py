@@ -97,6 +97,7 @@ class ReportRootAPI(Resource):
                         assignment_id=assignment.id,
                         active=True
                     ) \
+                    .order_by(AssignmentCriterion.position) \
                     .all()
 
                 title_row1 += [assignment.name] + [""] * len(assignment_criteria)
@@ -276,7 +277,7 @@ def participation_report(course, assignments, group_name):
     assignment_criteria = AssignmentCriterion.query \
         .filter(AssignmentCriterion.assignment_id.in_(assignment_ids)) \
         .filter_by(active=True) \
-        .order_by(AssignmentCriterion.id) \
+        .order_by(AssignmentCriterion.position) \
         .all()
 
     criteria = {}  # structure - assignment_id/criterion_id
