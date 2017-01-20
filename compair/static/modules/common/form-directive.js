@@ -128,6 +128,8 @@ module.service('EditorOptions', function() {
         // change Code Snippet's theme
         codeSnippet_theme: 'foundation',
 
+        linkShowTargetTab: false,
+
         height: "150px",
 
         // enable custom plugin that combines ASCIIMath and LaTeX math input and code highlighting

@@ -73,13 +73,6 @@
 
         <!-- MathJax, should figure out how to bower manage this -->
         <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_HTMLorMML&delayStartupUntil=configured"></script>
-        <script type="text/javascript">
-        MathJax.Hub.Config({
-          skipStartupTypeset: true
-        });
-        MathJax.Hub.Configured();
-        CKEDITOR.plugins.addExternal( 'combinedmath', '/app/lib_extension/ckeditor/plugins/combinedmath/' );
-        </script>
 
         <!-- build:prod_minify_js -->
         <!-- AngularJS Modules/Controllers/Services/etc -->
