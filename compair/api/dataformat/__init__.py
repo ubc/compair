@@ -113,6 +113,7 @@ def get_assignment(restrict_user=True):
 
         'name': fields.String,
         'description': fields.String,
+        'peer_feedback_prompt': fields.String(default=None),
         'number_of_comparisons': fields.Integer,
         'total_comparisons_required': fields.Integer,
         'total_steps_required': fields.Integer,

@@ -438,6 +438,7 @@ describe('course-module', function () {
                         }
                     ],
                     "description": "",
+                    "peer_feedback_prompt": null,
                     "educators_can_compare": false,
                     "enable_self_evaluation": false,
                     "evaluation_count": 0,
@@ -489,6 +490,7 @@ describe('course-module', function () {
                         }
                     ],
                     "description": "",
+                    "peer_feedback_prompt": null,
                     "educators_can_compare": false,
                     "enable_self_evaluation": false,
                     "evaluation_count": 0,

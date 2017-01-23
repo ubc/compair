@@ -8,6 +8,7 @@ from flask_restful import Resource, marshal, abort
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import desc, or_, func, and_
 from sqlalchemy.orm import joinedload, undefer_group, load_only
+from six import text_type
 
 from . import dataformat
 from compair.core import db, event
@@ -19,9 +20,16 @@ from .util import new_restful_api, get_model_changes
 assignment_api = Blueprint('assignment_api', __name__)
 api = new_restful_api(assignment_api)
 
+def non_blank_text(value):
+    if value is None:
+        return None
+    else:
+        return None if text_type(value).strip() == "" else text_type(value)
+
 new_assignment_parser = RequestParser()
 new_assignment_parser.add_argument('name', required=True, help="Assignment name is required.")
 new_assignment_parser.add_argument('description', default=None)
+new_assignment_parser.add_argument('peer_feedback_prompt', type=non_blank_text, default=None)
 new_assignment_parser.add_argument('answer_start', required=True)
 new_assignment_parser.add_argument('answer_end', required=True)
 new_assignment_parser.add_argument('compare_start', default=None)
@@ -104,6 +112,7 @@ class AssignmentIdAPI(Resource):
         # modify assignment according to new values, preserve original values if values not passed
         assignment.name = params.get("name", assignment.name)
         assignment.description = params.get("description", assignment.description)
+        assignment.peer_feedback_prompt = params.get("peer_feedback_prompt", assignment.peer_feedback_prompt)
         assignment.answer_start = datetime.datetime.strptime(
             params.get('answer_start', assignment.answer_start),
             '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -297,6 +306,7 @@ class AssignmentRootAPI(Resource):
         new_assignment.user_id = current_user.id
         new_assignment.name = params.get("name")
         new_assignment.description = params.get("description")
+        new_assignment.peer_feedback_prompt = params.get("peer_feedback_prompt")
         new_assignment.answer_start = dateutil.parser.parse(params.get('answer_start'))
         new_assignment.answer_end = dateutil.parser.parse(params.get('answer_end'))
         new_assignment.educators_can_compare = params.get("educators_can_compare")

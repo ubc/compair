@@ -714,6 +714,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "compared": false,
                 "compare_period": false,
                 "modified": "Wed, 20 Apr 2016 21:50:31 -0000",
+                "peer_feedback_prompt": null,
                 "enable_self_evaluation": false,
                 "content": null,
                 "file": [],

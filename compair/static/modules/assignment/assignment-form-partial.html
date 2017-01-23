@@ -272,6 +272,23 @@
 
         <br />
 
+        <input id="peerFeedbackCheck" type="checkbox" ng-model="assignment.peerFeedbackCheck" ng-checked="assignment.peerFeedbackCheck || assignment.peer_feedback_prompt" ng-disabled="assignment.peer_feedback_prompt">
+        <label class="not-bold" for="peerFeedbackCheck">Use custom peer feedback prompt</label>
+        <span ng-show="!showPeerFeedbackDefaultText">(<a ng-click="showPeerFeedbackDefaultText = true">show default</a>)</span>
+        <span ng-show="showPeerFeedbackDefaultText">(<a ng-click="showPeerFeedbackDefaultText = false;">hide default</a>)</span>
+        <div class="intro-text" ng-show="showPeerFeedbackDefaultText">
+            Use any instructor-provided guidelines or answer general questions, based on the criteria above:
+            <strong>What did the author do well? Where might the author improve?</strong>
+            Remember to make your comments—including criticisms—encouraging, respectful, and specific.
+        </div>
+        <div ng-if="assignment.peerFeedbackCheck || assignment.peer_feedback_prompt">
+            <div class="form-group">
+                <textarea ng-model="assignment.peer_feedback_prompt" id="assignmentPeerFeedbackPrompt" class="form-control" ckeditor="editorOptions" rows="4"></textarea>
+            </div>
+        </div>
+
+        <br />
+
         <input id="enable_self_evaluation" type="checkbox" name="enable_self_evaluation" ng-model="assignment.enable_self_evaluation">
         <label class="not-bold" for="enable_self_evaluation">Require that students also evaluate their own answer (after peer comparisons)</label>
 
