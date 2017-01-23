@@ -129,6 +129,13 @@ class AssignmentIdAPI(Resource):
             assignment.compare_end = datetime.datetime.strptime(
                 params.get('compare_end', assignment.compare_end),
                 '%Y-%m-%dT%H:%M:%S.%fZ')
+
+        # validate answer + comparison period start & end times
+        valid, error_message = Assignment.validate_periods(course.start_date, course.end_date,
+             assignment.answer_start, assignment.answer_end, assignment.compare_start, assignment.compare_end)
+        if not valid:
+            return {"error": error_message}, 400
+
         assignment.students_can_reply = params.get('students_can_reply', False)
         assignment.number_of_comparisons = params.get(
             'number_of_comparisons', assignment.number_of_comparisons)
@@ -336,6 +343,13 @@ class AssignmentRootAPI(Resource):
         new_assignment.compare_end = params.get('compare_end', None)
         if new_assignment.compare_end is not None:
             new_assignment.compare_end = dateutil.parser.parse(params.get('compare_end', None))
+
+        # validate answer + comparison period start & end times
+        valid, error_message = Assignment.validate_periods(course.start_date, course.end_date,
+             new_assignment.answer_start, new_assignment.answer_end,
+             new_assignment.compare_start, new_assignment.compare_end)
+        if not valid:
+            return {"error": error_message}, 400
 
         new_assignment.students_can_reply = params.get('students_can_reply', False)
         new_assignment.number_of_comparisons = params.get('number_of_comparisons')

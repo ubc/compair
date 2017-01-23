@@ -72,6 +72,9 @@ class CourseListAPI(Resource):
                 new_course.end_date,
                 '%Y-%m-%dT%H:%M:%S.%fZ')
 
+        if new_course.start_date and new_course.end_date and new_course.start_date > new_course.end_date:
+            return {"error": 'Course end time must be after course start time'}, 400
+
         try:
             # create the course
             db.session.add(new_course)
@@ -145,6 +148,9 @@ class CourseAPI(Resource):
                 course.end_date,
                 '%Y-%m-%dT%H:%M:%S.%fZ')
 
+        if course.start_date and course.end_date and course.start_date > course.end_date:
+            return {"error": 'Course end time must be after course start time'}, 400
+
         db.session.commit()
 
         on_course_modified.send(
@@ -187,6 +193,17 @@ class CourseDuplicateAPI(Resource):
 
         params = duplicate_course_parser.parse_args()
 
+        start_date = datetime.datetime.strptime(
+            params.get("start_date"), '%Y-%m-%dT%H:%M:%S.%fZ'
+        ) if params.get("start_date") else None
+
+        end_date = datetime.datetime.strptime(
+            params.get("end_date"), '%Y-%m-%dT%H:%M:%S.%fZ'
+        ) if params.get("end_date") else None
+
+        if start_date and end_date and start_date > end_date:
+            return {"error": 'Course end time must be after course start time'}, 400
+
         assignments = [assignment for assignment in course.assignments if assignment.active]
         assignments_copy_data = params.get("assignments")
 
@@ -194,16 +211,13 @@ class CourseDuplicateAPI(Resource):
             return {"error": "Not enough assignment data provided to duplication course"}, 400
 
         for assignment_copy_data in assignments_copy_data:
-            if not assignment_copy_data.get('answer_start'):
-                return {"error": "No answer start date provided for assignment "+assignment_copy_data.id}, 400
+            if assignment_copy_data.get('answer_start'):
+                assignment_copy_data['answer_start'] = datetime.datetime.strptime(
+                    assignment_copy_data.get('answer_start'), '%Y-%m-%dT%H:%M:%S.%fZ')
 
-            if not assignment_copy_data.get('answer_end'):
-                return {"error": "No answer end date provided for assignment "+assignment_copy_data.id}, 400
-
-            assignment_copy_data['answer_start'] = datetime.datetime.strptime(
-                assignment_copy_data.get('answer_start'), '%Y-%m-%dT%H:%M:%S.%fZ')
-            assignment_copy_data['answer_end'] = datetime.datetime.strptime(
-                assignment_copy_data.get('answer_end'), '%Y-%m-%dT%H:%M:%S.%fZ')
+            if assignment_copy_data.get('answer_end'):
+                assignment_copy_data['answer_end'] = datetime.datetime.strptime(
+                    assignment_copy_data.get('answer_end'), '%Y-%m-%dT%H:%M:%S.%fZ')
 
             if assignment_copy_data.get('compare_start'):
                 assignment_copy_data['compare_start'] = datetime.datetime.strptime(
@@ -213,13 +227,12 @@ class CourseDuplicateAPI(Resource):
                 assignment_copy_data['compare_end'] = datetime.datetime.strptime(
                     assignment_copy_data.get('compare_end'), '%Y-%m-%dT%H:%M:%S.%fZ')
 
-        start_date = datetime.datetime.strptime(
-            params.get("start_date"), '%Y-%m-%dT%H:%M:%S.%fZ'
-        ) if params.get("start_date") else None
-
-        end_date = datetime.datetime.strptime(
-            params.get("end_date"), '%Y-%m-%dT%H:%M:%S.%fZ'
-        ) if params.get("end_date") else None
+            valid, error_message = Assignment.validate_periods(start_date, end_date,
+                assignment_copy_data.get('answer_start'), assignment_copy_data.get('answer_end'),
+                assignment_copy_data.get('compare_start'), assignment_copy_data.get('compare_end'))
+            if not valid:
+                error_message = error_message.replace(".", "")
+                return {"error": error_message + " for assignment "+assignment_copy_data.get('name', '')}, 400
 
         # duplicate course
         duplicate_course = Course(

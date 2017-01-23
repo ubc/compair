@@ -775,14 +775,15 @@ module.controller("AssignmentWriteController",
     [ "$scope", "$q", "$location", "$routeParams", "$route", "AssignmentResource", "$uibModal", "Authorize",
              "CriterionResource", "required_rounds", "Toaster", "attachService",
              "Session", "EditorOptions", "PairingAlgorithm", "ComparisonExampleResource",
-             "AnswerResource", "xAPIStatementHelper",
+             "AnswerResource", "xAPIStatementHelper", "CourseResource", "moment",
     function($scope, $q, $location, $routeParams, $route, AssignmentResource, $uibModal, Authorize,
              CriterionResource, required_rounds, Toaster, attachService,
              Session, EditorOptions, PairingAlgorithm, ComparisonExampleResource,
-             AnswerResource, xAPIStatementHelper)
+             AnswerResource, xAPIStatementHelper, CourseResource, moment)
     {
         var courseId = $routeParams['courseId'];
         //initialize assignment so this scope can access data from included form
+        $scope.course = CourseResource.get({'id': courseId});
         $scope.assignment = {criteria: []};
         $scope.availableCriteria = [];
         $scope.editorOptions = EditorOptions.basic;
@@ -967,29 +968,46 @@ module.controller("AssignmentWriteController",
             );
         }
 
-        $scope.date.astart.open = function($event) {
+        $scope.datePickerOpen = function($event, object) {
             $event.preventDefault();
             $event.stopPropagation();
 
-            $scope.date.astart.opened = true;
+            object.opened = true;
         };
-        $scope.date.aend.open = function($event) {
-            $event.preventDefault();
-            $event.stopPropagation();
 
-            $scope.date.aend.opened = true;
+        $scope.datePickerMinDate = function() {
+            var dates = Array.prototype.slice.call(arguments).filter(function(val) {
+                return val !== null;
+            });
+            if (dates.length == 0) {
+                return null;
+            }
+            return dates.reduce(function (left, right) {
+                return moment(left) > moment(right) ? left : right;
+            }, dates[0]);
         };
-        $scope.date.cstart.open = function($event) {
-            $event.preventDefault();
-            $event.stopPropagation();
 
-            $scope.date.cstart.opened = true;
+        $scope.datePickerMaxDate = function() {
+            var dates = Array.prototype.slice.call(arguments).filter(function(val) {
+                return val !== null;
+            });
+            if (dates.length == 0) {
+                return null;
+            }
+            return dates.reduce(function (left, right) {
+                return moment(left) < moment(right) ? left : right;
+            }, dates[0]);
         };
-        $scope.date.cend.open = function($event) {
-            $event.preventDefault();
-            $event.stopPropagation();
 
-            $scope.date.cend.opened = true;
+        $scope.getMinDate = function(startDate) {
+            minDate = null;
+            if ($scope.course.start_date) {
+                minDate = $scope.course.start_date;
+            }
+            if (startDate) {
+                minDate = startDate;
+            }
+            return minDate;
         };
 
         $scope.criteriaCanDraw = function() {

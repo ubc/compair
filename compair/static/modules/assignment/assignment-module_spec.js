@@ -1096,6 +1096,7 @@ describe('assignment-module', function () {
         describe('new:', function() {
             beforeEach(function () {
                 controller = createController({current: {method: 'new'}}, {courseId: "1abcABC123-abcABC123_Z"});
+                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z').respond(mockCourse);
                 $httpBackend.expectGET('/api/criteria').respond(mockCritiera);
                 $httpBackend.flush();
 
@@ -1397,6 +1398,7 @@ describe('assignment-module', function () {
         describe('edit:', function() {
             beforeEach(function () {
                 controller = createController({current: {method: 'edit'}}, {courseId: "1abcABC123-abcABC123_Z", assignmentId: "1abcABC123-abcABC123_Z"});
+                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z').respond(mockCourse);
                 $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z').respond(mockAssignment);
                 $httpBackend.expectGET('/api/criteria').respond(mockCritiera);
                 $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/comparisons/examples').respond(mockComparisonExamples);
@@ -1655,6 +1657,7 @@ describe('assignment-module', function () {
         describe('copy:', function() {
             beforeEach(function () {
                 controller = createController({current: {method: 'copy'}}, {courseId: "1abcABC123-abcABC123_Z", assignmentId: "1abcABC123-abcABC123_Z"});
+                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z').respond(mockCourse);
                 $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z').respond(mockAssignment);
                 $httpBackend.expectGET('/api/criteria').respond(mockCritiera);
                 $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/comparisons/examples').respond(mockComparisonExamples);
