@@ -902,25 +902,32 @@ describe('assignment-module', function () {
                 expect($rootScope.instructors).toEqual(mockInstructorLabels.instructors);
 
                 expect($rootScope.showTab('answers')).toBe(true);
-                expect($rootScope.showTab('help')).toBe(false);
-                expect($rootScope.showTab('participation')).toBe(false);
-                expect($rootScope.showTab('comparisons')).toBe(false);
             });
 
-            it('should be able to change tabs', function () {
+            it('should be able to change to answers tab', function () {
+                $rootScope.setTab('answers');
+                $rootScope.$emit('$routeUpdate');
+                $httpBackend.flush();
+                expect($rootScope.showTab('answers')).toBe(true);
+            });
+
+            it('should be able to change to help tab', function () {
                 $rootScope.setTab('help');
-                expect($rootScope.showTab('answers')).toBe(false);
+                $rootScope.$emit('$routeUpdate');
+                $httpBackend.flush();
                 expect($rootScope.showTab('help')).toBe(true);
-                expect($rootScope.showTab('participation')).toBe(false);
-                expect($rootScope.showTab('comparisons')).toBe(false);
+            });
 
+            it('should be able to change to participation tab', function () {
                 $rootScope.setTab('participation');
-                expect($rootScope.showTab('answers')).toBe(false);
-                expect($rootScope.showTab('help')).toBe(false);
+                $rootScope.$emit('$routeUpdate');
+                $httpBackend.flush();
                 expect($rootScope.showTab('participation')).toBe(true);
-                expect($rootScope.showTab('comparisons')).toBe(false);
+            });
 
+            it('should be able to change to comparisons tab', function () {
                 $rootScope.setTab('comparisons');
+                $rootScope.$emit('$routeUpdate');
                 $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers/comparisons').respond({
                     "objects": [],
                     "page": 1,
@@ -936,10 +943,21 @@ describe('assignment-module', function () {
                     "total": 0
                 });
                 $httpBackend.flush();
-                expect($rootScope.showTab('answers')).toBe(false);
-                expect($rootScope.showTab('help')).toBe(false);
-                expect($rootScope.showTab('participation')).toBe(false);
                 expect($rootScope.showTab('comparisons')).toBe(true);
+            });
+
+            it('should be able to change to feedback tab', function () {
+                $rootScope.setTab('feedback');
+                $rootScope.$emit('$routeUpdate');
+                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers?author=1abcABC123-abcABC123_Z').respond({
+                    "objects": [],
+                    "page": 1,
+                    "pages": 0,
+                    "per_page": 20,
+                    "total": 0
+                });
+                $httpBackend.flush();
+                expect($rootScope.showTab('feedback')).toBe(true);
             });
 
             it('should be able to delete assignment', function () {

@@ -114,7 +114,10 @@
         <a ng-click="setTab('answers')" href="">Answers <span ng-show="canManageAssignment || (!assignment.answer_period && see_answers)">({{answers.total}})</span></a>
       </li>
       <li ng-show="!canManageAssignment" id="comparisons" ng-class="{active:showTab('comparisons')}">
-        <a ng-click="setTab('comparisons')" href="">Your Work + Feedback</a>
+        <a ng-click="setTab('comparisons')" href="">Your Work</a>
+      </li>
+      <li ng-show="!canManageAssignment" id="feedback" ng-class="{active:showTab('feedback')}">
+        <a ng-click="setTab('feedback')" href="">Feedback</a>
       </li>
       <li id="comments" ng-class="{active:showTab('help')}">
         <a ng-click="setTab('help')" href="">Help</a>
@@ -392,13 +395,13 @@
             <!-- Comparisons Tab Header -->
             <div class="tab-header">
                 <div>
-                    <h2>Your work and feedback</h2>
+                    <h2>Your work</h2>
                     <p class="intro-text">Work you have submitted
                     <span ng-show="assignment.status.answers.answered || comparisons.objects.length > 0">&mdash;
                         <strong><span ng=show="assignment.status.answers.answered">1 answer</span><span ng-show="assignment.status.answers.answered && comparisons.objects.length > 0">,</span>
                         <span ng-show="comparisons.objects.length > 0">{{comparisons.objects.length}} comparison<span ng-show="comparisons.objects.length > 1">s</span></span></strong>
                     &mdash;</span>
-                    for this assignment appears below. Feedback for your answer can be found in the replies underneath the answer.</p>
+                    for this assignment appears below.</p>
                 </div>
             </div>
 
@@ -434,51 +437,6 @@
                         attachment="answer.file" ng-click="revealAnswer(answer)">
                     </compair-attachment-inline>
                 </div>
-
-                <!-- Student Answer Replies Section -->
-                <a href="" ng-click="showReplies = !showReplies; toggleReplies(showReplies, answer)">
-                    <h3 class="reply-heading" ng-if="answer.comment_count">
-                        <i class="fa fa-chevron-down" ng-show="showReplies"></i>
-                        <i class="fa fa-chevron-right" ng-hide="showReplies"></i>
-                        <ng-pluralize count="answer.comment_count" when="{'1': '{} reply', 'other': '{} replies'}"></ng-pluralize>
-                        to your answer
-                        <span ng-if="canManageAssignment || answer.user_id == loggedInUserId">({{ answer.private_comment_count }} private, {{ answer.public_comment_count }} public)</span>
-                    </h3>
-                </a>
-
-                <div ng-show="showReplies">
-                    <div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer)" class="each-reply">
-
-                        <hr ng-hide="$first" />
-
-                        <!-- Student Reply Metadata Header -->
-                        <div class="each-header clearfix">
-                            <compair-avatar user-id="comment.user_id" avatar="comment.user.avatar" display-name="comment.user.displayname" full-name="comment.user.fullname"></compair-avatar>
-                            <span class="label label-info" ng-if="instructors[comment.user_id]">
-                                {{instructors[comment.user_id]}}
-                            </span>
-                            <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation">gave <span class="glyphicon glyphicon-lock"></span> private feedback</strong>
-                            <strong ng-if="comment.comment_type == AnswerCommentType.self_evaluation">self-evaluated</strong>
-                            <strong ng-if="comment.comment_type == AnswerCommentType.public">replied <span ng-if="canManageAssignment || answer.user_id == loggedInUserId" class="label label-info">Public</span></strong>
-                            on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
-                            <div class="manager-actions pull-right"
-                                 ng-if="canManageAssignment || (comment.user_id == loggedInUserId && (comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.public))">
-                                <a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="reply">
-                                    <i class="fa fa-trash-o"></i>
-                                </a>
-                                <a href="" ng-click="editAnswerComment(answer, comment)">
-                                    Edit
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Student Reply -->
-                        <div class="content" mathjax hljs ng-bind-html="comment.content"></div>
-
-                    </div><!-- closes each-reply (student) -->
-
-                </div><!-- closes toggle div -->
-
             </div>
 
             <!-- Comparisons Section -->
@@ -558,6 +516,84 @@
             </div>
 
         </div><!-- closes comparisons-tab -->
+
+        <div class="tab-pane" ng-class="{active: showTab('feedback')}" id="feedback-tab">
+            <!-- Feedback Tab Header -->
+            <div class="tab-header">
+                <div>
+                    <h2>Feedback</h2>
+                    <p class="intro-text">Feedback for your answer can be found below.</p>
+                </div>
+            </div>
+
+            <!-- Student Answer Metadata Header -->
+            <div class="each-evaluation clearfix" ng-repeat="answer in user_answers.objects">
+                <div class="each-header clearfix" ng-show="user_answers.objects.length > 1">
+                    <compair-avatar user-id="answer.user_id" avatar="answer.user.avatar" me="true"></compair-avatar>
+                    <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
+                    <div class="manager-actions pull-right" ng-if="canManageAssignment || (answer.user_id == loggedInUserId && assignment.answer_period && !assignment.compare_period)">
+                        <span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
+                            <i class="fa fa-warning"></i>
+                            Flagged
+                            <a href="" title="Unflag this answer" ng-click="unflagAnswer(answer, courseId, assignment.id, answer.id)">
+                                Unflag?
+                            </a>
+                        </span>
+                        <a href="" confirmation-needed="deleteAnswer(answer, courseId, assignment.id, answer.id)" keyword="answer">
+                            <i class="fa fa-trash-o"></i>
+                        </a>
+                        <a href="" ng-click="editAnswer(answer)">
+                            Edit
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Student Answer -->
+                <div class="content {{answer.id}}" ng-if="user_answers.objects.length > 1">
+                    <div mathjax hljs ng-bind-html="answer.content">
+                    </div>
+
+                    <!-- Student Attachment -->
+                    <compair-attachment-inline label="See answer details:"
+                        attachment="answer.file" ng-click="revealAnswer(answer)">
+                    </compair-attachment-inline>
+                </div>
+
+                <!-- Student Answer Replies Section -->
+                <div ng-repeat="(commentKey, comment) in answer.comments | filter:commentFilter(answer)" class="clearfix"
+                    ng-class="{'each-header': user_answers.objects.length <= 1, 'each-reply': user_answers.objects.length > 1 }">
+
+                    <hr ng-hide="$first" />
+
+                    <!-- Student Reply Metadata Header -->
+                    <div class="each-header clearfix">
+                        <compair-avatar user-id="comment.user_id" avatar="comment.user.avatar" display-name="comment.user.displayname" full-name="comment.user.fullname"></compair-avatar>
+                        <span class="label label-info" ng-if="instructors[comment.user_id]">
+                            {{instructors[comment.user_id]}}
+                        </span>
+                        <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation">gave <span class="glyphicon glyphicon-lock"></span> private feedback</strong>
+                        <strong ng-if="comment.comment_type == AnswerCommentType.self_evaluation">self-evaluated</strong>
+                        <strong ng-if="comment.comment_type == AnswerCommentType.public">replied <span ng-if="canManageAssignment || answer.user_id == loggedInUserId" class="label label-info">Public</span></strong>
+                        on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
+                        <div class="manager-actions pull-right"
+                                ng-if="canManageAssignment || (comment.user_id == loggedInUserId && (comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.public))">
+                            <a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="reply">
+                                <i class="fa fa-trash-o"></i>
+                            </a>
+                            <a href="" ng-click="editAnswerComment(answer, comment)">
+                                Edit
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Student Reply -->
+                    <div class="content" mathjax hljs ng-bind-html="comment.content"></div>
+
+                </div><!-- closes each-reply (student) -->
+
+            </div>
+
+        </div><!-- closes feedback-tab -->
 
         <div class="tab-pane" ng-class="{active: showTab('help')}" id="comments-tab">
 
