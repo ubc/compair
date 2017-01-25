@@ -1,6 +1,7 @@
 import csv
 import os
 import time
+import re
 
 from bouncer.constants import MANAGE
 from flask import Blueprint, current_app, abort
@@ -8,11 +9,12 @@ from flask_login import login_required, current_user
 
 from flask_restful import Resource, reqparse
 
-from sqlalchemy import func
+from sqlalchemy import func, and_, or_
+from sqlalchemy.orm import joinedload
 
 from compair.authorization import require
 from compair.core import event
-from compair.models import CourseRole, Assignment, UserCourse, Course, Answer, \
+from compair.models import User, CourseRole, Assignment, UserCourse, Course, Answer, \
     AnswerComment, AssignmentCriterion, Comparison, AnswerCommentType
 from .util import new_restful_api
 
@@ -108,6 +110,21 @@ class ReportRootAPI(Resource):
                     title_row2.append("Self Evaluation Submitted")
             titles = [title_row1, title_row2]
 
+        elif report_type == "peer_feedback":
+            titles1 = [
+                "",
+                "Sender", "", "",
+                "Receiver", "", "",
+                "", ""
+            ]
+            titles2 = [
+                "Assignment",
+                "Last Name", "First Name", "Student No",
+                "Last Name", "First Name", "Student No",
+                "Type", "Feedback"
+            ]
+            data = peer_feedback_report(course, assignments, group_name)
+            titles = [titles1, titles2]
         else:
             return {'error': 'The requested report type cannot be found'}, 400
 
@@ -329,3 +346,79 @@ def participation_report(course, assignments, group_name):
         report.append(temp)
 
     return report
+
+def peer_feedback_report(course, assignments, group_name):
+    report = []
+
+    senders = User.query \
+        .join("user_courses") \
+        .filter(and_(
+            UserCourse.course_id == course.id,
+            UserCourse.course_role == CourseRole.student
+        )) \
+        .order_by(User.lastname, User.firstname, User.id)
+    if group_name:
+        senders = senders.filter(UserCourse.group_name == group_name)
+    senders = senders.all()
+    sender_user_ids = [u.id for u in senders]
+
+    assignment_ids = [assignment.id for assignment in assignments]
+
+    answer_comments = AnswerComment.query \
+        .join(Answer, AnswerComment.answer_id == Answer.id) \
+        .join(User, User.id == Answer.user_id) \
+        .with_entities(
+            Answer.user_id.label("receiver_user_id"),
+            AnswerComment.user_id.label("sender_user_id"),
+            Answer.assignment_id.label("assignment_id"),
+            AnswerComment.comment_type,
+            AnswerComment.content,
+            User.firstname.label("receiver_firstname"),
+            User.lastname.label("receiver_lastname"),
+            User.student_number.label("receiver_student_number"),
+        ) \
+        .filter(Answer.assignment_id.in_(assignment_ids)) \
+        .filter(AnswerComment.user_id.in_(sender_user_ids)) \
+        .filter(AnswerComment.comment_type != AnswerCommentType.self_evaluation) \
+        .filter(Answer.draft == False) \
+        .filter(Answer.practice == False) \
+        .filter(AnswerComment.draft == False) \
+        .order_by(AnswerComment.created) \
+        .all()
+
+    for assignment in assignments:
+        for user in senders:
+            user_sent_feedback = [ac for ac in answer_comments  \
+                if ac.sender_user_id == user.id and ac.assignment_id == assignment.id]
+
+            if len(user_sent_feedback) > 0:
+                for feedback in user_sent_feedback:
+                    temp = [
+                        assignment.name,
+                        user.lastname, user.firstname, user.student_number,
+                        feedback.receiver_lastname, feedback.receiver_firstname, feedback.receiver_student_number,
+                        feedback.comment_type.value, strip_html(feedback.content)
+                    ]
+                    report.append(temp)
+
+            else:
+                # enter blank row
+                temp = [
+                    assignment.name,
+                    user.lastname, user.firstname, user.student_number,
+                    "---", "---", "---",
+                    "", ""
+                ]
+                report.append(temp)
+
+    return report
+
+def strip_html(text):
+    text = re.sub('<[^>]+>', '', text)
+    text = text.replace('&nbsp;', ' ')
+    text = text.replace('&amp;', '&')
+    text = text.replace('&lt;', '<')
+    text = text.replace('&gt;', '>')
+    text = text.replace('&quot;', '"')
+    text = text.replace('&#39;', '\'')
+    return text
