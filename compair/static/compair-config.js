@@ -273,12 +273,44 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', '$locationProvi
     $logProvider.debugEnabled(debugMode);
 }]);
 
-myApp.config(['localStorageServiceProvider', function (localStorageServiceProvider) {
-    localStorageServiceProvider
-        .setPrefix('ComPAIR')
-        .setStorageType('sessionStorage') // options [localStorage, sessionStorage]
-        .setStorageCookie(0); // fallback default settings
-}]);
+myApp.config(
+    ['localStorageServiceProvider',
+	function (localStorageServiceProvider)
+    {
+    	localStorageServiceProvider
+        	.setPrefix('ComPAIR')
+        	.setStorageType('sessionStorage') // options [localStorage, sessionStorage]
+        	.setStorageCookie(0); // fallback default settings
+        // config MathJax
+        window.MathJax.Hub.Config({
+            skipStartupTypeset: true
+        });
+        window.MathJax.Hub.Configured();
+
+        // config CKEDITOR
+        window.CKEDITOR.plugins.addExternal( 'combinedmath', '/app/lib_extension/ckeditor/plugins/combinedmath/' );
+        window.CKEDITOR.on('dialogDefinition', function(ev) {
+            var dialogName = ev.data.name;
+            var dialog = ev.data.definition.dialog;
+            var dialogDefinition = ev.data.definition;
+
+            if (dialogName === 'link') {
+                var target = dialogDefinition.getContents('target');
+                target.get('linkTargetType')['default'] = '_blank';
+                /*
+                var options = target.get('linkTargetType').items;
+
+                for (var i = options.length-1; i >= 0; i--) {
+                    var value = options[i][1];
+                    if (!value.match(/\_blank/i)) {
+                        options.splice(i, 1);
+                    }
+                }
+                */
+            }
+        });
+    }
+]);
 
 // placeholder for templates module to store templates into cache
 // gulp prod will generate the actual templates module and put contents into cache
