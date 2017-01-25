@@ -6,7 +6,8 @@ from data.fixtures.test_data import SimpleAssignmentTestData, ComparisonTestData
     TestFixture, LTITestData
 from data.factories import AssignmentFactory
 from compair.models import Assignment, Comparison, PairingAlgorithm, \
-    CourseGrade, AssignmentGrade, SystemRole, CourseRole, LTIOutcome
+    CourseGrade, AssignmentGrade, SystemRole, CourseRole, LTIOutcome, \
+    AnswerCommentType
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.core import db
 
@@ -510,18 +511,21 @@ class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 1)
+                    self.assertEqual(status['answers']['feedback'], 0)
                 elif assignments[1].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 1)
+                    self.assertEqual(status['answers']['feedback'], 0)
                 else:
                     self.assertFalse(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
+                    self.assertEqual(status['answers']['feedback'], 0)
 
         with self.login(self.data.get_authorized_student().username):
             # test authorized student - when haven't compared
@@ -536,18 +540,21 @@ class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 1)
+                    self.assertEqual(status['answers']['feedback'], 0)
                 elif assignments[1].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 1)
+                    self.assertEqual(status['answers']['feedback'], 0)
                 else:
                     self.assertFalse(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
+                    self.assertEqual(status['answers']['feedback'], 0)
 
             compare_count_result = self._submit_all_possible_comparisons_for_user(self.data.get_authorized_student().id)
 
@@ -564,23 +571,147 @@ class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
                         assignment.total_comparisons_required - compare_count_result)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 1)
+                    self.assertEqual(status['answers']['feedback'], 0)
+                    self.assertEqual(status['answers']['feedback'], 0)
                 elif assignments[1].id == assignment.id:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 1)
+                    self.assertEqual(status['answers']['feedback'], 0)
+                    self.assertEqual(status['answers']['feedback'], 0)
                 else:
                     self.assertFalse(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
+                    self.assertEqual(status['answers']['feedback'], 0)
 
-            # test self evaluation enabled
+            # test self evaluation enabled (without self_evaluation)
             for assignment in assignments:
-                assignment.enable_self_evauluation = True
+                assignment.enable_self_evaluation = True
             db.session.commit()
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            for assignment in assignments:
+                self.assertTrue(assignment.uuid in rv.json['statuses'])
+                status = rv.json['statuses'][assignment.uuid]
+                if assignments[0].id == assignment.id:
+                    self.assertFalse(status['comparisons']['self_evaluation_completed'])
+                    self.assertFalse(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], compare_count_result)
+                    self.assertEqual(status['comparisons']['left'],
+                        assignment.total_comparisons_required - compare_count_result)
+                    self.assertTrue(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 1)
+                    self.assertEqual(status['answers']['feedback'], 0)
+                    self.assertEqual(status['answers']['feedback'], 0)
+                elif assignments[1].id == assignment.id:
+                    self.assertFalse(status['comparisons']['self_evaluation_completed'])
+                    self.assertTrue(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
+                    self.assertTrue(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 1)
+                    self.assertEqual(status['answers']['feedback'], 0)
+                    self.assertEqual(status['answers']['feedback'], 0)
+                else:
+                    self.assertFalse(status['comparisons']['self_evaluation_completed'])
+                    self.assertFalse(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
+                    self.assertFalse(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 0)
+                    self.assertEqual(status['answers']['feedback'], 0)
+
+            # test self evaluation enabled (with self_evaluation)
+            for assignment in assignments:
+                answer = next((
+                    answer for answer in assignment.answers if answer.user_id == self.data.get_authorized_student().id
+                ), None )
+                if answer:
+                    self.data.create_answer_comment(answer, self.data.get_authorized_student(), AnswerCommentType.self_evaluation)
+            db.session.commit()
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            for assignment in assignments:
+                self.assertTrue(assignment.uuid in rv.json['statuses'])
+                status = rv.json['statuses'][assignment.uuid]
+                if assignments[0].id == assignment.id:
+                    self.assertTrue(status['comparisons']['self_evaluation_completed'])
+                    self.assertFalse(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], compare_count_result)
+                    self.assertEqual(status['comparisons']['left'],
+                        assignment.total_comparisons_required - compare_count_result)
+                    self.assertTrue(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 1)
+                    self.assertEqual(status['answers']['feedback'], 0)
+                elif assignments[1].id == assignment.id:
+                    self.assertTrue(status['comparisons']['self_evaluation_completed'])
+                    self.assertTrue(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
+                    self.assertTrue(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 1)
+                    self.assertEqual(status['answers']['feedback'], 0)
+                else:
+                    self.assertFalse(status['comparisons']['self_evaluation_completed'])
+                    self.assertFalse(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
+                    self.assertFalse(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 0)
+                    self.assertEqual(status['answers']['feedback'], 0)
+
+
+            # test feedback
+            other_student = self.data.create_normal_user()
+            self.data.enrol_student(other_student, self.data.get_course())
+
+            for assignment in assignments:
+                answer = next((
+                    answer for answer in assignment.answers if answer.user_id == self.data.get_authorized_student().id
+                ), None )
+                if answer:
+                    self.data.create_answer_comment(answer, other_student, AnswerCommentType.evaluation)
+                    self.data.create_answer_comment(answer, other_student, AnswerCommentType.private)
+                    self.data.create_answer_comment(answer, other_student, AnswerCommentType.public)
+            db.session.commit()
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            for assignment in assignments:
+                self.assertTrue(assignment.uuid in rv.json['statuses'])
+                status = rv.json['statuses'][assignment.uuid]
+                if assignments[0].id == assignment.id:
+                    self.assertTrue(status['comparisons']['self_evaluation_completed'])
+                    self.assertFalse(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], compare_count_result)
+                    self.assertEqual(status['comparisons']['left'],
+                        assignment.total_comparisons_required - compare_count_result)
+                    self.assertTrue(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 1)
+                    self.assertEqual(status['answers']['feedback'], 3)
+                elif assignments[1].id == assignment.id:
+                    self.assertTrue(status['comparisons']['self_evaluation_completed'])
+                    self.assertTrue(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
+                    self.assertTrue(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 1)
+                    self.assertEqual(status['answers']['feedback'], 3)
+                else:
+                    self.assertFalse(status['comparisons']['self_evaluation_completed'])
+                    self.assertFalse(status['comparisons']['available'])
+                    self.assertEqual(status['comparisons']['count'], 0)
+                    self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
+                    self.assertFalse(status['answers']['answered'])
+                    self.assertEqual(status['answers']['count'], 0)
+                    self.assertEqual(status['answers']['feedback'], 0)
 
     def test_get_status(self):
         url = self.url + '/' + self.assignment.uuid + '/status'
@@ -615,6 +746,7 @@ class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
             self.assertTrue(status['comparisons']['available'])
             self.assertTrue(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 1)
+            self.assertEqual(status['answers']['feedback'], 0)
 
         with self.login(self.data.get_authorized_student().username):
             # test authorized student - when haven't compared
@@ -626,10 +758,10 @@ class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
             self.assertTrue(status['comparisons']['available'])
             self.assertTrue(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 1)
+            self.assertEqual(status['answers']['feedback'], 0)
 
             compare_count_result = self._submit_all_possible_comparisons_for_user(self.data.get_authorized_student().id)
             # test authorized student - when have compared all
-            self.login(self.data.get_authorized_student().username)
             rv = self.client.get(url)
             self.assert200(rv)
             status = rv.json['status']
@@ -639,6 +771,64 @@ class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
             self.assertFalse(status['comparisons']['available'])
             self.assertTrue(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 1)
+            self.assertEqual(status['answers']['feedback'], 0)
+
+            # test self evaluation enabled (without self_evaluation)
+            self.assignment.enable_self_evaluation = True
+            db.session.commit()
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertFalse(status['comparisons']['self_evaluation_completed'])
+            self.assertEqual(status['comparisons']['count'], compare_count_result)
+            self.assertEqual(status['comparisons']['left'],
+                self.assignment.total_comparisons_required - compare_count_result)
+            self.assertFalse(status['comparisons']['available'])
+            self.assertTrue(status['answers']['answered'])
+            self.assertEqual(status['answers']['count'], 1)
+            self.assertEqual(status['answers']['feedback'], 0)
+
+            # test self evaluation enabled (with self_evaluation)
+            answer = next((
+                answer for answer in self.assignment.answers if answer.user_id == self.data.get_authorized_student().id
+            ), None )
+            self.assertIsNotNone(answer)
+            self.data.create_answer_comment(answer, self.data.get_authorized_student(), AnswerCommentType.self_evaluation)
+            db.session.commit()
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertTrue(status['comparisons']['self_evaluation_completed'])
+            self.assertEqual(status['comparisons']['count'], compare_count_result)
+            self.assertEqual(status['comparisons']['left'],
+                self.assignment.total_comparisons_required - compare_count_result)
+            self.assertFalse(status['comparisons']['available'])
+            self.assertTrue(status['answers']['answered'])
+            self.assertEqual(status['answers']['count'], 1)
+            self.assertEqual(status['answers']['feedback'], 0)
+
+            # test feedback
+            other_student = self.data.create_normal_user()
+            self.data.enrol_student(other_student, self.data.get_course())
+            self.data.create_answer_comment(answer, other_student, AnswerCommentType.evaluation)
+            self.data.create_answer_comment(answer, other_student, AnswerCommentType.private)
+            self.data.create_answer_comment(answer, other_student, AnswerCommentType.public)
+            db.session.commit()
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertTrue(status['comparisons']['self_evaluation_completed'])
+            self.assertEqual(status['comparisons']['count'], compare_count_result)
+            self.assertEqual(status['comparisons']['left'],
+                self.assignment.total_comparisons_required - compare_count_result)
+            self.assertFalse(status['comparisons']['available'])
+            self.assertTrue(status['answers']['answered'])
+            self.assertEqual(status['answers']['count'], 1)
+            self.assertEqual(status['answers']['feedback'], 3)
+
 
 class AssignmentStatusAnswersAPITests(ComPAIRAPITestCase):
     def setUp(self):
@@ -680,12 +870,14 @@ class AssignmentStatusAnswersAPITests(ComPAIRAPITestCase):
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
+                    self.assertEqual(status['answers']['feedback'], 0)
                 else:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
+                    self.assertEqual(status['answers']['feedback'], 0)
 
             # test authorized instructor - multiple answers
             self.fixtures.add_answer(assignments[0], self.fixtures.instructor)
@@ -704,12 +896,14 @@ class AssignmentStatusAnswersAPITests(ComPAIRAPITestCase):
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 3)
+                    self.assertEqual(status['answers']['feedback'], 0)
                 else:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
+                    self.assertEqual(status['answers']['feedback'], 0)
 
         self.fixtures.add_students(1)
         with self.login(self.fixtures.students[-1].username):
@@ -725,12 +919,14 @@ class AssignmentStatusAnswersAPITests(ComPAIRAPITestCase):
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
+                    self.assertEqual(status['answers']['feedback'], 0)
                 else:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
+                    self.assertEqual(status['answers']['feedback'], 0)
 
             # test authorized student - answered
             self.fixtures.add_answer(assignments[0], self.fixtures.students[-1])
@@ -746,12 +942,14 @@ class AssignmentStatusAnswersAPITests(ComPAIRAPITestCase):
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 1)
+                    self.assertEqual(status['answers']['feedback'], 0)
                 else:
                     self.assertTrue(status['comparisons']['available'])
                     self.assertEqual(status['comparisons']['count'], 0)
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertFalse(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 0)
+                    self.assertEqual(status['answers']['feedback'], 0)
 
     def test_get_status(self):
         url = self.url + '/' + self.fixtures.assignment.uuid + '/status'
@@ -786,6 +984,7 @@ class AssignmentStatusAnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(status['comparisons']['left'], self.fixtures.assignment.total_comparisons_required)
             self.assertFalse(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 0)
+            self.assertEqual(status['answers']['feedback'], 0)
 
             # test authorized instructor - multiple answers
             self.fixtures.add_answer(self.fixtures.assignment, self.fixtures.instructor)
@@ -800,6 +999,7 @@ class AssignmentStatusAnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(status['comparisons']['left'], self.fixtures.assignment.total_comparisons_required)
             self.assertTrue(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 3)
+            self.assertEqual(status['answers']['feedback'], 0)
 
         self.fixtures.add_students(1)
         with self.login(self.fixtures.students[-1].username):
@@ -812,6 +1012,7 @@ class AssignmentStatusAnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(status['comparisons']['left'], self.fixtures.assignment.total_comparisons_required)
             self.assertFalse(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 0)
+            self.assertEqual(status['answers']['feedback'], 0)
 
             # test authorized student - answered
             self.fixtures.add_answer(self.fixtures.assignment, self.fixtures.students[-1])
@@ -824,6 +1025,7 @@ class AssignmentStatusAnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(status['comparisons']['left'], self.fixtures.assignment.total_comparisons_required)
             self.assertTrue(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 1)
+            self.assertEqual(status['answers']['feedback'], 0)
 
 
 

@@ -6,7 +6,8 @@ import factory.fuzzy
 
 from compair import db
 from six.moves import range
-from compair.models import SystemRole, CourseRole, Criterion, Course, Comparison, ThirdPartyType
+from compair.models import SystemRole, CourseRole, Criterion, \
+    Course, Comparison, ThirdPartyType, AnswerCommentType
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
     AnswerFactory, CriterionFactory, ComparisonFactory, AssignmentCriterionFactory, FileFactory, \
     AssignmentCommentFactory, AnswerCommentFactory, ScoreFactory, ComparisonExampleFactory, \
@@ -363,6 +364,16 @@ class SimpleAnswersTestData(SimpleAssignmentTestData):
         )
         db.session.commit()
         return answer
+
+    def create_answer_comment(self, answer, author, comment_type, draft=False):
+        answer_comment = AnswerCommentFactory(
+            answer=answer,
+            user=author,
+            comment_type=comment_type,
+            draft=draft
+        )
+        db.session.commit()
+        return answer_comment
 
     def get_answers(self):
         return self.answers

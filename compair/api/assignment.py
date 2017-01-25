@@ -402,6 +402,20 @@ class AssignmentIdStatusAPI(Resource):
             ) \
             .count()
 
+        feedback_count = AnswerComment.query \
+            .join("answer") \
+            .filter(and_(
+                AnswerComment.active == True,
+                AnswerComment.comment_type != AnswerCommentType.self_evaluation,
+                AnswerComment.draft == False,
+                Answer.user_id == current_user.id,
+                Answer.assignment_id == assignment.id,
+                Answer.active == True,
+                Answer.practice == False,
+                Answer.draft == False
+            )) \
+            .count()
+
         drafts = Answer.query \
             .options(load_only('id')) \
             .filter_by(
@@ -415,17 +429,18 @@ class AssignmentIdStatusAPI(Resource):
             .all()
 
         comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
-        comparison_availble = Comparison.comparison_avialble_for_user(course.id, assignment.id, current_user.id)
+        comparison_available = Comparison.comparison_available_for_user(course.id, assignment.id, current_user.id)
 
         status = {
             'answers': {
                 'answered': answer_count > 0,
+                'feedback': feedback_count,
                 'count': answer_count,
                 'has_draft': len(drafts) > 0,
                 'draft_ids': [draft.uuid for draft in drafts]
             },
             'comparisons': {
-                'available': comparison_availble,
+                'available': comparison_available,
                 'count': comparison_count,
                 'left': max(0, assignment.total_comparisons_required - comparison_count)
             }
@@ -487,6 +502,26 @@ class AssignmentRootStatusAPI(Resource):
             .group_by(Answer.assignment_id) \
             .all()
 
+
+        feedback_counts = AnswerComment.query \
+            .join("answer") \
+            .with_entities(
+                Answer.assignment_id,
+                func.count(Answer.assignment_id).label('feedback_count')
+            ) \
+            .filter(and_(
+                AnswerComment.active == True,
+                AnswerComment.comment_type != AnswerCommentType.self_evaluation,
+                AnswerComment.draft == False,
+                Answer.user_id == current_user.id,
+                Answer.active == True,
+                Answer.practice == False,
+                Answer.draft == False,
+                Answer.assignment_id.in_(assignment_ids)
+            )) \
+            .group_by(Answer.assignment_id) \
+            .all()
+
         # get self evaluation status for assignments with self evaluations enabled
         self_evaluations = AnswerComment.query \
             .join("answer") \
@@ -524,19 +559,24 @@ class AssignmentRootStatusAPI(Resource):
                 (result.answer_count for result in answer_counts if result.assignment_id == assignment.id),
                 0
             )
+            feedback_count = next(
+                (result.feedback_count for result in feedback_counts if result.assignment_id == assignment.id),
+                0
+            )
             assignment_drafts = [draft for draft in drafts if draft.assignment_id == assignment.id]
             comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
-            comparison_availble = Comparison.comparison_avialble_for_user(course.id, assignment.id, current_user.id)
+            comparison_available = Comparison.comparison_available_for_user(course.id, assignment.id, current_user.id)
 
             statuses[assignment.uuid] = {
                 'answers': {
                     'answered': answer_count > 0,
+                    'feedback': feedback_count,
                     'count': answer_count,
                     'has_draft': len(assignment_drafts) > 0,
                     'draft_ids': [draft.uuid for draft in assignment_drafts]
                 },
                 'comparisons': {
-                    'available': comparison_availble,
+                    'available': comparison_available,
                     'count': comparison_count,
                     'left': max(0, assignment.total_comparisons_required - comparison_count)
                 }
