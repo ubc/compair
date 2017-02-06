@@ -151,6 +151,7 @@ describe('comparison-module', function () {
             "compared": true,
             "compare_period": true,
             "modified": "Fri, 25 Sep 2015 07:40:19 -0000",
+            "peer_feedback_prompt": null,
             "number_of_comparisons": 3,
             "total_comparisons_required": 3,
             "total_steps_required": 4,

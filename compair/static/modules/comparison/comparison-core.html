@@ -146,7 +146,15 @@
 
             <div class="row sub-step">
 
-                <p class="intro-text">Use any instructor-provided guidelines or answer general questions, based on the criteria above: <strong>What did the author do well? Where might the author improve?</strong> Remember to make your comments&mdash;including criticisms&mdash;encouraging, respectful, and specific.</p>
+                <div class="intro-text" ng-if="assignment.peer_feedback_prompt">
+                    <div mathjax hljs ng-bind-html="assignment.peer_feedback_prompt"></div>
+                </div>
+
+                <div class="intro-text" ng-if="!assignment.peer_feedback_prompt">
+                    Use any instructor-provided guidelines or answer general questions, based on the criteria above:
+                    <strong>What did the author do well? Where might the author improve?</strong>
+                    Remember to make your comments&mdash;including criticisms&mdash;encouraging, respectful, and specific.
+                </div>
 
                 <div class="col-md-6">
                     <label class="cke-label">

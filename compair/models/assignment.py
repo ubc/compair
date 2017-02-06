@@ -43,6 +43,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     answer_grade_weight = db.Column(db.Integer, default=1, nullable=False)
     comparison_grade_weight = db.Column(db.Integer, default=1, nullable=False)
     self_evaluation_grade_weight = db.Column(db.Integer, default=1, nullable=False)
+    peer_feedback_prompt = db.Column(db.Text)
 
     # relationships
     # user via User Model

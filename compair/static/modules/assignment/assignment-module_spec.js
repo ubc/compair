@@ -131,6 +131,7 @@ describe('assignment-module', function () {
             }
         ],
         "description": "<p>This is the description</p>\n",
+        "peer_feedback_prompt": null,
         "enable_self_evaluation": true,
         "evaluation_count": 17,
         "file": null,
