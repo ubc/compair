@@ -3,8 +3,6 @@
     <div class="row">
         <header class="col-sm-6">
             <h1><i class="fa fa-book"></i> {{course.name}} <br />({{course.year}} {{course.term}})</h1>
-            <div class="intro-text" mathjax hljs ng-bind-html="course.description">
-            </div>
         </header>
         <div class="col-sm-6 sub-nav">
             <span ng-if="canCreateAssignments">

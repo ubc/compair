@@ -20,14 +20,11 @@ class CoursesAPITests(ComPAIRAPITestCase):
             course_expected.uuid, course_actual['id'],
             "Expected course id does not match actual.")
         self.assertEqual(
-            course_expected.description, course_actual['description'],
-            "Expected course description does not match actual.")
-        self.assertEqual(
             course_expected.year, course_actual['year'],
-            "Expected course description does not match actual.")
+            "Expected course year does not match actual.")
         self.assertEqual(
             course_expected.term, course_actual['term'],
-            "Expected course description does not match actual.")
+            "Expected course term does not match actual.")
         self.assertEqual(
             course_expected.available, course_actual['available'],
             "Expected course availability does not match actual.")
@@ -76,8 +73,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             'year': 2015,
             'term': 'Winter',
             'start_date': None,
-            'end_date': None,
-            'description': 'Test Course One Description Test'
+            'end_date': None
         }
         # Test login required
         rv = self.client.post(
@@ -102,7 +98,6 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assertEqual(course_expected['name'], course_actual['name'])
             self.assertEqual(course_expected['year'], course_actual['year'])
             self.assertEqual(course_expected['term'], course_actual['term'])
-            self.assertEqual(course_expected['description'], course_actual['description'])
             self.assertTrue(course_actual['available'])
 
             # Verify the course is created in db
@@ -110,7 +105,6 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assertEqual(course_in_db.name, course_actual['name'])
             self.assertEqual(course_in_db.year, course_actual['year'])
             self.assertEqual(course_in_db.term, course_actual['term'])
-            self.assertEqual(course_in_db.description, course_actual['description'])
             self.assertTrue(course_in_db.available)
 
             # Verify instructor added to course
@@ -148,7 +142,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
         with self.login(self.data.get_authorized_instructor().username):
             rv = self.client.post(
                 '/api/courses',
-                data=json.dumps({'description': 'd'}), content_type='application/json')
+                data=json.dumps({'year': 'd'}), content_type='application/json')
             self.assert400(rv)
 
     def test_edit_course(self):
@@ -158,8 +152,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             'year': 2015,
             'term': 'Winter',
             'start_date': None,
-            'end_date': None,
-            'description': 'Test Description'
+            'end_date': None
         }
         url = '/api/courses/' + self.data.get_course().uuid
 
@@ -189,7 +182,6 @@ class CoursesAPITests(ComPAIRAPITestCase):
             db.session.expire_all()
             self.assertEqual(expected['id'], rv.json['id'])
             self.assertEqual(expected['name'], rv.json['name'])
-            self.assertEqual(expected['description'], rv.json['description'])
             self.assertTrue(rv.json['available'])
 
             # Starts in the future
@@ -312,7 +304,6 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assertEqual(expected['term'], rv.json['term'])
             self.assertEqual(expected['start_date'], rv.json['start_date'])
             self.assertEqual(expected['end_date'], rv.json['end_date'])
-            self.assertEqual(original_course.description, rv.json['description'])
 
             # verify instructor added to duplicate course
             user_course = UserCourse.query \
@@ -383,7 +374,6 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             self.assertEqual(self.expected['term'], duplicate_course.term)
             self.assertEqual(self.expected['start_date'].replace('Z', ''), rv.json['start_date'].replace('+00:00', ''))
             self.assertEqual(self.expected['end_date'].replace('Z', ''), rv.json['end_date'].replace('+00:00', ''))
-            self.assertEqual(original_course.description, duplicate_course.description)
 
             # verify instructor added to duplicate course
             user_course = UserCourse.query \

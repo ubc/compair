@@ -66,16 +66,14 @@ storage.users[student2.id] = student2;
 var course = courseFactory.generateCourse("1abcABC123-abcABC123_Z", {
     name: "CHEM 111",
     year: 2015,
-    term: "Winter",
-    description: "<p>CHEM 111 description<p>",
+    term: "Winter"
 });
 storage.courses[course.id] = course;
 
 var course2 = courseFactory.generateCourse("2abcABC123-abcABC123_Z", {
     name: "PHYS 101",
     year: 2015,
-    term: "Winter",
-    description: "<p>PHYS 101  description<p>",
+    term: "Winter"
 });
 storage.courses[course2.id] = course2;
 

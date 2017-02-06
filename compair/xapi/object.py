@@ -34,8 +34,6 @@ class XAPIObject(object):
                 name=LanguageMap({ 'en-US': course.name })
             )
         )
-        if course.description:
-            activity.definition.description = LanguageMap({ 'en-US': course.description })
 
         return activity
 

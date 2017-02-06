@@ -5,7 +5,6 @@ var courseTemplate = {
     "name": null,
     "year": 2015,
     "term": null,
-    "description": null,
     "start_time": null,
     "end_time": null,
     "available": true,

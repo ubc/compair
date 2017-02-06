@@ -27,15 +27,6 @@
                     </compair-field-with-feedback>
                 </div>
             </div>
-            <input id="descriptionCheck" type="checkbox" ng-model="course.descriptionCheck" ng-checked="course.descriptionCheck || course.description" ng-disabled="course.description">
-            <label for="descriptionCheck">Add a course description (optional)<span ng-show="course.descriptionCheck || course.description">:</span></label>
-            <br />
-
-            <div ng-if="course.descriptionCheck || course.description">
-                <div class="form-group">
-                    <textarea ng-model="course.description" id="courseDescription" class="form-control" ckeditor="editorOptions" rows="4"></textarea>
-                </div>
-            </div>
         </fieldset>
 
         <fieldset>

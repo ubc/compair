@@ -55,7 +55,6 @@ describe('course-module', function () {
         "student_assignment_count": 0,
         "student_count": 0,
         "created": "Fri, 09 Jan 2015 17:23:59 -0000",
-        "description": null,
         "id": "1abcABC123-abcABC123_Z",
         "modified": "Fri, 09 Jan 2015 17:23:59 -0000",
         "name": "Test Course",
@@ -113,9 +112,7 @@ describe('course-module', function () {
                     "end_date": null,
                     "assignment_count": 0,
                     "student_assignment_count": 0,
-                    "student_count": 0,
-                    "descriptionCheck": true,
-                    "description": "<p>Description</p>\n"
+                    "student_count": 0
                 };
                 beforeEach(inject(function (_Toaster_) {
                     toaster = _Toaster_;
@@ -251,7 +248,6 @@ describe('course-module', function () {
                 {
                     "available": false,
                     "created": "2016-07-29T19:34:40",
-                    "description": null,
                     "assignment_count": 0,
                     "student_assignment_count": 0,
                     "student_count": 0,
@@ -267,7 +263,6 @@ describe('course-module', function () {
                 {
                     "available": true,
                     "created": "2016-10-04T21:32:54",
-                    "description": "<p>This is the test course</p>\n",
                     "assignment_count": 0,
                     "student_assignment_count": 0,
                     "student_count": 0,
@@ -330,9 +325,7 @@ describe('course-module', function () {
                     "end_date": null,
                     "assignment_count": 0,
                     "student_assignment_count": 0,
-                    "student_count": 0,
-                    "descriptionCheck": true,
-                    "description": "<p>Description</p>\n"
+                    "student_count": 0
                 };
 
                 it('should error when start date is not before end date', function () {
@@ -395,7 +388,6 @@ describe('course-module', function () {
             var course = {
                 "available": false,
                 "created": "2016-07-29T19:34:40",
-                "description": null,
                 "assignment_count": 0,
                 "student_assignment_count": 0,
                 "student_count": 0,

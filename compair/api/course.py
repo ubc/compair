@@ -22,7 +22,6 @@ new_course_parser = reqparse.RequestParser()
 new_course_parser.add_argument('name', required=True, help='Course name is required.')
 new_course_parser.add_argument('year', type=int, required=True, help='Course year is required.')
 new_course_parser.add_argument('term', required=True, help='Course term/semester is required.')
-new_course_parser.add_argument('description')
 new_course_parser.add_argument('start_date', default=None)
 new_course_parser.add_argument('end_date', default=None)
 
@@ -61,7 +60,6 @@ class CourseListAPI(Resource):
             name=params.get("name"),
             year=params.get("year"),
             term=params.get("term"),
-            description=params.get("description", None),
             start_date=params.get('start_date', None),
             end_date=params.get('end_date', None)
         )
@@ -135,7 +133,6 @@ class CourseAPI(Resource):
         course.name = params.get("name", course.name)
         course.year = params.get("year", course.year)
         course.term = params.get("term", course.term)
-        course.description = params.get("description", course.description)
 
         course.start_date = params.get("start_date", None)
         if course.start_date is not None:
@@ -230,7 +227,6 @@ class CourseDuplicateAPI(Resource):
             name=params.get("name"),
             year=params.get("year"),
             term=params.get("term"),
-            description=course.description,
             start_date=start_date,
             end_date=end_date
         )

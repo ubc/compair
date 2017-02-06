@@ -44,7 +44,7 @@ class SampleDataFixture(object):
         # create courses
         self.courses = []
         for course_name in self.COURSE_NAMES:
-            course = CourseFactory(name=course_name, description=course_name + " Course Description")
+            course = CourseFactory(name=course_name)
             self.courses.append(course)
         # create instructors
         for instructor_name in self.INSTRUCTOR_NAMES:

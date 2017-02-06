@@ -43,7 +43,6 @@ class CourseFactory(factory.alchemy.SQLAlchemyModelFactory):
     name = factory.Sequence(lambda n: 'TestCourseü%d' % n)
     year = 2015
     term = 'Winterü'
-    description = factory.fuzzy.FuzzyText(length=36, suffix='ü')
     #start_date = datetime.datetime.now() - datetime.timedelta(days=7)
     #end_date = datetime.datetime.now() + datetime.timedelta(days=7)
 

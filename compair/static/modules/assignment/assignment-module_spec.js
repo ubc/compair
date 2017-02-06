@@ -55,7 +55,6 @@ describe('assignment-module', function () {
         "student_assignment_count": 0,
         "student_count": 0,
         "created": "Fri, 09 Jan 2015 17:23:59 -0000",
-        "description": null,
         "id": "1abcABC123-abcABC123_Z",
         "modified": "Fri, 09 Jan 2015 17:23:59 -0000",
         "name": "Test Course",
