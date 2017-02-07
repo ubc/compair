@@ -77,7 +77,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         )
 
     @classmethod
-    def comparison_avialble_for_user(cls, course_id, assignment_id, user_id):
+    def comparison_available_for_user(cls, course_id, assignment_id, user_id):
         from . import UserCourse, CourseRole, Answer
         # ineligible authors - eg. instructors, TAs, dropped student, user
         ineligible_users = UserCourse.query. \

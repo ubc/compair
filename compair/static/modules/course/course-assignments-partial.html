@@ -198,6 +198,11 @@
                 Self-evaluation comparison unavailable<br />(You have not answered the assignment)
             </p>
 
+            <!-- BUTTON when user has feedback for their answer AND user is not an admin AND the comparison period is complete -->
+            <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}?tab=feedback" class="btn btn-success" title="See Feedback"
+               ng-show="assignment.status.answers.feedback && !canManageAssignment && assignment.after_comparing">
+                See Feedback ({{assignment.status.answers.feedback}})
+            </a>
         </div>
 
     </div>

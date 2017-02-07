@@ -117,7 +117,7 @@
         <a ng-click="setTab('comparisons')" href="">Your Work</a>
       </li>
       <li ng-show="!canManageAssignment" id="feedback" ng-class="{active:showTab('feedback')}">
-        <a ng-click="setTab('feedback')" href="">Feedback</a>
+        <a ng-click="setTab('feedback')" href="">Feedback ({{assignment.status.answers.feedback}})</a>
       </li>
       <li id="comments" ng-class="{active:showTab('help')}">
         <a ng-click="setTab('help')" href="">Help</a>
