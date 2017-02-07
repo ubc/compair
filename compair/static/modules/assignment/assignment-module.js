@@ -253,6 +253,7 @@ module.controller("AssignmentViewController",
         };
         $scope.self_evaluation_needed = false;
         $scope.rankLimit = null;
+        var tab = $location.search().tab || 'answers';
 
         Session.getUser().then(function(user) {
             $scope.loggedInUserId = user.id;
@@ -312,6 +313,8 @@ module.controller("AssignmentViewController",
                     Toaster.reqerror("Assignment Not Found For ID " + assignmentId, ret);
                 }
             );
+
+            $scope.loadTabData();
         });
 
         Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, $scope.courseId).then(function(result) {
@@ -366,21 +369,43 @@ module.controller("AssignmentViewController",
             }
         };
 
-        var tab = 'answers';
-        // tabs: answers, help, participation, comparisons
         $scope.setTab = function(name) {
-            var oldTab = tab;
-            tab = name;
-            if (name == "comparisons") {
-                $scope.comparisons = AnswerResource.comparisons(params);
-				var answer_params = angular.extend({}, params, {author: $scope.loggedInUserId});
-				$scope.user_answers = AnswerResource.get(answer_params);
-            }
-            xAPIStatementHelper.closed_page_section(oldTab + " tab");
-            xAPIStatementHelper.opened_page_section(tab + " tab");
+            $location.search('tab', name);
+            xAPIStatementHelper.closed_page_section(tab + " tab");
         };
+
         $scope.showTab = function(name) {
             return tab == name;
+        };
+
+        // Handle $location.search as a soft reload
+        // $routeProvider reloadOnSearch: false for this controller
+        $scope.$on('$routeUpdate',function(e) {
+            tab = $location.search().tab || 'answers';
+            $scope.loadTabData();
+        });
+
+        $scope.loadTabData = function() {
+            // tabs: answers, help, participation, comparisons, feedback
+            if (tab == "comparisons") {
+                $scope.comparisons = AnswerResource.comparisons(params);
+                var answer_params = angular.extend({}, params, {author: $scope.loggedInUserId});
+                $scope.user_answers = AnswerResource.get(answer_params);
+            }
+            if (tab == "feedback") {
+                var answer_params = angular.extend({}, params, {author: $scope.loggedInUserId});
+                $scope.user_answers = AnswerResource.get(answer_params,
+                    function (ret) {
+                        ret.objects.forEach(function(answer) {
+                            $scope.loadComments(answer);
+                        });
+                    },
+                    function (ret) {
+                        Toaster.reqerror("Failed to load Answers", ret);
+                    }
+                );
+            };
+            xAPIStatementHelper.opened_page_section(tab + " tab");
         };
 
         // revealAnswer function shows full answer content for abbreviated answers (determined by getHeight directive)

@@ -144,7 +144,8 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', '$locationProvi
         .when ('/course/:courseId/assignment/:assignmentId',
             {
                 templateUrl: 'modules/assignment/assignment-view-partial.html',
-                label: "View Assignment"
+                label: "View Assignment",
+                reloadOnSearch: false
             })
         .when ('/course/:courseId/assignment/:assignmentId/edit',
             {
