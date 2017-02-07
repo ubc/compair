@@ -28,10 +28,10 @@ module.factory(
 
 /***** Controllers *****/
 module.controller("GradebookController",
-    ["$scope", "$log", "$routeParams", "CourseResource", "GradebookResource",
+    ["$scope", "$window", "$routeParams", "CourseResource", "GradebookResource",
         "GroupResource", "AssignmentResource", "Authorize", "Toaster",
         "xAPIStatementHelper", "$filter",
-    function($scope, $log, $routeParams, CourseResource, GradebookResource,
+    function($scope, $window, $routeParams, CourseResource, GradebookResource,
         GroupResource, AssignmentResource, Authorize, Toaster,
         xAPIStatementHelper, $filter)
     {
@@ -59,6 +59,18 @@ module.controller("GradebookController",
             function(ret)
             {
                 $scope.gradebook = ret['gradebook'];
+                $scope.showAttachments = false;
+                $scope.gradebook.forEach(function(entry) {
+                    if (entry.file) {
+                        $scope.showAttachments = true;
+                    }
+                    // download file name is student number + full name (if student number is set)
+                    entry.download_file_name = ""
+                    if (entry.user.student_number) {
+                        entry.download_file_name = entry.user.student_number + " ";
+                    }
+                    entry.download_file_name += entry.user.fullname;
+                });
                 $scope.totalComparisonsRequired=ret['total_comparisons_required'];
                 $scope.includeScores = ret['include_scores'];
                 $scope.includeSelfEval = ret['include_self_evaluation'];
@@ -85,8 +97,13 @@ module.controller("GradebookController",
 
         $scope.groupFilter = function() {
             return function (entry) {
-                return entry.user_id in userIds;
+                return entry.user && entry.user.id in userIds;
             }
+        };
+
+        $scope.openAttachment = function (file, downloadName) {
+            var filepath = '/app/attachment/' + file.name + "?name="+encodeURIComponent($scope.downloadName+'.'+file.extension);
+            $window.open(filepath);
         };
 
         var filterWatcher = function(newValue, oldValue) {

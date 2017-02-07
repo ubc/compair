@@ -26,6 +26,7 @@ module.directive('compairAttachmentInline', function() {
         scope: {
             attachment: '=?',
             downloadName: '=?',
+            forceDownload: '=?',
             //attachments: '=?',
             label: '@'
         },
@@ -35,10 +36,11 @@ module.directive('compairAttachmentInline', function() {
             $scope.inline = null;
             $scope.inlineVisible = false;
             $scope.inlineUrl = null;
+            $scope.forceDownload = $scope.forceDownload || false;
 
             $scope.openAttachment = function (file) {
                 var filepath = '/app/attachment/' + file.name;
-                if (file.extension == 'pdf') {
+                if (file.extension == 'pdf' && !$scope.forceDownload) {
                     var modalScope = $scope.$new();
                     modalScope.file = filepath;
                     modalScope.name = 'Attached PDF: Use + and - to zoom';
@@ -62,7 +64,7 @@ module.directive('compairAttachmentInline', function() {
 
             $scope.updateInline = function (file) {
                 // only pdfs can be opened inline
-                if (file.extension == 'pdf') {
+                if (file.extension == 'pdf' && !$scope.forceDownload) {
                     if (file != $scope.inline) {
                         $scope.inlineVisible = true;
                         $scope.inline = file;

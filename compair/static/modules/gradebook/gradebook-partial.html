@@ -31,19 +31,22 @@
             <thead>
                 <tr>
                     <th>
-                        <a href="" ng-click="updateTableOrderBy('firstname')">First Name</a>
+                        <a href="" ng-click="updateTableOrderBy('user.firstname')">First Name</a>
                     </th>
                     <th>
-                        <a href="" ng-click="updateTableOrderBy('lastname')">Last Name</a>
+                        <a href="" ng-click="updateTableOrderBy('user.lastname')">Last Name</a>
                     </th>
                     <th>
-                        <a href="" ng-click="updateTableOrderBy('displayname')">Display Name</a>
+                        <a href="" ng-click="updateTableOrderBy('user.displayname')">Display Name</a>
                     </th>
                     <th class="text-center" ng-if="!includeScores">
                         <a href="" ng-click="updateTableOrderBy('num_answers')">Answered</a>
                     </th>
                     <th class="text-center" ng-if="includeScores">
                         <a href="" ng-click="updateTableOrderBy('score')">Answer Score</a>
+                    </th>
+                    <th class="text-center" ng-if="showAttachments">
+                        <a href="" ng-click="updateTableOrderBy('file')">Attachment</a>
                     </th>
                     <th class="text-center">
                         <a href="" ng-click="updateTableOrderBy('flagged')">Flagged</a>
@@ -61,11 +64,11 @@
             </thead>
             <tbody>
                 <tr ng-repeat="entry in gradebook | filter:groupFilter() | orderBy:predicate:reverse">
-                    <td>{{entry.firstname}}</td>
-                    <td>{{entry.lastname}}</td>
+                    <td>{{entry.user.firstname}}</td>
+                    <td>{{entry.user.lastname}}</td>
                     <td>
-                        <a ng-href="#/user/{{entry.user_id}}">
-                            {{entry.displayname}}
+                        <a ng-href="#/user/{{entry.id}}">
+                            {{entry.user.displayname}}
                         </a>
                     </td>
                     <td class="text-center text-success" ng-if="!includeScores && entry.num_answers > 0"><strong>Yes</strong></td>
@@ -80,6 +83,10 @@
                             <span ng-if="!isNumber(entry.score)">{{entry.score}}</span>
                             <span ng-if="isNumber(entry.score)">{{entry.score|number:0}}%</span>
                         </strong>
+                    </td>
+                    <td class="text-center" ng-if="showAttachments">
+                        <span ng-if="!entry.file"> n/a </span>
+                        <a ng-if="entry.file" ng-click="openAttachment(entry.file, entry.download_file_name)">View</a>
                     </td>
                     <td class="text-center" ng-class="{
                         'text-success': entry.flagged == 'No',

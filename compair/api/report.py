@@ -193,6 +193,7 @@ def participation_stat_report(course, assignments, group_name, overall):
             .join(Answer) \
             .filter(Answer.assignment_id == assignment.id) \
             .filter(AnswerComment.draft == False) \
+            .filter(AnswerComment.active == True) \
             .with_entities(AnswerComment.user_id, func.count(AnswerComment.id)) \
             .group_by(AnswerComment.user_id) \
             .all()

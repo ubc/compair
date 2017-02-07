@@ -5,13 +5,14 @@ import copy
 from bouncer.constants import MANAGE
 from flask import Blueprint, jsonify
 from flask_login import login_required, current_user
-from flask_restful import Resource
+from flask_restful import Resource, marshal_with, marshal, reqparse
 from sqlalchemy import func, and_
 from sqlalchemy.orm import undefer, joinedload
 
+from . import dataformat
 from compair.authorization import require
 from compair.models import Course, Assignment, CourseRole, User, UserCourse, Comparison, \
-    AnswerComment, Answer, AnswerScore, AnswerCommentType, PairingAlgorithm, AssignmentGrade
+    AnswerComment, Answer, File, AnswerScore, AnswerCommentType, PairingAlgorithm, AssignmentGrade
 from .util import new_restful_api
 from compair.core import event
 
@@ -39,7 +40,7 @@ class GradebookAPI(Resource):
 
         # get all students in this course
         students = User.query \
-            .with_entities(User.id, User.uuid, User.displayname, User.firstname, User.lastname, AssignmentGrade.grade) \
+            .with_entities(User, AssignmentGrade.grade) \
             .join(UserCourse, UserCourse.user_id == User.id) \
             .outerjoin(AssignmentGrade, and_(
                  AssignmentGrade.user_id == User.id,
@@ -50,7 +51,7 @@ class GradebookAPI(Resource):
                 UserCourse.course_role == CourseRole.student
             )) \
             .all()
-        student_ids = [student.id for student in students]
+        student_ids = [student.id for (student, grade) in students]
 
         # get students comparisons counts for this assignment
         comparisons = User.query \
@@ -69,7 +70,10 @@ class GradebookAPI(Resource):
 
         # find out the scores that students get
         answer_scores = Answer.query \
-            .with_entities(Answer.user_id, Answer.flagged, AnswerScore.normalized_score) \
+            .with_entities(Answer.user_id, Answer.flagged, File, AnswerScore.normalized_score) \
+            .outerjoin(File, and_(
+                 Answer.file_id == File.id
+            )) \
             .outerjoin(AnswerScore, and_(
                  Answer.id == AnswerScore.answer_id
             )) \
@@ -86,15 +90,18 @@ class GradebookAPI(Resource):
         scores_by_user_id = {student_id: 'No Answer' for student_id in student_ids}
         flagged_by_user_id = {}
         num_answers_per_student = {}
+        file_by_user_id = {}
 
-        for (user_id, flagged, score ) in answer_scores:
+        for (user_id, flagged, file_attachment, score) in answer_scores:
             flagged_by_user_id[user_id] = 'Yes' if flagged else 'No'
             num_answers_per_student[user_id] = 1
             if include_scores:
                 scores_by_user_id[user_id] = round(score, 3) if score != None else 'Not Evaluated'
+            if file_attachment != None:
+                file_by_user_id[user_id] = file_attachment
 
         include_self_evaluation = False
-        num_self_evaluation_per_student = {student_id: 0 for student_id in student_ids}
+        num_self_evaluation_per_student = {}
         if assignment.enable_self_evaluation:
             include_self_evaluation = True
 
@@ -107,40 +114,32 @@ class GradebookAPI(Resource):
                 .filter(and_(
                     AnswerComment.comment_type == AnswerCommentType.self_evaluation,
                     AnswerComment.draft == False,
+                    AnswerComment.active == True,
                     AnswerComment.user_id.in_(student_ids)
                 )) \
                 .group_by(AnswerComment.user_id) \
                 .all()
 
-            for self_evaluation_count in self_evaluation_counts:
-                num_self_evaluation_per_student[self_evaluation_count.user_id] = self_evaluation_count.comment_count
+            for (user_id, comment_count) in self_evaluation_counts:
+                num_self_evaluation_per_student[user_id] = comment_count
 
         # {'gradebook':[{user1}. {user2}, ...]}
         # user id, username, first name, last name, answer submitted, comparisons submitted
         gradebook = []
-        for student in students:
+        for (student, grade) in students:
             entry = {
-                'user_id': student.uuid,
-                'displayname': student.displayname,
-                'firstname': student.firstname,
-                'lastname': student.lastname,
+                'user': student,
                 'num_answers': num_answers_per_student.get(student.id, 0),
                 'num_comparisons': num_comparisons_per_student.get(student.id, 0),
-                'grade': student.grade * 100 if student.grade else 0,
-                'flagged': flagged_by_user_id.get(student.id, 'No Answer')
+                'grade': grade * 100 if grade else 0,
+                'flagged': flagged_by_user_id.get(student.id, 'No Answer'),
+                'file': file_by_user_id.get(student.id, None),
             }
             if include_scores:
                 entry['score'] = scores_by_user_id.get(student.id, 'No Answer')
             if include_self_evaluation:
-                entry['num_self_evaluation'] = num_self_evaluation_per_student[student.id]
+                entry['num_self_evaluation'] = num_self_evaluation_per_student.get(student.id, 0)
             gradebook.append(entry)
-
-        ret = {
-            'gradebook': gradebook,
-            'total_comparisons_required': assignment.total_comparisons_required,
-            'include_scores': include_scores,
-            'include_self_evaluation': include_self_evaluation
-        }
 
         on_gradebook_get.send(
             self,
@@ -149,7 +148,13 @@ class GradebookAPI(Resource):
             course_id=course.id,
             data={'assignment_id': assignment.id})
 
-        return jsonify(ret)
+        return {
+            'gradebook': marshal(gradebook, dataformat.get_gradebook(
+                include_scores=include_scores, include_self_evaluation=include_self_evaluation)),
+            'total_comparisons_required': assignment.total_comparisons_required,
+            'include_scores': include_scores,
+            'include_self_evaluation': include_self_evaluation
+        }
 
 
 api.add_resource(GradebookAPI, '')
