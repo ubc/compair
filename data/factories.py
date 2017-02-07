@@ -1,19 +1,24 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import datetime
+import logging
 
 import factory
 import factory.fuzzy
 
 from compair.core import db
-from compair.models import Course, User, CourseRole, SystemRole, Criterion, \
-    UserCourse, AssignmentCriterion, Assignment, Score, Answer, AssignmentComment, \
-    AnswerComment, Comparison, AnswerCommentType, ComparisonExample, File, \
+from compair.models import Course, User, CourseRole, SystemRole, Criterion, File, \
+    UserCourse, AssignmentCriterion, Assignment, AnswerScore, AnswerCriterionScore, \
+    Answer, AssignmentComment, AnswerComment, Comparison, ComparisonCriterion, \
+    AnswerCommentType, ComparisonExample, \
     LTIConsumer, LTIContext, LTIResourceLink, LTIMembership, LTIUser, LTIUserResourceLink, \
     ThirdPartyUser, ThirdPartyType
 
 from oauthlib.common import generate_token
 
+# suppress factory_boy debug logging (spits out a lot of text)
+# comment out/set log level to debug to see the messages
+logging.getLogger("factory").setLevel(logging.WARN)
 
 class UserFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
@@ -104,9 +109,19 @@ class AnswerFactory(factory.alchemy.SQLAlchemyModelFactory):
     # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 
-class ScoreFactory(factory.alchemy.SQLAlchemyModelFactory):
+class AnswerScoreFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
-        model = Score
+        model = AnswerScore
+        sqlalchemy_session = db.session
+
+    score = 5
+
+    assignment = factory.SubFactory(AssignmentFactory)
+    answer = factory.SubFactory(AnswerFactory)
+
+class AnswerCriterionScoreFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = AnswerCriterionScore
         sqlalchemy_session = db.session
 
     score = 5
@@ -148,11 +163,22 @@ class ComparisonFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = db.session
 
     assignment = factory.SubFactory(AssignmentFactory)
-    criterion = factory.SubFactory(CriterionFactory)
     user = factory.SubFactory(UserFactory)
+    # Make sure created dates are unique.
+    created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
+
+
+class ComparisonCriterionFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = ComparisonCriterion
+        sqlalchemy_session = db.session
+
+    comparison = factory.SubFactory(ComparisonFactory)
+    criterion = factory.SubFactory(CriterionFactory)
     content = factory.Sequence(lambda n: 'this is some content for post ü %d' % n)
     # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
+
 
 class ComparisonExampleFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:

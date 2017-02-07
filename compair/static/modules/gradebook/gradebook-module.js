@@ -29,17 +29,16 @@ module.factory(
 /***** Controllers *****/
 module.controller("GradebookController",
     ["$scope", "$log", "$routeParams", "CourseResource", "GradebookResource",
-        "GroupResource", "AssignmentResource", "Authorize", "Toaster", "AssignmentCriterionResource",
+        "GroupResource", "AssignmentResource", "Authorize", "Toaster",
         "xAPIStatementHelper", "$filter",
     function($scope, $log, $routeParams, CourseResource, GradebookResource,
-        GroupResource, AssignmentResource, Authorize, Toaster, AssignmentCriterionResource,
+        GroupResource, AssignmentResource, Authorize, Toaster,
         xAPIStatementHelper, $filter)
     {
         $scope.users = [];
         $scope.gradebookFilters = {
             student: null,
-            group: null,
-            sortby: null
+            group: null
         };
         var userIds = {};
         $scope.isNumber = angular.isNumber;
@@ -84,17 +83,6 @@ module.controller("GradebookController",
             }
         });
 
-        AssignmentCriterionResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
-            function (ret) {
-                $scope.criteria = ret['objects'];
-                $scope.gradebookFilters.sortby = ret['objects'][0]['id'];
-                $scope.$watchCollection('gradebookFilters', filterWatcher);
-            },
-            function (ret) {
-                Toaster.reqerror("Unable to retrieve the criteria.", ret);
-            }
-        );
-
         $scope.groupFilter = function() {
             return function (entry) {
                 return entry.user_id in userIds;
@@ -133,6 +121,7 @@ module.controller("GradebookController",
 
             $scope.updateAnswerList();
         };
+        $scope.$watchCollection('gradebookFilters', filterWatcher);
 
         $scope.updateTableOrderBy = function(predicate) {
             $scope.reverse = $scope.predicate == predicate && !$scope.reverse;

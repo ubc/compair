@@ -4,11 +4,12 @@ import base64
 import uuid
 
 from compair import db
-from compair.models import User, Comparison, Score, \
-    LTIOutcome, SystemRole
-from compair.models.comparison import update_scores
+from compair.models import User, Comparison, AnswerScore, \
+    AnswerCriterionScore, LTIOutcome, SystemRole
+from compair.models.comparison import update_answer_scores, \
+    update_answer_criteria_scores
 from compair.tests.test_compair import ComPAIRTestCase
-from compair.algorithms import ComparisonPair
+from compair.algorithms import ComparisonPair, ComparisonWinner
 from compair.algorithms.score import calculate_score
 from data.fixtures.test_data import TestFixture, LTITestData
 
@@ -42,20 +43,45 @@ class TestUsersModel(ComPAIRTestCase):
 
 
 class TestUtils(ComPAIRTestCase):
-    def test_update_scores(self):
+    def test_update_answer_scores(self):
 
-        criterion_comparison_results = {
-            1: calculate_score(comparison_pairs=[
-                ComparisonPair(1,2, winning_key=1)
-            ])
-        }
-        scores = update_scores([], 1, criterion_comparison_results)
+        comparison_results = calculate_score(comparison_pairs=[
+            ComparisonPair(key1=1,key2=2, winner=ComparisonWinner.key1)
+        ])
+        scores = update_answer_scores([], 1, comparison_results)
         self.assertEqual(len(scores), 2)
         for score in scores:
             self.assertIsNone(score.id)
 
-        score = Score(answer_id=1, criterion_id=1, id=2)
-        scores = update_scores([score], 1, criterion_comparison_results)
+        score = AnswerScore(answer_id=1, id=2)
+        scores = update_answer_scores([score], 1, comparison_results)
+        self.assertEqual(len(scores), 2)
+        self.assertEqual(scores[0].id, 2)
+        self.assertIsNone(scores[1].id)
+
+
+        comparison_results = calculate_score(comparison_pairs=[
+            ComparisonPair(key1=1,key2=2, winner=ComparisonWinner.key1),
+            ComparisonPair(key1=3,key2=4, winner=ComparisonWinner.key1)
+        ])
+        score = AnswerScore(answer_id=1, id=2)
+        scores = update_answer_scores([score], 1, comparison_results)
+        self.assertEqual(len(scores), 4)
+
+    def test_update_answer_criteria_scores(self):
+
+        criterion_comparison_results = {
+            1: calculate_score(comparison_pairs=[
+               ComparisonPair(key1=1,key2=2, winner=ComparisonWinner.key1)
+            ])
+        }
+        scores = update_answer_criteria_scores([], 1, criterion_comparison_results)
+        self.assertEqual(len(scores), 2)
+        for score in scores:
+            self.assertIsNone(score.id)
+
+        score = AnswerCriterionScore(answer_id=1, criterion_id=1, id=2)
+        scores = update_answer_criteria_scores([score], 1, criterion_comparison_results)
         self.assertEqual(len(scores), 2)
         self.assertEqual(scores[0].id, 2)
         self.assertIsNone(scores[1].id)
@@ -63,14 +89,14 @@ class TestUtils(ComPAIRTestCase):
 
         criterion_comparison_results = {
             1: calculate_score(comparison_pairs=[
-                   ComparisonPair(1,2, winning_key=1)
+                   ComparisonPair(key1=1,key2=2, winner=ComparisonWinner.key1)
             ]),
             2: calculate_score(comparison_pairs=[
-               ComparisonPair(1,2, winning_key=1)
+               ComparisonPair(key1=1,key2=2, winner=ComparisonWinner.key1)
             ])
         }
-        score = Score(answer_id=1, criterion_id=1, id=2)
-        scores = update_scores([score], 1, criterion_comparison_results)
+        score = AnswerCriterionScore(answer_id=1, criterion_id=1, id=2)
+        scores = update_answer_criteria_scores([score], 1, criterion_comparison_results)
         self.assertEqual(len(scores), 4)
 
 class TestLTIOutcome(ComPAIRTestCase):

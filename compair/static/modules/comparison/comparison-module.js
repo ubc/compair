@@ -32,6 +32,11 @@ module.factory('ComparisonResource', ['$resource',
         return ret;
 }]);
 
+module.constant('WinningAnswer', {
+    answer1: "answer1",
+    answer2: "answer2",
+    draw: "draw"
+});
 
 /***** Constants *****/
 module.constant('required_rounds', 6);
@@ -41,10 +46,10 @@ module.controller(
     'ComparisonController',
     ['$log', '$location', '$route', '$scope', '$timeout', '$routeParams', '$anchorScroll', 'AssignmentResource', 'AnswerResource',
         'ComparisonResource', 'AnswerCommentResource', 'Session', 'Toaster', 'AnswerCommentType', "TimerResource",
-        'EditorOptions', "Authorize", "xAPI", "xAPIStatementHelper",
+        'EditorOptions', "Authorize", "xAPI", "xAPIStatementHelper", "WinningAnswer",
     function($log, $location, $route, $scope, $timeout, $routeParams, $anchorScroll, AssignmentResource, AnswerResource,
         ComparisonResource, AnswerCommentResource, Session, Toaster, AnswerCommentType, TimerResource,
-        EditorOptions, Authorize, xAPI, xAPIStatementHelper)
+        EditorOptions, Authorize, xAPI, xAPIStatementHelper, WinningAnswer)
     {
         var courseId = $scope.courseId = $routeParams['courseId'];
         var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
@@ -54,6 +59,7 @@ module.controller(
         $scope.isDraft = false;
         $scope.preventExit = true; //user should be warned before leaving page by default
         $scope.tracking = xAPI.generateTracking();
+        $scope.WinningAnswer = WinningAnswer;
 
         $scope.editor1Options =  xAPI.ckeditorContentTracking(EditorOptions.basic, function(duration) {
             xAPIStatementHelper.interacted_answer_comment($scope.answer1.comment, $scope.tracking.getRegistration(), duration);
@@ -71,20 +77,20 @@ module.controller(
         });
 
         // get an comparisons to be compared from the server
-        $scope.comparisonsError = false;
+        $scope.comparisonError = false;
         $scope.answer1 = {};
         $scope.answer2 = {};
-        $scope.comparisons = [];
+        $scope.comparison = {};
         Session.getUser().then(function(user) {
             userId = user.id;
             ComparisonResource.get({'courseId': courseId, 'assignmentId': assignmentId},
                 function (ret) {
                     // check if there is any existing comments from current user
                     var newPair = ret.new_pair;
-                    $scope.comparisons = ret.objects;
-                    $scope.answer1 = angular.copy($scope.comparisons[0].answer1);
+                    $scope.comparison = ret.comparison;
+                    $scope.answer1 = angular.copy($scope.comparison.answer1);
                     $scope.answer1.comment = {};
-                    $scope.answer2 = angular.copy($scope.comparisons[0].answer2);
+                    $scope.answer2 = angular.copy($scope.comparison.answer2);
                     $scope.answer2.comment = {};
 
                     $scope.current = ret.current;
@@ -144,12 +150,12 @@ module.controller(
                             }
                             if (newPair) {
                                 xAPIStatementHelper.initialize_comparison_question(
-                                    $scope.comparisons, $scope.current, $scope.assignment.pairing_algorithm,
+                                    $scope.comparison, $scope.current, $scope.assignment.pairing_algorithm,
                                     $scope.tracking.getRegistration()
                                 );
                             } else {
                                 xAPIStatementHelper.resume_comparison_question(
-                                    $scope.comparisons, $scope.current, $scope.assignment.pairing_algorithm,
+                                    $scope.comparison, $scope.current, $scope.assignment.pairing_algorithm,
                                     $scope.tracking.getRegistration()
                                 );
                             }
@@ -160,7 +166,7 @@ module.controller(
                         }
                     );
                 }, function (ret) {
-                    $scope.comparisonsError = true;
+                    $scope.comparisonError = true;
                     if (ret.status == 403 && ret.data && ret.data.error) {
                         Toaster.info(ret.data.error);
                     } else if (ret.status == 400 && ret.data && ret.data.error)  {
@@ -187,14 +193,14 @@ module.controller(
 
         $scope.trackExited = function() {
             xAPIStatementHelper.exited_comparison_question(
-                $scope.comparisons, $scope.current, $scope.assignment.pairing_algorithm,
+                $scope.comparison, $scope.current, $scope.assignment.pairing_algorithm,
                 $scope.tracking.getRegistration(), $scope.tracking.getDuration()
             );
         };
 
-        $scope.trackComparisonWinner = function(comparison) {
-            xAPIStatementHelper.interacted_comparison_solution(
-                comparison, $scope.tracking.getRegistration()
+        $scope.trackComparisonCriterionWinner = function(comparison_criterion) {
+            xAPIStatementHelper.interacted_comparison_criterion_solution(
+                $scope.comparison, comparison_criterion, $scope.tracking.getRegistration()
             );
         };
 
@@ -219,18 +225,19 @@ module.controller(
                     }
                 );
             });
+            var comparison_criteria = []
             var comparisons = []
-            angular.forEach($scope.comparisons, function(comparison) {
-                comparisons.push({
-                    criterion_id: comparison.criterion_id,
-                    content: comparison.content,
-                    winner_id: comparison.winner_id,
-                    draft: $scope.isDraft
+            angular.forEach($scope.comparison.comparison_criteria, function(comparison_criterion) {
+                comparison_criteria.push({
+                    criterion_id: comparison_criterion.criterion_id,
+                    content: comparison_criterion.content,
+                    winner: comparison_criterion.winner
                 });
             });
 
             $data = {
-                comparisons: comparisons,
+                draft: $scope.isDraft,
+                comparison_criteria: comparison_criteria,
                 tracking: $scope.tracking.toParams()
             };
 
@@ -277,7 +284,7 @@ module.controller(
                         }
                         $scope.tracking = xAPI.generateTracking();
                         xAPIStatementHelper.resume_comparison_question(
-                            $scope.comparisons, $scope.current, $scope.assignment.pairing_algorithm,
+                            $scope.comparison, $scope.current, $scope.assignment.pairing_algorithm,
                             $scope.tracking.getRegistration()
                         );
                         Toaster.success("Saved Draft Successfully!", "Remember to submit your comparison before the deadline.");

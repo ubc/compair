@@ -25,7 +25,7 @@
 
         <hr />
 
-        <div class="h3 text-center" ng-show="showCountDown && !comparisonsError">
+        <div class="h3 text-center" ng-show="showCountDown && !comparisonError">
             <timer end-time="assignment.compare_end">
                 <span ng-show="minutes > 0 || seconds > 0" title="Official time remaining until deadline" class="bg-danger alert text-danger"><i class="glyphicon glyphicon-time"></i> {{minutes}} minutes {{seconds}} seconds left</span>
                 <span ng-show="minutes == 0 && seconds == 0" class="bg-danger alert text-danger"><i class="glyphicon glyphicon-time"></i> DEADLINE REACHED</span>
@@ -35,15 +35,15 @@
         </div>
 
         <h2 class="col-md-6">Answer Pair</h2>
-        <h2 class="col-md-6 text-right rounds"><span ng-hide="comparisonsError" class="label label-warning">
+        <h2 class="col-md-6 text-right rounds"><span ng-hide="comparisonError" class="label label-warning">
             Round {{current}} <span ng-if="!canManageAssignment">/ {{total}}</span>
         </h2>
 
-        <div ng-show="comparisonsError" class="alert alert-info" role="alert">
+        <div ng-show="comparisonError" class="alert alert-info" role="alert">
             <p><strong>Break time!</strong> You've compared the currently available answer pairs. Please check back later to compare new pairs after more answers have been submitted.</p>
         </div>
 
-        <div class="col-md-6" ng-hide="comparisonsError">
+        <div class="col-md-6" ng-hide="comparisonError">
             <div class="answer-choice clearfix">
                 <h3 class="text-center">Answer {{firstAnsNum}}</h3>
                 <div mathjax hljs ng-bind-html="answer1.content"></div>
@@ -64,7 +64,7 @@
             </div>
         </div>
 
-        <div class="col-md-6" ng-hide="comparisonsError">
+        <div class="col-md-6" ng-hide="comparisonError">
             <div class="answer-choice clearfix">
                 <h3 class="text-center">Answer {{secondAnsNum}}</h3>
                 <div mathjax hljs ng-bind-html="answer2.content"></div>
@@ -86,7 +86,7 @@
 
     </div>
 
-    <form name="comparisonForm" ng-submit="comparisonSubmit(comparisonForm)" novalidate ng-hide="comparisonsError" confirm-form-exit form-type="compare">
+    <form name="comparisonForm" ng-submit="comparisonSubmit(comparisonForm)" novalidate ng-hide="comparisonError" confirm-form-exit form-type="compare">
 
         <div>
 
@@ -99,37 +99,35 @@
                 <br />
             </div>
 
-            <div class="form-group sub-step" ng-repeat="comparison in comparisons">
+            <div class="form-group sub-step" ng-repeat="comparsion_criterion in comparison.comparison_criteria">
 
                 <div class="each-criterion sub-step">
                     <fieldset>
                         <div class="row">
                             <div class="col-sm-8">
-                                <h4><i class="fa fa-gavel"></i> {{comparison.criterion.name}}</h4>
+                                <h4><i class="fa fa-gavel"></i> {{comparsion_criterion.criterion.name}}</h4>
                                 <hr />
                                 <div class="criteria" mathjax hljs
-                                     ng-bind-html="comparison.criterion.description">
+                                     ng-bind-html="comparsion_criterion.criterion.description">
                                 </div>
                             </div>
                             <div class="col-sm-4 text-center">
                                 <p><strong>Select one:</strong></p>
                                 <div class="btn-group">
-                                    <label class="btn btn-primary" ng-class=
-                                        "{active:comparison.winner_id==answer1.id}">
+                                    <label class="btn btn-primary" ng-class="{active: comparsion_criterion.winner == WinningAnswer.answer1 }">
                                         <input type="radio" class="hideRadio"
                                             name="answer{{answer1.id}}" required
-                                            ng-model="comparison.winner_id"
-                                            ng-change="trackComparisonWinner(comparison)"
-                                            ng-value="answer1.id">
+                                            ng-model="comparsion_criterion.winner"
+                                            ng-change="trackComparisonCriterionWinner(comparsion_criterion, answer1.id)"
+                                            ng-value="WinningAnswer.answer1">
                                         Answer {{firstAnsNum}}
                                     </label>
-                                    <label class="btn btn-primary" ng-class=
-                                        "{active:comparison.winner_id==answer2.id}">
+                                    <label class="btn btn-primary" ng-class="{active: comparsion_criterion.winner == WinningAnswer.answer2 }">
                                         <input type="radio" class="hideRadio"
                                             name="answer{{answer2.id}}" required
-                                            ng-model="comparison.winner_id"
-                                            ng-change="trackComparisonWinner(comparison)"
-                                            ng-value="answer2.id">
+                                            ng-model="comparsion_criterion.winner"
+                                            ng-change="trackComparisonCriterionWinner(comparsion_criterion, answer2.id)"
+                                            ng-value="WinningAnswer.answer2">
                                         Answer {{secondAnsNum}}
                                     </label>
                                 </div>

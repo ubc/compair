@@ -229,9 +229,9 @@ module.controller(
 
 module.controller(
     "ComparisonCommentController",
-    ['$scope', '$log', '$routeParams', 'breadcrumbs', 'CourseResource', 'AssignmentResource',
+    ['$scope', '$log', '$routeParams', 'breadcrumbs', 'CourseResource', 'AssignmentResource', "WinningAnswer",
         'AnswerResource', 'AnswerCommentResource', 'GroupResource', 'Toaster', "xAPIStatementHelper",
-    function ($scope, $log, $routeParams, breadcrumbs, CourseResource, AssignmentResource,
+    function ($scope, $log, $routeParams, breadcrumbs, CourseResource, AssignmentResource, WinningAnswer,
         AnswerResource, AnswerCommentResource, GroupResource, Toaster, xAPIStatementHelper)
     {
         var courseId = $routeParams['courseId'];
@@ -245,6 +245,7 @@ module.controller(
             author: null
         };
         $scope.answers = [];
+        $scope.WinningAnswer = WinningAnswer;
 
         CourseResource.get({'id':courseId},
             function (ret) {
@@ -288,7 +289,7 @@ module.controller(
             if (_.find($scope.answers, {user_id: author_id})) return;
             AnswerResource.get({'courseId': courseId, 'assignmentId': assignmentId, 'author': author_id}, function(response) {
                 var answer = response.objects[0];
-                $scope.answers.push(convertScore(answer));
+                $scope.answers.push(answer);
             });
         };
 
@@ -318,14 +319,5 @@ module.controller(
     }]
 );
 
-function convertScore(answer) {
-    var scores = answer.scores;
-    answer.scores = _.reduce(scores, function(results, score) {
-        results[score.criterion_id] = score.normalized_score;
-        return results;
-    }, {});
-
-    return answer;
-}
 // End anonymouse function
 }) ();

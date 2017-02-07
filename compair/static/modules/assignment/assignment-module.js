@@ -34,6 +34,39 @@ var module = angular.module('ubc.ctlt.compair.assignment',
     ]
 );
 
+var findEqualPartitions = function(items) {
+    if (items.length <= 1) {
+        return false;
+    }
+    return _findEqualPartitionsRecursive([], items);
+};
+
+var _findEqualPartitionsRecursive = function(partition1, partition2) {
+    var sum1 = _.sum(partition1);
+    var sum2 = _.sum(partition2);
+
+    if (sum1 == sum2) {
+        // found equal partitions
+        return [partition1, partition2];
+    } else if (sum1 > sum2 || partition2.length == 1) {
+        // stop if sum1 is larger than sum2 (sum1 only grows)
+        // or if last item in partition2
+        return false;
+    } else {
+        // try moving every item from partition2 in partition1 recursively
+        for(var index = 0; index < partition2.length; ++index) {
+            var newPartition2 = angular.copy(partition2);
+            newPartition1 = partition1.concat(newPartition2.splice(index, 1));
+            var result = _findEqualPartitionsRecursive(newPartition1, newPartition2);
+            if (result !== false) {
+                return result;
+            }
+        }
+
+        return false;
+    }
+};
+
 module.constant('PairingAlgorithm', {
     adaptive: "adaptive",
     random: "random"
@@ -121,8 +154,7 @@ module.directive('comparisonPreview', function() {
                     $scope.comparisons.push({
                         'criterion_id': criterion.id,
                         'criterion': criterion,
-                        'content': '',
-                        'winner_id': null
+                        'content': ''
                     });
                 });
                 /* student view preview is comparison template */
@@ -208,12 +240,12 @@ module.filter("excludeInstr", function() {
 });
 
 module.filter("notScoredEnd", function () {
-    return function (array, key) {
+    return function (array) {
         if (!angular.isArray(array)) return;
         var scored = [];
         var not_scored = [];
         angular.forEach(array, function(item) {
-            if (key in item.scores) {
+            if (item.score) {
                 scored.push(item);
             } else {
                 not_scored.push(item);
@@ -227,10 +259,10 @@ module.filter("notScoredEnd", function () {
 module.controller("AssignmentViewController",
     ["$scope", "$routeParams", "$location", "AnswerResource", "Authorize", "AssignmentResource", "AssignmentCommentResource",
              "ComparisonResource", "CourseResource", "required_rounds", "Session", "Toaster", "AnswerCommentResource",
-             "GroupResource", "AnswerCommentType", "PairingAlgorithm", "$uibModal", "xAPIStatementHelper",
+             "GroupResource", "AnswerCommentType", "PairingAlgorithm", "$uibModal", "xAPIStatementHelper", "WinningAnswer",
     function($scope, $routeParams, $location, AnswerResource, Authorize, AssignmentResource, AssignmentCommentResource,
              ComparisonResource, CourseResource, required_rounds, Session, Toaster, AnswerCommentResource,
-             GroupResource, AnswerCommentType, PairingAlgorithm, $uibModal, xAPIStatementHelper)
+             GroupResource, AnswerCommentType, PairingAlgorithm, $uibModal, xAPIStatementHelper, WinningAnswer)
     {
         $scope.courseId = $routeParams['courseId'];
         $scope.AnswerCommentType = AnswerCommentType;
@@ -253,6 +285,7 @@ module.controller("AssignmentViewController",
         };
         $scope.self_evaluation_needed = false;
         $scope.rankLimit = null;
+        $scope.WinningAnswer = WinningAnswer;
         var tab = $location.search().tab || 'answers';
 
         Session.getUser().then(function(user) {
@@ -265,8 +298,6 @@ module.controller("AssignmentViewController",
                     ret.compare_start = new Date(ret.compare_start);
                     ret.compare_end = new Date(ret.compare_end);
                     $scope.assignment = ret;
-
-                    $scope.criteria = ret.criteria;
 
                     if (ret.rank_display_limit) {
                         $scope.rankLimit = ret.rank_display_limit;
@@ -700,15 +731,13 @@ module.controller("AssignmentViewController",
 
                 $scope.rankCount = {};
                 angular.forEach(response.objects, function(answer) {
-                    angular.forEach(answer.scores, function(score) {
-                        if (score.criterion_id == $scope.answerFilters.orderBy) {
-                            if ($scope.rankCount[score.rank] == undefined) {
-                                $scope.rankCount[score.rank] = 1;
-                            } else {
-                                ++$scope.rankCount[score.rank];
-                            }
+                    if (answer.score && $scope.answerFilters.orderBy=='score') {
+                        if ($scope.rankCount[answer.score.rank] == undefined) {
+                            $scope.rankCount[answer.score.rank] = 1;
+                        } else {
+                            ++$scope.rankCount[answer.score.rank];
                         }
-                    });
+                    };
                 });
             });
         };
@@ -763,11 +792,11 @@ module.controller("AssignmentViewController",
 ]);
 module.controller("AssignmentWriteController",
     [ "$scope", "$q", "$location", "$routeParams", "$route", "AssignmentResource", "$uibModal", "Authorize",
-             "AssignmentCriterionResource", "CriterionResource", "required_rounds", "Toaster", "attachService",
+             "CriterionResource", "required_rounds", "Toaster", "attachService",
              "AttachmentResource", "Session", "EditorOptions", "PairingAlgorithm", "ComparisonExampleResource",
              "AnswerResource", "xAPIStatementHelper",
     function($scope, $q, $location, $routeParams, $route, AssignmentResource, $uibModal, Authorize,
-             AssignmentCriterionResource, CriterionResource, required_rounds, Toaster, attachService,
+             CriterionResource, required_rounds, Toaster, attachService,
              AttachmentResource, Session, EditorOptions, PairingAlgorithm, ComparisonExampleResource,
              AnswerResource, xAPIStatementHelper)
     {
@@ -878,7 +907,7 @@ module.controller("AssignmentWriteController",
                     Toaster.reqerror("Assignment Not Found", "No assignment found for id "+$scope.assignmentId);
                 }
             );
-        }
+        };
 
         $scope.date.astart.open = function($event) {
             $event.preventDefault();
@@ -905,6 +934,16 @@ module.controller("AssignmentWriteController",
             $scope.date.cend.opened = true;
         };
 
+        $scope.criteriaCanDraw = function() {
+            var items = [];
+            $scope.assignment.criteria.forEach(function(criterion) {
+                items.push(criterion.weight);
+            });
+            var result = findEqualPartitions(items);
+            console.log(result)
+            return result !== false;
+        };
+
         $scope.deleteFile = function(file) {
             AttachmentResource.delete({'fileId': file.id}).$promise.then(
                 function () {
@@ -918,12 +957,16 @@ module.controller("AssignmentWriteController",
             );
         };
 
-        Authorize.can(Authorize.MANAGE, AssignmentCriterionResource.MODEL).then(function(result) {
-            $scope.canManageCriteriaAssignment = result;
+        Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, courseId).then(function(result) {
+            $scope.canManageAssignment = result;
         });
 
         CriterionResource.get().$promise.then(function (ret) {
             $scope.availableCriteria = ret.objects;
+            // add default weight of 1 to all criterion
+            $scope.availableCriteria.forEach(function(criterion) {
+                criterion.weight = 1;
+            });
             if (!$scope.assignment.criteria.length) {
                 // if we don't have any criterion, e.g. new assignment, add a default one automatically
                 $scope.assignment.criteria.push(_.find($scope.availableCriteria, {public: true}));
@@ -966,10 +1009,13 @@ module.controller("AssignmentWriteController",
             var modalInstance;
 
             var criterionUpdateListener = $scope.$on('CRITERION_UPDATED', function(event, c) {
+                var weight = criterion.weight;
                 angular.copy(c, criterion);
+                criterion.weight = weight;
                 modalInstance.close();
             });
             var criterionAddListener = $scope.$on('CRITERION_ADDED', function(event, c) {
+                c.weight = 1;
                 $scope.assignment.criteria.push(c);
                 modalInstance.close();
             });
@@ -1031,6 +1077,14 @@ module.controller("AssignmentWriteController",
             });
         };
 
+        $scope.getCriterionWeightAsPercent = function(weight) {
+            var total = 0;
+            $scope.assignment.criteria.forEach(function(criterion) {
+                total += criterion.weight;
+            });
+            return (weight * 100) / total;
+        }
+
         $scope.getGradeWeightAsPercent = function(weight) {
             var total = $scope.assignment.answer_grade_weight + $scope.assignment.comparison_grade_weight;
             if ($scope.assignment.enable_self_evaluation) {
@@ -1082,6 +1136,7 @@ module.controller("AssignmentWriteController",
             if (!$scope.assignment.id) {
                 _.forEach($scope.assignment.criteria, function(criterion) {
                     if (criterion.public) {
+                        var weight = criterion.weight;
                         var criterionDuplicate = angular.copy(criterion);
                         criterionDuplicate.id = null;
                         criterionDuplicate.public = false;
@@ -1091,6 +1146,7 @@ module.controller("AssignmentWriteController",
                             CriterionResource.save({}, criterionDuplicate).$promise.then(
                                 function (ret) {
                                     angular.copy(ret, criterion);
+                                    criterion.weight = weight;
                                     resolve();
                                 },
                                 function (ret) {

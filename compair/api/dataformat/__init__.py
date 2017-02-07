@@ -21,6 +21,10 @@ class UnwrapPairingAlgorithm(fields.Raw):
     def format(self, pairing_algorithm):
         return pairing_algorithm.value
 
+class UnwrapWinningAnswer(fields.Raw):
+    def format(self, winning_answer):
+        return winning_answer.value if winning_answer != None else None
+
 def get_partial_user(restrict_user=True):
     ret = {
         'id': fields.String(attribute="user_uuid"),
@@ -91,8 +95,8 @@ def get_user_courses():
     courses['course_role'] = UnwrapCourseRole(attribute='course_role')
     return courses
 
-def get_criterion():
-    return {
+def get_criterion(with_weight=False):
+    ret = {
         'id': fields.String(attribute="uuid"),
         'name': fields.String,
         'description': fields.String,
@@ -103,6 +107,11 @@ def get_criterion():
         'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
         'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
+
+    if with_weight:
+        ret['weight'] = fields.Integer
+
+    return ret
 
 
 def get_assignment(restrict_user=True):
@@ -118,7 +127,7 @@ def get_assignment(restrict_user=True):
         'total_comparisons_required': fields.Integer,
         'total_steps_required': fields.Integer,
 
-        'criteria': fields.List(fields.Nested(get_criterion())),
+        'criteria': fields.List(fields.Nested(get_criterion(with_weight=True))),
         'file': fields.Nested(get_file(), allow_null=True),
 
         'answer_start': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.answer_start)),
@@ -169,9 +178,8 @@ def get_answer(restrict_user=True):
         'draft': fields.Boolean,
         'top_answer': fields.Boolean,
 
-        'scores': fields.List(fields.Nested(get_score(
-            restrict_user=restrict_user
-        ))),
+        'score': fields.Nested(get_score(restrict_user=restrict_user), allow_null=True),
+
         'comment_count': fields.Integer,
         'private_comment_count': fields.Integer,
         'public_comment_count': fields.Integer,
@@ -220,20 +228,17 @@ def get_file():
     }
 
 
-def get_comparison(restrict_user=True, with_answers=True):
+def get_comparison(restrict_user=True, with_answers=True, with_feedback=False, with_self_evaluation=False):
     ret = {
         'id': fields.String(attribute="uuid"),
         'course_id': fields.String(attribute="course_uuid"),
         'assignment_id': fields.String(attribute="assignment_uuid"),
-        'criterion_id': fields.String(attribute="criterion_uuid"),
         'answer1_id': fields.String(attribute="answer1_uuid"),
         'answer2_id': fields.String(attribute="answer2_uuid"),
         'user_id': fields.String(attribute="user_uuid"),
-        'winner_id': fields.String(attribute="winner_uuid", default=None),
+        'winner': UnwrapWinningAnswer(attribute='winner'),
 
-        'content': fields.String,
-        'criterion': fields.Nested(get_criterion()),
-
+        'comparison_criteria': fields.List(fields.Nested(get_comparison_criterion())),
         'user': get_partial_user(restrict_user),
         'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
@@ -244,7 +249,25 @@ def get_comparison(restrict_user=True, with_answers=True):
         ret['answer2'] = fields.Nested(get_answer(
             restrict_user=restrict_user))
 
+    if with_feedback:
+        ret['answer1_feedback'] = fields.List(fields.Nested(get_answer_comment(restrict_user)))
+        ret['answer2_feedback'] = fields.List(fields.Nested(get_answer_comment(restrict_user)))
+
+    if with_self_evaluation:
+        ret['self_evaluation'] = fields.List(fields.Nested(get_answer_comment(restrict_user)))
+
     return ret
+
+def get_comparison_criterion():
+    return {
+        'id': fields.String(attribute="uuid"),
+        'criterion_id': fields.String(attribute="criterion_uuid"),
+        'content': fields.String,
+        'winner': UnwrapWinningAnswer(attribute='winner'),
+
+        'criterion': fields.Nested(get_criterion()),
+        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
+    }
 
 def get_comparison_example(with_answers=True):
     ret = {
@@ -264,29 +287,6 @@ def get_comparison_example(with_answers=True):
             restrict_user=False))
 
     return ret
-
-def get_comparison_set(restrict_user=True):
-    return {
-        'course_id': fields.String(attribute="course_uuid"),
-        'assignment_id': fields.String(attribute="assignment_uuid"),
-        'user_id': fields.String(attribute="user_uuid"),
-
-        'comparisons': fields.List(fields.Nested(get_comparison(
-            restrict_user=restrict_user, with_answers=False
-        ))),
-
-        'answer1_id': fields.String(attribute="answer1_uuid"),
-        'answer2_id': fields.String(attribute="answer2_uuid"),
-        'answer1': fields.Nested(get_answer()),
-        'answer2': fields.Nested(get_answer()),
-
-        'user': get_partial_user(restrict_user),
-
-        'answer1_feedback': fields.List(fields.Nested(get_answer_comment(restrict_user))),
-        'answer2_feedback': fields.List(fields.Nested(get_answer_comment(restrict_user))),
-        'self_evaluation': fields.List(fields.Nested(get_answer_comment(restrict_user))),
-        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.get('created')))
-    }
 
 def get_import_users_results(restrict_user=True):
     return {

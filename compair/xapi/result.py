@@ -10,6 +10,8 @@ from .resource_iri import XAPIResourceIRI
 from .activity import XAPIActivity
 from .extension import XAPIExtension
 
+from compair.models import WinningAnswer
+
 class XAPIResult(object):
     @classmethod
     def _unescape(cls, text):
@@ -116,6 +118,36 @@ class XAPIResult(object):
         return result
 
     @classmethod
+    def answer_evaluation_on_criterion(cls, answer, criterion_score, **kwargs):
+        from compair.models import ScoringAlgorithm
+
+        result = cls.basic(**kwargs)
+        result.extensions = Extensions() if not result.extensions else result.extensions
+
+        result.score = Score(raw=criterion_score.score)
+
+        score_details = {
+            'algorithm': criterion_score.scoring_algorithm.value,
+            'wins': criterion_score.wins,
+            'loses': criterion_score.loses,
+            'rounds': criterion_score.rounds,
+            'opponents': criterion_score.opponents,
+        }
+
+        if criterion_score.scoring_algorithm == ScoringAlgorithm.comparative_judgement:
+            result.score.min = 0.0
+            result.score.max = 1.0
+            score_details['expected score'] = criterion_score.variable1
+
+        elif criterion_score.scoring_algorithm == ScoringAlgorithm.true_skill:
+            score_details['mu'] = criterion_score.variable1
+            score_details['sigma'] = criterion_score.variable2
+
+        result.extensions[XAPIExtension.result_extensions.get('score details')] = score_details
+
+        return result
+
+    @classmethod
     def answer_comment(cls, answer_comment, **kwargs):
         result = cls.basic_content(answer_comment.content, **kwargs)
 
@@ -137,9 +169,26 @@ class XAPIResult(object):
     def comparison(cls, comparison, **kwargs):
         result = cls.basic(**kwargs)
 
-        if comparison.winner_id:
-            result.response = XAPIResourceIRI.answer(comparison.winner_uuid)
-        else:
+        if comparison.winner == None:
             result.response = "Undecided"
+        elif comparison.winner == WinningAnswer.draw:
+            result.response = "Draw"
+        elif comparison.winner == WinningAnswer.answer1:
+            result.response = XAPIResourceIRI.answer(comparison.answer1_uuid)
+        elif comparison.winner == WinningAnswer.answer2:
+            result.response = XAPIResourceIRI.answer(comparison.answer2_uuid)
+
+        return result
+
+    @classmethod
+    def comparison_criterion(cls, comparison, comparison_criterion, **kwargs):
+        result = cls.basic(**kwargs)
+
+        if comparison_criterion.winner == None:
+            result.response = "Undecided"
+        elif comparison_criterion.winner == WinningAnswer.answer1:
+            result.response = XAPIResourceIRI.answer(comparison_criterion.answer1_uuid)
+        elif comparison_criterion.winner == WinningAnswer.answer2:
+            result.response = XAPIResourceIRI.answer(comparison_criterion.answer2_uuid)
 
         return result

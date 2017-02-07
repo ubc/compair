@@ -56,10 +56,8 @@ class XAPIContext(object):
         return context
 
     @classmethod
-    def comparison_question(cls, comparisons, **kwargs):
+    def comparison_question(cls, comparison, **kwargs):
         context = cls.basic(**kwargs)
-
-        comparison = comparisons[0]
 
         context.context_activities = ContextActivities(
             # parent is assignment + answer1 + answer2
@@ -74,9 +72,9 @@ class XAPIContext(object):
             ])
         )
 
-        for comparison in comparisons:
+        for comparison_criterion in comparison.comparison_criteria:
             context.context_activities.grouping.append(
-                Activity(id=XAPIResourceIRI.criterion(comparison.criterion_uuid))
+                Activity(id=XAPIResourceIRI.criterion(comparison_criterion.criterion_uuid))
             )
 
         return context
@@ -119,13 +117,24 @@ class XAPIContext(object):
 
     @classmethod
     def answer_evaluation(cls, answer, comparison, **kwargs):
+        context = cls.answer(answer, **kwargs)
+
+        context.context_activities.other = ActivityList([
+            Activity(id=XAPIResourceIRI.comparison(comparison.uuid)),
+            Activity(id=XAPIResourceIRI.comparison_question(comparison.uuid))
+        ])
+
+        return context
+
+    @classmethod
+    def answer_evaluation_on_criterion(cls, answer, comparison_criterion, **kwargs):
         context = cls.basic(**kwargs)
 
         context.context_activities = ContextActivities(
             # parent is answer + criterion
             parent=ActivityList([
                 Activity(id=XAPIResourceIRI.answer(answer.uuid)),
-                Activity(id=XAPIResourceIRI.criterion(comparison.criterion_uuid))
+                Activity(id=XAPIResourceIRI.criterion(comparison_criterion.criterion_uuid))
             ]),
             # grouping is course + assignment + assignment question
             grouping=ActivityList([
@@ -135,9 +144,9 @@ class XAPIContext(object):
             ]),
             # other is comparison + comparison question
             other=ActivityList([
-                Activity(id=XAPIResourceIRI.comparison(comparison.uuid)),
-                Activity(id=XAPIResourceIRI.comparison_question(
-                    comparison.assignment_uuid, comparison.answer1_uuid, comparison.answer2_uuid))
+                Activity(id=XAPIResourceIRI.comparison_criterion(comparison_criterion.uuid)),
+                Activity(id=XAPIResourceIRI.comparison(comparison_criterion.comparison_uuid)),
+                Activity(id=XAPIResourceIRI.comparison_question(comparison_criterion.comparison_uuid))
             ])
         )
 
@@ -222,9 +231,7 @@ class XAPIContext(object):
         context.context_activities = ContextActivities(
             # parent is comparison question + criterion
             parent=ActivityList([
-                Activity(id=XAPIResourceIRI.comparison_question(
-                    comparison.assignment_uuid, comparison.answer1_uuid, comparison.answer2_uuid)),
-                Activity(id=XAPIResourceIRI.criterion(comparison.criterion_uuid)),
+                Activity(id=XAPIResourceIRI.comparison_question(comparison.uuid))
             ]),
             # grouping is course + assignment + answer1 + answer2
             grouping=ActivityList([
@@ -232,6 +239,28 @@ class XAPIContext(object):
                 Activity(id=XAPIResourceIRI.assignment(comparison.assignment_uuid)),
                 Activity(id=XAPIResourceIRI.answer(comparison.answer1_uuid)),
                 Activity(id=XAPIResourceIRI.answer(comparison.answer2_uuid))
+            ])
+        )
+
+        return context
+
+    @classmethod
+    def comparison_criterion(cls, comparison, comparison_criterion, **kwargs):
+        context = cls.basic(**kwargs)
+
+        context.context_activities = ContextActivities(
+            # parent is comparison + criterion
+            parent=ActivityList([
+                Activity(id=XAPIResourceIRI.comparison(comparison.uuid)),
+                Activity(id=XAPIResourceIRI.criterion(comparison_criterion.criterion_uuid))
+            ]),
+            # grouping is course + assignment + answer1 + answer2 + comparison question
+            grouping=ActivityList([
+                Activity(id=XAPIResourceIRI.course(comparison.course_uuid)),
+                Activity(id=XAPIResourceIRI.assignment(comparison.assignment_uuid)),
+                Activity(id=XAPIResourceIRI.answer(comparison.answer1_uuid)),
+                Activity(id=XAPIResourceIRI.answer(comparison.answer2_uuid)),
+                Activity(id=XAPIResourceIRI.comparison_question(comparison.uuid))
             ])
         )
 

@@ -161,9 +161,10 @@
                             </span><br />
                             <span class="filter" ng-if="(canManageAssignment || rankLimit) && assignment.pairing_algorithm != PairingAlgorithm.random">
                                 <label>Order by: &nbsp;</label>
-                                <select ng-model="answerFilters.orderBy" chosen disable_search_threshold="8"
-                                        ng-options="c.id as c.name for c in criteria" ng-disabled="answerFilters.top == true">
+                                <select ng-model="answerFilters.orderBy" chosen disable_search_threshold="8" ng-disabled="answerFilters.top == true">
                                     <option value="">Date submitted</option>
+                                    <option value="score" ng-if="canManageAssignment">Answer score</option>
+                                    <option value="score" ng-if="!canManageAssignment">Answer rank</option>
                                 </select>
                             </span><br />
                             <span class="filter" ng-if="canManageAssignment">
@@ -253,7 +254,7 @@
                 </div><!-- closes each-answer (instructor) -->
 
                 <!-- Student Answers Section -->
-                <div class="each-answer clearfix" ng-repeat="answer in answers.objects | notScoredEnd:answerFilters.orderBy | excludeInstr:instructors as results" ng-if="(see_answers || answer.user_id == loggedInUserId || canManageAssignment)">
+                <div class="each-answer clearfix" ng-repeat="answer in answers.objects | notScoredEnd | excludeInstr:instructors as results" ng-if="(see_answers || answer.user_id == loggedInUserId || canManageAssignment)">
                 <!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.user_id] && (see_answers || (answer.user_id == loggedInUserId && assignment.answer_period) || canManageAssignment)"> -->
                     <!-- Student Answer Metadata Header -->
                     <div class="each-header clearfix">
@@ -296,18 +297,18 @@
                     <!-- <p ng-show="!showReadMore">No More To Read!!! ({{thisHeight}})</p> -->
 
                     <!-- Student Score (not used for instructor answers) -->
-                    <p class="pull-right score-display" ng-if="canManageAssignment && !answerFilters.anonymous && score.criterion_id==answerFilters.orderBy && answer.scores.length > 0" ng-repeat="score in answer.scores">
-                        <em>Score: {{score.normalized_score}}%</em>
+                    <p class="pull-right score-display" ng-if="canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && answer.score">
+                        <em>Score: {{answer.score.normalized_score}}%</em>
                         <a href="" uib-tooltip="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
                             <i class="fa fa-question-circle"></i>
                         </a>
                     </p>
                     <!-- Student Rank (not used for instructor answers) -->
-                    <p class="pull-right score-display" ng-if="!canManageAssignment && !answerFilters.anonymous && score.criterion_id==answerFilters.orderBy && answer.scores.length > 0" ng-repeat="score in answer.scores">
-                        <em ng-if="score.rank <= rankLimit">
-                            Students Ranked: <strong>{{score.rank}} <span ng-if="rankCount[score.rank] > 1">(tied)</span></strong>
+                    <p class="pull-right score-display" ng-if="!canManageAssignment && !answerFilters.anonymous && nswerFilters.orderBy=='score' && answer.score">
+                        <em ng-if="answer.score.rank <= rankLimit">
+                            Students Ranked: <strong>{{score.rank}} <span ng-if="rankCount[answer.score.rank] > 1">(tied)</span></strong>
                         </em>
-                        <em ng-if="score.rank > 0 && score.rank > rankLimit">
+                        <em ng-if="answer.score.rank > 0 && answer.score.rank > rankLimit">
                             Students Ranked: <strong>N/A</strong>
                             <a href="" uib-tooltip="Answers that are ranked outside the top {{rankLimit}} do not receive a rank number for this assignment." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
                                 <i class="fa fa-question-circle"></i>
@@ -315,10 +316,10 @@
                         </em>
                     </p>
                     <!-- No Student Score/Rank -->
-                    <p class="pull-right score-display" ng-if="canManageAssignment && !answerFilters.anonymous && answer.scores.length == 0">
+                    <p class="pull-right score-display" ng-if="canManageAssignment && !answerFilters.anonymous && !answer.score">
                         <em>Not Compared</em>
                     </p>
-                    <p class="pull-right score-display" ng-if="!canManageAssignment && !answerFilters.anonymous && score.criterion_id!=answerFilters.orderBy && answer.scores.length == 0">
+                    <p class="pull-right score-display" ng-if="!canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && !answer.score">
                         <em>Not Ranked</em>
                     </p>
 
@@ -440,12 +441,12 @@
             </div>
 
             <!-- Comparisons Section -->
-            <div class="each-evaluation" ng-repeat="comparison_set in comparisons.objects">
+            <div class="each-evaluation" ng-repeat="comparison in comparisons.objects">
 
                 <!-- Comparison Header -->
                 <div class="each-header">
-                    <compair-avatar user-id="comparison_set.user_id" avatar="comparison_set.user.avatar" me="true"></compair-avatar>
-                    <strong>compared</strong> on {{ comparison_set.created | amDateFormat: 'MMM D @ h:mm a'}}:
+                    <compair-avatar user-id="comparison.user_id" avatar="comparison.user.avatar" me="true"></compair-avatar>
+                    <strong>compared</strong> on {{ comparison.created | amDateFormat: 'MMM D @ h:mm a'}}:
                 </div>
 
                 <!-- Answers -->
@@ -456,15 +457,15 @@
                         Show compared answers
                     </a></p>
                     <div class="row" ng-show="showAnswers">
-                        <compair-answer-content answer="comparison_set.answer1" is-chosen="comparison.winner_id == comparison_set.answer1_id" name="Odd-Numbered Answer" criterion="comparison.criterion_id" show-score="false"></compair-answer-content>
-                        <compair-answer-content answer="comparison_set.answer2" is-chosen="comparison.winner_id == comparison_set.answer2_id" name="Even-Numbered Answer" criterion="comparison.criterion_id" show-score="false"></compair-answer-content>
+                        <compair-answer-content answer="comparison.answer1" is-chosen="comparison.winner == WinningAnswer.answer1" name="Odd-Numbered Answer" show-score="false"></compair-answer-content>
+                        <compair-answer-content answer="comparison.answer2" is-chosen="comparison.winner == WinningAnswer.answer2" name="Even-Numbered Answer" show-score="false"></compair-answer-content>
                     </div>
 
                 <div class="row">
                     <div class="col-md-6">
                         <h5 class="content">Feedback for Odd-Numbered Answer</h5>
                         <!-- feedback for odd-numbered answer -->
-                        <div ng-repeat="feedback in comparison_set.answer1_feedback">
+                        <div ng-repeat="feedback in comparison.answer1_feedback">
                             <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
                         </div>
                     </div>
@@ -472,19 +473,19 @@
                     <div class="col-md-6">
                         <h5 class="content">Feedback for Even-Numbered Answer</h5>
                         <!-- feedback for even-numbered answer -->
-                        <div ng-repeat="feedback in comparison_set.answer2_feedback">
+                        <div ng-repeat="feedback in comparison.answer2_feedback">
                             <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
                         </div>
                     </div>
                 </div>
 
                 <h5 class="content">Comparisons</h5>
-                <div ng-repeat="comparison in comparison_set.comparisons">
+                <div ng-repeat="comparsion_criterion in comparison.comparison_criteria">
                     <div class="content">
-                        <p>"{{ comparison.criterion.name }}"<br />
+                        <p>"{{ comparsion_criterion.criterion.name }}"<br />
                             <span class="glyphicon glyphicon-ok-circle"></span>
-                            <span ng-if="comparison.winner_id == comparison_set.answer1_id"><strong>Odd-numbered answer</strong></span>
-                            <span ng-if="comparison.winner_id == comparison_set.answer2_id"><strong>Even-numbered answer</strong></span>
+                            <span ng-if="comparsion_criterion.winner == WinningAnswer.answer1"><strong>Odd-numbered answer</strong></span>
+                            <span ng-if="comparsion_criterion.winner == WinningAnswer.answer2"><strong>Even-numbered answer</strong></span>
                         </p>
                     </div>
                 </div>
@@ -496,7 +497,7 @@
             </div>
 
             <!-- self evaluation section -->
-            <div class="each-evaluation" ng-if="comparisons.objects[0].self_evaluation.length > 0" ng-init="comments=comparisons.objects[0].self_evaluation">
+            <div class="each-evaluation" ng-if="comparison.self_evaluation.length > 0" ng-init="comments=comparison.self_evaluation">
                 <div ng-repeat="comment in comments">
                     <div class="each-header">
                         <compair-avatar user-id="comment.user_id" avatar="comment.user.avatar" me="true"></compair-avatar>

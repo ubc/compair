@@ -11,30 +11,28 @@ from . import *
 
 from compair.core import db
 
-class Score(DefaultTableMixin, WriteTrackingMixin):
-    __tablename__ = 'score'
+class AnswerScore(DefaultTableMixin, WriteTrackingMixin):
+    __tablename__ = 'answer_score'
 
     # table columns
     assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id', ondelete="CASCADE"),
         nullable=False)
     answer_id = db.Column(db.Integer, db.ForeignKey('answer.id', ondelete="CASCADE"),
-        nullable=False)
-    criterion_id = db.Column(db.Integer, db.ForeignKey('criterion.id', ondelete="CASCADE"),
-        nullable=False)
+        unique=True, nullable=False)
 
     """
     Comparative Judgement
-    exposed score = expected score / number of opponenents
+    score = expected score / number of opponents
     score_variable1 = expected score
     score_variable2 = None
 
     Elo Rating
-    exposed score = Elo rating
+    score = Elo rating
     score_variable1 = Elo rating
     score_variable2 = None
 
     True Skill Rating
-    exposed score = Rating's Mu - (Default Mu / Default Sigma) * Rating's Sigma
+    score = Rating's Mu - (Default Mu / Default Sigma) * Rating's Sigma
     score_variable1 = Rating's Mu
     score_variable2 = Rating's Sigma
     """
@@ -52,11 +50,8 @@ class Score(DefaultTableMixin, WriteTrackingMixin):
     # relationships
     # assignment via Assignment Model
     # answer via Answer Model
-    # criterion via Criterion Model
 
     # hyprid and other functions
-    criterion_uuid = association_proxy('criterion', 'uuid')
-
     def convert_to_scored_object(self):
         return ScoredObject(
             key=self.answer_id,
@@ -71,7 +66,7 @@ class Score(DefaultTableMixin, WriteTrackingMixin):
 
     @hybrid_property
     def rank(self):
-        scores = Score.get_assignment_scores(self.assignment_id, self.criterion_id)
+        scores = AnswerScore.get_assignment_scores(self.assignment_id)
         for index, score in enumerate(scores):
             if score.score == self.score:
                 return index + 1
@@ -79,24 +74,22 @@ class Score(DefaultTableMixin, WriteTrackingMixin):
 
     # TODO: this should be cached
     @classmethod
-    def get_assignment_scores(cls, assignment_id, criterion_id):
-        return Score.query \
-            .with_entities(Score.score) \
+    def get_assignment_scores(cls, assignment_id):
+        return AnswerScore.query \
+            .with_entities(AnswerScore.score) \
             .filter(and_(
-                Score.assignment_id == assignment_id,
-                Score.criterion_id == criterion_id
+                AnswerScore.assignment_id == assignment_id
             )) \
-            .order_by(Score.score.desc()) \
+            .order_by(AnswerScore.score.desc()) \
             .all()
 
     @classmethod
-    def get_score_for_rank(cls, assignment_id, criterion_id, rank):
-        scores = Score.get_assignment_scores(assignment_id, criterion_id)
+    def get_score_for_rank(cls, assignment_id, rank):
+        scores = AnswerScore.get_assignment_scores(assignment_id)
         if len(scores) < rank:
             return None
         else:
             return scores[rank-1].score
-
 
     @classmethod
     def __declare_last__(cls):
@@ -108,12 +101,10 @@ class Score(DefaultTableMixin, WriteTrackingMixin):
                 (cls.score - func.min(s_alias.c.score)) / (func.max(s_alias.c.score) - func.min(s_alias.c.score)) * 100
             ]).
             where(and_(
-                s_alias.c.criterion_id == cls.criterion_id,
                 s_alias.c.assignment_id == cls.assignment_id,
             ))
         )
 
     __table_args__ = (
-        db.UniqueConstraint('answer_id', 'criterion_id', name='_unique_answer_and_criterion'),
         DefaultTableMixin.default_table_args
     )

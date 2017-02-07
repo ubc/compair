@@ -11,7 +11,7 @@ from sqlalchemy.orm import undefer, joinedload
 
 from compair.authorization import require
 from compair.models import Course, Assignment, CourseRole, User, UserCourse, Comparison, \
-    AnswerComment, Answer, Score, AnswerCommentType, PairingAlgorithm, AssignmentGrade
+    AnswerComment, Answer, AnswerScore, AnswerCommentType, PairingAlgorithm, AssignmentGrade
 from .util import new_restful_api
 from compair.core import event
 
@@ -65,78 +65,59 @@ class GradebookAPI(Resource):
             .all()
 
         # we want only the count for comparisons by current students in the course
-        num_comparisons_per_student = {user_id: int(compare_count/assignment.criteria_count)
-                                      if assignment.criteria_count else 0
-                                      for (user_id, compare_count) in comparisons}
+        num_comparisons_per_student = {user_id: compare_count for (user_id, compare_count) in comparisons}
 
         # find out the scores that students get
-        criterion_ids = [criterion.id for criterion in assignment.criteria]
-        stmt = Answer.query. \
-            with_entities(Answer.user_id, Answer.flagged, Score.criterion_id, Score.normalized_score.label('ns')). \
-            outerjoin(Score, and_(
-                Answer.id == Score.answer_id,
-                Score.criterion_id.in_(criterion_ids))). \
-            filter(and_(
+        answer_scores = Answer.query \
+            .with_entities(Answer.user_id, Answer.flagged, AnswerScore.normalized_score) \
+            .outerjoin(AnswerScore, and_(
+                 Answer.id == AnswerScore.answer_id
+            )) \
+            .filter(and_(
                 Answer.assignment_id == assignment.id,
                 Answer.draft == False,
-                Answer.practice == False
-            )). \
-            subquery()
-
-        scores_by_user = User.query. \
-            with_entities(User.id, stmt.c.flagged, stmt.c.criterion_id, stmt.c.ns). \
-            outerjoin(stmt, User.id == stmt.c.user_id). \
-            filter(User.id.in_(student_ids)). \
-            all()
+                Answer.practice == False,
+                Answer.user_id.in_(student_ids)
+            )) \
+            .all()
 
         # process the results into dicts
         include_scores = assignment.pairing_algorithm != PairingAlgorithm.random
-        init_scores = {criterion.id: 'Not Evaluated' for criterion in assignment.criteria}
-        scores_by_user_id = {student_id: copy.deepcopy(init_scores) for student_id in student_ids}
+        scores_by_user_id = {student_id: 'No Answer' for student_id in student_ids}
         flagged_by_user_id = {}
         num_answers_per_student = {}
-        for score in scores_by_user:
-            # answer flag exists means there is an answer from a student
-            if score[1] is not None:
-                flagged_by_user_id[score[0]] = 'Yes' if score[1] else 'No'
-                num_answers_per_student[score[0]] = 1
-                if include_scores:
-                    if score[2] is not None and score[3] is not None:
-                        scores_by_user_id[score[0]][score[2]] = round(score[3], 3)
-            else:
-                if include_scores:
-                    # no answer from the student
-                    scores_by_user_id[score[0]] = {criterion.id: 'No Answer' for criterion in assignment.criteria}
+
+        for (user_id, flagged, score ) in answer_scores:
+            flagged_by_user_id[user_id] = 'Yes' if flagged else 'No'
+            num_answers_per_student[user_id] = 1
+            if include_scores:
+                scores_by_user_id[user_id] = round(score, 3) if score != None else 'Not Evaluated'
 
         include_self_evaluation = False
-        num_self_evaluation_per_student = {}
+        num_self_evaluation_per_student = {student_id: 0 for student_id in student_ids}
         if assignment.enable_self_evaluation:
             include_self_evaluation = True
-            # assuming self-evaluation with no comparison
-            stmt = AnswerComment.query \
+
+            self_evaluation_counts = AnswerComment.query \
                 .with_entities(AnswerComment.user_id, func.count('*').label('comment_count')) \
-                .filter_by(comment_type=AnswerCommentType.self_evaluation) \
-                .filter_by(draft=False) \
                 .join(Answer, and_(
                     Answer.id == AnswerComment.answer_id,
-                    Answer.assignment_id == assignment.id)) \
+                    Answer.assignment_id == assignment.id
+                )) \
+                .filter(and_(
+                    AnswerComment.comment_type == AnswerCommentType.self_evaluation,
+                    AnswerComment.draft == False,
+                    AnswerComment.user_id.in_(student_ids)
+                )) \
                 .group_by(AnswerComment.user_id) \
-                .subquery()
-
-            comments_by_user_id = User.query \
-                .with_entities(User.id, stmt.c.comment_count) \
-                .outerjoin(stmt, User.id == stmt.c.user_id) \
-                .filter(User.id.in_(student_ids)) \
-                .order_by(User.id) \
                 .all()
 
-            num_self_evaluation_per_student = dict(comments_by_user_id)
-            num_self_evaluation_per_student.update((k, 0) for k, v in num_self_evaluation_per_student.items() if v is None)
+            for self_evaluation_count in self_evaluation_counts:
+                num_self_evaluation_per_student[self_evaluation_count.user_id] = self_evaluation_count.comment_count
 
         # {'gradebook':[{user1}. {user2}, ...]}
         # user id, username, first name, last name, answer submitted, comparisons submitted
         gradebook = []
-        no_answer = {criterion.id: 'No Answer' for criterion in assignment.criteria}
         for student in students:
             entry = {
                 'user_id': student.uuid,
@@ -149,10 +130,7 @@ class GradebookAPI(Resource):
                 'flagged': flagged_by_user_id.get(student.id, 'No Answer')
             }
             if include_scores:
-                entry['scores'] = {
-                    criterion.uuid: scores_by_user_id.get(student.id, no_answer).get(criterion.id)
-                        for criterion in assignment.criteria
-                }
+                entry['score'] = scores_by_user_id.get(student.id, 'No Answer')
             if include_self_evaluation:
                 entry['num_self_evaluation'] = num_self_evaluation_per_student[student.id]
             gradebook.append(entry)

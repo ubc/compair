@@ -30,8 +30,8 @@ class Criterion(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     assignment_criteria = db.relationship("AssignmentCriterion",
         back_populates="criterion", lazy='dynamic')
 
-    comparisons = db.relationship("Comparison", backref="criterion", lazy='dynamic')
-    scores = db.relationship("Score", backref="criterion", lazy='dynamic')
+    comparison_criteria = db.relationship("ComparisonCriterion", backref="criterion", lazy='dynamic')
+    answer_criteria_scores = db.relationship("AnswerCriterionScore", backref="criterion", lazy='dynamic')
 
     # hyprid and other functions
     @hybrid_property
@@ -43,8 +43,8 @@ class Criterion(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         super(cls, cls).__declare_last__()
 
         cls.compare_count = column_property(
-            select([func.count(Comparison.id)]).
-            where(Comparison.criterion_id == cls.id),
+            select([func.count(ComparisonCriterion.id)]).
+            where(ComparisonCriterion.criterion_id == cls.id),
             deferred=True,
             group="counts"
         )

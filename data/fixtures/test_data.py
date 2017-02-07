@@ -7,10 +7,11 @@ import factory.fuzzy
 from compair import db
 from six.moves import range
 from compair.models import SystemRole, CourseRole, Criterion, \
-    Course, Comparison, ThirdPartyType, AnswerCommentType
+    Course, Comparison, ThirdPartyType, AnswerCommentType, WinningAnswer
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
-    AnswerFactory, CriterionFactory, ComparisonFactory, AssignmentCriterionFactory, FileFactory, \
-    AssignmentCommentFactory, AnswerCommentFactory, ScoreFactory, ComparisonExampleFactory, \
+    AnswerFactory, CriterionFactory, ComparisonFactory, ComparisonCriterionFactory, \
+    AssignmentCommentFactory, AnswerCommentFactory, AnswerScoreFactory, AnswerCriterionScoreFactory, \
+    ComparisonExampleFactory, AssignmentCriterionFactory, FileFactory, \
     LTIConsumerFactory, LTIContextFactory, LTIResourceLinkFactory, \
     LTIUserFactory, LTIUserResourceLinkFactory, ThirdPartyUserFactory
 from data.fixtures import DefaultFixture
@@ -357,11 +358,16 @@ class SimpleAnswersTestData(SimpleAssignmentTestData):
             user=author,
             draft=draft
         )
-        ScoreFactory(
+        AnswerScoreFactory(
             assignment=assignment,
-            answer=answer,
-            criterion=assignment.criteria[0]
+            answer=answer
         )
+        for criterion in assignment.criteria:
+            AnswerCriterionScoreFactory(
+                assignment=assignment,
+                answer=answer,
+                criterion=criterion
+            )
         db.session.commit()
         return answer
 
@@ -579,8 +585,14 @@ class TestFixture:
                 )
                 # half of the answers have scores
                 if i < num_answers/2:
+
+                    AnswerScoreFactory(
+                        assignment=assignment,
+                        answer=answer,
+                        score=random.random() * 5
+                    )
                     for criterion in assignment.criteria:
-                        ScoreFactory(
+                        AnswerCriterionScoreFactory(
                             assignment=assignment,
                             answer=answer,
                             criterion=criterion,
@@ -602,12 +614,13 @@ class TestFixture:
         for assignment in self.assignments:
             for student in self.students:
                 for i in range(assignment.total_comparisons_required):
-                    comparisons = Comparison.create_new_comparison_set(assignment.id, student.id, False)
-                    for comparison in comparisons:
-                        comparison.completed = True
-                        comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
-                        db.session.add(comparison)
-        db.session.commit()
+                    comparison = Comparison.create_new_comparison(assignment.id, student.id, False)
+                    comparison.completed = True
+                    comparison.winner = WinningAnswer.answer1 if comparison.answer1_id < comparison.answer2_id else WinningAnswer.answer2
+                    for comparison_criterion in comparison.comparison_criteria:
+                        comparison_criterion.winner = comparison.winner
+                    db.session.add(comparison)
+                    db.session.commit()
 
         return self
 

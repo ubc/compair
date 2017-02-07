@@ -10,7 +10,7 @@ from data.fixtures import DefaultFixture, UserFactory, AssignmentFactory
 from data.fixtures.test_data import BasicTestData, LTITestData, ThirdPartyAuthTestData, ComparisonTestData
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.models import User, SystemRole, CourseRole, AnswerComment, AnswerCommentType, Comparison, \
-    LTIContext, ThirdPartyUser, ThirdPartyType
+    LTIContext, ThirdPartyUser, ThirdPartyType, WinningAnswer
 from compair.core import db
 
 
@@ -910,22 +910,28 @@ class UsersCourseStatusAPITests(ComPAIRAPITestCase):
         submit_count = 0
 
         for comparison_example in assignment.comparison_examples:
-            comparisons = Comparison.create_new_comparison_set(assignment.id, user_id, False)
-            self.assertEqual(comparisons[0].answer1_id, comparison_example.answer1_id)
-            self.assertEqual(comparisons[0].answer2_id, comparison_example.answer2_id)
-            for comparison in comparisons:
-                comparison.completed = True
-                comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
-                db.session.add(comparison)
+            comparison = Comparison.create_new_comparison(assignment.id, user_id, False)
+            self.assertEqual(comparison.answer1_id, comparison_example.answer1_id)
+            self.assertEqual(comparison.answer2_id, comparison_example.answer2_id)
+
+            comparison.completed = True
+            comparison.winner = WinningAnswer.answer1 if comparison.answer1_id < comparison.answer2_id else WinningAnswer.answer2
+            for comparison_criterion in comparison.comparison_criteria:
+                comparison_criterion.winner = comparison.winner
+            db.session.add(comparison)
+
             submit_count += 1
             db.session.commit()
 
         for i in range(assignment.number_of_comparisons):
-            comparisons = Comparison.create_new_comparison_set(assignment.id, user_id, False)
-            for comparison in comparisons:
-                comparison.completed = True
-                comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
-                db.session.add(comparison)
+            comparison = Comparison.create_new_comparison(assignment.id, user_id, False)
+
+            comparison.completed = True
+            comparison.winner = WinningAnswer.answer1 if comparison.answer1_id < comparison.answer2_id else WinningAnswer.answer2
+            for comparison_criterion in comparison.comparison_criteria:
+                comparison_criterion.winner = comparison.winner
+            db.session.add(comparison)
+
             submit_count += 1
             db.session.commit()
 

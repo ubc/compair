@@ -115,35 +115,32 @@ describe('comparison-module', function () {
             "available": true,
             "students_can_reply": false,
             "comment_count": 1,
-            "criteria": [{
-                "active": true,
-                "criterion": {
+            "criteria": [
+                {
+                    "compared": true,
                     "created": "Fri, 09 Jan 2015 22:47:02 -0000",
                     "default": true,
                     "public": false,
-                    "description": "criterionn 1",
+                    "description": "criterion 1",
                     "id": "4abcABC123-abcABC123_Z",
-                    "compared": true,
                     "modified": "Fri, 09 Jan 2015 22:47:02 -0000",
                     "name": "Which answer has the better critical idea?",
-                    "user_id": "50bcABC123-abcABC123_Z"
+                    "user_id": "50bcABC123-abcABC123_Z",
+                    "weight": 1
                 },
-                "id": "12bcABC123-abcABC123_Z"
-            }, {
-                "active": true,
-                "criterion": {
+                {
+                    "compared": true,
                     "created": "Fri, 09 Jan 2015 22:50:06 -0000",
                     "default": true,
                     "public": false,
                     "description": "criterion 2",
                     "id": "5abcABC123-abcABC123_Z",
-                    "compared": true,
                     "modified": "Fri, 09 Jan 2015 22:50:06 -0000",
                     "name": "Which answer is more effectively articulated? Explain the reason for your preference.",
-                    "user_id": "50bcABC123-abcABC123_Z"
-                },
-                "id": "13bcABC123-abcABC123_Z"
-            }],
+                    "user_id": "50bcABC123-abcABC123_Z",
+                    "weight": 1
+                }
+            ],
             "evaluation_count": 252,
             "id": "9abcABC123-abcABC123_Z",
             "compare_end": "Thu, 15 Sep 2016 16:00:00 -0000",
@@ -249,73 +246,63 @@ describe('comparison-module', function () {
             "user_id": "162cABC123-abcABC123_Z"
         };
 
-        var mockComparisons = [
-            {
-                'id': "1abcABC123-abcABC123_Z",
-                'course_id': "1abcABC123-abcABC123_Z",
-                'assignment_id': "9abcABC123-abcABC123_Z",
-                'criterion_id': "4abcABC123-abcABC123_Z",
-                'user_id': id,
-                'answer1_id': "407cABC123-abcABC123_Z",
-                'answer2_id': "279cABC123-abcABC123_Z",
-                'answer1': angular.copy(mockAnswer1),
-                'answer2': angular.copy(mockAnswer2),
-                'winner_id': null,
+        var mockComparison = {
+            'id': "1abcABC123-abcABC123_Z",
+            'course_id': "1abcABC123-abcABC123_Z",
+            'assignment_id': "9abcABC123-abcABC123_Z",
+            'user_id': id,
+            'answer1_id': "407cABC123-abcABC123_Z",
+            'answer2_id': "279cABC123-abcABC123_Z",
+            'answer1': angular.copy(mockAnswer1),
+            'answer2': angular.copy(mockAnswer2),
+            'winner': null,
 
-                'content': '',
-                'criterion': {
-                    "created": "Fri, 09 Jan 2015 22:47:02 -0000",
-                    "default": true,
-                    "public": false,
-                    "description": "criterionn 1",
-                    "id": "4abcABC123-abcABC123_Z",
-                    "compared": true,
-                    "modified": "Fri, 09 Jan 2015 22:47:02 -0000",
-                    "name": "Which answer has the better critical idea?",
-                    "user_id": "50bcABC123-abcABC123_Z",
-                },
+            'comparison_criteria': [
+                {
+                    'id': "1abcABC123-abcABC123_Z",
+                    'winner': null,
+                    'content': '',
 
-                'user': {
-                    'avatar': "63a9f0ea7bb98050796b649e85481845",
-                    'displayname': "root",
-                    'fullname': "John Smith",
-                    'id': id
-                },
-                'created': "Fri, 09 Jan 2015 18:35:58 -0000",
-            }, {
-                'id': "2abcABC123-abcABC123_Z",
-                'course_id': "1abcABC123-abcABC123_Z",
-                'assignment_id': "9abcABC123-abcABC123_Z",
-                'criterion_id': "5abcABC123-abcABC123_Z",
-                'user_id': id,
-                'answer1_id': "407cABC123-abcABC123_Z",
-                'answer2_id': "279cABC123-abcABC123_Z",
-                'answer1': angular.copy(mockAnswer1),
-                'answer2': angular.copy(mockAnswer2),
-                'winner_id': null,
+                    'criterion_id': "4abcABC123-abcABC123_Z",
+                    'criterion': {
+                        "created": "Fri, 09 Jan 2015 22:47:02 -0000",
+                        "default": true,
+                        "public": false,
+                        "description": "criterion 1",
+                        "id": "4abcABC123-abcABC123_Z",
+                        "compared": true,
+                        "modified": "Fri, 09 Jan 2015 22:47:02 -0000",
+                        "name": "Which answer has the better critical idea?",
+                        "user_id": "50bcABC123-abcABC123_Z",
+                    }
+                }, {
+                    'id': "2abcABC123-abcABC123_Z",
+                    'winner': null,
+                    'content': '',
 
-                'content': '',
-                'criterion': {
-                    "created": "Fri, 09 Jan 2015 22:50:06 -0000",
-                    "default": true,
-                    "public": false,
-                    "description": "criterion 2",
-                    "id": "5abcABC123-abcABC123_Z",
-                    "compared": true,
-                    "modified": "Fri, 09 Jan 2015 22:50:06 -0000",
-                    "name": "Which answer is more effectively articulated? Explain the reason for your preference.",
-                    "user_id": "50bcABC123-abcABC123_Z"
-                },
+                    'criterion_id': "5abcABC123-abcABC123_Z",
+                    'criterion': {
+                        "created": "Fri, 09 Jan 2015 22:50:06 -0000",
+                        "default": true,
+                        "public": false,
+                        "description": "criterion 2",
+                        "id": "5abcABC123-abcABC123_Z",
+                        "compared": true,
+                        "modified": "Fri, 09 Jan 2015 22:50:06 -0000",
+                        "name": "Which answer is more effectively articulated? Explain the reason for your preference.",
+                        "user_id": "50bcABC123-abcABC123_Z",
+                    }
+                }
+            ],
 
-                'user': {
-                    'avatar': "63a9f0ea7bb98050796b649e85481845",
-                    'displayname': "root",
-                    'fullname': "John Smith",
-                    'id': id
-                },
-                'created': "Fri, 09 Jan 2015 18:35:58 -0000",
-            }
-        ];
+            'user': {
+                'avatar': "63a9f0ea7bb98050796b649e85481845",
+                'displayname': "root",
+                'fullname': "John Smith",
+                'id': id
+            },
+            'created': "Fri, 09 Jan 2015 18:35:58 -0000",
+        };
 
         var mockComments = [{
             "answer_id": "279cABC123-abcABC123_Z",
@@ -394,7 +381,7 @@ describe('comparison-module', function () {
 
         it('should have correct initial states', function () {
             $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/comparisons').respond({
-                'objects':mockComparisons,
+                'comparison':mockComparison,
                 'new_pair': true,
                 'current': 1
             });
@@ -409,12 +396,12 @@ describe('comparison-module', function () {
             $httpBackend.flush();
 
             expect($rootScope.assignment).toEqualData(mockAssignment);
-            expect($rootScope.comparisons).toEqualData(mockComparisons);
+            expect($rootScope.comparison).toEqualData(mockComparison);
             expect($rootScope.current).toEqual(1);
             expect($rootScope.tracking).toEqualData(mockTracking);
 
-            answer1 = angular.copy(mockComparisons[0]).answer1;
-            answer2 = angular.copy(mockComparisons[0]).answer2;
+            answer1 = angular.copy(mockComparison.answer1);
+            answer2 = angular.copy(mockComparison.answer2);
             answer1.comment = mockNewComment;
             answer2.comment = mockComments[0];
             expect($rootScope.answer1).toEqualData(answer1);
@@ -424,16 +411,16 @@ describe('comparison-module', function () {
         describe('actions:', function() {
             var $mockRoute, controller;
             var mockComparisonResponse = {
-                "objects": angular.copy(mockComparisons)
+                "comparison": angular.copy(mockComparison)
             };
-            mockComparisonResponse.objects[0].winner_id = "407cABC123-abcABC123_Z";
-            mockComparisonResponse.objects[0].content = 'criterion comment 1';
-            mockComparisonResponse.objects[1].winner_id = "279cABC123-abcABC123_Z";
-            mockComparisonResponse.objects[1].content = 'criterion comment 2';
+            mockComparisonResponse.comparison.comparison_criteria[0].winner = "answer1";
+            mockComparisonResponse.comparison.comparison_criteria[0].content = 'criterion comment 1';
+            mockComparisonResponse.comparison.comparison_criteria[1].winner = "answer2";
+            mockComparisonResponse.comparison.comparison_criteria[1].content = 'criterion comment 2';
 
             beforeEach(function() {
                 $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/comparisons').respond({
-                    'objects':mockComparisons,
+                    'comparison':mockComparison,
                     'new_pair': true,
                     'current': 1
                 });
@@ -452,17 +439,16 @@ describe('comparison-module', function () {
 
             it('should submit comparisons when comparisonSubmit is called', function() {
                 var expectedComparison = {
-                    "comparisons":[
+                    "draft": false,
+                    "comparison_criteria":[
                         {
                             criterion_id: "4abcABC123-abcABC123_Z",
                             content: 'criterion comment 1',
-                            winner_id: "407cABC123-abcABC123_Z",
-                            draft: false
+                            winner: 'answer1'
                         }, {
                             criterion_id: "5abcABC123-abcABC123_Z",
                             content: 'criterion comment 2',
-                            winner_id: "279cABC123-abcABC123_Z",
-                            draft: false
+                            winner: 'answer2'
                         }
                     ],
                     "tracking":  mockTracking.toParams()
@@ -474,10 +460,10 @@ describe('comparison-module', function () {
                 $rootScope.answer1.comment.content = 'Feedback 1';
                 $rootScope.answer2.comment.content = 'Feedback 2';
                 // save comparison selection and comments
-                $rootScope.comparisons[0].winner_id = mockComparisons[0].answer1_id;
-                $rootScope.comparisons[0].content = 'criterion comment 1';
-                $rootScope.comparisons[1].winner_id = mockComparisons[0].answer2_id;
-                $rootScope.comparisons[1].content = 'criterion comment 2';
+                $rootScope.comparison.comparison_criteria[0].winner = 'answer1';
+                $rootScope.comparison.comparison_criteria[0].content = 'criterion comment 1';
+                $rootScope.comparison.comparison_criteria[1].winner = 'answer2';
+                $rootScope.comparison.comparison_criteria[1].content = 'criterion comment 2';
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments/3713ABC123-abcABC123_Z', expectedAnswerComment1).respond({});
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/279cABC123-abcABC123_Z/comments/3703ABC123-abcABC123_Z', expectedAnswerComment2).respond({});
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/comparisons', expectedComparison).respond(mockComparisonResponse);
@@ -495,16 +481,16 @@ describe('comparison-module', function () {
         describe('draft actions:', function() {
             var $mockRoute, controller;
             var mockComparisonResponse = {
-                "objects": angular.copy(mockComparisons)
+                "comparison": angular.copy(mockComparison)
             };
-            mockComparisonResponse.objects[0].winner_id = null;
-            mockComparisonResponse.objects[0].content = 'criterion comment 1';
-            mockComparisonResponse.objects[1].winner_id = "279cABC123-abcABC123_Z";
-            mockComparisonResponse.objects[1].content = 'criterion comment 2';
+            mockComparisonResponse.comparison.comparison_criteria[0].winner = "answer1";
+            mockComparisonResponse.comparison.comparison_criteria[0].content = 'criterion comment 1';
+            mockComparisonResponse.comparison.comparison_criteria[1].winner = "answer2";
+            mockComparisonResponse.comparison.comparison_criteria[1].content = 'criterion comment 2';
 
             beforeEach(function() {
                 $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/comparisons').respond({
-                    'objects':mockComparisons,
+                    'comparison':mockComparison,
                     'new_pair': true,
                     'current': 1
                 });
@@ -520,17 +506,16 @@ describe('comparison-module', function () {
 
             it('should submit comparison when comparisonSubmit is called', function() {
                 var expectedComparison = {
-                    "comparisons":[
+                    "draft": true,
+                    "comparison_criteria":[
                         {
                             criterion_id: "4abcABC123-abcABC123_Z",
                             content: 'criterion comment 1',
-                            winner_id: "407cABC123-abcABC123_Z",
-                            draft: true
+                            winner: 'answer1'
                         }, {
                             criterion_id: "5abcABC123-abcABC123_Z",
                             content: 'criterion comment 2',
-                            winner_id: "279cABC123-abcABC123_Z",
-                            draft: true
+                            winner: 'answer2'
                         }
                     ],
                     "tracking":  mockTracking.toParams()
@@ -542,10 +527,10 @@ describe('comparison-module', function () {
                 $rootScope.answer1.comment.content = 'Feedback 1';
                 $rootScope.answer2.comment.content = 'Feedback 2';
                 // save comparison selection and comments
-                $rootScope.comparisons[0].winner_id = mockComparisons[0].answer1_id;
-                $rootScope.comparisons[0].content = 'criterion comment 1';
-                $rootScope.comparisons[1].winner_id = mockComparisons[0].answer2_id;
-                $rootScope.comparisons[1].content = 'criterion comment 2';
+                $rootScope.comparison.comparison_criteria[0].winner = 'answer1';
+                $rootScope.comparison.comparison_criteria[0].content = 'criterion comment 1';
+                $rootScope.comparison.comparison_criteria[1].winner = 'answer2';
+                $rootScope.comparison.comparison_criteria[1].content = 'criterion comment 2';
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments/3713ABC123-abcABC123_Z', expectedAnswerComment1).respond({});
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/279cABC123-abcABC123_Z/comments/3703ABC123-abcABC123_Z', expectedAnswerComment2).respond({});
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/comparisons', expectedComparison).respond(mockComparisonResponse);

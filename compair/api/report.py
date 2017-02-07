@@ -10,6 +10,7 @@ from flask_login import login_required, current_user
 from flask_restful import Resource, reqparse
 
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 
 from compair.authorization import require
 from compair.core import event
@@ -101,8 +102,9 @@ class ReportRootAPI(Resource):
                     .all()
 
                 title_row1 += [assignment.name] + [""] * len(assignment_criteria)
+                title_row2.append('Percentage score for answer overall')
                 for assignment_criterion in assignment_criteria:
-                    title_row2.append('Percentage Score for "' + assignment_criterion.criterion.name + '"')
+                    title_row2.append('Percentage score for "' + assignment_criterion.criterion.name + '"')
                 title_row2.append("Evaluations Submitted (" + str(assignment.total_comparisons_required) + ' required)')
                 if assignment.enable_self_evaluation:
                     title_row1 += [""]
@@ -168,7 +170,7 @@ def participation_stat_report(course, assignments, group_name, overall):
             .filter_by(assignment_id=assignment.id) \
             .group_by(Comparison.user_id) \
             .all()
-        evaluations = {user_id: count for (user_id, count) in evaluations}
+        evaluation_submitted = {user_id: int(count) for (user_id, count) in evaluations}
 
         # COMMENTS
         comments = AnswerComment.query \
@@ -181,7 +183,6 @@ def participation_stat_report(course, assignments, group_name, overall):
         comments = {user_id: count for (user_id, count) in comments}
 
         total_req += assignment.total_comparisons_required  # for overall required
-        criteria_count = len(assignment.criteria)
 
         for user_course_student in user_course_students:
             user = user_course_student.user
@@ -199,11 +200,10 @@ def participation_stat_report(course, assignments, group_name, overall):
             total[user.id]['total_answers'] += submitted
             temp.extend([submitted, answer_uuid])
 
-            evaluation_submitted = evaluations[user.id] if user.id in evaluations else 0
-            evaluation_submitted = int(evaluation_submitted / criteria_count) if criteria_count else 0
-            evaluation_req_met = 'Yes' if evaluation_submitted >= assignment.total_comparisons_required else 'No'
-            total[user.id]['total_evaluations'] += evaluation_submitted
-            temp.extend([evaluation_submitted, assignment.total_comparisons_required, evaluation_req_met])
+            evaluations = evaluation_submitted.get(user.id, 0)
+            evaluation_req_met = 'Yes' if evaluations >= assignment.total_comparisons_required else 'No'
+            total[user.id]['total_evaluations'] += evaluations
+            temp.extend([evaluations, assignment.total_comparisons_required, evaluation_req_met])
 
             comment_count = comments[user.id] if user.id in comments else 0
             total[user.id]['total_comments'] += comment_count
@@ -247,17 +247,24 @@ def participation_report(course, assignments, group_name):
 
     # ANSWERS - scores
     answers = Answer.query \
+        .options(joinedload('score')) \
+        .options(joinedload('criteria_scores')) \
         .filter(Answer.assignment_id.in_(assignment_ids)) \
         .filter(Answer.user_id.in_(user_ids)) \
         .filter(Answer.draft == False) \
         .filter(Answer.practice == False) \
         .all()
 
-    scores = {}  # structure - user_id/assignment_id/criterion_id/normalized_score
+    scores = {} # structure - user_id/assignment_id/normalized_score
     for answer in answers:
         user_object = scores.setdefault(answer.user_id, {})
+        user_object.setdefault(answer.assignment_id, answer.score.normalized_score if answer.score else None)
+
+    criteria_scores = {} # structure - user_id/assignment_id/criterion_id/normalized_score
+    for answer in answers:
+        user_object = criteria_scores.setdefault(answer.user_id, {})
         assignment_object = user_object.setdefault(answer.assignment_id, {})
-        for s in answer.scores:
+        for s in answer.criteria_scores:
             assignment_object[s.criterion_id] = s.normalized_score
 
     # COMPARISONS
@@ -307,14 +314,22 @@ def participation_report(course, assignments, group_name):
         temp = [user.lastname, user.firstname, user.student_number]
 
         for assignment in assignments:
+            if user.id not in scores or assignment.id not in scores[user.id]:
+                score = 'No Answer'
+            elif scores[user.id][assignment.id] == None:
+                score = 'Not Evaluated'
+            else:
+                score = scores[user.id][assignment.id]
+            temp.append(score)
+
             for criterion in criteria[assignment.id]:
-                if user.id not in scores or assignment.id not in scores[user.id]:
-                    score = 'No Answer'
-                elif criterion not in scores[user.id][assignment.id]:
-                    score = 'Not Evaluated'
+                if user.id not in criteria_scores or assignment.id not in criteria_scores[user.id]:
+                    criterion_score = 'No Answer'
+                elif criterion not in criteria_scores[user.id][assignment.id]:
+                    criterion_score = 'Not Evaluated'
                 else:
-                    score = scores[user.id][assignment.id][criterion]
-                temp.append(score)
+                    criterion_score = criteria_scores[user.id][assignment.id][criterion]
+                temp.append(criterion_score)
             if user.id not in comparisons or assignment.id not in comparisons[user.id]:
                 compared = 0
             else:

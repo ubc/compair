@@ -158,13 +158,21 @@ class AssignmentIdAPI(Resource):
         if assignment.rank_display_limit != None and assignment.rank_display_limit <= 0:
             assignment.rank_display_limit = None
 
-        criterion_uuids = [c['id'] for c in params.criteria]
+        criterion_uuids = [c.get('id') for c in params.criteria]
+        criterion_data = {c.get('id'): c.get('weight', 1) for c in params.criteria}
         if assignment.compared:
             active_uuids = [c.uuid for c in assignment.criteria]
+            active_data = {c.uuid: c.weight for c in assignment.criteria}
             if set(criterion_uuids) != set(active_uuids):
                 msg = 'The criteria cannot be changed in the assignment ' + \
                       'because they have already been used in an evaluation.'
                 return {"error": msg}, 403
+
+            for criterion in assignment.criteria:
+                if criterion_data.get(criterion.uuid) != criterion.weight:
+                    msg = 'The criteria weight cannot be changed in the assignment ' + \
+                        'because it has already been used in an evaluation.'
+                    return {"error": msg}, 403
         else:
             # assignment not comapred yet, can change criteria
             if len(criterion_uuids) == 0:
@@ -175,6 +183,8 @@ class AssignmentIdAPI(Resource):
             # disable old ones
             for c in assignment.assignment_criteria:
                 c.active = c.criterion_uuid in criterion_uuids
+                if c.active:
+                    c.weight = criterion_data.get(c.criterion_uuid)
 
             # add the new ones
             new_uuids = []
@@ -186,7 +196,8 @@ class AssignmentIdAPI(Resource):
                 new_criteria = Criterion.query.filter(Criterion.uuid.in_(new_uuids)).all()
                 for criterion in new_criteria:
                     assignment.assignment_criteria.append(AssignmentCriterion(
-                        criterion=criterion
+                        criterion=criterion,
+                        weight=criterion_data.get(criterion.uuid)
                     ))
 
         # ensure criteria are in order
@@ -342,8 +353,9 @@ class AssignmentRootAPI(Resource):
         check_valid_pairing_algorithm(pairing_algorithm)
         new_assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
 
-        criterion_uuids = [c['id'] for c in params.criteria]
-        if len(criterion_uuids) == 0:
+        criterion_uuids = [c.get('id') for c in params.criteria]
+        criterion_data = {c.get('id'): c.get('weight', 1) for c in params.criteria}
+        if len(criterion_data) == 0:
             msg = 'You must add at least one criterion to the assignment'
             return {"error": msg}, 400
 
@@ -359,7 +371,8 @@ class AssignmentRootAPI(Resource):
         for criterion_uuid in criterion_uuids:
             criterion = next(criterion for criterion in criteria if criterion.uuid == criterion_uuid)
             new_assignment.assignment_criteria.append(AssignmentCriterion(
-                criterion=criterion
+                criterion=criterion,
+                weight=criterion_data.get(criterion.uuid)
             ))
 
         db.session.add(new_assignment)

@@ -3,7 +3,7 @@ from .mixins import ActiveMixin, DefaultTableMixin, WriteTrackingMixin, UUIDMixi
 
 # enums
 from .custom_types import AnswerCommentType, CourseRole, PairingAlgorithm, \
-    ScoringAlgorithm, SystemRole, ThirdPartyType
+    ScoringAlgorithm, SystemRole, ThirdPartyType, WinningAnswer
 
 # models
 from .activity_log import ActivityLog
@@ -12,6 +12,7 @@ from .answer import Answer
 from .assignment_criterion import AssignmentCriterion
 from .assignment_comment import AssignmentComment
 from .comparison import Comparison
+from .comparison_criterion import ComparisonCriterion
 from .comparison_example import ComparisonExample
 from .assignment_grade import AssignmentGrade
 from .assignment import Assignment
@@ -19,7 +20,8 @@ from .course_grade import CourseGrade
 from .course import Course
 from .criterion import Criterion
 from .file import File
-from .score import Score
+from .answer_score import AnswerScore
+from .answer_criterion_score import AnswerCriterionScore
 from .user import User
 from .user_course import UserCourse
 from .third_party_user import ThirdPartyUser

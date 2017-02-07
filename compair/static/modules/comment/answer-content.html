@@ -2,10 +2,10 @@
     <div class="answer-choice clearfix">
         <h4 class="text-center">{{ name }}
             <span ng-show="isChosen">(Chosen)</span>
-            <span ng-repeat="score in answer.scores">
+            <span ng-if="answer.score">
                 <span class="label label-warning pull-right score-display"
-                    ng-if="answer && showScore && score.criterion_id == criterion">
-                    Score: {{score.normalized_score|number:0}}%
+                    ng-if="answer && showScore">
+                    Score: {{answer.score.normalized_score|number:0}}%
                 </span>
             </span>
         </h4>
