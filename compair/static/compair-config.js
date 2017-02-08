@@ -153,6 +153,12 @@ myApp.config(['$routeProvider', '$logProvider', '$httpProvider', '$locationProvi
                 label: "Edit Assignment",
                 method: 'edit'
             })
+        .when ('/course/:courseId/assignment/:assignmentId/duplicate',
+            {
+                templateUrl: 'modules/assignment/assignment-duplicate-partial.html',
+                label: "Duplicate Assignment",
+                method: 'copy'
+            })
         .when ('/course/:courseId/assignment/:assignmentId/answer/create',
             {
                 templateUrl: 'modules/answer/answer-create-partial.html',

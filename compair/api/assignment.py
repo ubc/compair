@@ -104,8 +104,7 @@ class AssignmentIdAPI(Resource):
         # make sure that file attachment exists
         file_uuid = params.get('file_id')
         if file_uuid:
-            uploaded_file = File.get_by_uuid_or_404(file_uuid)
-            assignment.file_id = uploaded_file.id
+            assignment.file = File.get_by_uuid_or_404(file_uuid)
         else:
             assignment.file_id = None
 
@@ -243,8 +242,6 @@ class AssignmentIdAPI(Resource):
         formatted_assignment = marshal(assignment, dataformat.get_assignment(False))
         # delete file when assignment is deleted
         assignment.active = False
-        if assignment.file:
-            assignment.file.active = False
         db.session.commit()
 
         # update course grades
@@ -274,7 +271,7 @@ class AssignmentRootAPI(Resource):
         assignment = Assignment(course_id=course.id)
         restrict_user = not allow(MANAGE, assignment)
 
-        # Get all assignments for this course, order by answer_start date
+        # Get all assignments for this course, order by answer_start date, created date
         base_query = Assignment.query \
             .options(joinedload("assignment_criteria").joinedload("criterion")) \
             .options(undefer_group('counts')) \
@@ -282,7 +279,7 @@ class AssignmentRootAPI(Resource):
                 Assignment.course_id == course.id,
                 Assignment.active == True
             ) \
-            .order_by(desc(Assignment.answer_start))
+            .order_by(desc(Assignment.answer_start), desc(Assignment.created))
 
         if restrict_user:
             now = datetime.datetime.utcnow()
@@ -328,8 +325,7 @@ class AssignmentRootAPI(Resource):
         # make sure that file attachment exists
         file_uuid = params.get('file_id')
         if file_uuid:
-            uploaded_file = File.get_by_uuid_or_404(file_uuid)
-            new_assignment.file_id = uploaded_file.id
+            new_assignment.file = File.get_by_uuid_or_404(file_uuid)
         else:
             new_assignment.file_id = None
 

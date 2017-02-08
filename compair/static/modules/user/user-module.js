@@ -239,7 +239,6 @@ module.controller("UserCourseController",
             if ($scope.canManageUsers) {
                 userId = $routeParams.userId;
                 $scope.user = UserResource.get({'id': userId}, function (ret) {
-                    console.log(ret)
                     breadcrumbs.options = {'Manage User Courses': "Manage {0}'s Courses".format(ret.fullname)};
                 });
 
