@@ -1,11 +1,11 @@
-<div ng-controller="CourseAssignmentsController" class="course-screen">
+<div class="course-screen">
 
     <div class="row">
         <header class="col-sm-6">
             <h1><i class="fa fa-book"></i> {{course.name}} <br />({{course.year}} {{course.term}})</h1>
         </header>
         <div class="col-sm-6 sub-nav">
-            <span ng-if="canCreateAssignments">
+            <span ng-if="canCreateAssignment">
                 <a ng-href="#/course/{{course.id}}/assignment/create"
                     class="btn btn-primary" id="add-assignment-btn">
                     <i class="fa fa-plus"></i>
@@ -13,7 +13,7 @@
                 </a>
             </span>
             <span ng-if="canEditCourse">
-                <a id="edit-course-btn" ng-href="#/course/{{course.id}}/configure" class="btn btn-primary">
+                <a id="edit-course-btn" ng-href="#/course/{{course.id}}/edit" class="btn btn-primary">
                     <i class="fa fa-edit"></i>
                     Edit Course
                 </a>
@@ -45,7 +45,7 @@
     <div ng-if="!assignments.length">
         <hr />
         <p>No assignments currently posted.</p>
-        <p ng-if="canCreateAssignments">Would you like to <a ng-href="#/course/{{course.id}}/assignment/create">add an assignment</a>?</p>
+        <p ng-if="canCreateAssignment">Would you like to <a ng-href="#/course/{{course.id}}/assignment/create">add an assignment</a>?</p>
     </div>
 
     <!-- Assignments List -->
@@ -105,7 +105,7 @@
                     <!-- Completed Assignment Feedback (for students) -->
                     <li ng-if="!canManageAssignment && (assignment.steps_left == 0 || assignment.status.answers.answered)">
                         You
-                        <span ng-if="answered"><strong>answered</strong> <span ng-if="assignment.steps_left == 0">and </span></span>
+                        <span ng-if="assignment.status.answers.answered"><strong>answered</strong> <span ng-if="assignment.steps_left == 0">and </span></span>
                         <span ng-if="assignment.steps_left == 0"><strong>compared</strong></span>
                     </li>
                     <!-- Assignment Feedback (for students) -->
@@ -127,7 +127,7 @@
                         <span ng-if="!assignment.answer_period && !assignment.compare_period && assignment.answers_available">Assignment completed {{assignment.compare_end | amDateFormat: 'MMM D'}}</span>
                     </li>
                     <li ng-if="canManageAssignment || assignment.user_id == loggedInUserId">
-                        <a confirmation-needed="deleteAssignment(course.id, assignment.id)" keyword="assignment" title="Delete" href="">
+                        <a confirmation-needed="deleteAssignment(assignment)" keyword="assignment" title="Delete" href="">
                             <i class="fa fa-trash-o"></i>
                         </a>
                     </li>

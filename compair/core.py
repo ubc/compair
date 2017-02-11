@@ -35,4 +35,3 @@ event = Namespace()
 @user_logged_in.connect
 def generate_session_token(sender, user, **extra):
     sess['session_token'] = user.generate_session_token()
-

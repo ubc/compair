@@ -6,6 +6,7 @@ from flask import Blueprint, current_app
 from flask_restful import Resource, marshal_with, marshal, reqparse
 from flask_login import login_required, current_user
 from sqlalchemy import exc, func
+from flask_restplus import abort
 
 from . import dataformat
 from compair.authorization import require
@@ -52,7 +53,9 @@ class CourseListAPI(Resource):
         """
         Create new course
         """
-        require(CREATE, Course)
+        require(CREATE, Course,
+            title="Course Creation Failed",
+            message="You do not have permission to create a course since you are not an instructor.")
         params = new_course_parser.parse_args()
 
         new_course = Course(
@@ -73,7 +76,7 @@ class CourseListAPI(Resource):
                 '%Y-%m-%dT%H:%M:%S.%fZ')
 
         if new_course.start_date and new_course.end_date and new_course.start_date > new_course.end_date:
-            return {"error": 'Course end time must be after course start time'}, 400
+            abort(400, title="Course Not Saved", message="Course end time must be after course start time.")
 
         try:
             # create the course
@@ -111,7 +114,9 @@ class CourseAPI(Resource):
     @login_required
     def get(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(READ, course)
+        require(READ, course,
+            title="Failed to Retrieve Course",
+            message="You do not have permission to view this course since you are not enrolled in it.")
 
         on_course_get.send(
             self,
@@ -123,13 +128,15 @@ class CourseAPI(Resource):
     @login_required
     def post(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(EDIT, course)
+        require(EDIT, course,
+            title="Course Update Failed",
+            message="You do not have permission to update this course since you are not its instructor.")
 
         params = existing_course_parser.parse_args()
 
         # make sure the course id in the url and the course id in the params match
         if params['id'] != course_uuid:
-            return {"error": "Course id does not match URL."}, 400
+            abort(400, title="Course Update Failed", message="Course id does not match URL.")
 
         # modify course according to new values, preserve original values if values not passed
         course.name = params.get("name", course.name)
@@ -165,7 +172,9 @@ class CourseAPI(Resource):
     @login_required
     def delete(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(DELETE, course)
+        require(DELETE, course,
+            title="Course Deletion Failed",
+            message="You do not have permission to delete this course since you are not its instructor.")
 
         course.active = False
         db.session.commit()
@@ -189,7 +198,9 @@ class CourseDuplicateAPI(Resource):
         Duplicate a course
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(EDIT, course)
+        require(EDIT, course,
+            title="Course Duplication Failed",
+            message="You do not have permission to duplicate this course since you are not its instructor.")
 
         params = duplicate_course_parser.parse_args()
 
@@ -202,22 +213,26 @@ class CourseDuplicateAPI(Resource):
         ) if params.get("end_date") else None
 
         if start_date and end_date and start_date > end_date:
-            return {"error": 'Course end time must be after course start time'}, 400
+            abort(400, title="Course Not Saved", message="Course end time must be after course start time.")
 
         assignments = [assignment for assignment in course.assignments if assignment.active]
         assignments_copy_data = params.get("assignments")
 
         if len(assignments) != len(assignments_copy_data):
-            return {"error": "Not enough assignment data provided to duplication course"}, 400
+            abort(400, title="Course Duplication Failed", message="Not enough assignment data provided to duplication course.")
 
         for assignment_copy_data in assignments_copy_data:
-            if assignment_copy_data.get('answer_start'):
-                assignment_copy_data['answer_start'] = datetime.datetime.strptime(
-                    assignment_copy_data.get('answer_start'), '%Y-%m-%dT%H:%M:%S.%fZ')
+            if not assignment_copy_data.get('answer_start'):
+                abort(400, title="Course Duplication Failed", message="No answer start date provided for assignment "+assignment_copy_data.id+".")
 
-            if assignment_copy_data.get('answer_end'):
-                assignment_copy_data['answer_end'] = datetime.datetime.strptime(
-                    assignment_copy_data.get('answer_end'), '%Y-%m-%dT%H:%M:%S.%fZ')
+            if not assignment_copy_data.get('answer_end'):
+                abort(400, title="Course Duplication Failed", message="No answer end date provided for assignment "+assignment_copy_data.id+".")
+
+            assignment_copy_data['answer_start'] = datetime.datetime.strptime(
+                assignment_copy_data.get('answer_start'), '%Y-%m-%dT%H:%M:%S.%fZ')
+
+            assignment_copy_data['answer_end'] = datetime.datetime.strptime(
+                assignment_copy_data.get('answer_end'), '%Y-%m-%dT%H:%M:%S.%fZ')
 
             if assignment_copy_data.get('compare_start'):
                 assignment_copy_data['compare_start'] = datetime.datetime.strptime(
@@ -231,8 +246,8 @@ class CourseDuplicateAPI(Resource):
                 assignment_copy_data.get('answer_start'), assignment_copy_data.get('answer_end'),
                 assignment_copy_data.get('compare_start'), assignment_copy_data.get('compare_end'))
             if not valid:
-                error_message = error_message.replace(".", "")
-                return {"error": error_message + " for assignment "+assignment_copy_data.get('name', '')}, 400
+                error_message = error_message.replace(".", "") + " for assignment "+assignment_copy_data.get('name', '')
+                abort(400, title="Course Not Saved", message=error_message)
 
         # duplicate course
         duplicate_course = Course(
@@ -262,7 +277,7 @@ class CourseDuplicateAPI(Resource):
             )
 
             if not assignment_copy_data:
-                return {"error": "No assignment data provided for assignment "+assignment.uuid}, 400
+                abort(400, title="Course Duplication Failed", message="No assignment data provided for assignment "+assignment.uuid+".")
 
             duplicate_assignment = Assignment(
                 course=duplicate_course,

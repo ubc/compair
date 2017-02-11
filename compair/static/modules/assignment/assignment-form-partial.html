@@ -1,3 +1,10 @@
+<h1 ng-if="method == 'create'">Add Assignment</h1>
+<h1 ng-if="method == 'edit'">Edit Assignment</h1>
+
+<h1 ng-if="method == 'copy'">Duplicate: {{originalAssignment.name}}</h1>
+<br ng-if="method == 'copy'">
+<p class="intro-text" ng-if="method == 'copy'">Please update the schedule and any other fields requiring changes to duplicate your assignment. This process will <em>not</em> copy submitted answers or comparisons.</p>
+
 <form name="assignmentForm" class="form" ng-submit="assignmentSubmit()" novalidate>
 
     <fieldset>
@@ -194,7 +201,7 @@
             <p>
                 <i class="fa fa-chevron-down" ng-show="showAdvanced"></i>
                 <i class="fa fa-chevron-right" ng-hide="showAdvanced"></i>
-                <span id="app-login-toggle">Change how answers are selected and scored/ranked?</span>
+                <span>Change how answers are selected and scored/ranked?</span>
             </p>
         </a>
         <div ng-show="showAdvanced">

@@ -17,22 +17,25 @@ var module = angular.module('ubc.ctlt.compair.navbar',
 );
 
 /***** Controllers *****/
+module.component('navbarComponent', {
+    controller: 'NavbarController',
+    templateUrl: 'modules/navbar/navbar-partial.html'
+});
+
 module.controller(
     "NavbarController",
-    ["$scope", "$log", "$route", "breadcrumbs", "AuthTypesEnabled",
+    ["$scope", "$log", "$routeParams", "breadcrumbs", "AuthTypesEnabled",
         "Session", "AuthenticationService", "Authorize", "CourseResource", "UserResource", "AssignmentResource",
-    function NavbarController($scope, $log, $route, breadcrumbs, AuthTypesEnabled,
+    function NavbarController($scope, $log, $routeParams, breadcrumbs, AuthTypesEnabled,
         Session, AuthenticationService, Authorize, CourseResource, UserResource, AssignmentResource)
     {
         $scope.breadcrumbs = breadcrumbs;
-        $scope.isLoggedIn = false;
         $scope.isCollapsed = true;
 
         $scope.AuthTypesEnabled = AuthTypesEnabled;
 
         // determine if we're in a course so we know whether to show
         // the course settings
-        //$scope.inCourse = false;
         $scope.getPermissions = function() {
             Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function (result) {
                 $scope.canCreateUsers = result;
@@ -48,10 +51,8 @@ module.controller(
             });
         };
         $scope.setInCourse = function() {
-            var courseId = $route.current.params['courseId'];
-            $scope.inCourse = false;
+            var courseId = $routeParams.courseId;
             if (courseId) {
-                $scope.inCourse = true;
                 // update breadcrumb to show the course name
                 CourseResource.get({'id': courseId}).$promise.then(
                     function(ret)
@@ -67,10 +68,6 @@ module.controller(
             // update for further navigation after the page has loaded
             $scope.setInCourse();
         });
-        // show course configure options if user can edit courses
-        /*Authorize.can(Authorize.EDIT, CourseResource.MODEL).then(function(result) {
-            $scope.canEditCourse = result;
-        })*/
         Session.getUser().then(function(user) {
             $scope.loggedInUser = user;
             $log.debug("Logged in as " + $scope.loggedInUser.username);
@@ -84,26 +81,9 @@ module.controller(
            $scope.getPermissions();
         });
 
-        // listen for changes in authentication state
-//		$scope.$on(AuthenticationService.LOGIN_EVENT, updateAuthentication);
-//		$scope.$on(AuthenticationService.LOGOUT_EVENT, updateAuthentication);
-
         $scope.showLogin = function() {
             $scope.$emit(AuthenticationService.LOGIN_REQUIRED_EVENT);
         };
-
-        // TODO Not sure what listening to comparison, steps do
-        $scope.$on("COMPARISON", function(event) {
-            route = $scope.breadcrumb[$scope.breadcrumb.length - 1].link ? $scope.breadcrumb[$scope.breadcrumb.length - 1].link : "";
-            $location.path(route.replace("#/", ""));
-        });
-        var steps = '';
-        $scope.$on("STEPS", function(event, val) {
-            $scope.hastutorial = true;
-            steps = val.steps;
-            var intro = val.intro;
-            steps.unshift({element: '#stepTutorial', intro: intro});
-        });
     }
 ]);
 

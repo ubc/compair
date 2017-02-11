@@ -507,7 +507,10 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             rv = self.client.delete(self.url + '/' + assignment.uuid)
             self.assert403(rv)
             self.assertEqual(
-                '<p>User ' + self.data.get_authorized_student().uuid + ' does not have delete access to assignment '+assignment.uuid+'</p>',
+                "Assignment Deletion Failed",
+                rv.json['title'])
+            self.assertEqual(
+                "You do not have permission to remove this assignment since you are not its instructor.",
                 rv.json['message'])
 
         with self.login(self.data.get_authorized_instructor().username):
@@ -594,7 +597,8 @@ class AssignmentEditComparedAPITests(ComPAIRAPITestCase):
             chaged_pairing['pairing_algorithm'] = PairingAlgorithm.adaptive.value
             rv = self.client.post(url, data=json.dumps(chaged_pairing), content_type='application/json')
             self.assert403(rv)
-            self.assertEqual(rv.json['error'],
+            self.assertEqual(rv.json['title'], "Assignment Update Failed")
+            self.assertEqual(rv.json['message'],
                 'The pair selection algorithm cannot be changed in the assignment ' + \
                 'because it has already been used in an evaluation.')
 
@@ -605,7 +609,8 @@ class AssignmentEditComparedAPITests(ComPAIRAPITestCase):
             ]
             rv = self.client.post(url, data=json.dumps(change_criteria), content_type='application/json')
             self.assert403(rv)
-            self.assertEqual(rv.json['error'],
+            self.assertEqual(rv.json['title'], "Assignment Update Failed")
+            self.assertEqual(rv.json['message'],
                 'The criteria cannot be changed in the assignment ' + \
                 'because they have already been used in an evaluation.')
 
@@ -616,7 +621,8 @@ class AssignmentEditComparedAPITests(ComPAIRAPITestCase):
             ]
             rv = self.client.post(url, data=json.dumps(change_criteria), content_type='application/json')
             self.assert403(rv)
-            self.assertEqual(rv.json['error'],
+            self.assertEqual(rv.json['title'], "Assignment Update Failed")
+            self.assertEqual(rv.json['message'],
                 'The criteria weight cannot be changed in the assignment ' + \
                 'because it has already been used in an evaluation.')
 

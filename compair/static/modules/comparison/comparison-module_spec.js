@@ -79,7 +79,7 @@ describe('comparison-module', function () {
     });
 
     describe('ComparisonController', function () {
-        var $rootScope, createController, $location, $uibModal, $q, xAPI, xAPISettings;
+        var $rootScope, createController, $location, $uibModal, $q, xAPI, xAPISettings, $route;
         var mockCritiera = {
             "criteria": [{
                 "created": "Sat, 06 Sep 2014 02:13:07 -0000",
@@ -357,17 +357,20 @@ describe('comparison-module', function () {
             }
         };
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$uibModal_, _$q_, _xAPI_, _xAPISettings_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$uibModal_, _$q_, _xAPI_, _xAPISettings_, _$route_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
             $uibModal = _$uibModal_;
             $q = _$q_;
             xAPI = _xAPI_;
-            createController = function (route, params) {
+            $route = _$route_;
+            spyOn($route, 'reload');
+            createController = function (params, resolvedData) {
                 return $controller('ComparisonController', {
                     $scope: $rootScope,
-                    $route: route || {},
-                    $routeParams: params || {}
+                    $route: $route,
+                    $routeParams: params || {},
+                    resolvedData: resolvedData || {}
                 });
             };
             xAPI.generateTracking = function() {
@@ -385,16 +388,20 @@ describe('comparison-module', function () {
                 'current': 1
             });
             $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answer_comments?answer_ids=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z&draft=true&evaluation=only&user_ids=1abcABC123-abcABC123_Z').respond(mockComments);
-            $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z').respond(mockAssignment);
             $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments', expectedNewComment).respond(mockNewComment);
 
-            $httpBackend.expectGET('/api/timer').respond(mockTimer);
-            createController({}, {courseId: "3abcABC123-abcABC123_Z", assignmentId: "9abcABC123-abcABC123_Z"});
-            expect($rootScope.assignment).toEqual({});
+            createController({courseId: "3abcABC123-abcABC123_Z", assignmentId: "9abcABC123-abcABC123_Z"}, {
+                course: angular.copy(mockCourse),
+                assignment: angular.copy(mockAssignment),
+                loggedInUser: angular.copy(mockUser),
+                timer: angular.copy(mockTimer),
+                canManageAssignment: true,
+            });
+            expect($rootScope.course).toEqualData(mockCourse);
+            expect($rootScope.assignment).toEqualData(mockAssignment);
             expect($rootScope.current).toBe(undefined);
             $httpBackend.flush();
 
-            expect($rootScope.assignment).toEqualData(mockAssignment);
             expect($rootScope.comparison).toEqualData(mockComparison);
             expect($rootScope.current).toEqual(1);
             expect($rootScope.tracking).toEqualData(mockTracking);
@@ -408,7 +415,7 @@ describe('comparison-module', function () {
         });
 
         describe('actions:', function() {
-            var $mockRoute, controller;
+            var controller;
             var mockComparisonResponse = {
                 "comparison": angular.copy(mockComparison)
             };
@@ -424,11 +431,14 @@ describe('comparison-module', function () {
                     'current': 1
                 });
                 $httpBackend.whenGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answer_comments?answer_ids=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z&draft=true&evaluation=only&user_ids=1abcABC123-abcABC123_Z').respond(mockComments);
-                $httpBackend.whenGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z').respond(mockAssignment);
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments', expectedNewComment).respond(mockNewComment);
-                $httpBackend.expectGET('/api/timer').respond(mockTimer);
-                $mockRoute = jasmine.createSpyObj('route', ['reload']);
-                controller = createController($mockRoute, {courseId: "3abcABC123-abcABC123_Z", assignmentId: "9abcABC123-abcABC123_Z"});
+                controller = createController({courseId: "3abcABC123-abcABC123_Z", assignmentId: "9abcABC123-abcABC123_Z"}, {
+                    course: angular.copy(mockCourse),
+                    assignment: angular.copy(mockAssignment),
+                    loggedInUser: angular.copy(mockUser),
+                    timer: angular.copy(mockTimer),
+                    canManageAssignment: true,
+                });
                 $httpBackend.flush();
             });
 
@@ -471,14 +481,14 @@ describe('comparison-module', function () {
                 $rootScope.comparisonSubmit();
                 $httpBackend.flush();
 
-                expect($mockRoute.reload).toHaveBeenCalled();
+                expect($route.reload).toHaveBeenCalled();
                 expect($rootScope.preventExit).toBe(false);
             })
 
         });
 
         describe('draft actions:', function() {
-            var $mockRoute, controller;
+            var controller;
             var mockComparisonResponse = {
                 "comparison": angular.copy(mockComparison)
             };
@@ -494,11 +504,14 @@ describe('comparison-module', function () {
                     'current': 1
                 });
                 $httpBackend.whenGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answer_comments?answer_ids=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z&draft=true&evaluation=only&user_ids=1abcABC123-abcABC123_Z').respond(mockComments);
-                $httpBackend.whenGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z').respond(mockAssignment);
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments', expectedNewComment).respond(mockNewComment);
-                $httpBackend.expectGET('/api/timer').respond(mockTimer);
-                $mockRoute = jasmine.createSpyObj('route', ['reload']);
-                controller = createController($mockRoute, {courseId: "3abcABC123-abcABC123_Z", assignmentId: "9abcABC123-abcABC123_Z"});
+                controller = createController({courseId: "3abcABC123-abcABC123_Z", assignmentId: "9abcABC123-abcABC123_Z"}, {
+                    course: angular.copy(mockCourse),
+                    assignment: angular.copy(mockAssignment),
+                    loggedInUser: angular.copy(mockUser),
+                    timer: angular.copy(mockTimer),
+                    canManageAssignment: true,
+                });
                 $rootScope.isDraft = true;
                 $httpBackend.flush();
             });
@@ -539,6 +552,7 @@ describe('comparison-module', function () {
                 expect($rootScope.submitted).toBe(true);
                 $httpBackend.flush();
 
+                expect($route.reload).not.toHaveBeenCalled();
                 expect($rootScope.preventExit).toBe(true);
                 expect($rootScope.submitted).toBe(false);
             })

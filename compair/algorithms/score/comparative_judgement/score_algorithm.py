@@ -22,7 +22,7 @@ class ComparativeJudgementScoreAlgorithm(ScoreAlgorithmBase):
 
     def calculate_score_1vs1(self, key1_scored_object, key2_scored_object, winner, other_comparison_pairs):
         """
-        Calcualtes the scores for a new 1vs1 comparison without re-calculating all previous scores
+        Calculates the scores for a new 1vs1 comparison without re-calculating all previous scores
         :param key1_scored_object: Contains score parameters for key1
         :param key2_scored_object: Contains score parameters for key2
         :param winner: indicates comparison winner

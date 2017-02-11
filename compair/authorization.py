@@ -1,8 +1,9 @@
 from bouncer.constants import ALL, MANAGE, EDIT, READ, CREATE, DELETE
 from flask_bouncer import ensure
 from flask_login import current_user
-from werkzeug.exceptions import Unauthorized, Forbidden
+from werkzeug.exceptions import Unauthorized
 from sqlalchemy import and_
+from flask_restplus import abort
 
 from .models import Course, User, UserCourse, CourseRole, SystemRole, \
     Assignment, Answer, AnswerComment, Comparison, Criterion, \
@@ -89,7 +90,7 @@ def define_authorization(user, they):
         # owner of the answer comment
         they.can((EDIT, DELETE, READ), AnswerComment, user_id=user.id)
         # students, instructor and ta can submit comparisons
-        they.can(CREATE, Comparison, course_id=entry.course_id)
+        they.can((CREATE, EDIT), Comparison, course_id=entry.course_id)
         # instructors can modify the course and enrolment
         if entry.course_role == CourseRole.instructor:
             they.can((EDIT, DELETE), Course, id=entry.course_id)
@@ -202,7 +203,7 @@ def allow(operation, target):
         return False
 
 
-def require(operation, target):
+def require(operation, target, title=None, message=None):
     """
     This is basically Flask-Bouncer's ensure except it throws a 403 instead of a 401
     if the permission check fails. A 403 is more accurate since authentication would
@@ -215,7 +216,11 @@ def require(operation, target):
     try:
         ensure(operation, target)
     except Unauthorized as e:
-        raise Forbidden(e.get_description())
+        if not title:
+            title = "Forbidden"
+        if not message:
+            message = e.description
+        abort(403, title=title, message=message)
 
 
 def is_user_access_restricted(user):

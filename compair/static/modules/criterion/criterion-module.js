@@ -6,9 +6,11 @@
 
 var module = angular.module('ubc.ctlt.compair.criterion', [
     'ngResource',
+    'ui.bootstrap',
     'ubc.ctlt.compair.common.form',
     'ubc.ctlt.compair.common.mathjax',
     'ubc.ctlt.compair.common.highlightjs',
+    'ubc.ctlt.compair.toaster'
 ]);
 
 module.factory('CriterionResource', ['$resource', function($resource) {
@@ -16,20 +18,45 @@ module.factory('CriterionResource', ['$resource', function($resource) {
 }]);
 
 /***** Controllers *****/
-module.controller('CriterionConfigureController',
-    ['$scope', '$routeParams', '$location', 'CriterionResource', 'Toaster', 'EditorOptions',
-    function($scope, $routeParams, $location, CriterionResource, Toaster, EditorOptions) {
-        var criterionId = $routeParams['criterionId'];
+module.controller(
+    "CriterionModalController",
+    ['$scope', 'CriterionResource', 'Toaster', 'EditorOptions', "$uibModalInstance",
+    function ($scope, CriterionResource, Toaster, EditorOptions, $uibModalInstance)
+    {
+        $scope.criterion = $scope.criterion || {};
+        $scope.method = $scope.criterion.id ? 'edit' : 'create';
+        $scope.modalInstance = $uibModalInstance;
         $scope.editorOptions = EditorOptions.basic;
-        $scope.criterion = CriterionResource.get({'criterionId': criterionId});
+        $scope.submitted = false;
 
-        // update criterion
-        $scope.$on('CRITERION_ADDED', function() {
-            var courseId = $routeParams['courseId'];
-            var assignmentId = $routeParams['assignmentId'];
-            Toaster.success("Criterion Updated", "Successfully saved your criterion changes.");
-            $location.path('/course/' + courseId + '/assignment/' + assignmentId + '/edit');
-        });
+        if ($scope.method == 'edit') {
+            $scope.criterion = CriterionResource.get({'criterionId': $scope.criterion.id});
+        }
+        $scope.criterionSubmit = function () {
+            $scope.submitted = true;
+
+            // never edit a public criterion. Create a new copy of it instead
+            var criterion = angular.copy($scope.criterion);
+            if (criterion.public) {
+                criterion.id = null;
+                criterion.public = false;
+            }
+            CriterionResource.save({}, criterion).$promise.then(
+                function (ret) {
+                    $scope.criterion = ret;
+
+                    if ($scope.method == 'create') {
+                        Toaster.success("Criterion Created Successfully");
+                    } else {
+                        Toaster.success("Criterion Updated Successfully");
+                    }
+
+                    $uibModalInstance.close($scope.criterion);
+                }
+            ).finally(function() {
+                $scope.submitted = false;
+            });
+        };
     }]
 );
 

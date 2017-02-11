@@ -1,11 +1,12 @@
 import dateutil.parser
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
-from flask import Blueprint, abort
+from flask import Blueprint
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import desc, or_, func, and_
 from sqlalchemy.orm import joinedload, undefer_group, load_only
+from flask_restplus import abort
 
 from . import dataformat
 from compair.core import db, event
@@ -36,7 +37,9 @@ class ComparisonExampleIdAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         comparison_example = ComparisonExample.get_active_by_uuid_or_404(comparison_example_uuid)
-        require(EDIT, comparison_example)
+        require(EDIT, comparison_example,
+            title="Comparison Example Not Updated",
+            message="Your role in this course does not allow you to update comparison examples.")
 
         params = existing_comparison_example_parser.parse_args()
         answer1_uuid = params.get("answer1_id")
@@ -47,14 +50,16 @@ class ComparisonExampleIdAPI(Resource):
             answer1.practice = True
             comparison_example.answer1 = answer1
         else:
-            return {"error": "Comparison examples must have 2 answers"}, 400
+            abort(400, title="Comparison Example Not Updated",
+                message="Please add two answers to the comparison example and try again.")
 
         if answer2_uuid:
             answer2 = Answer.get_active_by_uuid_or_404(answer2_uuid)
             answer2.practice = True
             comparison_example.answer2 = answer2
         else:
-            return {"error": "Comparison examples must have 2 answers"}, 400
+            abort(400, title="Comparison Example Not Updated",
+                message="Please add two answers to the comparison example and try again.")
 
         on_comparison_example_modified.send(
             self,
@@ -73,7 +78,9 @@ class ComparisonExampleIdAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         comparison_example = ComparisonExample.get_active_by_uuid_or_404(comparison_example_uuid)
-        require(DELETE, comparison_example)
+        require(DELETE, comparison_example,
+            title="Comparison Example Not Deleted",
+            message="Your role in this course does not allow you to delete comparison examples.")
 
         formatted_comparison_example = marshal(comparison_example,
             dataformat.get_comparison_example(with_answers=False))
@@ -100,7 +107,9 @@ class ComparisonExampleRootAPI(Resource):
     def get(self, course_uuid, assignment_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
-        require(READ, ComparisonExample(course_id=course.id))
+        require(READ, ComparisonExample(course_id=course.id),
+            title="Comparison Example Unavailable",
+            message="Your role in this course does not allow you to view comparison examples.")
 
         # Get all comparison examples for this assignment
         comparison_examples = ComparisonExample.query \
@@ -123,7 +132,9 @@ class ComparisonExampleRootAPI(Resource):
     def post(self, course_uuid, assignment_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
-        require(CREATE, ComparisonExample(assignment=Assignment(course_id=course.id)))
+        require(CREATE, ComparisonExample(assignment=Assignment(course_id=course.id)),
+            title="Comparison Example Not Saved",
+            message="Your role in this course does not allow you to save comparison examples.")
 
         new_comparison_example = ComparisonExample(assignment_id=assignment.id)
 
@@ -136,14 +147,16 @@ class ComparisonExampleRootAPI(Resource):
             answer1.practice = True
             new_comparison_example.answer1 = answer1
         else:
-            return {"error": "Comparison examples must have 2 answers"}, 400
+            abort(400, title="Comparison Example Not Saved",
+                message="Please add two answers to the comparison example and try again.")
 
         if answer2_uuid:
             answer2 = Answer.get_active_by_uuid_or_404(answer2_uuid)
             answer2.practice = True
             new_comparison_example.answer2 = answer2
         else:
-            return {"error": "Comparison examples must have 2 answers"}, 400
+            abort(400, title="Comparison Example Not Saved",
+                message="Please add two answers to the comparison example and try again.")
 
         on_comparison_example_create.send(
             self,

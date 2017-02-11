@@ -35,6 +35,8 @@ UPLOAD_ALLOWED_EXTENSIONS = {'csv'}
 
 PASSLIB_CONTEXT = 'default'
 
+ERROR_404_HELP = False
+
 # make the session valid for a day
 PERMANENT_SESSION_LIFETIME = 3600 * 24
 

@@ -127,14 +127,16 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             filename = 'alias.pdf'
             rv = self.client.post(url, data=dict())
             self.assert400(rv)
-            self.assertEqual("No file attachment found", rv.json['error'])
+            self.assertEqual("Attachment Upload Failed", rv.json['title'])
+            self.assertEqual("No file attachment found.", rv.json['message'])
 
             # test no file uploaded
             filename = 'alias.xyz'
             uploaded_file = io.BytesIO(b"this is a test")
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert400(rv)
-            self.assertEqual("Invalid file extension", rv.json['error'])
+            self.assertEqual("Attachment Upload Failed", rv.json['title'])
+            self.assertEqual("Invalid file extension.", rv.json['message'])
 
             for extension, mimetype in test_formats:
                 filename = 'alias.'+extension

@@ -30,9 +30,9 @@ module.directive('compairAttachmentInline', function() {
             //attachments: '=?',
             label: '@'
         },
-        controller: [
-                "$scope", "$log", "$window", "$sce", "$uibModal", "xAPIStatementHelper",
-                function ($scope, $log, $window, $sce, $uibModal, xAPIStatementHelper) {
+        controller: ["$scope", "$window", "$sce", "$uibModal", "xAPIStatementHelper",
+                     function ($scope, $window, $sce, $uibModal, xAPIStatementHelper)
+        {
             $scope.inline = null;
             $scope.inlineVisible = false;
             $scope.inlineUrl = null;

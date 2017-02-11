@@ -59,65 +59,36 @@ module.factory(
 /***** Controllers *****/
 module.controller(
     'ClassViewController',
-    ["$scope", "$log", "$routeParams", "$route", "ClassListResource", "CourseResource",
-             "CourseRole", "GroupResource", "Toaster", "Session", "SaveAs", "LTIResource",
-             "UserResource", "Authorize", "$uibModal", "xAPIStatementHelper",
-    function($scope, $log, $routeParams, $route, ClassListResource, CourseResource,
-             CourseRole, GroupResource, Toaster, Session, SaveAs, LTIResource,
-             UserResource, Authorize, $uibModal, xAPIStatementHelper)
+    ["$scope", "$routeParams", "$route", "ClassListResource", "CourseResource",
+             "CourseRole", "GroupResource", "Toaster", "SaveAs", "LTIResource",
+             "UserResource", "$uibModal", "xAPIStatementHelper", "resolvedData",
+    function($scope, $routeParams, $route, ClassListResource, CourseResource,
+             CourseRole, GroupResource, Toaster, SaveAs, LTIResource,
+             UserResource, $uibModal, xAPIStatementHelper, resolvedData)
     {
-        $scope.course = {};
-        $scope.classlist = [];
-        var courseId = $routeParams['courseId'];
-        $scope.courseId = courseId;
+
+        $scope.courseId = $routeParams.courseId;
+
+        $scope.course = resolvedData.course;
+        $scope.classlist = resolvedData.classlist.objects;
+        $scope.groups = resolvedData.groups.objects;
+        $scope.loggedInUserId = resolvedData.loggedInUser.id;
+        $scope.canManageUsers = resolvedData.canManageUsers;
+        $scope.canCreateUsers = resolvedData.canCreateUsers;
+
         $scope.submitted = false;
         $scope.lti_membership_enabled = false;
         $scope.lti_membership_pending = 0;
-        Session.getUser().then(function(user) {
-            $scope.loggedInUserId = user.id;
-        });
-        Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
-            $scope.canManageUsers = result;
-        });
-        Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function (result) {
-            $scope.canCreateUsers = result;
-        });
-        CourseResource.get({'id':courseId},
-            function (ret) {
-                $scope.course_name = ret.name;
-                if (ret.lti_linked) {
-                    LTIResource.getMembershipStatus({id: courseId},
-                        function(ret) {
-                            $scope.lti_membership_enabled = ret.status.enabled;
-                            $scope.lti_membership_pending = ret.status.pending;
-                        },
-                        function(ret) {
-                            Toaster.reqerror("LTI Course Status Error", ret);
-                        }
-                    );
+        $scope.course_roles = [CourseRole.student, CourseRole.teaching_assistant, CourseRole.instructor];
+
+        if ($scope.course.lti_linked) {
+            LTIResource.getMembershipStatus({id: $scope.courseId},
+                function(ret) {
+                    $scope.lti_membership_enabled = ret.status.enabled;
+                    $scope.lti_membership_pending = ret.status.pending;
                 }
-            },
-            function (ret) {
-                Toaster.reqerror("No Course Found For Course ID "+courseId, ret);
-            }
-        );
-        ClassListResource.get({'courseId':courseId},
-            function (ret) {
-                $scope.classlist = ret.objects;
-                $scope.resetSelected();
-            },
-            function (ret) {
-                Toaster.reqerror("No Users Found For Course ID "+courseId, ret);
-            }
-        );
-        GroupResource.getAllFromSession({'courseId':courseId},
-            function (ret) {
-                $scope.groups = ret.objects;
-            },
-            function (ret) {
-                Toaster.reqerror("Groups Retrieval Failed", ret);
-            }
-        );
+            );
+        }
 
 		// enable checkbox to select/deselect all users
 		$scope.selectAll = function() {
@@ -137,14 +108,12 @@ module.controller(
             });
         };
 
-        $scope.course_roles = [CourseRole.student, CourseRole.teaching_assistant, CourseRole.instructor];
-
         $scope.addUsersToNewGroup = function() {
             var modalInstance = $uibModal.open({
                 animation: true,
                 backdrop: 'static',
                 controller: "AddGroupModalController",
-                templateUrl: 'modules/group/group-form-partial.html'
+                templateUrl: 'modules/group/group-modal-partial.html'
             })
             modalInstance.opened.then(function() {
                 xAPIStatementHelper.opened_modal("Edit Group");
@@ -169,23 +138,17 @@ module.controller(
             }
 
             if (groupName) {
-                GroupResource.updateUsersGroup({'courseId': courseId, 'groupName': groupName}, {ids: selectedUserIds},
+                GroupResource.updateUsersGroup({'courseId': $scope.courseId, 'groupName': groupName}, {ids: selectedUserIds},
                     function (ret) {
                         Toaster.success("Update Complete", "Successfully enrolled the user(s) into " + ret.group_name);
                         $route.reload();
-                    },
-                    function (ret) {
-                        Toaster.reqerror("User(s) Not Enrolled", ret);
                     }
                 );
             } else {
-                GroupResource.removeUsersGroup({'courseId': courseId}, {ids: selectedUserIds},
+                GroupResource.removeUsersGroup({'courseId': $scope.courseId}, {ids: selectedUserIds},
                     function (ret) {
                         Toaster.success("User(s) Removed", "Successfully removed the user(s) from groups");
                         $route.reload();
-                    },
-                    function (ret) {
-                        Toaster.reqerror("No User(s) Removed", ret);
                     }
                 );
             }
@@ -199,23 +162,17 @@ module.controller(
             });
 
             if (courseRole) {
-                ClassListResource.updateCourseRoles({'courseId': courseId}, {ids: selectedUserIds, course_role: courseRole},
+                ClassListResource.updateCourseRoles({'courseId': $scope.courseId}, {ids: selectedUserIds, course_role: courseRole},
                     function (ret) {
                         Toaster.success("User(s) Updated", "Successfully changed course role to " + courseRole);
                         $route.reload();
-                    },
-                    function (ret) {
-                        Toaster.reqerror("User(s) Not Updated", ret);
                     }
                 );
             } else {
-                ClassListResource.updateCourseRoles({'courseId': courseId}, {ids: selectedUserIds},
+                ClassListResource.updateCourseRoles({'courseId': $scope.courseId}, {ids: selectedUserIds},
                     function (ret) {
                         Toaster.success("User(s) Removed", "Successfully removed user(s) from course.");
                         $route.reload();
-                    },
-                    function (ret) {
-                        Toaster.reqerror("No User(s) Removed", ret);
                     }
                 );
             }
@@ -223,74 +180,58 @@ module.controller(
 
         $scope.update = function(userId, groupName) {
             if (groupName) {
-                GroupResource.enrol({'courseId': courseId, 'userId': userId, 'groupName': groupName}, {},
+                GroupResource.enrol({'courseId': $scope.courseId, 'userId': userId, 'groupName': groupName}, {},
                     function (ret) {
                         Toaster.success("Update Complete", "Successfully added the user to group " + ret.group_name);
-                    },
-                    function (ret) {
-                        Toaster.reqerror("Update Not Completed", ret);
                     }
                 );
             } else {
-                GroupResource.unenrol({'courseId': courseId, 'userId': userId},
+                GroupResource.unenrol({'courseId': $scope.courseId, 'userId': userId},
                     function (ret) {
                         Toaster.success("User Removed", "Successfully removed the user from the group.");
-                    },
-                    function (ret) {
-                        Toaster.reqerror("User Not Removed", ret);
                     }
                 );
             }
         };
 
         $scope.enrol = function(user) {
-            ClassListResource.enrol({'courseId': courseId, 'userId': user.id}, user,
+            ClassListResource.enrol({'courseId': $scope.courseId, 'userId': user.id}, user,
                 function (ret) {
                     Toaster.success("User Added", 'Successfully changed '+ ret.fullname +'\'s course role to ' + ret.course_role);
-                },
-                function (ret) {
-                    Toaster.reqerror("User Add Failed", "Problem encountered For ID " + user.id, ret);
                 }
             );
         };
 
         $scope.unenrol = function(userId) {
-            ClassListResource.unenrol({'courseId': courseId, 'userId': userId},
+            ClassListResource.unenrol({'courseId': $scope.courseId, 'userId': userId},
                 function (ret) {
                     Toaster.success("User Removed", "Successfully unenrolled " + ret.fullname + " from the course.");
                     $route.reload();
-                },
-                function (ret) {
-                    Toaster.reqerror("User Not Removed", ret);
                 }
             )
         };
 
         $scope.updateLTIMembership = function() {
             $scope.submitted = true;
-            LTIResource.updateMembership({id: courseId}, {},
+            LTIResource.updateMembership({id: $scope.courseId}, {},
                 function(ret) {
                     $scope.submitted = false;
-                    ClassListResource.get({'courseId':courseId},
+                    ClassListResource.get({'courseId':$scope.courseId},
                         function (ret) {
                             Toaster.success("Enrolment Refreshed", "Successfully updated enrolment for the course.");
                             $route.reload();
-                        },
-                        function (ret) {
-                            Toaster.reqerror("No Users Found For Course ID "+courseId, ret);
                         }
                     );
                 },
                 function(ret) {
                     $scope.submitted = false;
-                    Toaster.reqerror("LTI Update Course Membership Error", ret);
                 }
             );
         };
 
         $scope.export = function() {
-            ClassListResource.export({'courseId': courseId}, function(ret) {
-                SaveAs.download(ret.content, 'classlist_'+$scope.course_name+'.csv', {type: "text/csv;charset=utf-8"});
+            ClassListResource.export({'courseId': $scope.courseId}, function(ret) {
+                SaveAs.download(ret.content, 'classlist_'+$scope.course.name+'.csv', {type: "text/csv;charset=utf-8"});
             });
         };
 
@@ -299,27 +240,21 @@ module.controller(
             $scope.predicate = predicate;
             var orderBy = $scope.predicate + " " + ($scope.reverse ? "desc" : "asc");
             xAPIStatementHelper.sorted_page_section("classlist table", orderBy);
-        }
+        };
+        $scope.resetSelected();
     }
 ]);
 
 module.controller(
     'ClassImportController',
-    ["$scope", "$log", "$location", "$routeParams", "ClassListResource", "CourseResource",
-        "Toaster", "importService", "ThirdPartyAuthType", "AuthTypesEnabled",
-    function($scope, $log, $location, $routeParams, ClassListResource, CourseResource,
-             Toaster, importService, ThirdPartyAuthType, AuthTypesEnabled)
+    ["$scope", "$location", "$routeParams", "ClassListResource", "CourseResource",
+        "Toaster", "importService", "ThirdPartyAuthType", "AuthTypesEnabled", "resolvedData",
+    function($scope, $location, $routeParams, ClassListResource, CourseResource,
+             Toaster, importService, ThirdPartyAuthType, AuthTypesEnabled, resolvedData)
     {
-        $scope.course = {};
-        var courseId = $routeParams['courseId'];
-        CourseResource.get({'id':courseId},
-            function (ret) {
-                $scope.course_name = ret['name'];
-            },
-            function (ret) {
-                Toaster.reqerror("No Course Found For ID "+courseId, ret);
-            }
-        );
+        $scope.courseId = $routeParams['courseId'];
+        $scope.course = resolvedData.course;
+
         $scope.ThirdPartyAuthType = ThirdPartyAuthType;
         $scope.importTypes = [];
         if (AuthTypesEnabled.cas) {
@@ -332,17 +267,16 @@ module.controller(
         // default value
         $scope.importType = $scope.importTypes[0].value;
 
-        $scope.uploader = importService.getUploader(courseId, 'users');
+        $scope.uploader = importService.getUploader($scope.courseId, 'users');
         $scope.uploader.onCompleteItem = function(fileItem, response, status, headers) {
             $scope.submitted = false;
-            importService.onComplete(courseId, response);
+            importService.onComplete($scope.courseId, response);
         };
         $scope.uploader.onBeforeUploadItem = function(fileItem) {
             if ($scope.importType == ThirdPartyAuthType.cas) {
                 fileItem.formData.push({ 'import_type': $scope.importType });
             }
         };
-        $scope.uploader.onErrorItem = importService.onError();
 
         $scope.upload = function() {
             $scope.submitted = true;
@@ -353,41 +287,48 @@ module.controller(
 
 module.controller(
     'ClassImportResultsController',
-    ["$scope", "$log", "$routeParams", "ClassListResource", "Toaster", "importService",
-    function($scope, $log, $routeParams, ClassListResource, Toaster, importService)
+    ["$scope", "$routeParams", "ClassListResource", "Toaster", "importService", "resolvedData",
+    function($scope, $routeParams, ClassListResource, Toaster, importService, resolvedData)
     {
         $scope.results = importService.getResults();
 
-        $scope.course = {};
         $scope.courseId = $routeParams['courseId'];
         $scope.headers = ['Username', 'Student Number', 'First Name', 'Last Name', 'Email', 'Message'];
     }
 ]);
 
+module.component('enrolComponent', {
+    controller: 'EnrolController',
+    templateUrl: 'modules/classlist/classlist-enrol-partial.html',
+    bindings: {
+        courseId: '<'
+    }
+});
+
 module.controller(
     'EnrolController',
-    ["$scope", "$log", "$routeParams", "$route", "$location", "ClassListResource", "Toaster", "UserResource",
-    function($scope, $log, $routeParams, $route, $location, ClassListResource, Toaster, UserResource)
+    ["$route", "ClassListResource", "Toaster", "UserResource", "CourseRole",
+    function($route, ClassListResource, Toaster, UserResource, CourseRole)
     {
-        var courseId = $routeParams['courseId'];
+        var ctrl = this;
+        //ctrl.courseId
 
-        $scope.enrolSubmit = function() {
-            $scope.submitted = true;
-            $scope.user.course_role = $scope.course_role;
-            ClassListResource.enrol({'courseId': courseId, 'userId': $scope.user.id}, $scope.user,
+        ctrl.course_roles = [CourseRole.student, CourseRole.teaching_assistant, CourseRole.instructor];
+
+        ctrl.enrolSubmit = function() {
+            ctrl.submitted = true;
+            ctrl.user.course_role = ctrl.course_role;
+            ClassListResource.enrol({'courseId': ctrl.courseId, 'userId': ctrl.user.id}, ctrl.user).$promise.then(
                 function (ret) {
-                    $scope.submitted = false;
                     Toaster.success("User Added", 'Successfully added '+ ret.fullname +' as ' + ret.course_role + ' to the course.');
                     $route.reload();
-                },
-                function (ret) {
-                    $scope.submitted = false;
-                    Toaster.reqerror("User Add Failed", "Problem encountered for ID " + $scope.user.id, ret);
                 }
-            );
+            ).finally(function() {
+                ctrl.submitted = false;
+            });
         };
 
-        $scope.getUsersAhead = function(search) {
+        ctrl.getUsersAhead = function(search) {
             // need return a real promise so can't use short form (without $promise.then)
             return UserResource.get({search: search}).$promise.then(function(response) {
                 return response.objects;

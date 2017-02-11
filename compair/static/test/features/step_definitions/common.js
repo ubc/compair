@@ -16,11 +16,6 @@ var commonStepDefinitionsWrapper = function() {
     var pageFactory = new PageFactory();
     var page;
 
-    // check title of page
-    this.Then("'$content_title' page should load", function (content_title) {
-        return expect($("#view-title").getText()).to.eventually.equal(content_title);
-    });
-
     // fill in form
     this.When("I fill form item '$item' in with '$content'", function (item, content) {
         return element(by.model(item)).getTagName().then(function(tagName) {
@@ -93,8 +88,10 @@ var commonStepDefinitionsWrapper = function() {
         var page_regex = {
             'course': /.*\/course\/[A-Za-z0-9_-]{22}$/,
             'manage users': /.*\/course\/[A-Za-z0-9_-]{22}\/user$/,
+            'create assignment': /.*\/course\/[A-Za-z0-9_-]{22}\/assignment\/create$/,
             'edit assignment': /.*\/course\/[A-Za-z0-9_-]{22}\/assignment\/[A-Za-z0-9_-]{22}\/edit$/,
-            'edit course': /.*\/course\/[A-Za-z0-9_-]{22}\/configure$/,
+            'create course': /.*\/course\/create$/,
+            'edit course': /.*\/course\/[A-Za-z0-9_-]{22}\/edit$/,
             'profile': /.*\/user\/[A-Za-z0-9_-]{22}$/,
             'create user': /.*\/user\/create$/,
             'edit profile': /.*\/user\/[A-Za-z0-9_-]{22}\/edit$/,

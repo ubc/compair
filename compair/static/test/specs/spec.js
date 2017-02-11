@@ -36,7 +36,7 @@ describe('homepage before user authenticate', function () {
         expect(displayName.getText()).toBe('root');
         expect(internalLoginText.isPresent()).toBeFalsy();
 
-        var logoutButton = element(by.css('li[ng-controller=LogoutController] a'));
+        var logoutButton = element(by.css('#logout-link'));
 
         displayName.click();
         logoutButton.click();

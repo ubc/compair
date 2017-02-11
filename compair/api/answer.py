@@ -1,5 +1,5 @@
 from bouncer.constants import CREATE, READ, EDIT, MANAGE, DELETE
-from flask import Blueprint, abort
+from flask import Blueprint
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
@@ -7,6 +7,7 @@ from sqlalchemy import func, or_, and_, desc
 from sqlalchemy.orm import joinedload, undefer_group
 from itertools import groupby
 from operator import attrgetter
+from flask_restplus import abort
 
 from . import dataformat
 from compair.core import db, event
@@ -70,9 +71,6 @@ on_set_top_answer = event.signal('SET_TOP_ANSWER')
 on_user_answer_get = event.signal('USER_ANSWER_GET')
 on_answer_comparisons_get = event.signal('ANSWER_COMPARISONS_GET')
 
-# messages
-answer_deadline_message = 'Answer deadline has passed.'
-
 # /
 class AnswerRootAPI(Resource):
     @login_required
@@ -89,7 +87,9 @@ class AnswerRootAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
-        require(READ, assignment)
+        require(READ, assignment,
+            title="Assignment Answers Unavailable",
+            message="Answers are visible only to those enrolled in the course. Please double-check your enrollment in this course.")
         restrict_user = not allow(MANAGE, assignment)
 
         params = answer_list_parser.parse_args()
@@ -171,9 +171,11 @@ class AnswerRootAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
         if not assignment.answer_grace and not allow(MANAGE, assignment):
-            return {'error': answer_deadline_message}, 403
+            abort(403, title="Answer Not Saved", message="The answer deadline has passed. No answers can be saved beyond the deadline unless the instructor saves it on your behalf.")
 
-        require(CREATE, Answer(course_id=course.id))
+        require(CREATE, Answer(course_id=course.id),
+            title="Answers Not Saved",
+            message="Answers can be saved only to those enrolled in the course. Please double-check your enrollment in this course.")
         restrict_user = not allow(MANAGE, assignment)
 
         answer = Answer(assignment_id=assignment.id)
@@ -190,12 +192,12 @@ class AnswerRootAPI(Resource):
 
         # non-drafts must have content
         if not answer.draft and not answer.content and not file_uuid:
-            return {"error": "The answer content is empty!"}, 400
+            abort(400, title="Answer Not Saved", message="Please provide content in the text editor or upload a file to save this answer.")
 
         user_uuid = params.get("user_id")
         # we allow instructor and TA to submit multiple answers for other users in the class
         if user_uuid and not allow(MANAGE, Answer(course_id=course.id)):
-            return {"error": "Only instructors and teaching assistants can submit an answer on behalf of another user."}, 400
+            abort(400, title="Answer Not Saved", message="Only instructors and teaching assistants can submit an answer on behalf of another.")
 
         if user_uuid:
             user = User.get_by_uuid_or_404(user_uuid)
@@ -217,7 +219,7 @@ class AnswerRootAPI(Resource):
             # only system admin can add answers for themselves to a class without being enrolled in it
             # required for managing comparison examples as system admin
             if current_user.id != answer.user_id or current_user.system_role != SystemRole.sys_admin:
-                return {"error": "You are not enrolled in the course."}, 400
+                abort(400, title="Answer Not Saved", message="Answers can be saved only to those enrolled in the course. Please double-check your enrollment in this course.")
 
         elif user_course.course_role.value not in instructors_and_tas:
             # check if there is a previous answer submitted for the student
@@ -229,7 +231,7 @@ class AnswerRootAPI(Resource):
                 ). \
                 first()
             if prev_answer:
-                return {"error": "An answer has already been submitted."}, 400
+                abort(400, title="Answer Not Saved", message="An answer has already been submitted for this assignment by you or on your behalf.")
 
         db.session.add(answer)
         db.session.commit()
@@ -263,7 +265,9 @@ class AnswerIdAPI(Resource):
             answer_uuid,
             joinedloads=['file', 'user', 'score']
         )
-        require(READ, answer)
+        require(READ, answer,
+            title="Answer Unavailable",
+            message="Your role in this course does not allow you to view this answer.")
         restrict_user = not allow(MANAGE, assignment)
 
         on_answer_get.send(
@@ -281,16 +285,18 @@ class AnswerIdAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
         if not assignment.answer_grace and not allow(MANAGE, assignment):
-            return {'error': answer_deadline_message}, 403
+            abort(403, title="Answer Not Updated", message="The answer deadline has passed. No answers can be updated beyond the deadline unless the instructor updates it on your behalf.")
 
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
-        require(EDIT, answer)
+        require(EDIT, answer,
+            title="Answer Not Updated",
+            message="Your role in this course does not allow you to update this answer.")
         restrict_user = not allow(MANAGE, assignment)
 
         params = existing_answer_parser.parse_args()
         # make sure the answer id in the url and the id matches
         if params['id'] != answer_uuid:
-            return {"error": "Answer id does not match the URL."}, 400
+            abort(400, title="Answer Not Updated", message="The answer's ID does not match the URL, which is required in order to update the answer.")
 
         # modify answer according to new values, preserve original values if values not passed
         answer.content = params.get("content")
@@ -299,7 +305,8 @@ class AnswerIdAPI(Resource):
         # we allow instructor and TA to submit multiple answers for other users in the class
         if user_uuid and user_uuid != answer.user_uuid:
             if not allow(MANAGE, answer) or not answer.draft:
-                return {"error": "Only instructors and teaching assistants can submit an answer on behalf of another user."}, 400
+                abort(400, title="Answer Not Updated",
+                    message="Only instructors and teaching assistants can update an answer on behalf of another.")
             user = User.get_by_uuid_or_404(user_uuid)
             answer.user_id = user.id
 
@@ -321,7 +328,7 @@ class AnswerIdAPI(Resource):
                     ) \
                     .first()
                 if prev_answer:
-                    return {"error": "An answer has already been submitted."}, 400
+                    abort(400, title="Answer Not Updated", message="An answer has already been submitted for this assignment by you or on your behalf.")
 
         # can only change draft status while a draft
         if answer.draft:
@@ -336,7 +343,7 @@ class AnswerIdAPI(Resource):
 
         # non-drafts must have content
         if not answer.draft and not answer.content and not file_uuid:
-            return {"error": "The answer content is empty!"}, 400
+            abort(400, title="Answer Not Updated", message="Please provide content in the text editor or upload a file to update this answer.")
 
         db.session.add(answer)
         db.session.commit()
@@ -362,7 +369,9 @@ class AnswerIdAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
-        require(DELETE, answer)
+        require(DELETE, answer,
+            title="Answer Not Deleted",
+            message="Your role in this course does not allow you to delete this answer.")
 
         answer.active = False
         db.session.commit()
@@ -392,7 +401,9 @@ class AnswerComparisonsAPI(Resource):
     def get(self, course_uuid, assignment_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
-        require(READ, assignment)
+        require(READ, assignment,
+            title="Assignment Comparisons Unavailable",
+            message="Your role in this course does not allow you to view comparisons for this assignment.")
 
         can_read = allow(READ, Comparison(course_id=course.id))
         restrict_user = is_user_access_restricted(current_user)
@@ -499,7 +510,9 @@ class AnswerUserIdAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
-        require(READ, Answer(user_id=current_user.id))
+        require(READ, Answer(user_id=current_user.id),
+            title="Answers Not Available",
+            message="Your role in this course does not allow you to view answers for this assignment.")
         restrict_user = not allow(MANAGE, assignment)
 
         params = user_answer_list_parser.parse_args()
@@ -549,14 +562,16 @@ class AnswerFlagAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
 
-        require(READ, answer)
+        require(READ, answer,
+            title="Answer Not Flagged",
+            message="Your role in this course does not allow you to flag answers.")
         restrict_user = not allow(MANAGE, answer)
 
         # anyone can flag an answer, but only the original flagger or someone who can manage
         # the answer can unflag it
         if answer.flagged and answer.flagger_user_id != current_user.id and \
                 not allow(MANAGE, answer):
-            return {"error": "You do not have permission to unflag this answer."}, 400
+            abort(400, title="Answer Update Failed", message="You do not have permission to unflag this answer.")
 
         params = flag_parser.parse_args()
         answer.flagged = params['flagged']
@@ -592,7 +607,9 @@ class TopAnswerAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
 
-        require(MANAGE, answer)
+        require(MANAGE, answer,
+            title="Answer Not Selected",
+            message="Your role in this course does not allow you to select top answers.")
 
         params = top_answer_parser.parse_args()
         answer.top_answer = params.get('top_answer')
@@ -607,6 +624,7 @@ class TopAnswerAPI(Resource):
             data={'answer_id': answer.id, 'top_answer': answer.top_answer})
 
         db.session.commit()
+
         return marshal(answer, dataformat.get_answer(restrict_user=False))
 
 api.add_resource(TopAnswerAPI, '/<answer_uuid>/top')

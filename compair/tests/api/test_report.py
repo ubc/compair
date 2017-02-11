@@ -75,7 +75,7 @@ class ReportAPITest(ComPAIRAPITestCase):
             invalid_input = input.copy()
             invalid_input['group_name'] = "invalid_group_name"
             rv = self.client.post(self.url, data=json.dumps(invalid_input), content_type='application/json')
-            self.assert404(rv)
+            self.assert400(rv)
 
         # participation with valid instructor
         with self.login(self.fixtures.instructor.username):

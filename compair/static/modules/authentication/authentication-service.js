@@ -10,8 +10,8 @@ var module = angular.module(
 );
 
 module.factory('AuthenticationService',
-    ["$rootScope", "$resource", "$log", "$http", "$q", "authService", "Session",
-    function ($rootScope, $resource, $log, $http, $q, authService, Session) {
+    ["$rootScope", "$resource", "$http", "$q", "authService", "Session",
+    function ($rootScope, $resource, $http, $q, authService, Session) {
         var LOGIN_EVENT = "event:Authentication-Login";
         var LOGOUT_EVENT = "event:Authentication-Logout";
 

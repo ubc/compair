@@ -5,13 +5,14 @@ import unicodecsv as csv
 import re
 
 from bouncer.constants import MANAGE
-from flask import Blueprint, current_app, abort
+from flask import Blueprint, current_app
 from flask_login import login_required, current_user
 
 from flask_restful import Resource, reqparse
 
 from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import joinedload
+from flask_restplus import abort
 
 from compair.authorization import require
 from compair.core import event
@@ -46,7 +47,9 @@ class ReportRootAPI(Resource):
     def post(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment(course_id=course.id)
-        require(MANAGE, assignment)
+        require(MANAGE, assignment,
+            title="Generate Report Failed",
+            message="You do not have permission to generate reports for this course since you are not its instructor.")
 
         params = report_parser.parse_args()
         group_name = params.get('group_name', None)
@@ -75,7 +78,7 @@ class ReportRootAPI(Resource):
                 ) \
                 .first()
             if group_exists == None:
-                abort(404)
+                abort(400, title="Generate Report Failed", message="Group does not exists.")
 
         if report_type == "participation_stat":
             data = participation_stat_report(course, assignments, group_name, assignment_uuid is None)
@@ -128,7 +131,7 @@ class ReportRootAPI(Resource):
             data = peer_feedback_report(course, assignments, group_name)
             titles = [titles1, titles2]
         else:
-            return {'error': 'The requested report type cannot be found'}, 400
+            abort(400, title="Generate Report Failed", message="The requested report type cannot be found")
 
         name = name_generator(course, report_type, group_name)
         tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], name)

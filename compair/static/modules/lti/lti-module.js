@@ -83,74 +83,68 @@ module.factory('LTI',
 
 /***** Controllers *****/
 module.controller("LTIController",
-    ['$rootScope', '$scope', '$location', '$route', "$uibModal", 'breadcrumbs','Authorize',
+    ['$rootScope', '$scope', '$location', '$route', "$uibModal", 'breadcrumbs',
      'CourseRole', 'Toaster', 'AuthenticationService', 'LTI', 'LTIResource', 'Session',
-     'xAPIStatementHelper',
-    function($rootScope, $scope, $location, $route, $uibModal, breadcrumbs, Authorize,
+     'xAPIStatementHelper', 'resolvedData',
+    function($rootScope, $scope, $location, $route, $uibModal, breadcrumbs,
              CourseRole, Toaster, AuthenticationService, LTI, LTIResource, Session,
-             xAPIStatementHelper) {
-        $scope.status = {};
+             xAPIStatementHelper, resolvedData)
+    {
+        $scope.status = resolvedData.ltiStatus;
 
-        LTI.getStatus().then(function(status) {
-            $scope.status = status;
+        // check if valid lti status
+        if (!$scope.status.valid) {
+            // invalid lti session, get out of here
+            LTI.destroy_lit_status();
+            $location.path('/');
 
-            // check if valid lti status
-            if (!status.valid) {
-                // invalid lti session, get out of here
-                LTI.destroy_lit_status();
-                $location.path('/');
+        // check if user doesn't exist
+        } else if (!$scope.status.user.exists) {
+            Session.destroy();
+            $rootScope.$emit(AuthenticationService.LTI_LOGIN_REQUIRED_EVENT);
 
-            // check if user doesn't exist
-            } else if (!status.user.exists) {
-                Session.destroy();
-                $rootScope.$emit(AuthenticationService.LTI_LOGIN_REQUIRED_EVENT);
-
-            // check if course doesn't exist
-            } else if (!status.course.exists) {
-                if (status.course.course_role == CourseRole.instructor) {
-                    var modalScope = $scope.$new();
-                    var modalInstance = $uibModal.open({
-                        animation: true,
-                        backdrop: 'static',
-                        keyboard: false,
-                        controller: "CourseSelectModalController",
-                        templateUrl: 'modules/course/course-select-partial.html',
-                        scope: modalScope
-                    });
-                    modalInstance.opened.then(function() {
-                        xAPIStatementHelper.opened_modal("Select Course");
-                    });
-                    modalInstance.result.then(function (selectedCourseId) {
-                        LTIResource.linkCourse({id: selectedCourseId}, {},
-                            function(ret) {
-                                Toaster.success("Course Linked Successfully", "Successfully linked your course as requested.");
-                                // reload to refresh status and check what to do next
-                                $route.reload();
-                            },
-                            function(ret) {
-                                Toaster.reqerror("LTI Course Linking Error", ret);
-                            }
-                        );
-                        xAPIStatementHelper.closed_modal("Select Course");
-                    }, function () {
-                        // modal dismissed, reload page to update status
-                        $route.reload();
-                        xAPIStatementHelper.closed_modal("Select Course");
-                    });
-                } else {
-                    // student can't setup course, get out of here
-                    Toaster.warning("Course Not Yet Ready", "Please wait for your instructor to set up the course and try accessing again.");
-                    $location.path('/');
-                }
+        // check if course doesn't exist
+        } else if (!$scope.status.course.exists) {
+            if ($scope.status.course.course_role == CourseRole.instructor) {
+                var modalScope = $scope.$new();
+                var modalInstance = $uibModal.open({
+                    animation: true,
+                    backdrop: 'static',
+                    keyboard: false,
+                    controller: "CourseSelectModalController",
+                    templateUrl: 'modules/course/course-select-partial.html',
+                    scope: modalScope
+                });
+                modalInstance.opened.then(function() {
+                    xAPIStatementHelper.opened_modal("Select Course");
+                });
+                modalInstance.result.then(function (selectedCourseId) {
+                    LTIResource.linkCourse({id: selectedCourseId}, {},
+                        function(ret) {
+                            Toaster.success("Course Linked Successfully", "Successfully linked your course as requested.");
+                            // reload to refresh status and check what to do next
+                            $route.reload();
+                        }
+                    );
+                    xAPIStatementHelper.closed_modal("Select Course");
+                }, function () {
+                    // modal dismissed, reload page to update status
+                    $route.reload();
+                    xAPIStatementHelper.closed_modal("Select Course");
+                });
             } else {
-                // setup complete, redirect to course or assignment is present
-                if (status.assignment.exists) {
-                    $location.path('/course/'+status.course.id+"/assignment/"+status.assignment.id);
-                } else {
-                    $location.path('/course/'+status.course.id);
-                }
+                // student can't setup course, get out of here
+                Toaster.warning("Course Not Yet Ready", "Please wait for your instructor to set up the course and try accessing again.");
+                $location.path('/');
             }
-        });
+        } else {
+            // setup complete, redirect to course or assignment is present
+            if ($scope.status.assignment.exists) {
+                $location.path('/course/'+$scope.status.course.id+"/assignment/"+$scope.status.assignment.id);
+            } else {
+                $location.path('/course/'+$scope.status.course.id);
+            }
+        }
     }]
 );
 

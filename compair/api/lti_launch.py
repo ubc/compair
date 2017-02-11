@@ -1,9 +1,10 @@
 from bouncer.constants import CREATE, READ, EDIT, DELETE, MANAGE
 from flask import Blueprint, jsonify, request, current_app, url_for, redirect, session as sess
 from flask_login import login_required, current_user, logout_user
-from flask_restful import Resource, marshal, abort
+from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import and_, or_
+from flask_restplus import abort
 
 from . import dataformat
 from compair.core import event, db
@@ -35,7 +36,7 @@ class LTIAuthAPI(Resource):
         Kickstarts the LTI integration flow.
         """
         if not current_app.config.get('LTI_LOGIN_ENABLED'):
-            return abort(403)
+            abort(403, title="Login Failed", message="Login method not enabled.")
 
         tool_provider = FlaskToolProvider.from_flask_request(request=request)
         validator = ComPAIRRequestValidator()
@@ -164,13 +165,15 @@ class LTICourseLinkAPI(Resource):
         link current session's lti context with a course
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(EDIT, course)
+        require(EDIT, course,
+            title="Course Link Failed",
+            message="You do not have permission to link this course since you are not its instructor.")
 
         if not sess.get('LTI'):
-            return {'error': "Your LTI session has expired." }, 404
+            abort(400, title="Course Link Failed", message="Your LTI session has expired.")
 
         if not sess.get('lti_context'):
-            return {'error': "Your LTI session has no context." }, 404
+            abort(400, title="Course Link Failed", message="Your LTI session has no context.")
 
         lti_context = LTIContext.query.get_or_404(sess.get('lti_context'))
         lti_context.compair_course_id = course.id
@@ -198,19 +201,22 @@ class LTICourseMembershipAPI(Resource):
         refresh the course membership if able
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(EDIT, course)
+        require(EDIT, course,
+            title="Course Membership Update Failed",
+            message="You do not have permission to update membership for this course since you are not its instructor.")
 
         if not course.lti_linked:
-            return {'error': "Course not linked to lti context" }, 400
+            abort(400, title="Course Membership Update Failed", message="Course not linked to a lti context.")
 
         try:
             LTIMembership.update_membership_for_course(course)
         except MembershipNoValidContextsException as err:
-            return {'error': "LTI membership service is not supported for this course" }, 400
+            abort(400, title="Course Membership Update Failed", message="LTI membership service is not supported for this course.")
         except MembershipNoResultsException as err:
-            return {'error': "LTI membership service did not return any users" }, 400
+            abort(400, title="Course Membership Update Failed", message="LTI membership service did not return any users.")
         except MembershipInvalidRequestException as err:
-            return {'error': "LTI membership request was invalid. Please relaunch the ComPAIR course from the LTI consumer and try again" }, 400
+            msg = "LTI membership request was invalid. Please relaunch the ComPAIR course from the LTI consumer and try again."
+            abort(400, title="Course Membership Update Failed", message=msg)
 
         on_lti_course_membership_update.send(
             self,
@@ -231,10 +237,12 @@ class LTICourseMembershipStatusAPI(Resource):
         refresh the course membership if able
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(EDIT, course)
+        require(EDIT, course,
+            title="Failed to Retrieve Course Membership Status",
+            message="You do not have permission to view membership status for this course since you are not its instructor.")
 
         if not course.lti_linked:
-            return {'error': "Course not linked to lti context" }, 400
+            abort(400, title="Failed to Retrieve Course Membership Status", message="Course not linked to a lti context.")
 
         valid_membership_contexts = [
             lti_context for lti_context in course.lti_contexts \

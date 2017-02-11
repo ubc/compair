@@ -7,6 +7,7 @@ from flask_restful.reqparse import RequestParser
 
 from flask_login import current_user
 from sqlalchemy import and_, or_
+from flask_restplus import abort
 
 from . import dataformat
 from compair.authorization import require
@@ -40,7 +41,9 @@ class GroupUserIdAPI(Resource):
             )) \
             .first_or_404()
 
-        require(EDIT, user_course)
+        require(EDIT, user_course,
+            title="Group Assign Failed",
+            message="You do not have permission to assign groups to users in this course since you are not its instructor.")
 
         user_course.group_name = group_name
         db.session.commit()
@@ -67,7 +70,9 @@ class GroupUserAPI(Resource):
                 user_id=user.id
             ) \
             .first_or_404()
-        require(EDIT, user_course)
+        require(EDIT, user_course,
+            title="Group Assign Failed",
+            message="You do not have permission to assign groups to users in this course since you are not its instructor.")
 
         user_course.group_name = None
         db.session.commit()
@@ -88,12 +93,14 @@ class GroupUserListGroupNameAPI(Resource):
     @login_required
     def post(self, course_uuid, group_name):
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(EDIT, UserCourse(course_id=course.id))
+        require(EDIT, UserCourse(course_id=course.id),
+            title="Group Assign Failed",
+            message="You do not have permission to assign groups to users in this course since you are not its instructor.")
 
         params = user_list_parser.parse_args()
 
         if len(params.get('ids')) == 0:
-            return {"error": "Please select at least one user below"}, 400
+            abort(400, title="Group Assign Failed", message="Please select at least one user below.")
 
         user_courses = UserCourse.query \
             .join(User, UserCourse.user_id == User.id) \
@@ -105,7 +112,7 @@ class GroupUserListGroupNameAPI(Resource):
             .all()
 
         if len(params.get('ids')) != len(user_courses):
-            return {"error": "One or more users are not enrolled in the course"}, 400
+            abort(400, title="Group Assign Failed", message="One or more users are not enrolled in the course.")
 
         for user_course in user_courses:
             user_course.group_name = group_name
@@ -127,12 +134,14 @@ class GroupUserListAPI(Resource):
     @login_required
     def post(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(EDIT, UserCourse(course_id=course.id))
+        require(EDIT, UserCourse(course_id=course.id),
+            title="Group Assign Failed",
+            message="You do not have permission to assign groups to users in this course since you are not its instructor.")
 
         params = user_list_parser.parse_args()
 
         if len(params.get('ids')) == 0:
-            return {"error": "Please select at least one user below"}, 400
+            abort(400, title="Group Assign Failed", message="Please select at least one user below.")
 
         user_courses = UserCourse.query \
             .join(User, UserCourse.user_id == User.id) \
@@ -144,7 +153,7 @@ class GroupUserListAPI(Resource):
             .all()
 
         if len(params.get('ids')) != len(user_courses):
-            return {"error": "One or more users are not enrolled in the course"}, 400
+            abort(400, title="Group Assign Failed", message="One or more users are not enrolled in the course.")
 
         for user_course in user_courses:
             user_course.group_name = None

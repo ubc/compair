@@ -1,12 +1,12 @@
 <form name="userForm" class="form" ng-submit="save()" novalidate>
     <fieldset>
         <legend>Account Details</legend>
-        <p class="instructional-text" ng-if="canManageUsers || (method == 'new' && loggedInUserIsInstructor)">
+        <p class="instructional-text" ng-if="canManageUsers || (method == 'create' && loggedInUserIsInstructor)">
             This application provides three user roles with increasing levels of permission.
             <strong>Students</strong> can post and edit their own answers, comments, and replies.
             <strong>Instructors</strong> can additionally add and edit their own courses and assignments.
             <strong>System Administrators</strong> can additionally create users and manage which users can access a course.</p>
-        <div class="form-group" ng-if="canManageUsers || (method == 'new' && loggedInUserIsInstructor)">
+        <div class="form-group" ng-if="canManageUsers || (method == 'create' && loggedInUserIsInstructor)">
             <label for="system_role" class="required-star">Application Role </label>
             <select class="form-control" id="system_role" name="system_role"
                 ng-model="user.system_role" required
@@ -46,7 +46,7 @@
     <fieldset ng-if="canManageUsers || user.uses_compair_login">
         <legend>Account Login</legend>
         <p class="instructional-text">
-            This information will set the <strong>ComPAIR username <span ng-if="method == 'new'">and password</span></strong> for logging in without an external login (like CWL).
+            This information will set the <strong>ComPAIR username <span ng-if="method == 'create'">and password</span></strong> for logging in without an external login (like CWL).
             The username you set does not appear anywhere to other users in the application but does need to be unique.
         </p>
         <compair-field-with-feedback form-control="userForm.username">
@@ -55,7 +55,7 @@
                 name="username" ng-model="user.username"
                 ng-required="user.uses_compair_login" />
         </compair-field-with-feedback>
-        <div ng-if="method == 'new'">
+        <div ng-if="method == 'create'">
             <compair-field-with-feedback form-control="userForm.password">
                 <label for=password" class="required-star">ComPAIR Password </label>
                 <input class="form-control" id="password" type="password"

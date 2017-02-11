@@ -1,4 +1,4 @@
-<div ng-controller="UserListController" class="users-screen">
+<div class="users-screen">
     <div class="row">
         <h1 class="col-sm-8"><i class="fa fa-users"></i> Manage Users</h1>
 
@@ -62,10 +62,10 @@
     </div>
 
     <div class="text-center" ng-if="users.length">
-        <pagination total-items="totalNumUsers" ng-model="userFilters.page"
+        <uib-pagination total-items="totalNumUsers" ng-model="userFilters.page"
                     max-size="10" class="pagination-sm" boundary-links="true"
                     direction-links="false" items-per-page="userFilters.perPage"
-                    num-pages="numPages" ng-hide="numPages == 1"></pagination>
+                    num-pages="numPages" ng-hide="numPages == 1"></uib-pagination>
     </div>
 
     <div ng-if="!users.length">

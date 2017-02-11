@@ -72,6 +72,8 @@ module.service('importService',
         });
         model = type;
 
+        uploader.onErrorItem = onError();
+
         uploader.filters.push({
             name: 'importExtensionFilter',
             fn: function(item, options) {
@@ -102,10 +104,7 @@ module.service('importService',
 
     var onError = function() {
         return function(fileItem, response, status, headers) {
-            Toaster.reqerror("Unable To Upload", status);
-            if ('error' in response) {
-                Toaster.error("File Type Error", "Only CSV files can be uploaded.");
-            }
+            // nothing to do
         };
     };
 
@@ -116,8 +115,7 @@ module.service('importService',
     return {
         getUploader: getUploader,
         onComplete: onComplete,
-        getResults: getResults,
-        onError: onError
+        getResults: getResults
     };
 }]);
 
@@ -189,8 +187,6 @@ module.service('attachService',
             reset();
             if (response == '413') {
                 Toaster.error("File Size Error", "The file is larger than 25MB. Please upload a smaller file.");
-            } else {
-                Toaster.reqerror("Attachment Upload Fail", status);
             }
         };
     };
@@ -282,8 +278,6 @@ module.service('answerAttachService',
             reset();
             if (response == '413') {
                 Toaster.error("File Size Error", "The file is larger than 25MB. Please upload a smaller file.");
-            } else {
-                Toaster.reqerror("Attachment Upload Fail", status);
             }
         };
     };

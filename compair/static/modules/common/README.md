@@ -1,1 +1,0 @@
-This directory contains common code used by many modules. These common pieces of code are made into their own modules. Note that only small and simple modules should be here. If the module is large or complicated, it should go into it's own directory instead of in common.

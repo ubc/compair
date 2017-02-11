@@ -45,5 +45,21 @@ class AnswerComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixi
     user_system_role = association_proxy('user', 'system_role')
 
     @classmethod
+    def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Comment Not Found"
+        if not message:
+            message = "The comment was removed from the system or is no longer accessible."
+        return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
+
+    @classmethod
+    def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Comment Not Found"
+        if not message:
+            message = "The comment was removed from the system or is no longer accessible."
+        return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
+
+    @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()

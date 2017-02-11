@@ -4,11 +4,12 @@ import dateutil.parser
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask import Blueprint
 from flask_login import login_required, current_user
-from flask_restful import Resource, marshal, abort
+from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import desc, or_, func, and_
 from sqlalchemy.orm import joinedload, undefer_group, load_only
 from six import text_type
+from flask_restplus import abort
 
 from . import dataformat
 from compair.core import db, event
@@ -59,13 +60,13 @@ on_assignment_delete = event.signal('ASSIGNMENT_DELETE')
 on_assignment_list_get_status = event.signal('ASSIGNMENT_LIST_GET_STATUS')
 on_assignment_get_status = event.signal('ASSIGNMENT_GET_STATUS')
 
-def check_valid_pairing_algorithm(pairing_algorithm):
+def check_valid_pairing_algorithm(pairing_algorithm, title=None):
     pairing_algorithms = [
         PairingAlgorithm.adaptive.value,
         PairingAlgorithm.random.value
     ]
     if pairing_algorithm not in pairing_algorithms:
-        abort(400)
+        abort(400, title=title, message="'"+pairing_algorithm+"' is not a valid pairing algorithm.")
 
 # /id
 class AssignmentIdAPI(Resource):
@@ -73,11 +74,13 @@ class AssignmentIdAPI(Resource):
     def get(self, course_uuid, assignment_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
-        require(READ, assignment)
+        require(READ, assignment,
+            title="Assignment Not Available",
+            message="Assignments can be saved only to those enrolled in the course. Please double-check your enrollment in this course.")
 
         now = datetime.datetime.utcnow()
         if assignment.answer_start and not allow(MANAGE, assignment) and not (assignment.answer_start <= now):
-            return {"error": "The assignment is unavailable!"}, 403
+            abort(403, title="Assignment Not Available", message="This assignment is not yet open. Please check back after the start date the instructor has set.")
         restrict_user = not allow(MANAGE, assignment)
 
         on_assignment_get.send(
@@ -93,13 +96,15 @@ class AssignmentIdAPI(Resource):
     def post(self, course_uuid, assignment_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
-        require(EDIT, assignment)
+        require(EDIT, assignment,
+            title="Assignment Not Updated",
+            message="Your role in this course does not allow you to update assignments.")
 
         params = existing_assignment_parser.parse_args()
 
         # make sure the assignment id in the url and the id matches
         if params['id'] != assignment_uuid:
-            return {"error": "Assignment id does not match URL."}, 400
+            abort(400, title="Assignment Not Updated", message="The assignment's ID does not match the URL, which is required in order to update the assignment.")
 
         # make sure that file attachment exists
         file_uuid = params.get('file_id')
@@ -150,13 +155,13 @@ class AssignmentIdAPI(Resource):
             'self_evaluation_grade_weight', assignment.self_evaluation_grade_weight)
 
         pairing_algorithm = params.get("pairing_algorithm")
-        check_valid_pairing_algorithm(pairing_algorithm)
+        check_valid_pairing_algorithm(pairing_algorithm, title="Assignment Not Updated")
         if not assignment.compared:
             assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
         elif assignment.pairing_algorithm != PairingAlgorithm(pairing_algorithm):
             msg = 'The pair selection algorithm cannot be changed in the assignment ' + \
-                    'because it has already been used in an evaluation.'
-            return {"error": msg}, 403
+                    'because it has already been used in one or more comparisons.'
+            abort(403, title="Assignment Not Updated", message=msg)
 
         assignment.educators_can_compare = params.get("educators_can_compare")
 
@@ -171,19 +176,19 @@ class AssignmentIdAPI(Resource):
             active_data = {c.uuid: c.weight for c in assignment.criteria}
             if set(criterion_uuids) != set(active_uuids):
                 msg = 'The criteria cannot be changed in the assignment ' + \
-                      'because they have already been used in an evaluation.'
-                return {"error": msg}, 403
+                      'because they have already been used in one or more comparisons.'
+                abort(403, title="Assignment Not Updated", message=msg)
 
             for criterion in assignment.criteria:
                 if criterion_data.get(criterion.uuid) != criterion.weight:
-                    msg = 'The criteria weight cannot be changed in the assignment ' + \
-                        'because it has already been used in an evaluation.'
-                    return {"error": msg}, 403
+                    msg = 'The criteria weights cannot be changed in the assignment ' + \
+                        'because they have already been used in one or more comparisons.'
+                    abort(403, title="Assignment Not Updated", message=msg)
         else:
             # assignment not comapred yet, can change criteria
             if len(criterion_uuids) == 0:
-                msg = 'You must add at least one criterion to the assignment '
-                return {"error": msg}, 403
+                msg = "Please add at least one criterion to the assignment and save again."
+                abort(403, title="Assignment Not Updated", message=msg)
 
             existing_uuids = [c.criterion_uuid for c in assignment.assignment_criteria]
             # disable old ones
@@ -244,7 +249,9 @@ class AssignmentIdAPI(Resource):
     def delete(self, course_uuid, assignment_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
-        require(DELETE, assignment)
+        require(DELETE, assignment,
+            title="Assignment Not Deleted",
+            message="Your role in this course does not allow you to delete assignments.")
 
         formatted_assignment = marshal(assignment, dataformat.get_assignment(False))
         # delete file when assignment is deleted
@@ -273,7 +280,9 @@ class AssignmentRootAPI(Resource):
     @login_required
     def get(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(READ, course)
+        require(READ, course,
+            title="Assignments Not Available",
+            message="Assignments can be seen only by those enrolled in the course. Please double-check your enrollment in this course.")
 
         assignment = Assignment(course_id=course.id)
         restrict_user = not allow(MANAGE, assignment)
@@ -314,7 +323,9 @@ class AssignmentRootAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         # check permission first before reading parser arguments
         new_assignment = Assignment(course_id=course.id)
-        require(CREATE, new_assignment)
+        require(CREATE, new_assignment,
+            title="Assignment Not Saved",
+            message="Your role in this course does not allow you to add assignments.")
 
         params = new_assignment_parser.parse_args()
 
@@ -360,22 +371,22 @@ class AssignmentRootAPI(Resource):
         new_assignment.self_evaluation_grade_weight = params.get('self_evaluation_grade_weight')
 
         pairing_algorithm = params.get("pairing_algorithm", PairingAlgorithm.random)
-        check_valid_pairing_algorithm(pairing_algorithm)
+        check_valid_pairing_algorithm(pairing_algorithm, title="Assignment Not Saved")
         new_assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
 
         criterion_uuids = [c.get('id') for c in params.criteria]
         criterion_data = {c.get('id'): c.get('weight', 1) for c in params.criteria}
         if len(criterion_data) == 0:
-            msg = 'You must add at least one criterion to the assignment'
-            return {"error": msg}, 400
+            msg = "Please add at least one criterion to the assignment and save again."
+            abort(400, title="Assignment Not Saved", message=msg)
 
         criteria = Criterion.query \
             .filter(Criterion.uuid.in_(criterion_uuids)) \
             .all()
 
         if len(criterion_uuids) != len(criteria):
-            msg = 'You select an invalid criterion'
-            return {"error": msg}, 400
+            msg = "You select an invalid criterion."
+            abort(400, title="Assignment Not Saved", message=msg)
 
         # add criteria to assignment in order
         for criterion_uuid in criterion_uuids:
@@ -413,7 +424,9 @@ class AssignmentIdStatusAPI(Resource):
     def get(self, course_uuid, assignment_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
-        require(READ, assignment)
+        require(READ, assignment,
+            title="Assignment Status Unavailable" ,
+            message="Assignment status can be seen only by those enrolled in the course. Please double-check your enrollment in this course.")
 
         answer_count = Answer.query \
             .filter_by(
@@ -503,7 +516,9 @@ class AssignmentRootStatusAPI(Resource):
     @login_required
     def get(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(READ, course)
+        require(READ, course,
+            title="Assignment Status Unavailable",
+            message="Assignment status can be seen only by those enrolled in the course. Please double-check your enrollment in this course.")
 
         assignments = course.assignments \
             .filter_by(active=True) \

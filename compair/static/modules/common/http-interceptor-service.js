@@ -1,5 +1,4 @@
 // Holds service used by requests that can change the GET response cached in the $cacheFactory
-
 (function() {
 
 var module = angular.module('ubc.ctlt.compair.common.interceptor', []);

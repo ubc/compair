@@ -1,12 +1,5 @@
-import uuid
-import os
-import csv
-import json
-import unicodecsv as csv
-from six import text_type
-
 from bouncer.constants import READ, CREATE, DELETE, EDIT
-from flask import Blueprint, current_app, request, abort
+from flask import Blueprint, current_app, request
 from flask_restful import Resource, marshal
 from flask_login import login_required
 from werkzeug.utils import secure_filename
@@ -14,6 +7,7 @@ from flask_restful.reqparse import RequestParser
 
 from flask_login import current_user
 from sqlalchemy import and_, or_
+from flask_restplus import abort
 
 from . import dataformat
 from compair.authorization import require
@@ -21,108 +15,13 @@ from compair.core import db, event
 from compair.models import UserCourse, User, Course, CourseRole, \
     ThirdPartyUser, ThirdPartyType
 from .util import new_restful_api
-from .file import allowed_file
 
 course_group_api = Blueprint('course_group_api', __name__)
 api = new_restful_api(course_group_api)
 
-USER_IDENTIFIER = 0
-GROUP_NAME = 1
-
-import_parser = RequestParser()
-import_parser.add_argument('userIdentifier', required=True)
-
 # events
 on_course_group_get = event.signal('COURSE_GROUP_GET')
-on_course_group_import = event.signal('COURSE_GROUP_IMPORT')
 on_course_group_members_get = event.signal('COURSE_GROUP_MEMBERS_GET')
-
-def import_members(course, identifier, members):
-    # initialize list of users and their statuses
-    invalids = []  #invalid entry - eg. no group name
-    user_infile = [] # for catching duplicate users
-    count = 0 # keep track of active groups
-
-    # require all rows to have two columns if there are a minimum of one entry
-    if len(members) > 0 and len(members[0]) != 2:
-        invalids.append({'member': {}, 'message': 'Only user identifier and group name fields should be in the file.'})
-        return {'success': count, 'invalids': invalids}
-    elif identifier not in [ThirdPartyType.cas.value, 'username', 'student_number']:
-        invalids.append({'member': {}, 'message': 'A valid user identifier is not given.'})
-        return {'success': count, 'invalids': invalids}
-
-
-    # make set all group names to None initially
-    user_courses = UserCourse.query.filter_by(course_id=course.id).all()
-    for user_course in user_courses:
-        user_course.group_name = None
-        db.session.add(user_course)
-    db.session.commit()
-
-    enroled = UserCourse.query \
-        .filter(and_(
-            UserCourse.course_id == course.id,
-            UserCourse.course_role != CourseRole.dropped
-        )) \
-        .all()
-
-    # add groups
-    groups = set(g[GROUP_NAME] for g in members)
-    for group_name in groups:
-        # invalid group name
-        if not group_name:
-            # skip for now - generate errors below
-            continue
-        count += 1
-
-    enroled = [e.user_id for e in enroled]
-    # enrol users to groups
-    for member in members:
-        if member[USER_IDENTIFIER] in user_infile:
-            message = 'This user already exists in the file.'
-            invalids.append({'member': member, 'message': message})
-            continue
-        if not member[GROUP_NAME]:
-            message = 'The group name is invalid.'
-            invalids.append({'member': member, 'message': message})
-            continue
-
-        if identifier == ThirdPartyType.cas.value:
-            third_party_user = ThirdPartyUser.query \
-                .filter_by(
-                    third_party_type=ThirdPartyType.cas,
-                    unique_identifier=member[USER_IDENTIFIER]
-                ) \
-                .first()
-            user = third_party_user.user if third_party_user else None
-            value = 'CWL username'
-        elif identifier == 'username':
-            user = User.query.filter_by(username=member[USER_IDENTIFIER]).first()
-            value = 'ComPAIR username'
-        else:
-            user = User.query.filter_by(student_number=member[USER_IDENTIFIER]).first()
-            value = 'student number'
-
-        if not user:
-            invalids.append({'member': member, 'message': 'No user with this '+value+' exists.'})
-            continue
-
-        if user.id in enroled:
-            # get the user_course instance
-            user_course = next(user_course for user_course in user.user_courses if user_course.course_id == course.id)
-            user_course.group_name = member[GROUP_NAME]
-            db.session.add(user_course)
-            user_infile.append(member[USER_IDENTIFIER])
-        else:
-            message = 'The user is not enroled in the course'
-            invalids.append({'member': member, 'message': message})
-            continue
-    db.session.commit()
-
-    return {
-        'success': count,
-        'invalids': invalids
-    }
 
 # /
 class GroupRootAPI(Resource):
@@ -130,7 +29,9 @@ class GroupRootAPI(Resource):
     def get(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         user_course = UserCourse(course_id=course.id)
-        require(READ, user_course)
+        require(READ, user_course,
+            title="Failed to Retrieve Groups",
+            message="You do not have permission to view groups for this course since you are not its instructor.")
 
         group_names = UserCourse.query \
             .with_entities(UserCourse.group_name) \
@@ -152,48 +53,6 @@ class GroupRootAPI(Resource):
 
         return {'objects': [group.group_name for group in group_names] }
 
-    @login_required
-    def post(self, course_uuid):
-        course = Course.get_active_by_uuid_or_404(course_uuid)
-        user_course = UserCourse(course_id=course.id)
-        require(EDIT, user_course)
-
-        params = import_parser.parse_args()
-        identifier = params.get('userIdentifier')
-
-        if identifier == ThirdPartyType.cas.value and not current_app.config.get('CAS_LOGIN_ENABLED'):
-            return {'error': 'Invalid import type: CWL auth not enabled'}, 400
-        elif identifier == 'username' and not current_app.config.get('APP_LOGIN_ENABLED'):
-            return {'error': 'Invalid import type: App auth not enabled'}, 400
-
-        file = request.files['file']
-        if file and allowed_file(file.filename, current_app.config['UPLOAD_ALLOWED_EXTENSIONS']):
-            unique = str(uuid.uuid4())
-            filename = unique + secure_filename(file.filename)
-            tmpName = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-            file.save(tmpName)
-            current_app.logger.debug("Import groups for course "+str(course.id)+" with "+ filename)
-            with open(tmpName, 'rb') as csvfile:
-                spamreader = csv.reader(csvfile)
-                members = []
-                for row in spamreader:
-                    if row:
-                        members.append(row)
-                results = import_members(course, identifier, members)
-            os.remove(tmpName)
-
-            on_course_group_import.send(
-                current_app._get_current_object(),
-                event_name=on_course_group_import.name,
-                user=current_user,
-                course_id=course.id,
-                data={'filename': tmpName}
-            )
-
-            current_app.logger.debug("Group Import for course " + str(course.id) + " is successful. Removed file.")
-            return results
-        else:
-            return {'error': 'Wrong file type'}, 400
 api.add_resource(GroupRootAPI, '')
 
 # /:group_name
@@ -202,7 +61,9 @@ class GroupNameAPI(Resource):
     def get(self, course_uuid, group_name):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         user_course = UserCourse(course_id=course.id)
-        require(READ, user_course)
+        require(READ, user_course,
+            title="Failed to Retrieve Group Members",
+            message="You do not have permission to view group members for this course since you are not its instructor.")
 
         members = User.query \
             .join(UserCourse, UserCourse.user_id == User.id) \
@@ -214,7 +75,7 @@ class GroupNameAPI(Resource):
             .all()
 
         if len(members) == 0:
-            abort(404)
+            abort(404, title="Group Not Found", message="Group "+group_name+" was removed.")
 
         on_course_group_members_get.send(
             current_app._get_current_object(),

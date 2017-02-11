@@ -47,7 +47,8 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             # test unique oauth_consumer_key by submitting again
             rv = self.client.post(url, data=json.dumps(consumer_expected), content_type='application/json')
             self.assertStatus(rv, 409)
-            self.assertEqual(rv.json['error'], "A LTI consumer with the same consumer key already exists.")
+            self.assertEqual(rv.json['title'], "Consumer Creation Failed")
+            self.assertEqual(rv.json['message'], "A LTI consumer with the same consumer key already exists.")
 
     def test_list_lti_consumers(self):
         url = self._build_consumer_url()
@@ -222,5 +223,6 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
 
             rv = self.client.post(url, data=json.dumps(consumer2_expected), content_type='application/json')
             self.assertStatus(rv, 409)
-            self.assertEqual(rv.json['error'], "A LTI consumer with the same consumer key already exists.")
+            self.assertEqual(rv.json['title'], "Consumer Update Failed")
+            self.assertEqual(rv.json['message'], "A LTI consumer with the same consumer key already exists.")
 

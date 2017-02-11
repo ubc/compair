@@ -23,30 +23,19 @@ var module = angular.module('ubc.ctlt.compair.home',
 /***** Controllers *****/
 module.controller(
     'HomeController',
-    ["$rootScope", "$scope", "$location", "Session", "AuthenticationService", "AssignmentResource",
-     "Authorize", "CourseResource", "Toaster", "UserResource", "$uibModal", "xAPIStatementHelper",
-    function ($rootScope, $scope, $location, Session, AuthenticationService, AssignmentResource,
-              Authorize, CourseResource, Toaster, UserResource, $uibModal, xAPIStatementHelper) {
-
-        $scope.loggedInUserId = null;
+    ["$rootScope", "$scope", "$location", "AssignmentResource",
+     "Authorize", "CourseResource", "Toaster", "UserResource", "$uibModal", "xAPIStatementHelper", "resolvedData",
+    function ($rootScope, $scope, $location, AssignmentResource,
+              Authorize, CourseResource, Toaster, UserResource, $uibModal, xAPIStatementHelper, resolvedData)
+    {
         $scope.totalNumCourses = 0;
         $scope.courseFilters = {
             page: 1,
             perPage: 10,
             search: null
         };
-
-        Authorize.can(Authorize.CREATE, CourseResource.MODEL).then(function(canAddCourse){
-            $scope.canAddCourse = canAddCourse;
-
-            Session.getUser().then(function(user) {
-                $scope.loggedInUserId = user.id;
-                $scope.updateCourseList();
-
-                // register watcher here so that we start watching when all filter values are set
-                $scope.$watchCollection('courseFilters', filterWatcher);
-            });
-        });
+        $scope.canAddCourse = resolvedData.canAddCourse;
+        $scope.loggedInUserId = resolvedData.loggedInUser.id;
 
         $scope.updateCourseList = function() {
             UserResource.getUserCourses($scope.courseFilters).$promise.then(
@@ -76,15 +65,9 @@ module.controller(
                                 _.forEach($scope.courses, function(course) {
                                     course.status = statuses[course.id];
                                 });
-                            },
-                            function (ret) {
-                                Toaster.reqerror("Unable to retrieve your course status.", ret);
                             }
                         );
                     }
-                },
-                function (ret) {
-                    Toaster.reqerror("Unable to retrieve your courses.", ret);
                 }
             );
         };
@@ -94,13 +77,9 @@ module.controller(
                 function (ret) {
                     Toaster.success('Course deleted successfully');
                     $scope.updateCourseList();
-                },
-                function (ret) {
-                    Toaster.reqerror('Course deletion failed', ret);
                 }
             );
         };
-
 
         $scope.duplicateCourse = function(course) {
             var modalScope = $scope.$new();
@@ -138,6 +117,9 @@ module.controller(
             xAPIStatementHelper.filtered_page($scope.courseFilters);
             $scope.updateCourseList();
         };
+
+        $scope.updateCourseList();
+        $scope.$watchCollection('courseFilters', filterWatcher);
     }
 ]);
 // End anonymous function

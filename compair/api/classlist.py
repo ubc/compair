@@ -7,12 +7,12 @@ import unicodecsv as csv
 from bouncer.constants import EDIT, READ, MANAGE
 from flask import Blueprint, request, current_app, make_response
 from flask_login import login_required, current_user
-from flask_restful import Resource, marshal, abort
+from flask_restful import Resource, marshal
 from six import BytesIO
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
-
+from flask_restplus import abort
 from flask_restful.reqparse import RequestParser
 
 from . import dataformat
@@ -305,7 +305,9 @@ class ClasslistRootAPI(Resource):
     @login_required
     def get(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(READ, UserCourse(course_id=course.id))
+        require(READ, UserCourse(course_id=course.id),
+            title="Class List Unavailable",
+            message="Your role in this course does not allow you to view the class list.")
         restrict_user = not allow(READ, USER_IDENTITY)
 
         # expire current_user from the session. When loading classlist from database, if the
@@ -360,46 +362,51 @@ class ClasslistRootAPI(Resource):
     def post(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         user_course = UserCourse(course_id=course.id)
-        require(EDIT, user_course)
+        require(EDIT, user_course,
+            title="Class List Not Imported",
+            message="Your role in this course does not allow you to import or otherwise change the class list.")
 
         params = import_classlist_parser.parse_args()
         import_type = params.get('import_type')
 
         if import_type not in [ThirdPartyType.cas.value, None]:
-            return {'error': 'Invalid import type'}, 400
+            abort(400, title="Class List Not Imported", message="Please select a valid way for students to log in.")
         elif import_type == ThirdPartyType.cas.value and not current_app.config.get('CAS_LOGIN_ENABLED'):
-            return {'error': 'Invalid import type: CWL auth not enabled'}, 400
+            abort(400, title="Class List Not Imported", message="Please select a valid way for students to log in. Students are not able to use CWL based on the current settings.")
         elif import_type is None and not current_app.config.get('APP_LOGIN_ENABLED'):
-            return {'error': 'Invalid import type: App auth not enabled'}, 400
+            abort(400, title="Class List Not Imported", message="Please select a valid way for students to log in. Students are not able to use the ComPAIR logins based on the current settings.")
 
         uploaded_file = request.files['file']
         results = {'success': 0, 'invalids': []}
-        if uploaded_file and allowed_file(uploaded_file.filename, current_app.config['UPLOAD_ALLOWED_EXTENSIONS']):
-            unique = str(uuid.uuid4())
-            filename = unique + secure_filename(uploaded_file.filename)
-            tmp_name = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-            uploaded_file.save(tmp_name)
-            current_app.logger.debug("Importing for course " + str(course.id) + " with " + filename)
-            with open(tmp_name, 'rb') as csvfile:
-                spamreader = csv.reader(csvfile)
-                users = []
-                for row in spamreader:
-                    if row:
-                        users.append(row)
 
-                if len(users) > 0:
-                    results = import_users(import_type, course, users)
+        if not uploaded_file:
+            abort(400, title="Class List Not Imported", message="No file was found to upload. Please try again.")
+        elif not allowed_file(uploaded_file.filename, current_app.config['UPLOAD_ALLOWED_EXTENSIONS']):
+            abort(400, title="Class List Not Imported", message="Only CSV files can be uploaded. Please try again with a valid CSV file.")
 
-                on_classlist_upload.send(
-                    self,
-                    event_name=on_classlist_upload.name,
-                    user=current_user,
-                    course_id=course.id)
-            os.remove(tmp_name)
-            current_app.logger.debug("Class Import for course " + str(course.id) + " is successful. Removed file.")
-            return results
-        else:
-            return {'error': 'Wrong file type'}, 400
+        unique = str(uuid.uuid4())
+        filename = unique + secure_filename(uploaded_file.filename)
+        tmp_name = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        uploaded_file.save(tmp_name)
+        current_app.logger.debug("Importing for course " + str(course.id) + " with " + filename)
+        with open(tmp_name, 'rb') as csvfile:
+            spamreader = csv.reader(csvfile)
+            users = []
+            for row in spamreader:
+                if row:
+                    users.append(row)
+
+            if len(users) > 0:
+                results = import_users(import_type, course, users)
+
+            on_classlist_upload.send(
+                self,
+                event_name=on_classlist_upload.name,
+                user=current_user,
+                course_id=course.id)
+        os.remove(tmp_name)
+        current_app.logger.debug("Class Import for course " + str(course.id) + " is successful. Removed file.")
+        return results
 
 
 api.add_resource(ClasslistRootAPI, '')
@@ -435,7 +442,9 @@ class EnrolAPI(Resource):
                 course_id=course.id
             )
 
-        require(EDIT, user_course)
+        require(EDIT, user_course,
+            title="Enrollment Not Updated",
+            message="Your role in this course does not allow you to update enrollment.")
 
         params = new_course_user_parser.parse_args()
         role_name = params.get('course_role')
@@ -447,18 +456,12 @@ class EnrolAPI(Resource):
             CourseRole.instructor.value
         ]
         if role_name not in course_roles:
-            abort(404)
+            abort(400, title="Enrollment Not Updated", message="Please select a valid course role from the list provided.")
         course_role = CourseRole(role_name)
         if user_course.course_role != course_role:
             user_course.course_role = course_role
             db.session.add(user_course)
             db.session.commit()
-
-        result = {
-            'user_id': user.uuid,
-            'fullname': user.fullname,
-            'course_role': course_role.value
-        }
 
         on_classlist_enrol.send(
             self,
@@ -467,7 +470,11 @@ class EnrolAPI(Resource):
             course_id=course.id,
             data={'user_id': user.id})
 
-        return result
+        return {
+            'user_id': user.uuid,
+            'fullname': user.fullname,
+            'course_role': course_role.value
+        }
 
     @login_required
     def delete(self, course_uuid, user_uuid):
@@ -479,15 +486,11 @@ class EnrolAPI(Resource):
                 course_id=course.id
             ) \
             .first_or_404()
-        require(EDIT, user_course)
+        require(EDIT, user_course,
+            title="Enrollment Not Updated",
+            message="Your role in this course does not allow you to update enrollment.")
 
         user_course.course_role = CourseRole.dropped
-        result = {
-            'user_id': user.uuid,
-            'fullname': user.fullname,
-            'course_role': CourseRole.dropped.value
-        }
-
         db.session.add(user_course)
 
         on_classlist_unenrol.send(
@@ -498,7 +501,13 @@ class EnrolAPI(Resource):
             data={'user_id': user.id})
 
         db.session.commit()
-        return result
+
+        return {
+            'user_id': user.uuid,
+            'fullname': user.fullname,
+            'course_role': CourseRole.dropped.value
+        }
+
 
 
 api.add_resource(EnrolAPI, '/<user_uuid>')
@@ -509,7 +518,9 @@ class TeachersAPI(Resource):
     @login_required
     def get(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(READ, course)
+        require(READ, course,
+            title="Instructors Unavailable",
+            message="Instructors can only be seen here by those enrolled in the course. Please double-check your enrollment in this course.")
 
         instructors = UserCourse.query \
             .filter(and_(
@@ -536,7 +547,9 @@ class StudentsAPI(Resource):
     @login_required
     def get(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(READ, course)
+        require(READ, course,
+            title="Students Unavailable",
+            message="Students can only be seen here by those enrolled in the course. Please double-check your enrollment in this course.")
         restrict_user = not allow(MANAGE, course)
 
         students = User.query \
@@ -585,7 +598,9 @@ class UserCourseRoleAPI(Resource):
     @login_required
     def post(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(EDIT, UserCourse(course_id=course.id))
+        require(EDIT, UserCourse(course_id=course.id),
+            title="Enrollment Not Updated",
+            message="Your role in this course does not allow you to update enrollment.")
 
         params = update_users_course_role_parser.parse_args()
 
@@ -597,11 +612,11 @@ class UserCourseRoleAPI(Resource):
             CourseRole.instructor.value
         ]
         if role_name not in course_roles:
-            abort(404)
+            abort(400, title="Enrollment Not Updated", message="Please select a valid course role from the list provided.")
         course_role = CourseRole(role_name)
 
         if len(params.get('ids')) == 0:
-            return {"error": "Please select at least one user below"}, 400
+            abort(400, title="Enrollment Not Updated", message="Please select at least one user below and then try to update the enrollment again.")
 
         user_courses = UserCourse.query \
             .join(User, UserCourse.user_id == User.id) \
@@ -613,13 +628,15 @@ class UserCourseRoleAPI(Resource):
             .all()
 
         if len(params.get('ids')) != len(user_courses):
-            return {"error": "One or more users are not enrolled in the course"}, 400
+            abort(400, title="Enrollment Not Updated", message="One or more users selected are not enrolled in the course yet.")
 
         if len(user_courses) == 1 and user_courses[0].user_id == current_user.id:
             if course_role == CourseRole.dropped:
-                return {"error": "You cannot drop yourself from the course. Please select other users"}, 400
+                abort(400, title="Enrollment Not Updated",
+                    message="You cannot drop yourself from the course. Please select only other users and try again.")
             else:
-                return {"error": "You cannot change your own course role. Please select other users"}, 400
+                abort(400, title="Enrollment Not Updated",
+                    message="You cannot change your own course role. Please select only other users and try again.")
 
         for user_course in user_courses:
             # skip current user

@@ -32,9 +32,11 @@ module.factory('LTIConsumerResource',
 
 module.controller('LTIConsumerController',
     ['$scope', '$location', '$route', '$routeParams', 'UserResource', 'LTIConsumerResource',
-     'Toaster', 'breadcrumbs', 'Session', 'Authorize', 'xAPIStatementHelper',
+     'Toaster', 'breadcrumbs', 'xAPIStatementHelper', 'resolvedData',
     function($scope, $location, $route, $routeParams, UserResource, LTIConsumerResource,
-             Toaster, breadcrumbs, Session, Authorize, xAPIStatementHelper) {
+             Toaster, breadcrumbs, xAPIStatementHelper, resolvedData)
+    {
+        $scope.canManageUsers = resolvedData.canManageUsers;
 
         $scope.totalNumConsumers = 0;
         $scope.consumerFilters = {
@@ -44,17 +46,9 @@ module.controller('LTIConsumerController',
             reverse: null
         };
 
-        Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
-            $scope.canManageUsers = result;
-
-            if ($scope.canManageUsers) {
-                $scope.updateConsumerList();
-                // register watcher here so that we start watching when all filter values are set
-                $scope.$watchCollection('consumerFilters', filterWatcher);
-            } else {
-                $location.path('/');
-            }
-        });
+        if (!$scope.canManageUsers) {
+            $location.path('/');
+        }
 
         $scope.updateTableOrderBy = function(predicate) {
             $scope.reverse = $scope.predicate == predicate && !$scope.reverse;
@@ -68,12 +62,10 @@ module.controller('LTIConsumerController',
                 function(ret) {
                     $scope.consumers = ret.objects;
                     $scope.totalNumConsumers = ret.total;
-                },
-                function (ret) {
-                    Toaster.reqerror("Unable to retrieve LTI consumers.", ret);
                 }
             );
         };
+        $scope.updateConsumerList();
 
         $scope.updateConsumer = function(consumer) {
             LTIConsumerResource.save(consumer).$promise.then(
@@ -84,13 +76,6 @@ module.controller('LTIConsumerController',
                          Toaster.success("LTI Consumer Deactivated!");
                     }
                     $scope.updateConsumerList();
-                },
-                function (ret) {
-                    if (ret.active) {
-                         Toaster.reqerror("LTI Consumer Activation Failed!");
-                    } else {
-                         Toaster.reqerror("LTI Consumer Deactivation Failed!");
-                    }
                 }
             );
         };
@@ -103,64 +88,44 @@ module.controller('LTIConsumerController',
             xAPIStatementHelper.filtered_page($scope.consumerFilters);
             $scope.updateConsumerList();
         };
+        $scope.$watchCollection('consumerFilters', filterWatcher);
     }]
 );
 
 
 module.controller("LTIConsumerWriteController",
     ['$scope', '$location', '$route', '$routeParams', 'UserResource', 'LTIConsumerResource',
-     'Toaster', 'breadcrumbs', 'Session', 'Authorize', 'xAPIStatementHelper',
+     'Toaster', 'breadcrumbs', 'xAPIStatementHelper', 'resolvedData',
     function($scope, $location, $route, $routeParams, UserResource, LTIConsumerResource,
-             Toaster, breadcrumbs, Session, Authorize, xAPIStatementHelper)
+             Toaster, breadcrumbs, xAPIStatementHelper, resolvedData)
     {
-        $scope.consumerId = $routeParams['consumerId'];
-        $scope.consumer = {};
+        $scope.consumerId = $routeParams.consumerId;
+
+        $scope.consumer = resolvedData.consumer || {};
+        $scope.canManageUsers = resolvedData.canManageUsers;
+
+        $scope.method = $scope.consumer.id ? "edit" : "create";
         $scope.submitted = false;
 
-        Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function(result) {
-            $scope.canManageUsers = result;
-
-            if ($scope.canManageUsers) {
-                if ($route.current.method == "new") {
-                    // nothing
-                } else if ($route.current.method == "edit") {
-                    LTIConsumerResource.get({'id': $scope.consumerId}).$promise.then(
-                        function (ret) {
-                            $scope.consumer = ret;
-                        },
-                        function (ret) {
-                            Toaster.reqerror("Unable to retrieve consumer "+$scope.consumerId, ret);
-                        }
-                    );
-                }
-            } else {
-                $location.path('/');
-            }
-        });
+        if (!$scope.canManageUsers) {
+            $location.path('/');
+        }
 
         $scope.save = function () {
             $scope.submitted = true;
 
             LTIConsumerResource.save($scope.consumer).$promise.then(
                 function (ret) {
-                    $scope.submitted = false;
-
-                    if ($route.current.method == "new") {
+                    if ($scope.method == "create") {
                          Toaster.success("LTI Consumer Created!");
-                    } else if ($route.current.method == "edit") {
+                    } else if ($scope.method == "edit") {
                          Toaster.success("LTI Consumer Updated!");
                     }
                     $location.path('/lti/consumer');
-                },
-                function (ret) {
-                    $scope.submitted = false;
-                    if ($route.current.method == "new") {
-                         Toaster.reqerror("LTI Consumer Create Failed!");
-                    } else if ($route.current.method == "edit") {
-                         Toaster.reqerror("LTI Consumer Update Failed!");
-                    }
                 }
-            );
+            ).finally(function() {
+                $scope.submitted = false;
+            });
         };
     }
 ]);

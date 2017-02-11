@@ -1,6 +1,6 @@
-<div ng-controller="HomeController" class="home-screen">
+<div class="home-screen">
 
-    <h1 id="view-title">ComPAIR</h1>
+    <h1>ComPAIR</h1>
 
     <p class="intro-text">Welcome to the ComPAIR tool! With this tool,
         <span ng-show="!canAddCourse">you will show your understanding of course content by answering the assignments posted by your instructor and then comparing pairs of your peers' answers and offering constructive feedback on how they can improve.</span>
@@ -43,7 +43,7 @@
                     <ul class="list-inline course-metadata-list">
                         <!-- Edit Link (instructors only) -->
                         <li ng-if="course.canEditCourse">
-                            <a ng-href="#/course/{{course.id}}/configure" title="Edit">
+                            <a ng-href="#/course/{{course.id}}/edit" title="Edit">
                                 Edit
                             </a>
                         </li>
@@ -112,7 +112,7 @@
         <hr />
         <p ng-if="!courseFilters.search">No courses currently available.</p>
         <p ng-if="courseFilters.search">No courses found for this search. Please try another search term above.</p>
-        <p ng-if="canAddCourse && !courseFilters.search">Would you like to <a href="#/course/new">add a course</a>?</p>
+        <p ng-if="canAddCourse && !courseFilters.search">Would you like to <a href="#/course/create">add a course</a>?</p>
     </div>
 
 </div>

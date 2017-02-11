@@ -1,4 +1,4 @@
-<div ng-controller="AssignmentViewController" class="assignment-screen">
+<div class="assignment-screen">
 
     <div class="standalone-assignment">
 
@@ -51,7 +51,7 @@
                 <strong>{{assignment.status.answers.feedback}} peer<span ng-if="assignment.status.answers.feedback != 1">s</span></strong> left you feedback below
             </li>
             <li ng-if="canManageAssignment || assignment.user_id == loggedInUserId">
-                <a ng-if="canManageAssignment || assignment.user_id == loggedInUserId" title="Delete" confirmation-needed="deleteAssignment(courseId, assignment.id)" keyword="assignment" href="">
+                <a ng-if="canManageAssignment || assignment.user_id == loggedInUserId" title="Delete" confirmation-needed="deleteAssignment(assignment)" keyword="assignment" href="">
                     <i class="fa fa-trash-o"></i>
                 </a>
             </li>
@@ -231,7 +231,7 @@
                         <span class="label label-info" ng-if="instructors[answer.user_id]">{{instructors[answer.user_id]}}&nbsp;</span>
                         <strong>said</strong>:
                         <div class="manager-actions pull-right" ng-if="canManageAssignment">
-                            <a href="" confirmation-needed="deleteAnswer(answer, courseId, assignment.id, answer.id)" keyword="instructor answer">
+                            <a href="" confirmation-needed="deleteAnswer(answer)" keyword="instructor answer">
                                 <i class="fa fa-trash-o"></i>
                             </a>
                             <a href="" ng-click="editAnswer(answer)">
@@ -266,7 +266,7 @@
                             <span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
                                 <i class="fa fa-warning"></i>
                                 Flagged
-                                <a href="" title="Unflag this answer" ng-click="unflagAnswer(answer, courseId, assignment.id, answer.id)">
+                                <a href="" title="Unflag this answer" ng-click="unflagAnswer(answer)">
                                     Unflag?
                                 </a>
                             </span>
@@ -279,7 +279,7 @@
                                     <i class="fa fa-star"></i>
                                 </a>
                             </span>
-                            <a href="" confirmation-needed="deleteAnswer(answer, courseId, assignment.id, answer.id)" keyword="answer">
+                            <a href="" confirmation-needed="deleteAnswer(answer)" keyword="answer">
                                 <i class="fa fa-trash-o"></i>
                             </a>
                             <a href="" ng-click="editAnswer(answer)">
@@ -419,12 +419,12 @@
                         <span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
                             <i class="fa fa-warning"></i>
                             Flagged
-                            <a href="" title="Unflag this answer" ng-click="unflagAnswer(answer, courseId, assignment.id, answer.id)">
+                            <a href="" title="Unflag this answer" ng-click="unflagAnswer(answer)">
                                 Unflag?
                             </a>
                         </span>
                         -->
-                        <a href="" confirmation-needed="deleteAnswer(answer, courseId, assignment.id, answer.id)" keyword="answer">
+                        <a href="" confirmation-needed="deleteAnswer(answer)" keyword="answer">
                             <i class="fa fa-trash-o"></i>
                         </a>
                         <a href="" ng-click="editAnswer(answer)">
@@ -533,12 +533,12 @@
                 </div>
 
                 <h5 class="content">Comparisons</h5>
-                <div ng-repeat="comparsion_criterion in comparison.comparison_criteria">
+                <div ng-repeat="comparison_criterion in comparison.comparison_criteria">
                     <div class="content">
-                        <p>"{{ comparsion_criterion.criterion.name }}"<br />
+                        <p>"{{ comparison_criterion.criterion.name }}"<br />
                             <span class="glyphicon glyphicon-ok-circle"></span>
-                            <span ng-if="comparsion_criterion.winner == WinningAnswer.answer1"><strong>Odd-numbered answer</strong></span>
-                            <span ng-if="comparsion_criterion.winner == WinningAnswer.answer2"><strong>Even-numbered answer</strong></span>
+                            <span ng-if="comparison_criterion.winner == WinningAnswer.answer1"><strong>Odd-numbered answer</strong></span>
+                            <span ng-if="comparison_criterion.winner == WinningAnswer.answer2"><strong>Even-numbered answer</strong></span>
                         </p>
                     </div>
                 </div>
@@ -629,7 +629,9 @@
         </div><!-- closes comments-tab -->
 
         <div class="tab-pane" ng-class="{active: showTab('participation')}" id="participation-tab" ng-if="canManageAssignment && showTab('participation')">
-            <ng-include src="'modules/gradebook/gradebook-partial.html'"></ng-include>
+            <div ng-controller="GradebookController">
+                <ng-include src="'modules/gradebook/gradebook-partial.html'"></ng-include>
+            </div>
         </div><!-- closes gradebook-tab -->
 
     </div><!-- closes tab-content -->
