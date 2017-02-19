@@ -18,7 +18,6 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     name = db.Column(db.String(255), nullable=False)
     year = db.Column(db.Integer, nullable=False)
     term = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.Text)
     start_date = db.Column(db.DateTime(timezone=True), nullable=True)
     end_date = db.Column(db.DateTime(timezone=True), nullable=True)
     # relationships
