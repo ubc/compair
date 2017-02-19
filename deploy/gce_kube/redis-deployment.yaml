@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: compair-redis
+  labels:
+    app: compair
+    tier: redis
+spec:
+  ports:
+    - port: 6379
+  selector:
+    app: compair
+    tier: redis
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: compair-redis
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: compair
+        tier: redis
+    spec:
+      containers:
+      - image: redis:3.2.4
+        name: compair-redis
+        command: ["redis-server", "--appendonly","yes"]
+        ports:
+        - containerPort: 6379
+          name: redis
+        volumeMounts:
+        - name: redis-persistent-storage
+          mountPath: /data
+      volumes:
+      - name: redis-persistent-storage
+        persistentVolumeClaim:
+          claimName: redis-pv-claim

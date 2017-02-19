@@ -69,9 +69,9 @@ Get NFS service IP, listed under `IP` field:
 ```
 kubectl describe services compair-nfs-server
 ```
-Update the NFS service IP in `nfs-pv.yaml` and then create persistent volume:
+Update the NFS service IP in `persistent-storage.yaml` and then create persistent volume:
 ```
-kubectl create -f nfs-pv.yaml
+kubectl create -f persistent-storage.yaml
 ```
 
 ### Setting Up Database Password
@@ -85,14 +85,24 @@ kubectl create secret generic mysql-pass --from-file=password.txt
 kubectl create -f mysql-deployment.yaml
 ```
 
-### Creating ComPAIR Deployment
+### Creating Redis Deployment
+```bash
+kubectl create -f redis-deployment.yaml
+```
+
+### Creating ComPAIR Worker Deployment
+```bash
+kubectl create -f compair-worker-deployment.yaml
+```
+
+### Creating ComPAIR App Deployment
 ```bash
 kubectl create -f compair-deployment.yaml
 ```
 
 ### Getting the Public IP for ComPAIR Service
 ```bash
-kubectl describe services compair 
+kubectl describe services compair
 ```
 The public IP is listed under `LoadBalancer Ingress` field. You may need to wait a little bit for the load balancer getting provisioned.
 
