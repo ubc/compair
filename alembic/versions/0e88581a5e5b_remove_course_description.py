@@ -1,14 +1,14 @@
 """Remove course description
 
 Revision ID: 0e88581a5e5b
-Revises: 622121ae2f36
+Revises: ed763e759c2a
 Create Date: 2017-02-06 20:47:07.952542
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '0e88581a5e5b'
-down_revision = '622121ae2f36'
+down_revision = 'ed763e759c2a'
 
 from alembic import op
 import sqlalchemy as sa

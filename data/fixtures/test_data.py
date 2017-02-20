@@ -6,8 +6,8 @@ import factory.fuzzy
 
 from compair import db
 from six.moves import range
-from compair.models import SystemRole, CourseRole, Criterion, \
-    Course, Comparison, ThirdPartyType, AnswerCommentType, WinningAnswer
+from compair.models import SystemRole, CourseRole, Criterion, Course, \
+    Comparison, ThirdPartyType, AnswerCommentType, WinningAnswer
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
     AnswerFactory, CriterionFactory, ComparisonFactory, ComparisonCriterionFactory, \
     AssignmentCommentFactory, AnswerCommentFactory, AnswerScoreFactory, AnswerCriterionScoreFactory, \
@@ -536,9 +536,11 @@ class TestFixture:
         self.unauthorized_student = UserFactory(system_role=SystemRole.student)
         self.dropped_instructor = UserFactory(system_role=SystemRole.instructor)
         self.draft_student = None
+        self.answer_comments = []
         db.session.commit()
 
-    def add_course(self, num_students=5, num_assignments=1, num_additional_criteria=0, num_groups=0, num_answers='#', with_draft_student=False, with_comparisons=False):
+    def add_course(self, num_students=5, num_assignments=1, num_additional_criteria=0, num_groups=0, num_answers='#',
+            with_comments=False, with_draft_student=False, with_comparisons=False):
         self.course = CourseFactory()
         self.instructor = UserFactory(system_role=SystemRole.instructor)
         self.enrol_user(self.instructor, self.course, CourseRole.instructor)
@@ -553,10 +555,10 @@ class TestFixture:
         # create a shortcut for first assignment as it is frequently used
         self.assignment = self.assignments[0]
 
-        self.add_answers(num_answers)
+        self.add_answers(num_answers, with_comments=with_comments)
 
         if with_comparisons:
-            self.add_comparisons()
+            self.add_comparisons(with_comments=with_comments)
 
         if with_draft_student:
             self.add_students(1)
@@ -569,7 +571,7 @@ class TestFixture:
 
         return self
 
-    def add_answers(self, num_answers):
+    def add_answers(self, num_answers, with_comments=False):
         if num_answers == '#':
             num_answers = len(self.students) * len(self.assignments)
         if len(self.students) * len(self.assignments) < num_answers:
@@ -579,9 +581,10 @@ class TestFixture:
             )
         for assignment in self.assignments:
             for i in range(num_answers):
+                student = self.students[i % len(self.students)]
                 answer = AnswerFactory(
                     assignment=assignment,
-                    user=self.students[i % len(self.students)]
+                    user=student
                 )
                 # half of the answers have scores
                 if i < num_answers/2:
@@ -598,6 +601,30 @@ class TestFixture:
                             criterion=criterion,
                             score=random.random() * 5
                         )
+
+                if with_comments:
+                    other_students = [s for s in self.students if s.id != student.id]
+                    # half of the answers has a public comment
+                    if i < num_answers/2:
+                        random.shuffle(other_students)
+                        answer_comment = AnswerCommentFactory(
+                            user=other_students[0],
+                            answer=answer,
+                            comment_type=AnswerCommentType.public
+                        )
+                        self.answer_comments.append(answer_comment)
+
+                    # half of the answers has a private comment
+                    # (middle half so there is partial overlap with public comments)
+                    if num_answers/4 < i and i < (num_answers * 3)/4:
+                        random.shuffle(other_students)
+                        answer_comment = AnswerCommentFactory(
+                            user=other_students[0],
+                            answer=answer,
+                            comment_type=AnswerCommentType.private
+                        )
+                        self.answer_comments.append(answer_comment)
+
                 self.answers.append(answer)
 
             for dropped_student in self.dropped_students:
@@ -610,9 +637,10 @@ class TestFixture:
 
         return self
 
-    def add_comparisons(self):
+    def add_comparisons(self, with_comments=False):
         for assignment in self.assignments:
             for student in self.students:
+                answers = set()
                 for i in range(assignment.total_comparisons_required):
                     comparison = Comparison.create_new_comparison(assignment.id, student.id, False)
                     comparison.completed = True
@@ -620,6 +648,16 @@ class TestFixture:
                     for comparison_criterion in comparison.comparison_criteria:
                         comparison_criterion.winner = comparison.winner
                     db.session.add(comparison)
+                    db.session.commit()
+
+                if with_comments:
+                    for answer in answers:
+                        answer_comment = AnswerCommentFactory(
+                            user=student,
+                            answer=answer,
+                            comment_type=AnswerCommentType.evaluation
+                        )
+                        self.answer_comments.append(answer_comment)
                     db.session.commit()
 
         return self

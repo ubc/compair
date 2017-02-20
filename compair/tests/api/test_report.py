@@ -3,6 +3,7 @@ import json
 import io
 import os
 import unicodecsv as csv
+import re
 
 from data.fixtures.test_data import TestFixture
 from compair.tests.test_compair import ComPAIRAPITestCase
@@ -14,7 +15,7 @@ class ReportAPITest(ComPAIRAPITestCase):
     def setUp(self):
         super(ReportAPITest, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=30, num_assignments=2, num_additional_criteria=1, num_groups=2, num_answers=25,
-            with_draft_student=True)
+            with_draft_student=True, with_comments=True)
         self.url = "/api/courses/" + self.fixtures.course.uuid + "/report"
         self.files_to_cleanup = []
 
@@ -325,7 +326,163 @@ class ReportAPITest(ComPAIRAPITestCase):
                     next_row = next(reader)
                     user_stats = self._check_participation_stat_report_user_row(self.fixtures.assignments[0], student, next_row, overall_stats)
 
+        # peer_feedback with valid instructor
+        with self.login(self.fixtures.instructor.username):
+            input = {
+                'group_name': None,
+                'type': "peer_feedback",
+                'assignment': None
+            }
 
+            # test authorized user entire course
+            rv = self.client.post(self.url, data=json.dumps(input), content_type='application/json')
+            self.assert200(rv)
+            self.assertIsNotNone(rv.json['file'])
+            file_name = rv.json['file'].split("/")[-1]
+            self.files_to_cleanup.append(file_name)
+
+            tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
+            with open(tmp_name, 'rb') as csvfile:
+                reader = csv.reader(csvfile, delimiter=',')
+
+                heading1 = next(reader)
+                heading2 = next(reader)
+                self._check_peer_feedback_report_heading_rows(heading1, heading2)
+
+                sorted_students = sorted(self.fixtures.students,
+                    key=lambda student: (student.lastname, student.firstname, student.id)
+                )
+
+                for assignment in self.fixtures.assignments:
+                    for student in sorted_students:
+                        self._check_peer_feedback_report_user_rows(assignment, student, reader)
+
+            # test authorized user one assignment
+            single_assignment_input = input.copy()
+            single_assignment_input['assignment'] = self.fixtures.assignments[0].uuid
+            rv = self.client.post(self.url, data=json.dumps(single_assignment_input), content_type='application/json')
+            self.assert200(rv)
+            self.assertIsNotNone(rv.json['file'])
+            file_name = rv.json['file'].split("/")[-1]
+            self.files_to_cleanup.append(file_name)
+
+            tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
+            with open(tmp_name, 'rb') as csvfile:
+                reader = csv.reader(csvfile, delimiter=',')
+
+                heading1 = next(reader)
+                heading2 = next(reader)
+                self._check_peer_feedback_report_heading_rows(heading1, heading2)
+
+                sorted_students = sorted(self.fixtures.students,
+                    key=lambda student: (student.lastname, student.firstname, student.id)
+                )
+
+                for student in sorted_students:
+                    self._check_peer_feedback_report_user_rows(self.fixtures.assignments[0], student, reader)
+
+            # test authorized user entire course with group_name filter
+            group_name_input = input.copy()
+            group_name_input['group_name'] = self.fixtures.groups[0]
+            rv = self.client.post(self.url, data=json.dumps(group_name_input), content_type='application/json')
+            self.assert200(rv)
+            self.assertIsNotNone(rv.json['file'])
+            file_name = rv.json['file'].split("/")[-1]
+            self.files_to_cleanup.append(file_name)
+
+            tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
+            with open(tmp_name, 'rb') as csvfile:
+                reader = csv.reader(csvfile, delimiter=',')
+
+                heading1 = next(reader)
+                heading2 = next(reader)
+                self._check_peer_feedback_report_heading_rows(heading1, heading2)
+
+                sorted_students = sorted(self.fixtures.students,
+                    key=lambda student: (student.lastname, student.firstname, student.id)
+                )
+
+                for assignment in self.fixtures.assignments:
+                    for student in sorted_students:
+                        if student.user_courses[0].group_name != self.fixtures.groups[0]:
+                            continue
+                        self._check_peer_feedback_report_user_rows(assignment, student, reader)
+
+            # test authorized user one assignment
+            group_name_input = input.copy()
+            group_name_input['group_name'] = self.fixtures.groups[0]
+            group_name_input['assignment'] = self.fixtures.assignments[0].uuid
+            rv = self.client.post(self.url, data=json.dumps(group_name_input), content_type='application/json')
+            self.assert200(rv)
+            self.assertIsNotNone(rv.json['file'])
+            file_name = rv.json['file'].split("/")[-1]
+            self.files_to_cleanup.append(file_name)
+
+            tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
+            with open(tmp_name, 'rb') as csvfile:
+                reader = csv.reader(csvfile, delimiter=',')
+
+                heading1 = next(reader)
+                heading2 = next(reader)
+                self._check_peer_feedback_report_heading_rows(heading1, heading2)
+
+                sorted_students = sorted(self.fixtures.students,
+                    key=lambda student: (student.lastname, student.firstname, student.id)
+                )
+
+                for student in sorted_students:
+                    if student.user_courses[0].group_name != self.fixtures.groups[0]:
+                        continue
+                    self._check_peer_feedback_report_user_rows(self.fixtures.assignments[0], student, reader)
+
+            # test authorized user one assignment (content's html parsed)
+            original_content = {}
+            for answer_comment in self.fixtures.answer_comments:
+                if answer_comment.user.user_courses[0].group_name != self.fixtures.groups[0] or \
+                        answer_comment.assignment_id != self.fixtures.assignments[0].id:
+                    continue
+                original_content[answer_comment.id] = answer_comment.content
+                answer_comment.content = '<p id="some_id">&#39;&quot;&gt;&lt;&amp;&nbsp;<\/p>'+answer_comment.content
+            db.session.commit()
+
+            group_name_input = input.copy()
+            group_name_input['group_name'] = self.fixtures.groups[0]
+            group_name_input['assignment'] = self.fixtures.assignments[0].uuid
+            rv = self.client.post(self.url, data=json.dumps(group_name_input), content_type='application/json')
+            self.assert200(rv)
+            self.assertIsNotNone(rv.json['file'])
+            file_name = rv.json['file'].split("/")[-1]
+            self.files_to_cleanup.append(file_name)
+
+            tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
+            with open(tmp_name, 'rb') as csvfile:
+                reader = csv.reader(csvfile, delimiter=',')
+
+                heading1 = next(reader)
+                heading2 = next(reader)
+                self._check_peer_feedback_report_heading_rows(heading1, heading2)
+
+                sorted_students = sorted(self.fixtures.students,
+                    key=lambda student: (student.lastname, student.firstname, student.id)
+                )
+
+                for student in sorted_students:
+                    if student.user_courses[0].group_name != self.fixtures.groups[0]:
+                        continue
+
+                    answer_comments = sorted(
+                        [ac for ac in self.fixtures.answer_comments if ac.user_id == student.id and
+                            ac.assignment_id == self.fixtures.assignments[0].id],
+                        key=lambda ac: (ac.created)
+                    )
+
+                    if len(answer_comments) > 0:
+                        for answer_comment in answer_comments:
+                            row = next(reader)
+                            self.assertEqual(row[8], '\'"><& '+original_content[answer_comment.id])
+                    else:
+                        # skip user with no comments
+                        row = next(reader)
 
     def _check_participation_stat_report_heading_rows(self, heading):
         expected_heading = ['Assignment', 'User UUID', 'Last Name', 'First Name',
@@ -504,3 +661,61 @@ class ReportAPITest(ComPAIRAPITestCase):
 
             self.assertEqual(row[index], str(evaluations_submitted))
             index += 1
+
+    def _check_peer_feedback_report_heading_rows(self, heading1, heading2):
+        expected_heading1 = [
+            "",
+            "Sender", "", "",
+            "Receiver", "", "",
+            "", ""
+        ]
+        self.assertEqual(expected_heading1, heading1)
+        expected_heading2 = [
+            "Assignment",
+            "Last Name", "First Name", "Student No",
+            "Last Name", "First Name", "Student No",
+            "Type", "Feedback"
+        ]
+        self.assertEqual(expected_heading2, heading2)
+
+    def _check_peer_feedback_report_user_rows(self, assignment, student, reader):
+
+        answer_comments = sorted(
+            [ac for ac in self.fixtures.answer_comments if ac.user_id == student.id and ac.assignment_id == assignment.id],
+            key=lambda ac: (ac.created)
+        )
+
+        if len(answer_comments) > 0:
+            for answer_comment in answer_comments:
+                row = next(reader)
+                answer_user = answer_comment.answer.user
+
+                excepted_row = [
+                    assignment.name,
+                    student.lastname, student.firstname, student.student_number,
+                    answer_user.lastname, answer_user.firstname, answer_user.student_number,
+                    answer_comment.comment_type.value, self._strip_html(answer_comment.content)
+                ]
+
+                self.assertEqual(row, excepted_row)
+        else:
+            row = next(reader)
+
+            excepted_row = [
+                assignment.name,
+                student.lastname, student.firstname, student.student_number,
+                "---", "---", "---",
+                "", ""
+            ]
+
+            self.assertEqual(row, excepted_row)
+
+    def _strip_html(self, text):
+        text = re.sub('<[^>]+>', '', text)
+        text = text.replace('&nbsp;', ' ')
+        text = text.replace('&amp;', '&')
+        text = text.replace('&lt;', '<')
+        text = text.replace('&gt;', '>')
+        text = text.replace('&quot;', '"')
+        text = text.replace('&#39;', '\'')
+        return text

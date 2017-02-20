@@ -16,7 +16,7 @@ manager = Manager(usage="Generate Reports")
 """
 @manager.option('-c', '--course', dest='course_id', help='Specify a course ID to generate report from.')
 def create(course_id):
-    """Creates report"""
+    #Creates report
     course_name = ''
     if course_id:
         course_name = Course.query.with_entities(Course.name).filter_by(id=course_id).scalar()
