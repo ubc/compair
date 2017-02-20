@@ -44,7 +44,8 @@ module.controller(
         var allGroups = {'name': 'All Groups', 'value': 'all'};
         $scope.types = [
             {'id': 'participation', 'name': 'Participation Report (Regular)'},
-            {'id': 'participation_stat', 'name': 'Participation Report (Research)'}
+            {'id': 'participation_stat', 'name': 'Participation Report (Research)'},
+            {'id': 'peer_feedback', 'name': 'Peer Feedback Report'}
         ];
 
         UserResource.getTeachingUserCourses().$promise.then(
