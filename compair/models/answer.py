@@ -25,7 +25,7 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     flagged = db.Column(db.Boolean(name='flagged'), default=False, nullable=False)
     flagger_user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="SET NULL"),
         nullable=True)
-    draft = db.Column(db.Boolean(name='draft'), default=False, nullable=False)
+    draft = db.Column(db.Boolean(name='draft'), default=False, nullable=False, index=True)
     top_answer = db.Column(db.Boolean(name='top_answer'), default=False, nullable=False, index=True)
 
     # relationships

@@ -80,6 +80,11 @@
                             Edit
                         </a>
                     </li>
+                    <li ng-if="canManageAssignment">
+                        <a ng-href="#/course/{{course.id}}/assignment/{{assignment.id}}/duplicate" title="Duplicate">
+                            Duplicate
+                        </a>
+                    </li>
                     <!-- Total Answers -->
                     <li title="{{assignment.answer_count}} answers">
                         <span ng-if="(!canManageAssignment && assignment.answers_available) || canManageAssignment">

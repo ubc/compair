@@ -20,7 +20,7 @@ class AnswerComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixi
     content = db.Column(db.Text)
     comment_type = db.Column(EnumType(AnswerCommentType, name="comment_type"),
         nullable=False, index=True)
-    draft = db.Column(db.Boolean(name='draft'), default=False, nullable=False)
+    draft = db.Column(db.Boolean(name='draft'), default=False, nullable=False, index=True)
 
     # relationships
     # answer via Answer Model

@@ -21,8 +21,6 @@ api = new_restful_api(file_api)
 
 # events
 on_save_file = event.signal('FILE_CREATE')
-on_file_get = event.signal('FILE_GET')
-on_file_delete = event.signal('FILE_DELETE')
 
 
 def allowed_file(filename, allowed):
@@ -77,34 +75,8 @@ class FileAPI(Resource):
 
 api.add_resource(FileAPI, '')
 
-
-# /file_uuid
-class FileIdAPI(Resource):
-    @login_required
-    def delete(self, file_uuid):
-        uploaded_file = File.get_active_by_uuid_or_404(file_uuid)
-
-        require(DELETE, uploaded_file)
-
-        for assignment in uploaded_file.assignments.all():
-            assignment.file_id = None
-
-        for answer in uploaded_file.answers.all():
-            answer.file_id = None
-
-        uploaded_file.active = False
-        db.session.commit()
-
-        on_file_delete.send(
-            self,
-            event_name=on_file_delete.name,
-            user=current_user,
-            data={'file_id': uploaded_file.id})
-
-        return {'id': uploaded_file.uuid}
-
-api.add_resource(FileIdAPI, '/<file_uuid>')
-
+"""
+# Not needed at the moment
 def duplicate_file(original_file, new_model_name, new_model_id):
     try:
         duplicated_file = File(
@@ -136,3 +108,4 @@ def duplicate_file(original_file, new_model_name, new_model_id):
         raise e
 
     return duplicated_file
+"""

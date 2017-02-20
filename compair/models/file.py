@@ -1,6 +1,7 @@
 import mimetypes
 
 # sqlalchemy
+from sqlalchemy.orm import column_property
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -8,7 +9,7 @@ from . import *
 
 from compair.core import db
 
-class File(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
+class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     __tablename__ = 'file'
 
     # table columns
@@ -33,6 +34,54 @@ class File(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         mimetype, encoding = mimetypes.guess_type(self.name)
         return mimetype
 
+    @hybrid_property
+    def active(self):
+        return self.assignment_count + self.answer_count > 0
+
+    @classmethod
+    def get_active_or_404(cls, model_id, joinedloads=[]):
+        query = cls.query
+        # load relationships if needed
+        for load_string in joinedloads:
+            query.options(joinedload(load_string))
+
+        model = query.get_or_404(model_id)
+        if model is None or not model.active:
+            abort(404)
+        return model
+
+    @classmethod
+    def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[]):
+        query = cls.query
+        # load relationships if needed
+        for load_string in joinedloads:
+            query.options(joinedload(load_string))
+
+        model = query.filter_by(uuid=model_uuid).one_or_none()
+        if model is None or not model.active:
+            abort(404)
+        return model
+
     @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()
+
+        cls.assignment_count = column_property(
+            select([func.count(Assignment.id)]).
+            where(and_(
+                Assignment.file_id == cls.id,
+                Assignment.active == True
+            )),
+            deferred=True,
+            group="counts"
+        )
+
+        cls.answer_count = column_property(
+            select([func.count(Answer.id)]).
+            where(and_(
+                Answer.file_id == cls.id,
+                Answer.active == True
+            )),
+            deferred=True,
+            group="counts"
+        )

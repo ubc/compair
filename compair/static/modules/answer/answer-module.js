@@ -105,10 +105,10 @@ module.controller(
     "AnswerWriteController",
     ["$scope", "$log", "$location", "$routeParams", "AnswerResource", "ClassListResource", "$route",
         "AssignmentResource", "TimerResource", "Toaster", "Authorize", "Session", "$timeout",
-        "answerAttachService", "AttachmentResource", "EditorOptions", "xAPI", "xAPIStatementHelper",
+        "answerAttachService", "EditorOptions", "xAPI", "xAPIStatementHelper",
     function ($scope, $log, $location, $routeParams, AnswerResource, ClassListResource, $route,
         AssignmentResource, TimerResource, Toaster, Authorize, Session, $timeout,
-        answerAttachService, AttachmentResource, EditorOptions, xAPI, xAPIStatementHelper)
+        answerAttachService, EditorOptions, xAPI, xAPIStatementHelper)
     {
         $scope.courseId = $routeParams['courseId'];
         var assignmentId = $routeParams['assignmentId'];
@@ -162,7 +162,7 @@ module.controller(
                     $scope.answer = ret;
 
                     if (ret.file) {
-                        $scope.answer.uploadedFile = ret.file
+                        $scope.answer.uploadedFile = true;
                     }
                 },
                 function (ret) {
@@ -215,19 +215,11 @@ module.controller(
         });
 
         $scope.deleteFile = function(file) {
-            AttachmentResource.delete({'fileId': file.id}).$promise.then(
-                function (ret) {
-                    Toaster.success('Attachment deleted successfully');
-                    $scope.answer.file = null;
-                    $scope.answer.uploadedFile = false;
+            $scope.answer.file = null;
+            $scope.answer.uploadedFile = false;
 
-                    xAPIStatementHelper.deleted_answer_attachment(
-                        file, $scope.answer, $scope.tracking.getRegistration()
-                    );
-                },
-                function (ret) {
-                    Toaster.reqerror('Attachment deletion failed', ret);
-                }
+            xAPIStatementHelper.deleted_answer_attachment(
+                file, $scope.answer, $scope.tracking.getRegistration()
             );
         };
 
@@ -323,9 +315,9 @@ module.controller(
 module.controller(
     "AnswerEditModalController",
     ["$scope", "AnswerResource", "Toaster", "xAPI", "xAPIStatementHelper",
-        "answerAttachService", "AttachmentResource", "EditorOptions", "$uibModalInstance",
+        "answerAttachService", "EditorOptions", "$uibModalInstance",
     function ($scope, AnswerResource, Toaster, xAPI, xAPIStatementHelper,
-        answerAttachService, AttachmentResource, EditorOptions, $uibModalInstance)
+        answerAttachService, EditorOptions, $uibModalInstance)
     {
         //$scope.courseId
         //$scope.assignmentId
@@ -345,7 +337,7 @@ module.controller(
             function (ret) {
                 $scope.answer = ret;
                 if (ret.file) {
-                    $scope.answer.uploadedFile = ret.file
+                    $scope.answer.uploadedFile = true;
                 }
             },
             function (ret) {
@@ -373,19 +365,11 @@ module.controller(
         });
 
         $scope.deleteFile = function(file) {
-            AttachmentResource.delete({'fileId': file.id}).$promise.then(
-                function (ret) {
-                    Toaster.success('Attachment deleted successfully');
-                    $scope.answer.file = null;
-                    $scope.answer.uploadedFile = false;
+            $scope.answer.file = null;
+            $scope.answer.uploadedFile = false;
 
-                    xAPIStatementHelper.deleted_answer_attachment(
-                        file, $scope.answer, $scope.tracking.getRegistration()
-                    );
-                },
-                function (ret) {
-                    Toaster.reqerror('Attachment deletion failed', ret);
-                }
+            xAPIStatementHelper.deleted_answer_attachment(
+                file, $scope.answer, $scope.tracking.getRegistration()
             );
         };
 
@@ -433,9 +417,9 @@ module.controller(
 module.controller(
     "ComparisonExampleModalController",
     ["$scope", "AnswerResource", "Toaster",
-        "answerAttachService", "AttachmentResource", "EditorOptions", "$uibModalInstance",
+        "answerAttachService", "EditorOptions", "$uibModalInstance",
     function ($scope, AnswerResource, Toaster,
-        answerAttachService, AttachmentResource, EditorOptions, $uibModalInstance)
+        answerAttachService, EditorOptions, $uibModalInstance)
     {
         //$scope.courseId
         //$scope.assignmentId
@@ -449,7 +433,7 @@ module.controller(
         if ($scope.method == 'new') {
             // if answer is new, prepopulate the file upload area if needed
             if ($scope.answer.file) {
-                $scope.answer.uploadedFile = $scope.answer.file;
+                $scope.answer.uploadedFile = true;
             }
         } else if($scope.method == 'edit') {
             // refresh the answer if already exists
@@ -458,7 +442,7 @@ module.controller(
                 function (ret) {
                     $scope.answer = ret;
                     if (ret.file) {
-                        $scope.answer.uploadedFile = ret.file
+                        $scope.answer.uploadedFile = true;
                     }
                 },
                 function (ret) {
@@ -471,16 +455,8 @@ module.controller(
         $scope.resetFileUploader = answerAttachService.reset();
 
         $scope.deleteFile = function(file) {
-            AttachmentResource.delete({'fileId': file.id}).$promise.then(
-                function (ret) {
-                    Toaster.success('Attachment deleted successfully');
-                    $scope.answer.file = null;
-                    $scope.answer.uploadedFile = false;
-                },
-                function (ret) {
-                    Toaster.reqerror('Attachment deletion failed', ret);
-                }
-            );
+            $scope.answer.file = null;
+            $scope.answer.uploadedFile = false;
         };
 
         $scope.answerSubmit = function () {

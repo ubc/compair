@@ -13,7 +13,6 @@ from compair.core import db, event
 from compair.models import Course, CourseRole, UserCourse, Answer, \
     Assignment, AssignmentCriterion, File, ComparisonExample
 from .util import pagination, new_restful_api, get_model_changes
-from .file import duplicate_file
 
 course_api = Blueprint('course_api', __name__)
 api = new_restful_api(course_api)
@@ -240,9 +239,6 @@ class CourseDuplicateAPI(Resource):
         )
         db.session.add(new_user_course)
 
-        assignment_files_to_duplicate = []
-        answer_files_to_duplicate = []
-
         # duplicate assignments
         for assignment in assignments:
             # this should never be null due
@@ -258,6 +254,7 @@ class CourseDuplicateAPI(Resource):
             duplicate_assignment = Assignment(
                 course=duplicate_course,
                 user_id=current_user.id,
+                file=assignment.file,
                 name=assignment.name,
                 description=assignment.description,
 
@@ -276,15 +273,9 @@ class CourseDuplicateAPI(Resource):
                 enable_self_evaluation=assignment.enable_self_evaluation,
                 pairing_algorithm=assignment.pairing_algorithm
             )
-
-            # register assignemnt files for later
-            if assignment.file and assignment.file.active:
-                assignment_files_to_duplicate.append(
-                    (assignment.file, duplicate_assignment)
-                )
             db.session.add(duplicate_assignment)
 
-            # duplicate assignemnt criteria
+            # duplicate assignment criteria
             for assignment_criterion in assignment.assignment_criteria:
                 if not assignment_criterion.active:
                     continue
@@ -295,7 +286,7 @@ class CourseDuplicateAPI(Resource):
                 )
                 db.session.add(duplicate_assignment_criterion)
 
-            # duplicate assignemnt comparisons examples
+            # duplicate assignment comparisons examples
             for comparison_example in assignment.comparison_examples:
                 answer1 = comparison_example.answer1
                 answer2 = comparison_example.answer2
@@ -304,32 +295,24 @@ class CourseDuplicateAPI(Resource):
                 duplicate_answer1 = Answer(
                     assignment=duplicate_assignment,
                     user_id=current_user.id,
+                    file=answer1.file,
                     content=answer1.content,
                     practice=answer1.practice,
                     active=answer1.active,
                     draft=answer1.draft
                 )
-                # register assignemnt files for later
-                if answer1.file and answer1.file.active:
-                    answer_files_to_duplicate.append(
-                        (answer1.file, duplicate_answer1)
-                    )
                 db.session.add(duplicate_answer1)
 
                 # duplicate assignemnt comparisons example answers
                 duplicate_answer2 = Answer(
                     assignment=duplicate_assignment,
                     user_id=current_user.id,
+                    file=answer2.file,
                     content=answer2.content,
                     practice=answer2.practice,
                     active=answer2.active,
                     draft=answer2.draft
                 )
-                # register assignemnt files for later
-                if answer2.file and answer2.file.active:
-                    answer_files_to_duplicate.append(
-                        (answer2.file, duplicate_answer2)
-                    )
                 db.session.add(duplicate_answer2)
 
                 duplicate_comparison_example = ComparisonExample(
@@ -339,20 +322,7 @@ class CourseDuplicateAPI(Resource):
                 )
                 db.session.add(duplicate_comparison_example)
 
-
         db.session.commit()
-
-        for (file, duplicate_assignment) in assignment_files_to_duplicate:
-            duplicate_assignment.file = duplicate_file(
-                file, Assignment.__name__, duplicate_assignment.id)
-
-            db.session.commit()
-
-        for (file, duplicate_answer) in answer_files_to_duplicate:
-            duplicate_answer.file = duplicate_file(
-                file, Answer.__name__, duplicate_answer.id)
-
-            db.session.commit()
 
         on_course_duplicate.send(
             self,
