@@ -176,18 +176,21 @@ module.service('attachService',
 
     var onComplete = function() {
         return function(fileItem, response) {
-            if (response) {
-                file = response['file'];
+            if (response && response.file) {
+                file = response.file;
             }
         };
     };
 
     var onError = function() {
         return function(fileItem, response, status) {
+            fileItem.cancel();
+            fileItem.remove();
+            reset();
             if (response == '413') {
                 Toaster.error("File Size Error", "The file is larger than 25MB. Please upload a smaller file.");
             } else {
-                Toaster.reqerror("Attachment Fail", status);
+                Toaster.reqerror("Attachment Upload Fail", status);
             }
         };
     };
@@ -265,8 +268,8 @@ module.service('answerAttachService',
     var uploadedCallback = function(fileItem) {};
     var onComplete = function() {
         return function(fileItem, response) {
-            if (response) {
-                file = response['file'];
+            if (response && response.file) {
+                file = response.file;
                 uploadedCallback(file);
             }
         };
@@ -274,10 +277,13 @@ module.service('answerAttachService',
 
     var onError = function() {
         return function(fileItem, response, status) {
+            fileItem.cancel();
+            fileItem.remove();
+            reset();
             if (response == '413') {
                 Toaster.error("File Size Error", "The file is larger than 25MB. Please upload a smaller file.");
             } else {
-                Toaster.reqerror("Attachment Fail", status);
+                Toaster.reqerror("Attachment Upload Fail", status);
             }
         };
     };
