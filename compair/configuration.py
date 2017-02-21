@@ -22,6 +22,7 @@ Currently the supported environment variables:
 
 import os
 
+from distutils.util import strtobool
 from flask import Config
 from sqlalchemy.engine.url import URL
 
@@ -64,22 +65,30 @@ if 'DATABASE' in config:
     del config['DATABASE']
 
 env_overridables = [
-    'APP_LOGIN_ENABLED', 'CAS_LOGIN_ENABLED', 'LTI_LOGIN_ENABLED',
     'CAS_SERVER', 'CAS_AFTER_LOGIN', 'CAS_AFTER_LOGOUT',
-    'CAS_LOGIN_ROUTE', 'CAS_LOGOUT_ROUTE',
-    'CAS_LOGOUT_RETURN_URL',
+    'CAS_LOGIN_ROUTE', 'CAS_LOGOUT_ROUTE', 'CAS_LOGOUT_RETURN_URL',
     'CAS_VALIDATE_ROUTE', 'CAS_ATTRIBUTES_TO_STORE',
     'SECRET_KEY', 'REPORT_FOLDER', 'UPLOAD_FOLDER',
     'ATTACHMENT_UPLOAD_FOLDER', 'ASSET_LOCATION', 'ASSET_CLOUD_URI_PREFIX',
-    'CELERY_ALWAYS_EAGER', 'CELERY_RESULT_BACKEND', 'CELERY_BROKER_URL',
-    'XAPI_ENABLED', 'XAPI_APP_BASE_URL',
+    'CELERY_RESULT_BACKEND', 'CELERY_BROKER_URL',
+    'XAPI_APP_BASE_URL',
     'LRS_STATEMENT_ENDPOINT', 'LRS_AUTH', 'LRS_USERNAME', 'LRS_PASSWORD',
-    'LRS_ACTOR_ACCOUNT_USE_CAS',
     'LRS_ACTOR_ACCOUNT_CAS_IDENTIFIER', 'LRS_ACTOR_ACCOUNT_CAS_HOMEPAGE',
-    'GA_TRACKING_ID', 'ENFORCE_SSL']
+    'GA_TRACKING_ID'
+]
+
+env_bool_overridables = [
+    'APP_LOGIN_ENABLED', 'CAS_LOGIN_ENABLED', 'LTI_LOGIN_ENABLED',
+    'CELERY_ALWAYS_EAGER', 'XAPI_ENABLED', 'LRS_ACTOR_ACCOUNT_USE_CAS',
+    'ENFORCE_SSL'
+]
 
 for env in env_overridables:
-    if os.environ.get(env):
+    if os.environ.get(env) != None:
         config[env] = os.environ.get(env)
+
+for env in env_bool_overridables:
+    if os.environ.get(env) != None:
+        config[env] = strtobool(os.environ.get(env))
 
 # print config

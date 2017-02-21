@@ -31,6 +31,7 @@ services:
       - DEV=1
       - CELERY_BROKER_URL=redis://redis:6379
       #- GA_TRACKING_ID=12345
+      - ENFORCE_SSL=0
     volumes:
       - .:/code
       - ./.data/persistent:/code/persistent
@@ -51,6 +52,7 @@ services:
       - DEV=1
       - CELERY_BROKER_URL=redis://redis:6379
       - C_FORCE_ROOT=1
+      - ENFORCE_SSL=0
   web:
     image: nginx:1.11
     volumes:
