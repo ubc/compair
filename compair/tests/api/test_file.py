@@ -104,10 +104,15 @@ class FileRetrieveTests(ComPAIRAPITestCase):
         url = '/api/attachment'
         test_formats = [
             ('pdf', 'application/pdf'),
+            ('PDF', 'application/pdf'),
             ('mp3', 'audio/mpeg'),
+            ('MP3', 'audio/mpeg'),
             ('mp4', 'video/mp4'),
+            ('MP4', 'video/mp4'),
             ('jpg', 'image/jpeg'),
-            ('jpeg', 'image/jpeg')
+            ('JPG', 'image/jpeg'),
+            ('jpeg', 'image/jpeg'),
+            ('JPEG', 'image/jpeg')
         ]
 
         # test login required
@@ -117,6 +122,20 @@ class FileRetrieveTests(ComPAIRAPITestCase):
         uploaded_file.close()
 
         with self.login(self.fixtures.instructor.username):
+            # test no file uploaded
+            filename = 'alias.pdf'
+            rv = self.client.post(url, data=dict())
+            self.assert400(rv)
+            print(rv.json)
+            self.assertEqual("No file attachment found", rv.json['error'])
+
+            # test no file uploaded
+            filename = 'alias.xyz'
+            uploaded_file = io.BytesIO(b"this is a test")
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+            self.assert400(rv)
+            self.assertEqual("Invalid file extension", rv.json['error'])
+
             for extension, mimetype in test_formats:
                 filename = 'alias.'+extension
 
@@ -127,9 +146,9 @@ class FileRetrieveTests(ComPAIRAPITestCase):
 
                 actual_file = rv.json['file']
                 self.files_to_cleanup.append(actual_file['name'])
-                self.assertEqual(actual_file['id']+"."+extension, actual_file['name'])
+                self.assertEqual(actual_file['id']+"."+extension.lower(), actual_file['name'])
                 self.assertEqual(filename, actual_file['alias'])
-                self.assertEqual(extension, actual_file['extension'])
+                self.assertEqual(extension.lower(), actual_file['extension'])
                 self.assertEqual(mimetype, actual_file['mimetype'])
 
     def test_delete_attachment(self):
