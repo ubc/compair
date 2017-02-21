@@ -545,8 +545,13 @@ describe('course-module', function () {
 
                     // check course start date automatic generation
                     var startOfWeek = new Date();
-                    // +1 for converting to ISO 8601 first day of week (monday)
-                    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
+                    // -day of week+1 for converting to ISO 8601 first day of week (monday)
+                    // -6 for sundays (since they are d)
+                    if (startOfWeek.getDay() == 0) {
+                        startOfWeek.setDate(startOfWeek.getDate() - 6);
+                    } else {
+                        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
+                    }
 
                     expect($rootScope.duplicateCourse.date.course_start.date.toDateString()).toEqual(startOfWeek.toDateString());
 
@@ -580,7 +585,7 @@ describe('course-module', function () {
                         // +1 for converting to ISO 8601 first day of week (monday)
                         startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
 
-                        for (var dayIndex = 0; dayIndex < 1; dayIndex++) {
+                        for (var dayIndex = 0; dayIndex < 7; dayIndex++) {
                             var day = new Date(startOfWeek);
                             day.setDate(startOfWeek.getDate() + dayIndex);
 
