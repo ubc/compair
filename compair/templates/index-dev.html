@@ -9,9 +9,6 @@
         <link rel="icon" href="data:;base64,iVBORw0KGgo=">
         <title>ComPAIR</title>
 
-        <!-- needed when ckeditor is minified or when running unit tests -->
-        {#<script src="{{ url_for('static', filename='lib_extension/ckeditor/basepath.js') }}"></script>#}
-
         <!-- Bower Installed Libs, automatically inserted using gulp modules -->
         <!-- bower:css -->
         <link rel="stylesheet" href="{{ url_for('static', filename='lib/bootstrap/dist/css/bootstrap.css') }}" />
@@ -67,12 +64,31 @@
         <!-- ComPAIR Stylesheet -->
         <!-- build:prod_compile_minify_css -->
         <link rel="stylesheet/less" type="text/css" href="{{ url_for('static', filename='less/compair.less') }}" />
-        <script src="//cdnjs.cloudflare.com/ajax/libs/less.js/2.5.1/less.min.js">
-        </script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/less.js/2.5.1/less.min.js"></script>
         <!-- endbuild -->
 
         <!-- MathJax, should figure out how to bower manage this -->
         <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_HTMLorMML&delayStartupUntil=configured"></script>
+        <script>
+            // config MathJax
+            MathJax.Hub.Config({
+                skipStartupTypeset: true
+            });
+            MathJax.Hub.Configured();
+
+            // config CKEDITOR
+            CKEDITOR.plugins.addExternal( 'combinedmath', '/app/lib_extension/ckeditor/plugins/combinedmath/' );
+            CKEDITOR.on('dialogDefinition', function(ev) {
+                var dialogName = ev.data.name;
+                var dialog = ev.data.definition.dialog;
+                var dialogDefinition = ev.data.definition;
+
+                if (dialogName === 'link') {
+                    var target = dialogDefinition.getContents('target');
+                    target.get('linkTargetType')['default'] = '_blank';
+                }
+            });
+        </script>
 
         <!-- build:prod_minify_js -->
         <!-- AngularJS Modules/Controllers/Services/etc -->

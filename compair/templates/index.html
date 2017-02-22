@@ -27,6 +27,26 @@
 
         <!-- MathJax, should figure out how to bower manage this -->
         <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_HTMLorMML&delayStartupUntil=configured"></script>
+        <script>
+            // config MathJax
+            MathJax.Hub.Config({
+                skipStartupTypeset: true
+            });
+            MathJax.Hub.Configured();
+
+            // config CKEDITOR
+            CKEDITOR.plugins.addExternal( 'combinedmath', '/app/lib_extension/ckeditor/plugins/combinedmath/' );
+            CKEDITOR.on('dialogDefinition', function(ev) {
+                var dialogName = ev.data.name;
+                var dialog = ev.data.definition.dialog;
+                var dialogDefinition = ev.data.definition;
+
+                if (dialogName === 'link') {
+                    var target = dialogDefinition.getContents('target');
+                    target.get('linkTargetType')['default'] = '_blank';
+                }
+            });
+        </script>
 
         <!-- build:prod_minify_js -->
         <script src="{{ compair_js }}"></script>
