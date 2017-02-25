@@ -2,11 +2,11 @@ import os
 
 from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask, render_template
 from flask_login import current_user, login_required, login_user, logout_user
-from compair import cas
 from compair.core import db, event
 from compair.authorization import get_logged_in_user_permissions
 from compair.models import User, LTIUser, LTIResourceLink, LTIUserResourceLink, UserCourse, LTIContext, \
     ThirdPartyUser, ThirdPartyType
+from compair.cas import get_cas_login_url, validate_cas_ticket, get_cas_logout_url
 
 login_api = Blueprint("login_api", __name__, url_prefix='/api')
 
@@ -71,7 +71,7 @@ def logout():
                 url = jsonify({'redirect': return_url})
 
     elif sess.get('CAS_LOGIN'):
-        url = jsonify({'redirect': url_for('cas.logout')})
+        url = jsonify({'redirect': url_for('login_api.cas_logout')})
 
     sess.clear()
     return url
@@ -88,9 +88,15 @@ def session():
 def get_permission():
     return jsonify(get_logged_in_user_permissions())
 
+@login_api.route('/cas/login')
+def cas_login():
+    if not current_app.config.get('CAS_LOGIN_ENABLED'):
+        return "", 403
 
-@login_api.route('/auth/cas', methods=['GET'])
-def auth_cas():
+    return redirect(get_cas_login_url())
+
+@login_api.route('/cas/auth', methods=['GET'])
+def cas_auth():
     """
     CAS Authentication Endpoint. Authenticate user through CAS. If user doesn't exists,
     set message in session so that frontend can get the message through /session call
@@ -98,57 +104,75 @@ def auth_cas():
     if not current_app.config.get('CAS_LOGIN_ENABLED'):
         return "", 403
 
-    username = cas.username
     url = "/app/#/lti" if sess.get('LTI') else "/"
+    error_message = None
+    ticket = request.args.get("ticket")
 
-    if username is not None:
-        thirdpartyuser = ThirdPartyUser.query. \
-            filter_by(
-                unique_identifier=username,
-                third_party_type=ThirdPartyType.cas
-            ) \
-            .one_or_none()
-        msg = None
-
-        # store additional CAS attributes if needed
-        additional_params = None
-        if cas.attributes and len(current_app.config.get('CAS_ATTRIBUTES_TO_STORE')) > 0:
-            additional_params = {}
-            for attr_name in current_app.config.get('CAS_ATTRIBUTES_TO_STORE'):
-                additional_params[attr_name] = cas.attributes.get('cas:'+attr_name)
-
-        if not thirdpartyuser or not thirdpartyuser.user:
-            if sess.get('LTI') and sess.get('oauth_create_user_link'):
-                sess['CAS_CREATE'] = True
-                sess['CAS_UNIQUE_IDENTIFIER'] = cas.username
-                sess['CAS_ADDITIONAL_PARAMS'] = additional_params
-                url = '/app/#/oauth/create'
-            else:
-                current_app.logger.debug("Login failed, invalid username for: " + username)
-                msg = 'You don\'t have access to this application.'
-        else:
-            authenticate(thirdpartyuser.user, login_method=thirdpartyuser.third_party_type.value)
-            thirdpartyuser.params = additional_params
-
-            if sess.get('LTI') and sess.get('oauth_create_user_link'):
-                lti_user = LTIUser.query.get_or_404(sess['lti_user'])
-                lti_user.compair_user_id = thirdpartyuser.user_id
-                sess.pop('oauth_create_user_link')
-
-            if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
-                lti_context = LTIContext.query.get_or_404(sess['lti_context'])
-                lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
-                lti_context.update_enrolment(thirdpartyuser.user_id, lti_user_resource_link.course_role)
-
-            db.session.commit()
-            sess['CAS_LOGIN'] = True
+    # check if token isn't present
+    if not ticket:
+        error_message = "No token in request"
     else:
-        msg = 'Login Failed. Expecting CAS username to be set.'
+        validation_response = validate_cas_ticket(ticket)
 
-    if msg is not None:
-        sess['CAS_AUTH_MSG'] = msg
+        if not validation_response.success:
+            current_app.logger.debug(
+                "CAS Server did NOT validate ticket:%s and included this response:%s" % (ticket, validation_response.response)
+            )
+            error_message = "Login Failed. CAS ticket was invalid."
+        elif not validation_response.user:
+            current_app.logger.debug("CAS Server responded with valid ticket but no user")
+            error_message = "Login Failed. Expecting CAS username to be set."
+        else:
+            current_app.logger.debug(
+                "CAS Server responded with user:%s and attributes:%s" % (validation_response.user, validation_response.attributes)
+            )
+            username = validation_response.user
+
+            thirdpartyuser = ThirdPartyUser.query. \
+                filter_by(
+                    unique_identifier=username,
+                    third_party_type=ThirdPartyType.cas
+                ) \
+                .one_or_none()
+
+            # store additional CAS attributes if needed
+            if not thirdpartyuser or not thirdpartyuser.user:
+                if sess.get('LTI') and sess.get('oauth_create_user_link'):
+                    sess['CAS_CREATE'] = True
+                    sess['CAS_UNIQUE_IDENTIFIER'] = username
+                    sess['CAS_PARAMS'] = validation_response.attributes
+                    url = '/app/#/oauth/create'
+                else:
+                    current_app.logger.debug("Login failed, invalid username for: " + username)
+                    error_message = "You don't have access to this application."
+            else:
+                authenticate(thirdpartyuser.user, login_method=thirdpartyuser.third_party_type.value)
+                thirdpartyuser.params = validation_response.attributes
+
+                if sess.get('LTI') and sess.get('oauth_create_user_link'):
+                    lti_user = LTIUser.query.get_or_404(sess['lti_user'])
+                    lti_user.compair_user_id = thirdpartyuser.user_id
+                    sess.pop('oauth_create_user_link')
+
+                if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
+                    lti_context = LTIContext.query.get_or_404(sess['lti_context'])
+                    lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
+                    lti_context.update_enrolment(thirdpartyuser.user_id, lti_user_resource_link.course_role)
+
+                db.session.commit()
+                sess['CAS_LOGIN'] = True
+
+    if error_message is not None:
+        sess['CAS_AUTH_MSG'] = error_message
 
     return redirect(url)
+
+@login_api.route('/cas/logout', methods=['GET'])
+def cas_logout():
+    if not current_app.config.get('CAS_LOGIN_ENABLED'):
+        return "", 403
+
+    return redirect(get_cas_logout_url())
 
 
 def authenticate(user, login_method=None):

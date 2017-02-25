@@ -34,15 +34,18 @@ class LoginAPITests(ComPAIRAPITestCase):
         user = self.data.create_user(SystemRole.instructor)
         third_party_user = auth_data.create_third_party_user(user=user)
 
-        with mock.patch('flask_cas.CAS.username', new_callable=mock.PropertyMock) as mocked_cas_username:
+        response_mock = mock.MagicMock()
+        response_mock.success = True
+        response_mock.user =  third_party_user.unique_identifier
+        response_mock.attributes = None
+
+        with mock.patch('compair.api.login.validate_cas_ticket', return_value=response_mock):
             # test cas login disabled
             self.app.config['CAS_LOGIN_ENABLED'] = False
-            mocked_cas_username.return_value = third_party_user.unique_identifier
-            rv = self.client.get('/api/auth/cas', data={}, content_type='application/json', follow_redirects=True)
+            rv = self.client.get('/api/cas/auth?ticket=mock_ticket', follow_redirects=True)
             self.assert403(rv)
 
             # test cas login enabled
             self.app.config['CAS_LOGIN_ENABLED'] = True
-            mocked_cas_username.return_value = third_party_user.unique_identifier
-            rv = self.client.get('/api/auth/cas', data={}, content_type='application/json', follow_redirects=True)
+            rv = self.client.get('/api/cas/auth?ticket=mock_ticket', follow_redirects=True)
             self.assert200(rv)
