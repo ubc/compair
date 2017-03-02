@@ -152,11 +152,16 @@ class ComPAIRAPITestCase(ComPAIRTestCase):
         self.client.delete('/api/logout', follow_redirects=True)
 
     @contextmanager
-    def cas_login(self, cas_username):
-        with mock.patch('flask_cas.CAS.username', new_callable=mock.PropertyMock) as mocked_cas_username:
-            mocked_cas_username.return_value = cas_username
-            rv = self.client.get('/api/auth/cas', data={}, content_type='application/json', follow_redirects=True)
-            self.assert200(rv)
+    def cas_login(self, cas_username, follow_redirects=True):
+        response_mock = mock.MagicMock()
+        response_mock.success = True
+        response_mock.user = cas_username
+        response_mock.attributes = {}
+
+        with mock.patch('compair.api.login.validate_cas_ticket', return_value=response_mock):
+            rv = self.client.get('/api/cas/auth?ticket=mock_ticket', follow_redirects=follow_redirects)
+            if follow_redirects:
+                self.assert200(rv)
             yield rv
             self.client.delete('/api/logout', follow_redirects=True)
 

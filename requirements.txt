@@ -15,7 +15,7 @@ passlib==1.6.2
 python-dateutil==2.4.2
 python-mimeparse==0.1.4
 six==1.10.0
-git+git://github.com/cameronbwhite/Flask-CAS.git@v1.0.1
+caslib.py==2.2.2
 alembic==0.8.8
 enum34==1.1.6
 SQLAlchemy-Enum34==1.0.1

@@ -877,9 +877,8 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assert400(rv)
             self.assertEqual(rv.json['error'], "LTI membership service is not supported for this course")
 
-    @mock.patch('flask_cas.CAS.username', new_callable= mock.PropertyMock)
-    def test_cas_auth_via_lti_launch(self, mocked_cas_username):
-        url = '/api/auth/cas'
+    def test_cas_auth_via_lti_launch(self):
+        url = '/api/cas/auth?ticket=mock_ticket'
         auth_data = ThirdPartyAuthTestData()
 
         lti_consumer = self.lti_data.get_consumer()
@@ -903,68 +902,66 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             user = self.data.create_user(system_role)
             third_party_user = auth_data.create_third_party_user(user=user)
-            mocked_cas_username.return_value = third_party_user.unique_identifier
 
-            with self.client.get(url, data={}, content_type='application/json', follow_redirects=False) as rv:
+            with self.cas_login(third_party_user.unique_identifier, follow_redirects=False) as rv:
                 self.assertRedirects(rv, '/app/#/lti')
 
-            # check session
-            with self.client.session_transaction() as sess:
-                self.assertTrue(sess.get('LTI'))
+                # check session
+                with self.client.session_transaction() as sess:
+                    self.assertTrue(sess.get('LTI'))
 
-                # check that oauth_create_user_link is None
-                self.assertIsNone(sess.get('oauth_create_user_link'))
+                    # check that oauth_create_user_link is None
+                    self.assertIsNone(sess.get('oauth_create_user_link'))
 
-                # check that user is logged in
-                self.assertEqual(str(user.id), sess.get('user_id'))
+                    # check that user is logged in
+                    self.assertEqual(str(user.id), sess.get('user_id'))
 
-                self.assertIsNone(sess.get('CAS_CREATE'))
-                self.assertIsNone(sess.get('CAS_UNIQUE_IDENTIFIER'))
+                    self.assertIsNone(sess.get('CAS_CREATE'))
+                    self.assertIsNone(sess.get('CAS_UNIQUE_IDENTIFIER'))
 
-            # check that lti_user is now linked
-            self.assertEqual(lti_user.compair_user_id, user.id)
+                # check that lti_user is now linked
+                self.assertEqual(lti_user.compair_user_id, user.id)
 
-            # create fresh lti_user
-            lti_user = self.lti_data.create_user(lti_consumer, system_role)
+                # create fresh lti_user
+                lti_user = self.lti_data.create_user(lti_consumer, system_role)
 
-            course = self.data.create_course()
-            lti_context.compair_course_id = course.id
-            db.session.commit()
+                course = self.data.create_course()
+                lti_context.compair_course_id = course.id
+                db.session.commit()
 
-            # linked third party user (with linked context id)
-            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
-                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
-                self.assert200(rv)
+                # linked third party user (with linked context id)
+                with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                        user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                    self.assert200(rv)
 
             user = self.data.create_user(system_role)
             third_party_user = auth_data.create_third_party_user(user=user)
-            mocked_cas_username.return_value = third_party_user.unique_identifier
 
-            with self.client.get(url, data={}, content_type='application/json', follow_redirects=False) as rv:
+            with self.cas_login(third_party_user.unique_identifier, follow_redirects=False) as rv:
                 self.assertRedirects(rv, '/app/#/lti')
 
-            # check session
-            with self.client.session_transaction() as sess:
-                self.assertTrue(sess.get('LTI'))
+                # check session
+                with self.client.session_transaction() as sess:
+                    self.assertTrue(sess.get('LTI'))
 
-                # check that oauth_create_user_link is None
-                self.assertIsNone(sess.get('oauth_create_user_link'))
+                    # check that oauth_create_user_link is None
+                    self.assertIsNone(sess.get('oauth_create_user_link'))
 
-                # check that user is logged in
-                self.assertEqual(str(user.id), sess.get('user_id'))
+                    # check that user is logged in
+                    self.assertEqual(str(user.id), sess.get('user_id'))
 
-                self.assertIsNone(sess.get('CAS_CREATE'))
-                self.assertIsNone(sess.get('CAS_UNIQUE_IDENTIFIER'))
+                    self.assertIsNone(sess.get('CAS_CREATE'))
+                    self.assertIsNone(sess.get('CAS_UNIQUE_IDENTIFIER'))
 
-            # check that lti_user is now linked
-            self.assertEqual(lti_user.compair_user_id, user.id)
+                # check that lti_user is now linked
+                self.assertEqual(lti_user.compair_user_id, user.id)
 
-            # verify enrollment
-            user_course = UserCourse.query \
-                .filter_by(
-                    user_id=user.id,
-                    course_id=course.id,
-                    course_role=course_role
-                ) \
-                .one_or_none()
-            self.assertIsNotNone(user_course)
+                # verify enrollment
+                user_course = UserCourse.query \
+                    .filter_by(
+                        user_id=user.id,
+                        course_id=course.id,
+                        course_role=course_role
+                    ) \
+                    .one_or_none()
+                self.assertIsNotNone(user_course)

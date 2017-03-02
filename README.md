@@ -109,7 +109,7 @@ xAPI statements require an actor (currently logged in user) account information.
 
 `LRS_ACTOR_ACCOUNT_CAS_HOMEPAGE`: Set the homepage of the CAS account
 
-`LRS_ACTOR_ACCOUNT_CAS_IDENTIFIER`: Optionally set a param to set as the actor's unique key for the CAS account. Requires `CAS_ATTRIBUTES_TO_STORE` to be set when not using default setting. (uses CAS username by default)
+`LRS_ACTOR_ACCOUNT_CAS_IDENTIFIER`: Optionally set a param to set as the actor's unique key for the CAS account. (uses CAS username by default)
 
 Restart server after making any changes to settings
 
@@ -144,9 +144,11 @@ Restart server after making any changes to settings
 
 `CAS_LOGIN_ENABLED`: Enable login via CAS server (default: True)
 
-`CAS_ATTRIBUTES_TO_STORE`: Array of CAS attributes to store in the third_party_user table's param column. (default: empty)
+`CAS_SERVER`: Url of the CAS Server (do not include trailing slash)
 
-See [Flask-CAS](https://github.com/cameronbwhite/Flask-CAS) for other CAS settings
+`CAS_AUTH_PREFIX`: Prefix to CAS action (default '/cas')
+
+`CAS_USE_SAML`: Determines which authorization endpoint to use. '/serviceValidate' if false (default). '/samlValidate' if true.
 
 Restart server after making any changes to settings
 
