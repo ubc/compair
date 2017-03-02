@@ -273,7 +273,7 @@ class UserListAPI(Resource):
                     thirdpartyuser = ThirdPartyUser(
                         third_party_type=ThirdPartyType.cas,
                         unique_identifier=sess.get('CAS_UNIQUE_IDENTIFIER'),
-                        params=sess.get('CAS_ADDITIONAL_PARAMS'),
+                        params=sess.get('CAS_PARAMS'),
                         user=user
                     )
                     login_method = ThirdPartyType.cas.value

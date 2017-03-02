@@ -4,7 +4,6 @@
 from blinker import Namespace
 from flask import session as sess
 from flask_bouncer import Bouncer
-from flask_cas import CAS
 from celery import Celery
 
 from flask_login import LoginManager, user_logged_in
@@ -22,9 +21,6 @@ bouncer = Bouncer()
 
 # initialize Flask-Login
 login_manager = LoginManager()
-
-# initialize CAS
-cas = CAS()
 
 # initialize celery
 celery = Celery(

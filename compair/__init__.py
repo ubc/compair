@@ -1,6 +1,8 @@
 import json
 import os
 import ssl
+import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 from flask import Flask, redirect, session as sess, abort, jsonify, url_for
 from flask_login import current_user
@@ -8,7 +10,7 @@ from sqlalchemy.orm import joinedload
 from werkzeug.routing import BaseConverter
 
 from .authorization import define_authorization
-from .core import login_manager, bouncer, db, cas, celery
+from .core import login_manager, bouncer, db, celery
 from .configuration import config
 from .models import User, File
 from .activity import log
@@ -75,6 +77,7 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
         else:
             # Handle target environment that doesn't support HTTPS verification
             ssl._create_default_https_context = _create_unverified_https_context
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
     app.logger.debug("Application Configuration: " + str(app.config))
 
@@ -109,8 +112,6 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
                 response.status_code = 403
                 return response
             return abort(401)
-
-        cas.init_app(app)
 
         # Flask-Bouncer initialization
         bouncer.init_app(app)
