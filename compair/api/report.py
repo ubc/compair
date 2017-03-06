@@ -113,15 +113,15 @@ class ReportRootAPI(Resource):
         elif report_type == "peer_feedback":
             titles1 = [
                 "",
-                "Sender", "", "",
-                "Receiver", "", "",
+                "Feedback Author", "", "",
+                "Answer Author", "", "",
                 "", ""
             ]
             titles2 = [
                 "Assignment",
                 "Last Name", "First Name", "Student No",
                 "Last Name", "First Name", "Student No",
-                "Type", "Feedback"
+                "Feedback Type", "Feedback"
             ]
             data = peer_feedback_report(course, assignments, group_name)
             titles = [titles1, titles2]
@@ -393,11 +393,20 @@ def peer_feedback_report(course, assignments, group_name):
 
             if len(user_sent_feedback) > 0:
                 for feedback in user_sent_feedback:
+
+                    feedback_type = ""
+                    if feedback.comment_type == AnswerCommentType.evaluation:
+                        feedback_type = "Comparison"
+                    elif feedback.comment_type == AnswerCommentType.private:
+                        feedback_type = "Private Reply"
+                    elif feedback.comment_type == AnswerCommentType.public:
+                        feedback_type = "Public Reply"
+
                     temp = [
                         assignment.name,
                         user.lastname, user.firstname, user.student_number,
                         feedback.receiver_lastname, feedback.receiver_firstname, feedback.receiver_student_number,
-                        feedback.comment_type.value, strip_html(feedback.content)
+                        feedback_type, strip_html(feedback.content)
                     ]
                     report.append(temp)
 
