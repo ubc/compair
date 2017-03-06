@@ -7,7 +7,7 @@ import re
 
 from data.fixtures.test_data import TestFixture
 from compair.tests.test_compair import ComPAIRAPITestCase
-from compair.models import CourseRole, Answer, Comparison, AnswerComment
+from compair.models import CourseRole, Answer, Comparison, AnswerComment, AnswerCommentType
 from compair.core import db
 from flask import current_app
 
@@ -665,8 +665,8 @@ class ReportAPITest(ComPAIRAPITestCase):
     def _check_peer_feedback_report_heading_rows(self, heading1, heading2):
         expected_heading1 = [
             "",
-            "Sender", "", "",
-            "Receiver", "", "",
+            "Feedback Author", "", "",
+            "Answer Author", "", "",
             "", ""
         ]
         self.assertEqual(expected_heading1, heading1)
@@ -674,7 +674,7 @@ class ReportAPITest(ComPAIRAPITestCase):
             "Assignment",
             "Last Name", "First Name", "Student No",
             "Last Name", "First Name", "Student No",
-            "Type", "Feedback"
+            "Feedback Type", "Feedback"
         ]
         self.assertEqual(expected_heading2, heading2)
 
@@ -690,11 +690,19 @@ class ReportAPITest(ComPAIRAPITestCase):
                 row = next(reader)
                 answer_user = answer_comment.answer.user
 
+                feedback_type = ""
+                if answer_comment.comment_type == AnswerCommentType.evaluation:
+                    feedback_type = "Comparison"
+                elif answer_comment.comment_type == AnswerCommentType.private:
+                    feedback_type = "Private Reply"
+                elif answer_comment.comment_type == AnswerCommentType.public:
+                    feedback_type = "Public Reply"
+
                 excepted_row = [
                     assignment.name,
                     student.lastname, student.firstname, student.student_number,
                     answer_user.lastname, answer_user.firstname, answer_user.student_number,
-                    answer_comment.comment_type.value, self._strip_html(answer_comment.content)
+                    feedback_type, self._strip_html(answer_comment.content)
                 ]
 
                 self.assertEqual(row, excepted_row)
