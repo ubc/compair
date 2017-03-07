@@ -947,20 +947,6 @@ describe('assignment-module', function () {
                 expect($rootScope.showTab('comparisons')).toBe(true);
             });
 
-            it('should be able to change to feedback tab', function () {
-                $rootScope.setTab('feedback');
-                $rootScope.$emit('$routeUpdate');
-                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers?author=1abcABC123-abcABC123_Z').respond({
-                    "objects": [],
-                    "page": 1,
-                    "pages": 0,
-                    "per_page": 20,
-                    "total": 0
-                });
-                $httpBackend.flush();
-                expect($rootScope.showTab('feedback')).toBe(true);
-            });
-
             it('should be able to delete assignment', function () {
                 $httpBackend.expectDELETE('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z').respond(mockAssignment);
                 $rootScope.deleteAssignment(mockAssignment.course_id, mockAssignment.id);

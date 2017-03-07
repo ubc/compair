@@ -409,21 +409,14 @@ module.controller("AssignmentViewController",
             if (tab == "comparisons") {
                 $scope.comparisons = AnswerResource.comparisons(params);
                 var answer_params = angular.extend({}, params, {author: $scope.loggedInUserId});
-                $scope.user_answers = AnswerResource.get(answer_params);
-            }
-            if (tab == "feedback") {
-                var answer_params = angular.extend({}, params, {author: $scope.loggedInUserId});
                 $scope.user_answers = AnswerResource.get(answer_params,
                     function (ret) {
                         ret.objects.forEach(function(answer) {
                             $scope.loadComments(answer);
                         });
-                    },
-                    function (ret) {
-                        Toaster.reqerror("Failed to load Answers", ret);
                     }
                 );
-            };
+            }
             xAPIStatementHelper.opened_page_section(tab + " tab");
         };
 

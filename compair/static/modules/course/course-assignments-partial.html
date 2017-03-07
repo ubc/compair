@@ -114,6 +114,13 @@
                         <span ng-if="assignment.compare_period && assignment.steps_left > 0">{{assignment.steps_left}} comparison<span ng-if="(assignment.steps_left) != 1">s</span></span>
                         needed from you
                     </li>
+                    <!-- Assignment Peer Feedback (for students) -->
+                    <li ng-if="!canManageAssignment && assignment.after_comparing && assignment.status.answers.feedback" class="label label-warning">
+                        You received
+                        <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}?tab=comparisons" class="label-link">
+                            {{assignment.status.answers.feedback}} peer review<span ng-if="assignment.status.answers.feedback != 1">s</span> &raquo;
+                        </a>
+                    </li>
                     <!-- Assignment Feedback (for instructors) -->
                     <li ng-if="canManageAssignment">
                         <span ng-if="!assignment.answer_period && !assignment.compare_period && !assignment.answers_available">Scheduled for {{assignment.answer_start | amDateFormat: 'MMM D'}}</span>
@@ -200,12 +207,6 @@
                 ng-show="!canManageAssignment && assignment.compare_period && !assignment.comparisons_left && assignment.self_evaluation_needed && !assignment.status.answers.answered">
                 Self-evaluation comparison unavailable<br />(You have not answered the assignment)
             </p>
-
-            <!-- BUTTON when user has feedback for their answer AND user is not an admin AND the comparison period is complete -->
-            <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}?tab=feedback" class="btn btn-success" title="See Feedback"
-               ng-show="assignment.status.answers.feedback && !canManageAssignment && assignment.after_comparing">
-                See Feedback ({{assignment.status.answers.feedback}})
-            </a>
         </div>
 
     </div>
