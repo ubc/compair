@@ -149,9 +149,11 @@ module.directive('comparisonPreview', function() {
                     content: "<p>The second student answer in the pair will appear here.</p>",
                     file: null
                 }
-                $scope.comparisons = [];
+                $scope.comparison = {
+                    comparison_criteria: []
+                };
                 angular.forEach($scope.assignment.criteria, function(criterion) {
-                    $scope.comparisons.push({
+                    $scope.comparison.comparison_criteria.push({
                         'criterion_id': criterion.id,
                         'criterion': criterion,
                         'content': ''

@@ -1,14 +1,9 @@
 
 <div>
-    <div class="row">
-        <div class="col-sm-10">
-            <label class="required-star">Comparison Criteria</label>
-        </div>
-        <div class="col-sm-2 text-center">
-            <label ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive && assignment.criteria.length > 1">Criteria Weight</label>
-        </div>
-    </div>
-
+    <label class="required-star">Comparison Criteria</label>
+    <p class="bg-warning text-warning alert" ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive && criteriaCanDraw()">
+        Note that with these criteria weights, it is possible for an answer pair to be scored (behind the scenes) as tied. This may affect the accuracy of answer pair selection and final answer rankings, but it will not change the comparison process for students.
+    </p>
 
     <div ng-repeat="(key, criterion) in assignment.criteria" class="row">
         <div class="col-sm-2">
@@ -45,16 +40,12 @@
                 <input class="form-control" type="number" min="0" ng-pattern="onlyNumbers" required
                     name="criterion_weight" ng-model="criterion.weight">
             </div>
-            <span class="text-muted">{{getCriterionWeightAsPercent(criterion.weight)|number:2}}%</span>
+            <span class="text-muted">{{getCriterionWeightAsPercent(criterion.weight)|number:2}}% weight</span>
             <br /><br />
         </div>
     </div>
 
     <comparison-preview ng-show="assignment.criteria.length > 0"></comparison-preview>
-    <p class="bg-warning text-warning alert" ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive && criteriaCanDraw()">
-        <i class="fa fa-warning"></i>
-        It is possible for students to have a draw when comparing asnwers.
-    </p>
 
     <div ng-show="assignment.criteria.length < 1">
         <p>No criteria added yet for this assignment. Please select or create a new one below.</p>
