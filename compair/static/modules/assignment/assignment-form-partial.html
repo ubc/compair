@@ -146,10 +146,23 @@
     </fieldset>
 
     <fieldset>
-        <legend>Criteria</legend>
+        <legend>Instructions &amp; Criteria</legend>
         <div class="instructional-text">
-            <p><strong>The criteria below appear when students compare answers</strong> for this assignment, to guide them in their critical-thinking process. For each criterion, students will need to choose a preferred answer from a given pair. Note that the number of criteria is permanently set once students start comparing, so you won't be able to add or drop criteria after comparing begins.</p>
+            <p><strong>The instructions and criteria below appear when students compare answers</strong> for this assignment, to guide them in their critical-thinking process. For each pair, students will need to provide peer feedback as prompted with the text below. For each criterion, students will need to choose a preferred answer from the given pair. Note that the number of criteria is permanently set once students start comparing, so you won't be able to add or drop criteria after comparing begins.</p>
         </div>
+        <label>Instructions</label>
+        <br />
+        <div ng-show="!assignment.peerFeedbackCheck">
+            <p>You are currently using the default: <em>"Use any instructor-provided guidelines or answer general questions, based on the criteria above: What did the author do well? Where might the author improve? Remember to make your comments—including criticisms—encouraging, respectful, and specific."</em></p>
+        </div>
+        <input id="peerFeedbackCheck" type="checkbox" ng-model="assignment.peerFeedbackCheck" ng-checked="assignment.peerFeedbackCheck || assignment.peer_feedback_prompt" ng-disabled="assignment.peer_feedback_prompt">
+        <label class="not-bold" for="peerFeedbackCheck">Customize the peer feedback instructions<span ng-if="assignment.peerFeedbackCheck || assignment.peer_feedback_prompt">:</span></label>
+        <div ng-if="assignment.peerFeedbackCheck || assignment.peer_feedback_prompt">
+            <div class="form-group">
+                <textarea ng-model="assignment.peer_feedback_prompt" id="assignmentPeerFeedbackPrompt" class="form-control" ckeditor="editorOptions" rows="4"></textarea>
+            </div>
+        </div>
+        <hr />
         <ng-include src="'modules/criterion/criterion-assignment-partial.html'"></ng-include>
     </fieldset>
 
@@ -267,23 +280,6 @@
                 </div>
             </div>
 
-        </div>
-
-        <br />
-
-        <input id="peerFeedbackCheck" type="checkbox" ng-model="assignment.peerFeedbackCheck" ng-checked="assignment.peerFeedbackCheck || assignment.peer_feedback_prompt" ng-disabled="assignment.peer_feedback_prompt">
-        <label class="not-bold" for="peerFeedbackCheck">Use custom peer feedback prompt</label>
-        <span ng-show="!showPeerFeedbackDefaultText">(<a ng-click="showPeerFeedbackDefaultText = true">show default</a>)</span>
-        <span ng-show="showPeerFeedbackDefaultText">(<a ng-click="showPeerFeedbackDefaultText = false;">hide default</a>)</span>
-        <div class="intro-text" ng-show="showPeerFeedbackDefaultText">
-            Use any instructor-provided guidelines or answer general questions, based on the criteria above:
-            <strong>What did the author do well? Where might the author improve?</strong>
-            Remember to make your comments—including criticisms—encouraging, respectful, and specific.
-        </div>
-        <div ng-if="assignment.peerFeedbackCheck || assignment.peer_feedback_prompt">
-            <div class="form-group">
-                <textarea ng-model="assignment.peer_feedback_prompt" id="assignmentPeerFeedbackPrompt" class="form-control" ckeditor="editorOptions" rows="4"></textarea>
-            </div>
         </div>
 
         <br />
