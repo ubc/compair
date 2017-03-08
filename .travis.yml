@@ -28,6 +28,8 @@ env:
     - secure: "W1l1V7Sa0tpYfz+fU0NObz+FcaA3wIUjovuMWhQU7+sqMHAmhPM2ajsRb0bgUoCBN1SW4KAi3lo06fFkmQjxR2D/U1iSUY5ahIFG+W3E8V5zWNLg/mdywDM2acWByhMCMjiBHGPFdGkXXf3pLmc/6XLs3WnPuV2o84xte67zMEo="
     # DOCKER_PASS
     - secure: "f4Z8sNwOpoSm2R0TyEsowL+edxEixCJT3qdS7s2G9zVlRTBzU33VrvBTpfgIJuFdMlGKNV16iHL7iWiLtyGcq07HlgffJc1KKWZGG8JuhykB+GKSOh/lNX/AgIrIUDtmLEpi1/MSXmiFbISf60C4GYstxtMfHeC7/WsVsGyfk7A="
+    # Gitlab deployment key DEPLOYMENT_TOKEN
+    - secure: "VGcweRjhmDkVgx3tL3R6/RWmS2ulKWfc3R8u4taMQF1hBCkFLdunkNR5Am9stkHmXCbiaXBnn9uE5Yv7sFx09oVq+i9kdbrYoN2ujVsSI/1dTUA8vbNps8/GQpICrU3qcgEUwHX/2xTHbJqvtyV0eG98z3bBg8EHHdMIFEjiT0g="
   matrix:
     - DB=sqlite DATABASE_URI="sqlite:///:memory:"
     - DB=mysql DATABASE_URI="mysql+pymysql://root@localhost/compair"
@@ -67,7 +69,7 @@ script:
   - ./scripts/travis_script.sh
 
 after_success:
-  - if [ "$DOCKER" = "true" ]; then scripts/deploy_docker.sh; fi
+  - if [ "$DOCKER" = "true" ]; then scripts/deploy_dockerhub.sh; scripts/deploy.sh; fi
 
 after_failure:
   - if [ "$DOCKER" = "true" ]; then timeout 3s docker-compose logs app db web; fi

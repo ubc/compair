@@ -2,20 +2,21 @@
 
 REPO=ubcctlt/compair-app
 
+
 if [ -n "$TRAVIS_TAG" ]
 then
-    # tag image with git tag
-    docker tag $REPO $REPO:$TRAVIS_TAG
-elif [ "$TRAVIS_PULL_REQUEST" == "true" ]
+    # tag image with git tag with # removed
+    TAG=${TRAVIS_TAG/\#/}
+elif [ "$TRAVIS_PULL_REQUEST" != "false" ]
 then
     # tag PR requst built images
-    docker tag $REPO $REPO:pr-$TRAVIS_BUILD_NUMBER-$TRAVIS_COMMIT
+    TAG="pr-$TRAVIS_BUILD_NUMBER-$TRAVIS_COMMIT"
 else
     # tag master or branch images
     TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
-    docker tag $REPO $REPO:$TAG
-    docker tag $REPO $REPO:travis-$TRAVIS_BUILD_NUMBER-$TRAVIS_COMMIT
+    #docker tag $REPO $REPO:travis-$TRAVIS_BUILD_NUMBER-$TRAVIS_COMMIT
 fi
 
 docker login -u $DOCKER_USER -p $DOCKER_PASS
-docker push $REPO
+docker tag $REPO $REPO:$TAG
+docker push $REPO:$TAG
