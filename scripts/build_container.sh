@@ -4,8 +4,8 @@ REPO=ubcctlt/compair-app
 
 if [ -n "$TRAVIS_TAG" ]
 then
-    # tag image with git tag
-    docker tag $REPO $REPO:$TRAVIS_TAG
+    # tag image with git tag with # removed
+    docker tag $REPO $REPO:${TRAVIS_TAG/\#/}
 elif [ "$TRAVIS_PULL_REQUEST" != "false" ]
 then
     # tag PR requst built images

@@ -2,8 +2,8 @@
 
 if [ -n "$TRAVIS_TAG" ]
 then
-    # tag image with git tag
-    TAG=$TRAVIS_TAG
+    # tag image with git tag with # removed
+    TAG=${TRAVIS_TAG/\#/}
 elif [ "$TRAVIS_PULL_REQUEST" != "false" ]
 then
     # deploy pull rquest build for review
