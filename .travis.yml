@@ -69,7 +69,7 @@ script:
   - ./scripts/travis_script.sh
 
 after_success:
-  - if [ "$DOCKER" = "true" ]; then scripts/build_container.sh; scripts/deploy.sh; fi
+  - if [ "$DOCKER" = "true" ]; then scripts/deploy_dockerhub.sh; scripts/deploy.sh; fi
 
 after_failure:
   - if [ "$DOCKER" = "true" ]; then timeout 3s docker-compose logs app db web; fi
