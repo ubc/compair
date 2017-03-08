@@ -507,10 +507,10 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             rv = self.client.delete(self.url + '/' + assignment.uuid)
             self.assert403(rv)
             self.assertEqual(
-                "Assignment Deletion Failed",
+                "Assignment Not Deleted",
                 rv.json['title'])
             self.assertEqual(
-                "You do not have permission to remove this assignment since you are not its instructor.",
+                "Your role in this course does not allow you to delete assignments.",
                 rv.json['message'])
 
         with self.login(self.data.get_authorized_instructor().username):
@@ -597,10 +597,10 @@ class AssignmentEditComparedAPITests(ComPAIRAPITestCase):
             chaged_pairing['pairing_algorithm'] = PairingAlgorithm.adaptive.value
             rv = self.client.post(url, data=json.dumps(chaged_pairing), content_type='application/json')
             self.assert403(rv)
-            self.assertEqual(rv.json['title'], "Assignment Update Failed")
+            self.assertEqual(rv.json['title'], "Assignment Not Updated")
             self.assertEqual(rv.json['message'],
                 'The pair selection algorithm cannot be changed in the assignment ' + \
-                'because it has already been used in an evaluation.')
+                'because it has already been used in one or more comparisons.')
 
             # test cannot change criteria
             change_criteria = expected.copy()
@@ -609,10 +609,10 @@ class AssignmentEditComparedAPITests(ComPAIRAPITestCase):
             ]
             rv = self.client.post(url, data=json.dumps(change_criteria), content_type='application/json')
             self.assert403(rv)
-            self.assertEqual(rv.json['title'], "Assignment Update Failed")
+            self.assertEqual(rv.json['title'], "Assignment Not Updated")
             self.assertEqual(rv.json['message'],
                 'The criteria cannot be changed in the assignment ' + \
-                'because they have already been used in an evaluation.')
+                'because they have already been used in one or more comparisons.')
 
             # test cannot change criteria weight
             change_criteria = expected.copy()
@@ -621,10 +621,10 @@ class AssignmentEditComparedAPITests(ComPAIRAPITestCase):
             ]
             rv = self.client.post(url, data=json.dumps(change_criteria), content_type='application/json')
             self.assert403(rv)
-            self.assertEqual(rv.json['title'], "Assignment Update Failed")
+            self.assertEqual(rv.json['title'], "Assignment Not Updated")
             self.assertEqual(rv.json['message'],
-                'The criteria weight cannot be changed in the assignment ' + \
-                'because it has already been used in an evaluation.')
+                'The criteria weights cannot be changed in the assignment ' + \
+                'because they have already been used in one or more comparisons.')
 
             # can otherwise edit compared assignments
             rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')

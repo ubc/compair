@@ -7,10 +7,9 @@ from sqlalchemy import func, or_, and_, desc
 from sqlalchemy.orm import joinedload, undefer_group
 from itertools import groupby
 from operator import attrgetter
-from flask_restplus import abort
 
 from . import dataformat
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.authorization import require, allow, is_user_access_restricted
 from compair.models import Answer, Assignment, Course, User, Comparison, Criterion, \
     AnswerScore, UserCourse, SystemRole, CourseRole, AnswerComment, AnswerCommentType, File
@@ -511,7 +510,7 @@ class AnswerUserIdAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
         require(READ, Answer(user_id=current_user.id),
-            title="Answers Not Available",
+            title="Answers Unavailable",
             message="Your role in this course does not allow you to view answers for this assignment.")
         restrict_user = not allow(MANAGE, assignment)
 

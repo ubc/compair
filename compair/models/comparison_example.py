@@ -41,7 +41,7 @@ class ComparisonExample(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTracking
     @classmethod
     def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
         if not title:
-            title = "Comparison Example Not Found"
+            title = "Comparison Example Unavailable"
         if not message:
             message = "The comparison example was removed from the system or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
@@ -49,7 +49,7 @@ class ComparisonExample(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTracking
     @classmethod
     def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
         if not title:
-            title = "Comparison Example Not Found"
+            title = "Comparison Example Unavailable"
         if not message:
             message = "The comparison example was removed from the system or is no longer accessible."
         return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)

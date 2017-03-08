@@ -1,8 +1,7 @@
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import joinedload
-from flask_restplus import abort
 
-from compair.core import db
+from compair.core import db, abort
 
 class ActiveMixin(db.Model):
     __abstract__ = True

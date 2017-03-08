@@ -4,10 +4,9 @@ from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import and_, or_
-from flask_restplus import abort
 
 from . import dataformat
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.authorization import require, allow
 from compair.models import Assignment, Course, AssignmentComment
 from .util import new_restful_api, get_model_changes, pagination_parser

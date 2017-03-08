@@ -7,11 +7,10 @@ from flask_restful.reqparse import RequestParser
 
 from flask_login import current_user
 from sqlalchemy import and_, or_
-from flask_restplus import abort
 
 from . import dataformat
 from compair.authorization import require
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.models import UserCourse, User, Course, CourseRole, \
     ThirdPartyUser, ThirdPartyType
 from .util import new_restful_api
@@ -30,8 +29,8 @@ class GroupRootAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         user_course = UserCourse(course_id=course.id)
         require(READ, user_course,
-            title="Failed to Retrieve Groups",
-            message="You do not have permission to view groups for this course since you are not its instructor.")
+            title="Groups Unavailable",
+            message="Groups can be seen only by those enrolled in the course. Please double-check your enrollment in this course.")
 
         group_names = UserCourse.query \
             .with_entities(UserCourse.group_name) \
@@ -62,8 +61,8 @@ class GroupNameAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         user_course = UserCourse(course_id=course.id)
         require(READ, user_course,
-            title="Failed to Retrieve Group Members",
-            message="You do not have permission to view group members for this course since you are not its instructor.")
+            title="Group Members Unavailable",
+            message="Group membership can be seen only by those enrolled in the course. Please double-check your enrollment in this course.")
 
         members = User.query \
             .join(UserCourse, UserCourse.user_id == User.id) \
@@ -75,7 +74,7 @@ class GroupNameAPI(Resource):
             .all()
 
         if len(members) == 0:
-            abort(404, title="Group Not Found", message="Group "+group_name+" was removed.")
+            abort(404, title="Group Unavailable", message="Group "+group_name+" was removed or is no longer available.")
 
         on_course_group_members_get.send(
             current_app._get_current_object(),

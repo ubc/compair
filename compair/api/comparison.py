@@ -9,10 +9,9 @@ from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import or_, and_
 from sqlalchemy.orm import joinedload
-from flask_restplus import abort
 
 from . import dataformat
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.authorization import require, allow
 from compair.models import Answer, Comparison, Course, WinningAnswer, \
     Assignment, UserCourse, CourseRole, AssignmentCriterion
@@ -92,7 +91,7 @@ class CompareRootAPI(Resource):
                     data=marshal(comparison, dataformat.get_comparison(restrict_user)))
 
             except InsufficientObjectsForPairException:
-                abort(400, title="Comparisons Unavailable", message="Not enough answers are available for you to do comparisons. Please check back later for more answers."")
+                abort(400, title="Comparisons Unavailable", message="Not enough answers are available for you to do comparisons. Please check back later for more answers.")
             except UserComparedAllObjectsException:
                 abort(400, title="Comparisons Unavailable", message="You have compared all the currently available answer pairs. Please check back later for more answers.")
             except UnknownPairGeneratorException:

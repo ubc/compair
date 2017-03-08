@@ -1,8 +1,7 @@
 import uuid
 import base64
-from flask_restplus import abort
 
-from compair.core import db
+from compair.core import db, abort
 
 class UUIDMixin(db.Model):
     __abstract__ = True

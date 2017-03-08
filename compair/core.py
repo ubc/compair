@@ -2,7 +2,9 @@
     The app core, initialize necessary objects
 """
 from blinker import Namespace
-from flask import session as sess
+from werkzeug.exceptions import HTTPException
+from six import text_type
+from flask import session as sess, abort as flask_abort
 from flask_bouncer import Bouncer
 from celery import Celery
 
@@ -35,3 +37,15 @@ event = Namespace()
 @user_logged_in.connect
 def generate_session_token(sender, user, **extra):
     sess['session_token'] = user.generate_session_token()
+
+
+
+def abort(code=500, message=None, **kwargs):
+    try:
+        flask_abort(code)
+    except HTTPException as e:
+        if message:
+            kwargs['message'] = text_type(message)
+        if kwargs:
+            e.data = kwargs
+        raise

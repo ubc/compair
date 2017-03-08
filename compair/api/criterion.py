@@ -59,8 +59,8 @@ class CriteriaAPI(Resource):
 
         criterion = Criterion(user_id=current_user.id)
         require(CREATE, criterion,
-            title="Criterion Creation Failed",
-            message="You do not have permission to create criterion since you are not an instructor.")
+            title="Criterion Not Saved",
+            message="Your role in the system does not allow you to add criteria.")
 
         criterion.name = params.get("name")
         criterion.description = params.get("description", None)
@@ -89,8 +89,8 @@ class CriteriaIdAPI(Resource):
     def get(self, criterion_uuid):
         criterion = Criterion.get_active_by_uuid_or_404(criterion_uuid)
         require(READ, criterion,
-            title="Failed to Retrieve Criterion",
-            message="You do not have permission to view this criterion.")
+            title="Criterion Unavailable",
+            message="Your system role does not allow you to view this criterion.")
 
         on_criterion_get.send(
             self,
@@ -104,8 +104,8 @@ class CriteriaIdAPI(Resource):
     def post(self, criterion_uuid):
         criterion = Criterion.get_active_by_uuid_or_404(criterion_uuid)
         require(EDIT, criterion,
-            title="Criterion Update Failed",
-            message="You do not have permission to update this criterion.")
+            title="Criterion Not Updated",
+            message="Your system role does not allow you to update this criterion.")
 
         params = existing_criterion_parser.parse_args()
 

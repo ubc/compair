@@ -6,10 +6,9 @@ from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import desc, or_, func, and_
 from sqlalchemy.orm import joinedload, undefer_group, load_only
-from flask_restplus import abort
 
 from . import dataformat
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.authorization import allow, require
 from compair.models import Assignment, Course, Answer, ComparisonExample
 from .util import new_restful_api, get_model_changes

@@ -422,7 +422,8 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             invalid_expected['end_date'] = self.invalid_end_date
             rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'Course end time must be after course start time'})
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "Course end time must be after course start time.")
 
             # test invalid assignment answer start
             invalid_expected = self.validate_expected_course.copy()
@@ -430,7 +431,8 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             invalid_expected['assignments'][0]['answer_start'] = None
             rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'No answer period start time provided for assignment '+self.valid_assignment.name})
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "No answer period start time provided for assignment "+self.valid_assignment.name+".")
 
             # test invalid assignment answer end
             invalid_expected = self.validate_expected_course.copy()
@@ -438,21 +440,24 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             invalid_expected['assignments'][0]['answer_end'] = None
             rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'No answer period end time provided for assignment '+self.valid_assignment.name})
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "No answer period end time provided for assignment "+self.valid_assignment.name+".")
 
             invalid_expected = self.validate_expected_course.copy()
             invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
             invalid_expected['assignments'][0]['answer_end'] = self.invalid_answer_end
             rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'Answer period end time must be after the answer start time for assignment '+self.valid_assignment.name})
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "Answer period end time must be after the answer start time for assignment "+self.valid_assignment.name+".")
 
             invalid_expected = self.validate_expected_course.copy()
             invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
             invalid_expected['assignments'][0]['answer_end'] = self.invalid_answer_end2
             rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'Answer period end time must be before the course end time for assignment '+self.valid_assignment.name})
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "Answer period end time must be before the course end time for assignment "+self.valid_assignment.name+".")
 
             # test invalid assignment compare start
             invalid_expected = self.validate_expected_course.copy()
@@ -460,14 +465,16 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             invalid_expected['assignments'][0]['compare_start'] = None
             rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'No compare period start time provided for assignment '+self.valid_assignment.name})
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "No compare period start time provided for assignment "+self.valid_assignment.name+".")
 
             invalid_expected = self.validate_expected_course.copy()
             invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
             invalid_expected['assignments'][0]['compare_start'] = self.invalid_compare_start
             rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'Compare period start time must be after the answer start time for assignment '+self.valid_assignment.name})
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "Compare period start time must be after the answer start time for assignment "+self.valid_assignment.name+".")
 
             # test invalid assignment compare end
             invalid_expected = self.validate_expected_course.copy()
@@ -475,21 +482,24 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             invalid_expected['assignments'][0]['compare_end'] = None
             rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'No compare period end time provided for assignment '+self.valid_assignment.name})
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "No compare period end time provided for assignment "+self.valid_assignment.name+".")
 
             invalid_expected = self.validate_expected_course.copy()
             invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
             invalid_expected['assignments'][0]['compare_end'] = self.invalid_compare_end
             rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'Compare period end time must be after the compare start time for assignment '+self.valid_assignment.name})
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "Compare period end time must be after the compare start time for assignment "+self.valid_assignment.name+".")
 
             invalid_expected = self.validate_expected_course.copy()
             invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
             invalid_expected['assignments'][0]['compare_end'] = self.invalid_compare_end2
             rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'Compare period end time must be before the course end time for assignment '+self.valid_assignment.name})
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "Compare period end time must be before the course end time for assignment "+self.valid_assignment.name+".")
 
             # test deep copy assignments
             rv = self.client.post(self.url, data=json.dumps(self.expected), content_type='application/json')

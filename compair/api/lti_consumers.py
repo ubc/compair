@@ -3,10 +3,9 @@ from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal, reqparse, marshal_with
 from sqlalchemy import exc, or_, and_, desc, asc
-from flask_restplus import abort
 
 from . import dataformat
-from compair.core import event, db
+from compair.core import event, db, abort
 from compair.authorization import require, allow
 from compair.models import LTIConsumer
 from .util import new_restful_api, get_model_changes, pagination_parser
@@ -37,8 +36,8 @@ class ConsumerAPI(Resource):
     @login_required
     def get(self):
         require(MANAGE, LTIConsumer,
-            title="Failed to Retrieve Consumers",
-            message="You do not have permission to view LTI consumers.")
+            title="Consumers Unavailable",
+            message="Your system role does not allow you to view LTI consumers.")
 
         params = consumer_list_parser.parse_args()
 
@@ -67,8 +66,8 @@ class ConsumerAPI(Resource):
 
         consumer = LTIConsumer()
         require(CREATE, consumer,
-            title="Consumer Creation Failed",
-            message="You do not have permission to create LTI consumers.")
+            title="Consumer Not Saved",
+            message="Your system role does not allow you to save LTI consumers.")
 
         consumer.oauth_consumer_key = params.get("oauth_consumer_key")
         consumer.oauth_consumer_secret = params.get("oauth_consumer_secret")
@@ -85,7 +84,7 @@ class ConsumerAPI(Resource):
             )
         except exc.IntegrityError:
             db.session.rollback()
-            abort(409, title="Consumer Creation Failed", message="A LTI consumer with the same consumer key already exists.")
+            abort(409, title="Consumer Not Saved", message="A LTI consumer with the same consumer key already exists.")
 
         return marshal(consumer, dataformat.get_lti_consumer())
 
@@ -99,8 +98,8 @@ class ConsumerIdAPI(Resource):
     def get(self, consumer_uuid):
         consumer = LTIConsumer.get_by_uuid_or_404(consumer_uuid)
         require(READ, consumer,
-            title="Failed to Retrieve Consumer",
-            message="You do not have permission to view this LTI consumer.")
+            title="Consumer Unavailable",
+            message="Your system role does not allow you to view LTI consumers.")
 
         on_consumer_get.send(
             self,
@@ -114,8 +113,8 @@ class ConsumerIdAPI(Resource):
     def post(self, consumer_uuid):
         consumer = LTIConsumer.get_by_uuid_or_404(consumer_uuid)
         require(EDIT, consumer,
-            title="Consumer Update Failed",
-            message="You do not have permission to update this LTI consumer.")
+            title="Consumer Not Updated",
+            message="Your system role does not allow you to update LTI consumers.")
 
         params = existing_consumer_parser.parse_args()
 
@@ -137,7 +136,7 @@ class ConsumerIdAPI(Resource):
             )
         except exc.IntegrityError:
             db.session.rollback()
-            abort(409, title="Consumer Update Failed", message="A LTI consumer with the same consumer key already exists.")
+            abort(409, title="Consumer Not Updated", message="A LTI consumer with the same consumer key already exists.")
 
         return marshal(consumer, dataformat.get_lti_consumer())
 

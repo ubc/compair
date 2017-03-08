@@ -65,7 +65,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     @classmethod
     def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
         if not title:
-            title = "Comparison Not Found"
+            title = "Comparison Unavailable"
         if not message:
             message = "The comparison was removed from the system or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)

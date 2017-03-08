@@ -9,10 +9,9 @@ from flask_restful.reqparse import RequestParser
 from sqlalchemy import desc, or_, func, and_
 from sqlalchemy.orm import joinedload, undefer_group, load_only
 from six import text_type
-from flask_restplus import abort
 
 from . import dataformat
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.authorization import allow, require
 from compair.models import Assignment, Course, Criterion, AssignmentCriterion, Answer, Comparison, \
     AnswerComment, AnswerCommentType, PairingAlgorithm, Criterion, File
@@ -75,12 +74,12 @@ class AssignmentIdAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(READ, assignment,
-            title="Assignment Not Available",
+            title="Assignment Unavailable",
             message="Assignments can be saved only to those enrolled in the course. Please double-check your enrollment in this course.")
 
         now = datetime.datetime.utcnow()
         if assignment.answer_start and not allow(MANAGE, assignment) and not (assignment.answer_start <= now):
-            abort(403, title="Assignment Not Available", message="This assignment is not yet open. Please check back after the start date the instructor has set.")
+            abort(403, title="Assignment Unavailable", message="This assignment is not yet open. Please check back after the start date the instructor has set.")
         restrict_user = not allow(MANAGE, assignment)
 
         on_assignment_get.send(
@@ -281,7 +280,7 @@ class AssignmentRootAPI(Resource):
     def get(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         require(READ, course,
-            title="Assignments Not Available",
+            title="Assignments Unavailable",
             message="Assignments can be seen only by those enrolled in the course. Please double-check your enrollment in this course.")
 
         assignment = Assignment(course_id=course.id)
@@ -385,8 +384,7 @@ class AssignmentRootAPI(Resource):
             .all()
 
         if len(criterion_uuids) != len(criteria):
-            msg = "You select an invalid criterion."
-            abort(400, title="Assignment Not Saved", message=msg)
+            abort(400, title="Assignment Not Saved", message="You selected an invalid criterion.")
 
         # add criteria to assignment in order
         for criterion_uuid in criterion_uuids:
@@ -425,7 +423,7 @@ class AssignmentIdStatusAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(READ, assignment,
-            title="Assignment Status Unavailable" ,
+            title="Assignment Status Unavailable",
             message="Assignment status can be seen only by those enrolled in the course. Please double-check your enrollment in this course.")
 
         answer_count = Answer.query \

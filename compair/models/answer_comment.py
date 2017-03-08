@@ -47,17 +47,17 @@ class AnswerComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixi
     @classmethod
     def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
         if not title:
-            title = "Comment Not Found"
+            title = "Reply Unavailable"
         if not message:
-            message = "The comment was removed from the system or is no longer accessible."
+            message = "The reply was removed from the system or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
     def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
         if not title:
-            title = "Comment Not Found"
+            title = "Reply Unavailable"
         if not message:
-            message = "The comment was removed from the system or is no longer accessible."
+            message = "The reply was removed from the system or is no longer accessible."
         return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod

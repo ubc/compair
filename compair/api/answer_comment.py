@@ -4,10 +4,9 @@ from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import and_, or_
-from flask_restplus import abort
 
 from . import dataformat
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.authorization import require, allow, USER_IDENTITY
 from compair.models import User, Answer, Assignment, Course, AnswerComment, \
     CourseRole, SystemRole, AnswerCommentType
@@ -105,7 +104,7 @@ class AnswerCommentListAPI(Resource):
             answer_uuids.extend(params['answer_ids'].split(','))
 
         if not answer_uuids and not params['ids'] and not params['assignment_id'] and not params['user_ids']:
-            abort(404, title="Replies Not Available", message="There was a problem getting the replies for this answer. Please try again.")
+            abort(404, title="Replies Unavailable", message="There was a problem getting the replies for this answer. Please try again.")
 
         conditions = []
 
@@ -118,7 +117,7 @@ class AnswerCommentListAPI(Resource):
             .all() if answer_uuids else []
         if answer_uuids and not answers:
             # non-existing answer ids.
-            abort(404, title="Replies Not Available", message="There was a problem getting the replies for this answer. Please try again.")
+            abort(404, title="Replies Unavailable", message="There was a problem getting the replies for this answer. Please try again.")
 
         # build query condition for each answer
         for answer in answers:
@@ -192,7 +191,7 @@ class AnswerCommentListAPI(Resource):
         # checking the permission
         for answer_comment in answer_comments:
             require(READ, answer_comment.answer,
-                title="Replies Not Available",
+                title="Replies Unavailable",
                 message="Your role in this course does not allow you to view replies for this answer.")
 
         on_answer_comment_list_get.send(
@@ -239,7 +238,7 @@ class AnswerCommentListAPI(Resource):
 
         comment_type = params.get("comment_type")
         if comment_type not in comment_types:
-            abort(400, title="Reply Not Saved", message="'"+params.get("comment_type")+"' is not a valid comment type.")
+            abort(400, title="Reply Not Saved", message="Please select a valid comment type.")
         answer_comment.comment_type = AnswerCommentType(comment_type)
 
         db.session.add(answer_comment)
@@ -277,7 +276,7 @@ class AnswerCommentAPI(Resource):
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
         answer_comment = AnswerComment.get_active_by_uuid_or_404(answer_comment_uuid)
         require(READ, answer_comment,
-            title="Reply Not Available",
+            title="Reply Unavailable",
             message="Your role in this course does not allow you to view this reply.")
 
         on_answer_comment_get.send(
@@ -319,7 +318,7 @@ class AnswerCommentAPI(Resource):
 
         comment_type = params.get("comment_type", AnswerCommentType.private.value)
         if comment_type not in comment_types:
-            abort(400, title="Reply Not Updated", message="'"+params.get("comment_type")+"' is not a valid comment type.")
+            abort(400, title="Reply Not Updated", message="Please select a valid comment type.")
 
         answer_comment.comment_type = AnswerCommentType(comment_type)
         # only update draft param if currently a draft

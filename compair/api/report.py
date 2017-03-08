@@ -12,10 +12,9 @@ from flask_restful import Resource, reqparse
 
 from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import joinedload
-from flask_restplus import abort
 
 from compair.authorization import require
-from compair.core import event
+from compair.core import event, abort
 from compair.models import User, CourseRole, Assignment, UserCourse, Course, Answer, \
     AnswerComment, AssignmentCriterion, Comparison, AnswerCommentType
 from .util import new_restful_api
@@ -48,8 +47,8 @@ class ReportRootAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment(course_id=course.id)
         require(MANAGE, assignment,
-            title="Generate Report Failed",
-            message="You do not have permission to generate reports for this course since you are not its instructor.")
+            title="Report Not Generated",
+            message="Your system role does not allow you to generate reports.")
 
         params = report_parser.parse_args()
         group_name = params.get('group_name', None)
@@ -78,7 +77,7 @@ class ReportRootAPI(Resource):
                 ) \
                 .first()
             if group_exists == None:
-                abort(400, title="Generate Report Failed", message="Group does not exists.")
+                abort(400, title="Report Not Generated", message="Please select a valid group from the list provided.")
 
         if report_type == "participation_stat":
             data = participation_stat_report(course, assignments, group_name, assignment_uuid is None)
@@ -131,7 +130,7 @@ class ReportRootAPI(Resource):
             data = peer_feedback_report(course, assignments, group_name)
             titles = [titles1, titles2]
         else:
-            abort(400, title="Generate Report Failed", message="The requested report type cannot be found")
+            abort(400, title="Report Not Generated", message="Please select a valid report type from the list provided.")
 
         name = name_generator(course, report_type, group_name)
         tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], name)

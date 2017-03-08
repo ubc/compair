@@ -3,7 +3,8 @@ from flask_bouncer import ensure
 from flask_login import current_user
 from werkzeug.exceptions import Unauthorized
 from sqlalchemy import and_
-from flask_restplus import abort
+
+from .core import abort
 
 from .models import Course, User, UserCourse, CourseRole, SystemRole, \
     Assignment, Answer, AnswerComment, Comparison, Criterion, \

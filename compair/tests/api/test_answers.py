@@ -353,11 +353,8 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 data=json.dumps(expected_answer),
                 content_type='application/json')
             self.assert400(rv)
-            self.assertEqual({
-                "title": "Answer Creation Failed",
-                "message": "An answer has already been submitted."
-            }, rv.json)
-
+            self.assertEqual(rv.json['title'], "Answer Not Saved")
+            self.assertEqual(rv.json['message'], "An answer has already been submitted for this assignment by you or on your behalf.")
 
         self.fixtures.add_students(1)
         self.fixtures.course.calculate_grade(self.fixtures.students[-1])
@@ -419,8 +416,9 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 data=json.dumps(expected_answer),
                 content_type='application/json')
             self.assert403(rv)
-            self.assertEqual("Answer Creation Failed", rv.json['title'])
-            self.assertEqual("Answer deadline has passed.", rv.json['message'])
+            self.assertEqual("Answer Not Saved", rv.json['title'])
+            self.assertEqual("The answer deadline has passed. No answers can be saved beyond the deadline unless the instructor saves it on your behalf.",
+                rv.json['message'])
 
             # test student can submit answers within answer grace period
             self.fixtures.assignment.answer_end = datetime.datetime.utcnow() - datetime.timedelta(seconds=15)
@@ -722,8 +720,9 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 data=json.dumps(expected),
                 content_type='application/json')
             self.assert403(rv)
-            self.assertEqual("Answer Update Failed", rv.json['title'])
-            self.assertEqual("Answer deadline has passed.", rv.json['message'])
+            self.assertEqual("Answer Not Updated", rv.json['title'])
+            self.assertEqual("The answer deadline has passed. No answers can be updated beyond the deadline unless the instructor updates it on your behalf.",
+                rv.json['message'])
 
             # test student can submit answers within answer grace period
             self.fixtures.assignment.answer_end = datetime.datetime.utcnow() - datetime.timedelta(seconds=15)

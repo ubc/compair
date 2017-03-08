@@ -6,11 +6,11 @@ from flask import Blueprint, current_app
 from flask_restful import Resource, marshal_with, marshal, reqparse
 from flask_login import login_required, current_user
 from sqlalchemy import exc, func
-from flask_restplus import abort
+from six import text_type
 
 from . import dataformat
 from compair.authorization import require
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.models import Course, CourseRole, UserCourse, Answer, \
     Assignment, AssignmentCriterion, File, ComparisonExample
 from .util import pagination, new_restful_api, get_model_changes
@@ -54,8 +54,8 @@ class CourseListAPI(Resource):
         Create new course
         """
         require(CREATE, Course,
-            title="Course Creation Failed",
-            message="You do not have permission to create a course since you are not an instructor.")
+            title="Course Not Saved",
+            message="Your role in the system does not allow you to add courses.")
         params = new_course_parser.parse_args()
 
         new_course = Course(
@@ -115,8 +115,8 @@ class CourseAPI(Resource):
     def get(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         require(READ, course,
-            title="Failed to Retrieve Course",
-            message="You do not have permission to view this course since you are not enrolled in it.")
+            title="Course Unavailable",
+            message="Courses can be seen only by those enrolled in it. Please double-check your enrollment in this course.")
 
         on_course_get.send(
             self,
@@ -129,14 +129,15 @@ class CourseAPI(Resource):
     def post(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         require(EDIT, course,
-            title="Course Update Failed",
-            message="You do not have permission to update this course since you are not its instructor.")
+            title="Course Not Updated",
+            message="Your role in this course does not allow you to update it.")
 
         params = existing_course_parser.parse_args()
 
         # make sure the course id in the url and the course id in the params match
         if params['id'] != course_uuid:
-            abort(400, title="Course Update Failed", message="Course id does not match URL.")
+            abort(400, title="Course Not Updated",
+                message="The course's ID does not match the URL, which is required in order to update the course.")
 
         # modify course according to new values, preserve original values if values not passed
         course.name = params.get("name", course.name)
@@ -173,8 +174,8 @@ class CourseAPI(Resource):
     def delete(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         require(DELETE, course,
-            title="Course Deletion Failed",
-            message="You do not have permission to delete this course since you are not its instructor.")
+            title="Course Not Deleted",
+            message="Your role in this course does not allow you to delete it.")
 
         course.active = False
         db.session.commit()
@@ -199,8 +200,8 @@ class CourseDuplicateAPI(Resource):
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
         require(EDIT, course,
-            title="Course Duplication Failed",
-            message="You do not have permission to duplicate this course since you are not its instructor.")
+            title="Course Not Saved",
+            message="Your role in this course does not allow you to copy it.")
 
         params = duplicate_course_parser.parse_args()
 
@@ -219,20 +220,16 @@ class CourseDuplicateAPI(Resource):
         assignments_copy_data = params.get("assignments")
 
         if len(assignments) != len(assignments_copy_data):
-            abort(400, title="Course Duplication Failed", message="Not enough assignment data provided to duplication course.")
+            abort(400, title="Course Not Saved", message="The course is missing assignments. Please reload the page and try again.")
 
         for assignment_copy_data in assignments_copy_data:
-            if not assignment_copy_data.get('answer_start'):
-                abort(400, title="Course Duplication Failed", message="No answer start date provided for assignment "+assignment_copy_data.id+".")
+            if assignment_copy_data.get('answer_start'):
+                assignment_copy_data['answer_start'] = datetime.datetime.strptime(
+                    assignment_copy_data.get('answer_start'), '%Y-%m-%dT%H:%M:%S.%fZ')
 
-            if not assignment_copy_data.get('answer_end'):
-                abort(400, title="Course Duplication Failed", message="No answer end date provided for assignment "+assignment_copy_data.id+".")
-
-            assignment_copy_data['answer_start'] = datetime.datetime.strptime(
-                assignment_copy_data.get('answer_start'), '%Y-%m-%dT%H:%M:%S.%fZ')
-
-            assignment_copy_data['answer_end'] = datetime.datetime.strptime(
-                assignment_copy_data.get('answer_end'), '%Y-%m-%dT%H:%M:%S.%fZ')
+            if assignment_copy_data.get('answer_end'):
+                assignment_copy_data['answer_end'] = datetime.datetime.strptime(
+                    assignment_copy_data.get('answer_end'), '%Y-%m-%dT%H:%M:%S.%fZ')
 
             if assignment_copy_data.get('compare_start'):
                 assignment_copy_data['compare_start'] = datetime.datetime.strptime(
@@ -246,7 +243,7 @@ class CourseDuplicateAPI(Resource):
                 assignment_copy_data.get('answer_start'), assignment_copy_data.get('answer_end'),
                 assignment_copy_data.get('compare_start'), assignment_copy_data.get('compare_end'))
             if not valid:
-                error_message = error_message.replace(".", "") + " for assignment "+assignment_copy_data.get('name', '')
+                error_message = error_message.replace(".", "") + " for assignment "+text_type(assignment_copy_data.get('name', ''))+"."
                 abort(400, title="Course Not Saved", message=error_message)
 
         # duplicate course
@@ -277,7 +274,7 @@ class CourseDuplicateAPI(Resource):
             )
 
             if not assignment_copy_data:
-                abort(400, title="Course Duplication Failed", message="No assignment data provided for assignment "+assignment.uuid+".")
+                abort(400, title="Course Not Saved", message="Missing information for assignment "+assignment.name+".")
 
             duplicate_assignment = Assignment(
                 course=duplicate_course,

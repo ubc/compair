@@ -38,7 +38,7 @@ class AssignmentComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTracking
     @classmethod
     def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
         if not title:
-            title = "Help Comment Not Found"
+            title = "Help Comment Unavailable"
         if not message:
             message = "The help comment was removed from the system or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
@@ -46,7 +46,7 @@ class AssignmentComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTracking
     @classmethod
     def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
         if not title:
-            title = "Help Comment Not Found"
+            title = "Help Comment Unavailable"
         if not message:
             message = "The help comment was removed from the system or is no longer accessible."
         return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)

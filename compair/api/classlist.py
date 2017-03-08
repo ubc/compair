@@ -12,11 +12,10 @@ from six import BytesIO
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
-from flask_restplus import abort
 from flask_restful.reqparse import RequestParser
 
 from . import dataformat
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.authorization import allow, require, USER_IDENTITY
 from compair.models import UserCourse, Course, User, SystemRole, CourseRole, \
     ThirdPartyType, ThirdPartyUser

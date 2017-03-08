@@ -4,11 +4,10 @@ import mimetypes
 from sqlalchemy.orm import column_property
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
-from flask_restplus import abort
 
 from . import *
 
-from compair.core import db
+from compair.core import db, abort
 
 class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     __tablename__ = 'file'
@@ -42,7 +41,7 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     @classmethod
     def get_active_or_404(cls, model_id, joinedloads=[], title=None, message=None):
         if not title:
-            title = "Attachment Not Found"
+            title = "Attachment Unavailable"
         if not message:
             message = "The attachment was removed from the system or is no longer accessible."
 
@@ -59,7 +58,7 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     @classmethod
     def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
         if not title:
-            title = "Attachment Not Found"
+            title = "Attachment Unavailable"
         if not message:
             message = "The attachment was removed from the system or is no longer accessible."
 

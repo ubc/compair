@@ -2,9 +2,8 @@ import os
 
 from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask, render_template
 from flask_login import current_user, login_required, login_user, logout_user
-from flask_restplus import abort
 
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.authorization import get_logged_in_user_permissions
 from compair.models import User, LTIUser, LTIResourceLink, LTIUserResourceLink, UserCourse, LTIContext, \
     ThirdPartyUser, ThirdPartyType
@@ -19,12 +18,13 @@ on_logout = event.signal('USER_LOGGED_OUT')
 @login_api.route('/login', methods=['POST'])
 def login():
     if not current_app.config.get('APP_LOGIN_ENABLED'):
-        abort(403, title="Login Failed", message="Login method not enabled.")
+        abort(403, title="Not Logged In",
+            message="Please use a valid way to log in. You are not able to use the ComPAIR login based on the current settings.")
 
     # expecting login params to be in json format
     param = request.json
     if param is None:
-        abort(400, title="Login Failed", message="Invalid login data format. Expecting json.")
+        abort(400, title="Not Logged In", message="Invalid login data. Please try again.")
 
     username = param['username']
     password = param['password']
@@ -51,7 +51,7 @@ def login():
         return jsonify({'user_id': user.uuid, 'permissions': permissions})
 
     # login unsuccessful
-    abort(400, title="Login Failed", message="Sorry, unrecognized username or password.")
+    abort(400, title="Not Logged In", message="Sorry, unrecognized username or password. Please try again.")
 
 @login_api.route('/logout', methods=['DELETE'])
 @login_required
@@ -93,7 +93,8 @@ def get_permission():
 @login_api.route('/cas/login')
 def cas_login():
     if not current_app.config.get('CAS_LOGIN_ENABLED'):
-        abort(403, title="Login Failed", message="Login method not enabled.")
+        abort(403, title="Not Logged In",
+            message="Please use a valid way to log in. You are not able to use CWL login based on the current settings.")
 
     return redirect(get_cas_login_url())
 
@@ -104,7 +105,8 @@ def cas_auth():
     set message in session so that frontend can get the message through /session call
     """
     if not current_app.config.get('CAS_LOGIN_ENABLED'):
-        abort(403, title="Login Failed", message="Login method not enabled.")
+        abort(403, title="Not Logged In",
+            message="Please use a valid way to log in. You are not able to use CWL login based on the current settings.")
 
     url = "/app/#/lti" if sess.get('LTI') else "/"
     error_message = None
@@ -172,7 +174,8 @@ def cas_auth():
 @login_api.route('/cas/logout', methods=['GET'])
 def cas_logout():
     if not current_app.config.get('CAS_LOGIN_ENABLED'):
-        abort(403, title="Logout Failed", message="Logout method not enabled.")
+        abort(403, title="Not Logged Out",
+            message="Please use a valid way to log out. You are not able to use CWL logout based on the current settings.")
 
     return redirect(get_cas_logout_url())
 

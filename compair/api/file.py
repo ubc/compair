@@ -9,11 +9,10 @@ from flask import Blueprint, request, current_app
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
-from flask_restplus import abort
 
 from compair.authorization import allow, require
 from . import dataformat
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.models import File, Assignment, Answer
 from .util import new_restful_api
 
@@ -40,9 +39,12 @@ class FileAPI(Resource):
         uploaded_file = request.files.get('file')
 
         if not uploaded_file:
-            abort(400, title="Attachment Upload Failed", message="No file attachment found.")
+            abort(400, title="Attachment Not Uploaded", message="No file was found to upload. Please try again.")
         elif not allowed_file(uploaded_file.filename, current_app.config['ATTACHMENT_ALLOWED_EXTENSIONS']):
-            abort(400, title="Attachment Upload Failed", message="Invalid file extension.")
+            extensions = [extension.upper() for extension in list(current_app.config['ATTACHMENT_ALLOWED_EXTENSIONS'])]
+            extensions.sort()
+            extensions = ", ".join(extensions)
+            abort(400, title="Attachment Not Uploaded", message="Only "+extensions+" files can be uploaded. Please try again with a valid file.")
 
         on_save_file.send(
             self,

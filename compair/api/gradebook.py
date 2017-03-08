@@ -8,14 +8,13 @@ from flask_login import login_required, current_user
 from flask_restful import Resource, marshal_with, marshal, reqparse
 from sqlalchemy import func, and_
 from sqlalchemy.orm import undefer, joinedload
-from flask_restplus import abort
 
 from . import dataformat
 from compair.authorization import require
 from compair.models import Course, Assignment, CourseRole, User, UserCourse, Comparison, \
     AnswerComment, Answer, File, AnswerScore, AnswerCommentType, PairingAlgorithm, AssignmentGrade
 from .util import new_restful_api
-from compair.core import event
+from compair.core import event, abort
 
 gradebook_api = Blueprint('gradebook_api', __name__)
 api = new_restful_api(gradebook_api)
@@ -34,8 +33,8 @@ class GradebookAPI(Resource):
             joinedloads=['assignment_criteria']
         )
         require(MANAGE, assignment,
-            title="Failed to Retrieve Grade Book",
-            message="You do not have permission to view grade book for this assignment since you are not the course's instructor.")
+            title="Grade Book Unavailable",
+            message="Your role in this course does not allow you to view grades for this assignment.")
 
         # get all students in this course
         students = User.query \

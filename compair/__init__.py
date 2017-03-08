@@ -8,10 +8,9 @@ from flask import Flask, redirect, session as sess, jsonify, url_for
 from flask_login import current_user
 from sqlalchemy.orm import joinedload
 from werkzeug.routing import BaseConverter
-from flask_restplus import abort
 
 from .authorization import define_authorization
-from .core import login_manager, bouncer, db, celery
+from .core import login_manager, bouncer, db, celery, abort
 from .configuration import config
 from .models import User, File
 from .activity import log
