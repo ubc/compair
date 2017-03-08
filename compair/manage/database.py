@@ -8,7 +8,6 @@ from alembic import command
 from compair.core import db
 
 from sqlalchemy.engine import reflection
-from sqlalchemy import create_engine
 from sqlalchemy.schema import MetaData, Table, DropTable, ForeignKeyConstraint, DropConstraint
 
 manager = Manager(usage="Perform database operations")
@@ -49,14 +48,17 @@ def drop():
 @manager.command
 def create(default_data=True, sample_data=False):
     """Creates database tables from sqlalchemy models"""
-    db.create_all()
-    populate(default_data, sample_data)
+    if db.engine.has_table('user'):
+        print ('Tables exist. Skipping database create. Use database recreate instead.')
+    else:
+        db.create_all()
+        populate(default_data, sample_data)
 
-    # add database version table and add current head version
-    alembic_cfg = Config("alembic.ini")
-    command.stamp(alembic_cfg, 'head')
+        # add database version table and add current head version
+        alembic_cfg = Config("alembic.ini")
+        command.stamp(alembic_cfg, 'head')
 
-    print ('All tables are created and data is loaded.')
+        print ('All tables are created and data is loaded.')
 
 
 @manager.command
