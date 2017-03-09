@@ -155,6 +155,25 @@
                 </div>
 
                 <div class="col-md-6">
+                    <div class="answer-choice clearfix">
+                        <h3 class="text-center">Answer {{firstAnsNum}}</h3>
+                        <div mathjax hljs ng-bind-html="answer1.content"></div>
+                        <!-- Attachment -->
+                        <compair-attachment-inline label="See detail:"
+                            attachment="answer1.file" download-name="'Answer #'+firstAnsNum">
+                        </compair-attachment-inline>
+                        <!-- Flagging -->
+                        <div ng-repeat="key in $root">{{key}}</div>
+                        <a href="" class="btn btn-default btn-xs pull-right"
+                            title="Flag as incomplete or inappropriate."
+                            ng-class="{'btn-danger': answer1.flagged}"
+                            ng-click="toggleAnswerFlag(answer1)">
+                            <i class="fa fa-warning"></i>
+                            <span ng-if="answer1.flagged">Flagged</span>
+                            <span ng-if="!answer1.flagged">Flag</span>
+                        </a>
+                    </div>
+
                     <label class="cke-label">
                         Your feedback for Answer {{firstAnsNum}} (shown to instructors and author)
                         <i class="fa fa-arrow-down"></i>
@@ -163,7 +182,26 @@
                         ng-model="answer1.comment.content" rows="8" ckeditor="editor1Options" required>
                     </textarea>
                 </div>
+
                 <div class="col-md-6">
+                    <div class="answer-choice clearfix">
+                        <h3 class="text-center">Answer {{secondAnsNum}}</h3>
+                        <div mathjax hljs ng-bind-html="answer2.content"></div>
+                        <!-- Attachment -->
+                        <compair-attachment-inline label="See detail:"
+                            attachment="answer2.file" download-name="'Answer #'+secondAnsNum">
+                        </compair-attachment-inline>
+                        <!-- Flagging -->
+                        <a href="" class="btn btn-default btn-xs pull-right"
+                            title="Flag as incomplete or inappropriate."
+                            ng-class="{'btn-danger': answer2.flagged}"
+                            ng-click="toggleAnswerFlag(answer2)">
+                            <i class="fa fa-warning"></i>
+                            <span ng-if="answer2.flagged">Flagged</span>
+                            <span ng-if="!answer2.flagged">Flag</span>
+                        </a>
+                    </div>
+
                     <label class="cke-label">
                         Your feedback for Answer {{secondAnsNum}} (shown to instructors and author)
                         <i class="fa fa-arrow-down"></i>
