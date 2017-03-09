@@ -112,14 +112,11 @@
                     <li ng-if="!canManageAssignment && ((assignment.compare_period && assignment.steps_left > 0) || (assignment.answer_period && !assignment.status.answers.answered))" class="label label-warning">
                         <span ng-if="assignment.answer_period && !assignment.status.answers.answered">1 answer<span ng-if="(assignment.compare_period && assignment.steps_left) > 0">, </span></span>
                         <span ng-if="assignment.compare_period && assignment.steps_left > 0">{{assignment.steps_left}} comparison<span ng-if="(assignment.steps_left) != 1">s</span></span>
-                        needed from you
+                        needed
                     </li>
                     <!-- Assignment Peer Feedback (for students) -->
                     <li ng-if="!canManageAssignment && assignment.after_comparing && assignment.status.answers.feedback" class="label label-warning">
-                        You received
-                        <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}?tab=comparisons" class="label-link">
-                            {{assignment.status.answers.feedback}} peer review<span ng-if="assignment.status.answers.feedback != 1">s</span> &raquo;
-                        </a>
+                        {{assignment.status.answers.feedback}} peer<span ng-if="assignment.status.answers.feedback != 1">s</span> left you feedback
                     </li>
                     <!-- Assignment Feedback (for instructors) -->
                     <li ng-if="canManageAssignment">
@@ -179,10 +176,15 @@
             </a>
 
             <!-- BUTTON when user is an admin AND the comparison period is active AND admins can compare -->
-           <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Answers" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
+            <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Answers" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
                ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">
                 Compare Answers
-           </a>
+            </a>
+           
+            <!-- BUTTON when user is not an admin AND the comparison period is complete AND the user has peer feedback to read -->
+            <a class="btn btn-success" ng-show="!canManageAssignment && assignment.after_comparing && assignment.status.answers.feedback" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}?tab=comparisons">
+                See Feedback
+            </a>
 
             <!-- ADDITIONAL TEXT when user has not answered AND user is not an admin AND answer period is active -->
             <p class="below-button-text"
