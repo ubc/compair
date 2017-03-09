@@ -3,7 +3,7 @@
     <ul class="list-inline">
         <li>{{label}}</li>
         <li>
-            <span ng-if="attachment.extension == 'pdf'">
+            <span ng-if="attachment.extension == 'pdf' && !forceDownload">
                 <a href="" class="btn btn-primary btn-xs" ng-click="updateInline(attachment);">
                     <i class="fa fa-file-pdf-o"></i> Show PDF Below
                 </a>
@@ -12,7 +12,7 @@
                     Open PDF Pop-up <i class="fa fa-external-link"></i>
                 </a>
             </span>
-            <span ng-if="attachment.extension != 'pdf'">
+            <span ng-if="attachment.extension != 'pdf' || forceDownload">
                 <a href="" class="btn btn-primary btn-xs" ng-click="openAttachment(attachment);">
                     Open Attachment <i class="fa fa-external-link"></i>
                 </a>

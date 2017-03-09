@@ -304,6 +304,24 @@ def get_score(restrict_user=True):
 
     return ret
 
+def get_gradebook(include_scores=False, include_self_evaluation=False):
+    ret = {
+        'user': fields.Nested(get_user(restrict_user=False)),
+        'num_answers': fields.Integer,
+        'num_comparisons': fields.Integer,
+        'grade': fields.Float,
+        'flagged': fields.String,
+        'file': fields.Nested(get_file(), allow_null=True),
+    }
+
+    if include_scores:
+        ret['score'] = fields.Raw
+
+    if include_self_evaluation:
+        ret['num_self_evaluation'] = fields.Integer
+
+    return ret
+
 def get_lti_consumer():
     return {
         'id': fields.String(attribute="uuid"),
