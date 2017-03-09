@@ -15,11 +15,14 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     # table columns
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"),
         nullable=False)
+    kaltura_media_id = db.Column(db.Integer, db.ForeignKey('kaltura_media.id', ondelete="SET NULL"),
+        nullable=True)
     name = db.Column(db.String(255), nullable=False)
     alias = db.Column(db.String(255), nullable=False)
 
     # relationships
     # user via User Model
+    # kaltura_media via KalturaMedia Model
 
     assignments = db.relationship("Assignment", backref="file", lazy='dynamic')
     answers = db.relationship("Answer", backref="file", lazy='dynamic')
@@ -27,7 +30,7 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     # hyprid and other functions
     @hybrid_property
     def extension(self):
-        return self.name.rsplit('.', 1)[1] if '.' in self.name else None
+        return self.name.lower().rsplit('.', 1)[1] if '.' in self.name else None
 
     @hybrid_property
     def mimetype(self):

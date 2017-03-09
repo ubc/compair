@@ -1,7 +1,7 @@
 // Directives to integrate highlight js into AngularJS
 (function() {
 
-var module = angular.module('ubc.ctlt.compair.common.highlightjs', []);
+var module = angular.module('ubc.ctlt.compair.rich.content.highlightjs', []);
 
 /***** Directives *****/
 module.directive('hljs', function() {

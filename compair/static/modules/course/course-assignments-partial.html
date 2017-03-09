@@ -67,9 +67,7 @@
 
                 <!-- Details -->
                 <div class="assignment-desc">
-                    <div mathjax hljs ng-bind-html="assignment.description"></div>
-                    <!-- Attachment -->
-                    <compair-attachment-inline label="See assignment details:" attachment="assignment.file"></compair-attachment-inline>
+                    <rich-content content="assignment.description" attachment="assignment.file"></rich-content>
                 </div>
 
                 <!-- Metadata -->
@@ -180,7 +178,7 @@
                ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">
                 Compare Answers
             </a>
-           
+
             <!-- BUTTON when user is not an admin AND the comparison period is complete AND the user has peer feedback to read -->
             <a class="btn btn-success" ng-show="!canManageAssignment && assignment.after_comparing && assignment.status.answers.feedback" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}?tab=comparisons">
                 See Feedback

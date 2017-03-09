@@ -824,10 +824,23 @@ module.service('xAPI',
                 return context;
             },
 
-            pdf_modal: function(pdf_name, relativePath, locationUrl, options) {
+            attachment_modal: function(attachment_name, relativePath, locationUrl, options) {
                 var context = _this.context.modal(relativePath, locationUrl, options);
                 context.contextActivities.other.push({
-                    id: _this._resourceIRI.attachment(pdf_name),
+                    id: _this._resourceIRI.attachment(attachment_name),
+                });
+                return context;
+            },
+
+            embeddable_content_modal: function(contentUrl, relativePath, locationUrl, options) {
+                var context = _this.context.modal(relativePath, locationUrl, options);
+
+                // ensure is valid url
+                if (!/^https?:\/\//i.test(contentUrl)) {
+                    contentUrl = 'http://' + contentUrl;
+                }
+                context.contextActivities.other.push({
+                    id: contentUrl,
                 });
                 return context;
             },
@@ -1182,51 +1195,74 @@ module.service('xAPIStatementHelper',
         };
 
 
-        // verb_inline_pdf
-        this.opened_inline_pdf = function(pdf_name) {
+        // verb_inline_kaltura_media
+        this.opened_inline_kaltura_media = function(pdf_name) {
             var relativePath = $location.path();
             var pageUrl = $location.absUrl();
 
             xAPI.generateStatement({
                 verb: xAPI.verb.opened,
-                object: xAPI.object.page_section(relativePath, "Inline PDF Attachment"),
+                object: xAPI.object.page_section(relativePath, "Inline Kaltura Media Attachment"),
                 context: xAPI.context.inline_pdf(pdf_name, relativePath, pageUrl)
             });
         };
 
-        this.closed_inline_pdf = function(pdf_name) {
+        this.closed_inline_kaltura_media = function(pdf_name) {
             var relativePath = $location.path();
             var locationUrl = $location.absUrl();
 
             xAPI.generateStatement({
                 verb: xAPI.verb.closed,
-                object: xAPI.object.page_section(relativePath, "Inline PDF Attachment"),
+                object: xAPI.object.page_section(relativePath, "Inline Kaltura Media Attachment"),
                 context: xAPI.context.inline_pdf(pdf_name, relativePath, locationUrl)
             });
         };
 
-
-
-        // verb_pdf_modal
-        this.opened_pdf_modal = function(pdf_name) {
+        // verb_attachment_modal
+        this.opened_attachment_modal = function(attachment_name) {
             var relativePath = $location.path();
             var locationUrl = $location.absUrl();
 
             xAPI.generateStatement({
                 verb: xAPI.verb.opened,
-                object: xAPI.object.modal(relativePath, "View PDF Attachment"),
-                context: xAPI.context.pdf_modal(pdf_name, relativePath, locationUrl)
+                object: xAPI.object.modal(relativePath, "View Attachment"),
+                context: xAPI.context.attachment_modal(attachment_name, relativePath, locationUrl)
             });
         };
 
-        this.closed_pdf_modal = function(pdf_name) {
+        this.closed_attachment_modal = function(attachment_name) {
             var relativePath = $location.path();
             var locationUrl = $location.absUrl();
 
             xAPI.generateStatement({
                 verb: xAPI.verb.closed,
-                object: xAPI.object.modal(relativePath, "View PDF Attachment"),
-                context: xAPI.context.pdf_modal(pdf_name, relativePath, locationUrl)
+                object: xAPI.object.modal(relativePath, "View Attachment"),
+                context: xAPI.context.attachment_modal(attachment_name, relativePath, locationUrl)
+            });
+        };
+
+
+
+        // verb_embeddable_content_modal
+        this.opened_embeddable_content_modal = function(contentUrl) {
+            var relativePath = $location.path();
+            var locationUrl = $location.absUrl();
+
+            xAPI.generateStatement({
+                verb: xAPI.verb.opened,
+                object: xAPI.object.modal(relativePath, "View Embeddable Content"),
+                context: xAPI.context.embeddable_content_modal(contentUrl, relativePath, locationUrl)
+            });
+        };
+
+        this.closed_embeddable_content_modal = function(contentUrl) {
+            var relativePath = $location.path();
+            var locationUrl = $location.absUrl();
+
+            xAPI.generateStatement({
+                verb: xAPI.verb.closed,
+                object: xAPI.object.modal(relativePath, "View Embeddable Content"),
+                context: xAPI.context.embeddable_content_modal(contentUrl, relativePath, locationUrl)
             });
         };
 
@@ -1258,22 +1294,6 @@ module.service('xAPIStatementHelper',
                 context: xAPI.context.answer_page_section(answer, relativePath, locationUrl)
             });
         };
-
-
-        // verb_answer_show_all_section
-        this.opened_answer_show_all_section = function(answer) {
-            if (!answer.id) { return; }
-
-            var relativePath = $location.path();
-            var pageUrl = $location.absUrl();
-
-            xAPI.generateStatement({
-                verb: xAPI.verb.opened,
-                object: xAPI.object.page_section(relativePath, "Answer show all"),
-                context: xAPI.context.answer_page_section(answer, relativePath, pageUrl)
-            });
-        };
-
 
         // verb_comparison_question
         this.initialize_comparison_question = function(comparison, comparison_number, pairing_algorithm, registration) {

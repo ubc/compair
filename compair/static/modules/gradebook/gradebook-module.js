@@ -96,7 +96,7 @@ module.controller("GradebookController",
         };
 
         $scope.openAttachment = function (file, downloadName) {
-            var filepath = '/app/attachment/' + file.name + "?name="+encodeURIComponent($scope.downloadName+'.'+file.extension);
+            var filepath = '/app/attachment/' + file.name + "?name="+encodeURIComponent(downloadName+'.'+file.extension);
             $window.open(filepath);
         };
 

@@ -36,8 +36,7 @@ var module = angular.module('ubc.ctlt.compair.course',
         'ubc.ctlt.compair.common.interceptor',
         'ubc.ctlt.compair.comparison',
         'ubc.ctlt.compair.assignment',
-        'ubc.ctlt.compair.common.highlightjs',
-        'ubc.ctlt.compair.common.attachment',
+        'ubc.ctlt.compair.rich.content',
         'ubc.ctlt.compair.toaster'
     ]
 );

@@ -223,7 +223,19 @@ def get_file():
         'name': fields.String,
         'alias': fields.String,
         'extension': fields.String,
-        'mimetype': fields.String
+        'mimetype': fields.String,
+        'kaltura_media': fields.Nested(get_kaltura_media(), allow_null=True)
+    }
+
+def get_kaltura_media():
+    return {
+        'partner_id': fields.Integer,
+        'player_id': fields.Integer,
+        'entry_id': fields.String,
+        'service_url': fields.String,
+        #'download_url': fields.String, #currently no reason to expose download url
+        'media_type': fields.Integer,
+        'show_recent_warning': fields.Boolean
     }
 
 

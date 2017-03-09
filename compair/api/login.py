@@ -1,6 +1,6 @@
 import os
 
-from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask, render_template
+from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask
 from flask_login import current_user, login_required, login_user, logout_user
 
 from compair.core import db, event, abort

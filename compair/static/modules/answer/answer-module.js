@@ -13,9 +13,8 @@ var module = angular.module('ubc.ctlt.compair.answer',
         'ubc.ctlt.compair.common.xapi',
         'ubc.ctlt.compair.common.form',
         'ubc.ctlt.compair.common.interceptor',
-        'ubc.ctlt.compair.common.mathjax',
-        'ubc.ctlt.compair.common.highlightjs',
         'ubc.ctlt.compair.common.timer',
+        'ubc.ctlt.compair.rich.content',
         'ubc.ctlt.compair.assignment',
         'ubc.ctlt.compair.attachment',
         'ubc.ctlt.compair.toaster'
@@ -104,10 +103,10 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
 module.controller(
     "AnswerWriteController",
     ["$scope", "$location", "$routeParams", "AnswerResource", "ClassListResource", "$route",
-        "AssignmentResource", "Toaster", "$timeout",
+        "AssignmentResource", "Toaster", "$timeout", "UploadValidator",
         "answerAttachService", "EditorOptions", "xAPI", "xAPIStatementHelper", "resolvedData",
     function ($scope, $location, $routeParams, AnswerResource, ClassListResource, $route,
-        AssignmentResource, Toaster, $timeout,
+        AssignmentResource, Toaster, $timeout, UploadValidator,
         answerAttachService, EditorOptions, xAPI, xAPIStatementHelper, resolvedData)
     {
         $scope.courseId = $routeParams.courseId;
@@ -125,8 +124,8 @@ module.controller(
 
         $scope.method = $scope.answer.id ? 'edit' : 'create';
         $scope.preventExit = true; //user should be warned before leaving page by default
+        $scope.UploadValidator = UploadValidator;
         $scope.tracking = xAPI.generateTracking();
-
         $scope.editorOptions = xAPI.ckeditorContentTracking(EditorOptions.basic, function(duration) {
             xAPIStatementHelper.interacted_answer_solution(
                 $scope.answer, $scope.tracking.getRegistration(), duration
@@ -256,9 +255,9 @@ module.controller(
 module.controller(
     "AnswerEditModalController",
     ["$scope", "AnswerResource", "Toaster", "xAPI", "xAPIStatementHelper",
-        "answerAttachService", "EditorOptions", "$uibModalInstance",
+        "answerAttachService", "UploadValidator", "EditorOptions", "$uibModalInstance",
     function ($scope, AnswerResource, Toaster, xAPI, xAPIStatementHelper,
-        answerAttachService, EditorOptions, $uibModalInstance)
+        answerAttachService, UploadValidator, EditorOptions, $uibModalInstance)
     {
         //$scope.courseId
         //$scope.assignmentId
@@ -266,6 +265,7 @@ module.controller(
         $scope.answer = typeof($scope.answer) != 'undefined' ? $scope.answer : {};
         $scope.method = 'edit';
         $scope.modalInstance = $uibModalInstance;
+        $scope.UploadValidator = UploadValidator;
         $scope.tracking = xAPI.generateTracking();
         $scope.editorOptions =  xAPI.ckeditorContentTracking(EditorOptions.basic, function(duration) {
             xAPIStatementHelper.interacted_answer_solution(
@@ -350,9 +350,9 @@ module.controller(
 
 module.controller(
     "ComparisonExampleModalController",
-    ["$scope", "AnswerResource", "Toaster",
+    ["$scope", "AnswerResource", "Toaster", "UploadValidator",
         "answerAttachService", "EditorOptions", "$uibModalInstance",
-    function ($scope, AnswerResource, Toaster,
+    function ($scope, AnswerResource, Toaster, UploadValidator,
         answerAttachService, EditorOptions, $uibModalInstance)
     {
         //$scope.courseId
@@ -361,6 +361,7 @@ module.controller(
         $scope.method = $scope.answer.id ? 'edit' : 'create';
         $scope.modalInstance = $uibModalInstance;
         $scope.comparison_example = true;
+        $scope.UploadValidator = UploadValidator;
 
         $scope.editorOptions = EditorOptions.basic;
 

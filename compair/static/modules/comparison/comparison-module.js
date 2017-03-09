@@ -14,9 +14,7 @@ var module = angular.module('ubc.ctlt.compair.comparison',
         'ubc.ctlt.compair.toaster',
         'ubc.ctlt.compair.common.xapi',
         'ubc.ctlt.compair.common.form',
-        'ubc.ctlt.compair.common.mathjax',
-        'ubc.ctlt.compair.common.highlightjs',
-        'ubc.ctlt.compair.common.attachment',
+        'ubc.ctlt.compair.rich.content',
         'ubc.ctlt.compair.session'
     ]
 );

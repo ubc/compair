@@ -3,10 +3,7 @@
         <h2 ng-if="parent.name"><i class="fa fa-comments"></i> {{parent.name}}</h2>
         <i class="fa fa-quote-left pull-left" ng-if="!parent.name && parent.content"></i>
         <i class="fa fa-quote-right pull-right" ng-if="!parent.name && parent.content"></i>
-        <div class="assignment-desc" mathjax hljs ng-bind-html="parent.content"></div>
-        <!-- Attachment -->
-        <compair-attachment-inline label="See assignment details:" attachment="parent.file"></compair-attachment-inline>
-
+        <rich-content content="parent.content" attachment="parent.file"></rich-content>
         <hr />
         <div class="form-group">
             <textarea ng-model="comment.content" id="commentContent" class="form-control" rows="8"

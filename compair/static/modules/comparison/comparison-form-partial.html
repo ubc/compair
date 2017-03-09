@@ -16,9 +16,7 @@
 
     <div ng-show="showAssignment " class="standalone-assignment">
         <h2><i class="fa fa-comments"></i> {{assignment.name}}</h2>
-        <div mathjax hljs ng-bind-html="assignment.description"></div>
-        <!-- Attachment -->
-        <compair-attachment-inline label="See assignment details:" attachment="assignment.file"></compair-attachment-inline>
+        <rich-content content="assignment.description" attachment="assignment.file"></rich-content>
     </div>
 
     <div class="row answer-pair">
@@ -46,44 +44,14 @@
         <div class="col-md-6" ng-hide="comparisonError">
             <div class="answer-choice clearfix">
                 <h3 class="text-center">Answer {{firstAnsNum}}</h3>
-                <div mathjax hljs ng-bind-html="answer1.content"></div>
-                <!-- Attachment -->
-                <compair-attachment-inline label="See detail:"
-                    attachment="answer1.file" download-name="'Answer #'+firstAnsNum">
-                </compair-attachment-inline>
-                <!-- Flagging -->
-                <!--
-                <a href="" class="btn btn-default btn-xs pull-right"
-                    title="Flag as incomplete or inappropriate."
-                    ng-class="{'btn-danger': answer1.flagged}"
-                    ng-click="toggleAnswerFlag(answer1)">
-                    <i class="fa fa-warning"></i>
-                    <span ng-if="answer1.flagged">Flagged</span>
-                    <span ng-if="!answer1.flagged">Flag</span>
-                </a>
-                -->
+                <rich-content content="answer1.content" attachment="answer1.file" download-name="'Answer #'+firstAnsNum"></rich-content>
             </div>
         </div>
 
         <div class="col-md-6" ng-hide="comparisonError">
             <div class="answer-choice clearfix">
                 <h3 class="text-center">Answer {{secondAnsNum}}</h3>
-                <div mathjax hljs ng-bind-html="answer2.content"></div>
-                <!-- Attachment -->
-                <compair-attachment-inline label="See detail:"
-                    attachment="answer2.file" download-name="'Answer #'+secondAnsNum">
-                </compair-attachment-inline>
-                <!-- Flagging -->
-                <!--
-                <a href="" class="btn btn-default btn-xs pull-right"
-                    title="Flag as incomplete or inappropriate."
-                    ng-class="{'btn-danger': answer2.flagged}"
-                    ng-click="toggleAnswerFlag(answer2)">
-                    <i class="fa fa-warning"></i>
-                    <span ng-if="answer2.flagged">Flagged</span>
-                    <span ng-if="!answer2.flagged">Flag</span>
-                </a>
-                -->
+                <rich-content content="answer2.content" attachment="answer2.file" download-name="'Answer #'+secondAnsNum"></rich-content>
             </div>
         </div>
 
@@ -162,52 +130,22 @@
                     <i class="fa fa-chevron-right" ng-hide="showAnswers"></i>
                     Show the answer pair again
                 </a></p>
-                
+
                 <div class="col-md-6">
                     <div ng-show="showAnswers" class="answer-choice clearfix">
                         <h3 class="text-center">Answer {{firstAnsNum}}</h3>
-                        <div mathjax hljs ng-bind-html="answer1.content"></div>
-                        <!-- Attachment -->
-                        <compair-attachment-inline label="See detail:"
-                            attachment="answer1.file" download-name="'Answer #'+firstAnsNum">
-                        </compair-attachment-inline>
-                        <!-- Flagging -->
-                        <!--
-                        <a href="" class="btn btn-default btn-xs pull-right"
-                            title="Flag as incomplete or inappropriate."
-                            ng-class="{'btn-danger': answer1.flagged}"
-                            ng-click="toggleAnswerFlag(answer1)">
-                            <i class="fa fa-warning"></i>
-                            <span ng-if="answer1.flagged">Flagged</span>
-                            <span ng-if="!answer1.flagged">Flag</span>
-                        </a>
-                        -->
+                        <rich-content content="answer1.content" attachment="answer1.file" download-name="'Answer #'+firstAnsNum"></rich-content>
                     </div>
                 </div>
 
                 <div class="col-md-6">
                     <div ng-show="showAnswers" class="answer-choice clearfix">
                         <h3 class="text-center">Answer {{secondAnsNum}}</h3>
-                        <div mathjax hljs ng-bind-html="answer2.content"></div>
-                        <!-- Attachment -->
-                        <compair-attachment-inline label="See detail:"
-                            attachment="answer2.file" download-name="'Answer #'+secondAnsNum">
-                        </compair-attachment-inline>
-                        <!-- Flagging -->
-                        <!--
-                        <a href="" class="btn btn-default btn-xs pull-right"
-                            title="Flag as incomplete or inappropriate."
-                            ng-class="{'btn-danger': answer2.flagged}"
-                            ng-click="toggleAnswerFlag(answer2)">
-                            <i class="fa fa-warning"></i>
-                            <span ng-if="answer2.flagged">Flagged</span>
-                            <span ng-if="!answer2.flagged">Flag</span>
-                        </a>
-                        -->
+                        <rich-content content="answer2.content" attachment="answer2.file" download-name="'Answer #'+secondAnsNum"></rich-content>
                     </div>
                 </div>
             </div>
-            
+
             <div class="row sub-step">
                 <div class="col-md-6">
                     <label class="cke-label">

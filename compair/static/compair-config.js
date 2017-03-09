@@ -14,6 +14,7 @@ var myApp = angular.module('myApp', [
     'ngPromiseExtras',
     'ubc.ctlt.compair.common',
     'ubc.ctlt.compair.common.xapi',
+    'ubc.ctlt.compair.rich.content',
     'ubc.ctlt.compair.answer',
     'ubc.ctlt.compair.attachment',
     'ubc.ctlt.compair.classlist',
@@ -39,6 +40,10 @@ myApp.factory('StandardErrorHandler',
     function($log, Toaster)
 {
     return function(error) {
+        // ensure data attribute exists
+        error.data = error.data || {};
+
+        // title and message set to error.data or defaults
         var title = error.data.title || error.statusText;
         var message = error.data.message || undefined;
         switch (error.status) {

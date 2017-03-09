@@ -98,7 +98,7 @@ describe('xapi-module', function () {
             "total_comparisons_required": 3,
             "total_steps_required": 4,
             "content": "<p><strong>For your answer, write ONLY the premise of 20-60 words. Do not include your notes. Consider spending 10-15 minutes making the notes, but not much longer for this exercise. I strongly recommend marking up a hard copy, as we do in class: paste the poem into a word document and print yourself a working copy.</strong></p>\n\n<p>Transplanted<br />\n&nbsp;&nbsp;&nbsp; ---by Lorna Crozier<br />\n<br />\nThis heart met the air. Grew in the hours<br />\nbetween the first body and the next<br />\na taste for things outside it: the heat<br />\nof high intensity, wind grieving<br />\nin the poplar leaves, the smell of steam<br />\nwafting through the open window<br />\nfrom the hot dog vendor&#39;s cart. Often it skips<br />\n<br />\na beat - grouse explode from ditches,<br />\na man flies through the windshield,<br />\na face the heart once knew<br />\nweeps in the corridor that gives nothing back<br />\nbut unloveliness and glare.<br />\n<br />\nLike a shovel that hits the earth, then rises,<br />\nand hits the earth again, it feels its own<br />\ndull blows. Some nights it is a sail billowing<br />\nwith blood, a raw fist punching.<br />\nSome nights, beneath the weight of blankets,<br />\nflesh and bones, the heart remembers. Feels those<br />\nsurgical gloves close around it, and goes cold.</p>\n",
-            "file": [],
+            "file": null,
             "user": {
                 "avatar": "b893bcb68fbeef6738437fa1deca0a28",
                 "displayname": "Tiffany Potter",
@@ -115,7 +115,7 @@ describe('xapi-module', function () {
             "comment_count": 3,
             "content": "This is answer 1",
             "created": "Sat, 29 Aug 2015 08:00:19 -0000",
-            "file": [],
+            "file": null,
             "flagged": false,
             "top_answer": false,
             "id": "407cABC123-abcABC123_Z",
@@ -155,7 +155,7 @@ describe('xapi-module', function () {
             "comment_count": 4,
             "content": "This is answer 2",
             "created": "Tue, 24 Feb 2015 04:09:28 -0000",
-            "file": [],
+            "file": null,
             "flagged": false,
             "top_answer": false,
             "id": "279cABC123-abcABC123_Z",
@@ -1005,7 +1005,7 @@ describe('xapi-module', function () {
             });
         });
 
-        describe('opened_inline_pdf:', function() {
+        describe('opened_inline_kaltura_media:', function() {
             it('should generate a valid statement', function() {
                 var expectedStatement = {
                     "id": mockStatementId,
@@ -1030,21 +1030,21 @@ describe('xapi-module', function () {
                         }
                     },
                     "object":{
-                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?section="+encodeURIComponent("Inline PDF Attachment"),
+                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?section="+encodeURIComponent("Inline Kaltura Media Attachment"),
                         "objectType":"Activity",
                         "definition":{
                             "type":"http://id.tincanapi.com/activitytype/section",
-                            "name": { "en-US": "Inline PDF Attachment" }
+                            "name": { "en-US": "Inline Kaltura Media Attachment" }
                         }
                     }
                 };
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
-                xAPIStatementHelper.opened_inline_pdf(mockFile.name);
+                xAPIStatementHelper.opened_inline_kaltura_media(mockFile.name);
                 $httpBackend.flush();
             });
         });
 
-        describe('closed_inline_pdf:', function() {
+        describe('closed_inline_kaltura_media:', function() {
             it('should generate a valid statement', function() {
                 var expectedStatement = {
                     "id": mockStatementId,
@@ -1069,21 +1069,21 @@ describe('xapi-module', function () {
                         }
                     },
                     "object":{
-                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?section="+encodeURIComponent("Inline PDF Attachment"),
+                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?section="+encodeURIComponent("Inline Kaltura Media Attachment"),
                         "objectType":"Activity",
                         "definition":{
                             "type":"http://id.tincanapi.com/activitytype/section",
-                            "name": { "en-US": "Inline PDF Attachment" }
+                            "name": { "en-US": "Inline Kaltura Media Attachment" }
                         }
                     }
                 };
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
-                xAPIStatementHelper.closed_inline_pdf(mockFile.name);
+                xAPIStatementHelper.closed_inline_kaltura_media(mockFile.name);
                 $httpBackend.flush();
             });
         });
 
-        describe('opened_pdf_modal:', function() {
+        describe('opened_attachment_modal:', function() {
             it('should generate a valid statement', function() {
                 var expectedStatement = {
                     "id": mockStatementId,
@@ -1108,21 +1108,21 @@ describe('xapi-module', function () {
                         }
                     },
                     "object":{
-                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent("View PDF Attachment"),
+                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent("View Attachment"),
                         "objectType":"Activity",
                         "definition":{
                             "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
-                            "name": { "en-US": "View PDF Attachment" }
+                            "name": { "en-US": "View Attachment" }
                         }
                     }
                 };
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
-                xAPIStatementHelper.opened_pdf_modal(mockFile.name);
+                xAPIStatementHelper.opened_attachment_modal(mockFile.name);
                 $httpBackend.flush();
             });
         });
 
-        describe('closed_pdf_modal:', function() {
+        describe('closed_attachment_modal:', function() {
             it('should generate a valid statement', function() {
                 var expectedStatement = {
                     "id": mockStatementId,
@@ -1147,16 +1147,94 @@ describe('xapi-module', function () {
                         }
                     },
                     "object":{
-                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent("View PDF Attachment"),
+                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent("View Attachment"),
                         "objectType":"Activity",
                         "definition":{
                             "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
-                            "name": { "en-US": "View PDF Attachment" }
+                            "name": { "en-US": "View Attachment" }
                         }
                     }
                 };
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
-                xAPIStatementHelper.closed_pdf_modal(mockFile.name);
+                xAPIStatementHelper.closed_attachment_modal(mockFile.name);
+                $httpBackend.flush();
+            });
+        });
+
+        describe('opened_embeddable_content_modal:', function() {
+            it('should generate a valid statement', function() {
+                var expectedStatement = {
+                    "id": mockStatementId,
+                    "timestamp": mockTimestamp,
+                    "verb":{
+                        "id":"http://activitystrea.ms/schema/1.0/open",
+                        "display":{"en-US":"opened"}
+                    },
+                    "context":{
+                        "contextActivities":{
+                            "parent":[{
+                                "id": "https://localhost:8888/app/#"+mockLocationPath,
+                                "objectType":"Activity"
+                            }],
+                            "other":[{
+                                "id": mockLocationAbsUrl,
+                                "objectType":"Activity"
+                            },{
+                                "id": "https://mock.com/url",
+                                "objectType":"Activity"
+                            }]
+                        }
+                    },
+                    "object":{
+                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent("View Embeddable Content"),
+                        "objectType":"Activity",
+                        "definition":{
+                            "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
+                            "name": { "en-US": "View Embeddable Content" }
+                        }
+                    }
+                };
+                $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                xAPIStatementHelper.opened_embeddable_content_modal("https://mock.com/url");
+                $httpBackend.flush();
+            });
+        });
+
+        describe('closed_embeddable_content_modal:', function() {
+            it('should generate a valid statement', function() {
+                var expectedStatement = {
+                    "id": mockStatementId,
+                    "timestamp": mockTimestamp,
+                    "verb":{
+                        "id":"http://activitystrea.ms/schema/1.0/close",
+                        "display":{"en-US":"closed"}
+                    },
+                    "context":{
+                        "contextActivities":{
+                            "parent":[{
+                                "id": "https://localhost:8888/app/#"+mockLocationPath,
+                                "objectType":"Activity"
+                            }],
+                            "other":[{
+                                "id": mockLocationAbsUrl,
+                                "objectType":"Activity"
+                            },{
+                                "id": "https://mock.com/url",
+                                "objectType":"Activity"
+                            }]
+                        }
+                    },
+                    "object":{
+                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent("View Embeddable Content"),
+                        "objectType":"Activity",
+                        "definition":{
+                            "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
+                            "name": { "en-US": "View Embeddable Content" }
+                        }
+                    }
+                };
+                $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                xAPIStatementHelper.closed_embeddable_content_modal("https://mock.com/url");
                 $httpBackend.flush();
             });
         });
@@ -1247,51 +1325,6 @@ describe('xapi-module', function () {
                 };
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
                 xAPIStatementHelper.closed_answer_replies_section(mockAnswer1);
-                $httpBackend.flush();
-            });
-        });
-
-        describe('opened_answer_show_all_section:', function() {
-            it('should do nothing when no answer id provided', function() {
-                var invalid = angular.copy(mockAnswer1);
-                invalid.id = null;
-                xAPIStatementHelper.opened_answer_show_all_section(invalid);
-            });
-
-            it('should generate a valid statement', function() {
-                var expectedStatement = {
-                    "id": mockStatementId,
-                    "timestamp": mockTimestamp,
-                    "verb":{
-                        "id":"http://activitystrea.ms/schema/1.0/open",
-                        "display":{"en-US":"opened"}
-                    },
-                    "context":{
-                        "contextActivities":{
-                            "parent":[{
-                                "id": "https://localhost:8888/app/#"+mockLocationPath,
-                                "objectType":"Activity"
-                            }],
-                            "other":[{
-                                "id": mockLocationAbsUrl,
-                                "objectType":"Activity"
-                            },{
-                                "id": "https://localhost:8888/app/xapi/answer/407cABC123-abcABC123_Z",
-                                "objectType":"Activity"
-                            }]
-                        }
-                    },
-                    "object":{
-                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?section="+encodeURIComponent("Answer show all"),
-                        "objectType":"Activity",
-                        "definition":{
-                            "type":"http://id.tincanapi.com/activitytype/section",
-                            "name": { "en-US": "Answer show all" }
-                        }
-                    }
-                };
-                $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
-                xAPIStatementHelper.opened_answer_show_all_section(mockAnswer1);
                 $httpBackend.flush();
             });
         });

@@ -29,10 +29,10 @@
         </compair-field-with-feedback>
 
         <div>
-            <label for="importFile">Attachment (maximum size 25MB)</label>
+            <label for="importFile">Attachment (maximum size {{UploadValidator.getAttachmentUploadLimit() | filesize }})</label>
             <p ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)">
                 <em>
-                    Tip: Allowed file types include PDFs, MP3s, MP4s, JPGs, and PNGs.
+                    Tip: Allowed file types include {{ UploadValidator.getAttachmentExtensionsForDisplay() }}.
                     Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> or using <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a> or <a href="http://www.google.com/chrome/">Chrome</a> if you have problems uploading PDFs.
                 </em>
             </p>
@@ -270,12 +270,7 @@
                     <div ng-if="!comparison_example.answer1.content && !comparison_example.answer1.file">
                         <p class="text-muted"><em>Click 'Edit' above to add your example answer here.</em></p>
                     </div>
-                    <div>
-                        <div mathjax hljs ng-bind-html="comparison_example.answer1.content"></div>
-                        <compair-attachment-inline label="See answer details:"
-                            attachment="comparison_example.answer1.file">
-                        </compair-attachment-inline>
-                    </div>
+                    <rich-content content="comparison_example.answer1.content" attachment="comparison_example.answer1.file"></rich-content>
                 </div>
                 <div class="col-md-1">
                     <label>vs.</label>
@@ -290,12 +285,7 @@
                     <div ng-if="!comparison_example.answer2.content && !comparison_example.answer2.file">
                         <p class="text-muted"><em>Click 'Edit' above to add your example answer here.</em></p>
                     </div>
-                    <div>
-                        <div mathjax hljs ng-bind-html="comparison_example.answer2.content"></div>
-                        <compair-attachment-inline label="See answer details:"
-                            attachment="comparison_example.answer2.file">
-                        </compair-attachment-inline>
-                    </div>
+                    <rich-content content="comparison_example.answer2.content" attachment="comparison_example.answer2.file"></rich-content>
                 </div>
             </div>
 
@@ -369,6 +359,6 @@
     </fieldset>
 
     <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
-        ng-disabled="assignmentForm.$invalid || assignment.criteria.length == 0 || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess)" />
+        ng-disabled="assignmentForm.$invalid || assignment.criteria.length == 0 || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
 
 </form>
