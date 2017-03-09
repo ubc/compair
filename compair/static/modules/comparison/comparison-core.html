@@ -154,8 +154,14 @@
                     Remember to make your comments&mdash;including criticisms&mdash;encouraging, respectful, and specific.
                 </div>
 
+                <p class="assignment-toggle"><a href="" ng-click="showAnswers = !showAnswers">
+                    <i class="fa fa-chevron-down" ng-show="showAnswers"></i>
+                    <i class="fa fa-chevron-right" ng-hide="showAnswers"></i>
+                    Show the answer pair again
+                </a></p>
+                
                 <div class="col-md-6">
-                    <div class="answer-choice clearfix">
+                    <div ng-show="showAnswers" class="answer-choice clearfix">
                         <h3 class="text-center">Answer {{firstAnsNum}}</h3>
                         <div mathjax hljs ng-bind-html="answer1.content"></div>
                         <!-- Attachment -->
@@ -173,18 +179,10 @@
                             <span ng-if="!answer1.flagged">Flag</span>
                         </a>
                     </div>
-
-                    <label class="cke-label">
-                        Your feedback for Answer {{firstAnsNum}} (shown to instructors and author)
-                        <i class="fa fa-arrow-down"></i>
-                    </label>
-                    <textarea
-                        ng-model="answer1.comment.content" rows="8" ckeditor="editor1Options" required>
-                    </textarea>
                 </div>
 
                 <div class="col-md-6">
-                    <div class="answer-choice clearfix">
+                    <div ng-show="showAnswers" class="answer-choice clearfix">
                         <h3 class="text-center">Answer {{secondAnsNum}}</h3>
                         <div mathjax hljs ng-bind-html="answer2.content"></div>
                         <!-- Attachment -->
@@ -201,7 +199,21 @@
                             <span ng-if="!answer2.flagged">Flag</span>
                         </a>
                     </div>
+                </div>
+            </div>
+            
+            <div class="row sub-step">
+                <div class="col-md-6">
+                    <label class="cke-label">
+                        Your feedback for Answer {{firstAnsNum}} (shown to instructors and author)
+                        <i class="fa fa-arrow-down"></i>
+                    </label>
+                    <textarea
+                        ng-model="answer1.comment.content" rows="8" ckeditor="editor1Options" required>
+                    </textarea>
+                </div>
 
+                <div class="col-md-6">
                     <label class="cke-label">
                         Your feedback for Answer {{secondAnsNum}} (shown to instructors and author)
                         <i class="fa fa-arrow-down"></i>
