@@ -45,12 +45,11 @@
                     <th class="text-center" ng-if="includeScores">
                         <a href="" ng-click="updateTableOrderBy('score')">Answer Score</a>
                     </th>
-                    <th class="text-center" ng-if="showAttachments">
-                        <a href="" ng-click="updateTableOrderBy('file')">Attachment</a>
-                    </th>
+                    <!--
                     <th class="text-center">
                         <a href="" ng-click="updateTableOrderBy('flagged')">Flagged</a>
                     </th>
+                    -->
                     <th class="text-center">
                         <a href="" ng-click="updateTableOrderBy('num_comparisons')">Evaluations</a>
                     </th>
@@ -88,6 +87,7 @@
                         <span ng-if="!entry.file"> n/a </span>
                         <a ng-if="entry.file" ng-click="openAttachment(entry.file, entry.download_file_name)">View</a>
                     </td>
+                    <!--
                     <td class="text-center" ng-class="{
                         'text-success': entry.flagged == 'No',
                         'text-danger': entry.flagged == 'Yes'
@@ -95,6 +95,7 @@
                         <strong ng-if="entry.flagged != 'No Answer'">{{ entry.flagged }}</strong>
                         <strong ng-if="entry.flagged == 'No Answer'">n/a</strong>
                     </td>
+                    -->
                     <td class="text-center" ng-class="{
                         'text-danger': entry.num_comparisons == 0,
                         'text-warning': entry.num_comparisons > 0 &&

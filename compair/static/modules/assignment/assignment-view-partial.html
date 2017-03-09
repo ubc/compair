@@ -262,6 +262,7 @@
                         <span ng-show="answerFilters.anonymous">Student</span>
                         <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right" ng-if="(canManageAssignment && !answerFilters.anonymous) || (answer.user_id == loggedInUserId && assignment.answer_period && !assignment.compare_period)">
+                            <!--
                             <span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
                                 <i class="fa fa-warning"></i>
                                 Flagged
@@ -269,6 +270,7 @@
                                     Unflag?
                                 </a>
                             </span>
+                            -->
                             <span ng-show="canManageAssignment">
                                 <a href="" ng-if="!answer.top_answer" title="Add to instructor's top answers" ng-click="setTopAnswer(answer, true)">
                                     <i class="fa fa-star-o"></i>
@@ -413,6 +415,7 @@
                     <compair-avatar user-id="answer.user_id" avatar="answer.user.avatar" me="true"></compair-avatar>
                     <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
                     <div class="manager-actions pull-right" ng-if="canManageAssignment || (answer.user_id == loggedInUserId && assignment.answer_period && !assignment.compare_period)">
+                        <!--
                         <span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
                             <i class="fa fa-warning"></i>
                             Flagged
@@ -420,6 +423,7 @@
                                 Unflag?
                             </a>
                         </span>
+                        -->
                         <a href="" confirmation-needed="deleteAnswer(answer, courseId, assignment.id, answer.id)" keyword="answer">
                             <i class="fa fa-trash-o"></i>
                         </a>
