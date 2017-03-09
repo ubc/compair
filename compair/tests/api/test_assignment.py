@@ -180,6 +180,93 @@ class AssignmentAPITests(ComPAIRAPITestCase):
                 self.assertEqual(criterion['id'], rv.json['criteria'][index]['id'])
                 self.assertEqual(criterion['weight'], rv.json['criteria'][index]['weight'])
 
+            # test answer/compare period validation
+            now = datetime.datetime.utcnow()
+            course = self.data.get_course()
+            course.start_date = now
+            course.end_date = now + datetime.timedelta(days=90)
+            db.session.commit()
+
+            valid_answer_start = now.isoformat() + 'Z'
+            valid_answer_end = (now + datetime.timedelta(days=90)).isoformat() + 'Z'
+
+            invalid_answer_start = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
+            invalid_answer_end = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
+            invalid_answer_end2 = (now + datetime.timedelta(days=91)).isoformat() + 'Z'
+
+            valid_compare_start = now.isoformat() + 'Z'
+            valid_compare_end = (now + datetime.timedelta(days=90)).isoformat() + 'Z'
+
+            invalid_compare_start = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
+            invalid_compare_end = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
+            invalid_compare_end2 = (now + datetime.timedelta(days=91)).isoformat() + 'Z'
+            assignment_expected = {
+                'name': 'this is a new assignment\'s name',
+                'description': 'this is the new assignment\'s description.',
+                'answer_start': valid_answer_start,
+                'answer_end': valid_answer_end,
+                'compare_start': valid_answer_start,
+                'compare_end': valid_answer_end,
+                'number_of_comparisons': 3,
+                'students_can_reply': False,
+                'enable_self_evaluation': False,
+                'criteria': assignment_criteria,
+                'pairing_algorithm': PairingAlgorithm.random.value,
+                'rank_display_limit': 20,
+                'answer_grade_weight': 1,
+                'comparison_grade_weight': 1,
+                'self_evaluation_grade_weight': 1
+            }
+
+            # ensure is valid to begin with
+            rv = self.client.post(self.url, data=json.dumps(assignment_expected), content_type='application/json')
+            self.assert200(rv)
+
+            # test invalid assignment answer end
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['answer_end'] = invalid_answer_end
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'error': 'Answer period end time must be after the answer start time.'})
+
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['answer_end'] = invalid_answer_end2
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'error': 'Answer period end time must be before the course end time.'})
+
+            # test invalid assignment compare start
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['compare_start'] = None
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'error': 'No compare period start time provided.'})
+
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['compare_start'] = invalid_compare_start
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'error': 'Compare period start time must be after the answer start time.'})
+
+            # test invalid assignment compare end
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['compare_end'] = None
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'error': 'No compare period end time provided.'})
+
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['compare_end'] = invalid_compare_end
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'error': 'Compare period end time must be after the compare start time.'})
+
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['compare_end'] = invalid_compare_end2
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'error': 'Compare period end time must be before the course end time.'})
+
     def test_edit_assignment(self):
         criterion2 = self.data.create_criterion(self.data.get_authorized_instructor())
         criterion3 = self.data.create_criterion(self.data.get_authorized_instructor())
@@ -321,6 +408,96 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             rv = self.client.post(url, data=json.dumps(ta_add_criteria), content_type='application/json')
             self.assert200(rv)
             self._verify_assignment(assignment, rv.json)
+
+
+        with self.login(self.data.get_authorized_instructor().username):
+            # test answer/compare period validation
+            now = datetime.datetime.utcnow()
+            course = self.data.get_course()
+            course.start_date = now
+            course.end_date = now + datetime.timedelta(days=90)
+            db.session.commit()
+
+            valid_answer_start = now.isoformat() + 'Z'
+            valid_answer_end = (now + datetime.timedelta(days=90)).isoformat() + 'Z'
+
+            invalid_answer_start = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
+            invalid_answer_end = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
+            invalid_answer_end2 = (now + datetime.timedelta(days=91)).isoformat() + 'Z'
+
+            valid_compare_start = now.isoformat() + 'Z'
+            valid_compare_end = (now + datetime.timedelta(days=90)).isoformat() + 'Z'
+
+            invalid_compare_start = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
+            invalid_compare_end = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
+            invalid_compare_end2 = (now + datetime.timedelta(days=91)).isoformat() + 'Z'
+            assignment_expected = {
+                'id': assignment.uuid,
+                'name': 'This is the new name.',
+                'description': 'new_description',
+                'answer_start': valid_answer_start,
+                'answer_end': valid_answer_end,
+                'compare_start': valid_compare_start,
+                'compare_end': valid_compare_end,
+                'number_of_comparisons': assignment.number_of_comparisons,
+                'students_can_reply': assignment.students_can_reply,
+                'enable_self_evaluation': assignment.enable_self_evaluation,
+                'criteria': assignment_criteria,
+                'pairing_algorithm': PairingAlgorithm.adaptive.value,
+                'rank_display_limit': 10,
+                'answer_grade_weight': 2,
+                'comparison_grade_weight': 2,
+                'self_evaluation_grade_weight': 2
+            }
+
+            # ensure is valid to begin with
+            rv = self.client.post(self.url, data=json.dumps(assignment_expected), content_type='application/json')
+            self.assert200(rv)
+
+            # test invalid assignment answer end
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['answer_end'] = invalid_answer_end
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'error': 'Answer period end time must be after the answer start time.'})
+
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['answer_end'] = invalid_answer_end2
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'error': 'Answer period end time must be before the course end time.'})
+
+            # test invalid assignment compare start
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['compare_start'] = None
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'error': 'No compare period start time provided.'})
+
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['compare_start'] = invalid_compare_start
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'error': 'Compare period start time must be after the answer start time.'})
+
+            # test invalid assignment compare end
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['compare_end'] = None
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'error': 'No compare period end time provided.'})
+
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['compare_end'] = invalid_compare_end
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'error': 'Compare period end time must be after the compare start time.'})
+
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['compare_end'] = invalid_compare_end2
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'error': 'Compare period end time must be before the course end time.'})
 
     def test_delete_assignment(self):
         # Test deleting the assignment

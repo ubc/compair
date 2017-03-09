@@ -178,6 +178,46 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         AssignmentGrade.calculate_grades(self)
 
     @classmethod
+    def validate_periods(cls, course_start, course_end, answer_start, answer_end, compare_start, compare_end):
+        # validate answer period
+        if answer_start == None:
+            return (False, "No answer period start time provided.")
+        elif answer_end == None:
+            return (False, "No answer period end time provided.")
+
+        course_start = course_start.replace(tzinfo=pytz.utc) if course_start else None
+        course_end = course_end.replace(tzinfo=pytz.utc) if course_end else None
+        answer_start = answer_start.replace(tzinfo=pytz.utc)
+        answer_end = answer_end.replace(tzinfo=pytz.utc)
+
+        # course start <= answer start < answer end <= course end
+        if course_start and course_start > answer_start:
+            return (False, "Answer period start time must be after the course start time.")
+        elif answer_start >= answer_end:
+            return (False, "Answer period end time must be after the answer start time.")
+        elif course_end and course_end < answer_end:
+            return (False, "Answer period end time must be before the course end time.")
+
+        # validate compare period
+        if compare_start == None and compare_end != None:
+            return (False, "No compare period start time provided.")
+        elif compare_start != None and compare_end == None:
+            return (False, "No compare period end time provided.")
+        elif compare_start != None and compare_end != None:
+            compare_start = compare_start.replace(tzinfo=pytz.utc)
+            compare_end = compare_end.replace(tzinfo=pytz.utc)
+
+            # answer start < compare start < compare end <= course end
+            if answer_start > compare_start:
+                return (False, "Compare period start time must be after the answer start time.")
+            elif compare_start > compare_end:
+                return (False, "Compare period end time must be after the compare start time.")
+            elif course_end and course_end < compare_end:
+                return (False, "Compare period end time must be before the course end time.")
+
+        return (True, None)
+
+    @classmethod
     def __declare_last__(cls):
         from . import UserCourse, CourseRole
         super(cls, cls).__declare_last__()

@@ -78,9 +78,12 @@
                 <label class="required-star">Answering Begins</label><br />
                 <div class="assignment-date">
                     <span class="input-group">
-                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.astart.date" is-open="date.astart.opened" required />
+                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.astart.date"
+                            min-date="datePickerMinDate(course.start_date)"
+                            max-date="datePickerMaxDate(date.aend.date, course.end_date)"
+                            is-open="date.astart.opened" required />
                         <span class="input-group-btn">
-                            <button type="button" class="btn btn-default" ng-click="date.astart.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.astart)"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
                     </span>
                 </div>
@@ -92,9 +95,12 @@
                 <label class="required-star">Answering Ends</label><br />
                 <div class="assignment-date">
                     <span class="input-group">
-                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.aend.date" is-open="date.aend.opened" required />
+                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.aend.date"
+                            min-date="datePickerMinDate(date.astart.date, course.start_date)"
+                            max-date="datePickerMaxDate(course.end_date)"
+                            is-open="date.aend.opened" required />
                         <span class="input-group-btn">
-                            <button type="button" class="btn btn-default" ng-click="date.aend.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.aend)"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
                     </span>
                 </div>
@@ -117,9 +123,12 @@
                     <label class="required-star">Comparing Begins</label><br />
                     <div class="assignment-date">
                         <span class="input-group">
-                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.cstart.date" is-open="date.cstart.opened" ng-required="assignment.availableCheck" />
+                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.cstart.date"
+                                min-date="datePickerMinDate(date.astart.date, course.start_date)"
+                                max-date="datePickerMaxDate(date.cend.date, course.end_date)"
+                                is-open="date.cstart.opened" ng-required="assignment.availableCheck" />
                             <span class="input-group-btn">
-                                <button type="button" class="btn btn-default" ng-click="date.cstart.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.cstart)"><i class="glyphicon glyphicon-calendar"></i></button>
                             </span>
                         </span>
                     </div>
@@ -131,9 +140,12 @@
                     <label class="required-star">Comparing Ends</label><br />
                     <div class="assignment-date">
                         <span class="input-group">
-                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.cend.date" is-open="date.cend.opened" ng-required="assignment.availableCheck" />
+                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.cend.date"
+                                min-date="datePickerMinDate(date.cstart.date, course.start_date)"
+                                max-date="datePickerMaxDate(course.end_date)"
+                                is-open="date.cend.opened" ng-required="assignment.availableCheck" />
                             <span class="input-group-btn">
-                                <button type="button" class="btn btn-default" ng-click="date.cend.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.cend)"><i class="glyphicon glyphicon-calendar"></i></button>
                             </span>
                         </span>
                     </div>

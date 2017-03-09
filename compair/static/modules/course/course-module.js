@@ -231,15 +231,11 @@ module.controller(
             $scope.originalCourse = angular.copy(course);
         };
 
-        $scope.date.course_start.open = function($event) {
+        $scope.datePickerOpen = function($event, object) {
             $event.preventDefault();
             $event.stopPropagation();
-            $scope.date.course_start.opened = true;
-        };
-        $scope.date.course_end.open = function($event) {
-            $event.preventDefault();
-            $event.stopPropagation();
-            $scope.date.course_end.opened = true;
+
+            object.opened = true;
         };
 
         $scope.save = function() {
@@ -336,17 +332,6 @@ module.controller(
                 }
             }
 
-            $scope.duplicateCourse.date.course_start.open = function($event) {
-                $event.preventDefault();
-                $event.stopPropagation();
-                $scope.duplicateCourse.date.course_start.opened = true;
-            };
-            $scope.duplicateCourse.date.course_end.open = function($event) {
-                $event.preventDefault();
-                $event.stopPropagation();
-                $scope.duplicateCourse.date.course_end.opened = true;
-            };
-
             $scope.originalAssignments = [];
             $scope.duplicateAssignments = [];
             AssignmentResource.get({'courseId': $scope.originalCourse.id}).$promise.then(
@@ -411,29 +396,15 @@ module.controller(
                     duplicate_assignment.availableCheck = true;
                 }
 
-                duplicate_assignment.date.astart.open = function($event) {
-                    $event.preventDefault();
-                    $event.stopPropagation();
-                    duplicate_assignment.date.astart.opened = true;
-                };
-                duplicate_assignment.date.aend.open = function($event) {
-                    $event.preventDefault();
-                    $event.stopPropagation();
-                    duplicate_assignment.date.aend.opened = true;
-                };
-                duplicate_assignment.date.cstart.open = function($event) {
-                    $event.preventDefault();
-                    $event.stopPropagation();
-                    duplicate_assignment.date.cstart.opened = true;
-                };
-                duplicate_assignment.date.cend.open = function($event) {
-                    $event.preventDefault();
-                    $event.stopPropagation();
-                    duplicate_assignment.date.cend.opened = true;
-                };
-
                 $scope.duplicateAssignments.push(duplicate_assignment);
             });
+        };
+
+        $scope.datePickerOpen = function($event, object) {
+            $event.preventDefault();
+            $event.stopPropagation();
+
+            object.opened = true;
         };
 
         $scope.cancelDuplicateCourse = function() {
@@ -442,6 +413,30 @@ module.controller(
             } else {
                 $scope.$dismiss();
             }
+        };
+
+        $scope.datePickerMinDate = function() {
+            var dates = Array.prototype.slice.call(arguments).filter(function(val) {
+                return val !== null;
+            });
+            if (dates.length == 0) {
+                return null;
+            }
+            return dates.reduce(function (left, right) {
+                return moment(left) > moment(right) ? left : right;
+            }, dates[0]);
+        };
+
+        $scope.datePickerMaxDate = function() {
+            var dates = Array.prototype.slice.call(arguments).filter(function(val) {
+                return val !== null;
+            });
+            if (dates.length == 0) {
+                return null;
+            }
+            return dates.reduce(function (left, right) {
+                return moment(left) < moment(right) ? left : right;
+            }, dates[0]);
         };
 
         $scope.duplicate = function() {
@@ -469,6 +464,7 @@ module.controller(
 
                 var assignment_submit = {
                     id: assignment.id,
+                    name: assignment.name,
                     answer_start: combineDateTime(assignment.date.astart),
                     answer_end: combineDateTime(assignment.date.aend),
                     compare_start: combineDateTime(assignment.date.cstart),
@@ -567,17 +563,11 @@ module.controller(
             $scope.loggedInUserId = user.id;
         });
 
-        $scope.date.course_start.open = function($event) {
+        $scope.datePickerOpen = function($event, object) {
             $event.preventDefault();
             $event.stopPropagation();
 
-            $scope.date.course_start.opened = true;
-        };
-        $scope.date.course_end.open = function($event) {
-            $event.preventDefault();
-            $event.stopPropagation();
-
-            $scope.date.course_end.opened = true;
+            object.opened = true;
         };
 
         $scope.save = function() {
