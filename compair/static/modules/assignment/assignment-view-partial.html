@@ -45,10 +45,10 @@
                 Comparisons due {{assignment.compare_end | amDateFormat: 'MMM D @ h:mm a'}}
             </li>
             <li ng-if="!canManageAssignment && assignment.compare_period && (steps_left > 0) && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)">
-                <strong>{{ steps_left }} comparison<span ng-if="steps_left != 1">s</span></strong> needed from you
+                <strong>{{ steps_left }} comparison<span ng-if="steps_left != 1">s</span></strong> needed
             </li>
             <li ng-if="!canManageAssignment && assignment.after_comparing && assignment.status.answers.feedback">
-                You received <strong>{{assignment.status.answers.feedback}} peer review<span ng-if="assignment.status.answers.feedback != 1">s</span></strong>
+                <strong>{{assignment.status.answers.feedback}} peer<span ng-if="assignment.status.answers.feedback != 1">s</span></strong> left you feedback below
             </li>
             <li ng-if="canManageAssignment || assignment.user_id == loggedInUserId">
                 <a ng-if="canManageAssignment || assignment.user_id == loggedInUserId" title="Delete" confirmation-needed="deleteAssignment(courseId, assignment.id)" keyword="assignment" href="">
@@ -322,8 +322,7 @@
                     <p class="pull-right score-display" ng-if="!canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && !answer.score">
                         <em>Not Ranked</em>
                     </p>
-
-
+                    
                     <!-- Student Answer Replies Section -->
                     <a href="" ng-click="showReplies = !showReplies; toggleReplies(showReplies, answer)">
                         <h3 class="reply-heading" ng-if="!answerFilters.anonymous && ((answer.comment_count && (answer.user_id == loggedInUserId || canManageAssignment)) || (answer.public_comment_count && see_answers))">
@@ -408,6 +407,8 @@
 
             <!-- Student Answer Metadata Header -->
             <div class="each-evaluation clearfix" ng-repeat="answer in user_answers.objects">
+                <h3 ng-if="$first">Your answer and peer feedback</h3>
+                <br ng-if="$first"/>
                 <div class="each-header clearfix">
                     <compair-avatar user-id="answer.user_id" avatar="answer.user.avatar" me="true"></compair-avatar>
                     <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
@@ -488,6 +489,9 @@
             <!-- Comparisons Section -->
             <div class="each-evaluation" ng-repeat="comparison in comparisons.objects">
 
+                <h3 ng-if="$first">Your comparisons</h3>
+                <br ng-if="$first"/>
+            
                 <!-- Comparison Header -->
                 <div class="each-header">
                     <compair-avatar user-id="comparison.user_id" avatar="comparison.user.avatar" me="true"></compair-avatar>
