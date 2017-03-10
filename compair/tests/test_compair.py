@@ -68,7 +68,6 @@ def json_recorder(filename, key=None):
 class ComPAIRTestCase(TestCase):
     def create_app(self):
         app = create_app(settings_override=test_app_settings)
-        app.config['ENFORCE_SSL'] = False
         return app
 
     def setUp(self):

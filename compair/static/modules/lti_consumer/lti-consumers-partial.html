@@ -1,4 +1,4 @@
-<div ng-controller="LTIConsumerController" class="lti-consumers-screen">
+<div class="lti-consumers-screen">
     <div class="row">
         <header class="col-md-6">
             <h1><i class="fa fa-cogs"></i> Manage LTI Consumers</h1>
@@ -45,9 +45,9 @@
     </div>
 
     <div class="text-center" ng-if="consumers.length">
-        <pagination total-items="totalNumConsumers" ng-model="consumerFilters.page"
+        <uib-pagination total-items="totalNumConsumers" ng-model="consumerFilters.page"
                     max-size="10" class="pagination-sm" boundary-links="true"
                     direction-links="false" items-per-page="consumerFilters.perPage"
-                    num-pages="numPages" ng-hide="numPages == 1"></pagination>
+                    num-pages="numPages" ng-hide="numPages == 1"></uib-pagination>
     </div>
 </div>

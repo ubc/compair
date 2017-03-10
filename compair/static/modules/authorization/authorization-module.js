@@ -13,8 +13,8 @@ var module = angular.module('ubc.ctlt.compair.authorization',
 // normally, there would be a "Service" at the end of the name, but it seems
 // too much to type if it's going to be used a lot
 module.factory('Authorize',
-    ["$log", "$q", "Session",
-    function($log, $q, Session)
+    ["$q", "Session",
+    function($q, Session)
     {
         var _allow_operation = function(operation, resource, resource_scope, permissions) {
             if (resource in permissions)

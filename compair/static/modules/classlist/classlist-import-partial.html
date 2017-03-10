@@ -1,44 +1,41 @@
-<div ng-controller="ClassImportController">
-
-    <h1>Import Users</h1>
-    <p class="intro-text"><strong>Create, update, enrol, or drop multiple users</strong> in this course at the same time by importing a CSV (comma-separated values) file with a full list of your course's users. Any new users in an imported file will be enrolled in the course and any deleted users will be dropped from the course.</p>
-    <div class="form-group">
-        <fieldset>
-            <legend>For {{course_name}}</legend>
-            <div class="form-group">
-                <label for="importType" class="required-star">What will students use to log in?</label>
-                <select class="form-control" ng-model="importType" name="importType"
-                        ng-options="type.value as type.name for type in importTypes" required>
-                </select>
-                <br />
-                <p><strong>With this setting:</strong></p>
-                <ul class="li-spacing" ng-if="importType == null">
-                    <li>Students will log in using a new username and password specific to ComPAIR. You must send the username and password to each student.</li>
-                    <li>User information is expected in this order: <strong><span class="required-star">Username</span>, <span class="required-star">Password</span>, Student Number, First Name, Last Name, Email, Display Name, Group</strong></li>
-                    <li>Usernames and passwords are required. All other information is optional. Usernames and student numbers must also be unique in the application.</li>
-                    <li>To skip non-required information, simply leave a blank space between commas, e.g., to leave out first and last name:<br />
-                    "studentuser1, pass1234, 005678, , ,jane.doe@student.ca, display0001, Group 2</li>
-                </ul>
-                <ul class="li-spacing" ng-if="importType == ThirdPartyAuthType.cas">
-                    <li>Students will log in using their CWL. The usernames in your file must match the students' CWLs.</li>
-                    <li>User information is expected in this order: <strong><span class="required-star">Username</span>, Student Number, First Name, Last Name, Email, Display Name, Group</strong></li>
-                    <li>Usernames are required. All other information is optional. Usernames and student numbers must also be unique in the application.</li>
-                    <li>To skip non-required information, simply leave a blank space between commas, e.g., to leave out first and last name:<br />
-                    "studentuser1, 005678, , ,jane.doe@student.ca, display0001, Group 2</li>
-              </ul>
-            </div>
-            <div class="form-group">
-                <label for="importFile" class="required-star">Choose CSV File</label>
-                <input type="file" nv-file-select uploader="uploader"
-                    id="importFile" ng-click="uploader.clearQueue()"/>
-            </div>
-        </fieldset>
-    </div>
-    <input type="submit" class="btn btn-success btn-lg center-block" value="Import"
-        ng-click="upload();"
-        ng-disabled="!uploader.queue[0] || submitted" />
-    <p ng-if="submitted" class="text-center">
-        <i class="fa fa-spin fa-spinner"></i>
-        &nbsp; Importing...
-    </p>
+<h1>Import Users</h1>
+<p class="intro-text"><strong>Create, update, enrol, or drop multiple users</strong> in this course at the same time by importing a CSV (comma-separated values) file with a full list of your course's users. Any new users in an imported file will be enrolled in the course and any deleted users will be dropped from the course.</p>
+<div class="form-group">
+    <fieldset>
+        <legend>For {{course.name}}</legend>
+        <div class="form-group">
+            <label for="importType" class="required-star">What will students use to log in?</label>
+            <select class="form-control" ng-model="importType" name="importType"
+                    ng-options="type.value as type.name for type in importTypes" required>
+            </select>
+            <br />
+            <p><strong>With this setting:</strong></p>
+            <ul class="li-spacing" ng-if="importType == null">
+                <li>Students will log in using a new username and password specific to ComPAIR. You must send the username and password to each student.</li>
+                <li>User information is expected in this order: <strong><span class="required-star">Username</span>, <span class="required-star">Password</span>, Student Number, First Name, Last Name, Email, Display Name, Group</strong></li>
+                <li>Usernames and passwords are required. All other information is optional. Usernames and student numbers must also be unique in the application.</li>
+                <li>To skip non-required information, simply leave a blank space between commas, e.g., to leave out first and last name:<br />
+                "studentuser1, pass1234, 005678, , ,jane.doe@student.ca, display0001, Group 2</li>
+            </ul>
+            <ul class="li-spacing" ng-if="importType == ThirdPartyAuthType.cas">
+                <li>Students will log in using their CWL. The usernames in your file must match the students' CWLs.</li>
+                <li>User information is expected in this order: <strong><span class="required-star">Username</span>, Student Number, First Name, Last Name, Email, Display Name, Group</strong></li>
+                <li>Usernames are required. All other information is optional. Usernames and student numbers must also be unique in the application.</li>
+                <li>To skip non-required information, simply leave a blank space between commas, e.g., to leave out first and last name:<br />
+                "studentuser1, 005678, , ,jane.doe@student.ca, display0001, Group 2</li>
+            </ul>
+        </div>
+        <div class="form-group">
+            <label for="importFile" class="required-star">Choose CSV File</label>
+            <input type="file" nv-file-select uploader="uploader"
+                id="importFile" ng-click="uploader.clearQueue()"/>
+        </div>
+    </fieldset>
 </div>
+<input type="submit" class="btn btn-success btn-lg center-block" value="Import"
+    ng-click="upload();"
+    ng-disabled="!uploader.queue[0] || submitted" />
+<p ng-if="submitted" class="text-center">
+    <i class="fa fa-spin fa-spinner"></i>
+    &nbsp; Importing...
+</p>

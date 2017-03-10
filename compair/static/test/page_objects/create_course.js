@@ -1,6 +1,6 @@
 var CreateCoursePage = function() {
     this.getLocation = function() {
-        return 'course/new';
+        return 'course/create';
     };
 };
 

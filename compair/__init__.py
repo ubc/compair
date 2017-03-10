@@ -4,13 +4,13 @@ import ssl
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
-from flask import Flask, redirect, session as sess, abort, jsonify, url_for
+from flask import Flask, redirect, session as sess, jsonify, url_for
 from flask_login import current_user
 from sqlalchemy.orm import joinedload
 from werkzeug.routing import BaseConverter
 
 from .authorization import define_authorization
-from .core import login_manager, bouncer, db, celery
+from .core import login_manager, bouncer, db, celery, abort
 from .configuration import config
 from .models import User, File
 from .activity import log
@@ -85,12 +85,11 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
 
     celery.conf.update(app.config)
 
-    if not skip_assets:
-        if not app.debug and not app.config.get('UNITTEST', False):
-            assets = get_asset_names(app)
-            app.config.update(assets)
+    create_persistent_dirs(app.config, app.logger)
 
-        create_persistent_dirs(app.config, app.logger)
+    if not skip_assets and not app.debug and not app.config.get('TESTING', False):
+        assets = get_asset_names(app)
+        app.config.update(assets)
 
     if not skip_endpoints:
         # Flask-Login initialization
@@ -111,7 +110,7 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
                 response = jsonify({'message': msg, 'status': 403, 'type': 'CAS'})
                 response.status_code = 403
                 return response
-            return abort(401)
+            abort(401, title="Not Logged In", message="Authentication is required to access this area. Please log in to continue.")
 
         # Flask-Bouncer initialization
         bouncer.init_app(app)

@@ -102,34 +102,34 @@
                 <br />
             </div>
 
-            <div class="form-group sub-step" ng-repeat="comparsion_criterion in comparison.comparison_criteria">
+            <div class="form-group sub-step" ng-repeat="comparison_criterion in comparison.comparison_criteria">
 
                 <div class="each-criterion sub-step">
                     <fieldset>
                         <div class="row">
                             <div class="col-sm-8">
-                                <h4><i class="fa fa-gavel"></i> {{comparsion_criterion.criterion.name}}</h4>
+                                <h4><i class="fa fa-gavel"></i> {{comparison_criterion.criterion.name}}</h4>
                                 <hr />
                                 <div class="criteria" mathjax hljs
-                                     ng-bind-html="comparsion_criterion.criterion.description">
+                                     ng-bind-html="comparison_criterion.criterion.description">
                                 </div>
                             </div>
                             <div class="col-sm-4 text-center">
                                 <p><strong>Select one:</strong></p>
                                 <div class="btn-group">
-                                    <label class="btn btn-primary" ng-class="{active: comparsion_criterion.winner == WinningAnswer.answer1 }">
+                                    <label class="btn btn-primary" ng-class="{active: comparison_criterion.winner == WinningAnswer.answer1 }">
                                         <input type="radio" class="hideRadio"
                                             name="answer{{answer1.id}}" required
-                                            ng-model="comparsion_criterion.winner"
-                                            ng-change="trackComparisonCriterionWinner(comparsion_criterion, answer1.id)"
+                                            ng-model="comparison_criterion.winner"
+                                            ng-change="trackComparisonCriterionWinner(comparison_criterion, answer1.id)"
                                             ng-value="WinningAnswer.answer1">
                                         Answer {{firstAnsNum}}
                                     </label>
-                                    <label class="btn btn-primary" ng-class="{active: comparsion_criterion.winner == WinningAnswer.answer2 }">
+                                    <label class="btn btn-primary" ng-class="{active: comparison_criterion.winner == WinningAnswer.answer2 }">
                                         <input type="radio" class="hideRadio"
                                             name="answer{{answer2.id}}" required
-                                            ng-model="comparsion_criterion.winner"
-                                            ng-change="trackComparisonCriterionWinner(comparsion_criterion, answer2.id)"
+                                            ng-model="comparison_criterion.winner"
+                                            ng-change="trackComparisonCriterionWinner(comparison_criterion, answer2.id)"
                                             ng-value="WinningAnswer.answer2">
                                         Answer {{secondAnsNum}}
                                     </label>
@@ -233,12 +233,12 @@
 
         <div class="form-group sub-step text-center">
             <input ng-disabled="submitted" type="submit"
-                ng-click="$parent.isDraft = true"
+                ng-click="isDraft = true"
                 value="Save Draft" class="btn btn-default btn-lg" />
             &nbsp; &nbsp;
             <!-- button to submit and refresh page IF evaluations remain for user -->
             <input ng-disabled="comparisonForm.$invalid || submitted" type="submit"
-                ng-click="$parent.isDraft = false"
+                ng-click="isDraft = false"
                 value="Submit" class="btn btn-success btn-lg" />
             <p ng-if="submitted">
                 <i class="fa fa-spin fa-spinner"></i>

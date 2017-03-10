@@ -1,3 +1,12 @@
+<div ng-show="example">
+    <h1>{{answerName}}</h1>
+    <p class="intro-text">This is one answer in the pair students will review as the first comparison for this assignment.</p>
+</div>
+<div ng-show="!example">
+    <h1 ng-if="method == 'create'">Answer</h1>
+    <h1 ng-if="method == 'edit'">Edit Answer</h1>
+</div>
+
 <p class="intro-text" ng-hide="comparison_example">Please note <strong>answers are not automatically saved</strong> as you type. However, you may manually save a draft of your answer below.</p>
 
 <form class="form" name="answerForm" ng-submit="answerSubmit()" novalidate confirm-form-exit form-type="answer">

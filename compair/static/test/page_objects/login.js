@@ -1,5 +1,16 @@
 var LoginDialog = function() {
+    this.clearToaster = function() {
+        browser.executeScript(function() {
+            var injector = angular.element(document).injector();
+            var Toaster = injector.get('Toaster');
+            if (Toaster) {
+                Toaster.clear();
+            }
+        });
+    };
+
     this.login = function(user) {
+        this.clearToaster();
         return browser.setLocation('/').then(function() {
             browser.wait(browser.isElementPresent(element(by.id('app-login-toggle'))), 2000);
             element(by.id('app-login-toggle')).click();
@@ -16,6 +27,7 @@ var LoginDialog = function() {
     };
 
     this.skipLogin = function() {
+        this.clearToaster();
         return browser.setLocation('/').then(function() {
             return browser.executeScript(function(fixtureName) {
                 var injector = angular.element(document).injector()
@@ -33,7 +45,7 @@ var LoginDialog = function() {
 
     this.logout = function() {
         element(by.binding('loggedInUser.displayname')).click();
-        return element(by.css('li[ng-controller=LogoutController] a')).click();
+        return element(by.css('#logout-link')).click();
     };
 };
 

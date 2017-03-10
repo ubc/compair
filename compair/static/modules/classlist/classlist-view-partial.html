@@ -1,5 +1,4 @@
-<div ng-controller="ClassViewController" class="manage-screen">
-
+<div class="manage-screen">
     <div class="row">
         <header class="col-md-6">
             <h1><i class="fa fa-users"></i> Manage Users</h1>
@@ -27,7 +26,7 @@
     <p class="intro-text" ng-if="!lti_membership_enabled">
         <strong>Edit, drop, or add course users to groups</strong> below. To make significant changes to the <em>full</em> course user list, click "Import Users" above and follow the directions on the next screen. To generate a file with all the currently enrolled users, click "Export Users" above.
     </p>
-    <h2 >Enrolled in {{course_name}}</h2>
+    <h2 >Enrolled in {{course.name}}</h2>
     <hr />
 
     <div class="row">
@@ -39,7 +38,7 @@
                 </a>
             </div>
             <div ng-show="!lti_membership_enabled && canCreateUsers">
-                <ng-include src="'modules/classlist/classlist-enrol-partial.html'"></ng-include>
+                <enrol-component course-id="courseId"></hero-detail>
             </div>
         </div>
     </div>

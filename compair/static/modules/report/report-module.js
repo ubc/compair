@@ -14,8 +14,8 @@ var module = angular.module('ubc.ctlt.compair.report',
 
 /***** Providers *****/
 module.factory('ReportResource',
-    [ "$q", "$routeParams", "$log", "$resource",
-    function($q, $routeParams, $log, $resource)
+    [ "$q", "$routeParams", "$resource",
+    function($q, $routeParams, $resource)
 {
     var ret = $resource('/api/courses/:id/report', {id: '@id'});
     ret.MODEL = "Course"; // add constant to identify the model
@@ -28,15 +28,16 @@ module.factory('ReportResource',
 module.controller(
     'ReportCreateController',
     [ "$scope", "$log", "CourseResource", "ReportResource", "UserResource",
-             "GroupResource", "AssignmentResource", "Session", "Toaster",
+             "GroupResource", "AssignmentResource", "Toaster", "resolvedData",
     function($scope, $log, CourseResource, ReportResource, UserResource,
-             GroupResource, AssignmentResource, Session, Toaster)
+             GroupResource, AssignmentResource, Toaster, resolvedData)
     {
+        $scope.courses = resolvedData.coursesAsInstructor.courses;
+
         $scope.report = {
             'type': 'participation',
             'group_name': 'all'
         };
-        $scope.courses = {};
         $scope.assignments = [];
         $scope.groups = [];
 
@@ -47,15 +48,6 @@ module.controller(
             {'id': 'participation_stat', 'name': 'Participation Report (Research)'},
             {'id': 'peer_feedback', 'name': 'Peer Feedback Report'}
         ];
-
-        UserResource.getTeachingUserCourses().$promise.then(
-            function(ret) {
-                $scope.courses = ret.courses;
-            },
-            function (ret) {
-                Toaster.reqerror("Unable to retrieve your courses.", ret);
-            }
-        );
 
         $scope.changeReport = function() {
             $scope.reportFile = null;
@@ -80,9 +72,6 @@ module.controller(
                     if ($scope.groups.length > 0) {
                         $scope.groups.push(allGroups);
                     }
-                },
-                function(ret) {
-                    Toaster.reqerror('Unable to retrieve groups', ret);
                 }
             );
             AssignmentResource.get({'courseId': $scope.report.course_id}).$promise.then(
@@ -92,9 +81,6 @@ module.controller(
                         ret.objects.push(all);
                     }
                     $scope.assignments = ret.objects;
-                },
-                function (ret) {
-                    Toaster.reqerror("Unable to retrieve course assignments: " + courseId, ret);
                 }
             );
         };
@@ -103,20 +89,20 @@ module.controller(
             $scope.reportFile = null;
             $scope.submitted = true;
             var report = angular.copy($scope.report);
-            if (report.assignment == 'all')
+            if (report.assignment == 'all') {
                 delete report.assignment;
-            if (report.group_name == 'all')
+            }
+            if (report.group_name == 'all') {
                 delete report.group_name;
+            }
+
             ReportResource.save({'id': report.course_id}, report).$promise.then(
                 function (ret) {
                     $scope.reportFile = ret.file;
-                    $scope.submitted = false;
-                },
-                function (ret) {
-                    $scope.submitted = false;
-                    Toaster.reqerror("Export Report Failed.", ret);
                 }
-            );
+            ).finally(function() {
+                $scope.submitted = false;
+            });
         };
     }
 ]);

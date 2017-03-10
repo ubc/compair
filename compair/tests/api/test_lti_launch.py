@@ -429,7 +429,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
         with self.login(self.data.get_authorized_instructor().username):
             # requires lti session
             rv = self.client.post(url, data={}, content_type='application/json')
-            self.assert404(rv)
+            self.assert400(rv)
 
         # setup lti session with no context id
         with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
@@ -444,7 +444,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
         # link course
         rv = self.client.post(url, data={}, content_type='application/json')
-        self.assert404(rv)
+        self.assert400(rv)
 
         # setup lti session with context id
         with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
@@ -647,7 +647,8 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             """
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json['error'], "LTI membership request was invalid. Please relaunch the ComPAIR course from the LTI consumer and try again")
+            self.assertEqual(rv.json['title'], "Membership Not Updated")
+            self.assertEqual(rv.json['message'], "The membership request was invalid. Please relaunch the LTI link and try again.")
 
             # test empty membership response
             mocked_send_membership_request.return_value = """
@@ -665,7 +666,9 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             """
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json['error'], "LTI membership service did not return any users")
+            self.assertEqual(rv.json['title'], "Membership Not Updated")
+            self.assertEqual(rv.json['message'],
+                "The membership service did not return any users. Please check your LTI course and try again.")
 
             # test full membership response
             mocked_send_membership_request.return_value = """
@@ -869,13 +872,17 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             # requires course linked to at least one lti context
             rv = self.client.post(url_2, data={}, content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json['error'], "Course not linked to lti context")
+            self.assertEqual(rv.json['title'], "Membership Not Updated")
+            self.assertEqual(rv.json['message'],
+                "Your LTI link settings has no course context. Please edit your LTI link settings and try again.")
 
             # requires at least one linked lti context to support membership
             lti_context_2 = self.lti_data.create_context(lti_consumer, compair_course=course_2)
             rv = self.client.post(url_2, data={}, content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json['error'], "LTI membership service is not supported for this course")
+            self.assertEqual(rv.json['title'], "Membership Not Updated")
+            self.assertEqual(rv.json['message'],
+                "The LTI link does not support the membership extension. Please edit your LTI link settings or contact your system administrator and try again.")
 
     def test_cas_auth_via_lti_launch(self):
         url = '/api/cas/auth?ticket=mock_ticket'

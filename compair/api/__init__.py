@@ -1,7 +1,7 @@
 import mimetypes
 import os
 
-from flask import redirect, render_template
+from flask import redirect, render_template, jsonify
 from flask_login import login_required, current_user, current_app
 from flask import make_response
 from flask import send_file
@@ -118,7 +118,7 @@ def register_api_blueprints(app):
 
     @app.route('/app/')
     def route_app():
-        if app.debug:
+        if app.debug or app.config.get('TESTING', False):
             return render_template(
                 'index-dev.html',
                 ga_tracking_id=app.config['GA_TRACKING_ID'],
@@ -294,9 +294,8 @@ def log_events(log):
     on_classlist_update_users_course_roles.connect(log)
 
     # course group events
-    from .course_group import on_course_group_get, on_course_group_import, on_course_group_members_get
+    from .course_group import on_course_group_get, on_course_group_members_get
     on_course_group_get.connect(log)
-    on_course_group_import.connect(log)
     on_course_group_members_get.connect(log)
 
     # course user group events

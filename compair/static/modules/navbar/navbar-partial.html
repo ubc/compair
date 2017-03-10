@@ -1,5 +1,4 @@
-<div role="navigation" bs-navbar
-     ng-controller="NavbarController">
+<div role="navigation" bs-navbar>
     <div class="navbar navbar-default navbar-static-top">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -13,28 +12,6 @@
             <!-- All elements in this div can be collapsed on small displays -->
             <div class="navbar-collapse" id="compair-navbar-collapse" ng-class="{collapse: isCollapsed}">
                 <ul id="logged-in-nav-options" class="nav navbar-nav" ng-show="loggedInUser.isLoggedIn()">
-                    <!-- Breadcrumbs in a dropdown -->
-                    <!-- <li class="dropdown">
-                        <a href="" class="dropdown-toggle"
-                            data-toggle="dropdown">
-                            <span ng-repeat="breadcrumb in breadcrumbs.get()
-                                track by breadcrumb.path">
-                                <i ng-if="$first && $last" class="fa fa-home"></i>
-                                <span ng-if="$last" ng-bind="breadcrumb.label">
-                                </span>
-                                <i ng-if="$last" class="fa fa-angle-down"></i>
-                            </span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li ng-repeat="breadcrumb in breadcrumbs.get()
-                                track by breadcrumb.path">
-                                <a ng-href="#{{ breadcrumb.path }}">
-                                    <i ng-if="$first" class="fa fa-home"></i>
-                                    <span ng-bind="breadcrumb.label"></span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li> -->
                     <li ng-if="canManageAssignments">
                         <a ng-href="#/report" id="download-report-btn">
                             <i class="fa fa-bar-chart-o"></i>
@@ -42,7 +19,7 @@
                         </a>
                     </li>
                     <li ng-if="canCreateCourses">
-                        <a ng-href="#/course/new" id="create-course-btn">
+                        <a ng-href="#/course/create" id="create-course-btn">
                             <i class="fa fa-book"></i>
                             Add Course
                         </a>
@@ -65,35 +42,6 @@
                             Manage LTI
                         </a>
                     </li>
-                    <!-- When in a course -->
-                    <!-- <li ng-if="inCourse && canEditCourse">
-                        <a ng-href="#/course/{{courseId}}/configure">
-                            <i class="fa fa-cog"></i>
-                            Configure Course
-                        </a>
-                    </li>
-                    <li ng-if="inCourse && canEditCourse">
-                        <a ng-href="#/course/{{courseId}}/user">
-                            <i class="fa fa-users"></i>
-                            Class List
-                        </a>
-                    </li>
-                    <li ng-if="inCourse && canCreateUsers">
-                        <a ng-href="#/course/{{courseId}}/user/import">
-                            <i class="fa fa-file-text-o"></i>
-                            Enrol Students
-                        </a>
-                    </li> -->
-                    <!-- Leftover -->
-                    <!-- <li data-match-route="/comparepage.*" ng-show="check">
-                        <a href="#/quickcompare">Random compare</a>
-                    </li>
-                    <li data-match-route="/createuser" ng-show="check && usertype!='Student'">
-                        <a href="#/createuser">Create Account</a>
-                    </li>
-                    <li data-match-route="/user" ng-show="check && usertype=='Admin'">
-                        <a href="#/user">User</a>
-                    </li> -->
                 </ul>
                 <!-- Not Logged In Options -->
                 <ul class="nav navbar-nav navbar-right" ng-hide="loggedInUser.isLoggedIn()">
@@ -107,8 +55,8 @@
                         <a class="dropdown-toggle" data-toggle="dropdown" href="#notifications">
                             <i class="fa fa-envelope-o"></i>
                         </a>
-                        <div notification></div> -->
-                    </li>
+                        <div notification></div>
+                    </li> -->
                     <li uib-dropdown>
                         <a href="" id="menu-dropdown" uib-dropdown-toggle>
                             {{loggedInUser.displayname}} <i class='fa fa-angle-down'></i>
@@ -141,4 +89,3 @@
         </li>
     </ul>
 </div>
-

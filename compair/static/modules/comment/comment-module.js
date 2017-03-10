@@ -97,7 +97,7 @@ module.controller(
         //$scope.courseId
         //$scope.assignmentId
         $scope.comment = typeof($scope.comment) != 'undefined' ? $scope.comment : {};
-        $scope.method = $scope.comment.id ? 'edit' : 'new';
+        $scope.method = $scope.comment.id ? 'edit' : 'create';
         $scope.modalInstance = $uibModalInstance;
         $scope.editorOptions = EditorOptions.basic;
 
@@ -107,9 +107,6 @@ module.controller(
             AssignmentCommentResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId, 'commentId': $scope.comment.id}).$promise.then(
                 function(ret) {
                     $scope.comment = ret;
-                },
-                function (ret) {
-                    Toaster.reqerror("Unable to retrieve comment "+$scope.comment.id, ret);
                 }
             );
         }
@@ -120,22 +117,17 @@ module.controller(
             .$promise.then(
                 function (ret) {
                     $scope.comment = ret;
-                    $scope.submitted = false;
-
-                    if ($scope.method == 'new') {
+                    if ($scope.method == 'create') {
                         Toaster.success("New Comment Created!");
                     } else {
                         Toaster.success("Comment Updated!");
                     }
 
                     $uibModalInstance.close($scope.comment);
-                },
-                function (ret)
-                {
-                    $scope.submitted = false;
-                    Toaster.reqerror("Comment Save Failed.", ret);
                 }
-            );
+            ).finally(function() {
+                $scope.submitted = false;
+            });
         };
     }]
 );
@@ -151,14 +143,14 @@ module.controller(
         //$scope.assignmentId
         //$scope.answerId
         $scope.comment = typeof($scope.comment) != 'undefined' ? $scope.comment : {};
-        $scope.method = $scope.comment.id ? 'edit' : 'new';
+        $scope.method = $scope.comment.id ? 'edit' : 'create';
         $scope.modalInstance = $uibModalInstance;
 
         $scope.editorOptions = EditorOptions.basic;
         $scope.answerComment = true;
         $scope.AnswerCommentType = AnswerCommentType;
 
-        if ($scope.method == 'new') {
+        if ($scope.method == 'create') {
             $scope.comment = {
                 'comment_type': AnswerCommentType.private
             }
@@ -172,9 +164,6 @@ module.controller(
                             Toaster.error("No replies can be made for answers in this assignment.");
                             $uibModalInstance.dismiss();
                         }
-                    },
-                    function (ret) {
-                        Toaster.reqerror("Unable to retrieve the assignment.", ret);
                     }
                 );
             }
@@ -204,118 +193,19 @@ module.controller(
             }, $scope.comment).$promise.then(
                 function(ret) {
                     $scope.comment = ret;
-                    $scope.submitted = false;
 
-                    if ($scope.method == 'new') {
+                    if ($scope.method == 'create') {
                         Toaster.success("Reply Created!");
                     } else {
                         Toaster.success("Reply Updated!");
                     }
 
                     $uibModalInstance.close($scope.comment);
-                },
-                function(ret) {
-                    $scope.submitted = false;
-                    if ($scope.method == 'new') {
-                        Toaster.reqerror("Reply Not Created", ret);
-                    } else {
-                        Toaster.reqerror("Reply Not Updated", ret);
-                    }
                 }
-            );
-        };
-    }]
-);
-
-module.controller(
-    "ComparisonCommentController",
-    ['$scope', '$log', '$routeParams', 'breadcrumbs', 'CourseResource', 'AssignmentResource', "WinningAnswer",
-        'AnswerResource', 'AnswerCommentResource', 'GroupResource', 'Toaster', "xAPIStatementHelper",
-    function ($scope, $log, $routeParams, breadcrumbs, CourseResource, AssignmentResource, WinningAnswer,
-        AnswerResource, AnswerCommentResource, GroupResource, Toaster, xAPIStatementHelper)
-    {
-        var courseId = $routeParams['courseId'];
-        var assignmentId = $routeParams['assignmentId'];
-        $scope.courseId = courseId;
-        $scope.assignmentId = assignmentId;
-        $scope.listFilters = {
-            page: 1,
-            perPage: 20,
-            group: null,
-            author: null
-        };
-        $scope.answers = [];
-        $scope.WinningAnswer = WinningAnswer;
-
-        CourseResource.get({'id':courseId},
-            function (ret) {
-                breadcrumbs.options = {'Course assignments': ret['name']};
-            },
-            function (ret) {
-                Toaster.reqerror("Course Not Found For ID "+ courseId, ret);
-            }
-        );
-
-        $scope.students = CourseResource.getStudents({'id': courseId},
-            function (ret) {},
-            function (ret) {
-                Toaster.reqerror("Class list retrieval failed", ret);
-            }
-        );
-
-        AssignmentResource.get({'courseId': courseId, 'assignmentId': assignmentId},
-            function(ret) {
-                $scope.parent = ret;
-                $scope.criteria = {};
-                angular.forEach(ret.criteria, function(criterion, key){
-                    $scope.criteria[criterion['id']] = criterion['name'];
-                });
-            },
-            function (ret) {
-                Toaster.reqerror("Unable to retrieve the assignment "+assignmentId, ret);
-            }
-        );
-
-        $scope.groups = GroupResource.get({'courseId': courseId},
-            function (ret) {
-                $scope.groups = ret.objects
-            },
-            function (ret) {
-                Toaster.reqerror("Unable to retrieve the groups in the course.", ret);
-            }
-        );
-
-        $scope.loadAnswerByAuthor = function(author_id) {
-            if (_.find($scope.answers, {user_id: author_id})) return;
-            AnswerResource.get({'courseId': courseId, 'assignmentId': assignmentId, 'author': author_id}, function(response) {
-                var answer = response.objects[0];
-                $scope.answers.push(answer);
+            ).finally(function() {
+                $scope.submitted = false;
             });
         };
-
-        $scope.$watchCollection('listFilters', function(newValue, oldValue) {
-            if (angular.equals(newValue, oldValue)) return;
-            if (oldValue.group != newValue.group) {
-                $scope.listFilters.author = null;
-                $scope.listFilters.page = 1;
-            }
-            if (oldValue.author != newValue.author) {
-                $scope.listFilters.page = 1;
-            }
-            xAPIStatementHelper.filtered_page($scope.listFilters);
-            $scope.updateList();
-        });
-
-        $scope.updateList = function() {
-            var params = angular.merge({'courseId': $scope.courseId, 'assignmentId': assignmentId}, $scope.listFilters);
-
-            AnswerResource.comparisons(params, function(ret) {
-                $scope.comparisons = ret;
-                $scope.comparisons.grouped = _.groupBy($scope.comparisons.objects, 'user_id');
-            });
-        };
-
-        $scope.updateList();
     }]
 );
 

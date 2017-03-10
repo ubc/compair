@@ -14,19 +14,15 @@ from compair.authorization import require
 from compair.models import Course, Assignment, CourseRole, User, UserCourse, Comparison, \
     AnswerComment, Answer, File, AnswerScore, AnswerCommentType, PairingAlgorithm, AssignmentGrade
 from .util import new_restful_api
-from compair.core import event
+from compair.core import event, abort
 
-
-
-# First declare a Flask Blueprint for this module
 gradebook_api = Blueprint('gradebook_api', __name__)
-# Then pack the blueprint into a Flask-Restful API
 api = new_restful_api(gradebook_api)
 
 # events
 on_gradebook_get = event.signal('GRADEBOOK_GET')
 
-# declare an API URL
+
 # /
 class GradebookAPI(Resource):
     @login_required
@@ -36,7 +32,9 @@ class GradebookAPI(Resource):
             assignment_uuid,
             joinedloads=['assignment_criteria']
         )
-        require(MANAGE, assignment)
+        require(MANAGE, assignment,
+            title="Grade Book Unavailable",
+            message="Your role in this course does not allow you to view grades for this assignment.")
 
         # get all students in this course
         students = User.query \

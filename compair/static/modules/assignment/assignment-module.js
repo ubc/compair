@@ -160,14 +160,15 @@ module.directive('comparisonPreview', function() {
                     });
                 });
                 /* student view preview is comparison template */
-                $scope.thePreview = $uibModal.open({
-                    templateUrl: 'modules/comparison/comparison-core.html',
+                $scope.modalInstance = $uibModal.open({
+                    animation: true,
+                    templateUrl: 'modules/comparison/comparison-modal-partial.html',
                     scope: $scope
                 });
-                $scope.thePreview.opened.then(function() {
+                $scope.modalInstance.opened.then(function() {
                     xAPIStatementHelper.opened_modal("Preview Comparison");
                 });
-                $scope.thePreview.result.finally(function() {
+                $scope.modalInstance.result.finally(function() {
                     xAPIStatementHelper.closed_modal("Preview Comparison");
                 });
             }
@@ -187,7 +188,7 @@ module.factory(
                 'get': {url: url}, //, cache: true},
                 'save': {method: 'POST', url: url, interceptor: Interceptors.cache},
                 'delete': {method: 'DELETE', url: url, interceptor: Interceptors.cache},
-                'getCurrentUserStatus': {url: '/api/courses/:id/assignments/:assignmentId/status'}
+                'getCurrentUserStatus': {url: '/api/courses/:courseId/assignments/:assignmentId/status'}
             }
         );
         ret.MODEL = "Assignment";
@@ -245,22 +246,30 @@ module.filter("notScoredEnd", function () {
 
 /***** Controllers *****/
 module.controller("AssignmentViewController",
-    ["$scope", "$routeParams", "$location", "AnswerResource", "Authorize", "AssignmentResource", "AssignmentCommentResource",
-             "ComparisonResource", "CourseResource", "required_rounds", "Session", "Toaster", "AnswerCommentResource",
+    ["$scope", "$routeParams", "$location", "AnswerResource", "AssignmentResource", "AssignmentCommentResource",
+             "ComparisonResource", "CourseResource", "Toaster", "AnswerCommentResource", "resolvedData",
              "GroupResource", "AnswerCommentType", "PairingAlgorithm", "$uibModal", "xAPIStatementHelper", "WinningAnswer",
-    function($scope, $routeParams, $location, AnswerResource, Authorize, AssignmentResource, AssignmentCommentResource,
-             ComparisonResource, CourseResource, required_rounds, Session, Toaster, AnswerCommentResource,
+    function($scope, $routeParams, $location, AnswerResource, AssignmentResource, AssignmentCommentResource,
+             ComparisonResource, CourseResource, Toaster, AnswerCommentResource, resolvedData,
              GroupResource, AnswerCommentType, PairingAlgorithm, $uibModal, xAPIStatementHelper, WinningAnswer)
     {
-        $scope.courseId = $routeParams['courseId'];
+        $scope.courseId = $routeParams.courseId;
+        $scope.assignmentId = $routeParams.assignmentId;
+
+        $scope.loggedInUserId = resolvedData.loggedInUser.id;
+        $scope.course = resolvedData.course;
+        $scope.assignment = resolvedData.assignment;
+        $scope.canManageAssignment = resolvedData.canManageAssignment;
+        $scope.students = resolvedData.students.objects;
+        $scope.allStudents = resolvedData.students.objects;
+        $scope.instructors = resolvedData.instructorLabels.instructors;
+
         $scope.AnswerCommentType = AnswerCommentType;
         $scope.PairingAlgorithm = PairingAlgorithm;
-        var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
         var params = {
             courseId: $scope.courseId,
-            assignmentId: assignmentId
+            assignmentId: $scope.assignmentId
         };
-        $scope.allStudents = {};
         $scope.totalNumAnswers = 0;
         $scope.answerFilters = {
             page: 1,
@@ -276,92 +285,48 @@ module.controller("AssignmentViewController",
         $scope.WinningAnswer = WinningAnswer;
         var tab = $location.search().tab || 'answers';
 
-        Session.getUser().then(function(user) {
-            $scope.loggedInUserId = user.id;
+        // setup assignment data
+        $scope.assignment.answer_start = new Date($scope.assignment.answer_start);
+        $scope.assignment.answer_end = new Date($scope.assignment.answer_end);
+        $scope.assignment.compare_start = new Date($scope.assignment.compare_start);
+        $scope.assignment.compare_end = new Date($scope.assignment.compare_end);
+        if ($scope.assignment.rank_display_limit) {
+            $scope.rankLimit = $scope.assignment.rank_display_limit;
+        }
+        $scope.readDate = Date.parse($scope.assignment.created);
+        if ($scope.assignment.compare_end) {
+            $scope.answerAvail = $scope.assignment.compare_end;
+        } else {
+            $scope.answerAvail = $scope.assignment.answer_end;
+        }
 
-            AssignmentResource.get(params,
-                function (ret) {
-                    ret.answer_start = new Date(ret.answer_start);
-                    ret.answer_end = new Date(ret.answer_end);
-                    ret.compare_start = new Date(ret.compare_start);
-                    ret.compare_end = new Date(ret.compare_end);
-                    $scope.assignment = ret;
+        AssignmentResource.getCurrentUserStatus({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
+            function(ret) {
+                $scope.assignment.status = ret.status;
 
-                    if (ret.rank_display_limit) {
-                        $scope.rankLimit = ret.rank_display_limit;
-                    }
+                $scope.comparisons_left = $scope.assignment.status.comparisons.left;
+                $scope.self_evaluation_needed = $scope.assignment.enable_self_evaluation ?
+                    !$scope.assignment.status.comparisons.self_evaluation_completed : false;
+                $scope.steps_left = $scope.comparisons_left + ($scope.self_evaluation_needed ? 1 : 0);
 
-                    $scope.readDate = Date.parse(ret.created);
-
-                    if ($scope.assignment.compare_end) {
-                        $scope.answerAvail = $scope.assignment.compare_end;
-                    } else {
-                        $scope.answerAvail = $scope.assignment.answer_end;
-                    }
-
-                    AssignmentResource.getCurrentUserStatus({'id': $scope.courseId, 'assignmentId': assignmentId},
-                        function (ret) {
-                            $scope.assignment.status = ret.status;
-                            $scope.comparisons_left = ret.status.comparisons.left;
-                            $scope.self_evaluation_needed = $scope.assignment.enable_self_evaluation ?
-                                !ret.status.comparisons.self_evaluation_completed : false;
-                            $scope.steps_left = $scope.comparisons_left + ($scope.self_evaluation_needed ? 1 : 0);
-
-                            if ($scope.assignment.compare_end) {
-                                // if comparison period is set answers can be seen after it ends
-                                $scope.see_answers = $scope.assignment.after_comparing;
-                            } else {
-                                // if an comparison period is NOT set - answers can be seen after req met
-                                $scope.see_answers = $scope.assignment.after_comparing && $scope.comparisons_left == 0;
-                            }
-                            var diff = $scope.assignment.answer_count - ret.status.answers.count;
-                            var possible_comparisons_left = ((diff * (diff - 1)) / 2);
-                            $scope.warning = ret.status.comparisons.left > possible_comparisons_left;
-                        },
-                        function (ret) {
-                            Toaster.reqerror("Assignment Status Not Found", ret);
-                        }
-                    );
-                    // update the answer list
-                    $scope.updateAnswerList();
-                    // register watcher here so that we start watching when all filter values are set
-                    $scope.$watchCollection('answerFilters', filterWatcher);
-                },
-                function (ret)
-                {
-                    Toaster.reqerror("Assignment Not Found For ID " + assignmentId, ret);
+                if ($scope.assignment.compare_end) {
+                    // if comparison period is set answers can be seen after it ends
+                    $scope.see_answers = $scope.assignment.after_comparing;
+                } else {
+                    // if an comparison period is NOT set - answers can be seen after req met
+                    $scope.see_answers = $scope.assignment.after_comparing && $scope.comparisons_left == 0;
                 }
-            );
-
-            $scope.loadTabData();
-        });
-
-        Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, $scope.courseId).then(function(result) {
-            $scope.canManageAssignment = result;
-            if ($scope.canManageAssignment) {
-                GroupResource.get({'courseId': $scope.courseId}, function (ret) {
-                    $scope.groups = ret.objects;
-                });
+                var diff = $scope.assignment.answer_count - $scope.assignment.status.answers.count;
+                var possible_comparisons_left = ((diff * (diff - 1)) / 2);
+                $scope.warning = $scope.assignment.status.comparisons.left > possible_comparisons_left;
             }
-        });
-        $scope.students = {};
-        CourseResource.getStudents({'id': $scope.courseId}, function (ret) {
-            $scope.allStudents = ret.objects;
-            $scope.students = ret.objects;
-        });
-        $scope.assignment = {};
+        )
 
-        $scope.comments = AssignmentCommentResource.get(params);
-
-        $scope.instructors = {};
-        CourseResource.getInstructorsLabels({'id': $scope.courseId},
-            function (ret) {
-                $scope.instructors = ret.instructors;
-            },
-            function (ret) {
-                Toaster.reqerror("Instructors Not Found", ret);
-            }
-        );
+        if ($scope.canManageAssignment) {
+            GroupResource.get({'courseId': $scope.courseId}, function (ret) {
+                $scope.groups = ret.objects;
+            });
+        }
 
         $scope.getUserIds = function(students) {
             var users = {};
@@ -416,9 +381,16 @@ module.controller("AssignmentViewController",
                         });
                     }
                 );
-            }
+            } else if (tab == "help") {
+                AssignmentCommentResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
+                    function(ret) {
+                        $scope.comments = ret;
+                    }
+                )
+            };
             xAPIStatementHelper.opened_page_section(tab + " tab");
         };
+        $scope.loadTabData();
 
         // revealAnswer function shows full answer content for abbreviated answers (determined by getHeight directive)
         $scope.revealAnswer = function(answer) {
@@ -429,21 +401,20 @@ module.controller("AssignmentViewController",
         };
 
         // assignment delete function
-        $scope.deleteAssignment = function(course_id, assignment_id) {
-            AssignmentResource.delete({'courseId': course_id, 'assignmentId': assignment_id},
+        $scope.deleteAssignment = function(assignment) {
+            AssignmentResource.delete({'courseId': assignment.course_id, 'assignmentId': assignment.id},
                 function (ret) {
                     Toaster.success("Assignment Delete Successful", "Successfully deleted assignment " + ret.id);
-                    $location.path('/course/'+course_id);
+                    $location.path('/course/'+$scope.courseId);
                 },
                 function (ret) {
-                    Toaster.reqerror("Assignment Delete Failed", ret);
-                    $location.path('/course/'+course_id);
+                    $location.path('/course/'+$scope.courseId);
                 }
             );
         };
 
-        $scope.deleteAnswer = function(answer, course_id, assignment_id, answer_id) {
-            AnswerResource.delete({'courseId':course_id, 'assignmentId':assignment_id, 'answerId':answer_id},
+        $scope.deleteAnswer = function(answer) {
+            AnswerResource.delete({'courseId': answer.course_id, 'assignmentId': answer.assignment_id, 'answerId':answer.id},
                 function (ret) {
                     Toaster.success("Answer Delete Successful", "Successfully deleted answer "+ ret.id);
                     var authorId = answer['user_id'];
@@ -453,23 +424,17 @@ module.controller("AssignmentViewController",
                         $scope.assignment.status.answers.count--;
                         $scope.assignment.status.answers.answered = $scope.assignment.status.answers.count > 0;
                     }
-                },
-                function (ret) {
-                    Toaster.reqerror("Answer Delete Failed", ret);
                 }
             );
         };
 
         // unflag a flagged answer
-        $scope.unflagAnswer = function(answer, course_id, assignment_id, answer_id) {
+        $scope.unflagAnswer = function(answer) {
             var params = {'flagged': false};
-            AnswerResource.flagged({'courseId':course_id, 'assignmentId':assignment_id, 'answerId':answer_id}, params).$promise.then(
+            AnswerResource.flagged({'courseId': answer.course_id, 'assignmentId': answer.assignment_id, 'answerId': answer.id}, params).$promise.then(
                 function () {
                     answer['flagged'] = false;
                     Toaster.success("Answer Successfully Unflagged");
-                },
-                function (ret) {
-                    Toaster.reqerror("Unable To Change Flag", ret);
                 }
             );
         };
@@ -477,7 +442,7 @@ module.controller("AssignmentViewController",
         // toggle top_answer state for answer
         $scope.setTopAnswer = function(answer, topAnswer) {
             var params = {'top_answer': topAnswer};
-            AnswerResource.topAnswer({'courseId':answer.course_id, 'assignmentId':answer.assignment_id, 'answerId':answer.id}, params).$promise.then(
+            AnswerResource.topAnswer({'courseId': answer.course_id, 'assignmentId': answer.assignment_id, 'answerId':answer.id}, params).$promise.then(
                 function () {
                     answer.top_answer = topAnswer;
                     if (topAnswer) {
@@ -488,9 +453,6 @@ module.controller("AssignmentViewController",
                     if ($scope.answerFilters.author == "top-picks") {
                         $scope.updateAnswerList();
                     }
-                },
-                function (ret) {
-                    Toaster.reqerror("Unable To Change Top Answer", ret);
                 }
             );
         };
@@ -530,7 +492,7 @@ module.controller("AssignmentViewController",
         $scope.createAnswerComment = function(answer) {
             var modalScope = $scope.$new();
             modalScope.courseId = $scope.courseId;
-            modalScope.assignmentId = $scope.assignment.id;
+            modalScope.assignmentId = $scope.assignmentId;
             modalScope.answerId = answer.id;
 
             $scope.modalInstance = $uibModal.open({
@@ -561,7 +523,7 @@ module.controller("AssignmentViewController",
         $scope.editAnswerComment = function(answer, comment) {
             var modalScope = $scope.$new();
             modalScope.courseId = $scope.courseId;
-            modalScope.assignmentId = $scope.assignment.id;
+            modalScope.assignmentId = $scope.assignmentId;
             modalScope.answerId = answer.id;
             modalScope.comment = angular.copy(comment);
 
@@ -603,7 +565,7 @@ module.controller("AssignmentViewController",
         $scope.createAssignmentComment = function() {
             var modalScope = $scope.$new();
             modalScope.courseId = $scope.courseId;
-            modalScope.assignmentId = $scope.assignment.id;
+            modalScope.assignmentId = $scope.assignmentId;
 
             $scope.modalInstance = $uibModal.open({
                 animation: true,
@@ -626,7 +588,7 @@ module.controller("AssignmentViewController",
         $scope.editAssignmentComment = function(comment) {
             var modalScope = $scope.$new();
             modalScope.courseId = $scope.courseId;
-            modalScope.assignmentId = $scope.assignment.id;
+            modalScope.assignmentId = $scope.assignmentId;
             modalScope.comment = angular.copy(comment);
 
             $scope.modalInstance = $uibModal.open({
@@ -664,7 +626,7 @@ module.controller("AssignmentViewController",
         $scope.loadComments = function(answer) {
             answer.comments = AnswerCommentResource.query({
                 courseId: $scope.courseId,
-                assignmentId: assignmentId,
+                assignmentId: $scope.assignmentId,
                 answer_ids: answer.id
             });
         };
@@ -675,9 +637,6 @@ module.controller("AssignmentViewController",
                     Toaster.success("Comment Delete Successful", "Successfully deleted comment " + ret.id);
                     $scope.comments.objects.splice(key, 1);
                     $scope.assignment.comment_count--;
-                },
-                function (ret) {
-                    Toaster.reqerror("Comment Delete Failed", ret);
                 }
             );
         };
@@ -693,15 +652,12 @@ module.controller("AssignmentViewController",
                         answer.private_comment_count--;
                     }
                     answer.comment_count--;
-                },
-                function (ret) {
-                    Toaster.reqerror("Reply Delete Failed", ret);
                 }
             );
         };
 
         $scope.updateAnswerList = function() {
-            var params = angular.merge({'courseId': $scope.courseId, 'assignmentId': assignmentId}, $scope.answerFilters);
+            var params = angular.merge({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answerFilters);
             $scope.answerFiltersName = $("#answers-filter option:selected").text();
             delete params.anonymous;
             if (params.author == "top-picks") {
@@ -722,6 +678,7 @@ module.controller("AssignmentViewController",
                 });
             });
         };
+        $scope.updateAnswerList();
 
         var filterWatcher = function(newValue, oldValue) {
             if (angular.equals(newValue, oldValue)) return;
@@ -735,9 +692,6 @@ module.controller("AssignmentViewController",
                     GroupResource.get({'courseId': $scope.courseId, 'groupName': $scope.answerFilters.group},
                         function (ret) {
                             $scope.students = ret.students;
-                        },
-                        function (ret) {
-                            Toaster.reqerror("Unable to retrieve the group members", ret);
                         }
                     );
                 }
@@ -769,42 +723,49 @@ module.controller("AssignmentViewController",
 
             $scope.updateAnswerList();
         };
+        // register watcher here so that we start watching when all filter values are set
+        $scope.$watchCollection('answerFilters', filterWatcher);
     }
 ]);
 module.controller("AssignmentWriteController",
-    [ "$scope", "$q", "$location", "$routeParams", "$route", "AssignmentResource", "$uibModal", "Authorize",
+    [ "$scope", "$q", "$location", "$routeParams", "$route", "AssignmentResource", "$uibModal",
              "CriterionResource", "required_rounds", "Toaster", "attachService",
-             "Session", "EditorOptions", "PairingAlgorithm", "ComparisonExampleResource",
-             "AnswerResource", "xAPIStatementHelper", "CourseResource", "moment",
-    function($scope, $q, $location, $routeParams, $route, AssignmentResource, $uibModal, Authorize,
+             "EditorOptions", "PairingAlgorithm", "ComparisonExampleResource",
+             "AnswerResource", "xAPIStatementHelper", "resolvedData", "moment",
+    function($scope, $q, $location, $routeParams, $route, AssignmentResource, $uibModal,
              CriterionResource, required_rounds, Toaster, attachService,
-             Session, EditorOptions, PairingAlgorithm, ComparisonExampleResource,
-             AnswerResource, xAPIStatementHelper, CourseResource, moment)
+             EditorOptions, PairingAlgorithm, ComparisonExampleResource,
+             AnswerResource, xAPIStatementHelper, resolvedData, moment)
     {
-        var courseId = $routeParams['courseId'];
-        //initialize assignment so this scope can access data from included form
-        $scope.course = CourseResource.get({'id': courseId});
-        $scope.assignment = {criteria: []};
-        $scope.availableCriteria = [];
+        $scope.courseId = $routeParams.courseId;
+        $scope.assignmentId = $routeParams.assignmentId || undefined;
+
+        $scope.course = resolvedData.course;
+        $scope.assignment = resolvedData.assignment || {};
+        $scope.loggedInUserId = resolvedData.loggedInUser.id;
+        $scope.canManageAssignment = resolvedData.canManageAssignment;
+        $scope.availableCriteria = resolvedData.criteria.objects;
+
+        // add default weight of 1 to all criterion
+        _.forEach($scope.availableCriteria, function(criterion) {
+            criterion.weight = 1;
+        });
+
+        $scope.method = $scope.assignment.id ? "edit" : "create";
+        if ($route.current.method == "copy") {
+           $scope.method = "copy";
+        }
+
         $scope.editorOptions = EditorOptions.basic;
         $scope.PairingAlgorithm = PairingAlgorithm;
-
         $scope.uploader = attachService.getUploader();
         $scope.resetFileUploader = attachService.reset();
         $scope.recommended_comparisons = Math.floor(required_rounds / 2);
-        $scope.comparison_example = {
-            answer1: {},
-            answer2: {}
-        };
 
         $scope.rankLimitOptions = [
             {value: 10, label: 'Answers ranked 10th and higher'},
             {value: 20, label: 'Answers ranked 20th and higher'},
-        ]
-
-        Session.getUser().then(function(user) {
-            $scope.loggedInUserId = user.id;
-        });
+        ];
 
         // DATETIMES
         // declaration
@@ -817,155 +778,128 @@ module.controller("AssignmentWriteController",
             'cend': {'date': new Date(), 'time': new Date().setHours(23, 59, 0, 0)}
         };
 
+        $scope.comparison_example = {
+            answer1: {},
+            answer2: {}
+        };
+
         // initialization method data
-        if ($route.current.method == "new") {
-            // want default to disable discussion
-            $scope.assignment.students_can_reply = false;
-            // want default to only students comparing discussion
-            $scope.assignment.educators_can_compare = false;
-            // default the setting to the recommended # of comparisons
-            $scope.assignment.number_of_comparisons = $scope.recommended_comparisons;
-            $scope.assignment.pairing_algorithm = PairingAlgorithm.adaptive;
-            $scope.assignment.rank_display_limit = null;
-            $scope.assignment.answer_grade_weight = 1;
-            $scope.assignment.comparison_grade_weight = 1;
-            $scope.assignment.self_evaluation_grade_weight = 1;
+        if ($scope.method == "create") {
+            $scope.assignment = {
+                // add default criteria
+                criteria: [
+                    _.find($scope.availableCriteria, {public: true})
+                ],
+                // students replies disabled by default
+                students_can_reply: false,
+                // instructor comparisons disabled by default
+                educators_can_compare: false,
+                number_of_comparisons: $scope.recommended_comparisons,
+                pairing_algorithm: PairingAlgorithm.adaptive,
+                rank_display_limit: null,
+                answer_grade_weight: 1,
+                comparison_grade_weight: 1,
+                self_evaluation_grade_weight: 1
+            }
 
             $scope.date.astart.date.setDate(today.getDate()+1);
             $scope.date.aend.date.setDate(today.getDate()+8);
             $scope.date.cstart.date.setDate(today.getDate()+8);
             $scope.date.cend.date.setDate(today.getDate()+15);
 
-        } else if ($route.current.method == "edit") {
-            $scope.assignmentId = $routeParams['assignmentId'];
-            AssignmentResource.get({'courseId': courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
-                function (ret) {
-                    $scope.assignment = ret;
-                    $scope.date.astart.date = new Date(ret.answer_start);
-                    $scope.date.astart.time = new Date(ret.answer_start);
-                    $scope.date.aend.date = new Date(ret.answer_end);
-                    $scope.date.aend.time = new Date(ret.answer_end);
+        } else if ($scope.method == "edit") {
+            if ($scope.assignment.file) {
+                $scope.assignment.uploadedFile = true;
+            }
 
-                    if (ret.compare_start && ret.compare_end) {
-                        $scope.assignment.availableCheck = true;
-                        $scope.date.cstart.date = new Date(ret.compare_start);
-                        $scope.date.cstart.time = new Date(ret.compare_start);
-                        $scope.date.cend.date = new Date(ret.compare_end);
-                        $scope.date.cend.time = new Date(ret.compare_end)
-                    } else {
-                        $scope.date.cstart.date = new Date($scope.date.aend.date);
-                        $scope.date.cstart.time = new Date($scope.date.aend.time);
-                        $scope.date.cend.date = new Date();
-                        $scope.date.cend.date.setDate($scope.date.cstart.date.getDate()+7);
-                        $scope.date.cend.time = new Date($scope.date.aend.time);
-                        $scope.date.cstart.date = $scope.date.cstart.date;
-                        $scope.date.cend.date = $scope.date.cend.date;
+            $scope.date.astart.date = new Date($scope.assignment.answer_start);
+            $scope.date.astart.time = new Date($scope.assignment.answer_start);
+            $scope.date.aend.date = new Date($scope.assignment.answer_end);
+            $scope.date.aend.time = new Date($scope.assignment.answer_end);
+
+            if ($scope.assignment.compare_start && $scope.assignment.compare_end) {
+                $scope.assignment.availableCheck = true;
+                $scope.date.cstart.date = new Date($scope.assignment.compare_start);
+                $scope.date.cstart.time = new Date($scope.assignment.compare_start);
+                $scope.date.cend.date = new Date($scope.assignment.compare_end);
+                $scope.date.cend.time = new Date($scope.assignment.compare_end)
+            } else {
+                $scope.date.cstart.date = new Date($scope.date.aend.date);
+                $scope.date.cstart.time = new Date($scope.date.aend.time);
+                $scope.date.cend.date = new Date();
+                $scope.date.cend.date.setDate($scope.date.cstart.date.getDate()+7);
+                $scope.date.cend.time = new Date($scope.date.aend.time);
+            }
+
+            $scope.assignment.addPractice = resolvedData.assignmentComparisonExamples.objects.length > 0;
+            if ($scope.assignment.addPractice) {
+                $scope.comparison_example = resolvedData.assignmentComparisonExamples.objects[0];
+            }
+
+        } else if ($scope.method == "copy") {
+            var originalAssignment = $scope.assignment;
+            $scope.originalAssignment = originalAssignment;
+
+            $scope.assignment = {
+                // copy criteria
+                criteria: originalAssignment.criteria,
+                // copy assignment data
+                name: originalAssignment.name,
+                description: originalAssignment.description,
+                number_of_comparisons: originalAssignment.number_of_comparisons,
+                students_can_reply: originalAssignment.students_can_reply,
+                enable_self_evaluation: originalAssignment.enable_self_evaluation,
+                pairing_algorithm: originalAssignment.pairing_algorithm,
+                educators_can_compare: originalAssignment.educators_can_compare,
+                answer_grade_weight: originalAssignment.answer_grade_weight,
+                comparison_grade_weight: originalAssignment.comparison_grade_weight,
+                self_evaluation_grade_weight: originalAssignment.self_evaluation_grade_weight,
+                peer_feedback_prompt: originalAssignment.peer_feedback_prompt,
+                rank_display_limit: originalAssignment.rank_display_limit,
+
+                // copy assignment attachment
+                file: originalAssignment.file,
+                uploadedFile: originalAssignment.file ? true : undefined
+            }
+
+            // copy assignment dates
+            $scope.date.astart.date = new Date(originalAssignment.answer_start);
+            $scope.date.astart.time = new Date(originalAssignment.answer_start);
+            $scope.date.aend.date = new Date(originalAssignment.answer_end);
+            $scope.date.aend.time = new Date(originalAssignment.answer_end);
+
+            if (originalAssignment.compare_start && originalAssignment.compare_end) {
+                $scope.assignment.availableCheck = true;
+                $scope.date.cstart.date = new Date(originalAssignment.compare_start);
+                $scope.date.cstart.time = new Date(originalAssignment.compare_start);
+                $scope.date.cend.date = new Date(originalAssignment.compare_end);
+                $scope.date.cend.time = new Date(originalAssignment.compare_end)
+            } else {
+                $scope.date.cstart.date = new Date($scope.date.aend.date);
+                $scope.date.cstart.time = new Date($scope.date.aend.time);
+                $scope.date.cend.date = new Date();
+                $scope.date.cend.date.setDate($scope.date.cstart.date.getDate()+7);
+                $scope.date.cend.time = new Date($scope.date.aend.time);
+            }
+
+            // copy assignment comparison examples
+            $scope.assignment.addPractice = resolvedData.assignmentComparisonExamples.objects.length > 0;
+            if ($scope.assignment.addPractice) {
+                var comparison_example = resolvedData.assignmentComparisonExamples.objects[0];
+
+                $scope.comparison_example = {
+                    answer1: {
+                        content: comparison_example.answer1.content,
+                        file: comparison_example.answer1.file,
+                        file_id: comparison_example.answer1.file ? comparison_example.answer1.file.id : undefined
+                    },
+                    answer2: {
+                        content: comparison_example.answer2.content,
+                        file: comparison_example.answer2.file,
+                        file_id: comparison_example.answer2.file ? comparison_example.answer2.file.id : undefined
                     }
-                    $scope.compared = ret.compared;
-                    if (ret.file) {
-                        $scope.assignment.uploadedFile = true;
-                    }
-
-                    $scope.assignment.addPractice = false;
-                    ComparisonExampleResource.get({'courseId': courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
-                        function (ret) {
-                            if (ret.objects.length > 0) {
-                                $scope.comparison_example = ret.objects[0];
-                                $scope.assignment.addPractice = true;
-                            }
-                        },
-                        function () {
-                            Toaster.reqerror("Assignment Practice Answers not Found", "No practice answers found for assignment with id "+$scope.assignmentId);
-                        }
-                    );
-                    removeAssignmentCriteriaFromAvailable();
-                },
-                function () {
-                    Toaster.reqerror("Assignment Not Found", "No assignment found for id "+$scope.assignmentId);
-                }
-            );
-        } else if ($route.current.method == "copy") {
-            $scope.originalAssignmentId = $routeParams['assignmentId'];
-            AssignmentResource.get({'courseId': courseId, 'assignmentId': $scope.originalAssignmentId}).$promise.then(
-                function (ret) {
-                    $scope.originalAssignment = angular.copy(ret);
-                    // copy criteria
-                    $scope.assignment.criteria = ret.criteria;
-
-                    // copy assignment data
-                    $scope.assignment.name = ret.name;
-                    $scope.assignment.description = ret.description;
-                    $scope.assignment.number_of_comparisons = ret.number_of_comparisons;
-                    $scope.assignment.students_can_reply = ret.students_can_reply;
-                    $scope.assignment.enable_self_evaluation = ret.enable_self_evaluation;
-                    $scope.assignment.pairing_algorithm = ret.pairing_algorithm;
-                    $scope.assignment.educators_can_compare = ret.educators_can_compare;
-                    $scope.assignment.answer_grade_weight = ret.answer_grade_weight;
-                    $scope.assignment.comparison_grade_weight = ret.comparison_grade_weight;
-                    $scope.assignment.self_evaluation_grade_weight = ret.self_evaluation_grade_weight;
-                    $scope.assignment.peer_feedback_prompt = ret.peer_feedback_prompt;
-                    $scope.assignment.rank_display_limit = ret.rank_display_limit;
-
-                    // copy assignment dates
-                    $scope.date.astart.date = new Date(ret.answer_start);
-                    $scope.date.astart.time = new Date(ret.answer_start);
-                    $scope.date.aend.date = new Date(ret.answer_end);
-                    $scope.date.aend.time = new Date(ret.answer_end);
-
-                    if (ret.compare_start && ret.compare_end) {
-                        $scope.assignment.availableCheck = true;
-                        $scope.date.cstart.date = new Date(ret.compare_start);
-                        $scope.date.cstart.time = new Date(ret.compare_start);
-                        $scope.date.cend.date = new Date(ret.compare_end);
-                        $scope.date.cend.time = new Date(ret.compare_end)
-                    } else {
-                        $scope.date.cstart.date = new Date($scope.date.aend.date);
-                        $scope.date.cstart.time = new Date($scope.date.aend.time);
-                        $scope.date.cend.date = new Date();
-                        $scope.date.cend.date.setDate($scope.date.cstart.date.getDate()+7);
-                        $scope.date.cend.time = new Date($scope.date.aend.time);
-                        $scope.date.cstart.date = $scope.date.cstart.date;
-                        $scope.date.cend.date = $scope.date.cend.date;
-                    }
-
-                    // copy assignment attachment
-                    if (ret.file) {
-                        $scope.assignment.file = ret.file;
-                        $scope.assignment.uploadedFile = true;
-                    }
-
-                    // copy assignment comparison examples
-                    $scope.assignment.addPractice = false;
-                    ComparisonExampleResource.get({'courseId': courseId, 'assignmentId': $scope.originalAssignmentId}).$promise.then(
-                        function (ret) {
-                            if (ret.objects.length > 0) {
-                                var comparison_example = ret.objects[0];
-
-                                $scope.comparison_example.answer1.content = comparison_example.answer1.content;
-                                $scope.comparison_example.answer1.file = comparison_example.answer1.file;
-                                if (comparison_example.answer1.file) {
-                                    $scope.comparison_example.answer1.file_id = comparison_example.answer1.file.id;
-                                }
-
-                                $scope.comparison_example.answer2.content = comparison_example.answer2.content;
-                                $scope.comparison_example.answer2.file = comparison_example.answer2.file;
-                                if (comparison_example.answer2.file) {
-                                    $scope.comparison_example.answer2.file_id = comparison_example.answer2.file.id;
-                                }
-
-                                $scope.assignment.addPractice = true;
-                            }
-                        },
-                        function () {
-                            Toaster.reqerror("Assignment Practice Answers not Found", "No practice answers found for assignment with id "+$scope.originalAssignmentId);
-                        }
-                    );
-                    removeAssignmentCriteriaFromAvailable();
-                },
-                function () {
-                    Toaster.reqerror("Assignment Not Found", "No assignment found for id "+$scope.originalAssignmentId);
-                }
-            );
+                };
+            }
         }
 
         $scope.datePickerOpen = function($event, object) {
@@ -1024,28 +958,13 @@ module.controller("AssignmentWriteController",
             $scope.assignment.uploadedFile = false;
         };
 
-        Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, courseId).then(function(result) {
-            $scope.canManageAssignment = result;
-        });
-
-        CriterionResource.get().$promise.then(function (ret) {
-            $scope.availableCriteria = ret.objects;
-            // add default weight of 1 to all criterion
-            $scope.availableCriteria.forEach(function(criterion) {
-                criterion.weight = 1;
-            });
-            if (!$scope.assignment.criteria.length) {
-                // if we don't have any criterion, e.g. new assignment, add a default one automatically
-                $scope.assignment.criteria.push(_.find($scope.availableCriteria, {public: true}));
-            }
-            removeAssignmentCriteriaFromAvailable();
-        });
         var removeAssignmentCriteriaFromAvailable = function() {
             // we need to remove the existing assignment criteria from available list
             $scope.availableCriteria = _.filter($scope.availableCriteria, function(c) {
-                return !_($scope.assignment.criteria).pluck('id').includes(c.id);
+                return !_.find($scope.assignment.criteria, {id: c.id});
             });
         };
+        removeAssignmentCriteriaFromAvailable();
 
         $scope.add = function(key) {
             // not proceed if empty option is being added
@@ -1065,52 +984,46 @@ module.controller("AssignmentWriteController",
         };
 
         $scope.changeCriterion = function(criterion) {
+            criterion = criterion || {};
+
             var modalScope = $scope.$new();
             modalScope.criterion = angular.copy(criterion);
-            modalScope.editorOptions = EditorOptions.basic;
             if (criterion && criterion.public) {
                 modalScope.criterion.default = false;
                 modalScope.criterion.compared = false;
             }
+            var method = criterion.id ? 'edit' : 'create';
+            var modalName = criterion.id ? 'Edit Criterion' : 'Create Criterion';
 
-            var modalInstance;
-
-            var criterionUpdateListener = $scope.$on('CRITERION_UPDATED', function(event, c) {
-                var weight = criterion.weight;
-                angular.copy(c, criterion);
-                criterion.weight = weight;
-                modalInstance.close();
-            });
-            var criterionAddListener = $scope.$on('CRITERION_ADDED', function(event, c) {
-                c.weight = 1;
-                $scope.assignment.criteria.push(c);
-                modalInstance.close();
-            });
-            var criterionCancelListener = $scope.$on('CRITERION_CANCEL', function() {
-                modalInstance.dismiss('cancel');
-            });
-            modalInstance = $uibModal.open({
+            $scope.modalInstance = $uibModal.open({
                 animation: true,
                 backdrop: 'static',
-                template: '<criterion-form criterion=criterion editor-options=editorOptions></criterion-form>',
+                controller: "CriterionModalController",
+                templateUrl: 'modules/criterion/criterion-modal-partial.html',
                 scope: modalScope
             });
-            modalInstance.opened.then(function() {
-                xAPIStatementHelper.opened_modal("Edit Criterion");
+            $scope.modalInstance.opened.then(function() {
+                xAPIStatementHelper.opened_modal(modalName);
             });
-            // we need to remove the listener, otherwise on multiple click, multiple listeners will be registered
-            modalInstance.result.finally(function(){
-                criterionUpdateListener();
-                criterionAddListener();
-                criterionCancelListener();
-                xAPIStatementHelper.closed_modal("Edit Criterion");
+            $scope.modalInstance.result.then(function (c) {
+                if (method == 'edit') {
+                    var weight = criterion.weight;
+                    angular.copy(c, criterion);
+                    criterion.weight = weight;
+                } else {
+                    c.weight = 1;
+                    $scope.assignment.criteria.push(c);
+                }
+                xAPIStatementHelper.closed_modal(modalName);
+            }, function() {
+                xAPIStatementHelper.closed_modal(modalName);
             });
         };
 
         $scope.changeAnswer = function(answer, isAnswer1) {
             var modalScope = $scope.$new();
             modalScope.answerName = isAnswer1 ? 'Answer A' : 'Answer B';
-            modalScope.courseId = courseId;
+            modalScope.courseId = $scope.courseId;
             modalScope.assignmentId = $scope.assignment.id;
             modalScope.answer = angular.copy(answer);
             var modalName = modalScope.answer.id ?
@@ -1217,7 +1130,6 @@ module.controller("AssignmentWriteController",
                                     resolve();
                                 },
                                 function (ret) {
-                                    Toaster.reqerror("Criterion Save Failed.", ret);
                                     reject();
                                 }
                             );
@@ -1241,7 +1153,7 @@ module.controller("AssignmentWriteController",
                 } else {
                     $scope.assignment.file_id = null;
                 }
-                AssignmentResource.save({'courseId': courseId}, $scope.assignment)
+                AssignmentResource.save({'courseId': $scope.courseId}, $scope.assignment)
                     .$promise.then(function (ret) {
                         var assignmentId = ret.id;
                         $scope.assignment.id = ret.id;
@@ -1258,28 +1170,20 @@ module.controller("AssignmentWriteController",
 
                         $q.all(promises).then(function() {
                             $scope.submitted = false;
-                            if ($route.current.method == "new") {
+                            if ($scope.method == "create") {
                                 Toaster.success("New Assignment Created",'"' + ret.name + '" should now be listed.');
-                            } else if ($route.current.method == "copy") {
+                            } else if ($scope.method == "copy") {
                                 Toaster.success("Assignment Duplicated",'"' + ret.name + '" should now be listed.');
                             } else {
                                 Toaster.success("Assignment Updated");
                             }
-                            $location.path('/course/' + courseId);
+                            $location.path('/course/' + $scope.courseId);
                         }, function() {
-                            // error message handled elsewhere
                             $scope.submitted = false;
                         });
                     },
                     function (ret) {
                         $scope.submitted = false;
-                        if ($route.current.method == "new") {
-                            Toaster.reqerror("No New Assignment Created", ret);
-                        } else if ($route.current.method == "copy") {
-                            Toaster.reqerror("Assignment Not Duplicated", ret);
-                        } else {
-                            Toaster.reqerror("Assignment Not Updated", ret);
-                        }
                     }
                 );
             });
@@ -1288,14 +1192,13 @@ module.controller("AssignmentWriteController",
         var deleteComparisonsExample = function(assignmentId, comparison_example) {
             return $q(function(resolve, reject) {
                 if (comparison_example.id) {
-                    ComparisonExampleResource.delete({'courseId': courseId, 'assignmentId': assignmentId}, comparison_example)
+                    ComparisonExampleResource.delete({'courseId': $scope.courseId, 'assignmentId': assignmentId}, comparison_example)
                     .$promise.then(
                         function (ret) {
                             comparison_example.id = null;
                             resolve();
                         },
                         function (ret) {
-                            Toaster.reqerror("Practice Answers Selete Failed.", ret);
                             reject();
                         }
                     );
@@ -1315,14 +1218,13 @@ module.controller("AssignmentWriteController",
 
                 // after answers are saved, save comparison example
                 $q.all(promises).then(function() {
-                    ComparisonExampleResource.save({'courseId': courseId, 'assignmentId': assignmentId}, comparison_example)
+                    ComparisonExampleResource.save({'courseId': $scope.courseId, 'assignmentId': assignmentId}, comparison_example)
                     .$promise.then(
                         function (ret) {
                             comparison_example.id = ret.id;
                             resolve();
                         },
                         function (ret) {
-                            Toaster.reqerror("Practice Answers Save Failed.", ret);
                             reject();
                         }
                     );
@@ -1337,7 +1239,7 @@ module.controller("AssignmentWriteController",
             return $q(function(resolve, reject) {
                 // only save the answer if new (saved automatically in modal if already exists)
                 if (answer.id == null) {
-                    AnswerResource.save({'courseId': courseId, 'assignmentId': assignmentId}, answer)
+                    AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': assignmentId}, answer)
                     .$promise.then(
                         function (ret) {
                             if (isAnswer1) {
@@ -1350,7 +1252,6 @@ module.controller("AssignmentWriteController",
                             resolve();
                         },
                         function (ret) {
-                            Toaster.reqerror("Practice Answer Save Failed.", ret);
                             reject();
                         }
                     );

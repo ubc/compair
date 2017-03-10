@@ -21,7 +21,7 @@ Feature: Edit Course Users
   Scenario: Adding user to course as admin
     Given I'm a System Administrator
     And I'm on 'edit course user' page for course with id '1abcABC123-abcABC123_Z'
-    When I fill form item 'user' in with 'Second'
+    When I fill form item '$ctrl.user' in with 'Second'
     And I select the first user search result
     And I select the Student role for the user
     And I submit form with 'Enrol' button

@@ -40,6 +40,14 @@ class ComparisonCriterion(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     answer2_uuid = association_proxy('comparison', 'answer2_uuid')
 
     @classmethod
+    def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Criterion Comparison Unavailable"
+        if not message:
+            message = "The criterion comparison was removed from the system or is no longer accessible."
+        return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
+
+    @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()
 

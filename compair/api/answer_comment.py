@@ -1,12 +1,12 @@
 from bouncer.constants import CREATE, READ, EDIT, DELETE, MANAGE
 from flask import Blueprint
 from flask_login import login_required, current_user
-from flask_restful import Resource, marshal, abort
+from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import and_, or_
 
 from . import dataformat
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.authorization import require, allow, USER_IDENTITY
 from compair.models import User, Answer, Assignment, Course, AnswerComment, \
     CourseRole, SystemRole, AnswerCommentType
@@ -104,7 +104,7 @@ class AnswerCommentListAPI(Resource):
             answer_uuids.extend(params['answer_ids'].split(','))
 
         if not answer_uuids and not params['ids'] and not params['assignment_id'] and not params['user_ids']:
-            abort(404)
+            abort(404, title="Replies Unavailable", message="There was a problem getting the replies for this answer. Please try again.")
 
         conditions = []
 
@@ -116,8 +116,8 @@ class AnswerCommentListAPI(Resource):
             ) \
             .all() if answer_uuids else []
         if answer_uuids and not answers:
-            # non-existing answer ids. we return empty result
-            abort(404)
+            # non-existing answer ids.
+            abort(404, title="Replies Unavailable", message="There was a problem getting the replies for this answer. Please try again.")
 
         # build query condition for each answer
         for answer in answers:
@@ -190,7 +190,9 @@ class AnswerCommentListAPI(Resource):
 
         # checking the permission
         for answer_comment in answer_comments:
-            require(READ, answer_comment.answer)
+            require(READ, answer_comment.answer,
+                title="Replies Unavailable",
+                message="Your role in this course does not allow you to view replies for this answer.")
 
         on_answer_comment_list_get.send(
             self,
@@ -208,7 +210,9 @@ class AnswerCommentListAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
-        require(CREATE, AnswerComment(course_id=course.id))
+        require(CREATE, AnswerComment(course_id=course.id),
+            title="Feedback Not Saved",
+            message="Your role in this course does not allow you to save replies for this answer.")
 
         answer_comment = AnswerComment(answer_id=answer.id)
 
@@ -217,7 +221,7 @@ class AnswerCommentListAPI(Resource):
         answer_comment.content = params.get("content")
         # require content not empty if not a draft
         if not answer_comment.content and not answer_comment.draft:
-            return {"error": "The comment content is empty!"}, 400
+            abort(400, title="Reply Not Saved", message="Please provide content in the text editor to reply to this answer.")
 
         if params.get('user_id') and current_user.system_role == SystemRole.sys_admin:
             user = User.get_by_uuid_or_404(params.get('user_id'))
@@ -234,7 +238,7 @@ class AnswerCommentListAPI(Resource):
 
         comment_type = params.get("comment_type")
         if comment_type not in comment_types:
-            abort(400)
+            abort(400, title="Reply Not Saved", message="Please select a valid comment type.")
         answer_comment.comment_type = AnswerCommentType(comment_type)
 
         db.session.add(answer_comment)
@@ -271,7 +275,9 @@ class AnswerCommentAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
         answer_comment = AnswerComment.get_active_by_uuid_or_404(answer_comment_uuid)
-        require(READ, answer_comment)
+        require(READ, answer_comment,
+            title="Reply Unavailable",
+            message="Your role in this course does not allow you to view this reply.")
 
         on_answer_comment_get.send(
             self,
@@ -285,18 +291,20 @@ class AnswerCommentAPI(Resource):
     @login_required
     def post(self, course_uuid, assignment_uuid, answer_uuid, answer_comment_uuid):
         """
-        Create an answer comment
+        Update an answer comment
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
         answer_comment = AnswerComment.get_active_by_uuid_or_404(answer_comment_uuid)
-        require(EDIT, answer_comment)
+        require(EDIT, answer_comment,
+            title="Reply Not Updated",
+            message="Your role in this course does not allow you to update replies for this answer.")
 
         params = existing_answer_comment_parser.parse_args()
         # make sure the answer comment id in the url and the id matches
         if params['id'] != answer_comment_uuid:
-            return {"error": "Comment id does not match URL."}, 400
+            abort(400, title="Reply Not Updated", message="The reply's ID does not match the URL, which is required in order to update the reply.")
 
         # modify answer comment according to new values, preserve original values if values not passed
         answer_comment.content = params.get("content")
@@ -310,7 +318,7 @@ class AnswerCommentAPI(Resource):
 
         comment_type = params.get("comment_type", AnswerCommentType.private.value)
         if comment_type not in comment_types:
-            abort(400)
+            abort(400, title="Reply Not Updated", message="Please select a valid comment type.")
 
         answer_comment.comment_type = AnswerCommentType(comment_type)
         # only update draft param if currently a draft
@@ -319,7 +327,7 @@ class AnswerCommentAPI(Resource):
 
         # require content not empty if not a draft
         if not answer_comment.content and not answer_comment.draft:
-            return {"error": "The comment content is empty!"}, 400
+            abort(400, title="Reply Not Updated", message="Please provide content in the text editor to update this reply.")
 
         db.session.add(answer_comment)
 
@@ -357,7 +365,9 @@ class AnswerCommentAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer_comment = AnswerComment.get_active_by_uuid_or_404(answer_comment_uuid)
-        require(DELETE, answer_comment)
+        require(DELETE, answer_comment,
+            title="Reply Not Deleted",
+            message="Your role in this course does not allow you to delete replies for this answer.")
 
         data = marshal(answer_comment, dataformat.get_answer_comment(False))
         answer_comment.active = False

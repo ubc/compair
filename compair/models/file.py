@@ -7,7 +7,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from . import *
 
-from compair.core import db
+from compair.core import db, abort
 
 class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     __tablename__ = 'file'
@@ -39,7 +39,12 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         return self.assignment_count + self.answer_count > 0
 
     @classmethod
-    def get_active_or_404(cls, model_id, joinedloads=[]):
+    def get_active_or_404(cls, model_id, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Attachment Unavailable"
+        if not message:
+            message = "The attachment was removed from the system or is no longer accessible."
+
         query = cls.query
         # load relationships if needed
         for load_string in joinedloads:
@@ -47,11 +52,16 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
         model = query.get_or_404(model_id)
         if model is None or not model.active:
-            abort(404)
+            abort(404, title=title, message=message)
         return model
 
     @classmethod
-    def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[]):
+    def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Attachment Unavailable"
+        if not message:
+            message = "The attachment was removed from the system or is no longer accessible."
+
         query = cls.query
         # load relationships if needed
         for load_string in joinedloads:
@@ -59,7 +69,7 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
         model = query.filter_by(uuid=model_uuid).one_or_none()
         if model is None or not model.active:
-            abort(404)
+            abort(404, title=title, message=message)
         return model
 
     @classmethod

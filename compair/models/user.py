@@ -10,7 +10,7 @@ from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_enum34 import EnumType
 
-from flask_login import UserMixin
+from flask_login import UserMixin, current_user
 from . import *
 
 from compair.core import db
@@ -153,9 +153,6 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     #     s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
     #     return s.dumps({'id': self.id})
 
-    def __repr__(self):
-        return "User " + self.uuid if self.uuid else "User"
-
     def get_course_role(self, course_id):
         """ Return user's course role by course id """
 
@@ -164,6 +161,22 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
                 return user_course.course_role
 
         return None
+
+    @classmethod
+    def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "User Unavailable"
+        if not message:
+            message = "The user was removed from the system or is no longer accessible."
+        return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
+
+    @classmethod
+    def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "User Unavailable"
+        if not message:
+            message = "The user was removed from the system or is no longer accessible."
+        return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
     def __declare_last__(cls):

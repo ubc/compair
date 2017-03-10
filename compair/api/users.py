@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, abort, session as sess
+from flask import Blueprint, current_app, session as sess
 from bouncer.constants import MANAGE, EDIT, CREATE, READ
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
@@ -9,7 +9,7 @@ from six import text_type
 
 from . import dataformat
 from compair.authorization import is_user_access_restricted, require, allow
-from compair.core import db, event
+from compair.core import db, event, abort
 from .util import new_restful_api, get_model_changes, pagination_parser
 from compair.models import User, SystemRole, Course, UserCourse, CourseRole, \
     Assignment, LTIUser, LTIUserResourceLink, LTIContext, ThirdPartyUser, ThirdPartyType, \
@@ -76,14 +76,14 @@ on_teaching_course_get = event.signal('USER_TEACHING_COURSE_GET')
 on_user_edit_button_get = event.signal('USER_EDIT_BUTTON_GET')
 on_user_password_update = event.signal('USER_PASSWORD_UPDATE')
 
-def check_valid_system_role(system_role):
+def check_valid_system_role(system_role, title=None):
     system_roles = [
         SystemRole.sys_admin.value,
         SystemRole.instructor.value,
         SystemRole.student.value
     ]
     if system_role not in system_roles:
-        abort(400)
+        abort(400, title=title, message="Please select a valid system role from the list provided.")
 
 # /user_uuid
 class UserAPI(Resource):
@@ -104,22 +104,23 @@ class UserAPI(Resource):
         user = User.get_by_uuid_or_404(user_uuid)
 
         if is_user_access_restricted(user):
-            return {'error': "Sorry, you don't have permission for this action."}, 403
+            abort(403, title="Account Not Updated", message="Your system role does not allow you to update this account.")
 
         params = existing_user_parser.parse_args()
 
         # make sure the user id in the url and the id matches
         if params['id'] != user_uuid:
-            return {"error": "User id does not match URL."}, 400
+            abort(400, title="Account Not Updated",
+                message="The account's ID does not match the URL, which is required in order to update the account.")
 
         # only update username if user uses compair login method
         if user.uses_compair_login:
             username = params.get("username")
             if username == None:
-                return {"error": "Missing required parameter: username."}, 400
+                abort(400, title="Account Not Updated", message="The required field username is missing.")
             username_exists = User.query.filter_by(username=username).first()
             if username_exists and username_exists.id != user.id:
-                return {"error": "This username already exists. Please pick another."}, 409
+                abort(409, title="Account Not Updated", message="This username already exists. Please pick another.")
 
             user.username = username
         elif allow(MANAGE, user):
@@ -128,14 +129,14 @@ class UserAPI(Resource):
             if username:
                 username_exists = User.query.filter_by(username=username).first()
                 if username_exists and username_exists.id != user.id:
-                    return {"error": "This username already exists. Please pick another."}, 409
+                    abort(409, title="Account Not Updated", message="This username already exists. Please pick another.")
             user.username = username
         else:
             user.username = None
 
         if allow(MANAGE, user):
             system_role = params.get("system_role", user.system_role.value)
-            check_valid_system_role(system_role)
+            check_valid_system_role(system_role, title="Account Not Updated")
             user.system_role = SystemRole(system_role)
 
         # only students should have student numbers
@@ -143,7 +144,7 @@ class UserAPI(Resource):
             student_number = params.get("student_number", user.student_number)
             student_number_exists = User.query.filter_by(student_number=student_number).first()
             if student_number is not None and student_number_exists and student_number_exists.id != user.id:
-                return {"error": "This student number already exists. Please pick another."}, 409
+                abort(409, title="Account Not Updated", message="This student number already exists. Please pick another.")
             else:
                 user.student_number = student_number
         else:
@@ -167,8 +168,7 @@ class UserAPI(Resource):
                 data={'id': user.id, 'changes': changes})
         except exc.IntegrityError:
             db.session.rollback()
-            current_app.logger.error("Failed to edit user. Duplicate.")
-            return {'error': 'A user with the same identifier already exists.'}, 409
+            abort(409, title="Account Not Updated", message="A user with the same identifier already exists.")
 
         return marshal(user, dataformat.get_user(restrict_user))
 
@@ -232,20 +232,20 @@ class UserListAPI(Resource):
             # else enforce required password and unique username
             user.password = params.get("password")
             if user.password == None:
-                return {"error": "Missing required parameter: password."}, 400
+                abort(400, title="Account Not Saved", message="The required field password is missing.")
 
             user.username = params.get("username")
             if user.username == None:
-                return {"error": "Missing required parameter: username."}, 400
+                abort(400, title="Account Not Saved", message="The required field username is missing.")
 
             username_exists = User.query.filter_by(username=user.username).first()
             if username_exists:
-                return {"error": "This username already exists. Please pick another."}, 409
+                abort(409, title="Account Not Saved", message="This username already exists. Please pick another.")
 
         student_number_exists = User.query.filter_by(student_number=user.student_number).first()
         # if student_number is not left blank and it exists -> 409 error
         if user.student_number is not None and student_number_exists:
-            return {"error": "This student number already exists. Please pick another."}, 409
+            abort(409, title="Account Not Saved", message="This student number already exists. Please pick another.")
 
         # handle oauth_create_user_link setup for third party logins
         if sess.get('oauth_create_user_link'):
@@ -280,10 +280,12 @@ class UserListAPI(Resource):
                     db.session.add(thirdpartyuser)
         else:
             system_role = params.get("system_role")
-            check_valid_system_role(system_role)
+            check_valid_system_role(system_role, title="Account Not Saved")
             user.system_role = SystemRole(system_role)
 
-            require(CREATE, user)
+            require(CREATE, user,
+                title="Account Not Saved",
+                message="Your system role does not allow you to create accounts.")
 
         # only students can have student numbers
         if user.system_role != SystemRole.student:
@@ -307,7 +309,7 @@ class UserListAPI(Resource):
         except exc.IntegrityError:
             db.session.rollback()
             current_app.logger.error("Failed to add new user. Duplicate.")
-            return {'error': 'A user with the same identifier already exists.'}, 400
+            abort(409, title="Account Not Saved", message="A user with the same identifier already exists.")
 
         # handle oauth_create_user_link teardown for third party logins
         if sess.get('oauth_create_user_link'):
@@ -370,7 +372,9 @@ class UserCourseListAPI(Resource):
     def get(self, user_uuid):
         user = User.get_by_uuid_or_404(user_uuid)
 
-        require(MANAGE, User)
+        require(MANAGE, User,
+            title="User's Courses Unavailable",
+            message="Your system role does not allow you to view courses for this user.")
 
         params = user_id_course_list_parser.parse_args()
 
@@ -428,7 +432,7 @@ class UserCourseStatusListAPI(Resource):
         course_uuids = params['ids'].split(',')
 
         if params['ids'] == '' or len(course_uuids) == 0:
-            return {"error": "Select at least one course"}, 400
+            abort(400, title="Course Status Unavailable", message="Please select a valid course.")
 
         query = Course.query \
             .filter(and_(
@@ -452,7 +456,8 @@ class UserCourseStatusListAPI(Resource):
         results = query.all()
 
         if len(course_uuids) != len(results):
-            return {"error": "Not enrolled in course"}, 400
+            abort(400, title="Course Status Unavailable",
+                message="Your are not enrolled in one or more users selected courses yet.")
 
         statuses = {}
 
@@ -576,26 +581,29 @@ class UserUpdatePasswordAPI(Resource):
     def post(self, user_uuid):
         user = User.get_by_uuid_or_404(user_uuid)
         # anyone who passes checking below should be an instructor or admin
-        require(EDIT, user)
+        require(EDIT, user,
+            title="Password Not Updated",
+            message="Your system role does not allow you to update passwords for this account.")
 
-        if user.uses_compair_login:
-            params = update_password_parser.parse_args()
-            oldpassword = params.get('oldpassword')
-            # if it is not current user changing own password, it must be an instructor or admin
-            # because of above check
-            if current_user.id != user.id or (oldpassword and user.verify_password(oldpassword)):
-                user.password = params.get('newpassword')
-                db.session.commit()
-                on_user_password_update.send(
-                    self,
-                    event_name=on_user_password_update.name,
-                    user=current_user)
-                return marshal(user, dataformat.get_user(False))
-            else:
-                return {"error": "The old password is incorrect or you do not have permission to change password."}, 403
-        else:
-            return {"error": "Cannot update password. User does not use ComPAIR account login authentication method."}, 400
+        if not user.uses_compair_login:
+            abort(400, title="Password Not Updated",
+                message="Cannot update password. User does not use the ComPAIR account login authentication method.")
 
+        params = update_password_parser.parse_args()
+        oldpassword = params.get('oldpassword')
+
+        if current_user.id == user.id and not oldpassword:
+            abort(400, title="Password Not Updated", message="The old password is missing.")
+        elif current_user.id == user.id and not user.verify_password(oldpassword):
+            abort(400, title="Password Not Updated", message="The old password is incorrect.")
+
+        user.password = params.get('newpassword')
+        db.session.commit()
+        on_user_password_update.send(
+            self,
+            event_name=on_user_password_update.name,
+            user=current_user)
+        return marshal(user, dataformat.get_user(False))
 
 api = new_restful_api(user_api)
 api.add_resource(UserAPI, '/<user_uuid>')

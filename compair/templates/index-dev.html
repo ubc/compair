@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--[if IE 9]><html ng-app = "myApp" auth-login class="ie9"><![endif]-->
-<html ng-app = "myApp" auth-login>
+<html ng-app="myApp" auth-login>
     <head>
         <base href="/app/">
         <meta charset="utf-8">
@@ -52,6 +52,7 @@
         <script src="{{ url_for('static', filename='lib/tincan/build/tincan.js') }}"></script>
         <script src="{{ url_for('static', filename='lib/angular-uuids/angular-uuid.js') }}"></script>
         <script src="{{ url_for('static', filename='lib/angular-local-storage/dist/angular-local-storage.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-promise-extras/angular-promise-extras.js') }}"></script>
         <!-- endbower -->
         <!-- endbuild -->
 
@@ -109,7 +110,6 @@
         <script src="{{ url_for('static', filename='modules/authorization/authorization-module.js') }}"></script>
         <script src="{{ url_for('static', filename='modules/session/session-service.js') }}"></script>
         <script src="{{ url_for('static', filename='modules/criterion/criterion-module.js') }}"></script>
-        <script src="{{ url_for('static', filename='modules/criterion/criterion-form-directive.js') }}"></script>
         <script src="{{ url_for('static', filename='modules/toaster/toaster-module.js') }}"></script>
         <script src="{{ url_for('static', filename='modules/user/user-module.js') }}"></script>
         <!-- - Individual Route Modules -->
@@ -176,10 +176,11 @@
     <![endif]-->
 
     <!-- Main Navbar -->
-    <ng-include src="'modules/navbar/navbar-partial.html'"></ng-include>
+    <navbar-component></navbar-component>
+    <ng-include src="'modules/route/route-error-partial.html'"></ng-include>
 
     <!-- Toast Messages from AngularJS-Toaster -->
-    <toaster-container toaster-options="{'limit': 1, 'position-class': 'toast-top-full-width-opaque'}"></toaster-container>
+    <toaster-container toaster-options="{'limit': 1, 'position-class': 'toast-top-full-width-opaque',  'prevent-duplicates': true}"></toaster-container>
 
     <!-- Main Viewport, where all the module partials are shown -->
     <div class="container">

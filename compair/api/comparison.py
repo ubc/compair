@@ -2,7 +2,7 @@ from __future__ import division
 import operator
 import random
 
-from bouncer.constants import READ, CREATE, MANAGE
+from bouncer.constants import READ, CREATE, EDIT, MANAGE
 from flask import Blueprint, current_app
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
@@ -11,7 +11,7 @@ from sqlalchemy import or_, and_
 from sqlalchemy.orm import joinedload
 
 from . import dataformat
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.authorization import require, allow
 from compair.models import Answer, Comparison, Course, WinningAnswer, \
     Assignment, UserCourse, CourseRole, AssignmentCriterion
@@ -34,10 +34,6 @@ on_comparison_get = event.signal('COMPARISON_GET')
 on_comparison_create = event.signal('COMPARISON_CREATE')
 on_comparison_update = event.signal('COMPARISON_UPDATE')
 
-#messages
-comparison_deadline_message = 'Assignment comparison deadline has passed.'
-educators_can_not_compare_message = 'Only students can compare answers in this assignment.'
-
 # /
 class CompareRootAPI(Resource):
     @login_required
@@ -47,14 +43,20 @@ class CompareRootAPI(Resource):
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
-        require(READ, assignment)
-        require(CREATE, Comparison)
+        require(READ, assignment,
+            title="Comparisons Unavailable",
+            message="Assignments and their comparisons can only be seen here by those enrolled in the course. Please double-check your enrollment in this course.")
+        require(CREATE, Comparison,
+            title="Comparisons Unavailable",
+            message="Comparisons can only be seen here by those enrolled in the course. Please double-check your enrollment in this course.")
         restrict_user = not allow(MANAGE, assignment)
 
         if not assignment.compare_grace:
-            return {'error': comparison_deadline_message}, 403
+            abort(403, title="Comparisons Unavailable",
+                message="The comparison deadline has passed. No comparisons can be done beyond the deadline.")
         elif not restrict_user and not assignment.educators_can_compare:
-            return {'error': educators_can_not_compare_message}, 403
+            abort(403, title="Comparisons Unavailable",
+                message="Only students can currently compare answers for this assignment. To change these settings to include instructors and teaching assistants, edit the assignment.")
 
         # check if user has a comparison they have not completed yet
         new_pair = False
@@ -89,11 +91,11 @@ class CompareRootAPI(Resource):
                     data=marshal(comparison, dataformat.get_comparison(restrict_user)))
 
             except InsufficientObjectsForPairException:
-                return {"error": "Not enough answers are available for a comparison."}, 400
+                abort(400, title="Comparisons Unavailable", message="Not enough answers are available for you to do comparisons. Please check back later for more answers.")
             except UserComparedAllObjectsException:
-                return {"error": "You have compared all the currently available answers."}, 400
+                abort(400, title="Comparisons Unavailable", message="You have compared all the currently available answer pairs. Please check back later for more answers.")
             except UnknownPairGeneratorException:
-                return {"error": "Generating scored pairs failed, this really shouldn't happen."}, 500
+                abort(500, title="Comparisons Unavailable", message="Generating scored pairs failed, this really shouldn't happen.")
 
         comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
 
@@ -110,14 +112,20 @@ class CompareRootAPI(Resource):
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
-        require(READ, assignment)
-        require(CREATE, Comparison)
+        require(READ, assignment,
+            title="Comparison Not Saved",
+            message="Comparisons can only be saved by those enrolled in the course. Please double-check your enrollment in this course.")
+        require(EDIT, Comparison,
+            title="Comparison Not Saved",
+            message="Comparisons can only be updated by those enrolled in the course. Please double-check your enrollment in this course.")
         restrict_user = not allow(MANAGE, assignment)
 
         if not assignment.compare_grace:
-            return {'error': comparison_deadline_message}, 403
+            abort(403, title="Comparison Not Saved",
+                message="The comparison deadline has passed. No comparisons can be done beyond the deadline.")
         elif not restrict_user and not assignment.educators_can_compare:
-            return {'error': educators_can_not_compare_message}, 403
+            abort(403, title="Comparison Not Saved",
+                message="Only students can save answer comparisons for this assignment. To change these settings to include instructors and teaching assistants, edit the assignment.")
 
         comparison = Comparison.query \
             .options(joinedload('comparison_criteria')) \
@@ -133,13 +141,13 @@ class CompareRootAPI(Resource):
 
         # check if there are any comparisons to update
         if not comparison:
-            return {"error": "There are no comparisons open for evaluation."}, 400
+            abort(400, title="Comparison Not Saved", message="There are no comparisons open for evaluation.")
 
         is_comparison_example = comparison.comparison_example_id != None
 
         # check if number of comparison criteria submitted matches number of comparison criteria needed
         if len(comparison.comparison_criteria) != len(params['comparison_criteria']):
-            return {"error": "Not all criteria were evaluated."}, 400
+            abort(400, title="Comparison Not Saved", message="Not all criteria were evaluated.")
 
         if params.get('draft'):
             completed = False
@@ -148,7 +156,7 @@ class CompareRootAPI(Resource):
         for comparison_criterion_update in params['comparison_criteria']:
             # ensure criterion param is present
             if 'criterion_id' not in comparison_criterion_update:
-                return {"error": "Missing criterion_id in evaluation."}, 400
+                abort(400, title="Comparison Not Saved", message="The assignment is missing criteria. Please reload the page and try again.")
 
             # set default values for cotnent and winner
             comparison_criterion_update.setdefault('content', None)
@@ -167,11 +175,11 @@ class CompareRootAPI(Resource):
 
                     # check that the winner id matches one of the answer pairs
                     if winner not in [None, WinningAnswer.answer1.value, WinningAnswer.answer2.value]:
-                        return {"error": "Selected answer is invalid."}, 400
+                        abort(400, title="Comparison Not Saved", message="Please select a valid winner from the list provided.")
 
                     break
             if not known_criterion:
-                return {"error": "Unknown criterion submitted!"}, 400
+                abort(400, title="Comparison Not Saved", message="You are attempting to submit comparison of an unknown criterion, which is not allowed.")
 
 
         # update comparison criterion

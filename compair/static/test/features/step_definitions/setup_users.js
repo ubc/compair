@@ -22,7 +22,7 @@ var setupAdminStepDefinitionsWrapper = function () {
     this.Given("I'm a CAS System Administrator", {timeout: 20 * 1000}, function () {
         var fixtureName = 'admin/cas_fixture';
         backEndMocks.setStorageFixture(browser, fixtureName);
-        return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
+        return loginDialog.skipLogin();
     });
 
     this.Given("I'm an Instructor", {timeout: 20 * 1000}, function () {

@@ -84,11 +84,11 @@ describe('course-module', function () {
             $location = _$location_;
             $uibModal = _$uibModal_;
             $q = _$q_;
-            createController = function (route, params) {
+            createController = function (params, resolvedData) {
                 return $controller('CourseController', {
                     $scope: $rootScope,
                     $routeParams: params || {},
-                    $route: route || {}
+                    resolvedData: resolvedData || {}
                 });
             }
             xAPISettings = _xAPISettings_;
@@ -102,7 +102,7 @@ describe('course-module', function () {
 
         describe('view:', function () {
             var controller;
-            describe('new', function () {
+            describe('create', function () {
                 var toaster;
                 var course = {
                     "name": "Test111",
@@ -120,7 +120,9 @@ describe('course-module', function () {
                 }));
 
                 beforeEach(function () {
-                    controller = createController({current: {method: 'new'}});
+                    controller = createController({}, {
+                        loggedInUser: angular.copy(mockUser),
+                    });
                 });
 
                 it('should be correctly initialized', function () {
@@ -166,18 +168,18 @@ describe('course-module', function () {
                 beforeEach(function () {
                     editCourse = angular.copy(mockCourse);
                     editCourse.id = "2abcABC123-abcABC123_Z";
-                    controller = createController({current: {method: 'edit'}}, {courseId: "2abcABC123-abcABC123_Z"});
-                    $httpBackend.expectGET('/api/courses/2abcABC123-abcABC123_Z').respond(editCourse);
-                    $httpBackend.flush();
+                    controller = createController({courseId: editCourse.id}, {
+                        course: editCourse,
+                        loggedInUser: angular.copy(mockUser),
+                    });
                 });
 
                 it('should be correctly initialized', function () {
                     expect($rootScope.course).toEqualData(_.merge(editCourse));
+                    expect($rootScope.course).toEqualData(editCourse);
                 });
 
                 it('should error when start date is not before end date', function () {
-                    var editedCourse = angular.copy(editCourse);
-                    $rootScope.course = editedCourse;
                     $rootScope.date.course_start.date = new Date();
                     $rootScope.date.course_start.time = new Date();
                     $rootScope.date.course_end.date = new Date();
@@ -192,12 +194,10 @@ describe('course-module', function () {
                 });
 
                 it('should be able to save edited course', function () {
-                    var editedCourse = angular.copy(editCourse);
-                    editedCourse.name = 'new name';
-                    editedCourse.year = 2016;
-                    editedCourse.term = "Summer";
-                    $rootScope.course = editedCourse;
-                    $httpBackend.expectPOST('/api/courses/2abcABC123-abcABC123_Z', $rootScope.course).respond(editedCourse);
+                    $rootScope.course.name = 'new name';
+                    $rootScope.course.year = 2016;
+                    $rootScope.course.term = "Summer";
+                    $httpBackend.expectPOST('/api/courses/2abcABC123-abcABC123_Z', $rootScope.course).respond($rootScope.course);
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();
@@ -206,7 +206,6 @@ describe('course-module', function () {
                 });
 
                 it('should enable save button even if save failed', function() {
-                    $rootScope.course = angular.copy(editCourse);
                     $httpBackend.expectPOST('/api/courses/2abcABC123-abcABC123_Z', $rootScope.course).respond(400, '');
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(true);
@@ -232,7 +231,7 @@ describe('course-module', function () {
                     then: jasmine.createSpy('modalInstance.result.then')
                 }
             };
-            createController = function (route, params) {
+            createController = function (params) {
                 return $controller('CourseSelectModalController', {
                     $scope: $rootScope,
                     $uibModalInstance: modalInstance,

@@ -44,17 +44,21 @@ module.constant('required_rounds', 6);
 /***** Controllers *****/
 module.controller(
     'ComparisonController',
-    ['$log', '$location', '$route', '$scope', '$timeout', '$routeParams', '$anchorScroll', 'AssignmentResource', 'AnswerResource',
-        'ComparisonResource', 'AnswerCommentResource', 'Session', 'Toaster', 'AnswerCommentType', "TimerResource",
-        'EditorOptions', "Authorize", "xAPI", "xAPIStatementHelper", "WinningAnswer",
-    function($log, $location, $route, $scope, $timeout, $routeParams, $anchorScroll, AssignmentResource, AnswerResource,
-        ComparisonResource, AnswerCommentResource, Session, Toaster, AnswerCommentType, TimerResource,
-        EditorOptions, Authorize, xAPI, xAPIStatementHelper, WinningAnswer)
+    ['$location', '$route', '$scope', '$timeout', '$routeParams', '$anchorScroll', 'AssignmentResource', 'AnswerResource',
+        'ComparisonResource', 'AnswerCommentResource', 'Toaster', 'AnswerCommentType',
+        'EditorOptions', "xAPI", "xAPIStatementHelper", "WinningAnswer", "resolvedData",
+    function($location, $route, $scope, $timeout, $routeParams, $anchorScroll, AssignmentResource, AnswerResource,
+        ComparisonResource, AnswerCommentResource, Toaster, AnswerCommentType,
+        EditorOptions, xAPI, xAPIStatementHelper, WinningAnswer, resolvedData)
     {
-        var courseId = $scope.courseId = $routeParams['courseId'];
-        var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
-        var userId;
-        $scope.assignment = {};
+        $scope.courseId = $routeParams.courseId;
+        $scope.assignmentId = $routeParams.assignmentId;
+
+        $scope.course = resolvedData.course;
+        $scope.assignment = resolvedData.assignment;
+        $scope.canManageAssignment = resolvedData.canManageAssignment;
+        $scope.loggedInUserId = resolvedData.loggedInUser.id;
+
         $scope.submitted = false;
         $scope.isDraft = false;
         $scope.preventExit = true; //user should be warned before leaving page by default
@@ -68,128 +72,93 @@ module.controller(
             xAPIStatementHelper.interacted_answer_comment($scope.answer2.comment, $scope.tracking.getRegistration(), duration);
         });
 
-        var countDown = function() {
-            $scope.showCountDown = true;
-        };
+        $scope.total = $scope.assignment.total_steps_required;
 
-        Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, $scope.courseId).then(function(result) {
-            $scope.canManageAssignment = result;
-        });
+        // if there is a comparison end date, check if timer is needed
+        var due_date = new Date($scope.assignment.compare_end);
+        if (due_date && $scope.assignment.compare_end != null) {
+            var current_time = resolvedData.timer.date;
+            var trigger_time = due_date.getTime() - current_time - 600000; //(10 mins)
+            if (trigger_time < 86400000) { //(1 day)
+                $timeout(function() {
+                    $scope.showCountDown = true;
+                }, trigger_time);
+            }
+        }
 
         // get an comparisons to be compared from the server
         $scope.comparisonError = false;
         $scope.answer1 = {};
         $scope.answer2 = {};
         $scope.comparison = {};
-        Session.getUser().then(function(user) {
-            userId = user.id;
-            ComparisonResource.get({'courseId': courseId, 'assignmentId': assignmentId},
-                function (ret) {
-                    // check if there is any existing comments from current user
-                    var newPair = ret.new_pair;
-                    $scope.comparison = ret.comparison;
-                    $scope.answer1 = angular.copy($scope.comparison.answer1);
-                    $scope.answer1.comment = {};
-                    $scope.answer2 = angular.copy($scope.comparison.answer2);
-                    $scope.answer2.comment = {};
 
-                    $scope.current = ret.current;
-                    $scope.firstAnsNum = ($scope.current * 2) - 1;
-                    $scope.secondAnsNum = ($scope.current * 2);
+        ComparisonResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId},
+            function (ret) {
+                // check if there is any existing comments from current user
+                var newPair = ret.new_pair;
+                $scope.comparison = ret.comparison;
+                $scope.answer1 = angular.copy($scope.comparison.answer1);
+                $scope.answer1.comment = {};
+                $scope.answer2 = angular.copy($scope.comparison.answer2);
+                $scope.answer2.comment = {};
 
-                    var answer_ids = [$scope.answer1.id, $scope.answer2.id].sort().join(',');
-                    AnswerCommentResource.query(
-                        {'courseId':courseId, 'assignmentId':assignmentId, 'answer_ids': answer_ids, 'user_ids': userId, 'evaluation':'only', 'draft':'true'},
-                        function(ret) {
-                            _.forEach(ret, function(comment) {
-                                if (comment.answer_id == $scope.answer1.id) {
-                                    $scope.answer1.comment = comment;
-                                } else if (comment.answer_id == $scope.answer2.id) {
-                                    $scope.answer2.comment = comment;
-                                }
-                            });
-                            // create new answer comment drafts if they don't already exist
-                            _.forEach([$scope.answer1, $scope.answer2], function(answer) {
-                                if (!answer.comment.id) {
-                                    var params = {
-                                        courseId: courseId,
-                                        assignmentId: assignmentId,
-                                        answerId: answer.id
-                                    };
-                                    answer.comment.comment_type = AnswerCommentType.evaluation;
-                                    answer.comment.draft = true;
-                                    AnswerCommentResource.save(params, answer.comment).$promise.then(
-                                        function(ret) {
-                                            answer.comment = ret;
-                                        }
-                                    );
-                                }
-                            });
-                        }
-                    );
-                    AssignmentResource.get({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
-                        function (ret)
-                        {
-                            $scope.assignment = ret;
-                            $scope.total = $scope.assignment.total_steps_required;
-                            // if there is a comparison end date, check if timer is needed
-                            var due_date = new Date($scope.assignment.compare_end);
-                            if (due_date && $scope.assignment.compare_end != null) {
-                                TimerResource.get(
-                                    function (ret) {
-                                        var current_time = ret.date;
-                                        var trigger_time = due_date.getTime() - current_time - 600000; //(10 mins)
-                                        if (trigger_time < 86400000) { //(1 day)
-                                            $timeout(countDown, trigger_time);
-                                        }
-                                    },
-                                    function (ret) {
-                                        Toaster.reqerror("Unable to get the current time", ret);
+                $scope.current = ret.current;
+                $scope.firstAnsNum = ($scope.current * 2) - 1;
+                $scope.secondAnsNum = ($scope.current * 2);
+
+                var answer_ids = [$scope.answer1.id, $scope.answer2.id].sort().join(',');
+                AnswerCommentResource.query({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId,
+                        'answer_ids': answer_ids, 'user_ids': $scope.loggedInUserId, 'evaluation':'only', 'draft':'true'},
+                    function(ret) {
+                        _.forEach(ret, function(comment) {
+                            if (comment.answer_id == $scope.answer1.id) {
+                                $scope.answer1.comment = comment;
+                            } else if (comment.answer_id == $scope.answer2.id) {
+                                $scope.answer2.comment = comment;
+                            }
+                        });
+                        // create new answer comment drafts if they don't already exist
+                        _.forEach([$scope.answer1, $scope.answer2], function(answer) {
+                            if (!answer.comment.id) {
+                                var params = {
+                                    courseId: $scope.courseId,
+                                    assignmentId: $scope.assignmentId,
+                                    answerId: answer.id
+                                };
+                                answer.comment.comment_type = AnswerCommentType.evaluation;
+                                answer.comment.draft = true;
+                                AnswerCommentResource.save(params, answer.comment).$promise.then(
+                                    function(ret) {
+                                        answer.comment = ret;
                                     }
                                 );
                             }
-                            if (newPair) {
-                                xAPIStatementHelper.initialize_comparison_question(
-                                    $scope.comparison, $scope.current, $scope.assignment.pairing_algorithm,
-                                    $scope.tracking.getRegistration()
-                                );
-                            } else {
-                                xAPIStatementHelper.resume_comparison_question(
-                                    $scope.comparison, $scope.current, $scope.assignment.pairing_algorithm,
-                                    $scope.tracking.getRegistration()
-                                );
-                            }
-                        },
-                        function (ret)
-                        {
-                            Toaster.reqerror("Assignment Not Loaded", ret);
-                        }
-                    );
-                }, function (ret) {
-                    $scope.comparisonError = true;
-                    if (ret.status == 403 && ret.data && ret.data.error) {
-                        Toaster.info(ret.data.error);
-                    } else if (ret.status == 400 && ret.data && ret.data.error)  {
-                        Toaster.info("You have compared all the currently available answers.", "Please check back later for more answers.");
-                    } else {
-                        Toaster.reqerror("Cannot Compare Answers", ret);
+                        });
                     }
-                    $scope.preventExit = false; //no work done. its safe to exit
+                );
 
-                    AssignmentResource.get({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
-                        function (ret)
-                        {
-                            $scope.assignment = ret;
-                            $scope.total = $scope.assignment.total_steps_required;
-                        },
-                        function (ret)
-                        {
-                            Toaster.reqerror("Assignment Not Loaded", ret);
-                        }
+                if (newPair) {
+                    xAPIStatementHelper.initialize_comparison_question(
+                        $scope.comparison, $scope.current, $scope.assignment.pairing_algorithm,
+                        $scope.tracking.getRegistration()
+                    );
+                } else {
+                    xAPIStatementHelper.resume_comparison_question(
+                        $scope.comparison, $scope.current, $scope.assignment.pairing_algorithm,
+                        $scope.tracking.getRegistration()
                     );
                 }
-            );
-        });
+            }, function (ret) {
+                //TODO: double check messages
+                $scope.comparisonError = true;
+                if (ret.status == 403 && ret.data && ret.data.message) {
+                    Toaster.info(ret.data.message);
+                } else if (ret.status == 400 && ret.data && ret.data.title && ret.data.message)  {
+                    Toaster.info(ret.data.title, ret.data.message);
+                }
+                $scope.preventExit = false; //no work done. its safe to exit
+            }
+        );
 
         $scope.trackExited = function() {
             xAPIStatementHelper.exited_comparison_question(
@@ -210,8 +179,8 @@ module.controller(
             // save comments for each individual answer
             angular.forEach([$scope.answer1, $scope.answer2], function(answer) {
                 var params = {
-                    courseId: courseId,
-                    assignmentId: assignmentId,
+                    courseId: $scope.courseId,
+                    assignmentId: $scope.assignmentId,
                     answerId: answer.id,
                     commentId: _.get(answer, 'comment.id')
                 };
@@ -241,12 +210,12 @@ module.controller(
                 tracking: $scope.tracking.toParams()
             };
 
-            ComparisonResource.save({'courseId': courseId, 'assignmentId': assignmentId}, $data).$promise.then(
+            ComparisonResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $data).$promise.then(
                 function(ret) {
                     $scope.submitted = false;
                     if (!$scope.isDraft) {
                         if(!$scope.canManageAssignment) {
-                            AssignmentResource.getCurrentUserStatus({'id': $scope.courseId, 'assignmentId': assignmentId},
+                            AssignmentResource.getCurrentUserStatus({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId},
                                 function(ret) {
                                     var comparisons_count = ret.status.comparisons.count;
 
@@ -259,17 +228,17 @@ module.controller(
                                     } else if ($scope.assignment.enable_self_evaluation && ret.status.answers.answered) {
                                         Toaster.success("Your Comparison Saved Successfully", "Write a self-evaluation, and your assignment will be complete!");
                                         $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
-                                        $location.path('/course/'+courseId+'/assignment/'+assignmentId+'/self_evaluation');
+                                        $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId + '/self_evaluation');
                                     } else {
                                         Toaster.success("Your Comparison Saved Successfully", "Your assignment is now complete. Good work!");
                                         $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
-                                        $location.path('/course/' + courseId);
+                                        $location.path('/course/' + $scope.courseId);
                                     }
                                 },
                                 function(ret) {
                                     Toaster.success("Your Comparison Saved Successfully");
                                     $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
-                                    $location.path('/course/' + courseId);
+                                    $location.path('/course/' + $scope.courseId);
                                 }
                             );
                         } else {
@@ -292,12 +261,6 @@ module.controller(
                 },
                 function(ret) {
                     $scope.submitted = false;
-                    // if compare period is not in session
-                    if (ret.status == '403' && 'error' in ret.data) {
-                        Toaster.error(ret.data.error);
-                    } else {
-                        Toaster.reqerror("Comparison Submit Failed", ret);
-                    }
                 }
             );
         };
@@ -305,22 +268,18 @@ module.controller(
         // flag answer for instructor
         $scope.toggleAnswerFlag = function(answer) {
             var params = {
-                flagged: !answer['flagged'],
+                flagged: !answer.flagged,
                 tracking: $scope.tracking.toParams()
             };
-            var resultMsg = answer['flagged'] ?
+            var resultMsg = answer.flagged ?
                 "Answer has been unflagged." :
                 "Answer has been flagged as inappropriate or incomplete.";
 
-            AnswerResource.flagged({'courseId':courseId,'assignmentId':assignmentId,
+            AnswerResource.flagged({'courseId':courseId,'assignmentId': $scope.assignmentId,
                 'answerId': answer['id']}, params).$promise.then(
                 function() {
                     answer.flagged = params['flagged'];
                     Toaster.success(resultMsg);
-
-                },
-                function(ret) {
-                    Toaster.reqerror("Unable To Change Flag", ret);
                 }
             );
         };
@@ -329,13 +288,19 @@ module.controller(
 
 module.controller(
     'ComparisonSelfEvalController',
-    ['$log', '$location', '$scope', '$routeParams', 'AnswerResource', 'AssignmentResource', 'AnswerCommentResource',
-        'Session', 'Toaster', 'AnswerCommentType', 'EditorOptions', "xAPI", "xAPIStatementHelper",
-    function($log, $location, $scope, $routeParams, AnswerResource, AssignmentResource,
-             AnswerCommentResource, Session, Toaster, AnswerCommentType, EditorOptions, xAPI, xAPIStatementHelper)
+    ['$location', '$scope', '$routeParams', 'AnswerResource', 'AssignmentResource', 'AnswerCommentResource',
+     'Toaster', 'AnswerCommentType', 'EditorOptions', "xAPI", "xAPIStatementHelper", "resolvedData",
+    function($location, $scope, $routeParams, AnswerResource, AssignmentResource, AnswerCommentResource,
+             Toaster, AnswerCommentType, EditorOptions, xAPI, xAPIStatementHelper, resolvedData)
     {
-        var courseId = $scope.courseId = $routeParams['courseId'];
-        var assignmentId = $scope.assignmentId = $routeParams['assignmentId'];
+        $scope.courseId = $routeParams.courseId;
+        $scope.assignmentId = $routeParams.assignmentId;
+
+        $scope.course = resolvedData.course;
+        $scope.assignment = resolvedData.assignment;
+        $scope.assignmentStatus = resolvedData.assignmentStatus;
+        $scope.loggedInUserId = resolvedData.loggedInUser.id;
+
         $scope.comment = {
             draft: true
         };
@@ -346,63 +311,45 @@ module.controller(
             );
         });
         $scope.preventExit = true; //user should be warned before leaving page by default
+        $scope.total = $scope.assignmentStatus.status.comparisons.count + 1;
 
-        AssignmentResource.getCurrentUserStatus({'id': courseId, 'assignmentId': assignmentId},
-            function (ret) {
-                // current comparison round user is on
-                $scope.total = ret.status.comparisons.count + 1;
-            },
-            function (ret) {
-                Toaster.reqerror("Assignment Status Not Found", ret);
-            }
-        );
-
-        Session.getUser().then(function(user) {
-            userId = user.id;
-            AnswerResource.user({'courseId': courseId, 'assignmentId': assignmentId}).$promise.then(
-                function (ret) {
-                    var answer = {}
-                    if (!ret.objects.length) {
-                        Toaster.error("No Answer Found", "Your answer for this assignment was not found, so the self-evaluation is unavailable.");
-                        $location.path('/course/' + courseId);
-                    } else {
-                        answer = ret.objects[0];
-                        $scope.parent = answer;
-                    }
-                    AnswerCommentResource.query(
-                        {'courseId':courseId, 'assignmentId':assignmentId, 'answer_ids': answer.id, 'user_ids': userId, 'self_evaluation':'only', 'draft':'only'},
+        $scope.answerId = undefined;
+        if (!resolvedData.userAnswers.objects.length) {
+            Toaster.error("No Answer Found", "Your answer for this assignment was not found, so the self-evaluation is unavailable.");
+            $location.path('/course/' + $scope.courseId);
+        } else {
+            var answer = ret.objects[0];
+            $scope.answerId = answer.id;
+            $scope.parent = answer;
+        }
+        AnswerCommentResource.query({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId,
+                'answer_ids': $scope.answerId, 'user_ids': $scope.loggedInUserId, 'self_evaluation':'only', 'draft':'only'},
+            function(ret) {
+                if (ret.length > 0) {
+                    $scope.comment = ret[0];
+                    xAPIStatementHelper.resume_self_evaluation_question(
+                        $scope.comment, $scope.tracking.getRegistration()
+                    );
+                } else {
+                    // else generate new self-evaluation comment
+                    var params = {
+                        courseId: $scope.courseId,
+                        assignmentId: $scope.assignmentId,
+                        answerId: $scope.answerId
+                    };
+                    $scope.comment.comment_type = AnswerCommentType.evaluation;
+                    $scope.comment.draft = true;
+                    AnswerCommentResource.save(params, $scope.comment).$promise.then(
                         function(ret) {
-                            if (ret.length > 0) {
-                                $scope.comment = ret[0];
-                                xAPIStatementHelper.resume_self_evaluation_question(
-                                    $scope.comment, $scope.tracking.getRegistration()
-                                );
-                            } else {
-                                // else generate new self-evaulation comment
-                                var params = {
-                                    courseId: courseId,
-                                    assignmentId: assignmentId,
-                                    answerId: answer.id
-                                };
-                                $scope.comment.comment_type = AnswerCommentType.evaluation;
-                                $scope.comment.draft = true;
-                                AnswerCommentResource.save(params, $scope.comment).$promise.then(
-                                    function(ret) {
-                                        $scope.comment = ret;
-                                        xAPIStatementHelper.initialize_self_evaluation_question(
-                                            $scope.comment, $scope.tracking.getRegistration()
-                                        );
-                                    }
-                                );
-                            }
+                            $scope.comment = ret;
+                            xAPIStatementHelper.initialize_self_evaluation_question(
+                                $scope.comment, $scope.tracking.getRegistration()
+                            );
                         }
                     );
-                },
-                function (ret) {
-                    Toaster.reqerror("Unable To Retrieve Answer", ret);
                 }
-            );
-        });
+            }
+        );
 
         $scope.trackExited = function() {
             xAPIStatementHelper.exited_self_evaluation_question(
@@ -414,33 +361,89 @@ module.controller(
             $scope.submitted = true;
             $scope.comment.comment_type = AnswerCommentType.self_evaluation;
             var params = {
-                courseId: courseId,
-                assignmentId: assignmentId,
-                answerId: $scope.parent.id,
+                courseId: $scope.courseId,
+                assignmentId: $scope.assignmentId,
+                answerId: $scope.answerId,
                 commentId: _.get($scope.comment, 'id')
             };
             $scope.comment.tracking = $scope.tracking.toParams()
             AnswerCommentResource.save(params, $scope.comment).$promise.then(
                 function (ret) {
-                    $scope.submitted = false;
                     $scope.preventExit = false; //user has saved self-evaluation, does not need warning when leaving page
 
                     if (ret.draft) {
                         Toaster.success("Saved Draft Successfully!", "Remember to submit your self-evaluation before the deadline.");
-                        $location.path('/course/' + courseId + '/assignment/' + assignmentId + '/self_evaluation');
+                        $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId + '/self_evaluation');
                     } else {
                         Toaster.success("Your Self-Evaluation Saved Successfully", "Your assignment is now complete. Good work!");
-                        $location.path('/course/' + courseId);
+                        $location.path('/course/' + $scope.courseId);
                     }
-                },
-                function (ret) {
-                    $scope.submitted = false;
-                    Toaster.reqerror("Unable To Save Self-Evaluation", ret);
                 }
-            )
+            ).finally(function() {
+                $scope.submitted = false;
+            });
         };
     }]
 );
+
+module.controller(
+    "ComparisonViewController",
+    ['$scope', '$routeParams', 'breadcrumbs', 'CourseResource', 'AssignmentResource', "WinningAnswer",
+        'AnswerResource', 'AnswerCommentResource', 'GroupResource', 'Toaster', "xAPIStatementHelper", "resolvedData",
+    function ($scope, $routeParams, breadcrumbs, CourseResource, AssignmentResource, WinningAnswer,
+        AnswerResource, AnswerCommentResource, GroupResource, Toaster, xAPIStatementHelper, resolvedData)
+    {
+        $scope.courseId = $routeParams.courseId;
+        $scope.assignmentId = $routeParams.assignmentId;
+
+        $scope.course = resolvedData.course;
+        $scope.assignment = resolvedData.assignment;
+        $scope.students = resolvedData.students.objects;
+        $scope.groups = resolvedData.groups.objects;
+
+        $scope.listFilters = {
+            page: 1,
+            perPage: 20,
+            group: null,
+            author: null
+        };
+        $scope.answers = [];
+        $scope.WinningAnswer = WinningAnswer;
+        breadcrumbs.options = {'Course assignments': $scope.course.name};
+
+        $scope.loadAnswerByAuthor = function(author_id) {
+            if (_.find($scope.answers, {user_id: author_id})) return;
+            AnswerResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId, 'author': author_id}, function(response) {
+                var answer = response.objects[0];
+                $scope.answers.push(answer);
+            });
+        };
+
+        $scope.$watchCollection('listFilters', function(newValue, oldValue) {
+            if (angular.equals(newValue, oldValue)) return;
+            if (oldValue.group != newValue.group) {
+                $scope.listFilters.author = null;
+                $scope.listFilters.page = 1;
+            }
+            if (oldValue.author != newValue.author) {
+                $scope.listFilters.page = 1;
+            }
+            xAPIStatementHelper.filtered_page($scope.listFilters);
+            $scope.updateList();
+        });
+
+        $scope.updateList = function() {
+            var params = angular.merge({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.listFilters);
+
+            AnswerResource.comparisons(params, function(ret) {
+                $scope.comparisons = ret;
+                $scope.comparisons.grouped = _.groupBy($scope.comparisons.objects, 'user_id');
+            });
+        };
+        $scope.updateList();
+    }]
+);
+
 
 // End anonymous function
 })();

@@ -63,7 +63,10 @@ def pagination(model):
 
 
 def _unauthorized_override(response):
-    return jsonify({"error": "Authentication Required."}), 401
+    return jsonify({
+        "title": "Unauthorized",
+        "message": "Authentication Required. Please log in again."
+    }), 401
 
 
 def new_restful_api(blueprint):

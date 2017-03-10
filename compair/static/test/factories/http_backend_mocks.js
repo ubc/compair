@@ -90,11 +90,13 @@ module.exports.buildStorageFixture = function(storageFixture) {
 };
 
 module.exports.httpbackendMock = function(storageFixtures) {
-    angular.module('MyApp.services.mock', []);
+    var myApp = angular.module("myApp");
+    myApp.requires.push('ngMockE2E');
+
     angular.module('httpBackEndMock', ['ngMockE2E'])
     .factory('storageFixture', function() {
         var fixtures = storageFixtures;
-        var currentFixture = fixtures['admin/default_fixture'];
+        var currentFixture = {};
 
         return {
             setCurrentFixture: function(fixtureName) {
@@ -105,7 +107,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
             }
         }
     })
-    .run(function($httpBackend, storageFixture) {
+    .run(["$httpBackend", "storageFixture", function($httpBackend, storageFixture) {
         var generateNewId = function(num) {
             var id = ""+num;
             return id + "zabcABC123-abcABC123_Z".substr(id.length);
@@ -633,6 +635,12 @@ module.exports.httpbackendMock = function(storageFixtures) {
             return [200, { 'objects': storageFixture.storage().criteria }, {}];
         });
 
+        $httpBackend.whenGET(/\/api\/criteria\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
+            var id = url.split('/').pop();
+
+            return [200, storageFixture.storage().criteria[id], {}];
+        });
+
         // create new criterion
         $httpBackend.whenPOST('/api/criteria').respond(function(method, url, data, headers) {
             data = JSON.parse(data);
@@ -717,6 +725,9 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "enable_self_evaluation": false,
                 "content": null,
                 "file": [],
+                "answer_grade_weight": 1,
+                "comparison_grade_weight": 1,
+                "self_evaluation_grade_weight": 1,
                 "user": angular.copy(currentUser),
                 "pairing_algorithm": null,
                 "educators_can_compare": null,
@@ -970,7 +981,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
         // End Statements
 
         $httpBackend.whenGET(/.*/).passThrough();
-    });
+    }]);
 
     angular.module('ubc.ctlt.compair.common.xapi')
     .run( ['$location', 'xAPISettings', function($location, xAPISettings) {

@@ -5,9 +5,9 @@
         .module('ubc.ctlt.compair.login')
 
         .directive('loginCreateUserForm',
-            ['$route', '$log', 'Session', 'UserResource', 'SystemRole', 'Toaster',
+            ['$route', '$log', 'UserResource', 'SystemRole', 'Toaster',
              'AuthenticationService', 'LTI',
-            function ($route, $log, Session, UserResource, SystemRole, Toaster,
+            function ($route, $log, UserResource, SystemRole, Toaster,
                       AuthenticationService, LTI) {
             return {
                 restrict: 'E',
@@ -16,7 +16,7 @@
                 },
                 templateUrl: 'modules/user/user-form-partial.html',
                 link: function (scope, element, attrs) {
-		        scope.method = 'new';
+		            scope.method = 'create';
                     scope.canManageUsers = false;
                     scope.submitted = false;
 

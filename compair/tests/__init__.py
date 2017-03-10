@@ -4,10 +4,7 @@
 
 test_app_settings = {
     'DEBUG': False,
-    # disable this for now, since Flask-Login will ignore the login_required
-    # decorator if this is true. Not sure if this is required for testing,
-    # so leaving it here for now in case other stuff breaks in the future.
-    #'TESTING': True,
+    'TESTING': True,
     #'PRESERVE_CONTEXT_ON_EXCEPTION': False,
     'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
     'SQLALCHEMY_ECHO': False,

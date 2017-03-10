@@ -163,11 +163,6 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     def total_steps_required(self):
         return self.total_comparisons_required + (1 if self.enable_self_evaluation else 0)
 
-    def __repr__(self):
-        if self.id:
-            return "assignment " + self.uuid
-        else:
-            return "assignment"
 
     def calculate_grade(self, user):
         from . import AssignmentGrade
@@ -216,6 +211,22 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
                 return (False, "Compare period end time must be before the course end time.")
 
         return (True, None)
+
+    @classmethod
+    def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Assignment Unavailable"
+        if not message:
+            message = "The assignment was removed from the system or is no longer accessible."
+        return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
+
+    @classmethod
+    def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Assignment Unavailable"
+        if not message:
+            message = "The assignment was removed from the system or is no longer accessible."
+        return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
     def __declare_last__(cls):

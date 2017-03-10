@@ -1,6 +1,6 @@
-<div ng-controller="ComparisonCommentController" class="evaluations-screen">
+<div class="evaluations-screen">
 
-    <h1>Comparisons for "{{ parent.name }}"</h1>
+    <h1>Comparisons for "{{ assignment.name }}"</h1>
 
     <p class="intro-text">Filter by a group (if available) and student evaluator's name, or select "any" for these options to see the full list of available comparisons.</p>
 
@@ -16,7 +16,7 @@
         <div ng-class="{'col-sm-4': groups.length, 'col-sm-6': !groups.length}">
             <label>Student Evaluator</label>
             <select class="form-control" ng-model="listFilters.author" chosen disable_search_threshold="8" width="'100%'"
-                    ng-options="s.id as s.name for s in students.objects | filter:{group_name:listFilters.group || undefined } | orderBy: 'name'">
+                    ng-options="s.id as s.name for s in students | filter:{group_name:listFilters.group || undefined } | orderBy: 'name'">
                 <option value="">Any Student</option>
             </select>
             <br />
@@ -32,7 +32,7 @@
     <h2>
         {{ comparisons.total }} <span ng-if="!listFilters.group && !listFilters.author">total</span> comparisons found
         <span ng-if="listFilters.group && !listFilters.author"> for Group "{{ listFilters.group }}"</span>
-        <span ng-if="listFilters.author"> for "{{ (students.objects | filter:{id:listFilters.author}:true)[0].name }}"</span>
+        <span ng-if="listFilters.author"> for "{{ (students | filter:{id:listFilters.author}:true)[0].name }}"</span>
     </h2>
     <p ng-if="numPages > 1">(Page {{listFilters.page}} of {{numPages}})</p>
 
@@ -95,12 +95,12 @@
 
                 <h5 class="content">Comparisons</h5>
 
-                <div ng-repeat="comparsion_criterion in comparison.comparison_criteria">
+                <div ng-repeat="comparison_criterion in comparison.comparison_criteria">
 
-                    <p class="content">"{{comparsion_criterion.criterion.name}}"<br />
+                    <p class="content">"{{comparison_criterion.criterion.name}}"<br />
                         <span class="glyphicon glyphicon-ok-circle"></span>
-                        <span ng-if="comparsion_criterion.winner == WinningAnswer.answer1"><strong>Odd-numbered answer</strong></span>
-                        <span ng-if="comparsion_criterion.winner == WinningAnswer.answer2"><strong>Even-numbered answer</strong></span>
+                        <span ng-if="comparison_criterion.winner == WinningAnswer.answer1"><strong>Odd-numbered answer</strong></span>
+                        <span ng-if="comparison_criterion.winner == WinningAnswer.answer2"><strong>Even-numbered answer</strong></span>
                     </p>
 
                 </div>

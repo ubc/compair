@@ -49,9 +49,6 @@ module.controller("GradebookController",
                 $scope.allStudents = ret.objects;
                 $scope.users = ret.objects;
                 userIds = $scope.getUserIds(ret.objects);
-            },
-            function (ret) {
-                Toaster.reqerror("Class list retrieval failed", ret);
             }
         );
 
@@ -87,9 +84,6 @@ module.controller("GradebookController",
                 GroupResource.get({'courseId': $scope.courseId}).$promise.then(
                     function (ret) {
                         $scope.groups = ret.objects;
-                    },
-                    function (ret) {
-                        Toaster.reqerror("Unable to retrieve the groups in the course.", ret);
                     }
                 );
             }
@@ -119,9 +113,6 @@ module.controller("GradebookController",
                         function (ret) {
                             $scope.users = ret.students;
                             userIds = $scope.getUserIds(ret.students);
-                        },
-                        function (ret) {
-                            Toaster.reqerror("Unable to retrieve the group members", ret);
                         }
                     );
                 }

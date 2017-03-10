@@ -30,12 +30,12 @@ Feature: Edit Assignment
     When I edit the second criterion
     And I fill form item 'criterion.name' in with 'Choose the best one'
     And I fill in the criterion description with 'Choose the best one.'
-    And I submit modal form with 'Update' button
+    And I submit modal form with 'Save' button
     And I add a new criterion
     And I fill form item 'criterion.name' in with 'Which do you like?'
     And I fill in the criterion description with 'Choose the one you like best.'
     And I toggle the 'Include this criterion in my list of default criteria (to use it in other assignments)' checkbox
-    And I submit modal form with 'Add New' button
+    And I submit modal form with 'Save' button
     And I submit form with 'Save' button
     Then I should be on the 'course' page
 

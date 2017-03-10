@@ -157,7 +157,9 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                 data=json.dumps(ok_comparisons),
                 content_type='application/json')
             self.assert403(rv)
-            self.assertEqual("Assignment comparison deadline has passed.", rv.json['error'])
+            self.assertEqual("Comparison Not Saved", rv.json['title'])
+            self.assertEqual("The comparison deadline has passed. No comparisons can be done beyond the deadline.",
+                rv.json['message'])
 
             # test within grace period
             self.assignment.compare_start = datetime.datetime.utcnow() - datetime.timedelta(days=7)

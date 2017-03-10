@@ -58,7 +58,9 @@ class CriteriaAPI(Resource):
         params = new_criterion_parser.parse_args()
 
         criterion = Criterion(user_id=current_user.id)
-        require(CREATE, criterion)
+        require(CREATE, criterion,
+            title="Criterion Not Saved",
+            message="Your role in the system does not allow you to add criteria.")
 
         criterion.name = params.get("name")
         criterion.description = params.get("description", None)
@@ -86,7 +88,9 @@ class CriteriaIdAPI(Resource):
     @login_required
     def get(self, criterion_uuid):
         criterion = Criterion.get_active_by_uuid_or_404(criterion_uuid)
-        require(READ, criterion)
+        require(READ, criterion,
+            title="Criterion Unavailable",
+            message="Your system role does not allow you to view this criterion.")
 
         on_criterion_get.send(
             self,
@@ -99,7 +103,9 @@ class CriteriaIdAPI(Resource):
     @login_required
     def post(self, criterion_uuid):
         criterion = Criterion.get_active_by_uuid_or_404(criterion_uuid)
-        require(EDIT, criterion)
+        require(EDIT, criterion,
+            title="Criterion Not Updated",
+            message="Your system role does not allow you to update this criterion.")
 
         params = existing_criterion_parser.parse_args()
 

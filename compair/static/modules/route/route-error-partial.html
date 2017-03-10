@@ -1,0 +1,9 @@
+<div class="row" ng-if="$root.routeResolveLoadError">
+    <div class="alert alert-danger col-md-6 col-md-offset-3" role="alert">
+        <p>
+            <strong ng-if="$root.routeResolveLoadError.data.title">{{$root.routeResolveLoadError.data.title}}</strong>
+            <strong ng-if="!$root.routeResolveLoadError.data.title">{{$root.routeResolveLoadError.statusText}}</strong>
+        </p>
+        <p ng-if="$root.routeResolveLoadError.data.message">{{$root.routeResolveLoadError.data.message}}</p>
+    </div>
+</div>

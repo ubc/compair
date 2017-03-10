@@ -1,7 +1,8 @@
 from flask import Blueprint
 from flask_restful import Resource, reqparse
 from flask_login import login_required, current_user
-from compair.core import db, event
+
+from compair.core import db, event, abort
 from compair.xapi import XAPI, XAPIStatement
 
 from .util import new_restful_api
@@ -21,7 +22,8 @@ class StatementAPI(Resource):
     @login_required
     def post(self):
         if not XAPI.enabled:
-            return 404
+            # this should silently fail
+            abort(404)
 
         params = statement_parser.parse_args()
 

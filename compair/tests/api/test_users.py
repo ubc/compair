@@ -114,7 +114,8 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.post(
                 url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assertStatus(rv, 409)
-            self.assertEqual("This username already exists. Please pick another.", rv.json['error'])
+            self.assertEqual("Account Not Saved", rv.json['title'])
+            self.assertEqual("This username already exists. Please pick another.", rv.json['message'])
 
             # test duplicate student number
             expected = UserFactory.stub(
@@ -122,7 +123,8 @@ class UsersAPITests(ComPAIRAPITestCase):
                 student_number=self.data.get_authorized_student().student_number)
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assertStatus(rv, 409)
-            self.assertEqual("This student number already exists. Please pick another.", rv.json['error'])
+            self.assertEqual("Account Not Saved", rv.json['title'])
+            self.assertEqual("This student number already exists. Please pick another.", rv.json['message'])
 
             # test creating student
             expected = UserFactory.stub(system_role=SystemRole.student.value)
@@ -354,14 +356,16 @@ class UsersAPITests(ComPAIRAPITestCase):
             duplicate['username'] = self.data.get_unauthorized_student().username
             rv = self.client.post(url, data=json.dumps(duplicate), content_type='application/json')
             self.assertStatus(rv, 409)
-            self.assertEqual("This username already exists. Please pick another.", rv.json['error'])
+            self.assertEqual("Account Not Updated", rv.json['title'])
+            self.assertEqual("This username already exists. Please pick another.", rv.json['message'])
 
             # test duplicate student number
             duplicate = expected.copy()
             duplicate['student_number'] = self.data.get_unauthorized_student().student_number
             rv = self.client.post(url, data=json.dumps(duplicate), content_type='application/json')
             self.assertStatus(rv, 409)
-            self.assertEqual("This student number already exists. Please pick another.", rv.json['error'])
+            self.assertEqual("Account Not Updated", rv.json['title'])
+            self.assertEqual("This student number already exists. Please pick another.", rv.json['message'])
 
             # test successful update by admin
             valid = expected.copy()
@@ -760,10 +764,9 @@ class UsersAPITests(ComPAIRAPITestCase):
                 url.format(self.data.authorized_student.uuid),
                 data=json.dumps({'newpassword': '123456'}),
                 content_type='application/json')
-            self.assert403(rv)
-            self.assertEqual(
-                'The old password is incorrect or you do not have permission to change password.',
-                rv.json['error'])
+            self.assert400(rv)
+            self.assertEqual('Password Not Updated', rv.json['title'])
+            self.assertEqual('The old password is missing.', rv.json['message'])
 
             # test incorrect old password
             invalid_input = data.copy()
@@ -771,10 +774,9 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.post(
                 url.format(self.data.authorized_student.uuid),
                 data=json.dumps(invalid_input), content_type='application/json')
-            self.assert403(rv)
-            self.assertEqual(
-                'The old password is incorrect or you do not have permission to change password.',
-                rv.json['error'])
+            self.assert400(rv)
+            self.assertEqual('Password Not Updated', rv.json['title'])
+            self.assertEqual('The old password is incorrect.', rv.json['message'])
 
             # test with old password
             rv = self.client.post(
@@ -809,9 +811,8 @@ class UsersAPITests(ComPAIRAPITestCase):
                 url.format(self.data.get_authorized_student().uuid), data=json.dumps(data),
                 content_type='application/json')
             self.assert403(rv)
-            self.assertEqual(
-                '<p>User {} does not have edit access to User {}</p>'.format(self.data.get_unauthorized_instructor().uuid,
-                                                                   self.data.get_authorized_student().uuid),
+            self.assertEqual("Password Not Updated", rv.json['title'])
+            self.assertEqual("Your system role does not allow you to update passwords for this account.",
                 rv.json['message'])
 
         # test admin update password
@@ -836,7 +837,8 @@ class UsersAPITests(ComPAIRAPITestCase):
             # cannot change password
             rv = self.client.post(url, data=json.dumps(data), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual("Cannot update password. User does not use ComPAIR account login authentication method.", rv.json['error'])
+            self.assertEqual("Password Not Updated", rv.json['title'])
+            self.assertEqual("Cannot update password. User does not use the ComPAIR account login authentication method.", rv.json['message'])
 
     def test_get_edit_button(self):
         url = '/api/users/' + self.data.get_authorized_student().uuid + '/edit'
