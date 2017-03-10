@@ -13,6 +13,9 @@ else
     exit 0
 fi
 
+# clean tags
+TAG=${TAG//[^a-zA-Z0-9-\._]/}
+
 curl -X POST \
      -F token=$DEPLOYMENT_TOKEN \
      -F ref=master \
