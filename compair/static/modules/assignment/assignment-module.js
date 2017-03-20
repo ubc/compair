@@ -116,6 +116,7 @@ module.directive('comparisonPreview', function() {
                 $scope.firstAnsNum = 1;
                 $scope.secondAnsNum = 2;
                 $scope.total = 0;
+                $scope.forcePreventExit = true;
                 if ($scope.assignment.number_of_comparisons > 0) {
                     $scope.total = $scope.assignment.number_of_comparisons;
                 }
@@ -144,14 +145,14 @@ module.directive('comparisonPreview', function() {
                     });
                 });
                 /* student view preview is comparison template */
-                $scope.thePreview = $modal.open({
+                $scope.modalInstance = $modal.open({
                     templateUrl: 'modules/comparison/comparison-core.html',
                     scope: $scope
                 });
-                $scope.thePreview.opened.then(function() {
+                $scope.modalInstance.opened.then(function() {
                     xAPIStatementHelper.opened_modal("Preview Comparison");
                 });
-                $scope.thePreview.result.finally(function() {
+                $scope.modalInstance.result.finally(function() {
                     xAPIStatementHelper.closed_modal("Preview Comparison");
                 });
             }

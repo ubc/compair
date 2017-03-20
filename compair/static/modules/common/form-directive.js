@@ -42,40 +42,54 @@ module.directive('confirmFormExit', function(){
         link: function(scope, elem, attrs, formController) {
             //refresh
             window.onbeforeunload = function() {
+                //when generic confirmation is needed regardless of form state
+                if (scope.forcePreventExit) {
+                    return "Are you sure you want to refresh this page? Any unsaved changed you've made will be lost.";
+                }
                 //when confirmation is for answer AND an answer has been written or file uploaded AND the user has not pressed submit
-                if (attrs.formType == 'answer' && (scope.answer.content || scope.uploader.queue.length) && scope.preventExit && formController.$dirty) {
+                else if (attrs.formType == 'answer' && (scope.answer.content || scope.uploader.queue.length) && scope.preventExit && formController.$dirty) {
                     return "Are you sure you want to refresh this page? Any unsaved changed you've made will be lost.";
                 }
                 //when confirmation is for comparison AND the user has not pressed submit
-                if (attrs.formType == 'compare' && scope.preventExit && formController.$dirty) {
+                else if (attrs.formType == 'compare' && scope.preventExit && formController.$dirty) {
                     return "Are you sure you want to refresh this page? Any unsaved work you've done for this round will be lost.";
                 }
                 //when confirmation is for comment AND the user has not pressed submit
-                if (attrs.formType == 'comment' && scope.preventExit && formController.$dirty) {
+                else if (attrs.formType == 'comment' && scope.preventExit && formController.$dirty) {
                     return "Are you sure you want to refresh this page? Any unsaved changed you've made will be lost.";
                 }
             }
             //change URL
             scope.$on('$locationChangeStart', function(event, next, current) {
-                if (attrs.formType == 'answer' && scope.preventExit) {
+                if (scope.forcePreventExit) {
+                    if (!confirm("Are you sure you want to leave this page? Any unsaved changes you've made will be lost.")) {
+                        event.preventDefault();
+                        return;
+                    }
+                    if (scope.trackExited && typeof scope.trackExited === "function") {
+                        scope.trackExited();
+                    }
+                } else if (attrs.formType == 'answer' && scope.preventExit) {
                     if ((scope.answer.content || scope.uploader.queue.length) && formController.$dirty) {
                         if (!confirm("Are you sure you want to leave this page? Any unsaved changes you've made will be lost.")) {
                             event.preventDefault();
                             return;
                         }
                     }
-                    scope.trackExited();
-                }
-                if (attrs.formType == 'compare' && scope.preventExit) {
+                    if (scope.trackExited && typeof scope.trackExited === "function") {
+                        scope.trackExited();
+                    }
+                } else if (attrs.formType == 'compare' && scope.preventExit) {
                     if (formController.$dirty) {
                         if (!confirm("Are you sure you want to leave this page? Any unsaved work you've done for this round will be lost.")) {
                             event.preventDefault();
                             return;
                         }
                     }
-                    scope.trackExited();
-                }
-                if (attrs.formType == 'comment' && scope.preventExit) {
+                    if (scope.trackExited && typeof scope.trackExited === "function") {
+                        scope.trackExited();
+                    }
+                } else if (attrs.formType == 'comment' && scope.preventExit) {
                     if (formController.$dirty) {
                         if (!confirm("Are you sure you want to leave this page? Any unsaved changes you've made will be lost.")) {
                             event.preventDefault();
