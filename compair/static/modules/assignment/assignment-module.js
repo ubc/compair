@@ -131,6 +131,7 @@ module.directive('comparisonPreview', function() {
                 $scope.firstAnsNum = 1;
                 $scope.secondAnsNum = 2;
                 $scope.total = 0;
+                $scope.forcePreventExit = true;
                 if ($scope.assignment.number_of_comparisons > 0) {
                     $scope.total = $scope.assignment.number_of_comparisons;
                 }
