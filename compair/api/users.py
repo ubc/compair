@@ -378,8 +378,6 @@ class UserCourseStatusListAPI(Resource):
         statuses = {}
 
         for course, course_role in results:
-            print(course, course_role)
-
             incomplete_assignment_ids = set()
             answer_period_assignments = [assignment for assignment in course.assignments if assignment.active and assignment.answer_period]
             compare_period_assignments = [assignment for assignment in course.assignments if assignment.active and assignment.compare_period]

@@ -2,7 +2,6 @@ import json
 import os
 import ssl
 import requests
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 from flask import Flask, redirect, session as sess, abort, jsonify, url_for
 from flask_login import current_user
@@ -77,7 +76,14 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
         else:
             # Handle target environment that doesn't support HTTPS verification
             ssl._create_default_https_context = _create_unverified_https_context
-        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+        # try disabling insecure request warnings (some versions of requests have import errors)
+        try:
+            from requests.packages.urllib3.exceptions import InsecureRequestWarning
+            requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        except ImportError:
+            # Skip if requests does not have InsecureRequestWarning
+            pass
 
     app.logger.debug("Application Configuration: " + str(app.config))
 

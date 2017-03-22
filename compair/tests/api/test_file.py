@@ -126,7 +126,6 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             filename = 'alias.pdf'
             rv = self.client.post(url, data=dict())
             self.assert400(rv)
-            print(rv.json)
             self.assertEqual("No file attachment found", rv.json['error'])
 
             # test no file uploaded
