@@ -47,10 +47,35 @@
             <div class="row">
                 <div class="col-md-8">
                     <h1 class="main-heading">Documentation</h1>
-                    <p>(to be added)</p>
-                  
-                    <h3 class="text-center highlight-heading">Coming soon!</h3>
-                    
+
+                    <h2>Licensing</h2>
+                    <p>ComPAIR uses the <a href="https://github.com/ubc/compair/blob/master/LICENSE.txt" target="_blank">GPL-3.0</a> License.
+
+                    <h2>UBC Faculty and Staff</h2>
+                    <p>UBC faculty and staff can visit the <a href="http://wiki.ubc.ca/Documentation:ComPAIR" target="_blank">ComPAIR wiki</a> for instructions on how to add ComPAIR to courses or can contact the <a href="http://lthub.ubc.ca/" target="_blank">Learning Technology Hub</a> at <a href="mailto:lt.hub@ubc.ca">lt.hub@ubc.ca</a> for additional support.</p>
+
+                    <h2>Installation Guides</h2>
+                    <p>ComPAIR requires a minimum of a web server running python 2.7 or 3 and a mysql or mariadb database. It is recommended to also have Redis and a Celery daemon running to reduce server load for certain tasks.</p>
+
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <strong><a href="https://github.com/ubc/compair/tree/master/deploy/linux_server#deploying-compair-on-a-centos-7-server" target="_blank">CentOS 7 Server (Standalone Linux)</a>:</strong>
+                            Setup an all-in-one ComPAIR server. Useful for piloting ComPAIR or small scale production environments.
+                        </li>
+                        <li class="list-group-item">
+                            <strong><a href="https://github.com/ubc/compair/tree/master/deploy/aws#deploying-compair-on-amamzon-web-services" target="_blank">Amazon Web Services (AWS)</a>:</strong>
+                            Setup ComPAIR on Amazon Web Services. Useful for larger scale production environments.
+                        </li>
+                        <li class="list-group-item">
+                            <strong><a href="https://github.com/ubc/compair/tree/master/deploy/gce_kube#deploying-compair-on-google-container-enginekubernetes" target="_blank">Google Container Engine / Kubernetes</a>:</strong>
+                            Setup ComPAIR on Google Container Engine or Kubernetes. Useful for larger scale production environments.
+                        </li>
+                        <li class="list-group-item">
+                            <strong><a href="https://github.com/ubc/compair/tree/master/#developer-installation---docker" target="_blank">Development Instance via Docker</a>:</strong>
+                            Setup a development environment for ComPAIR. Useful for contributing to ComPAIR or customizing code. Not recommended for use in a production environment. Instead follow the Kubernetes guide above.
+                        </li>
+                    </ul>
+
                     <p class="text-center"><a href="https://github.com/ubc/compair" target="_blank" class="btn btn-success btn-lg" role="button">Download code <i class="glyphicon glyphicon-new-window"></i></a></p>
                 </div>
                 <div class="col-md-4">
@@ -72,9 +97,9 @@
             <footer>
                 <p>&copy; University of British Columbia</p>
             </footer>
-    
+
         </div> <!-- /container -->
-        
+
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
         <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.11.2.min.js"><\/script>')</script>
 
