@@ -40,8 +40,8 @@ class XAPI(object):
             db.session.commit()
 
         else:
-            from compair.tasks.xapi_statement import send_lrs_statements
-            send_lrs_statements.delay(statements)
+            from compair.tasks import send_lrs_statements
+            send_lrs_statements.delay([statement.to_json(cls._version) for statement in statements])
 
     @classmethod
     def _send_lrs_statements(cls, statements):

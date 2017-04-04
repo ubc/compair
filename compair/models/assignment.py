@@ -160,7 +160,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         return self.total_comparisons_required + (1 if self.enable_self_evaluation else 0)
 
     def __repr__(self):
-        if self.id:
+        if self.uuid:
             return "assignment " + self.uuid
         else:
             return "assignment"

@@ -3,7 +3,7 @@ import datetime
 import dateutil.parser
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask import Blueprint
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, current_app
 from flask_restful import Resource, marshal, abort
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import desc, or_, func, and_
@@ -86,6 +86,11 @@ class AssignmentIdAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(EDIT, assignment)
+
+        if current_app.config.get('DEMO_INSTALLATION', False):
+            from data.fixtures import DemoDataFixture
+            if assignment.id in DemoDataFixture.DEFAULT_ASSIGNMENT_IDS:
+                return {"error": "Sorry, you cannot edit the default demo assignments."}, 400
 
         params = existing_assignment_parser.parse_args()
 
@@ -219,6 +224,11 @@ class AssignmentIdAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(DELETE, assignment)
+
+        if current_app.config.get('DEMO_INSTALLATION', False):
+            from data.fixtures import DemoDataFixture
+            if assignment.id in DemoDataFixture.DEFAULT_ASSIGNMENT_IDS:
+                return {"error": "Sorry, you cannot remove the default demo assignments."}, 400
 
         formatted_assignment = marshal(assignment, dataformat.get_assignment(False))
         # delete file when assignment is deleted

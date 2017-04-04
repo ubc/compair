@@ -7,7 +7,7 @@ from data.fixtures.test_data import SimpleAssignmentTestData, ComparisonTestData
 from data.factories import AssignmentFactory
 from compair.models import Assignment, Comparison, PairingAlgorithm, \
     CourseGrade, AssignmentGrade, SystemRole, CourseRole, LTIOutcome
-from compair.tests.test_compair import ComPAIRAPITestCase
+from compair.tests.test_compair import ComPAIRAPITestCase, ComPAIRAPIDemoTestCase
 from compair.core import db
 
 
@@ -1067,3 +1067,62 @@ class AssignmentCourseGradeUpdateAPITests(ComPAIRAPITestCase):
 
             new_course_grades = CourseGrade.get_course_grades(self.fixtures.course)
             self.assertEqual(0, len(new_course_grades))
+
+
+class AssignmentDemoAPITests(ComPAIRAPIDemoTestCase):
+    def setUp(self):
+        super(AssignmentDemoAPITests, self).setUp()
+
+    def test_delete_demo_assignment(self):
+        assignments = [Assignment.query.get(1), Assignment.query.get(2)]
+
+        for assignment in assignments:
+            url = '/api/courses/' + assignment.course_uuid + '/assignments/' + assignment.uuid
+
+            with self.login('root'):
+                # test deletion by authorized instructor fails
+                self.app.config['DEMO_INSTALLATION'] = True
+                rv = self.client.delete(url)
+                self.assert400(rv)
+
+                # test deletion by authorized instructor success
+                self.app.config['DEMO_INSTALLATION'] = False
+                rv = self.client.delete(url)
+                self.assert200(rv)
+
+    def test_edit_demo_assignment(self):
+        assignments = [Assignment.query.get(1), Assignment.query.get(2)]
+
+        for assignment in assignments:
+            url = '/api/courses/' + assignment.course_uuid + '/assignments/' + assignment.uuid
+
+            assignment_criteria = [ {'id': criterion.uuid } for criterion in assignment.criteria]
+
+            expected = {
+                'id': assignment.uuid,
+                'name': 'This is the new name.',
+                'description': 'new_description',
+                'answer_start': assignment.answer_start.isoformat() + 'Z',
+                'answer_end': assignment.answer_end.isoformat() + 'Z',
+                'number_of_comparisons': assignment.number_of_comparisons,
+                'students_can_reply': assignment.students_can_reply,
+                'enable_self_evaluation': assignment.enable_self_evaluation,
+                'criteria': assignment_criteria,
+                'pairing_algorithm': PairingAlgorithm.adaptive.value,
+                'rank_display_limit': 10,
+                'answer_grade_weight': 2,
+                'comparison_grade_weight': 2,
+                'self_evaluation_grade_weight': 2
+            }
+
+            with self.login('root'):
+                # test deletion by authorized instructor fails
+                self.app.config['DEMO_INSTALLATION'] = True
+                rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+                self.assert400(rv)
+
+
+                # test deletion by authorized instructor success
+                self.app.config['DEMO_INSTALLATION'] = False
+                rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+                self.assert200(rv)

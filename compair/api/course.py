@@ -125,6 +125,11 @@ class CourseAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         require(EDIT, course)
 
+        if current_app.config.get('DEMO_INSTALLATION', False):
+            from data.fixtures import DemoDataFixture
+            if course.id == DemoDataFixture.DEFAULT_COURSE_ID:
+                return {"error": "Sorry, you cannot edit the default demo course."}, 400
+
         params = existing_course_parser.parse_args()
 
         # make sure the course id in the url and the course id in the params match
@@ -164,6 +169,11 @@ class CourseAPI(Resource):
     def delete(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         require(DELETE, course)
+
+        if current_app.config.get('DEMO_INSTALLATION', False):
+            from data.fixtures import DemoDataFixture
+            if course.id == DemoDataFixture.DEFAULT_COURSE_ID:
+                return {"error": "Sorry, you cannot remove the default demo course."}, 400
 
         course.active = False
         db.session.commit()
