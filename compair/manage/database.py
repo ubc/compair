@@ -14,9 +14,9 @@ manager = Manager(usage="Perform database operations")
 
 
 @manager.command
-def drop():
+def drop(yes=False):
     """Drops database tables"""
-    if prompt_bool("Are you sure you want to lose all your data"):
+    if yes or prompt_bool("Are you sure you want to lose all your data"):
         inspector = reflection.Inspector.from_engine(db.engine)
         metadata = MetaData()
         tbs = []
@@ -62,11 +62,14 @@ def create(default_data=True, sample_data=False):
 
 
 @manager.command
-def recreate(default_data=True, sample_data=False):
+def recreate(yes=False, default_data=True, sample_data=False):
     """Recreates database tables (same as issuing 'drop' and then 'create')"""
     print ("Resetting database state...")
-    if drop():
+    if drop(yes=yes):
         create(default_data, sample_data)
+        return True
+
+    return False
 
 
 @manager.command
@@ -80,6 +83,17 @@ def populate(default_data=False, sample_data=False):
         db.session.commit()
 
     if sample_data:
-        from data.fixtures import SampleDataFixture
-        SampleDataFixture()
+        from data.fixtures import DemoDataFixture
+        DemoDataFixture()
         db.session.commit()
+
+@manager.command
+def reset_demo(yes=False):
+    """Recreate & populate database with demo data"""
+
+    if recreate(yes=yes, default_data=True, sample_data=True):
+        print ("Demo data reset successfully.")
+        return True
+
+    print("Error: Demo reset failed. You must remove all existing data in order to reset the demo.")
+    return False

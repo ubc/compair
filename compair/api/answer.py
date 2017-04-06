@@ -1,6 +1,6 @@
 from bouncer.constants import CREATE, READ, EDIT, MANAGE, DELETE
 from flask import Blueprint, abort
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, current_app
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import func, or_, and_, desc
@@ -294,6 +294,11 @@ class AnswerIdAPI(Resource):
         require(EDIT, answer)
         restrict_user = not allow(MANAGE, assignment)
 
+        if current_app.config.get('DEMO_INSTALLATION', False):
+            from data.fixtures import DemoDataFixture
+            if assignment.id in DemoDataFixture.DEFAULT_ASSIGNMENT_IDS and answer.user_id in DemoDataFixture.DEFAULT_STUDENT_IDS:
+                return {"error": "Sorry, you cannot edit the default student demo answers."}, 400
+
         params = existing_answer_parser.parse_args()
         # make sure the answer id in the url and the id matches
         if params['id'] != answer_uuid:
@@ -370,6 +375,11 @@ class AnswerIdAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
         require(DELETE, answer)
+
+        if current_app.config.get('DEMO_INSTALLATION', False):
+            from data.fixtures import DemoDataFixture
+            if assignment.id in DemoDataFixture.DEFAULT_ASSIGNMENT_IDS and answer.user_id in DemoDataFixture.DEFAULT_STUDENT_IDS:
+                return {"error": "Sorry, you cannot remove the default student demo answers."}, 400
 
         answer.active = False
         if answer.file:

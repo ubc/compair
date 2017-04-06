@@ -249,7 +249,7 @@ module.controller(
                     Toaster.success("User Added", 'Successfully changed '+ ret.fullname +'\'s course role to ' + ret.course_role);
                 },
                 function (ret) {
-                    Toaster.reqerror("User Add Failed", "Promblem encountered For ID " + user.id, ret);
+                    Toaster.reqerror("User Add Failed", ret);
                 }
             );
         };

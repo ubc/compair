@@ -19,7 +19,7 @@ from compair.core import db, event
 from compair.authorization import allow, require, USER_IDENTITY
 from compair.models import UserCourse, Course, User, SystemRole, CourseRole, \
     ThirdPartyType, ThirdPartyUser
-from compair.tasks.user_password import set_passwords
+from compair.tasks import set_passwords
 from .util import new_restful_api
 from .file import random_generator, allowed_file
 
@@ -361,6 +361,11 @@ class ClasslistRootAPI(Resource):
         user_course = UserCourse(course_id=course.id)
         require(EDIT, user_course)
 
+        if current_app.config.get('DEMO_INSTALLATION', False):
+            from data.fixtures import DemoDataFixture
+            if course.id == DemoDataFixture.DEFAULT_COURSE_ID:
+                return {"error": "Sorry, you cannot import users for the default demo course."}, 400
+
         params = import_classlist_parser.parse_args()
         import_type = params.get('import_type')
 
@@ -421,6 +426,11 @@ class EnrolAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         user = User.get_by_uuid_or_404(user_uuid)
 
+        if current_app.config.get('DEMO_INSTALLATION', False):
+            from data.fixtures import DemoDataFixture
+            if course.id == DemoDataFixture.DEFAULT_COURSE_ID and user.id in DemoDataFixture.DEFAULT_COURSE_USERS:
+                return {"error": "Sorry, you cannot update course role for the default users in the default demo course."}, 400
+
         user_course = UserCourse.query \
             .filter_by(
                 user_id=user.id,
@@ -479,6 +489,11 @@ class EnrolAPI(Resource):
             ) \
             .first_or_404()
         require(EDIT, user_course)
+
+        if current_app.config.get('DEMO_INSTALLATION', False):
+            from data.fixtures import DemoDataFixture
+            if course.id == DemoDataFixture.DEFAULT_COURSE_ID and user.id in DemoDataFixture.DEFAULT_COURSE_USERS:
+                return {"error": "Sorry, you cannot update course role for the default users in the default demo course."}, 400
 
         user_course.course_role = CourseRole.dropped
         result = {
@@ -621,6 +636,11 @@ class UserCourseRoleAPI(Resource):
                 return {"error": "You cannot change your own course role. Please select other users"}, 400
 
         for user_course in user_courses:
+            if current_app.config.get('DEMO_INSTALLATION', False):
+                from data.fixtures import DemoDataFixture
+                if course.id == DemoDataFixture.DEFAULT_COURSE_ID and user.id in DemoDataFixture.DEFAULT_COURSE_USERS:
+                    return {"error": "Sorry, you cannot update course role for the default users in the default demo course."}, 400
+
             # skip current user
             if user_course.user_id == current_user.id:
                 continue

@@ -124,7 +124,9 @@ Restart server after making any changes to settings
 
 `CELERY_RESULT_BACKEND`: Set the backend to store results (disabled by default)
 
-Workers will need to be restarted after any changes to them unless the --autoreload option is set (for development only)
+`CELERY_TIMEZONE`: Set the timezone used for cron jobs. Currently only used for demo installations ('America/Vancouver' by default)
+
+Workers will need to be restarted after any changes to them.
 
 if `CELERY_ALWAYS_EAGER` is on, then all background task calls will run locally and block until completed (effectively disabling background tasks).
 See the [Celery CELERY_ALWAYS_EAGER docs](http://docs.celeryproject.org/en/latest/configuration.html?highlight=CELERY_BROKER_URL#celery-always-eager).
@@ -170,6 +172,29 @@ Disable outgoing https requirements
 
 Can be used to disable secure SSL requirements for outgoing and incoming traffic from LTI and CAS.
 This should only be used for development or staging purposes.
+
+Setup a demo installation
+-----------------------------
+
+Demo installations have default data of one course, 2 assignments, 1 instructor, and 30 students. Demo installations do not allow editing/deleting the course, assignments, student answers, or enrollment of any automatic generated default data. Users can still create other courses, assignments, etc and modify them as needed. **Demo installations also allow anyone to create system administrators, instructors, and students at any time.** If the cron job is setup, all data will be automatically reset to defaults every day at 3:00 a.m.
+
+**You should never turn a server with existing data into a demo.** Always delete all existing data first with:
+
+    python manage.py database drop
+
+### Demo Settings
+
+`DEMO_INSTALLATION`: Turns the ComPAIR installation into a demo (default: False)
+
+Setting `DEMO_INSTALLATION` to True will also force `APP_LOGIN_ENABLED` to True and `CAS_LOGIN_ENABLED` to False. `LTI_LOGIN_ENABLED` may still be optionally set to True or False if you want to allow LTI connections to be made to the demo installation.
+
+### Additional Setup
+
+In order for the cron job to work properly, you must also create an additional celery process (ex: `celery beat -A celery_worker.celery`). You should also set `CELERY_TIMEZONE` to your preferred timezone so that the automatic scheduler will reset properly at 3:00 a.m. in your timezone.
+
+You can set the data the first time by running:
+
+    python manage.py database create
 
 Google Analytics Web Tracking
 -----------------------------

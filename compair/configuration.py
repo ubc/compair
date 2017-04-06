@@ -68,7 +68,7 @@ env_overridables = [
     'CAS_SERVER', 'CAS_AUTH_PREFIX',
     'SECRET_KEY', 'REPORT_FOLDER', 'UPLOAD_FOLDER',
     'ATTACHMENT_UPLOAD_FOLDER', 'ASSET_LOCATION', 'ASSET_CLOUD_URI_PREFIX',
-    'CELERY_RESULT_BACKEND', 'CELERY_BROKER_URL',
+    'CELERY_RESULT_BACKEND', 'CELERY_BROKER_URL', 'CELERY_TIMEZONE',
     'XAPI_APP_BASE_URL',
     'LRS_STATEMENT_ENDPOINT', 'LRS_AUTH', 'LRS_USERNAME', 'LRS_PASSWORD',
     'LRS_ACTOR_ACCOUNT_CAS_IDENTIFIER', 'LRS_ACTOR_ACCOUNT_CAS_HOMEPAGE',
@@ -77,7 +77,7 @@ env_overridables = [
 
 env_bool_overridables = [
     'APP_LOGIN_ENABLED', 'CAS_LOGIN_ENABLED', 'LTI_LOGIN_ENABLED',
-    'CAS_USE_SAML',
+    'CAS_USE_SAML', 'DEMO_INSTALLATION',
     'CELERY_ALWAYS_EAGER', 'XAPI_ENABLED', 'LRS_ACTOR_ACCOUNT_USE_CAS',
     'ENFORCE_SSL'
 ]
@@ -90,4 +90,8 @@ for env in env_bool_overridables:
     if os.environ.get(env) != None:
         config[env] = strtobool(os.environ.get(env))
 
-# print config
+
+# force cas login to be disabled when demo installation
+if config['DEMO_INSTALLATION'] == True:
+    config['APP_LOGIN_ENABLED'] = True
+    config['CAS_LOGIN_ENABLED'] = False

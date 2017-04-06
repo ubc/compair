@@ -102,9 +102,10 @@ module.service('importService',
 
     var onError = function() {
         return function(fileItem, response, status, headers) {
-            Toaster.reqerror("Unable To Upload", status);
             if ('error' in response) {
-                Toaster.error("File Type Error", "Only CSV files can be uploaded.");
+                Toaster.error("Unable To Upload", response.error);
+            } else {
+                Toaster.reqerror("Unable To Upload", status);
             }
         };
     };

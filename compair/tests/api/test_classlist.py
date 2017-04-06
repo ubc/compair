@@ -4,8 +4,8 @@ import io
 
 from compair.core import db
 from data.fixtures.test_data import BasicTestData, ThirdPartyUserFactory
-from compair.tests.test_compair import ComPAIRAPITestCase
-from compair.models import CourseRole, UserCourse, ThirdPartyType
+from compair.tests.test_compair import ComPAIRAPITestCase, ComPAIRAPIDemoTestCase
+from compair.models import CourseRole, UserCourse, ThirdPartyType, Course
 
 
 class ClassListAPITest(ComPAIRAPITestCase):
@@ -965,3 +965,68 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
     def _create_enrol_url(self, url, user_id):
         return url + '/' + str(user_id)
+
+
+
+class ClassListDemoAPITest(ComPAIRAPIDemoTestCase):
+    def setUp(self):
+        super(ClassListDemoAPITest, self).setUp()
+
+    def test_import_demo_classlist(self):
+        course = Course.query.get(1)
+        url = '/api/courses/' + course.uuid + '/users'
+
+        filename = "classlist.csv"
+        content = "username1,,,,"
+
+        with self.login("root"):
+            # test import fails
+            self.app.config['DEMO_INSTALLATION'] = True
+            uploaded_file = io.BytesIO(content.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+            self.assert400(rv)
+            uploaded_file.close()
+
+            # test import success
+            self.app.config['DEMO_INSTALLATION'] = False
+            uploaded_file = io.BytesIO(content.encode())
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+            self.assert200(rv)
+            uploaded_file.close()
+
+    def test_drop_demo_course_user(self):
+        user_courses = UserCourse.query.all()
+
+        for user_course in user_courses:
+            url = '/api/courses/' + user_course.course.uuid + '/users/' + user_course.user.uuid
+
+            with self.login('root'):
+                # test deletion fails
+                self.app.config['DEMO_INSTALLATION'] = True
+                rv = self.client.delete(url)
+                self.assert400(rv)
+
+                # test deletion success
+                self.app.config['DEMO_INSTALLATION'] = False
+                rv = self.client.delete(url)
+                self.assert200(rv)
+
+    def test_unenrol_demo_course_user(self):
+        user_courses = UserCourse.query.all()
+
+        for user_course in user_courses:
+            url = '/api/courses/' + user_course.course.uuid + '/users/' + user_course.user.uuid
+
+            expected = {'course_role': CourseRole.teaching_assistant.value }
+
+            with self.login('root'):
+                # test deletion by authorized instructor fails
+                self.app.config['DEMO_INSTALLATION'] = True
+                rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+                self.assert400(rv)
+
+
+                # test deletion by authorized instructor success
+                self.app.config['DEMO_INSTALLATION'] = False
+                rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+                self.assert200(rv)

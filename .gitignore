@@ -68,3 +68,6 @@ compair/static/tracking.js
 
 # docker generated data
 .data
+
+celerybeat-schedule
+celerybeat.pid

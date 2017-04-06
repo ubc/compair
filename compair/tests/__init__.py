@@ -17,5 +17,6 @@ test_app_settings = {
     'CELERY_ALWAYS_EAGER': True,
     'XAPI_ENABLED': True,
     'XAPI_APP_BASE_URL': 'https://localhost:8888/',
-    'LRS_STATEMENT_ENDPOINT': 'local'
+    'LRS_STATEMENT_ENDPOINT': 'local',
+    'DEMO_INSTALLATION': False
 }
