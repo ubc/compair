@@ -15,6 +15,7 @@ fi
 
 # clean tags
 TAG=${TAG//[^a-zA-Z0-9-\._]/}
+ENV_NAME=${ENV_NAME//[^a-zA-Z0-9-\._ ]/}
 
 curl -X POST \
      -F token=$DEPLOYMENT_TOKEN \
