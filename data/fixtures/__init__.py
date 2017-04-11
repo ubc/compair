@@ -221,9 +221,9 @@ class DemoDataFixture(object):
             (You will in turn receive peer feedback on your own chosen film.)</p>
             """,
             answer_start=(now - datetime.timedelta(days=30)),
-            answer_end=(now - datetime.timedelta(days=23)),
-            compare_start=(now - datetime.timedelta(days=22)),
-            compare_end=(now - datetime.timedelta(days=16)),
+            answer_end=(now + datetime.timedelta(days=365)),
+            compare_start=(now - datetime.timedelta(days=30)),
+            compare_end=(now + datetime.timedelta(days=365)),
             number_of_comparisons=3,
             students_can_reply=True,
             enable_self_evaluation=True,
