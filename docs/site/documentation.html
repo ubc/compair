@@ -47,32 +47,35 @@
             <div class="row">
                 <div class="col-md-8">
                     <h1 class="main-heading">Documentation</h1>
-
-                    <h2>Licensing</h2>
-                    <p>ComPAIR uses the <a href="https://github.com/ubc/compair/blob/master/LICENSE.txt" target="_blank">GPL-3.0</a> License.
+                    
+                    <p>ComPAIR is an open-source learning application being developed by the University of British Columbia's Centre for Teaching, Learning & Technology using a <a href="https://github.com/ubc/compair/blob/master/LICENSE.txt" target="_blank">GPL-3.0</a> license. Other educational institutions are welcome to download, deploy, and add to the code.</p>
 
                     <h2>UBC Faculty and Staff</h2>
-                    <p>UBC faculty and staff can visit the <a href="http://wiki.ubc.ca/Documentation:ComPAIR" target="_blank">ComPAIR wiki</a> for instructions on how to add ComPAIR to courses or can contact the <a href="http://lthub.ubc.ca/" target="_blank">Learning Technology Hub</a> at <a href="mailto:lt.hub@ubc.ca">lt.hub@ubc.ca</a> for additional support.</p>
+                    <p>Faculty and staff at UBC can get started with ComPAIR by using UBC's learning management system, Connect. Through Connect, you can set up a course in ComPAIR that will automatically be populated with your class list.</p>
+                    <ol>
+                        <li>Set up an account either by adding ComPAIR as an LTI tool in Connect or contacting <a href="http://lthub.ubc.ca/support/lt-hub/">LT Hub</a> for assistance with this process.</li>
+                        <li>Once you have an account, click on the LTI link in Connect or log in with your CWL at: <a href="https://compair.elearning.ubc.ca/app/">compair.elearning.ubc.ca</a>.</li>
+                    </ol>
 
-                    <h2>Installation Guides</h2>
-                    <p>ComPAIR requires a minimum of a web server running python 2.7 or 3 and a mysql or mariadb database. It is recommended to also have Redis and a Celery daemon running to reduce server load for certain tasks.</p>
+                    <h2>Outside UBC</h2>
+                    <p>Outside of UBC, ComPAIR requires a minimum of a web server running python 2.7 or 3 and a mysql or mariadb database. It is also recommended to have Redis and a Celery daemon running to reduce server load for certain tasks.</p>
 
                     <ul class="list-group">
                         <li class="list-group-item">
                             <strong><a href="https://github.com/ubc/compair/tree/master/deploy/linux_server#deploying-compair-on-a-centos-7-server" target="_blank">CentOS 7 Server (Standalone Linux)</a>:</strong>
-                            Setup an all-in-one ComPAIR server. Useful for piloting ComPAIR or small scale production environments.
+                            Set up an all-in-one ComPAIR server. Useful for piloting ComPAIR or small scale production environments.
                         </li>
                         <li class="list-group-item">
                             <strong><a href="https://github.com/ubc/compair/tree/master/deploy/aws#deploying-compair-on-amamzon-web-services" target="_blank">Amazon Web Services (AWS)</a>:</strong>
-                            Setup ComPAIR on Amazon Web Services. Useful for larger scale production environments.
+                            Set up ComPAIR on Amazon Web Services. Useful for larger scale production environments.
                         </li>
                         <li class="list-group-item">
                             <strong><a href="https://github.com/ubc/compair/tree/master/deploy/gce_kube#deploying-compair-on-google-container-enginekubernetes" target="_blank">Google Container Engine / Kubernetes</a>:</strong>
-                            Setup ComPAIR on Google Container Engine or Kubernetes. Useful for larger scale production environments.
+                            Set up ComPAIR on Google Container Engine or Kubernetes. Useful for larger scale production environments.
                         </li>
                         <li class="list-group-item">
                             <strong><a href="https://github.com/ubc/compair/tree/master/#developer-installation---docker" target="_blank">Development Instance via Docker</a>:</strong>
-                            Setup a development environment for ComPAIR. Useful for contributing to ComPAIR or customizing code. Not recommended for use in a production environment. Instead follow the Kubernetes guide above.
+                            Set up a development environment for ComPAIR. Useful for contributing to ComPAIR or customizing code. Not recommended for use in a production environment. (Instead follow the Kubernetes guide above.)
                         </li>
                     </ul>
 
