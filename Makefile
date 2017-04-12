@@ -17,6 +17,12 @@ env:
 	. env/bin/activate && \
 	make deps
 
+prod:
+	$(DOCKERRUN_PY) pip install -r requirements.txt
+	$(DOCKERRUN_NODE) npm install --production
+	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js
+	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js prod
+
 deps:
 	$(DOCKERRUN_PY) pip install -r requirements.txt
 	$(DOCKERRUN_NODE) npm install

@@ -1,0 +1,16 @@
+[Unit]
+Description=uWSGI instance to serve ComPAIR
+After=network.target
+
+[Service]
+WorkingDirectory=/www_data/compair
+Environment="PATH=/www_data/compair/.env/bin"
+
+Environment="DATABASE_URI=mysql+pymysql://compair:compair_password@localhost/compair"
+Environment="CELERY_BROKER_URL=redis://0.0.0.0:6379"
+Environment="ASSET_LOCATION=local"
+
+ExecStart=/www_data/compair/.env/bin/uwsgi --ini /etc/uwsgi/uwsgi.ini --logto /var/log/uwsgi.log
+
+[Install]
+WantedBy=multi-user.target
