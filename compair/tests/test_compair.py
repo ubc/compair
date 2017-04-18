@@ -190,6 +190,12 @@ class ComPAIRAPITestCase(ComPAIRTestCase):
     def get_url(self, **values):
         return self.api.url_for(self.resource, **values)
 
+class ComPAIRAPIDemoTestCase(ComPAIRAPITestCase):
+    def setUp(self):
+        db.create_all()
+        populate(default_data=True, sample_data=True)
+        self.app.config['DEMO_INSTALLATION'] = True
+
 
 class SessionTests(ComPAIRAPITestCase):
     def test_loggedin_user_session(self):

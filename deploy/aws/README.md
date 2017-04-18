@@ -1,4 +1,4 @@
-Deploying ComPAIR on Amamzon Web Services
+Deploying ComPAIR on Amazon Web Services
 =======================================
 
 This instruction uses CloudFormation template to deploy ComPAIR application to AWS. By default, it will deploy a MySQL RDS as the backend database, 1 instance of EC2 and 4 docker containers for the application, worker, redis, and a load balancer to accept the request.

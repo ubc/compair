@@ -28,10 +28,24 @@ module.factory('LoginResource', ["$resource", function($resource) {
     );
 }]);
 
+module.factory('DemoResource', ['$resource', function($resource) {
+    var User = $resource('/api/demo/', {
+        'save': {method: 'POST'}
+    });
+    User.MODEL = "User";
+
+    User.prototype.isLoggedIn = function() {
+        return this.hasOwnProperty('id');
+    };
+
+    return User;
+}]);
+
 module.constant('AuthTypesEnabled', {
     app: true,
     cas: true,
-    lti: true
+    lti: true,
+    demo: false
 });
 
 /***** Directives *****/
@@ -123,11 +137,14 @@ module.run(
 module.controller(
     "LoginController",
     [ "$rootScope", "$scope", "$location", "$log", "$route", "AuthTypesEnabled",
-      "LoginResource", "AuthenticationService", "LTI", "LTIResource",
+      "LoginResource", "AuthenticationService", "LTI", "LTIResource", "SystemRole",
+      "DemoResource",
     function ($rootScope, $scope, $location, $log, $route, AuthTypesEnabled,
-              LoginResource, AuthenticationService, LTI, LTIResource)
+              LoginResource, AuthenticationService, LTI, LTIResource, SystemRole,
+              DemoResource)
     {
         $scope.submitted = false;
+        $scope.SystemRole = SystemRole;
 
         // update allowCreateUser if needed
         $rootScope.$on(AuthenticationService.LTI_LOGIN_REQUIRED_EVENT, function() {
@@ -140,10 +157,49 @@ module.controller(
             $scope.showComPAIRAccountFieldsCreateUserForm = false;
         });
 
-        $scope.authTypesEnabled = AuthTypesEnabled;
+        $scope.AuthTypesEnabled = AuthTypesEnabled;
         // open account login automatically if cas is disabled
-        if (!$scope.authTypesEnabled.cas && $scope.authTypesEnabled.app) {
+        if (!$scope.AuthTypesEnabled.cas && $scope.AuthTypesEnabled.app) {
             $scope.showAppLogin = true;
+        }
+
+        $scope.createDemoAccount = function(system_role) {
+            DemoResource.save({system_role: system_role}).$promise.then(
+                function(ret) {
+                    // demo account creation successful
+                    $log.debug("Demo account creation successful!");
+                    userid = ret.user_id;
+                    $log.debug("Login User ID: " + userid);
+                    // retrieve logged in user's information
+                    AuthenticationService.login(true).then(function() {
+                        $scope.login_err = "";
+                        $scope.submitted = false;
+
+                        // force route to "/"
+                        // can't rely on authentication service reloading since uuids might be erased
+                        if ($location.path() == "/") {
+                            $route.reload();
+                        } else {
+                            $location.path("/");
+                        }
+                    }, function() {
+                        $log.error("Failed to retrieve logged in user's data: " + JSON.stringify(ret));
+                        $scope.login_err = "Unable to retrieve user information, server problem?";
+                        $scope.submitted = false;
+                    });
+                },
+                function(ret) {
+                    // login failed
+                    $log.debug("Login authentication failed.");
+                    if (ret.data.error) {
+                        $scope.login_err = ret.data.error;
+                    }
+                    else {
+                        $scope.login_err = "Server error during authentication.";
+                    }
+                    $scope.submitted = false;
+                }
+            );
         }
 
         $scope.submit = function() {

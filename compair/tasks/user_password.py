@@ -1,8 +1,8 @@
 from compair.core import celery, db
 from compair.models import User
 
-@celery.task(ignore_result=True)
-def set_passwords(user_passwords):
+@celery.task(bind=True, ignore_result=True)
+def set_passwords(self, user_passwords):
     user_ids = user_passwords.keys()
 
     users = User.query \

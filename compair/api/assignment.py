@@ -3,7 +3,7 @@ import datetime
 import dateutil.parser
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask import Blueprint
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, current_app
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import desc, or_, func, and_
@@ -99,6 +99,11 @@ class AssignmentIdAPI(Resource):
             title="Assignment Not Updated",
             message="Your role in this course does not allow you to update assignments.")
 
+        if current_app.config.get('DEMO_INSTALLATION', False):
+            from data.fixtures import DemoDataFixture
+            if assignment.id in DemoDataFixture.DEFAULT_ASSIGNMENT_IDS:
+                abort(400, title="Assignment Not Updated", message="Sorry, you cannot edit the default demo assignments.")
+
         params = existing_assignment_parser.parse_args()
 
         # make sure the assignment id in the url and the id matches
@@ -138,7 +143,7 @@ class AssignmentIdAPI(Resource):
         valid, error_message = Assignment.validate_periods(course.start_date, course.end_date,
              assignment.answer_start, assignment.answer_end, assignment.compare_start, assignment.compare_end)
         if not valid:
-            return {"error": error_message}, 400
+            abort(400, title="Assignment Not Updated", message=error_message)
 
         assignment.students_can_reply = params.get('students_can_reply', False)
         assignment.number_of_comparisons = params.get(
@@ -252,6 +257,11 @@ class AssignmentIdAPI(Resource):
             title="Assignment Not Deleted",
             message="Your role in this course does not allow you to delete assignments.")
 
+        if current_app.config.get('DEMO_INSTALLATION', False):
+            from data.fixtures import DemoDataFixture
+            if assignment.id in DemoDataFixture.DEFAULT_ASSIGNMENT_IDS:
+                abort(400, title="Assignment Not Deleted", message="Sorry, you cannot remove the default demo assignments.")
+
         formatted_assignment = marshal(assignment, dataformat.get_assignment(False))
         # delete file when assignment is deleted
         assignment.active = False
@@ -359,7 +369,7 @@ class AssignmentRootAPI(Resource):
              new_assignment.answer_start, new_assignment.answer_end,
              new_assignment.compare_start, new_assignment.compare_end)
         if not valid:
-            return {"error": error_message}, 400
+            abort(400, title="Assignment Not Saved", message=error_message)
 
         new_assignment.students_can_reply = params.get('students_can_reply', False)
         new_assignment.number_of_comparisons = params.get('number_of_comparisons')

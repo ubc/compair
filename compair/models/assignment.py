@@ -163,7 +163,6 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     def total_steps_required(self):
         return self.total_comparisons_required + (1 if self.enable_self_evaluation else 0)
 
-
     def calculate_grade(self, user):
         from . import AssignmentGrade
         AssignmentGrade.calculate_grade(self, user)

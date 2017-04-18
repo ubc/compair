@@ -132,6 +132,11 @@ class CourseAPI(Resource):
             title="Course Not Updated",
             message="Your role in this course does not allow you to update it.")
 
+        if current_app.config.get('DEMO_INSTALLATION', False):
+            from data.fixtures import DemoDataFixture
+            if course.id == DemoDataFixture.DEFAULT_COURSE_ID:
+                abort(400, title="Course Not Updated", message="Sorry, you cannot edit the default demo course.")
+
         params = existing_course_parser.parse_args()
 
         # make sure the course id in the url and the course id in the params match
@@ -157,7 +162,7 @@ class CourseAPI(Resource):
                 '%Y-%m-%dT%H:%M:%S.%fZ')
 
         if course.start_date and course.end_date and course.start_date > course.end_date:
-            return {"error": 'Course end time must be after course start time'}, 400
+            abort(400, title="Course Not Updated", message="Course end time must be after course start time.")
 
         db.session.commit()
 
@@ -176,6 +181,11 @@ class CourseAPI(Resource):
         require(DELETE, course,
             title="Course Not Deleted",
             message="Your role in this course does not allow you to delete it.")
+
+        if current_app.config.get('DEMO_INSTALLATION', False):
+            from data.fixtures import DemoDataFixture
+            if course.id == DemoDataFixture.DEFAULT_COURSE_ID:
+                abort(400, title="Course Not Deleted", message="Sorry, you cannot remove the default demo course.")
 
         course.active = False
         db.session.commit()

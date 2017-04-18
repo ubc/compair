@@ -14,7 +14,7 @@ from compair.models import User, Course, LTIConsumer, LTIContext, LTIMembership,
 from compair.models.lti_models import MembershipNoValidContextsException, \
     MembershipNoResultsException, MembershipInvalidRequestException
 from .util import new_restful_api, get_model_changes, pagination_parser
-from compair.tasks.lti_membership import update_lti_course_membership
+from compair.tasks import update_lti_course_membership
 
 from compair.api.classlist import display_name_generator
 from lti.contrib.flask import FlaskToolProvider

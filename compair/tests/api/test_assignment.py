@@ -8,7 +8,7 @@ from data.factories import AssignmentFactory
 from compair.models import Assignment, Comparison, PairingAlgorithm, \
     CourseGrade, AssignmentGrade, SystemRole, CourseRole, LTIOutcome, \
     AnswerCommentType, WinningAnswer
-from compair.tests.test_compair import ComPAIRAPITestCase
+from compair.tests.test_compair import ComPAIRAPITestCase, ComPAIRAPIDemoTestCase
 from compair.core import db
 
 
@@ -227,45 +227,45 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             invalid_expected['answer_end'] = invalid_answer_end
             rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'Answer period end time must be after the answer start time.'})
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'Answer period end time must be after the answer start time.'})
 
             invalid_expected = assignment_expected.copy()
             invalid_expected['answer_end'] = invalid_answer_end2
             rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'Answer period end time must be before the course end time.'})
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'Answer period end time must be before the course end time.'})
 
             # test invalid assignment compare start
             invalid_expected = assignment_expected.copy()
             invalid_expected['compare_start'] = None
             rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'No compare period start time provided.'})
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'No compare period start time provided.'})
 
             invalid_expected = assignment_expected.copy()
             invalid_expected['compare_start'] = invalid_compare_start
             rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'Compare period start time must be after the answer start time.'})
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'Compare period start time must be after the answer start time.'})
 
             # test invalid assignment compare end
             invalid_expected = assignment_expected.copy()
             invalid_expected['compare_end'] = None
             rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'No compare period end time provided.'})
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'No compare period end time provided.'})
 
             invalid_expected = assignment_expected.copy()
             invalid_expected['compare_end'] = invalid_compare_end
             rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'Compare period end time must be after the compare start time.'})
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'Compare period end time must be after the compare start time.'})
 
             invalid_expected = assignment_expected.copy()
             invalid_expected['compare_end'] = invalid_compare_end2
             rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'Compare period end time must be before the course end time.'})
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'Compare period end time must be before the course end time.'})
 
     def test_edit_assignment(self):
         criterion2 = self.data.create_criterion(self.data.get_authorized_instructor())
@@ -459,45 +459,45 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             invalid_expected['answer_end'] = invalid_answer_end
             rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'Answer period end time must be after the answer start time.'})
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'Answer period end time must be after the answer start time.'})
 
             invalid_expected = assignment_expected.copy()
             invalid_expected['answer_end'] = invalid_answer_end2
             rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'Answer period end time must be before the course end time.'})
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'Answer period end time must be before the course end time.'})
 
             # test invalid assignment compare start
             invalid_expected = assignment_expected.copy()
             invalid_expected['compare_start'] = None
             rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'No compare period start time provided.'})
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'No compare period start time provided.'})
 
             invalid_expected = assignment_expected.copy()
             invalid_expected['compare_start'] = invalid_compare_start
             rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'Compare period start time must be after the answer start time.'})
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'Compare period start time must be after the answer start time.'})
 
             # test invalid assignment compare end
             invalid_expected = assignment_expected.copy()
             invalid_expected['compare_end'] = None
             rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'No compare period end time provided.'})
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'No compare period end time provided.'})
 
             invalid_expected = assignment_expected.copy()
             invalid_expected['compare_end'] = invalid_compare_end
             rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'Compare period end time must be after the compare start time.'})
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'Compare period end time must be after the compare start time.'})
 
             invalid_expected = assignment_expected.copy()
             invalid_expected['compare_end'] = invalid_compare_end2
             rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json, {'error': 'Compare period end time must be before the course end time.'})
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'Compare period end time must be before the course end time.'})
 
     def test_delete_assignment(self):
         # Test deleting the assignment
@@ -1472,3 +1472,62 @@ class AssignmentCourseGradeUpdateAPITests(ComPAIRAPITestCase):
 
             new_course_grades = CourseGrade.get_course_grades(self.fixtures.course)
             self.assertEqual(0, len(new_course_grades))
+
+
+class AssignmentDemoAPITests(ComPAIRAPIDemoTestCase):
+    def setUp(self):
+        super(AssignmentDemoAPITests, self).setUp()
+
+    def test_delete_demo_assignment(self):
+        assignments = [Assignment.query.get(1), Assignment.query.get(2)]
+
+        for assignment in assignments:
+            url = '/api/courses/' + assignment.course_uuid + '/assignments/' + assignment.uuid
+
+            with self.login('root'):
+                # test deletion by authorized instructor fails
+                self.app.config['DEMO_INSTALLATION'] = True
+                rv = self.client.delete(url)
+                self.assert400(rv)
+
+                # test deletion by authorized instructor success
+                self.app.config['DEMO_INSTALLATION'] = False
+                rv = self.client.delete(url)
+                self.assert200(rv)
+
+    def test_edit_demo_assignment(self):
+        assignments = [Assignment.query.get(1), Assignment.query.get(2)]
+
+        for assignment in assignments:
+            url = '/api/courses/' + assignment.course_uuid + '/assignments/' + assignment.uuid
+
+            assignment_criteria = [ {'id': criterion.uuid } for criterion in assignment.criteria]
+
+            expected = {
+                'id': assignment.uuid,
+                'name': 'This is the new name.',
+                'description': 'new_description',
+                'answer_start': assignment.answer_start.isoformat() + 'Z',
+                'answer_end': assignment.answer_end.isoformat() + 'Z',
+                'number_of_comparisons': assignment.number_of_comparisons,
+                'students_can_reply': assignment.students_can_reply,
+                'enable_self_evaluation': assignment.enable_self_evaluation,
+                'criteria': assignment_criteria,
+                'pairing_algorithm': PairingAlgorithm.adaptive.value,
+                'rank_display_limit': 10,
+                'answer_grade_weight': 2,
+                'comparison_grade_weight': 2,
+                'self_evaluation_grade_weight': 2
+            }
+
+            with self.login('root'):
+                # test deletion by authorized instructor fails
+                self.app.config['DEMO_INSTALLATION'] = True
+                rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+                self.assert400(rv)
+
+
+                # test deletion by authorized instructor success
+                self.app.config['DEMO_INSTALLATION'] = False
+                rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+                self.assert200(rv)

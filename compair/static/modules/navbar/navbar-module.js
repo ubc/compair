@@ -31,6 +31,7 @@ module.controller(
     {
         $scope.breadcrumbs = breadcrumbs;
         $scope.isCollapsed = true;
+        $scope.AuthTypesEnabled = AuthTypesEnabled;
 
         $scope.AuthTypesEnabled = AuthTypesEnabled;
 

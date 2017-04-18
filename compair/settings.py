@@ -43,8 +43,9 @@ PERMANENT_SESSION_LIFETIME = 3600 * 24
 # set celery tasks
 CELERY_RESULT_BACKEND = None
 CELERY_BROKER_URL = None
-CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'msgpack', 'yaml']
-CELERY_IMPORTS = ('compair.tasks.user_password', 'compair.tasks.lti_outcomes', 'compair.tasks.xapi_statement')
+CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
+CELERY_IMPORTS = ['compair.tasks']
+CELERY_TIMEZONE = 'America/Vancouver'
 BROKER_TRANSPORT_OPTIONS = {
     'fanout_prefix': True,
     'fanout_patterns': True
@@ -70,6 +71,12 @@ ASSET_CLOUD_URI_PREFIX = 'https://d1flf4q1u9z72v.cloudfront.net/dist/'
 
 # Google Analytic Tracking ID, setting this will enable tracking
 GA_TRACKING_ID = None
+
+# Used by ComPAIR demo instances
+# Demo instances allow user to create accounts of any role on the login screen and
+# schedule automatic database resets daily
+# Do not enable in any non-demo environment
+DEMO_INSTALLATION = False
 
 # Login & Authentication methods
 # Login via ComPAIR username & Password

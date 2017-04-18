@@ -13,7 +13,7 @@ from .core import login_manager, bouncer, db, celery, abort
 from .configuration import config
 from .models import User, File
 from .activity import log
-from .api import register_api_blueprints, log_events
+from .api import register_api_blueprints, log_events, register_demo_api_blueprints, log_demo_events
 from compair.xapi import capture_xapi_events
 
 class RegexConverter(BaseConverter):
@@ -87,6 +87,16 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
 
     app.logger.debug("Application Configuration: " + str(app.config))
 
+    # setup celery scheduled tasks
+    if app.config.get('DEMO_INSTALLATION', False):
+        from celery.schedules import crontab
+
+        app.config['CELERYBEAT_SCHEDULE'] = {}
+        app.config['CELERYBEAT_SCHEDULE']['reset-demo-data-daily'] = {
+            'task': "compair.tasks.demo.reset_demo",
+            'schedule': crontab(hour=3, minute=0)
+        }
+
     db.init_app(app)
 
     celery.conf.update(app.config)
@@ -137,6 +147,10 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
         app.url_map.converters['regex'] = RegexConverter
 
         app = register_api_blueprints(app)
+
+        if app.config.get('DEMO_INSTALLATION', False):
+            log_demo_events(log)
+            app = register_demo_api_blueprints(app)
 
     return app
 

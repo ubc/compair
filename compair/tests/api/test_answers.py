@@ -7,7 +7,7 @@ from data.fixtures import AnswerFactory
 from data.fixtures.test_data import TestFixture, LTITestData
 from compair.models import Answer, CourseGrade, AssignmentGrade, \
     CourseRole, SystemRole
-from compair.tests.test_compair import ComPAIRAPITestCase
+from compair.tests.test_compair import ComPAIRAPITestCase, ComPAIRAPIDemoTestCase
 
 
 class AnswersAPITests(ComPAIRAPITestCase):
@@ -1144,3 +1144,49 @@ class AnswerComparisonAPITests(ComPAIRAPITestCase):
             self.assertEqual(rv.json['page'], 1)
             self.assertEqual(rv.json['objects'][0]['user_id'], self.fixtures.students[1].uuid)
             self.assertEqual(rv.json['total'], self.fixtures.assignment.total_comparisons_required)
+
+
+
+class AnswerDemoAPITests(ComPAIRAPIDemoTestCase):
+    def setUp(self):
+        super(AnswerDemoAPITests, self).setUp()
+
+    def test_delete_demo_answer(self):
+        answers = Answer.query.all()
+
+        for answer in answers:
+            url = '/api/courses/' + answer.course_uuid + '/assignments/' + answer.assignment_uuid + '/answers/' + answer.uuid
+
+            with self.login('root'):
+                # test deletion fails
+                self.app.config['DEMO_INSTALLATION'] = True
+                rv = self.client.delete(url)
+                self.assert400(rv)
+
+                # test deletion success
+                self.app.config['DEMO_INSTALLATION'] = False
+                rv = self.client.delete(url)
+                self.assert200(rv)
+
+    def test_edit_demo_answer(self):
+        answers = Answer.query.all()
+
+        for answer in answers:
+            url = '/api/courses/' + answer.course_uuid + '/assignments/' + answer.assignment_uuid + '/answers/' + answer.uuid
+
+            expected = {
+                'id': answer.uuid,
+                'content': 'This is an edit'
+            }
+
+            with self.login('root'):
+                # test deletion fails
+                self.app.config['DEMO_INSTALLATION'] = True
+                rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+                self.assert400(rv)
+
+
+                # test deletion success
+                self.app.config['DEMO_INSTALLATION'] = False
+                rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+                self.assert200(rv)

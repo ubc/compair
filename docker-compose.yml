@@ -38,10 +38,10 @@ services:
     depends_on:
       - db
       - redis
-  worker:
+  worker: &worker
     <<: *app
     command: celery worker --app=celery_worker.celery --loglevel=DEBUG
-    environment:
+    environment: &worker_env
       - DB_DRIVER=mysql+pymysql
       - DB_USERNAME=compair
       - DB_PASSWORD=compair
@@ -53,6 +53,9 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379
       - C_FORCE_ROOT=1
       - ENFORCE_SSL=0
+  worker_scheduler:
+    <<: *worker
+    command: celery beat --app=celery_worker.celery --loglevel=DEBUG
   web:
     image: nginx:1.11
     volumes:

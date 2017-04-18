@@ -127,7 +127,8 @@ def register_api_blueprints(app):
                 cas_login_enabled=app.config['CAS_LOGIN_ENABLED'],
                 lti_login_enabled=app.config['LTI_LOGIN_ENABLED'],
                 xapi_enabled=app.config['XAPI_ENABLED'],
-                xapi_app_base_url=app.config.get('XAPI_APP_BASE_URL')
+                xapi_app_base_url=app.config.get('XAPI_APP_BASE_URL'),
+                demo=app.config.get('DEMO_INSTALLATION'),
             )
 
         # running in prod mode, figure out asset location
@@ -151,7 +152,8 @@ def register_api_blueprints(app):
             cas_login_enabled=app.config['CAS_LOGIN_ENABLED'],
             lti_login_enabled=app.config['LTI_LOGIN_ENABLED'],
             xapi_enabled=app.config['XAPI_ENABLED'],
-            xapi_app_base_url=app.config.get('XAPI_APP_BASE_URL')
+            xapi_app_base_url=app.config.get('XAPI_APP_BASE_URL'),
+            demo=app.config.get('DEMO_INSTALLATION'),
         )
 
     @app.route('/')
@@ -193,6 +195,13 @@ def register_api_blueprints(app):
 
     return app
 
+def register_demo_api_blueprints(app):
+    from .demo import demo_api
+    app.register_blueprint(
+        demo_api,
+        url_prefix='/api/demo')
+
+    return app
 
 def log_events(log):
     # user events
@@ -335,3 +344,9 @@ def log_events(log):
 
     # misc
     on_get_file.connect(log)
+
+
+def log_demo_events(log):
+    # demo events
+    from .demo import on_user_demo_create
+    on_user_demo_create.connect(log)

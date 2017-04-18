@@ -1,6 +1,6 @@
 from bouncer.constants import CREATE, READ, EDIT, MANAGE, DELETE
 from flask import Blueprint
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, current_app
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import func, or_, and_, desc
@@ -292,6 +292,11 @@ class AnswerIdAPI(Resource):
             message="Your role in this course does not allow you to update this answer.")
         restrict_user = not allow(MANAGE, assignment)
 
+        if current_app.config.get('DEMO_INSTALLATION', False):
+            from data.fixtures import DemoDataFixture
+            if assignment.id in DemoDataFixture.DEFAULT_ASSIGNMENT_IDS and answer.user_id in DemoDataFixture.DEFAULT_STUDENT_IDS:
+                abort(400, title="Answer Not Updated", message="Sorry, you cannot edit the default student demo answers.")
+
         params = existing_answer_parser.parse_args()
         # make sure the answer id in the url and the id matches
         if params['id'] != answer_uuid:
@@ -371,6 +376,11 @@ class AnswerIdAPI(Resource):
         require(DELETE, answer,
             title="Answer Not Deleted",
             message="Your role in this course does not allow you to delete this answer.")
+
+        if current_app.config.get('DEMO_INSTALLATION', False):
+            from data.fixtures import DemoDataFixture
+            if assignment.id in DemoDataFixture.DEFAULT_ASSIGNMENT_IDS and answer.user_id in DemoDataFixture.DEFAULT_STUDENT_IDS:
+                abort(400, title="Answer Not Deleted", message="Sorry, you cannot remove the default student demo answers.")
 
         answer.active = False
         db.session.commit()

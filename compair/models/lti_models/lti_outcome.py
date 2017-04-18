@@ -13,7 +13,7 @@ class LTIOutcome(object):
     @classmethod
     def update_assignment_grades(cls, compair_assignment):
         from compair.models import CourseRole, AssignmentGrade
-        from compair.tasks.lti_outcomes import update_lti_assignment_grades
+        from compair.tasks import update_lti_assignment_grades
 
         lti_resource_links = compair_assignment.lti_resource_links.all()
 
@@ -60,7 +60,7 @@ class LTIOutcome(object):
     @classmethod
     def update_user_assignment_grade(cls, compair_assignment, compair_user):
         from compair.models import CourseRole, AssignmentGrade, LTIUser
-        from compair.tasks.lti_outcomes import update_lti_assignment_grades
+        from compair.tasks import update_lti_assignment_grades
 
         lti_resource_links = compair_assignment.lti_resource_links.all()
 
@@ -106,7 +106,7 @@ class LTIOutcome(object):
     def update_course_grades(cls, compair_course):
         from compair.models import CourseRole, CourseGrade, \
             LTIResourceLink, LTIUserResourceLink
-        from compair.tasks.lti_outcomes import update_lti_course_grades
+        from compair.tasks import update_lti_course_grades
 
         lti_contexts = compair_course.lti_contexts.all()
 
@@ -161,7 +161,7 @@ class LTIOutcome(object):
     def update_user_course_grade(cls, compair_course, compair_user):
         from compair.models import CourseRole, CourseGrade, \
             LTIResourceLink, LTIUserResourceLink
-        from compair.tasks.lti_outcomes import update_lti_course_grades
+        from compair.tasks import update_lti_course_grades
 
         lti_contexts = compair_course.lti_contexts.all()
 

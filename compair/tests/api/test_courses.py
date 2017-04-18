@@ -3,7 +3,7 @@ import json
 from compair import db
 
 from data.fixtures.test_data import BasicTestData, ComparisonTestData
-from compair.tests.test_compair import ComPAIRAPITestCase
+from compair.tests.test_compair import ComPAIRAPITestCase, ComPAIRAPIDemoTestCase
 from compair.models import Course, UserCourse
 
 
@@ -606,3 +606,48 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
                     self.assertEqual(original_answer2.practice, original_answer2.practice)
                     self.assertEqual(original_answer2.active, original_answer2.active)
                     self.assertEqual(original_answer2.draft, original_answer2.draft)
+
+
+class CourseDemoAPITests(ComPAIRAPIDemoTestCase):
+    def setUp(self):
+        super(CourseDemoAPITests, self).setUp()
+
+    def test_delete_demo_course(self):
+        course = Course.query.get(1)
+        url = '/api/courses/' + course.uuid
+
+        with self.login('root'):
+            # test deletion by authorized instructor fails
+            self.app.config['DEMO_INSTALLATION'] = True
+            rv = self.client.delete(url)
+            self.assert400(rv)
+
+            # test deletion by authorized instructor success
+            self.app.config['DEMO_INSTALLATION'] = False
+            rv = self.client.delete(url)
+            self.assert200(rv)
+
+    def test_edit_demo_course(self):
+        course = Course.query.get(1)
+        url = '/api/courses/' + course.uuid
+
+        expected = {
+            'id': course.uuid,
+            'name': 'ExpectedCourse',
+            'year': 2015,
+            'term': 'Winter',
+            'start_date': None,
+            'end_date': None,
+            'description': 'Test Description'
+        }
+
+        with self.login('root'):
+            # test deletion fails
+            self.app.config['DEMO_INSTALLATION'] = True
+            rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+            self.assert400(rv)
+
+            # test deletion success
+            self.app.config['DEMO_INSTALLATION'] = False
+            rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+            self.assert200(rv)

@@ -32,10 +32,17 @@ module.factory('AuthenticationService',
                    return $q.when(false);
                 });
             },
-            login: function () {
+            login: function (skipRetry) {
+                skipRetry = skipRetry || false;
+
                 Session.destroy();
                 return Session.getUser().then(function() {
-                    authService.loginConfirmed();
+                    authService.loginConfirmed('success', function(config) {
+                        if (skipRetry) {
+                            return false;
+                        }
+                        return config;
+                    });
                     $rootScope.$broadcast(LOGIN_EVENT);
                 });
             },
