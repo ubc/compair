@@ -13,7 +13,9 @@ from .core import login_manager, bouncer, db, celery
 from .configuration import config
 from .models import User, File
 from .activity import log
-from .api import register_api_blueprints, log_events, register_demo_api_blueprints, log_demo_events
+from .api import register_api_blueprints, log_events, \
+    register_demo_api_blueprints, log_demo_events, \
+    register_statement_api_blueprints
 from compair.xapi import capture_xapi_events
 
 class RegexConverter(BaseConverter):
@@ -153,7 +155,10 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
             log_demo_events(log)
             app = register_demo_api_blueprints(app)
 
+        if app.config.get('XAPI_ENABLED', False):
+            capture_xapi_events()
+            app = register_statement_api_blueprints(app)
+
     return app
 
 log_events(log)
-capture_xapi_events()

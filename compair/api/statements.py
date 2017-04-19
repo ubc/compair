@@ -20,8 +20,9 @@ statement_parser.add_argument('timestamp', type=str, required=False)
 class StatementAPI(Resource):
     @login_required
     def post(self):
-        if not XAPI.enabled:
-            return 404
+        if not XAPI.enabled():
+            # this should silently fail
+            abort(404)
 
         params = statement_parser.parse_args()
 
