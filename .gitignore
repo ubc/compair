@@ -8,7 +8,6 @@
 *.egg-info
 dist
 build
-!compair/static/lib_extension/pdfjs/build
 eggs
 parts
 bin

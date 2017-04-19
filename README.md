@@ -236,15 +236,3 @@ Google Analytics Web Tracking
 2. Set `GA_TRACKING_ID` to your web property id (ex: 'UA-XXXX-Y')
 
 Restart server after making any changes to settings
-
-Update PDF.js
--------------
-The assets for PDF.js are included in the repo and needed to be updated manually when PDF.js is updated.
-
-```
-git clone https://github.com/mozilla/pdf.js.git /tmp
-cd /tmp/pdf.js
-gulp generic
-cd -
-cp -R /tmp/pdf.js/build/generic/* compair/static/lib_extension/pdfjs
-```
