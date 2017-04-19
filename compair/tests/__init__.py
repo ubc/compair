@@ -12,8 +12,11 @@ test_app_settings = {
     'PASSLIB_CONTEXT': 'plaintext',
     'ENFORCE_SSL': False,
     'CELERY_ALWAYS_EAGER': True,
-    'XAPI_ENABLED': True,
+    'XAPI_ENABLED': False,
     'XAPI_APP_BASE_URL': 'https://localhost:8888/',
     'LRS_STATEMENT_ENDPOINT': 'local',
     'DEMO_INSTALLATION': False
 }
+
+test_app_xapi_settings = test_app_settings.copy()
+test_app_xapi_settings['XAPI_ENABLED'] = True

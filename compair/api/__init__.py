@@ -108,11 +108,6 @@ def register_api_blueprints(app):
         timer_api,
         url_prefix='/api/timer')
 
-    from .statements import statement_api
-    app.register_blueprint(
-        statement_api,
-        url_prefix='/api/statements')
-
     from .healthz import healthz_api
     app.register_blueprint(healthz_api)
 
@@ -192,6 +187,14 @@ def register_api_blueprints(app):
 
         return send_file(file_path, mimetype=mimetype,
             attachment_filename=attachment_filename, as_attachment=as_attachment)
+
+    return app
+
+def register_statement_api_blueprints(app):
+    from .statements import statement_api
+    app.register_blueprint(
+        statement_api,
+        url_prefix='/api/statements')
 
     return app
 

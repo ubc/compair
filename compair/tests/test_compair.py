@@ -14,7 +14,7 @@ from compair import create_app
 from compair.manage.database import populate
 from compair.core import db
 from compair.models import User, XAPILog
-from compair.tests import test_app_settings
+from compair.tests import test_app_settings, test_app_xapi_settings
 from lti import ToolConsumer
 from lti.utils import parse_qs
 
@@ -88,6 +88,10 @@ class ComPAIRXAPITestCase(ComPAIRTestCase):
         'definition': {'type': 'http://id.tincanapi.com/activitytype/source'},
         'objectType': 'Activity'
     }
+
+    def create_app(self):
+        app = create_app(settings_override=test_app_xapi_settings)
+        return app
 
     def generate_tracking(self, with_duration=False, **kargs):
         tracking = {

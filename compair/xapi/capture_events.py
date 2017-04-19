@@ -29,9 +29,6 @@ tracking_parser = RequestParser()
 tracking_parser.add_argument('tracking', type=dict, default=dict())
 
 def capture_xapi_events():
-    if not XAPI.enabled:
-        return
-
     # authentication events
     on_login_with_method.connect(xapi_on_login_with_method)
     on_logout.connect(xapi_on_logout)
