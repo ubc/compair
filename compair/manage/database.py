@@ -37,8 +37,6 @@ def drop(yes=False):
         for table in tbs:
             db.engine.execute(DropTable(table))
 
-        db.session.commit()
-
         print ('All tables are dropped.')
         return True
 
