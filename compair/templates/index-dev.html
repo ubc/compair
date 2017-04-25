@@ -163,6 +163,10 @@
                     if (baseUrl == '') { baseUrl = $location.absUrl().replace("app/#"+$location.url(), ""); }
                     xAPISettings.baseUrl = baseUrl;
                 }]);
+                angular.module('ubc.ctlt.compair.user')
+                .run( ['UserSettings', function(UserSettings) {
+                    UserSettings.notifications = {{ 'true' if notifications_enabled else 'false' }};
+                }]);
             })();
         </script>
         {% if ga_tracking_id %}

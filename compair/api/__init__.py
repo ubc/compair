@@ -124,6 +124,7 @@ def register_api_blueprints(app):
                 lti_login_enabled=app.config['LTI_LOGIN_ENABLED'],
                 kaltura_enabled=app.config['KALTURA_ENABLED'],
                 kaltura_extensions=list(app.config['KALTURA_ATTACHMENT_EXTENSIONS']),
+                notifications_enabled=app.config['MAIL_NOTIFICATION_ENABLED'],
                 xapi_enabled=app.config['XAPI_ENABLED'],
                 xapi_app_base_url=app.config.get('XAPI_APP_BASE_URL'),
                 demo=app.config.get('DEMO_INSTALLATION'),
@@ -152,6 +153,7 @@ def register_api_blueprints(app):
             lti_login_enabled=app.config['LTI_LOGIN_ENABLED'],
             kaltura_enabled=app.config['KALTURA_ENABLED'],
             kaltura_extensions=list(app.config['KALTURA_ATTACHMENT_EXTENSIONS']),
+            notifications_enabled=app.config['MAIL_NOTIFICATION_ENABLED'],
             xapi_enabled=app.config['XAPI_ENABLED'],
             xapi_app_base_url=app.config.get('XAPI_APP_BASE_URL'),
             demo=app.config.get('DEMO_INSTALLATION'),
@@ -215,7 +217,7 @@ def register_demo_api_blueprints(app):
 def log_events(log):
     # user events
     from .users import on_user_modified, on_user_get, on_user_list_get, on_user_create, on_user_course_get, \
-        on_user_password_update, on_user_edit_button_get, on_teaching_course_get
+        on_user_password_update, on_user_edit_button_get, on_teaching_course_get, on_user_notifications_update
     on_user_modified.connect(log)
     on_user_get.connect(log)
     on_user_list_get.connect(log)
@@ -223,6 +225,7 @@ def log_events(log):
     on_user_course_get.connect(log)
     on_teaching_course_get.connect(log)
     on_user_edit_button_get.connect(log)
+    on_user_notifications_update.connect(log)
     on_user_password_update.connect(log)
 
     # course events

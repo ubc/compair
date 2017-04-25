@@ -23,6 +23,7 @@ module.factory('UserResource', ['$resource', function($resource) {
         getUserCoursesStatus: {url: '/api/users/courses/status'},
         getTeachingUserCourses: {url: '/api/users/courses/teaching'},
         getEditButton: {url: '/api/users/:id/edit'},
+        updateNotifcations: {method: 'POST', url: '/api/users/:id/notification'},
         password: {method: 'POST', url: '/api/users/:id/password'}
     });
     User.MODEL = "User";
@@ -34,10 +35,20 @@ module.factory('UserResource', ['$resource', function($resource) {
     return User;
 }]);
 
+module.constant('UserSettings', {
+    notifications: false
+});
+
 module.constant('SystemRole', {
     student: "Student",
     instructor: "Instructor",
     sys_admin: "System Administrator"
+});
+
+module.constant('EmailNotificationMethod', {
+    enable: "enable",
+    disable: "disable",
+    //digest: "digest"
 });
 
 module.constant('CourseRole', {
@@ -50,9 +61,9 @@ module.constant('CourseRole', {
 /***** Controllers *****/
 module.controller("UserWriteController",
     ['$scope', '$route', '$routeParams', '$location', 'breadcrumbs', 'Session',
-     'UserResource', 'SystemRole', 'Toaster', 'resolvedData',
+     'UserResource', 'SystemRole', 'Toaster', 'resolvedData', 'UserSettings', 'EmailNotificationMethod',
     function($scope, $route, $routeParams, $location, breadcrumbs, Session,
-             UserResource, SystemRole, Toaster, resolvedData)
+             UserResource, SystemRole, Toaster, resolvedData, UserSettings, EmailNotificationMethod)
     {
         $scope.userId = $routeParams.userId;
 
@@ -65,6 +76,8 @@ module.controller("UserWriteController",
         $scope.method = $scope.user.id ? 'edit' : 'create';
         $scope.password = {};
 
+        $scope.UserSettings = UserSettings;
+        $scope.EmailNotificationMethod = EmailNotificationMethod;
         $scope.SystemRole = SystemRole;
         $scope.system_roles = [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin]
         // remove system admin from system roles if current_user is not an admin
@@ -76,6 +89,7 @@ module.controller("UserWriteController",
             breadcrumbs.options = {'User Profile': "{0}'s Profile".format($scope.user.displayname)};
         } else if ($scope.method == 'create') {
             $scope.user.uses_compair_login = true;
+            $scope.user.email_notification_method = EmailNotificationMethod.enable;
             $scope.user.system_role = SystemRole.student;
         }
 
@@ -112,7 +126,9 @@ module.controller("UserWriteController",
 
 module.controller("UserViewController",
     ['$scope', '$routeParams', 'breadcrumbs', 'SystemRole', 'resolvedData',
-    function($scope, $routeParams, breadcrumbs, SystemRole, resolvedData)
+     'UserResource', 'UserSettings', 'EmailNotificationMethod', 'Toaster',
+    function($scope, $routeParams, breadcrumbs, SystemRole, resolvedData,
+             UserResource, UserSettings, EmailNotificationMethod, Toaster)
     {
         $scope.userId = $routeParams.userId;
 
@@ -122,9 +138,21 @@ module.controller("UserViewController",
         $scope.loggedInUser = resolvedData.loggedInUser;
         $scope.ownProfile = $scope.loggedInUser.id == $scope.userId;
         $scope.loggedInUserIsInstructor = $scope.loggedInUser.system_role == SystemRole.instructor;
+        $scope.UserSettings = UserSettings;
+        $scope.EmailNotificationMethod = EmailNotificationMethod;
 
         $scope.SystemRole = SystemRole;
         breadcrumbs.options = {'User Profile': "{0}'s Profile".format($scope.user.displayname)};
+
+        $scope.updateNotificationSettings = function() {
+            $scope.submitted = true;
+
+            UserResource.updateNotifcations({'id': $scope.userId}, $scope.user, function(ret) {
+                Toaster.success('Notification Settings Successfully Updated', 'Your changes were saved.');
+            }).$promise.finally(function() {
+                $scope.submitted = false;
+            });
+        };
     }]
 );
 

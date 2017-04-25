@@ -4,7 +4,7 @@ from .mixins import ActiveMixin, DefaultTableMixin, WriteTrackingMixin, UUIDMixi
 # enums
 from .custom_types import AnswerCommentType, CourseRole, \
     PairingAlgorithm, ScoringAlgorithm, SystemRole, \
-    ThirdPartyType, WinningAnswer
+    ThirdPartyType, WinningAnswer, EmailNotificationMethod
 
 # models
 from .activity_log import ActivityLog

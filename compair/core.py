@@ -7,6 +7,7 @@ from six import text_type
 from flask import session as sess, abort as flask_abort
 from flask_bouncer import Bouncer
 from celery import Celery
+from flask_mail import Mail
 
 from flask_login import LoginManager, user_logged_in
 from flask_sqlalchemy import SQLAlchemy
@@ -29,6 +30,9 @@ celery = Celery(
     broker=config.get("CELERY_RESULT_BACKEND"),
     backend=config.get("CELERY_BROKER_URL")
 )
+
+# initialize Flask-Mail
+mail = Mail()
 
 # create custom namespace for signals
 event = Namespace()

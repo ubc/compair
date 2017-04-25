@@ -39,6 +39,8 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     lastname = db.Column(db.String(255))
     student_number = db.Column(db.String(50), unique=True, nullable=True)
     last_online = db.Column(db.DateTime)
+    email_notification_method = db.Column(EnumType(EmailNotificationMethod, name="email_notification_method"),
+        nullable=False, default=EmailNotificationMethod.enable, index=True)
 
     # relationships
 

@@ -45,7 +45,9 @@ describe('user-module', function () {
         last_online: "Tue, 12 Aug 2014 20:53:31 -0000",
         modified: "Tue, 12 Aug 2014 20:53:31 -0000",
         username: "root",
-        system_role: "System Administrator"
+        system_role: "System Administrator",
+        uses_compair_login: true,
+        email_notification_method: 'enable'
     };
     beforeEach(module('ubc.ctlt.compair.user'));
     beforeEach(inject(function ($injector) {
@@ -89,7 +91,8 @@ describe('user-module', function () {
                 expect($rootScope.canManageUsers).toBe(true);
                 expect($rootScope.user).toEqual({
                     'uses_compair_login': true,
-                    'system_role': 'Student'
+                    'system_role': 'Student',
+                    'email_notification_method': 'enable'
                 });
             });
 
@@ -192,7 +195,19 @@ describe('user-module', function () {
                 expect($rootScope.loggedInUserIsInstructor).toBe(false);
                 expect($rootScope.ownProfile).toBe(false);
                 expect($rootScope.showEditButton).toEqualData({available: 'true'});
-            })
+            });
+
+            it('should be able to toggle user email notification settings', function () {
+                var editUser = angular.copy(viewUser);
+                editUser.email_notification_method = 'disable';
+                $rootScope.user = editUser;
+                $httpBackend.expectPOST('/api/users/2abcABC123-abcABC123_Z/notification', $rootScope.user).respond(editUser);
+                $rootScope.updateNotificationSettings();
+                expect($rootScope.submitted).toBe(true);
+                $httpBackend.flush();
+                expect($rootScope.submitted).toBe(false);
+                expect($rootScope.user.email_notification_method).toEqualData('disable');
+            });
         });
     });
 });

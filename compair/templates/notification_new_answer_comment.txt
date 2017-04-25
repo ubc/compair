@@ -1,0 +1,9 @@
+{% extends "notification_base.txt" %}
+{% block body %}
+You've received new answer feedback for the following assignment: {{ assignment.name }}
+
+{{ author.displayname }} {% if instructor_label %}({{instructor_label}}) {% endif %}{% if comment.comment_type in [answer_comment_types.private, answer_comment_types.evaluation] %}gave private feedback{% elif comment.comment_type == answer_comment_types.public %}replied Public{% endif %} on {{ comment.created.strftime('%b %d @ %I:%M %p') }}
+
+You can view it at:
+{{ url_for('route_app', _external=True, _anchor='/course/'+course.uuid+'/assignment/'+assignment.uuid) }}?tab=comparisons
+{% endblock %}

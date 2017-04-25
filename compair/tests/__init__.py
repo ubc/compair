@@ -15,7 +15,9 @@ test_app_settings = {
     'XAPI_ENABLED': False,
     'XAPI_APP_BASE_URL': 'https://localhost:8888/',
     'LRS_STATEMENT_ENDPOINT': 'local',
-    'DEMO_INSTALLATION': False
+    'DEMO_INSTALLATION': False,
+    'MAIL_NOTIFICATION_ENABLED': True,
+    'MAIL_DEFAULT_SENDER': 'compair@example.com'
 }
 
 test_app_xapi_settings = test_app_settings.copy()
