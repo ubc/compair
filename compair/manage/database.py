@@ -17,6 +17,10 @@ manager = Manager(usage="Perform database operations")
 def drop(yes=False):
     """Drops database tables"""
     if yes or prompt_bool("Are you sure you want to lose all your data"):
+        # commit any loose hanging sessions if they exist before dropping everything
+        db.session.commit()
+
+        # Start drop transaction
         inspector = reflection.Inspector.from_engine(db.engine)
         metadata = MetaData()
         tbs = []
@@ -32,10 +36,13 @@ def drop(yes=False):
             all_fks.extend(fks)
 
         for fkc in all_fks:
-            db.engine.execute(DropConstraint(fkc))
+            db.session.execute(DropConstraint(fkc))
 
         for table in tbs:
-            db.engine.execute(DropTable(table))
+            db.session.execute(DropTable(table))
+
+        # commit drop all transaction
+        db.session.commit()
 
         print ('All tables are dropped.')
         return True
