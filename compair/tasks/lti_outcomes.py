@@ -4,7 +4,8 @@ from compair.core import celery, db
 from compair.models import LTIConsumer, LTIOutcome, CourseGrade, AssignmentGrade
 from flask import current_app
 
-@celery.task(bind=True, ignore_result=True)
+@celery.task(bind=True, autoretry_for=(Exception,),
+    ignore_result=True, store_errors_even_if_ignored=True)
 def update_lti_course_grades(self, lti_consumer_id, sourcedid_and_grades):
     lti_consumer = LTIConsumer.query.get(lti_consumer_id)
     if lti_consumer:
@@ -16,23 +17,13 @@ def update_lti_course_grades(self, lti_consumer_id, sourcedid_and_grades):
 
                 current_app.logger.debug("Posting grade for lis_result_sourcedid: "+lis_result_sourcedid)
 
-                try:
-                    LTIOutcome.post_replace_result(lti_consumer, lis_result_sourcedid, grade)
-
-                except requests.exceptions.ConnectTimeout as error:
-                    current_app.logger.error("Failed grade update for lis_result_sourcedid: " + lis_result_sourcedid + " with grade: "+str(grade) + ". "+str(error))
-                    if not self.request.is_eager:
-                        self.retry(error)
-
-                except requests.exceptions.ConnectionError as error:
-                    current_app.logger.error("Failed grade update for lis_result_sourcedid: " + lis_result_sourcedid + " with grade: "+str(grade) + ". "+str(error))
-                    if not self.request.is_eager:
-                        self.retry(error)
+                LTIOutcome.post_replace_result(lti_consumer, lis_result_sourcedid, grade)
 
     else:
         current_app.logger.info("Failed LTI Outcomes grade update for lti_consumer with id: "+str(lti_consumer_id)+". record not found.")
 
-@celery.task(bind=True, ignore_result=True)
+@celery.task(bind=True, autoretry_for=(Exception,),
+    ignore_result=True, store_errors_even_if_ignored=True)
 def update_lti_assignment_grades(self, lti_consumer_id, sourcedid_and_grades):
     lti_consumer = LTIConsumer.query.get(lti_consumer_id)
     if lti_consumer:
@@ -44,17 +35,6 @@ def update_lti_assignment_grades(self, lti_consumer_id, sourcedid_and_grades):
 
                 current_app.logger.debug("Posting grade for lis_result_sourcedid: "+lis_result_sourcedid)
 
-                try:
-                    LTIOutcome.post_replace_result(lti_consumer, lis_result_sourcedid, grade)
-
-                except requests.exceptions.ConnectTimeout as error:
-                    current_app.logger.error("Failed grade update for lis_result_sourcedid: " + lis_result_sourcedid + " with grade: "+str(grade) + ". "+str(error))
-                    if not self.request.is_eager:
-                        self.retry(error)
-
-                except requests.exceptions.ConnectionError as error:
-                    current_app.logger.error("Failed grade update for lis_result_sourcedid: " + lis_result_sourcedid + " with grade: "+str(grade) + ". "+str(error))
-                    if not self.request.is_eager:
-                        self.retry(error)
+                LTIOutcome.post_replace_result(lti_consumer, lis_result_sourcedid, grade)
     else:
         current_app.logger.info("Failed LTI Outcomes grade update for lti_consumer with id: "+str(lti_consumer_id)+". record not found.")

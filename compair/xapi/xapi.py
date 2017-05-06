@@ -1,5 +1,3 @@
-import socket
-
 from flask import current_app, request
 from tincan import RemoteLRS
 from compair.models import XAPILog
@@ -61,18 +59,8 @@ class XAPI(object):
             lrs_settings['password'] = current_app.config.get('LRS_PASSWORD')
 
         lrs =  RemoteLRS(**lrs_settings)
-        try:
-            lrs_response = lrs.save_statements(statements)
+        lrs_response = lrs.save_statements(statements)
 
-            if not lrs_response.success:
-                current_app.logger.error("xAPI Failed with: " + str(lrs_response.data))
-                current_app.logger.error("xAPI Request Body: " + lrs_response.request.content)
-
-        except socket.error as error:
-            if error.errno != socket.errno.ECONNREFUSED:
-                raise error
-
-            current_app.logger.error("xAPI Failed with: Connection refused")
-            current_app.logger.error("xAPI Statements:")
-            for statement in statements:
-                current_app.logger.error(statement.to_json(cls._version))
+        if not lrs_response.success:
+            current_app.logger.error("xAPI Failed with: " + str(lrs_response.data))
+            current_app.logger.error("xAPI Request Body: " + lrs_response.request.content)
