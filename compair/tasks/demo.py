@@ -1,6 +1,9 @@
 from compair.core import celery, db
-from compair.manage.database import reset_demo as _reset_demo
+from compair.manage.database import recreate
 
-@celery.task(bind=True, ignore_result=True)
+# retry in 30 seconds, need to be fast since database might be in a bad state
+# if error occurred during database populate (since database drop/create cannot be rolled back)
+@celery.task(bind=True, autoretry_for=(Exception,),
+    default_retry_delay=30.0, ignore_result=True, store_errors_even_if_ignored=True)
 def reset_demo(self):
-    _reset_demo(yes=True)
+    recreate(yes=True, default_data=True, sample_data=True)

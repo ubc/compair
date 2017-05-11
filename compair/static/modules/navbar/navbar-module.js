@@ -33,11 +33,13 @@ module.controller(
         $scope.isCollapsed = true;
         $scope.AuthTypesEnabled = AuthTypesEnabled;
 
-        $scope.AuthTypesEnabled = AuthTypesEnabled;
-
         // determine if we're in a course so we know whether to show
         // the course settings
         $scope.getPermissions = function() {
+            Session.getUser().then(function(user) {
+                $scope.loggedInUser = user;
+                $log.debug("Logged in as " + $scope.loggedInUser.username);
+            });
             Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function (result) {
                 $scope.canCreateUsers = result;
             });
@@ -68,10 +70,6 @@ module.controller(
         $scope.$on('$locationChangeSuccess', function(event, next) {
             // update for further navigation after the page has loaded
             $scope.setInCourse();
-        });
-        Session.getUser().then(function(user) {
-            $scope.loggedInUser = user;
-            $log.debug("Logged in as " + $scope.loggedInUser.username);
         });
 
         $scope.getPermissions();
