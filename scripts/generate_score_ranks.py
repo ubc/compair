@@ -7,13 +7,12 @@
 
  Note: placement stats measure the percentage of answers in the correct range:
  EX: Top 10% answers in:
- the Top 10% ranks = 0.6 = 60% of the Top 10% of anwers are in the Top 10% ranks
- the Top 20% ranks = 0.9 = 90% of the Top 10% of anwers are in the Top 20% ranks
- the Top 30% ranks = 1.0 = 100% of the Top 10% of anwers are in the Top 30% ranks
- the Top 40% ranks = 1.0 = 100% of the Top 10% of anwers are in the Top 40% ranks
- the Top 50% ranks = 1.0 = 100% of the Top 10% of anwers are in the Top 50% ranks
-
- There might be a better way of storing this than just adding it all to the end of the round rows
+ the Top 10% ranks = 0.6 = 60% of the Top 10% of answers are in the Top 10% ranks
+ the Top 20% ranks = 0.9 = 90% of the Top 10% of answers are in the Top 20% ranks
+ the Top 30% ranks = 1.0 = 100% of the Top 10% of answers are in the Top 30% ranks
+ the Top 40% ranks = 1.0 = 100% of the Top 10% of answers are in the Top 40% ranks
+ the Top 50% ranks = 1.0 = 100% of the Top 10% of answers are in the Top 50% ranks
+ This is disabled for now
 """
 
 import csv
@@ -24,8 +23,7 @@ import math
 from compair.algorithms import ComparisonPair, ScoredObject
 from compair.algorithms.score import calculate_score_1vs1
 from compair.algorithms.pair import generate_pair
-from compair.models.pairing_algorithm import PairingAlgorithm
-from compair.models.scoring_algorithm import ScoringAlgorithm
+from compair.models import PairingAlgorithm, ScoringAlgorithm
 
 CURRENT_FOLDER = os.getcwd() + '/scripts'
 
@@ -38,16 +36,20 @@ NUMBER_OF_COMPARISONS_PER_STUDENT = 6
 NUMBER_OF_ROUNDS = NUMBER_OF_COMPARISONS_PER_STUDENT * 2
 ROUND_LENGTH = NUMBER_OF_ANSWERS / 2
 
+# for all comparison functions value1 and value2 represent the true rank of the answers
 ALWAYS_CORRECT = lambda value1, value2: 1
 ALWAYS_WRONG = lambda value1, value2: 0
 MOSTLY_CORRECT = lambda value1, value2: 0.8
 GUESSING = lambda value1, value2: 0.5
-
 # when numbers are closely matched, there should be at worst
-# about 50/50 chance or selecting corectly/incorrectly
+# about 50% chance or selecting correctly/incorrectly
+# when they are far apart, it should be easier to select the correct answer (a little less than 100%)
 CLOSELY_MATCHED_ERRORS = lambda value1, value2: 0.5 + (abs(value1-value2) / NUMBER_OF_ANSWERS / 2)
 
-ROUNDS_TO_GIVE_INCORRECT_SELECTION = [6]
+# add a round # to array to have all comparisons for that round be incorrectly selected
+# ex ROUNDS_TO_GIVE_INCORRECT_SELECTION = [3,6] will cause comparisons on round 3 or 6 to always
+# select the wrong answer in select_winner
+ROUNDS_TO_GIVE_INCORRECT_SELECTION = []
 
 def select_winner(round, student_key, key1, key2):
     correct_answer = key1 if key1 > key2 else key2
@@ -101,7 +103,7 @@ def update_top_stats(stats, index):
     if index in TOP_50_PERCENT:
         stats[4] += 1
 
-def output_botom_stats(stats, stat_range):
+def output_bottom_stats(stats, stat_range):
     return [
         float(stats[0]) / float(min(len(BOTTOM_10_PERCENT), len(stat_range))),
         float(stats[1]) / float(min(len(BOTTOM_20_PERCENT), len(stat_range))),
@@ -156,13 +158,13 @@ TOP_50_PERCENT = range((NUMBER_OF_ANSWERS * 50 / 100)+1, NUMBER_OF_ANSWERS+1)
 
 pairing_packages = [
     PairingAlgorithm.adaptive.value,
-    PairingAlgorithm.random.value
+#    PairingAlgorithm.random.value
 ]
 
 scoring_packages = [
 #    ScoringAlgorithm.comparative_judgement.value,
     ScoringAlgorithm.elo.value,
-    ScoringAlgorithm.true_skill.value
+#    ScoringAlgorithm.true_skill.value
 ]
 for pairing_package_name in pairing_packages:
     for scoring_package_name in scoring_packages:
@@ -301,11 +303,11 @@ for pairing_package_name in pairing_packages:
                     ["Yes" if completed else "No"] +
                     [len(set([answer.score for answer in answers]))] +
                     [str(answer.score) for answer in answers] +
-                    output_botom_stats(bottom_10_stats, BOTTOM_10_PERCENT) +
-                    output_botom_stats(bottom_20_stats, BOTTOM_20_PERCENT) +
-                    output_botom_stats(bottom_30_stats, BOTTOM_30_PERCENT) +
-                    output_botom_stats(bottom_40_stats, BOTTOM_40_PERCENT) +
-                    output_botom_stats(bottom_50_stats, BOTTOM_50_PERCENT) +
+                    output_bottom_stats(bottom_10_stats, BOTTOM_10_PERCENT) +
+                    output_bottom_stats(bottom_20_stats, BOTTOM_20_PERCENT) +
+                    output_bottom_stats(bottom_30_stats, BOTTOM_30_PERCENT) +
+                    output_bottom_stats(bottom_40_stats, BOTTOM_40_PERCENT) +
+                    output_bottom_stats(bottom_50_stats, BOTTOM_50_PERCENT) +
                     output_mid_stats(mid_10_stats, MID_10_PERCENT) +
                     output_mid_stats(mid_20_stats, MID_20_PERCENT) +
                     output_mid_stats(mid_30_stats, MID_30_PERCENT) +
@@ -315,7 +317,8 @@ for pairing_package_name in pairing_packages:
                     output_top_stats(top_20_stats, TOP_20_PERCENT) +
                     output_top_stats(top_30_stats, TOP_30_PERCENT) +
                     output_top_stats(top_40_stats, TOP_40_PERCENT) +
-                    output_top_stats(top_50_stats, TOP_50_PERCENT))
+                    output_top_stats(top_50_stats, TOP_50_PERCENT)
+                )
 
             results.append([""])
             results.append([""])
