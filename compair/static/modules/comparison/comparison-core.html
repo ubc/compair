@@ -17,7 +17,7 @@
 
     <div ng-show="showAssignment " class="standalone-assignment">
         <h2><i class="fa fa-comments"></i> {{assignment.name}}</h2>
-        <div mathjax hljs ng-bind-html="assignment.description"></div>
+        <ckeditor-html-content html-content="assignment.description"></ckeditor-html-content>
         <!-- Attachment -->
         <compair-attachment-inline label="See assignment details:" attachment="assignment.file"></compair-attachment-inline>
     </div>
@@ -47,7 +47,7 @@
         <div class="col-md-6" ng-hide="comparisonsError">
             <div class="answer-choice clearfix">
                 <h3 class="text-center">Answer {{firstAnsNum}}</h3>
-                <div mathjax hljs ng-bind-html="answer1.content"></div>
+                <ckeditor-html-content html-content="answer1.content"></ckeditor-html-content>
                 <!-- Attachment -->
                 <compair-attachment-inline label="See detail:"
                     attachment="answer1.file" download-name="'Answer #'+firstAnsNum">
@@ -68,7 +68,7 @@
         <div class="col-md-6" ng-hide="comparisonsError">
             <div class="answer-choice clearfix">
                 <h3 class="text-center">Answer {{secondAnsNum}}</h3>
-                <div mathjax hljs ng-bind-html="answer2.content"></div>
+                <ckeditor-html-content html-content="answer2.content"></ckeditor-html-content>
                 <!-- Attachment -->
                 <compair-attachment-inline label="See detail:"
                     attachment="answer2.file" download-name="'Answer #'+secondAnsNum">
@@ -108,9 +108,7 @@
                             <div class="col-sm-8">
                                 <h4><i class="fa fa-gavel"></i> {{comparison.criterion.name}}</h4>
                                 <hr />
-                                <div class="criteria" mathjax hljs
-                                     ng-bind-html="comparison.criterion.description">
-                                </div>
+                                <ckeditor-html-content class="criteria" html-content="comparison.criterion.description"></ckeditor-html-content>
                             </div>
                             <div class="col-sm-4 text-center">
                                 <p><strong>Select one:</strong></p>

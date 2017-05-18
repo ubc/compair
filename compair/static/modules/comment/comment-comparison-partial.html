@@ -81,14 +81,14 @@
                         <h5 class="content">Feedback for Odd-Numbered Answer</h5>
                         <!-- feedback for odd-numbered answer -->
                         <div ng-repeat="feedback in comparison_set.answer1_feedback">
-                            <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
+                            <ckeditor-html-content class="content" html-content="feedback.content"></ckeditor-html-content>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <h5 class="content">Feedback for Even-Numbered Answer</h5>
                         <!-- feedback for even-numbered answer -->
                         <div ng-repeat="feedback in comparison_set.answer2_feedback">
-                            <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
+                            <ckeditor-html-content class="content" html-content="feedback.content"></ckeditor-html-content>
                         </div>
                     </div>
                 </div>
@@ -112,7 +112,7 @@
                         <strong>self-evaluated</strong> on {{ self_evaluation.created | amDateFormat: 'MMM D @ h:mm a'}}:
                     </div>
 
-                    <div class="content" mathjax hljs ng-bind-html="self_evaluation.content"></div>
+                    <ckeditor-html-content class="content" html-content="self_evaluation.content"></ckeditor-html-content>
                 </div>
             </div>
         </div>

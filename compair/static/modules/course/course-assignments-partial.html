@@ -3,8 +3,7 @@
     <div class="row">
         <header class="col-sm-6">
             <h1><i class="fa fa-book"></i> {{course.name}} <br />({{course.year}} {{course.term}})</h1>
-            <div class="intro-text" mathjax hljs ng-bind-html="course.description">
-            </div>
+            <ckeditor-html-content class="intro-text" html-content="course.description"></ckeditor-html-content>
         </header>
         <div class="col-sm-6 sub-nav">
             <span ng-if="canCreateAssignments">
@@ -69,7 +68,7 @@
 
                 <!-- Details -->
                 <div class="assignment-desc">
-                    <div mathjax hljs ng-bind-html="assignment.description"></div>
+                    <ckeditor-html-content html-content="assignment.description"></ckeditor-html-content>
                     <!-- Attachment -->
                     <compair-attachment-inline label="See assignment details:" attachment="assignment.file"></compair-attachment-inline>
                 </div>

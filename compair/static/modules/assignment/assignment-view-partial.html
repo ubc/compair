@@ -6,7 +6,7 @@
         <h2><i class="fa fa-comments"></i> {{assignment.name}}</h2>
 
         <!-- Assignment Details -->
-        <div class="assignmentmathjax assignment-desc" mathjax hljs ng-bind-html="assignment.description"></div>
+        <ckeditor-html-content class="assignment-desc" html-content="assignment.description"></ckeditor-html-content>
 
         <!-- Assignment Attachment -->
         <compair-attachment-inline label="See assignment details:" attachment="assignment.file"></compair-attachment-inline>
@@ -238,7 +238,7 @@
 
                     <!-- Instructor Answer -->
                     <div class="content instructor-answer">
-                        <div mathjax hljs ng-bind-html="answer.content"></div>
+                        <ckeditor-html-content html-content="comparison_example.answer1.content"></ckeditor-html-content>
                         <!-- Instructor Attachment -->
                         <compair-attachment-inline label="See answer details:" attachment="answer.file"></compair-attachment-inline>
                     </div>
@@ -284,7 +284,7 @@
 
                     <!-- Student Answer -->
                     <div class="content {{answer.id}}" get-height>
-                        <div mathjax hljs ng-bind-html="answer.content"></div>
+                        <ckeditor-html-content html-content="answer.content"></ckeditor-html-content>
                         <!-- Student Attachment -->
                         <compair-attachment-inline label="See answer details:" attachment="answer.file" ng-click="revealAnswer(answer)"></compair-attachment-inline>
                     </div>
@@ -360,7 +360,7 @@
                             </div>
 
                             <!-- Student Reply -->
-                            <div class="content" mathjax hljs ng-bind-html="comment.content"></div>
+                            <ckeditor-html-content class="content" html-content="comment.content"></ckeditor-html-content>
 
                         </div><!-- closes each-reply (student) -->
 
@@ -426,8 +426,7 @@
 
                 <!-- Student Answer -->
                 <div class="content {{answer.id}}">
-                    <div mathjax hljs ng-bind-html="answer.content">
-                    </div>
+                    <ckeditor-html-content html-content="answer.content"></ckeditor-html-content>
 
                     <!-- Student Attachment -->
                     <compair-attachment-inline label="See answer details:"
@@ -473,7 +472,7 @@
                         </div>
 
                         <!-- Student Reply -->
-                        <div class="content" mathjax hljs ng-bind-html="comment.content"></div>
+                        <ckeditor-html-content class="content" html-content="comment.content"></ckeditor-html-content>
 
                     </div><!-- closes each-reply (student) -->
 
@@ -507,7 +506,7 @@
                         <h5 class="content">Feedback for Odd-Numbered Answer</h5>
                         <!-- feedback for odd-numbered answer -->
                         <div ng-repeat="feedback in comparison_set.answer1_feedback">
-                            <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
+                            <ckeditor-html-content class="content" html-content="feedback.content"></ckeditor-html-content>
                         </div>
                     </div>
 
@@ -515,7 +514,7 @@
                         <h5 class="content">Feedback for Even-Numbered Answer</h5>
                         <!-- feedback for even-numbered answer -->
                         <div ng-repeat="feedback in comparison_set.answer2_feedback">
-                            <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
+                            <ckeditor-html-content class="content" html-content="feedback.content"></ckeditor-html-content>
                         </div>
                     </div>
                 </div>
@@ -553,7 +552,7 @@
                             </a>
                         </div>
                     </div>
-                    <div class="content" mathjax hljs ng-bind-html="comment.content"></div>
+                    <ckeditor-html-content class="content" html-content="comment.content"></ckeditor-html-content>
                 </div>
             </div>
 
@@ -610,7 +609,7 @@
                 </div>
 
                 <!-- Comment -->
-                <div class="content" mathjax hljs ng-bind-html="comment.content"></div>
+                <ckeditor-html-content class="content" html-content="comment.content"></ckeditor-html-content>
 
             </div><!-- closes each-comment -->
 

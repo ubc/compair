@@ -3,7 +3,7 @@
 <form class="form" name="answerForm" ng-submit="answerSubmit()" novalidate confirm-form-exit form-type="answer">
     <fieldset>
         <h2 ng-hide="comparison_example"><i class="fa fa-comments"></i> {{assignment.name}}</h2>
-        <div class="assignment-desc" mathjax hljs ng-bind-html="assignment.description" ng-hide="comparison_example"></div>
+        <ckeditor-html-content class="assignment-desc" html-content="assignment.description" ng-hide="comparison_example"></ckeditor-html-content>
 
         <!-- Attachment -->
         <compair-attachment-inline label="See assignment details:" attachment="assignment.file" ng-hide="comparison_example"></compair-attachment-inline>

@@ -9,7 +9,7 @@
                 </span>
             </span>
         </h4>
-        <div mathjax hljs ng-if="answer" ng-bind-html="answer.content"></div>
+        <ckeditor-html-content html-content="answer.content" ng-if="answer"></ckeditor-html-content>
         <div ng-if="!answer"><i>(This answer has been deleted.)</i></div>
         <!-- Attachments -->
         <compair-attachment-inline label="See details:" attachment="answer.file"></compair-attachment-inline>

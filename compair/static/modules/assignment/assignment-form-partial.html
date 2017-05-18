@@ -240,7 +240,7 @@
                         <p class="text-muted"><em>Click 'Edit' above to add your example answer here.</em></p>
                     </div>
                     <div>
-                        <div mathjax hljs ng-bind-html="comparison_example.answer1.content"></div>
+                        <ckeditor-html-content class="assignment-desc" html-content="comparison_example.answer1.content"></ckeditor-html-content>
                         <compair-attachment-inline label="See answer details:"
                             attachment="comparison_example.answer1.file">
                         </compair-attachment-inline>
