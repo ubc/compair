@@ -318,7 +318,7 @@ module.controller(
             Toaster.error("No Answer Found", "Your answer for this assignment was not found, so the self-evaluation is unavailable.");
             $location.path('/course/' + $scope.courseId);
         } else {
-            var answer = ret.objects[0];
+            var answer = resolvedData.userAnswers.objects[0];
             $scope.answerId = answer.id;
             $scope.parent = answer;
         }
