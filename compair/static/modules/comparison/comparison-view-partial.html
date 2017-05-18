@@ -54,8 +54,18 @@
                         Student's Answer
                     </a></p>
                     <compair-student-answer class="answer" answer="(answers | filter:{user_id:comparison.user_id}:true)[0]" ng-show="showMyAnswer"></compair-student-answer>
+                    <br />
+                    <div class="" ng-if="comparison_set[0].self_evaluation.length > 0">
+                        <div ng-repeat="self_evaluation in comparison_set[0].self_evaluation">
+                            <div class="each-header">
+                                <compair-avatar user-id="self_evaluation.user_id" avatar="self_evaluation.user.avatar" display-name="self_evaluation.user.fullname"></compair-avatar>
+                                <strong>self-evaluated</strong> on {{ self_evaluation.created | amDateFormat: 'MMM D @ h:mm a'}}:
+                            </div>
+                            <div class="content" mathjax hljs ng-bind-html="self_evaluation.content"></div>
+                        </div>
+                    </div>
                 </div>
-
+                
                 <!-- Comparison Header -->
                 <div class="each-header">
                     <compair-avatar user-id="comparison.user_id" avatar="comparison.user.avatar" display-name="comparison.user.fullname"></compair-avatar>
@@ -105,16 +115,7 @@
 
                 </div>
             </div>
-            <div class="each-evaluation" ng-if="comparison_set[0].self_evaluation.length > 0">
-                <div ng-repeat="self_evaluation in comparison_set[0].self_evaluation">
-                    <div class="each-header">
-                        <compair-avatar user-id="self_evaluation.user_id" avatar="self_evaluation.user.avatar" display-name="self_evaluation.user.fullname"></compair-avatar>
-                        <strong>self-evaluated</strong> on {{ self_evaluation.created | amDateFormat: 'MMM D @ h:mm a'}}:
-                    </div>
 
-                    <div class="content" mathjax hljs ng-bind-html="self_evaluation.content"></div>
-                </div>
-            </div>
         </div>
 
     </div>
