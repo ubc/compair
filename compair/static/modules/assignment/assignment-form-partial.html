@@ -195,8 +195,8 @@
         </div>
 
         <label class="required-star">How answers are selected for comparisons</label>
-        <p ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive"><em>Adaptively (adds answer scores and rank) &ndash; default</em></p>
-        <p ng-if="assignment.pairing_algorithm == PairingAlgorithm.random"><em>Randomly (no answer scores or rank)</em></p>
+        <p ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive"><em>Adaptively (answers are scored and ranked) &ndash; default</em></p>
+        <p ng-if="assignment.pairing_algorithm == PairingAlgorithm.random"><em>Randomly (no answer scores or rank assigned)</em></p>
         <a href="" ng-click="showAdvanced = !showAdvanced">
             <p>
                 <i class="fa fa-chevron-down" ng-show="showAdvanced"></i>
@@ -254,7 +254,7 @@
 
         <p><strong>Add-on comparison options:</strong></p>
         <input id="add_practice" type="checkbox" name="add_practice" ng-model="assignment.addPractice" ng-disabled="assignment.compared">
-        <label class="not-bold" for="add_practice">Start students with instructor-created answer pair for practice (before peer comparisons)</label>
+        <label class="not-bold" for="add_practice">Start students with an instructor-created answer pair for practice (before peer comparisons)</label>
 
         <div ng-show="assignment.addPractice">
             <br />
@@ -304,17 +304,17 @@
         <br />
 
         <input id="enable_self_evaluation" type="checkbox" name="enable_self_evaluation" ng-model="assignment.enable_self_evaluation">
-        <label class="not-bold" for="enable_self_evaluation">Require that students also evaluate their own answer (after peer comparisons)</label>
+        <label class="not-bold" for="enable_self_evaluation">Require that students also reflect and leave feedback on their own answer (after peer comparisons)</label>
 
         <br />
 
         <input id="educators_can_compare" type="checkbox" name="educators_can_compare" ng-model="assignment.educators_can_compare">
-        <label class="not-bold" for="educators_can_compare">Allow instructors and teaching assistants to compare student answers</label>
+        <label class="not-bold" for="educators_can_compare">Allow instructors and teaching assistants to compare <span ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}'">and affect scores of </span>student answers</label>
 
         <br />
 
         <input id="students_can_reply" type="checkbox" ng-model="assignment.students_can_reply">
-        <label class="not-bold" for="students_can_reply">Allow students to post additional replies to one another (using their profile's display name)</label>
+        <label class="not-bold" for="students_can_reply">Allow students to post additional replies to one another's answers (this enables optional peer feedback outside the comparison process)</label>
 
         <hr />
 
@@ -328,10 +328,10 @@
     </fieldset>
 
     <fieldset>
-        <legend>Grade</legend>
+        <legend>Participation Grade</legend>
 
         <div class="instructional-text">
-            <p>Enter the <strong>relative weight you'd like assigned to each part of the assignment</strong> a student completes, and this will be computed into a percentage, totalling 100% for the whole assignment.</p>
+            <p>Enter the <strong>relative weight you'd like assigned to each part of the assignment</strong> a student completes, and this will be computed into a percentage, adding up to 100% participation for the whole assignment.</p>
         </div>
 
         <div class="form-group">
