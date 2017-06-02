@@ -16,24 +16,21 @@
                     <div ng-show="AuthTypesEnabled.app">
                         <h3 ng-if="AuthTypesEnabled.cas">Or use a ComPAIR account:</h3>
                         <h3 ng-if="!AuthTypesEnabled.cas && !AuthTypesEnabled.demo">Log in with your ComPAIR account:</h3>
-                        <h3 ng-if="!AuthTypesEnabled.cas && AuthTypesEnabled.demo">Log in with your ComPAIR demo account:</h3>
-                        <div ng-if="AuthTypesEnabled.demo">
-                            <p>
-                                <strong>Create account:</strong>
-                                &nbsp;&nbsp;
-                                <a href="" ng-click="createDemoAccount(SystemRole.sys_admin)">Admin</a>
-                                &nbsp;&nbsp;|&nbsp;&nbsp;
-                                <a href="" ng-click="createDemoAccount(SystemRole.instructor)">Instructor</a>
-                                &nbsp;&nbsp;|&nbsp;&nbsp;
-                                <a href="" ng-click="createDemoAccount(SystemRole.student)">Student</a>
-                            </p>
-                            <p>Default password is: <i>demo</i></p>
-                        </div>
+                        <h3 ng-if="!AuthTypesEnabled.cas && AuthTypesEnabled.demo">Select the account type you want to demo:</h3>
+                        <p class="text-center" ng-if="AuthTypesEnabled.demo">
+                            <a href="" ng-click="createDemoAccount(SystemRole.sys_admin)">Admin</a>
+                            &nbsp;&nbsp;|&nbsp;&nbsp;
+                            <a href="" ng-click="createDemoAccount(SystemRole.instructor)">Instructor</a>
+                            &nbsp;&nbsp;|&nbsp;&nbsp;
+                            <a href="" ng-click="createDemoAccount(SystemRole.student)">Student</a>
+                        </p>
+                        <hr ng-if="AuthTypesEnabled.demo" />
                         <p>
                             <a href="" ng-click="showAppLogin = !showAppLogin">
                                 <i class="fa fa-chevron-down" ng-show="showAppLogin"></i>
                                 <i class="fa fa-chevron-right" ng-hide="showAppLogin"></i>
-                                <span id="app-login-toggle">Log in with existing account</span>
+                                <span id="app-login-toggle" ng-if="!AuthTypesEnabled.demo">Log in with existing account</span>
+                                <span id="app-login-toggle" ng-if="AuthTypesEnabled.demo">Or log in with existing demo account</span>
                             </a>
                             <span ng-show="allowCreateUser">&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<a href="" ng-click="showCreateUserForm = true">Create new account</a></span>
                         </p>
@@ -48,6 +45,7 @@
                             <div class="form-group has-feedback"
                                 ng-class="{'has-error': loginForm.password.$invalid, 'has-success': loginForm.password.$valid}">
                                 <label for="inputPass" class="required-star">ComPAIR Password</label>
+                                <span ng-if="AuthTypesEnabled.demo">(Default: <i>demo</i>)</span>
                                 <input type="password" id="inputPass" name="password" ng-model="password" required
                                         placeholder="" class="form-control">
                             </div>
