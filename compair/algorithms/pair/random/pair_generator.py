@@ -44,9 +44,6 @@ class RandomPairGenerator(PairGenerator):
         if len(self.scored_objects) < 2:
             raise InsufficientObjectsForPairException
 
-        if self._has_compared_all():
-            raise UserComparedAllObjectsException
-
         comparison_pair = self._find_pair()
 
         if comparison_pair == None:
@@ -54,30 +51,12 @@ class RandomPairGenerator(PairGenerator):
 
         return comparison_pair
 
-    def _has_compared_all(self):
-        """
-        Returns True if the user has already compared all objects, False otherwise.
-        """
-        compared_keys = set()
-        for comparison_pair in self.comparison_pairs:
-            compared_keys.add(comparison_pair.key1)
-            compared_keys.add(comparison_pair.key2)
-
-        all_keys = set([scored_object.key for scored_object in self.scored_objects])
-
-        # some comparison keys may have been soft deleted hence we need to use
-        # the set subtraction operation instead of comparing sizes
-        all_keys -= compared_keys
-
-        return not all_keys
-
-
     def _find_pair(self):
         """
         Returns an comparison pair by matching them up randomly within a round.
         - First key is selected by random within the lowest round possible
         - First key must have a valid opponent with the current user or else its skipped
-        - Second key canidates are filters by previous opponents to first key
+        - Second key candidates are filters by previous opponents to first key
         - Second key is selected randomly in the lowest round possible
         """
         score_object_1 = None
@@ -99,7 +78,6 @@ class RandomPairGenerator(PairGenerator):
             if score_object_1 != None:
                 break
 
-        # Note this should be caught in get_pair
         if score_object_1 == None:
             raise UserComparedAllObjectsException
 

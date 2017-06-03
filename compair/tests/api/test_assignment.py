@@ -370,8 +370,8 @@ class AssignmentEditComparedAPITests(ComPAIRAPITestCase):
         for answer in self.data.get_student_answers():
             if answer.assignment_id == self.assignment.id and answer.user_id != user_id:
                 num_eligible_answers += 1
-        # n - 1 possible pairs before all answers have been compared
-        num_possible_comparisons = num_eligible_answers - 1
+        # n(n-1)/2 possible pairs before all answers have been compared
+        num_possible_comparisons = int(num_eligible_answers * (num_eligible_answers - 1) / 2)
         for i in range(num_possible_comparisons):
             comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id, False)
             for comparison in comparisons:
@@ -462,8 +462,8 @@ class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
         for answer in self.data.get_student_answers():
             if answer.assignment_id == self.assignment.id and answer.user_id != user_id:
                 num_eligible_answers += 1
-        # n - 1 possible pairs before all answers have been compared
-        num_possible_comparisons = num_eligible_answers - 1
+        # n(n-1)/2 possible pairs before all answers have been compared
+        num_possible_comparisons = int(num_eligible_answers * (num_eligible_answers - 1) / 2)
         for i in range(num_possible_comparisons):
             comparisons = Comparison.create_new_comparison_set(self.assignment.id, user_id, False)
             for comparison in comparisons:

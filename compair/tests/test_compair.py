@@ -4,6 +4,8 @@ import json
 import unittest
 import mock
 import uuid
+import sys
+import os
 
 from flask_testing import TestCase
 from os.path import dirname
@@ -64,6 +66,15 @@ def json_recorder(filename, key=None):
         return wrapper
     return _decorator
 
+@contextmanager
+def suppress_stdout():
+    old_stdout = sys.stdout
+    sys.stdout = open(os.devnull, "w")
+    try:
+        yield
+    finally:
+        sys.stdout.close()
+        sys.stdout = old_stdout
 
 class ComPAIRTestCase(TestCase):
     def create_app(self):
@@ -72,7 +83,8 @@ class ComPAIRTestCase(TestCase):
 
     def setUp(self):
         db.create_all()
-        populate(default_data=True)
+        with suppress_stdout():
+            populate(default_data=True)
         # reset login settings in case tests fail
         self.app.config['APP_LOGIN_ENABLED'] = True
         self.app.config['CAS_LOGIN_ENABLED'] = True
@@ -197,7 +209,8 @@ class ComPAIRAPITestCase(ComPAIRTestCase):
 class ComPAIRAPIDemoTestCase(ComPAIRAPITestCase):
     def setUp(self):
         db.create_all()
-        populate(default_data=True, sample_data=True)
+        with suppress_stdout():
+            populate(default_data=True, sample_data=True)
         self.app.config['DEMO_INSTALLATION'] = True
 
 
