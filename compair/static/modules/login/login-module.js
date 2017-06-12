@@ -159,7 +159,7 @@ module.controller(
 
         $scope.AuthTypesEnabled = AuthTypesEnabled;
         // open account login automatically if cas is disabled
-        if (!$scope.AuthTypesEnabled.cas && $scope.AuthTypesEnabled.app) {
+        if (!$scope.AuthTypesEnabled.cas && !AuthTypesEnabled.demo && $scope.AuthTypesEnabled.app) {
             $scope.showAppLogin = true;
         }
 

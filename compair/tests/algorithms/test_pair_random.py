@@ -69,12 +69,15 @@ class TestPairAdaptive(unittest.TestCase):
                 rounds=3, wins=None, loses=None, opponents=None
             )
         ]
-        comparisons = [
-            ComparisonPair(1,2,None),
-            ComparisonPair(1,3,None),
-            ComparisonPair(1,4,None)
-        ]
+        comparisons = []
+        max_comparisons = 6 # n(n-1)/2 = 4*3/2
+        for i in range(0, max_comparisons):
+            results = self.pair_algorithm.generate_pair(scored_objects, comparisons)
+            comparisons.append(
+                ComparisonPair(results.key1, results.key2, results.key1)
+            )
 
+        # if trying to run one more time, should run into all objects compared error
         with self.assertRaises(UserComparedAllObjectsException):
             results = self.pair_algorithm.generate_pair(scored_objects, comparisons)
 

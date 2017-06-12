@@ -247,6 +247,21 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             group="counts"
         )
 
+        cls.student_answer_count = column_property(
+            select([func.count(Answer.id)]).
+            select_from(join(Answer, UserCourse, UserCourse.user_id == Answer.user_id)).
+            where(and_(
+                Answer.assignment_id == cls.id,
+                Answer.active == True,
+                Answer.draft == False,
+                Answer.practice == False,
+                UserCourse.course_id == cls.course_id,
+                UserCourse.course_role == CourseRole.student
+            )),
+            deferred=True,
+            group="counts"
+        )
+
         cls.top_answer_count = column_property(
             select([func.count(Answer.id)]).
             select_from(join(Answer, UserCourse, UserCourse.user_id == Answer.user_id)).

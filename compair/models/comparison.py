@@ -93,40 +93,6 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         )
 
     @classmethod
-    def comparison_available_for_user(cls, course_id, assignment_id, user_id):
-        from . import UserCourse, CourseRole, Answer
-        # ineligible authors - eg. instructors, TAs, dropped student, user
-        ineligible_users = UserCourse.query. \
-            filter(and_(
-                UserCourse.course_id == course_id,
-                UserCourse.course_role != CourseRole.student
-            )). \
-            values(UserCourse.user_id)
-        ineligible_user_ids_base = [u[0] for u in ineligible_users]
-        ineligible_user_ids_base.append(user_id)
-
-        # ineligible authors (potentially) - eg. authors for answers that the user has seen
-        compared = Comparison.query \
-            .filter_by(
-                user_id=user_id,
-                assignment_id=assignment_id
-            ) \
-            .all()
-        compared_authors1 = [c.answer1.user_id for c in compared]
-        compared_authors2 = [c.answer2.user_id for c in compared]
-        ineligible_user_ids = ineligible_user_ids_base + compared_authors1 + compared_authors2
-
-        eligible_answers = Answer.query \
-            .filter(and_(
-                Answer.assignment_id == assignment_id,
-                Answer.user_id.notin_(ineligible_user_ids),
-                Answer.draft == False,
-                Answer.active == True
-            )) \
-            .count()
-        return eligible_answers / 2 >= 1  # min 1 pair required
-
-    @classmethod
     def _get_new_comparison_pair(cls, course_id, assignment_id, user_id, pairing_algorithm, comparisons):
         from . import Assignment, UserCourse, CourseRole, Answer, AnswerScore, PairingAlgorithm
 

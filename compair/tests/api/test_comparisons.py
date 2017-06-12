@@ -229,15 +229,19 @@ class ComparisonAPITests(ComPAIRAPITestCase):
 
         users = [self.data.get_authorized_student(), self.data.get_authorized_instructor(), self.data.get_authorized_ta()]
         for user in users:
-            compared_answer_uuids = set()
+            max_comparisons = 0
+            other_student_answers = 0
             valid_answer_uuids = set()
             for answer in self.data.get_student_answers():
                 if answer.assignment.id == self.assignment.id and answer.user_id != user.id:
+                    other_student_answers += 1
                     valid_answer_uuids.add(answer.uuid)
+            max_comparisons = int(other_student_answers * (other_student_answers - 1) / 2)
 
             if user.id == self.data.get_authorized_student().id:
                 for comparison_example in self.data.comparisons_examples:
                     if comparison_example.assignment_id == self.assignment.id:
+                        max_comparisons += 1
                         valid_answer_uuids.add(comparison_example.answer1_uuid)
                         valid_answer_uuids.add(comparison_example.answer2_uuid)
 
@@ -254,7 +258,7 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                     db.session.commit()
 
                 current = 0
-                while len(valid_answer_uuids - compared_answer_uuids) > 0:
+                while current < max_comparisons:
                     current += 1
                     if user.id == self.data.get_authorized_student().id:
                         course_grade = CourseGrade.get_user_course_grade(self.course, user).grade
@@ -308,8 +312,6 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                         content_type='application/json')
                     self.assert200(rv)
                     actual_comparison = rv.json['comparison']
-                    compared_answer_uuids.add(actual_comparison['answer1_id'])
-                    compared_answer_uuids.add(actual_comparison['answer2_id'])
                     self._validate_comparison_submit(comparison_submit, actual_comparison, expected_comparison)
 
                     # grades should increase for every comparison
@@ -405,8 +407,8 @@ class ComparisonAPITests(ComPAIRAPITestCase):
         for answer in self.data.get_student_answers():
             if answer.assignment_id == self.assignment.id and answer.user_id != user_id:
                 num_eligible_answers += 1
-        # n - 1 possible pairs before all answers have been compared
-        num_possible_comparisons = num_eligible_answers - 1
+        # n(n-1)/2 possible pairs before all answers have been compared
+        num_possible_comparisons = int(num_eligible_answers * (num_eligible_answers - 1) / 2)
         winner_ids = []
         loser_ids = []
         for i in range(num_possible_comparisons):
@@ -466,7 +468,7 @@ class ComparisonAPITests(ComPAIRAPITestCase):
 
         # Check that ranking by score and by wins match, this only works for low number of
         # comparisons
-        sorted_expect_ranking = sorted(num_wins_by_id.items(), key=operator.itemgetter(0), reverse=True)
+        sorted_expect_ranking = sorted(num_wins_by_id.items(), key=operator.itemgetter(0))
         sorted_expect_ranking = sorted(sorted_expect_ranking, key=operator.itemgetter(1))
         expected_ranking_by_wins = [answer_id for (answer_id, wins) in sorted_expect_ranking]
 
