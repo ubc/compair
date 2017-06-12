@@ -415,7 +415,8 @@ class AssignmentIdStatusAPI(Resource):
             .all()
 
         comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
-        comparison_availble = Comparison.comparison_avialble_for_user(course.id, assignment.id, current_user.id)
+        other_student_answers = assignment.student_answer_count - answer_count
+        comparison_available = comparison_count < other_student_answers * (other_student_answers - 1) / 2
 
         status = {
             'answers': {
@@ -425,7 +426,7 @@ class AssignmentIdStatusAPI(Resource):
                 'draft_ids': [draft.uuid for draft in drafts]
             },
             'comparisons': {
-                'available': comparison_availble,
+                'available': comparison_available,
                 'count': comparison_count,
                 'left': max(0, assignment.total_comparisons_required - comparison_count)
             }
@@ -526,7 +527,8 @@ class AssignmentRootStatusAPI(Resource):
             )
             assignment_drafts = [draft for draft in drafts if draft.assignment_id == assignment.id]
             comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
-            comparison_availble = Comparison.comparison_avialble_for_user(course.id, assignment.id, current_user.id)
+            other_student_answers = assignment.student_answer_count - answer_count
+            comparison_available = comparison_count < other_student_answers * (other_student_answers - 1) / 2
 
             statuses[assignment.uuid] = {
                 'answers': {
@@ -536,7 +538,7 @@ class AssignmentRootStatusAPI(Resource):
                     'draft_ids': [draft.uuid for draft in assignment_drafts]
                 },
                 'comparisons': {
-                    'available': comparison_availble,
+                    'available': comparison_available,
                     'count': comparison_count,
                     'left': max(0, assignment.total_comparisons_required - comparison_count)
                 }
