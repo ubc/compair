@@ -37,6 +37,7 @@ module.controller('LTIConsumerController',
              Toaster, breadcrumbs, xAPIStatementHelper, resolvedData)
     {
         $scope.canManageUsers = resolvedData.canManageUsers;
+        $scope.launchUrl = $location.absUrl().replace("app/#"+$location.url(), "") + 'api/lti/auth';
 
         $scope.totalNumConsumers = 0;
         $scope.consumerFilters = {
