@@ -17,6 +17,9 @@ class LTIConsumer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin)
     tool_consumer_instance_name = db.Column(db.String(255), nullable=True)
     tool_consumer_instance_url = db.Column(db.Text, nullable=True)
     lis_outcome_service_url = db.Column(db.Text, nullable=True)
+    canvas_consumer = db.Column(db.Boolean(name='canvas_consumer'),
+        default=False, nullable=False)
+    canvas_api_token = db.Column(db.String(255), nullable=True)
 
     # relationships
     lti_nonces = db.relationship("LTINonce", backref="lti_consumer", lazy="dynamic")
@@ -46,7 +49,12 @@ class LTIConsumer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin)
         lti_consumer.tool_consumer_instance_guid = tool_provider.tool_consumer_instance_guid
         lti_consumer.tool_consumer_instance_name = tool_provider.tool_consumer_instance_name
         lti_consumer.tool_consumer_instance_url = tool_provider.tool_consumer_instance_url
-        lti_consumer.lis_outcome_service_url = tool_provider.lis_outcome_service_url
+
+        # do no overwrite lis_outcome_service_url if value is None
+        # some LTI consumers do not always send the lis_outcome_service_url
+        # ex: Canvas when linking from module instead of an assignment
+        if tool_provider.lis_outcome_service_url:
+            lti_consumer.lis_outcome_service_url = tool_provider.lis_outcome_service_url
 
         db.session.commit()
 

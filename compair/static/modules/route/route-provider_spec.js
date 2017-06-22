@@ -1019,7 +1019,7 @@ describe('user-module', function () {
             var path = '/lti/consumer';
 
             it('should load correctly', function() {
-                $httpBackend.expectGET('modules/lti_consumer/lti-consumers-partial.html').respond('');
+                $httpBackend.expectGET('modules/lti_consumer/lti-consumers-list-partial.html').respond('');
 
                 expect($route.current).toBeUndefined();
                 $location.path(path);
@@ -1031,8 +1031,8 @@ describe('user-module', function () {
 
                 expect(toaster.error).not.toHaveBeenCalled();
                 expect($rootScope.routeResolveLoadError).toBeUndefined();
-                expect($route.current.templateUrl).toBe('modules/lti_consumer/lti-consumers-partial.html');
-                expect($route.current.controller).toBe('LTIConsumerController');
+                expect($route.current.templateUrl).toBe('modules/lti_consumer/lti-consumers-list-partial.html');
+                expect($route.current.controller).toBe('LTIConsumerListController');
             });
         });
 
@@ -1054,6 +1054,47 @@ describe('user-module', function () {
                 expect($rootScope.routeResolveLoadError).toBeUndefined();
                 expect($route.current.templateUrl).toBe('modules/lti_consumer/lti-consumer-form-partial.html');
                 expect($route.current.controller).toBe('LTIConsumerWriteController');
+            });
+        });
+
+        describe('"/lti/consumer/:consumerId"', function() {
+            var path = '/lti/consumer/'+mockConsumerId;
+
+            it('should handle pre-loading errors', function() {
+                $httpBackend.expectGET('/api/lti/consumers/'+mockConsumerId).respond(404, '');
+                $httpBackend.expectGET('modules/lti_consumer/lti-consumer-view-partial.html').respond('');
+
+                expect($route.current).toBeUndefined();
+                $location.path(path);
+
+                expect($route.current).toBeUndefined();
+                $httpBackend.flush();
+
+                expect(Session.getUser).not.toHaveBeenCalled();
+                expect(Authorize.can).toHaveBeenCalledWith(Authorize.MANAGE, "User");
+
+                expect(toaster.error).toHaveBeenCalled();
+                expect($rootScope.routeResolveLoadError).not.toBeUndefined();
+                expect($route.current.templateUrl).toBe('modules/lti_consumer/lti-consumer-view-partial.html');
+                expect($route.current.controller).toBe('LTIConsumerViewController');
+            });
+
+            it('should load correctly', function() {
+                $httpBackend.expectGET('/api/lti/consumers/'+mockConsumerId).respond({});
+                $httpBackend.expectGET('modules/lti_consumer/lti-consumer-view-partial.html').respond('');
+
+                expect($route.current).toBeUndefined();
+                $location.path(path);
+                expect($route.current).toBeUndefined();
+                $httpBackend.flush();
+
+                expect(Session.getUser).not.toHaveBeenCalled();
+                expect(Authorize.can).toHaveBeenCalledWith(Authorize.MANAGE, "User");
+
+                expect(toaster.error).not.toHaveBeenCalled();
+                expect($rootScope.routeResolveLoadError).toBeUndefined();
+                expect($route.current.templateUrl).toBe('modules/lti_consumer/lti-consumer-view-partial.html');
+                expect($route.current.controller).toBe('LTIConsumerViewController');
             });
         });
 

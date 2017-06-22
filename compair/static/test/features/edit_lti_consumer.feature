@@ -4,7 +4,7 @@ Feature: Edit LTI Consumers
   Scenario: Loading edit LTI consumer page as admin
     Given I'm a System Administrator
     And I'm on 'manage lti' page
-    When I set the first consumer's Edit button
+    When I click the first consumer's Edit button
     Then I should be on the 'edit lti consumer' page
 
   Scenario: Editing a lti consumer as admin
@@ -12,6 +12,9 @@ Feature: Edit LTI Consumers
     And I'm on 'edit lti consumer' page for consumer with id '1abcABC123-abcABC123_Z'
     When I fill form item 'consumer.oauth_consumer_key' in with 'new_consumer_key_1'
     And I fill form item 'consumer.oauth_consumer_secret' in with 'new_consumer_secret_1'
+    And I toggle the 'Canvas Consumer' checkbox
+    And I fill form item 'consumer.canvas_api_token' in with 'new_canvas_api_token'
+    And I toggle the 'Active' checkbox
     And I submit form with 'Save' button
     Then I should be on the 'manage lti' page
     And I should see '3' consumers listed

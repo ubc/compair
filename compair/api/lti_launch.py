@@ -23,6 +23,9 @@ from oauthlib.oauth1 import RequestValidator
 lti_api = Blueprint("lti_api", __name__)
 api = new_restful_api(lti_api)
 
+lti_launch_parser = RequestParser()
+lti_launch_parser.add_argument('assignment', default=None)
+
 # events
 on_lti_course_link = event.signal('LTI_CONTEXT_COURSE_LINKED')
 on_lti_course_membership_update = event.signal('LTI_CONTEXT_COURSE_MEMBERSHIP_UPDATE')
@@ -41,6 +44,12 @@ class LTIAuthAPI(Resource):
         tool_provider = FlaskToolProvider.from_flask_request(request=request)
         validator = ComPAIRRequestValidator()
         ok = tool_provider.is_valid_request(validator)
+
+        params = lti_launch_parser.parse_args()
+
+        # override custom_assignment if not set in launch body but is in querystring
+        if not tool_provider.custom_assignment and params.get('assignment'):
+            tool_provider.custom_assignment = params.get('assignment')
 
         if ok and tool_provider.user_id != None:
             # log current user out if needed
@@ -182,7 +191,7 @@ class LTICourseLinkAPI(Resource):
         db.session.commit()
 
         # automatically fetch membership if enabled for context
-        if lti_context.ext_ims_lis_memberships_url and lti_context.ext_ims_lis_memberships_id:
+        if lti_context.membership_enabled:
             update_lti_course_membership.delay(course.id)
 
         on_lti_course_link.send(
@@ -252,7 +261,7 @@ class LTICourseMembershipStatusAPI(Resource):
 
         valid_membership_contexts = [
             lti_context for lti_context in course.lti_contexts \
-            if lti_context.ext_ims_lis_memberships_url and lti_context.ext_ims_lis_memberships_id
+            if lti_context.membership_enabled
         ]
 
         pending = 0

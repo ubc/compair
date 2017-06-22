@@ -654,9 +654,9 @@ myApp.config(
             })
         .when('/lti/consumer',
             {
-                templateUrl: 'modules/lti_consumer/lti-consumers-partial.html',
+                templateUrl: 'modules/lti_consumer/lti-consumers-list-partial.html',
                 label: "Manage LTI",
-                controller: 'LTIConsumerController',
+                controller: 'LTIConsumerListController',
                 resolve: {
                     resolvedData: function() {
                         return ResolveDeferredRouteData({
@@ -683,6 +683,20 @@ myApp.config(
                 templateUrl: 'modules/lti_consumer/lti-consumer-form-partial.html',
                 label: "Edit LTI Consumer",
                 controller: 'LTIConsumerWriteController',
+                resolve: {
+                    resolvedData: function() {
+                        return ResolveDeferredRouteData({
+                            consumer: RouteResolves.consumer(),
+                            canManageUsers: RouteResolves.canManageUsers()
+                        }, ['consumer']);
+                    }
+                },
+            })
+        .when('/lti/consumer/:consumerId',
+            {
+                templateUrl: 'modules/lti_consumer/lti-consumer-view-partial.html',
+                label: "View LTI Consumer",
+                controller: 'LTIConsumerViewController',
                 resolve: {
                     resolvedData: function() {
                         return ResolveDeferredRouteData({

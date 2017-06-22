@@ -50,7 +50,7 @@ var viewLTIConsumersStepDefinitionsWrapper = function () {
         return element(by.css("body")).click();
     });
 
-    this.When("I set the first consumer's Edit button", function () {
+    this.When("I click the first consumer's Edit button", function () {
         return element.all(by.exactRepeater("consumer in consumers"))
             .get(0)
             .element(by.cssContainingText('a', 'Edit'))

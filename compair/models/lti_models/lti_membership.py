@@ -45,8 +45,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         from . import MembershipNoValidContextsException
 
         valid_membership_contexts = [
-            lti_context for lti_context in course.lti_contexts \
-            if lti_context.ext_ims_lis_memberships_url and lti_context.ext_ims_lis_memberships_id
+            lti_context for lti_context in course.lti_contexts if lti_context.membership_enabled
         ]
 
         if len(valid_membership_contexts) == 0:
@@ -54,10 +53,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
 
         lti_members = []
         for lti_context in valid_membership_contexts:
-            members = LTIMembership._get_membership(lti_context.lti_consumer,
-                lti_context.ext_ims_lis_memberships_id,
-                lti_context.ext_ims_lis_memberships_url)
-
+            members = LTIMembership._get_membership(lti_context)
             lti_members += LTIMembership._update_membership_for_context(lti_context, members)
 
         LTIMembership._update_enrollment_for_course(course.id, lti_members)
@@ -94,13 +90,15 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
                 None
             )
             roles = member.get('roles')
+            has_instructor_role = next((role for role in roles if role.find("Instructor") >= 0), None)
+            has_ta_role = next((role for role in roles if role.find("TeachingAssistant") >= 0), None)
 
             # create lti user if doesn't exist
             if not lti_user:
                 lti_user = LTIUser(
                     lti_consumer_id=lti_context.lti_consumer_id,
                     user_id=member.get('user_id'),
-                    system_role=SystemRole.instructor if 'Instructor' in roles else SystemRole.student,
+                    system_role=SystemRole.instructor if has_instructor_role else SystemRole.student,
                     lis_person_name_given=member.get('person_name_given'),
                     lis_person_name_family=member.get('person_name_family'),
                     lis_person_name_full=member.get('person_name_full'),
@@ -109,9 +107,9 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
                 new_lti_users.append(lti_user)
 
             course_role = CourseRole.student
-            if 'Instructor' in roles:
+            if has_instructor_role:
                 course_role = CourseRole.instructor
-            elif 'TeachingAssistant' in roles:
+            elif has_ta_role:
                 course_role = CourseRole.teaching_assistant
 
             # create new lti membership row
@@ -179,7 +177,18 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         db.session.commit()
 
     @classmethod
-    def _get_membership(cls, lti_consumer, memberships_id, memberships_url):
+    def _get_membership(cls, lti_context):
+        if lti_context.membership_ext_enabled:
+            return LTIMembership._get_membership_ext(lti_context)
+        elif lti_context.membership_canvas_enabled:
+            return LTIMembership._get_membership_canvas(lti_context)
+        return []
+
+    @classmethod
+    def _get_membership_ext(cls, lti_context):
+        lti_consumer = lti_context.lti_consumer
+        memberships_id = lti_context.ext_ims_lis_memberships_id
+        memberships_url = lti_context.ext_ims_lis_memberships_url
         params = {
             'id': memberships_id,
             'lti_message_type':'basic-lis-readmembershipsforcontext',
@@ -192,8 +201,8 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         signed_request = sign(request)
         params = parse_qs(signed_request.body.decode('utf-8'))
 
-        xmlString = LTIMembership._send_membership_request(memberships_url, params)
-        root = ElementTree.fromstring(xmlString)
+        data = LTIMembership._post_membership_request(memberships_url, params)
+        root = ElementTree.fromstring(data)
 
         codemajor = root.find('statusinfo/codemajor')
         if codemajor is not None and codemajor.text in ['Failure', 'Unsupported']:
@@ -217,9 +226,49 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         return members
 
     @classmethod
-    def _send_membership_request(cls, memberships_url, params):
+    def _get_membership_canvas(cls, lti_context):
+        lti_consumer = lti_context.lti_consumer
+        canvas_api_token = lti_consumer.canvas_api_token
+        memberships_url = lti_context.custom_context_memberships_url
+        headers = {'Authorization': "Bearer "+canvas_api_token}
+        members = []
+
+        while True:
+            data = LTIMembership._get_membership_request(memberships_url, headers)
+            membership = data['pageOf']['membershipSubject']['membership']
+
+            if len(membership) == 0:
+                raise MembershipNoResultsException
+
+            for record in membership:
+                if record.get('status').find("Inactive") >= 0:
+                    continue
+                member = record['member']
+                members.append({
+                    'user_id': member.get('userId'),
+                    'roles': record.get('role'),
+                    'person_contact_email_primary': member.get('email'),
+                    'person_name_given': member.get('givenName'),
+                    'person_name_family': member.get('familyName'),
+                    'person_name_full': member.get('name')
+                })
+
+            # check if another page or else finish
+            memberships_url = data.get('nextPage')
+            if not memberships_url:
+                break
+
+        return members
+
+    @classmethod
+    def _post_membership_request(cls, memberships_url, params):
         verify = current_app.config.get('ENFORCE_SSL', True)
         return requests.post(memberships_url, data=params, verify=verify).text
+
+    @classmethod
+    def _get_membership_request(cls, memberships_url, headers=None):
+        verify = current_app.config.get('ENFORCE_SSL', True)
+        return requests.get(memberships_url, headers=headers, verify=verify).json()
 
     @classmethod
     def __declare_last__(cls):

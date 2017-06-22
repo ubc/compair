@@ -2,16 +2,6 @@
     <div class="row">
         <header class="col-md-6">
             <h1><i class="fa fa-cogs"></i> Manage LTI Consumers</h1>
-            <div class="lti-param-copy">
-                Launch Url: "<em>{{launchUrl}}</em>"
-                &nbsp;&nbsp;
-                <!-- TODO: when ui bootstrap is updated change trigger to 'outsideClick' -->
-                <a href="" uib-tooltip="Copied" tooltip-placement="bottom" tooltip-trigger="click"
-                    ngclipboard data-clipboard-text="{{launchUrl}}"
-                    title="Copy the launch url to create an LTI service">
-                    Copy?
-                </a>
-            </div>
         </header>
         <div class="col-md-6 sub-nav">
             <a href="#/lti/consumer/create" class="btn btn-primary" id="create-lti-consumer-btn">
@@ -30,7 +20,7 @@
                         <a href="" ng-click="updateTableOrderBy('oauth_consumer_key')">Consumer Key</a>
                     </th>
                     <th>
-                        <a href="" ng-click="updateTableOrderBy('oauth_consumer_secret')">Consumer Secret</a>
+                        <a href="" ng-click="updateTableOrderBy('oauth_consumer_secret')">Canvas Consumer</a>
                     </th>
                     <th>
                         <a href="" ng-click="updateTableOrderBy('active')">Status</a>
@@ -42,8 +32,13 @@
                     <td class="nowrap">
                         <a href="#/lti/consumer/{{consumer.id}}/edit">Edit</a>
                     </td>
-                    <td>{{consumer.oauth_consumer_key}}</td>
-                    <td>{{consumer.oauth_consumer_secret}}</td>
+                    <td>
+                        <a href="#/lti/consumer/{{consumer.id}}">{{consumer.oauth_consumer_key}}</a>
+                    </td>
+                    <td>
+                        <span ng-if="consumer.canvas_consumer">Yes</span>
+                        <span ng-if="!consumer.canvas_consumer">No</span>
+                    </td>
                     <td>
                         <select ng-model="consumer.active" ng-options="key for (key , value) in {'Active': true, 'Inactive': false}"
                                 ng-change="updateConsumer(consumer)">

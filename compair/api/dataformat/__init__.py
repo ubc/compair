@@ -320,12 +320,18 @@ def get_gradebook(include_scores=False, include_self_evaluation=False):
 
     return ret
 
-def get_lti_consumer():
-    return {
+def get_lti_consumer(include_sensitive=False):
+    ret = {
         'id': fields.String(attribute="uuid"),
         'oauth_consumer_key': fields.String,
-        'oauth_consumer_secret': fields.String,
+        'canvas_consumer': fields.Boolean,
         'active': fields.Boolean,
         'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
         'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
+
+    if include_sensitive:
+        ret['oauth_consumer_secret'] = fields.String
+        ret['canvas_api_token'] = fields.String
+
+    return ret

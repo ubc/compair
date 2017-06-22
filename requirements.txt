@@ -23,7 +23,7 @@ SQLAlchemy-Enum34==1.0.1
 mock==2.0.0
 elo==0.1.1
 trueskill==0.4.4
-lti==0.8.4
+lti==0.9.2
 Celery==4.0.2
 redis==2.10.5
 git+git://github.com/andrew-gardener/TinCanPython.git@python35

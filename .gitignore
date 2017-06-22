@@ -69,5 +69,8 @@ compair/static/tracking.js
 # docker generated data
 .data
 
+# docker-compose overrides
+docker-compose.overrides.yml
+
 celerybeat-schedule
 celerybeat.pid
