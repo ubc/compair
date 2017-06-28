@@ -13,7 +13,7 @@ from compair.core import db, event, abort
 from .util import new_restful_api, get_model_changes, pagination_parser
 from compair.models import User, SystemRole, Course, UserCourse, CourseRole, \
     Assignment, LTIUser, LTIUserResourceLink, LTIContext, ThirdPartyUser, ThirdPartyType, \
-    Answer, Comparison, AnswerComment, AnswerCommentType
+    Answer, Comparison, AnswerComment, AnswerCommentType, EmailNotificationMethod
 from compair.api.login import authenticate
 
 user_api = Blueprint('user_api', __name__)
@@ -32,6 +32,7 @@ new_user_parser.add_argument('firstname', required=True)
 new_user_parser.add_argument('lastname', required=True)
 new_user_parser.add_argument('displayname', required=True)
 new_user_parser.add_argument('email')
+new_user_parser.add_argument('email_notification_method')
 new_user_parser.add_argument('password', required=False)
 
 existing_user_parser = RequestParser()
@@ -43,6 +44,11 @@ existing_user_parser.add_argument('firstname', required=True)
 existing_user_parser.add_argument('lastname', required=True)
 existing_user_parser.add_argument('displayname', required=True)
 existing_user_parser.add_argument('email')
+existing_user_parser.add_argument('email_notification_method')
+
+update_notification_settings_parser = RequestParser()
+update_notification_settings_parser.add_argument('email_notification_method', required=False)
+update_notification_settings_parser.add_argument('email_notification_method', required=True)
 
 update_password_parser = RequestParser()
 update_password_parser.add_argument('oldpassword', required=False)
@@ -74,6 +80,7 @@ on_user_course_get = event.signal('USER_COURSE_GET')
 on_user_course_status_get = event.signal('USER_COURSE_STATUS_GET')
 on_teaching_course_get = event.signal('USER_TEACHING_COURSE_GET')
 on_user_edit_button_get = event.signal('USER_EDIT_BUTTON_GET')
+on_user_notifications_update = event.signal('USER_NOTIFICATIONS_UPDATE')
 on_user_password_update = event.signal('USER_PASSWORD_UPDATE')
 
 def check_valid_system_role(system_role, title=None):
@@ -84,6 +91,15 @@ def check_valid_system_role(system_role, title=None):
     ]
     if system_role not in system_roles:
         abort(400, title=title, message="Please select a valid system role from the list provided.")
+
+
+def check_valid_email_notification_method(email_notification_method, title=None):
+    email_notification_methods = [
+        EmailNotificationMethod.enable.value,
+        EmailNotificationMethod.disable.value
+    ]
+    if email_notification_method not in email_notification_methods:
+        abort(400, title=title, message="Please select a valid email notification method from the list provided.")
 
 # /user_uuid
 class UserAPI(Resource):
@@ -155,6 +171,11 @@ class UserAPI(Resource):
         user.displayname = params.get("displayname", user.displayname)
 
         user.email = params.get("email", user.email)
+
+        email_notification_method = params.get("email_notification_method")
+        check_valid_email_notification_method(email_notification_method, title="Account Not Updated")
+        user.email_notification_method = EmailNotificationMethod(email_notification_method)
+
         changes = get_model_changes(user)
 
         restrict_user = not allow(EDIT, user)
@@ -223,6 +244,10 @@ class UserListAPI(Resource):
         user.firstname = params.get("firstname")
         user.lastname = params.get("lastname")
         user.displayname = params.get("displayname")
+
+        email_notification_method = params.get("email_notification_method")
+        check_valid_email_notification_method(email_notification_method, title="Account Not Saved")
+        user.email_notification_method = EmailNotificationMethod(email_notification_method)
 
         # if creating a cas user, do not set username or password
         if sess.get('oauth_create_user_link') and sess.get('LTI') and sess.get('CAS_CREATE'):
@@ -575,6 +600,33 @@ class UserEditButtonAPI(Resource):
 
         return {'available': available}
 
+# /notification
+class UserUpdateNotificationAPI(Resource):
+    @login_required
+    def post(self, user_uuid):
+        user = User.get_by_uuid_or_404(user_uuid)
+        # anyone who passes checking below should be an instructor or admin
+        require(EDIT, user,
+            title="Notification Settings Not Updated",
+            message="Your system role does not allow you to update notification settings for this account.")
+
+        if not user.email:
+            abort(400, title="Notification Settings Not Updated",
+                message="Cannot update notification settings. User does not have an email address.")
+
+        params = update_notification_settings_parser.parse_args()
+
+        email_notification_method = params.get("email_notification_method")
+        check_valid_email_notification_method(email_notification_method, title="Notification Settings Not Updated")
+        user.email_notification_method = EmailNotificationMethod(email_notification_method)
+
+        db.session.commit()
+        on_user_notifications_update.send(
+            self,
+            event_name=on_user_notifications_update.name,
+            user=current_user)
+        return marshal(user, dataformat.get_user(is_user_access_restricted(user)))
+
 # /password
 class UserUpdatePasswordAPI(Resource):
     @login_required
@@ -613,4 +665,5 @@ api.add_resource(CurrentUserCourseListAPI, '/courses')
 api.add_resource(UserCourseStatusListAPI, '/courses/status')
 api.add_resource(TeachingUserCourseListAPI, '/courses/teaching')
 api.add_resource(UserEditButtonAPI, '/<user_uuid>/edit')
+api.add_resource(UserUpdateNotificationAPI, '/<user_uuid>/notification')
 api.add_resource(UserUpdatePasswordAPI, '/<user_uuid>/password')

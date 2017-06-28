@@ -10,7 +10,7 @@ from data.fixtures import DefaultFixture, UserFactory, AssignmentFactory
 from data.fixtures.test_data import BasicTestData, LTITestData, ThirdPartyAuthTestData, ComparisonTestData
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.models import User, SystemRole, CourseRole, AnswerComment, AnswerCommentType, Comparison, \
-    LTIContext, ThirdPartyUser, ThirdPartyType, WinningAnswer
+    LTIContext, ThirdPartyUser, ThirdPartyType, WinningAnswer, EmailNotificationMethod
 from compair.core import db
 
 
@@ -88,19 +88,28 @@ class UsersAPITests(ComPAIRAPITestCase):
         url = '/api/users'
 
         # test login required
-        expected = UserFactory.stub(system_role=SystemRole.student.value)
+        expected = UserFactory.stub(
+            system_role=SystemRole.student.value,
+            email_notification_method=EmailNotificationMethod.enable.value
+        )
         rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
         self.assert401(rv)
 
         # test unauthorized user
         with self.login(self.data.get_authorized_student().username):
-            expected = UserFactory.stub(system_role=SystemRole.student.value)
+            expected = UserFactory.stub(
+                system_role=SystemRole.student.value,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(
                 url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assert403(rv)
 
         with self.login(self.data.get_authorized_instructor().username):
-            expected = UserFactory.stub(system_role=SystemRole.student.value)
+            expected = UserFactory.stub(
+                system_role=SystemRole.student.value,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(
                 url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assert403(rv)
@@ -110,7 +119,9 @@ class UsersAPITests(ComPAIRAPITestCase):
             # test duplicate username
             expected = UserFactory.stub(
                 system_role=SystemRole.student.value,
-                username=self.data.get_authorized_student().username)
+                username=self.data.get_authorized_student().username,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(
                 url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assertStatus(rv, 409)
@@ -120,27 +131,38 @@ class UsersAPITests(ComPAIRAPITestCase):
             # test duplicate student number
             expected = UserFactory.stub(
                 system_role=SystemRole.student.value,
-                student_number=self.data.get_authorized_student().student_number)
+                student_number=self.data.get_authorized_student().student_number,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assertStatus(rv, 409)
             self.assertEqual("Account Not Saved", rv.json['title'])
             self.assertEqual("This student number already exists. Please pick another.", rv.json['message'])
 
             # test creating student
-            expected = UserFactory.stub(system_role=SystemRole.student.value)
+            expected = UserFactory.stub(
+                system_role=SystemRole.student.value,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(
                 url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
 
             # test creating instructor
-            expected = UserFactory.stub(system_role=SystemRole.instructor.value)
+            expected = UserFactory.stub(
+                system_role=SystemRole.instructor.value,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
 
             # test creating admin
-            expected = UserFactory.stub(system_role=SystemRole.sys_admin.value)
+            expected = UserFactory.stub(
+                system_role=SystemRole.sys_admin.value,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
@@ -150,7 +172,10 @@ class UsersAPITests(ComPAIRAPITestCase):
         lti_data = LTITestData()
 
         # test login required when LTI and oauth_create_user_link are not present
-        expected = UserFactory.stub(system_role=SystemRole.student.value)
+        expected = UserFactory.stub(
+            system_role=SystemRole.student.value,
+            email_notification_method=EmailNotificationMethod.enable.value
+        )
         rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
         self.assert401(rv)
 
@@ -161,7 +186,10 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert200(lti_response)
 
             # test create instructor via lti session
-            expected = UserFactory.stub(system_role=None)
+            expected = UserFactory.stub(
+                system_role=None,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
@@ -181,7 +209,10 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert200(lti_response)
 
             # test create instructor via lti session
-            expected = UserFactory.stub(system_role=None)
+            expected = UserFactory.stub(
+                system_role=None,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
@@ -206,7 +237,10 @@ class UsersAPITests(ComPAIRAPITestCase):
             db.session.commit()
 
             # test create instructor via lti session
-            expected = UserFactory.stub(system_role=None)
+            expected = UserFactory.stub(
+                system_role=None,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
@@ -226,7 +260,10 @@ class UsersAPITests(ComPAIRAPITestCase):
                 roles="Student") as lti_response:
             self.assert200(lti_response)
 
-            expected = UserFactory.stub(system_role=None)
+            expected = UserFactory.stub(
+                system_role=None,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
@@ -242,7 +279,10 @@ class UsersAPITests(ComPAIRAPITestCase):
                 roles="TeachingAssistant") as lti_response:
             self.assert200(lti_response)
 
-            expected = UserFactory.stub(system_role=None)
+            expected = UserFactory.stub(
+                system_role=None,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
@@ -264,7 +304,10 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertIsNone(sess.get('LTI'))
 
         # test login required when LTI and oauth_create_user_link are not present (even when CAS params are present)
-        expected = UserFactory.stub(system_role=SystemRole.student.value)
+        expected = UserFactory.stub(
+            system_role=SystemRole.student.value,
+            email_notification_method=EmailNotificationMethod.enable.value
+        )
         rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
         self.assert401(rv)
 
@@ -279,7 +322,10 @@ class UsersAPITests(ComPAIRAPITestCase):
                 sess['CAS_UNIQUE_IDENTIFIER'] = "some_unique_identifier"
                 self.assertTrue(sess.get('LTI'))
 
-            expected = UserFactory.stub(system_role=None)
+            expected = UserFactory.stub(
+                system_role=None,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
@@ -314,6 +360,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             'username': user.username,
             'student_number': user.student_number,
             'system_role': user.system_role.value,
+            'email_notification_method': user.email_notification_method.value,
             'firstname': user.firstname,
             'lastname': user.lastname,
             'displayname': user.displayname,
@@ -326,6 +373,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             'username': instructor.username,
             'student_number': instructor.student_number,
             'system_role': instructor.system_role.value,
+            'email_notification_method': instructor.email_notification_method.value,
             'firstname': instructor.firstname,
             'lastname': instructor.lastname,
             'displayname': instructor.displayname,
@@ -411,6 +459,12 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(user.system_role.value, rv.json['system_role'])
 
+            valid = expected.copy()
+            valid['email_notification_method'] = EmailNotificationMethod.disable.value
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(user.email_notification_method.value, rv.json['email_notification_method'])
+
             # for instructor
             valid = expected_instructor.copy()
             valid['username'] = "wrongUsername"
@@ -430,6 +484,12 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.post(instructor_url, data=json.dumps(valid), content_type='application/json')
             self.assert200(rv)
             self.assertEqual(instructor.system_role.value, rv.json['system_role'])
+
+            valid = expected_instructor.copy()
+            valid['email_notification_method'] = EmailNotificationMethod.disable.value
+            rv = self.client.post(instructor_url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(instructor.email_notification_method.value, rv.json['email_notification_method'])
 
         # test updating username, student number, usertype for system - admin
         with self.login('root'):
@@ -452,6 +512,12 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(user.system_role.value, rv.json['system_role'])
 
+            valid = expected.copy()
+            valid['email_notification_method'] = EmailNotificationMethod.disable.value
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(user.email_notification_method.value, rv.json['email_notification_method'])
+
             # for instructor
             valid = expected_instructor.copy()
             valid['username'] = "wrongUsername"
@@ -472,6 +538,12 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(instructor.system_role.value, rv.json['system_role'])
 
+            valid = expected_instructor.copy()
+            valid['email_notification_method'] = EmailNotificationMethod.disable.value
+            rv = self.client.post(instructor_url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(instructor.email_notification_method.value, rv.json['email_notification_method'])
+
         # test edit user with no compair login
         auth_data = ThirdPartyAuthTestData()
         cas_user_auth = auth_data.create_cas_user_auth(SystemRole.student)
@@ -487,6 +559,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             'firstname': user.firstname,
             'lastname': user.lastname,
             'displayname': user.displayname,
+            'email_notification_method': EmailNotificationMethod.enable.value,
             'email': user.email
         }
 
@@ -743,6 +816,80 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(2, len(rv.json['courses']))
+
+    def test_update_notification(self):
+        url = '/api/users/{}/notification'
+        data = {
+            'email_notification_method': EmailNotificationMethod.disable.value,
+        }
+
+        # test login required
+        rv = self.client.post(
+            url.format(self.data.authorized_instructor.uuid),
+            data=json.dumps(data), content_type='application/json')
+        self.assert401(rv)
+
+        # test student update notification settings
+        with self.login(self.data.authorized_student.username):
+            # test incorrect email notification method
+            invalid_input = data.copy()
+            invalid_input['email_notification_method'] = 'wrong'
+            rv = self.client.post(
+                url.format(self.data.authorized_student.uuid),
+                data=json.dumps(invalid_input), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual('Notification Settings Not Updated', rv.json['title'])
+            self.assertEqual('Please select a valid email notification method from the list provided.', rv.json['message'])
+
+            # test success
+            rv = self.client.post(
+                url.format(self.data.authorized_student.uuid),
+                data=json.dumps(data),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(self.data.get_authorized_student().uuid, rv.json['id'])
+            self.assertEqual(self.data.get_authorized_student().email_notification_method.value, data['email_notification_method'])
+
+        # test instructor update notification settings
+        with self.login(self.data.get_authorized_instructor().username):
+            rv = self.client.post(url.format("999"), data=json.dumps(data), content_type='application/json')
+            self.assert404(rv)
+
+            # test instructor changes the notification settings of a student in the course
+            rv = self.client.post(
+                url.format(self.data.get_authorized_student().uuid), data=json.dumps(data),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(self.data.get_authorized_student().uuid, rv.json['id'])
+            self.assertEqual(self.data.get_authorized_student().email_notification_method.value, data['email_notification_method'])
+
+            # test changing own notification settings
+            rv = self.client.post(
+                url.format(self.data.get_authorized_instructor().uuid),
+                data=json.dumps(data), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(self.data.get_authorized_instructor().uuid, rv.json['id'])
+            self.assertEqual(self.data.get_authorized_student().email_notification_method.value, data['email_notification_method'])
+
+        # test instructor changes the notification settings of a student not in the course
+        with self.login(self.data.get_unauthorized_instructor().username):
+            rv = self.client.post(
+                url.format(self.data.get_authorized_student().uuid), data=json.dumps(data),
+                content_type='application/json')
+            self.assert403(rv)
+            self.assertEqual('Notification Settings Not Updated', rv.json['title'])
+            self.assertEqual("Your system role does not allow you to update notification settings for this account.",
+                rv.json['message'])
+
+        # test admin update notification settings
+        with self.login('root'):
+            # test admin changes student notification settings
+            rv = self.client.post(
+                url.format(self.data.get_authorized_student().uuid),
+                data=json.dumps(data), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(self.data.get_authorized_student().uuid, rv.json['id'])
+            self.assertEqual(self.data.get_authorized_student().email_notification_method.value, data['email_notification_method'])
 
     def test_update_password(self):
         url = '/api/users/{}/password'

@@ -32,6 +32,16 @@
             <strong class="col-md-3">Email:</strong>
             <div id="user_email"  class="col-md-9">{{ user.email }}</div>
         </div>
+        <div class="row" ng-if="UserSettings.notifications && (canManageUser || showEditButton.available || ownProfile)">
+            <strong class="col-md-3">Notifications:</strong>
+		    <div class="col-md-9" ng-show="!user.email">N/A</div>
+		    <div id="user_email_notification_method" class="col-md-9" ng-show="user.email">
+                <input id="email_notification_method" type="checkbox" ng-model="user.email_notification_method" ng-disabled="!user.email || submitted"
+                    ng-true-value="'{{EmailNotificationMethod.enable}}'" ng-false-value="'{{EmailNotificationMethod.disable}}'"
+                    ng-change="updateNotificationSettings()">
+                Receive email notifications from ComPAIR about assignments
+            </div>
+        </div>
 	    <div class="row" ng-if="(canManageUsers || loggedInUserIsInstructor || ownProfile) && user.uses_compair_login">
             <strong class="col-md-3">Username:</strong>
             <div id="user_username" class="col-md-9">{{ user.username }}</div>

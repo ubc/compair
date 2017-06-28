@@ -41,6 +41,12 @@
             <input class="form-control" id="email" type="email"
                 name="email" ng-model="user.email" />
         </compair-field-with-feedback>
+        <compair-field-with-feedback form-control="userForm.email_notification_method" ng-if="UserSettings.notifications">
+            <input type="checkbox" ng-show="!user.email" disabled />
+            <input id="email_notification_method" type="checkbox" ng-model="user.email_notification_method" ng-show="user.email"
+                ng-true-value="'{{EmailNotificationMethod.enable}}'" ng-false-value="'{{EmailNotificationMethod.disable}}'">
+            <label class="not-bold" for="email_notification_method" ng-class="{'text-muted': !user.email}">Receive email notifications from ComPAIR about assignments</label>
+        </compair-field-with-feedback>
     </fieldset>
 
     <fieldset ng-if="canManageUsers || user.uses_compair_login">

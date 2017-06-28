@@ -1,0 +1,9 @@
+{% extends "notification_base.txt" %}
+{% block body %}
+You've received a new help comment on the following assignment: {{ assignment.name }}
+
+{{ author.displayname }} ({{ author.fullname }}) commented on {{ comment.created.strftime('%b %d @ %I:%M %p') }}
+
+You can view it at:
+{{ url_for('route_app', _external=True, _anchor='/course/'+course.uuid+'/assignment/'+assignment.uuid) }}?tab=help
+{% endblock %}

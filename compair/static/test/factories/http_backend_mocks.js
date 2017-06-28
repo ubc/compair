@@ -166,7 +166,8 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "modified": "Sun, 11 Jan 2015 02:55:59 -0000",
                 "last_online": "Sun, 11 Jan 2015 02:55:59 -0000",
                 "system_role": null,
-                "uses_compair_login": true
+                "uses_compair_login": true,
+                "email_notification_method": 'enable'
             };
 
             newUser = angular.merge({}, newUser, data);
@@ -253,6 +254,13 @@ module.exports.httpbackendMock = function(storageFixtures) {
             var editId = url.split('/').pop();
             storageFixture.storage().users[editId] = data;
             return [200, data, {}];
+        });
+
+        // update user notification settings
+        $httpBackend.whenPOST(/\/api\/users\/[A-Za-z0-9_-]{22}\/notification$/).respond(function(method, url, data, headers) {
+            var editId = url.split('/')[3];
+            storageFixture.storage().users[editId].email_notification_method = data.email_notification_method;
+            return [200, storageFixture.storage().users[editId], {}];
         });
 
         // update user password

@@ -39,7 +39,9 @@ describe('Service: Session', function() {
         last_online: "Tue, 12 Aug 2014 20:53:31 -0000",
         modified: "Tue, 12 Aug 2014 20:53:31 -0000",
         username: "root",
-        system_role: "System Administrator"
+        system_role: "System Administrator",
+        uses_compair_login: true,
+        email_notification_method: 'enable'
     };
 
     beforeEach(module('ubc.ctlt.compair.session'));

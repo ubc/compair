@@ -5,25 +5,9 @@ import pytz
 def replace_tzinfo(datetime):
     return datetime.replace(tzinfo=pytz.utc) if datetime else None
 
-class UnwrapSystemRole(fields.Raw):
-    def format(self, system_role):
-        return system_role.value
-
-class UnwrapCourseRole(fields.Raw):
-    def format(self, course_role):
-        return course_role.value
-
-class UnwrapAnswerCommentType(fields.Raw):
-    def format(self, comment_type):
-        return comment_type.value
-
-class UnwrapPairingAlgorithm(fields.Raw):
-    def format(self, pairing_algorithm):
-        return pairing_algorithm.value
-
-class UnwrapWinningAnswer(fields.Raw):
-    def format(self, winning_answer):
-        return winning_answer.value if winning_answer != None else None
+class UnwrapEnum(fields.Raw):
+    def format(self, enum):
+        return enum.value if enum != None else None
 
 def get_partial_user(restrict_user=True):
     ret = {
@@ -46,6 +30,7 @@ def get_user(restrict_user=True):
     }
     if restrict_user:
         return restricted
+
     unrestricted = {
         'username': fields.String,
         'student_number': fields.String,
@@ -54,7 +39,8 @@ def get_user(restrict_user=True):
         'email': fields.String,
         'fullname': fields.String,
         'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
-        'system_role': UnwrapSystemRole(attribute='system_role'),
+        'system_role': UnwrapEnum(attribute='system_role'),
+        'email_notification_method': UnwrapEnum(attribute='email_notification_method'),
         'uses_compair_login': fields.Boolean
     }
     unrestricted.update(restricted)
@@ -65,7 +51,7 @@ def get_users_in_course(restrict_user=True):
     users = get_user(restrict_user)
     users['group_name'] = fields.String
     if not restrict_user:
-        users['course_role'] = UnwrapCourseRole(attribute='course_role')
+        users['course_role'] = UnwrapEnum(attribute='course_role')
         users['cas_username'] = fields.String
     return users
 
@@ -91,7 +77,7 @@ def get_course():
 def get_user_courses():
     courses = get_course()
     courses['group_name'] = fields.String
-    courses['course_role'] = UnwrapCourseRole(attribute='course_role')
+    courses['course_role'] = UnwrapEnum(attribute='course_role')
     return courses
 
 def get_criterion(with_weight=False):
@@ -137,7 +123,7 @@ def get_assignment(restrict_user=True):
 
         'students_can_reply': fields.Boolean,
         'enable_self_evaluation': fields.Boolean,
-        'pairing_algorithm': UnwrapPairingAlgorithm(attribute='pairing_algorithm'),
+        'pairing_algorithm': UnwrapEnum(attribute='pairing_algorithm'),
         'educators_can_compare': fields.Boolean,
         'rank_display_limit': fields.Integer(default=None),
 
@@ -209,7 +195,7 @@ def get_answer_comment(restrict_user=True):
         'answer_id': fields.String(attribute="answer_uuid"),
         'user_id': fields.String(attribute="user_uuid"),
         'content': fields.String,
-        'comment_type': UnwrapAnswerCommentType(attribute='comment_type'),
+        'comment_type': UnwrapEnum(attribute='comment_type'),
         'draft': fields.Boolean,
 
         'user': get_partial_user(restrict_user),
@@ -247,7 +233,7 @@ def get_comparison(restrict_user=True, with_answers=True, with_feedback=False, w
         'answer1_id': fields.String(attribute="answer1_uuid"),
         'answer2_id': fields.String(attribute="answer2_uuid"),
         'user_id': fields.String(attribute="user_uuid"),
-        'winner': UnwrapWinningAnswer(attribute='winner'),
+        'winner': UnwrapEnum(attribute='winner'),
 
         'comparison_criteria': fields.List(fields.Nested(get_comparison_criterion())),
         'user': get_partial_user(restrict_user),
@@ -274,7 +260,7 @@ def get_comparison_criterion():
         'id': fields.String(attribute="uuid"),
         'criterion_id': fields.String(attribute="criterion_uuid"),
         'content': fields.String,
-        'winner': UnwrapWinningAnswer(attribute='winner'),
+        'winner': UnwrapEnum(attribute='winner'),
 
         'criterion': fields.Nested(get_criterion()),
         'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))

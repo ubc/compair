@@ -301,6 +301,8 @@ class AnswerCommentAPI(Resource):
             title="Reply Not Updated",
             message="Your role in this course does not allow you to update replies for this answer.")
 
+        was_draft = answer_comment.draft
+
         params = existing_answer_comment_parser.parse_args()
         # make sure the answer comment id in the url and the id matches
         if params['id'] != answer_comment_uuid:
@@ -330,25 +332,16 @@ class AnswerCommentAPI(Resource):
             abort(400, title="Reply Not Updated", message="Please provide content in the text editor to update this reply.")
 
         db.session.add(answer_comment)
-
-        if answer_comment.comment_type == AnswerCommentType.evaluation:
-            on_answer_comment_modified.send(
-                self,
-                event_name=on_answer_comment_modified.name,
-                user=current_user,
-                course_id=course.id,
-                answer_comment=answer_comment,
-                data=get_model_changes(answer_comment))
-        else:
-            on_answer_comment_modified.send(
-                self,
-                event_name=on_answer_comment_modified.name,
-                user=current_user,
-                course_id=course.id,
-                answer_comment=answer_comment,
-                data=get_model_changes(answer_comment))
-
         db.session.commit()
+
+        on_answer_comment_modified.send(
+            self,
+            event_name=on_answer_comment_modified.name,
+            user=current_user,
+            course_id=course.id,
+            answer_comment=answer_comment,
+            was_draft=was_draft,
+            data=get_model_changes(answer_comment))
 
         # update course & assignment grade for user if self-evaluation is completed
         if not answer_comment.draft and answer_comment.comment_type == AnswerCommentType.self_evaluation:

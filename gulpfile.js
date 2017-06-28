@@ -25,7 +25,7 @@ var gulp = require('gulp'),
     sauceConnectLauncher = require('sauce-connect-launcher'),
     del = require('del').sync, // use sync method, gulp doesn't seem to wait for async del
     sort = require('gulp-sort'), // gulp.src with wildcard doesn't give us a stable file order
-    streamqueue = require('streamqueue'); // queued streams one by one
+    streamqueue = require('streamqueue'), // queued streams one by one
     templateCache = require('gulp-angular-templatecache');
 
 var cssFilenames = [
@@ -66,6 +66,7 @@ gulp.task('prod_compile_minify_css', ['less'], function() {
     return gulp.src(cssFilenames)
         .pipe(cleanCss())
         .pipe(concat(targetCssFilename))
+        .pipe(gulp.dest('./compair/templates/static'))
         .pipe(gulp.dest('./compair/static/build'));
 });
 // don't sort bower files as bower handles order and dependency

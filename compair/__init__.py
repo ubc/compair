@@ -4,12 +4,14 @@ import ssl
 import requests
 
 from flask import Flask, redirect, session as sess, jsonify, url_for
+from jinja2 import Markup
 from flask_login import current_user
 from sqlalchemy.orm import joinedload
 from werkzeug.routing import BaseConverter
+from lxml.html.clean import clean_html
 
 from .authorization import define_authorization
-from .core import login_manager, bouncer, db, celery, abort
+from .core import login_manager, bouncer, db, celery, abort, mail
 from .configuration import config
 from .models import User, File
 from .activity import log
@@ -17,6 +19,7 @@ from .api import register_api_blueprints, log_events, \
     register_demo_api_blueprints, log_demo_events, \
     register_statement_api_blueprints
 from compair.xapi import capture_xapi_events
+from compair.notifications import capture_notification_events
 
 class RegexConverter(BaseConverter):
     def __init__(self, url_map, *items):
@@ -103,8 +106,13 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
 
     celery.conf.update(app.config)
 
+    mail.init_app(app)
+
     create_persistent_dirs(app.config, app.logger)
 
+    # add include_raw to jinja templates
+    app.jinja_env.globals['include_raw'] = lambda filename : Markup(app.jinja_loader.get_source(app.jinja_env, filename)[0])
+    app.jinja_env.globals['clean_html'] = lambda html_string : clean_html(html_string) if html_string else ''
     if not skip_assets and not app.debug and not app.config.get('TESTING', False):
         assets = get_asset_names(app)
         app.config.update(assets)
@@ -149,6 +157,9 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
         app.url_map.converters['regex'] = RegexConverter
 
         app = register_api_blueprints(app)
+
+        if app.config.get('MAIL_NOTIFICATION_ENABLED', False):
+            capture_notification_events()
 
         if app.config.get('DEMO_INSTALLATION', False):
             log_demo_events(log)

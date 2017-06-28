@@ -35,6 +35,7 @@ var admin = userFactory.generateUser("1abcABC123-abcABC123_Z", "System Administr
     firstname: "JaNy",
     lastname: "bwsV",
     fullname: "JaNy bwsV",
+    email: "admin@exmple.com"
 });
 storage.users[admin.id] = admin;
 

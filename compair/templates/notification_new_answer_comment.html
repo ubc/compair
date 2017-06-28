@@ -1,0 +1,41 @@
+{% extends "notification_base.html" %}
+{% block body %}
+<div class="assignment-screen">
+    <div class="standalone-assignment">
+        <!-- Assignment -->
+        <p class="intro-text">
+            You've received new answer feedback for the following assignment: <strong>{{assignment.name}}</strong>
+            <br />
+            <a href="{{ url_for('route_app', _external=True, _anchor='/course/'+course.uuid+'/assignment/'+assignment.uuid) }}?tab=comparisons">View in ComPAIR</a>
+        </p>
+    </div>
+
+    <div class="tab-content">
+        <div id="comparisons-tab">
+            <div class="each-evaluation">
+                <div class="each-reply">
+                    <div class="each-header">
+                        <a href="{{ url_for('route_app', _external=True, _anchor='/user/'+author.uuid) }}">
+                            <img src="//www.gravatar.com/avatar/{{ author.avatar }}?s=32&d=retro" />
+                        </a>
+                        <a href="{{ url_for('route_app', _external=True, _anchor='/user/'+author.uuid) }}">
+                            {{ author.displayname }}
+                        </a>
+
+                        {% if instructor_label %}<span class="label label-info">{{instructor_label}}</span>{% endif %}
+
+                        {% if comment.comment_type in [answer_comment_types.private, answer_comment_types.evaluation] %}
+                        <strong>gave <span class="glyphicon glyphicon-lock"></span> private feedback</strong>
+                        {% elif comment.comment_type == answer_comment_types.public %}
+                        <strong>replied <span class="label label-info">Public</span></strong>
+                        {% endif %}
+                        on {{ comment.created.strftime('%b %d @ %I:%M %p') }}:
+                    </div>
+
+                    <div class="content">{{ clean_html(comment.content) | safe }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

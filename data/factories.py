@@ -10,7 +10,7 @@ from compair.core import db
 from compair.models import Course, User, CourseRole, SystemRole, Criterion, File, \
     UserCourse, AssignmentCriterion, Assignment, AnswerScore, AnswerCriterionScore, \
     Answer, AssignmentComment, AnswerComment, Comparison, ComparisonCriterion, \
-    AnswerCommentType, ComparisonExample, \
+    AnswerCommentType, ComparisonExample, EmailNotificationMethod, \
     LTIConsumer, LTIContext, LTIResourceLink, LTIMembership, LTIUser, LTIUserResourceLink, \
     ThirdPartyUser, ThirdPartyType
 
@@ -33,6 +33,7 @@ class UserFactory(factory.alchemy.SQLAlchemyModelFactory):
     student_number = factory.fuzzy.FuzzyText(length=8, suffix='ü')
     password = 'password'
     system_role = SystemRole.instructor
+    email_notification_method = EmailNotificationMethod.enable
 
 
 class CourseFactory(factory.alchemy.SQLAlchemyModelFactory):

@@ -2,7 +2,7 @@ import json
 import six
 import mock
 
-from compair import db
+from compair import db, mail
 from data.fixtures.test_data import AnswerCommentsTestData, LTITestData
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.api.answer_comment import api, AnswerCommentListAPI, AnswerCommentAPI
@@ -253,26 +253,37 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
             self.assert400(rv)
 
             # test authorized user
-            rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
-            self.assert200(rv)
-            self.assertEqual(content['content'], rv.json['content'])
-            self.assertFalse(rv.json['draft'])
+            with mail.record_messages() as outbox:
+                rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
+                self.assert200(rv)
+                self.assertEqual(content['content'], rv.json['content'])
+                self.assertFalse(rv.json['draft'])
+
+                self.assertEqual(len(outbox), 1)
+                self.assertEqual(outbox[0].subject, "New Answer Feedback in "+self.data.get_course().name)
+                self.assertEqual(outbox[0].recipients, [self.answers[self.assignment.id][0].user.email])
 
             # test authorized user draft
-            draft_content = content.copy()
-            draft_content['draft'] = True
-            rv = self.client.post(url, data=json.dumps(draft_content), content_type='application/json')
-            self.assert200(rv)
-            self.assertEqual(content['content'], rv.json['content'])
-            self.assertTrue(rv.json['draft'])
+            with mail.record_messages() as outbox:
+                draft_content = content.copy()
+                draft_content['draft'] = True
+                rv = self.client.post(url, data=json.dumps(draft_content), content_type='application/json')
+                self.assert200(rv)
+                self.assertEqual(content['content'], rv.json['content'])
+                self.assertTrue(rv.json['draft'])
+
+                self.assertEqual(len(outbox), 0)
 
             # test authorized user draft - empty content
-            empty = draft_content.copy()
-            empty['content'] = None
-            rv = self.client.post(url, data=json.dumps(empty), content_type='application/json')
-            self.assert200(rv)
-            self.assertEqual(empty['content'], rv.json['content'])
-            self.assertTrue(rv.json['draft'])
+            with mail.record_messages() as outbox:
+                empty = draft_content.copy()
+                empty['content'] = None
+                rv = self.client.post(url, data=json.dumps(empty), content_type='application/json')
+                self.assert200(rv)
+                self.assertEqual(empty['content'], rv.json['content'])
+                self.assertTrue(rv.json['draft'])
+
+                self.assertEqual(len(outbox), 0)
 
         with self.login(self.data.get_authorized_student().username):
             lti_consumer = self.lti_data.lti_consumer
@@ -287,26 +298,29 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
                 'content': 'great answer'
             }
 
-            rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
-            self.assert200(rv)
+            with mail.record_messages() as outbox:
+                rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
+                self.assert200(rv)
 
-            # grades should increase
-            new_course_grade = CourseGrade.get_user_course_grade(self.course, self.data.get_authorized_student())
-            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, self.data.get_authorized_student())
-            self.assertGreater(new_course_grade.grade, course_grade)
-            self.assertGreater(new_assignment_grade.grade, assignment_grade)
+                self.assertEqual(len(outbox), 0)
 
-            mocked_update_assignment_grades_run.assert_called_once_with(
-                lti_consumer.id,
-                [(lti_user_resource_link2.lis_result_sourcedid, new_assignment_grade.id)]
-            )
-            mocked_update_assignment_grades_run.reset_mock()
+                # grades should increase
+                new_course_grade = CourseGrade.get_user_course_grade(self.course, self.data.get_authorized_student())
+                new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, self.data.get_authorized_student())
+                self.assertGreater(new_course_grade.grade, course_grade)
+                self.assertGreater(new_assignment_grade.grade, assignment_grade)
 
-            mocked_update_course_grades_run.assert_called_once_with(
-                lti_consumer.id,
-                [(lti_user_resource_link1.lis_result_sourcedid, new_course_grade.id)]
-            )
-            mocked_update_assignment_grades_run.reset_mock()
+                mocked_update_assignment_grades_run.assert_called_once_with(
+                    lti_consumer.id,
+                    [(lti_user_resource_link2.lis_result_sourcedid, new_assignment_grade.id)]
+                )
+                mocked_update_assignment_grades_run.reset_mock()
+
+                mocked_update_course_grades_run.assert_called_once_with(
+                    lti_consumer.id,
+                    [(lti_user_resource_link1.lis_result_sourcedid, new_course_grade.id)]
+                )
+                mocked_update_assignment_grades_run.reset_mock()
 
 
 class AnswerCommentAPITests(ComPAIRAPITestCase):
@@ -478,38 +492,55 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
 
         # test authorized instructor
         with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
-            self.assert200(rv)
-            self.assertEqual(content['content'], rv.json['content'])
+            with mail.record_messages() as outbox:
+                rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
+                self.assert200(rv)
+                self.assertEqual(content['content'], rv.json['content'])
+
+                self.assertEqual(len(outbox), 0)
 
         # test author
         with self.login(self.data.get_extra_student(0).username):
-            content['content'] = 'I am the author'
-            rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
-            self.assert200(rv)
-            self.assertEqual(content['content'], rv.json['content'])
-            self.assertFalse(rv.json['draft'])
+            with mail.record_messages() as outbox:
+                content['content'] = 'I am the author'
+                rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
+                self.assert200(rv)
+                self.assertEqual(content['content'], rv.json['content'])
+                self.assertFalse(rv.json['draft'])
+
+                self.assertEqual(len(outbox), 0)
 
             # ignored setting draft to True when draft is already False
-            content['draft'] = True
-            rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
-            self.assert200(rv)
-            self.assertEqual(content['content'], rv.json['content'])
-            self.assertFalse(rv.json['draft'])
+            with mail.record_messages() as outbox:
+                content['draft'] = True
+                rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
+                self.assert200(rv)
+                self.assertEqual(content['content'], rv.json['content'])
+                self.assertFalse(rv.json['draft'])
+
+                self.assertEqual(len(outbox), 0)
 
         # test draft author
         with self.login(self.data.get_extra_student(1).username):
-            draft_content['content'] = 'I am the author'
-            rv = self.client.post(draft_url, data=json.dumps(draft_content), content_type='application/json')
-            self.assert200(rv)
-            self.assertEqual(draft_content['content'], rv.json['content'])
-            self.assertTrue(rv.json['draft'])
+            with mail.record_messages() as outbox:
+                draft_content['content'] = 'I am the author'
+                rv = self.client.post(draft_url, data=json.dumps(draft_content), content_type='application/json')
+                self.assert200(rv)
+                self.assertEqual(draft_content['content'], rv.json['content'])
+                self.assertTrue(rv.json['draft'])
+
+                self.assertEqual(len(outbox), 0)
 
             # can change draft to False when draft is True
-            draft_content['draft'] = False
-            rv = self.client.post(draft_url, data=json.dumps(draft_content), content_type='application/json')
-            self.assert200(rv)
-            self.assertFalse(rv.json['draft'])
+            with mail.record_messages() as outbox:
+                draft_content['draft'] = False
+                rv = self.client.post(draft_url, data=json.dumps(draft_content), content_type='application/json')
+                self.assert200(rv)
+                self.assertFalse(rv.json['draft'])
+
+                self.assertEqual(len(outbox), 1)
+                self.assertEqual(outbox[0].subject, "New Answer Feedback in "+self.data.get_course().name)
+                self.assertEqual(outbox[0].recipients, [self.answers[self.assignment.id][0].user.email])
 
         answer = self.answers[self.assignment.id][0]
         self_evaluation = self.data.create_answer_comment(
@@ -532,40 +563,46 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
                 'draft': True
             }
 
-            rv = self.client.post(self_evaluation_url, data=json.dumps(content), content_type='application/json')
-            self.assert200(rv)
-            self.assertEqual(content['content'], rv.json['content'])
-            self.assertTrue(rv.json['draft'])
+            with mail.record_messages() as outbox:
+                rv = self.client.post(self_evaluation_url, data=json.dumps(content), content_type='application/json')
+                self.assert200(rv)
+                self.assertEqual(content['content'], rv.json['content'])
+                self.assertTrue(rv.json['draft'])
 
-            # grades should not change
-            new_course_grade = CourseGrade.get_user_course_grade(self.course, answer.user).grade
-            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, answer.user).grade
-            self.assertEqual(new_course_grade, course_grade)
-            self.assertEqual(new_assignment_grade, assignment_grade)
+                self.assertEqual(len(outbox), 0)
+
+                # grades should not change
+                new_course_grade = CourseGrade.get_user_course_grade(self.course, answer.user).grade
+                new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, answer.user).grade
+                self.assertEqual(new_course_grade, course_grade)
+                self.assertEqual(new_assignment_grade, assignment_grade)
 
             # can change draft to False when draft is True
-            content['draft'] = False
-            rv = self.client.post(self_evaluation_url, data=json.dumps(content), content_type='application/json')
-            self.assert200(rv)
-            self.assertFalse(rv.json['draft'])
+            with mail.record_messages() as outbox:
+                content['draft'] = False
+                rv = self.client.post(self_evaluation_url, data=json.dumps(content), content_type='application/json')
+                self.assert200(rv)
+                self.assertFalse(rv.json['draft'])
 
-            # grades should increase
-            new_course_grade = CourseGrade.get_user_course_grade(self.course, answer.user)
-            new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, answer.user)
-            self.assertGreater(new_course_grade.grade, course_grade)
-            self.assertGreater(new_assignment_grade.grade, assignment_grade)
+                self.assertEqual(len(outbox), 0)
 
-            mocked_update_assignment_grades_run.assert_called_once_with(
-                lti_consumer.id,
-                [(lti_user_resource_link2.lis_result_sourcedid, new_assignment_grade.id)]
-            )
-            mocked_update_assignment_grades_run.reset_mock()
+                # grades should increase
+                new_course_grade = CourseGrade.get_user_course_grade(self.course, answer.user)
+                new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, answer.user)
+                self.assertGreater(new_course_grade.grade, course_grade)
+                self.assertGreater(new_assignment_grade.grade, assignment_grade)
 
-            mocked_update_course_grades_run.assert_called_once_with(
-                lti_consumer.id,
-                [(lti_user_resource_link1.lis_result_sourcedid, new_course_grade.id)]
-            )
-            mocked_update_course_grades_run.reset_mock()
+                mocked_update_assignment_grades_run.assert_called_once_with(
+                    lti_consumer.id,
+                    [(lti_user_resource_link2.lis_result_sourcedid, new_assignment_grade.id)]
+                )
+                mocked_update_assignment_grades_run.reset_mock()
+
+                mocked_update_course_grades_run.assert_called_once_with(
+                    lti_consumer.id,
+                    [(lti_user_resource_link1.lis_result_sourcedid, new_course_grade.id)]
+                )
+                mocked_update_course_grades_run.reset_mock()
 
 
     @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')

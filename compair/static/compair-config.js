@@ -83,6 +83,10 @@ myApp.factory('defaultErrorHandlerInterceptor',
 {
     return {
         'responseError': function(rejection) {
+            var config = rejection.config;
+            if (config && config.bypassErrorsInterceptor) {
+                return $q.reject(rejection);
+            }
             if ($rootScope.skipAutoToastAPIErrors !== true) {
                 StandardErrorHandler(rejection);
             }

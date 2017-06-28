@@ -168,6 +168,17 @@ In addition, you must create a LTI consumer key/secret by:
 
 You can enable/disable consumers from the Manage LTI screen as needed
 
+(Optional) Email Notification Settings
+-----------------------------
+
+Run `gulp prod` in order to generate the combined minified css used in the html emails.
+
+`MAIL_NOTIFICATION_ENABLED`: Enable email notifications application wide (default: False).
+
+Even if notifications are enabled, users can disable them for themselves on the edit account screen.
+
+See [Flask-Mail](https://pythonhosted.org/Flask-Mail/#configuring-flask-mail) for details on configuration settings for mailing notifications.
+
 Disable outgoing https requirements
 -----------------------------
 

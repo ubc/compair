@@ -6,9 +6,9 @@
 
         .directive('loginCreateUserForm',
             ['$route', '$log', 'UserResource', 'SystemRole', 'Toaster',
-             'AuthenticationService', 'LTI',
+             'AuthenticationService', 'LTI', 'UserSettings',
             function ($route, $log, UserResource, SystemRole, Toaster,
-                      AuthenticationService, LTI) {
+                      AuthenticationService, LTI, UserSettings) {
             return {
                 restrict: 'E',
                 scope: {
@@ -21,6 +21,7 @@
                     scope.submitted = false;
 
                     scope.password = {};
+                    $scope.UserSettings = UserSettings;
                     scope.SystemRole = SystemRole;
                     scope.system_roles = [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin];
 

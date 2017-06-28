@@ -21,7 +21,7 @@ module.factory('StatementResource',
 {
     var ret = $resource('/api/statements', {},
         {
-            'save': { method: 'POST', ignoreLoadingBar: true }
+            'save': { method: 'POST', ignoreLoadingBar: true, bypassErrorsInterceptor: true }
         }
     );
     return ret;
