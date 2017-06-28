@@ -1,11 +1,11 @@
 <div dynamic-rich-content="richContent" class="rich-content"></div>
 
 <div ng-if="attachmentContent.length > 0" class="rich-content-attachments">
-    <h5>{{attachmentContent.length}} Attachment <span ng-if="attachmentContent.length > 1">s</span></h5>
-    <div class="each-attachment-content" ng-repeat="content in attachmentContent">
+    <h5>{{attachmentContent.length}} Attachment<span ng-if="attachmentContent.length > 1">s</span>:</h5>
+    <div class="each-attachment-content pop-or-show" ng-repeat="content in attachmentContent">
         <p ng-if="content.type != 'attachment'">
             <a href="" ng-click="showAttachmentContentModal(content)" ng-if="content.type != 'attachment'"
-               class="btn btn-primary btn-sm">
+               class="btn btn-primary btn-xs">
                 Open in Pop-up
             </a> or
             <br />

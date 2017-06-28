@@ -33,7 +33,7 @@
         </div>
 
         <div>
-            <label for="importFile">Attachment (maximum size {{UploadValidator.getAttachmentUploadLimit() | filesize }})</label>
+            <label for="importFile">Your Attachment (maximum size {{UploadValidator.getAttachmentUploadLimit() | filesize }})</label>
             <p ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)">
                 <span class="required-star"></span>
                 <em>
@@ -42,7 +42,7 @@
                 </em>
             </p>
             <input type="file" nv-file-select uploader="uploader" ng-click="answerForm.$setDirty()" id="importFile" ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)" multiple/>
-            <p class="instructional-text" ng-show="uploader.queue.length"><strong>Save this answer</strong> to submit the file below. You may also remove the file and upload another instead.</p>
+            <p class="instructional-text" ng-show="uploader.queue.length"><strong>Submit this answer</strong> to save the file below. You may also remove the file and upload another instead.</p>
             <div class="row" ng-repeat="item in uploader.queue">
                 <div class="col-md-7"><i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong></div>
                 <div class="col-md-1">{{item.file.size/1024/1024|number:2}} MB</div>
