@@ -118,9 +118,12 @@ def register_api_blueprints(app):
                 'index-dev.html',
                 ga_tracking_id=app.config['GA_TRACKING_ID'],
                 attachment_extensions=list(app.config['ATTACHMENT_ALLOWED_EXTENSIONS']),
+                attachment_upload_limit=app.config['ATTACHMENT_UPLOAD_LIMIT'],
                 app_login_enabled=app.config['APP_LOGIN_ENABLED'],
                 cas_login_enabled=app.config['CAS_LOGIN_ENABLED'],
                 lti_login_enabled=app.config['LTI_LOGIN_ENABLED'],
+                kaltura_enabled=app.config['KALTURA_ENABLED'],
+                kaltura_extensions=list(app.config['KALTURA_ATTACHMENT_EXTENSIONS']),
                 xapi_enabled=app.config['XAPI_ENABLED'],
                 xapi_app_base_url=app.config.get('XAPI_APP_BASE_URL'),
                 demo=app.config.get('DEMO_INSTALLATION'),
@@ -143,9 +146,12 @@ def register_api_blueprints(app):
             compair_css=prefix + assets['compair.css'],
             ga_tracking_id=app.config['GA_TRACKING_ID'],
             attachment_extensions=list(app.config['ATTACHMENT_ALLOWED_EXTENSIONS']),
+            attachment_upload_limit=app.config['ATTACHMENT_UPLOAD_LIMIT'],
             app_login_enabled=app.config['APP_LOGIN_ENABLED'],
             cas_login_enabled=app.config['CAS_LOGIN_ENABLED'],
             lti_login_enabled=app.config['LTI_LOGIN_ENABLED'],
+            kaltura_enabled=app.config['KALTURA_ENABLED'],
+            kaltura_extensions=list(app.config['KALTURA_ATTACHMENT_EXTENSIONS']),
             xapi_enabled=app.config['XAPI_ENABLED'],
             xapi_app_base_url=app.config.get('XAPI_APP_BASE_URL'),
             demo=app.config.get('DEMO_INSTALLATION'),
@@ -323,8 +329,10 @@ def log_events(log):
     on_export_report.connect(log)
 
     # file attachment event
-    from .file import on_save_file
+    from .file import on_save_file, on_get_kaltura_token, on_save_kaltura_file
     on_save_file.connect(log)
+    on_get_kaltura_token.connect(log)
+    on_save_kaltura_file.connect(log)
 
     # gradebook event
     from .gradebook import on_gradebook_get

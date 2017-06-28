@@ -724,7 +724,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "peer_feedback_prompt": null,
                 "enable_self_evaluation": false,
                 "content": null,
-                "file": [],
+                "file": null,
                 "answer_grade_weight": 1,
                 "comparison_grade_weight": 1,
                 "self_evaluation_grade_weight": 1,

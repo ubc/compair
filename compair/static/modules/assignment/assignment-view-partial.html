@@ -5,11 +5,8 @@
         <!-- Assignment -->
         <h2><i class="fa fa-comments"></i> {{assignment.name}}</h2>
 
-        <!-- Assignment Details -->
-        <div class="assignmentmathjax assignment-desc" mathjax hljs ng-bind-html="assignment.description"></div>
-
-        <!-- Assignment Attachment -->
-        <compair-attachment-inline label="See assignment details:" attachment="assignment.file"></compair-attachment-inline>
+        <!-- Assignment Details & Attachment -->
+        <rich-content content="assignment.description" attachment="assignment.file" class="assignment-desc"></rich-content>
 
         <!-- Assignment Answer/Comparison Periods -->
         <div ng-show="canManageAssignment">
@@ -242,9 +239,7 @@
 
                     <!-- Instructor Answer -->
                     <div class="content instructor-answer">
-                        <div mathjax hljs ng-bind-html="answer.content"></div>
-                        <!-- Instructor Attachment -->
-                        <compair-attachment-inline label="See answer details:" attachment="answer.file"></compair-attachment-inline>
+                        <rich-content content="answer.content" attachment="answer.file"></rich-content>
                     </div>
 
                     <p class="pull-right">
@@ -290,9 +285,7 @@
 
                     <!-- Student Answer -->
                     <div class="content {{answer.id}}" get-height>
-                        <div mathjax hljs ng-bind-html="answer.content"></div>
-                        <!-- Student Attachment -->
-                        <compair-attachment-inline label="See answer details:" attachment="answer.file" ng-click="revealAnswer(answer)"></compair-attachment-inline>
+                        <rich-content content="answer.content" attachment="answer.file" ng-click="revealAnswer(answer)"></rich-content>
                     </div>
                     <!-- Student Answer Read More Button (not used for instructor answers) -->
                     <p ng-show="showReadMore" class="read-more" ng-click="revealAnswer(answer)"><a href="" class="btn btn-sm btn-default">Read More...</a></p>
@@ -324,7 +317,7 @@
                     <p class="pull-right score-display" ng-if="!canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && !answer.score">
                         <em>Not Ranked</em>
                     </p>
-                    
+
                     <!-- Student Answer Replies Section -->
                     <a href="" ng-click="showReplies = !showReplies; toggleReplies(showReplies, answer)">
                         <h3 class="reply-heading" ng-if="!answerFilters.anonymous && ((answer.comment_count && (answer.user_id == loggedInUserId || canManageAssignment)) || (answer.public_comment_count && see_answers))">
@@ -435,13 +428,7 @@
 
                 <!-- Student Answer -->
                 <div class="content {{answer.id}}">
-                    <div mathjax hljs ng-bind-html="answer.content">
-                    </div>
-
-                    <!-- Student Attachment -->
-                    <compair-attachment-inline label="See answer details:"
-                        attachment="answer.file" ng-click="revealAnswer(answer)">
-                    </compair-attachment-inline>
+                    <rich-content content="answer.content" attachment="answer.file" ng-click="revealAnswer(answer)"></rich-content>
                 </div>
 
                 <!-- Student Answer Replies Section -->
@@ -495,7 +482,7 @@
 
                 <h3 ng-if="$first">Your comparisons</h3>
                 <br ng-if="$first"/>
-            
+
                 <!-- Comparison Header -->
                 <div class="each-header">
                     <compair-avatar user-id="comparison.user_id" avatar="comparison.user.avatar" me="true"></compair-avatar>

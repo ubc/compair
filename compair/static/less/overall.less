@@ -17,6 +17,10 @@ h6 {
   font-weight: bold;
 }
 
+.rich-content-attachments h5 {
+  margin-top: 15px;  
+}
+
 /* code highlighting blocks shouldn't have boxes around them */
 pre {
     background-color: transparent;
@@ -120,6 +124,19 @@ dt {
 
 }//closes sub-nav
 
+/* class for pop-up / show below options for attachments */
+.pop-or-show {
+  
+  margin: 1em 0;
+  padding-left: 1em;
+  border-left: 1px dashed @link-blue;
+  
+  .btn {
+    margin: .5em .5em .5em 0;
+  }
+  
+}//closes pop-or-show
+
 /* class for filters */
 .filter {
 
@@ -171,7 +188,7 @@ dt {
   }
 
   /* assignment details */
-  div {
+  .assignment-desc {
     font-size: 1.1em;
   }
 

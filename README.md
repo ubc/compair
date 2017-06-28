@@ -199,6 +199,37 @@ You can set the data the first time by running:
 
     python manage.py database create
 
+(Optional) Kaltura Media Attachments
+---------------------------
+
+You may optionally enable Kaltura uploads to support more media file attachment types with better cross browser playback compatibility.
+
+It is highly recommended to create a seperate account for ComPAIR so it does not interfere with other content. ComPAIR treats the account provided as a bucket account to store all video/audio uploads. You should have a Kaltura player setup and configured for the account.
+
+Currently only version 3 of the Kaltura api is supported.
+
+### Settings
+
+`KALTURA_ENABLED`: Set to 1 to enable uploading media attachments to a Kaltura account (off by default).
+
+`KALTURA_SERVICE_URL`: The base url of the Kaltura server.
+
+`KALTURA_PARTNER_ID`: The partner id of the Kaltura account.
+
+`KALTURA_SECRET`: The secret for the partner id provided.
+
+`KALTURA_USER_ID`: The user id (email) of the Kaltura account.
+
+`KALTURA_PLAYER_ID`: A Kaltura player id (conf ui id) to display the media in.
+
+`ATTACHMENT_UPLOAD_LIMIT`: The file size upload limit (in bytes) for all attachments including Kaltura uploads. (default 250MB).
+
+`KALTURA_VIDEO_EXTENSIONS`: Set of video file extensions that will be uploaded to the Kaltura instead of ComPAIR (default: mp4, mov, and webm).
+
+`KALTURA_AUDIO_EXTENSIONS`: Set of audio file extensions that will be uploaded to the Kaltura instead of ComPAIR (default: mp3).
+
+Restart server after making any changes to settings
+
 Google Analytics Web Tracking
 -----------------------------
 1. Register for a Google Analytics web property ID at http://www.google.ca/analytics/.

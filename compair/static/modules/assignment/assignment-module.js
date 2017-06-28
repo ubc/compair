@@ -23,9 +23,7 @@ var module = angular.module('ubc.ctlt.compair.assignment',
         'ubc.ctlt.compair.common.xapi',
         'ubc.ctlt.compair.common.form',
         'ubc.ctlt.compair.common.interceptor',
-        'ubc.ctlt.compair.common.mathjax',
-        'ubc.ctlt.compair.common.highlightjs',
-        'ubc.ctlt.compair.common.attachment',
+        'ubc.ctlt.compair.rich.content',
         'ubc.ctlt.compair.criterion',
         'ubc.ctlt.compair.group',
         'ubc.ctlt.compair.comparison',
@@ -398,7 +396,6 @@ module.controller("AssignmentViewController",
             var thisClass = '.content.'+answer.id;      // class for the answer to show is "content" plus the answer's ID
             $(thisClass).css({'max-height' : 'none'}); // now remove height restriction for this answer
             this.showReadMore = false;                 // and hide the read more button for this answer
-            xAPIStatementHelper.opened_answer_show_all_section(answer);
         };
 
         // assignment delete function
@@ -730,11 +727,11 @@ module.controller("AssignmentViewController",
 ]);
 module.controller("AssignmentWriteController",
     [ "$scope", "$q", "$location", "$routeParams", "$route", "AssignmentResource", "$uibModal",
-             "CriterionResource", "required_rounds", "Toaster", "attachService",
+             "CriterionResource", "required_rounds", "Toaster", "attachService", "UploadValidator",
              "EditorOptions", "PairingAlgorithm", "ComparisonExampleResource",
              "AnswerResource", "xAPIStatementHelper", "resolvedData", "moment",
     function($scope, $q, $location, $routeParams, $route, AssignmentResource, $uibModal,
-             CriterionResource, required_rounds, Toaster, attachService,
+             CriterionResource, required_rounds, Toaster, attachService, UploadValidator,
              EditorOptions, PairingAlgorithm, ComparisonExampleResource,
              AnswerResource, xAPIStatementHelper, resolvedData, moment)
     {
@@ -757,6 +754,7 @@ module.controller("AssignmentWriteController",
            $scope.method = "copy";
         }
 
+        $scope.UploadValidator = UploadValidator;
         $scope.editorOptions = EditorOptions.basic;
         $scope.PairingAlgorithm = PairingAlgorithm;
         $scope.uploader = attachService.getUploader();

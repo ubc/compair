@@ -1,0 +1,22 @@
+<p ng-if="(content.type == 'kaltura_video' || content.type == 'kaltura_audio') && content.show_recent_warning === true" class="intro-text bg-warning text-warning alert">
+    <i class="fa fa-warning"></i>
+    This <span ng-if="content.type == 'kaltura_video'">video</span><span ng-if="content.type == 'kaltura_audio'">audio</span> was uploaded recently. It may take a short while for the server to process it.
+</p>
+<div ng-if="content.type == 'kaltura_video'" class="embed-responsive embed-responsive-16by9">
+    <kaltura-player id="{{content.id}}_{{modalInstance ? 'modal' : 'inline'}}" base-url="{{content.service_url}}" video="content.kalturaAttributes" class="content-item embed-responsive-item"></kaltura-player>
+</div>
+<div ng-if="content.type == 'kaltura_audio'">
+    <kaltura-player id="{{content.id}}_{{modalInstance ? 'modal' : 'inline'}}" base-url="{{content.service_url}}" width="100%" height="90px" video="content.kalturaAttributes" class="content-item"></kaltura-player>
+</div>
+<div ng-if="content.type == 'pdf'" class="embed-responsive embed-responsive-16by9">
+    <pdfjs-viewer src="{{ content.url }}" class="content-item embed-responsive-item"></pdfjs-viewer>
+</div>
+<div ng-if="content.type == 'image'">
+    <img ng-src="{{content.url}}" ng-alt="{{content.title}}" class="content-item" />
+</div>
+<div ng-if="content.type == 'video'" class="embed-responsive embed-responsive-16by9">
+    <video ng-src="{{content.url}}" controls class="content-item embed-responsive-item"></video>
+</div>
+<div ng-if="content.type == 'audio'">
+    <audio ng-src="{{content.url}}" controls class="content-item"></audio>
+</div>

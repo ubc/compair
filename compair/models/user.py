@@ -70,6 +70,9 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     files = db.relationship("File",
         foreign_keys='File.user_id',
         backref="user", lazy='dynamic')
+    kaltura_files = db.relationship("KalturaMedia",
+        foreign_keys='KalturaMedia.user_id',
+        backref="user", lazy='dynamic')
     comparisons = db.relationship("Comparison",
         foreign_keys='Comparison.user_id',
         backref="user", lazy='dynamic')

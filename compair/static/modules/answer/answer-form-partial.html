@@ -12,11 +12,7 @@
 <form class="form" name="answerForm" ng-submit="answerSubmit()" novalidate confirm-form-exit form-type="answer">
     <fieldset>
         <h2 ng-hide="comparison_example"><i class="fa fa-comments"></i> {{assignment.name}}</h2>
-        <div class="assignment-desc" mathjax hljs ng-bind-html="assignment.description" ng-hide="comparison_example"></div>
-
-        <!-- Attachment -->
-        <compair-attachment-inline label="See assignment details:" attachment="assignment.file" ng-hide="comparison_example"></compair-attachment-inline>
-
+        <rich-content content="assignment.description" attachment="assignment.file" ng-hide="comparison_example"></rich-content>
         <hr ng-hide="comparison_example" />
 
         <div class="h3 text-center" ng-show="!canManageAssignment && showCountDown && comparison_example !== true">
@@ -37,16 +33,16 @@
         </div>
 
         <div>
-            <label for="importFile">Attachment (maximum size 25MB)</label>
+            <label for="importFile">Your Attachment (maximum size {{UploadValidator.getAttachmentUploadLimit() | filesize }})</label>
             <p ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)">
                 <span class="required-star"></span>
                 <em>
-                    Tip: Allowed file types include PDFs, MP3s, MP4s, JPGs, and PNGs.
+                    Tip: Allowed file types include {{ UploadValidator.getAttachmentExtensionsForDisplay() }}.
                     Try downloading <a href="https://get.adobe.com/reader/">Acrobat Reader</a> or using <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a> or <a href="http://www.google.com/chrome/">Chrome</a> if you have problems uploading PDFs.
                 </em>
             </p>
             <input type="file" nv-file-select uploader="uploader" ng-click="answerForm.$setDirty()" id="importFile" ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)" multiple/>
-            <p class="instructional-text" ng-show="uploader.queue.length"><strong>Save this answer</strong> to submit the file below. You may also remove the file and upload another instead.</p>
+            <p class="instructional-text" ng-show="uploader.queue.length"><strong>Submit this answer</strong> to save the file below. You may also remove the file and upload another instead.</p>
             <div class="row" ng-repeat="item in uploader.queue">
                 <div class="col-md-7"><i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong></div>
                 <div class="col-md-1">{{item.file.size/1024/1024|number:2}} MB</div>
@@ -84,15 +80,15 @@
     <div class="text-center" ng-show="answer.draft && (!canManageAssignment || answer.user_id == loggedInUserId)">
         <input type="submit" class="btn btn-default btn-lg" value="Save Draft"
 		    ng-click="answer.draft = true"
-		    ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess)" />
+		    ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
 		&nbsp; &nbsp;
 		<input type="submit" class="btn btn-success btn-lg" value="Submit"
             ng-click="answer.draft = false"
-            ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess)" />
+            ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
     </div>
     <div ng-show="!answer.draft || (canManageAssignment && answer.user_id != loggedInUserId)">
         <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
             ng-click="answer.draft = false"
-            ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess)" />
+            ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
     </div>
 </form>

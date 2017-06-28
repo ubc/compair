@@ -17,6 +17,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='lib/AngularJS-Toaster/toaster.css') }}" />
         <link rel="stylesheet" href="{{ url_for('static', filename='lib/chosen/chosen.css') }}" />
         <link rel="stylesheet" href="{{ url_for('static', filename='lib/chosen-bootstrap-theme/dist/chosen-bootstrap-theme.min.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='lib/pdf.js-viewer/viewer.css') }}" />
         <!-- endbower -->
 
         <!-- Javascript Libraries -->
@@ -53,12 +54,16 @@
         <script src="{{ url_for('static', filename='lib/angular-uuids/angular-uuid.js') }}"></script>
         <script src="{{ url_for('static', filename='lib/angular-local-storage/dist/angular-local-storage.js') }}"></script>
         <script src="{{ url_for('static', filename='lib/angular-promise-extras/angular-promise-extras.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/ng-kaltura-player/index.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/pdf.js-viewer/pdf.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/angular-pdfjs-viewer/dist/angular-pdfjs-viewer.js') }}"></script>
         <!-- endbower -->
         <!-- endbuild -->
 
         <!-- font awesome CDN -->
         <script src="https://use.fontawesome.com/5896577a49.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.11/ckeditor.js"></script>
+        <script src="//platform.twitter.com/widgets.js"></script>
 
         <!-- Non-Bower Managed Includes -->
 
@@ -79,6 +84,7 @@
 
             // config CKEDITOR
             CKEDITOR.plugins.addExternal( 'combinedmath', '/app/lib_extension/ckeditor/plugins/combinedmath/' );
+            CKEDITOR.plugins.addExternal( 'autolink', '/app/lib_extension/ckeditor/plugins/autolink/' );
             CKEDITOR.on('dialogDefinition', function(ev) {
                 var dialogName = ev.data.name;
                 var dialog = ev.data.definition.dialog;
@@ -100,11 +106,12 @@
         <script src="{{ url_for('static', filename='modules/common/modal-cancel-button-directive.js') }}"></script>
         <script src="{{ url_for('static', filename='modules/common/avatar-directive.js') }}"></script>
         <script src="{{ url_for('static', filename='modules/common/http-interceptor-service.js') }}"></script>
-        <script src="{{ url_for('static', filename='modules/common/mathjax-directive.js') }}"></script>
-        <script src="{{ url_for('static', filename='modules/common/hljs-directive.js') }}"></script>
         <script src="{{ url_for('static', filename='modules/common/timer-module.js') }}"></script>
         <script src="{{ url_for('static', filename='modules/common/xapi-module.js') }}"></script>
-        <script src="{{ url_for('static', filename='modules/common/attachment-directive.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/rich-content/mathjax-directive.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/rich-content/hljs-directive.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/rich-content/twttr-directive.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/rich-content/rich-content-directive.js') }}"></script>
         <!-- - Non-Route Modules -->
         <script src="{{ url_for('static', filename='modules/authentication/authentication-service.js') }}"></script>
         <script src="{{ url_for('static', filename='modules/authorization/authorization-module.js') }}"></script>
@@ -142,8 +149,12 @@
                     AuthTypesEnabled.demo = {{ 'true' if demo else 'false' }};
                 }]);
                 angular.module('ubc.ctlt.compair.attachment')
-                .run( ['FileExtensions', function(FileExtensions) {
-                    FileExtensions.attachment = {{ attachment_extensions|string|safe if attachment_extensions else [] }};
+                .run( ['UploadSettings', function(UploadSettings) {
+                    UploadSettings.attachmentExtensions = {{ attachment_extensions|string|safe if attachment_extensions else [] }};
+                    UploadSettings.attachmentUploadLimit = {{ attachment_upload_limit if attachment_upload_limit else 262144000 }};
+                    {% if kaltura_enabled %}
+                    UploadSettings.kalturaExtensions = {{ kaltura_extensions|string|safe if attachment_extensions else [] }};
+                    {% endif %}
                 }]);
                 angular.module('ubc.ctlt.compair.common.xapi')
                 .run( ['$location', 'xAPISettings', function($location, xAPISettings) {

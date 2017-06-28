@@ -98,14 +98,17 @@
         border-color: #000;
     }
 
-    /* for PDF viewer buttons */
-    .pdfInline a {
-        background: transparent;
+    /* for Rich Content */
+    .rich-content-embed {
+        display: none;
+    }
+    .each-attachment-content .heading a {
+        display: transparent;
         border: none;
     }
-        .pdfInline a:after {
-            content: ' [Log in to the application to see and download this file]';
-        }
+    .each-attachment-content .heading a:after {
+        content: ' [Log in to the application to see and download this file]';
+    }
 
     /* add space for writing next to answers */
     .assignment-screen .tab-content .each-answer > .content,

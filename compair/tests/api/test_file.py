@@ -9,6 +9,7 @@ from flask import make_response
 from data.fixtures.test_data import TestFixture
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.core import db
+from compair.models import KalturaMedia
 
 
 class FileRetrieveTests(ComPAIRAPITestCase):
@@ -105,15 +106,11 @@ class FileRetrieveTests(ComPAIRAPITestCase):
         url = '/api/attachment'
         test_formats = [
             ('pdf', 'application/pdf'),
-            ('PDF', 'application/pdf'),
             ('mp3', 'audio/mpeg'),
-            ('MP3', 'audio/mpeg'),
             ('mp4', 'video/mp4'),
-            ('MP4', 'video/mp4'),
+            ('webm', 'video/webm'),
             ('jpg', 'image/jpeg'),
-            ('JPG', 'image/jpeg'),
-            ('jpeg', 'image/jpeg'),
-            ('JPEG', 'image/jpeg')
+            ('jpeg', 'image/jpeg')
         ]
 
         # test login required
@@ -136,7 +133,7 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert400(rv)
             self.assertEqual("Attachment Not Uploaded", rv.json['title'])
-            self.assertEqual("Only JPEG, JPG, MP3, MP4, PDF, PNG files can be uploaded. Please try again with a valid file.",
+            self.assertEqual("Only JPEG, JPG, MP3, MP4, PDF, PNG, WEBM files can be uploaded. Please try again with a valid file.",
                 rv.json['message'])
 
             for extension, mimetype in test_formats:
@@ -153,3 +150,171 @@ class FileRetrieveTests(ComPAIRAPITestCase):
                 self.assertEqual(filename, actual_file['alias'])
                 self.assertEqual(extension.lower(), actual_file['extension'])
                 self.assertEqual(mimetype, actual_file['mimetype'])
+
+                # test with uppercase extension
+                filename = 'alias.'+extension.upper()
+
+                uploaded_file = io.BytesIO(b"this is a test")
+                rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+                self.assert200(rv)
+                uploaded_file.close()
+
+                actual_file = rv.json['file']
+                self.files_to_cleanup.append(actual_file['name'])
+                self.assertEqual(actual_file['id']+"."+extension.lower(), actual_file['name'])
+                self.assertEqual(filename, actual_file['alias'])
+                self.assertEqual(extension.lower(), actual_file['extension'])
+                self.assertEqual(mimetype, actual_file['mimetype'])
+
+
+    @mock.patch('compair.kaltura.kaltura_session.KalturaSession._api_start')
+    @mock.patch('compair.kaltura.kaltura_session.KalturaSession._api_end')
+    @mock.patch('compair.kaltura.upload_token.UploadToken._api_add')
+    def test_get_kaltura(self, mocked_upload_token_add, mocked_kaltura_session_end, mocked_kaltura_session_start):
+        url = '/api/attachment/kaltura'
+        current_app.config['KALTURA_ENABLED'] = True
+        current_app.config['KALTURA_SERVICE_URL'] = "https://www.kaltura.com"
+        current_app.config['KALTURA_PARTNER_ID'] = 123
+        current_app.config['KALTURA_USER_ID'] = "test@test.com"
+        current_app.config['KALTURA_SECRET'] = "abc"
+        current_app.config['KALTURA_PLAYER_ID'] = 456
+
+        mocked_kaltura_session_start.return_value = "ks_mock"
+        mocked_kaltura_session_end.return_value = {}
+        mocked_upload_token_add.return_value = {
+            "id": "mocked_upload_token_id"
+        }
+        expected_upload_url = "https://www.kaltura.com/api_v3/service/uploadtoken/action/upload?format=1&uploadTokenId=mocked_upload_token_id&ks=ks_mock"
+
+
+        # test login required
+        rv = self.client.get(url)
+        self.assert401(rv)
+
+        with self.login(self.fixtures.instructor.username):
+            # test kaltura disabled
+            current_app.config['KALTURA_ENABLED'] = False
+            rv = self.client.get(url)
+            self.assert400(rv)
+
+            # test kaltura enabled
+            current_app.config['KALTURA_ENABLED'] = True
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(rv.json['upload_url'], expected_upload_url)
+
+            self.assertEqual(mocked_kaltura_session_start.call_count, 2)
+            mocked_kaltura_session_start.assert_any_call()
+            mocked_kaltura_session_start.assert_any_call(
+                privileges="edit:mocked_upload_token_id,urirestrict:/api_v3/service/uploadtoken/action/upload*")
+            mocked_kaltura_session_start.reset_mock()
+
+            mocked_kaltura_session_end.assert_called_once_with("ks_mock")
+            mocked_kaltura_session_end.reset_mock()
+
+            mocked_upload_token_add.assert_called_once_with("ks_mock")
+            mocked_upload_token_add.reset_mock()
+
+            kaltura_media_items = KalturaMedia.query.all()
+            self.assertEqual(len(kaltura_media_items), 1)
+            self.assertEqual(kaltura_media_items[0].user_id, self.fixtures.instructor.id)
+            self.assertEqual(kaltura_media_items[0].partner_id, 123)
+            self.assertEqual(kaltura_media_items[0].player_id, 456)
+            self.assertEqual(kaltura_media_items[0].upload_ks, "ks_mock")
+            self.assertEqual(kaltura_media_items[0].upload_token_id, "mocked_upload_token_id")
+            self.assertIsNone(kaltura_media_items[0].file_name)
+            self.assertIsNone(kaltura_media_items[0].entry_id)
+            self.assertIsNone(kaltura_media_items[0].download_url)
+
+    @mock.patch('compair.kaltura.kaltura_session.KalturaSession._api_start')
+    @mock.patch('compair.kaltura.kaltura_session.KalturaSession._api_end')
+    @mock.patch('compair.kaltura.upload_token.UploadToken._api_get')
+    @mock.patch('compair.kaltura.media.Media._api_add')
+    @mock.patch('compair.kaltura.media.Media._api_add_content')
+    def test_post_kaltura(self, mocked_kaltura_media_add_content, mocked_kaltura_media_add, mocked_upload_token_get,
+            mocked_kaltura_session_end, mocked_kaltura_session_start):
+        url = '/api/attachment/kaltura/mocked_upload_token_id'
+        invalid_url = '/api/attachment/kaltura/mocked_upload_token_id_invalid'
+        current_app.config['KALTURA_ENABLED'] = True
+        current_app.config['KALTURA_SERVICE_URL'] = "https://www.kaltura.com"
+        current_app.config['KALTURA_PARTNER_ID'] = 123
+        current_app.config['KALTURA_USER_ID'] = "test@test.com"
+        current_app.config['KALTURA_SECRET'] = "abc"
+        current_app.config['KALTURA_PLAYER_ID'] = 456
+
+        mocked_kaltura_session_start.return_value = "ks_mock"
+        mocked_kaltura_session_end.return_value = {}
+        mocked_upload_token_get.return_value = {
+            "id": "mocked_upload_token_id",
+            "fileName": "uploaded_audio_file.mp3"
+        }
+        mocked_kaltura_media_add.return_value = {
+            "id": "mock_entry_id"
+        }
+        mocked_kaltura_media_add_content.return_value = {
+            "id": "mock_entry_id",
+            "downloadUrl": "www.download/url.com"
+        }
+
+        kaltura_media = KalturaMedia(
+            user=self.fixtures.instructor,
+            service_url="https://www.kaltura.com",
+            partner_id=123,
+            player_id=456,
+            upload_ks="upload_ks_mock",
+            upload_token_id="mocked_upload_token_id"
+        )
+        db.session.add(kaltura_media)
+
+        invalid_kaltura_media =  KalturaMedia(
+            user=self.fixtures.instructor,
+            service_url="https://www.kaltura.com",
+            partner_id=123,
+            player_id=456,
+            upload_ks="upload_ks_mock",
+            upload_token_id="mocked_upload_token_id_invalid",
+            entry_id="def"
+        )
+        db.session.add(invalid_kaltura_media)
+        db.session.commit()
+
+        # test login required
+        rv = self.client.post(url)
+        self.assert401(rv)
+
+        with self.login(self.fixtures.instructor.username):
+            # test kaltura disabled
+            current_app.config['KALTURA_ENABLED'] = False
+            rv = self.client.post(url)
+            self.assert400(rv)
+
+            # test invalid upload_token_id
+            current_app.config['KALTURA_ENABLED'] = True
+            rv = self.client.post(invalid_url)
+            self.assert400(rv)
+
+            # test valid
+            rv = self.client.post(url)
+            self.assert200(rv)
+            self.assertEqual(rv.json['file']['id'], kaltura_media.files.all()[0].uuid)
+            self.assertEqual(kaltura_media.file_name, "uploaded_audio_file.mp3")
+            self.assertEqual(kaltura_media.entry_id, "mock_entry_id")
+            self.assertEqual(kaltura_media.download_url, "www.download/url.com")
+            self.assertEqual(kaltura_media.service_url, "https://www.kaltura.com")
+
+            mocked_kaltura_session_start.assert_called_once_with()
+            mocked_kaltura_session_start.reset_mock()
+
+            self.assertEqual(mocked_kaltura_session_end.call_count, 2)
+            mocked_kaltura_session_end.assert_any_call("ks_mock")
+            mocked_kaltura_session_end.assert_any_call("upload_ks_mock")
+            mocked_kaltura_session_end.reset_mock()
+
+            mocked_upload_token_get.assert_called_once_with("ks_mock", "mocked_upload_token_id")
+            mocked_upload_token_get.reset_mock()
+
+            mocked_kaltura_media_add.assert_called_once_with("ks_mock", 5)
+            mocked_kaltura_media_add.reset_mock()
+
+            mocked_kaltura_media_add_content.assert_called_once_with("ks_mock", "mock_entry_id", "mocked_upload_token_id")
+            mocked_kaltura_media_add_content.reset_mock()

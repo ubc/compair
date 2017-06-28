@@ -9,7 +9,7 @@ var answerTemplate = {
     "comment_count": 0,
     "private_comment_count": 0,
     "public_comment_count": 0,
-    "file": [],
+    "file": null,
     "scores": [],
     "user": {
         "id": null,

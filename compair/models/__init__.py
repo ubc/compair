@@ -2,8 +2,9 @@
 from .mixins import ActiveMixin, DefaultTableMixin, WriteTrackingMixin, UUIDMixin
 
 # enums
-from .custom_types import AnswerCommentType, CourseRole, PairingAlgorithm, \
-    ScoringAlgorithm, SystemRole, ThirdPartyType, WinningAnswer
+from .custom_types import AnswerCommentType, CourseRole, \
+    PairingAlgorithm, ScoringAlgorithm, SystemRole, \
+    ThirdPartyType, WinningAnswer
 
 # models
 from .activity_log import ActivityLog
@@ -30,6 +31,8 @@ from .xapi_log import XAPILog
 # LTI models
 from .lti_models import LTIConsumer, LTIContext, LTIMembership, \
     LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce, LTIOutcome
+
+from .kaltura_models import KalturaMedia
 
 from compair.core import db
 convention = {

@@ -9,9 +9,8 @@
                 </span>
             </span>
         </h4>
-        <div mathjax hljs ng-if="answer" ng-bind-html="answer.content"></div>
+
+        <rich-content content="answer.content" attachment="answer.file" ng-if="answer"></rich-content>
         <div ng-if="!answer"><i>(This answer has been deleted.)</i></div>
-        <!-- Attachments -->
-        <compair-attachment-inline label="See details:" attachment="answer.file"></compair-attachment-inline>
     </div>
 </div>

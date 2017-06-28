@@ -8,8 +8,7 @@ var module = angular.module('ubc.ctlt.compair.criterion', [
     'ngResource',
     'ui.bootstrap',
     'ubc.ctlt.compair.common.form',
-    'ubc.ctlt.compair.common.mathjax',
-    'ubc.ctlt.compair.common.highlightjs',
+    'ubc.ctlt.compair.rich.content',
     'ubc.ctlt.compair.toaster'
 ]);
 
