@@ -19,7 +19,7 @@
             </span>
         </div>
     </div>
-    <p class="intro-text" ng-if="canManageAssignment">To export data reports for participation and other application statistics, go to <a ng-href="#/report">Download Reports</a>.</p>
+    <p class="intro-text"><span ng-if="canManageAssignment">To export data reports for participation and other application statistics, go to <a ng-href="#/report">Download Reports</a>.</span> <span ng-if="includeScores">Note that answer scores are normalized from the scores assigned using ComPAIR's <a href="http://ubc.github.io/compair/site/best-practices.html#scores" target="_blank">scoring algorithm</a> and are not reflective of a straight win-loss record.</span></p>
     <div ng-if="!gradebook.length">
         <hr />
         <p>No students found for this course. Would you like to <a ng-href="#/course/{{courseId}}/user">manage users</a>?</p>

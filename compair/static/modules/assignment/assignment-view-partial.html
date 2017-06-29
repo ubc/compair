@@ -294,7 +294,7 @@
                     <!-- Student Score (not used for instructor answers) -->
                     <p class="pull-right score-display" ng-if="canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && answer.score">
                         <em>Score: {{answer.score.normalized_score}}%</em>
-                        <a href="" uib-tooltip="The top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
+                        <a href="" uib-tooltip="Scores are normalized, so the top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
                             <i class="fa fa-question-circle"></i>
                         </a>
                     </p>
