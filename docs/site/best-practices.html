@@ -62,11 +62,11 @@
                         <li class="list-group-item"><strong>Integration:</strong> Assignments felt more beneficial to students when presented as part of a larger process. It may be more useful for students to use ComPAIR to see what their peers have done and reflect on their own work in the context of a bigger goal, rather than apply this to standalone assignments that are not concretely tied into the course in any other way.</li>
                     </ul>
                     
-                    <h2>Notes on scoring and grades</h2>
+                    <h2><a id="scoring"></a>Notes on scoring and grades</h2>
                     
-                    <p>When ComPAIR assignments are set up to select answer pairs adaptively&mdash;that is, to pick answers that are closer in quality&mdash;the application tracks a score for each student answer. This score is a calculation of the answer's win-loss record, with weighting applied (based on the Elo rating system) to reflect the impact of more significant wins and losses. The score is what allows the application to more closely match pairs as additional student ranking data is gathered over time.
- </p>
-                    <p>Some instructors have used the scores to form all or part of a student's grade for the assignments. While you are welcome to use the application for grading, we caution against relying on ComPAIR without additional external validation. The algorithm behind the scores has not yet been thoroughly vetted for this purpose and ultimately relies on the training of novice users (students) to provide accurate, well-informed rankings.</p>
+                    <p>When ComPAIR assignments are set up to select answer pairs adaptively&mdash;that is, to pair answers that are closer in quality&mdash;the application tracks a score for each student answer. Every answer starts with a base score and that increases or decreases (based on the <a href="https://en.wikipedia.org/wiki/Elo_rating_system" target="_blank">Elo rating system</a>) to reflect the outcome of the comparisons the answer competes in. Basically, after every comparison, the winning answer takes points from the losing one, with the difference between the answer scores at the time of comparison factoring into the total number of points transferred.</p>
+                    <p>Once answers move beyond the base score, higher-rated answers are expected to win more often. So if a higher-rated answer wins (as expected), fewer points are taken from the lower-rated answer's score. Conversely, if a lower-rated answer wins in an upset (unexpectedly), more points will be transferred to the lower-rated answer's score. At the end of this process, stronger answers should end up with higher scores and weaker answers with lower scores.</p>
+                    <p>Some instructors have used the scores and the ranking they provide to form all or part of a student's grade for the assignments. While you are welcome to use the application this way, we caution against relying on ComPAIR without any additional external validation. The algorithm behind the scores has not yet been thoroughly vetted for this purpose and ultimately relies on the skills and training of novice users (students) to provide accurate, well-informed rankings of their peers.</p>
                     
                     <p class="text-center"><a href="documentation.html" class="btn btn-success btn-lg" role="button">Get started &raquo;</a></p>
                 </div>
@@ -92,7 +92,7 @@
             <hr>
 
             <footer>
-                <p>&copy; University of British Columbia</p>
+                <p>&copy; University of British Columbia | <a href="http://ctlt.ubc.ca/" target="_blank">CTLT</a></p>
             </footer>
     
         </div> <!-- /container -->
