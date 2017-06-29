@@ -8,3 +8,4 @@ node_modules
 bower_components
 
 .data
+docker-compose.overrides.yml

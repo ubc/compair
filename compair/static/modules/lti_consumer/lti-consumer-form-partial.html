@@ -18,6 +18,20 @@
                 ng-minlength="10" ng-maxlength="255"
                 required />
         </compair-field-with-feedback>
+        <compair-field-with-feedback form-control="consumerForm.canvas_consumer">
+            <input id="canvas_consumer" type="checkbox" ng-model="consumer.canvas_consumer">
+            <label class="not-bold" for="canvas_consumer">Canvas Consumer</label>
+        </compair-field-with-feedback>
+        <compair-field-with-feedback form-control="consumerForm.canvas_api_token" ng-if="consumer.canvas_consumer">
+            <label for="canvas_api_token">Consumer Secret</label>
+            <input class="form-control" id="canvas_api_token" type="text"
+                name="canvas_api_token" ng-model="consumer.canvas_api_token"
+                ng-maxlength="255" />
+        </compair-field-with-feedback>
+        <compair-field-with-feedback form-control="consumerForm.active" ng-if="method == 'edit'">
+            <input id="active" type="checkbox" ng-model="consumer.active">
+            <label class="not-bold" for="active">Active</label>
+        </compair-field-with-feedback>
     </fieldset>
 
     <input type="submit" class="btn btn-success center-block btn-lg" value="Save"

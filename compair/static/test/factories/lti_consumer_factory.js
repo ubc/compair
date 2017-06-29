@@ -5,6 +5,8 @@ var ltiConsumerTemplate = {
     "oauth_consumer_key": null,
     "oauth_consumer_secret": null,
     "active": true,
+    "canvas_consumer": false,
+    "canvas_api_token": null,
     "created": "Mon, 18 Apr 2016 17:38:23 -0000",
     "modified": "Mon, 18 Apr 2016 17:38:23 -0000"
 }

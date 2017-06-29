@@ -16,6 +16,8 @@ api = new_restful_api(lti_consumer_api)
 new_consumer_parser = reqparse.RequestParser()
 new_consumer_parser.add_argument('oauth_consumer_key', type=str, required=True)
 new_consumer_parser.add_argument('oauth_consumer_secret', type=str)
+new_consumer_parser.add_argument('canvas_consumer', type=bool, default=False)
+new_consumer_parser.add_argument('canvas_api_token', type=str)
 
 existing_consumer_parser = new_consumer_parser.copy()
 existing_consumer_parser.add_argument('id', type=str, required=True)
@@ -71,6 +73,8 @@ class ConsumerAPI(Resource):
 
         consumer.oauth_consumer_key = params.get("oauth_consumer_key")
         consumer.oauth_consumer_secret = params.get("oauth_consumer_secret")
+        consumer.canvas_consumer = params.get("canvas_consumer")
+        consumer.canvas_api_token = params.get("canvas_api_token")
 
         try:
             db.session.add(consumer)
@@ -86,7 +90,7 @@ class ConsumerAPI(Resource):
             db.session.rollback()
             abort(409, title="Consumer Not Saved", message="A LTI consumer with the same consumer key already exists.")
 
-        return marshal(consumer, dataformat.get_lti_consumer())
+        return marshal(consumer, dataformat.get_lti_consumer(include_sensitive=True))
 
 
 api.add_resource(ConsumerAPI, '')
@@ -107,7 +111,7 @@ class ConsumerIdAPI(Resource):
             user=current_user
         )
 
-        return marshal(consumer, dataformat.get_lti_consumer())
+        return marshal(consumer, dataformat.get_lti_consumer(include_sensitive=True))
 
     @login_required
     def post(self, consumer_uuid):
@@ -124,6 +128,8 @@ class ConsumerIdAPI(Resource):
 
         consumer.oauth_consumer_key = params.get("oauth_consumer_key")
         consumer.oauth_consumer_secret = params.get("oauth_consumer_secret")
+        consumer.canvas_consumer = params.get("canvas_consumer")
+        consumer.canvas_api_token = params.get("canvas_api_token")
         consumer.active = params.get("active")
 
         try:
@@ -138,7 +144,7 @@ class ConsumerIdAPI(Resource):
             db.session.rollback()
             abort(409, title="Consumer Not Updated", message="A LTI consumer with the same consumer key already exists.")
 
-        return marshal(consumer, dataformat.get_lti_consumer())
+        return marshal(consumer, dataformat.get_lti_consumer(include_sensitive=True))
 
 
 api.add_resource(ConsumerIdAPI, '/<consumer_uuid>')

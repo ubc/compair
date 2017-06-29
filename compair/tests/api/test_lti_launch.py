@@ -210,7 +210,6 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 # check that user is logged in
                 self.assertEqual(str(user.id), sess.get('user_id'))
 
-            # verify lti_resource_link does not retain the invalid assignment_id
             self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
 
             # ensure replay attacks do not work for lti launch requests
@@ -462,8 +461,8 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
         self.assert200(rv)
 
 
-    @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._send_membership_request')
-    def test_lti_course_link_with_membership(self, mocked_send_membership_request):
+    @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._post_membership_request')
+    def test_lti_course_link_with_membership_ext(self, mocked_post_membership_request):
         instructor = self.data.get_authorized_instructor()
         course = self.data.get_course()
         current_users = [(user_course.user_id, user_course.course_role) for user_course in course.user_courses]
@@ -483,7 +482,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 ext_ims_lis_memberships_id="123", ext_ims_lis_memberships_url="https://mockmembershipurl.com") as rv:
             self.assert200(rv)
 
-            mocked_send_membership_request.return_value = """
+            mocked_post_membership_request.return_value = """
                 <message_response>
                 <lti_message_type></lti_message_type>
                 <statusinfo>
@@ -508,7 +507,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 ext_ims_lis_memberships_id="123", ext_ims_lis_memberships_url="https://mockmembershipurl.com") as rv:
             self.assert200(rv)
 
-            mocked_send_membership_request.return_value = """
+            mocked_post_membership_request.return_value = """
                 <message_response>
                 <lti_message_type>basic-lis-readmembershipsforcontext</lti_message_type>
                 <statusinfo>
@@ -537,7 +536,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 ext_ims_lis_memberships_id="123", ext_ims_lis_memberships_url="https://mockmembershipurl.com") as rv:
             self.assert200(rv)
 
-            mocked_send_membership_request.return_value = """
+            mocked_post_membership_request.return_value = """
                 <message_response>
                 <lti_message_type>basic-lis-readmembershipsforcontext</lti_message_type>
                 <statusinfo>
@@ -595,8 +594,379 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1", "compair_student_2",
                     "compair_student_3", "compair_instructor_2"])
 
-    @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._send_membership_request')
-    def test_lti_membership(self, mocked_send_membership_request):
+
+    @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._get_membership_request')
+    def test_lti_course_link_with_canvas_membership_url(self, mocked_get_membership_request):
+        instructor = self.data.get_authorized_instructor()
+        course = self.data.get_course()
+        current_users = [(user_course.user_id, user_course.course_role) for user_course in course.user_courses]
+
+        url = '/api/lti/course/'+course.uuid+'/link'
+
+        lti_consumer = self.lti_data.lti_consumer
+        lti_consumer.canvas_consumer = True
+        lti_consumer.canvas_api_token = "canvas_api_token"
+        db.session.commit()
+
+        lti_context = self.lti_data.create_context(lti_consumer)
+        lti_user = self.lti_data.create_user(lti_consumer, SystemRole.instructor, instructor)
+        lti_resource_link = self.lti_data.create_resource_link(lti_consumer, lti_context)
+        lti_user_resource_link = self.lti_data.create_user_resource_link(
+            lti_user, lti_resource_link, CourseRole.instructor)
+
+        # test empty membership response
+        with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                user_id=lti_user.user_id, context_id=lti_context.context_id, roles="Instructor",
+                custom_context_memberships_url="https://mockmembershipurl.com") as rv:
+            self.assert200(rv)
+
+            mocked_get_membership_request.return_value = {
+                "@id":None,
+                "@type":"Page",
+                "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                "differences":None,
+                "nextPage":None,
+                "pageOf":{
+                    "membershipPredicate":"http://www.w3.org/ns/org#membership",
+                    "membershipSubject":{
+                        "@id":None,
+                        "name":"Test Course",
+                        "@type":"Context",
+                        "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
+                        "membership":[]
+                    },
+                    "@id":None,
+                    "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                    "@type":"LISMembershipContainer"
+                }
+            }
+
+            # link course
+            rv = self.client.post(url, data={}, content_type='application/json')
+            self.assert200(rv)
+
+            # membership should not change
+            for user_course in course.user_courses:
+                self.assertIn((user_course.user_id, user_course.course_role), current_users)
+
+
+        # test successful membership response (minimual returned data)
+        with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                user_id=lti_user.user_id, context_id=lti_context.context_id, roles="Instructor",
+                custom_context_memberships_url="https://mockmembershipurl.com") as rv:
+            self.assert200(rv)
+
+            mocked_get_membership_request.return_value = {
+                "@id":None,
+                "@type":"Page",
+                "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                "differences":None,
+                "nextPage":None,
+                "pageOf":{
+                    "membershipPredicate":"http://www.w3.org/ns/org#membership",
+                    "membershipSubject":{
+                        "name":"Test Course",
+                        "@type":"Context",
+                        "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
+                        "membership":[
+                            {
+                                "status":"Active",
+                                "role":[
+                                    "urn:lti:role:ims/lis/Instructor"
+                                ],
+                                "member":{
+                                    "userId":lti_user.user_id
+                                }
+                            },
+                            {
+                                "status":"liss:Active",
+                                "role":[
+                                    "urn:lti:role:ims/lis/Learner"
+                                ],
+                                "member":{
+                                    "userId":"compair_student_1"
+                                }
+                            },
+                            {
+                                "status":"Active",
+                                "role":[
+                                    "urn:lti:role:ims/lis/Learner"
+                                ],
+                                "member":{
+                                    "userId":"compair_student_2"
+                                }
+                            },
+                            {
+                                "status":"Active",
+                                "role":[
+                                    "urn:lti:role:ims/lis/TeachingAssistant"
+                                ],
+                                "member":{
+                                    "userId":"compair_student_3"
+                                }
+                            },
+                            {
+                                "status":"Active",
+                                "role":[
+                                    "urn:lti:role:ims/lis/TeachingAssistant"
+                                ],
+                                "member":{
+                                    "userId":"compair_instructor_2"
+                                }
+                            },
+                            {
+                                "status":"Inactive",
+                                "role":[
+                                    "urn:lti:role:ims/lis/Learner"
+                                ],
+                                "member":{
+                                    "userId":"compair_student_100"
+                                }
+                            }
+                        ]
+                    },
+                    "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                    "@type":"LISMembershipContainer"
+                }
+            }
+
+            # link course
+            rv = self.client.post(url, data={}, content_type='application/json')
+            self.assert200(rv)
+
+            # 5 members in minimal_membership (all old users besides instructor should be dropped)
+
+            # verify user course roles
+            for user_course in course.user_courses:
+                if user_course.user_id == instructor.id:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+                else:
+                    #everyone else should be dropped
+                    self.assertEqual(user_course.course_role, CourseRole.dropped)
+
+            # verify membership table
+            lti_memberships = LTIMembership.query \
+                .filter_by(compair_course_id=course.id) \
+                .all()
+
+            self.assertEqual(len(lti_memberships), 5)
+            for lti_membership in lti_memberships:
+                self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1", "compair_student_2",
+                    "compair_student_3", "compair_instructor_2"])
+
+
+        def paginated_membership_requests(memberships_url, headers=None):
+            if memberships_url == "https://mockmembershipurl.com":
+                return {
+                    "@id":None,
+                    "@type":"Page",
+                    "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                    "differences":None,
+                    "nextPage":"https://mockmembershipurl.com?page=2&per_page=1",
+                    "pageOf":{
+                        "membershipPredicate":"http://www.w3.org/ns/org#membership",
+                        "membershipSubject":{
+                            "name":"Test Course",
+                            "@type":"Context",
+                            "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
+                            "membership":[
+                                {
+                                    "status":"Active",
+                                    "role":[
+                                        "urn:lti:role:ims/lis/Instructor"
+                                    ],
+                                    "member":{
+                                        "userId":lti_user.user_id
+                                    }
+                                }
+                            ]
+                        },
+                        "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                        "@type":"LISMembershipContainer"
+                    }
+                }
+            elif memberships_url == "https://mockmembershipurl.com?page=2&per_page=1":
+                return {
+                    "@id":None,
+                    "@type":"Page",
+                    "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                    "differences":None,
+                    "nextPage":"https://mockmembershipurl.com?page=3&per_page=1",
+                    "pageOf":{
+                        "membershipPredicate":"http://www.w3.org/ns/org#membership",
+                        "membershipSubject":{
+                            "name":"Test Course",
+                            "@type":"Context",
+                            "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
+                            "membership":[
+                                {
+                                    "status":"liss:Active",
+                                    "role":[
+                                        "urn:lti:role:ims/lis/Learner"
+                                    ],
+                                    "member":{
+                                        "userId":"compair_student_1"
+                                    }
+                                }
+                            ]
+                        },
+                        "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                        "@type":"LISMembershipContainer"
+                    }
+                }
+            elif memberships_url == "https://mockmembershipurl.com?page=3&per_page=1":
+                return {
+                    "@id":None,
+                    "@type":"Page",
+                    "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                    "differences":None,
+                    "nextPage":"https://mockmembershipurl.com?page=4&per_page=1",
+                    "pageOf":{
+                        "membershipPredicate":"http://www.w3.org/ns/org#membership",
+                        "membershipSubject":{
+                            "name":"Test Course",
+                            "@type":"Context",
+                            "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
+                            "membership":[
+                                {
+                                    "status":"Active",
+                                    "role":[
+                                        "urn:lti:role:ims/lis/Learner"
+                                    ],
+                                    "member":{
+                                        "userId":"compair_student_2"
+                                    }
+                                }
+                            ]
+                        },
+                        "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                        "@type":"LISMembershipContainer"
+                    }
+                }
+            elif memberships_url == "https://mockmembershipurl.com?page=4&per_page=1":
+                return {
+                    "@id":None,
+                    "@type":"Page",
+                    "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                    "differences":None,
+                    "nextPage":"https://mockmembershipurl.com?page=5&per_page=1",
+                    "pageOf":{
+                        "membershipPredicate":"http://www.w3.org/ns/org#membership",
+                        "membershipSubject":{
+                            "name":"Test Course",
+                            "@type":"Context",
+                            "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
+                            "membership":[
+                                {
+                                    "status":"Active",
+                                    "role":[
+                                        "urn:lti:role:ims/lis/TeachingAssistant"
+                                    ],
+                                    "member":{
+                                        "userId":"compair_student_3"
+                                    }
+                                }
+                            ]
+                        },
+                        "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                        "@type":"LISMembershipContainer"
+                    }
+                }
+            elif memberships_url == "https://mockmembershipurl.com?page=5&per_page=1":
+                return {
+                    "@id":None,
+                    "@type":"Page",
+                    "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                    "differences":None,
+                    "nextPage":"https://mockmembershipurl.com?page=6&per_page=1",
+                    "pageOf":{
+                        "membershipPredicate":"http://www.w3.org/ns/org#membership",
+                        "membershipSubject":{
+                            "name":"Test Course",
+                            "@type":"Context",
+                            "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
+                            "membership":[
+                                {
+                                    "status":"Active",
+                                    "role":[
+                                        "urn:lti:role:ims/lis/TeachingAssistant"
+                                    ],
+                                    "member":{
+                                        "userId":"compair_instructor_2"
+                                    }
+                                }
+                            ]
+                        },
+                        "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                        "@type":"LISMembershipContainer"
+                    }
+                }
+            elif memberships_url == "https://mockmembershipurl.com?page=6&per_page=1":
+                return {
+                    "@id":None,
+                    "@type":"Page",
+                    "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                    "differences":None,
+                    "nextPage":None,
+                    "pageOf":{
+                        "membershipPredicate":"http://www.w3.org/ns/org#membership",
+                        "membershipSubject":{
+                            "name":"Test Course",
+                            "@type":"Context",
+                            "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
+                            "membership":[
+                                {
+                                    "status":"Inactive",
+                                    "role":[
+                                        "urn:lti:role:ims/lis/Learner"
+                                    ],
+                                    "member":{
+                                        "userId":"compair_student_100"
+                                    }
+                                }
+                            ]
+                        },
+                        "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                        "@type":"LISMembershipContainer"
+                    }
+                }
+        mocked_get_membership_request.reset_mock()
+        mocked_get_membership_request.side_effect = paginated_membership_requests
+
+        # test successful membership response with pagination
+        with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                user_id=lti_user.user_id, context_id=lti_context.context_id, roles="Instructor",
+                custom_context_memberships_url="https://mockmembershipurl.com") as rv:
+            self.assert200(rv)
+
+            # link course
+            rv = self.client.post(url, data={}, content_type='application/json')
+            self.assert200(rv)
+
+            self.assertEqual(mocked_get_membership_request.call_count, 6)
+
+            # 5 members in minimal_membership (all old users besides instructor should be dropped)
+
+            # verify user course roles
+            for user_course in course.user_courses:
+                if user_course.user_id == instructor.id:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+                else:
+                    #everyone else should be dropped
+                    self.assertEqual(user_course.course_role, CourseRole.dropped)
+
+            # verify membership table
+            lti_memberships = LTIMembership.query \
+                .filter_by(compair_course_id=course.id) \
+                .all()
+
+            self.assertEqual(len(lti_memberships), 5)
+            for lti_membership in lti_memberships:
+                self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1", "compair_student_2",
+                    "compair_student_3", "compair_instructor_2"])
+
+    @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._post_membership_request')
+    def test_lti_membership(self, mocked_post_membership_request):
         course = self.data.get_course()
         instructor = self.data.get_authorized_instructor()
         student_1 = self.data.authorized_student
@@ -635,7 +1005,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assert404(rv)
 
             # test invalid request
-            mocked_send_membership_request.return_value = """
+            mocked_post_membership_request.return_value = """
                 <message_response>
                 <lti_message_type></lti_message_type>
                 <statusinfo>
@@ -651,7 +1021,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertEqual(rv.json['message'], "The membership request was invalid. Please relaunch the LTI link and try again.")
 
             # test empty membership response
-            mocked_send_membership_request.return_value = """
+            mocked_post_membership_request.return_value = """
                 <message_response>
                 <lti_message_type>basic-lis-readmembershipsforcontext</lti_message_type>
                 <statusinfo>
@@ -671,7 +1041,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 "The membership service did not return any users. Please check your LTI course and try again.")
 
             # test full membership response
-            mocked_send_membership_request.return_value = """
+            mocked_post_membership_request.return_value = """
                 <message_response>
                 <lti_message_type>basic-lis-readmembershipsforcontext</lti_message_type>
                 <statusinfo>
@@ -735,8 +1105,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     </member>
                 </memberships>
                 </message_response>
-            """.format(instructor_user_id=lti_user_instructor.user_id,
-                student_user_id=lti_user_student_1.user_id)
+            """.format(instructor_user_id=lti_user_instructor.user_id, student_user_id=lti_user_student_1.user_id)
 
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert200(rv)
@@ -763,7 +1132,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     "compair_student_2", "compair_student_3", "compair_instructor_2"])
 
             # test minimual membership response
-            mocked_send_membership_request.return_value = """
+            mocked_post_membership_request.return_value = """
                 <message_response>
                 <lti_message_type>basic-lis-readmembershipsforcontext</lti_message_type>
                 <statusinfo>
@@ -795,8 +1164,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     </member>
                 </memberships>
                 </message_response>
-            """.format(instructor_user_id=lti_user_instructor.user_id,
-                student_user_id=lti_user_student_1.user_id)
+            """.format(instructor_user_id=lti_user_instructor.user_id, student_user_id=lti_user_student_1.user_id)
 
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert200(rv)
@@ -824,7 +1192,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
 
             # test ensure current user is not unenrolled from course on membership fetch
-            mocked_send_membership_request.return_value = """
+            mocked_post_membership_request.return_value = """
                 <message_response>
                 <lti_message_type>basic-lis-readmembershipsforcontext</lti_message_type>
                 <statusinfo>
@@ -883,6 +1251,368 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertEqual(rv.json['title'], "Membership Not Updated")
             self.assertEqual(rv.json['message'],
                 "The LTI link does not support the membership extension. Please edit your LTI link settings or contact your system administrator and try again.")
+
+
+    @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._get_membership_request')
+    def test_lti_membership_for_canvas_consumer(self, mocked_get_membership_request):
+        course = self.data.get_course()
+        instructor = self.data.get_authorized_instructor()
+        student_1 = self.data.authorized_student
+        student_2 = self.data.create_normal_user()
+        self.data.enrol_student(student_2, course)
+
+        current_user_ids = [user_course.user_id for user_course in course.user_courses]
+
+        url = '/api/lti/course/'+course.uuid+'/membership'
+
+        lti_consumer = self.lti_data.lti_consumer
+        lti_consumer.canvas_consumer = True
+        lti_consumer.canvas_api_token = "canvas_api_token"
+        lti_context = self.lti_data.create_context(
+            lti_consumer,
+            compair_course_id=course.id,
+            custom_context_memberships_url="https://mockmembershipurl.com"
+        )
+
+        lti_user_instructor = self.lti_data.create_user(lti_consumer, SystemRole.instructor, instructor)
+        lti_user_student_1 = self.lti_data.create_user(lti_consumer, SystemRole.student, student_1)
+
+        with self.login(self.data.get_authorized_instructor().username):
+            # test empty membership response
+
+            mocked_get_membership_request.return_value = {
+                "@id":None,
+                "@type":"Page",
+                "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                "differences":None,
+                "nextPage":None,
+                "pageOf":{
+                    "membershipPredicate":"http://www.w3.org/ns/org#membership",
+                    "membershipSubject":{
+                        "@id":None,
+                        "name":"Test Course",
+                        "@type":"Context",
+                        "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
+                        "membership":[]
+                    },
+                    "@id":None,
+                    "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                    "@type":"LISMembershipContainer"
+                }
+            }
+            rv = self.client.post(url, data={}, content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json['title'], "Membership Not Updated")
+            self.assertEqual(rv.json['message'],
+                "The membership service did not return any users. Please check your LTI course and try again.")
+
+            # test full membership response
+            mocked_get_membership_request.return_value = {
+                "@id":None,
+                "@type":"Page",
+                "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                "differences":None,
+                "nextPage":None,
+                "pageOf":{
+                    "membershipPredicate":"http://www.w3.org/ns/org#membership",
+                    "membershipSubject":{
+                        "@id":None,
+                        "name":"Test Course",
+                        "@type":"Context",
+                        "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
+                        "membership":[
+                            {
+                                "@id":None,
+                                "status":"Active",
+                                "role":[
+                                    "urn:lti:role:ims/lis/Instructor"
+                                ],
+                                "member":{
+                                    "@id":None,
+                                    "name":"Instructor Two",
+                                    "img":"http://www.gravatar.com/avatar/1",
+                                    "email":"compair_instructor_2@test.com",
+                                    "familyName":"Two",
+                                    "givenName":"Instructor",
+                                    "resultSourcedId":"compair_instructor_2",
+                                    "sourcedId":None,
+                                    "userId":lti_user_instructor.user_id
+                                }
+                            },
+                            {
+                                "@id":None,
+                                "status":"Active",
+                                "role":[
+                                    "urn:lti:role:ims/lis/Learner"
+                                ],
+                                "member":{
+                                    "@id":None,
+                                    "name":"Student One",
+                                    "img":"http://www.gravatar.com/avatar/2",
+                                    "email":"compair_student_1@test.com",
+                                    "familyName":"One",
+                                    "givenName":"Student",
+                                    "resultSourcedId":None,
+                                    "sourcedId":"compair_student_1",
+                                    "userId":lti_user_student_1.user_id
+                                }
+                            },
+                            {
+                                "@id":None,
+                                "status":"Active",
+                                "role":[
+                                    "urn:lti:role:ims/lis/Learner"
+                                ],
+                                "member":{
+                                    "@id":None,
+                                    "name":"Student Two",
+                                    "img":"http://www.gravatar.com/avatar/3",
+                                    "email":"compair_student_2@test.com",
+                                    "familyName":"Two",
+                                    "givenName":"Student",
+                                    "resultSourcedId":None,
+                                    "sourcedId":"compair_student_2",
+                                    "userId":"compair_student_2"
+                                }
+                            },
+                            {
+                                "@id":None,
+                                "status":"Active",
+                                "role":[
+                                    "urn:lti:role:ims/lis/TeachingAssistant"
+                                ],
+                                "member":{
+                                    "@id":None,
+                                    "name":"Student Six",
+                                    "img":"http://www.gravatar.com/avatar/4",
+                                    "email":"compair_student_3@test.com",
+                                    "familyName":"Six",
+                                    "givenName":"Student",
+                                    "resultSourcedId":None,
+                                    "sourcedId":"compair_student_3",
+                                    "userId":"compair_student_3"
+                                }
+                            },
+                            {
+                                "@id":None,
+                                "status":"Active",
+                                "role":[
+                                    "urn:lti:role:ims/lis/TeachingAssistant"
+                                ],
+                                "member":{
+                                    "@id":None,
+                                    "name":"Instructor One",
+                                    "img":"http://www.gravatar.com/avatar/5",
+                                    "email":"compair_instructor_2@test.com",
+                                    "familyName":"One",
+                                    "givenName":"Instructor",
+                                    "resultSourcedId":None,
+                                    "sourcedId":"compair_instructor_2",
+                                    "userId":"compair_instructor_2"
+                                }
+                            },
+                            {
+                                "@id":None,
+                                "status":"Inactive",
+                                "role":[
+                                    "urn:lti:role:ims/lis/Learner"
+                                ],
+                                "member":{
+                                    "@id":None,
+                                    "name":"Student One Hundred",
+                                    "img":"http://www.gravatar.com/avatar/6",
+                                    "email":"compair_student_100@test.com",
+                                    "familyName":"One Hundred",
+                                    "givenName":"Student",
+                                    "resultSourcedId":None,
+                                    "sourcedId":"compair_student_100",
+                                    "userId":"compair_student_100"
+                                }
+                            }
+                        ]
+                    },
+                    "@id":None,
+                    "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                    "@type":"LISMembershipContainer"
+                }
+            }
+
+            rv = self.client.post(url, data={}, content_type='application/json')
+            self.assert200(rv)
+
+            # 5 members
+            # verify user course roles
+            for user_course in course.user_courses:
+                if user_course.user_id == instructor.id:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+                elif user_course.user_id == student_1.id:
+                    self.assertEqual(user_course.course_role, CourseRole.student)
+                else:
+                    #everyone else should be dropped
+                    self.assertEqual(user_course.course_role, CourseRole.dropped)
+
+            # verify membership table
+            lti_memberships = LTIMembership.query \
+                .filter_by(compair_course_id=course.id) \
+                .all()
+
+            self.assertEqual(len(lti_memberships), 5)
+            for lti_membership in lti_memberships:
+                self.assertIn(lti_membership.lti_user.user_id, [lti_user_instructor.user_id, lti_user_student_1.user_id,
+                    "compair_student_2", "compair_student_3", "compair_instructor_2", "compair_student_100"])
+
+            # test minimual membership response
+            mocked_get_membership_request.return_value = {
+                "@id":None,
+                "@type":"Page",
+                "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                "differences":None,
+                "nextPage":None,
+                "pageOf":{
+                    "membershipPredicate":"http://www.w3.org/ns/org#membership",
+                    "membershipSubject":{
+                        "name":"Test Course",
+                        "@type":"Context",
+                        "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
+                        "membership":[
+                            {
+                            "status":"Active",
+                            "role":[
+                                "urn:lti:role:ims/lis/Instructor"
+                            ],
+                            "member":{
+                                "userId":lti_user_instructor.user_id
+                            }
+                            },
+                            {
+                            "status":"Active",
+                            "role":[
+                                "urn:lti:role:ims/lis/Learner"
+                            ],
+                            "member":{
+                                "userId":lti_user_student_1.user_id
+                            }
+                            },
+                            {
+                            "status":"Active",
+                            "role":[
+                                "urn:lti:role:ims/lis/Learner"
+                            ],
+                            "member":{
+                                "userId":"compair_student_2"
+                            }
+                            },
+                            {
+                            "status":"Active",
+                            "role":[
+                                "urn:lti:role:ims/lis/TeachingAssistant"
+                            ],
+                            "member":{
+                                "userId":"compair_student_3"
+                            }
+                            },
+                            {
+                            "status":"Active",
+                            "role":[
+                                "urn:lti:role:ims/lis/TeachingAssistant"
+                            ],
+                            "member":{
+                                "userId":"compair_instructor_2"
+                            }
+                            },
+                            {
+                            "status":"Inactive",
+                            "role":[
+                                "urn:lti:role:ims/lis/Learner"
+                            ],
+                            "member":{
+                                "userId":"compair_student_100"
+                            }
+                            }
+                        ]
+                    },
+                    "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                    "@type":"LISMembershipContainer"
+                }
+            }
+
+            rv = self.client.post(url, data={}, content_type='application/json')
+            self.assert200(rv)
+
+            # 5 members (all old users besides instructor should be dropped)
+            # verify user course roles
+            for user_course in course.user_courses:
+                if user_course.user_id == instructor.id:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+                elif user_course.user_id == student_1.id:
+                    self.assertEqual(user_course.course_role, CourseRole.student)
+                else:
+                    #everyone else should be dropped
+                    self.assertEqual(user_course.course_role, CourseRole.dropped)
+
+            # verify membership table
+            lti_memberships = LTIMembership.query \
+                .filter_by(compair_course_id=course.id) \
+                .all()
+
+            self.assertEqual(len(lti_memberships), 5)
+            for lti_membership in lti_memberships:
+                self.assertIn(lti_membership.lti_user.user_id, [lti_user_instructor.user_id, lti_user_student_1.user_id,
+                    "compair_student_2", "compair_student_3", "compair_instructor_2"])
+
+
+            # test ensure current user is not unenrolled from course on membership fetch
+            mocked_get_membership_request.return_value = {
+                "@id":None,
+                "@type":"Page",
+                "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                "differences":None,
+                "nextPage":None,
+                "pageOf":{
+                    "membershipPredicate":"http://www.w3.org/ns/org#membership",
+                    "membershipSubject":{
+                        "name":"Test Course",
+                        "@type":"Context",
+                        "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
+                        "membership":[
+                            {
+                                "status":"Active",
+                                "role":[
+                                    "urn:lti:role:ims/lis/Learner"
+                                ],
+                                "member":{
+                                    "userId":lti_user_student_1.user_id
+                                }
+                            }
+                        ]
+                    },
+                    "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                    "@type":"LISMembershipContainer"
+                }
+            }
+
+            rv = self.client.post(url, data={}, content_type='application/json')
+            self.assert200(rv)
+
+            # 1 members (+ current user instructor)
+            # verify user course roles
+            for user_course in course.user_courses:
+                if user_course.user_id == instructor.id:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+                elif user_course.user_id == student_1.id:
+                    self.assertEqual(user_course.course_role, CourseRole.student)
+                else:
+                    #everyone else should be dropped
+                    self.assertEqual(user_course.course_role, CourseRole.dropped)
+
+            # verify membership table
+            lti_memberships = LTIMembership.query \
+                .filter_by(compair_course_id=course.id) \
+                .all()
+
+            self.assertEqual(len(lti_memberships), 1)
+            for lti_membership in lti_memberships:
+                self.assertIn(lti_membership.lti_user.user_id, lti_user_student_1.user_id)
 
     def test_cas_auth_via_lti_launch(self):
         url = '/api/cas/auth?ticket=mock_ticket'

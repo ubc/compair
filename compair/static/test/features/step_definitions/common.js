@@ -42,6 +42,10 @@ var commonStepDefinitionsWrapper = function() {
         return element(by.cssContainingText('label', label)).click();
     });
 
+    this.When("I toggle the '$model' form checkbox", function (model) {
+        return element(by.model(model)).click();
+    });
+
     // generate page factory
     this.Given("I'm on '$pageName' page", function (pageName) {
         page = pageFactory.createPage(pageName);
@@ -99,7 +103,8 @@ var commonStepDefinitionsWrapper = function() {
             'user courses': /.*\/users\/[A-Za-z0-9_-]{22}\/course(\?.+)?$/,
             'manage lti': /.*\/lti\/consumer(\?.+)?$/,
             'create lti consumer': /.*\/lti\/consumer\/create$/,
-            'edit lti consumer': /.*\/lti\/consumer\/[A-Za-z0-9_-]{22}\/edit?$/,
+            'edit lti consumer': /.*\/lti\/consumer\/[A-Za-z0-9_-]{22}\/edit$/,
+            'lti consumer': /.*\/lti\/consumer\/[A-Za-z0-9_-]{22}$/
         };
         return expect(browser.getCurrentUrl()).to.eventually.match(page_regex[page]);
     });

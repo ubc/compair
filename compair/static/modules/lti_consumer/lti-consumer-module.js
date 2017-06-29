@@ -30,14 +30,13 @@ module.factory('LTIConsumerResource',
     return ret;
 }]);
 
-module.controller('LTIConsumerController',
+module.controller('LTIConsumerListController',
     ['$scope', '$location', '$route', '$routeParams', 'UserResource', 'LTIConsumerResource',
      'Toaster', 'breadcrumbs', 'xAPIStatementHelper', 'resolvedData',
     function($scope, $location, $route, $routeParams, UserResource, LTIConsumerResource,
              Toaster, breadcrumbs, xAPIStatementHelper, resolvedData)
     {
         $scope.canManageUsers = resolvedData.canManageUsers;
-        $scope.launchUrl = $location.absUrl().replace("app/#"+$location.url(), "") + 'api/lti/auth';
 
         $scope.totalNumConsumers = 0;
         $scope.consumerFilters = {
@@ -93,6 +92,36 @@ module.controller('LTIConsumerController',
     }]
 );
 
+module.controller("LTIConsumerViewController",
+    ['$scope', '$location', '$route', '$routeParams', 'UserResource', 'LTIConsumerResource',
+     'Toaster', 'breadcrumbs', 'xAPIStatementHelper', 'resolvedData',
+    function($scope, $location, $route, $routeParams, UserResource, LTIConsumerResource,
+             Toaster, breadcrumbs, xAPIStatementHelper, resolvedData)
+    {
+        $scope.consumerId = $routeParams.consumerId;
+        $scope.launchUrl = $location.absUrl().replace("app/#"+$location.url(), "") + 'api/lti/auth';
+
+        $scope.consumer = resolvedData.consumer || {};
+        $scope.canManageUsers = resolvedData.canManageUsers;
+
+        if (!$scope.canManageUsers) {
+            $location.path('/');
+        }
+
+        $scope.updateConsumerActive = function() {
+            LTIConsumerResource.save($scope.consumer).$promise.then(
+                function (ret) {
+                    $scope.consumer = ret;
+                    if (ret.active) {
+                         Toaster.success("LTI Consumer Activated!");
+                    } else {
+                         Toaster.success("LTI Consumer Deactivated!");
+                    }
+                }
+            );
+        };
+    }
+]);
 
 module.controller("LTIConsumerWriteController",
     ['$scope', '$location', '$route', '$routeParams', 'UserResource', 'LTIConsumerResource',

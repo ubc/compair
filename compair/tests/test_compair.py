@@ -182,19 +182,22 @@ class ComPAIRAPITestCase(ComPAIRTestCase):
 
     @contextmanager
     def lti_launch(self, lti_consumer, lti_resource_link_id,
-                         assignment_uuid=None, nonce=None, timestamp=None, follow_redirects=True,
+                         assignment_uuid=None, query_assignment_uuid=None,
+                         nonce=None, timestamp=None, follow_redirects=True,
                          **kwargs):
+        launch_url = "http://localhost/api/lti/auth"
         launch_params = kwargs.copy()
         launch_params['resource_link_id'] = lti_resource_link_id
         if assignment_uuid:
             launch_params['custom_assignment'] = assignment_uuid
+        if query_assignment_uuid:
+            launch_url = launch_url+"?assignment="+query_assignment_uuid
 
         tool_consumer = ToolConsumer(
             lti_consumer.oauth_consumer_key,
             lti_consumer.oauth_consumer_secret,
             params=launch_params,
-            #launch_url not actually used. Just needed for validation
-            launch_url='http://localhost/api/lti/auth'
+            launch_url=launch_url
         )
 
         launch_request = tool_consumer.generate_launch_request(nonce=nonce, timestamp=timestamp)
