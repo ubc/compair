@@ -1,7 +1,7 @@
 <div class="lti-consumers-screen">
     <div class="row">
         <header class="col-md-6">
-            <h1><i class="fa fa-cogs"></i> Manage LTI Consumers</h1>
+            <h1>Manage LTI Consumers</h1>
         </header>
         <div class="col-md-6 sub-nav">
             <a href="#/lti/consumer/create" class="btn btn-primary" id="create-lti-consumer-btn">
@@ -53,5 +53,9 @@
                     max-size="10" class="pagination-sm" boundary-links="true"
                     direction-links="false" items-per-page="consumerFilters.perPage"
                     num-pages="numPages" ng-hide="numPages == 1"></uib-pagination>
+    </div>
+    <div ng-if="!consumers.length">
+        <hr />
+        <p>No consumers found. Add a <a href="#/lti/consumer/create">new consumer</a>?</p>
     </div>
 </div>

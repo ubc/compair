@@ -1,6 +1,6 @@
 <form name="userForm" class="form" ng-submit="save()" novalidate>
     <fieldset>
-        <legend>Account Details</legend>
+        <legend>User Details</legend>
         <p class="instructional-text" ng-if="canManageUsers || (method == 'create' && loggedInUserIsInstructor)">
             This application provides three user roles with increasing levels of permission.
             <strong>Students</strong> can post and edit their own answers, comments, and replies.
@@ -50,7 +50,7 @@
     </fieldset>
 
     <fieldset ng-if="canManageUsers || user.uses_compair_login">
-        <legend>Account Login</legend>
+        <legend>User Login</legend>
         <p class="instructional-text">
             This information will set the <strong>ComPAIR username <span ng-if="method == 'create'">and password</span></strong> for logging in without an external login (like CWL).
             The username you set does not appear anywhere to other users in the application but does need to be unique.
