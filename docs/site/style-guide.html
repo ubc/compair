@@ -58,15 +58,24 @@
                     
                     <p>ComPAIR is an <a href="https://github.com/ubc/compair" target="_blank">open-source learning application</a> being developed by the University of British Columbia's Centre for Teaching, Learning & Technology (<a href="http://ctlt.ubc.ca/" target="_blank">CTLT</a>) using a <a href="https://github.com/ubc/compair/blob/master/LICENSE.txt" target="_blank">GPL-3.0</a> license. ComPAIR primarily uses default <a href="http://getbootstrap.com/" target="_blank">Bootstrap</a> grids and styles. This basic style guide spells out application-specific uses of those styles.</p>
                     
-                    <h2>Introduction</h2>
-                    <p>Users in ComPAIR interact with three main types of <strong>objects</strong> in the application: courses, assignments, and users. These objects have slightly different styles applied, as noted below.</p>
-
-                    <h2>Breadcrumbs</h2>
+                    <p>Jump to: <a href="#intro">Introduction</a> | <a href="#admin-bar">Global Administration Bar</a> | <a href="#breadcrumbs">Breadcrumbs</a> | <a href="#headings">Headings</a> | <a href="#intro-text">.intro-text Paragraphs</a></p>
                     
+                    <h2 id="intro">Introduction</h2>
+                    <p>Users in ComPAIR interact with three main types of <strong>objects</strong> in the application: courses, assignments, and users. These objects have slightly different styles applied, as noted below.</p>
+                    <p>Users in ComPAIR can be given one of three <strong>roles</strong>. Roles provide increasing levels of permission, which affects the UI. Students can post and edit their own answers, comments, and replies. Instructors can additionally add and edit their own courses and assignments. System Administrators can additionally create users and manage which users can access a course.</p>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+
+                    <h2 id="admin-bar">Global Adminstration Bar</h2>
+                    <p>The global adminstration bar contains varying levels of administrative functions, depending on the user's application role. Options on the bar appear with an icon and then "First Letter Each Word Capitalized" text written as verb+noun and matching the first two words of the resulting page's h1. Instructors see: Download Reports and Add Course. System Administrators additionally see: Add User, Manage User, and Manage LTI.</p>
+                    <p>All users see their display name in the bar, with a dropdown that includes access to their user profile and an option to log out. The dropdown options follow the conventions above, except they do not have to follow the verb+noun structure.</p>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                    
+                    <h2 id="breadcrumbs">Breadcrumbs</h2>
                     <p>Breadcrumbs function as the <strong>main navigation</strong> for the application and appear just below the global administration bar for every page except the home page. The home page is always the first link, with all child pages listed and linked up until the current page. The current page is listed but not linked.</p>
                     <p>The breadcrumb labels should match the h1 on each page; these are dynamically generated and found in the compair-config.js file in the static folder, though additional modifications are also made on-the-fly (using breadcrumb.options) in individual controllers to add object names.</p>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
                     
-                    <h2>Headings</h2>
+                    <h2 id="headings">Headings</h2>
                     <ul>
                         <li><strong>h1</strong>:
                             Used as first heading on each screen; no content should appear above this heading; should match breadcrumb label; "First Letter Each Word Capitalized" when hard-coded (object h1s are user-generated); object h1s include the icon for that object before the text; no other h1s include icons
@@ -82,30 +91,13 @@
                         <li><strong>h5</strong>: </li>
                         <li><strong>h6</strong>: </li>
                     </ul>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
 
-                    <h2>Outside UBC</h2>
-                    <p>Outside of UBC, you will need to set up your own instance of the application. A ComPAIR instance requires a minimum of a web server running Python 2.7 or 3 and a MySQL or MariaDB database. We also recommend running Redis and a Celery daemon to reduce server load for certain tasks.</p>
-
-                    <ul class="list-group">
-                        <li class="list-group-item">
-                            <strong><a href="https://github.com/ubc/compair/tree/master/deploy/linux_server#deploying-compair-on-a-centos-7-server" target="_blank">CentOS 7 Server (Standalone Linux)</a>:</strong>
-                            Set up an all-in-one ComPAIR server. Useful for piloting ComPAIR or small scale production environments.
-                        </li>
-                        <li class="list-group-item">
-                            <strong><a href="https://github.com/ubc/compair/tree/master/deploy/aws#deploying-compair-on-amamzon-web-services" target="_blank">Amazon Web Services (AWS)</a>:</strong>
-                            Set up ComPAIR on Amazon Web Services. Useful for larger scale production environments.
-                        </li>
-                        <li class="list-group-item">
-                            <strong><a href="https://github.com/ubc/compair/tree/master/deploy/gce_kube#deploying-compair-on-google-container-enginekubernetes" target="_blank">Google Container Engine / Kubernetes</a>:</strong>
-                            Set up ComPAIR on Google Container Engine or Kubernetes. Useful for larger scale production environments.
-                        </li>
-                        <li class="list-group-item">
-                            <strong><a href="https://github.com/ubc/compair/tree/master/#developer-installation---docker" target="_blank">Development Instance via Docker</a>:</strong>
-                            Set up a development environment for ComPAIR. Useful for contributing to ComPAIR or customizing code. Not recommended for use in a production environment. (Instead, follow the Kubernetes guide above.)
-                        </li>
-                    </ul>
+                    <h2 id="intro-text">.intro-text Paragraphs</h2>
+                    <p>When appropriate, one or more p tags with the class "intro-text" appear just below the h1. This text is slightly larger and meant to provide an introduction to the page. Text to emphasis may be bolded here.</p>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
                     
-                    <p class="text-center"><a href="https://compairdemo.ctlt.ubc.ca" target="_blank" class="btn btn-success btn-lg" role="button">Try the demo <i class="glyphicon glyphicon-new-window"></i></a> &nbsp; <a href="https://github.com/ubc/compair" target="_blank" class="btn btn-success btn-lg" role="button">Download our code <i class="glyphicon glyphicon-new-window"></i></a></p>
+                    <p class="text-center"><a href="documentation.html" target="_blank" class="btn btn-success btn-lg" role="button">Back to docs </a></p>
                 </div>
             </div>
 
