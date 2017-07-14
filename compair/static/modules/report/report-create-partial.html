@@ -33,8 +33,9 @@
         </div>
     </fieldset>
     <div class="alert alert-success text-center" ng-show="reportFile">
-        <h4>Report Complete</h4>
+        <p class="h4">Report Complete</p>
         <p>Your report is ready for <strong><a href="{{ reportFile }}">download <i class="fa fa-file-excel-o"></i></a></strong> now.</p>
+        <br />
     </div>
     <input type="submit" class="btn btn-success btn-lg center-block" value="Run" ng-disabled="reportForm.$invalid || submitted"/>
 </form>
