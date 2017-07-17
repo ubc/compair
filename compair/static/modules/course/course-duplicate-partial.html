@@ -2,7 +2,7 @@
 
 <form name="duplicateCourseForm" class="form" ng-submit="duplicate()" novalidate>
 
-    <h2 class="text-center">Duplicate: {{originalCourse.name}}</h2>
+    <h1 class="text-center">Duplicate: {{originalCourse.name}}</h1>
     <br />
     <p class="intro-text">Please provide the required fields below to duplicate your course and its assignments. All assignments will be editable after duplication. This process will <em>not</em> copy enrolled students, submitted answers, or comparisons.</p>
 
@@ -70,10 +70,10 @@
     </fieldset>
 
     <div ng-class="{'text-center': !showAssignments}">
-        <a class="btn btn-primary btn-lg" value="Next" ng-click="showAssignments=!showAssignments; adjustDuplicateAssignmentDates()"
+        <a class="btn btn-success btn-lg" value="Next" ng-click="showAssignments=!showAssignments; adjustDuplicateAssignmentDates()"
             ng-disabled="duplicateCourseForm.$invalid" ng-show="!showAssignments">Next &raquo;</a>
         <br ng-show="!showAssignments" /><br ng-show="!showAssignments" />
-        <a class="btn btn-default btn-md" value="Next" ng-click="showAssignments=!showAssignments"
+        <a class="btn btn-default btn-md" value="Back" ng-click="showAssignments=!showAssignments"
             ng-show="showAssignments">&laquo; Back</a>
     </div>
 

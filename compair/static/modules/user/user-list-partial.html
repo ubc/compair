@@ -16,6 +16,9 @@
                 <tr>
                     <th>Actions</th>
                     <th>
+                        <a href="" ng-click="updateTableOrderBy('displayname')">Display Name</a>
+                    </th>
+                    <th>
                         <a href="" ng-click="updateTableOrderBy('firstname')">First Name</a>
                     </th>
                     <th>
@@ -23,9 +26,6 @@
                     </th>
                     <th>
                         <a href="" ng-click="updateTableOrderBy('student_number')">Student Number</a>
-                    </th>
-                    <th>
-                        <a href="" ng-click="updateTableOrderBy('displayname')">Display Name</a>
                     </th>
                     <th>
                         <a href="" ng-click="updateTableOrderBy('email')">Email</a>
@@ -42,10 +42,10 @@
                         <span>&nbsp;|&nbsp;</span>
                         <a href="#/users/{{user.id}}/course">Manage Courses</a>
                     </td>
+                    <td><i class="fa fa-user"></i> {{user.displayname}}</td>
                     <td>{{user.firstname}}</td>
                     <td>{{user.lastname}}</td>
                     <td>{{user.student_number}}</td>
-                    <td><a ng-href="#/user/{{user.id}}">{{user.displayname}}</a></td>
                     <td>{{user.email}}</td>
                     <td>
                         {{ user.system_role }}

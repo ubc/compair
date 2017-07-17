@@ -506,7 +506,7 @@ myApp.config(
         .when ('/course/:courseId/assignment/:assignmentId/compare',
             {
                 templateUrl: 'modules/comparison/comparison-form-partial.html',
-                label: "Compare Answers",
+                label: "Compare Answer Pairs",
                 controller: 'ComparisonController',
                 resolve: {
                     resolvedData: function() {

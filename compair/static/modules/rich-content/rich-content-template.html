@@ -2,22 +2,22 @@
 
 <div ng-if="attachmentContent.length > 0" class="rich-content-attachments">
     <strong class="h5">{{attachmentContent.length}} Attachment<span ng-if="attachmentContent.length > 1">s</span>:</strong>
-    <div class="each-attachment-content pop-or-show" ng-repeat="content in attachmentContent">
+    <div class="each-attachment-content" ng-repeat="content in attachmentContent">
         <p ng-if="content.type != 'attachment'">
             <a href="" ng-click="showAttachmentContentModal(content)" ng-if="content.type != 'attachment'"
-               class="btn btn-primary btn-xs">
+               class="btn btn-info btn-xs">
                 Open in Pop-up
             </a> or
             <br />
             <a href="" ng-click="toggleShowContent(content)" ng-if="content.type != 'attachment'">
                 <i class="fa fa-chevron-right" ng-show="!content.displayInline"></i>
                 <i class="fa fa-chevron-down" ng-show="content.displayInline"></i>
-                Show Below
+                Show below
             </a>
         </p>
         <p ng-if="content.type == 'attachment'">
-            <a ng-href="{{content.url}}" target="_blank" class="btn btn-primary">
-                Download <i class="fa fa-download"></i>
+            <a ng-href="{{content.url}}" target="_blank" class="btn btn-info">
+                Download
             </a>
         </p>
 

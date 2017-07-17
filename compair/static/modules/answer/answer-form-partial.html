@@ -44,28 +44,28 @@
             <input type="file" nv-file-select uploader="uploader" ng-click="answerForm.$setDirty()" id="importFile" ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)" multiple/>
             <p class="instructional-text" ng-show="uploader.queue.length"><strong>Submit this answer</strong> to save the file below. You may also remove the file and upload another instead.</p>
             <div class="row" ng-repeat="item in uploader.queue">
-                <div class="col-md-7"><i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong></div>
+                <div class="col-md-2">
+                    <a href="" ng-click="item.cancel();item.remove();resetFileUploader();">
+                        Remove
+                    </a>
+                </div>
+				<div class="col-md-7"><i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong></div>
                 <div class="col-md-1">{{item.file.size/1024/1024|number:2}} MB</div>
                 <div class="col-md-2" ng-if="item.progress < 100"><strong>{{item.progress}}% uploaded</strong></div>
                 <div class="col-md-2" ng-if="item.progress == 100 && !item.isSuccess"><strong>Storing file...</strong></div>
                 <div class="col-md-2" ng-if="item.progress == 100 && item.isSuccess"><strong>Attached</strong></div>
-                <div class="col-md-2">
-                    <a class="btn btn-danger btn-xs" ng-click="item.cancel();item.remove();resetFileUploader();">
-                        <i class="fa fa-trash-o"></i> Remove
-                    </a>
-                </div>
             </div>
         </div>
         <br>
         <div ng-show="answer.file && answer.uploadedFile">
             <div class="row">
+				<div class="col-md-1">
+                    <a href="" ng-click="deleteFile(answer.file)">
+                        Remove
+                    </a>
+                </div>
                 <div class="col-md-4">
                     <i class="fa fa-paperclip"></i> Attached File: <strong>{{answer.file.alias}}</strong>
-                </div>
-                <div class="col-md-1">
-                    <a ng-click="deleteFile(answer.file)" class="btn btn-danger btn-xs">
-                        <i class="fa fa-trash-o"></i> Remove
-                    </a>
                 </div>
             </div>
             <br>

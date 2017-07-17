@@ -1,6 +1,6 @@
 <div class="evaluate-screen">
 
-    <h1>Compare Answers</h1>
+    <h1>Compare Answer Pairs</h1>
 
     <p class="intro-text">
         For each round, choose which answer better matches the criteria below, give helpful feedback on both answers in the pair, and submit the comparison.
@@ -86,7 +86,7 @@
                                 <p><strong>Select one:</strong></p>
                                 <div class="btn-group">
                                     <label class="btn btn-primary" ng-class="{active: comparison_criterion.winner == WinningAnswer.answer1 }">
-                                        <input type="radio" class="hideRadio"
+                                        <i class="fa fa-thumbs-up"></i><input type="radio" class="hideRadio"
                                             name="answer{{answer1.id}}" required
                                             ng-model="comparison_criterion.winner"
                                             ng-change="trackComparisonCriterionWinner(comparison_criterion, answer1.id)"
@@ -94,7 +94,7 @@
                                         Answer {{firstAnsNum}}
                                     </label>
                                     <label class="btn btn-primary" ng-class="{active: comparison_criterion.winner == WinningAnswer.answer2 }">
-                                        <input type="radio" class="hideRadio"
+                                        <i class="fa fa-thumbs-up"></i><input type="radio" class="hideRadio"
                                             name="answer{{answer2.id}}" required
                                             ng-model="comparison_criterion.winner"
                                             ng-change="trackComparisonCriterionWinner(comparison_criterion, answer2.id)"
@@ -128,7 +128,7 @@
                 <p class="assignment-toggle"><a href="" ng-click="showAnswers = !showAnswers">
                     <i class="fa fa-chevron-down" ng-show="showAnswers"></i>
                     <i class="fa fa-chevron-right" ng-hide="showAnswers"></i>
-                    Show the answer pair again
+                    Show answer pair again
                 </a></p>
 
                 <div class="col-md-6">

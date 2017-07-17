@@ -7,7 +7,7 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <title>Style Guide | ComPAIR Learning Application</title>
-        <meta name="description" content="Get started with basic documentation for using UBC's ComPAIR learning application as a standalone tool or as an integration.">
+        <meta name="description" content="A basic style guide for UBC's ComPAIR learning application.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="index, follow" />
             
@@ -58,27 +58,28 @@
                     
                     <p>ComPAIR is an <a href="https://github.com/ubc/compair" target="_blank">open-source learning application</a> being developed by the University of British Columbia's Centre for Teaching, Learning & Technology (<a href="http://ctlt.ubc.ca/" target="_blank">CTLT</a>) using a <a href="https://github.com/ubc/compair/blob/master/LICENSE.txt" target="_blank">GPL-3.0</a> license. ComPAIR primarily uses default <a href="http://getbootstrap.com/" target="_blank">Bootstrap</a> grids and styles. This basic style guide spells out application-specific uses of those styles.</p>
                     
-                    <p>Jump to: <a href="#intro">Introduction</a> | <a href="#admin-bar">Global Administration Bar</a> | <a href="#breadcrumbs">Breadcrumbs</a> | <a href="#headings">Headings</a> | <a href="#intro-text">.intro-text Paragraphs</a></p>
-                    
                     <h2 id="intro">Introduction</h2>
-                    <p>Users in ComPAIR interact with three main types of <strong>objects</strong> in the application: courses, assignments, and users. These objects have slightly different styles applied, as noted below.</p>
+                    <p>Users in ComPAIR interact with three main types of <strong>objects</strong> in the application: courses, assignments, and users. These objects have slightly different styles applied, as noted below. When new objects are created, use the term "Add"; when editing, "Edit"; when copying, "Duplicate"; and when removing, "Delete".</p>
                     <p>Users in ComPAIR can be given one of three <strong>roles</strong>. Roles provide increasing levels of permission, which affects the UI. Students can post and edit their own answers, comments, and replies. Instructors can additionally add and edit their own courses and assignments. System Administrators can additionally create users and manage which users can access a course.</p>
-                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                    <p>Jump to: <a href="#admin-bar">Global Administration Bar</a> | <a href="#breadcrumbs">Breadcrumbs</a> | <a href="#headings">Headings</a> | <a href="#intro-text">.intro-text Paragraphs</a> | <a href="#object-lists">Object Lists</a> | <a href="#buttons">Buttons</a> | <a href="#collapsible">.collapsible-content Elements</a></p>
+                    <hr />
+                    <br />
 
                     <h2 id="admin-bar">Global Adminstration Bar</h2>
-                    <p>The global adminstration bar contains varying levels of administrative functions, depending on the user's application role. Options on the bar appear with an icon and then "First Letter Each Word Capitalized" text written as verb+noun and matching the first two words of the resulting page's h1. Instructors see: Download Reports and Add Course. System Administrators additionally see: Add User, Manage User, and Manage LTI.</p>
+                    <p>The global adminstration bar contains varying levels of <strong>administrative functions</strong>, depending on the user's application role. Options on the bar appear with an icon and then "First Letter Each Word Capitalized" text written as verb+noun and matching the first two words of the resulting page's h1. Instructors see: Download Reports and Add Course. System Administrators additionally see: Add User, Manage User, and Manage LTI.</p>
                     <p>All users see their display name in the bar, with a dropdown that includes access to their user profile and an option to log out. The dropdown options follow the conventions above, except they do not have to follow the verb+noun structure.</p>
                     <p class="text-right"><a href="#top">&#94; Back to top</a></p>
                     
                     <h2 id="breadcrumbs">Breadcrumbs</h2>
                     <p>Breadcrumbs function as the <strong>main navigation</strong> for the application and appear just below the global administration bar for every page except the home page. The home page is always the first link, with all child pages listed and linked up until the current page. The current page is listed but not linked.</p>
-                    <p>The breadcrumb labels should match the h1 on each page; these are dynamically generated and found in the compair-config.js file in the static folder, though additional modifications are also made on-the-fly (using breadcrumb.options) in individual controllers to add object names.</p>
+                    <p>The breadcrumb labels should match the h1 on each page; these are dynamically generated and found in the <code>compair-config.js</code> file in the static folder, though additional modifications are also made on-the-fly (using breadcrumb.options) in individual controllers to add object names in place of generic text.</p>
                     <p class="text-right"><a href="#top">&#94; Back to top</a></p>
                     
                     <h2 id="headings">Headings</h2>
+                    <p>The application currently uses <strong>five levels</strong> of headings.</p>
                     <ul>
                         <li><strong>h1</strong>:
-                            Used as first heading on each page; no content should appear above this heading; should match breadcrumb label; "First Letter Each Word Capitalized" when hard-coded (some h1s are user-generated); object name h1s include the icon for that object before the text; no other h1s include icons
+                            Used as the first heading on each page; no content should appear above this heading; should match breadcrumb label; "First Letter Each Word Capitalized" when hard-coded (some h1s are user-generated); object name h1s include the icon for that object before the text (as noted below); no other h1s include icons
                             <ul>
                                 <li><strong>Courses</strong>: <code>&lt;i class="fa fa-book" aria-hidden="true"&gt;&lt;/i&gt;</code> before course name</li>
                                 <li><strong>Assignments</strong>: <code>&lt;i class="fa fa-comments" aria-hidden="true"&gt;&lt;/i&gt;</code> before assignment name</li>
@@ -87,22 +88,50 @@
                         </li>
                         <li><strong>h2 / h3</strong>: Used as sub-headings (and further sub-headings) on any page; "First letter capitalized" when hard-coded (some h2s/h3s are user-generated); object name h2s include the icon for that object before the text (see above for guidelines); no other h2s/h3s include icons</li>
                         <li><strong>h4</strong>:
-                            Used only in relation to comparisons; in comparing as criterion titles; in viewing comparisons as student name divider; "First letter capitalized" when hard-coded; icons precede text
+                            Used only in relation to comparisons; in comparing as criterion titles; in viewing comparisons as student work divider; "First letter capitalized" when hard-coded; icons precede text (as noted below)
                              <ul>
                                 <li><strong>Criteria</strong>: <code>&lt;i class="fa fa-gavel" aria-hidden="true"&gt;&lt;/i&gt;</code> before criterion title</li>
-                                <li><strong>Users</strong>: as noted above before student name</li>
+                                <li><strong>Users</strong>: <code>&lt;i class="fa fa-user" aria-hidden="true"&gt;&lt;/i&gt;</code> before user name</li>
                             </ul>
                         </li>
-                        <li><strong>h5</strong>: Used only in relation to comparisons; in viewing comparisons as sub-headings dividing student work into sections; "First Letter Each Word Capitalized"; lighter gray colour and botton border; no icons</li>
+                        <li><strong>h5</strong>: Used only in relation to comparisons; in viewing comparisons as sub-headings dividing student work into sections; "First Letter Each Word Capitalized"; lighter gray colour and bottom border; no icons</li>
                         <li><strong>h6</strong>: Not currently used</li>
                     </ul>
                     <p class="text-right"><a href="#top">&#94; Back to top</a></p>
 
                     <h2 id="intro-text">.intro-text Paragraphs</h2>
-                    <p>When appropriate, one or more p tags with the class "intro-text" appear just below h1s or h2s. This text is slightly larger and meant to provide an introduction to the page or section. Text to emphasize may be bolded here.</p>
+                    <p>When appropriate, one or more p tags with <code>class="intro-text"</code> appear just below h1s or h2s. This text is slightly larger and meant to provide an <strong>introduction to the page or section</strong>. Text to emphasize may be bolded here.</p>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                                        
+                    <h2 id="object-lists">Object Lists</h2>
+                    <p>When objects appear in a list form (i.e., home page with courses, course pages with assignments, management pages with users), they share some commonalities in display.</p>
+                    <ul>
+                        <li>Each object appears on a new row</li>
+                        <li>Each row alternates background colour between <code>#ffffff</code> and <code>#f9f9f9</code></li>
+                        <li>Each row includes details about the object and actions that can be taken on the object (e.g., edit)</li>
+                        <li>If present, orange label tags highlight important information about the object</li>
+                        <li>If filters are used to affect the list of objects, these appear in the upper right corner just before the list starts</li>
+                    </ul>
+                    <p>Some of this styling is applied to other lists of items in the application as well. For example, the list of answers and help comments also follow these conventions.</p>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                    
+                    <h2 id="buttons">Buttons</h2>
+                    <p>ComPAIR primarily uses <strong>four types</strong> of buttons. All button text is "First Letter Each Word Capitalized".</p>
+                    <ul>
+                        <li><strong>Green</strong> / <code>.btn-success</code>: Indicates a primary action a user must take to complete an activity; used as the final button in submitting all forms (including inline forms) and for "View Course", "Answer", and "Compare Pairs" buttons; form buttons are center aligned; other buttons are right aligned when practical; no icons added; larger sizing preferred</li>
+                        <li><strong>Blue</strong> / <code>.btn-primary</code>: Indicates a secondary action a user can take; used to present contextual options, e.g., adding assignments, editing user profiles, replying to answers; also used for selection of answer per criterion; buttons are right aligned when practical; must contain a related icon to the left of the text; medium sizing preferred</li>
+                        <li><strong>White</strong> / <code>.btn-default</code>: Indicates one of two or more options where de-emphasis of button(s) is desired; used for buttons to save drafts of answers and comparisons and to make choices during duplication process; as save button, always center aligned and to the left of the "Submit" button; no icons added; sizing should be appropriate to surrounding context</li>
+                        <li><strong>Turquoise</strong> / <code>.btn-info</code>: Indicates access to additional information; used for button to open pop-ups of attachments or links and to read more answer text; no icons added; smaller sizing preferred</li>
+                    </ul>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                    
+                    <h2 id="collapsible">.collapsible-content Elements</h2>
+                    <p>Content pieces can be designed to collapse/expand with show/hide functions in Angular and <code>class="collapsible-content"</code> on the element to toggle. The content is always displayed under linked (blue) text. A chevron appears to the left of this text, facing right&mdash;<code>&lt;i class="fa fa-chevron-right"&gt;&lt;/i&gt;</code>&mdash;when the content is collapsed/hidden and facing down&mdash;<code>&lt;i class="fa fa-chevron-down"&gt;&lt;/i&gt;</code>&mdash;when the content is expanded/shown.</p>
                     <p class="text-right"><a href="#top">&#94; Back to top</a></p>
                     
                     <p class="text-center"><a href="documentation.html" target="_blank" class="btn btn-success btn-lg" role="button">Back to docs </a></p>
+
+                    
                 </div>
             </div>
 

@@ -17,6 +17,10 @@ h6 {
   font-weight: bold;
 }
 
+modal-cancel-button + h1 {
+  margin-top: 0;
+}
+
 .rich-content-attachments h5 {
   margin-top: 15px;  
 }
@@ -96,6 +100,17 @@ input[type=checkbox] {
 
 }
 
+/* increase emphasis for action buttons */
+.btn-success {
+  font-weight: bold;
+}
+
+/* labels to look less like buttons */
+.label {
+  border-radius: 1em;
+  font-weight: normal;
+}
+
 /* fix placement of bootstrap form feedback icons */
 .has-feedback .form-control-feedback {
   top: 25px;
@@ -124,18 +139,26 @@ dt {
 
 }//closes sub-nav
 
-/* class for pop-up / show below options for attachments */
-.pop-or-show {
+/* class for collapsible content */
+.collapsible-content {
   
   margin: 1em 0;
-  padding-left: 1em;
+  padding-left: 1.5em;
+  border-left: 2px solid @border-gray;
+  
+}//closes collapsible-content
+
+/* attachments similar styling to collapsible */
+.each-attachment-content {
+  
+  &:extend(.collapsible-content);
   border-left: 1px dashed @link-blue;
   
   .btn {
     margin: .5em .5em .5em 0;
   }
   
-}//closes pop-or-show
+}//closes each-attachment-content
 
 /* class for filters */
 .filter {

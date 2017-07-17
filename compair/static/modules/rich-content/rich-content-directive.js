@@ -327,7 +327,7 @@ module.directive('richContent',
                         var embeddableLinkIndex = matches[count].embeddableLinkIndex;
                         var template =
                             '&mdash;<a href="" ng-click="showEmbeddableLinkModal(embeddableLinks['+embeddableLinkIndex+'])" '+
-                                'class="btn btn-primary btn-xs">'+
+                                'class="btn btn-info btn-xs">'+
                                 'Open in Pop-up'+
                             '</a>';
                         content = content.substr(0, contentIndex) + template + content.substr(contentIndex);
