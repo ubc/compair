@@ -1,6 +1,7 @@
 <div class="col-md-6">
     <div class="answer-choice clearfix">
-        <h4><img src="/app/img/compair-logo-scale.png" alt="ComPAIR Scale" /> {{ name }}
+        <h4>
+            <compair-logo type="'scale'"></compair-logo> {{ name }}
             <span ng-show="isChosen">(Chosen)</span>
             <span ng-if="answer.score">
                 <span class="label label-warning pull-right score-display"
