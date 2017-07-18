@@ -59,8 +59,11 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertRedirects(rv, '/app/#/lti')
 
             lti_resource_link = LTIResourceLink.query.all()[-1]
+            self.assertEqual(lti_resource_link.resource_link_id, lti_resource_link_id)
             lti_user = LTIUser.query.all()[-1]
+            self.assertEqual(lti_user.user_id, lti_user_id)
             lti_context = LTIContext.query.all()[-1]
+            self.assertEqual(lti_context.context_id, lti_context_id)
             lti_user_resource_link = LTIUserResourceLink.query.all()[-1]
 
             # check session
@@ -226,6 +229,95 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     assignment_uuid=assignment.uuid, follow_redirects=False,
                     nonce=nonce, timestamp=timestamp) as rv:
                 self.assert400(rv)
+
+            # user_id_override ------
+            lti_consumer.user_id_override = "custom_puid"
+            db.session.commit()
+
+            # user_id_override parameter is missing
+            with self.lti_launch(lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
+                    assignment_uuid=assignment.uuid, follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/app/#/course/'+course.uuid+'/assignment/'+assignment.uuid)
+
+            # check session
+            with self.client.session_transaction() as sess:
+                self.assertTrue(sess.get('LTI'))
+                self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
+                self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
+                self.assertEqual(lti_user.id, sess.get('lti_user'))
+                self.assertEqual(lti_context.id, sess.get('lti_context'))
+                self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
+
+                # user already exists, oauth_create_user_link should be None
+                self.assertIsNone(sess.get('oauth_create_user_link'))
+
+                # check that user is logged in
+                self.assertEqual(str(user.id), sess.get('user_id'))
+
+            self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
+
+            # user_id_override parameter is present (new user)
+            custom_puid = "puid123456789_"+lti_role
+            with self.lti_launch(lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
+                    assignment_uuid=assignment.uuid, follow_redirects=False,
+                    custom_puid=custom_puid) as rv:
+                self.assertRedirects(rv, '/app/#/lti')
+
+            lti_user = LTIUser.query.all()[-1]
+            self.assertEqual(lti_user.user_id, custom_puid)
+            lti_user_resource_link = LTIUserResourceLink.query.all()[-1]
+
+            # check session
+            with self.client.session_transaction() as sess:
+                self.assertTrue(sess.get('LTI'))
+                self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
+                self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
+                self.assertEqual(lti_user.id, sess.get('lti_user'))
+                self.assertEqual(lti_context.id, sess.get('lti_context'))
+                self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
+
+                # user doesn't exist
+                self.assertTrue(sess.get('oauth_create_user_link'))
+
+                # check that user is logged in
+                self.assertIsNone(sess.get('user_id'))
+
+            self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
+
+            # link user account
+            user = self.data.create_user(system_role)
+            lti_user.compair_user = user
+            db.session.commit()
+
+            # user_id_override parameter is present (existing user)
+            with self.lti_launch(lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
+                    assignment_uuid=assignment.uuid, follow_redirects=False,
+                    custom_puid=custom_puid) as rv:
+                self.assertRedirects(rv, '/app/#/course/'+course.uuid+'/assignment/'+assignment.uuid)
+
+            # check session
+            with self.client.session_transaction() as sess:
+                self.assertTrue(sess.get('LTI'))
+                self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
+                self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
+                self.assertEqual(lti_user.id, sess.get('lti_user'))
+                self.assertEqual(lti_context.id, sess.get('lti_context'))
+                self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
+
+                # user already exists, oauth_create_user_link should be None
+                self.assertIsNone(sess.get('oauth_create_user_link'))
+
+                # check that user is logged in
+                self.assertEqual(str(user.id), sess.get('user_id'))
+
+            self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
+
+            lti_consumer.user_id_override = None
+            db.session.commit()
+            # done user_id_override ------
 
     def test_lti_status(self):
         url = '/api/lti/status'
@@ -470,6 +562,9 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
         url = '/api/lti/course/'+course.uuid+'/link'
 
         lti_consumer = self.lti_data.lti_consumer
+        lti_consumer.user_id_override = "custom_puid"
+        db.session.commit()
+
         lti_context = self.lti_data.create_context(lti_consumer)
         lti_user = self.lti_data.create_user(lti_consumer, SystemRole.instructor, instructor)
         lti_resource_link = self.lti_data.create_resource_link(lti_consumer, lti_context)
@@ -594,9 +689,78 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1", "compair_student_2",
                     "compair_student_3", "compair_instructor_2"])
 
+        # test successful membership response (with user_id_override)
+        with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                user_id=lti_user.user_id, context_id=lti_context.context_id, roles="Instructor",
+                ext_ims_lis_memberships_id="123", ext_ims_lis_memberships_url="https://mockmembershipurl.com") as rv:
+            self.assert200(rv)
+
+            mocked_post_membership_request.return_value = """
+                <message_response>
+                <lti_message_type>basic-lis-readmembershipsforcontext</lti_message_type>
+                <statusinfo>
+                    <codemajor>Success</codemajor>
+                    <severity>Status</severity>
+                    <codeminor>fullsuccess</codeminor>
+                    <description>Roster retrieved</description>
+                </statusinfo>
+                <memberships>
+                    <member>
+                    <user_id>ignore_1</user_id>
+                    <roles>Instructor</roles>
+                    <custom_puid>{instructor_user_id}</custom_puid>
+                    </member>
+                    <member>
+                    <user_id>ignore_2</user_id>
+                    <roles>Learner</roles>
+                    <custom_puid>compair_student_1</custom_puid>
+                    </member>
+                    <member>
+                    <user_id>ignore_3</user_id>
+                    <roles>Learner</roles>
+                    <custom_puid>compair_student_2</custom_puid>
+                    </member>
+                    <member>
+                    <user_id>ignore_4</user_id>
+                    <roles>TeachingAssistant</roles>
+                    <custom_puid>compair_student_3</custom_puid>
+                    </member>
+                    <member>
+                    <user_id>ignore_5</user_id>
+                    <roles>TeachingAssistant</roles>
+                    <custom_puid>compair_instructor_2</custom_puid>
+                    </member>
+                </memberships>
+                </message_response>
+            """.format(instructor_user_id=lti_user.user_id)
+
+            # link course
+            rv = self.client.post(url, data={}, content_type='application/json')
+            self.assert200(rv)
+
+            # 5 members in minimal_membership (all old users besides instructor should be dropped)
+
+            # verify user course roles
+            for user_course in course.user_courses:
+                if user_course.user_id == instructor.id:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+                else:
+                    #everyone else should be dropped
+                    self.assertEqual(user_course.course_role, CourseRole.dropped)
+
+            # verify membership table
+            lti_memberships = LTIMembership.query \
+                .filter_by(compair_course_id=course.id) \
+                .all()
+
+            self.assertEqual(len(lti_memberships), 5)
+            for lti_membership in lti_memberships:
+                self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1", "compair_student_2",
+                    "compair_student_3", "compair_instructor_2"])
+
 
     @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._get_membership_request')
-    def test_lti_course_link_with_canvas_membership_url(self, mocked_get_membership_request):
+    def test_lti_course_link_with_membership_service(self, mocked_get_membership_request):
         instructor = self.data.get_authorized_instructor()
         course = self.data.get_course()
         current_users = [(user_course.user_id, user_course.course_role) for user_course in course.user_courses]
@@ -604,9 +768,6 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
         url = '/api/lti/course/'+course.uuid+'/link'
 
         lti_consumer = self.lti_data.lti_consumer
-        lti_consumer.canvas_consumer = True
-        lti_consumer.canvas_api_token = "canvas_api_token"
-        db.session.commit()
 
         lti_context = self.lti_data.create_context(lti_consumer)
         lti_user = self.lti_data.create_user(lti_consumer, SystemRole.instructor, instructor)
@@ -754,6 +915,199 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1", "compair_student_2",
                     "compair_student_3", "compair_instructor_2"])
 
+
+        for user_id_override in [None, "custom_puid", "ext_user_username", "lis_result_sourcedid"]:
+
+            lti_consumer.user_id_override = user_id_override
+            db.session.commit()
+
+            # test successful membership response (user_id_override)
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles="Instructor",
+                    custom_context_memberships_url="https://mockmembershipurl.com") as rv:
+                self.assert200(rv)
+
+                mocked_get_membership_request.return_value = {
+                    "@id":None,
+                    "@type":"Page",
+                    "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                    "differences":None,
+                    "nextPage":None,
+                    "pageOf":{
+                        "membershipPredicate":"http://www.w3.org/ns/org#membership",
+                        "membershipSubject":{
+                            "name":"Test Course",
+                            "@type":"Context",
+                            "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
+                            "membership":[
+                                {
+                                    "status":"Active",
+                                    "role":[
+                                        "urn:lti:role:ims/lis/Instructor"
+                                    ],
+                                    "member":{
+                                        "userId": lti_user.user_id
+                                    },
+                                    "message" : [
+                                        {
+                                            "message_type": "basic-lti-launch-request",
+                                            "lis_result_sourcedid": lti_user.user_id,
+                                            "custom" : {
+                                                "puid": lti_user.user_id
+                                            },
+                                            "ext" : {
+                                                "user_username": lti_user.user_id
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    "status":"liss:Active",
+                                    "role":[
+                                        "urn:lti:role:ims/lis/Learner"
+                                    ],
+                                    "member":{
+                                        "userId": "userId_2"
+                                    },
+                                    "message" : [
+                                        {
+                                            "message_type": "basic-lti-launch-request",
+                                            "lis_result_sourcedid": "1234567890-1",
+                                            "custom" : {
+                                                "puid": "compair_student_1_puid"
+                                            },
+                                            "ext" : {
+                                                "user_username": "compair_student_1_username",
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    "status":"Active",
+                                    "role":[
+                                        "urn:lti:role:ims/lis/Learner"
+                                    ],
+                                    "member":{
+                                        "userId": "userId_3"
+                                    },
+                                    "message" : [
+                                        {
+                                            "message_type": "basic-lti-launch-request",
+                                            "lis_result_sourcedid": "1234567890-2",
+                                            "custom" : {
+                                                "puid": "compair_student_2_puid"
+                                            },
+                                            "ext" : {
+                                                "user_username": "compair_student_2_username",
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    "status":"Active",
+                                    "role":[
+                                        "urn:lti:role:ims/lis/TeachingAssistant"
+                                    ],
+                                    "member":{
+                                        "userId":"userId_4"
+                                    },
+                                    "message" : [
+                                        {
+                                            "message_type": "basic-lti-launch-request",
+                                            "lis_result_sourcedid": "1234567890-3",
+                                            "custom" : {
+                                                "puid": "compair_student_3_puid"
+                                            },
+                                            "ext" : {
+                                                "user_username": "compair_student_3_username",
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    "status":"Active",
+                                    "role":[
+                                        "urn:lti:role:ims/lis/TeachingAssistant"
+                                    ],
+                                    "member":{
+                                        "userId":"userId_5"
+                                    },
+                                    "message" : [
+                                        {
+                                            "message_type": "basic-lti-launch-request",
+                                            "lis_result_sourcedid": "1234567890-4",
+                                            "custom" : {
+                                                "puid": "compair_instructor_2_puid"
+                                            },
+                                            "ext" : {
+                                                "user_username": "compair_instructor_2_username",
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    "status":"Inactive",
+                                    "role":[
+                                        "urn:lti:role:ims/lis/Learner"
+                                    ],
+                                    "member":{
+                                        "userId": "userId_6"
+                                    },
+                                    "message" : [
+                                        {
+                                            "message_type": "basic-lti-launch-request",
+                                            "lis_result_sourcedid": "1234567890-5",
+                                            "custom" : {
+                                                "puid": "compair_student_100_puid"
+                                            },
+                                            "ext" : {
+                                                "user_username": "compair_student_100_username",
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                        "@type":"LISMembershipContainer"
+                    }
+                }
+
+                # link course
+                rv = self.client.post(url, data={}, content_type='application/json')
+                self.assert200(rv)
+
+                # 5 members in minimal_membership (all old users besides instructor should be dropped)
+
+                # verify user course roles
+                for user_course in course.user_courses:
+                    if user_course.user_id == instructor.id:
+                        self.assertEqual(user_course.course_role, CourseRole.instructor)
+                    else:
+                        #everyone else should be dropped
+                        self.assertEqual(user_course.course_role, CourseRole.dropped)
+
+                # verify membership table
+                lti_memberships = LTIMembership.query \
+                    .filter_by(compair_course_id=course.id) \
+                    .all()
+
+                self.assertEqual(len(lti_memberships), 5)
+                for lti_membership in lti_memberships:
+                    if user_id_override == None:
+                        self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "userId_2", "userId_3", "userId_4", "userId_5"])
+                    elif user_id_override == "custom_puid":
+                        self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1_puid", "compair_student_2_puid",
+                            "compair_student_3_puid", "compair_instructor_2_puid"])
+                    elif user_id_override == "ext_user_username":
+                        self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1_username", "compair_student_2_username",
+                            "compair_student_3_username", "compair_instructor_2_username"])
+                    elif user_id_override == "lis_result_sourcedid":
+                        self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "1234567890-1", "1234567890-2",
+                            "1234567890-3", "1234567890-4"])
+
+        lti_consumer.user_id_override = None
+        db.session.commit()
 
         def paginated_membership_requests(memberships_url, headers=None):
             if memberships_url == "https://mockmembershipurl.com":
@@ -966,7 +1320,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     "compair_student_3", "compair_instructor_2"])
 
     @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._post_membership_request')
-    def test_lti_membership(self, mocked_post_membership_request):
+    def test_lti_membership_for_consumer_with_membership_ext(self, mocked_post_membership_request):
         course = self.data.get_course()
         instructor = self.data.get_authorized_instructor()
         student_1 = self.data.authorized_student
@@ -1254,7 +1608,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
 
     @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._get_membership_request')
-    def test_lti_membership_for_canvas_consumer(self, mocked_get_membership_request):
+    def test_lti_membership_for_consumer_with_membership_service(self, mocked_get_membership_request):
         course = self.data.get_course()
         instructor = self.data.get_authorized_instructor()
         student_1 = self.data.authorized_student
@@ -1266,8 +1620,6 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
         url = '/api/lti/course/'+course.uuid+'/membership'
 
         lti_consumer = self.lti_data.lti_consumer
-        lti_consumer.canvas_consumer = True
-        lti_consumer.canvas_api_token = "canvas_api_token"
         lti_context = self.lti_data.create_context(
             lti_consumer,
             compair_course_id=course.id,

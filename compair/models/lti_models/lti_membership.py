@@ -12,7 +12,9 @@ from . import *
 
 from compair.core import db
 
-from oauthlib.oauth1 import SIGNATURE_TYPE_BODY, SIGNATURE_HMAC
+from oauthlib.oauth1 import SIGNATURE_TYPE_BODY, SIGNATURE_TYPE_AUTH_HEADER, SIGNATURE_HMAC
+from .helpers import LTIMemerbshipServiceOauthClient
+
 from requests_oauthlib import OAuth1
 from lti.utils import parse_qs
 import requests
@@ -180,8 +182,8 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
     def _get_membership(cls, lti_context):
         if lti_context.membership_ext_enabled:
             return LTIMembership._get_membership_ext(lti_context)
-        elif lti_context.membership_canvas_enabled:
-            return LTIMembership._get_membership_canvas(lti_context)
+        elif lti_context.membership_service_enabled:
+            return LTIMembership._get_membership_service(lti_context)
         return []
 
     @classmethod
@@ -212,29 +214,45 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             raise MembershipNoResultsException
 
         members = []
-        for member in root.findall('memberships/member'):
-            roles_text = member.findtext('roles')
+        for record in root.findall('memberships/member'):
+            roles_text = record.findtext('roles')
 
-            members.append({
-                'user_id': member.findtext('user_id'),
+            member = {
+                'user_id': record.findtext('user_id'),
                 'roles': roles_text.split(",") if roles_text != None else [],
-                'person_contact_email_primary': member.findtext('person_contact_email_primary'),
-                'person_name_given': member.findtext('person_name_given'),
-                'person_name_family': member.findtext('person_name_family'),
-                'person_name_full': member.findtext('person_name_full')
-            })
+                'person_contact_email_primary': record.findtext('person_contact_email_primary'),
+                'person_name_given': record.findtext('person_name_given'),
+                'person_name_family': record.findtext('person_name_family'),
+                'person_name_full': record.findtext('person_name_full')
+            }
+
+            # override user_id with user_id_override if present in membership result
+            if lti_consumer.user_id_override and record.findtext(lti_consumer.user_id_override) is not None:
+                member['user_id'] = record.findtext(lti_consumer.user_id_override)
+
+            members.append(member)
         return members
 
     @classmethod
-    def _get_membership_canvas(cls, lti_context):
+    def _get_membership_service(cls, lti_context):
+        # possible parameters are role, lis_result_sourcedid, limit
         lti_consumer = lti_context.lti_consumer
-        canvas_api_token = lti_consumer.canvas_api_token
         memberships_url = lti_context.custom_context_memberships_url
-        headers = {'Authorization': "Bearer "+canvas_api_token}
+
         members = []
 
         while True:
+            headers = { 'Accept': 'application/vnd.ims.lis.v2.membershipcontainer+json' }
+            request = requests.Request('GET', memberships_url, headers=headers).prepare()
+            # Note: need to use LTIMemerbshipServiceOauthClient since normal client will
+            #       not include oauth_body_hash if there is not content type or the body is None
+            sign = OAuth1(lti_consumer.oauth_consumer_key, lti_consumer.oauth_consumer_secret,
+                signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC,
+                client_class=LTIMemerbshipServiceOauthClient)
+            signed_request = sign(request)
+            headers = signed_request.headers
             data = LTIMembership._get_membership_request(memberships_url, headers)
+
             membership = data['pageOf']['membershipSubject']['membership']
 
             if len(membership) == 0:
@@ -243,16 +261,36 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             for record in membership:
                 if record.get('status').find("Inactive") >= 0:
                     continue
-                member = record['member']
-                members.append({
-                    'user_id': member.get('userId'),
+                member = {
+                    'user_id': record['member'].get('userId'),
                     'roles': record.get('role'),
-                    'person_contact_email_primary': member.get('email'),
-                    'person_name_given': member.get('givenName'),
-                    'person_name_family': member.get('familyName'),
-                    'person_name_full': member.get('name')
-                })
+                    'person_contact_email_primary': record['member'].get('email'),
+                    'person_name_given': record['member'].get('givenName'),
+                    'person_name_family': record['member'].get('familyName'),
+                    'person_name_full': record['member'].get('name')
+                }
 
+                # override user_id with user_id_override if present in membership result
+                if lti_consumer.user_id_override and 'message' in record:
+                    for message in record['message']:
+                        if not message['message_type'] == 'basic-lti-launch-request':
+                            continue
+
+                        # check if user_id_override is a basic lti parameter
+                        if lti_consumer.user_id_override in message:
+                            member['user_id'] = message[lti_consumer.user_id_override]
+                        # check if user_id_override is an extension and present
+                        elif lti_consumer.user_id_override.startswith('ext_'):
+                            ext_override = lti_consumer.user_id_override[len('ext_'):]
+                            if ext_override in message['ext']:
+                                member['user_id'] = message['ext'][ext_override]
+                        # check if user_id_override is an custom attribute and present
+                        elif lti_consumer.user_id_override.startswith('custom_'):
+                            custom_override = lti_consumer.user_id_override[len('custom_'):]
+                            if custom_override in message['custom']:
+                                member['user_id'] = message['custom'][custom_override]
+
+                members.append(member)
             # check if another page or else finish
             memberships_url = data.get('nextPage')
             if not memberships_url:

@@ -6,12 +6,11 @@ Feature: Manage LTI Consumers
     And I'm on 'manage lti' page
     When I click the first consumer's key
     Then I should be on the 'lti consumer' page
-    And I should see consumer_key_1's information
 
-  Scenario: View LTI canvas consumer as admin
+  Scenario: View LTI consumer as admin
     Given I'm a System Administrator
-    And I'm on 'lti consumer' page for consumer with id '2abcABC123-abcABC123_Z'
-    Then I should see consumer_key_2's information
+    And I'm on 'lti consumer' page for consumer with id '1abcABC123-abcABC123_Z'
+    Then I should see consumer_key_1's information
 
   Scenario: View LTI inactive consumer as admin
     Given I'm a System Administrator

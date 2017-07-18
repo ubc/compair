@@ -12,8 +12,7 @@ Feature: Edit LTI Consumers
     And I'm on 'edit lti consumer' page for consumer with id '1abcABC123-abcABC123_Z'
     When I fill form item 'consumer.oauth_consumer_key' in with 'new_consumer_key_1'
     And I fill form item 'consumer.oauth_consumer_secret' in with 'new_consumer_secret_1'
-    And I toggle the 'Canvas Consumer' checkbox
-    And I fill form item 'consumer.canvas_api_token' in with 'new_canvas_api_token'
+    And I fill form item 'consumer.user_id_override' in with 'new_user_id_override'
     And I toggle the 'Active' checkbox
     And I submit form with 'Save' button
     Then I should be on the 'manage lti' page

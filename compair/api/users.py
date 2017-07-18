@@ -47,7 +47,6 @@ existing_user_parser.add_argument('email')
 existing_user_parser.add_argument('email_notification_method')
 
 update_notification_settings_parser = RequestParser()
-update_notification_settings_parser.add_argument('email_notification_method', required=False)
 update_notification_settings_parser.add_argument('email_notification_method', required=True)
 
 update_password_parser = RequestParser()

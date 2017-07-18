@@ -3,6 +3,7 @@ from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal, reqparse, marshal_with
 from sqlalchemy import exc, or_, and_, desc, asc
+from six import text_type
 
 from . import dataformat
 from compair.core import event, db, abort
@@ -13,11 +14,16 @@ from .util import new_restful_api, get_model_changes, pagination_parser
 lti_consumer_api = Blueprint('lti_consumer_api', __name__)
 api = new_restful_api(lti_consumer_api)
 
+def non_blank_text(value):
+    if value is None:
+        return None
+    else:
+        return None if text_type(value).strip() == "" else text_type(value)
+
 new_consumer_parser = reqparse.RequestParser()
 new_consumer_parser.add_argument('oauth_consumer_key', type=str, required=True)
 new_consumer_parser.add_argument('oauth_consumer_secret', type=str)
-new_consumer_parser.add_argument('canvas_consumer', type=bool, default=False)
-new_consumer_parser.add_argument('canvas_api_token', type=str)
+new_consumer_parser.add_argument('user_id_override', type=non_blank_text)
 
 existing_consumer_parser = new_consumer_parser.copy()
 existing_consumer_parser.add_argument('id', type=str, required=True)
@@ -73,8 +79,7 @@ class ConsumerAPI(Resource):
 
         consumer.oauth_consumer_key = params.get("oauth_consumer_key")
         consumer.oauth_consumer_secret = params.get("oauth_consumer_secret")
-        consumer.canvas_consumer = params.get("canvas_consumer")
-        consumer.canvas_api_token = params.get("canvas_api_token")
+        consumer.user_id_override = params.get("user_id_override")
 
         try:
             db.session.add(consumer)
@@ -128,8 +133,7 @@ class ConsumerIdAPI(Resource):
 
         consumer.oauth_consumer_key = params.get("oauth_consumer_key")
         consumer.oauth_consumer_secret = params.get("oauth_consumer_secret")
-        consumer.canvas_consumer = params.get("canvas_consumer")
-        consumer.canvas_api_token = params.get("canvas_api_token")
+        consumer.user_id_override = params.get("user_id_override")
         consumer.active = params.get("active")
 
         try:

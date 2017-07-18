@@ -324,7 +324,7 @@ def get_lti_consumer(include_sensitive=False):
     ret = {
         'id': fields.String(attribute="uuid"),
         'oauth_consumer_key': fields.String,
-        'canvas_consumer': fields.Boolean,
+        'user_id_override': fields.String,
         'active': fields.Boolean,
         'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
         'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
@@ -332,6 +332,5 @@ def get_lti_consumer(include_sensitive=False):
 
     if include_sensitive:
         ret['oauth_consumer_secret'] = fields.String
-        ret['canvas_api_token'] = fields.String
 
     return ret

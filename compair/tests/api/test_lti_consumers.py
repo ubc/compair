@@ -19,8 +19,7 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
         consumer_expected = {
             'oauth_consumer_key': 'new_consumer_key',
             'oauth_consumer_secret': 'new_consumer_secret',
-            'canvas_consumer': False,
-            'canvas_api_token': None
+            'user_id_override': 'new_consumer_user_id_override',
         }
 
         # Test login required
@@ -44,8 +43,7 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(consumer_expected['oauth_consumer_key'], rv.json['oauth_consumer_key'])
             self.assertEqual(consumer_expected['oauth_consumer_secret'], rv.json['oauth_consumer_secret'])
-            self.assertEqual(consumer_expected['canvas_consumer'], rv.json['canvas_consumer'])
-            self.assertEqual(consumer_expected['canvas_api_token'], rv.json['canvas_api_token'])
+            self.assertEqual(consumer_expected['user_id_override'], rv.json['user_id_override'])
             self.assertTrue(rv.json['active'])
 
             # test unique oauth_consumer_key by submitting again
@@ -53,21 +51,6 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             self.assertStatus(rv, 409)
             self.assertEqual(rv.json['title'], "Consumer Not Saved")
             self.assertEqual(rv.json['message'], "A LTI consumer with the same consumer key already exists.")
-
-            # test canvas Consumer
-            consumer_expected = {
-                'oauth_consumer_key': 'new_canvas_consumer_key',
-                'oauth_consumer_secret': 'new_canvas_consumer_secret',
-                'canvas_consumer': True,
-                'canvas_api_token': "new_canvas_api_token"
-            }
-            rv = self.client.post(url, data=json.dumps(consumer_expected), content_type='application/json')
-            self.assert200(rv)
-            self.assertEqual(consumer_expected['oauth_consumer_key'], rv.json['oauth_consumer_key'])
-            self.assertEqual(consumer_expected['oauth_consumer_secret'], rv.json['oauth_consumer_secret'])
-            self.assertEqual(consumer_expected['canvas_consumer'], rv.json['canvas_consumer'])
-            self.assertEqual(consumer_expected['canvas_api_token'], rv.json['canvas_api_token'])
-            self.assertTrue(rv.json['active'])
 
     def test_list_lti_consumers(self):
         url = self._build_consumer_url()
@@ -98,18 +81,16 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
 
             for index, lti_consumer in enumerate(lti_consumers):
                 self.assertEqual(lti_consumer.oauth_consumer_key, rv.json['objects'][index]['oauth_consumer_key'])
-                self.assertEqual(lti_consumer.canvas_consumer, rv.json['objects'][index]['canvas_consumer'])
+                self.assertEqual(lti_consumer.user_id_override, rv.json['objects'][index]['user_id_override'])
                 self.assertEqual(lti_consumer.active, rv.json['objects'][index]['active'])
                 self.assertNotIn('oauth_consumer_secret',  rv.json['objects'][index])
-                self.assertNotIn('canvas_api_token',  rv.json['objects'][index])
 
             # test paging
             for i in range(1, 30): # add 29 more consumers
                 if i % 2 == 0:
                     self.lti_data.create_consumer(oauth_consumer_key='lti_consumer_key_'+str(i))
                 else:
-                    self.lti_data.create_consumer(oauth_consumer_key='lti_consumer_key_'+str(i),
-                        canvas_consumer=True, canvas_api_token='canvas_api_token_'+str(i))
+                    self.lti_data.create_consumer(oauth_consumer_key='lti_consumer_key_'+str(i), user_id_override='user_id_override_'+str(i))
             lti_consumers = self.lti_data.lti_consumers
 
             rv = self.client.get(url)
@@ -119,10 +100,9 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
 
             for index, lti_consumer in enumerate(lti_consumers[:20]):
                 self.assertEqual(lti_consumer.oauth_consumer_key, rv.json['objects'][index]['oauth_consumer_key'])
-                self.assertEqual(lti_consumer.canvas_consumer, rv.json['objects'][index]['canvas_consumer'])
+                self.assertEqual(lti_consumer.user_id_override, rv.json['objects'][index]['user_id_override'])
                 self.assertEqual(lti_consumer.active, rv.json['objects'][index]['active'])
                 self.assertNotIn('oauth_consumer_secret',  rv.json['objects'][index])
-                self.assertNotIn('canvas_api_token',  rv.json['objects'][index])
 
             rv = self.client.get(url+"?page=2")
             self.assert200(rv)
@@ -131,49 +111,44 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
 
             for index, lti_consumer in enumerate(lti_consumers[20:]):
                 self.assertEqual(lti_consumer.oauth_consumer_key, rv.json['objects'][index]['oauth_consumer_key'])
-                self.assertEqual(lti_consumer.canvas_consumer, rv.json['objects'][index]['canvas_consumer'])
+                self.assertEqual(lti_consumer.user_id_override, rv.json['objects'][index]['user_id_override'])
                 self.assertEqual(lti_consumer.active, rv.json['objects'][index]['active'])
                 self.assertNotIn('oauth_consumer_secret',  rv.json['objects'][index])
-                self.assertNotIn('canvas_api_token',  rv.json['objects'][index])
 
             # test order by
-            rv = self.client.get(url+"?orderBy=canvas_consumer")
+            rv = self.client.get(url+"?orderBy=oauth_consumer_key")
             self.assert200(rv)
             self.assertEqual(len(rv.json['objects']), 20)
             self.assertEqual(rv.json['total'], 30)
 
             sorted_lti_consumers = sorted(
                 [consumer for consumer in lti_consumers],
-                key=lambda consumer: consumer.canvas_consumer)[:20]
+                key=lambda consumer: consumer.oauth_consumer_key)[:20]
 
             for index, lti_consumer in enumerate(sorted_lti_consumers):
                 self.assertEqual(lti_consumer.oauth_consumer_key, rv.json['objects'][index]['oauth_consumer_key'])
-                self.assertEqual(lti_consumer.canvas_consumer, rv.json['objects'][index]['canvas_consumer'])
+                self.assertEqual(lti_consumer.user_id_override, rv.json['objects'][index]['user_id_override'])
                 self.assertEqual(lti_consumer.active, rv.json['objects'][index]['active'])
                 self.assertNotIn('oauth_consumer_secret',  rv.json['objects'][index])
-                self.assertNotIn('canvas_api_token',  rv.json['objects'][index])
 
-            rv = self.client.get(url+"?orderBy=canvas_consumer&reverse=true")
+            rv = self.client.get(url+"?orderBy=oauth_consumer_key&reverse=true")
             self.assert200(rv)
             self.assertEqual(len(rv.json['objects']), 20)
             self.assertEqual(rv.json['total'], 30)
 
             sorted_lti_consumers = sorted(
                 [consumer for consumer in lti_consumers],
-                key=lambda consumer: consumer.canvas_consumer,
+                key=lambda consumer: consumer.oauth_consumer_key,
                 reverse=True)[:20]
 
             for index, lti_consumer in enumerate(sorted_lti_consumers):
                 self.assertEqual(lti_consumer.oauth_consumer_key, rv.json['objects'][index]['oauth_consumer_key'])
-                self.assertEqual(lti_consumer.canvas_consumer, rv.json['objects'][index]['canvas_consumer'])
+                self.assertEqual(lti_consumer.user_id_override, rv.json['objects'][index]['user_id_override'])
                 self.assertEqual(lti_consumer.active, rv.json['objects'][index]['active'])
                 self.assertNotIn('oauth_consumer_secret',  rv.json['objects'][index])
-                self.assertNotIn('canvas_api_token',  rv.json['objects'][index])
 
     def test_get_lti_consumer(self):
         lti_consumer = self.lti_data.lti_consumer
-        canvas_consumer = self.lti_data.create_consumer(oauth_consumer_key='canvas_consumer',
-            canvas_consumer=True, canvas_api_token='canvas_api_token')
         url = self._build_consumer_url(lti_consumer.uuid)
 
         # Test login required
@@ -202,19 +177,8 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(lti_consumer.oauth_consumer_key, rv.json['oauth_consumer_key'])
             self.assertEqual(lti_consumer.oauth_consumer_secret, rv.json['oauth_consumer_secret'])
-            self.assertEqual(lti_consumer.canvas_consumer, rv.json['canvas_consumer'])
-            self.assertEqual(lti_consumer.canvas_api_token, rv.json['canvas_api_token'])
+            self.assertEqual(lti_consumer.user_id_override, rv.json['user_id_override'])
             self.assertTrue(lti_consumer.active, rv.json['active'])
-
-            # test canvas_consumer
-            url = self._build_consumer_url(canvas_consumer.uuid)
-            rv = self.client.get(url)
-            self.assert200(rv)
-            self.assertEqual(canvas_consumer.oauth_consumer_key, rv.json['oauth_consumer_key'])
-            self.assertEqual(canvas_consumer.oauth_consumer_secret, rv.json['oauth_consumer_secret'])
-            self.assertEqual(canvas_consumer.canvas_consumer, rv.json['canvas_consumer'])
-            self.assertEqual(canvas_consumer.canvas_api_token, rv.json['canvas_api_token'])
-            self.assertTrue(canvas_consumer.active, rv.json['active'])
 
     def test_edit_lti_consumer(self):
         lti_consumer = self.lti_data.lti_consumer
@@ -224,8 +188,7 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             'id': lti_consumer.uuid,
             'oauth_consumer_key': 'edit_consumer_key',
             'oauth_consumer_secret': 'edit_consumer_secret',
-            'canvas_consumer': False,
-            'canvas_api_token': None,
+            'user_id_override': 'edit_consumer_user_id_override',
             'active': False
         }
 
@@ -261,19 +224,17 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(consumer_expected['oauth_consumer_key'], rv.json['oauth_consumer_key'])
             self.assertEqual(consumer_expected['oauth_consumer_secret'], rv.json['oauth_consumer_secret'])
-            self.assertEqual(consumer_expected['canvas_consumer'], rv.json['canvas_consumer'])
-            self.assertEqual(consumer_expected['canvas_api_token'], rv.json['canvas_api_token'])
+            self.assertEqual(consumer_expected['user_id_override'], rv.json['user_id_override'])
             self.assertEqual(consumer_expected['active'], rv.json['active'])
 
-            # test edit to canvas consumer
-            consumer_expected['canvas_consumer'] = True
-            consumer_expected['canvas_api_token'] = "canvas_api_token"
-            rv = self.client.post(url, data=json.dumps(consumer_expected), content_type='application/json')
+            # valid url (empty user_id_override)
+            consumer_expected_no_override = consumer_expected.copy()
+            consumer_expected_no_override['user_id_override'] = ""
+            rv = self.client.post(url, data=json.dumps(consumer_expected_no_override), content_type='application/json')
             self.assert200(rv)
             self.assertEqual(consumer_expected['oauth_consumer_key'], rv.json['oauth_consumer_key'])
             self.assertEqual(consumer_expected['oauth_consumer_secret'], rv.json['oauth_consumer_secret'])
-            self.assertEqual(consumer_expected['canvas_consumer'], rv.json['canvas_consumer'])
-            self.assertEqual(consumer_expected['canvas_api_token'], rv.json['canvas_api_token'])
+            self.assertIsNone(rv.json['user_id_override'])
             self.assertEqual(consumer_expected['active'], rv.json['active'])
 
             # test edit duplicate consumer key

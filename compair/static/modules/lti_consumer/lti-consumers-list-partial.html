@@ -20,7 +20,7 @@
                         <a href="" ng-click="updateTableOrderBy('oauth_consumer_key')">Consumer Key</a>
                     </th>
                     <th>
-                        <a href="" ng-click="updateTableOrderBy('oauth_consumer_secret')">Canvas Consumer</a>
+                        <a href="" ng-click="updateTableOrderBy('oauth_consumer_secret')">LTI User ID Override</a>
                     </th>
                     <th>
                         <a href="" ng-click="updateTableOrderBy('active')">Status</a>
@@ -36,8 +36,7 @@
                         <a href="#/lti/consumer/{{consumer.id}}">{{consumer.oauth_consumer_key}}</a>
                     </td>
                     <td>
-                        <span ng-if="consumer.canvas_consumer">Yes</span>
-                        <span ng-if="!consumer.canvas_consumer">No</span>
+                        <a href="#/lti/consumer/{{consumer.id}}">{{consumer.user_id_override}}</a>
                     </td>
                     <td>
                         <select ng-model="consumer.active" ng-options="key for (key , value) in {'Active': true, 'Inactive': false}"

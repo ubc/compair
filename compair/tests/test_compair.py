@@ -182,7 +182,7 @@ class ComPAIRAPITestCase(ComPAIRTestCase):
 
     @contextmanager
     def lti_launch(self, lti_consumer, lti_resource_link_id,
-                         assignment_uuid=None, query_assignment_uuid=None,
+                         assignment_uuid=None, query_assignment_uuid=None, custom_puid=None,
                          nonce=None, timestamp=None, follow_redirects=True,
                          **kwargs):
         launch_url = "http://localhost/api/lti/auth"
@@ -190,6 +190,8 @@ class ComPAIRAPITestCase(ComPAIRTestCase):
         launch_params['resource_link_id'] = lti_resource_link_id
         if assignment_uuid:
             launch_params['custom_assignment'] = assignment_uuid
+        if custom_puid:
+            launch_params['custom_puid'] = custom_puid
         if query_assignment_uuid:
             launch_url = launch_url+"?assignment="+query_assignment_uuid
 
