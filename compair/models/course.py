@@ -51,13 +51,19 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @hybrid_property
     def start_date_order(self):
-        return self.start_date if self.start_date else self.min_assignment_answer_start
+        if self.start_date:
+            return self.start_date
+        elif self.min_assignment_answer_start:
+            return self.min_assignment_answer_start
+        else:
+            return self.created
 
     @start_date_order.expression
     def start_date_order(cls):
         return case([
-            (cls.start_date != None, cls.start_date)
-        ], else_ = cls.min_assignment_answer_start)
+            (cls.start_date != None, cls.start_date),
+            (cls.min_assignment_answer_start != None, cls.min_assignment_answer_start)
+        ], else_ = cls.created)
 
     def calculate_grade(self, user):
         from . import CourseGrade
