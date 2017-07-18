@@ -6,7 +6,7 @@
         </header>
         <div class="col-sm-6 sub-nav">
             <span ng-if="canManageAssignment || assignment.user_id == loggedInUserId">
-                <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/edit" title="Edit" class="btn btn-primary">
+                <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/edit" title="Edit this assignment" class="btn btn-primary">
                     <i class="fa fa-edit"></i>
                     Edit Assignment
                 </a>
@@ -164,13 +164,13 @@
                                 </select>
                             </span><br />
                             <span class="filter" ng-if="canManageAssignment">
-                                <button uib-btn-checkbox ng-model="answerFilters.anonymous" activeClass="''"
-                                    class="btn btn-sm" ng-class="{'btn-info': answerFilters.anonymous, 'btn-primary': !answerFilters.anonymous}">
-                                    <i ng-class="{'fa fa-eye-slash': answerFilters.anonymous, 'fa fa-eye': !answerFilters.anonymous}"></i> Anonymize<span ng-show="answerFilters.anonymous">d</span> Answers
-                                </button>
-                                <a href="" uib-tooltip="Hide student names, scores, and replies when sharing this screen with students" tooltip-trigger tooltip-animation="false" tooltip-placement="left">
+                                 <a href="" uib-tooltip="Hide student names, scores, and replies when sharing this screen with students" tooltip-trigger tooltip-animation="false" tooltip-placement="left">
                                     <i class="fa fa-question-circle"></i>
-                                </a>
+                                </a>&nbsp;
+                                <button uib-btn-checkbox ng-model="answerFilters.anonymous" activeClass="''"
+                                    class="btn btn-sm" ng-class="{'btn-default': answerFilters.anonymous, 'btn-default': !answerFilters.anonymous}">
+                                   Anonymize<span ng-show="answerFilters.anonymous">d</span> Answers  <i ng-class="{'fa fa-eye-slash': answerFilters.anonymous, 'fa fa-eye': !answerFilters.anonymous}"></i> 
+                                </button>
                             </span>
                         </div>
                     </div>
@@ -180,6 +180,12 @@
                 <p class="intro-text"
                    ng-if="canManageAssignment && !assignment.answer_period && !assignment.available">
                     Answering period begins {{assignment.answer_start | amDateFormat: 'MMM D @ h:mm a'}}. Would you like to <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/edit" title="Edit the assignment">change the answer date</a> for this assignment?
+                </p>
+                
+                <!-- Instructors should see when assigment becomes active -->
+                <p class="intro-text"
+                   ng-if="canManageAssignment && assignment.available && !answerFilters.anonymous">
+                    You can add answers to a list of instructor's "top picks" by clicking the star icon for any answer below. Students will then have the option to view the list when they look at this assignment. (Simply click the star again to remove any answer from the list.)
                 </p>
 
                 <!-- Students should see before answering during the answer period -->
@@ -224,13 +230,14 @@
                     <!-- Instructor Answer Metadata Header -->
                     <div class="each-header clearfix">
                         <compair-avatar user-id="answer.user_id" avatar="answer.user.avatar" display-name="answer.user.displayname" full-name="answer.user.fullname"></compair-avatar>
-                        <span class="label label-warning" ng-if="instructors[answer.user_id]">{{instructors[answer.user_id]}}&nbsp;</span>
-                        <strong>said</strong>:
+                        <span class="label label-default" ng-if="instructors[answer.user_id]">{{instructors[answer.user_id]}}</span>
+                        <strong>said</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right" ng-if="canManageAssignment">
-                            <a href="" confirmation-needed="deleteAnswer(answer)" keyword="instructor answer">
+                            <em>{{instructors[answer.user_id]}} Response</em>
+                            <a title="Delete this answer" href="" confirmation-needed="deleteAnswer(answer)" keyword="instructor answer">
                                 <i class="fa fa-trash-o"></i>
                             </a>
-                            <a href="" ng-click="editAnswer(answer)">
+                            <a href="" title="Edit this answer" ng-click="editAnswer(answer)">
                                 Edit
                             </a>
                         </div>
@@ -240,10 +247,6 @@
                     <div class="content instructor-answer">
                         <rich-content content="answer.content" attachment="answer.file"></rich-content>
                     </div>
-
-                    <p class="pull-right">
-                        <em>{{instructors[answer.user_id]}} Response</em>
-                    </p>
 
                 </div><!-- closes each-answer (instructor) -->
 
@@ -256,6 +259,27 @@
                         <span ng-show="answerFilters.anonymous">Student</span>
                         <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right" ng-if="(canManageAssignment && !answerFilters.anonymous) || (answer.user_id == loggedInUserId && assignment.answer_period && !assignment.compare_period)">
+                            <!-- Student Score (not used for instructor answers) -->
+                            <span ng-if="canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && answer.score" class="label label-warning score-tooltip" uib-tooltip="Scores are normalized, so the top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left">
+                                Score: {{answer.score.normalized_score}}%
+                            </span>
+                            <!-- Student Rank (not used for instructor answers) -->
+                            <span class="label label-warning" ng-if="!canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && answer.score">
+                                <span ng-if="answer.score.rank <= rankLimit">
+                                    Students Ranked: <strong>{{score.rank}} <span ng-if="rankCount[answer.score.rank] > 1">(tied)</span></strong>
+                                </span>
+                                <span class="score-tooltip" ng-if="answer.score.rank > 0 && answer.score.rank > rankLimit" uib-tooltip="Answers that are ranked outside the top {{rankLimit}} do not receive a rank number for this assignment." tooltip-trigger tooltip-animation="false" tooltip-placement="left">
+                                    Students Ranked: <strong>N/A</strong>
+                                </span>
+                            </span>
+                            <!-- No Student Score/Rank -->
+                            <span ng-if="canManageAssignment && !answerFilters.anonymous && !answer.score">
+                                <em>(not compared)</em>
+                            </span>
+                            <span ng-if="!canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && !answer.score">
+                                <em>(not ranked)</em>
+                            </span>
+                            
                             <!--
                             <span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
                                 <i class="fa fa-warning"></i>
@@ -273,10 +297,10 @@
                                     <i class="fa fa-star"></i>
                                 </a>
                             </span>
-                            <a href="" confirmation-needed="deleteAnswer(answer)" keyword="answer">
+                            <a href="" title="Delete this answer" confirmation-needed="deleteAnswer(answer)" keyword="answer">
                                 <i class="fa fa-trash-o"></i>
                             </a>
-                            <a href="" ng-click="editAnswer(answer)">
+                            <a href="" title="Edit this answer" ng-click="editAnswer(answer)">
                                 Edit
                             </a>
                         </div>
@@ -289,33 +313,6 @@
                     <!-- Student Answer Read More Button (not used for instructor answers) -->
                     <p ng-show="showReadMore" class="read-more" ng-click="revealAnswer(answer)"><a href="" class="btn btn-sm btn-info"><i class="fa fa-long-arrow-down"></i> Read More</a></p>
                     <!-- <p ng-show="!showReadMore">No More To Read!!! ({{thisHeight}})</p> -->
-
-                    <!-- Student Score (not used for instructor answers) -->
-                    <p class="text-right score-display" ng-if="canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && answer.score">
-                        <em>Score: {{answer.score.normalized_score}}%</em>
-                        <a href="" uib-tooltip="Scores are normalized, so the top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
-                            <i class="fa fa-question-circle"></i>
-                        </a>
-                    </p>
-                    <!-- Student Rank (not used for instructor answers) -->
-                    <p class="text-right score-display" ng-if="!canManageAssignment && !answerFilters.anonymous && nswerFilters.orderBy=='score' && answer.score">
-                        <em ng-if="answer.score.rank <= rankLimit">
-                            Students Ranked: <strong>{{score.rank}} <span ng-if="rankCount[answer.score.rank] > 1">(tied)</span></strong>
-                        </em>
-                        <em ng-if="answer.score.rank > 0 && answer.score.rank > rankLimit">
-                            Students Ranked: <strong>N/A</strong>
-                            <a href="" uib-tooltip="Answers that are ranked outside the top {{rankLimit}} do not receive a rank number for this assignment." tooltip-trigger tooltip-animation="false" tooltip-placement="left" class="score-tooltip">
-                                <i class="fa fa-question-circle"></i>
-                            </a>
-                        </em>
-                    </p>
-                    <!-- No Student Score/Rank -->
-                    <p class="text-right score-display" ng-if="canManageAssignment && !answerFilters.anonymous && !answer.score">
-                        <em>Not Compared</em>
-                    </p>
-                    <p class="text-right score-display" ng-if="!canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && !answer.score">
-                        <em>Not Ranked</em>
-                    </p>
 
                     <!-- Student Answer Replies Section -->
                     <a href="" ng-click="showReplies = !showReplies; toggleReplies(showReplies, answer)">
@@ -340,19 +337,17 @@
                             <!-- Student Reply Metadata Header -->
                             <div class="each-header clearfix">
                                 <compair-avatar user-id="comment.user_id" avatar="comment.user.avatar" display-name="comment.user.displayname" full-name="comment.user.fullname"></compair-avatar>
-                                <span class="label label-warning" ng-if="instructors[comment.user_id]">
-                                    {{instructors[comment.user_id]}}
-                                </span>
-                                <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation">gave <span class="glyphicon glyphicon-lock"></span> private feedback</strong>
-                                <strong ng-if="comment.comment_type == AnswerCommentType.self_evaluation"><span class="glyphicon glyphicon-lock"></span> self-evaluated</strong>
-                                <strong ng-if="comment.comment_type == AnswerCommentType.public">replied <span class="glyphicon glyphicon-eye-open"></span> publicly</strong>
+                                <span class="label label-default" ng-if="instructors[comment.user_id]">{{instructors[comment.user_id]}}</span>
+                                <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation"> gave private feedback <span class="glyphicon glyphicon-lock"></span></strong>
+                                <strong ng-if="comment.comment_type == AnswerCommentType.self_evaluation"> self-evaluated <span class="glyphicon glyphicon-lock"></span></strong>
+                                <strong ng-if="comment.comment_type == AnswerCommentType.public"> replied publicly <span class="glyphicon glyphicon-eye-open"></span> </strong>
                                 on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
                                 <div class="manager-actions pull-right"
                                      ng-if="canManageAssignment || (comment.user_id == loggedInUserId && (comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private))">
-                                    <a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="reply">
+                                    <a href="" title="Delete this reply" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="reply">
                                         <i class="fa fa-trash-o"></i>
                                     </a>
-                                    <a href="" ng-click="editAnswerComment(answer, comment)">
+                                    <a href="" title="Edit this reply" ng-click="editAnswerComment(answer, comment)">
                                         Edit
                                     </a>
                                 </div>
@@ -365,7 +360,7 @@
 
                     </div><!-- closes toggle div -->
 
-                    <p class="text-right">
+                    <p class="pull-right">
                         <a ng-if="!answerFilters.anonymous && (assignment.students_can_reply || canManageAssignment)" href="" ng-click="createAnswerComment(answer)" class="btn btn-sm btn-primary btn-reply">
                             <i class="fa fa-reply"></i> Reply
                         </a>
@@ -418,10 +413,10 @@
                             </a>
                         </span>
                         -->
-                        <a href="" confirmation-needed="deleteAnswer(answer)" keyword="answer">
+                        <a href="" title="Delete this answer" confirmation-needed="deleteAnswer(answer)" keyword="answer">
                             <i class="fa fa-trash-o"></i>
                         </a>
-                        <a href="" ng-click="editAnswer(answer)">
+                        <a href="" title="Edit this answer" ng-click="editAnswer(answer)">
                             Edit
                         </a>
                     </div>
@@ -453,19 +448,17 @@
                         <!-- Student Reply Metadata Header -->
                         <div class="each-header clearfix">
                             <compair-avatar user-id="comment.user_id" avatar="comment.user.avatar" display-name="comment.user.displayname" full-name="comment.user.fullname"></compair-avatar>
-                            <span class="label label-warning" ng-if="instructors[comment.user_id]">
-                                {{instructors[comment.user_id]}}
-                            </span>
-                            <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation">gave <span class="glyphicon glyphicon-lock"></span> private feedback</strong>
-                            <strong ng-if="comment.comment_type == AnswerCommentType.self_evaluation"><span class="glyphicon glyphicon-lock"></span> self-evaluated</strong>
-                            <strong ng-if="comment.comment_type == AnswerCommentType.public">replied <span class="glyphicon glyphicon-eye-open"></span> publicly</strong>
+                            <span class="label label-default" ng-if="instructors[comment.user_id]">{{instructors[comment.user_id]}}</span>
+                            <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation"> gave private feedback <span class="glyphicon glyphicon-lock"></span></strong>
+                            <strong ng-if="comment.comment_type == AnswerCommentType.self_evaluation"> self-evaluated <span class="glyphicon glyphicon-lock"></span></strong>
+                            <strong ng-if="comment.comment_type == AnswerCommentType.public"> replied publicly <span class="glyphicon glyphicon-eye-open"></span></strong>
                             on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
                             <div class="manager-actions pull-right"
                                  ng-if="canManageAssignment || (comment.user_id == loggedInUserId && (comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.public))">
-                                <a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="reply">
+                                <a href="" title="Delete this reply" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="reply">
                                     <i class="fa fa-trash-o"></i>
                                 </a>
-                                <a href="" ng-click="editAnswerComment(answer, comment)">
+                                <a href="" title="Edit this reply" ng-click="editAnswerComment(answer, comment)">
                                     Edit
                                 </a>
                             </div>
@@ -547,10 +540,10 @@
                         <strong>self-evaluated</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right"
                              ng-if="canManageAssignment || (comment.user_id == loggedInUserId && (comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private))">
-                            <a href="" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="reply">
+                            <a href="" title="Delete this reply" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="reply">
                                 <i class="fa fa-trash-o"></i>
                             </a>
-                            <a href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
+                            <a title="Edit this reply" href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
                                 Edit
                             </a>
                         </div>
@@ -585,15 +578,13 @@
                 <!-- Comment Metadata Header -->
                 <div class="each-header clearfix">
                     <compair-avatar user-id="comment.user_id" avatar="comment.user.avatar" display-name="comment.user.displayname" full-name="comment.user.fullname" me="comment.user_id == loggedInUserId"></compair-avatar>
-                    <span class="label label-warning" ng-if="instructors[comment.user_id]">
-                        {{instructors[comment.user_id]}}
-                    </span>
+                    <span class="label label-default" ng-if="instructors[comment.user_id]">{{instructors[comment.user_id]}}</span>
                     <strong>commented</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
                     <div class="manager-actions pull-right" ng-if="canManageAssignment || comment.user_id == loggedInUserId">
-                        <a confirmation-needed="deleteComment(commentKey, courseId, assignment.id, comment.id)" keyword="comment" href="">
+                        <a title="Delete this comment" confirmation-needed="deleteComment(commentKey, courseId, assignment.id, comment.id)" keyword="comment" href="">
                             <i class="fa fa-trash-o"></i>
                         </a>
-                        <a href="" ng-click="editAssignmentComment(comment)">
+                        <a href="" title="Edit this comment" ng-click="editAssignmentComment(comment)">
                             Edit
                         </a>
                     </div>

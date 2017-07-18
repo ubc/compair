@@ -61,7 +61,7 @@
                     <h2 id="intro">Introduction</h2>
                     <p>Users in ComPAIR interact with three main types of <strong>objects</strong> in the application: courses, assignments, and users. These objects have slightly different styles applied, as noted below. When new objects are created, use the term "Add"; when editing, "Edit"; when copying, "Duplicate"; and when removing, "Delete".</p>
                     <p>Users in ComPAIR can be given one of three <strong>roles</strong>. Roles provide increasing levels of permission, which affects the UI. Students can post and edit their own answers, comments, and replies. Instructors can additionally add and edit their own courses and assignments. System Administrators can additionally create users and manage which users can access a course.</p>
-                    <p>Jump to: <a href="#admin-bar">Global Administration Bar</a> | <a href="#breadcrumbs">Breadcrumbs</a> | <a href="#headings">Headings</a> | <a href="#intro-text">.intro-text Paragraphs</a> | <a href="#object-lists">Object Lists</a> | <a href="#buttons">Buttons</a> | <a href="#collapsible">.collapsible-content Elements</a></p>
+                    <p>Jump to: <a href="#admin-bar">Global Administration Bar</a> | <a href="#breadcrumbs">Breadcrumbs</a> | <a href="#headings">Headings</a> | <a href="#intro-text">.intro-text Paragraphs</a> | <a href="#object-lists">Object Lists</a> | <a href="#interactions">Assignment Interactions</a> | <a href="#buttons">Buttons</a> | <a href="#collapsible">.collapsible-content Elements</a> | <a href="#labels">Labels</a> | <a href="#forms">Forms</a></p>
                     <hr />
                     <br />
 
@@ -108,25 +108,48 @@
                     <ul>
                         <li>Each object appears on a new row</li>
                         <li>Each row alternates background colour between <code>#ffffff</code> and <code>#f9f9f9</code></li>
-                        <li>Each row includes details about the object and actions that can be taken on the object (e.g., edit)</li>
+                        <li>Each row includes relevant metadata about the object and actions that can be taken on the object (e.g., edit)</li>
                         <li>If present, orange label tags highlight important information about the object</li>
                         <li>If filters are used to affect the list of objects, these appear in the upper right corner just before the list starts</li>
                     </ul>
                     <p>Some of this styling is applied to other lists of items in the application as well. For example, the list of answers and help comments also follow these conventions.</p>
                     <p class="text-right"><a href="#top">&#94; Back to top</a></p>
                     
-                    <h2 id="buttons">Buttons</h2>
-                    <p>ComPAIR primarily uses <strong>four types</strong> of buttons. All button text is "First Letter Each Word Capitalized".</p>
+                    <h2 id="interactions">Assignment Interactions</h2>
+                    <p>Users can interact with assignments in <strong>four main ways</strong>: answering, comparing answer pairs, replying to answers, and commenting on the assignment. When these activities are displayed in the application, they follow the same introductory line. Before the answer, comparison, reply, or comment, there should be text containing (from left to right):</p>
                     <ul>
-                        <li><strong>Green</strong> / <code>.btn-success</code>: Indicates a primary action a user must take to complete an activity; used as the final button in submitting all forms (including inline forms) and for "View Course", "Answer", and "Compare Pairs" buttons; form buttons are center aligned; other buttons are right aligned when practical; no icons added; larger sizing preferred</li>
-                        <li><strong>Blue</strong> / <code>.btn-primary</code>: Indicates a secondary action a user can take; used to present contextual options, e.g., adding assignments, editing user profiles, replying to answers; also used for selection of answer per criterion; buttons are right aligned when practical; must contain a related icon to the left of the text; medium sizing preferred</li>
-                        <li><strong>White</strong> / <code>.btn-default</code>: Indicates one of two or more options where de-emphasis of button(s) is desired; used for buttons to save drafts of answers and comparisons and to make choices during duplication process; as save button, always center aligned and to the left of the "Submit" button; no icons added; sizing should be appropriate to surrounding context</li>
-                        <li><strong>Turquoise</strong> / <code>.btn-info</code>: Indicates access to additional information; used for button to open pop-ups of attachments or links and to read more answer text; no icons added; smaller sizing preferred</li>
+                        <li>The user's profile icon</li>
+                        <li>The user's name (linked to their profile), presented as Display Name (Full Name), where the full name only appears to non-students</li>
+                        <li>A gray label to indicate if this is an instructor/teaching assistant</li>
+                        <li>A bolded verb, e.g., answered, submitted, replied, with a text and icon to indicated public/private for replies</li>
+                        <li>The date presented as "on <code>MMM D @ h:mm a</code>:"</li>
+                    </ul>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                    
+                    <h2 id="buttons">Buttons</h2>
+                    <p>The application primarily uses <strong>four types</strong> of buttons. All button text is "First Letter Each Word Capitalized".</p>
+                    <ul>
+                        <li><strong>Green</strong> / <code>class="btn-success"</code>: Indicates a primary action a user must take to complete an activity; used as the final button in submitting all forms (including inline forms) and for "View Course", "Answer", and "Compare Pairs" buttons; form buttons are center aligned; other buttons are right aligned when practical; no icons added; larger sizing preferred</li>
+                        <li><strong>Blue</strong> / <code>class="btn-primary"</code>: Indicates a secondary action a user can take; used to present contextual options, e.g., adding assignments, editing user profiles, replying to answers; also used for selection of answer per criterion; buttons are right aligned when practical; must contain a related icon to the left of the text; medium sizing preferred</li>
+                        <li><strong>White</strong> / <code>class="btn-default"</code>: Indicates one of two or more options where de-emphasis of button(s) is desired; used for buttons to save drafts of answers and comparisons and to make choices during duplication process; as save button, always center aligned and to the left of the "Submit" button; no icons added; sizing should be appropriate to surrounding context</li>
+                        <li><strong>Turquoise</strong> / <code>class="btn-info"</code>: Indicates access to additional information; used for button to open pop-ups of attachments or links and to read more answer text; no icons added; smaller sizing preferred</li>
                     </ul>
                     <p class="text-right"><a href="#top">&#94; Back to top</a></p>
                     
                     <h2 id="collapsible">.collapsible-content Elements</h2>
                     <p>Content pieces can be designed to collapse/expand with show/hide functions in Angular and <code>class="collapsible-content"</code> on the element to toggle. The content is always displayed under linked (blue) text. A chevron appears to the left of this text, facing right&mdash;<code>&lt;i class="fa fa-chevron-right"&gt;&lt;/i&gt;</code>&mdash;when the content is collapsed/hidden and facing down&mdash;<code>&lt;i class="fa fa-chevron-down"&gt;&lt;/i&gt;</code>&mdash;when the content is expanded/shown.</p>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                    
+                    <h2 id="labels">Labels</h2>
+                    <p>The application uses <strong>two kinds</strong> of labels.</p>
+                    <ul>
+                        <li><strong>Orange</strong> / <code>class="label-warning"</code>: Identifies important information as related to assignments; used for outstanding work, rounds remaining, feedback received, and answer scores; appears as part of metadata except in case of rounds remaining (where it is part of the heading)</li>
+                        <li><strong>Gray</strong> / <code>class="label-default"</code>: Identifies instructors/teaching assistants in assignments; used when instructors/TAs answer, reply, or comment; appears as part of metadata</li>
+                    </ul>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                    
+                    <h2 id="forms">Forms</h2>
+                    <p>Forms...</p>
                     <p class="text-right"><a href="#top">&#94; Back to top</a></p>
                     
                     <p class="text-center"><a href="documentation.html" target="_blank" class="btn btn-success btn-lg" role="button">Back to docs </a></p>

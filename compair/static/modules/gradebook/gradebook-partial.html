@@ -44,6 +44,9 @@
                 <th class="text-center" ng-if="includeScores">
                     <a href="" ng-click="updateTableOrderBy('score')">Answer Score</a>
                 </th>
+                <th class="text-center" ng-if="showAttachments">
+                    <a href="" ng-click="updateTableOrderBy('attachments')">Attachments</a>
+                </th>
                 <!--
                 <th class="text-center">
                     <a href="" ng-click="updateTableOrderBy('flagged')">Flagged</a>
@@ -80,7 +83,7 @@
                 </td>
                 <td class="text-center" ng-if="showAttachments">
                     <span ng-if="!entry.file"> n/a </span>
-                    <a ng-if="entry.file" ng-click="openAttachment(entry.file, entry.download_file_name)">View</a>
+                    <a href="" ng-if="entry.file" ng-click="openAttachment(entry.file, entry.download_file_name)">View &raquo;</a>
                 </td>
                 <!--
                 <td class="text-center" ng-class="{
@@ -101,7 +104,7 @@
                 </td>
                 <td class="text-center text-success" ng-if="includeSelfEval && entry.num_self_evaluation > 0"><strong>Yes</strong></td>
                 <td class="text-center text-danger" ng-if="includeSelfEval && entry.num_self_evaluation == 0"><strong>No</strong></td>
-                <td><strong>{{entry.grade|number:0}}%</strong></td>
+                <td class="text-center"><strong>{{entry.grade|number:0}}%</strong></td>
             </tr>
         </tbody>
     </table>
