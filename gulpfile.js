@@ -28,7 +28,7 @@ var gulp = require('gulp'),
     streamqueue = require('streamqueue'), // queued streams one by one
     templateCache = require('gulp-angular-templatecache');
 
-var cssFilenames = [
+    var cssFilenames = [
         './compair/static/lib/bootstrap/dist/css/bootstrap.css',
         './compair/static/lib/highlightjs/styles/foundation.css',
         './compair/static/lib/angular-loading-bar/build/loading-bar.css',
@@ -94,7 +94,7 @@ gulp.task('prod_copy_fonts', function () {
 gulp.task('prod_copy_images', function () {
 	// chosen image is loaded by chosen.css and default location is
     // ./
-    return gulp.src('bower_components/chosen/*.png')
+    return gulp.src(['bower_components/chosen/*.png', './compair/static/img/*.png', './compair/static/img/*.ico'])
         .pipe(gulp.dest('compair/static/dist/'));
 });
 gulp.task('prod_minify_js', ['prod_templatecache'], function() {
@@ -128,7 +128,8 @@ gulp.task('prod_minify_js', ['prod_templatecache'], function() {
         .pipe(gulp.dest('./compair/static/build'));
 });
 gulp.task('revision', ['prod_minify_js_libs', 'prod_compile_minify_css', 'prod_minify_js', 'prod_copy_fonts', 'prod_copy_images'], function() {
-    return gulp.src(['./compair/static/build/*.css', './compair/static/build/*.js', '!compair/static/build/templates.js'])
+    return gulp.src(['./compair/static/build/*.css', './compair/static/build/*.js', '!compair/static/build/templates.js',
+            './compair/static/build/*.png', './compair/static/build/*.ico'])
         .pipe(rev())
         .pipe(gulp.dest('./compair/static/dist'))
         .pipe(rev.manifest())

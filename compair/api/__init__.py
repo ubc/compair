@@ -145,6 +145,7 @@ def register_api_blueprints(app):
             bower_js_libs=prefix + assets['bowerJsLibs.js'],
             compair_js=prefix + assets['compair.js'],
             compair_css=prefix + assets['compair.css'],
+            static_img_path=prefix,
             ga_tracking_id=app.config['GA_TRACKING_ID'],
             attachment_extensions=list(app.config['ATTACHMENT_ALLOWED_EXTENSIONS']),
             attachment_upload_limit=app.config['ATTACHMENT_UPLOAD_LIMIT'],
