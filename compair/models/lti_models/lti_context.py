@@ -33,15 +33,15 @@ class LTIContext(DefaultTableMixin, WriteTrackingMixin):
 
     @hybrid_property
     def membership_enabled(self):
-        return self.membership_ext_enabled or self.membership_canvas_enabled
+        return self.membership_ext_enabled or self.membership_service_enabled
 
     @hybrid_property
     def membership_ext_enabled(self):
         return self.ext_ims_lis_memberships_url and self.ext_ims_lis_memberships_id
 
     @hybrid_property
-    def membership_canvas_enabled(self):
-        return self.custom_context_memberships_url and self.lti_consumer.canvas_api_token
+    def membership_service_enabled(self):
+        return self.custom_context_memberships_url
 
     def is_linked_to_course(self):
         return self.compair_course_id != None

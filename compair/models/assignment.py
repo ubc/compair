@@ -89,7 +89,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @hybrid_property
     def compared(self):
-        return self.compare_count > 0
+        return self.all_compare_count > 0
 
     def completed_comparison_count_for_user(self, user_id):
         return self.comparisons \
@@ -152,8 +152,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @hybrid_property
     def evaluation_count(self):
-        evaluation_count = self.compare_count
-        return evaluation_count + self.self_evaluation_count
+        return self.compare_count + self.self_evaluation_count
 
     @hybrid_property
     def total_comparisons_required(self):
@@ -298,9 +297,21 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             group="counts"
         )
 
+        cls.all_compare_count = column_property(
+            select([func.count(Comparison.id)]).
+            where(and_(
+                Comparison.assignment_id == cls.id
+            )),
+            deferred=True,
+            group="counts"
+        )
+
         cls.compare_count = column_property(
             select([func.count(Comparison.id)]).
-            where(Comparison.assignment_id == cls.id),
+            where(and_(
+                Comparison.assignment_id == cls.id,
+                Comparison.completed == True
+            )),
             deferred=True,
             group="counts"
         )

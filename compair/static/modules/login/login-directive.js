@@ -6,9 +6,9 @@
 
         .directive('loginCreateUserForm',
             ['$route', '$log', 'UserResource', 'SystemRole', 'Toaster',
-             'AuthenticationService', 'LTI', 'UserSettings',
+             'AuthenticationService', 'LTI', 'UserSettings', 'EmailNotificationMethod',
             function ($route, $log, UserResource, SystemRole, Toaster,
-                      AuthenticationService, LTI, UserSettings) {
+                      AuthenticationService, LTI, UserSettings, EmailNotificationMethod) {
             return {
                 restrict: 'E',
                 scope: {
@@ -21,14 +21,16 @@
                     scope.submitted = false;
 
                     scope.password = {};
-                    $scope.UserSettings = UserSettings;
+                    scope.UserSettings = UserSettings;
+                    scope.EmailNotificationMethod = EmailNotificationMethod;
                     scope.SystemRole = SystemRole;
                     scope.system_roles = [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin];
 
                     scope.user = {
                         // required parameter that will be ignored by backend
                         system_role: SystemRole.student,
-                        uses_compair_login: scope.uses_compair_login
+                        uses_compair_login: scope.uses_compair_login,
+                        email_notification_method: EmailNotificationMethod.enable
                     }
 
                     LTI.getStatus().then(function(status) {
@@ -37,6 +39,7 @@
                             // overwrite user with LTI user info
                             scope.user = LTI.getLTIUser();
                             scope.user.uses_compair_login = scope.uses_compair_login;
+                            scope.user.email_notification_method = EmailNotificationMethod.enable;
                         }
                     });
 

@@ -22,16 +22,9 @@
             </div>
         </div>
         <div class="row">
-            <strong class="col-md-2">Canvas Consumer:</strong>
-            <div id="consumer_canvas_consumer" class="col-md-10">
-                <span ng-if="consumer.canvas_consumer">Yes</span>
-                <span ng-if="!consumer.canvas_consumer">No</span>
-            </div>
-        </div>
-        <div class="row" ng-if="consumer.canvas_consumer">
-            <strong class="col-md-2">Canvas API Token:</strong>
-            <div id="consumer_canvas_api_token" class="col-md-10">
-                <span class="spoiler">{{consumer.canvas_api_token}}</span>
+            <strong class="col-md-2">LTI User ID Override:</strong>
+            <div id="consumer_user_id_override" class="col-md-10">
+                {{consumer.user_id_override}}
             </div>
         </div>
         <div class="row">
