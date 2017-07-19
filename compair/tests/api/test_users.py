@@ -639,6 +639,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             url = '/api/users/courses'
 
             self.data.get_course().start_date = None
+            self.data.get_course().created = datetime.datetime.now() - datetime.timedelta(days=10)
 
             course_2 = self.data.create_course()
             course_2.start_date = datetime.datetime.now()
@@ -735,6 +736,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             url = '/api/users/'+ self.data.get_authorized_instructor().uuid +'/courses'
 
             self.data.get_course().start_date = None
+            self.data.get_course().created = datetime.datetime.now() - datetime.timedelta(days=10)
 
             course_2 = self.data.create_course()
             course_2.start_date = datetime.datetime.now()
