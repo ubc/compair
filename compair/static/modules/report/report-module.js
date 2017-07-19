@@ -34,19 +34,16 @@ module.controller(
     {
         $scope.courses = resolvedData.coursesAsInstructor.courses;
 
-        $scope.report = {
-            'type': 'participation',
-            'group_name': 'all'
-        };
+        $scope.report = {};
         $scope.assignments = [];
         $scope.groups = [];
 
         var all = {'id': 'all', 'name': 'All Assignments'};
         var allGroups = {'name': 'All Groups', 'value': 'all'};
         $scope.types = [
-            {'id': 'participation', 'name': 'Participation Report (Regular)'},
-            {'id': 'participation_stat', 'name': 'Participation Report (Research)'},
-            {'id': 'peer_feedback', 'name': 'Peer Feedback Report'}
+            {'id': 'participation', 'name': 'Basic Participation Report'},
+            {'id': 'participation_stat', 'name': 'Participation Report for Research Teams'},
+            {'id': 'peer_feedback', 'name': 'Compiled Peer Feedback Report'}
         ];
 
         $scope.changeReport = function() {

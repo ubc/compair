@@ -7,7 +7,7 @@
         <h1>Update Password</h1>
         <form name="changePasswordForm" class="form" ng-submit="changePassword()" novalidate>
             <fieldset>
-                <legend>Password</legend>
+                <legend>Password Details</legend>
                 <compair-field-with-feedback form-control="changePasswordForm.oldpassword" ng-if="ownProfile || !canManageUsers">
                     <label for="oldpassword" class="required-star">Old Password</label>
                     <input class="form-control" id="oldpassword" type="password"
@@ -27,7 +27,7 @@
                         required pw-match="newpassword" />
                 </compair-field-with-feedback>
             </fieldset>
-            <input type="submit" class="btn btn-success center-block btn-lg" value="Update"
+            <input type="submit" class="btn btn-success center-block btn-lg" value="Save"
                 ng-disabled="changePasswordForm.$invalid || submitted">
         </form>
     </div>

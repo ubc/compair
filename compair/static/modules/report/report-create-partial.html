@@ -17,12 +17,15 @@
             <label for="reportGroup" class="required-star">Student Group</label>
             <select class="form-control" ng-model="report.group_name" name="reportCourseId" ng-change="changeReport()"
                     ng-options="g.value as g.name for g in groups" required>
+                <option value="">- Select group -</option>
             </select>
         </div>
         <div class="form-group">
             <label for="reportType" class="required-star">Report Type</label>
             <select class="form-control" ng-model="report.type" name="reportType" required
-                    ng-options="t.id as t.name for t in types" ng-change="changeReport()"></select>
+                    ng-options="t.id as t.name for t in types" ng-change="changeReport()">
+                <option value="">- Select report -</option>
+            </select>
         </div>
         <div class="form-group">
             <label for="reportAssignment" class="required-star">Assignment</label>
@@ -35,7 +38,8 @@
     <div class="alert alert-success text-center" ng-show="reportFile">
         <p class="h4">Report Complete</p>
         <p>Your report is ready for <strong><a href="{{ reportFile }}">download <i class="fa fa-file-excel-o"></i></a></strong> now.</p>
+        <p>Run <a href="" ng-click="changeReport()">another report</a>?</p>
         <br />
     </div>
-    <input type="submit" class="btn btn-success btn-lg center-block" value="Run" ng-disabled="reportForm.$invalid || submitted"/>
+    <input type="submit" class="btn btn-success btn-lg center-block" value="Run" ng-disabled="reportForm.$invalid || submitted" ng-show="!reportFile"/>
 </form>

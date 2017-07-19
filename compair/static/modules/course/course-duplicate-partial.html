@@ -90,14 +90,14 @@
         <div ng-show="duplicateAssignments.length" class="each-assignment" ng-class="{'first-child': $first}"
             ng-repeat="assignment in duplicateAssignments | orderBy:'':true">
 
-            <hr />
+            <hr ng-hide="$first" />
 
             <h3 class="media-heading">
                 Assignment: "{{assignment.name}}"
             </h3>
             <div class="form-group">
                 <input id="availableCheck-{{assignment.id}}" type="checkbox" ng-model="assignment.availableCheck">
-                <label for="availableCheck-{{assignment.id}}">Set a comparison period for this assignment below</label>
+                <label for="availableCheck-{{assignment.id}}">Set a comparison period for this assignment below<span ng-show="assignment.availableCheck">:</span></label>
             </div>
 
             <div class="row">

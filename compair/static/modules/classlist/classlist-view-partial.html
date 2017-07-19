@@ -14,10 +14,6 @@
                     Export Users
                 </a>
             </span>
-            <!-- <a ng-href="#/course/{{courseId}}/user/group/import" class="btn btn-primary" ng-if="canCreateUsers">
-                <i class="fa fa-list-ul"></i>
-                Assign Groups
-            </a> -->
         </div>
     </div>
     <p class="intro-text" ng-if="lti_membership_enabled">
@@ -26,8 +22,7 @@
     <p class="intro-text" ng-if="!lti_membership_enabled">
         <strong>Edit or drop users from the course and manage course groups</strong> below. To make significant changes to the <em>full</em> course user list at once, click "Import Users" above and follow the directions on the next screen. To generate a file with all the currently enrolled users, click "Export Users" above.
     </p>
-    <h2 >Enrolled in {{course.name}}</h2>
-    <hr />
+    <h2>Enrolled in {{course.name}}</h2>
 
     <div class="row">
         <h3 class="col-md-2">{{ classlist.length + lti_membership_pending }} users</h3>
@@ -51,10 +46,10 @@
     <div class="row" ng-show="classlist.length > 0">
 	    <div class="col-sm-3 form-group">
 			<select class="form-control" ng-model="bulkActions" ng-init="bulkActions = 'none'">
-				<option value="none">- select bulk action -</option>
-				<option value="add">Add Selected Users to a Group</option>
-				<option value="drop">Drop Selected Users</option>
-				<option value="update">Update Role for Selected Users</option>
+				<option value="none">- Select bulk action -</option>
+				<option value="add">Add selected users to a group</option>
+				<option value="drop">Drop selected users from course</option>
+				<option value="update">Update role for selected users</option>
 			</select>
 	    </div>
 	    <div class="col-sm-9" ng-show="bulkActions == 'add'">
@@ -67,7 +62,7 @@
 			<div class="form-group col-sm-4">
 				<select id="select-group" class="form-control" ng-model="selectedGroup"
 					ng-options="g as g for g in groups" ng-disabled="!groups.length">
-					<option value="">- select existing group -</option>
+					<option value="">- Select existing group -</option>
 				</select>
 			</div>
 			<div class="col-sm-3">
@@ -84,7 +79,7 @@
 			<div class="form-group col-sm-6">
 				<select id="select-group" class="form-control" ng-model="selectedCourseRole"
 					ng-options="course_role as course_role for course_role in course_roles">
-				    <option value="">- select new role -</option>
+				    <option value="">- Select course role -</option>
 				</select>
 			</div>
 			<div class="col-sm-3">

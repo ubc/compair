@@ -581,6 +581,7 @@ module.controller("AssignmentViewController",
             }, function() {
                 xAPIStatementHelper.closed_modal("Create Assignment Comment");
             });
+            $scope.assignment.comment_count++;
         };
 
         $scope.editAssignmentComment = function(comment) {

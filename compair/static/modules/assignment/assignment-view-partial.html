@@ -3,6 +3,7 @@
     <div class="row">
         <header class="col-sm-6">
             <h1>View Assignment</h1>
+            <br ng-if="!canManageAssignment" />
         </header>
         <div class="col-sm-6 sub-nav">
             <span ng-if="canManageAssignment || assignment.user_id == loggedInUserId">
@@ -41,11 +42,19 @@
             <li ng-if="assignment.status.comparisons.available && !canManageAssignment && assignment.compare_period && (steps_left > 0) && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period) && assignment.compare_end">
                 Comparisons due {{assignment.compare_end | amDateFormat: 'MMM D @ h:mm a'}}
             </li>
-            <li ng-if="!canManageAssignment && assignment.compare_period && (steps_left > 0) && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)">
-                <strong>{{ steps_left }} comparison<span ng-if="steps_left != 1">s</span></strong> needed
+            <li ng-if="!canManageAssignment && assignment.compare_period && (steps_left > 0) && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)" class="label label-warning">
+                {{ steps_left }} comparison<span ng-if="steps_left != 1">s</span> needed
             </li>
-            <li ng-if="!canManageAssignment && assignment.after_comparing && assignment.status.answers.feedback">
-                <strong>{{assignment.status.answers.feedback}} peer<span ng-if="assignment.status.answers.feedback != 1">s</span></strong> left you feedback below
+            <!-- ADDITIONAL TEXT when answer pairs are not available for comparison AND (user is not an admin OR admins can compare) AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active)-->
+            <li ng-if="!assignment.status.comparisons.available && (!canManageAssignment || assignment.educators_can_compare) && assignment.compare_period && (steps_left > 0) && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)">
+                <em>Not enough answers to compare</em>
+            </li>
+            <!-- ADDITIONAL TEXT when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has a self-evaluation remaining AND has not answered assignment -->
+            <li ng-if="!canManageAssignment && assignment.compare_period && comparisons_left == 0 && self_evaluation_needed && !assignment.status.answers.answered">
+                <em>Self-evaluation comparison unavailable</em>
+            </li>
+            <li ng-if="!canManageAssignment && assignment.status.answers.feedback" class="label label-warning">
+                {{assignment.status.answers.feedback}} peer<span ng-if="assignment.status.answers.feedback != 1">s</span></strong> left you feedback
             </li>
         </ul>
 
@@ -94,14 +103,6 @@
                ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">
                 Compare Pairs
             </a>
-    
-            <!-- ADDITIONAL TEXT when answer pairs are not available for comparison AND (user is not an admin OR admins can compare) AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active)-->
-            <p ng-if="!assignment.status.comparisons.available && (!canManageAssignment || assignment.educators_can_compare) && assignment.compare_period && (steps_left > 0) && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)">
-                <br /><em>Not enough answers to compare (Refresh the page to check again) </em></p>
-    
-            <!-- ADDITIONAL TEXT when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has a self-evaluation remaining AND has not answered assignment -->
-            <p ng-if="!canManageAssignment && assignment.compare_period && comparisons_left == 0 && self_evaluation_needed && !assignment.status.answers.answered">
-                <br /><em>Self-evaluation comparison unavailable (You have not answered the assignment)</em></p>
         
         </div>
 
@@ -113,10 +114,10 @@
         <a ng-click="setTab('answers')" href="">Answers <span ng-show="canManageAssignment || (!assignment.answer_period && see_answers)">({{answers.total}})</span></a>
       </li>
       <li ng-show="!canManageAssignment" id="comparisons" ng-class="{active:showTab('comparisons')}">
-        <a ng-click="setTab('comparisons')" href="">Your Work + Feedback</a>
+        <a ng-click="setTab('comparisons')" href="">Your Work + Feedback <span ng-if="assignment.status.answers.feedback">({{assignment.status.answers.feedback}})</span></a>
       </li>
       <li id="comments" ng-class="{active:showTab('help')}">
-        <a ng-click="setTab('help')" href="">Help Comments</a>
+        <a ng-click="setTab('help')" href="">Help Comments ({{assignment.comment_count}})</a>
       </li>
       <li ng-show="canManageAssignment" id="participation" ng-class="{active:showTab('participation')}">
         <a ng-click="setTab('participation')" href="">Participation</a>
@@ -182,9 +183,9 @@
                     Answering period begins {{assignment.answer_start | amDateFormat: 'MMM D @ h:mm a'}}. Would you like to <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/edit" title="Edit the assignment">change the answer date</a> for this assignment?
                 </p>
                 
-                <!-- Instructors should see when assigment becomes active -->
+                <!-- Instructors should see when assignment becomes active -->
                 <p class="intro-text"
-                   ng-if="canManageAssignment && assignment.available && !answerFilters.anonymous">
+                   ng-if="canManageAssignment && assignment.available">
                     You can add answers to a list of instructor's "top picks" by clicking the star icon for any answer below. Students will then have the option to view the list when they look at this assignment. (Simply click the star again to remove any answer from the list.)
                 </p>
 
@@ -251,7 +252,7 @@
                 </div><!-- closes each-answer (instructor) -->
 
                 <!-- Student Answers Section -->
-                <div class="each-answer clearfix" ng-repeat="answer in answers.objects | notScoredEnd | excludeInstr:instructors as results" ng-if="(see_answers || answer.user_id == loggedInUserId || canManageAssignment)">
+                <div class="each-answer clearfix" ng-repeat="answer in answers.objects | notScoredEnd | excludeInstr:instructors as results" ng-if="(see_answers || canManageAssignment)">
                 <!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.user_id] && (see_answers || (answer.user_id == loggedInUserId && assignment.answer_period) || canManageAssignment)"> -->
                     <!-- Student Answer Metadata Header -->
                     <div class="each-header clearfix">
@@ -392,7 +393,7 @@
                         <strong><span ng=show="assignment.status.answers.answered">1 answer</span><span ng-show="assignment.status.answers.answered && comparisons.objects.length > 0">,</span>
                         <span ng-show="comparisons.objects.length > 0">{{comparisons.objects.length}} comparison<span ng-show="comparisons.objects.length > 1">s</span></span></strong>
                     &mdash;</span>
-                    for this assignment appears below. Feedback for your answer can be found in the replies underneath the answer.</p>
+                    for this assignment appears below. Any feedback for your answer can be found in the replies underneath the answer.</p>
                 </div>
             </div>
 

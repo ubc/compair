@@ -12,6 +12,7 @@
                     Add Assignment
                 </a>
             </span>
+            <span ng-if="canEditCourse">
                 <a id="manage-users-btn" ng-href="#/course/{{course.id}}/user" class="btn btn-primary">
                     <i class="fa fa-users"></i>
                     Manage Users
@@ -45,8 +46,7 @@
 
     <div ng-if="!assignments.length">
         <hr />
-        <p>No assignments currently posted.</p>
-        <p ng-if="canCreateAssignment">Would you like to <a ng-href="#/course/{{course.id}}/assignment/create">add an assignment</a>?</p>
+        <p>No assignments currently posted. <span ng-if="canCreateAssignment">Would you like to <a ng-href="#/course/{{course.id}}/assignment/create">add an assignment</a>?</span></p>
     </div>
 
     <!-- Assignments List -->
@@ -120,10 +120,10 @@
                     <!-- Assignment Feedback (for instructors) -->
                     <li ng-if="canManageAssignment">
                         <span ng-if="!assignment.answer_period && !assignment.compare_period && !assignment.answers_available">Scheduled for {{assignment.answer_start | amDateFormat: 'MMM D'}}</span>
-                        <span ng-if="assignment.answer_period && !assignment.compare_period" class="label label-warning">Answering period</span>
-                        <span ng-if="!assignment.answer_period && assignment.compare_period" class="label label-warning">Comparing period</span>
-                        <span ng-if="assignment.answer_period && assignment.compare_period" class="label label-warning">Answer/compare period</span>
-                        <span ng-if="!assignment.answer_period && !assignment.compare_period && assignment.answers_available">Assignment completed {{assignment.compare_end | amDateFormat: 'MMM D'}}</span>
+                        <span ng-if="assignment.answer_period && !assignment.compare_period" class="label label-warning">Answer period</span>
+                        <span ng-if="!assignment.answer_period && assignment.compare_period" class="label label-warning">Comparison period</span>
+                        <span ng-if="assignment.answer_period && assignment.compare_period" class="label label-warning">Answer/comparison period</span>
+                        <span ng-if="!assignment.answer_period && !assignment.compare_period && assignment.answers_available">Completed on {{assignment.compare_end | amDateFormat: 'MMM D'}}</span>
                     </li>
                     <li ng-if="canManageAssignment || assignment.user_id == loggedInUserId">
                         <a confirmation-needed="deleteAssignment(assignment)" keyword="assignment" title="Delete" href="">

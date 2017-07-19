@@ -124,6 +124,7 @@
                         <li>A bolded verb, e.g., answered, submitted, replied, with a text and icon to indicated public/private for replies</li>
                         <li>The date presented as "on <code>MMM D @ h:mm a</code>:"</li>
                     </ul>
+                    <p><strong>Tabs</strong> are used to help users navigate these interactions for assignments. In each assignment, students see tabs for Answers (answers and replies), Your Work + Feedback (their answers, related replies, their comparisons), and Help Comments (comments). Non-students see tabs for Answers (answers and replies), TBA: Comparisons (comparisons), Help Comments (comments), and Participation (summary of interactions).</p>
                     <p class="text-right"><a href="#top">&#94; Back to top</a></p>
                     
                     <h2 id="buttons">Buttons</h2>
@@ -132,7 +133,7 @@
                         <li><strong>Green</strong> / <code>class="btn-success"</code>: Indicates a primary action a user must take to complete an activity; used as the final button in submitting all forms (including inline forms) and for "View Course", "Answer", and "Compare Pairs" buttons; form buttons are center aligned; other buttons are right aligned when practical; no icons added; larger sizing preferred</li>
                         <li><strong>Blue</strong> / <code>class="btn-primary"</code>: Indicates a secondary action a user can take; used to present contextual options, e.g., adding assignments, editing user profiles, replying to answers; also used for selection of answer per criterion; buttons are right aligned when practical; must contain a related icon to the left of the text; medium sizing preferred</li>
                         <li><strong>White</strong> / <code>class="btn-default"</code>: Indicates one of two or more options where de-emphasis of button(s) is desired; used for buttons to save drafts of answers and comparisons and to make choices during duplication process; as save button, always center aligned and to the left of the "Submit" button; no icons added; sizing should be appropriate to surrounding context</li>
-                        <li><strong>Turquoise</strong> / <code>class="btn-info"</code>: Indicates access to additional information; used for button to open pop-ups of attachments or links and to read more answer text; no icons added; smaller sizing preferred</li>
+                        <li><strong>Turquoise</strong> / <code>class="btn-info"</code>: Indicates access to additional information; used for button to open pop-ups of attachments or links, to read more answer text, and to see the student comparison preview; no icons added; smaller sizing preferred</li>
                     </ul>
                     <p class="text-right"><a href="#top">&#94; Back to top</a></p>
                     
@@ -149,7 +150,25 @@
                     <p class="text-right"><a href="#top">&#94; Back to top</a></p>
                     
                     <h2 id="forms">Forms</h2>
-                    <p>Forms...</p>
+                    <p>Unless displayed inline, forms always use <strong>fieldsets and legends</strong> to organize the form fields. Additionally, forms share other styles:</p>
+                    <ul>
+                        <li>Legends use "First Letter Each Word Capitalized" for text and should succintly summarize the fields below</li>
+                        <li>When appropriate, a div with <code>class="instructional-text"</code> can be used to contain explanatory text for the fieldset; this appears within the fieldset and can contain bolded or dynamic text to improve guidance</li>
+                        <li>Sub-sections of a fieldset are set apart with <code>&lt;hr&gt;</code> lines</li>
+                        <li>Labels are bold and appear above or to the right of the fields, and should also be "First Letter Each Word Capitalized" for text
+                            <ul>
+                                <li>Checkbox labels may be normal weight and "First word capitalized", if the text has to be longer for usability reasons</li>
+                                <li>Sub-labels are weight and use <code>class="text-muted"</code></li>
+                            </ul>
+                        </li>
+                        <li>Required fields should have a red asterisk after their labels, added with <code>class="required-star"</code></li>
+                        <li>Required fields should also use the <code>compair-field-with-feedback</code> directive to add dynamic green/red highlighting and icons</li>
+                        <li>Placeholders should be used only when needed to further explain a field</li>
+                        <li>Informational text to inform users about form settings use a paragraph tag with <code>class="alert alert-info"</code></li>
+                        <li>Blank drop-down selects read: "- Select <em>appropriate term here</em> -" (with "First letter capitalized" text)</li>
+                        <li>Date fields should use the date picker</li>
+                        <li>Forms should be submitted with a green button that is center aligned at the bottom of the form</li>
+                    </ul>
                     <p class="text-right"><a href="#top">&#94; Back to top</a></p>
                     
                     <p class="text-center"><a href="documentation.html" target="_blank" class="btn btn-success btn-lg" role="button">Back to docs </a></p>
