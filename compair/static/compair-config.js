@@ -713,18 +713,18 @@ myApp.config(
 
 myApp.config(
     ['localStorageServiceProvider',
-	function (localStorageServiceProvider)
+    function (localStorageServiceProvider)
     {
-    	localStorageServiceProvider
-        	.setPrefix('ComPAIR')
-        	.setStorageType('sessionStorage') // options [localStorage, sessionStorage]
-        	.setStorageCookie(0); // fallback default settings
+        localStorageServiceProvider
+            .setPrefix('ComPAIR')
+            .setStorageType('sessionStorage') // options [localStorage, sessionStorage]
+            .setStorageCookie(0); // fallback default settings
     }
 ]);
 
 myApp.run(
     ['$rootScope',
-	function ($rootScope)
+    function ($rootScope)
     {
         //handle routeProvider resolve errors
         $rootScope.$on("$routeChangeError", function(evt, current, previous, rejection) {

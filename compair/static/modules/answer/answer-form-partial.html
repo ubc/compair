@@ -8,25 +8,25 @@
 </div>
 
 <div ng-hide="comparison_example">
-	
-	<p class="intro-text">Answer the assignment with a file attachment and/or response in the text editor. Please note <strong>answers are not automatically saved</strong> as you type. However, you may manually save a draft of your answer below.</p>
-	
-	<p class="assignment-toggle"><a href="" ng-click="showAssignment = !showAssignment">
-		<i class="fa fa-chevron-down" ng-show="showAssignment "></i>
-		<i class="fa fa-chevron-right" ng-hide="showAssignment "></i>
-		Show assignment "{{assignment.name}}"
-	</a></p>
-	
-	<div ng-show="showAssignment" class="standalone-assignment">
-		<h2><i class="fa fa-comments"></i> {{assignment.name}}</h2>
-		<rich-content content="assignment.description" attachment="assignment.file"></rich-content>
-	</div>
+
+    <p class="intro-text">Answer the assignment with a file attachment and/or response in the text editor. Please note <strong>answers are not automatically saved</strong> as you type. However, you may manually save a draft of your answer below.</p>
+
+    <p class="assignment-toggle"><a href="" ng-click="showAssignment = !showAssignment">
+        <i class="fa fa-chevron-down" ng-show="showAssignment "></i>
+        <i class="fa fa-chevron-right" ng-hide="showAssignment "></i>
+        Show assignment "{{assignment.name}}"
+    </a></p>
+
+    <div ng-show="showAssignment" class="standalone-assignment">
+        <h2><i class="fa fa-comments"></i> {{assignment.name}}</h2>
+        <rich-content content="assignment.description" attachment="assignment.file"></rich-content>
+    </div>
 
 </div>
 
 <form class="form" name="answerForm" ng-submit="answerSubmit()" novalidate confirm-form-exit form-type="answer">
     <fieldset>
-		<legend>Answer Details</legend>
+        <legend>Answer Details</legend>
         <div class="h3 text-center" ng-show="!canManageAssignment && showCountDown && comparison_example !== true">
             <timer end-time="assignment.answer_end">
                 <span ng-show="minutes > 0 || seconds > 0" title="Official time remaining until deadline" class="bg-danger alert text-danger"><i class="glyphicon glyphicon-time"></i> {{minutes}} minutes {{seconds}} seconds left</span>
@@ -35,42 +35,42 @@
             <br /><br />
             <span class="h4">(Answer must be submitted before deadline to be accepted)</span>
         </div>
-		
-		<div class="instructional-text">
-				<p ng-if="canManageAssignment && !comparison_example">Answers submitted as an instructor or TA will <strong>not be included in comparisons</strong> and appear to students only after they answer/compare.</p>
+
+        <div class="instructional-text">
+                <p ng-if="canManageAssignment && !comparison_example">Answers submitted as an instructor or TA will <strong>not be included in comparisons</strong> and appear to students only after they answer/compare.</p>
                 <p>Allowed file types for attachments include {{ UploadValidator.getAttachmentExtensionsForDisplay() }}, with a maximum file size of <strong>{{UploadValidator.getAttachmentUploadLimit() | filesize }}</strong>. Any files you upload will be attached when you <strong>save or submit this answer</strong> but not before.</p>
         </div>
 
         <div class="form-group" ng-if="canManageAssignment && answer.draft && comparison_example !== true">
             <label class="required-star" for="user_id">Submit As</label>
-			<select id="user_id" name="user_id" required
+            <select id="user_id" name="user_id" required
                     ng-model="answer.user_id" class="form-control" chosen width="'100%'" disable_search_threshold="8"
                     ng-options="u.id as u.fullname for u in classlist">
-				<option value="">- Select a user -</option>
+                <option value="">- Select a user -</option>
             </select>
-	    </div>
+        </div>
 
         <div>
             <label class="required-star" for="importFile">Answer Attachment and/or Text</label>
             <input type="file" nv-file-select uploader="uploader" ng-click="answerForm.$setDirty()" id="importFile" ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)" multiple/>
-			<br />
-			<div class="row" ng-repeat="item in uploader.queue">
+            <br />
+            <div class="row" ng-repeat="item in uploader.queue">
                 <div class="col-md-2">
                     <a href="" ng-click="item.cancel();item.remove();resetFileUploader();">
                         Remove
                     </a>
                 </div>
-				<div class="col-md-7"><i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong></div>
+                <div class="col-md-7"><i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong></div>
                 <div class="col-md-1">{{item.file.size/1024/1024|number:2}} MB</div>
                 <div class="col-md-2" ng-if="item.progress < 100"><strong>{{item.progress}}% uploaded</strong></div>
                 <div class="col-md-2" ng-if="item.progress == 100 && !item.isSuccess"><strong>Storing file...</strong></div>
                 <div class="col-md-2" ng-if="item.progress == 100 && item.isSuccess"><strong>Attached</strong></div>
-				<br /><br />
+                <br /><br />
             </div>
         </div>
         <div ng-show="answer.file && answer.uploadedFile">
             <div class="row">
-				<div class="col-md-1">
+                <div class="col-md-1">
                     <a href="" ng-click="deleteFile(answer.file)">
                         Remove
                     </a>
@@ -86,13 +86,13 @@
                 class="form-control" rows="8" ckeditor="editorOptions" ng-required="!(uploader.queue.length || uploadedFile || answer.file)">
             </textarea>
         </div>
-	</fieldset>
+    </fieldset>
     <div class="text-center" ng-show="answer.draft && (!canManageAssignment || answer.user_id == loggedInUserId)">
         <input type="submit" class="btn btn-default btn-lg" value="Save Draft"
-		    ng-click="answer.draft = true"
-		    ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
-		&nbsp; &nbsp;
-		<input type="submit" class="btn btn-success btn-lg" value="Submit"
+            ng-click="answer.draft = true"
+            ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
+        &nbsp; &nbsp;
+        <input type="submit" class="btn btn-success btn-lg" value="Submit"
             ng-click="answer.draft = false"
             ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
     </div>

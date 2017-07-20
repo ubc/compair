@@ -90,17 +90,17 @@ module.controller(
             );
         }
 
-		// enable checkbox to select/deselect all users
-		$scope.selectAll = function() {
-			angular.forEach($scope.classlist, function(user) {
-				user.selected = $scope.selectedAll;
-			});
-		};
-		$scope.checkIfAllSelected = function() {
-			$scope.selectedAll = $scope.classlist.every(function(user) {
-				return user.selected == true
-			})
-		};
+        // enable checkbox to select/deselect all users
+        $scope.selectAll = function() {
+            angular.forEach($scope.classlist, function(user) {
+                user.selected = $scope.selectedAll;
+            });
+        };
+        $scope.checkIfAllSelected = function() {
+            $scope.selectedAll = $scope.classlist.every(function(user) {
+                return user.selected == true
+            })
+        };
 
         $scope.resetSelected = function() {
             angular.forEach($scope.classlist, function(user) {

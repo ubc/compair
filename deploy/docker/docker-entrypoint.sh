@@ -5,7 +5,7 @@ DEV=${DEV:-0}
 
 # if command starts with an option, prepend uwsgi
 if [ "${1:0:1}" = '-' ]; then
-	set -- uwsgi "$@"
+    set -- uwsgi "$@"
 fi
 
 if [ "$1" = 'uwsgi' ]; then
