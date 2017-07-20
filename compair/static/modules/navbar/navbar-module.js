@@ -54,20 +54,19 @@ module.controller(
             });
         };
         $scope.setInCourse = function() {
-            var courseId = $routeParams.courseId;
-            if (courseId) {
+            $scope.courseId = $routeParams.courseId;
+            if ($scope.courseId) {
                 // update breadcrumb to show the course name
-                CourseResource.get({'id': courseId}).$promise.then(
+                CourseResource.get({'id': $scope.courseId}).$promise.then(
                     function(ret)
                     {
                         breadcrumbs.options = {'Course Assignments': ret['name']};
                     }
                 );
             }
-            $scope.courseId = courseId;
         };
         $scope.setInCourse(); // init for first page load
-        $scope.$on('$locationChangeSuccess', function(event, next) {
+        $scope.$on('$routeChangeSuccess', function(event, next) {
             // update for further navigation after the page has loaded
             $scope.setInCourse();
         });
