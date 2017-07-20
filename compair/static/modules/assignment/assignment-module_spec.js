@@ -872,11 +872,17 @@ describe('assignment-module', function () {
             });
 
             it('should be correctly initialized', function () {
+                var expectedStudents = _.sortBy(angular.copy(mockStudents.objects), 'name');
+                expectedStudents.unshift({
+                    id: "top-picks",
+                    name: "Instructor's top picks"
+                });
+
                 expect($rootScope.assignment.id).toEqual(mockAssignment.id);
                 expect($rootScope.courseId).toEqual(mockCourse.id);
 
                 expect($rootScope.allStudents).toEqual(mockStudents.objects);
-                expect($rootScope.students).toEqual(mockStudents.objects);
+                expect($rootScope.students).toEqual(expectedStudents);
 
                 expect($rootScope.totalNumAnswers).toEqual(mockAnswers.total);
 

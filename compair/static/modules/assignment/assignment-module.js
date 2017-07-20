@@ -259,7 +259,6 @@ module.controller("AssignmentViewController",
         $scope.course = resolvedData.course;
         $scope.assignment = resolvedData.assignment;
         $scope.canManageAssignment = resolvedData.canManageAssignment;
-        $scope.students = resolvedData.students.objects;
         $scope.allStudents = resolvedData.students.objects;
         $scope.instructors = resolvedData.instructorLabels.instructors;
 
@@ -654,6 +653,14 @@ module.controller("AssignmentViewController",
             );
         };
 
+        $scope.resetStudents = function(students) {
+            $scope.students = _.sortBy(students, 'name');
+            $scope.students.unshift({
+                id: "top-picks",
+                name: "Instructor's top picks"
+            });
+        };
+
         $scope.updateAnswerList = function() {
             var params = angular.merge({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answerFilters);
             $scope.answerFiltersName = $("#answers-filter option:selected").text();
@@ -677,6 +684,7 @@ module.controller("AssignmentViewController",
             });
         };
         $scope.updateAnswerList();
+        $scope.resetStudents($scope.allStudents);
 
         var filterWatcher = function(newValue, oldValue) {
             if (angular.equals(newValue, oldValue)) return;
@@ -685,11 +693,11 @@ module.controller("AssignmentViewController",
                     $scope.answerFilters.author = null;
                 }
                 if ($scope.answerFilters.group == null) {
-                    $scope.students = $scope.allStudents;
+                    $scope.resetStudents($scope.allStudents);
                 } else {
                     GroupResource.get({'courseId': $scope.courseId, 'groupName': $scope.answerFilters.group},
                         function (ret) {
-                            $scope.students = ret.students;
+                            $scope.resetStudents(ret.students);
                         }
                     );
                 }
