@@ -150,10 +150,9 @@
                                         ng-options="group as group for group in groups | orderBy: 'toString()'">
                                     <option value="">All groups</option>
                                 </select>
-                                <select id="answers-filter" ng-model="answerFilters.author" class="nullable" chosen disable_search_threshold="8">
+                                <select id="answers-filter" ng-model="answerFilters.author" class="nullable" chosen disable_search_threshold="8"
+                                        ng-options="u.id as u.name for u in students">
                                     <option value="">All answers</option>
-                                    <option value="top-picks">Instructor's top picks</option>
-                                    <option ng-repeat="u in students | orderBy: 'name'" value="{{u.id}}">{{u.name}}</option>
                                 </select>
                             </span><br />
                             <span class="filter" ng-if="(canManageAssignment || rankLimit) && assignment.pairing_algorithm != PairingAlgorithm.random">
