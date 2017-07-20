@@ -115,7 +115,7 @@
                     </li>
                     <!-- Assignment Peer Feedback (for students) -->
                     <li ng-if="!canManageAssignment && assignment.status.answers.feedback" class="label label-warning">
-                        {{assignment.status.answers.feedback}} peer<span ng-if="assignment.status.answers.feedback != 1">s</span> left you feedback
+                        {{assignment.status.answers.feedback}} feedback item<span ng-if="assignment.status.answers.feedback != 1">s</span> received
                     </li>
                     <!-- Assignment Feedback (for instructors) -->
                     <li ng-if="canManageAssignment">

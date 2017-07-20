@@ -852,7 +852,7 @@ class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
                         assignment.total_comparisons_required - compare_count_result)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 1)
-                    self.assertEqual(status['answers']['feedback'], 0)
+                    self.assertEqual(status['answers']['feedback'], 1)
                 elif assignments[1].id == assignment.id:
                     self.assertTrue(status['comparisons']['self_evaluation_completed'])
                     self.assertTrue(status['comparisons']['available'])
@@ -860,7 +860,7 @@ class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 1)
-                    self.assertEqual(status['answers']['feedback'], 0)
+                    self.assertEqual(status['answers']['feedback'], 1)
                 else:
                     self.assertFalse(status['comparisons']['self_evaluation_completed'])
                     self.assertFalse(status['comparisons']['available'])
@@ -898,7 +898,7 @@ class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
                         assignment.total_comparisons_required - compare_count_result)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 1)
-                    self.assertEqual(status['answers']['feedback'], 3)
+                    self.assertEqual(status['answers']['feedback'], 4)
                 elif assignments[1].id == assignment.id:
                     self.assertTrue(status['comparisons']['self_evaluation_completed'])
                     self.assertTrue(status['comparisons']['available'])
@@ -906,7 +906,7 @@ class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
                     self.assertEqual(status['comparisons']['left'], assignment.total_comparisons_required)
                     self.assertTrue(status['answers']['answered'])
                     self.assertEqual(status['answers']['count'], 1)
-                    self.assertEqual(status['answers']['feedback'], 3)
+                    self.assertEqual(status['answers']['feedback'], 4)
                 else:
                     self.assertFalse(status['comparisons']['self_evaluation_completed'])
                     self.assertFalse(status['comparisons']['available'])
@@ -1010,7 +1010,7 @@ class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
             self.assertFalse(status['comparisons']['available'])
             self.assertTrue(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 1)
-            self.assertEqual(status['answers']['feedback'], 0)
+            self.assertEqual(status['answers']['feedback'], 1)
 
             # test feedback
             other_student = self.data.create_normal_user()
@@ -1030,7 +1030,7 @@ class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
             self.assertFalse(status['comparisons']['available'])
             self.assertTrue(status['answers']['answered'])
             self.assertEqual(status['answers']['count'], 1)
-            self.assertEqual(status['answers']['feedback'], 3)
+            self.assertEqual(status['answers']['feedback'], 4)
 
 
 class AssignmentStatusAnswersAPITests(ComPAIRAPITestCase):
