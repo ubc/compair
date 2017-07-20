@@ -450,7 +450,6 @@ class AssignmentIdStatusAPI(Resource):
             .join("answer") \
             .filter(and_(
                 AnswerComment.active == True,
-                AnswerComment.comment_type != AnswerCommentType.self_evaluation,
                 AnswerComment.draft == False,
                 Answer.user_id == current_user.id,
                 Answer.assignment_id == assignment.id,
@@ -558,7 +557,6 @@ class AssignmentRootStatusAPI(Resource):
             ) \
             .filter(and_(
                 AnswerComment.active == True,
-                AnswerComment.comment_type != AnswerCommentType.self_evaluation,
                 AnswerComment.draft == False,
                 Answer.user_id == current_user.id,
                 Answer.active == True,

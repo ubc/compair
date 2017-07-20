@@ -1,5 +1,5 @@
 <div class="assignment-screen">
-    
+
     <div class="row">
         <header class="col-sm-6">
             <h1>View Assignment</h1>
@@ -54,12 +54,12 @@
                 <em>Self-evaluation comparison unavailable</em>
             </li>
             <li ng-if="!canManageAssignment && assignment.status.answers.feedback" class="label label-warning">
-                {{assignment.status.answers.feedback}} peer<span ng-if="assignment.status.answers.feedback != 1">s</span></strong> left you feedback
+                {{assignment.status.answers.feedback}} feedback item<span ng-if="assignment.status.answers.feedback != 1">s</span> received
             </li>
         </ul>
 
         <!-- Assignment Actions -->
-        
+
         <div class="text-right">
 
             <!-- BUTTON when user does not have an answer draft AND (user is admin OR (user has not answered AND the answer period is active) -->
@@ -67,13 +67,13 @@
                ng-show="!assignment.status.answers.has_draft && (canManageAssignment || (!assignment.status.answers.answered && assignment.answer_period))">
                 Answer
             </a>
-    
+
             <!-- BUTTON when user has an answer draft AND (user is admin OR (user has not answered AND the answer period is active) -->
             <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{assignment.status.answers.draft_ids[0]}}/edit" class="btn btn-success" title="Answer Assignment"
                ng-show="assignment.status.answers.has_draft && (canManageAssignment || (!assignment.status.answers.answered && assignment.answer_period))">
                 Finish Answer
             </a>
-    
+
             <!-- BUTTON when user is not an admin AND the comparison period is active AND the user has not finished pair comparisons AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active)
                  basically we force users to answer first, if they can
                  enabled only when answer pairs are available for comparison (so when no logic is false)
@@ -82,7 +82,7 @@
                ng-show="!canManageAssignment && assignment.compare_period && comparisons_left > 0 && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)" ng-disabled="!assignment.status.comparisons.available">
                 Compare Pairs
             </a>
-    
+
             <!-- BUTTON when user is not an admin AND the comparison period is active AND user has finished pair comparisons AND has a self-evaluation remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active)
                  basically we force users to answer first, if they can
                  enabled only when user has answered assignment
@@ -91,19 +91,19 @@
                ng-show="!canManageAssignment && assignment.compare_period && comparisons_left == 0 && self_evaluation_needed && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)" ng-disabled="!assignment.status.answers.answered">
                 Compare Pairs
             </a>
-    
+
             <!-- BUTTON when user is an admin AND (the comparison period is active OR is complete) -->
             <a class="btn btn-success" title="Comparisons" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/comparisons"
                ng-show="canManageAssignment && (assignment.compare_period || assignment.after_comparing)">
                 See Comparisons
             </a>
-    
+
             <!-- BUTTON when user is an admin AND the comparison period is active AND admins can compare -->
             <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Pairs" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
                ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">
                 Compare Pairs
             </a>
-        
+
         </div>
 
     </div><!-- closes Assignment box -->
@@ -170,7 +170,7 @@
                                 </a>&nbsp;
                                 <button uib-btn-checkbox ng-model="answerFilters.anonymous" activeClass="''"
                                     class="btn btn-sm" ng-class="{'btn-default': answerFilters.anonymous, 'btn-default': !answerFilters.anonymous}">
-                                   Anonymize<span ng-show="answerFilters.anonymous">d</span> Answers  <i ng-class="{'fa fa-eye-slash': answerFilters.anonymous, 'fa fa-eye': !answerFilters.anonymous}"></i> 
+                                   Anonymize<span ng-show="answerFilters.anonymous">d</span> Answers  <i ng-class="{'fa fa-eye-slash': answerFilters.anonymous, 'fa fa-eye': !answerFilters.anonymous}"></i>
                                 </button>
                             </span>
                         </div>
@@ -182,7 +182,7 @@
                    ng-if="canManageAssignment && !assignment.answer_period && !assignment.available">
                     Answering period begins {{assignment.answer_start | amDateFormat: 'MMM D @ h:mm a'}}. Would you like to <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/edit" title="Edit the assignment">change the answer date</a> for this assignment?
                 </p>
-                
+
                 <!-- Instructors should see when assignment becomes active -->
                 <p class="intro-text"
                    ng-if="canManageAssignment && assignment.available">
@@ -280,7 +280,7 @@
                             <span ng-if="!canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && !answer.score">
                                 <em>(not ranked)</em>
                             </span>
-                            
+
                             <!--
                             <span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
                                 <i class="fa fa-warning"></i>
