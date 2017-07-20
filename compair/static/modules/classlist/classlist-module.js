@@ -293,7 +293,7 @@ module.controller(
         $scope.results = importService.getResults();
 
         $scope.courseId = $routeParams['courseId'];
-        $scope.headers = ['Username', 'Student Number', 'First Name', 'Last Name', 'Email', 'Message'];
+        $scope.headers = ['Username', 'Student Number', 'First Name', 'Last Name', 'Email', 'Reason'];
     }
 ]);
 

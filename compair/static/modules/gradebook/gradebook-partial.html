@@ -19,7 +19,7 @@
             </span>
         </div>
     </div>
-    <p class="intro-text"><span ng-if="canManageAssignment">To export data reports for participation and other application statistics, go to <a ng-href="#/report">Download Reports</a>.</span> <span ng-if="includeScores">Note that answer scores are normalized from the scores assigned using ComPAIR's <a href="http://ubc.github.io/compair/site/best-practices.html#scores" target="_blank">scoring algorithm</a> and are not reflective of a straight win-loss record.</span></p>
+    <p class="intro-text"><span ng-if="canManageAssignment">To export data reports for participation and other application statistics, go to <a ng-href="#/report">Download Reports</a>.</span> <span ng-if="includeScores">Note that <strong>answer scores are normalized</strong> from the scores assigned using ComPAIR's <a href="http://ubc.github.io/compair/site/best-practices.html#scores" target="_blank">scoring algorithm</a> and are not reflective of a straight win-loss record. The top-ranked answer(s) for the assignment receive 100%. All others receive a lower percentage based on how well they did in comparison.</span></p>
     <div ng-if="!gradebook.length">
         <hr />
         <p>No students found for this course. Would you like to <a ng-href="#/course/{{courseId}}/user">manage users</a>?</p>
@@ -59,7 +59,7 @@
                     <a href="" ng-click="updateTableOrderBy('num_self_evaluation')">Self-Evaluation</a>
                 </th>
                 <th class="text-center">
-                    <a href="" ng-click="updateTableOrderBy('grade')">Grade</a>
+                    <a href="" ng-click="updateTableOrderBy('grade')">Participation Grade</a>
                 </th>
             </tr>
         </thead>
@@ -70,12 +70,7 @@
                 <td>{{entry.user.lastname}}</td>
                 <td class="text-center text-success" ng-if="!includeScores && entry.num_answers > 0"><strong>Yes</strong></td>
                 <td class="text-center text-danger" ng-if="!includeScores && entry.num_answers == 0"><strong>No</strong></td>
-                <td class="text-center" ng-if="includeScores"
-                    ng-class="{
-                    'text-danger': entry.num_answers == 0,
-                    'text-warning': entry.num_answers > 0 && !isNumber(entry.score),
-                    'text-success': isNumber(entry.score)
-                    }">
+                <td class="text-center" ng-if="includeScores">
                     <strong>
                         <span ng-if="!isNumber(entry.score)">{{entry.score}}</span>
                         <span ng-if="isNumber(entry.score)">{{entry.score|number:0}}%</span>

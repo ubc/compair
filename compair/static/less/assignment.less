@@ -6,7 +6,14 @@
 
   .standalone-assignment {
     margin-top: 0;
-  }
+    
+    /* add button spacing */
+    .btn-success,
+    .btn-default {
+      margin: 0 0 .5em 0.5em;
+    }
+    
+  }//closes standalone-assignment
 
   /* ul for metadata in assignment box */
   .assignment-metadata-list {
@@ -127,9 +134,9 @@
         background: @bkgrd-gray;
     }
 
-    /* score help (?) icon */
-    .score-display i {
-      font-size: 1.2em;
+    /* scores */
+    .label {
+      cursor: default;
     }
 
     /* read-more is style for p tag shown when content is cut off */

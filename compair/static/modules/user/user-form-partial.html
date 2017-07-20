@@ -3,9 +3,9 @@
         <legend>User Details</legend>
         <p class="instructional-text" ng-if="canManageUsers || (method == 'create' && loggedInUserIsInstructor)">
             This application provides three user roles with increasing levels of permission.
-            <strong>Students</strong> can post and edit their own answers, comments, and replies.
-            <strong>Instructors</strong> can additionally add and edit their own courses and assignments.
-            <strong>System Administrators</strong> can additionally create users and manage which users can access a course.</p>
+            <strong>Students</strong> can manage their own answers, comparisons, comments, and replies.
+            <strong>Instructors</strong> can additionally manage their own courses and assignments and edit users in their courses.
+            <strong>System Administrators</strong> can additionally manage users and manage which users can access which courses.</p>
         <div class="form-group" ng-if="canManageUsers || (method == 'create' && loggedInUserIsInstructor)">
             <label for="system_role" class="required-star">Application Role </label>
             <select class="form-control" id="system_role" name="system_role"
