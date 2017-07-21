@@ -14,15 +14,15 @@ Testing
 
 ### All Tests
 
-	make test
+    make test
 
 ### Backend Testing
 
-	make testb
+    make testb
 
 ### Frondend Testing
 
-	make testf
+    make testf
 
 The front end unit tests are located along with the module files instead of in unit test own directory. The files are named as MODULE-NAME_test.js. This convention is based on
 
@@ -30,7 +30,7 @@ The front end unit tests are located along with the module files instead of in u
 
 ### Test Driven Development
 
-	make tdd
+    make tdd
 
 This will start a Karma server, which will monitor the js files. If any file is changed, the front end test suite will run. In case something is broken by code change, you will be notified right away.
 
@@ -47,11 +47,11 @@ Install all the python dependencies (`requirements.txt`):
 
 Install the node dependencies (`package.json`):
 
-	npm install
+    npm install
 
 Install the front-end javascript dependencies (`bower.json`):
 
-	node_modules/.bin/gulp
+    node_modules/.bin/gulp
 
 Running the application
 -----------------------

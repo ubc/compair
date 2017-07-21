@@ -1,7 +1,7 @@
 <div class="user-courses-screen">
 
     <div class="row">
-        <h1 class="col-sm-8">Manage {{ user.displayname }}'s courses</h1>
+        <h1 class="col-sm-8">Manage {{ user.displayname }}'s Courses</h1>
 
         <form class="col-sm-4 search-courses text-right" role="search" ng-show="courses.length || courseFilters.search">
             <div class="form-group">
@@ -39,7 +39,7 @@
                     <td class="nowrap">
                         <a href="" confirmation-needed="dropCourse(course)" keyword="user" ng-if="loggedInUserId != user.id || canManageUsers">Drop</a>
                     </td>
-                    <td><a ng-href="#/course/{{course.id}}">{{course.name}}</a></td>
+                    <td><a ng-href="#/course/{{course.id}}"><i class="fa fa-book"></i> {{course.name}}</a></td>
                     <td>{{course.year}}</td>
                     <td>{{course.term}}</td>
                     <td>
@@ -73,7 +73,7 @@
 
     <div ng-if="!courses.length">
         <hr />
-        <p ng-if="!courseFilters.search">No courses found. Select <a href="#/users">another user</a>.</p>
+        <p ng-if="!courseFilters.search">No courses found. Select <a href="#/users">another user</a>?</p>
         <p ng-if="courseFilters.search">No courses found for this search. Please try another search term above.</p>
     </div>
 

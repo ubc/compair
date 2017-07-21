@@ -4,6 +4,17 @@
 
 .assignment-screen {
 
+  .standalone-assignment {
+    margin-top: 0;
+    
+    /* add button spacing */
+    .btn-success,
+    .btn-default {
+      margin: 0 0 .5em 0.5em;
+    }
+    
+  }//closes standalone-assignment
+
   /* ul for metadata in assignment box */
   .assignment-metadata-list {
 
@@ -24,6 +35,16 @@
       }
       &:last-child {
         border-right: none;
+      }
+      
+      &.label {
+        font-size: 100%;
+        border-right: none;
+      
+        &+li {
+          border-left: 1px solid @green-blue;
+        }
+      
       }
 
     }//closes li
@@ -72,12 +93,6 @@
       font-weight: normal;
     }
 
-    /* add spacing to instructor labels */
-    .label-info {
-      margin-top: .4em;
-      display: inline-block;
-    }
-
     /* manager-actions is class for action buttons div */
     .manager-actions a {
 
@@ -119,9 +134,9 @@
         background: @bkgrd-gray;
     }
 
-    /* score help (?) icon */
-    .score-display i {
-      font-size: 1.2em;
+    /* scores */
+    .label {
+      cursor: default;
     }
 
     /* read-more is style for p tag shown when content is cut off */
@@ -140,7 +155,7 @@
 
     /* h3 reply heading (conditionally displayed) */
     .reply-heading {
-      margin: 0 0 2em 0;
+      margin: 0 0 1.1em 0;
       font-size: 1.1em;
       display: inline-block;
       line-height: 1.3em;
@@ -149,7 +164,7 @@
     /* class for reply divs */
     .each-reply {
 
-      margin-left: 4em;
+      margin-left: .5em;
       font-size: .85em;
 
       /* hr divides answer from reply and replies from each other */
@@ -211,6 +226,12 @@
   }
 
 }//closes assignment-date
+
+form blockquote {
+  font-size: 1.1em;
+  font-style: italic;
+  border: none;
+}
 
 .lti-param-copy {
     display: inline-block;

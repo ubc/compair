@@ -300,7 +300,7 @@ myApp.config(
         .when ('/oauth/create',
             {
                 templateUrl: 'modules/oauth/oauth-partial.html',
-                label: "Create account", // breadcrumb label
+                label: "Add User", // breadcrumb label
                 controller: 'OAuthController',
                 resolve: {
                     resolvedData: function() {
@@ -506,7 +506,7 @@ myApp.config(
         .when ('/course/:courseId/assignment/:assignmentId/compare',
             {
                 templateUrl: 'modules/comparison/comparison-form-partial.html',
-                label: "Compare Answers",
+                label: "Compare Answer Pairs",
                 controller: 'ComparisonController',
                 resolve: {
                     resolvedData: function() {
@@ -555,7 +555,7 @@ myApp.config(
             })
         .when('/report',{
                 templateUrl: 'modules/report/report-create-partial.html',
-                label: "Run Reports",
+                label: "Download Reports",
                 controller: 'ReportCreateController',
                 resolve: {
                     resolvedData: function() {
@@ -568,7 +568,7 @@ myApp.config(
         .when('/user/create',
             {
                 templateUrl: 'modules/user/user-create-partial.html',
-                label: "Create Account",
+                label: "Add User",
                 controller: 'UserWriteController',
                 resolve: {
                     resolvedData: function() {
@@ -582,7 +582,7 @@ myApp.config(
         .when('/user/:userId/edit',
             {
                 templateUrl: 'modules/user/user-edit-partial.html',
-                label: "Edit Account",
+                label: "Edit User",
                 controller: 'UserWriteController',
                 resolve: {
                     resolvedData: function() {
@@ -597,7 +597,7 @@ myApp.config(
         .when('/user/:userId',
             {
                 templateUrl: 'modules/user/user-view-partial.html',
-                label: "User Profile",
+                label: "View User",
                 controller: 'UserViewController',
                 resolve: {
                     resolvedData: function() {
@@ -613,7 +613,7 @@ myApp.config(
         .when('/users',
             {
                 templateUrl: 'modules/user/user-list-partial.html',
-                label: "Users",
+                label: "Manage Users",
                 controller: 'UserListController',
                 resolve: {
                     resolvedData: function() {
@@ -655,7 +655,7 @@ myApp.config(
         .when('/lti/consumer',
             {
                 templateUrl: 'modules/lti_consumer/lti-consumers-list-partial.html',
-                label: "Manage LTI",
+                label: "Manage LTI Consumers",
                 controller: 'LTIConsumerListController',
                 resolve: {
                     resolvedData: function() {
@@ -668,7 +668,7 @@ myApp.config(
         .when('/lti/consumer/create',
             {
                 templateUrl: 'modules/lti_consumer/lti-consumer-form-partial.html',
-                label: "Create LTI Consumer",
+                label: "Add LTI Consumer",
                 controller: 'LTIConsumerWriteController',
                 resolve: {
                     resolvedData: function() {
@@ -713,18 +713,18 @@ myApp.config(
 
 myApp.config(
     ['localStorageServiceProvider',
-	function (localStorageServiceProvider)
+    function (localStorageServiceProvider)
     {
-    	localStorageServiceProvider
-        	.setPrefix('ComPAIR')
-        	.setStorageType('sessionStorage') // options [localStorage, sessionStorage]
-        	.setStorageCookie(0); // fallback default settings
+        localStorageServiceProvider
+            .setPrefix('ComPAIR')
+            .setStorageType('sessionStorage') // options [localStorage, sessionStorage]
+            .setStorageCookie(0); // fallback default settings
     }
 ]);
 
 myApp.run(
     ['$rootScope',
-	function ($rootScope)
+    function ($rootScope)
     {
         //handle routeProvider resolve errors
         $rootScope.$on("$routeChangeError", function(evt, current, previous, rejection) {

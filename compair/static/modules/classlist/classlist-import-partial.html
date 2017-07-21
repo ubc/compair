@@ -1,10 +1,11 @@
 <h1>Import Users</h1>
 <p class="intro-text"><strong>Create, update, enrol, or drop multiple users</strong> in this course at the same time by importing a CSV (comma-separated values) file with a full list of your course's users. Any new users in an imported file will be enrolled in the course and any deleted users will be dropped from the course.</p>
+<h2>For {{course.name}}</h2>
 <div class="form-group">
     <fieldset>
-        <legend>For {{course.name}}</legend>
+        <legend>Import Settings</legend>
         <div class="form-group">
-            <label for="importType" class="required-star">What will students use to log in?</label>
+            <label for="importType" class="required-star">Students Log In With</label>
             <select class="form-control" ng-model="importType" name="importType"
                     ng-options="type.value as type.name for type in importTypes" required>
             </select>

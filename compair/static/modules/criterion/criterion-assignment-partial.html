@@ -1,7 +1,4 @@
 <label class="required-star">Comparison Criteria</label>
-<p class="bg-warning text-warning alert" ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive && criteriaCanDraw()">
-    Note that with these criteria weights, it is possible for an answer pair to be scored (behind the scenes) as tied. This may affect the accuracy of answer pair selection and final answer rankings, but it will not change the comparison process for students.
-</p>
 
 <div ng-repeat="(key, criterion) in assignment.criteria" class="row">
     <div class="col-sm-2">
@@ -21,27 +18,36 @@
     <div class="col-sm-2">
         <p>
             <a href="" confirmation-needed="remove(key)" keyword="criterion" ng-if="!assignment.compared">
-                <i class="fa fa-minus-circle"></i> Drop <i class="visible-xs fa fa-arrow-down"></i>
+                Drop <i class="visible-xs fa fa-arrow-down"></i>
             </a>
-            <span ng-if="assignment.compared" class="text-muted"><i class="fa fa-minus-circle"></i> (cannot drop)</span>
+            <span ng-if="assignment.compared" class="text-muted">(cannot drop)</span>
         </p><!-- disable from assignment / add to dropdown -->
     </div>
     <div ng-class="{
-            'col-sm-6': assignment.pairing_algorithm == PairingAlgorithm.adaptive && assignment.criteria.length > 1,
-            'col-sm-8': assignment.pairing_algorithm != PairingAlgorithm.adaptive || assignment.criteria.length <= 1
+            'col-sm-6': assignment.criteria.length > 1,
+            'col-sm-8': assignment.criteria.length <= 1
         }">
         <strong>{{ key + 1 }}. {{ criterion.name }}</strong>
         <div mathjax hljs ng-bind-html="criterion.description"></div>
     </div>
-    <div class="col-sm-2 text-center" ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive && assignment.criteria.length > 1">
-        <div ng-if="!assignment.compared">
-            <input class="form-control" type="number" min="0" ng-pattern="onlyNumbers" required
-                name="criterion_weight" ng-model="criterion.weight">
+    <div class="col-sm-2" ng-if="assignment.criteria.length > 1">
+        <div ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive">
+            <span class="text-muted">Score Weight = {{getCriterionWeightAsPercent(criterion.weight)|number:2}}%</span>
+            <div ng-if="!assignment.compared">
+                <input class="form-control" type="number" min="0" ng-pattern="onlyNumbers" required
+                    name="criterion_weight" ng-model="criterion.weight">
+            </div>
         </div>
-        <span class="text-muted">{{getCriterionWeightAsPercent(criterion.weight)|number:2}}% weight</span>
+        <div ng-if="assignment.pairing_algorithm == PairingAlgorithm.random">
+            <span class="text-muted">Score Weight N/A<br / ><em>Scoring not used</em></span>
+        </div>
         <br /><br />
     </div>
 </div>
+
+<p class="alert alert-info" ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive && criteriaCanDraw()">
+    Note that with these criteria weights, <strong>it is possible for an answer pair to be scored overall as tied</strong>. This may affect the accuracy of answer pair selection and final answer rankings, but it will not change the comparison process for students.
+</p>
 
 <comparison-preview ng-show="assignment.criteria.length > 0"></comparison-preview>
 
@@ -59,7 +65,7 @@
 
     <div class="row">
         <div class="col-sm-2">
-            <p><a id="add-new-criteria" href="" class="btn btn-primary btn-sm" ng-click="changeCriterion()">Add New</a></p>
+            <p><a id="add-new-criteria" href="" class="btn btn-primary btn-sm" ng-click="changeCriterion()"><i class="fa fa-plus" aria-hidden="true"></i> Add New</a></p>
         </div>
         <div class="col-sm-1">
             <p>OR</p>
@@ -67,14 +73,12 @@
         <div class="form-group col-sm-6">
             <select id="select-default-criteria" class="form-control" ng-model="selected"
                     ng-options="key as c.name for (key, c) in availableCriteria">
-                <option value="">- select a default criterion -</option>
+                <option value="">- Select a default criterion -</option>
             </select>
-            <br />
-            <p class="text-muted"><em>Default criterion are created by checking the default criterion box at the bottom of the form when you add new or edit existing criteria.</em></p>
         </div>
         <div class="col-sm-3">
             <!-- used length because when list is empty the empty option gets a value of 0 which is valid -->
-            <p><a id="add-default-criteria" class="btn btn-sm btn-primary" ng-click="add(selected)" ng-disabled="!selected || !availableCriteria.length">Add Selected</a></p>
+            <p><a id="add-default-criteria" class="btn btn-sm btn-primary" ng-click="add(selected)" ng-disabled="!selected || !availableCriteria.length"><i class="fa fa-plus" aria-hidden="true"></i> Add Selected</a></p>
         </div>
     </div>
 </div>

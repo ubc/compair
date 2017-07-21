@@ -1,0 +1,225 @@
+<!doctype html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang=""> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang=""> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9" lang=""> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang=""> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>Style Guide | ComPAIR Learning Application</title>
+        <meta name="description" content="A basic style guide for UBC's ComPAIR learning application.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="index, follow" />
+            
+        <link rel="icon" type="image/png" href="img/green-favicon-32x32.png" sizes="32x32" />
+        <link rel="icon" type="image/png" href="img/green-favicon-16x16.png" sizes="16x16" />
+
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="css/custom.css">
+
+        <script src="js/vendor/modernizr-2.8.3-respond-1.4.2.min.js"></script>
+    </head>
+    <body>
+        <!--[if lt IE 8]>
+        <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <div class="navbar-header">
+                  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                  </button>
+                  <a class="navbar-brand" href="index.html"><img src="img/compair-logo-small.png" alt="ComPAIR Home"></a>
+                </div>
+                <div id="navbar" class="navbar-collapse collapse">
+                  <ul class="nav navbar-nav navbar-right">
+                      <li><a href="index.html">Home</a></li>
+                      <li><a href="workflow.html">Workflow</a></li>
+                      <li><a href="examples.html">Examples</a></li>
+                      <li><a href="best-practices.html">Best Practices</a></li>
+                      <li class="active"><a href="documentation.html">Documentation</a></li>
+                  </ul>
+                </div>
+              </div>
+        </nav>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <ol class="breadcrumb">
+                        <li><a href="documentation.html">Documentation</a></li>
+                        <li class="active">Style Guide</li>
+                    </ol>
+                    <h1 class="main-heading">Style Guide</h1>
+                    
+                    <p>ComPAIR is an <a href="https://github.com/ubc/compair" target="_blank">open-source learning application</a> being developed by the University of British Columbia's Centre for Teaching, Learning & Technology (<a href="http://ctlt.ubc.ca/" target="_blank">CTLT</a>) using a <a href="https://github.com/ubc/compair/blob/master/LICENSE.txt" target="_blank">GPL-3.0</a> license. ComPAIR primarily uses default <a href="http://getbootstrap.com/" target="_blank">Bootstrap</a> grids and styles. This basic style guide spells out application-specific uses of the styles.</p>
+                    
+                    <h2 id="intro">Introduction</h2>
+                    <p>Users in ComPAIR can be given one of three <strong>roles</strong>. Roles provide increasing levels of permission, which affect the UI. Students can manage&mdash;add, edit, delete&mdash;their own answers (during the designated answer period), comparisons (during the designated comparison period), comments, and replies (if enabled). Instructors can additionally manage and duplicate their own courses and assignments and edit users in their courses. System Administrators can additionally create users and manage which users can access which courses.</p>
+                    <p>There are three main types of <strong>objects</strong> in the application: courses, assignments, and users. These objects may have slightly different styles applied, as noted in the sections below. When new objects are created, use the term "Add"; when editing, "Edit"; when copying, "Duplicate"; and when removing, "Delete" (and deleting always triggers a confirmation message before the action is performed).</p>
+                    <p>Object conventions are often applied to the four primary <strong>assignment interactions</strong>&mdash;answering, comparing, replying, and commenting&mdash;too, and these have additional conventions of their own, as noted in the section below.</p>
+                    
+                    <p>Jump to: <a href="#admin-bar">Global Administration Bar</a> | <a href="#breadcrumbs">Breadcrumbs</a> | <a href="#headings">Headings</a> | <a href="#intro-text">.intro-text Paragraphs</a> | <a href="#object-lists">Object Lists</a> | <a href="#interactions">Assignment Interactions</a> | <a href="#buttons">Buttons</a> | <a href="#forms">Forms</a> | <a href="#pop-ups">Modal Pop-ups</a> | <a href="#collapsible">.collapsible-content Elements</a> | <a href="#labels">.labels Tagging</a></p>
+                    <hr />
+                    <br />
+
+                    <h2 id="admin-bar">Global Adminstration Bar</h2>
+                    <p>The global adminstration bar appears at the top of every page and contains varying amounts of <strong>administrative functions</strong> (depending on the user's application role) that are not context specific. Options on the bar appear with an icon on the left and then "First Letter Each Word Capitalized" text written as verb+noun and matching the first two words of the resulting page's h1 heading. Instructors currently see: Download Reports and Add Course. System Administrators additionally see: Add User, Manage User, and Manage LTI.</p>
+                    <p>All users see their display name on the right-hand side of the bar, with a dropdown that provides access to their user profile and an option to log out. The dropdown options follow the display conventions above, except they do not have to follow the verb+noun structure.</p>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                    
+                    <h2 id="breadcrumbs">Breadcrumbs</h2>
+                    <p>Breadcrumbs function as the <strong>main navigation</strong> for the application and appear just below the global administration bar for every page except the home page. The home page is always the first link shown, with all child pages listed and linked up until the current page. The current page is listed but not linked.</p>
+                    <p>The breadcrumb labels should match the h1 on each page. These are dynamically generated based on page location and hard-coded only in the <code>compair-config.js</code> file, though additional modifications are also made on-the-fly (using breadcrumb.options) in individual controllers (to add object names in place of generic text).</p>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                    
+                    <h2 id="headings">Headings</h2>
+                    <p>The application currently uses <strong>five levels</strong> of headings.</p>
+                    <ul>
+                        <li><strong>h1</strong>:
+                            Used as the first heading on each page; no content should appear above this heading; should match breadcrumb label; "First Letter Each Word Capitalized" when hard-coded (some h1s are user-generated); object name h1s include the icon for that object before the text (as noted below); no other h1s include icons
+                            <ul>
+                                <li><strong>Courses</strong>: <code>&lt;i class="fa fa-book" aria-hidden="true"&gt;&lt;/i&gt;</code> before course name</li>
+                                <li><strong>Assignments</strong>: <code>&lt;i class="fa fa-comments" aria-hidden="true"&gt;&lt;/i&gt;</code> before assignment name</li>
+                                <li><strong>Users</strong>: <code>&lt;i class="fa fa-user" aria-hidden="true"&gt;&lt;/i&gt;</code> before user name</li>
+                            </ul>
+                        </li>
+                        <li><strong>h2 / h3</strong>: Used as sub-headings (and further sub-headings) on any page; "First letter capitalized" when hard-coded (some h2s/h3s are user-generated); object name h2s include the icon for that object before the text (see above for guidelines); no other h2s/h3s include icons</li>
+                        <li><strong>h4</strong>:
+                            Used only in relation to comparisons; in comparing as criterion titles; in viewing comparisons as student work divider; "First letter capitalized" when hard-coded; icons always precede text (as noted below)
+                             <ul>
+                                <li><strong>Criteria</strong>: <code>&lt;i class="fa fa-gavel" aria-hidden="true"&gt;&lt;/i&gt;</code> before criterion title</li>
+                                <li><strong>Users</strong>: <code>&lt;i class="fa fa-user" aria-hidden="true"&gt;&lt;/i&gt;</code> before user name</li>
+                            </ul>
+                        </li>
+                        <li><strong>h5</strong>: Used only in relation to comparisons; in viewing comparisons as sub-headings dividing student work into sections; "First Letter Each Word Capitalized"; custom style with lighter gray colour and bottom border applied; no icons</li>
+                        <li><del><strong>h6</strong></del>: (not currently used)</li>
+                    </ul>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+
+                    <h2 id="intro-text">.intro-text Paragraphs</h2>
+                    <p>When appropriate, one or more p tags with <code>class="intro-text"</code> appear just below the page's h1 or first h2. This text is slightly larger in display and meant to provide an <strong>introduction to the page or section</strong>. Text to emphasize may be bolded here.</p>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                                        
+                    <h2 id="object-lists">Object Lists</h2>
+                    <p>When objects appear as a list of items (i.e., home page with courses, course pages with assignments, management pages with users), they share some commonalities in display.</p>
+                    <ul>
+                        <li>Each object appears on a new row</li>
+                        <li>Each row alternates background colour between <code>#ffffff</code> and <code>#f9f9f9</code></li>
+                        <li>Each row includes relevant metadata about the object and actions that can be taken on the object (e.g., edit)
+                            <ul>
+                                <li><strong>Courses</strong>: Students see # assignments, # unfinished assignments, Year/Term; Instructors/Admins see Edit, Duplicate, # assignments, # students, Year/Term, Delete</li>
+                                <li><strong>Assignments</strong>: Students see # answers, # comments, Completed work status, Needed work status, # feedback status; Instructors/Admins see Edit, Duplicate, # answers, # comparisons, # comments, Answer/Compare status, Delete</li>
+                                <li><strong>Users</strong>: Instructors/Admins see Edit, Drop, Bulk action, Display Name, First Name, Last Name, Student Number, Email, Course Role, Course Group</li>
+                            </ul>
+                        </li>
+                        <li>If present, orange label tags highlight important information about the object ("status" items above)</li>
+                    </ul>
+                    <p><strong>Filters</strong> of various types are used to affect the list of objects and make it easier to locate a specific object. These appear in the upper right corner before the list starts. When long enough, filters shown as drop-down selects include a search function.</p>
+                    <p>Some of this styling is applied to other lists of items in the application as well. For example, the display of assignment interactions for answers and comments also follow these conventions.</p>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                    
+                    <h2 id="interactions">Assignment Interactions</h2>
+                    <p>Outside of managing an assignment, users can interact with assignments in <strong>four main ways</strong>: answering, comparing answer pairs, replying to answers, and commenting on the assignment. When the results of these activities are displayed in the application, they follow the same introductory line. Before the answer, comparison, reply, or comment, there should be text containing (from left to right):</p>
+                    <ul>
+                        <li>The user's profile icon</li>
+                        <li>The user's name (linked to their profile), presented as Display Name (Full Name), where the full name only appears to those in a non-Student role</li>
+                        <li>A gray label&mdash;<code>class="label-default"</code>&mdash;to indicate if this is an instructor/teaching assistant (otherwise no label shown)</li>
+                        <li>A bolded verb, e.g., answered, submitted, replied, with text+icon to indicate public and private for replies (as noted below)
+                            <ul>
+                                <li><strong>Public</strong>: <code>&lt;i class="glyphicon glyphicon-lock"&gt;&lt;/i&gt;</code> after bolded text</li>
+                                <li><strong>Private</strong>: <code>&lt;i class="glyphicon glyphicon-eye-open"&gt;&lt;/i&gt;</code> after bolded text</li>
+                            </ul>
+                        </li>
+                        <li>The date presented at the end as "on <code>MMM D @ h:mm a</code>:"</li>
+                    </ul>
+                    <p><strong>Tabs</strong> are used to help users navigate these interactions for assignments. In each assignment, Students see tabs for Answers (answers and replies), Your Work + Feedback (their answer, related replies, their comparisons), and Help Comments (comments). Instructors/Admins see tabs for Answers (answers and replies), <em>TBA: Comparisons (comparisons)</em>, Help Comments (comments), and Participation (summary of interactions).</p>
+                    <p>Answers and comments follow the display conventions for object lists as noted above. Actions Instructors/Admins can take on answers include Star (add to instructor's top picks list), Edit, and Delete; the same applies to comments except without the first option.</p>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                    
+                    <h2 id="buttons">Buttons</h2>
+                    <p>The application primarily uses <strong>four types</strong> of buttons. All button text is "First Letter Each Word Capitalized".</p>
+                    <ul>
+                        <li><strong>Green</strong> / <code>class="btn-success"</code>: Indicates a primary action a user must take to complete an activity; used as the final button in submitting all forms (including inline forms) and for "View Course", "Answer/Finish Answer", and "Compare Pairs" buttons; form buttons are center aligned; other buttons are right aligned when practical; no icons added; larger sizing preferred</li>
+                        <li><strong>Blue</strong> / <code>class="btn-primary"</code>: Indicates a secondary action a user can take; used to present contextual administrative options and optional student activities, e.g., adding assignments, editing user profiles, replying to answers; also used for selection of answer per criterion in comparison form; buttons are right aligned when practical; must contain a related icon to the left of the text; medium sizing preferred</li>
+                        <li><strong>White</strong> / <code>class="btn-default"</code>: Indicates one of two or more options where de-emphasis of button(s) is desired; used for buttons to save drafts of answers and comparisons and to make choices during duplication process; as save button, always center aligned and to the left of the "Submit" button; no icons added; sizing should be appropriate to surrounding context</li>
+                        <li><strong>Turquoise</strong> / <code>class="btn-info"</code>: Indicates access to additional information; used for button to open pop-ups of attachments or links, to read more answer text, and to see the student comparison preview; no icons added; smaller sizing preferred</li>
+                    </ul>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                    
+                    <h2 id="forms">Forms</h2>
+                    <p>Unless displayed inline, forms always use <strong>fieldsets with legends</strong> to organize the form fields. Additionally, forms share other styles.</p>
+                    <ul>
+                        <li>Legends use "First Letter Each Word Capitalized" for text and should succintly summarize the fields below</li>
+                        <li>When appropriate, a div with <code>class="instructional-text"</code> can be used to contain explanatory text for the fieldset; this must appear within the fieldset and can contain bolded or dynamic text to improve guidance</li>
+                        <li>Sub-sections of a fieldset are set apart with <code>&lt;hr&gt;</code> lines</li>
+                        <li>Labels are bold and appear above or to the right of the fields, and should also be "First Letter Each Word Capitalized" for text except as noted below
+                            <ul>
+                                <li>Checkbox labels may be normal weight and "First word capitalized", if the text has to be longer for usability reasons</li>
+                                <li>Sub-labels are also normal weight and use <code>class="text-muted"</code></li>
+                            </ul>
+                        </li>
+                        <li>Required fields should have a red asterisk after their labels, added with <code>class="required-star"</code></li>
+                        <li>Required text fields should also use the <code>compair-field-with-feedback</code> directive to add dynamic green/red highlighting and icons</li>
+                        <li>Placeholders should be used only when needed to further explain a field</li>
+                        <li>Informational text to inform users about important form settings should use a paragraph tag with <code>class="alert alert-info"</code></li>
+                        <li>Blank drop-down selects read: "- Select <em>appropriate term here</em> -" (with "First letter capitalized" text)</li>
+                        <li>Date fields should use the date picker</li>
+                        <li>Forms are be submitted with a green button that is center aligned at the bottom of the form; if relevant, a save draft white button can appear to the left of this button</li>
+                    </ul>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                    
+                    <h2 id="pop-ups">Modal Pop-ups</h2>
+                    <p>Modal pop-ups are used to help users <strong>view or interact with a page when it is a sub-step</strong> of the page they are on, e.g, looking at an attachment, adding a group, replying to an answer, commenting on an assignment. For these instances, it is better (or required) that users remain on the same page and at the same place on the page then have to navigate away to complete an action and then return back.</p>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                    
+                    <h2 id="collapsible">.collapsible-content Elements</h2>
+                    <p>Content pieces can be designed to collapse/expand with show/hide functions in Angular and <code>class="collapsible-content"</code> on the element to toggle. The content is always displayed under linked (blue) text and should contain <strong>information that can be progressively revealed</strong> (i.e., can be sought optionally). A chevron appears to the left of this text, facing right&mdash;<code>&lt;i class="fa fa-chevron-right"&gt;&lt;/i&gt;</code>&mdash;when the content is collapsed/hidden and facing down&mdash;<code>&lt;i class="fa fa-chevron-down"&gt;&lt;/i&gt;</code>&mdash;when the content is expanded/shown.</p>
+                    <p>If the progressive reveal is part of filling out a form&mdash;that is, the user needs to confirm the addition of something to the form&mdash; a checkbox should be used in place of this convention.</p>
+                    <p>When the assignment itself is being displayed in this way, a containing div with <code>class="standalone-assignment"</code> should be applied, as well as a h2/h3 heading with the assignment name preceded by the icon <code>&lt;i class="fa fa-comments" aria-hidden="true"&gt;&lt;/i&gt;</code>. This will style the assignment similar to how it appears on the assignment page, to help with the user's recognition that this is the assignment.</p>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                    
+                    <h2 id="labels">.labels Tagging</h2>
+                    <p>The application uses <strong>two kinds</strong> of labels to tag information.</p>
+                    <ul>
+                        <li><strong>Orange</strong> / <code>class="label-warning"</code>: Identifies important information as related to assignments; used for outstanding work, rounds remaining, feedback received, and answer scores; appears as part of metadata except in case of rounds remaining (where it is part of the heading)</li>
+                        <li><strong>Gray</strong> / <code>class="label-default"</code>: Identifies instructors/teaching assistants in assignments; used when instructors/TAs answer, reply, or comment; appears as part of metadata</li>
+                    </ul>
+                    <p class="text-right"><a href="#top">&#94; Back to top</a></p>
+                    
+                    <p class="text-center"><a href="documentation.html" target="_blank" class="btn btn-success btn-lg" role="button">Back to docs </a></p>
+
+                    
+                </div>
+            </div>
+
+            <hr>
+
+            <footer>
+                <p>&copy; University of British Columbia | <a href="http://ctlt.ubc.ca/" target="_blank">CTLT</a></p>
+            </footer>
+
+        </div> <!-- /container -->
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.11.2.min.js"><\/script>')</script>
+
+        <script src="js/vendor/bootstrap.min.js"></script>
+
+        <script src="js/main.js"></script>
+
+        <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+        <script>
+            (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+            function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+            e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+            e.src='//www.google-analytics.com/analytics.js';
+            r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+            ga('create','UA-XXXXX-X','auto');ga('send','pageview');
+        </script>
+    </body>
+</html>

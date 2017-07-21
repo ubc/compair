@@ -1,15 +1,14 @@
 <div class="col-md-6">
     <div class="answer-choice clearfix">
-        <h4>
-            <compair-logo type="'scale'"></compair-logo> {{ name }}
-            <span ng-show="isChosen">(Chosen)</span>
+        <p class="h4"><strong><compair-logo type="'scale'"></compair-logo> {{ name }}
+            <span ng-show="isChosen">(Chosen)</span></strong>
             <span ng-if="answer.score">
                 <span class="label label-warning pull-right score-display"
                     ng-if="answer && showScore">
                     Score: {{answer.score.normalized_score|number:0}}%
                 </span>
             </span>
-        </h4>
+        </p>
 
         <rich-content content="answer.content" attachment="answer.file" ng-if="answer"></rich-content>
         <div ng-if="!answer"><i>(This answer has been deleted.)</i></div>

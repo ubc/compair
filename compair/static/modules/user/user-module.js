@@ -86,7 +86,7 @@ module.controller("UserWriteController",
         }
 
         if ($scope.method == 'edit') {
-            breadcrumbs.options = {'User Profile': "{0}'s Profile".format($scope.user.displayname)};
+            breadcrumbs.options = {'View User': "{0}'s Profile".format($scope.user.displayname)};
         } else if ($scope.method == 'create') {
             $scope.user.uses_compair_login = true;
             $scope.user.email_notification_method = EmailNotificationMethod.enable;
@@ -142,7 +142,7 @@ module.controller("UserViewController",
         $scope.EmailNotificationMethod = EmailNotificationMethod;
 
         $scope.SystemRole = SystemRole;
-        breadcrumbs.options = {'User Profile': "{0}'s Profile".format($scope.user.displayname)};
+        breadcrumbs.options = {'View User': "{0}'s Profile".format($scope.user.displayname)};
 
         $scope.updateNotificationSettings = function() {
             $scope.submitted = true;
@@ -246,7 +246,7 @@ module.controller("UserCourseController",
             reverse: null
         };
 
-        breadcrumbs.options = {'Manage User Courses': "Manage {0}'s Courses".format($scope.user.fullname)};
+        breadcrumbs.options = {'Manage User Courses': "Manage {0}'s Courses".format($scope.user.displayname)};
         $scope.course_roles = [CourseRole.student, CourseRole.teaching_assistant, CourseRole.instructor];
 
         if (!$scope.canManageUsers) {

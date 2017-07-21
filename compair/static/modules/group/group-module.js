@@ -46,6 +46,7 @@ module.controller(
     ["$rootScope", "$scope", "$uibModalInstance",
     function ($rootScope, $scope, $uibModalInstance) {
         $scope.group = {};
+        $scope.modalInstance = $uibModalInstance;
 
         $scope.groupSubmit = function () {
             $uibModalInstance.close($scope.group.name);

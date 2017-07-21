@@ -34,7 +34,7 @@ Feature: Edit Assignment
     And I add a new criterion
     And I fill form item 'criterion.name' in with 'Which do you like?'
     And I fill in the criterion description with 'Choose the one you like best.'
-    And I toggle the 'Include this criterion in my list of default criteria (to use it in other assignments)' checkbox
+    And I toggle the 'Include this criterion in my list of default criteria (to re-use it in other assignments)' checkbox
     And I submit modal form with 'Save' button
     And I submit form with 'Save' button
     Then I should be on the 'course' page

@@ -1,10 +1,10 @@
 <h1 ng-if="!course.id">Add Course</h1>
-<h1 ng-if="course.id">Edit {{course.name}}</h1>
+<h1 ng-if="course.id">Edit Course</h1>
 
 <form name="courseForm" class="form" ng-submit="save()" novalidate>
 
     <fieldset>
-        <legend>Course</legend>
+        <legend>Course Details</legend>
         <compair-field-with-feedback form-control="courseForm.courseName">
             <label for="courseName" class="required-star">Course Name</label>
             <input id="courseName" name="courseName" ng-model="course.name"

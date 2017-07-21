@@ -6,10 +6,10 @@ ENV PYTHONUNBUFFERED 1
 ENV PYTHONPATH /code
 ENV DEV 0
 
-RUN	easy_install distribute \
+RUN easy_install distribute \
     && pip install --no-cache-dir uwsgi \
     && mkdir /code \
-	&& rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the base uWSGI ini file to enable default dynamic uwsgi process number
 COPY deploy/docker/uwsgi.ini /etc/uwsgi/

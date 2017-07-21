@@ -82,6 +82,14 @@ var commonStepDefinitionsWrapper = function() {
         return element(by.css('input[type=submit][value="'+button+'"]')).click();
     });
 
+    this.When("I submit form with the first '$button' button", function (button) {
+        return element.all(by.css('input[type=submit][value="'+button+'"]')).get(0).click();
+    });
+
+    this.When("I submit form with the second '$button' button", function (button) {
+        return element.all(by.css('input[type=submit][value="'+button+'"]')).get(0).click();
+    });
+
     //submit modal form button
     this.When("I submit modal form with '$button' button", function (button) {
         return element(by.css('.modal input[type=button][value="'+button+'"]')).click();

@@ -1,7 +1,7 @@
-<h1><i class="fa fa-bar-chart-o"></i> Download Reports</h1>
+<h1>Download Reports</h1>
 
-<p class="intro-text">Run a report for your course, then download the data as a CSV (comma-separated values) file. You can create reports for the course as a whole or for individual assignments. To run a full course report, select "All Assignments" from the assignment drop-down below.</p>
-<p class="intro-text"><strong>To see class participation without downloading a report:</strong> Go to the course page, click any assignment, and select the "Participation" tab.</p>
+<p class="intro-text">Run a report for your course, then download the data as a CSV (comma-separated values) file. You can run reports for the course as a whole or for individual assignments. To run a full course report, select "All Assignments" from the assignment drop-down below.</p>
+<p class="intro-text"><strong>To see class participation without downloading a report:</strong> Access your course page, click any assignment, and select the "Participation" tab.</p>
 
 <form name="reportForm" class="form" ng-submit="reportSubmit()" novalidate>
     <fieldset>
@@ -17,12 +17,15 @@
             <label for="reportGroup" class="required-star">Student Group</label>
             <select class="form-control" ng-model="report.group_name" name="reportCourseId" ng-change="changeReport()"
                     ng-options="g.value as g.name for g in groups" required>
+                <option value="">- Select group -</option>
             </select>
         </div>
         <div class="form-group">
             <label for="reportType" class="required-star">Report Type</label>
             <select class="form-control" ng-model="report.type" name="reportType" required
-                    ng-options="t.id as t.name for t in types" ng-change="changeReport()"></select>
+                    ng-options="t.id as t.name for t in types" ng-change="changeReport()">
+                <option value="">- Select report -</option>
+            </select>
         </div>
         <div class="form-group">
             <label for="reportAssignment" class="required-star">Assignment</label>
@@ -33,8 +36,10 @@
         </div>
     </fieldset>
     <div class="alert alert-success text-center" ng-show="reportFile">
-        <h4>Report Complete</h4>
+        <p class="h4">Report Complete</p>
         <p>Your report is ready for <strong><a href="{{ reportFile }}">download <i class="fa fa-file-excel-o"></i></a></strong> now.</p>
+        <p>Run <a href="" ng-click="changeReport()">another report</a>?</p>
+        <br />
     </div>
-    <input type="submit" class="btn btn-success btn-lg center-block" value="Run" ng-disabled="reportForm.$invalid || submitted"/>
+    <input type="submit" class="btn btn-success btn-lg center-block" value="Run" ng-disabled="reportForm.$invalid || submitted" ng-show="!reportFile"/>
 </form>

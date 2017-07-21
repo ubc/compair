@@ -87,7 +87,7 @@
                         </li>
                         <!-- Delete Link -->
                         <li ng-if="course.canDeleteCourse">
-                            <a confirmation-needed="deleteCourse(course)" keyword="course and assignments" title="Delete" href="">
+                            <a confirmation-needed="deleteCourse(course)" keyword="course and its assignments" title="Delete" href="">
                                 <i class="fa fa-trash-o"></i>
                             </a>
                         </li>
@@ -119,9 +119,8 @@
 
     <div ng-if="!courses.length">
         <hr />
-        <p ng-if="!courseFilters.search">No courses currently available.</p>
+        <p ng-if="!courseFilters.search">No courses currently available. <span ng-if="canAddCourse">Would you like to <a href="#/course/create">add a course</a>?</span></p>
         <p ng-if="courseFilters.search">No courses found for this search. Please try another search term above.</p>
-        <p ng-if="canAddCourse && !courseFilters.search">Would you like to <a href="#/course/create">add a course</a>?</p>
     </div>
 
 </div>

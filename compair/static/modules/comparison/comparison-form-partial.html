@@ -1,10 +1,10 @@
 <div class="evaluate-screen">
 
-    <h1>Compare Answers</h1>
+    <h1>Compare Answer Pairs</h1>
 
     <p class="intro-text">
         For each round, choose which answer better matches the criteria below, give helpful feedback on both answers in the pair, and submit the comparison.
-        Please note <strong>answers are not automatically saved</strong> as you type.
+        Please note <strong>comparisons are not automatically saved</strong> as you type.
         However, you may manually save a draft of the round below.
     </p>
 
@@ -32,7 +32,7 @@
             <span class="h4">(Comparison must be submitted before deadline to be accepted)</span>
         </div>
 
-        <h2 class="col-md-6">Answer Pair</h2>
+        <h2 class="col-md-6">Answer pair</h2>
         <h2 class="col-md-6 text-right rounds"><span ng-hide="comparisonError" class="label label-warning">
             Round {{current}} <span ng-if="!canManageAssignment">/ {{total}}</span>
         </h2>
@@ -72,8 +72,9 @@
 
             <div class="form-group sub-step" ng-repeat="comparison_criterion in comparison.comparison_criteria">
 
-                <div class="each-criterion sub-step">
+                <div class="each-criterion">
                     <fieldset>
+                        <legend>Criterion #{{$index + 1}}</legend>
                         <div class="row">
                             <div class="col-sm-8">
                                 <h4><i class="fa fa-gavel"></i> {{comparison_criterion.criterion.name}}</h4>
@@ -83,10 +84,10 @@
                                 </div>
                             </div>
                             <div class="col-sm-4 text-center">
-                                <p><strong>Select one:</strong></p>
+                                <p><strong>Select Your Choice</strong></p>
                                 <div class="btn-group">
                                     <label class="btn btn-primary" ng-class="{active: comparison_criterion.winner == WinningAnswer.answer1 }">
-                                        <input type="radio" class="hideRadio"
+                                        <i class="fa fa-thumbs-up"></i><input type="radio" class="hideRadio"
                                             name="answer{{answer1.id}}" required
                                             ng-model="comparison_criterion.winner"
                                             ng-change="trackComparisonCriterionWinner(comparison_criterion, answer1.id)"
@@ -94,7 +95,7 @@
                                         Answer {{firstAnsNum}}
                                     </label>
                                     <label class="btn btn-primary" ng-class="{active: comparison_criterion.winner == WinningAnswer.answer2 }">
-                                        <input type="radio" class="hideRadio"
+                                        <i class="fa fa-thumbs-up"></i><input type="radio" class="hideRadio"
                                             name="answer{{answer2.id}}" required
                                             ng-model="comparison_criterion.winner"
                                             ng-change="trackComparisonCriterionWinner(comparison_criterion, answer2.id)"
@@ -128,7 +129,7 @@
                 <p class="assignment-toggle"><a href="" ng-click="showAnswers = !showAnswers">
                     <i class="fa fa-chevron-down" ng-show="showAnswers"></i>
                     <i class="fa fa-chevron-right" ng-hide="showAnswers"></i>
-                    Show the answer pair again
+                    Show answer pair again for Round {{current}}
                 </a></p>
 
                 <div class="col-md-6">
@@ -147,25 +148,28 @@
             </div>
 
             <div class="row sub-step">
-                <div class="col-md-6">
-                    <label class="cke-label">
-                        Your feedback for Answer {{firstAnsNum}} (shown to instructors and author)
-                        <i class="fa fa-arrow-down"></i>
-                    </label>
-                    <textarea
-                        ng-model="answer1.comment.content" rows="8" ckeditor="editor1Options" required>
-                    </textarea>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="cke-label">
-                        Your feedback for Answer {{secondAnsNum}} (shown to instructors and author)
-                        <i class="fa fa-arrow-down"></i>
-                    </label>
-                    <textarea
-                        ng-model="answer2.comment.content" rows="8" ckeditor="editor2Options" required>
-                    </textarea>
-                </div>
+                <fieldset>
+                    <legend>Peer Feedback</legend>
+                    <div class="col-md-6">
+                        <label class="cke-label">
+                            Your feedback for Answer {{firstAnsNum}} (shown to instructors and author)
+                            <i class="fa fa-arrow-down"></i>
+                        </label>
+                        <textarea
+                            ng-model="answer1.comment.content" rows="8" ckeditor="editor1Options" required>
+                        </textarea>
+                    </div>
+    
+                    <div class="col-md-6">
+                        <label class="cke-label">
+                            Your feedback for Answer {{secondAnsNum}} (shown to instructors and author)
+                            <i class="fa fa-arrow-down"></i>
+                        </label>
+                        <textarea
+                            ng-model="answer2.comment.content" rows="8" ckeditor="editor2Options" required>
+                        </textarea>
+                    </div>
+                </fieldset>
             </div>
         </div>
 

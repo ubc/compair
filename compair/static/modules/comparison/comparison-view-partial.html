@@ -43,15 +43,15 @@
             <div class="each-evaluation" ng-repeat="comparison in comparison_set">
 
                 <h4 class="text-center evaluator-heading" ng-if="$first">
-                    {{ comparison.user.fullname }} <br />
+                    <i class="fa fa-user" aria-hidden="true"></i> {{ comparison.user.fullname }} <br />
                     <i class="fa fa-arrow-down"></i>
                 </h4>
 
                 <div class="evaluator-answer" ng-if="$first">
-                    <p><a class="btn btn-default" href="" ng-click="loadAnswerByAuthor(comparison.user_id);showMyAnswer = !showMyAnswer;">
-                        <span ng-show="showMyAnswer">Hide</span>
-                        <span ng-hide="showMyAnswer">Show</span>
-                        Student's Answer
+                    <p class="content"><a href="" ng-click="loadAnswerByAuthor(comparison.user_id);showMyAnswer = !showMyAnswer;">
+                        <i ng-show="showMyAnswer" class="fa fa-chevron-down"></i>
+                        <i ng-hide="showMyAnswer" class="fa fa-chevron-right"></i>
+                        Show student's answer
                     </a></p>
                     <compair-student-answer class="answer" answer="(answers | filter:{user_id:comparison.user_id}:true)[0]" ng-show="showMyAnswer"></compair-student-answer>
                     <br />
@@ -81,7 +81,7 @@
                     Show compared answers
                 </a></p>
 
-                <div class="row" ng-show="showAnswers">
+                <div class="row collapsible-content" ng-show="showAnswers">
                     <compair-answer-content answer="comparison.answer1" is-chosen="comparison.winner == WinningAnswer.answer1" name="Odd-Numbered Answer" show-score="true"></compair-answer-content>
                     <compair-answer-content answer="comparison.answer2" is-chosen="comparison.winner == WinningAnswer.answer2" name="Even-Numbered Answer" show-score="true"></compair-answer-content>
                 </div>

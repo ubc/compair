@@ -1,19 +1,29 @@
+<p class="assignment-toggle"><a href="" ng-click="showAssignment = !showAssignment">
+    <i class="fa fa-chevron-down" ng-show="showAssignment "></i>
+    <i class="fa fa-chevron-right" ng-hide="showAssignment "></i>
+    Show <span ng-if="answerComment">answer you're replying to by {{parent.user.displayname}}</span><span ng-if="!answerComment">assignment "{{assignment.name}}"</span>
+</a></p>
+
+<div ng-show="showAssignment" class="standalone-assignment">
+    <h2 ng-if="parent.name"><i class="fa fa-comments"></i> {{parent.name}}</h2>
+    <h2 ng-if="answerComment"><i class="fa fa-user"></i> {{parent.user.displayname}}'s Answer</h2>
+    <rich-content content="parent.content" attachment="parent.file"></rich-content>
+</div>
+
 <form name="commentForm" class="form" ng-submit="commentSubmit()" confirm-form-exit novalidate form-type="comment">
     <fieldset>
-        <h2 ng-if="parent.name"><i class="fa fa-comments"></i> {{parent.name}}</h2>
-        <i class="fa fa-quote-left pull-left" ng-if="!parent.name && parent.content"></i>
-        <i class="fa fa-quote-right pull-right" ng-if="!parent.name && parent.content"></i>
-        <rich-content content="parent.content" attachment="parent.file"></rich-content>
-        <hr />
+        <legend><span ng-if="answerComment">Reply</span><span ng-if="!answerComment">Comment</span> Details</legend>
         <div class="form-group">
+            <label>Text</label>
             <textarea ng-model="comment.content" id="commentContent" class="form-control" rows="8"
                       ckeditor="editorOptions" required>
             </textarea>
         </div>
-        <div class="form-group" ng-if="answerComment && (comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private)">
-            <input id="comment_type" type="checkbox" ng-model="comment.comment_type"
+        <div class="form-group" ng-if="answerComment">
+            <input id="comment_type" type="checkbox" ng-model="comment.comment_type" ng-disabled="!(comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private)"
                    ng-true-value="'{{AnswerCommentType.public}}'" ng-false-value="'{{AnswerCommentType.private}}'">
-            <label for="comment_type">Show this reply to the whole class</label>
+            <label for="comment_type"><span class="text-muted not-bold" ng-if="!(comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private)">(cannot show this reply to the whole class)</span> <span ng-if="comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private">Show this reply to the whole class</span></label>
+            
         </div>
     </fieldset>
 
