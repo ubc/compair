@@ -5,8 +5,10 @@
             <form name="loginForm" class="form col-sm-6" ng-submit="submit()" novalidate>
                 <fieldset>
                     <div ng-if="AuthTypesEnabled.cas">
-                        <h2>Log in with your CWL <a id="cwl_login" href="/api/cas/login">here</a></h2>
-                        
+                        <h2>Log in with your CWL here:</h2>
+                        <a id="cwl_login" href="/api/cas/login">
+                            <img class="center-block" src="https://www.auth.cwl.ubc.ca/CWL_login_button.gif" width="76" height="25" alt="CWL Login" border="0">
+                        </a>
                     </div>
 
                     <hr ng-if="AuthTypesEnabled.app && AuthTypesEnabled.cas" />
