@@ -4,7 +4,7 @@ import os
 from flask import redirect, render_template, jsonify
 from flask_login import login_required, current_user, current_app
 from flask import make_response
-from flask import send_file
+from flask import send_file, url_for
 from flask_restful.reqparse import RequestParser
 
 from compair.core import event
@@ -132,13 +132,7 @@ def register_api_blueprints(app):
 
         # running in prod mode, figure out asset location
         assets = app.config['ASSETS']
-        prefix = ''
-        if app.config['ASSET_LOCATION'] == 'cloud':
-            prefix = app.config['ASSET_CLOUD_URI_PREFIX']
-        elif app.config['ASSET_LOCATION'] == 'local':
-            prefix = app.static_url_path + '/dist/'
-        else:
-            app.logger.error('Invalid ASSET_LOCATION value ' + app.config['ASSET_LOCATION'] + '.')
+        prefix = app.config['ASSET_PREFIX']
 
         return render_template(
             'index.html',
@@ -163,6 +157,23 @@ def register_api_blueprints(app):
     @app.route('/')
     def route_root():
         return redirect("/app/")
+
+    @app.route('/app/pdf')
+    def route_pdf_viewer():
+        if app.debug or app.config.get('TESTING', False):
+            return render_template(
+                'pdf-viewer.html',
+                pdf_lib_folder=url_for('static', filename='lib/pdf.js-viewer')
+            )
+
+        # running in prod mode, figure out asset location
+        assets = app.config['ASSETS']
+        prefix = app.config['ASSET_PREFIX']
+
+        return render_template(
+            'pdf-viewer.html',
+            pdf_lib_folder=prefix + 'pdf.js-viewer'
+        )
 
     @app.route('/app/<regex("attachment|report"):file_type>/<file_name>')
     @login_required

@@ -37,6 +37,17 @@ def get_asset_names(app):
 
     return {'ASSETS': assets}
 
+def get_asset_prefix(app):
+    prefix = ''
+    if app.config['ASSET_LOCATION'] == 'cloud':
+        prefix = app.config['ASSET_CLOUD_URI_PREFIX']
+    elif app.config['ASSET_LOCATION'] == 'local':
+        prefix = app.static_url_path + '/dist/'
+    else:
+        app.logger.error('Invalid ASSET_LOCATION value ' + app.config['ASSET_LOCATION'] + '.')
+
+    return {'ASSET_PREFIX': prefix}
+
 
 def create_persistent_dirs(conf, logger):
     """
@@ -116,6 +127,8 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
     if not skip_assets and not app.debug and not app.config.get('TESTING', False):
         assets = get_asset_names(app)
         app.config.update(assets)
+        prefix = get_asset_prefix(app)
+        app.config.update(prefix)
 
     if not skip_endpoints:
         # Flask-Login initialization

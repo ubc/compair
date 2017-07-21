@@ -55,6 +55,11 @@ gulp.task('bowerWiredep', ['bowerInstall'], function () {
         .pipe(gulp.dest('./compair/static/'));
 });
 
+gulp.task('copy_pdf_viewer_html_template', ['bowerInstall'], function() {
+    return gulp.src(['./compair/static/lib/pdf.js-viewer/viewer.html'])
+        .pipe(gulp.dest('./compair/templates/static'));
+});
+
 // compile css
 gulp.task('less', function () {
     return gulp.src('./compair/static/less/compair.less')
@@ -127,26 +132,28 @@ gulp.task('prod_minify_js', ['prod_templatecache'], function() {
         .pipe(uglify())
         .pipe(gulp.dest('./compair/static/build'));
 });
-gulp.task('revision', ['prod_minify_js_libs', 'prod_compile_minify_css', 'prod_minify_js', 'prod_copy_fonts', 'prod_copy_images'], function() {
-    return gulp.src(['./compair/static/build/*.css', './compair/static/build/*.js', '!compair/static/build/templates.js',
-            './compair/static/build/*.png', './compair/static/build/*.ico'])
+gulp.task('prod_pdf_viewer_files', function() {
+    return gulp.src([
+            './compair/static/lib/pdf.js-viewer/pdf.js',
+            './compair/static/lib/pdf.js-viewer/pdf.worker.js',
+            './compair/static/lib/pdf.js-viewer/viewer.css',
+            './compair/static/lib/pdf.js-viewer/images/*',
+            './compair/static/lib/pdf.js-viewer/cmaps/*',
+            './compair/static/lib/pdf.js-viewer/locale/*',
+        ], {base: './compair/static/lib/pdf.js-viewer/'})
+        .pipe(gulp.dest('./compair/static/dist/pdf.js-viewer'));
+});
+gulp.task('prod', ['prod_minify_js_libs', 'prod_compile_minify_css', 'prod_minify_js',
+        'prod_copy_fonts', 'prod_copy_images', 'prod_pdf_viewer_files'], function() {
+    return gulp.src([
+            './compair/static/build/*.css',
+            './compair/static/build/*.js',
+            '!compair/static/build/templates.js',
+        ], {base: './compair/static/build'})
         .pipe(rev())
         .pipe(gulp.dest('./compair/static/dist'))
         .pipe(rev.manifest())
         .pipe(gulp.dest('./compair/static/build'));
-});
-gulp.task('prod', ['revision'], function(){
-    var manifest = require("./compair/static/build/rev-manifest.json");
-    // modify includes to use the minified files
-    return gulp.src('./compair/static/index.html')
-        .pipe(htmlReplace(
-            {
-                prod_minify_js_libs: 'dist/' + manifest[jsLibsFilename],
-                prod_minify_js: 'dist/' + manifest[jsFilename],
-                prod_compile_minify_css: 'dist/' + manifest[targetCssFilename]
-            },
-            {keepBlockTags: true}))
-        .pipe(gulp.dest('./compair/static/'));
 });
 
 /**
@@ -343,4 +350,4 @@ gulp.task('webdriver_update', webdriver_update);
 gulp.task('webdriver_standalone', webdriver_standalone);
 
 
-gulp.task("default", ['bowerInstall', 'bowerWiredep'], function(){});
+gulp.task("default", ['bowerInstall', 'bowerWiredep', 'copy_pdf_viewer_html_template'], function(){});
