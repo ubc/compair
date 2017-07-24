@@ -537,10 +537,12 @@ class TestFixture:
         self.dropped_instructor = UserFactory(system_role=SystemRole.instructor)
         self.draft_student = None
         self.answer_comments = []
+        self.comparisons = []
+        self.self_evaluations = []
         db.session.commit()
 
     def add_course(self, num_students=5, num_assignments=1, num_additional_criteria=0, num_groups=0, num_answers='#',
-            with_comments=False, with_draft_student=False, with_comparisons=False):
+            with_comments=False, with_draft_student=False, with_comparisons=False, with_self_eval=False):
         self.course = CourseFactory()
         self.instructor = UserFactory(system_role=SystemRole.instructor)
         self.enrol_user(self.instructor, self.course, CourseRole.instructor)
@@ -551,14 +553,14 @@ class TestFixture:
 
         self.add_students(num_students, num_groups)
 
-        self.add_assignments(num_assignments, num_additional_criteria=num_additional_criteria)
+        self.add_assignments(num_assignments, num_additional_criteria=num_additional_criteria, with_self_eval=with_self_eval)
         # create a shortcut for first assignment as it is frequently used
         self.assignment = self.assignments[0]
 
         self.add_answers(num_answers, with_comments=with_comments)
 
         if with_comparisons:
-            self.add_comparisons(with_comments=with_comments)
+            self.add_comparisons(with_comments=with_comments, with_self_eval=with_self_eval)
 
         if with_draft_student:
             self.add_students(1)
@@ -637,28 +639,46 @@ class TestFixture:
 
         return self
 
-    def add_comparisons(self, with_comments=False):
+    def add_comparisons(self, with_comments=False, with_self_eval=False):
         for assignment in self.assignments:
             for student in self.students:
-                answers = set()
-                for i in range(assignment.total_comparisons_required):
-                    comparison = Comparison.create_new_comparison(assignment.id, student.id, False)
-                    comparison.completed = True
-                    comparison.winner = WinningAnswer.answer1 if comparison.answer1_id < comparison.answer2_id else WinningAnswer.answer2
-                    for comparison_criterion in comparison.comparison_criteria:
-                        comparison_criterion.winner = comparison.winner
-                    db.session.add(comparison)
-                    db.session.commit()
+                self.add_comparisons_for_user(assignment, student, with_comments=with_comments, with_self_eval=with_self_eval)
+        return self
 
-                if with_comments:
-                    for answer in answers:
-                        answer_comment = AnswerCommentFactory(
-                            user=student,
-                            answer=answer,
-                            comment_type=AnswerCommentType.evaluation
-                        )
-                        self.answer_comments.append(answer_comment)
-                    db.session.commit()
+    def add_comparisons_for_user(self, assignment, student, with_comments=False, with_self_eval=False):
+        answers = set()
+        for i in range(assignment.total_comparisons_required):
+            comparison = Comparison.create_new_comparison(assignment.id, student.id, False)
+            comparison.completed = True
+            comparison.winner = WinningAnswer.answer1 if comparison.answer1_id < comparison.answer2_id else WinningAnswer.answer2
+            for comparison_criterion in comparison.comparison_criteria:
+                comparison_criterion.winner = comparison.winner
+            db.session.add(comparison)
+            db.session.commit()
+            self.comparisons.append(comparison)
+
+        if with_comments:
+            for answer in answers:
+                answer_comment = AnswerCommentFactory(
+                    user=student,
+                    answer=answer,
+                    comment_type=AnswerCommentType.evaluation
+                )
+                self.answer_comments.append(answer_comment)
+            db.session.commit()
+
+        if with_self_eval:
+            student_answer = next(
+                answer for answer in self.answers if answer.user_id == student.id and answer.assignment_id == assignment.id
+            )
+            if student_answer:
+                self_evaluation = AnswerCommentFactory(
+                    user=student,
+                    answer=student_answer,
+                    comment_type=AnswerCommentType.self_evaluation
+                )
+                self.self_evaluations.append(self_evaluation)
+                db.session.commit()
 
         return self
 
@@ -684,11 +704,14 @@ class TestFixture:
 
         return self
 
-    def add_assignments(self, num_assignments=1, num_additional_criteria=0, is_answer_period_end=False):
+    def add_assignments(self, num_assignments=1, num_additional_criteria=0, is_answer_period_end=False, with_self_eval=False):
         for _ in range(num_assignments):
             answer_end = datetime.datetime.now() - datetime.timedelta(
                 days=2) if is_answer_period_end else datetime.datetime.now() + datetime.timedelta(days=7)
             assignment = AssignmentFactory(course=self.course, answer_end=answer_end)
+
+            if with_self_eval:
+                assignment.self_evaluation_enabled = True
 
             # default criterion
             AssignmentCriterionFactory(criterion=DefaultFixture.DEFAULT_CRITERION, assignment=assignment, position=0)

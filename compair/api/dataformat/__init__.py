@@ -225,7 +225,7 @@ def get_kaltura_media():
     }
 
 
-def get_comparison(restrict_user=True, with_answers=True, with_feedback=False, with_self_evaluation=False):
+def get_comparison(restrict_user=True, with_answers=True, with_feedback=False):
     ret = {
         'id': fields.String(attribute="uuid"),
         'course_id': fields.String(attribute="course_uuid"),
@@ -250,8 +250,16 @@ def get_comparison(restrict_user=True, with_answers=True, with_feedback=False, w
         ret['answer1_feedback'] = fields.List(fields.Nested(get_answer_comment(restrict_user)))
         ret['answer2_feedback'] = fields.List(fields.Nested(get_answer_comment(restrict_user)))
 
-    if with_self_evaluation:
-        ret['self_evaluation'] = fields.List(fields.Nested(get_answer_comment(restrict_user)))
+    return ret
+
+def get_comparison_set(restrict_user=True, with_user=True):
+    ret = {
+        'comparisons': fields.List(fields.Nested(get_comparison(restrict_user, True, True))),
+        'self_evaluations': fields.List(fields.Nested(get_answer_comment(restrict_user)))
+    }
+
+    if with_user:
+        ret['user'] = fields.Nested(get_user(restrict_user))
 
     return ret
 

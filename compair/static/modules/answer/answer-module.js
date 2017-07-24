@@ -89,7 +89,6 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
                 url: '/api/courses/:courseId/assignments/:assignmentId/answers/:answerId/top',
                 interceptor: cacheInterceptor
             },
-            comparisons: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/comparisons'},
             user: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/user'},
             userUnsaved: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/user', params:{draft: true, unsaved: true}, cache: false}
         }

@@ -537,22 +537,6 @@ myApp.config(
                     }
                 }
             })
-        .when ('/course/:courseId/assignment/:assignmentId/comparisons',
-            {
-                templateUrl: 'modules/comparison/comparison-view-partial.html',
-                label: "Comparisons",
-                controller: 'ComparisonViewController',
-                resolve: {
-                    resolvedData: function() {
-                        return ResolveDeferredRouteData({
-                            course: RouteResolves.course(),
-                            assignment: RouteResolves.assignment(),
-                            students: RouteResolves.students(),
-                            groups: RouteResolves.groups(),
-                        }, ['course', 'assignment', 'students']);
-                    }
-                }
-            })
         .when('/report',{
                 templateUrl: 'modules/report/report-create-partial.html',
                 label: "Download Reports",

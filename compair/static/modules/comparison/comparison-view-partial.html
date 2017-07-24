@@ -1,49 +1,48 @@
 <div class="evaluations-screen">
+    <div class="tab-header">
+        <div class="row">
+            <div class="col-sm-6">
+                <h2>Comparisons
+                    <span ng-if="comparisonFilters.group && !comparisonFilters.author"> for "{{ comparisonFilters.group }}"</span>
+                    <span ng-if="comparisonFilters.author"> for "{{ comparisonFiltersName }}"</span>
+                </h2>
+                <p ng-if="numPages > 1">(Page {{comparisonFilters.page}} of {{numPages}})</p>
+            </div>
 
-    <h1>Comparisons for "{{ assignment.name }}"</h1>
+            <div class="col-sm-6 text-right multi-filters">
+                <span class="filter">
+                    <label>Show: &nbsp;</label>
+                    <select ng-if="groups.length > 0" ng-model="comparisonFilters.group" class="nullable" chosen disable_search_threshold="8"
+                            ng-options="group as group for group in groups | orderBy: 'toString()'">
+                        <option value="">All groups</option>
+                    </select>
+                    <select id="comparison-filter" ng-model="comparisonFilters.author" class="nullable" chosen disable_search_threshold="8"
+                            ng-options="u.id as u.name for u in users | orderBy: 'name'">
+                        <option value="">All students</option>
+                    </select>
+                </span>
 
-    <p class="intro-text">Filter by a group (if available) and student evaluator's name, or select "any" for these options to see the full list of available comparisons. To view feedback given per each student answer, see the "Answers" tab on the <a ng-href="#/course/{{courseId}}/assignment/{{assignmentId}}">assignment page</a>.</p>
-
-    <div class="form-group row">
-        <div ng-if="groups.length" class="col-sm-2">
-            <label>Group</label>
-            <select class="form-control" ng-model="listFilters.group" chosen disable_search_threshold="8" width="'100%'"
-                    ng-options="g as g for g in groups | orderBy: 'toString()'">
-                <option value="">Any Group</option>
-            </select>
-            <br />
+                <span class="filter">
+                    <button uib-btn-checkbox ng-model="showAnswers" class="btn btn-sm btn-default">
+                        Show compared answers for all comparisons below <i ng-class="{'fa fa-eye-slash': !showAnswers, 'fa fa-eye': showAnswers}"></i>
+                    </button>
+                </span>
+            </div>
         </div>
-        <div ng-class="{'col-sm-4': groups.length, 'col-sm-6': !groups.length}">
-            <label>Student Evaluator</label>
-            <select class="form-control" ng-model="listFilters.author" chosen disable_search_threshold="8" width="'100%'"
-                    ng-options="s.id as s.name for s in students | filter:{group_name:listFilters.group || undefined } | orderBy: 'name'">
-                <option value="">Any Student</option>
-            </select>
-            <br />
-        </div>
-        <div class="col-sm-6">
-            <input class="show-all" type="checkbox" ng-click="showAnswers = !showAnswers;" id="toggleAll" />
-            <label for="toggleAll">Show compared answers for all comparisons below</label>
+
+        <p class="intro-text">Filter by a group (if available) and student evaluator's name, or select "any" for these options to see the full list of available comparisons.</p>
+
+        <div ng-show="!comparison_sets.length">
+            <p>No comparisons were found<span ng-if="comparisonFilters.group || comparisonFilters.author"> with these filter settings. Try another choice above</span>.</p>
         </div>
     </div>
 
-    <hr />
+    <div ng-show="comparison_sets.length" class="evaluations">
 
-    <h2>
-        {{ comparisons.total }} <span ng-if="!listFilters.group && !listFilters.author">total</span> comparisons found
-        <span ng-if="listFilters.group && !listFilters.author"> for Group "{{ listFilters.group }}"</span>
-        <span ng-if="listFilters.author"> for "{{ (students | filter:{id:listFilters.author}:true)[0].name }}"</span>
-    </h2>
-    <p ng-if="numPages > 1">(Page {{listFilters.page}} of {{numPages}})</p>
-
-    <div ng-show="comparisons.objects.length" class="evaluations">
-
-        <div ng-repeat="(user_id, comparison_set) in comparisons.grouped">
-
-            <div class="each-evaluation" ng-repeat="comparison in comparison_set">
-
+        <div ng-repeat="comparison_set in comparison_sets">
+            <div class="each-evaluation" ng-repeat="comparison in comparison_set.comparisons">
                 <h4 class="text-center evaluator-heading" ng-if="$first">
-                    <i class="fa fa-user" aria-hidden="true"></i> {{ comparison.user.fullname }} <br />
+                    <i class="fa fa-user" aria-hidden="true"></i> {{ comparison_set.user.fullname }} <br />
                     <i class="fa fa-arrow-down"></i>
                 </h4>
 
@@ -55,8 +54,8 @@
                     </a></p>
                     <compair-student-answer class="answer" answer="(answers | filter:{user_id:comparison.user_id}:true)[0]" ng-show="showMyAnswer"></compair-student-answer>
                     <br />
-                    <div class="" ng-if="comparison_set[0].self_evaluation.length > 0">
-                        <div ng-repeat="self_evaluation in comparison_set[0].self_evaluation">
+                    <div class="" ng-if="comparison_set.self_evaluations.length > 0">
+                        <div ng-repeat="self_evaluation in comparison_set.self_evaluations">
                             <div class="each-header">
                                 <compair-avatar user-id="self_evaluation.user_id" avatar="self_evaluation.user.avatar" display-name="self_evaluation.user.fullname"></compair-avatar>
                                 <strong>self-evaluated</strong> on {{ self_evaluation.created | amDateFormat: 'MMM D @ h:mm a'}}:
@@ -65,7 +64,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Comparison Header -->
                 <div class="each-header">
                     <compair-avatar user-id="comparison.user_id" avatar="comparison.user.avatar" display-name="comparison.user.fullname"></compair-avatar>
@@ -121,10 +120,8 @@
     </div>
 
     <div class="text-center">
-        <ul uib-pagination total-items="comparisons.total" ng-model="listFilters.page" max-size="10" class="pagination-sm" boundary-links="true" direction-links="false" items-per-page="listFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></ul>
-    </div>
-
-    <div ng-show="!comparisons.objects.length">
-        <p>No comparisons were found<span ng-if="group || search.userId.name"> with these filter settings. Try another group or student evaluator above</span>.</p>
+        <ul uib-pagination total-items="totalNumComparisonSets" ng-model="comparisonFilters.page"
+            max-size="10" class="pagination-sm" boundary-links="true" direction-links="false"
+            items-per-page="comparisonFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></ul>
     </div>
 </div>

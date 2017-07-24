@@ -252,7 +252,8 @@ def log_events(log):
 
     # assignment events
     from .assignment import on_assignment_modified, on_assignment_get, on_assignment_list_get, on_assignment_create, \
-        on_assignment_delete, on_assignment_list_get_status, on_assignment_get_status
+        on_assignment_delete, on_assignment_list_get_status, on_assignment_get_status, \
+        on_assignment_user_comparisons_get, on_assignment_users_comparisons_get
     on_assignment_modified.connect(log)
     on_assignment_get.connect(log)
     on_assignment_list_get.connect(log)
@@ -260,6 +261,8 @@ def log_events(log):
     on_assignment_delete.connect(log)
     on_assignment_list_get_status.connect(log)
     on_assignment_get_status.connect(log)
+    on_assignment_user_comparisons_get.connect(log)
+    on_assignment_users_comparisons_get.connect(log)
 
     # assignment comment events
     from .assignment_comment import on_assignment_comment_modified, on_assignment_comment_get, \
@@ -272,7 +275,7 @@ def log_events(log):
 
     # answer events
     from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, on_answer_flag, \
-        on_set_top_answer, on_answer_delete, on_user_answer_get, on_answer_comparisons_get
+        on_set_top_answer, on_answer_delete, on_user_answer_get
     on_answer_modified.connect(log)
     on_answer_get.connect(log)
     on_answer_list_get.connect(log)
@@ -281,7 +284,6 @@ def log_events(log):
     on_set_top_answer.connect(log)
     on_answer_delete.connect(log)
     on_user_answer_get.connect(log)
-    on_answer_comparisons_get.connect(log)
 
     # answer comment events
     from .answer_comment import on_answer_comment_modified, on_answer_comment_get, on_answer_comment_list_get, \

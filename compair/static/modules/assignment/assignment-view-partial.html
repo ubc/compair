@@ -95,12 +95,6 @@
                 Compare Pairs
             </a>
 
-            <!-- BUTTON when user is an admin AND (the comparison period is active OR is complete) -->
-            <a class="btn btn-success" title="Comparisons" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/comparisons"
-               ng-show="canManageAssignment && (assignment.compare_period || assignment.after_comparing)">
-                See Comparisons
-            </a>
-
             <!-- BUTTON when user is an admin AND the comparison period is active AND admins can compare -->
             <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Pairs" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
                ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">
@@ -113,18 +107,21 @@
 
     <!-- Tabs -->
     <ul class="nav nav-tabs" role="tablist">
-      <li id="answers" ng-class="{active:showTab('answers')}">
-        <a ng-click="setTab('answers')" href="">Answers <span ng-show="canManageAssignment || (!assignment.answer_period && see_answers)">({{answers.total}})</span></a>
-      </li>
-      <li ng-show="!canManageAssignment" id="comparisons" ng-class="{active:showTab('comparisons')}">
-        <a ng-click="setTab('comparisons')" href="">Your Work + Feedback <span ng-if="assignment.status.answers.feedback">({{assignment.status.answers.feedback}})</span></a>
-      </li>
-      <li id="comments" ng-class="{active:showTab('help')}">
-        <a ng-click="setTab('help')" href="">Help Comments ({{assignment.comment_count}})</a>
-      </li>
-      <li ng-show="canManageAssignment" id="participation" ng-class="{active:showTab('participation')}">
-        <a ng-click="setTab('participation')" href="">Participation</a>
-      </li>
+        <li id="answers" ng-class="{active:showTab('answers')}">
+            <a ng-click="setTab('answers')" href="">Answers <span ng-show="canManageAssignment || (!assignment.answer_period && see_answers)">({{answers.total}})</span></a>
+        </li>
+        <li ng-show="!canManageAssignment" id="your_work" ng-class="{active:showTab('your_work')}">
+            <a ng-click="setTab('your_work')" href="">Your Work + Feedback <span ng-if="assignment.status.answers.feedback">({{assignment.status.answers.feedback}})</span></a>
+        </li>
+        <li id="comments" ng-class="{active:showTab('help')}">
+            <a ng-click="setTab('help')" href="">Help Comments ({{assignment.comment_count}})</a>
+        </li>
+        <li ng-show="canManageAssignment" id="comparisons" ng-class="{active:showTab('comparisons')}">
+            <a ng-click="setTab('comparisons')" href="">Comparisons ({{totalNumComparisonsShown.count}})</span></a>
+        </li>
+        <li ng-show="canManageAssignment" id="participation" ng-class="{active:showTab('participation')}">
+            <a ng-click="setTab('participation')" href="">Participation</a>
+        </li>
     </ul>
 
     <!-- Tab Content -->
@@ -378,23 +375,29 @@
 
             </div><!-- closes answered show-hide div -->
 
-            <div class="text-center">
-                <ul uib-pagination total-items="totalNumAnswers" ng-model="answerFilters.page" max-size="10" class="pagination-sm" boundary-links="true" direction-links="false" items-per-page="answerFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></ul>
+            <div class="text-center" ng-if="see_answers || canManageAssignment">
+                <ul uib-pagination total-items="totalNumAnswers" ng-model="answerFilters.page" max-size="10"
+                    class="pagination-sm" boundary-links="true" direction-links="false"
+                    items-per-page="answerFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></ul>
             </div>
 
         </div><!-- closes answers-tab -->
 
-        <div class="tab-pane" ng-class="{active: showTab('comparisons')}" id="comparisons-tab">
+        <div class="tab-pane" ng-class="{active: showTab('your_work')}" id="your_work-tab">
 
-            <!-- Comparisons Tab Header -->
+            <!-- Your Work Tab Header -->
             <div class="tab-header">
                 <div>
                     <h2>Your work and feedback</h2>
                     <p class="intro-text">Work you have submitted
-                    <span ng-show="assignment.status.answers.answered || comparisons.objects.length > 0">&mdash;
-                        <strong><span ng=show="assignment.status.answers.answered">1 answer</span><span ng-show="assignment.status.answers.answered && comparisons.objects.length > 0">,</span>
-                        <span ng-show="comparisons.objects.length > 0">{{comparisons.objects.length}} comparison<span ng-show="comparisons.objects.length > 1">s</span></span></strong>
-                    &mdash;</span>
+                    <span ng-show="assignment.status.answers.answered || comparison_set.comparisons.length > 0">
+                        &mdash;
+                        <strong>
+                            <span ng-show="assignment.status.answers.answered">1 answer</span><span ng-show="assignment.status.answers.answered && comparison_set.comparisons.length > 0">,</span>
+                            <span ng-show="comparison_set.comparisons.length > 0">{{comparison_set.comparisons.length}} comparison<span ng-show="comparison_set.comparisons.length > 1">s</span></span>
+                        </strong>
+                        &mdash;
+                    </span>
                     for this assignment appears below. Any feedback for your answer can be found in the replies underneath the answer.</p>
                 </div>
             </div>
@@ -477,7 +480,7 @@
             </div>
 
             <!-- Comparisons Section -->
-            <div class="each-evaluation" ng-repeat="comparison in comparisons.objects">
+            <div class="each-evaluation" ng-repeat="comparison in comparison_set.comparisons">
 
                 <h3 ng-if="$first">Your comparisons</h3>
                 <br ng-if="$first"/>
@@ -531,13 +534,13 @@
 
             </div><!-- closes each-evaluation -->
 
-            <div class="each-evaluation" ng-if="!user_answers.objects && comparisons.objects.length < 1">
+            <div class="each-evaluation" ng-if="!user_answers.objects && comparison_set.comparisons.length < 1">
                 <p>(Nothing saved under your name yet.)</p>
             </div>
 
             <!-- self evaluation section -->
-            <div class="each-evaluation" ng-if="comparison.self_evaluation.length > 0" ng-init="comments=comparison.self_evaluation">
-                <div ng-repeat="comment in comments">
+            <div class="each-evaluation" ng-if="comparison_set.self_evaluations.length > 0">
+                <div ng-repeat="comment in comparison_set.self_evaluations">
                     <div class="each-header">
                         <compair-avatar user-id="comment.user_id" avatar="comment.user.avatar" me="true"></compair-avatar>
                         <strong>self-evaluated</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
@@ -555,7 +558,7 @@
                 </div>
             </div>
 
-        </div><!-- closes comparisons-tab -->
+        </div><!-- closes your_work-tab -->
 
         <div class="tab-pane" ng-class="{active: showTab('help')}" id="comments-tab">
 
@@ -599,6 +602,12 @@
             </div><!-- closes each-comment -->
 
         </div><!-- closes comments-tab -->
+
+        <div class="tab-pane" ng-class="{active: showTab('comparisons')}" id="comparisons-tab" ng-if="canManageAssignment && showTab('comparisons')">
+            <div ng-controller="ComparisonViewController">
+                <ng-include src="'modules/comparison/comparison-view-partial.html'"></ng-include>
+            </div>
+        </div><!-- closes comparisons-tab -->
 
         <div class="tab-pane" ng-class="{active: showTab('participation')}" id="participation-tab" ng-if="canManageAssignment && showTab('participation')">
             <div ng-controller="GradebookController">

@@ -100,11 +100,10 @@ module.controller(
 
                     // if evaluation period is set answers can be seen after it ends
                     if (assignment.compare_end) {
-                        assignment.answers_available = assignment.after_comparing;
+                        assignment.see_answers = assignment.after_comparing;
                     // if an evaluation period is NOT set - answers can be seen after req met
                     } else {
-                        assignment.answers_available = assignment.after_comparing &&
-                            assignment.comparisons_left < 1 && !assignment.self_evaluation_needed;
+                        assignment.see_answers = assignment.after_comparing && assignment.comparisons_left == 0;
                     }
                 });
             }
