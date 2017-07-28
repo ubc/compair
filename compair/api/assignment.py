@@ -95,6 +95,7 @@ class AssignmentIdAPI(Resource):
     def post(self, course_uuid, assignment_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+        assignment_criteria = assignment.assignment_criteria
         require(EDIT, assignment,
             title="Assignment Not Updated",
             message="Your role in this course does not allow you to update assignments.")
@@ -189,14 +190,14 @@ class AssignmentIdAPI(Resource):
                         'because they have already been used in one or more comparisons.'
                     abort(403, title="Assignment Not Updated", message=msg)
         else:
-            # assignment not comapred yet, can change criteria
+            # assignment not compared yet, can change criteria
             if len(criterion_uuids) == 0:
                 msg = "Please add at least one criterion to the assignment and save again."
                 abort(403, title="Assignment Not Updated", message=msg)
 
-            existing_uuids = [c.criterion_uuid for c in assignment.assignment_criteria]
+            existing_uuids = [c.criterion_uuid for c in assignment_criteria]
             # disable old ones
-            for c in assignment.assignment_criteria:
+            for c in assignment_criteria:
                 c.active = c.criterion_uuid in criterion_uuids
                 if c.active:
                     c.weight = criterion_data.get(c.criterion_uuid)
@@ -210,7 +211,7 @@ class AssignmentIdAPI(Resource):
             if len(new_uuids) > 0:
                 new_criteria = Criterion.query.filter(Criterion.uuid.in_(new_uuids)).all()
                 for criterion in new_criteria:
-                    assignment.assignment_criteria.append(AssignmentCriterion(
+                    assignment_criteria.append(AssignmentCriterion(
                         criterion=criterion,
                         weight=criterion_data.get(criterion.uuid)
                     ))
@@ -218,11 +219,11 @@ class AssignmentIdAPI(Resource):
         # ensure criteria are in order
         for index, criterion_uuid in enumerate(criterion_uuids):
             assignment_criterion = next(assignment_criterion \
-                for assignment_criterion in assignment.assignment_criteria \
+                for assignment_criterion in assignment_criteria \
                 if assignment_criterion.criterion_uuid == criterion_uuid)
 
-            assignment.assignment_criteria.remove(assignment_criterion)
-            assignment.assignment_criteria.insert(index, assignment_criterion)
+            assignment_criteria.remove(assignment_criterion)
+            assignment_criteria.insert(index, assignment_criterion)
 
         model_changes = get_model_changes(assignment)
 
@@ -237,7 +238,7 @@ class AssignmentIdAPI(Resource):
         db.session.commit()
 
         # need to reorder after update
-        assignment.assignment_criteria.reorder()
+        assignment_criteria.reorder()
 
         # update assignment and course grades if needed
         if model_changes and (model_changes.get('answer_grade_weight') or

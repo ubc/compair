@@ -75,6 +75,9 @@ class LTIOutcome(object):
             ) \
             .one_or_none()
 
+        if assignment_grade == None:
+            return
+
         # generate requests
         for lti_resource_link in lti_resource_links:
             lti_consumer = lti_resource_link.lti_consumer
@@ -93,7 +96,7 @@ class LTIOutcome(object):
                     continue
 
                 lis_result_sourcedid = lti_user_resource_link.lis_result_sourcedid
-                assignment_grade_id = assignment_grade.id if assignment_grade else None
+                assignment_grade_id = assignment_grade.id
 
                 resource_link_grades.append((lis_result_sourcedid, assignment_grade_id))
 
@@ -176,6 +179,9 @@ class LTIOutcome(object):
             ) \
             .one_or_none()
 
+        if course_grade == None:
+            return
+
         # generate requests
         for lti_context in lti_contexts:
             lti_consumer = lti_context.lti_consumer
@@ -199,7 +205,7 @@ class LTIOutcome(object):
                     continue
 
                 lis_result_sourcedid = lti_user_resource_link.lis_result_sourcedid
-                course_grade_id = course_grade.id if course_grade else None
+                course_grade_id = course_grade.id
 
                 lti_context_grades.append((lis_result_sourcedid, course_grade_id))
 
@@ -214,9 +220,14 @@ class LTIOutcome(object):
         grade must be in range: [0.0, 1.0]
         """
 
-        if not lti_consumer.lis_outcome_service_url or not lis_result_sourcedid or \
-                grade < 0.0 or grade > 1.0:
-            # cannot send grade if no lis_outcome_service_url or lis_outcome_service_url
+        if not lti_consumer.lis_outcome_service_url:
+            current_app.logger.error("Failed grade update for lis_result_sourcedid: " + lis_result_sourcedid + " ... no lis_outcome_service_url")
+            return False
+        elif not lis_result_sourcedid:
+            current_app.logger.error("Failed grade update ... no lis_result_sourcedid")
+            return False
+        elif grade < 0.0 or grade > 1.0:
+            current_app.logger.error("Failed grade update for lis_result_sourcedid: " + lis_result_sourcedid + " grade not in [0.0, 1.0]: "+str(grade))
             return False
 
         # build outcome request
