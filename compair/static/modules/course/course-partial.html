@@ -42,7 +42,7 @@
                     <span class="input-group">
                         <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.course_start.date" is-open="date.course_start.opened" />
                         <span class="input-group-btn">
-                            <button type="button" class="btn btn-default" ng-click="date.course_start.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.course_start)"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
                     </span>
                 </div>
@@ -56,7 +56,7 @@
                     <span class="input-group">
                         <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.course_end.date" is-open="date.course_end.opened" />
                         <span class="input-group-btn">
-                            <button type="button" class="btn btn-default" ng-click="date.course_end.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.course_end)"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
                     </span>
                 </div>
