@@ -3,7 +3,6 @@
 var module = angular.module('ubc.ctlt.compair.rich.content',
     [
         'Kaltura.directives',
-        'pdfjsViewer',
         'ui.bootstrap',
         'ubc.ctlt.compair.common.xapi',
         'ubc.ctlt.compair.rich.content.mathjax',
@@ -100,28 +99,24 @@ module.factory("embeddableRichContent",
                     return {
                         type: 'video',
                         url: url,
-                        icon: 'fa-file-video-o',
                         displayInline: false
                     };
                 } else if (url.match(embedRegexpPatterns.basicAudio)) {
                     return {
                         type: 'audio',
                         url: url,
-                        icon: 'fa-file-audio-o',
                         displayInline: false
                     };
                 } else if (url.match(embedRegexpPatterns.basicImage)) {
                     return {
                         type: 'image',
                         url: url,
-                        icon: 'fa-file-image-o',
                         displayInline: false
                     };
                 } else if (url.match(embedRegexpPatterns.pdf)) {
                     return {
                         type: 'pdf',
                         url: url,
-                        icon: 'fa-file-pdf-o',
                         embed: pdfEmbed(url),
                         displayInline: false
                     };
@@ -129,7 +124,6 @@ module.factory("embeddableRichContent",
                     return {
                         type: 'soundCloud',
                         url: url,
-                        icon: 'fa-soundcloud',
                         embed: soundCloudEmbed(url),
                         displayInline: false
                     };
@@ -137,7 +131,6 @@ module.factory("embeddableRichContent",
                     return {
                         type: 'spotify',
                         url: url,
-                        icon: 'fa-spotify',
                         embed: spotifyEmbed(url),
                         displayInline: false
                     };
@@ -145,7 +138,6 @@ module.factory("embeddableRichContent",
                     return {
                         type: 'vimeo',
                         url: url,
-                        icon: 'fa-vimeo',
                         embed: vimeoEmbed(url),
                         displayInline: false
                     };
@@ -153,7 +145,6 @@ module.factory("embeddableRichContent",
                     return {
                         type: 'youtube',
                         url: url,
-                        icon: 'fa-youtube',
                         embed: youtubeEmbed(url),
                         displayInline: false
                     };
@@ -162,7 +153,6 @@ module.factory("embeddableRichContent",
                     var embeddableLink = {
                         type: 'twitter',
                         url: url,
-                        icon: 'fa-twitter',
                         promise: promise,
                         embed: "",
                         displayInline: false
@@ -176,7 +166,6 @@ module.factory("embeddableRichContent",
             generateAttachmentContent: function(file, downloadName) {
                 var content = {
                     type: 'attachment', // default type, should be overwritten below
-                    icon: 'file-o',
                     title: file.name,
                     displayInline: false
                 }
@@ -193,10 +182,8 @@ module.factory("embeddableRichContent",
 
                     if (file.kaltura_media.media_type == 1) {
                         content.type = 'kaltura_video';
-                        content.icon = 'fa-file-video-o';
                     } else {
                         content.type = 'kaltura_audio';
-                        content.icon = 'fa-file-audio-o';
                     }
                 } else {
                     var filePath = '/app/attachment/' + file.name;
@@ -208,17 +195,13 @@ module.factory("embeddableRichContent",
 
                     if (file.extension == 'pdf') {
                         content.type = 'pdf';
-                        content.icon = 'fa-file-pdf-o';
-                        content.url = $sce.trustAsResourceUrl(content.url);
+                        content.url = $sce.trustAsResourceUrl('/app/pdf?file='+encodeURIComponent(content.url)+'#page=1');
                     } else if (file.mimetype.match(/image/ig)) {
                         content.type = 'image';
-                        content.icon = 'fa-file-image-o';
                     } else if (file.mimetype.match(/video/ig)) {
                         content.type = 'video';
-                        content.icon = 'fa-file-video-o';
                     } else if (file.mimetype.match(/audio/ig)) {
                         content.type = 'audio';
-                        content.icon = 'fa-file-audio-o';
                     }
                 }
                 return content;

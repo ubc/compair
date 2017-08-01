@@ -35,8 +35,6 @@ var hooks = function () {
                         log.message.indexOf("Uncaught TypeError: Cannot read property 'on' of undefined") == -1 &&
                         log.message.indexOf("Uncaught TypeError: Cannot read property 'unselectable' of null") == -1 &&
                         log.message.indexOf("Uncaught TypeError: Cannot read property 'getSelection' of undefined") == -1 &&
-                        log.message.indexOf("Uncaught TypeError: Cannot read property 'page' of null") == -1 &&
-                        log.message.indexOf("Uncaught TypeError: Cannot read property 'currentScaleValue' of null") == -1 &&
                         log.message.indexOf("TypeError: a is undefined") == -1 &&
                         log.message.indexOf("window.parent is null") == -1) {
                     browserErrorLogs.push(log)
