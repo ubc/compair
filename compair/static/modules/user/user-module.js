@@ -81,7 +81,7 @@ module.controller("UserWriteController",
         $scope.SystemRole = SystemRole;
         $scope.system_roles = [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin]
         // remove system admin from system roles if current_user is not an admin
-        if ($scope.user.system_role != SystemRole.sys_admin) {
+        if (!$scope.canManageUsers) {
             $scope.system_roles.pop()
         }
 

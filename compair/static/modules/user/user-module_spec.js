@@ -94,6 +94,9 @@ describe('user-module', function () {
                     'system_role': 'Student',
                     'email_notification_method': 'enable'
                 });
+                expect($rootScope.system_roles).toEqual([
+                    "Student", "Instructor", "System Administrator"
+                ]);
             });
 
             it('should be able to save new user', function () {
