@@ -121,7 +121,7 @@ module.controller(
         $scope.deleteAssignment = function(assignment) {
             AssignmentResource.delete({'courseId': assignment.course_id, 'assignmentId': assignment.id}).$promise.then(
                 function (ret) {
-                    Toaster.success("Successfully deleted assignment " + ret.id);
+                    Toaster.success("Assignment Removed", "Successfully removed assignment.");
                     $scope.assignments = _.filter($scope.assignments, function(a) {
                         return a.id != assignment.id;
                     });
@@ -543,9 +543,9 @@ module.controller(
 
             CourseResource.save({id: $scope.course.id}, $scope.course, function (ret) {
                 if ($scope.method == "create") {
-                    Toaster.success("Course Created", "The course created successfully");
+                    Toaster.success("Course Created", "The course was successfully created.");
                 } else if ($scope.method == "edit") {
-                    Toaster.success("Course Successfully Updated", "Your course changes have been saved.");
+                    Toaster.success("Course Updated", "Your course changes have been saved.");
                 }
 
                 // refresh permissions

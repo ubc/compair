@@ -117,9 +117,9 @@ module.controller(
                 function (ret) {
                     $scope.comment = ret;
                     if ($scope.method == 'create') {
-                        Toaster.success("New Comment Created!");
+                        Toaster.success("Comment Created");
                     } else {
-                        Toaster.success("Comment Updated!");
+                        Toaster.success("Comment Updated");
                     }
 
                     $uibModalInstance.close($scope.comment);
@@ -194,9 +194,9 @@ module.controller(
                     $scope.comment = ret;
 
                     if ($scope.method == 'create') {
-                        Toaster.success("Reply Created!");
+                        Toaster.success("Reply Created");
                     } else {
-                        Toaster.success("Reply Updated!");
+                        Toaster.success("Reply Updated");
                     }
 
                     $uibModalInstance.close($scope.comment);

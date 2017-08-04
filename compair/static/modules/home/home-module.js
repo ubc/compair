@@ -75,7 +75,7 @@ module.controller(
         $scope.deleteCourse = function(course) {
             CourseResource.delete({'id': course.id},
                 function (ret) {
-                    Toaster.success('Course deleted successfully');
+                    Toaster.success('Course Removed');
                     $scope.updateCourseList();
                 }
             );
