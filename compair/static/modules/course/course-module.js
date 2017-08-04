@@ -11,15 +11,15 @@ function combineDateTime(datetime) {
 }
 
 function getWeeksDelta(firstDate, secondDate) {
-    firstDate = moment(firstDate) || moment();
-    secondDate = moment(secondDate) || moment();
+    firstDate = firstDate == null ? moment() : moment(firstDate);
+    secondDate = secondDate == null ? moment() : moment(secondDate);
     // By default, moment#diff will return a number rounded towards zero (down for positive, up for negative).
     // we instead want to always Math.floor for both positive and negative numbers
     return Math.floor(firstDate.startOf('day').diff(secondDate.startOf('day'), 'weeks', true));
 }
 
 function getNewDuplicateDate(originalDate, weekDelta) {
-    originalDate = moment(originalDate) || moment();
+    originalDate = originalDate == null ? moment() : moment(originalDate);
     weekDelta = weekDelta || 0;
     return originalDate.add(weekDelta, 'weeks')
 }
