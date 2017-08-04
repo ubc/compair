@@ -114,7 +114,8 @@ class AssignmentIdAPI(Resource):
         # make sure that file attachment exists
         file_uuid = params.get('file_id')
         if file_uuid:
-            assignment.file = File.get_by_uuid_or_404(file_uuid)
+            attachment = File.get_by_uuid_or_404(file_uuid)
+            assignment.file_id = attachment.id
         else:
             assignment.file_id = None
 
@@ -353,7 +354,8 @@ class AssignmentRootAPI(Resource):
         # make sure that file attachment exists
         file_uuid = params.get('file_id')
         if file_uuid:
-            new_assignment.file = File.get_by_uuid_or_404(file_uuid)
+            attachment = File.get_by_uuid_or_404(file_uuid)
+            new_assignment.file_id = attachment.id
         else:
             new_assignment.file_id = None
 

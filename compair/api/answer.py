@@ -185,7 +185,8 @@ class AnswerRootAPI(Resource):
 
         file_uuid = params.get('file_id')
         if file_uuid:
-            answer.file = File.get_by_uuid_or_404(file_uuid)
+            attachment = File.get_by_uuid_or_404(file_uuid)
+            answer.file_id = attachment.id
         else:
             answer.file_id = None
 
@@ -341,7 +342,8 @@ class AnswerIdAPI(Resource):
 
         file_uuid = params.get('file_id')
         if file_uuid:
-            answer.file = File.get_by_uuid_or_404(file_uuid)
+            attachment = File.get_by_uuid_or_404(file_uuid)
+            answer.file_id = attachment.id
         else:
             answer.file_id = None
 
