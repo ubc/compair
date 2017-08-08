@@ -43,7 +43,7 @@
     "angular-uuids": "~0.0.4",
     "angular-local-storage": "~0.5.2",
     "angular-promise-extras": "~0.1.8",
-    "ng-kaltura-player": "~1.2.0",
+    "ng-kaltura-player": "~1.2.1",
     "pdf.js-viewer": "~1.6.211"
   },
   "resolutions": {
