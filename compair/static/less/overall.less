@@ -22,7 +22,7 @@ modal-cancel-button + h1 {
 }
 
 .rich-content-attachments h5 {
-  margin-top: 15px;  
+  margin-top: 15px;
 }
 
 /* code highlighting blocks shouldn't have boxes around them */
@@ -148,24 +148,29 @@ dt {
 
 /* class for collapsible content */
 .collapsible-content {
-  
+
   margin: 1em 0;
   padding-left: 1.5em;
   border-left: 2px solid @border-gray;
-  
+
 }//closes collapsible-content
 
 /* attachments similar styling to collapsible */
 .each-attachment-content {
-  
+
   &:extend(.collapsible-content);
   border-left: 1px dashed @link-blue;
-  
+
   .btn {
     margin: .5em .5em .5em 0;
   }
-  
+
 }//closes each-attachment-content
+
+/* additional responsize embed sizes */
+.embed-responsive-pdf {
+  padding-bottom: 100%
+}
 
 /* class for filters */
 .filter {
