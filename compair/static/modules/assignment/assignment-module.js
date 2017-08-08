@@ -286,8 +286,12 @@ module.controller("AssignmentViewController",
         // setup assignment data
         $scope.assignment.answer_start = new Date($scope.assignment.answer_start);
         $scope.assignment.answer_end = new Date($scope.assignment.answer_end);
-        $scope.assignment.compare_start = new Date($scope.assignment.compare_start);
-        $scope.assignment.compare_end = new Date($scope.assignment.compare_end);
+        if ($scope.assignment.compare_start != null) {
+            $scope.assignment.compare_start = new Date($scope.assignment.compare_start);
+        }
+        if ($scope.assignment.compare_end != null) {
+            $scope.assignment.compare_end = new Date($scope.assignment.compare_end);
+        }
         if ($scope.assignment.rank_display_limit) {
             $scope.rankLimit = $scope.assignment.rank_display_limit;
         }

@@ -28,8 +28,11 @@
             <li ng-show="canManageAssignment">
                 <em>Answering:</em> {{assignment.answer_start | amDateFormat: 'MMM D @ h:mm a'}} - {{assignment.answer_end | amDateFormat: 'MMM D @ h:mm a'}}
             </li>
-            <li ng-show="canManageAssignment">
+            <li ng-show="canManageAssignment && assignment.compare_start">
                 <em>Comparing:</em> {{assignment.compare_start | amDateFormat: 'MMM D @ h:mm a'}} - {{assignment.compare_end | amDateFormat: 'MMM D @ h:mm a'}}
+            </li>
+            <li ng-show="canManageAssignment && !assignment.compare_start">
+                <em>Comparing:</em> after {{assignment.answer_end | amDateFormat: 'MMM D @ h:mm a'}}
             </li>
             <li ng-if="!canManageAssignment && (steps_left == 0 || assignment.status.answers.answered)">
                 You
@@ -197,7 +200,7 @@
                 <!-- Students should see before evaluating before the comparison period -->
                 <p class="intro-text"
                    ng-if="!canManageAssignment && ((assignment.status.answers.answered && assignment.answer_period) || (!assignment.answer_period)) && !assignment.compare_period && !assignment.after_comparing">
-                    Comparisons begin <span ng-if="assignment.compare_start > 0">{{assignment.compare_start | amDateFormat: 'MMM D @ h:mm a'}}</span> <span ng-if="assignment.compare_start <= 0">after the answer due date passes</span>. After comparing answer pairs, you will be able to read all answers written by your classmates and instructors here.
+                    Comparisons begin <span ng-if="assignment.compare_start">{{assignment.compare_start | amDateFormat: 'MMM D @ h:mm a'}}</span> <span ng-if="!assignment.compare_start">after the answer due date passes</span>. After comparing answer pairs, you will be able to read all answers written by your classmates and instructors here.
                 </p>
 
                 <!-- Students should see before evaluating during the comparison period (regular comparison) -->
