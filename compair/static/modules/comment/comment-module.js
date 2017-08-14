@@ -117,7 +117,7 @@ module.controller(
                 function (ret) {
                     $scope.comment = ret;
                     if ($scope.method == 'create') {
-                        Toaster.success("Comment Created");
+                        Toaster.success("Comment Posted");
                     } else {
                         Toaster.success("Comment Updated");
                     }
@@ -194,7 +194,7 @@ module.controller(
                     $scope.comment = ret;
 
                     if ($scope.method == 'create') {
-                        Toaster.success("Reply Created");
+                        Toaster.success("Reply Posted");
                     } else {
                         Toaster.success("Reply Updated");
                     }

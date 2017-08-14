@@ -45,7 +45,7 @@ module.controller(
                     $scope.criterion = ret;
 
                     if ($scope.method == 'create') {
-                        Toaster.success("Criterion Created");
+                        Toaster.success("Criterion Saved");
                     } else {
                         Toaster.success("Criterion Updated");
                     }

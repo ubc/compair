@@ -98,9 +98,9 @@ module.controller("UserWriteController",
 
             UserResource.save({'id': $scope.userId}, $scope.user, function(ret) {
                 if ($scope.method == 'edit') {
-                    Toaster.success('User Updated', 'Your changes were saved.');
+                    Toaster.success('User Updated');
                 } else if ($scope.method == 'create') {
-                    Toaster.success('User Created', 'User should now have access.');
+                    Toaster.success('User Saved', 'This user now has access to ComPAIR.');
                 }
                 // refresh User's info on editing own profile and displayname changed
                 if ($scope.ownProfile && $scope.user.displayname != $scope.loggedInUser.displayname) {
@@ -148,7 +148,7 @@ module.controller("UserViewController",
             $scope.submitted = true;
 
             UserResource.updateNotifcations({'id': $scope.userId}, $scope.user, function(ret) {
-                Toaster.success('Notification Settings Updated', 'Your changes were saved.');
+                Toaster.success('Notification Settings Updated', 'Your notification changes were saved.');
             }).$promise.finally(function() {
                 $scope.submitted = false;
             });
@@ -185,7 +185,7 @@ module.controller("UserListController",
         $scope.updateUser = function(user) {
             UserResource.save({'id': user.id}, user,
                 function (ret) {
-                    Toaster.success("User Updated", 'Your changes were saved.');
+                    Toaster.success("User Updated");
                     $route.reload();
                 }
             );

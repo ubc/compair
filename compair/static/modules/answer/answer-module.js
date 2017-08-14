@@ -239,7 +239,7 @@ module.controller(
                     } else {
                         // if was a draft, show new success message
                         if (wasDraft) {
-                            Toaster.success("Answer Posted");
+                            Toaster.success("Answer Saved");
                         } else {
                             Toaster.success("Answer Updated");
                         }

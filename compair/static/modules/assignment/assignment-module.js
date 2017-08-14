@@ -401,7 +401,7 @@ module.controller("AssignmentViewController",
         $scope.deleteAssignment = function(assignment) {
             AssignmentResource.delete({'courseId': assignment.course_id, 'assignmentId': assignment.id},
                 function (ret) {
-                    Toaster.success("Assignment Removed", "Successfully removed assignment.");
+                    Toaster.success("Assignment Removed");
                     $location.path('/course/'+$scope.courseId);
                 },
                 function (ret) {
@@ -413,7 +413,7 @@ module.controller("AssignmentViewController",
         $scope.deleteAnswer = function(answer) {
             AnswerResource.delete({'courseId': answer.course_id, 'assignmentId': answer.assignment_id, 'answerId':answer.id},
                 function (ret) {
-                    Toaster.success("Answer Removed", "Successfully removed answer.");
+                    Toaster.success("Answer Removed");
                     var authorId = answer['user_id'];
                     $scope.answers.objects.splice($scope.answers.objects.indexOf(answer), 1);
                     $scope.assignment.answer_count -= 1;
@@ -443,9 +443,9 @@ module.controller("AssignmentViewController",
                 function () {
                     answer.top_answer = topAnswer;
                     if (topAnswer) {
-                        Toaster.success("Answer Added to Top Answers");
+                        Toaster.success("Answer Added to Top Answers", "Students will see this in the list of instructor-picked answers.");
                     } else {
-                        Toaster.success("Answer Removed from Top Answers");
+                        Toaster.success("Answer Removed from Top Answers", "Students will no longer see this in the list of instructor-picked answers.");
                     }
                     if ($scope.answerFilters.author == "top-picks") {
                         $scope.updateAnswerList();
@@ -632,7 +632,7 @@ module.controller("AssignmentViewController",
         $scope.deleteComment = function(key, course_id, assignment_id, comment_id) {
             AssignmentCommentResource.delete({'courseId': course_id, 'assignmentId': assignment_id, 'commentId': comment_id},
                 function (ret) {
-                    Toaster.success("Comment Removed", "Successfully removed comment.");
+                    Toaster.success("Comment Removed");
                     $scope.comments.objects.splice(key, 1);
                     $scope.assignment.comment_count--;
                 }
@@ -642,7 +642,7 @@ module.controller("AssignmentViewController",
         $scope.deleteReply = function(answer, commentKey, course_id, assignment_id, answer_id, comment_id) {
             AnswerCommentResource.delete({'courseId': course_id, 'assignmentId': assignment_id, 'answerId': answer_id, 'commentId': comment_id},
                 function (ret) {
-                    Toaster.success("Reply Removed", "Successfully removed reply.");
+                    Toaster.success("Reply Removed");
                     var comment = answer['comments'].splice(commentKey, 1)[0];
                     if (comment.comment_type == AnswerCommentType.public) {
                         answer.public_comment_count--;
@@ -1179,9 +1179,9 @@ module.controller("AssignmentWriteController",
                         $q.all(promises).then(function() {
                             $scope.submitted = false;
                             if ($scope.method == "create") {
-                                Toaster.success("Assignment Created",'"' + ret.name + '" should now be listed.');
+                                Toaster.success("Assignment Saved");
                             } else if ($scope.method == "copy") {
-                                Toaster.success("Assignment Duplicated",'"' + ret.name + '" should now be listed.');
+                                Toaster.success("Assignment Duplicated");
                             } else {
                                 Toaster.success("Assignment Updated");
                             }

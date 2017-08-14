@@ -121,7 +121,7 @@ module.controller(
         $scope.deleteAssignment = function(assignment) {
             AssignmentResource.delete({'courseId': assignment.course_id, 'assignmentId': assignment.id}).$promise.then(
                 function (ret) {
-                    Toaster.success("Assignment Removed", "Successfully removed assignment.");
+                    Toaster.success("Assignment Removed");
                     $scope.assignments = _.filter($scope.assignments, function(a) {
                         return a.id != assignment.id;
                     });
@@ -226,7 +226,7 @@ module.controller(
             }
 
             CourseResource.save({}, $scope.course, function (ret) {
-                Toaster.success("Course Created", 'The course was created successfully');
+                Toaster.success("Course Saved");
                 // refresh permissions
                 Session.expirePermissions();
                 $scope.selectCourse(ret.id);
@@ -459,7 +459,7 @@ module.controller(
             }
 
             CourseResource.createDuplicate({id: $scope.originalCourse.id}, $scope.duplicateCourse, function (ret) {
-                Toaster.success("Course Duplicated", 'The course was successfully duplicated');
+                Toaster.success("Course Duplicated");
                 // refresh permissions
                 Session.expirePermissions();
 
@@ -543,9 +543,9 @@ module.controller(
 
             CourseResource.save({id: $scope.course.id}, $scope.course, function (ret) {
                 if ($scope.method == "create") {
-                    Toaster.success("Course Created", "The course was successfully created.");
+                    Toaster.success("Course Saved");
                 } else if ($scope.method == "edit") {
-                    Toaster.success("Course Updated", "Your course changes have been saved.");
+                    Toaster.success("Course Updated");
                 }
 
                 // refresh permissions
