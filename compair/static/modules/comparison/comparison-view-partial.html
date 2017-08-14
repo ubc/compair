@@ -24,13 +24,13 @@
 
                 <span class="filter">
                     <button uib-btn-checkbox ng-model="showAnswers" class="btn btn-sm btn-default">
-                        Show compared answers for all comparisons below <i ng-class="{'fa fa-eye-slash': !showAnswers, 'fa fa-eye': showAnswers}"></i>
+                        Expand All Answer Pairs Below
                     </button>
                 </span>
             </div>
         </div>
 
-        <p class="intro-text">Filter by a group (if available) and student evaluator's name, or select "any" for these options to see the full list of available comparisons.</p>
+        <p class="intro-text">Filter by a group (if available) and student evaluator's name, or select "any" for these options to see the full list of available comparisons. To see all feedback left for each student answer, visit the "Answers" tab.</p>
 
         <div ng-show="!comparison_sets.length">
             <p>No comparisons were found<span ng-if="comparisonFilters.group || comparisonFilters.author"> with these filter settings. Try another choice above</span>.</p>
@@ -77,7 +77,7 @@
                 <p class="show-answers content"><a href="" ng-click="showAnswers = !showAnswers;">
                     <i ng-show="showAnswers" class="fa fa-chevron-down"></i>
                     <i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
-                    Show compared answers
+                    Show answer pair
                 </a></p>
 
                 <div class="row collapsible-content" ng-show="showAnswers">

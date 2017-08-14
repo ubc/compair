@@ -87,7 +87,7 @@
                     <!-- Total Answers -->
                     <li title="{{assignment.answer_count}} answers">
                         <span ng-if="(!canManageAssignment && assignment.see_answers) || canManageAssignment">
-                            <a href="#/course/{{course.id}}/assignment/{{assignment.id}}/?tab=answers">
+                            <a href="#/course/{{course.id}}/assignment/{{assignment.id}}/?tab=answers#answers">
                                 {{assignment.answer_count}} answer<span ng-if="assignment.answer_count != 1">s</span> &raquo;
                             </a>
                         </span>
@@ -97,13 +97,13 @@
                     </li>
                     <!-- Total Comparisons -->
                     <li ng-if="canManageAssignment" title="{{assignment.evaluation_count}} comments">
-                        <a href="#/course/{{course.id}}/assignment/{{assignment.id}}/?tab=comparisons">
+                        <a href="#/course/{{course.id}}/assignment/{{assignment.id}}/?tab=comparisons#comparisons">
                             {{assignment.evaluation_count}} comparison<span ng-if="assignment.evaluation_count != 1">s</span> &raquo;
                         </a>
                     </li>
                     <!-- Total Comments -->
                     <li title="{{assignment.comment_count}} comments">
-                        <a href="#/course/{{course.id}}/assignment/{{assignment.id}}/?tab=help">
+                        <a href="#/course/{{course.id}}/assignment/{{assignment.id}}/?tab=help#comments">
                             {{assignment.comment_count}} comment<span ng-if="assignment.comment_count != 1">s</span> &raquo;
                         </a>
                     </li>
