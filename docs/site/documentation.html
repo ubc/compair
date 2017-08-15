@@ -10,7 +10,7 @@
         <meta name="description" content="Get started with basic documentation for using UBC's ComPAIR learning application as a standalone tool or as an integration.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="index, follow" />
-            
+
         <link rel="icon" type="image/png" href="img/green-favicon-32x32.png" sizes="32x32" />
         <link rel="icon" type="image/png" href="img/green-favicon-16x16.png" sizes="16x16" />
 
@@ -51,17 +51,33 @@
             <div class="row">
                 <div class="col-md-8">
                     <h1 class="main-heading">Documentation <img src="img/compair-logo-scale.png" alt="ComPAIR Home" class="pull-right"></h1>
-                    
+
                     <p>ComPAIR is an open-source learning application being developed by the University of British Columbia's Centre for Teaching, Learning & Technology (<a href="http://ctlt.ubc.ca/" target="_blank">CTLT</a>) using a <a href="https://github.com/ubc/compair/blob/master/LICENSE.txt" target="_blank">GPL-3.0</a> license. ComPAIR is an <a href="http://lthub.ubc.ca/guides/compair/" target="_blank">official university tool</a> available for all internal faculty and staff to use (with full support) in live courses. Other educational institutions are welcome to download, deploy, and add to the code.</p>
-                    
-                    <h3 class="text-center highlight-heading">ComPAIR is available <span class="green-text">internally</span> at UBC via Connect and <span class="green-text">externally</span> to other institutions via GitHub</h3>
+
+                    <h3 class="text-center highlight-heading">ComPAIR is available <span class="green-text">internally</span> at UBC via Connect and Canvas as well as <span class="green-text">externally</span> to other institutions via GitHub</h3>
 
                     <h2>UBC faculty and staff</h2>
-                    <p>Faculty and staff at UBC can get started with ComPAIR by using UBC's learning management system, Connect. Through Connect, you can set up a course in ComPAIR that will automatically be populated with your class list.</p>
-                    <ol>
-                        <li>Set up an account either by adding ComPAIR as an LTI tool in Connect or contacting <a href="http://lthub.ubc.ca/support/lt-hub/">LT Hub</a> for assistance with this process.</li>
-                        <li>Once you have an account, click on the LTI link in Connect or log in with your CWL at: <a href="https://compair.elearning.ubc.ca/app/">compair.elearning.ubc.ca</a>.</li>
-                    </ol>
+                    <p>Faculty and staff at UBC can get started with ComPAIR by using either of the learning management systems (LMS): Connect or Canvas. Through the LMS, you can set up a course in ComPAIR that will automatically be populated with your class list.</p>
+
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <strong>Use ComPAIR in your Connect course by:</strong>
+                            <ul>
+                                <li>Adding ComPAIR as an <i>LTI tool</i> in Connect.</li>
+                                <li>Or contacting the <a href="http://lthub.ubc.ca/support/lt-hub/">LT Hub</a> for assistance with this process.</li>
+                            </ul>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Use ComPAIR in your Canvas course by:</strong>*
+                            <ul>
+                                <li>Adding ComPAIR to the course's sidebar by editing the course's navigation settings in Canvas.</li>
+                                <li>Adding a ComPAIR assignment to your course as an <i>external tool</i> in Canvas.</li>
+                                <li>Or contacting the <a href="http://lthub.ubc.ca/support/lt-hub/">LT Hub</a> for assistance with this process.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p>After the LTI link is set up, create your ComPAIR account and course by following the LTI link from within your LMS course.</p>
+                    <p>Visit <a href="http://lthub.ubc.ca/guides/compair/" target="_blank">ComPAIR's tool guide</a> for additional setup instuctions.
 
                     <h2>Outside UBC</h2>
                     <p>Outside of UBC, you will need to set up your own instance of the application. A ComPAIR instance requires a minimum of a web server running Python 2.7 or 3 and a MySQL or MariaDB database. We also recommend running Redis and a Celery daemon to reduce server load for certain tasks.</p>
@@ -84,7 +100,7 @@
                             Set up a development environment for ComPAIR. Useful for contributing to ComPAIR or customizing code. Not recommended for use in a production environment. (Instead, follow the Kubernetes guide above.)
                         </li>
                     </ul>
-                    
+
                     <h2>Style guide</h2>
                     <p>ComPAIR has a basic <a href="style-guide.html">style guide</a> available for anyone who plans to contribute to the code.</p>
 
