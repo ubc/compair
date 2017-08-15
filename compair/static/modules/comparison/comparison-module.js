@@ -218,29 +218,29 @@ module.controller(
                                     var comparisons_count = ret.status.comparisons.count;
 
                                     if ($scope.assignment.total_comparisons_required > comparisons_count) {
-                                        Toaster.success("Your Comparison Saved Successfully", "The next answer pair is now being loaded. Good luck on the next round!");
+                                        Toaster.success("Comparison Saved", "The next answer pair is now being loaded. Good luck on the next round!");
                                         $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
                                         $route.reload();
                                         window.scrollTo(0, 0);
                                     // self-evaluation
                                     } else if ($scope.assignment.enable_self_evaluation && ret.status.answers.answered) {
-                                        Toaster.success("Your Comparison Saved Successfully", "Write a self-evaluation, and your assignment will be complete!");
+                                        Toaster.success("Comparison Saved", "Write a self-evaluation, and your assignment will be complete!");
                                         $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
                                         $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId + '/self_evaluation');
                                     } else {
-                                        Toaster.success("Your Comparison Saved Successfully", "Your assignment is now complete. Good work!");
+                                        Toaster.success("Comparison Saved", "Your assignment is now complete. Good work!");
                                         $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
                                         $location.path('/course/' + $scope.courseId);
                                     }
                                 },
                                 function(ret) {
-                                    Toaster.success("Your Comparison Saved Successfully");
+                                    Toaster.success("Comparison Saved");
                                     $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
                                     $location.path('/course/' + $scope.courseId);
                                 }
                             );
                         } else {
-                            Toaster.success("Your Comparison Saved Successfully", "The next answer pair is now being loaded.");
+                            Toaster.success("Comparison Saved", "The next answer pair is now being loaded.");
                             $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
                             $route.reload();
                             window.scrollTo(0, 0);
@@ -254,7 +254,7 @@ module.controller(
                             $scope.comparison, $scope.current, $scope.assignment.pairing_algorithm,
                             $scope.tracking.getRegistration()
                         );
-                        Toaster.success("Saved Draft Successfully!", "Remember to submit your comparison before the deadline.");
+                        Toaster.success("Draft Saved", "Remember to submit your comparison before the deadline.");
                     }
                 },
                 function(ret) {
@@ -370,10 +370,10 @@ module.controller(
                     $scope.preventExit = false; //user has saved self-evaluation, does not need warning when leaving page
 
                     if (ret.draft) {
-                        Toaster.success("Saved Draft Successfully!", "Remember to submit your self-evaluation before the deadline.");
+                        Toaster.success("Draft Saved", "Remember to submit your self-evaluation before the deadline.");
                         $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId + '/self_evaluation');
                     } else {
-                        Toaster.success("Your Self-Evaluation Saved Successfully", "Your assignment is now complete. Good work!");
+                        Toaster.success("Self-Evaluation Saved", "Your assignment is now complete. Good work!");
                         $location.path('/course/' + $scope.courseId);
                     }
                 }

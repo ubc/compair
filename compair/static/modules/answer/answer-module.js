@@ -234,14 +234,14 @@ module.controller(
                     $scope.preventExit = false; //user has saved answer, does not need warning when leaving page
 
                     if (ret.draft) {
-                        Toaster.success("Saved Draft Successfully!", "Remember to submit your answer before the deadline.");
+                        Toaster.success("Draft Saved", "Remember to submit your answer before the deadline.");
                         $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId + '/answer/' + $scope.answer.id + '/edit');
                     } else {
                         // if was a draft, show new success message
                         if (wasDraft) {
-                            Toaster.success("New Answer Posted!");
+                            Toaster.success("Answer Saved");
                         } else {
-                            Toaster.success("Answer Updated!");
+                            Toaster.success("Answer Updated");
                         }
                         $location.path('/course/' + $scope.courseId + '/assignment/' +$scope.assignmentId);
                     }
@@ -338,7 +338,7 @@ module.controller(
             AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answer).$promise.then(
                 function (ret) {
                     $scope.answer = ret;
-                    Toaster.success("Answer Updated!");
+                    Toaster.success("Answer Updated");
                     $uibModalInstance.close($scope.answer);
                 }
             ).finally(function() {
@@ -412,7 +412,7 @@ module.controller(
                 AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answer).$promise.then(
                     function (ret) {
                         $scope.answer = ret;
-                        Toaster.success("Practice Answer Updated!");
+                        Toaster.success("Practice Answer Updated");
                         $uibModalInstance.close($scope.answer);
                     }
                 ).finally(function() {
