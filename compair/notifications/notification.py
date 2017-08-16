@@ -102,11 +102,11 @@ class Notification(object):
                 UserCourse.course_id == course.id
             ) \
             .first()
-
-        if user_course.course_role == CourseRole.instructor:
-            instructor_label = CourseRole.instructor.value
-        elif user_course.course_role == CourseRole.teaching_assistant:
-            instructor_label = CourseRole.teaching_assistant.value
+        if user_course:
+            if user_course.course_role == CourseRole.instructor:
+                instructor_label = CourseRole.instructor.value
+            elif user_course.course_role == CourseRole.teaching_assistant:
+                instructor_label = CourseRole.teaching_assistant.value
 
         # send the message
         subject = "New Answer Feedback in "+course.name

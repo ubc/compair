@@ -285,6 +285,12 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
 
                 self.assertEqual(len(outbox), 0)
 
+        with self.login('root'):
+            with mail.record_messages() as outbox:
+                rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
+                self.assert200(rv)
+                self.assertEqual(len(outbox), 1)
+
         with self.login(self.data.get_authorized_student().username):
             lti_consumer = self.lti_data.lti_consumer
             (lti_user_resource_link1, lti_user_resource_link2) = self.lti_data.setup_student_user_resource_links(
